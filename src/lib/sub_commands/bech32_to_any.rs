@@ -36,12 +36,30 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
     };
 
     if sub_command_args.event_id {
+        // Try nevent first
         if let Ok(nevent) = crate::types::NEvent::try_from_bech32_string(bech32) {
             println!("{}", nevent.id.as_hex_string());
             return Ok(());
+        }
+        // Try note (direct event ID)
+        else if let Ok(note) = crate::types::Id::try_from_bech32_string(bech32) {
+            println!("{}", note.as_hex_string());
+            return Ok(());
+        }
+        // Try naddr (parameterized replaceable event)
+        else if let Ok(_naddr) = crate::types::NAddr::try_from_bech32_string(bech32) {
+            // naddr doesn't have a specific event ID, it's a coordinate
+            eprintln!(
+                "Error: --event-id cannot be used with naddr (parameterized replaceable event)."
+            );
+            eprintln!("naddr represents an event coordinate, not a specific event ID.");
+            return Err(anyhow::anyhow!("naddr doesn't have a specific event ID"));
         } else {
-            eprintln!("Error: --event-id can only be used with a valid nevent string.");
-            return Err(anyhow::anyhow!("Invalid nevent string for --event-id"));
+            eprintln!("Error: --event-id can only be used with nevent or note bech32 strings.");
+            eprintln!("Supported types for --event-id:");
+            eprintln!("  nevent1... - Event pointer with optional relays, author, kind");
+            eprintln!("  note1...    - Direct event ID");
+            return Err(anyhow::anyhow!("Invalid bech32 string for --event-id"));
         }
     }
 

@@ -1,6 +1,5 @@
 #[allow(unused)]
 // Working Nostr Client Implementation with proper interface
-
 use anyhow::Result;
 use futures_util::{SinkExt, StreamExt};
 use serde_json::json;
