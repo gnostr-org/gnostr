@@ -1,10 +1,12 @@
 use std::{
+    collections::HashMap,
     fs::{self, File},
     io::Write,
     path::Path,
-    collections::HashMap,
 };
 
+use crate::legit::command as legit_command;
+use crate::types::{Event, KeySigner, Keys, PreEvent, Signer, Tag};
 use git2::{Repository, Signature};
 use gnostr_asyncgit::sync::{
     self, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
@@ -14,8 +16,6 @@ use gnostr_asyncgit::sync::{
 };
 use serial_test::serial;
 use tempfile::TempDir;
-use crate::types::{Keys, KeySigner, Event, PreEvent, Tag, Signer};
-use crate::legit::command as legit_command;
 
 // Helper function to set up a temporary git repository for testing.
 fn setup_test_repo() -> (TempDir, RepoPath) {
@@ -42,18 +42,13 @@ fn setup_test_repo() -> (TempDir, RepoPath) {
     };
     let tree = repo.find_tree(tree_id).unwrap();
     let commit = repo
-        .commit(
-            None,
-            &signature,
-            &signature,
-            "Initial commit",
-            &tree,
-            &[],
-        )
+        .commit(None, &signature, &signature, "Initial commit", &tree, &[])
         .unwrap();
 
     // Create the 'main' branch pointing to this commit
-    let _branch = repo.branch("main", &repo.find_commit(commit).unwrap(), false).unwrap();
+    let _branch = repo
+        .branch("main", &repo.find_commit(commit).unwrap(), false)
+        .unwrap();
 
     // Set HEAD to 'main'
     repo.set_head("refs/heads/main").unwrap();
@@ -112,7 +107,10 @@ fn test_complex_git_workflow() {
     // Verify the commit was created
     let head_id_after_commit = get_head(&repo_path).unwrap();
     let commit_details_after_commit = get_commit_details(&repo_path, head_id_after_commit).unwrap();
-    assert_eq!(commit_details_after_commit.message.unwrap().subject, "feat: add test file");
+    assert_eq!(
+        commit_details_after_commit.message.unwrap().subject,
+        "feat: add test file"
+    );
 
     // we will fix stashing and popping later
 
@@ -153,13 +151,15 @@ async fn test_create_event_with_custom_tags() {
     let content = "This is a test message with custom tags.";
     let mut custom_tags = HashMap::new();
     custom_tags.insert("emoji".to_string(), vec![":wave:".to_string()]);
-    custom_tags.insert("status".to_string(), vec!["testing".to_string(), "mocking".to_string()]);
+    custom_tags.insert(
+        "status".to_string(),
+        vec!["testing".to_string(), "mocking".to_string()],
+    );
 
-    let (event, pre_event) = legit_command::create_event_with_custom_tags(
-        &key_signer,
-        content,
-        custom_tags.clone(),
-    ).await.unwrap();
+    let (event, pre_event) =
+        legit_command::create_event_with_custom_tags(&key_signer, content, custom_tags.clone())
+            .await
+            .unwrap();
 
     // Assertions for PreEvent
     assert_eq!(pre_event.pubkey, key_signer.public_key());
