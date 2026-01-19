@@ -335,7 +335,7 @@ pub enum GnostrCommands {
     /// XOR utility subcommand
     Xor(crate::sub_commands::xor::XorArgs),
     /// Send a NIP-44 direct message
-    Dm(crate::sub_commands::dm::DmArgs),
+    Dm(DmArgs),
 }
 
 /// DmArgs
