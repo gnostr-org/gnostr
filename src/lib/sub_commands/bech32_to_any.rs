@@ -143,3 +143,226 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{Id, NEvent, NostrBech32};
+
+    #[test]
+    fn test_event_id_with_nevent() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "nevent1qqstna2yrezu5wghjvswqqculvvwxsrcvu7uc0f78gan4xqhvz49d9spr3mhxue69uhkummnw3ez6un9d3shjtn4de6x2argwghx6egpr4mhxue69uhkummnw3ez6ur4vgh8wetvd3hhyer9wghxuet5nxnepm".to_string(),
+            raw: false,
+            json: false,
+            event_id: true,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+
+        // Capture stdout and verify it contains the expected event ID
+        // Note: This test would need stdout capturing in a real test environment
+    }
+
+    #[test]
+    fn test_event_id_with_note() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "note1j8dp2dcqf2kz0ylnpdsnknw6a0mvmuzchgumzcykwt6w7xt3602qysj207"
+                .to_string(),
+            raw: false,
+            json: false,
+            event_id: true,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_event_id_with_naddr_error() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "naddr1qqxk67txd9e8xardv96x7mt9qgsgfvxyd2mfntp4avk29pj8pwz7pqwmyzrummmrjv3rdsuhg9mc9agrqsqqqa28rkfdwv".to_string(),
+            raw: false,
+            json: false,
+            event_id: true,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("naddr doesn't have a specific event ID"));
+    }
+
+    #[test]
+    fn test_event_id_with_invalid_bech32() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "invalid_bech32_string".to_string(),
+            raw: false,
+            json: false,
+            event_id: true,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid bech32 string for --event-id"));
+    }
+
+    #[test]
+    fn test_raw_output_with_pubkey() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "npub1sn0wdenkukak0d9dfczzeacvhkrgz92ak56egt7vdgzn8pv2wfqqhrjdv9"
+                .to_string(),
+            raw: true,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_json_output_with_nprofile() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "nprofile1qqsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8gpp4mhxue69uhhytnc9e3k7mgpz4mhxue69uhkg6nzv9ejuumpv34kytnrdaksjlyr9p".to_string(),
+            raw: false,
+            json: true,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_default_json_output() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "note1fntxtkcy9pjwucqwa9mddn7v03wwwsu9j330jj350nvhpky2tuaspk6nqc"
+                .to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_nostr_url_handling() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string:
+                "nostr://note1fntxtkcy9pjwucqwa9mddn7v03wwwsu9j330jj350nvhpky2tuaspk6nqc"
+                    .to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_nostr_url_with_path_handling() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string:
+                "nostr://note1fntxtkcy9pjwucqwa9mddn7v03wwwsu9j330jj350nvhpky2tuaspk6nqc/some/path"
+                    .to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_naddr_output() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "naddr1qqxk67txd9e8xardv96x7mt9qgsgfvxyd2mfntp4avk29pj8pwz7pqwmyzrummmrjv3rdsuhg9mc9agrqsqqqa28rkfdwv".to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_relay_output() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "nrelay1qqghwumn8ghj7mn0wd68yv339e3k7mgftj9ag".to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_private_key_handling() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "nsec1vl9rq9js679sklf8eaeqk0g29mggawnpzj33kg0vt2zg89kayrxswq6ym3q"
+                .to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cryptsec_not_implemented() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "ncryptsec1...".to_string(), // This would be a real cryptsec
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        // Test would need a real cryptsec string to work properly
+        // For now, just test that the function handles it gracefully
+        let result = bech32_to_any(&args);
+        // Should either succeed with "not implemented" message or fail gracefully
+    }
+
+    #[test]
+    fn test_empty_string_handling() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "".to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_whitespace_trimming() {
+        let args = Bech32ToAnySubCommand {
+            bech32_string: "  note1fntxtkcy9pjwucqwa9mddn7v03wwwsu9j330jj350nvhpky2tuaspk6nqc  "
+                .to_string(),
+            raw: false,
+            json: false,
+            event_id: false,
+        };
+
+        let result = bech32_to_any(&args);
+        assert!(result.is_ok());
+    }
+}
