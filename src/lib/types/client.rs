@@ -280,7 +280,7 @@ impl Client {
             .map_err(|e| Error::Custom(e.into()))?;
         
         // 2. Derive shared secret using ECDH
-        let shared_secret = shared_secret(&secret_key, &recipient_point);
+        let shared_secret = ecdh::shared_secret(&secret_key, &recipient_point);
 
         // 3. Derive encryption key using HKDF-SHA256
         let hkdf = Hkdf::<Sha256>::new(None, shared_secret.as_bytes());
