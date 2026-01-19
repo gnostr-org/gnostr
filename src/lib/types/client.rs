@@ -269,10 +269,10 @@ impl Client {
             .map_err(|e| Error::Custom(e.into()))?;
 
         // Convert k256::ecdsa::SigningKey to k256::elliptic_curve::SecretKey
-        let secret_key = SecretKey::from_bytes(
-            FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice())
-                .map_err(|e| Error::Custom(format!("FieldBytes conversion error: {:?}", e).into()))?,
-        )
+        let field_bytes = FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice())
+            .map_err(|e| Error::Custom(format!("FieldBytes conversion error: {:?}", e).into()))?;
+
+        let secret_key = SecretKey::from_bytes(field_bytes)
             .map_err(|e| Error::Custom(format!("SecretKey creation error: {:?}", e).into()))?;
 
         // Convert PublicKey to k256::elliptic_curve::PublicKey
