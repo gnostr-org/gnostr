@@ -43,7 +43,7 @@ pub struct RelaySubCommand {
     pub config: Option<PathBuf>,
 
     /// Path to data directory.
-    #[arg(short, long)]
+    #[arg(short, long, default_value = ".gnostr/relay")]
     pub data: Option<PathBuf>,
 
     /// Watch for configuration file changes.
@@ -79,7 +79,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     }
 
     let mut final_config_path: Option<PathBuf> = None;
-    let mut _final_data_path: Option<PathBuf> = None;
+    let mut final_data_path: Option<PathBuf> = None;
 
     // Determine configuration file path
     if let Some(config_arg_path) = args.config {
@@ -100,7 +100,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
                     if let Some(data_config) = gnostr_config.data {
                         if let Some(data_path_from_config) = data_config.path {
                             debug!("Data path from config file: {:?}", data_path_from_config);
-                            _final_data_path = Some(data_path_from_config);
+                            final_data_path = Some(data_path_from_config);
                         }
                     }
                 }
@@ -118,7 +118,14 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
             "Overriding data path with command line argument: {:?}",
             data_arg_path
         );
-        _final_data_path = Some(data_arg_path);
+        final_data_path = Some(data_arg_path);
+    }
+
+    // Set default data path if still None
+    if final_data_path.is_none() {
+        let default_data_path = PathBuf::from(".gnostr/relay");
+        debug!("Using default data path: {:?}", default_data_path);
+        final_data_path = Some(default_data_path);
     }
 
     // Check if gnostr-relay is installed
@@ -169,6 +176,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Running gnostr-relay from: {}", gnostr_relay_path);
 
     let mut cmd = Command::new(gnostr_relay_path);
+
     //if let Some(config_path) = final_config_path {
     //    cmd.arg("--config").arg(config_path);
     //}
