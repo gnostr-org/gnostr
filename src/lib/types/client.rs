@@ -26,8 +26,8 @@ use k256::{
     },
     schnorr::Signature,
 };
-use k256::ecdh; // Import ecdh as a module
-use k256::ecdh::SharedSecret; // Import SharedSecret type
+use secp256k1::ecdh::shared_secret_point; // Use secp256k1's shared_secret_point
+use secp256k1::{XOnlyPublicKey as Secp256k1XOnlyPublicKey, SecretKey as Secp256k1SecretKey}; // Import secp256k1 types for ECDH
 use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
     XChaCha20Poly1305,
@@ -270,12 +270,10 @@ impl Client {
             .map_err(|e| Error::Custom(e.into()))?;
 
         // Convert k256::ecdsa::SigningKey to k256::elliptic_curve::SecretKey
-        let field_bytes = match FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice()) {
-            Ok(fb) => fb,
-            Err(e) => return Err(Error::Custom(format!("FieldBytes conversion error: {:?}", e).into())),
-        };
-
-        let secret_key = SecretKey::from_bytes(field_bytes)
+        let secret_key = SecretKey::from_bytes(
+            FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice())
+                .map_err(|e| Error::Custom(format!("FieldBytes conversion error: {:?}", e).into()))?
+        )
             .map_err(|e| Error::Custom(format!("SecretKey creation error: {:?}", e).into()))?;
 
         // Convert PublicKey to k256::elliptic_curve::PublicKey
