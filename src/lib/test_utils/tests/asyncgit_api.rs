@@ -2,6 +2,7 @@ use std::{
     fs::{self, File},
     io::Write,
     path::Path,
+    collections::HashMap,
 };
 
 use git2::{Repository, Signature};
@@ -13,6 +14,8 @@ use gnostr_asyncgit::sync::{
 };
 use serial_test::serial;
 use tempfile::TempDir;
+use crate::types::{Keys, KeySigner, Event, PreEvent, Tag};
+use crate::legit::command as legit_command;
 
 // Helper function to set up a temporary git repository for testing.
 fn setup_test_repo() -> (TempDir, RepoPath) {
@@ -140,4 +143,37 @@ fn test_complex_git_workflow() {
     // 8. Confirm that the HEAD is pointing to main
     let head = get_head_tuple(&repo_path).unwrap();
     assert_eq!(head.name, "refs/heads/main");
+}
+
+#[tokio::test]
+#[serial]
+async fn test_create_event_with_custom_tags() {
+    let keys = Keys::generate();
+    let key_signer = KeySigner::from_private_key(keys.secret_key().unwrap(), "", 1).unwrap();
+    let content = "This is a test message with custom tags.";
+    let mut custom_tags = HashMap::new();
+    custom_tags.insert("emoji".to_string(), vec![":wave:".to_string()]);
+    custom_tags.insert("status".to_string(), vec!["testing".to_string(), "mocking".to_string()]);
+
+    let (event, pre_event) = legit_command::create_event_with_custom_tags(
+        &key_signer,
+        content,
+        custom_tags.clone(),
+    ).await.unwrap();
+
+    // Assertions for PreEvent
+    assert_eq!(pre_event.pubkey, key_signer.public_key());
+    assert_eq!(pre_event.content, content.to_string());
+    assert_eq!(pre_event.tags.len(), 2);
+    assert_eq!(pre_event.tags[0].to_vec(), vec!["emoji", ":wave:"]);
+    assert_eq!(pre_event.tags[1].to_vec(), vec!["status", "testing"]);
+
+    // Assertions for Event
+    assert_eq!(event.pubkey, key_signer.public_key());
+    assert_eq!(event.content, content.to_string());
+    assert_eq!(event.tags.len(), 2);
+    assert_eq!(event.tags[0].to_vec(), vec!["emoji", ":wave:"]);
+    assert_eq!(event.tags[1].to_vec(), vec!["status", "testing"]);
+    assert!(!event.id.as_hex_string().is_empty());
+    assert!(!event.sig.as_hex_string().is_empty());
 }
