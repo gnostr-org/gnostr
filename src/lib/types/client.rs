@@ -272,7 +272,7 @@ impl Client {
             FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice())
                 .map_err(|e| Error::Custom(format!("FieldBytes conversion error: {:?}", e).into()))?,
         )
-            .map_err(|e| Error::Custom(e.into()))?;
+            .map_err(|e| Error::Custom(format!("SecretKey creation error: {:?}", e).into()))?;
 
         // Convert PublicKey to k256::elliptic_curve::PublicKey
         let recipient_point = k256::PublicKey::from_sec1_bytes(recipient_pubkey.as_bytes())
