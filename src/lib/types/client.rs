@@ -338,6 +338,8 @@ impl Client {
         let message_json =
             serde_json::to_string(&client_message).map_err(|e| Error::Custom(e.into()))?;
 
+        let mut success = false;
+
         // REAL IMPLEMENTATION: Connect to relays and send event
         for relay_url in self.relays.iter() {
             let ws_url = format!("ws://{}", relay_url.as_str());
@@ -353,22 +355,27 @@ impl Client {
                         .await
                     {
                         warn!("Failed to send event to {}: {}", relay_url, e);
-                        continue;
+                        // Do not set success to true, continue to next relay
+                    } else {
+                        info!("Event {} sent to relay {}", event.id, relay_url);
+                        success = true; // Event sent successfully to at least one relay
                     }
-
-                    info!("Event {} sent to relay {}", event.id, relay_url);
 
                     // Keep connection open briefly for response
                     tokio::time::sleep(Duration::from_secs(2)).await;
                 }
                 Err(e) => {
                     warn!("Failed to connect to relay {}: {}", relay_url, e);
-                    continue;
+                    // Do not set success to true, continue to next relay
                 }
             }
         }
 
-        Ok(event.id)
+        if success {
+            Ok(event.id)
+        } else {
+            Err(Error::Custom("Failed to send event to any configured relay.".into()))
+        }
     }
 }
 
