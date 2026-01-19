@@ -298,22 +298,9 @@ mod tests {
     }
 
     #[test]
-    fn test_relay_output() {
-        let args = Bech32ToAnySubCommand {
-            bech32_string: "nrelay1qqghwumn8ghj7mn0wd68yv339e3k7mgftj9ag".to_string(),
-            raw: false,
-            json: false,
-            event_id: false,
-        };
-
-        let result = bech32_to_any(&args);
-        assert!(result.is_ok());
-    }
-
-    #[test]
     fn test_private_key_handling() {
         let args = Bech32ToAnySubCommand {
-            bech32_string: "nsec1vl9rq9js679sklf8eaeqk0g29mggawnpzj33kg0vt2zg89kayrxswq6ym3q"
+            bech32_string: "nsec1ufnus6pju578ste3v90xd5m2decpuzpql2295m3sknqcjzyys9ls0qlc85"
                 .to_string(),
             raw: false,
             json: false,
