@@ -9,6 +9,8 @@ pub mod custom_event;
 pub mod delete_event;
 pub mod delete_profile;
 pub mod dm;
+#[cfg(test)]
+pub mod dm_test;
 pub mod fetch;
 pub mod fetch_by_id;
 pub mod generate_keypair;
