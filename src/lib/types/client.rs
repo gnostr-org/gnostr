@@ -32,8 +32,8 @@ use chacha20poly1305::{
 };
 use hkdf::Hkdf;
 use sha2::Sha256;
-use rand::{RngCore};
-use base64; // Added base64 import
+use rand::RngCore;
+use base64::{engine::general_purpose::{STANDARD, GeneralPurpose}, Engine};
 
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
