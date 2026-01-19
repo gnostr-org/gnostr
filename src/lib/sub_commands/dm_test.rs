@@ -6,12 +6,15 @@ use crate::sub_commands::dm::dm_command;
 use crate::types::client::{Client, Options};
 use crate::types::RelayUrl;
 
+use serial_test::serial;
+
 mod tests {
     use super::*;
     use crate::types::{Keys, PrivateKey}; // Import PrivateKey
     use tokio; // Import tokio for async tests
 
     #[tokio::test]
+    #[serial]
     async fn test_dm_command_success() {
         // Setup real client
         let sender_privkey = PrivateKey::try_from_hex_string(
