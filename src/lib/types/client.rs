@@ -27,7 +27,7 @@ use k256::{
     schnorr::Signature,
 };
 use secp256k1::ecdh::shared_secret_point; // Use secp256k1's shared_secret_point
-use secp256k1::{XOnlyPublicKey as Secp256k1XOnlyPublicKey, SecretKey as Secp256k1SecretKey}; // Import secp256k1 types for ECDH
+use secp256k1::{XOnlyPublicKey as Secp256k1XOnlyPublicKey, SecretKey as Secp256k1SecretKey, Parity}; // Import secp256k1 types for ECDH and Parity
 use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
     XChaCha20Poly1305,
@@ -263,28 +263,31 @@ impl Client {
         recipient_pubkey: PublicKey,
         content: String,
     ) -> Result<Id, Error> {
-        // 1. Get sender's secret key
-        let sender_secret_key = self
+        // 1. Get sender's secret key (secp256k1::SecretKey)
+        let secp256k1_sender_secret_key = self
             .keys
             .secret_key()
-            .map_err(|e| Error::Custom(e.into()))?;
+            .map_err(|e| Error::Custom(e.into()))?
+            .0; // Access the inner secp256k1::SecretKey
 
-        // Convert k256::ecdsa::SigningKey to k256::elliptic_curve::SecretKey
-        let secret_key = SecretKey::from_bytes(
-            FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice())
-                .map_err(|e| Error::Custom(format!("FieldBytes conversion error: {:?}", e).into()))?
-        )
-            .map_err(|e| Error::Custom(format!("SecretKey creation error: {:?}", e).into()))?;
+        // Convert recipient_pubkey (crate::types::PublicKey) to secp256k1::XOnlyPublicKey
+        let secp256k1_recipient_xonly_pubkey = Secp256k1XOnlyPublicKey::from_slice(
+            recipient_pubkey.as_bytes()
+        ).map_err(|e| Error::Custom(format!("Secp256k1XOnlyPublicKey creation error: {:?}", e).into()))?;
 
-        // Convert PublicKey to k256::elliptic_curve::PublicKey
-        let recipient_point = k256::PublicKey::from_sec1_bytes(recipient_pubkey.as_bytes())
-            .map_err(|e| Error::Custom(e.into()))?;
-        
-        // 2. Derive shared secret using ECDH
-        let shared_secret = ecdh::shared_secret(&secret_key, &recipient_point);
+        // Get secp256k1::PublicKey from XOnlyPublicKey (using even parity as per NIP-01 convention for ECDH)
+        let secp256k1_recipient_pubkey = secp256k1::PublicKey::from_x_only_public_key(
+            secp256k1_recipient_xonly_pubkey,
+            secp256k1::Parity::Even,
+        );
+
+        // 2. Derive shared secret point using secp256k1::ecdh::shared_secret_point
+        let ssp = shared_secret_point(&secp256k1_recipient_pubkey, &secp256k1_sender_secret_key);
+        let shared_point_bytes: [u8; 32] = ssp[..32].try_into()
+            .map_err(|_| Error::Custom("Failed to convert shared secret point to 32 bytes".into()))?;
 
         // 3. Derive encryption key using HKDF-SHA256
-        let hkdf = Hkdf::<Sha256>::new(None, shared_secret.as_bytes());
+        let hkdf = Hkdf::<Sha256>::new(None, shared_point_bytes.as_slice());
         let mut encryption_key = [0u8; 32]; // XChaCha20Poly1305 key size
         hkdf.expand(b"nip44", &mut encryption_key)
             .map_err(|e| Error::Custom(format!("HKDF error: {:?}", e).into()))?;
