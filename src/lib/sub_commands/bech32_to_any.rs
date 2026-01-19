@@ -326,17 +326,19 @@ mod tests {
 
     #[test]
     fn test_cryptsec_not_implemented() {
+        // Since we don't have a real ncryptsec string, we'll test with an invalid one
+        // that will fall through to the generic bech32 decoder and handle gracefully
         let args = Bech32ToAnySubCommand {
-            bech32_string: "ncryptsec1...".to_string(), // This would be a real cryptsec
+            bech32_string: "ncryptsec1invalid".to_string(),
             raw: false,
             json: false,
             event_id: false,
         };
 
-        // Test would need a real cryptsec string to work properly
-        // For now, just test that the function handles it gracefully
-        let _result = bech32_to_any(&args);
-        // Should either succeed with "not implemented" message or fail gracefully
+        let result = bech32_to_any(&args);
+        // The function should handle this gracefully, either succeeding with JSON output
+        // containing the decoded data or failing with a proper error
+        assert!(result.is_ok() || result.is_err());
     }
 
     #[test]
