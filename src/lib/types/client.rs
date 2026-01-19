@@ -17,16 +17,7 @@ use crate::types::{
 use tracing::{debug, info, warn};
 
 // NIP-44 related imports
-use k256::{
-    ecdsa::SigningKey,
-                            elliptic_curve::{
-                                sec1::{FromEncodedPoint, ToEncodedPoint},
-                                SecretKey,
-                                FieldBytes,
-                            },
-                            ecdh::{shared_secret, SharedSecret},
-                            schnorr::Signature,
-};
+use k256::{    ecdsa::SigningKey,    elliptic_curve::{        sec1::{FromEncodedPoint, ToEncodedPoint},        SecretKey,        FieldBytes,    },    schnorr::Signature,};use k256::ecdh::{shared_secret, SharedSecret};
 use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
     XChaCha20Poly1305,
@@ -269,7 +260,8 @@ impl Client {
             .map_err(|e| Error::Custom(e.into()))?;
 
         // Convert k256::ecdsa::SigningKey to k256::elliptic_curve::SecretKey
-        let field_bytes = FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice())
+        let field_bytes_result = FieldBytes::from_slice(sender_secret_key.0.secret_bytes().as_slice());
+        let field_bytes = field_bytes_result
             .map_err(|e| Error::Custom(format!("FieldBytes conversion error: {:?}", e).into()))?;
 
         let secret_key = SecretKey::from_bytes(field_bytes)
