@@ -4,19 +4,21 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use mockall::{automock, predicate::*};
 use crate::types::{Client as GnostrClient, Error, Id, Keys, PublicKey};
-use crate::sub_commands::dm::dm_command; // Corrected import path for the function to be tested
-use crate::sub_commands::dm::DmClientTrait; // Import the new trait
+use crate::sub_commands::dm::{dm_command, DmClientTrait}; // Import both dm_command and DmClientTrait
+use mockall::mock;
 
 // Mock the DmClientTrait for testing dm_command
-#[automock]
-#[async_trait]
-pub trait DmClientTrait {
-    async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error>;
-    async fn nip44_direct_message(
-        &self,
-        recipient_pubkey: PublicKey,
-        message: String,
-    ) -> Result<Id, Error>;
+mock! {
+    pub DmClientTrait {}
+    #[async_trait]
+    impl DmClientTrait for DmClientTrait {
+        async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error>;
+        async fn nip44_direct_message(
+            &self,
+            recipient_pubkey: PublicKey,
+            message: String,
+        ) -> Result<Id, Error>;
+    }
 }
 
 mod tests {
