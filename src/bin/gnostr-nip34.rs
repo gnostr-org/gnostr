@@ -1,3 +1,5 @@
+#[allow(unused)]
+#[allow(dead_code)]
 use std::{
     collections::HashSet,
     io,
@@ -20,6 +22,7 @@ use ratatui::{
 };
 use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
+#[allow(dead_code)]
 /// Represents a relevant subset of a Git commit's data.
 #[derive(Debug, Clone)]
 struct Commit {
@@ -30,6 +33,7 @@ struct Commit {
     committer_date: String,
 }
 
+#[allow(dead_code)]
 /// Represents a Git branch's data.
 #[derive(Debug, Clone)]
 struct Branch {
