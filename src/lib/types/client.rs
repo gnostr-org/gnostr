@@ -282,7 +282,7 @@ impl Client {
         let hkdf = Hkdf::<Sha256>::new(None, shared_secret.as_bytes());
         let mut encryption_key = [0u8; 32]; // XChaCha20Poly1305 key size
         hkdf.expand(b"nip44", &mut encryption_key)
-            .map_err(|e| Error::Custom(e.into()))?;
+            .map_err(|e| Error::Custom(format!("HKDF error: {:?}", e).into()))?;
 
         // 4. Encrypt the message using XChaCha20Poly1305
         let cipher = XChaCha20Poly1305::new(&encryption_key.into());
@@ -293,8 +293,8 @@ impl Client {
             .encrypt(&nonce.into(), content.as_bytes())
             .map_err(|e| Error::Custom(e.into()))?;
 
-        let encrypted_message_base64 = base64::encode(encrypted_content);
-        let content_to_send = format!("{}?iv={}", encrypted_message_base64, base64::encode(nonce));
+        let encrypted_message_base64 = STANDARD.encode(encrypted_content);
+        let content_to_send = format!("{}?iv={}", encrypted_message_base64, STANDARD.encode(nonce));
 
         // 5. Create EventKind::EncryptedDirectMessage (kind 4) event
         let direct_message_event = EventBuilder::new(
