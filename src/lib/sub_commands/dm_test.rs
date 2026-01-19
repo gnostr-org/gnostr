@@ -27,7 +27,7 @@ mod tests {
     #[tokio::test]
     async fn test_dm_command_success() {
         // Setup mock client
-        let mut mock_client = MockGnostrClient::new();
+        let mut mock_client = MockDmClientTrait::new();
 
         // Create dummy keys and public key
         let dummy_privkey = PrivateKey::try_from_hex_string(
@@ -36,8 +36,14 @@ mod tests {
         let dummy_keys = Keys::new(dummy_privkey);
         let recipient_pubkey = dummy_keys.public_key(); // Use the public key from dummy_keys
 
-        let expected_event_id = Id::from_hex("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef").unwrap();
+        let expected_event_id = Id::try_from_hex_string("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef").unwrap();
         let message_content = "Hello, world!".to_string();
+
+        // Expect add_relays to be called
+        mock_client
+            .expect_add_relays()
+            .times(1)
+            .returning(|_| Ok(()));
 
         // Expect nip44_direct_message to be called and return success
         mock_client
@@ -56,7 +62,7 @@ mod tests {
     #[tokio::test]
     async fn test_dm_command_failure() {
         // Setup mock client
-        let mut mock_client = MockGnostrClient::new();
+        let mut mock_client = MockDmClientTrait::new();
 
         // Create dummy keys and public key
         let dummy_privkey = PrivateKey::try_from_hex_string(
@@ -68,12 +74,18 @@ mod tests {
         let error_message = "Failed to encrypt message".to_string();
         let message_content = "Secret message".to_string();
 
+        // Expect add_relays to be called
+        mock_client
+            .expect_add_relays()
+            .times(1)
+            .returning(|_| Ok(()));
+
         // Expect nip44_direct_message to be called and return an error
         mock_client
             .expect_nip44_direct_message()
             .with(eq(recipient_pubkey.clone()), eq(message_content.clone()))
             .times(1)
-            .returning(move |_, _| Err(Error::Custom(anyhow!(error_message.clone()))));
+            .returning(move |_, _| Err(Error::Custom(anyhow!(error_message.clone()).into())));
 
         // Call the function under test
         let result = dm_command(&mock_client, recipient_pubkey.clone(), message_content.clone()).await;
