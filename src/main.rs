@@ -485,7 +485,7 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let client = gnostr::types::client::Client::new(
+            let mut client = gnostr::types::client::Client::new(
                 &Keys::new(
                     PrivateKey::try_from_hex_string(
                         &gnostr_cli_args.nsec.ok_or_else(|| anyhow!("nsec not provided"))?,
