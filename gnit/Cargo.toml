@@ -76,6 +76,7 @@ rust-ini = "0.21.1"
 
 sd-notify = "0.4.1"
 serde = { version = "1.0", features = ["derive", "rc"] }
+service-manager = { version = "0.10.0", features = ["clap"] }
 shellwords = "1.1.0"
 simdutf8 = "0.1.5"
 tar = { version = "0.4", default-features = false }
