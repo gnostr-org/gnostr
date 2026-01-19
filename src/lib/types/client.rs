@@ -19,11 +19,12 @@ use tracing::{debug, info, warn};
 // NIP-44 related imports
 use k256::{
     ecdsa::SigningKey,
-    elliptic_curve::{
-        ecdh::{self, SharedSecret},
-        sec1::{FromEncodedPoint, ToEncodedPoint},
-        SecretKey,
-    },
+            elliptic_curve::{
+                ecdh::{self, SharedSecret},
+                sec1::{FromEncodedPoint, ToEncodedPoint},
+                SecretKey,
+                FieldBytes,
+            },
     schnorr::Signature,
 };
 use chacha20poly1305::{
