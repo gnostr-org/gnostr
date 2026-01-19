@@ -302,7 +302,7 @@ impl Client {
             content_to_send,
             vec![Tag::new_pubkey(recipient_pubkey, None, None)],
         )
-        .to_event(sender_secret_key)
+        .to_event(&sender_secret_key)
         .map_err(|e| Error::Custom(e.into()))?;
 
         // 6. Send the event
