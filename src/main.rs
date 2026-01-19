@@ -486,8 +486,8 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let client = gnostr::client::Client::new(
-                &gnostr::keys::Keys::new(gnostr_cli_args.nsec.clone()),
+            let client = gnostr::types::client::Client::new(
+                &Keys::new(gnostr_cli_args.nsec.clone()),
                 gnostr::types::client::Options::new(),
             );
             // Try to parse the recipient string as a PublicKey
