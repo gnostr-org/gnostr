@@ -335,7 +335,7 @@ mod tests {
 
         // Test would need a real cryptsec string to work properly
         // For now, just test that the function handles it gracefully
-        let result = bech32_to_any(&args);
+        let _result = bech32_to_any(&args);
         // Should either succeed with "not implemented" message or fail gracefully
     }
 
