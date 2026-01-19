@@ -165,15 +165,15 @@ async fn test_create_event_with_custom_tags() {
     assert_eq!(pre_event.pubkey, key_signer.public_key());
     assert_eq!(pre_event.content, content.to_string());
     assert_eq!(pre_event.tags.len(), 2);
-    assert_eq!(pre_event.tags[0].0.to_vec(), vec!["emoji", ":wave:"]);
-    assert_eq!(pre_event.tags[1].0.to_vec(), vec!["status", "testing"]);
+    assert!(pre_event.tags.contains(&Tag::new(&["emoji", ":wave:"])));
+    assert!(pre_event.tags.contains(&Tag::new(&["status", "testing"])));
 
     // Assertions for Event
     assert_eq!(event.pubkey, key_signer.public_key());
     assert_eq!(event.content, content.to_string());
     assert_eq!(event.tags.len(), 2);
-    assert_eq!(event.tags[0].0.to_vec(), vec!["emoji", ":wave:"]);
-    assert_eq!(event.tags[1].0.to_vec(), vec!["status", "testing"]);
+    assert!(event.tags.contains(&Tag::new(&["emoji", ":wave:"])));
+    assert!(event.tags.contains(&Tag::new(&["status", "testing"])));
     assert!(!event.id.as_hex_string().is_empty());
     assert!(!event.sig.as_hex_string().is_empty());
 }
