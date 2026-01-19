@@ -15,7 +15,6 @@ use gnostr_gnit::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
     theme::Theme,
 };
-use service_manager::*;
 use std::sync::OnceLock;
 use tokio::net::TcpListener;
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
@@ -78,56 +77,58 @@ pub struct Args {
 }
 
 async fn run_as_service() -> Result<(), anyhow::Error> {
-    info!("Starting gnostr-gnit in service mode...");
+    info!("Starting gnostr-gnit in daemon mode...");
 
     // Get current executable path
     let current_exe = std::env::current_exe().context("Failed to get current executable path")?;
 
-    // Build service arguments (remove --detach flag)
+    // Build daemon command arguments (remove --detach flag)
+    let daemon_args = build_daemon_args();
+
+    // Set environment variables for minimal logging
+    let mut cmd = tokio::process::Command::new(&current_exe);
+    cmd.args(&daemon_args);
+    cmd.env("RUST_LOG", "warn");
+    cmd.env("GNOSTR_GNIT_MODE", "daemon");
+
+    // Detach from terminal
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        cmd.stdin(std::process::Stdio::null());
+        cmd.stdout(std::process::Stdio::null());
+        cmd.stderr(std::process::Stdio::null());
+    }
+
+    // Spawn daemon process
+    cmd.spawn().context("Failed to spawn daemon process")?;
+
+    println!("gnostr-gnit started in background");
+    println!("Process ID: {}", std::process::id());
+
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn build_daemon_args() -> Vec<String> {
+    let mut daemon_args = Vec::new();
+
+    // Pass through essential arguments (remove --detach)
     let args: Vec<String> = std::env::args()
         .skip(1)
         .filter(|arg| arg != "--detach")
         .collect();
-    let service_args: Vec<std::ffi::OsString> = args.into_iter().map(|arg| arg.into()).collect();
 
-    // Use service-manager to handle daemonization
-    let manager =
-        <dyn ServiceManager>::native().context("Failed to detect service management platform")?;
+    for arg in args {
+        daemon_args.push(arg);
+    }
 
-    // Create service label
-    let label: ServiceLabel = "org.gnostr.gnostr-gnit".parse().unwrap();
+    // Force warn-level logging for daemon mode to reduce noise
+    daemon_args.push("--debug".to_string());
+    daemon_args.push("false".to_string());
+    daemon_args.push("--info".to_string());
+    daemon_args.push("--false".to_string());
 
-    // Install the service
-    manager
-        .install(ServiceInstallCtx {
-            label: label.clone(),
-            program: current_exe.clone(),
-            args: service_args,
-            contents: None,
-            username: None,
-            working_directory: None,
-            environment: Some(vec![
-                ("RUST_LOG".to_string(), "warn".to_string()),
-                ("GNOSTR_GNIT_MODE".to_string(), "service".to_string()),
-            ]),
-            autostart: true,
-            restart_policy: RestartPolicy::OnFailure { delay_secs: None },
-        })
-        .context("Failed to install service")?;
-
-    // Start the service
-    manager
-        .start(ServiceStartCtx {
-            label: label.clone(),
-        })
-        .context("Failed to start service")?;
-
-    println!("gnostr-gnit service installed and started");
-
-    println!("Service installed and started successfully");
-    println!("Check your system's service manager for status and control");
-
-    Ok(())
+    daemon_args
 }
 
 #[tokio::main]
