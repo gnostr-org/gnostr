@@ -16,6 +16,26 @@ use crate::types::{
 };
 use tracing::{debug, info, warn};
 
+// NIP-44 related imports
+use k256::{
+    ecdsa::SigningKey,
+    elliptic_curve::{
+        ecdh::shared_secret,
+        sec1::{FromEncodedPoint, ToEncodedPoint},
+        SecretKey,
+    },
+    schnorr::Signature,
+};
+use chacha20poly1305::{
+    aead::{Aead, KeyInit, OsRng},
+    XChaCha20Poly1305,
+};
+use hkdf::Hkdf;
+use sha2::Sha256;
+use rand::{RngCore};
+use base64; // Added base64 import
+
+
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum FilterOptions {
     ExitOnEOSE,
@@ -234,6 +254,59 @@ impl Client {
         let contact_event = self.send_event(contact_event).await?;
         debug!("contact_event={}", contact_event);
         Ok(())
+    }
+
+    pub async fn nip44_direct_message(
+        &self,
+        recipient_pubkey: PublicKey,
+        content: String,
+    ) -> Result<Id, Error> {
+        // 1. Get sender's secret key
+        let sender_secret_key = self
+            .keys
+            .secret_key()
+            .map_err(|e| Error::Custom(e.into()))?;
+
+        // Convert k256::ecdsa::SigningKey to k256::elliptic_curve::SecretKey
+        let secret_key = SecretKey::from_be_bytes(&sender_secret_key.to_bytes())
+            .map_err(|e| Error::Custom(e.into()))?;
+
+        // Convert PublicKey to k256::elliptic_curve::PublicKey
+        let recipient_point = k256::PublicKey::from_sec1_bytes(recipient_pubkey.as_bytes())
+            .map_err(|e| Error::Custom(e.into()))?;
+        
+        // 2. Derive shared secret using ECDH
+        let shared_secret = shared_secret(&secret_key, &recipient_point);
+
+        // 3. Derive encryption key using HKDF-SHA256
+        let hkdf = Hkdf::<Sha256>::new(None, shared_secret.as_bytes());
+        let mut encryption_key = [0u8; 32]; // XChaCha20Poly1305 key size
+        hkdf.expand(b"nip44", &mut encryption_key)
+            .map_err(|e| Error::Custom(e.into()))?;
+
+        // 4. Encrypt the message using XChaCha20Poly1305
+        let cipher = XChaCha20Poly1305::new(&encryption_key.into());
+        let mut nonce = [0u8; 24]; // XChaCha20Poly1305 nonce size
+        OsRng.fill_bytes(&mut nonce);
+
+        let encrypted_content = cipher
+            .encrypt(&nonce.into(), content.as_bytes())
+            .map_err(|e| Error::Custom(e.into()))?;
+
+        let encrypted_message_base64 = base64::encode(encrypted_content);
+        let content_to_send = format!("{}?iv={}", encrypted_message_base64, base64::encode(nonce));
+
+        // 5. Create EventKind::EncryptedDirectMessage (kind 4) event
+        let direct_message_event = EventBuilder::new(
+            EventKind::EncryptedDirectMessage,
+            content_to_send,
+            vec![Tag::new_pubkey(recipient_pubkey, None, None)],
+        )
+        .to_event(sender_secret_key)
+        .map_err(|e| Error::Custom(e.into()))?;
+
+        // 6. Send the event
+        self.send_event(direct_message_event).await
     }
 
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
