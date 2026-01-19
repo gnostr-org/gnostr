@@ -14,7 +14,7 @@ use gnostr_asyncgit::sync::{
 };
 use serial_test::serial;
 use tempfile::TempDir;
-use crate::types::{Keys, KeySigner, Event, PreEvent, Tag};
+use crate::types::{Keys, KeySigner, Event, PreEvent, Tag, Signer};
 use crate::legit::command as legit_command;
 
 // Helper function to set up a temporary git repository for testing.
