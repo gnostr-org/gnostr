@@ -143,7 +143,7 @@ cbc = { version = "0.1", features = [ "std" ] }
 chacha20 = "0.9"
 chacha20poly1305 = "0.10.1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
-clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+clap = { version = "4.5.34", features = ["derive", "env", "cargo"] } ## align with asyncgit version
 clean-path = "0.2.1"
 clipboard = "0.5.0"
 
