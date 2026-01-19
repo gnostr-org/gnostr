@@ -334,6 +334,20 @@ pub enum GnostrCommands {
     Nip34(crate::sub_commands::nip34::Nip34Command),
     /// XOR utility subcommand
     Xor(crate::sub_commands::xor::XorArgs),
+    /// Send a NIP-44 direct message
+    Dm(crate::sub_commands::dm::DmArgs),
+}
+
+/// DmArgs
+#[derive(Parser, Debug, Clone)]
+#[command(author, version, about = "Send a NIP-44 direct message", long_about = None)]
+pub struct DmArgs {
+    /// Public key of the recipient (hex or bech32)
+    #[arg(short, long, help = "Recipient's public key (hex or bech32)")]
+    pub recipient: String,
+    /// Message content
+    #[arg(short, long, help = "The message to send")]
+    pub message: String,
 }
 
 /// get_app_cache_path

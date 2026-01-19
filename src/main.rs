@@ -4,8 +4,9 @@ use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
-    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
+    cli::{get_app_cache_path, GnostrCli, GnostrCommands, DmArgs},
     sub_commands, weeble, wobble,
+    types::PublicKey,
 };
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
@@ -481,6 +482,31 @@ async fn main() -> anyhow::Result<()> {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::bech32_to_any::bech32_to_any(sub_command_args)
                 .map_err(|e| anyhow!("Error in bech32_to_any subcommand: {}", e))
+        }
+        Some(GnostrCommands::Dm(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            let client = gnostr::client::Client::new(
+                &gnostr::keys::Keys::new(gnostr_cli_args.nsec.clone()),
+                gnostr::types::client::Options::new(),
+            );
+            // Try to parse the recipient string as a PublicKey
+            let recipient_pubkey = PublicKey::try_from_bech32_string(
+                &sub_command_args.recipient
+            )
+            .or_else(|_| PublicKey::try_from_hex_string(
+                &sub_command_args.recipient
+            ))
+            .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
+
+            client.add_relays(gnostr_cli_args.relays.clone()).await?;
+
+            sub_commands::dm::dm_command(
+                &client,
+                recipient_pubkey,
+                sub_command_args.message.clone(),
+            )
+            .await
+            .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
         }
         Some(GnostrCommands::PrivkeyToBech32(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
