@@ -1,0 +1,304 @@
+use std::{future::IntoFuture, net::SocketAddr, path::PathBuf, sync::Arc};
+
+use anyhow::Context;
+use axum::{
+    body::Body,
+    http::{self, HeaderValue},
+    response::Response,
+    routing::get,
+    Extension, Router,
+};
+use clap::Parser;
+use const_format::formatcp;
+use gnostr_gnit::{build_asset_hash, open_database, run_indexer, Config, RefreshInterval};
+use gnostr_gnit::{
+    git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
+    theme::Theme,
+};
+use service_manager::*;
+use std::sync::OnceLock;
+use tokio::net::TcpListener;
+use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
+use tower_layer::layer_fn;
+use tracing::info;
+use tracing_subscriber::{
+    fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
+};
+use xxhash_rust::const_xxh3;
+
+const GLOBAL_CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/css/style.css"));
+const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
+    .const_format(&const_xxh3::xxh3_128(GLOBAL_CSS).to_be_bytes())
+    .as_str();
+
+static HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
+static DARK_HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about)]
+pub struct Args {
+    /// Path to a directory where the RocksDB database should be stored.
+    ///
+    /// This directory will be created if it doesn't exist. The RocksDB database is
+    /// quick to generate, so it can be pointed to temporary storage.
+    #[clap(short, long, value_parser, default_value = ".gnostr/web")]
+    db_store: PathBuf,
+    /// The IP address to bind to (e.g., 127.0.0.1, 0.0.0.0).
+    #[clap(long, value_parser, default_value = "127.0.0.1")]
+    bind_address: std::net::IpAddr,
+    /// The socket port to bind to (e.g., 3333).
+    #[arg(
+        short,
+        long,
+        value_parser,
+        default_value = "3333",
+        env = "GNOSTR_GNIT_BIND_PORT"
+    )]
+    bind_port: u16,
+    /// The path in which your bare Git repositories reside.
+    ///
+    /// This directory will be scanned recursively for Git repositories.
+    #[clap(short, long, value_parser, default_value = ".")]
+    scan_path: PathBuf,
+    /// Configures the metadata refresh interval for Git repositories (e.g., "never" or "60s").
+    #[arg(long, default_value_t = RefreshInterval::Duration(std::time::Duration::from_secs(30)), env = "GNOSTR_GNIT_REFRESH_INTERVAL")]
+    refresh_interval: RefreshInterval,
+    /// Configures the request timeout for incoming HTTP requests (e.g., "10s").
+    #[arg(long, default_value_t = humantime::Duration::from(std::time::Duration::from_secs(10)), env = "GNOSTR_GNIT_REQUEST_TIMEOUT")]
+    request_timeout: humantime::Duration,
+    /// debug logging
+    #[clap(long, value_parser, default_value = "false")]
+    debug: bool,
+    /// info logging
+    #[clap(long, value_parser, default_value = "false")]
+    info: bool,
+    /// Run the process in the background (daemonize)
+    #[clap(long, value_parser, default_value = "false")]
+    detach: bool,
+}
+
+async fn run_as_service() -> Result<(), anyhow::Error> {
+    info!("Starting gnostr-gnit in service mode...");
+
+    // Get current executable path
+    let current_exe = std::env::current_exe().context("Failed to get current executable path")?;
+
+    // Build service arguments (remove --detach flag)
+    let args: Vec<String> = std::env::args()
+        .skip(1)
+        .filter(|arg| arg != "--detach")
+        .collect();
+    let service_args: Vec<std::ffi::OsString> = args.into_iter().map(|arg| arg.into()).collect();
+
+    // Use service-manager to handle daemonization
+    let manager =
+        <dyn ServiceManager>::native().context("Failed to detect service management platform")?;
+
+    // Create service label
+    let label: ServiceLabel = "org.gnostr.gnostr-gnit".parse().unwrap();
+
+    // Install the service
+    manager
+        .install(ServiceInstallCtx {
+            label: label.clone(),
+            program: current_exe.clone(),
+            args: service_args,
+            contents: None,
+            username: None,
+            working_directory: None,
+            environment: Some(vec![
+                ("RUST_LOG".to_string(), "warn".to_string()),
+                ("GNOSTR_GNIT_MODE".to_string(), "service".to_string()),
+            ]),
+            autostart: true,
+            restart_policy: RestartPolicy::OnFailure { delay_secs: None },
+        })
+        .context("Failed to install service")?;
+
+    // Start the service
+    manager
+        .start(ServiceStartCtx {
+            label: label.clone(),
+        })
+        .context("Failed to start service")?;
+
+    println!("gnostr-gnit service installed and started");
+
+    println!("Service installed and started successfully");
+    println!("Check your system's service manager for status and control");
+
+    Ok(())
+}
+
+#[tokio::main]
+#[allow(clippy::too_many_lines)]
+async fn main() -> Result<(), anyhow::Error> {
+    let args: Args = Args::parse();
+
+    // Handle service mode before any other setup
+    if args.detach {
+        #[cfg(unix)]
+        {
+            return run_as_service().await;
+        }
+
+        #[cfg(not(unix))]
+        {
+            return Err(anyhow!(
+                "Detach functionality is currently only supported on Unix-like systems"
+            ));
+        }
+    }
+
+    // Set logging level based on args, only if RUST_LOG is not already set
+    if std::env::var_os("RUST_LOG").is_none() {
+        if args.debug {
+            std::env::set_var("RUST_LOG", "debug");
+        } else if args.info {
+            std::env::set_var("RUST_LOG", "info");
+        } else {
+            std::env::set_var("RUST_LOG", "warn");
+        }
+    }
+
+    let logger_layer = tracing_subscriber::fmt::layer().with_span_events(FmtSpan::CLOSE);
+    let env_filter = EnvFilter::from_default_env();
+
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(logger_layer)
+        .init();
+
+    let config = Config {
+        db_store: args.db_store.clone(),
+        scan_path: args.scan_path.clone(),
+        refresh_interval: args.refresh_interval,
+        bind_address: args.bind_address,
+        bind_port: args.bind_port,
+        request_timeout: args.request_timeout.into(),
+        debug: args.debug,
+        info: args.info,
+        detach: args.detach,
+    };
+
+    let db = open_database(&config)?;
+
+    let scan_path = args
+        .scan_path
+        .canonicalize()
+        .context("Could not canonicalize scan path")?;
+
+    let indexer_wakeup_task = run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
+
+    let css = {
+        let theme = toml::from_str::<Theme>(include_str!("../../themes/solarized_light.toml"))
+            .unwrap()
+            .build_css();
+        let css = Box::leak(
+            format!(r#"@media (prefers-color-scheme: light){{{theme}}}"#)
+                .into_boxed_str()
+                .into_boxed_bytes(),
+        );
+        HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
+        css
+    };
+
+    let dark_css = {
+        let theme = toml::from_str::<Theme>(include_str!("../../themes/solarized_dark.toml"))
+            .unwrap()
+            .build_css();
+        let css = Box::leak(
+            format!(r#"@media (prefers-color-scheme: dark){{{theme}}}"#)
+                .into_boxed_str()
+                .into_boxed_bytes(),
+        );
+        DARK_HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
+        css
+    };
+
+    let static_favicon = |content: &'static [u8]| {
+        move || async move {
+            let mut resp = Response::new(Body::from(content));
+            resp.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                HeaderValue::from_static("image/x-icon"),
+            );
+            resp
+        }
+    };
+
+    let static_css = |content: &'static [u8]| {
+        move || async move {
+            let mut resp = Response::new(Body::from(content));
+            resp.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                HeaderValue::from_static("text/css"),
+            );
+            resp
+        }
+    };
+
+    let static_svg = |content: &'static [u8]| {
+        move || async move {
+            let mut resp = Response::new(Body::from(content));
+            resp.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                HeaderValue::from_static("image/svg+xml"),
+            );
+            resp
+        }
+    };
+
+    info!("Priming highlighters...");
+    prime_highlighters();
+    info!("Server starting up...");
+
+    let app = Router::new()
+        .route("/", get(methods::index::handle))
+        .route(
+            formatcp!("/style-{}.css", GLOBAL_CSS_HASH),
+            get(static_css(GLOBAL_CSS)),
+        )
+        .route(
+            &format!("/highlight-{}.css", HIGHLIGHT_CSS_HASH.get().unwrap()),
+            get(static_css(css)),
+        )
+        .route(
+            &format!(
+                "/highlight-dark-{}.css",
+                DARK_HIGHLIGHT_CSS_HASH.get().unwrap()
+            ),
+            get(static_css(dark_css)),
+        )
+        .route(
+            "/favicon.ico",
+            get(static_favicon(include_bytes!("../../statics/favicon.ico"))),
+        )
+        .route(
+            "/gnostr.svg",
+            get(static_svg(include_bytes!("../../statics/gnostr.svg"))),
+        )
+        .fallback(methods::repo::service)
+        .layer(TimeoutLayer::new(args.request_timeout.into()))
+        .layer(layer_fn(LoggingMiddleware))
+        .layer(Extension(Arc::new(Git::new())))
+        .layer(Extension(db))
+        .layer(Extension(Arc::new(scan_path)))
+        .layer(CorsLayer::new());
+
+    println!("{}", &args.bind_port);
+    let socket = SocketAddr::new(args.bind_address, args.bind_port);
+
+    let listener = TcpListener::bind(&socket).await?;
+    let app = app.into_make_service_with_connect_info::<SocketAddr>();
+    let server = axum::serve(listener, app).into_future();
+
+    tokio::select! {
+        res = server => res.context("failed to run server"),
+        res = indexer_wakeup_task => res.context("failed to run indexer"),
+        _ = tokio::signal::ctrl_c() => {
+            info!("Received ctrl-c, shutting down");
+            Ok(())
+        }
+    }
+}

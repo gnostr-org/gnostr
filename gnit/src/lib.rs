@@ -66,6 +66,8 @@ pub struct Config {
     pub debug: bool,
     /// Enable info logging
     pub info: bool,
+    /// Run the process in the background (daemonize)
+    pub detach: bool,
 }
 
 impl Default for Config {
@@ -79,6 +81,7 @@ impl Default for Config {
             request_timeout: Duration::from_secs(10),
             debug: false,
             info: false,
+            detach: false,
         }
     }
 }
