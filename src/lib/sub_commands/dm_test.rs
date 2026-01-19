@@ -4,20 +4,26 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use mockall::{automock, predicate::*};
 use crate::types::{Client as GnostrClient, Error, Id, Keys, PublicKey};
-use crate::sub_commands::dm::{dm_command, DmClientTrait}; // Import both dm_command and DmClientTrait
-use mockall::mock;
+use crate::sub_commands::dm::dm_command;
+use crate::sub_commands::dm::DmClientTrait;
+use async_trait::async_trait;
+use mockall::{mock, predicate::*};
 
-// Mock the DmClientTrait for testing dm_command
 mock! {
     pub DmClientTrait {}
+
     #[async_trait]
     impl DmClientTrait for DmClientTrait {
-        async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error>;
+        async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error> {
+            todo!()
+        }
         async fn nip44_direct_message(
             &self,
             recipient_pubkey: PublicKey,
             message: String,
-        ) -> Result<Id, Error>;
+        ) -> Result<Id, Error> {
+            todo!()
+        }
     }
 }
 
@@ -40,12 +46,6 @@ mod tests {
 
         let expected_event_id = Id::try_from_hex_string("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef").unwrap();
         let message_content = "Hello, world!".to_string();
-
-        // Expect add_relays to be called
-        mock_client
-            .expect_add_relays()
-            .times(1)
-            .returning(|_| Ok(()));
 
         // Expect nip44_direct_message to be called and return success
         mock_client
@@ -75,12 +75,6 @@ mod tests {
 
         let error_message = "Failed to encrypt message".to_string();
         let message_content = "Secret message".to_string();
-
-        // Expect add_relays to be called
-        mock_client
-            .expect_add_relays()
-            .times(1)
-            .returning(|_| Ok(()));
 
         // Expect nip44_direct_message to be called and return an error
         mock_client
