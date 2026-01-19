@@ -17,7 +17,17 @@ use crate::types::{
 use tracing::{debug, info, warn};
 
 // NIP-44 related imports
-use k256::{    ecdsa::SigningKey,    elliptic_curve::{        sec1::{FromEncodedPoint, ToEncodedPoint},        SecretKey,        FieldBytes,    },    schnorr::Signature,};use k256::ecdh::{shared_secret, SharedSecret};
+use k256::{
+    ecdsa::SigningKey,
+    elliptic_curve::{
+        sec1::{FromEncodedPoint, ToEncodedPoint},
+        SecretKey,
+        FieldBytes,
+    },
+    schnorr::Signature,
+};
+use k256::ecdh; // Import ecdh as a module
+use k256::ecdh::SharedSecret; // Import SharedSecret type
 use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
     XChaCha20Poly1305,
