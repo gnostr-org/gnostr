@@ -4,9 +4,10 @@ use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
-    cli::{get_app_cache_path, GnostrCli, GnostrCommands, DmArgs},
+    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands, weeble, wobble,
-    types::PublicKey,
+    types::{PublicKey, Keys},
+    client::Connect,
 };
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
