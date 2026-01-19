@@ -25,7 +25,7 @@ fn setup_test_repo() -> (TempDir, RepoPath) {
     config.set_str("user.name", "Test User").unwrap();
     config.set_str("user.email", "test@example.com").unwrap();
 
-    // Create an initial commit
+    // Create an initial commit on the `main` branch
     let signature = Signature::now("Test User", "test@example.com").unwrap();
     let tree_id = {
         let mut index = repo.index().unwrap();
@@ -35,13 +35,12 @@ fn setup_test_repo() -> (TempDir, RepoPath) {
             .write_all(b"Initial commit")
             .unwrap();
         index.add_path(Path::new("README.md")).unwrap();
-        let oid = index.write_tree().unwrap();
-        repo.find_tree(oid).unwrap().id()
+        index.write_tree().unwrap()
     };
     let tree = repo.find_tree(tree_id).unwrap();
-    let _commit_id = repo
+    let commit = repo
         .commit(
-            Some("HEAD"),
+            None,
             &signature,
             &signature,
             "Initial commit",
@@ -50,14 +49,10 @@ fn setup_test_repo() -> (TempDir, RepoPath) {
         )
         .unwrap();
 
-    // Set the initial branch to main
-    let head = repo.head().unwrap();
-    repo.branch(
-        "main",
-        &repo.find_commit(head.target().unwrap()).unwrap(),
-        true,
-    )
-    .unwrap();
+    // Create the 'main' branch pointing to this commit
+    let _branch = repo.branch("main", &repo.find_commit(commit).unwrap(), false).unwrap();
+
+    // Set HEAD to 'main'
     repo.set_head("refs/heads/main").unwrap();
 
     (tmp_dir, RepoPath::Path(repo_path))
@@ -71,6 +66,19 @@ fn test_get_head_commit() {
     let head_id = get_head(&repo_path).unwrap();
     let commit_details = get_commit_details(&repo_path, head_id).unwrap();
 
+    assert_eq!(commit_details.message.unwrap().subject, "Initial commit");
+}
+
+#[test]
+#[serial]
+fn test_get_head_commit_details() {
+    let (_tmp_dir, repo_path) = setup_test_repo();
+
+    let head = get_head_tuple(&repo_path).unwrap();
+    assert_eq!(head.name, "refs/heads/main");
+    assert_eq!(head.id, get_head(&repo_path).unwrap());
+
+    let commit_details = get_commit_details(&repo_path, head.id).unwrap();
     assert_eq!(commit_details.message.unwrap().subject, "Initial commit");
 }
 
@@ -95,16 +103,13 @@ fn test_complex_git_workflow() {
     assert_eq!(status[0].path, "test.txt");
     assert_eq!(status[0].status, StatusItemType::New);
 
-    //INSERT gnostr legit commit creation here
-    let mut cmd = std::process::Command::new("gnostr");
-    cmd.arg("legit")
-        .arg("-m")
-        .arg("feat: add test file")
-        .env("GIT_DIR", repo_path.gitpath().join(".git"))
-        .env("GIT_WORK_TREE", repo_path.gitpath())
-        .current_dir(repo_path.gitpath());
-    let output = cmd.output().unwrap();
-    assert!(output.status.success());
+    // 3. Commit the staged file
+    sync::commit(&repo_path, "feat: add test file").unwrap();
+
+    // Verify the commit was created
+    let head_id_after_commit = get_head(&repo_path).unwrap();
+    let commit_details_after_commit = get_commit_details(&repo_path, head_id_after_commit).unwrap();
+    assert_eq!(commit_details_after_commit.message.unwrap().subject, "feat: add test file");
 
     // we will fix stashing and popping later
 
