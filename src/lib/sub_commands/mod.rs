@@ -8,6 +8,7 @@ pub mod create_public_channel;
 pub mod custom_event;
 pub mod delete_event;
 pub mod delete_profile;
+pub mod dm;
 pub mod fetch;
 pub mod fetch_by_id;
 pub mod generate_keypair;
