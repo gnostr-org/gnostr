@@ -1,9 +1,35 @@
 use anyhow::Result;
-use crate::types::{Client, Error, PublicKey};
+use crate::types::{Client, Error, PublicKey, Id, Keys};
 use tracing::{info, error};
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait DmClientTrait {
+    async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error>;
+    async fn nip44_direct_message(
+        &self,
+        recipient_pubkey: PublicKey,
+        message: String,
+    ) -> Result<Id, Error>;
+}
+
+#[async_trait]
+impl DmClientTrait for Client {
+    async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error> {
+        self.add_relays(relays).await
+    }
+
+    async fn nip44_direct_message(
+        &self,
+        recipient_pubkey: PublicKey,
+        message: String,
+    ) -> Result<Id, Error> {
+        self.nip44_direct_message(recipient_pubkey, message).await
+    }
+}
 
 pub async fn dm_command(
-    client: &Client,
+    client: &impl DmClientTrait,
     recipient_pubkey: PublicKey,
     message: String,
 ) -> Result<(), Error> {
