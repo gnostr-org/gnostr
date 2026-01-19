@@ -17,26 +17,29 @@ use crate::types::{
 use tracing::{debug, info, warn};
 
 // NIP-44 related imports
-use k256::{
-    ecdsa::SigningKey,
-    elliptic_curve::{
-        sec1::{FromEncodedPoint, ToEncodedPoint},
-        SecretKey,
-        FieldBytes,
-    },
-    schnorr::Signature,
+use base64::{
+    engine::general_purpose::{GeneralPurpose, STANDARD},
+    Engine,
 };
-use secp256k1::ecdh::shared_secret_point; // Use secp256k1's shared_secret_point
-use secp256k1::{XOnlyPublicKey as Secp256k1XOnlyPublicKey, SecretKey as Secp256k1SecretKey, Parity}; // Import secp256k1 types for ECDH and Parity
 use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
     XChaCha20Poly1305,
 };
 use hkdf::Hkdf;
-use sha2::Sha256;
+use k256::{
+    ecdsa::SigningKey,
+    elliptic_curve::{
+        sec1::{FromEncodedPoint, ToEncodedPoint},
+        FieldBytes, SecretKey,
+    },
+    schnorr::Signature,
+};
 use rand::RngCore;
-use base64::{engine::general_purpose::{STANDARD, GeneralPurpose}, Engine};
-
+use secp256k1::ecdh::shared_secret_point; // Use secp256k1's shared_secret_point
+use secp256k1::{
+    Parity, SecretKey as Secp256k1SecretKey, XOnlyPublicKey as Secp256k1XOnlyPublicKey,
+}; // Import secp256k1 types for ECDH and Parity
+use sha2::Sha256;
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum FilterOptions {
@@ -271,9 +274,10 @@ impl Client {
             .0; // Access the inner secp256k1::SecretKey
 
         // Convert recipient_pubkey (crate::types::PublicKey) to secp256k1::XOnlyPublicKey
-        let secp256k1_recipient_xonly_pubkey = Secp256k1XOnlyPublicKey::from_slice(
-            recipient_pubkey.as_bytes()
-        ).map_err(|e| Error::Custom(format!("Secp256k1XOnlyPublicKey creation error: {:?}", e).into()))?;
+        let secp256k1_recipient_xonly_pubkey =
+            Secp256k1XOnlyPublicKey::from_slice(recipient_pubkey.as_bytes()).map_err(|e| {
+                Error::Custom(format!("Secp256k1XOnlyPublicKey creation error: {:?}", e).into())
+            })?;
 
         // Get secp256k1::PublicKey from XOnlyPublicKey (using even parity as per NIP-01 convention for ECDH)
         let secp256k1_recipient_pubkey = secp256k1::PublicKey::from_x_only_public_key(
@@ -283,8 +287,9 @@ impl Client {
 
         // 2. Derive shared secret point using secp256k1::ecdh::shared_secret_point
         let ssp = shared_secret_point(&secp256k1_recipient_pubkey, &secp256k1_sender_secret_key);
-        let shared_point_bytes: [u8; 32] = ssp[..32].try_into()
-            .map_err(|_| Error::Custom("Failed to convert shared secret point to 32 bytes".into()))?;
+        let shared_point_bytes: [u8; 32] = ssp[..32].try_into().map_err(|_| {
+            Error::Custom("Failed to convert shared secret point to 32 bytes".into())
+        })?;
 
         // 3. Derive encryption key using HKDF-SHA256
         let hkdf = Hkdf::<Sha256>::new(None, shared_point_bytes.as_slice());
@@ -374,7 +379,9 @@ impl Client {
         if success {
             Ok(event.id)
         } else {
-            Err(Error::Custom("Failed to send event to any configured relay.".into()))
+            Err(Error::Custom(
+                "Failed to send event to any configured relay.".into(),
+            ))
         }
     }
 }
