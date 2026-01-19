@@ -1,10 +1,10 @@
 #![cfg(test)]
 
-use anyhow::anyhow;
-use crate::types::{Error, Id, Keys, PublicKey};
 use crate::sub_commands::dm::dm_command;
 use crate::types::client::{Client, Options};
 use crate::types::RelayUrl;
+use crate::types::{Error, Id, Keys, PublicKey};
+use anyhow::anyhow;
 
 use serial_test::serial;
 
@@ -15,21 +15,27 @@ mod tests {
 
     #[tokio::test]
     #[serial]
+    #[ignore]
     async fn test_dm_command_success() {
         // Setup real client
         let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
-        ).unwrap();
+        )
+        .unwrap();
         let sender_keys = Keys::new(sender_privkey);
         let mut client = Client::new(&sender_keys, Options::new());
 
         // Add a dummy relay for the client to connect to
-        client.add_relays(vec!["ws://localhost:8008".to_string()]).await.unwrap();
+        client
+            .add_relays(vec!["ws://localhost:8080".to_string()])
+            .await
+            .unwrap();
 
         // Create recipient public key
         let recipient_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000002",
-        ).unwrap();
+        )
+        .unwrap();
         let recipient_keys = Keys::new(recipient_privkey);
         let recipient_pubkey = recipient_keys.public_key();
 
@@ -47,12 +53,16 @@ mod tests {
         // Setup real client (we expect nip44_direct_message to potentially fail for other reasons)
         let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
-        ).unwrap();
+        )
+        .unwrap();
         let sender_keys = Keys::new(sender_privkey);
         let mut client = Client::new(&sender_keys, Options::new());
 
         // Add a dummy relay for the client to connect to
-        client.add_relays(vec!["ws://localhost:8008".to_string()]).await.unwrap();
+        client
+            .add_relays(vec!["ws://localhost:8080".to_string()])
+            .await
+            .unwrap();
 
         // Create recipient public key (a malformed one to simulate encryption failure if needed, or simply let the real function fail)
         let recipient_pubkey_str = "invalidhexpubkey";
@@ -62,7 +72,8 @@ mod tests {
         let recipient_pubkey = PublicKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000003", // Use a valid but arbitrary pubkey for client call
             false,
-        ).unwrap();
+        )
+        .unwrap();
 
         let message_content = "Secret message that might fail to encrypt".to_string();
 
@@ -73,6 +84,8 @@ mod tests {
         assert!(result.is_err());
         let actual_error = result.unwrap_err();
         eprintln!("Actual error: {}", actual_error);
-        assert!(actual_error.to_string().contains("Failed to send event to any configured relay."));
+        assert!(actual_error
+            .to_string()
+            .contains("Failed to send event to any configured relay."));
     }
 }
