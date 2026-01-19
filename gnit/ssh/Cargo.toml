@@ -27,7 +27,7 @@ clean-path = "0.2.1"
 colored = "2.0.0"
 comrak = "0.18.0"
 futures = "0.3.28"
-log = "0.4.17"
+tracing = "0.1"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 serde = { version = "1.0.159", features = ["derive"] }
@@ -38,7 +38,12 @@ textwrap = "0.16.0"
 tokio = { version = "1.27.0", features = ["full"] }
 toml = "0.7.3"
 clap = { version = "4.5.20", features = ["derive"] }
-env_logger = "0.10.0"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "env-filter",
+  "smallvec",
+  "parking_lot",
+  "fmt",
+] }
 sd-notify = "0.4.1"
 
 [[bin]]

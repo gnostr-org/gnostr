@@ -5,10 +5,10 @@ use std::{path::PathBuf, process::Stdio};
 
 use anyhow::Context;
 use clean_path::Clean;
-use log::info;
 use russh::{server::Handle, ChannelId, CryptoVec};
 use shellwords::split;
 use tokio::{io::AsyncReadExt, process::Command};
+use tracing::info;
 
 use crate::config::repo::{load_repo_config, new_repo_config};
 use crate::config::server::load_server_config;

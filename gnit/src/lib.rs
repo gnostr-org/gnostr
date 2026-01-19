@@ -160,7 +160,7 @@ pub fn open_database(config: &Config) -> Result<Arc<rocksdb::DB>, anyhow::Error>
                 .as_deref()
                 .map_or(Cow::Borrowed("unknown"), String::from_utf8_lossy);
 
-            log::warn!(
+            tracing::warn!(
                 "Clearing outdated database ({old_version} != {})",
                 database::schema::SCHEMA_VERSION
             );
@@ -182,9 +182,9 @@ pub async fn run_indexer(
     let (indexer_wakeup_send, mut indexer_wakeup_recv) = tokio::sync::mpsc::channel(10);
 
     std::thread::spawn(move || loop {
-        log::info!("Running periodic index");
+        tracing::info!("Running periodic index");
         crate::database::indexer::run(&scan_path, &db);
-        log::info!("Finished periodic index");
+        tracing::info!("Finished periodic index");
 
         if indexer_wakeup_recv.blocking_recv().is_none() {
             break;
@@ -209,7 +209,7 @@ pub async fn run_indexer(
                 }
 
                 if indexer_wakeup_send.send(()).await.is_err() {
-                    log::error!(
+                    tracing::error!(
                         "Indexing thread has died and is no longer accepting wakeup messages"
                     );
                 }

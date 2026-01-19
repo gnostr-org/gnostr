@@ -2,10 +2,10 @@ use anyhow::{anyhow, Context};
 use clap::Parser;
 use std::{path::PathBuf, sync::Arc};
 
-use env_logger::Env;
-use log::{error, info};
 use tokio::sync::Mutex;
 use toml;
+use tracing::{error, info};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 use gnostr_ssh_lib::{
     config::server::{load_server_config, ServerUser},
@@ -41,9 +41,17 @@ struct Args {
     /// Allow the user to create repositories
     #[arg(long)]
     can_create_repos: bool,
+    /// Enable debug logging
+    #[arg(long)]
+    _debug: bool,
 }
 
-async fn start(port: u16, config: PathBuf, repo_config: PathBuf) -> anyhow::Result<()> {
+async fn start(
+    port: u16,
+    config: PathBuf,
+    repo_config: PathBuf,
+    _debug: bool,
+) -> anyhow::Result<()> {
     if is_port_in_use(port).await {
         return Err(anyhow!("Port {} is already in use.", port));
     }
@@ -75,7 +83,19 @@ async fn main() -> anyhow::Result<()> {
         .canonicalize()
         .context("Could not canonicalize repo config path")?;
 
-    env_logger::init_from_env(Env::default().default_filter_or("info"));
+    // Set logging level based on args, only if RUST_LOG is not already set
+    if std::env::var_os("RUST_LOG").is_none() {
+        if args._debug {
+            std::env::set_var("RUST_LOG", "debug");
+        } else {
+            std::env::set_var("RUST_LOG", "info");
+        }
+    }
+
+    tracing_subscriber::registry()
+        .with(EnvFilter::from_default_env())
+        .with(fmt::layer())
+        .init();
 
     if let Some(username) = args.add_user {
         let mut server_config = load_server_config(config_path.clone()).await?;
@@ -112,7 +132,8 @@ async fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let result = async move { start(args.port, config_path, repo_config_path).await }.await;
+    let result =
+        async move { start(args.port, config_path, repo_config_path, args._debug).await }.await;
 
     if let Err(e) = result {
         error!("{:#}", e);

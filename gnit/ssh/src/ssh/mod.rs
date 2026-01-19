@@ -8,8 +8,8 @@ use russh_keys::*;
 use tokio::io::AsyncWriteExt;
 use tokio::process::ChildStdin;
 
-use log::error;
 use tokio::sync::Mutex;
+use tracing::error;
 
 use crate::config::server::ServerUser;
 use crate::state::State;
