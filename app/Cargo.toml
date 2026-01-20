@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-app"
-version = "1896.932853.83355"
+version = "1895.933117.678085"
 description = "gnostr-app:a git+nostr workflow utility."
 keywords = ["nostr", "nostr-relay", "git"]
 edition.workspace = true

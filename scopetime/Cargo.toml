@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-scopetime"
-version = "1896.932853.83355"
+version = "1895.933117.678085"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "log runtime of arbitrary scope"
