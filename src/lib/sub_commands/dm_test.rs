@@ -25,7 +25,7 @@ mod tests {
         let sender_keys = Keys::new(sender_privkey);
         let mut client = Client::new(&sender_keys, Options::new());
 
-        // Add a dummy relay for the client to connect to
+        // Add a gnostr-relay
         client
             .add_relays(vec!["ws://localhost:8080".to_string()])
             .await

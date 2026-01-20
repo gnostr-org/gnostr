@@ -347,7 +347,7 @@ impl Client {
 
         // REAL IMPLEMENTATION: Connect to relays and send event
         for relay_url in self.relays.iter() {
-            let ws_url = format!("ws://{}", relay_url.as_str());
+            let ws_url = relay_url.as_str().to_string();
             info!("Connecting to relay: {}", ws_url);
 
             match connect_async(&ws_url).await {

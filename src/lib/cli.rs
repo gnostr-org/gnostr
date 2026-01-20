@@ -348,6 +348,9 @@ pub struct DmArgs {
     /// Message content
     #[arg(short, long, help = "The message to send")]
     pub message: String,
+    /// Relay to send the DM to (can be used multiple times)
+    #[arg(long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
+    pub relay: Vec<String>,
 }
 
 /// get_app_cache_path
