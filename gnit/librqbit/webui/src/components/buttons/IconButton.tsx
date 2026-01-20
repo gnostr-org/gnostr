@@ -1,22 +1,21 @@
-import { MouseEventHandler } from "react";
+import { MouseEventHandler } from "react"
 
 export const IconButton: React.FC<{
-  onClick: () => void;
-  disabled?: boolean;
-  className?: string;
-  color?: string;
-  children: any;
+  onClick: () => void
+  disabled?: boolean
+  className?: string
+  color?: string
+  children: any
 }> = (props) => {
-  const { onClick, disabled, color, children, className, ...otherProps } =
-    props;
+  const { onClick, disabled, color, children, className, ...otherProps } = props
   const onClickStopPropagation: MouseEventHandler<HTMLAnchorElement> = (e) => {
-    e.stopPropagation();
+    e.stopPropagation()
     if (disabled) {
-      return;
+      return
     }
-    onClick();
-  };
-  const colorClassName = color ? `text-${color}` : "";
+    onClick()
+  }
+  const colorClassName = color ? `text-${color}` : ""
   return (
     <a
       className={`block p-1 text-blue-500 flex items-center justify-center ${colorClassName} ${className}`}
@@ -26,5 +25,5 @@ export const IconButton: React.FC<{
     >
       {children}
     </a>
-  );
-};
+  )
+}

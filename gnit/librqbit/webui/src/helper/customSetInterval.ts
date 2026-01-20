@@ -2,28 +2,25 @@
 // callback returns.
 // Returns a callback to clear it.
 
-export function customSetInterval(
-  asyncCallback: () => Promise<number>,
-  initialInterval: number
-): () => void {
-  let timeoutId: any;
-  let currentInterval: number = initialInterval;
+export function customSetInterval(asyncCallback: () => Promise<number>, initialInterval: number): () => void {
+  let timeoutId: any
+  let currentInterval: number = initialInterval
 
   const executeCallback = async () => {
-    currentInterval = await asyncCallback();
+    currentInterval = await asyncCallback()
     if (currentInterval === null || currentInterval === undefined) {
-      throw "asyncCallback returned null or undefined";
+      throw "asyncCallback returned null or undefined"
     }
-    scheduleNext();
-  };
+    scheduleNext()
+  }
 
   let scheduleNext = () => {
-    timeoutId = setTimeout(executeCallback, currentInterval);
-  };
+    timeoutId = setTimeout(executeCallback, currentInterval)
+  }
 
-  scheduleNext();
+  scheduleNext()
 
   return () => {
-    clearTimeout(timeoutId);
-  };
+    clearTimeout(timeoutId)
+  }
 }

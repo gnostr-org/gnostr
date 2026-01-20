@@ -1,6 +1,6 @@
-import colors from "tailwindcss/colors";
+import colors from "tailwindcss/colors"
 
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
@@ -18,4 +18,4 @@ export default {
       red: colors.red,
     },
   },
-} satisfies Config;
+} satisfies Config
