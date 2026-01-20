@@ -56,9 +56,9 @@ mod dm_tests {
     use crate::types::client::{Client, Options};
     use crate::types::ContentEncryptionAlgorithm;
     use crate::types::{Keys, PrivateKey};
+    use base64::Engine;
     use serial_test::serial;
     use tokio;
-    use base64::Engine;
 
     #[tokio::test]
     #[serial]
@@ -73,7 +73,10 @@ mod dm_tests {
 
         // Add a gnostr-relay
         client
-            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
+            .add_relays(vec![
+                "wss://relay.damus.io".to_string(),
+                "ws://localhost:8080".to_string(),
+            ])
             .await
             .unwrap();
 
@@ -94,7 +97,6 @@ mod dm_tests {
         assert!(result.is_ok());
     }
 
-
     #[tokio::test]
     #[serial]
     async fn test_dm_command_success_bech32_recipient() {
@@ -108,7 +110,10 @@ mod dm_tests {
 
         // Add gnostr-relays
         client
-            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
+            .add_relays(vec![
+                "wss://relay.damus.io".to_string(),
+                "ws://localhost:8080".to_string(),
+            ])
             .await
             .unwrap();
 
@@ -128,15 +133,12 @@ mod dm_tests {
         assert!(result.is_ok());
     }
 
-
     #[tokio::test]
     #[serial]
     async fn test_dm_command_invalid_hex_pubkey() {
-
         let recipient_pubkey_str = "invalidhexpubkey";
         let recipient_pubkey_result = PublicKey::try_from_hex_string(recipient_pubkey_str, false);
         assert!(recipient_pubkey_result.is_err());
-
     }
 
     #[tokio::test]
@@ -152,7 +154,12 @@ mod dm_tests {
 
         // Add intentional ws:// and wss:// mistakes
         client
-            .add_relays(vec!["ws://relay.damus.io".to_string(), "wss://localhost:8080".to_string()]).await.unwrap();
+            .add_relays(vec![
+                "ws://relay.damus.io".to_string(),
+                "wss://localhost:8080".to_string(),
+            ])
+            .await
+            .unwrap();
 
         let recipient_pubkey = PublicKey::try_from_hex_string(
             "edfa27d49d2af37ee331e1225bb6ed1912c6d999281b36d8018ad99bc3573c29",
@@ -196,7 +203,10 @@ mod dm_tests {
 
         // Add a dummy relay for the sender client (actual relay not needed for encryption/decryption logic)
         sender_client
-            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
+            .add_relays(vec![
+                "wss://relay.damus.io".to_string(),
+                "ws://localhost:8080".to_string(),
+            ])
             .await
             .unwrap();
 
@@ -217,15 +227,24 @@ mod dm_tests {
         // the message to get the expected content.
 
         let encrypted_content_from_sender = sender_privkey
-            .encrypt(&recipient_pubkey, &original_message, ContentEncryptionAlgorithm::Nip44v2)
+            .encrypt(
+                &recipient_pubkey,
+                &original_message,
+                ContentEncryptionAlgorithm::Nip44v2,
+            )
             .unwrap();
 
         // 2. Decrypt the message using the recipient's private key
-        let decrypted_message_result = recipient_privkey
-            .decrypt(&sender_pubkey, &encrypted_content_from_sender);
+        let decrypted_message_result =
+            recipient_privkey.decrypt(&sender_pubkey, &encrypted_content_from_sender);
 
         assert!(decrypted_message_result.is_ok());
-        assert_eq!(decrypted_message_result.unwrap(), original_message);
+
+        let decrypted_message = decrypted_message_result.unwrap();
+
+        assert_eq!(decrypted_message, original_message);
+
+        println!("{} == {}", decrypted_message, original_message);
     }
 
     #[tokio::test]
@@ -234,9 +253,13 @@ mod dm_tests {
         let sender_pubkey_hex = "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
         let encrypted_content = "AsQtQ6ZH81LsRiwmItz/gdy4Yjnlf4nZ2C8smdHdgCZY6dPrFVJC0JzgCz8XhnZ26uwGRB214C12J9fHYVFRO7B4Io7erA4+T/kmGgnSCTHabroLM5WKTYOBFuXtXCF40FIP";
 
-        let decrypted_message_result = recipient_privkey
-            .decrypt(&sender_pubkey, encrypted_content);
+        // Define keys within the test function to ensure they are in scope
+        let recipient_privkey = PrivateKey::generate(); // Generate a new private key for the recipient
+        let sender_pubkey = PublicKey::try_from_hex_string(sender_pubkey_hex, false).unwrap();
 
+        let decrypted_message_result = recipient_privkey.decrypt(&sender_pubkey, encrypted_content);
+
+        // Negative Test
         match decrypted_message_result {
             Ok(msg) => panic!("Decryption unexpectedly succeeded with message: {}", msg),
             Err(actual_error) => {
