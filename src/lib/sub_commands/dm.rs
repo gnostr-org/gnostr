@@ -127,6 +127,17 @@ mod dm_tests {
         assert!(result.is_ok());
     }
 
+
+    #[tokio::test]
+    #[serial]
+    async fn test_dm_command_invalid_hex_pubkey() {
+
+        let recipient_pubkey_str = "invalidhexpubkey";
+        let recipient_pubkey_result = PublicKey::try_from_hex_string(recipient_pubkey_str, false);
+        assert!(recipient_pubkey_result.is_err());
+
+    }
+
     #[tokio::test]
     #[serial]
     async fn test_dm_command_failure() {
@@ -138,27 +149,21 @@ mod dm_tests {
         let sender_keys = Keys::new(sender_privkey);
         let mut client = Client::new(&sender_keys, Options::new());
 
-        // Add a dummy relay for the client to connect to
+        // Add intentional ws:// and wss:// mistakes
         client
-            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
-            .await
-            .unwrap();
-
-        // Create recipient public key (a malformed one to simulate encryption failure if needed, or simply let the real function fail)
-        let recipient_pubkey_str = "invalidhexpubkey";
-        let recipient_pubkey_result = PublicKey::try_from_hex_string(recipient_pubkey_str, false);
-        assert!(recipient_pubkey_result.is_err());
+            .add_relays(vec!["ws://relay.damus.io".to_string(), "wss://localhost:8080".to_string()]).await.unwrap();
 
         let recipient_pubkey = PublicKey::try_from_hex_string(
-            "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy",
+            "edfa27d49d2af37ee331e1225bb6ed1912c6d999281b36d8018ad99bc3573c29",
             false,
         )
         .unwrap();
 
         let message_content = "gnostr dm sub_command test may fail to encrypt!".to_string();
 
-        // Call the function under test (expecting it to fail due to, e.g., connection issues or malformed key in the real nip44_direct_message)
         let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
+
+        //assert!(result.is_ok());
 
         // Assertions - we now expect a real error from the client's operations
         assert!(result.is_err());
@@ -184,7 +189,7 @@ mod dm_tests {
 
         // Add a dummy relay for the sender client (actual relay not needed for encryption/decryption logic)
         sender_client
-            .add_relays(vec!["wss://relay.damus.io".to_string()])
+            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
             .await
             .unwrap();
 
