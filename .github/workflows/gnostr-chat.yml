@@ -103,7 +103,9 @@ jobs:
           echo "Current PATH: $PATH"
           echo "Verifying gnostr:"
           which gnostr || echo "gnostr not found or not in PATH."
-          gnostr --version || true # Run if found, otherwise continue
+          echo "CARGO_HOME: ${CARGO_HOME}"
+          ls -l ~/.cargo/bin
+          gnostr --version # Run if found, otherwise continue
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
