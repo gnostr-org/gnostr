@@ -126,6 +126,7 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
         let default_data_path = PathBuf::from(".gnostr/relay");
         debug!("Using default data path: {:?}", default_data_path);
         final_data_path = Some(default_data_path);
+        debug!("Using default data path: {:?}", final_data_path);
     }
 
     // Check if gnostr-relay is installed
