@@ -63,14 +63,14 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
-      - name: Restore target
-        id: cache-target-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      #- name: Restore target
+      #  id: cache-target-restore
+      #  uses: actions/cache/restore@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      target
+      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - name: Setup Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -78,7 +78,7 @@ jobs:
           # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
           # If not specified, it defaults to 'stable'.
           # It can also read the version from a 'rust-toolchain.toml' file if present.
-          toolchain: stable
+          toolchain: ${{ matrix.rustup }}
           # Comma-separated list of additional components to install.
           components: clippy, rustfmt
           # Automatically configure smart caching (recommended for speed)
@@ -188,14 +188,14 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-stable
 
-      - name: Restore target
-        id: cache-target-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-stable
+      #- name: Restore target
+      #  id: cache-target-restore
+      #  uses: actions/cache/restore@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      target
+      #    key: ${{ runner.os }}-target-stable
 
       - uses: actions/checkout@v3
         with:
@@ -230,11 +230,11 @@ jobs:
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key || format('{0}-cargo-{1}', runner.os, 'stable') }}
 
-      - name: Save target
-        id: cache-target-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
+      #- name: Save target
+      #  id: cache-target-save
+      #  uses: actions/cache/save@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      target
+      #    key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
