@@ -4,10 +4,10 @@ use rand_core::OsRng;
 
 use super::{Error, Id, PublicKey, Signature, Signer};
 
-mod encrypted_private_key;
+pub(super) mod encrypted_private_key;
 pub use encrypted_private_key::*;
 
-mod content_encryption;
+pub(super) mod content_encryption;
 pub use content_encryption::*;
 
 /// This indicates the security of the key by keeping track of whether the
