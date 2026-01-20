@@ -169,6 +169,8 @@ jobs:
   tui:
     name: TUI Test
     runs-on: ubuntu-latest
+    env:
+      ACT: "false"
     steps:
       - name: Restore rustup
         id: cache-rustup-restore
