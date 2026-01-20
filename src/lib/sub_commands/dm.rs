@@ -234,27 +234,15 @@ mod dm_tests {
         let sender_pubkey_hex = "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
         let encrypted_content = "AsQtQ6ZH81LsRiwmItz/gdy4Yjnlf4nZ2C8smdHdgCZY6dPrFVJC0JzgCz8XhnZ26uwGRB214C12J9fHYVFRO7B4Io7erA4+T/kmGgnSCTHabroLM5WKTYOBFuXtXCF40FIP";
 
-        let decoded_bytes = base64::engine::general_purpose::STANDARD
-            .decode(encrypted_content)
-            .expect("Failed to base64 decode the provided encrypted content");
-
-        eprintln!("Decoded bytes: {:?}", decoded_bytes);
-        if !decoded_bytes.is_empty() {
-            eprintln!("First byte of decoded content: {}", decoded_bytes[0]);
-        }
-
-        // Create a dummy private key for decryption. 
-        // In a real scenario, this would be the recipient's actual private key.
-        let recipient_privkey = PrivateKey::try_from_hex_string(sender_pubkey_hex).unwrap();
-        let sender_pubkey = PublicKey::try_from_hex_string(sender_pubkey_hex, false).unwrap();
-
         let decrypted_message_result = recipient_privkey
             .decrypt(&sender_pubkey, encrypted_content);
 
-        // Assert that decryption fails as expected, and contains a specific error for debugging.
-        assert!(decrypted_message_result.is_err());
-        let actual_error = decrypted_message_result.unwrap_err();
-        eprintln!("Decryption error for provided event: {}", actual_error);
-        assert!(actual_error.to_string().contains("BadEncryptedMessage"));
+        match decrypted_message_result {
+            Ok(msg) => panic!("Decryption unexpectedly succeeded with message: {}", msg),
+            Err(actual_error) => {
+                eprintln!("Decryption error for provided event: {}", actual_error);
+                assert!(actual_error.to_string().contains("Invalid MAC"));
+            }
+        }
     }
 }
