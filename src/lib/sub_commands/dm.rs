@@ -226,4 +226,25 @@ mod dm_tests {
         assert!(decrypted_message_result.is_ok());
         assert_eq!(decrypted_message_result.unwrap(), original_message);
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_dm_command_decryption_of_provided_event() {
+        let sender_pubkey_hex = "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
+        let encrypted_content = "AsQtQ6ZH81LsRiwmItz/gdy4Yjnlf4nZ2C8smdHdgCZY6dPrFVJC0JzgCz8XhnZ26uwGRB214C12J9fHYVFRO7B4Io7erA4+T/kmGgnSCTHabroLM5WKTYOBFuXtXCF40FIP";
+
+        // Create a dummy private key for decryption. 
+        // In a real scenario, this would be the recipient's actual private key.
+        let recipient_privkey = PrivateKey::try_from_hex_string(sender_pubkey_hex).unwrap();
+        let sender_pubkey = PublicKey::try_from_hex_string(sender_pubkey_hex, false).unwrap();
+
+        let decrypted_message_result = recipient_privkey
+            .decrypt(&sender_pubkey, encrypted_content);
+
+        // Assert that decryption fails as expected, and contains a specific error for debugging.
+        assert!(decrypted_message_result.is_err());
+        let actual_error = decrypted_message_result.unwrap_err();
+        eprintln!("Decryption error for provided event: {}", actual_error);
+        assert!(actual_error.to_string().contains("BadEncryptedMessage"));
+    }
 }
