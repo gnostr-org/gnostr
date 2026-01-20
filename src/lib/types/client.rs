@@ -12,7 +12,7 @@ use tokio_tungstenite::{
 
 use crate::types::{
     ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
-    RelayUrl, SubscriptionId, Tag, UncheckedUrl, Unixtime,
+    RelayUrl, SubscriptionId, Tag, UncheckedUrl, Unixtime, private_key::content_encryption::ContentEncryptionAlgorithm,
 };
 use tracing::{debug, info, warn};
 
@@ -266,53 +266,16 @@ impl Client {
         recipient_pubkey: PublicKey,
         content: String,
     ) -> Result<Id, Error> {
-        // 1. Get sender's secret key (secp256k1::SecretKey)
-        let secp256k1_sender_secret_key = self
+        // Use the proper NIP-44 v2 encryption provided by PrivateKey
+        let encrypted_content = self
             .keys
-            .secret_key()
-            .map_err(|e| Error::Custom(e.into()))?
-            .0; // Access the inner secp256k1::SecretKey
-
-        // Convert recipient_pubkey (crate::types::PublicKey) to secp256k1::XOnlyPublicKey
-        let secp256k1_recipient_xonly_pubkey =
-            Secp256k1XOnlyPublicKey::from_slice(recipient_pubkey.as_bytes()).map_err(|e| {
-                Error::Custom(format!("Secp256k1XOnlyPublicKey creation error: {:?}", e).into())
-            })?;
-
-        // Get secp256k1::PublicKey from XOnlyPublicKey (using even parity as per NIP-01 convention for ECDH)
-        let secp256k1_recipient_pubkey = secp256k1::PublicKey::from_x_only_public_key(
-            secp256k1_recipient_xonly_pubkey,
-            secp256k1::Parity::Even,
-        );
-
-        // 2. Derive shared secret point using secp256k1::ecdh::shared_secret_point
-        let ssp = shared_secret_point(&secp256k1_recipient_pubkey, &secp256k1_sender_secret_key);
-        let shared_point_bytes: [u8; 32] = ssp[..32].try_into().map_err(|_| {
-            Error::Custom("Failed to convert shared secret point to 32 bytes".into())
-        })?;
-
-        // 3. Derive encryption key using HKDF-SHA256
-        let hkdf = Hkdf::<Sha256>::new(None, shared_point_bytes.as_slice());
-        let mut encryption_key = [0u8; 32]; // XChaCha20Poly1305 key size
-        hkdf.expand(b"nip44", &mut encryption_key)
-            .map_err(|e| Error::Custom(format!("HKDF error: {:?}", e).into()))?;
-
-        // 4. Encrypt the message using XChaCha20Poly1305
-        let cipher = XChaCha20Poly1305::new(&encryption_key.into());
-        let mut nonce = [0u8; 24]; // XChaCha20Poly1305 nonce size
-        OsRng.fill_bytes(&mut nonce);
-
-        let encrypted_content = cipher
-            .encrypt(&nonce.into(), content.as_bytes())
-            .map_err(|e| Error::Custom(e.into()))?;
-
-        let encrypted_message_base64 = STANDARD.encode(encrypted_content);
-        let content_to_send = format!("{}?iv={}", encrypted_message_base64, STANDARD.encode(nonce));
+            .secret_key()?
+            .encrypt(&recipient_pubkey, &content, ContentEncryptionAlgorithm::Nip44v2)?;
 
         // 5. Create EventKind::EncryptedDirectMessage (kind 4) event
         let direct_message_event = EventBuilder::new(
             EventKind::EncryptedDirectMessage,
-            content_to_send,
+            encrypted_content,
             vec![Tag::new_pubkey(recipient_pubkey, None, None)],
         )
         .to_event(
