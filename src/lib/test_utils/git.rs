@@ -53,12 +53,17 @@ impl GitTestRepo {
         )?;
         // Make sure we have standard diffs for the tests so that
         // user-level config does not make them fail.
+
+        // check other user level git configs?
         git_repo.config()?.set_bool("diff.mnemonicPrefix", false)?;
-        Ok(Self {
+        let mut repo_instance = Self {
             dir: path,
             git_repo,
             delete_dir_on_drop: true,
-        })
+        };
+        // Perform an initial commit to ensure HEAD is valid.
+        repo_instance.initial_commit()?;
+        Ok(repo_instance)
     }
     pub fn without_repo_in_git_config() -> Self {
         Self::new("main").unwrap()
@@ -144,15 +149,26 @@ impl GitTestRepo {
     }
 
     pub fn initial_commit(&mut self) -> Result<Oid> {
-        let oid = self.git_repo.index()?.write_tree()?;
-        let tree = self.git_repo.find_tree(oid)?;
+        let mut index = self.git_repo.index()?;
+        index.read_tree(&self.git_repo.head()?.peel_to_tree()?)?;
+        index.write_tree()?;
+
+        let tree_id = index.write_tree()?;
+        let tree = self.git_repo.find_tree(tree_id)?;
+
+        let head_commit_result = self.git_repo.head()?.peel_to_commit();
+        let parents = match head_commit_result {
+            Ok(commit) => vec![commit],
+            Err(_) => vec![], // No parent commit for the very first commit
+        };
+
         let commit_oid = self.git_repo.commit(
-            Some("HEAD"),
+            Some("HEAD"), // Update HEAD to point to this commit
             &joe_signature(),
             &joe_signature(),
             "Initial commit",
             &tree,
-            &[],
+            &parents.iter().collect::<Vec<&git2::Commit>>(),
         )?;
         Ok(commit_oid)
     }
