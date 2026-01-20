@@ -1,10 +1,10 @@
-import { BsX } from "react-icons/bs";
-import { ErrorWithLabel } from "../rqbit-web";
+import { BsX } from "react-icons/bs"
+import { ErrorWithLabel } from "../rqbit-web"
 
 const AlertDanger: React.FC<{
-  title: string;
-  children: React.ReactNode;
-  onClose?: () => void;
+  title: string
+  children: React.ReactNode
+  onClose?: () => void
 }> = ({ title, children, onClose }) => {
   return (
     <div className="bg-red-200 p-3 rounded-md mb-3 dark:bg-red-800/60">
@@ -18,25 +18,20 @@ const AlertDanger: React.FC<{
       </div>
       {children}
     </div>
-  );
-};
+  )
+}
 
-export const ErrorComponent = (props: {
-  error: ErrorWithLabel | null;
-  remove?: () => void;
-}) => {
-  let { error, remove } = props;
+export const ErrorComponent = (props: { error: ErrorWithLabel | null; remove?: () => void }) => {
+  let { error, remove } = props
 
   if (error == null) {
-    return null;
+    return null
   }
 
   return (
     <AlertDanger onClose={remove} title={error.text}>
-      {error.details?.statusText && (
-        <div className="pb-2 text-md">{error.details?.statusText}</div>
-      )}
+      {error.details?.statusText && <div className="pb-2 text-md">{error.details?.statusText}</div>}
       <div className="whitespace-pre-wrap text-sm">{error.details?.text}</div>
     </AlertDanger>
-  );
-};
+  )
+}

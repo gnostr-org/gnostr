@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
+import { ReactNode } from "react"
 
 export const Form = ({ children }: { children: ReactNode }) => {
-  return <form>{children}</form>;
-};
+  return <form>{children}</form>
+}
