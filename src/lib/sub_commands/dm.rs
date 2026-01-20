@@ -93,6 +93,40 @@ mod dm_tests {
     }
 
     #[tokio::test]
+    #[serial]
+    async fn test_dm_command_success_bech32_recipient() {
+        // Setup real client
+        let sender_privkey = PrivateKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000001",
+        )
+        .unwrap();
+        let sender_keys = Keys::new(sender_privkey);
+        let mut client = Client::new(&sender_keys, Options::new());
+
+        // Add gnostr-relays
+        client
+            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
+            .await
+            .unwrap();
+
+        // Create recipient public key from bech32 string
+        let recipient_pubkey = PublicKey::try_from_bech32_string(
+            "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy",
+            false,
+        )
+        .unwrap();
+
+        let message_content = "gnostr dm sub_command test with bech32 recipient!".to_string();
+
+        // Call the function under test
+        let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
+
+        // Assertions
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    #[serial]
     async fn test_dm_command_failure() {
         // Setup real client (we expect nip44_direct_message to potentially fail for other reasons)
         let sender_privkey = PrivateKey::try_from_hex_string(
