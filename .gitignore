@@ -1,5 +1,6 @@
 gnit/test-repo
 bin/
+!relay/src/bin/
 graph.png
 
 bun.lock
