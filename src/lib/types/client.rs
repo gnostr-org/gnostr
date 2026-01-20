@@ -11,8 +11,9 @@ use tokio_tungstenite::{
 };
 
 use crate::types::{
-    ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
-    RelayUrl, SubscriptionId, Tag, UncheckedUrl, Unixtime, private_key::content_encryption::ContentEncryptionAlgorithm,
+    private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
+    EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayUrl, SubscriptionId, Tag,
+    UncheckedUrl, Unixtime,
 };
 use tracing::{debug, info, warn};
 
@@ -267,10 +268,11 @@ impl Client {
         content: String,
     ) -> Result<Id, Error> {
         // Use the proper NIP-44 v2 encryption provided by PrivateKey
-        let encrypted_content = self
-            .keys
-            .secret_key()?
-            .encrypt(&recipient_pubkey, &content, ContentEncryptionAlgorithm::Nip44v2)?;
+        let encrypted_content = self.keys.secret_key()?.encrypt(
+            &recipient_pubkey,
+            &content,
+            ContentEncryptionAlgorithm::Nip44v2,
+        )?;
 
         // 5. Create EventKind::EncryptedDirectMessage (kind 4) event
         let direct_message_event = EventBuilder::new(
