@@ -21,6 +21,7 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
+      ACT: "false"
     strategy:
       matrix:
         os: [ubuntu-latest] # macos, ubuntu, windows
