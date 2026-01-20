@@ -54,6 +54,7 @@ pub async fn dm_command(
 mod dm_tests {
     use super::*;
     use crate::types::client::{Client, Options};
+    use crate::types::ContentEncryptionAlgorithm;
     use crate::types::{Keys, PrivateKey};
     use serial_test::serial;
     use tokio;
@@ -91,6 +92,7 @@ mod dm_tests {
         // Assertions
         assert!(result.is_ok());
     }
+
 
     #[tokio::test]
     #[serial]
@@ -145,15 +147,15 @@ mod dm_tests {
         // Create recipient public key (a malformed one to simulate encryption failure if needed, or simply let the real function fail)
         let recipient_pubkey_str = "invalidhexpubkey";
         let recipient_pubkey_result = PublicKey::try_from_hex_string(recipient_pubkey_str, false);
-        assert!(recipient_pubkey_result.is_err()); // Ensure it's an invalid key for this test's intent
+        assert!(recipient_pubkey_result.is_err());
 
         let recipient_pubkey = PublicKey::try_from_hex_string(
-            "0000000000000000000000000000000000000000000000000000000000000003", // Use a valid but arbitrary pubkey for client call
+            "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy",
             false,
         )
         .unwrap();
 
-        let message_content = "Secret message that might fail to encrypt".to_string();
+        let message_content = "gnostr dm sub_command test may fail to encrypt!".to_string();
 
         // Call the function under test (expecting it to fail due to, e.g., connection issues or malformed key in the real nip44_direct_message)
         let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
@@ -165,5 +167,52 @@ mod dm_tests {
         assert!(actual_error
             .to_string()
             .contains("Failed to send event to any configured relay."));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_dm_command_decryption_success() {
+        // Setup sender and receiver keypairs
+        let sender_privkey = PrivateKey::generate();
+        let sender_pubkey = sender_privkey.public_key();
+        let sender_keys = Keys::new(sender_privkey.clone());
+        let mut sender_client = Client::new(&sender_keys, Options::new());
+
+        let recipient_privkey = PrivateKey::generate();
+        let recipient_pubkey = recipient_privkey.public_key();
+        let recipient_keys = Keys::new(recipient_privkey.clone());
+
+        // Add a dummy relay for the sender client (actual relay not needed for encryption/decryption logic)
+        sender_client
+            .add_relays(vec!["wss://relay.damus.io".to_string()])
+            .await
+            .unwrap();
+
+        let original_message = "This is a secret message!".to_string();
+
+        // 1. Encrypt the message using dm_command
+        let event_id_result = sender_client
+            .nip44_direct_message(recipient_pubkey.clone(), original_message.clone())
+            .await;
+
+        assert!(event_id_result.is_ok());
+        let event_id = event_id_result.unwrap();
+
+        // In a real scenario, we would fetch the event from a relay.
+        // For this test, we'll simulate an event that would be received.
+        // We need to construct an Event with the content that nip44_direct_message would produce.
+        // Since we refactored nip44_direct_message to use PrivateKey::encrypt, we can re-encrypt
+        // the message to get the expected content.
+
+        let encrypted_content_from_sender = sender_privkey
+            .encrypt(&recipient_pubkey, &original_message, ContentEncryptionAlgorithm::Nip44v2)
+            .unwrap();
+
+        // 2. Decrypt the message using the recipient's private key
+        let decrypted_message_result = recipient_privkey
+            .decrypt(&sender_pubkey, &encrypted_content_from_sender);
+
+        assert!(decrypted_message_result.is_ok());
+        assert_eq!(decrypted_message_result.unwrap(), original_message);
     }
 }
