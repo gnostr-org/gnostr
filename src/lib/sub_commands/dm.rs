@@ -58,6 +58,7 @@ mod dm_tests {
     use crate::types::{Keys, PrivateKey};
     use serial_test::serial;
     use tokio;
+    use base64::Engine;
 
     #[tokio::test]
     #[serial]
@@ -232,6 +233,15 @@ mod dm_tests {
     async fn test_dm_command_decryption_of_provided_event() {
         let sender_pubkey_hex = "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
         let encrypted_content = "AsQtQ6ZH81LsRiwmItz/gdy4Yjnlf4nZ2C8smdHdgCZY6dPrFVJC0JzgCz8XhnZ26uwGRB214C12J9fHYVFRO7B4Io7erA4+T/kmGgnSCTHabroLM5WKTYOBFuXtXCF40FIP";
+
+        let decoded_bytes = base64::engine::general_purpose::STANDARD
+            .decode(encrypted_content)
+            .expect("Failed to base64 decode the provided encrypted content");
+
+        eprintln!("Decoded bytes: {:?}", decoded_bytes);
+        if !decoded_bytes.is_empty() {
+            eprintln!("First byte of decoded content: {}", decoded_bytes[0]);
+        }
 
         // Create a dummy private key for decryption. 
         // In a real scenario, this would be the recipient's actual private key.
