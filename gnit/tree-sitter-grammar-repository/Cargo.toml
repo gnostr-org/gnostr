@@ -1,7 +1,7 @@
 [package]
 name = "tree-sitter-grammar-repository"
 description = "tree-sitter grammars built from Helix with support for dynamic linking"
-version = "1896.932853.83355"
+version = "1895.933117.678085"
 edition = "2021"
 authors = ["Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"

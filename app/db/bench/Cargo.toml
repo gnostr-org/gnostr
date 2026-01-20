@@ -1,6 +1,6 @@
 [package]
 name = "nostr-db-bench"
-version = "1896.932853.83355"
+version = "1895.933117.678085"
 edition = "2021"
 publish = false
 

@@ -1273,7 +1273,7 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "gnostr-relay"
-version = "1896.932853.83355"
+version = "1895.933117.678085"
 dependencies = [
  "actix",
  "actix-cors",
