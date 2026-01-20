@@ -83,7 +83,7 @@ mod dm_tests {
         let recipient_keys = Keys::new(recipient_privkey);
         let recipient_pubkey = recipient_keys.public_key();
 
-        let message_content = "Hello, world!".to_string();
+        let message_content = "gnostr dm sub_command test!".to_string();
 
         // Call the function under test (this will now use the real nip44_direct_message)
         let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
@@ -104,7 +104,7 @@ mod dm_tests {
 
         // Add a dummy relay for the client to connect to
         client
-            .add_relays(vec!["ws://localhost:8080".to_string()])
+            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
             .await
             .unwrap();
 
