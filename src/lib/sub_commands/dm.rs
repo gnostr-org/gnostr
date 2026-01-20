@@ -85,8 +85,8 @@ mod dm_tests {
             "0000000000000000000000000000000000000000000000000000000000000002",
         )
         .unwrap();
-        let recipient_keys = Keys::new(recipient_privkey);
-        let recipient_pubkey = recipient_keys.public_key();
+        let _recipient_keys = Keys::new(recipient_privkey);
+        let recipient_pubkey = _recipient_keys.public_key();
 
         let message_content = "gnostr dm sub_command test!".to_string();
 
@@ -95,6 +95,7 @@ mod dm_tests {
 
         // Assertions
         assert!(result.is_ok());
+        let _event_id = result.unwrap();
     }
 
     #[tokio::test]
@@ -105,15 +106,12 @@ mod dm_tests {
             "0000000000000000000000000000000000000000000000000000000000000001",
         )
         .unwrap();
-        let sender_keys = Keys::new(sender_privkey);
-        let mut client = Client::new(&sender_keys, Options::new());
+        let _sender_keys = Keys::new(sender_privkey);
+        let mut client = Client::new(&_sender_keys, Options::new());
 
         // Add gnostr-relays
         client
-            .add_relays(vec![
-                "wss://relay.damus.io".to_string(),
-                "ws://localhost:8080".to_string(),
-            ])
+            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
             .await
             .unwrap();
 
@@ -131,6 +129,7 @@ mod dm_tests {
 
         // Assertions
         assert!(result.is_ok());
+        let _event_id = result.unwrap();
     }
 
     #[tokio::test]
@@ -199,7 +198,7 @@ mod dm_tests {
         )
         .unwrap();
         let recipient_pubkey = recipient_privkey.public_key();
-        let recipient_keys = Keys::new(recipient_privkey.clone());
+        let _recipient_keys = Keys::new(recipient_privkey.clone());
 
         // Add a dummy relay for the sender client (actual relay not needed for encryption/decryption logic)
         sender_client
@@ -218,7 +217,7 @@ mod dm_tests {
             .await;
 
         assert!(event_id_result.is_ok());
-        let event_id = event_id_result.unwrap();
+        let _event_id = event_id_result.unwrap();
 
         // In a real scenario, we would fetch the event from a relay.
         // For this test, we'll simulate an event that would be received.
