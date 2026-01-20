@@ -70,7 +70,7 @@ pub struct Data {
 impl Default for Data {
     fn default() -> Self {
         Self {
-            path: PathBuf::from("./data"),
+            path: PathBuf::from(".gnostr/data"),
             db_query_timeout: None,
         }
     }
