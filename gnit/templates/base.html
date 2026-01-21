@@ -12,7 +12,7 @@
     <header>
       <h1>
         <a href="/" class="no-hover" style="text-decoration: none">
-          <img src="/gnostr.svg" alt="gnostr" width="128" height="128" style="vertical-align: middle" />
+          <img src="/gnostr-{{ crate::GNOSTR_SVG_HASH.get().unwrap() }}.svg" alt="gnostr" width="128" height="128" style="vertical-align: middle" />
         </a>
         {% block header -%}gnostr.org{%- endblock %}
       </h1>
