@@ -201,15 +201,31 @@ jobs:
       #      target
       #    key: ${{ runner.os }}-target-stable
 
-      - uses: cargo-bins/cargo-binstall@main
-      - uses: actions/checkout@v3
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          submodules: "true"
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
+          # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
+          # If not specified, it defaults to 'stable'.
+          # It can also read the version from a 'rust-toolchain.toml' file if present.
+          toolchain: ${{ matrix.rustup }}
+          # Comma-separated list of additional components to install.
           components: clippy, rustfmt
+          # Automatically configure smart caching (recommended for speed)
           cache: true
+
+      - uses: cargo-bins/cargo-binstall@main
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          submodules: recursive
+          set-safe-directory: true
+          fetch-depth: 0
+          fetch-tags: false
+
+      - run: rustup default ${{ matrix.rustup }}
+      - run: cargo search gnostr --limit 100
+      - run: cargo-binstall --no-confirm sccache --force
+      - run: cargo-binstall --no-confirm gnostr --force
       - run: cargo build --bin gnostr
       - name: Run gnostr tui
         run: |
