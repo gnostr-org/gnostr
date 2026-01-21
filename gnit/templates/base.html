@@ -39,5 +39,6 @@
       time::OffsetDateTime::now_utc()|format_time }} in {{
       "{:?}"|format(crate::layers::logger::REQ_TIMESTAMP.get().elapsed()) }}
     </footer>
+    {%- block scripts -%}{%- endblock %}
   </body>
 </html>
