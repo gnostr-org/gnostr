@@ -29,7 +29,14 @@ jobs:
       fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          submodules: recursive
+          set-safe-directory: true
+          fetch-depth: 0
+          fetch-tags: false
+
       - name: Cache Cargo registry and Git dependencies
         uses: actions/cache@v3
         with:
