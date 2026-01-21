@@ -83,9 +83,9 @@
 									Mark All Read
 								</button>
 								<img class="pfp hide" role="their-pfp" data-pubkey=""
-								        src="/images/no-user.svg"/>
+								        src="/no-user-{{ crate::NO_USER_SVG_HASH.get().unwrap() }}.svg"/>
 								<img class="pfp hide" role="my-pfp" data-pubkey=""
-								        src="/images/no-user.svg"/>
+								        src="/no-user-{{ crate::NO_USER_SVG_HASH.get().unwrap() }}.svg"/>
 							</div>
 						</header>
 						<div id="gnostr-nip34-feed" class="events hide"></div>
