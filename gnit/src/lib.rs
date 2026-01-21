@@ -34,14 +34,138 @@ pub static DARK_HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
 pub static DARK_HIGHLIGHT_CSS_BYTES: OnceLock<&'static [u8]> = OnceLock::new();
 pub static JS_BUNDLE_HASH: OnceLock<&'static str> = OnceLock::new();
 
+pub const ADD_RELAY_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/add-relay.svg"));
+pub static ADD_RELAY_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const CLOSE_MODAL_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/close-modal.svg"));
+pub static CLOSE_MODAL_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const CONTENT_WARNING_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/content-warning.svg"));
+pub static CONTENT_WARNING_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EDIT_PROFILE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/edit-profile.svg"));
+pub static EDIT_PROFILE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_DELETE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-delete.svg"));
+pub static EVENT_DELETE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_DETAILS_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-details.svg"));
+pub static EVENT_DETAILS_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_LIKE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-like.svg"));
+pub static EVENT_LIKE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_LIKED_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-liked.svg"));
+pub static EVENT_LIKED_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_OPTIONS_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-options.svg"));
+pub static EVENT_OPTIONS_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_REPLY_ALL_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-reply-all.svg"));
+pub static EVENT_REPLY_ALL_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_REPLY_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-reply.svg"));
+pub static EVENT_REPLY_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EVENT_SHARE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/event-share.svg"));
+pub static EVENT_SHARE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EXPLORE_ACTIVE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/explore-active.svg"));
+pub static EXPLORE_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const EXPLORE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/explore.svg"));
+pub static EXPLORE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const FAVICON_NOTIF_ICO: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/favicon-notif.ico"));
+pub static FAVICON_NOTIF_ICO_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const FAVICON_ICO: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/favicon.ico"));
+pub static FAVICON_ICO_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const GNOSTR_NOTIF_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/gnostr_notif.svg"));
+pub static GNOSTR_NOTIF_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const GNOSTR_NOBG_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/gnostr-nobg.svg"));
+pub static GNOSTR_NOBG_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const GNOSTR_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/gnostr.svg"));
+pub static GNOSTR_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const HOME_ACTIVE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/home-active.svg"));
+pub static HOME_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const HOME_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/home.svg"));
+pub static HOME_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const ICON_MASKABLE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/icon-maskable.svg"));
+pub static ICON_MASKABLE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const ICON_ICNS: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/icon.icns"));
+pub static ICON_ICNS_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const ICON_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/icon.svg"));
+pub static ICON_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const KEY_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/key.svg"));
+pub static KEY_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
 pub const LOADER_FRAGMENT_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/loader-fragment.svg"));
 pub static LOADER_FRAGMENT_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const LOGO_INVERTED_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/logo-inverted.svg"));
+pub static LOGO_INVERTED_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const LOGO_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/logo.svg"));
+pub static LOGO_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const MESSAGE_USER_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/message-user.svg"));
 pub static MESSAGE_USER_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
+pub const MESSAGES_ACTIVE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/messages-active.svg"));
+pub static MESSAGES_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const MESSAGES_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/messages.svg"));
+pub static MESSAGES_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const NEW_NOTE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/new-note.svg"));
+pub static NEW_NOTE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const NO_USER_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/no-user.svg"));
+pub static NO_USER_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const NOTIFICATIONS_ACTIVE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/notifications-active.svg"));
+pub static NOTIFICATIONS_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const NOTIFICATIONS_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/notifications.svg"));
+pub static NOTIFICATIONS_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const OPEN_THREAD_HERE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/open-thread-here.svg"));
+pub static OPEN_THREAD_HERE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const OPEN_THREAD_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/open-thread.svg"));
+pub static OPEN_THREAD_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const PROFILE_WEBSITE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/profile-website.svg"));
+pub static PROFILE_WEBSITE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const PROFILE_ZAP_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/profile-zap.svg"));
+pub static PROFILE_ZAP_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const PUBKEY_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/pubkey.svg"));
+pub static PUBKEY_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const READ_MORE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/read-more.svg"));
+pub static READ_MORE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
 pub const SETTINGS_ACTIVE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/settings-active.svg"));
 pub static SETTINGS_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const SETTINGS_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/settings.svg"));
+pub static SETTINGS_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const SIGN_OUT_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/sign-out.svg"));
+pub static SIGN_OUT_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
 
 use std::{
     borrow::Cow,
@@ -273,9 +397,50 @@ pub fn init_static_asset_hashes() {
     DARK_HIGHLIGHT_CSS_HASH.set(crate::build_asset_hash(dark_css)).unwrap();
 
     // Image hashes
+    ADD_RELAY_SVG_HASH.set(crate::build_asset_hash(ADD_RELAY_SVG)).unwrap();
+    CLOSE_MODAL_SVG_HASH.set(crate::build_asset_hash(CLOSE_MODAL_SVG)).unwrap();
+    CONTENT_WARNING_SVG_HASH.set(crate::build_asset_hash(CONTENT_WARNING_SVG)).unwrap();
+    EDIT_PROFILE_SVG_HASH.set(crate::build_asset_hash(EDIT_PROFILE_SVG)).unwrap();
+    EVENT_DELETE_SVG_HASH.set(crate::build_asset_hash(EVENT_DELETE_SVG)).unwrap();
+    EVENT_DETAILS_SVG_HASH.set(crate::build_asset_hash(EVENT_DETAILS_SVG)).unwrap();
+    EVENT_LIKE_SVG_HASH.set(crate::build_asset_hash(EVENT_LIKE_SVG)).unwrap();
+    EVENT_LIKED_SVG_HASH.set(crate::build_asset_hash(EVENT_LIKED_SVG)).unwrap();
+    EVENT_OPTIONS_SVG_HASH.set(crate::build_asset_hash(EVENT_OPTIONS_SVG)).unwrap();
+    EVENT_REPLY_ALL_SVG_HASH.set(crate::build_asset_hash(EVENT_REPLY_ALL_SVG)).unwrap();
+    EVENT_REPLY_SVG_HASH.set(crate::build_asset_hash(EVENT_REPLY_SVG)).unwrap();
+    EVENT_SHARE_SVG_HASH.set(crate::build_asset_hash(EVENT_SHARE_SVG)).unwrap();
+    EXPLORE_ACTIVE_SVG_HASH.set(crate::build_asset_hash(EXPLORE_ACTIVE_SVG)).unwrap();
+    EXPLORE_SVG_HASH.set(crate::build_asset_hash(EXPLORE_SVG)).unwrap();
+    FAVICON_NOTIF_ICO_HASH.set(crate::build_asset_hash(FAVICON_NOTIF_ICO)).unwrap();
+    FAVICON_ICO_HASH.set(crate::build_asset_hash(FAVICON_ICO)).unwrap();
+    GNOSTR_NOTIF_SVG_HASH.set(crate::build_asset_hash(GNOSTR_NOTIF_SVG)).unwrap();
+    GNOSTR_NOBG_SVG_HASH.set(crate::build_asset_hash(GNOSTR_NOBG_SVG)).unwrap();
+    GNOSTR_SVG_HASH.set(crate::build_asset_hash(GNOSTR_SVG)).unwrap();
+    HOME_ACTIVE_SVG_HASH.set(crate::build_asset_hash(HOME_ACTIVE_SVG)).unwrap();
+    HOME_SVG_HASH.set(crate::build_asset_hash(HOME_SVG)).unwrap();
+    ICON_MASKABLE_SVG_HASH.set(crate::build_asset_hash(ICON_MASKABLE_SVG)).unwrap();
+    ICON_ICNS_HASH.set(crate::build_asset_hash(ICON_ICNS)).unwrap();
+    ICON_SVG_HASH.set(crate::build_asset_hash(ICON_SVG)).unwrap();
+    KEY_SVG_HASH.set(crate::build_asset_hash(KEY_SVG)).unwrap();
     LOADER_FRAGMENT_SVG_HASH.set(crate::build_asset_hash(LOADER_FRAGMENT_SVG)).unwrap();
+    LOGO_INVERTED_SVG_HASH.set(crate::build_asset_hash(LOGO_INVERTED_SVG)).unwrap();
+    LOGO_SVG_HASH.set(crate::build_asset_hash(LOGO_SVG)).unwrap();
     MESSAGE_USER_SVG_HASH.set(crate::build_asset_hash(MESSAGE_USER_SVG)).unwrap();
+    MESSAGES_ACTIVE_SVG_HASH.set(crate::build_asset_hash(MESSAGES_ACTIVE_SVG)).unwrap();
+    MESSAGES_SVG_HASH.set(crate::build_asset_hash(MESSAGES_SVG)).unwrap();
+    NEW_NOTE_SVG_HASH.set(crate::build_asset_hash(NEW_NOTE_SVG)).unwrap();
+    NO_USER_SVG_HASH.set(crate::build_asset_hash(NO_USER_SVG)).unwrap();
+    NOTIFICATIONS_ACTIVE_SVG_HASH.set(crate::build_asset_hash(NOTIFICATIONS_ACTIVE_SVG)).unwrap();
+    NOTIFICATIONS_SVG_HASH.set(crate::build_asset_hash(NOTIFICATIONS_SVG)).unwrap();
+    OPEN_THREAD_HERE_SVG_HASH.set(crate::build_asset_hash(OPEN_THREAD_HERE_SVG)).unwrap();
+    OPEN_THREAD_SVG_HASH.set(crate::build_asset_hash(OPEN_THREAD_SVG)).unwrap();
+    PROFILE_WEBSITE_SVG_HASH.set(crate::build_asset_hash(PROFILE_WEBSITE_SVG)).unwrap();
+    PROFILE_ZAP_SVG_HASH.set(crate::build_asset_hash(PROFILE_ZAP_SVG)).unwrap();
+    PUBKEY_SVG_HASH.set(crate::build_asset_hash(PUBKEY_SVG)).unwrap();
+    READ_MORE_SVG_HASH.set(crate::build_asset_hash(READ_MORE_SVG)).unwrap();
     SETTINGS_ACTIVE_SVG_HASH.set(crate::build_asset_hash(SETTINGS_ACTIVE_SVG)).unwrap();
+    SETTINGS_SVG_HASH.set(crate::build_asset_hash(SETTINGS_SVG)).unwrap();
+    SIGN_OUT_SVG_HASH.set(crate::build_asset_hash(SIGN_OUT_SVG)).unwrap();
 
     // JS bundle hash
     JS_BUNDLE_HASH.set(crate::build_asset_hash(JS_BUNDLE)).unwrap();
