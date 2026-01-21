@@ -60,9 +60,7 @@ use gnostr_gnit::{build_asset_hash, open_database, run_indexer, init_static_asse
     SIGN_OUT_SVG, SIGN_OUT_SVG_HASH, };
 use gnostr_gnit::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
-    theme::Theme,
 };
-use std::sync::OnceLock;
 use tokio::net::TcpListener;
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 use tower_layer::layer_fn;
