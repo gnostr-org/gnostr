@@ -152,12 +152,9 @@ jobs:
           LISTENER_PID=$!
           echo "Listener PID: $LISTENER_PID"
           sleep 5 # Give listener time to start
-
-          MESSAGE="Hello from github-ci-sender at $(date +%s)"
-          gnostr chat --name sender --topic gnostr-test-topic --message "$MESSAGE"
-
+          MESSAGE="Hello from gnostr-chat.yml at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$MESSAGE"
           sleep 5 # Give message time to propagate
-
           echo "Checking listener output..."
           cat listener_output.log
           grep -q "$MESSAGE" listener_output.log
