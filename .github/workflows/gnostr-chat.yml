@@ -154,6 +154,7 @@ jobs:
           echo "Listener PID: $LISTENER_PID"
           sleep 5 # Give listener time to start
           MESSAGE="Hello from gnostr-chat.yml at $(date +%s)"
+      - run: |
           gnostr chat --name sender --topic gnostr-test-topic --oneshot "$MESSAGE"
           sleep 5 # Give message time to propagate
           echo "Checking listener output..."
