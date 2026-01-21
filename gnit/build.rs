@@ -32,6 +32,7 @@ fn run() -> anyhow::Result<()> {
     };
 
     build_scss(paths).context("Failed to build CSS stylesheets")?;
+    build_js(paths).context("Failed to build JS bundle")?;
 
     Ok(())
 }
@@ -62,6 +63,53 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
     output_file
         .write_all(&output_content)
         .context("Failed to write compiled CSS to output")?;
+
+    Ok(())
+}
+
+fn build_js(paths: Paths) -> anyhow::Result<()> {
+    let in_dir = paths.statics_in_dir.join("js");
+    let ui_in_dir = in_dir.join("ui");
+    let out_dir = paths.statics_out_dir.join("js");
+    std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
+
+    println!("cargo:rerun-if-changed={}", in_dir.display());
+    println!("cargo:rerun-if-changed={}", ui_in_dir.display());
+
+    let mut all_js_content = String::new();
+
+    for entry in std::fs::read_dir(in_dir).context("Failed to read statics/js directory")? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() && path.extension().map_or(false, |ext| ext == "js") {
+            let content = std::fs::read_to_string(&path)
+                .context(format!("Failed to read JS file: {}", path.display()))?;
+            all_js_content.push_str(&content);
+            all_js_content.push_str("\n"); // Add newline for concatenation
+        }
+    }
+
+    for entry in std::fs::read_dir(ui_in_dir).context("Failed to read statics/js/ui directory")? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() && path.extension().map_or(false, |ext| ext == "js") {
+            let content = std::fs::read_to_string(&path)
+                .context(format!("Failed to read JS file: {}", path.display()))?;
+            all_js_content.push_str(&content);
+            all_js_content.push_str("\n"); // Add newline for concatenation
+        }
+    }
+
+    let output_file = out_dir.join("bundle.js");
+    let mut output_file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(output_file)
+        .context("Failed to open output JS bundle file")?;
+    output_file
+        .write_all(all_js_content.as_bytes())
+        .context("Failed to write compiled JS bundle to output")?;
 
     Ok(())
 }

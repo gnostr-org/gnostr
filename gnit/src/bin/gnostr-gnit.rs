@@ -10,7 +10,10 @@ use axum::{
 };
 use clap::Parser;
 use const_format::formatcp;
-use gnostr_gnit::{build_asset_hash, open_database, run_indexer, Config, RefreshInterval};
+use gnostr_gnit::{
+    build_asset_hash, open_database, run_indexer, Config, RefreshInterval, GLOBAL_CSS,
+    GLOBAL_CSS_HASH, JS_BUNDLE, JS_BUNDLE_HASH,
+};
 use gnostr_gnit::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
     theme::Theme,
@@ -23,12 +26,6 @@ use tracing::info;
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
-use xxhash_rust::const_xxh3;
-
-const GLOBAL_CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/css/style.css"));
-const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
-    .const_format(&const_xxh3::xxh3_128(GLOBAL_CSS).to_be_bytes())
-    .as_str();
 
 static HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
 static DARK_HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
@@ -250,8 +247,20 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     };
 
+    let static_js = |content: &'static [u8]| {
+        move || async move {
+            let mut resp = Response::new(Body::from(content));
+            resp.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                HeaderValue::from_static("application/javascript"),
+            );
+            resp
+        }
+    };
+
     info!("Priming highlighters...");
     prime_highlighters();
+    JS_BUNDLE_HASH.set(build_asset_hash(JS_BUNDLE)).unwrap();
     info!("Server starting up...");
 
     let app = Router::new()
@@ -259,6 +268,10 @@ async fn main() -> Result<(), anyhow::Error> {
         .route(
             formatcp!("/style-{}.css", GLOBAL_CSS_HASH),
             get(static_css(GLOBAL_CSS)),
+        )
+        .route(
+            &format!("/js-{}.js", JS_BUNDLE_HASH.get().unwrap()),
+            get(static_js(JS_BUNDLE)),
         )
         .route(
             &format!("/highlight-{}.css", HIGHLIGHT_CSS_HASH.get().unwrap()),

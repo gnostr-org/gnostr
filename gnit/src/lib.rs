@@ -26,9 +26,11 @@ pub const GLOBAL_CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/
 pub const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
     .const_format(&xxhash_rust::const_xxh3::xxh3_128(GLOBAL_CSS).to_be_bytes())
     .as_str();
+pub const JS_BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/js/bundle.js"));
 
 pub static HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
 pub static DARK_HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
+pub static JS_BUNDLE_HASH: OnceLock<Box<str>> = OnceLock::new();
 
 use std::{
     borrow::Cow,
