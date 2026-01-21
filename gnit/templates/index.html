@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-
+{% block content %}
 		<div id="container-busy">
 			<div class="loader" title="Loading...">
 				<img class="dark-invert" src="/images/loader-fragment.svg"/>
@@ -20,8 +20,7 @@
 
 		<!-- Main application wrapper -->
 		<div id="app-main" class="hide">
-			<!-- Global Header (e.g., for app title or global actions) -->
-			<header id="global-header">
+			<!-- Global Header (e.g., for app title or global actions) -->			<header id="global-header">
 				<button id="global-header-gnostr-btn" action="open-view" data-view="gnostr" class="nav icon active"
 				        title="gnostr.org">
 					<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
@@ -290,7 +289,6 @@
 
 
 
-{% block content %}
     <div class="table-responsive">
     <table class="repositories">
         <thead>
