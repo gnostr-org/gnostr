@@ -27,7 +27,7 @@ jobs:
         os: [ubuntu-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
         force: ["", "--force"]
-        path: [".", "relay", "asyncgit"]
+        path: [".", "relay", "asyncgit", "app"]
         pow: ["0", "16"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
