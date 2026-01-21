@@ -31,8 +31,8 @@ anyhow = "1.0.86"
 clap = { version = "4.5.16", features = ["derive"] }
 clio = { version = "0.3.5", features = ["clap-parse"] }
 gnostr = { version = "*", path = ".." }
-gnostr-extensions = { version = "0.0.1", path = "../relay/extensions" }
-gnostr-relay = { version = "0.0.6", path = "../relay", features = ["search"] }
+gnostr-extensions = { version = "1895.933117.678085", path = "../relay/extensions" }
+gnostr-relay = { version = "1895.933117.678085", path = "../relay", features = ["search"] }
 gpui = { git = "https://github.com/zed-industries/zed" }
 indicatif = "0.17.8"
 nostr-db = { version = "0.4.5", features = ["search"] }
