@@ -46,14 +46,14 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Restore rustup
-        id: cache-rustup-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            ~/.rustup
-          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+      #- name: Restore rustup
+      #  id: cache-rustup-restore
+      #  uses: actions/cache/restore@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      ~/.rustup
+      #    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Restore cargo
         id: cache-cargo-restore
