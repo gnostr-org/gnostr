@@ -11,7 +11,7 @@
 				<div class="padded">
 					<h1>
 						gnostr
-						<img class="icon svg" src="/images/logo-inverted.svg"/>
+						<img class="icon svg" src="/logo-inverted-{{ crate::LOGO_INVERTED_SVG_HASH.get().unwrap() }}.svg"/>
 					</h1>
 					<p>Please access with a nos2x compatible browser.</p>
 				</div>
@@ -43,7 +43,7 @@
 							<!-- add data-view="nip34-view-friends" -->
 							<button action="open-view" data-view="nip34-view-friends" class="nav icon"
 							        title="Nip34">
-								<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
+								<img class="icon svg inactive" src="/logo-inverted-{{ crate::LOGO_INVERTED_SVG_HASH.get().unwrap() }}.svg"/>
 								                    <img class="icon svg active" src="/logo-{{ crate::LOGO_SVG_HASH.get().unwrap() }}.svg"/>							</button>
 
 							                            <button action="open-view" data-view="dm" class="nav icon"
