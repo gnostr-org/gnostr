@@ -259,7 +259,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 "/highlight-dark-{}.css",
                 DARK_HIGHLIGHT_CSS_HASH.get().unwrap()
             ),
-            get(static_css(DARK_HIGHLIGHT_CSS.get().unwrap())),
+            get(static_css(DARK_HIGHLIGHT_CSS_BYTES.get().unwrap())),
         )
         .route(
             "/favicon.ico",
