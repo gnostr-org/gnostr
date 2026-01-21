@@ -78,10 +78,21 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
 
     let mut all_js_content = String::new();
 
-    for entry in std::fs::read_dir(in_dir).context("Failed to read statics/js directory")? {
+    // Explicitly add util.js first
+    let util_js_path = in_dir.join("util.js");
+    let util_js_content = std::fs::read_to_string(&util_js_path)
+        .context(format!("Failed to read JS file: {}", util_js_path.display()))?;
+    all_js_content.push_str(&util_js_content);
+    all_js_content.push_str("\n"); // Add newline for concatenation
+
+    // Add remaining JS files from statics/js, excluding util.js
+    for entry in std::fs::read_dir(&in_dir).context("Failed to read statics/js directory")? {
         let entry = entry?;
         let path = entry.path();
-        if path.is_file() && path.extension().map_or(false, |ext| ext == "js") {
+        if path.is_file()
+            && path.extension().map_or(false, |ext| ext == "js")
+            && path != util_js_path
+        {
             let content = std::fs::read_to_string(&path)
                 .context(format!("Failed to read JS file: {}", path.display()))?;
             all_js_content.push_str(&content);
@@ -89,6 +100,7 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
         }
     }
 
+    // Add JS files from statics/js/ui
     for entry in std::fs::read_dir(ui_in_dir).context("Failed to read statics/js/ui directory")? {
         let entry = entry?;
         let path = entry.path();
