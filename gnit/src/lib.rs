@@ -29,8 +29,19 @@ pub const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
 pub const JS_BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/js/bundle.js"));
 
 pub static HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
+pub static HIGHLIGHT_CSS_BYTES: OnceLock<&'static [u8]> = OnceLock::new();
 pub static DARK_HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
+pub static DARK_HIGHLIGHT_CSS_BYTES: OnceLock<&'static [u8]> = OnceLock::new();
 pub static JS_BUNDLE_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const LOADER_FRAGMENT_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/loader-fragment.svg"));
+pub static LOADER_FRAGMENT_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const MESSAGE_USER_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/message-user.svg"));
+pub static MESSAGE_USER_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+pub const SETTINGS_ACTIVE_SVG: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/statics/settings-active.svg"));
+pub static SETTINGS_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 use std::{
     borrow::Cow,
@@ -231,7 +242,44 @@ pub fn build_asset_hash(v: &'static [u8]) -> &'static str {
     Box::leak(out.into_boxed_str())
 }
 
-/// Response wrapper for Askama templates
+/// Initializes all static asset hashes.
+pub fn init_static_asset_hashes() {
+    // These values are computed at runtime, not compile-time like GLOBAL_CSS_HASH
+    // for now we set the css for dark and light here.
+    let css = {
+        let theme = toml::from_str::<crate::theme::Theme>(include_str!("../themes/solarized_light.toml"))
+            .unwrap()
+            .build_css();
+        Box::leak(
+            format!(r#"@media (prefers-color-scheme: light){{{theme}}}"#)
+                .into_boxed_str()
+                .into_boxed_bytes(),
+        )
+    };
+    HIGHLIGHT_CSS_BYTES.set(css).unwrap();
+    HIGHLIGHT_CSS_HASH.set(crate::build_asset_hash(css)).unwrap();
+
+    let dark_css = {
+        let theme = toml::from_str::<crate::theme::Theme>(include_str!("../themes/solarized_dark.toml"))
+            .unwrap()
+            .build_css();
+        Box::leak(
+            format!(r#"@media (prefers-color-scheme: dark){{{theme}}}"#)
+                .into_boxed_str()
+                .into_boxed_bytes(),
+        )
+    };
+    DARK_HIGHLIGHT_CSS_BYTES.set(dark_css).unwrap();
+    DARK_HIGHLIGHT_CSS_HASH.set(crate::build_asset_hash(dark_css)).unwrap();
+
+    // Image hashes
+    LOADER_FRAGMENT_SVG_HASH.set(crate::build_asset_hash(LOADER_FRAGMENT_SVG)).unwrap();
+    MESSAGE_USER_SVG_HASH.set(crate::build_asset_hash(MESSAGE_USER_SVG)).unwrap();
+    SETTINGS_ACTIVE_SVG_HASH.set(crate::build_asset_hash(SETTINGS_ACTIVE_SVG)).unwrap();
+
+    // JS bundle hash
+    JS_BUNDLE_HASH.set(crate::build_asset_hash(JS_BUNDLE)).unwrap();
+}
 pub struct TemplateResponse<T> {
     template: T,
 }

@@ -10,34 +10,25 @@ use axum::{
 };
 use clap::Parser;
 use const_format::formatcp;
-use gnostr_gnit::{
-    build_asset_hash, open_database, run_indexer, Config, RefreshInterval, GLOBAL_CSS,
+use gnostr_gnit::{build_asset_hash, open_database, run_indexer, init_static_asset_hashes, Config, RefreshInterval, GLOBAL_CSS,
     GLOBAL_CSS_HASH, JS_BUNDLE, JS_BUNDLE_HASH,
-};
+    HIGHLIGHT_CSS_BYTES, HIGHLIGHT_CSS_HASH,
+    DARK_HIGHLIGHT_CSS_BYTES, DARK_HIGHLIGHT_CSS_HASH,
+    LOADER_FRAGMENT_SVG, LOADER_FRAGMENT_SVG_HASH,
+    MESSAGE_USER_SVG, MESSAGE_USER_SVG_HASH,
+    SETTINGS_ACTIVE_SVG, SETTINGS_ACTIVE_SVG_HASH, };
 use gnostr_gnit::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
     theme::Theme,
 };
 use std::sync::OnceLock;
 use tokio::net::TcpListener;
-use tower_http::{cors::CorsLayer, services::ServeDir, timeout::TimeoutLayer};
+use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 use tower_layer::layer_fn;
 use tracing::info;
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
-
-static HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
-static DARK_HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
-
-const LOADER_FRAGMENT_SVG: &[u8] = include_bytes!("../../statics/loader-fragment.svg");
-static LOADER_FRAGMENT_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
-
-const MESSAGE_USER_SVG: &[u8] = include_bytes!("../../statics/message-user.svg");
-static MESSAGE_USER_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
-
-const SETTINGS_ACTIVE_SVG: &[u8] = include_bytes!("../../statics/settings-active.svg");
-static SETTINGS_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 
 #[derive(Parser, Debug)]
@@ -198,29 +189,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let indexer_wakeup_task = run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
 
-    let css: &'static [u8] = {
-        let theme = toml::from_str::<Theme>(include_str!("../../themes/solarized_light.toml"))
-            .unwrap()
-            .build_css();
-        Box::leak(
-            format!(r#"@media (prefers-color-scheme: light){{{theme}}}"#)
-                .into_boxed_str()
-                .into_boxed_bytes(),
-        )
-    };
-    HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
 
-    let dark_css: &'static [u8] = {
-        let theme = toml::from_str::<Theme>(include_str!("../../themes/solarized_dark.toml"))
-            .unwrap()
-            .build_css();
-        Box::leak(
-            format!(r#"@media (prefers-color-scheme: dark){{{theme}}}"#)
-                .into_boxed_str()
-                .into_boxed_bytes(),
-        )
-    };
-    DARK_HIGHLIGHT_CSS_HASH.set(build_asset_hash(dark_css)).unwrap();
 
     let static_ico = |content: &'static [u8]| {
         move || async move {
@@ -268,7 +237,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Priming highlighters...");
     prime_highlighters();
-    JS_BUNDLE_HASH.set(build_asset_hash(JS_BUNDLE)).unwrap();
+    init_static_asset_hashes();
     info!("Server starting up...");
 
     let app = Router::new()
@@ -283,14 +252,14 @@ async fn main() -> Result<(), anyhow::Error> {
         )
         .route(
             &format!("/highlight-{}.css", HIGHLIGHT_CSS_HASH.get().unwrap()),
-            get(static_css(css)),
+            get(static_css(HIGHLIGHT_CSS_BYTES.get().unwrap())),
         )
         .route(
             &format!(
                 "/highlight-dark-{}.css",
                 DARK_HIGHLIGHT_CSS_HASH.get().unwrap()
             ),
-            get(static_css(dark_css)),
+            get(static_css(DARK_HIGHLIGHT_CSS.get().unwrap())),
         )
         .route(
             "/favicon.ico",

@@ -21,6 +21,8 @@ pub struct View {
     pub branch: Option<Arc<str>>,
     pub dl_branch: Arc<str>,
     pub id: Option<String>,
+    pub highlight_css_hash: &'static str,
+    pub dark_highlight_css_hash: &'static str,
 }
 
 #[derive(Deserialize)]
@@ -49,6 +51,8 @@ pub async fn handle(
         branch: query.branch,
         id: query.id,
         dl_branch,
+        highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
 

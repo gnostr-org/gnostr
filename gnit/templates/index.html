@@ -3,7 +3,7 @@
 {% block content %}
 		<div id="container-busy">
 			<div class="loader" title="Loading...">
-				<img class="dark-invert" src="/images/loader-fragment.svg"/>
+				<img class="dark-invert" src="/loader-fragment-{{ crate::LOADER_FRAGMENT_SVG_HASH.get().unwrap() }}.svg"/>
 			</div>
 		</div>
 		<div id="container-welcome" class="hide">
@@ -64,7 +64,7 @@
 							<button action="open-view" data-view="settings" 
 							        title="Settings" class="nav icon">
 								<img class="icon svg inactive" src="/images/settings.svg"/>
-								<img class="icon svg active" src="/images/settings-active.svg"/>
+								<img class="icon svg active" src="/settings-active-{{ crate::SETTINGS_ACTIVE_SVG_HASH.get().unwrap() }}.svg"/>
 							</button>
 							<button action="new-note" title="New Note" class="nav icon new-note">
 								<img class="icon svg invert" src="/images/new-note.svg"/>
@@ -108,7 +108,7 @@
 									</button>
 									<button class="icon" name="message-user"
 									        title="Directly Message">
-										<img class="icon svg" src="/images/message-user.svg"/>
+										<img class="icon svg" src="/message-user-{{ crate::MESSAGE_USER_SVG_HASH.get().unwrap() }}.svg"/>
 									</button>
 									<button class="icon" name="copy-pk"
 									        data-pk="" title="Copy Public Key">
@@ -137,7 +137,7 @@
 						</div>
 						<div class="loading-events">
 							<div class="loader" title="Loading...">
-								<img class="dark-invert" src="/images/loader-fragment.svg"/>
+								<img class="dark-invert" src="/loader-fragment-{{ crate::LOADER_FRAGMENT_SVG_HASH.get().unwrap() }}.svg"/>
 							</div>
 						</div>
 						<div id="settings" class="hide">						<section>
@@ -211,7 +211,7 @@
 								<button action="open-view" data-view="settings" 
 								        title="Settings" class="icon">
 									<img class="icon svg inactive" src="/images/settings.svg"/>
-									<img class="icon svg active" src="/images/settings-active.svg"/>
+									<img class="icon svg active" src="/settings-active-{{ crate::SETTINGS_ACTIVE_SVG_HASH.get().unwrap() }}.svg"/>
 								</button>
 								<button id="new-note-mobile" action="new-note" 
 								        title="New Note" class="nav icon new-note">
