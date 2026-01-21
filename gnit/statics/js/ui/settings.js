@@ -75,7 +75,7 @@ function new_relay_item(str) {
 	<button class="remove-relay btn-text"
 		data-address="${str}"
 		role="remove-relay">
-		<img class="icon svg small" src="/images/event-delete.svg"/>
+		<img class="icon svg small" src="/event-delete-{{ crate::EVENT_DELETE_SVG_HASH.get().unwrap() }}.svg"/>
 	</button>
 	</td>`
   find_node(".remove-relay", tr).addEventListener("click", on_click_remove_relay)
