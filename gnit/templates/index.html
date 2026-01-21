@@ -23,7 +23,7 @@
 			<!-- Global Header (e.g., for app title or global actions) -->			<header id="global-header">
 				<button id="global-header-gnostr-btn" action="open-view" data-view="gnostr" class="nav icon active"
 				        title="gnostr.org">
-					<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
+					<img class="icon svg inactive" src="/logo-inverted-{{ crate::LOGO_INVERTED_SVG_HASH.get().unwrap() }}.svg"/>
 					<img class="icon svg active" src="/images/logo.svg"/>
 					<span id="app-title-btn-label">gnostr</span>
 				<label id="app-title"></label>
