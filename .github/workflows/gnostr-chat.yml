@@ -174,14 +174,14 @@ jobs:
     env:
       ACT: "false"
     steps:
-      - name: Restore rustup
-        id: cache-rustup-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            ~/.rustup
-          key: ${{ runner.os }}-rustup-stable
+      #- name: Restore rustup
+      #  id: cache-rustup-restore
+      #  uses: actions/cache/restore@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      ~/.rustup
+      #    key: ${{ runner.os }}-rustup-stable
 
       - name: Restore cargo
         id: cache-cargo-restore
@@ -225,8 +225,8 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo-binstall --no-confirm sccache --force
-      - run: cargo-binstall --no-confirm gnostr --force
-      - run: cargo build --bin gnostr
+      #- run: cargo-binstall --no-confirm gnostr --force
+      - run: cargo install --path . --force
       - name: Run gnostr tui
         run: |
           ./target/debug/gnostr tui &
