@@ -28,6 +28,8 @@ pub struct View {
     pub repo: Repository,
     pub commit: Arc<Commit>,
     pub branch: Option<Arc<str>>,
+    pub highlight_css_hash: &'static str,
+    pub dark_highlight_css_hash: &'static str,
 }
 
 pub async fn handle(
@@ -47,6 +49,8 @@ pub async fn handle(
         repo,
         commit,
         branch: query.branch,
+        highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
 

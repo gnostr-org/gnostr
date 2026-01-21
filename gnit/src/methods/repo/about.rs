@@ -26,6 +26,8 @@ pub struct View {
     repo: Repository,
     readme: Option<(ReadmeFormat, Arc<str>)>,
     branch: Option<Arc<str>>,
+    pub highlight_css_hash: &'static str,
+    pub dark_highlight_css_hash: &'static str,
 }
 
 pub async fn handle(
@@ -44,5 +46,7 @@ pub async fn handle(
         repo,
         readme,
         branch: query.branch,
+        highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
