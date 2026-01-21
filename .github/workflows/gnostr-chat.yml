@@ -233,14 +233,14 @@ jobs:
           sleep 10
           pkill -f gnostr
 
-      - name: Save rustup
-        id: cache-rustup-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
-        with:
-          path: |
-            ~/.rustup
-          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key || format('{0}-rustup-{1}', runner.os, 'stable') }}
+      #- name: Save rustup
+      #  id: cache-rustup-save
+      #  uses: actions/cache/save@v3
+      #  if: ${{ !env.ACT }}
+      #  with:
+      #    path: |
+      #      ~/.rustup
+      #    key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key || format('{0}-rustup-{1}', runner.os, 'stable') }}
 
       - name: Save cargo
         id: cache-cargo-save
