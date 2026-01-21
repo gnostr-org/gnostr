@@ -55,19 +55,17 @@
 							                                <div class="new-notifications hide" role="dm"></div>
 
 							                            </button>
-							<button action="open-view" data-view="notifications"
-							        class="nav icon" title="Notifications">
-								<img class="icon svg inactive" src="/images/notifications.svg"/>
-								<img class="icon svg active" src="/images/notifications-active.svg"/>
+							<button action="open-view" data-view="notifications" class="nav icon" title="Notifications">
+															<img class="icon svg active" src="/notifications-active-{{ crate::NOTIFICATIONS_ACTIVE_SVG_HASH.get().unwrap() }}.svg"/>
 								<div class="new-notifications hide" role="activity"></div>
 							</button>
 							<button action="open-view" data-view="settings" 
 							        title="Settings" class="nav icon">
-								<img class="icon svg inactive" src="/images/settings.svg"/>
+								<img class="icon svg inactive" src="/settings-{{ crate::SETTINGS_SVG_HASH.get().unwrap() }}.svg"/>
 								<img class="icon svg active" src="/settings-active-{{ crate::SETTINGS_ACTIVE_SVG_HASH.get().unwrap() }}.svg"/>
 							</button>
 							<button action="new-note" title="New Note" class="nav icon new-note">
-								<img class="icon svg invert" src="/images/new-note.svg"/>
+								<img class="icon svg invert" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg"/>
 							</button>
 						</div>
 					</nav>
@@ -202,13 +200,13 @@
 								</button>
 								<button action="open-view" data-view="notifications"
 								        class="icon" title="Notifications">
-									<img class="icon svg inactive" src="/images/notifications.svg"/>
-									<img class="icon svg active" src="/images/notifications-active.svg"/>
+									<img class="icon svg inactive" src="/notifications-{{ crate::NOTIFICATIONS_SVG_HASH.get().unwrap() }}.svg"/>
+									<img class="icon svg active" src="/notifications-active-{{ crate::NOTIFICATIONS_ACTIVE_SVG_HASH.get().unwrap() }}.svg"/>
 									<div class="new-notifications hide" role="activity"></div>
 								</button>
 								<button action="open-view" data-view="settings" 
 								        title="Settings" class="icon">
-									<img class="icon svg inactive" src="/images/settings.svg"/>
+									<img class="icon svg inactive" src="/settings-{{ crate::SETTINGS_SVG_HASH.get().unwrap() }}.svg"/>
 									<img class="icon svg active" src="/settings-active-{{ crate::SETTINGS_ACTIVE_SVG_HASH.get().unwrap() }}.svg"/>
 								</button>
 								<button id="new-note-mobile" action="new-note" 
