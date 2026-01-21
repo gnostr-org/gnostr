@@ -96,6 +96,7 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
+      - run: cargo-binstall --no-confirm sccache --force
       - run: cargo-binstall --no-confirm gnostr --force
       - name: Debug gnostr installation
         run: |
