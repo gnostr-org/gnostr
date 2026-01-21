@@ -9,7 +9,7 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 		alias open='xdg-open';
 	fi
 fi
-cargo install -j8 --path . --root .;
+cargo install -j8 --path . --root . --force;
 
 echo "Starting gnostr-gnit server..."
 cargo run --bin gnostr-gnit -- \
