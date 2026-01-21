@@ -14,9 +14,50 @@ use gnostr_gnit::{build_asset_hash, open_database, run_indexer, init_static_asse
     GLOBAL_CSS_HASH, JS_BUNDLE, JS_BUNDLE_HASH,
     HIGHLIGHT_CSS_BYTES, HIGHLIGHT_CSS_HASH,
     DARK_HIGHLIGHT_CSS_BYTES, DARK_HIGHLIGHT_CSS_HASH,
+    ADD_RELAY_SVG, ADD_RELAY_SVG_HASH,
+    CLOSE_MODAL_SVG, CLOSE_MODAL_SVG_HASH,
+    CONTENT_WARNING_SVG, CONTENT_WARNING_SVG_HASH,
+    EDIT_PROFILE_SVG, EDIT_PROFILE_SVG_HASH,
+    EVENT_DELETE_SVG, EVENT_DELETE_SVG_HASH,
+    EVENT_DETAILS_SVG, EVENT_DETAILS_SVG_HASH,
+    EVENT_LIKE_SVG, EVENT_LIKE_SVG_HASH,
+    EVENT_LIKED_SVG, EVENT_LIKED_SVG_HASH,
+    EVENT_OPTIONS_SVG, EVENT_OPTIONS_SVG_HASH,
+    EVENT_REPLY_ALL_SVG, EVENT_REPLY_ALL_SVG_HASH,
+    EVENT_REPLY_SVG, EVENT_REPLY_SVG_HASH,
+    EVENT_SHARE_SVG, EVENT_SHARE_SVG_HASH,
+    EXPLORE_ACTIVE_SVG, EXPLORE_ACTIVE_SVG_HASH,
+    EXPLORE_SVG, EXPLORE_SVG_HASH,
+    FAVICON_NOTIF_ICO, FAVICON_NOTIF_ICO_HASH,
+    FAVICON_ICO, FAVICON_ICO_HASH,
+    GNOSTR_NOTIF_SVG, GNOSTR_NOTIF_SVG_HASH,
+    GNOSTR_NOBG_SVG, GNOSTR_NOBG_SVG_HASH,
+    GNOSTR_SVG, GNOSTR_SVG_HASH,
+    HOME_ACTIVE_SVG, HOME_ACTIVE_SVG_HASH,
+    HOME_SVG, HOME_SVG_HASH,
+    ICON_MASKABLE_SVG, ICON_MASKABLE_SVG_HASH,
+    ICON_ICNS, ICON_ICNS_HASH,
+    ICON_SVG, ICON_SVG_HASH,
+    KEY_SVG, KEY_SVG_HASH,
     LOADER_FRAGMENT_SVG, LOADER_FRAGMENT_SVG_HASH,
+    LOGO_INVERTED_SVG, LOGO_INVERTED_SVG_HASH,
+    LOGO_SVG, LOGO_SVG_HASH,
     MESSAGE_USER_SVG, MESSAGE_USER_SVG_HASH,
-    SETTINGS_ACTIVE_SVG, SETTINGS_ACTIVE_SVG_HASH, };
+    MESSAGES_ACTIVE_SVG, MESSAGES_ACTIVE_SVG_HASH,
+    MESSAGES_SVG, MESSAGES_SVG_HASH,
+    NEW_NOTE_SVG, NEW_NOTE_SVG_HASH,
+    NO_USER_SVG, NO_USER_SVG_HASH,
+    NOTIFICATIONS_ACTIVE_SVG, NOTIFICATIONS_ACTIVE_SVG_HASH,
+    NOTIFICATIONS_SVG, NOTIFICATIONS_SVG_HASH,
+    OPEN_THREAD_HERE_SVG, OPEN_THREAD_HERE_SVG_HASH,
+    OPEN_THREAD_SVG, OPEN_THREAD_SVG_HASH,
+    PROFILE_WEBSITE_SVG, PROFILE_WEBSITE_SVG_HASH,
+    PROFILE_ZAP_SVG, PROFILE_ZAP_SVG_HASH,
+    PUBKEY_SVG, PUBKEY_SVG_HASH,
+    READ_MORE_SVG, READ_MORE_SVG_HASH,
+    SETTINGS_ACTIVE_SVG, SETTINGS_ACTIVE_SVG_HASH,
+    SETTINGS_SVG, SETTINGS_SVG_HASH,
+    SIGN_OUT_SVG, SIGN_OUT_SVG_HASH, };
 use gnostr_gnit::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
     theme::Theme,
@@ -262,24 +303,180 @@ async fn main() -> Result<(), anyhow::Error> {
             get(static_css(DARK_HIGHLIGHT_CSS_BYTES.get().unwrap())),
         )
         .route(
-            "/favicon.ico",
-            get(static_ico(include_bytes!("../../statics/favicon.ico"))),
+            &format!("/add-relay-{}.svg", ADD_RELAY_SVG_HASH.get().unwrap()),
+            get(static_svg(ADD_RELAY_SVG)),
         )
         .route(
-            "/gnostr.svg",
-            get(static_svg(include_bytes!("../../statics/gnostr.svg"))),
+            &format!("/close-modal-{}.svg", CLOSE_MODAL_SVG_HASH.get().unwrap()),
+            get(static_svg(CLOSE_MODAL_SVG)),
+        )
+        .route(
+            &format!("/content-warning-{}.svg", CONTENT_WARNING_SVG_HASH.get().unwrap()),
+            get(static_svg(CONTENT_WARNING_SVG)),
+        )
+        .route(
+            &format!("/edit-profile-{}.svg", EDIT_PROFILE_SVG_HASH.get().unwrap()),
+            get(static_svg(EDIT_PROFILE_SVG)),
+        )
+        .route(
+            &format!("/event-delete-{}.svg", EVENT_DELETE_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_DELETE_SVG)),
+        )
+        .route(
+            &format!("/event-details-{}.svg", EVENT_DETAILS_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_DETAILS_SVG)),
+        )
+        .route(
+            &format!("/event-like-{}.svg", EVENT_LIKE_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_LIKE_SVG)),
+        )
+        .route(
+            &format!("/event-liked-{}.svg", EVENT_LIKED_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_LIKED_SVG)),
+        )
+        .route(
+            &format!("/event-options-{}.svg", EVENT_OPTIONS_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_OPTIONS_SVG)),
+        )
+        .route(
+            &format!("/event-reply-all-{}.svg", EVENT_REPLY_ALL_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_REPLY_ALL_SVG)),
+        )
+        .route(
+            &format!("/event-reply-{}.svg", EVENT_REPLY_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_REPLY_SVG)),
+        )
+        .route(
+            &format!("/event-share-{}.svg", EVENT_SHARE_SVG_HASH.get().unwrap()),
+            get(static_svg(EVENT_SHARE_SVG)),
+        )
+        .route(
+            &format!("/explore-active-{}.svg", EXPLORE_ACTIVE_SVG_HASH.get().unwrap()),
+            get(static_svg(EXPLORE_ACTIVE_SVG)),
+        )
+        .route(
+            &format!("/explore-{}.svg", EXPLORE_SVG_HASH.get().unwrap()),
+            get(static_svg(EXPLORE_SVG)),
+        )
+        .route(
+            &format!("/favicon-notif-{}.ico", FAVICON_NOTIF_ICO_HASH.get().unwrap()),
+            get(static_ico(FAVICON_NOTIF_ICO)),
+        )
+        .route(
+            &format!("/favicon-{}.ico", FAVICON_ICO_HASH.get().unwrap()),
+            get(static_ico(FAVICON_ICO)),
+        )
+        .route(
+            &format!("/gnostr_notif-{}.svg", GNOSTR_NOTIF_SVG_HASH.get().unwrap()),
+            get(static_svg(GNOSTR_NOTIF_SVG)),
+        )
+        .route(
+            &format!("/gnostr-nobg-{}.svg", GNOSTR_NOBG_SVG_HASH.get().unwrap()),
+            get(static_svg(GNOSTR_NOBG_SVG)),
+        )
+        .route(
+            &format!("/gnostr-{}.svg", GNOSTR_SVG_HASH.get().unwrap()),
+            get(static_svg(GNOSTR_SVG)),
+        )
+        .route(
+            &format!("/home-active-{}.svg", HOME_ACTIVE_SVG_HASH.get().unwrap()),
+            get(static_svg(HOME_ACTIVE_SVG)),
+        )
+        .route(
+            &format!("/home-{}.svg", HOME_SVG_HASH.get().unwrap()),
+            get(static_svg(HOME_SVG)),
+        )
+        .route(
+            &format!("/icon-maskable-{}.svg", ICON_MASKABLE_SVG_HASH.get().unwrap()),
+            get(static_svg(ICON_MASKABLE_SVG)),
+        )
+        .route(
+            &format!("/icon-{}.icns", ICON_ICNS_HASH.get().unwrap()),
+            get(static_ico(ICON_ICNS)),
+        )
+        .route(
+            &format!("/icon-{}.svg", ICON_SVG_HASH.get().unwrap()),
+            get(static_svg(ICON_SVG)),
+        )
+        .route(
+            &format!("/key-{}.svg", KEY_SVG_HASH.get().unwrap()),
+            get(static_svg(KEY_SVG)),
         )
         .route(
             &format!("/loader-fragment-{}.svg", LOADER_FRAGMENT_SVG_HASH.get().unwrap()),
             get(static_svg(LOADER_FRAGMENT_SVG)),
         )
         .route(
+            &format!("/logo-inverted-{}.svg", LOGO_INVERTED_SVG_HASH.get().unwrap()),
+            get(static_svg(LOGO_INVERTED_SVG)),
+        )
+        .route(
+            &format!("/logo-{}.svg", LOGO_SVG_HASH.get().unwrap()),
+            get(static_svg(LOGO_SVG)),
+        )
+        .route(
             &format!("/message-user-{}.svg", MESSAGE_USER_SVG_HASH.get().unwrap()),
             get(static_svg(MESSAGE_USER_SVG)),
         )
         .route(
+            &format!("/messages-active-{}.svg", MESSAGES_ACTIVE_SVG_HASH.get().unwrap()),
+            get(static_svg(MESSAGES_ACTIVE_SVG)),
+        )
+        .route(
+            &format!("/messages-{}.svg", MESSAGES_SVG_HASH.get().unwrap()),
+            get(static_svg(MESSAGES_SVG)),
+        )
+        .route(
+            &format!("/new-note-{}.svg", NEW_NOTE_SVG_HASH.get().unwrap()),
+            get(static_svg(NEW_NOTE_SVG)),
+        )
+        .route(
+            &format!("/no-user-{}.svg", NO_USER_SVG_HASH.get().unwrap()),
+            get(static_svg(NO_USER_SVG)),
+        )
+        .route(
+            &format!("/notifications-active-{}.svg", NOTIFICATIONS_ACTIVE_SVG_HASH.get().unwrap()),
+            get(static_svg(NOTIFICATIONS_ACTIVE_SVG)),
+        )
+        .route(
+            &format!("/notifications-{}.svg", NOTIFICATIONS_SVG_HASH.get().unwrap()),
+            get(static_svg(NOTIFICATIONS_SVG)),
+        )
+        .route(
+            &format!("/open-thread-here-{}.svg", OPEN_THREAD_HERE_SVG_HASH.get().unwrap()),
+            get(static_svg(OPEN_THREAD_HERE_SVG)),
+        )
+        .route(
+            &format!("/open-thread-{}.svg", OPEN_THREAD_SVG_HASH.get().unwrap()),
+            get(static_svg(OPEN_THREAD_SVG)),
+        )
+        .route(
+            &format!("/profile-website-{}.svg", PROFILE_WEBSITE_SVG_HASH.get().unwrap()),
+            get(static_svg(PROFILE_WEBSITE_SVG)),
+        )
+        .route(
+            &format!("/profile-zap-{}.svg", PROFILE_ZAP_SVG_HASH.get().unwrap()),
+            get(static_svg(PROFILE_ZAP_SVG)),
+        )
+        .route(
+            &format!("/pubkey-{}.svg", PUBKEY_SVG_HASH.get().unwrap()),
+            get(static_svg(PUBKEY_SVG)),
+        )
+        .route(
+            &format!("/read-more-{}.svg", READ_MORE_SVG_HASH.get().unwrap()),
+            get(static_svg(READ_MORE_SVG)),
+        )
+        .route(
             &format!("/settings-active-{}.svg", SETTINGS_ACTIVE_SVG_HASH.get().unwrap()),
             get(static_svg(SETTINGS_ACTIVE_SVG)),
+        )
+        .route(
+            &format!("/settings-{}.svg", SETTINGS_SVG_HASH.get().unwrap()),
+            get(static_svg(SETTINGS_SVG)),
+        )
+        .route(
+            &format!("/sign-out-{}.svg", SIGN_OUT_SVG_HASH.get().unwrap()),
+            get(static_svg(SIGN_OUT_SVG)),
         )
         .fallback(methods::repo::service)
         .layer(TimeoutLayer::new(args.request_timeout.into()))
