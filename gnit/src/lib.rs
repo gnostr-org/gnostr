@@ -28,9 +28,9 @@ pub const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
     .as_str();
 pub const JS_BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/js/bundle.js"));
 
-pub static HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
-pub static DARK_HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
-pub static JS_BUNDLE_HASH: OnceLock<Box<str>> = OnceLock::new();
+pub static HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
+pub static DARK_HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
+pub static JS_BUNDLE_HASH: OnceLock<&'static str> = OnceLock::new();
 
 use std::{
     borrow::Cow,
@@ -225,10 +225,10 @@ pub async fn run_indexer(
 }
 
 #[must_use]
-pub fn build_asset_hash(v: &[u8]) -> Box<str> {
+pub fn build_asset_hash(v: &'static [u8]) -> &'static str {
     let hasher = const_xxh3::xxh3_128(v);
     let out = const_hex::encode(hasher.to_be_bytes());
-    Box::from(out)
+    Box::leak(out.into_boxed_str())
 }
 
 /// Response wrapper for Askama templates

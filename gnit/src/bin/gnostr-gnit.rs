@@ -20,15 +20,25 @@ use gnostr_gnit::{
 };
 use std::sync::OnceLock;
 use tokio::net::TcpListener;
-use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
+use tower_http::{cors::CorsLayer, services::ServeDir, timeout::TimeoutLayer};
 use tower_layer::layer_fn;
 use tracing::info;
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
 
-static HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
-static DARK_HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
+static HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
+static DARK_HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
+
+const LOADER_FRAGMENT_SVG: &[u8] = include_bytes!("../../statics/loader-fragment.svg");
+static LOADER_FRAGMENT_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+const MESSAGE_USER_SVG: &[u8] = include_bytes!("../../statics/message-user.svg");
+static MESSAGE_USER_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
+const SETTINGS_ACTIVE_SVG: &[u8] = include_bytes!("../../statics/settings-active.svg");
+static SETTINGS_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
+
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
@@ -188,33 +198,31 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let indexer_wakeup_task = run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
 
-    let css = {
+    let css: &'static [u8] = {
         let theme = toml::from_str::<Theme>(include_str!("../../themes/solarized_light.toml"))
             .unwrap()
             .build_css();
-        let css = Box::leak(
+        Box::leak(
             format!(r#"@media (prefers-color-scheme: light){{{theme}}}"#)
                 .into_boxed_str()
                 .into_boxed_bytes(),
-        );
-        HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
-        css
+        )
     };
+    HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
 
-    let dark_css = {
+    let dark_css: &'static [u8] = {
         let theme = toml::from_str::<Theme>(include_str!("../../themes/solarized_dark.toml"))
             .unwrap()
             .build_css();
-        let css = Box::leak(
+        Box::leak(
             format!(r#"@media (prefers-color-scheme: dark){{{theme}}}"#)
                 .into_boxed_str()
                 .into_boxed_bytes(),
-        );
-        DARK_HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
-        css
+        )
     };
+    DARK_HIGHLIGHT_CSS_HASH.set(build_asset_hash(dark_css)).unwrap();
 
-    let static_favicon = |content: &'static [u8]| {
+    let static_ico = |content: &'static [u8]| {
         move || async move {
             let mut resp = Response::new(Body::from(content));
             resp.headers_mut().insert(
@@ -286,11 +294,23 @@ async fn main() -> Result<(), anyhow::Error> {
         )
         .route(
             "/favicon.ico",
-            get(static_favicon(include_bytes!("../../statics/favicon.ico"))),
+            get(static_ico(include_bytes!("../../statics/favicon.ico"))),
         )
         .route(
             "/gnostr.svg",
             get(static_svg(include_bytes!("../../statics/gnostr.svg"))),
+        )
+        .route(
+            &format!("/loader-fragment-{}.svg", LOADER_FRAGMENT_SVG_HASH.get().unwrap()),
+            get(static_svg(LOADER_FRAGMENT_SVG)),
+        )
+        .route(
+            &format!("/message-user-{}.svg", MESSAGE_USER_SVG_HASH.get().unwrap()),
+            get(static_svg(MESSAGE_USER_SVG)),
+        )
+        .route(
+            &format!("/settings-active-{}.svg", SETTINGS_ACTIVE_SVG_HASH.get().unwrap()),
+            get(static_svg(SETTINGS_ACTIVE_SVG)),
         )
         .fallback(methods::repo::service)
         .layer(TimeoutLayer::new(args.request_timeout.into()))
