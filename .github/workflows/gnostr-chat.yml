@@ -27,7 +27,7 @@ jobs:
         os: [ubuntu-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
         force: ["", "--force"]
-        path: [".", "relay"]
+        path: [".", "relay", "asyncgit"]
         pow: ["0", "16"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -107,7 +107,7 @@ jobs:
           which cargo-binstall || echo "cargo-binstall not found or not in PATH."
           echo "Current PATH: $PATH"
           echo "Verifying gnostr:"
-          which gnostr || echo "gnostr not found or not in PATH."
+          which gnostr || echo "gnostr not found or not in PATH." && true
           echo "CARGO_HOME: ${CARGO_HOME}"
           ls -l ~/.cargo/bin
           gnostr --version # Run if found, otherwise continue
