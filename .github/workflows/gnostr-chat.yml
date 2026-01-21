@@ -234,7 +234,7 @@ jobs:
       - run: cargo install --path . --force
       - name: Run gnostr tui
         run: |
-          ./target/debug/gnostr tui &
+          gnostr tui &
           sleep 10
           pkill -f gnostr
 
