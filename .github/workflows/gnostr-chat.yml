@@ -200,6 +200,7 @@ jobs:
       #      target
       #    key: ${{ runner.os }}-target-stable
 
+      - uses: cargo-bins/cargo-binstall@main
       - uses: actions/checkout@v3
         with:
           submodules: "true"
