@@ -149,7 +149,7 @@ jobs:
           ${{ matrix.packages_install }}
       - name: Build artifacts
         run: |
-          sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu || true
+          sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu gcc-aarch64-none-elf || true
           dist build ${{ needs.plan.outputs.tag-flag }} --print=linkage --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
           echo "dist ran successfully"
       - id: cargo-dist
