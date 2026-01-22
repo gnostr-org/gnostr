@@ -1,7 +1,7 @@
 [package]
 name = "gnostr_gnit"
 description = "gnostr:git server library and binary"
-version = "1895.933117.678085"
+version = "1895.933440.257118"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
