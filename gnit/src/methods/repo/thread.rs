@@ -1,4 +1,4 @@
-use axum::{body::Body, http::Request, response::{IntoResponse, Html}};
+use axum::{body::Body, http::Request, response::Html};
 use std::{path::PathBuf, sync::Arc};
 use tracing::debug;
 use askama::Template;
@@ -18,11 +18,11 @@ pub async fn handle(
     debug!("Thread handler invoked");
 
     // Extract necessary extensions
-    let db = request.extensions().get::<Arc<rocksdb::DB>>().expect("db extension missing").clone();
-    let git = request.extensions().get::<Arc<Git>>().expect("git extension missing").clone();
-    let scan_path = request.extensions().get::<Arc<PathBuf>>().expect("scan_path extension missing").clone();
-    let repo = request.extensions().get::<crate::methods::repo::Repository>().expect("repository extension missing").clone();
-    let repo_path = request.extensions().get::<crate::methods::repo::RepositoryPath>().expect("repository path extension missing").clone();
+    let _db = request.extensions().get::<Arc<rocksdb::DB>>().expect("db extension missing").clone();
+    let _git = request.extensions().get::<Arc<Git>>().expect("git extension missing").clone();
+    let _scan_path = request.extensions().get::<Arc<PathBuf>>().expect("scan_path extension missing").clone();
+    let _repo = request.extensions().get::<crate::methods::repo::Repository>().expect("repository extension missing").clone();
+    let _repo_path = request.extensions().get::<crate::methods::repo::RepositoryPath>().expect("repository path extension missing").clone();
     let child_path = request.extensions().get::<crate::methods::repo::ChildPath>().expect("child path extension missing").clone();
 
     // Get the thread hash from child_path
