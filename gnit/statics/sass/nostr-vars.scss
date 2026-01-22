@@ -1,24 +1,24 @@
 :root {
-  /* Colors */
-  --clrBg: #fff;
-  --clrPanel: #f9f9f9;
-  --clrBorder: #f2f2f2;
-  --clrBtn: #202020;
-  --clrText: #202020;
-  --clrTextLight: #868686;
-  --clrTextLighter: #abb4ca;
-  --clrHeart: #ff5050;
-  --clrWarn: #fbc560;
-  --clrLink: blue;
-  --clrLinkVisited: purple;
-  --clrNotification: #0058ff;
-  --clrChatBlue: #0058ff;
+  /* Solarized Colors - Light Theme */
+  --clrBg: #fdf6e3; /* base3 */
+  --clrPanel: #eee8d5; /* base2 */
+  --clrBorder: #93a1a1; /* base1 */
+  --clrBtn: #073642; /* base02 */
+  --clrText: #073642; /* base02 */
+  --clrTextLight: #586e75; /* base01 */
+  --clrTextLighter: #657b83; /* base00 */
+  --clrHeart: #dc322f; /* red */
+  --clrWarn: #cb4b16; /* orange */
+  --clrLink: #268bd2; /* blue */
+  --clrLinkVisited: #6c71c4; /* violet */
+  --clrNotification: #cb4b16; /* orange */
+  --clrChatBlue: #268bd2; /* blue */
 
-  /* TODO I don't like these and simply did it for dark mode. To rename. */
-  --clrEvMsg: #f4f4f4;
-  --clrTextEvMsg: #444;
-  --clrBgAction: #171717;
-  --clrTextAction: white;
+  /* Event Message & Action Colors */
+  --clrEvMsg: #eee8d5; /* base2 */
+  --clrTextEvMsg: #586e75; /* base01 */
+  --clrBgAction: #eee8d5; /* base2 */
+  --clrTextAction: #073642; /* base02 */
 
   /* Font Sizes */
   --fsSmall: 12px;
@@ -46,15 +46,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --clrBg: #0f0f0f;
-    --clrText: #fff;
-    --clrPanel: #1f1f1f;
-    --clrBorder: #282828;
-    --clrLink: #fb5151;
-    --clrLinkVisited: #f77;
-    --clrEvMsg: #353535;
-    --clrTextEvMsg: white;
-    --clrBgAction: white;
-    --clrTextAction: #1f1f1f;
+    --clrBg: #002b36; /* base03 */
+    --clrText: #839496; /* base0 */
+    --clrPanel: #073642; /* base02 */
+    --clrBorder: #586e75; /* base01 */
+    --clrLink: #268bd2; /* blue */
+    --clrLinkVisited: #6c71c4; /* violet */
+    --clrEvMsg: #073642; /* base02 */
+    --clrTextEvMsg: #839496; /* base0 */
+    --clrBgAction: #586e75; /* base01 */
+    --clrTextAction: #839496; /* base0 */
   }
 }
