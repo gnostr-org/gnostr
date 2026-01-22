@@ -5,8 +5,6 @@ use std::sync::Arc;
 use gnostr_gnit::js::main_js::JSMain;
 use gnostr_gnit::template_html::TemplateHtml;
 
-mod kill_process; // Declare the new module
-
 use clap::Parser;
 
 use handlebars::Handlebars;
@@ -91,7 +89,7 @@ async fn main() {
     pretty_env_logger::init();
 
     let main_js = JSMain::new();
-    let main_js_bytes: &[u8] = include_bytes!("js/main.js");
+    let main_js_bytes: &[u8] = include_bytes!("../js/main.js");
     assert_eq!(main_js_bytes, main_js.main_js);
     // if let Ok(main_js_string) = String::from_utf8(main_js_bytes.to_vec()) {
     //     println!("main.js content: {}", main_js_string);

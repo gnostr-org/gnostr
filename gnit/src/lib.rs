@@ -6,7 +6,7 @@ pub mod css;
 pub mod images;
 pub mod template_html;
 pub mod websock_index_html;
-
+pub mod kill_process;
 pub mod database;
 pub mod git;
 pub mod layers;
