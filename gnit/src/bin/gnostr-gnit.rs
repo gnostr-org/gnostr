@@ -279,6 +279,7 @@ async fn main() -> Result<(), anyhow::Error> {
     init_static_asset_hashes();
     info!("Server starting up...");
 
+    #[allow(deprecated)]
     let app = Router::new()
         .route("/", get(methods::index::handle))
         .route("/gnostr", get(methods::gnostr::handle)) // GEMINI: Add /gnostr route
