@@ -9,10 +9,12 @@ use futures_util::{FutureExt, StreamExt};
 use warp::Filter;
 use structopt::StructOpt; // Add structopt
 
+use crate::template_html::TemplateHtml;
+
 //dev server
 use tiny_http::{Response, Server};
 
-use gnostr_js::*;
+use gnostr_gnit::*;
 
 #[derive(StructOpt)]
 struct Cli {
@@ -56,10 +58,10 @@ async fn main() {
 async fn serve() {
     let main_js = js::main_js::JSMain::new();
 
-    let main_js_bytes: &[u8] = include_bytes!("../js/main.js");
+    let main_js_bytes: &[u8] = include_bytes!("../statics/js/main.js");
     assert_eq!(main_js_bytes, main_js.main_js);
 
-    let template = gnostr_js::template_html::TemplateHtml::new();
+    let template = TemplateHtml::new();
 
     let mut hb = Handlebars::new();
     hb.register_template_string("template.html", template.to_string())
