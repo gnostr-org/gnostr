@@ -9,6 +9,7 @@ mod smart_git;
 mod snapshot;
 mod summary;
 mod tag;
+mod thread; // GEMINI: Add thread module
 mod tree;
 
 use crate::database::schema::repository::YokedRepository;
@@ -39,6 +40,7 @@ use self::{
     snapshot::handle as handle_snapshot,
     summary::handle as handle_summary,
     tag::handle as handle_tag,
+    thread::handle as handle_thread, // GEMINI: Import thread handler
     tree::handle as handle_tree,
 };
 use crate::database::schema::tag::YokedString;
@@ -192,6 +194,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         Some("patch") => h!(handle_patch),
         Some("tag") => h!(handle_tag),
         Some("snapshot") => h!(handle_snapshot),
+        Some("thread") => h!(handle_thread), // GEMINI: Add thread handler
         _ => h!(handle_summary), // Default to summary if no specific handler is found
     };
 
