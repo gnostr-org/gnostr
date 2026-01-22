@@ -1,9 +1,9 @@
 #![allow(unused)]
-pub mod js;
-pub mod css;
-pub mod images;
-pub mod template_html;
-pub mod websock_index_html;
+use super::js;
+use crate::css;
+use super::images;
+use crate::template_html;
+use crate::websock_index_html;
 
 /// TEMPLATE_HTML
 pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>

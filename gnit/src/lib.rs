@@ -1,5 +1,12 @@
 #![deny(clippy::pedantic)]
 
+pub mod chat;
+pub mod js;
+pub mod css;
+pub mod images;
+pub mod template_html;
+pub mod websock_index_html;
+
 pub mod database;
 pub mod git;
 pub mod layers;
