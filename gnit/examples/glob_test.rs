@@ -14,7 +14,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::Filter;
 use warp::ws::{Message, WebSocket};
 
-use gnostr_js::*;
+use gnostr_gnit::*;
 static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
 
@@ -72,7 +72,7 @@ async fn main() {
     //js/ui/util.js
     //
 
-    let main_js: &[u8] = include_bytes!("../js/main.js");
+    let main_js: &[u8] = include_bytes!("../statics/js/main.js");
     //println!("First few bytes of main.js: {:?}", &main_js[0..10]);
     if let Ok(main_js_string) = String::from_utf8(main_js.to_vec()) {
         println!("main.js content: {}", main_js_string);
