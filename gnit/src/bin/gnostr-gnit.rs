@@ -10,7 +10,7 @@ use axum::{
 };
 use clap::Parser;
 use const_format::formatcp;
-use gnostr_gnit::{build_asset_hash, open_database, run_indexer, init_static_asset_hashes, Config, RefreshInterval, GLOBAL_CSS,
+use gnostr_gnit::{/* build_asset_hash, */open_database, run_indexer, init_static_asset_hashes, Config, RefreshInterval, GLOBAL_CSS,
     GLOBAL_CSS_HASH, JS_BUNDLE, JS_BUNDLE_HASH,
     HIGHLIGHT_CSS_BYTES, HIGHLIGHT_CSS_HASH,
     DARK_HIGHLIGHT_CSS_BYTES, DARK_HIGHLIGHT_CSS_HASH,
