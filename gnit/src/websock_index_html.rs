@@ -1,318 +1,24 @@
-#![allow(unused)]
-pub mod js;
-pub mod css;
-pub mod images;
-pub mod template_html;
-pub mod websock_index_html;
 
-/// TEMPLATE_HTML
-pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
-<html lang=\"en\">
-	<head>
-		<meta charset=\"utf-8\">
-		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-		<meta name=\"theme-color\" content=\"\#0f0f0f\"/>
-		        <meta http-equiv=\"Content-Security-Policy\"
-		            content=\"default-src 'none'; manifest-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; script-src-elem 'self'; script-src-attr 'unsafe-hashes' 'sha256-Td3Y/ET9puc5SaGYiJIrX89xKCA2VzXvfyS6pEAPuUM='; style-src 'self' fonts.googleapis.com; img-src http: https: data:; media-src *; font-src 'self' fonts.gstatic.com; child-src 'none';\" />		<title>gnostr<h1>Hello 🅖!</h1>¬</title>
-		<link rel=\"manifest\" href=\"/pwa/manifest.json\"/>
-		<link rel=\"images\" href=\"/images/icon.svg\" type=\"image/svg+xml\"/>
-		<link rel=\"apple-touch-icon\" href=\"/pwa/icon-256.png\"/>
-		<link rel=\"stylesheet\" href=\"/css/vars.css?v=1\">
-		<link rel=\"stylesheet\" href=\"/css/utils.css?v=1\">
-		<link rel=\"stylesheet\" href=\"/css/styles.css?v=13\">
-		<link rel=\"stylesheet\" href=\"/css/responsive.css?v=10\">
-		<script defer src=\"/js/util.js?v=5\"></script>
-		<script defer src=\"/js/ui/safe-html.js?v=1\"></script>
-		<script defer src=\"/js/ui/util.js?v=8\"></script>
-		<script defer src=\"/js/ui/render.js?v=15\"></script>
-		<script defer src=\"/js/ui/state.js?v=1\"></script>
-		<script defer src=\"/js/ui/fmt.js?v=1\"></script>
-		<script defer src=\"/js/ui/profile.js?v=1\"></script>
-		<script defer src=\"/js/ui/settings.js?v=1\"></script>
-		<script defer src=\"/js/ui/dm.js?v=1\"></script>
-		<script defer src=\"/js/nostr.js?v=7\"></script>
-		<script defer src=\"/js/core.js?v=1\"></script>
-		<script defer src=\"/js/model.js?v=1\"></script>
-		<script defer src=\"/js/contacts.js?v=1\"></script>
-		<script defer src=\"/js/event.js?v=1\"></script>
-		        <script defer src=\"/js/lib.js?v=1\"></script>
-				<script defer src=\"/js/main.js?v=1\"></script>
-		        <script defer src=\"/js/db.js?v=1\"></script>
-			</head>	<body>
-		<div id=\"container-busy\">
-			<div class=\"loader\" title=\"Loading...\">
-				<img class=\"dark-invert\" src=\"/images/loader-fragment.svg\"/>
-			</div>
-		</div>
-		<div id=\"container-welcome\" class=\"hide\">
-			<div class=\"hero-box\">
-				<div class=\"padded\">
-					<h1>
-						gnostr<h1>Hello 🅖!</h1>¬
-						<img class=\"icon svg\" src=\"/images/logo-inverted.svg\"/>
-					</h1>
-					<p>A minimal experience for Nostr.</p>
-					<p>Please access with a nos2x compatible browser.</p>
-				</div>
-			</div>
-		</div>
-
-		<div id=\"container-app\" class=\"hide\">
-
-		<div id=\"container\">
-			<div class=\"flex-fill vertical-hide\"></div>
-			<nav id=\"nav\" class=\"nav full flex-noshrink vertical-hide\">
-				<div>
-					<button action=\"open-view\" data-view=\"nip34-global\" class=\"nav icon\"
-						title=\"gnostr.org\">
-						<img class=\"icon svg inactive\" src=\"/images/logo-inverted.svg\"/>
-						<img class=\"icon svg active\" src=\"/images/logo.svg\"/>
-					</button>
-					<button action=\"open-view\" data-view=\"friends\" class=\"nav icon\"
-						title=\"Home\">
-						<img class=\"icon svg inactive\" src=\"/images/home.svg\"/>
-						<img class=\"icon svg active\" src=\"/images/home-active.svg\"/>
-					</button>
-					<button action=\"open-view\" data-view=\"dm\" class=\"nav icon\"
-						title=\"Direct Messages\">
-						<img class=\"icon svg inactive\" src=\"/images/messages.svg\"/>
-						<img class=\"icon svg active\" src=\"/images/messages-active.svg\"/>
-						<div class=\"new-notifications hide\" role=\"dm\"></div>
-					</button>
-					<button action=\"open-view\" data-view=\"notifications\"
-						class=\"nav icon\" title=\"Notifications\">
-						<img class=\"icon svg inactive\" src=\"/images/notifications.svg\"/>
-						<img class=\"icon svg active\" src=\"/images/notifications-active.svg\"/>
-						<div class=\"new-notifications hide\" role=\"activity\"></div>
-					</button>
-					<button action=\"open-view\" data-view=\"settings\"
-						title=\"Settings\" class=\"nav icon\">
-						<img class=\"icon svg inactive\" src=\"/images/settings.svg\"/>
-						<img class=\"icon svg active\" src=\"/images/settings-active.svg\"/>
-					</button>
-					<button action=\"new-note\" title=\"New Note\" class=\"nav icon new-note\">
-						<img class=\"icon svg invert\" src=\"/images/new-note.svg\"/>
-					</button>
-				</div>
-			</nav>
-
-			<div id=\"view\">
-					<header>
-						<label>Home</label>
-						<div id=\"header-tools\">
-							<button class=\"action small hide\"
-							disabled action=\"mark-all-read\">
-								Mark All Read
-							</button>
-							<img class=\"pfp hide\" role=\"their-pfp\" data-pubkey=\"\"
-							src=\"/images/no-user.svg\"/>
-							<img class=\"pfp hide\" role=\"my-pfp\" data-pubkey=\"\"
-							src=\"/images/no-user.svg\"/>
-						</div>
-					</header>
-					<div id=\"profile-info\" role=\"profile-info\" class=\"bottom-border hide\">
-						<div class=\"profile-banner\" name=\"profile-banner\"></div>
-						<div class=\"flex\">
-							<img name=\"profile-image\" class=\"pfp jumbo hide\"/>
-							<label name=\"profile-nip05\"></label>
-							<div class=\"profile-tools\">
-								<button class=\"icon link hide\"
-								name=\"profile-website\" action=\"open-link\">
-									<img class=\"icon svg\" src=\"/images/profile-website.svg\"/>
-								</button>
-								<button class=\"icon link hide\"
-								title=\"Copy Lightning Address\"
-								name=\"profile-lud06\" action=\"open-lud06\">
-									<img class=\"icon svg\" src=\"/images/profile-zap.svg\"/>
-								</button>
-								<button class=\"icon\" name=\"message-user\"
-								title=\"Directly Message\">
-									<img class=\"icon svg\" src=\"/images/message-user.svg\"/>
-								</button>
-								<button class=\"icon\" name=\"copy-pk\"
-								data-pk=\"\" title=\"Copy Public Key\">
-									<img class=\"icon svg\" src=\"/images/pubkey.svg\"/></button>
-
-								<button class=\"action\" name=\"follow-user\"
-								data-pk=\"\">Follow</button>
-								<button class=\"action\" name=\"edit-profile\"
-								title=\"Update Profile\">
-									Update
-								</button>
-							</div>
-						</div>
-						<div>
-							<p name=\"profile-about\"></p>
-						</div>
-					</div>
-					                    <div id=\"dms\" class=\"hide\">
-										</div>
-										<div id=\"show-new\" class=\"show-new hide\" action=\"show-timeline-new\">
-											<button>Show <span>0</span> new notes</button>
-										</div>
-										<div id=\"timeline\" class=\"events\"></div>
-										<div id=\"show-more\" class=\"show-more\">
-											<button action=\"show-timeline-more\">Show More</button>
-					                        <button action=\"show-nip34-more\" class=\"hide\">Show More NIP-34</button>
-										</div>
-					                    <div class=\"loading-events\">
-											<div class=\"loader\" title=\"Loading...\">
-												<img class=\"dark-invert\" src=\"/images/loader-fragment.svg\"/>
-											</div>
-										</div>
-										<div id=\"settings\" class=\"hide\">						<section>
-							<header>
-								<label>Relays</label>
-								<button id=\"add-relay\" class=\"btn-text\">
-									<img class=\"svg icon small\" src=\"/images/add-relay.svg\"/>
-								</button>
-							</header>
-							<table id=\"relay-list\" class=\"row\">
-								<thead>
-									<tr>
-										<td>Address</td>
-										<td>Remove</td>
-									</tr>
-								</thead>
-								<tbody>
-								</tbody>
-							</table>
-						</section>
-						<section>
-							<header><label>Info</label></header>
-							<p>
-							<a href=\"https://github.com/gnostr-org/gnostr\">Source Code</a>
-							<a href=\"https://github.com/gnostr-org/gnostr/issues\">Bug Tracker</a>
-							<a href=\"mailto:admin@gnostr.org\">Email Me</a>
-							</p>
-						</section>
-					</div>
-					<footer>
-						<div id=\"dm-post\" class=\"hide\">
-							<textarea class=\"post-input dm\" name=\"message\"></textarea>
-							<div class=\"post-tools\">
-								<button name=\"send-dm\" class=\"action\">Send</button>
-							</div>
-						</div>
-						<nav class=\"nav mobile\">
-							<button action=\"open-view\" data-view=\"friends\" class=\"icon\"
-								title=\"Home\">
-								<img class=\"icon svg inactive\" src=\"/images/home.svg\"/>
-								<img class=\"icon svg active\" src=\"/images/home-active.svg\"/>
-							</button>
-							<button action=\"open-view\" data-view=\"dm\" class=\"icon\"
-								title=\"Direct Messages\">
-								<img class=\"icon svg inactive\" src=\"/images/messages.svg\"/>
-								<img class=\"icon svg active\" src=\"/images/messages-active.svg\"/>
-								<div class=\"new-notifications hide\" role=\"dm\"></div>
-							</button>
-							<button action=\"open-view\" data-view=\"notifications\"
-								class=\"icon\" title=\"Notifications\">
-								<img class=\"icon svg inactive\" src=\"/images/notifications.svg\"/>
-								<img class=\"icon svg active\" src=\"/images/notifications-active.svg\"/>
-								<div class=\"new-notifications hide\" role=\"activity\"></div>
-							</button>
-							<button action=\"open-view\" data-view=\"settings\"
-								title=\"Settings\" class=\"icon\">
-								<img class=\"icon svg inactive\" src=\"/images/settings.svg\"/>
-								<img class=\"icon svg active\" src=\"/images/settings-active.svg\"/>
-							</button>
-							<button id=\"new-note-mobile\" action=\"new-note\"
-								title=\"New Note\" class=\"nav icon new-note\">
-								<img class=\"icon svg invert\" src=\"/images/new-note.svg\"/>
-							</button>
-						</nav>
-					</footer>
-			</div>
-			<div class=\"flex-fill vertical-hide\"></div>
-		</div>
-		</div>
-        <div id=\"nip34-cache-size\" style=\"position: fixed; bottom: 0; width: 100%; text-align: right; background-color: #333; color: white; padding: 5px; font-size: 0.8em;\">NIP-34 Cache Size: Calculating...</div>
-
-		<dialog id=\"media-preview\" action=\"close-media\">
-			<img action=\"close-media\" src=\"\"/>
-			<!-- TODO add loader to media preview -->
-		</dialog>
-		<dialog id=\"reply-modal\">
-			<div class=\"container\">
-				<header>
-					<label>Reply To</label>
-					<button class=\"icon\" action=\"close-modal\">
-						<img class=\"icon svg\" src=\"/images/close-modal.svg\"/>
-					</button>
-				</header>
-				<div id=\"replying-to\"></div>
-				<div id=\"replybox\">
-					<textarea id=\"reply-content\" class=\"post-input\"
-						placeholder=\"Reply...\"></textarea>
-					<div class=\"post-tools new\">
-						<button class=\"action\" name=\"send\">Send</button>
-					</div>
-					<div class=\"post-tools reply\">
-						<button class=\"action\" name=\"reply-all\" data-all=\"1\">Reply All</button>
-						<button class=\"action\" name=\"reply\">Reply</button>
-					</div>
-				</div>
-			</div>
-		</dialog>
-		<dialog id=\"profile-editor\">
-			<div class=\"container\">
-				<header>
-					<label>Update Profile</label>
-					<button class=\"icon\" action=\"close-modal\">
-						<img class=\"icon svg\" src=\"/images/close-modal.svg\"/>
-					</button>
-				</header>
-				<div>
-					<input type=\"text\" class=\"block w100\" name=\"name\" placeholder=\"Name\"/>
-					<input type=\"text\" class=\"block w100\" name=\"display_name\" placeholder=\"Display Name\"/>
-					<input type=\"text\" class=\"block w100\" name=\"picture\" placeholder=\"Picture URL\"/>
-					<input type=\"text\" class=\"block w100\" name=\"banner\" placeholder=\"Banner URL\"/>
-					<input type=\"text\" class=\"block w100\" name=\"website\" placeholder=\"Website\"/>
-					<input type=\"text\" class=\"block w100\" name=\"lud06\" placeholder=\"lud06\"/>
-					<input type=\"text\" class=\"block w100\" name=\"nip05\" placeholder=\"nip05\"/>
-					<textarea name=\"about\" class=\"block w100\" placeholder=\"A bit about you.\"></textarea>
-					<button class=\"action float-right\" action=\"open-profile-editor\">
-						Update
-					</button>
-				</div>
-			</div>
-		</dialog>
-		<dialog id=\"event-details\">
-			<div class=\"container\">
-				<header>
-					<label>Event Details</label>
-					<button class=\"icon modal-floating-close-btn\" action=\"close-modal\">
-						<img class=\"icon svg\" src=\"/images/close-modal.svg\"/>
-					</button>
-				</header>
-				<div class=\"max-content\">
-					<pre><code></code></pre>
-				</div>
-			</div>
-		</dialog>
-
-		</div>
-	</body>
-</html>
-"#;
-
-
-
-
-pub static _WEBSOCKET_CHAT_INDEX_HTML: &str = r#"<!DOCTYPE html>
+pub static WEBSOCKET_INDEX_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">
     <head>
    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
     <!-- Or for older browsers, you might see: -->
     <!-- <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon"> -->
-<script src="https://bitcoincore.tech/apps/bitcoinjs-ui/lib/bitcoinjs-lib.js"></script>
-<script src="https://bundle.run/bip39@3.0.4"></script>
-<script src="https://bundle.run/bip32@2.0.6"></script>
-<script src="https://bundle.run/buffer@6.0.3"></script>
-<script src="https://bundle.run/noble-secp256k1@1.2.14"></script>
-<script src="https://bundle.run/browserify-cipher@1.0.1"></script>
-<script src="https://mempool.space/mempool.js"></script>
+<!-- replace this -->
+<script src="/js/bitcoinjs-lib.js"></script>
+<!-- replace this -->
+<script src="/js/bip39@3.0.4.js"></script>
+<!-- replace this -->
+<script src="/js/bip32@2.0.6.js"></script>
+<!-- replace this -->
+<script src="/js/buffer@6.0.3.js"></script>
+<!-- replace this -->
+<script src="/js/noble-secp256k1@1.2.14.js"></script>
+<!-- replace this -->
+<script src="/js/browserify-cipher@1.0.1.js"></script>
+<!-- replace this -->
+<script src="/js/mempool.js"></script>
 <script>
         function computeRawPrivkey( node ) {
                 return bitcoinjs.ECPair.fromPrivateKey( node.privateKey, { network: bitcoinjs.networks.mainnet } );
@@ -380,7 +86,7 @@ pub static _WEBSOCKET_CHAT_INDEX_HTML: &str = r#"<!DOCTYPE html>
 </script>
 
 
-        <title>Warp Chat</title>
+        <title>81:Warp Chat</title>
 
 
 
@@ -391,7 +97,7 @@ pub static _WEBSOCKET_CHAT_INDEX_HTML: &str = r#"<!DOCTYPE html>
 
     <body>
         <div id="title">
-        <h1>Warp chat</h1>
+        <h1>body:92:Warp chat</h1>
         </div>
         <div id="result">
             <p><em>{"blocksTipHash":""},</em></p>
@@ -403,7 +109,7 @@ pub static _WEBSOCKET_CHAT_INDEX_HTML: &str = r#"<!DOCTYPE html>
         <input type="text" id="text" />
         <button type="button" id="send">Send</button><br><br>
         <div id="nostr_functions">
-        <h1>Warp chat</h1>
+        <h1>104:Warp chat</h1>
         </div>
         <div id="chat">
             <p><em>Connecting...</em></p>
@@ -423,7 +129,7 @@ pub static _WEBSOCKET_CHAT_INDEX_HTML: &str = r#"<!DOCTYPE html>
         }
 
         ws.onopen = function() {
-            title.innerHTML = '<h3>Warp Connected!<h3>';
+            title.innerHTML = '<h3>124:Warp Connected!<h3>';
             chat.innerHTML = '';
         };
 
