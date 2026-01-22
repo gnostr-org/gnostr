@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <!-- begin gnostr chat web view -->
 		<div id="container-busy">
 			<div class="loader" title="Loading...">
 				<img class="dark-invert" src="/loader-fragment-{{ crate::LOADER_FRAGMENT_SVG_HASH.get().unwrap() }}.svg"/>
@@ -283,8 +284,9 @@
 			</div>
 		</dialog>
 
+    <!-- end gnostr chat web view -->
 
-
+    <!-- begit git web view -->
     <div class="table-responsive">
     <table class="repositories">
         <thead>

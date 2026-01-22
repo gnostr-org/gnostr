@@ -281,6 +281,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let app = Router::new()
         .route("/", get(methods::index::handle))
+        .route("/gnostr", get(methods::gnostr::handle)) // GEMINI: Add /gnostr route
         .route(
             formatcp!("/style-{}.css", GLOBAL_CSS_HASH),
             get(static_css(GLOBAL_CSS)),
