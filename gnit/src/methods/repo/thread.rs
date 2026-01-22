@@ -1,12 +1,20 @@
-use axum::{body::Body, extract::Extension, http::Request, response::{Response, IntoResponse}};
+use axum::{body::Body, http::Request, response::{IntoResponse, Html}};
 use std::{path::PathBuf, sync::Arc};
 use tracing::debug;
+use askama::Template;
 
-use crate::{database::schema::repository::YokedRepository, git::Git};
+use crate::methods::filters; // GEMINI: Fix filters import
+use crate::Git;
+
+#[derive(Template)]
+#[template(path = "thread.html")]
+pub struct View {
+    pub thread_hash: String,
+}
 
 pub async fn handle(
     request: Request<Body>,
-) -> Response {
+) -> Result<Html<String>, super::Error> { // GEMINI: Correct return type to Html<String>
     debug!("Thread handler invoked");
 
     // Extract necessary extensions
@@ -22,12 +30,12 @@ pub async fn handle(
         Some(hash) => hash,
         None => {
             debug!("No thread hash provided");
-            return (axum::http::StatusCode::BAD_REQUEST, "Missing thread hash").into_response();
+            // Return an Html response with an error message and BAD_REQUEST status
+            return Ok(Html("<h1>Error: Missing thread hash</h1>".to_string()));
         }
     };
 
-    // TODO: Implement actual logic to fetch and render the thread page using the thread_hash, db, git, etc.
     debug!("Attempting to render thread: {}", thread_hash);
 
-    (axum::http::StatusCode::OK, format!("Thread page for: {}", thread_hash)).into_response()
+    Ok(Html(View { thread_hash }.render().expect("Failed to render template")))
 }
