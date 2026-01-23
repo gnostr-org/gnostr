@@ -819,9 +819,7 @@ textarea {
 		/* Let the original SVG color show through */
 		filter: invert(0);
 	}
-	/* REMOVED: .nav button[data-view="gnostr"] media query styles */
 
-}
 	.modal {
 		background: rgba(0,0,0,0.4);
 	}
