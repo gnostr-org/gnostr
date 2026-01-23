@@ -21,10 +21,10 @@ fn main() {
 fn run() -> anyhow::Result<()> {
     let manifest_dir =
         PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
-    let statics_in_dir = manifest_dir.join("statics");
+    let statics_in_dir = manifest_dir;
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
-    let statics_out_dir = out_dir.join("statics");
+    let statics_out_dir = out_dir;
 
     let paths = Paths {
         statics_in_dir: &statics_in_dir,
@@ -38,8 +38,8 @@ fn run() -> anyhow::Result<()> {
 }
 
 fn build_scss(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("sass");
-    let out_dir = paths.statics_out_dir.join("css");
+    let in_dir = paths.statics_in_dir.join("src/sass");
+    let out_dir = paths.statics_out_dir.join("src/css");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory")?;
 
     println!("cargo:rerun-if-changed={}", in_dir.display());
@@ -68,9 +68,9 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
 }
 
 fn build_js(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("js");
+    let in_dir = paths.statics_in_dir.join("src/js");
     let ui_in_dir = in_dir.join("ui");
-    let out_dir = paths.statics_out_dir.join("js");
+    let out_dir = paths.statics_out_dir.join("src/js");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
 
     println!("cargo:rerun-if-changed={}", in_dir.display());
