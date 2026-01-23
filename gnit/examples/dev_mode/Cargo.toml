@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-gnostr_js = { path = "../.." }
+gnostr_gnit = { path = "../.." }
 futures-util = "0.3.31"
 handlebars = "6.3.2"
 lazy_static = "1.5.0"
@@ -19,4 +19,4 @@ warp = "0.3"
 
 
 [dev-dependencies]
-gnostr_js = { path = "../.." }
+gnostr_gnit = { path = "../.." }
