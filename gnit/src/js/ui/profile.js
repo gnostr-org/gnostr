@@ -65,7 +65,6 @@ function view_update_profile(model, pubkey) {
 
   const el_banner = find_node("div[name='profile-banner']", el)
   el_banner.style.backgroundImage = `url('${profile.data.banner}')`
-
   ;["nip05"].forEach((field) => {
     const x = find_node(`[name='profile-${field}']`, el)
     x.innerText = profile.data[field]
