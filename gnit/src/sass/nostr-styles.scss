@@ -205,6 +205,13 @@ td {
 .nav [data-view].active img.active {
   display: block;
 }
+.nav button.new-note img.inactive,
+.nav button.new-note img.active {
+  display: none;
+}
+.nav button.new-note img.inactive {
+  display: block;
+}
 button.nav > img.icon {
   width: 28px;
   height: 28px;

@@ -1,12 +1,15 @@
 #[allow(unused_imports)] //TODO
-use axum::{response::{IntoResponse, Html, Redirect}, http::StatusCode};
+use axum::{
+    http::StatusCode,
+    response::{Html, IntoResponse, Redirect},
+};
 
-use tracing::debug;
 use askama::Template;
+use tracing::debug;
 
+use crate::methods::filters;
 #[allow(unused_imports)] //TODO
 use crate::methods::repo::Error;
-use crate::methods::filters;
 
 #[derive(Template)]
 #[template(path = "gnostr.html")]
@@ -15,10 +18,9 @@ pub struct View {
 }
 
 //pub async fn handle() -> Result<Html<String>, Error> {
-    //TODO debug!("Gnostr handler invoked");
-    //TODO Ok(Html(View {}.render().expect("Failed to render template")))
+//TODO debug!("Gnostr handler invoked");
+//TODO Ok(Html(View {}.render().expect("Failed to render template")))
 pub async fn handle() -> Result<impl IntoResponse, crate::methods::repo::Error> {
-
     debug!("Gnostr handler invoked, redirecting to root");
     Ok(Redirect::permanent("/"))
 }

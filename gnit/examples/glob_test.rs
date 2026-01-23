@@ -5,14 +5,14 @@ use futures_util::{SinkExt, StreamExt, TryFutureExt};
 use sha2::Sha256;
 use std::collections::HashMap;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{mpsc, RwLock};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::Filter;
 use warp::ws::{Message, WebSocket};
+use warp::Filter;
 
 use gnostr_gnit::*;
 static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
