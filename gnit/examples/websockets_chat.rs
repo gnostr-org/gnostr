@@ -1,17 +1,16 @@
 // #![deny(warnings)]
 use std::collections::HashMap;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
 use futures_util::{SinkExt, StreamExt, TryFutureExt};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{mpsc, RwLock};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::Filter;
 use warp::ws::{Message, WebSocket};
+use warp::Filter;
 //use warp::filters::BoxedFilter; // for .boxed()
-
 
 /// Our global unique user id counter.
 static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
@@ -39,25 +38,19 @@ async fn main() {
         .and(users)
         .map(|ws: warp::ws::Ws, users| {
             // This will call our function if the handshake succeeds.
-            ws.on_upgrade(move |socket|
-            //
-            user_connected(socket, users))
+            ws.on_upgrade(move |socket| user_connected(socket, users))
 
-
-
-
-
-           // end .map(|ws: warp::ws::Ws, users| {
-        });//
-           // end .map(|ws: warp::ws::Ws, users| {
+            // end .map(|ws: warp::ws::Ws, users| {
+        }); //
+            // end .map(|ws: warp::ws::Ws, users| {
 
     // GET / -> index html
     let index = warp::path::end().map(|| warp::reply::html(INDEX_HTML));
     let files = warp::fs::dir(".");
     let routes = chat // First priority: /chat
-        .or(index)   // Second priority: /
-        .or(files)   // Third priority: catch-all for local files (like /images/favicon.ico)
-        .boxed();    // Apply type erasure
+        .or(index) // Second priority: /
+        .or(files) // Third priority: catch-all for local files (like /images/favicon.ico)
+        .boxed(); // Apply type erasure
 
     warp::serve(routes).run(([127, 0, 0, 1], 3333)).await;
 }

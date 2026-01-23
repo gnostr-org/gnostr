@@ -83,7 +83,8 @@
             />
           </button>
           <button action="new-note" title="New Note" class="nav icon new-note">
-            <img class="icon svg invert" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg" />
+            <img class="icon svg inactive" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg" />
+            <img class="icon svg active" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg" />
           </button>
         </div>
       </nav>
@@ -238,7 +239,8 @@
               />
             </button>
             <button id="new-note-mobile" action="new-note" title="New Note" class="nav icon new-note">
-              <img class="icon svg invert" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg" />
+              <img class="icon svg inactive" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg" />
+              <img class="icon svg active" src="/new-note-{{ crate::NEW_NOTE_SVG_HASH.get().unwrap() }}.svg" />
             </button>
           </nav>
         </footer>

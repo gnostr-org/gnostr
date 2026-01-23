@@ -6,8 +6,8 @@ use serde::Serialize;
 use serde_json::json;
 
 use futures_util::{FutureExt, StreamExt};
-use warp::Filter;
-use structopt::StructOpt; // Add structopt
+use structopt::StructOpt;
+use warp::Filter; // Add structopt
 
 use crate::template_html::TemplateHtml;
 
@@ -79,18 +79,16 @@ async fn serve() {
         })
         .map(handlebars);
 
-    let routes = warp::path("echo")
-        .and(warp::ws())
-        .map(|ws: warp::ws::Ws| {
-            ws.on_upgrade(|websocket| {
-                let (tx, rx) = websocket.split();
-                rx.forward(tx).map(|result| {
-                    if let Err(e) = result {
-                        eprintln!("websocket error: {:?}", e);
-                    }
-                })
+    let routes = warp::path("echo").and(warp::ws()).map(|ws: warp::ws::Ws| {
+        ws.on_upgrade(|websocket| {
+            let (tx, rx) = websocket.split();
+            rx.forward(tx).map(|result| {
+                if let Err(e) = result {
+                    eprintln!("websocket error: {:?}", e);
+                }
             })
-        });
+        })
+    });
 
     let server1 = warp::serve(warp::fs::dir(".")).run(([127, 0, 0, 1], 3030));
     println!("server1\n127.0.0.1:3030");

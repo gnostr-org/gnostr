@@ -1,7 +1,7 @@
 #![allow(unused)]
+use super::images;
 use super::js;
 use crate::css;
-use super::images;
 use crate::template_html;
 use crate::websock_index_html;
 
@@ -91,7 +91,8 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 						<img class=\"icon svg active\" src=\"/images/settings-active.svg\"/>
 					</button>
 					<button action=\"new-note\" title=\"New Note\" class=\"nav icon new-note\">
-						<img class=\"icon svg invert\" src=\"/images/new-note.svg\"/>
+						<img class=\"icon svg inactive\" src=\"/images/new-note.svg\"/>
+						<img class=\"icon svg active\" src=\"/images/new-note.svg\"/>
 					</button>
 				</div>
 			</nav>
@@ -219,7 +220,8 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 							</button>
 							<button id=\"new-note-mobile\" action=\"new-note\"
 								title=\"New Note\" class=\"nav icon new-note\">
-								<img class=\"icon svg invert\" src=\"/images/new-note.svg\"/>
+								<img class=\"icon svg inactive\" src=\"/images/new-note.svg\"/>
+								<img class=\"icon svg active\" src=\"/images/new-note.svg\"/>
 							</button>
 						</nav>
 					</footer>
@@ -296,9 +298,6 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 	</body>
 </html>
 "#;
-
-
-
 
 pub static _WEBSOCKET_CHAT_INDEX_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">

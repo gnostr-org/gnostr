@@ -43,7 +43,6 @@ where
     warp::reply::html(render)
 }
 
-
 // Define a simple structure for our response
 #[derive(Serialize)]
 struct Message {
@@ -52,29 +51,24 @@ struct Message {
 
 // 1. Define the handler function for the new path
 fn get_messages() -> impl warp::Reply {
-    let response = HashMap::from([
-        ("status", "ok"),
-        ("data", "This is the messages endpoint!")
-    ]);
+    let response = HashMap::from([("status", "ok"), ("data", "This is the messages endpoint!")]);
     json(&response)
 }
 
 use webbrowser;
 
 fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+    let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 
-let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
+    println!("Attempting to open: {}", url);
 
-println!("Attempting to open: {}", url);
+    match webbrowser::open(&url) {
+        Ok(_) => println!("Successfully opened the browser to {}", url),
+        Err(e) => eprintln!("Failed to open browser: {}", e),
+    }
 
-match webbrowser::open(&url) {
-    Ok(_) => println!("Successfully opened the browser to {}", url),
-    Err(e) => eprintln!("Failed to open browser: {}", e),
+    Ok(())
 }
-
-Ok(())
-}
-
 
 #[tokio::main]
 async fn main() {
@@ -184,15 +178,29 @@ async fn main() {
         .or(css_files)
         .or(nip34_detail_route)
         .or(gnostr) // Add the new NIP-34 gnostr route
-        .or(warp::get().and(warp::path::end().map(|| WithTemplate {
-            name: "template.html",
-            value: json!({ "user": "🅖" }),
-        }).map(handlebars.clone()).map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING))))        .or(warp::get().and(warp::path::full()).map(|_| WithTemplate {
-            name: "template.html",
-            value: json!({ "user": "🅖" }),
-        }).map(handlebars).map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)));
+        .or(warp::get().and(
+            warp::path::end()
+                .map(|| WithTemplate {
+                    name: "template.html",
+                    value: json!({ "user": "🅖" }),
+                })
+                .map(handlebars.clone())
+                .map(|reply| {
+                    reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)
+                }),
+        ))
+        .or(warp::get()
+            .and(warp::path::full())
+            .map(|_| WithTemplate {
+                name: "template.html",
+                value: json!({ "user": "🅖" }),
+            })
+            .map(handlebars)
+            .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)));
 
     let _ = open("127.0.0.1", args.port.try_into().unwrap());
     println!("http://127.0.0.1:{}", args.port);
-    warp::serve(root_routes.clone()).run(([127, 0, 0, 1], args.port)).await;
+    warp::serve(root_routes.clone())
+        .run(([127, 0, 0, 1], args.port))
+        .await;
 }

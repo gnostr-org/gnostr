@@ -195,7 +195,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         Some("tag") => h!(handle_tag),
         Some("snapshot") => h!(handle_snapshot),
         Some("thread") => h!(handle_thread), // GEMINI: Add thread handler
-        _ => h!(handle_summary), // Default to summary if no specific handler is found
+        _ => h!(handle_summary),             // Default to summary if no specific handler is found
     };
 
     debug!("Final Child Path: {:?}", child_path);

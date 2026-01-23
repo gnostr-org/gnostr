@@ -46,11 +46,7 @@ struct Args {
     debug: bool,
 }
 
-async fn start(
-    port: u16,
-    config: PathBuf,
-    repo_config: PathBuf,
-) -> anyhow::Result<()> {
+async fn start(port: u16, config: PathBuf, repo_config: PathBuf) -> anyhow::Result<()> {
     if is_port_in_use(port).await {
         return Err(anyhow!("Port {} is already in use.", port));
     }
@@ -131,8 +127,7 @@ async fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let result =
-        async move { start(args.port, config_path, repo_config_path).await }.await;
+    let result = async move { start(args.port, config_path, repo_config_path).await }.await;
 
     if let Err(e) = result {
         error!("{:#}", e);

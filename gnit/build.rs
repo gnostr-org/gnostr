@@ -80,8 +80,10 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
 
     // Explicitly add util.js first
     let util_js_path = in_dir.join("util.js");
-    let util_js_content = std::fs::read_to_string(&util_js_path)
-        .context(format!("Failed to read JS file: {}", util_js_path.display()))?;
+    let util_js_content = std::fs::read_to_string(&util_js_path).context(format!(
+        "Failed to read JS file: {}",
+        util_js_path.display()
+    ))?;
     all_js_content.push_str(&util_js_content);
     all_js_content.push_str("\n"); // Add newline for concatenation
 
