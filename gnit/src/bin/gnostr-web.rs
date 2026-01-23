@@ -2,8 +2,6 @@
 #![allow(unused)]
 use std::collections::HashMap;
 use std::sync::Arc;
-use gnostr_gnit::js::main_js::JSMain;
-use gnostr_gnit::template_html::TemplateHtml;
 
 use clap::Parser;
 
@@ -15,13 +13,12 @@ use futures_util::{FutureExt, StreamExt};
 use warp::Filter;
 
 use warp::reply;
-// reply::json(&response)
 use warp::reply::json;
 
 //dev server
 use tiny_http::{Response, Server};
 
-use gnostr_gnit::chat::*;
+use gnostr_gnit::*;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -88,7 +85,7 @@ async fn main() {
 
     pretty_env_logger::init();
 
-    let main_js = JSMain::new();
+    let main_js = js::main_js::JSMain::new();
     let main_js_bytes: &[u8] = include_bytes!("../js/main.js");
     assert_eq!(main_js_bytes, main_js.main_js);
     // if let Ok(main_js_string) = String::from_utf8(main_js_bytes.to_vec()) {
@@ -97,7 +94,7 @@ async fn main() {
     //     println!("main.js is not valid UTF-8.");
     // }
 
-    let template = TemplateHtml::new();
+    let template = gnostr_gnit::template_html::TemplateHtml::new();
     let mut hb = Handlebars::new();
     hb.register_template_string("template.html", template.to_string())
         .unwrap();
