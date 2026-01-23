@@ -39,7 +39,6 @@ pub async fn handle(
 }
 
 // SPA handler - serves the main template for client-side routing
-use std::collections::BTreeMap;
 
 pub async fn handle_spa() -> impl IntoResponse {
     // For SPA routes, we don't need repositories data, just serve the template
