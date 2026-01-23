@@ -258,6 +258,12 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/", get(methods::index::handle))
         .route("/gnostr", get(methods::gnostr::handle)) // GEMINI: Add /gnostr route
         .route("/gnostr/", get(methods::gnostr::handle)) // Handle trailing slash
+        .route("/nip34", get(methods::index::handle_spa)) // NIP-34 view
+        .route("/nip34-global", get(methods::index::handle_spa)) // NIP-34 global view
+        .route(
+            "/repository-details/:repo_id",
+            get(methods::index::handle_spa),
+        ) // NIP-34 repository details
         .route(
             formatcp!("/style-{}.css", GLOBAL_CSS_HASH),
             get(static_css(GLOBAL_CSS)),
