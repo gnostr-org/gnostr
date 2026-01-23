@@ -7,11 +7,6 @@ authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
 default-run = "gnostr-gnit"
 
-## [[bin]]
-## name = "gnostr-ssh"
-## path = "ssh/src/bin/gnostr-ssh.rs"
-## # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [package.metadata.deb]
 section = "web"
 
@@ -21,6 +16,14 @@ members = ["ssh", "tree-sitter-grammar-repository"]
 [[bin]]
 name = "gnostr-gnit"
 path = "src/bin/gnostr-gnit.rs"
+
+[[bin]]
+name = "gnostr-web"
+path = "src/main.rs"
+
+[[bin]]
+name = "gnostr-ssh"
+path = "ssh/src/bin/gnostr-ssh.rs"
 
 [dependencies]
 anyhow = "1.0"
