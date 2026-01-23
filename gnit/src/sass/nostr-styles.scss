@@ -472,6 +472,9 @@ button.nav > img.icon {
 
 .reactions {
   margin-bottom: 15px;
+  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
 }
 .reaction-group {
   display: inline-flex;
@@ -507,6 +510,13 @@ button.nav > img.icon {
 }
 .action-bar button.icon:hover {
   opacity: 1;
+}
+.action-bar button.heart {
+  margin-right: 8px;
+  margin-left: 8px;
+}
+.action-bar button[title="Share"] {
+  margin-right: 8px;
 }
 .action-bar button.heart.liked {
   opacity: 1;
