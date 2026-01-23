@@ -19,7 +19,7 @@ path = "src/bin/gnostr-gnit.rs"
 
 [[bin]]
 name = "gnostr-web"
-path = "src/main.rs"
+path = "src/bin/gnostr-web.rs"
 
 [[bin]]
 name = "gnostr-ssh"
