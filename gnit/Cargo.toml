@@ -5,6 +5,7 @@ version = "1895.933440.257118"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
+default-run = "gnostr-gnit"
 
 ## [[bin]]
 ## name = "gnostr-ssh"
