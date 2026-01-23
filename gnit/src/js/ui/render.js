@@ -182,7 +182,7 @@ function render_action_bar(model, ev, opts = {}) {
   let str = html`<div class="action-bar"></div>`
   if (!shared && event_can_reply(ev)) {
     str += html` <button class="icon" title="Reply" action="reply-to" data-evid="${ev.id}">
-        <img class="icon svg small" src="/images/event-reply.svg" />
+        <img class="icon svg small" src="${IMG_EVENT_REPLY}" />
       </button>
       <button
         class="icon react heart ${ab(liked, "liked", "")}"
@@ -197,12 +197,12 @@ function render_action_bar(model, ev, opts = {}) {
   }
   if (!shared) {
     str += html`<button class="icon" title="Share" data-evid="${ev.id}" action="share">
-      <img class="icon svg small" src="/images/event-share.svg" />
+      <img class="icon svg small" src="${IMG_EVENT_SHARE}" />
     </button>`
   }
   str += `
 	<button class="icon" title="More Options" action="open-event-options" data-evid="${ev.id}" onclick="console.log('More Options button clicked!', this.dataset.evid);">
-		<img class="icon svg small" src="/images/event-options.svg"/>
+		<img class="icon svg small" src="${IMG_EVENT_OPTIONS}"/>
 	</button>`
   return str + "</div>"
 }
