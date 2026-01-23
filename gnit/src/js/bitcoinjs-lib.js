@@ -23970,7 +23970,6 @@
               }
               return out
             }
-
             ;(function () {
               try {
                 Object.defineProperty(WritableState.prototype, "buffer", {
