@@ -262,6 +262,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/messages", get(methods::index::handle_spa)) // Messages view
         .route("/notifications", get(methods::index::handle_spa)) // Notifications view
         .route("/settings", get(methods::index::handle_spa)) // Settings view
+        .route("/profile/:pubkey", get(methods::index::handle_spa)) // Profile view
         .route("/nip34", get(methods::index::handle_spa)) // NIP-34 view
         .route("/nip34-global", get(methods::index::handle_spa)) // NIP-34 global view
         .route(
