@@ -497,6 +497,7 @@ async fn main() -> Result<(), anyhow::Error> {
             &format!("/sign-out-{}.svg", SIGN_OUT_SVG_HASH.get().unwrap()),
             get(static_svg(SIGN_OUT_SVG)),
         )
+        .fallback(methods::index::handle_spa)
         .fallback(methods::repo::service)
         .layer(TimeoutLayer::new(args.request_timeout.into()))
         .layer(layer_fn(LoggingMiddleware))
