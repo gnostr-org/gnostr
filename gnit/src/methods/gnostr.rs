@@ -24,3 +24,8 @@ pub async fn handle() -> Result<impl IntoResponse, crate::methods::repo::Error> 
     debug!("Gnostr handler invoked, redirecting to root");
     Ok(Redirect::permanent("/"))
 }
+
+pub async fn handle_slash() -> Result<impl IntoResponse, crate::methods::repo::Error> {
+    debug!("Gnostr handler with trailing slash invoked, redirecting to root");
+    Ok(Redirect::permanent("/"))
+}
