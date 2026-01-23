@@ -43,14 +43,13 @@ struct Args {
     can_create_repos: bool,
     /// Enable debug logging
     #[arg(long)]
-    _debug: bool,
+    debug: bool,
 }
 
 async fn start(
     port: u16,
     config: PathBuf,
     repo_config: PathBuf,
-    debug: bool,
 ) -> anyhow::Result<()> {
     if is_port_in_use(port).await {
         return Err(anyhow!("Port {} is already in use.", port));
@@ -133,7 +132,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let result =
-        async move { start(args.port, config_path, repo_config_path, args.debug).await }.await;
+        async move { start(args.port, config_path, repo_config_path).await }.await;
 
     if let Err(e) = result {
         error!("{:#}", e);
