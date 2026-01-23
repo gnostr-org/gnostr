@@ -1,9 +1,7 @@
 let GNOSTR = new_model()
 
-// TODO autogenerate these constants with a bash script
-const IMG_EVENT_LIKED = "/images/event-liked.svg"
-const IMG_EVENT_LIKE = "/images/event-like.svg"
-const IMG_NO_USER = "/images/no-user.svg"
+// These constants are now injected from the HTML template
+// const IMG_EVENT_LIKED, IMG_EVENT_LIKE, IMG_NO_USER are defined in the HTML
 
 const SID_META = "meta"
 const SID_HISTORY = "hist"

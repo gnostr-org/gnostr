@@ -653,7 +653,7 @@ function render_dummy_events(container_el, count) {
     dummy_el.classList.add("dummy-event", "event-base") // Add event-base for consistent styling
     dummy_el.innerHTML = `
             <div class="post-info">
-                <img class="pfp skeleton" style="width:40px;height:40px;border-radius:50%;" src="/src/images/no-user.svg"></img>
+                <img class="pfp skeleton" style="width:40px;height:40px;border-radius:50%;" src="${IMG_NO_USER}"></img>
                 <div class="post-identifiers">
                     <div class="author skeleton" style="width:100px;height:12px;"></div>
                     <div class="time skeleton" style="width:60px;height:10px;"></div>

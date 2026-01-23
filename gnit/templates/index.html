@@ -362,5 +362,11 @@
   </table>
 </div>
 {% endblock %} {% block scripts %}
+<script>
+  const IMG_EVENT_LIKE = "/event-like-{{ crate::EVENT_LIKE_SVG_HASH.get().unwrap() }}.svg"
+  const IMG_EVENT_LIKED = "/event-liked-{{ crate::EVENT_LIKED_SVG_HASH.get().unwrap() }}.svg"
+  const IMG_NO_USER = "/no-user-{{ crate::NO_USER_SVG_HASH.get().unwrap() }}.svg"
+  const IMG_EVENT_DELETE = "/event-delete-{{ crate::EVENT_DELETE_SVG_HASH.get().unwrap() }}.svg"
+</script>
 <script defer src="/js-{{ crate::JS_BUNDLE_HASH.get().unwrap() }}.js"></script>
 {% endblock %}
