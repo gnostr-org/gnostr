@@ -1,7 +1,9 @@
 let GNOSTR = new_model()
 
-// These constants are now injected from the HTML template
-// const IMG_EVENT_LIKED, IMG_EVENT_LIKE, IMG_NO_USER are defined in the HTML
+// TODO autogenerate these constants with a bash script
+const IMG_EVENT_LIKED = "/images/event-liked.svg"
+const IMG_EVENT_LIKE = "/images/event-like.svg"
+const IMG_NO_USER = "/images/no-user.svg"
 
 const SID_META = "meta"
 const SID_HISTORY = "hist"
@@ -84,6 +86,9 @@ async function webapp_init() {
 
   // Load data from storage
   await model_load_settings(model)
+  await model_load_events(model, (event) => {
+    model_process_event(model, null, event)
+  })
   init_settings(model)
 
   // Create our pool so that event processing functions can work
@@ -170,7 +175,7 @@ function on_timer_invalidations() {
 function on_timer_save() {
   setTimeout(() => {
     const model = GNOSTR
-    //model_save_events(model);
+    model_save_events(model)
     model_save_settings(model)
     on_timer_save()
   }, 1 * 1000)

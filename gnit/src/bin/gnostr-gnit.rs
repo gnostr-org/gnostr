@@ -10,10 +10,10 @@ use axum::{
 };
 use clap::Parser;
 use const_format::formatcp;
-use gnostr_gnit::{
+use gnostr_js::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
 };
-use gnostr_gnit::{
+use gnostr_js::{
     init_static_asset_hashes, /* build_asset_hash, */ open_database, run_indexer, Config,
     RefreshInterval, ADD_RELAY_SVG, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG, CLOSE_MODAL_SVG_HASH,
     CONTENT_WARNING_SVG, CONTENT_WARNING_SVG_HASH, DARK_HIGHLIGHT_CSS_BYTES,
@@ -256,7 +256,7 @@ async fn main() -> Result<(), anyhow::Error> {
     #[allow(deprecated)]
     let app = Router::new()
         .route("/", get(methods::index::handle))
-        .route("/gnostr", get(methods::gnostr::handle)) // GEMINI: Add /gnostr route
+        .route("/gnostr", get(methods::gnostr::handle))
         .route("/gnostr/", get(methods::gnostr::handle)) // Handle trailing slash
         .route("/thread/:thread_id", get(methods::index::handle_spa)) // Thread view
         .route("/messages", get(methods::index::handle_spa)) // Messages view

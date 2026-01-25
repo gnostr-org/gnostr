@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% block content %}
 <!-- begin gnostr chat web view -->
 <div id="container-busy">
-  <div class="loader" title="Loading...">
+  <div class="loader" title="index.html:4:Loading...">
     <img class="dark-invert" src="/loader-fragment-{{ crate::LOADER_FRAGMENT_SVG_HASH.get().unwrap() }}.svg" />
   </div>
 </div>
@@ -28,7 +28,7 @@
       class="nav icon active"
       title="gnostr.org"
     >
-      <img class="icon svg inactive" src="/logo-inverted-{{ crate::LOGO_INVERTED_SVG_HASH.get().unwrap() }}.svg" />
+      <!-- <img class="icon svg inactive" src="/logo-inverted-{{ crate::LOGO_INVERTED_SVG_HASH.get().unwrap() }}.svg" /> -->
       <img class="icon svg active" src="/logo-{{ crate::LOGO_SVG_HASH.get().unwrap() }}.svg" />
       <span id="app-title-btn-label">gnostr</span>
       <label id="app-title"></label>
@@ -150,7 +150,7 @@
           <button action="show-nip34-more" class="hide">Show More NIP-34</button>
         </div>
         <div class="loading-events">
-          <div class="loader" title="Loading...">
+          <div class="loader" title="index.html:153:Loading...">
             <img class="dark-invert" src="/loader-fragment-{{ crate::LOADER_FRAGMENT_SVG_HASH.get().unwrap() }}.svg" />
           </div>
         </div>

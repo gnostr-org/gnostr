@@ -1,5 +1,5 @@
 all: fake
-	@cargo run
+	@cargo build && cargo run
 
 example-dev-mode:
 	@cd examples/dev_mode && cargo run
