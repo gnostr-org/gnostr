@@ -356,7 +356,8 @@ function on_pool_event(relay, sub_id, ev) {
   const model = GNOSTR
 
   // Simply ignore any events that happened in the future.
-  if (new Date(ev.created_at * 1000) > new Date()) {
+  // Allow 5 minutes of clock skew tolerance
+  if (new Date(ev.created_at * 1000) > new Date(Date.now() + 5 * 60 * 1000)) {
     log_debug(`blocked event caust it was newer`, ev)
     return
   }
