@@ -1,4 +1,18 @@
 #![deny(clippy::pedantic)]
+use std::collections::HashMap;
+use handlebars::Handlebars;
+use clap::Args;
+use clap::Subcommand;
+use clap::Parser;
+use rkyv::Serialize as rkyvSerialize;
+use std::env::Args as stdEnvArgs;
+use serde::Serialize as serdeSerialize;
+
+use warp::body::json as warpBodyJson;
+
+use warp::reply::json as warpReplayJson;
+
+
 
 pub mod chat;
 pub mod css;
@@ -725,3 +739,59 @@ pub async fn find_available_port() -> u16 {
 
     3333 // fallback if no ports available
 }
+
+use webbrowser;
+
+pub fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+
+let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
+
+println!("Attempting to open: {}", url);
+
+match webbrowser::open(&url) {
+    Ok(_) => println!("Successfully opened the browser to {}", url),
+    Err(e) => eprintln!("Failed to open browser: {}", e),
+}
+
+Ok(())
+}
+
+#[derive(Args)]
+#[command(author, version, about, long_about = None)]
+struct AppArgs {
+    /// Port to listen on for the main server
+    #[arg(short, long, default_value_t = 3030)]
+    port: u16,
+}
+
+struct WithTemplate<T: serdeSerialize> {
+    name: &'static str,
+    value: T,
+}
+
+fn render<T>(template: WithTemplate<T>, hbs: Arc<Handlebars<'_>>) -> impl warp::Reply
+where
+    T: serdeSerialize,
+{
+    let render = hbs
+        .render(template.name, &template.value)
+        .unwrap_or_else(|err| err.to_string());
+    warp::reply::html(render)
+}
+
+
+// Define a simple structure for our response
+#[derive(serdeSerialize)]
+struct Message {
+    text: String,
+}
+
+// 1. Define the handler function for the new path
+fn get_messages() -> impl warp::Reply {
+    let response = HashMap::from([
+        ("status", "ok"),
+        ("data", "This is the messages endpoint!")
+    ]);
+    warpReplayJson(&response)
+}
+

@@ -1,8 +1,8 @@
 #![allow(unused)]
-use clap::Parser;
+use warp::{Filter, reply::json};
 use serde::Serialize;
 use std::collections::HashMap;
-use warp::{reply::json, Filter};
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,7 +20,10 @@ struct Message {
 
 // 1. Define the handler function for the new path
 fn get_messages() -> impl warp::Reply {
-    let response = HashMap::from([("status", "ok"), ("data", "This is the messages endpoint!")]);
+    let response = HashMap::from([
+        ("status", "ok"),
+        ("data", "This is the messages endpoint!")
+    ]);
     json(&response)
 }
 

@@ -3,6 +3,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+mod kill_process; // Declare the new module
+
 use clap::Parser;
 
 use handlebars::Handlebars;
@@ -13,6 +15,7 @@ use futures_util::{FutureExt, StreamExt};
 use warp::Filter;
 
 use warp::reply;
+// reply::json(&response)
 use warp::reply::json;
 
 //dev server
@@ -43,6 +46,7 @@ where
     warp::reply::html(render)
 }
 
+
 // Define a simple structure for our response
 #[derive(Serialize)]
 struct Message {
@@ -51,23 +55,11 @@ struct Message {
 
 // 1. Define the handler function for the new path
 fn get_messages() -> impl warp::Reply {
-    let response = HashMap::from([("status", "ok"), ("data", "This is the messages endpoint!")]);
+    let response = HashMap::from([
+        ("status", "ok"),
+        ("data", "This is the messages endpoint!")
+    ]);
     json(&response)
-}
-
-use webbrowser;
-
-fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
-    let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
-
-    println!("Attempting to open: {}", url);
-
-    match webbrowser::open(&url) {
-        Ok(_) => println!("Successfully opened the browser to {}", url),
-        Err(e) => eprintln!("Failed to open browser: {}", e),
-    }
-
-    Ok(())
 }
 
 #[tokio::main]
@@ -80,7 +72,7 @@ async fn main() {
     pretty_env_logger::init();
 
     let main_js = js::main_js::JSMain::new();
-    let main_js_bytes: &[u8] = include_bytes!("../js/main.js");
+    let main_js_bytes: &[u8] = include_bytes!("js/main.js");
     assert_eq!(main_js_bytes, main_js.main_js);
     // if let Ok(main_js_string) = String::from_utf8(main_js_bytes.to_vec()) {
     //     println!("main.js content: {}", main_js_string);
@@ -178,29 +170,15 @@ async fn main() {
         .or(css_files)
         .or(nip34_detail_route)
         .or(gnostr) // Add the new NIP-34 gnostr route
-        .or(warp::get().and(
-            warp::path::end()
-                .map(|| WithTemplate {
-                    name: "template.html",
-                    value: json!({ "user": "🅖" }),
-                })
-                .map(handlebars.clone())
-                .map(|reply| {
-                    reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)
-                }),
-        ))
-        .or(warp::get()
-            .and(warp::path::full())
-            .map(|_| WithTemplate {
-                name: "template.html",
-                value: json!({ "user": "🅖" }),
-            })
-            .map(handlebars)
-            .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)));
+        .or(warp::get().and(warp::path::end().map(|| WithTemplate {
+            name: "template.html",
+            value: json!({ "user": "🅖" }),
+        }).map(handlebars.clone()).map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING))))        .or(warp::get().and(warp::path::full()).map(|_| WithTemplate {
+            name: "template.html",
+            value: json!({ "user": "🅖" }),
+        }).map(handlebars).map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)));
 
     let _ = open("127.0.0.1", args.port.try_into().unwrap());
     println!("http://127.0.0.1:{}", args.port);
-    warp::serve(root_routes.clone())
-        .run(([127, 0, 0, 1], args.port))
-        .await;
+    warp::serve(root_routes.clone()).run(([127, 0, 0, 1], args.port)).await;
 }

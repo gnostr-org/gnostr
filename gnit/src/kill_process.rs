@@ -3,19 +3,18 @@ use std::process::Command;
 pub fn kill_gnostr_js_process() {
     #[cfg(unix)]
     {
-        let output = Command::new("pkill").arg("gnostr-js").output();
+        let output = Command::new("pkill")
+            .arg("gnostr-js")
+            .output();
 
         match output {
             Ok(out) => {
                 if out.status.success() {
                     println!("Successfully killed gnostr-js process.");
                 } else {
-                    eprintln!(
-                        "Failed to kill gnostr-js process: {}",
-                        String::from_utf8_lossy(&out.stderr)
-                    );
+                    eprintln!("Failed to kill gnostr-js process: {}", String::from_utf8_lossy(&out.stderr));
                 }
-            }
+            },
             Err(e) => eprintln!("Could not run pkill command: {}", e),
         }
     }

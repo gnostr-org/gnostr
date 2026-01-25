@@ -1,11 +1,11 @@
 [package]
-name = "gnostr_gnit"
+name = "gnostr_js"
 description = "gnostr:git server library and binary"
 version = "1895.933440.257118"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
-default-run = "gnostr-gnit"
+default-run = "gnostr_js"
 
 [package.metadata.deb]
 section = "web"
@@ -36,7 +36,7 @@ axum = { version = "0.7", default-features = false, features = [
   "http1",
 ] }
 bytes = "1.5"
-clap = { version = "4.5.20", default-features = false, features = [
+clap = { version = "4.5.20", features = [
   "std",
   "cargo",
   "derive",
@@ -104,7 +104,7 @@ tiny_http = "0.12.0"
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"
 tokio-util = { version = "0.7.10", features = ["io"] }
-toml = { version = "0.7", default-features = true, features = ["parse"] }
+toml = { version = "0.7.3", default-features = true, features = ["parse"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "timeout", "fs"] }
 tower-layer = "0.3"
@@ -125,8 +125,6 @@ warp = "0.3"
 webbrowser = "0.8"
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
-#[dependencies.tokio]#version = "1.27.0"#features = ["full"]#[dependencies.toml]
-#version = "0.7.3"
 
 [build-dependencies]
 anyhow = "1.0"
