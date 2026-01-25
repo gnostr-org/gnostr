@@ -4,14 +4,14 @@ A self-hosted Git server that's easy to set up, use, and maintain, accessed over
 
 ## Features
 
-*   **Self-Hosted:** Your own private Git server.
-*   **SSH-Based:** Secure access using SSH public key authentication.
-*   **Easy Setup:** Get started with a simple configuration file.
-*   **Git-Powered Configuration:** Server configuration is managed in a Git repository.
-*   **Access Control:** Differentiate between admin and regular users.
-*   **On-the-fly Repository Creation:** Create repositories by pushing to them.
-*   **Per-Repository Permissions:** Control read/write access for each repository.
-*   **Static Site Generator:** Automatically generates a simple webpage for public repositories from their `README.md`.
+- **Self-Hosted:** Your own private Git server.
+- **SSH-Based:** Secure access using SSH public key authentication.
+- **Easy Setup:** Get started with a simple configuration file.
+- **Git-Powered Configuration:** Server configuration is managed in a Git repository.
+- **Access Control:** Differentiate between admin and regular users.
+- **On-the-fly Repository Creation:** Create repositories by pushing to them.
+- **Per-Repository Permissions:** Control read/write access for each repository.
+- **Static Site Generator:** Automatically generates a simple webpage for public repositories from their `README.md`.
 
 ## Getting Started
 
@@ -54,6 +54,7 @@ welcome_message = "Welcome, %!"
 You can create a new repository on the server by simply pushing an existing local repository.
 
 For example, the user `alex` can create a repository named `my-project` under their personal namespace:
+
 ```sh
 git remote add origin ssh://git.example.com:2222/alex/my-project.git
 git push -u origin main
@@ -90,9 +91,9 @@ You can provide a custom [Tera](https://tera.netlify.app/) template for your rep
 
 The following variables are available in the template:
 
-*   `repo_name`: The name of the repository.
-*   `content`: The HTML content of the `README.md` file.
-*   `clone_url`: The SSH URL to clone the repository.
+- `repo_name`: The name of the repository.
+- `content`: The HTML content of the `README.md` file.
+- `clone_url`: The SSH URL to clone the repository.
 
 ## Git Remote Configuration
 
@@ -108,11 +109,11 @@ To configure a `git remote` for `gnostr-ssh`, follow these steps:
     git remote add <remote_name> ssh://<username>@<gnostr_ssh_hostname>:<port>/<repository_name>.git
     ```
 
-    *   `<remote_name>`: A name for your remote (e.g., `gnostr`, `origin`).
-    *   `<username>`: The username configured in `gnostr-ssh` for your public key.
-    *   `<gnostr_ssh_hostname>`: The hostname or IP address where `gnostr-ssh` is running.
-    *   `<port>`: The port `gnostr-ssh` is listening on (default is 2222, but can be configured).
-    *   `<repository_name>.git`: The name of the repository on the `gnostr-ssh` server (must end with `.git`).
+    - `<remote_name>`: A name for your remote (e.g., `gnostr`, `origin`).
+    - `<username>`: The username configured in `gnostr-ssh` for your public key.
+    - `<gnostr_ssh_hostname>`: The hostname or IP address where `gnostr-ssh` is running.
+    - `<port>`: The port `gnostr-ssh` is listening on (default is 2222, but can be configured).
+    - `<repository_name>.git`: The name of the repository on the `gnostr-ssh` server (must end with `.git`).
 
     **Example:**
     If `gnostr-ssh` is running on `localhost` at port `2222`, your username is `alice`, and your repository is `my_project.git`, you would run:
