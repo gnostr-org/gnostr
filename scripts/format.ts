@@ -16,6 +16,7 @@ const ignorePatterns = [
   "bip39@3.0.4.js",
   "bitcoinjs-lib.js",
   "browserify-cipher@1.0.1.js",
+  "plan-dist-manifest.json",
 ].join("\n")
 
 // Write a temp ignore file
