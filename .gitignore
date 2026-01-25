@@ -1,3 +1,5 @@
+.tmp-prettierignore
+
 bin/
 gnit/test-repo
 gnit/bin/
