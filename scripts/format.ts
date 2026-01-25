@@ -11,6 +11,11 @@ const ignorePatterns = [
   ".gnostr/**",
   "**/coverage/coverage/**",
   "**/.fingerprint/**",
+  "noble-secp256k1@1.2.14.js",
+  "bip32@2.0.6.js",
+  "bip39@3.0.4.js",
+  "bitcoinjs-lib.js",
+  "browserify-cipher@1.0.1.js",
 ].join("\n")
 
 // Write a temp ignore file
