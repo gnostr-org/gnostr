@@ -20,7 +20,7 @@ name = "gnostr_asyncgit"
 path = "src/lib.rs"
 
 [features]
-default = ["trace-libgit", "openssl-sys"]
+default = ["trace-libgit"]
 trace-libgit = []
 vendor-openssl = ["openssl-sys"]
 
@@ -52,7 +52,7 @@ notify = "7.0.0"
 # git2 = { path = "../../extern/git2-rs", features = ["vendored-openssl"]}
 # git2 = { git="https://github.com/extrawurst/git2-rs.git", rev="fc13dcc", features = ["vendored-openssl"]}
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
-openssl-sys = { version = '0.9', features = ["vendored"], optional = true }
+openssl-sys = { version = '0.9', optional = true }
 ratatui = { version = "0.29.0", features = ["serde"] }
 rayon = "1.10"
 rayon-core = "1.12"
