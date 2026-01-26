@@ -92,13 +92,13 @@ fn command_exists(command: &str) -> bool {
 // try:
 // cargo build --features memory_profiling -j8
 
-fn check_sscache() {
+fn check_sccache() {
     if Command::new("sccache").arg("--version").output().is_ok() {
-        println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
-        env::set_var("RUSTC_WRAPPER", "sscache");
+        println!("cargo:warning=sccache detected, setting RUSTC_WRAPPER.");
+        env::set_var("RUSTC_WRAPPER", "sccache");
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
     } else {
-        println!("cargo:warning=sscache not found - trying to install.");
+        println!("cargo:warning=sccache not found - trying to install.");
         install_sccache();
     }
 }
@@ -588,7 +588,7 @@ fn main() {
         if if_linux_unknown() {
             linux_install_pkg_config();
         }
-        if target_os == "aarch64-apple-darwin" || target_os == "x86_64-apple-darwin" {
+        if target_os == "macos" {
             println!("cargo:warning=On macOS, openssl@3 is recommended for this crate.");
 
             if check_brew() {
@@ -600,11 +600,11 @@ fn main() {
                 // Instruct rustc to link against the OpenSSL libraries.
                 // The `openssl` crate generally handles finding these libraries.
                 // If you need explicit linking (less recommended):
-                if target_os == "aarch64-apple-darwin" {
+                if target_arch == "aarch64" {
                     println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
                     println!("cargo:rustc-link-lib=dylib=ssl@3");
                     println!("cargo:rustc-link-lib=dylib=crypto@3");
-                } else if target_os == "x86_64-apple-darwin" {
+                } else if target_arch == "x86_64" {
                     println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
                     println!("cargo:rustc-link-lib=dylib=ssl@3");
                     println!("cargo:rustc-link-lib=dylib=crypto@3");
@@ -649,9 +649,10 @@ fn if_windows() -> bool {
     }
 }
 fn if_linux_unknown() -> bool {
-    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
 
-    if target == "aarch64-unknown-linux-gnu" {
+    if target_os == "linux" && target_arch == "aarch64" {
         println!(
             "cargo:warning=On AArch64 Linux, the `libssl-dev` package is required for this crate."
         );
@@ -686,14 +687,14 @@ fn if_linux_unknown() -> bool {
             }
         }
         true
-    } else {
-        // Logic for other target platforms
+    } else if target_os == "linux" {
+        // Logic for other Linux platforms
         println!("cargo:rustc-link-lib=dylib=ssl");
         println!("cargo:rustc-link-lib=dylib=crypto");
+        true
+    } else {
         false
     }
-
-    // Add other build logic here if needed
 }
 fn linux_install_pkg_config() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
@@ -745,10 +746,11 @@ fn linux_install_pkg_config() {
 }
 
 fn musl_install_pkg_config() {
-    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
 
-    if target == "x86_64-unknown-linux-musl" {
-        println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
+    if target_os == "linux" && target_env == "musl" {
+        println!("cargo:warning=Building for Linux with Musl libc.");
         println!(
             "cargo:warning=This build process may require `pkg-config` to locate necessary libraries."
         );
@@ -770,17 +772,6 @@ fn musl_install_pkg_config() {
         match pkg_config_check {
             Ok(output) if output.status.success() => {
                 println!("cargo:warning=Found `pkg-config` in your PATH.");
-                // Now you can use `pkg-config` to get information about libraries
-                // For example:
-                let lib_info = Command::new("pkg-config")
-                    .arg("--libs")
-                    .arg("your_library")
-                    .output()
-                    .unwrap();
-                println!(
-                    "cargo:rustc-link-lib={}",
-                    String::from_utf8_lossy(&lib_info.stdout).trim()
-                );
             }
             _ => {
                 println!(
@@ -792,15 +783,7 @@ fn musl_install_pkg_config() {
         }
 
         println!("cargo:rustc-cfg=target_musl");
-    } else {
-        println!(
-            "cargo:warning=Not building for x86_64-unknown-linux-musl (current target: {}).",
-            target
-        );
-        // Logic for other target platforms
     }
-
-    // Common build logic can go here
 }
 
 fn _make_empty() {
