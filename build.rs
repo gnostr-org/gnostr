@@ -605,7 +605,7 @@ fn main() {
                 // The `openssl` crate generally handles finding these libraries.
                 // If you need explicit linking (less recommended):
                 if target_arch == "aarch64" {
-                    println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
+                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
                     println!("cargo:rustc-link-lib=dylib=ssl@3");
                     println!("cargo:rustc-link-lib=dylib=crypto@3");
                 } else if target_arch == "x86_64" {
