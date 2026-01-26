@@ -23,13 +23,20 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [windows-latest] #[macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
+        os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          submodules: recursive
+          set-safe-directory: true
+          fetch-depth: 0
+          fetch-tags: false
+
       - name: Cache Cargo registry and Git dependencies
         uses: actions/cache@v3
         with:
@@ -48,14 +55,14 @@ jobs:
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Run sccache-cache only on non-release runs
-        if: github.event_name != 'release'
+        if: github.event_name != 'release' && matrix.os != 'macos-15-intel'
         uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Set Rust caching env vars only on non-release runs
         run: |
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
           # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && matrix.os != 'macos-15-intel'
 
       - name: Calculate Odd/Even Status
         shell: bash
@@ -134,14 +141,23 @@ jobs:
       #  with:
       #    path: |
       #      target
-      #    key: ${{ runner.os }}-target-${{ matrix.toolchain }}
+      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - uses: actions/checkout@v4
         with:
-          #submodules: 'true'
+          # Fetches all history for all branches and tags
+          # Required for tools like 'git describe' or semantic versioning
+          fetch-depth: 0
+
+          # Ensures the workspace is added to git's safe.directory config
+          # Crucial for avoiding "dubious ownership" errors in containerized builds
           set-safe-directory: "true"
-          fetch-depth: "0"
-          #fetch-tags: 'false'
+
+          # Optional: Uncomment if you need git submodules
+          # submodules: 'true'
+
+          # Optional: Uncomment if you want to explicitly disable tag fetching
+          # fetch-tags: 'false'
 
       - name: printenv
         shell: bash
@@ -151,7 +167,7 @@ jobs:
       #- name: coverage.sh
       #  shell: bash
       #  run: |
-      #    ./coverage.sh ${{ matrix.toolchain }} || true
+      #    ./coverage.sh ${{ matrix.rustup }} || true
 
       - name: make
         shell: bash
@@ -171,19 +187,25 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-      - name: cpan install Locale::Maketext::Simple || true
+      - name: Get latest release
         shell: bash
+        id: get_latest_release
         run: |
-          cpan install Locale::Maketext::Simple || true
+          # Use GitHub API to get the latest release tag
+          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
+          echo "Latest release tag: $LATEST_TAG"
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
-      - name: gnostr-installer || cargo-binstall gnostr
+      - name: Install gnostr (latest release)
         shell: bash
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.sh | sh || \
+          # Construct the installer URL using the latest tag
+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
+          echo "Installer URL: $INSTALLER_URL"
+          curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
 
-      - run: sudo apt-get install build-essential procps curl file git -y"
-        shell: bash
+      - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
 
       #- run: cargo install sccache --force -j8
@@ -198,7 +220,6 @@ jobs:
       - name: Install Strawberry Perl
         run: choco install strawberryperl
         if: runner.os == 'windows'
-
       - name: Install Perl modules
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
@@ -281,8 +302,7 @@ jobs:
           -e "$RUNNER_OS" \
           -e "$(gnostr --weeble)" \
           -e "$(gnostr --blockheight)" \
-          -e "$(gnostr --wobble)" \
-          --hex || true
+          -e "$(gnostr --wobble)" || true
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
@@ -320,63 +340,26 @@ jobs:
             echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
-      - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
-        run: |
-          cargo clean && echo "✅" || echo "❌"
+      #- name: 🌙 UTC second is ODD
+      #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
+      #  run: |
+      #    cargo clean && echo "✅" || echo "❌"
 
-      - name: 🚀 cargo test
+      - name: 🚀 cargo test -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          if command -v apt-get &> /dev/null; then \
-          sudo apt-get update && \
-          sudo apt-get install -y \
-          libxcb1-dev \
-          libxcb-render0-dev \
-          libxcb-shape0-dev \
-          libxcb-xfixes0-dev; \
-          else echo 'apt-get not found, trying yum'; \
-          if command -v yum &> /dev/null; \
-          then sudo yum install -y libxcb \
-          libxcb-devel \
-          libxcb-render-devel \
-          libxcb-shape-devel \
-          libxcb-xfixes-devel; \
-          else echo \
-          'Neither apt-get nor yum found. Please install libxcb development libraries manually.';\
-          fi;\
-          fi;
-
-      - name: Set OpenSSL environment variables
-        run: |
-          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL-Win64\lib" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL-Win64\include" >> $GITHUB_ENV
-        if: runner.os == 'windows'
-
-      - name: 🚀 cargo test -j8 --all-features -- --no-capture
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        run: |
-          cargo test -j8 --all-features -- --no-capture && echo "✅" || echo "❌"
+          cargo test -j8 -f --path . --all-features && echo "✅" ## || echo "❌"
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
         run: |
-          cargo test -j8 -- --ignored && echo "✅" || echo "❌"
-
-      - name: 🚀 cargo install -j8
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
-          gnostr nip34 --help
-          gnostr nip34 repo-announcement --help
-          gnostr nip34 repo-state --help
-          gnostr nip34 patch --help
-          gnostr nip34 pull-request --help
-          gnostr nip34 issue --help
-          gnostr nip34 status --help
+          make gnostr-chat &
+          make gnostr-chat &
+          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
+          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
+          sleep 5 # Wait for services to start
+          gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
         if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
@@ -402,25 +385,28 @@ jobs:
           echo "GITHUB_API_URL: ${{ env.GITHUB_API_URL }}"
 
       - name: Get Job Info
+        id: jobs
         shell: bash
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          GITHUB_API="/repos/${INPUT_REPOSITORY}/actions/runs/${INPUT_RUN_ID}/jobs"
-          JOBINFO="$(curl --get -Ss -H "Authorization: ***" ... "${GITHUB_API_URL}${GITHUB_API}?per_page=${INPUT_PER_PAGE}")"
+          GITHUB_API="/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs"
+          JOBINFO="$(curl --retry 3 --get -Ss -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "${{ github.api_url }}${GITHUB_API}?per_page=100")" || exit 0
+          if [ -z "$JOBINFO" ] || [ "$JOBINFO" = "null" ]; then
+            echo "Could not fetch job info, skipping..."
+            exit 0
+          fi
           echo "Available jobs:"
-          echo "$JOBINFO" | jq '.jobs[].name'
-          eval "$(echo "$JOBINFO" | jq -r --arg job_name "${INPUT_JOB_NAME}" '.jobs | map(select(.name == $job_name)) | .[0] | @sh "JOB_ID=\(.id) HTML_URL=\(.html_url)"')"
-          if [ -z "$JOB_ID" ] || [ "$JOB_ID" = "null" ]; then
-            echo "Could not find job with name: '$INPUT_JOB_NAME'"
-            exit 1
+          echo "$JOBINFO" | jq '.jobs[].name' || true
+          JOB_NAME="gnostr-bot (${{ matrix.os }}, ${{ matrix.toolchain }})"
+          HTML_URL=$(echo "$JOBINFO" | jq -r --arg job_name "$JOB_NAME" '.jobs | map(select(.name == $job_name)) | .[0].html_url // empty')
+          if [ -n "$HTML_URL" ] && [ "$HTML_URL" != "null" ]; then
+            echo "html_url=$HTML_URL" >> $GITHUB_OUTPUT
+          else
+            echo "html_url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
 
-      #- name: Get Current Job Log URL
-      #  uses: Tiryoh/gha-jobid-action@v1.4.0
-      #  id: jobs
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    job_name: "gnostr-bot (${{ matrix.os }}, ${{ matrix.toolchain }})" # input job.<job-id>.name and matrix here.
-      #    per_page: 50 # input matrix size here if it is larger than 30
       - name: Output Current Job Log URL
         run: echo ${{ steps.jobs.outputs.html_url }}
 
@@ -529,15 +515,6 @@ jobs:
             gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr query -i $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
-
-      #- name: Save rustup
-      #  id: cache-rustup-save
-      #  uses: actions/cache/save@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
 
       - name: Save cargo
         id: cache-cargo-save
