@@ -53,8 +53,8 @@ name = "git-remote-gnostr"
 path = "src/bin/git-remote-gnostr.rs"
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit"]
-# vendor-openssl can be enabled with: cargo build --features vendor-openssl
+default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
+# vendor-openssl is enabled by default for robust cross-platform builds
 expensive_tests = [] #nostr
 ghemoji = ["gh-emoji"]
 gnostr-web = [
