@@ -1,9 +1,9 @@
 use crate::types::{
+    Id,
     versioned::{
         event3::{EventV3, PreEventV3, RumorV3, UnsignedEventV3},
         zap_data::ZapDataV2,
     },
-    Id,
 };
 
 /// The main event type
