@@ -591,9 +591,9 @@ fn main() {
                     println!("cargo:rustc-link-lib=dylib=ssl@3");
                     println!("cargo:rustc-link-lib=dylib=crypto@3");
                 } else if target_os == "x86_64-apple-darwin" {
-                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl/lib");
+                    println!("cargo:rustc-link-lib=dylib=ssl");
+                    println!("cargo:rustc-link-lib=dylib=crypto");
                 }
             } else {
                 println!(
