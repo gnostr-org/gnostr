@@ -113,6 +113,8 @@ async function webapp_init() {
   await model_load_nip34_events(model)
   // Initial subscription to NIP-34 events
   subscribe_nip34_events(model)
+  // Initialize relay ping monitoring
+  init_relay_ping_monitoring(model)
 
   return pool
 }
