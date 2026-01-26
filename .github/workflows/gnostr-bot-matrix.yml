@@ -392,16 +392,26 @@ jobs:
           echo "GITHUB_API_URL: ${{ env.GITHUB_API_URL }}"
 
       - name: Get Job Info
+        id: jobs
         shell: bash
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          GITHUB_API="/repos/${INPUT_REPOSITORY}/actions/runs/${INPUT_RUN_ID}/jobs"
-          JOBINFO="$(curl --get -Ss -H "Authorization: ***" ... "${GITHUB_API_URL}${GITHUB_API}?per_page=${INPUT_PER_PAGE}")"
+          GITHUB_API="/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs"
+          JOBINFO="$(curl --retry 3 --get -Ss -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "${{ github.api_url }}${GITHUB_API}?per_page=100")" || exit 0
+          if [ -z "$JOBINFO" ] || [ "$JOBINFO" = "null" ]; then
+            echo "Could not fetch job info, skipping..."
+            exit 0
+          fi
           echo "Available jobs:"
-          echo "$JOBINFO" | jq '.jobs[].name'
-          eval "$(echo "$JOBINFO" | jq -r --arg job_name "${INPUT_JOB_NAME}" '.jobs | map(select(.name == $job_name)) | .[0] | @sh "JOB_ID=\(.id) HTML_URL=\(.html_url)"')"
-          if [ -z "$JOB_ID" ] || [ "$JOB_ID" = "null" ]; then
-            echo "Could not find job with name: '$INPUT_JOB_NAME'"
-            exit 1
+          echo "$JOBINFO" | jq '.jobs[].name' || true
+          JOB_NAME="gnostr-bot (${{ matrix.os }}, ${{ matrix.toolchain }})"
+          HTML_URL=$(echo "$JOBINFO" | jq -r --arg job_name "$JOB_NAME" '.jobs | map(select(.name == $job_name)) | .[0].html_url // empty')
+          if [ -n "$HTML_URL" ] && [ "$HTML_URL" != "null" ]; then
+            echo "html_url=$HTML_URL" >> $GITHUB_OUTPUT
+          else
+            echo "html_url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Output Current Job Log URL
