@@ -1,10 +1,11 @@
 // NIP-26: Delegation
 // https://github.com/nostr-protocol/nips/blob/master/26.md
 
-use secp256k1::{schnorr::Signature, Secp256k1, SecretKey, XOnlyPublicKey, Keypair, Message};
+use secp256k1::{schnorr::Signature, Keypair, Message, Secp256k1, SecretKey, XOnlyPublicKey};
 use sha2::{Digest, Sha256};
 
-/// A delegation, which allows one key to sign an event on behalf of another key.
+/// A delegation, which allows one key to sign an event on behalf of another
+/// key.
 #[derive(Debug, Copy, Clone)]
 pub struct Delegation {
     /// The public key of the delegator
@@ -25,13 +26,10 @@ impl Delegation {
         let secp = Secp256k1::new();
         let keypair = Keypair::from_secret_key(&secp, private_key);
         let conditions = self.build_conditions_string();
-        let message = format!(
-            "nostr:delegation:{}:{}",
-            self.delegatee, conditions
-        );
+        let message = format!("nostr:delegation:{}:{}", self.delegatee, conditions);
         let mut hasher = Sha256::new();
         hasher.update(message.as_bytes());
-        let message_hash = Message::from_slice(&hasher.finalize()).unwrap();
+        let message_hash = Message::from_digest_slice(&hasher.finalize()).unwrap();
         let signature = secp.sign_schnorr(&message_hash, &keypair);
         Ok(format!(
             "delegation:{}:{}:{}",
@@ -72,7 +70,7 @@ pub fn verify(
     let message = format!("nostr:delegation:{}:{}", delegatee_pubkey, conditions);
     let mut hasher = Sha256::new();
     hasher.update(message.as_bytes());
-    let message_hash = Message::from_slice(&hasher.finalize()).unwrap();
+    let message_hash = Message::from_digest_slice(&hasher.finalize()).unwrap();
     let signature = Signature::from_slice(&hex::decode(signature_str)?)?;
     let delegator = XOnlyPublicKey::from_slice(&hex::decode(delegator_str)?)?;
     secp.verify_schnorr(&signature, &message_hash, &delegator)?;

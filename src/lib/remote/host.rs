@@ -1,13 +1,18 @@
+use std::{
+    fs::File,
+    io::{Read, Write},
+    net::TcpStream,
+    sync::mpsc::channel,
+};
+
 use anyhow::*;
 use log::trace;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::sync::mpsc::channel;
 
-use crate::remote::message_stream::{MessageStream, TransitionToRead};
-use crate::remote::messages::*;
-use crate::remote::options::Opt;
+use crate::remote::{
+    message_stream::{MessageStream, TransitionToRead},
+    messages::*,
+    options::Opt,
+};
 
 fn handshake<T: Write + Read>(stream: &mut T) -> Result<()> {
     let handshake_request = HandshakeRequest {
@@ -17,7 +22,8 @@ fn handshake<T: Write + Read>(stream: &mut T) -> Result<()> {
 
     let mut msg_stream = MessageStream::new();
 
-    // as socket is in blocking mode at this point we expect this to return with the correct data directly
+    // as socket is in blocking mode at this point we expect this to return with the
+    // correct data directly
     if !msg_stream.begin_write_message(
         stream,
         &handshake_request,
@@ -45,7 +51,7 @@ fn handshake<T: Write + Read>(stream: &mut T) -> Result<()> {
         None => {
             return Err(anyhow!(
                 "Incorrect data from message reader, should have been message"
-            ))
+            ));
         }
     }
 

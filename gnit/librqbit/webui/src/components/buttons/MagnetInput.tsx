@@ -1,33 +1,33 @@
-import { useState } from "react";
-import { CgLink } from "react-icons/cg";
-import { UploadButton } from "./UploadButton";
-import { Modal } from "../modal/Modal";
-import { Button } from "./Button";
-import { ModalBody } from "../modal/ModalBody";
-import { ModalFooter } from "../modal/ModalFooter";
-import { FormInput } from "../forms/FormInput";
+import { useState } from "react"
+import { CgLink } from "react-icons/cg"
+import { UploadButton } from "./UploadButton"
+import { Modal } from "../modal/Modal"
+import { Button } from "./Button"
+import { ModalBody } from "../modal/ModalBody"
+import { ModalFooter } from "../modal/ModalFooter"
+import { FormInput } from "../forms/FormInput"
 
 export const MagnetInput = ({ className }: { className?: string }) => {
-  const [magnet, setMagnet] = useState<string | null>(null);
-  const [inputValue, setInputValue] = useState("");
-  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [magnet, setMagnet] = useState<string | null>(null)
+  const [inputValue, setInputValue] = useState("")
+  const [modalIsOpen, setModalIsOpen] = useState(false)
 
   const submit = () => {
-    setMagnet(inputValue);
-    setInputValue("");
-    setModalIsOpen(false);
-  };
+    setMagnet(inputValue)
+    setInputValue("")
+    setModalIsOpen(false)
+  }
 
   const clear = () => {
-    setModalIsOpen(false);
-    setMagnet(null);
-  };
+    setModalIsOpen(false)
+    setMagnet(null)
+  }
 
   return (
     <>
       <UploadButton
         onClick={() => {
-          setModalIsOpen(true);
+          setModalIsOpen(true)
         }}
         data={magnet}
         className={`group ${className}`}
@@ -46,7 +46,7 @@ export const MagnetInput = ({ className }: { className?: string }) => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !!inputValue) {
-                submit();
+                submit()
               }
             }}
             placeholder="magnet:?xt=urn:btih:..."
@@ -64,5 +64,5 @@ export const MagnetInput = ({ className }: { className?: string }) => {
         </ModalFooter>
       </Modal>
     </>
-  );
-};
+  )
+}

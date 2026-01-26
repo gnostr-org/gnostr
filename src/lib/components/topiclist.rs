@@ -1,3 +1,6 @@
+#![allow(missing_docs)]
+use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, env, rc::Rc, time::Instant};
+
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
@@ -12,22 +15,19 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use std::env;
-use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Instant};
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
+use tui_input::{backend::crossterm::EventHandler, Input};
 
 #[derive(Default)]
 pub enum InputMode {
-    Normal,
     #[default]
+    Normal,
     Editing,
 }
 
-use super::utils::logitems::{ItemBatch, LogEntry};
-use super::CommandText;
-use crate::utils::truncate_chars;
-use crate::p2p::chat::msg::Msg;
+use super::{
+    utils::logitems::{ItemBatch, LogEntry},
+    CommandText,
+};
 use crate::{
     app::Environment,
     components::{
@@ -35,6 +35,7 @@ use crate::{
         EventState, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
+    p2p::chat::msg::Msg,
     queue::{InternalEvent, Queue},
     strings::{self, symbol},
     try_or_popup,
@@ -42,12 +43,13 @@ use crate::{
         calc_scroll_top,
         style::{SharedTheme, Theme},
     },
+    utils::truncate_chars,
 };
 
 const ELEMENTS_PER_LINE: usize = 9;
 const SLICE_SIZE: usize = 1200;
 
-///
+/// TopicList
 pub struct TopicList {
     repo: RepoPathRef,
     title: Box<str>,
@@ -108,56 +110,56 @@ impl TopicList {
         }
     }
 
-    ///
+    /// tags
     pub const fn tags(&self) -> Option<&Tags> {
         self.tags.as_ref()
     }
 
-    ///
+    /// clear
     pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
     }
 
-    ///
+    /// copy_items
     pub fn copy_items(&self) -> Vec<CommitId> {
         self.commits.iter().copied().collect_vec()
     }
 
-    ///
+    /// set_tags
     pub fn set_tags(&mut self, tags: Tags) {
         self.tags = Some(tags);
     }
 
-    ///
+    /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
             .iter()
             .nth(self.selection.saturating_sub(self.items.index_offset()))
     }
 
-    ///
+    /// marked_count
     pub fn marked_count(&self) -> usize {
         self.marked.len()
     }
 
-    ///
+    /// marked
     pub fn marked(&self) -> &[(usize, CommitId)] {
         &self.marked
     }
 
-    ///
+    /// clear_marked
     pub fn clear_marked(&mut self) {
         self.marked.clear();
     }
 
-    ///
+    /// marked_commits
     pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
         commits
     }
 
-    ///
+    /// copy_commit_hash
     pub fn copy_commit_hash(&self) -> Result<()> {
         let marked = self.marked.as_slice();
         let yank: Option<String> = match marked {
@@ -190,7 +192,7 @@ impl TopicList {
         Ok(())
     }
 
-    ///
+    /// checkout
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn checkout(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
@@ -202,8 +204,11 @@ impl TopicList {
             );
         }
     }
+
+    /// comment
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn comment(&mut self) {
+        //TODO nostr reaction comment
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
             try_or_popup!(
                 self,
@@ -214,31 +219,35 @@ impl TopicList {
         }
     }
 
-    ///
+    /// set_local_branches
     pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
         self.local_branches.clear();
 
         for local_branch in local_branches {
-            self.local_branches
-                .entry(local_branch.top_commit)
-                .or_default()
-                .push(local_branch);
+            if local_branch.name.starts_with("pr") {
+                self.local_branches
+                    .entry(local_branch.top_commit)
+                    .or_default()
+                    .push(local_branch);
+            }
         }
     }
 
-    ///
+    /// set_remote_branches
     pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
         self.remote_branches.clear();
 
         for remote_branch in remote_branches {
-            self.remote_branches
-                .entry(remote_branch.top_commit)
-                .or_default()
-                .push(remote_branch);
+            if remote_branch.name.contains("pr") {
+                self.remote_branches
+                    .entry(remote_branch.top_commit)
+                    .or_default()
+                    .push(remote_branch);
+            }
         }
     }
 
-    ///
+    /// set_commits
     pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
         // methods
         // `copy_items`
@@ -256,7 +265,7 @@ impl TopicList {
         }
     }
 
-    ///
+    /// refresh_extend_data
     pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
         let new_commits = !commits.is_empty();
         self.commits.extend(commits);
@@ -269,7 +278,7 @@ impl TopicList {
         }
     }
 
-    ///
+    /// set_highlighted
     pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
         //note: set highlights to none if there is no highlight
         self.highlights = if highlighting.as_ref().is_some_and(|set| set.is_empty()) {
@@ -283,7 +292,7 @@ impl TopicList {
         self.fetch_commits(true);
     }
 
-    ///
+    /// select_commit
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         let index = self.commits.get_index_of(&id);
 
@@ -293,12 +302,12 @@ impl TopicList {
             Ok(())
         } else {
             anyhow::bail!(
-				"Could not select commit. It might not be loaded yet or it might be on a different branch."
-			);
+                "Could not select commit. It might not be loaded yet or it might be on a different branch."
+            );
         }
     }
 
-    ///
+    /// highlighted_selection_info
     pub fn highlighted_selection_info(&self) -> (usize, usize) {
         let amount = self
             .highlights
@@ -308,6 +317,7 @@ impl TopicList {
         (self.highlighted_selection.unwrap_or_default(), amount)
     }
 
+    /// set_hightlighted_selection_index
     fn set_highlighted_selection_index(&mut self) {
         self.highlighted_selection = self.highlights.as_ref().and_then(|highlights| {
             highlights
@@ -335,6 +345,7 @@ impl TopicList {
             .unwrap_or_default()
     }
 
+    /// move_selection
     fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
         let needs_update = if self.items.highlighting() {
             self.move_selection_highlighting(scroll)?
@@ -345,6 +356,7 @@ impl TopicList {
         Ok(needs_update)
     }
 
+    /// move_selection_highlighting
     fn move_selection_highlighting(&mut self, scroll: ScrollType) -> Result<bool> {
         let (current_index, selection_max) = self.highlighted_selection_info();
 
@@ -458,13 +470,14 @@ impl TopicList {
         selected: bool,
         tags: Option<String>,
         local_branches: Option<String>,
-        remote_branches: Option<String>,
+        remote_branches: Option<String>, /* detect branch names with
+                                          * pr/WEEBLE/BLOCKHEIGHT/WOBBLE nip34 etc */
         theme: &Theme,
         width: usize, //width
-        now: DateTime<Local>,
+        _now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
-        //
+        #[allow(clippy::if_same_then_else)]
         let mut txt: Vec<Span> =
             Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 });
 
@@ -503,7 +516,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_time = if normal {
+        let _style_time = if normal {
             theme.commit_time(selected)
         } else {
             theme.commit_unhighlighted()
@@ -513,7 +526,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_tags = if normal {
+        let _style_tags = if normal {
             theme.tags(selected)
         } else {
             theme.commit_unhighlighted()
@@ -523,7 +536,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_msg = if normal {
+        let _style_msg = if normal {
             theme.text(true, selected)
         } else {
             theme.commit_unhighlighted()
@@ -541,7 +554,9 @@ impl TopicList {
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(splitter.clone());
 
+        #[allow(unused_variables)]
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
+        #[allow(unused_variables)]
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
@@ -553,21 +568,23 @@ impl TopicList {
             style_author,
         ));
 
-        let author = string_width_align(&e.author, author_width);
+        //detect author by nostr pubkey if possible
+        let _author = string_width_align(&e.author, author_width);
         // commit author
         //txt.push(Span::styled(author, style_author));
 
         // commit tags
-        if let Some(tags) = tags {
+        if let Some(_tags) = tags {
             //txt.push(Span::styled(tags, style_tags));
         }
 
-        if let Some(local_branches) = local_branches {
-            //txt.push(Span::styled(local_branches, style_branches));
+        //TODO detect branch pr/WEEBLE/BLOCKHEIGHT/WOBBLE etc for nip34
+        if let Some(_local_branches) = local_branches {
+            txt.push(Span::styled(_local_branches, style_branches));
         }
         //git-remote-nostr helper
-        if let Some(remote_branches) = remote_branches {
-            txt.push(Span::styled(remote_branches, style_branches));
+        if let Some(_remote_branches) = remote_branches {
+            txt.push(Span::styled(_remote_branches, style_branches));
         }
 
         Line::from(txt)
@@ -582,29 +599,22 @@ impl TopicList {
         remote_branches: Option<String>,
         theme: &Theme,
         width: usize, //width
-        now: DateTime<Local>,
+        _now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
         //
+        #[allow(clippy::if_same_then_else)]
         let mut txt: Vec<Span> =
             Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 2 });
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
 
         let splitter_txt = Cow::from(symbol::EMPTY_SPACE);
-        let splitter = Span::styled(
-            splitter_txt,
-            if normal {
-                theme.text(true, false)
-                //Style::default()
-            } else {
-                theme.text(true, false)
-                //Style::default()
-            },
-        );
+        let splitter = Span::styled(splitter_txt, theme.text(true, false));
 
+        //nip34 indication for push
         // marker
-        if let Some(marked) = marked {
+        if let Some(_marked) = marked {
             //txt.push(Span::styled(
             //    Cow::from(if marked {
             //        //symbol::CIRCLED_G_STR //offset in home component
@@ -620,24 +630,24 @@ impl TopicList {
             //    theme.log_marker(selected),
             //));
         }
-        txt.push(splitter.clone());
+        //txt.push(splitter.clone());
 
-        let style_hash = if normal {
+        let _style_hash = if normal {
             theme.commit_hash(selected)
         } else {
             theme.commit_unhighlighted()
         };
-        let style_time = if normal {
+        let _style_time = if normal {
             theme.commit_time(selected)
         } else {
             theme.commit_unhighlighted()
         };
-        let style_author = if normal {
+        let _style_author = if normal {
             theme.commit_author(selected)
         } else {
             theme.commit_unhighlighted()
         };
-        let style_tags = if normal {
+        let _style_tags = if normal {
             theme.tags(selected)
         } else {
             theme.commit_unhighlighted()
@@ -647,7 +657,7 @@ impl TopicList {
         } else {
             theme.commit_unhighlighted()
         };
-        let style_msg = if normal {
+        let _style_msg = if normal {
             theme.text(true, selected)
         } else {
             theme.commit_unhighlighted()
@@ -663,11 +673,15 @@ impl TopicList {
         //    format!("{} ", &truncate_chars(&e.keys, 64 as usize)),
         //    style_hash,
         //));
-        txt.push(splitter.clone());
+
+        //txt.push(splitter.clone());
+
         //txt.push(Span::styled(Cow::from(&*e.hash_short), style_hash));
         //txt.push(splitter.clone());
 
+        #[allow(unused_variables)]
         let author_width = (width.saturating_sub(0) / 3).clamp(3, 20);
+        #[allow(unused_variables)]
         let message_width = width.saturating_sub(txt.iter().map(|span| span.content.len()).sum());
 
         //// commit msg
@@ -690,8 +704,8 @@ impl TopicList {
             txt.push(splitter.clone());
         }
 
-        if let Some(local_branches) = local_branches {
-            //txt.push(Span::styled(local_branches, style_branches));
+        if let Some(_local_branches) = local_branches {
+            txt.push(Span::styled(_local_branches, style_branches));
             txt.push(splitter.clone());
         }
         //git-remote-nostr helper
@@ -734,16 +748,16 @@ impl TopicList {
                 None
             };
 
-            //txt.push("topiclist:695:text".into());
-            txt.push(
-                format!(
-                    "{}/{}/{}",
-                    env::var("WEEBLE").unwrap(),
-                    env::var("BLOCKHEIGHT").unwrap(),
-                    env::var("WOBBLE").unwrap()
-                )
-                .into(), //wobble_sync().unwrap()).into()
-            );
+            //txt.push("topiclist:757:text".into());
+            //txt.push(
+            //    format!(
+            //        "{}/{}/{}",
+            //        env::var("WEEBLE").unwrap(),
+            //        env::var("BLOCKHEIGHT").unwrap(),
+            //        env::var("WOBBLE").unwrap()
+            //    )
+            //    .into(), //wobble_sync().unwrap()).into()
+            //);
             //get_detail_to_add
             txt.push(self.get_detail_to_add(
                 e,
@@ -756,54 +770,54 @@ impl TopicList {
                 now,
                 marked,
             ));
-            txt.push("topiclist:708:text".into());
+            txt.push("topiclist:777:text".into());
         }
 
         txt
     }
-    fn get_topic_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
-        let selection = self.relative_selection();
+
+    // displayed above get_detail_text
+    fn get_topic_text(&self, height: usize, _width: usize) -> Vec<Line<'_>> {
+        let _selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
-        let now = Local::now();
+        let _now = Local::now();
         let any_marked = !self.marked.is_empty();
-        for (idx, e) in self
-            .items
-            .iter()
-            .skip(self.scroll_top.get())
-            .take(height)
-            .enumerate()
+        //for (_idx, e) in self
+        for e in self.items.iter().skip(self.scroll_top.get()).take(height)
+        //    .enumerate()
         {
-            let tags = self
+            let _tags = self
                 .tags
                 .as_ref()
                 .and_then(|t| t.get(&e.id))
                 .map(|tags| tags.iter().map(|t| format!("<{}>", t.name)).join(" "));
 
-            let local_branches = self.local_branches.get(&e.id).map(|local_branch| {
+            let _local_branches = self.local_branches.get(&e.id).map(|local_branch| {
                 local_branch
                     .iter()
                     .map(|local_branch| format!("{{{0}}}", local_branch.name))
                     .join(" ")
             });
 
-            let marked = if any_marked {
+            let _marked = if any_marked {
                 self.is_marked(&e.id)
             } else {
                 None
             };
 
             //get_entry_to_add
-            txt.push(self.get_entry_to_add(
-                e,
-                idx + self.scroll_top.get() == selection,
-                tags,
-                local_branches,
-                self.remote_branches_string(e),
-                &self.theme,
-                width - 6_usize,
-                now,
-                marked,
-            ));
+            //txt.push(self.get_entry_to_add(
+            //    e,
+            //    _idx + self.scroll_top.get() == _selection,
+            //    _tags,
+            //    _local_branches,
+            //    self.remote_branches_string(e),
+            //    &self.theme,
+            //    _width - 6_usize,
+            //    _now,
+            //    _marked,
+            //));
+            txt.push("topiclist:840:text".into());
         }
 
         txt
@@ -936,6 +950,8 @@ impl TopicList {
             }
         }
     }
+    //#[allow(dead_code)]
+    //this is commit history list
     fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);
@@ -998,12 +1014,15 @@ impl TopicList {
         }
         Vec::new()
     }
+
+    /// handle_internal_event
     pub fn handle_internal_event(&mut self, event: InternalEvent) {
         if let InternalEvent::ChatMessage(msg) = event {
             if let Some(history) = self.chat_histories.get_mut(&msg.commit_id) {
                 history.push(msg.to_string());
             } else {
-                self.chat_histories.insert(msg.commit_id, vec![msg.to_string()]);
+                self.chat_histories
+                    .insert(msg.commit_id, vec![msg.to_string()]);
             }
         }
     }
@@ -1021,22 +1040,24 @@ impl DrawableComponent for TopicList {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(3),       //help and tools height
-                    Constraint::Length(3),       //timer
-                    Constraint::Percentage(100), //table
-                    Constraint::Length(3),       //chat input
+                    Constraint::Length(5),      //0 nip34 top box
+                    Constraint::Length(3),      //1 additional info
+                    Constraint::Percentage(50), //2 table //commit detail hidden
+                    Constraint::Percentage(50), //3 table //chat_history
+                    Constraint::Length(3),      //4 chat input //last in - bottom
                 ]
                 .as_ref(),
             )
             .split(chunks[0]);
 
+        //commit_details
         let right_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Length(2),       //0 topic
-                    Constraint::Length(2),       //1 squares
-                    Constraint::Percentage(100), //2 tools view
+                    Constraint::Min(0),         //0 topic
+                    Constraint::Min(0),         //1 squares
+                    Constraint::Percentage(50), //2 tools view
                 ]
                 .as_ref(),
             )
@@ -1044,7 +1065,10 @@ impl DrawableComponent for TopicList {
 
         let current_size = (
             area.width.saturating_sub(2),
-            area.height.saturating_sub(1) - right_chunks.get(1).unwrap().height - 2,
+            area.height
+                .saturating_sub(1)
+                .saturating_sub(right_chunks.get(1).unwrap().height)
+                .saturating_sub(2),
         );
         self.current_size.set(Some(current_size));
 
@@ -1057,8 +1081,8 @@ impl DrawableComponent for TopicList {
             selection,
         ));
 
-        let title = format!(
-            "topiclist.rs:984: {} {}/{} ",
+        let _title = format!(
+            "topiclist.rs:1100: {} {}/{} ",
             self.title,
             self.commits.len().saturating_sub(self.selection),
             self.commits.len(),
@@ -1071,41 +1095,58 @@ impl DrawableComponent for TopicList {
             .block(
                 Block::default()
                     .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
-                    .title(Span::styled(
-                        format!(
-                            "self.get_topic_text:pubkey--->{:>}<---",
-                            title.as_str().to_owned(),
-                        ),
-                        self.theme.title(true),
-                    ))
+                    //nip34 event info
+                    //.title(Span::styled(
+                    //    format!(
+                    //        "1097:self.get_topic_text:pubkey--->{:>}<---",
+                    //        _title.as_str().to_owned(),
+                    //    ),
+                    //    self.theme.title(true),
+                    //))
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
             left_chunks[0],
         );
 
+        //format nip34 info
         f.render_widget(
             Paragraph::new(self.get_detail_text(
-                10_usize * topic_height_in_lines,
+                /* 10_usize * */ topic_height_in_lines,
                 (current_size.0 - 6) as usize,
             ))
             .block(
                 Block::default()
                     .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
-                    .title(Span::styled(
-                        format!(
-                            "1032:more_detail--->{:>}<---",
-                            title.as_str().to_owned(),
-                        ),
-                        self.theme.title(true),
-                    ))
+                    //nip34 event info
+                    //.title(Span::styled(
+                    //    format!(
+                    //        "1118:more_detail--->{:>}<---",
+                    //        title.as_str().to_owned(),
+                    //    ),
+                    //    self.theme.title(true),
+                    //))
                     .border_style(self.theme.block(false)),
             )
             .alignment(Alignment::Left),
             left_chunks[1],
         );
 
-        let chat_history_height = left_chunks[2].height as usize;
+        //TODO
+        let chat_history_height = left_chunks[3].height as usize;
+        let chat_history_width = left_chunks[3].width as usize;
+        f.render_widget(
+            Paragraph::new(self.get_chat_text(chat_history_height, chat_history_width))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Commit History")
+                        .border_style(self.theme.block(false)),
+                )
+                .alignment(Alignment::Left),
+            left_chunks[2],
+        );
+
         f.render_widget(
             Paragraph::new(self.get_chat_history_text(chat_history_height))
                 .block(
@@ -1115,7 +1156,7 @@ impl DrawableComponent for TopicList {
                         .border_style(self.theme.block(false)),
                 )
                 .alignment(Alignment::Left),
-            left_chunks[2],
+            left_chunks[3],
         );
 
         // Chat input
@@ -1128,16 +1169,14 @@ impl DrawableComponent for TopicList {
             })
             .scroll((0, scroll as u16))
             .block(Block::default().borders(Borders::ALL).title("Input"));
-        f.render_widget(input, left_chunks[3]);
+        f.render_widget(input, left_chunks[4]);
 
         match self.input_mode {
             InputMode::Normal => {}
-            InputMode::Editing => {
-                f.set_cursor_position((
-                    left_chunks[3].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                    left_chunks[3].y + 1,
-                ))
-            }
+            InputMode::Editing => f.set_cursor_position((
+                left_chunks[4].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                left_chunks[4].y + 1,
+            )),
         }
         Ok(())
     }
@@ -1146,9 +1185,23 @@ impl DrawableComponent for TopicList {
 impl Component for TopicList {
     fn event(&mut self, ev: &crossterm::event::Event) -> Result<EventState> {
         if let crossterm::event::Event::Key(k) = ev {
+            //we respond to some key events reguardless of where we are in the life cycle
+
             if k.code == crossterm::event::KeyCode::Char('c')
-                && k.modifiers.contains(crossterm::event::KeyModifiers::CONTROL)
+                && k.modifiers
+                    .contains(crossterm::event::KeyModifiers::CONTROL)
             {
+                return Ok(EventState::Consumed);
+            }
+            if k.code == crossterm::event::KeyCode::Char('i') {
+                self.input_mode = InputMode::Editing;
+                self.input.reset();
+                return Ok(EventState::Consumed);
+            }
+
+            if k.code == crossterm::event::KeyCode::Esc {
+                self.input_mode = InputMode::Normal;
+                self.input.reset();
                 return Ok(EventState::Consumed);
             }
 
@@ -1180,7 +1233,12 @@ impl Component for TopicList {
                         self.comment();
                         true
                     } else if key_match(k, self.key_config.keys.enter) {
-                        self.input_mode = InputMode::Editing;
+                        //dont activate chat text input just because selection_changed
+                        //self.input_mode = InputMode::Editing;
+                        false
+                    } else if key_match(k, self.key_config.keys.exit_popup) {
+                        //always escape chat text input mode
+                        self.input_mode = InputMode::Normal;
                         false
                     } else {
                         false

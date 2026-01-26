@@ -70,7 +70,7 @@ pub struct Data {
 impl Default for Data {
     fn default() -> Self {
         Self {
-            path: PathBuf::from("./data"),
+            path: PathBuf::from(".gnostr/data"),
             db_query_timeout: None,
         }
     }
@@ -633,7 +633,7 @@ mod tests {
 # config relay information
 [information]
 name = "gnostr-relay"
-description = "GnostrApp:a git+nostr workflow utility"
+description = "gnostr-relay:a git+nostr workflow utility"
 software = "https://github.com/gnostr-org/gnostr"
 # pubkey = ""
 # contact = ""

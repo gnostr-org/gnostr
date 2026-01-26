@@ -15,7 +15,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.add_relay(relay_url.clone()).await?;
 
     // 4. Connect to the relay.
-    // The `connect` method returns a Result, so we use `?` to propagate connection errors.
+    // The `connect` method returns a Result, so we use `?` to propagate connection
+    // errors.
     client.connect().await;
 
     // 5. Define the Filter for events.
@@ -27,7 +28,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 6. Subscribe to events matching the filter.
     // The `subscribe` method now requires two arguments:
     // 1. A vector of filters (vec![filter] in this case).
-    // 2. An `Option<SubscribeAutoCloseOptions>`. We pass `None` for no auto-closing.
+    // 2. An `Option<SubscribeAutoCloseOptions>`. We pass `None` for no
+    //    auto-closing.
     println!("Subscribing to kind 1 events from {}", relay_url);
     let subscription_id = client.subscribe(vec![filter], None).await?;
 

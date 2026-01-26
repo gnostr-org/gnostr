@@ -26,7 +26,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct PushTagsPopup {
     repo: RepoPathRef,
     visible: bool,
@@ -40,7 +39,6 @@ pub struct PushTagsPopup {
 }
 
 impl PushTagsPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -55,7 +53,6 @@ impl PushTagsPopup {
         }
     }
 
-    ///
     pub fn push_tags(&mut self) -> Result<()> {
         self.show()?;
         if need_username_password(&self.repo.borrow())? {
@@ -82,7 +79,6 @@ impl PushTagsPopup {
         Ok(())
     }
 
-    ///
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::PushTags {
             self.update()?;
@@ -91,7 +87,6 @@ impl PushTagsPopup {
         Ok(())
     }
 
-    ///
     fn update(&mut self) -> Result<()> {
         self.pending = self.git_push.is_pending()?;
         self.progress = self.git_push.progress()?;
@@ -108,12 +103,10 @@ impl PushTagsPopup {
         Ok(())
     }
 
-    ///
     pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
     pub fn get_progress(progress: &Option<PushTagsProgress>) -> (String, u8) {
         progress
             .as_ref()
@@ -140,7 +133,7 @@ impl DrawableComponent for PushTagsPopup {
         if self.visible {
             let (state, progress) = Self::get_progress(&self.progress);
 
-            let area = ui::centered_rect_absolute(30, 3, f.size());
+            let area = ui::centered_rect_absolute(30, 3, f.area());
 
             f.render_widget(Clear, area);
             f.render_widget(

@@ -1,20 +1,21 @@
 //! An easy-to-use WebSocket server.
 //!
 //! To start a WebSocket listener, simply call [`launch()`], and use the
-//! returned [`EventHub`] to react to client messages, connections, and disconnections.
+//! returned [`EventHub`] to react to client messages, connections, and
+//! disconnections.
 //!
 //! # Example
 //!
 //! A WebSocket echo server:
 //!
 //! ```no_run
-//! use gnostr::ws::{Event, Responder};
 //! use std::collections::HashMap;
+//!
+//! use gnostr::ws::{Event, Responder};
 //!
 //! fn main() {
 //!     // listen for WebSockets on port 8080:
-//!     let event_hub = gnostr::ws::launch(8080)
-//!         .expect("failed to listen on port 8080");
+//!     let event_hub = gnostr::ws::launch(8080).expect("failed to listen on port 8080");
 //!     // map between client ids and the client's `Responder`:
 //!     let mut clients: HashMap<u64, Responder> = HashMap::new();
 //!
@@ -24,29 +25,34 @@
 //!                 println!("A client connected with id #{}", client_id);
 //!                 // add their Responder to our `clients` map:
 //!                 clients.insert(client_id, responder);
-//!             },
+//!             }
 //!             Event::Disconnect(client_id) => {
 //!                 println!("Client #{} disconnected.", client_id);
 //!                 // remove the disconnected client from the clients map:
 //!                 clients.remove(&client_id);
-//!             },
+//!             }
 //!             Event::Message(client_id, message) => {
-//!                 println!("Received a message from client #{}: {:?}", client_id, message);
+//!                 println!(
+//!                     "Received a message from client #{}: {:?}",
+//!                     client_id, message
+//!                 );
 //!                 // retrieve this client's `Responder`:
 //!                 let responder = clients.get(&client_id).unwrap();
 //!                 // echo the message back:
 //!                 responder.send(message);
-//!             },
+//!             }
 //!         }
 //!     }
 //! }
 //! ```
 use futures_util::{SinkExt, StreamExt};
-use tokio::net::{TcpListener, TcpStream};
-use tokio::runtime::Runtime;
+use tokio::{
+    net::{TcpListener, TcpStream},
+    runtime::Runtime,
+};
 use tokio_tungstenite::{accept_async, tungstenite};
 pub use tokio_util::sync::CancellationToken;
-use tracing::{debug, info, error, warn};
+use tracing::warn;
 
 #[derive(Debug)]
 pub enum Error {
@@ -63,19 +69,23 @@ pub enum Message {
     Binary(Vec<u8>),
 }
 
-impl Message {
-    fn into_tungstenite(self) -> tungstenite::Message {
-        match self {
-            Self::Text(text) => tungstenite::Message::Text(text),
-            Self::Binary(bytes) => tungstenite::Message::Binary(bytes),
+impl From<Message> for tungstenite::Message {
+    fn from(msg: Message) -> Self {
+        match msg {
+            Message::Text(text) => tungstenite::Message::Text(text.into()),
+            Message::Binary(bytes) => tungstenite::Message::Binary(bytes.into()),
         }
     }
+}
 
-    fn from_tungstenite(message: tungstenite::Message) -> Option<Self> {
-        match message {
-            tungstenite::Message::Binary(bytes) => Some(Self::Binary(bytes)),
-            tungstenite::Message::Text(text) => Some(Self::Text(text)),
-            _ => None,
+impl TryFrom<tungstenite::Message> for Message {
+    type Error = ();
+
+    fn try_from(msg: tungstenite::Message) -> Result<Self, Self::Error> {
+        match msg {
+            tungstenite::Message::Binary(bytes) => Ok(Self::Binary(bytes.to_vec())),
+            tungstenite::Message::Text(text) => Ok(Self::Text(text.to_string())),
+            _ => Err(()),
         }
     }
 }
@@ -129,7 +139,8 @@ impl Responder {
 }
 
 /// An incoming event from a client.
-/// This can be an incoming message, a new client connection, or a disconnection.
+/// This can be an incoming message, a new client connection, or a
+/// disconnection.
 #[derive(Debug)]
 pub enum Event {
     /// A new client has connected.
@@ -169,10 +180,13 @@ impl EventHub {
         Self { rx }
     }
 
-    /// Clears the event queue and returns all the events that were in the queue.
+    /// Clears the event queue and returns all the events that were in the
+    /// queue.
     pub fn drain(&self) -> Vec<Event> {
         if self.rx.is_disconnected() && self.rx.is_empty() {
-            panic!("EventHub channel disconnected. Panicking because Websocket listener thread was killed.");
+            panic!(
+                "EventHub channel disconnected. Panicking because Websocket listener thread was killed."
+            );
         }
 
         self.rx.drain().collect()
@@ -205,26 +219,31 @@ impl EventHub {
 /// Start listening for websocket connections on `port`.
 /// On success, returns an [`EventHub`] for receiving messages and
 /// connection/disconnection notifications.
-pub fn launch(port: u16) -> Result<(EventHub, std::thread::JoinHandle<()>, CancellationToken), Error> {
+pub fn launch(
+    port: u16,
+) -> Result<(EventHub, std::thread::JoinHandle<()>, CancellationToken), Error> {
     let address = format!("0.0.0.0:{}", port);
     let listener = std::net::TcpListener::bind(&address).map_err(|_| Error::FailedToStart)?;
     let cancellation_token = CancellationToken::new();
     launch_from_listener(listener, cancellation_token)
 }
 
-/// Start listening for websocket connections with the specified [`TcpListener`](std::net::TcpListener).
-/// The listener must be bound (by calling [`bind`](std::net::TcpListener::bind)) before being passed to
+/// Start listening for websocket connections with the specified
+/// [`TcpListener`](std::net::TcpListener). The listener must be bound (by
+/// calling [`bind`](std::net::TcpListener::bind)) before being passed to
 /// `launch_from_listener`.
 ///
 /// ```no_run
 /// use std::net::TcpListener;
+///
 /// use gnostr::ws::CancellationToken;
 ///
-///     // Example of using a pre-bound listener instead of providing a port.
-///     let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
-///     let cancellation_token = CancellationToken::new();
-///     let event_hub = gnostr::ws::launch_from_listener(listener, cancellation_token).expect("failed to listen on port 8080");
-///     // ...
+/// // Example of using a pre-bound listener instead of providing a port.
+/// let listener = TcpListener::bind("0.0.0.0:8080").unwrap();
+/// let cancellation_token = CancellationToken::new();
+/// let event_hub = gnostr::ws::launch_from_listener(listener, cancellation_token)
+///     .expect("failed to listen on port 8080");
+/// // ...
 /// ```
 pub fn launch_from_listener(
     listener: std::net::TcpListener,
@@ -291,7 +310,7 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
         while let Ok(event) = resp_rx.recv_async().await {
             match event {
                 ResponderCommand::Message(message) => {
-                    if (outgoing.send(message.into_tungstenite()).await).is_err() {
+                    if (outgoing.send(message.into()).await).is_err() {
                         let _ = outgoing.close().await;
                         return Ok(());
                     }
@@ -311,11 +330,12 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
     };
 
     let event_tx2 = event_tx.clone();
-    //future that forwards messages received from the websocket to the event channel
+    //future that forwards messages received from the websocket to the event
+    // channel
     let events = async move {
         while let Some(message) = incoming.next().await {
             if let Ok(tungstenite_msg) = message {
-                if let Some(msg) = Message::from_tungstenite(tungstenite_msg) {
+                if let Ok(msg) = Message::try_from(tungstenite_msg) {
                     event_tx2
                         .send(Event::Message(id, msg))
                         .unwrap_or_else(|e| warn!("Failed to send Message event: {}", e));
@@ -330,7 +350,8 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
         Result::<(), ()>::Err(())
     };
 
-    // use try_join so that when `events` returns Err (the websocket closes), responder_events will be stopped too
+    // use try_join so that when `events` returns Err (the websocket closes),
+    // responder_events will be stopped too
     let _ = futures_util::try_join!(responder_events, events);
 
     event_tx
@@ -340,18 +361,20 @@ async fn handle_connection(stream: TcpStream, event_tx: flume::Sender<Event>, id
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    
-    use tokio_tungstenite::MaybeTlsStream;
-    use tokio::net::TcpStream;
     use futures_util::StreamExt;
-    use tokio::time::{timeout, Duration};
-    use tokio_tungstenite::WebSocketStream;
+    use tokio::{
+        net::TcpStream,
+        time::{timeout, Duration},
+    };
+    use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+
+    use super::*;
 
     // Helper to find an available port and return a bound TcpListener
     async fn find_available_listener() -> tokio::net::TcpListener {
         for port in 8081..9000 {
-            if let Ok(listener) = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await {
+            if let Ok(listener) = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", port)).await
+            {
                 return listener;
             }
         }
@@ -382,19 +405,22 @@ mod tests {
     async fn test_message_conversion() {
         // Test Text message
         let text_msg = Message::Text("Hello".to_string());
-        let tungstenite_text = text_msg.clone().into_tungstenite();
+        let tungstenite_text: tungstenite::Message = text_msg.clone().into();
         assert!(matches!(tungstenite_text, tungstenite::Message::Text(_)));
-        assert_eq!(Message::from_tungstenite(tungstenite_text).unwrap(), text_msg);
+        assert_eq!(Message::try_from(tungstenite_text).unwrap(), text_msg);
 
         // Test Binary message
         let binary_msg = Message::Binary(vec![1, 2, 3]);
-        let tungstenite_binary = binary_msg.clone().into_tungstenite();
-        assert!(matches!(tungstenite_binary, tungstenite::Message::Binary(_)));
-        assert_eq!(Message::from_tungstenite(tungstenite_binary).unwrap(), binary_msg);
+        let tungstenite_binary: tungstenite::Message = binary_msg.clone().into();
+        assert!(matches!(
+            tungstenite_binary,
+            tungstenite::Message::Binary(_)
+        ));
+        assert_eq!(Message::try_from(tungstenite_binary).unwrap(), binary_msg);
 
         // Test unsupported message type
-        let ping_msg = tungstenite::Message::Ping(vec![1]);
-        assert!(Message::from_tungstenite(ping_msg).is_none());
+        let ping_msg = tungstenite::Message::Ping(vec![1].into());
+        assert!(Message::try_from(ping_msg).is_err());
     }
 
     #[tokio::test]
@@ -402,7 +428,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
 
         // Give the server a moment to start
         tokio::time::sleep(Duration::from_secs(1)).await;
@@ -410,21 +438,30 @@ mod tests {
         let mut client_ws = connect_websocket_client(port).await;
 
         // Verify connection event
-        let (client_id, responder) = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Connect event in time") {
+        let (client_id, responder) = match timeout(Duration::from_secs(5), event_hub.poll_async())
+            .await
+            .expect("Server did not send Connect event in time")
+        {
             Event::Connect(id, resp) => (id, resp),
             other => panic!("Expected Connect event, got {:?}", other),
         };
 
         // Send a message from client to server
         let client_message = "Hello from client".to_string();
-        client_ws.send(tungstenite::Message::Text(client_message.clone())).await.unwrap();
+        client_ws
+            .send(tungstenite::Message::Text(client_message.clone().into()))
+            .await
+            .unwrap();
 
         // Verify message event on server side
-        let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async()).await.expect("Server did not send Message event in time") {
+        let received_message = match timeout(Duration::from_secs(5), event_hub.poll_async())
+            .await
+            .expect("Server did not send Message event in time")
+        {
             Event::Message(id, msg) => {
                 assert_eq!(id, client_id);
                 msg
-            },
+            }
             other => panic!("Expected Message event, got {:?}", other),
         };
 
@@ -432,7 +469,11 @@ mod tests {
         responder.send(received_message.clone());
 
         // Verify message received by client
-        let response = timeout(Duration::from_secs(5), client_ws.next()).await.expect("Client did not receive message in time").unwrap().unwrap();
+        let response = timeout(Duration::from_secs(5), client_ws.next())
+            .await
+            .expect("Client did not receive message in time")
+            .unwrap()
+            .unwrap();
         match response {
             tungstenite::Message::Text(text) => assert_eq!(text, client_message),
             other => panic!("Expected text message back, got {:?}", other),
@@ -440,8 +481,14 @@ mod tests {
 
         // Test Responder::close
         responder.close();
-        // The client should receive a close frame and then the connection should be dropped
-        let client_close_frame = timeout(Duration::from_secs(5), client_ws.next()).await.expect("Client did not receive close frame in time").unwrap().unwrap().is_close();
+        // The client should receive a close frame and then the connection should be
+        // dropped
+        let client_close_frame = timeout(Duration::from_secs(5), client_ws.next())
+            .await
+            .expect("Client did not receive close frame in time")
+            .unwrap()
+            .unwrap()
+            .is_close();
         assert!(client_close_frame);
 
         // Signal the server to shut down and wait for its thread to finish
@@ -457,7 +504,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client1 = connect_websocket_client(port).await;
@@ -481,7 +530,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client = connect_websocket_client(port).await;
@@ -500,7 +551,9 @@ mod tests {
         let listener = find_available_listener().await;
         let port = listener.local_addr().unwrap().port();
         let cancellation_token = CancellationToken::new();
-        let (event_hub, server_handle, _cancellation_token_from_launch) = launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone()).expect("Failed to launch websocket server");
+        let (event_hub, server_handle, _cancellation_token_from_launch) =
+            launch_from_listener(listener.into_std().unwrap(), cancellation_token.clone())
+                .expect("Failed to launch websocket server");
         tokio::time::sleep(Duration::from_secs(1)).await;
 
         let _client_ws = connect_websocket_client(port).await;

@@ -475,7 +475,7 @@ fn get_git_hash() -> String {
 
 fn main() {
     println!("cargo:rerun-if-changed=src/empty");
-    make_empty();
+    //_make_empty();
     // _sync_nip44_vectors();
 
     if env::var("RUSTC_WRAPPER").is_ok() {
@@ -492,7 +492,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
 
-    make_empty();
+    //_make_empty();
 
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
@@ -789,7 +789,7 @@ fn musl_install_pkg_config() {
     // Common build logic can go here
 }
 
-fn make_empty() {
+fn _make_empty() {
     let target_path = Path::new("src/empty");
 
     // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
@@ -962,12 +962,12 @@ git commit --allow-empty -m "initial commit"
     //    );
     //}
 
-    let _ = git_commit(dir_path);
+    let _ = _git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
 }
 
-fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
+fn _git_commit(dir_path: &Path) -> Result<(), io::Error> {
     // 1. Convert Path to &str safely using .ok_or_else()
     // This converts the Option<&str> to a Result<&str, io::Error>.
     // If the path is invalid UTF-8 (None), it generates a custom io::Error

@@ -122,8 +122,8 @@ fn print_logged_in_as(user_ref: &UserRef, offline_mode: bool) -> Result<()> {
         println!("cannot extract account name from account metadata...");
     } else if !offline_mode && user_ref.relays.created_at.eq(&Timestamp::from(0)) {
         println!(
-			"cannot find your relay list. consider using another nostr client to create one to enhance your nostr experience."
-		);
+            "cannot find your relay list. consider using another nostr client to create one to enhance your nostr experience."
+        );
     }
     println!("logged in as {}", user_ref.metadata.name);
     Ok(())
@@ -163,8 +163,8 @@ async fn get_signer_without_prompts(
             Ok(signer)
         } else {
             bail!(
-				"bunker-app-key parameter must be provided alongside bunker-uri. if unknown, login interactively."
-			)
+                "bunker-app-key parameter must be provided alongside bunker-uri. if unknown, login interactively."
+            )
         }
     } else if !save_local {
         get_signer_with_git_config_nsec_or_bunker_without_prompts(git_repo).await

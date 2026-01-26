@@ -1,6 +1,10 @@
+use std::{
+    fs::{read_to_string, write},
+    path::PathBuf,
+};
+
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use std::{fs::{read_to_string, write}, path::PathBuf};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerUser {

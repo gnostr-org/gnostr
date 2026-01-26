@@ -1,6 +1,5 @@
 use std::path::Path;
-//use crate::client::Client;
-use crate::{client::{send_events, Client}, git_events::generate_cover_letter_and_patch_events};
+
 use anyhow::{bail, Context, Result};
 use console::Style;
 use nostr_0_34_1::{
@@ -14,13 +13,16 @@ use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
-    client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect,
-    },
+    client::{fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect},
     git::{identify_ahead_behind, Repo, RepoActions},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,
     repo_ref::get_repo_coordinates,
+};
+//use crate::client::Client;
+use crate::{
+    client::{send_events, Client},
+    git_events::generate_cover_letter_and_patch_events,
 };
 
 #[derive(Debug, clap::Args, Clone)]
@@ -29,17 +31,17 @@ pub struct SendArgs {
     /// commits to send as proposal; like in `git format-patch` eg.
     /// HEAD~2
     pub(crate) since_or_range: String,
-    #[clap(long, value_parser, num_args = 0.., value_delimiter = ' ')]
+    #[arg(long, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
     pub(crate) in_reply_to: Vec<String>,
     /// don't prompt for a cover letter
-    #[arg(long, action)]
+    #[arg(long)]
     pub(crate) no_cover_letter: bool,
     /// optional cover letter title
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub(crate) title: Option<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// optional cover letter description
     pub(crate) description: Option<String>,
     pub(crate) disable_cli_spinners: bool,

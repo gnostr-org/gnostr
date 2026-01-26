@@ -1,13 +1,15 @@
+use std::convert::TryInto;
+
 use base64::Engine;
-use chacha20::cipher::{KeyIvInit, StreamCipher};
-use chacha20::ChaCha20;
+use chacha20::{
+    cipher::{KeyIvInit, StreamCipher},
+    ChaCha20,
+};
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use rand_core::{OsRng, RngCore};
-use secp256k1::ecdh::shared_secret_point;
-use secp256k1::{Parity, PublicKey, SecretKey, XOnlyPublicKey};
+use secp256k1::{ecdh::shared_secret_point, Parity, PublicKey, SecretKey, XOnlyPublicKey};
 use sha2::Sha256;
-use std::convert::TryInto;
 mod error;
 pub use error::Error;
 
@@ -96,12 +98,13 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     let mut padded: Vec<u8> = Vec::new();
     padded.extend_from_slice(&(len as u16).to_be_bytes());
     padded.extend_from_slice(unpadded.as_bytes());
-    padded.extend(std::iter::repeat(0).take(calc_padding(len) - len));
+    padded.extend(std::iter::repeat_n(0, calc_padding(len) - len));
     Ok(padded)
 }
 
 /// Encrypt a plaintext message with a conversation key.
-/// The output is a base64 encoded string that can be placed into message contents.
+/// The output is a base64 encoded string that can be placed into message
+/// contents.
 #[inline]
 pub fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
     encrypt_inner(conversation_key, plaintext, None)

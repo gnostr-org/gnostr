@@ -1,15 +1,16 @@
-use crate::git_events::is_event_proposal_root_for_branch;
 use anyhow::{bail, Context, Result};
 use nostr_sdk_0_34_0::PublicKey;
 
 use crate::{
     client::{
         fetching_with_report, get_all_proposal_patch_events_from_cache,
-        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
-        Client, Connect
+        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache, Client, Connect,
     },
     git::{str_to_sha1, Repo, RepoActions},
-    git_events::{get_commit_id_from_patch, get_most_recent_patch_with_ancestors, tag_value},
+    git_events::{
+        get_commit_id_from_patch, get_most_recent_patch_with_ancestors,
+        is_event_proposal_root_for_branch, tag_value,
+    },
     repo_ref::get_repo_coordinates,
 };
 
@@ -52,7 +53,7 @@ pub async fn launch() -> Result<()> {
             .await?
             .iter()
             .find(|e| {
-                is_event_proposal_root_for_branch(e, &branch_name, &logged_in_public_key)
+                is_event_proposal_root_for_branch(e, &branch_name, logged_in_public_key.as_ref())
                     .unwrap_or(false)
             })
             .context("cannot find proposal that matches the current branch name")?
@@ -115,8 +116,8 @@ pub async fn launch() -> Result<()> {
     // if parent commit doesnt exist
     else if !git_repo.does_commit_exist(&proposal_base_commit.to_string())? {
         println!(
-			"a new version of the proposal has a prant commit that doesnt exist in your local repository."
-		);
+            "a new version of the proposal has a prant commit that doesnt exist in your local repository."
+        );
         println!("your '{main_branch_name}' branch may not be up-to-date.");
         println!("manually run `git pull` on '{main_branch_name}' and try again");
     }
@@ -135,12 +136,12 @@ pub async fn launch() -> Result<()> {
             .context("cannot apply patch chain")?;
 
         println!(
-			"pulled new version of proposal ({} ahead {} behind '{main_branch_name}'), replacing old version ({} ahead {} behind '{main_branch_name}')",
-			applied.len(),
-			proposal_behind_main.len(),
-			local_ahead_of_main.len(),
-			local_beind_main.len(),
-		);
+            "pulled new version of proposal ({} ahead {} behind '{main_branch_name}'), replacing old version ({} ahead {} behind '{main_branch_name}')",
+            applied.len(),
+            proposal_behind_main.len(),
+            local_ahead_of_main.len(),
+            local_beind_main.len(),
+        );
     }
     // if tip of proposal in branch in history (local appendments made
     // to up-to-date proposal)
@@ -149,9 +150,9 @@ pub async fn launch() -> Result<()> {
             .get_commits_ahead_behind(&proposal_tip, &local_branch_tip)
             .context("cannot get commits ahead behind for propsal_top and local_branch_tip")?;
         println!(
-			"local proposal branch exists with {} unpublished commits on top of the most up-to-date version of the proposal",
-			local_ahead_of_proposal.len()
-		);
+            "local proposal branch exists with {} unpublished commits on top of the most up-to-date version of the proposal",
+            local_ahead_of_proposal.len()
+        );
     } else {
         println!("you have an amended/rebase version the proposal that is unpublished");
         // user probably has a unpublished amended or rebase version
@@ -161,30 +162,30 @@ pub async fn launch() -> Result<()> {
         // them)
         if git_repo.does_commit_exist(&proposal_tip.to_string())? {
             println!(
-				"you have previously applied the latest version of the proposal ({} ahead {} behind '{main_branch_name}') but your local proposal branch has amended or rebased it ({} ahead {} behind '{main_branch_name}')",
-				most_recent_proposal_patch_chain.len(),
-				proposal_behind_main.len(),
-				local_ahead_of_main.len(),
-				local_beind_main.len(),
-			);
+                "you have previously applied the latest version of the proposal ({} ahead {} behind '{main_branch_name}') but your local proposal branch has amended or rebased it ({} ahead {} behind '{main_branch_name}')",
+                most_recent_proposal_patch_chain.len(),
+                proposal_behind_main.len(),
+                local_ahead_of_main.len(),
+                local_beind_main.len(),
+            );
         }
         // user probably has a unpublished amended or rebase version
         // of an older proposal version
         else {
             println!(
-				"your local proposal branch ({} ahead {} behind '{main_branch_name}') has conflicting changes with the latest published proposal ({} ahead {} behind '{main_branch_name}')",
-				local_ahead_of_main.len(),
-				local_beind_main.len(),
-				most_recent_proposal_patch_chain.len(),
-				proposal_behind_main.len(),
-			);
+                "your local proposal branch ({} ahead {} behind '{main_branch_name}') has conflicting changes with the latest published proposal ({} ahead {} behind '{main_branch_name}')",
+                local_ahead_of_main.len(),
+                local_beind_main.len(),
+                most_recent_proposal_patch_chain.len(),
+                proposal_behind_main.len(),
+            );
 
             println!(
-				"its likely that you have rebased / amended an old proposal version because git has no record of the latest proposal commit."
-			);
+                "its likely that you have rebased / amended an old proposal version because git has no record of the latest proposal commit."
+            );
             println!(
-				"it is possible that you have been working off the latest version and git has delete this commit as part of a clean up"
-			);
+                "it is possible that you have been working off the latest version and git has delete this commit as part of a clean up"
+            );
         }
         println!("to view the latest proposal but retain your changes:");
         println!("  1) create a new branch off the tip commit of this one to store your changes");
@@ -206,8 +207,8 @@ pub async fn launch() -> Result<()> {
 fn check_clean(git_repo: &Repo) -> Result<()> {
     if git_repo.has_outstanding_changes()? {
         bail!(
-			"cannot pull proposal branch when repository is not clean. discard or stash (un)staged changes and try again."
-		);
+            "cannot pull proposal branch when repository is not clean. discard or stash (un)staged changes and try again."
+        );
     }
     Ok(())
 }

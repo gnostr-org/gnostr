@@ -22,10 +22,9 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::io::StreamReader;
 use tracing::{debug, error, info_span, warn, Instrument};
 
-use crate::{
-    methods::repo::{Repository, RepositoryPath, Result},
-    StatusCode,
-};
+use crate::methods::repo::{Repository, RepositoryPath, Result};
+
+use axum::http::StatusCode;
 
 #[allow(clippy::unused_async)]
 pub async fn handle(

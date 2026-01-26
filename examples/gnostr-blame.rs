@@ -15,8 +15,10 @@
 
 #![deny(warnings)]
 
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::{
+    io::{BufRead, BufReader},
+    path::Path,
+};
 
 use git2::{BlameOptions, Repository};
 use structopt::StructOpt;

@@ -8,11 +8,11 @@
 
 <div align="center">
 
-  [![Crates.io](https://img.shields.io/crates/v/network-interface.svg)](https://crates.io/crates/network-interface)
-  [![Documentation](https://docs.rs/network-interface/badge.svg)](https://docs.rs/network-interface)
-  ![Build](https://github.com/EstebanBorai/network-interface/workflows/build/badge.svg)
-  ![Clippy](https://github.com/EstebanBorai/network-interface/workflows/clippy/badge.svg)
-  ![Formatter](https://github.com/EstebanBorai/network-interface/workflows/fmt/badge.svg)
+[![Crates.io](https://img.shields.io/crates/v/network-interface.svg)](https://crates.io/crates/network-interface)
+[![Documentation](https://docs.rs/network-interface/badge.svg)](https://docs.rs/network-interface)
+![Build](https://github.com/EstebanBorai/network-interface/workflows/build/badge.svg)
+![Clippy](https://github.com/EstebanBorai/network-interface/workflows/clippy/badge.svg)
+![Formatter](https://github.com/EstebanBorai/network-interface/workflows/fmt/badge.svg)
 
 </div>
 
@@ -26,6 +26,7 @@ API and no further changes to the implementation are required to support such
 platform.
 
 ## Usage
+
 ```rust
 use network_interface::NetworkInterface;
 use network_interface::NetworkInterfaceConfig;
@@ -53,6 +54,7 @@ NetworkInterface { name: "docker0", addr: Some(V6(V6IfAddr { ip: <redacted>, bro
 NetworkInterface { name: "veth9d2904f", addr: Some(V6(V6IfAddr { ip: <redacted>, broadcast: None, netmask: Some(ffff:ffff:ffff:ffff::) })) }
 NetworkInterface { name: "vethcdd79af", addr: Some(V6(V6IfAddr { ip: <redacted>, broadcast: None, netmask: Some(ffff:ffff:ffff:ffff::) })) }
 ```
+
 </details>
 
 ## Release

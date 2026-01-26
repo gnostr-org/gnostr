@@ -227,4 +227,20 @@ pub enum Error {
     /// Zap Receipt issue
     #[error("Invalid Zap Receipt: {0}")]
     ZapReceipt(String),
+
+    /// Invalid NIP-19 data
+    #[error("Invalid NIP-19 data")]
+    InvalidNip19Data,
+
+    /// Invalid NIP-19 prefix
+    #[error("Invalid NIP-19 prefix")]
+    InvalidNip19Prefix,
+
+    /// Boxed standard error
+    #[error(transparent)]
+    Custom(#[from] Box<dyn std::error::Error + Send + Sync + 'static>),
+
+    /// Anyhow error
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
 }

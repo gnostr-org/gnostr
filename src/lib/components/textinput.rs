@@ -19,14 +19,18 @@ use crate::{
     ui::{self, style::SharedTheme, Size},
 };
 
-///
+/// InputType
 #[derive(PartialEq, Eq)]
 pub enum InputType {
+    /// Singleline
     Singleline,
+    /// Multiline
     Multiline,
+    /// Password
     Password,
 }
 
+/// SelectionState
 #[derive(PartialEq, Eq)]
 enum SelectionState {
     Selecting,
@@ -36,7 +40,7 @@ enum SelectionState {
 
 type TextAreaComponent = TextArea<'static>;
 
-///
+/// TextInputComponent
 pub struct TextInputComponent {
     title: String,
     default_msg: String,
@@ -53,7 +57,7 @@ pub struct TextInputComponent {
 }
 
 impl TextInputComponent {
-    ///
+    /// new
     pub fn new(env: &Environment, title: &str, default_msg: &str, show_char_count: bool) -> Self {
         Self {
             msg: OnceCell::default(),
@@ -71,13 +75,13 @@ impl TextInputComponent {
         }
     }
 
-    ///
+    /// with_input_type
     pub const fn with_input_type(mut self, input_type: InputType) -> Self {
         self.input_type = input_type;
         self
     }
 
-    ///
+    /// set_input_type
     pub fn set_input_type(&mut self, input_type: InputType) {
         self.clear();
         self.input_type = input_type;
@@ -120,7 +124,7 @@ impl TextInputComponent {
         self.embed = true;
     }
 
-    ///
+    /// enabled
     pub fn enabled(&mut self, enable: bool) {
         self.selected = Some(enable);
     }
@@ -176,7 +180,7 @@ impl TextInputComponent {
         self.title = t;
     }
 
-    ///
+    /// set_default_msg
     pub fn set_default_msg(&mut self, v: String) {
         self.default_msg = v;
         if self.is_visible() {
@@ -611,7 +615,7 @@ impl DrawableComponent for TextInputComponent {
 
             f.render_widget(Clear, area);
 
-            f.render_widget(&*ta, area);
+            f.render_widget(ta, area);
 
             if self.show_char_count {
                 self.draw_char_count(f, area);

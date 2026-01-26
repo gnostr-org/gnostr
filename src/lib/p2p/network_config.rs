@@ -1,6 +1,7 @@
 use std::str::FromStr;
-use libp2p::{Multiaddr, PeerId, StreamProtocol};
+
 use clap::ValueEnum;
+use libp2p::{Multiaddr, PeerId, StreamProtocol};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum Network {

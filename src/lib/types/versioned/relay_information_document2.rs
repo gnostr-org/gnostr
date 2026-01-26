@@ -1,13 +1,17 @@
-use super::{FeeV1, RelayFeesV1, RelayRetentionV1};
-use crate::types::{EventKind, EventKindOrRange, PublicKeyHex, Url};
+use std::fmt;
+
 //use serde::de::Error as DeError;
 use serde::de::{Deserializer, MapAccess, Visitor};
-use serde::ser::{SerializeMap, Serializer};
-use serde::{Deserialize, Serialize};
+use serde::{
+    ser::{SerializeMap, Serializer},
+    Deserialize, Serialize,
+};
 use serde_json::{json, Map, Value};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use super::{FeeV1, RelayFeesV1, RelayRetentionV1};
+use crate::types::{EventKind, EventKindOrRange, PublicKeyHex, Url};
 
 /// Relay limitations
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -126,7 +130,7 @@ impl fmt::Display for RelayLimitationV2 {
 }
 
 /// Relay information document as described in NIP-11, supplied by a relay
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RelayInformationDocumentV2 {
     /// Name of the relay
     pub name: Option<String>,
@@ -134,8 +138,23 @@ pub struct RelayInformationDocumentV2 {
     /// Description of the relay in plain text
     pub description: Option<String>,
 
+    /// A banner image for the relay
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub banner: Option<Url>,
+
+    /// An icon for the relay
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub icon: Option<Url>,
+
     /// Public key of an administrative contact of the relay
     pub pubkey: Option<PublicKeyHex>,
+
+    /// The relay's public key, for signing events
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub self_pubkey: Option<PublicKeyHex>,
 
     /// An administrative contact for the relay. Should be a URI.
     pub contact: Option<String>,
@@ -182,7 +201,10 @@ impl Default for RelayInformationDocumentV2 {
         RelayInformationDocumentV2 {
             name: None,
             description: None,
+            banner: None,
+            icon: None,
             pubkey: None,
+            self_pubkey: None,
             contact: None,
             supported_nips: vec![],
             software: None,
@@ -220,7 +242,10 @@ impl RelayInformationDocumentV2 {
         RelayInformationDocumentV2 {
             name: Some("Crazy Horse".to_string()),
             description: Some("A really wild horse".to_string()),
+            banner: Some(Url::try_from_str("https://example.com/banner.jpg").unwrap()),
+            icon: Some(Url::try_from_str("https://example.com/icon.jpg").unwrap()),
             pubkey: Some(PublicKeyHex::mock()),
+            self_pubkey: Some(PublicKeyHex::mock()),
             contact: None,
             supported_nips: vec![11, 12, 13, 14],
             software: None,
@@ -317,8 +342,17 @@ impl fmt::Display for RelayInformationDocumentV2 {
         if let Some(desc) = &self.description {
             write!(f, " Description=\"{desc}\"")?;
         }
+        if let Some(banner) = &self.banner {
+            write!(f, " Banner=\"{banner}\"")?;
+        }
+        if let Some(icon) = &self.icon {
+            write!(f, " Icon=\"{icon}\"")?;
+        }
         if let Some(pubkey) = &self.pubkey {
             write!(f, " Pubkey=\"{pubkey}\"")?;
+        }
+        if let Some(self_pubkey) = &self.self_pubkey {
+            write!(f, " SelfPubkey=\"{self_pubkey}\"")?;
         }
         if let Some(contact) = &self.contact {
             write!(f, " Contact=\"{contact}\"")?;
@@ -375,176 +409,6 @@ impl fmt::Display for RelayInformationDocumentV2 {
     }
 }
 
-impl Serialize for RelayInformationDocumentV2 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut map = serializer.serialize_map(Some(7 + self.other.len()))?;
-        if self.name.is_some() {
-            map.serialize_entry("name", &json!(&self.name))?;
-        }
-        if self.description.is_some() {
-            map.serialize_entry("description", &json!(&self.description))?;
-        }
-        if self.pubkey.is_some() {
-            map.serialize_entry("pubkey", &json!(&self.pubkey))?;
-        }
-        if self.contact.is_some() {
-            map.serialize_entry("contact", &json!(&self.contact))?;
-        }
-        map.serialize_entry("supported_nips", &json!(&self.supported_nips))?;
-        if self.software.is_some() {
-            map.serialize_entry("software", &json!(&self.software))?;
-        }
-        if self.version.is_some() {
-            map.serialize_entry("version", &json!(&self.version))?;
-        }
-        if self.limitation.is_some() {
-            map.serialize_entry("limitation", &json!(&self.limitation))?;
-        }
-        if !self.retention.is_empty() {
-            map.serialize_entry("retention", &json!(&self.retention))?;
-        }
-        if !self.relay_countries.is_empty() {
-            map.serialize_entry("relay_countries", &json!(&self.relay_countries))?;
-        }
-        if !self.language_tags.is_empty() {
-            map.serialize_entry("language_tags", &json!(&self.language_tags))?;
-        }
-        if !self.tags.is_empty() {
-            map.serialize_entry("tags", &json!(&self.tags))?;
-        }
-        if self.posting_policy.is_some() {
-            map.serialize_entry("posting_policy", &json!(&self.posting_policy))?;
-        }
-        if self.payments_url.is_some() {
-            map.serialize_entry("payments_url", &json!(&self.payments_url))?;
-        }
-        if self.fees.is_some() {
-            map.serialize_entry("fees", &json!(&self.fees))?;
-        }
-        for (k, v) in &self.other {
-            map.serialize_entry(&k, &v)?;
-        }
-        map.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for RelayInformationDocumentV2 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_map(RidVisitor)
-    }
-}
-
-struct RidVisitor;
-
-impl<'de> Visitor<'de> for RidVisitor {
-    type Value = RelayInformationDocumentV2;
-
-    fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "A JSON object")
-    }
-
-    fn visit_map<M>(self, mut access: M) -> Result<RelayInformationDocumentV2, M::Error>
-    where
-        M: MapAccess<'de>,
-    {
-        let mut map: Map<String, Value> = Map::new();
-        while let Some((key, value)) = access.next_entry::<String, Value>()? {
-            let _ = map.insert(key, value);
-        }
-
-        let mut rid: RelayInformationDocumentV2 = Default::default();
-
-        if let Some(Value::String(s)) = map.remove("name") {
-            rid.name = Some(s);
-        }
-        if let Some(Value::String(s)) = map.remove("description") {
-            rid.description = Some(s);
-        }
-        if let Some(Value::String(s)) = map.remove("pubkey") {
-            rid.pubkey = match PublicKeyHex::try_from_string(s) {
-                Ok(pkh) => Some(pkh),
-                Err(_) => None,
-            };
-        }
-        if let Some(Value::String(s)) = map.remove("contact") {
-            rid.contact = Some(s);
-        }
-        if let Some(Value::Array(vec)) = map.remove("supported_nips") {
-            for elem in vec.iter() {
-                if let Value::Number(num) = elem {
-                    if let Some(u) = num.as_u64() {
-                        rid.supported_nips.push(u as u32);
-                    }
-                }
-            }
-        }
-        if let Some(Value::String(s)) = map.remove("software") {
-            rid.software = Some(s);
-        }
-        if let Some(Value::String(s)) = map.remove("version") {
-            rid.version = Some(s);
-        }
-        if let Some(v) = map.remove("limitation") {
-            rid.limitation = match serde_json::from_value::<Option<RelayLimitationV2>>(v) {
-                Ok(x) => x,
-                Err(_) => None,
-            }
-        }
-        if let Some(v) = map.remove("retention") {
-            rid.retention = match serde_json::from_value::<Vec<RelayRetentionV1>>(v) {
-                Ok(x) => x,
-                Err(_) => vec![],
-            };
-        }
-        if let Some(v) = map.remove("relay_countries") {
-            rid.relay_countries = match serde_json::from_value::<Vec<String>>(v) {
-                Ok(x) => x,
-                Err(_) => vec![],
-            }
-        }
-        if let Some(v) = map.remove("language_tags") {
-            rid.language_tags = match serde_json::from_value::<Vec<String>>(v) {
-                Ok(x) => x,
-                Err(_) => vec![],
-            }
-        }
-        if let Some(v) = map.remove("tags") {
-            rid.tags = match serde_json::from_value::<Vec<String>>(v) {
-                Ok(x) => x,
-                Err(_) => vec![],
-            }
-        }
-        if let Some(v) = map.remove("posting_policy") {
-            rid.posting_policy = match serde_json::from_value::<Option<Url>>(v) {
-                Ok(x) => x,
-                Err(_) => None,
-            }
-        }
-        if let Some(v) = map.remove("payments_url") {
-            rid.payments_url = match serde_json::from_value::<Option<Url>>(v) {
-                Ok(x) => x,
-                Err(_) => None,
-            }
-        }
-        if let Some(v) = map.remove("fees") {
-            rid.fees = match serde_json::from_value::<Option<RelayFeesV1>>(v) {
-                Ok(x) => x,
-                Err(_) => None,
-            }
-        }
-
-        rid.other = map;
-
-        Ok(rid)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -562,15 +426,53 @@ mod test {
 
     #[test]
     fn test_relay_information_document_json() {
-        let json = r##"{ "name": "A Relay", "description": null, "myfield": [1,2], "supported_nips": [11,12], "retention": [
-    { "kinds": [0, 1, [5, 7], [40, 49]], "time": 3600 },
-    { "kinds": [[40000, 49999]], "time": 100 },
-    { "kinds": [[30000, 39999]], "count": 1000 },
-    { "time": 3600, "count": 10000 }
-  ] }"##;
+        let json = r##"{
+            "name": "A Relay",
+            "description": null,
+            "myfield": [1,2],
+            "supported_nips": [11,12],
+            "retention": [
+                { "kinds": [0, 1, [5, 7], [40, 49]], "time": 3600 },
+                { "kinds": [[40000, 49999]], "time": 100 },
+                { "kinds": [[30000, 39999]], "count": 1000 },
+                { "time": 3600, "count": 10000 }
+            ],
+            "relay_countries": ["CA", "US"],
+            "language_tags": ["en", "br"],
+            "tags":[],
+            "other": { "misc_data": "value" }
+        }"##;
+
         let rid: RelayInformationDocumentV2 = serde_json::from_str(json).unwrap();
         let json2 = serde_json::to_value(&rid).unwrap();
-        let expected_json2: Value = serde_json::from_str(r##"{"name":"A Relay","supported_nips":[11,12],"retention":[{"kinds":[0,1,[5,7],[40,49]],"time":3600},{"kinds":[[40000,49999]],"time":100},{"kinds":[[30000,39999]],"count":1000},{"time":3600,"count":10000}],"myfield":[1,2]}"##).unwrap();
+
+        let expected_json2: serde_json::Value = serde_json::from_str(
+            r##"{
+            "name": "A Relay",
+            "description": null,
+            "pubkey": null,
+            "contact": null,
+            "supported_nips": [11, 12],
+            "software": null,
+            "version": null,
+            "limitation": null,
+            "retention": [
+                { "kinds": [0, 1, [5, 7], [40, 49]], "time": 3600 },
+                { "kinds": [[40000, 49999]], "time": 100 },
+                { "kinds": [[30000, 39999]], "count": 1000 },
+                { "time": 3600, "count": 10000 }
+            ],
+            "relay_countries": ["CA", "US"],
+            "language_tags": ["en", "br"],
+            "tags": [],
+            "posting_policy": null,
+            "payments_url": null,
+            "fees": null,
+            "other": { "misc_data": "value" }
+        }"##,
+        )
+        .unwrap();
+
         assert_eq!(json2, expected_json2);
     }
 }

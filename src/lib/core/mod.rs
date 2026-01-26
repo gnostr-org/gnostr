@@ -1,6 +1,8 @@
+pub mod ui;
+use std::path::PathBuf;
+
 use clap::Args;
 use gnostr_asyncgit::sync::RepoPath;
-use std::path::PathBuf;
 
 #[derive(Args, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -14,7 +16,7 @@ pub struct GnostrSubCommands {
     #[arg(long = "gitdir")]
     pub gitdir: Option<RepoPath>,
     /// Enable notify_watcher
-    #[clap(
+    #[arg(
         long,
         value_name = "NOTIFY_WATCHER",
         help = "gnostr --notify_watcher",
@@ -36,13 +38,13 @@ pub struct GnostrSubCommands {
     #[arg(long, global = true)]
     pub hash: Option<String>,
     ///// disable spinner animations
-    #[arg(long, action, default_value = "false")]
+    #[arg(long, default_value_t = false)]
     pub disable_cli_spinners: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub info: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub debug: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub trace: bool,
 }
 
@@ -65,8 +67,8 @@ impl Default for GnostrSubCommands {
     }
 }
 
-//pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn Error>> {
-//    let _ = crate::tui::tui().await;
+//pub async fn gnostr(sub_command_args: &GnostrSubCommands) -> Result<(),
+// Box<dyn Error>> {    let _ = crate::tui::tui().await;
 //    //let args: ChatCli = ChatCli::parse();
 //
 //    let args = sub_command_args.clone();

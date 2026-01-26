@@ -1,42 +1,37 @@
+use std::{error::Error as StdError, path::PathBuf, time::Duration};
+
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser};
-use git2::{Commit, ObjectType, Oid, Repository};
-use crate::legit::command::create_event;
-use crate::queue::InternalEvent;
-use gnostr_asyncgit::sync::commit::SerializableCommit;
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use git2::{ObjectType, Repository};
+use gnostr_asyncgit::sync::{commit::padded_commit_id, RepoPath};
 use libp2p::gossipsub;
-use nostr_sdk_0_37_0::prelude::*;
-//use nostr_sdk_0_37_0::EventBuilder;
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
-//use sha2::Digest;
-//use tokio::time::Duration;
-
-use std::collections::HashMap;
-use std::fmt::Write;
-use std::{error::Error, time::Duration};
+use proctitle::set_title;
+use serde_json; // Explicitly added for clarity
+use textwrap::{fill, Options};
+//use async_std::path::PathBuf;
 use tokio::{io, io::AsyncBufReadExt};
-use tracing_subscriber::util::SubscriberInitExt;
-//use tracing::debug;
 use tracing::{debug, info};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+use uuid::Uuid;
 
-use gnostr_asyncgit::sync::commit::{serialize_commit, deserialize_commit};
-use crate::utils::{generate_nostr_keys_from_commit_hash, parse_json, split_json_string};
+use self::msg::{Msg, MsgKind};
+use crate::{
+    queue::InternalEvent,
+    types::{
+        metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
+        nip28::CREATE_CHANNEL_MESSAGE,
+        Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
+    },
+};
 
 pub mod msg;
 pub use msg::*;
 pub mod p2p;
 pub use p2p::evt_loop;
-pub mod ui;
 pub mod tests;
-
-const TITLE: &str = include_str!("./title.txt");
-
+pub mod ui;
 
 /// Simple CLI application to interact with nostr
 #[derive(Debug, Parser)]
@@ -53,27 +48,27 @@ pub struct ChatCli {
         /*default_value = ""*/ //decide whether to allow env var $USER as default
     )]
     pub name: Option<String>,
-    ///
+
     #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
 		action = clap::ArgAction::Append,
 		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
     pub nsec: Option<String>,
-    ///
+
     #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
     pub hash: Option<String>,
-    ///
+
     #[arg(long, value_name = "CHAT", help = "gnostr chat")]
     pub chat: Option<String>,
-    ///
+
     #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
     pub topic: Option<String>,
-    ///
+
     #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
 		action = clap::ArgAction::Append,
 		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
     pub relays: Vec<String>,
     /// Enable debug logging
-    #[clap(
+    #[arg(
         long,
         value_name = "DEBUG",
         help = "gnostr --debug",
@@ -81,7 +76,7 @@ pub struct ChatCli {
     )]
     pub debug: bool,
     /// Enable info logging
-    #[clap(
+    #[arg(
         long,
         value_name = "INFO",
         help = "gnostr --info",
@@ -89,13 +84,16 @@ pub struct ChatCli {
     )]
     pub info: bool,
     /// Enable trace logging
-    #[clap(
+    #[arg(
         long,
         value_name = "TRACE",
         help = "gnostr --trace",
         default_value = "false"
     )]
     pub trace: bool,
+    /// Run in headless mode (no TUI)
+    #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
+    pub headless: bool,
     #[arg(long = "cfg", default_value = "")]
     pub config: String,
 }
@@ -106,29 +104,42 @@ pub struct ChatCli {
 pub struct ChatSubCommands {
     //#[command(subcommand)]
     //command: ChatCommands,
-    ///// nsec or hex private key
+    // nsec or hex private key
     #[arg(short, long, global = true)]
     pub nsec: Option<String>,
-    ///// password to decrypt nsec
+    // password to decrypt nsec
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     #[arg(long, global = true)]
     pub name: Option<String>,
-    ///// chat topic
+    // chat topic
     #[arg(long, global = true)]
     pub topic: Option<String>,
-    ///// chat hash
+    // chat hash
     #[arg(long, global = true)]
     pub hash: Option<String>,
-    ///// disable spinner animations
-    #[arg(long, action, default_value = "false")]
+    // disable spinner animations
+    #[arg(long, default_value_t = false)]
     pub disable_cli_spinners: bool,
-    #[arg(long, action)]
+    #[arg(long, default_value_t = false)]
     pub info: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub debug: bool,
-    #[arg(long, action)]
+    #[arg(long)]
     pub trace: bool,
+    /// Run in headless mode (no TUI)
+    #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
+    pub headless: bool,
+    /// workdir
+    pub workdir: Option<String>,
+    #[arg(
+        long,
+        value_name = "GITDIR",
+        default_value = ".",
+        help = "gnostr --gitdir '<string>'"
+    )]
+    /// gitdir
+    pub gitdir: Option<RepoPath>,
     /// Send a single message to a topic and exit
     #[arg(long, global = true, requires = "topic")]
     pub oneshot: Option<String>,
@@ -151,78 +162,174 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         use std::env;
         env::set_var("USER", &name);
     };
-
-    let level = if args.debug {
-        LevelFilter::DEBUG
-    } else if args.trace {
-        LevelFilter::TRACE
-    } else if args.info {
-        LevelFilter::INFO
+    // Determine the KeySigner to use
+    let nsec_hex = if let Some(nsec) = args.nsec.clone() {
+        nsec
+    } else if let Some(hash) = args.hash.clone() {
+        format!("{:0>64}", hash)
     } else {
-        LevelFilter::OFF
+        //args.nsec = padded_commit_id("0".to_string())
+
+        // Fallback to generate a new key if no nsec or hash is provided.
+        // For now, use a fixed dummy private key for simplicity in testing.
+        // TODO: Implement proper key generation.
+        "0000000000000000000000000000000000000000000000000000000000000001".to_string()
+    };
+    let private_key = crate::types::PrivateKey::try_from_hex_string(&nsec_hex).unwrap();
+    let keys = crate::types::KeySigner::from_private_key(private_key, "", 1).unwrap();
+    let public_key = keys.public_key();
+
+    // Initialize NostrClient and channels
+    let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let client = crate::types::nostr_client::NostrClient::new(peer_tx.clone());
+
+    // Send NIP-01 metadata event
+    let name = args
+        .name
+        .clone()
+        .unwrap_or_else(|| public_key.as_hex_string().chars().take(8).collect());
+    let metadata = {
+        let mut m = Metadata::default();
+        m.name = Some(name);
+        m.picture = Some(DEFAULT_AVATAR.to_string());
+        m.other.insert(
+            "banner".to_string(),
+            serde_json::Value::String(DEFAULT_BANNER.to_string()),
+        );
+        m
     };
 
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
-        .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-        .add_directive("nostr_relay_pool=off".parse().unwrap())
-        .add_directive("nostr_relay_pool::relay=off".parse().unwrap())
-        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        .add_directive("gnostr::message=off".parse().unwrap())
-        .add_directive("gnostr::nostr_proto=off".parse().unwrap());
+    let pre_event = crate::types::PreEvent {
+        pubkey: public_key,
+        created_at: crate::types::Unixtime::now(),
+        kind: crate::types::EventKind::Metadata,
+        tags: vec![TagV3::new(&["gnostr"])],
+        content: serde_json::to_string(&metadata).unwrap(),
+    };
 
-    let subscriber = Registry::default()
-        .with(fmt::layer().with_writer(std::io::stdout))
-        .with(filter);
+    tracing::info!("\n{:?}\n", &sub_command_args);
+    println!(
+        "pre_event={:?}",
+        Into::<crate::types::PublicKeyHex>::into(pre_event.pubkey)
+    );
 
-    let _ = subscriber.try_init();
+    let id = pre_event.hash().unwrap();
+    let sig = keys.sign_id(id).unwrap();
 
-    if let Some(message) = args.oneshot {
-        info!("Oneshot mode: sending message '{}'", message);
+    let metadata_event = EventV3 {
+        id,
+        pubkey: pre_event.pubkey,
+        created_at: pre_event.created_at,
+        kind: pre_event.kind,
+        tags: pre_event.tags,
+        content: pre_event.content,
+        sig,
+    };
 
-        let topic_str = args.topic.expect("--topic is required with --oneshot");
-        let topic = gossipsub::IdentTopic::new(topic_str);
+    client.send_event(metadata_event).await?;
+    tracing::info!("NIP-01 metadata event sent successfully.");
 
-        let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    // Define topic outside oneshot block
+    let topic = gossipsub::IdentTopic::new(
+        args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
+    );
 
-        let _p2p_handle = tokio::spawn(async move {
-            if let Err(e) = evt_loop(input_rx, peer_tx, topic).await {
-                eprintln!("p2p event loop error: {}", e);
+    if let Some(message_input) = args.oneshot {
+        if !args.headless {
+            tracing::info!("Oneshot mode: sending message '{}'", message_input);
+
+            let _p2p_handle = tokio::spawn(async move {
+                if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
+                    eprintln!("p2p event loop error: {}", e);
+                }
+            });
+
+            // Allow time for network initialization and peer discovery.
+            println!("Initializing network and discovering peers...");
+            tokio::time::sleep(Duration::from_secs(3)).await;
+
+            // Detect if message_input is a git diff
+            let mut msg_kind = MsgKind::OneShot;
+            if message_input.contains("diff --git")
+                || (message_input.contains("--- a/") && message_input.contains("+++ b/"))
+            {
+                msg_kind = MsgKind::GitDiff;
+            }
+
+            // Create a single Msg object with the entire message_input
+            let msg = Msg::default()
+                .set_kind(msg_kind)
+                .set_content(message_input.clone(), 0); // Use message_input directly
+
+            if input_tx
+                .send(InternalEvent::ChatMessage(msg))
+                .await
+                .is_err()
+            {
+                eprintln!("Failed to send message to event loop.");
+            } else {
+                println!("Oneshot message sent. Waiting for propagation...");
+            }
+
+            // Allow time for the message to propagate.
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            tracing::info!("Oneshot operation complete.");
+        } else {
+            println!("headless conflicts with oneshot!");
+        }
+        return Ok(());
+    }
+
+    // If headless mode is enabled and not in oneshot mode,
+    // run the event loop in the background
+    // and exit immediately without starting the TUI.
+
+    if sub_command_args.headless {
+        let topic_name = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
+        let process_title = format!("gnostr-chat-{}", topic_name);
+        set_title(&process_title);
+        println!("Headless mode enabled:");
+        tracing::info!("running event loop in background.");
+        tracing::info!("Process name set to: {}", process_title);
+
+        // Spawn the event loop to run in the background.
+        // This keeps the P2P network alive for the chat.
+        tokio::spawn(async move {
+            if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
+                eprintln!("Headless p2p event loop error: {}", e);
             }
         });
 
-        // Allow time for network initialization and peer discovery.
-        println!("Initializing network and discovering peers...");
-        tokio::time::sleep(Duration::from_secs(3)).await;
-
-        let msg = Msg::default().set_content(message, 0);
-        if input_tx.send(InternalEvent::ChatMessage(msg)).await.is_err() {
-            eprintln!("Failed to send message to event loop.");
-        } else {
-            println!("Message sent. Waiting for propagation...");
-        }
-
-        // Allow time for the message to propagate.
-        tokio::time::sleep(Duration::from_secs(2)).await;
-
-        println!("Oneshot operation complete.");
+        // Sleep briefly to allow background task to start, then return.
+        // The tokio runtime will keep the spawned task alive.
+        tokio::time::sleep(Duration::from_millis(100)).await;
         return Ok(());
     }
 
     tokio::task::spawn_blocking(move || {
-        let repo = Repository::discover(".")?;
+        let search_path: PathBuf = match &args.gitdir {
+            Some(repo_path) => match repo_path {
+                RepoPath::Path(p) => p.clone(),
+                _ => panic!("Unsupported RepoPath variant"),
+            },
+            // If no gitdir arg was provided, default to current directory "."
+            None => PathBuf::from("."), //TODO $HOME/.gnostr
+        };
+
+        let repo = Repository::discover(search_path)?;
         let head = repo.head()?;
         let obj = head.resolve()?.peel(ObjectType::Commit)?;
         let commit = obj.peel_to_commit()?;
         let commit_id = commit.id().to_string();
 
-        let mut app = ui::App::default();
-        app.topic = args.topic.unwrap_or_else(|| commit_id.to_string());
+        // TODO
+        let _padded_commit_id = format!("{:0>64}", commit_id.clone());
+
+        let mut app = ui::App {
+            topic: args.topic.unwrap_or_else(|| commit_id.to_string()),
+            ..Default::default()
+        };
 
         let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
         let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
@@ -236,7 +343,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             });
         });
 
-        let topic = gossipsub::IdentTopic::new(format!("{}", app.topic.clone()));
+        let topic = gossipsub::IdentTopic::new(app.topic.clone().to_string());
 
         global_rt().spawn(async move {
             evt_loop(input_rx, peer_tx, topic).await.unwrap();
@@ -258,22 +365,27 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         global_rt().spawn(async move {
             tokio::time::sleep(Duration::from_millis(1000)).await;
             input_tx_clone
-                .send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Join)))
+                .send(InternalEvent::ChatMessage(
+                    Msg::default().set_kind(MsgKind::Join),
+                ))
                 .await
                 .unwrap();
         });
 
         app.run().map_err(|e| anyhow!(e.to_string()))?;
 
-        let _ = input_tx.send(InternalEvent::ChatMessage(Msg::default().set_kind(MsgKind::Leave)));
+        let _ = input_tx.send(InternalEvent::ChatMessage(
+            Msg::default().set_kind(MsgKind::Leave),
+        ));
         std::thread::sleep(Duration::from_millis(500));
         Ok(())
-    }).await?
+    })
+    .await?
 }
 
 pub async fn input_loop(
     self_input: tokio::sync::mpsc::Sender<Vec<u8>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn StdError>> {
     let mut stdin = io::BufReader::new(io::stdin()).lines();
     while let Some(line) = stdin.next_line().await? {
         let msg = Msg::default().set_content(line, 0);

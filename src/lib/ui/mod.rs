@@ -118,7 +118,7 @@ pub fn centered_rect_absolute(width: u16, height: u16, r: Rect) -> Rect {
     )
 }
 
-///
+/// Helper to get common navigation movements from key events.
 pub fn common_nav(
     key: &crossterm::event::KeyEvent,
     key_config: &SharedKeyConfig,

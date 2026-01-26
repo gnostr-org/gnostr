@@ -1,5 +1,6 @@
-use k256::schnorr::{SigningKey, VerifyingKey};
 use std::process;
+
+use k256::schnorr::{SigningKey, VerifyingKey};
 
 pub fn is_valid(verifying_key_string: String, signing_key_string: String) -> bool {
     let verifying_key_bytes: Vec<u8> = match hex::decode(verifying_key_string) {

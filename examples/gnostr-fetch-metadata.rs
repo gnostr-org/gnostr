@@ -1,6 +1,7 @@
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr::types::{EventKind, Filter, PublicKeyHex};
 use std::env;
+
+use gnostr::types::{EventKind, Filter, PublicKeyHex};
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name

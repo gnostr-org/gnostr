@@ -46,7 +46,6 @@ pub struct ResetPopup {
 }
 
 impl ResetPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -90,7 +89,6 @@ impl ResetPopup {
         txt
     }
 
-    ///
     pub fn open(&mut self, id: CommitId) -> Result<()> {
         self.show()?;
 
@@ -99,7 +97,6 @@ impl ResetPopup {
         Ok(())
     }
 
-    ///
     #[allow(clippy::unnecessary_wraps)]
     pub fn update(&mut self) -> Result<()> {
         self.git_branch_name.lookup().map(Some).unwrap_or(None);

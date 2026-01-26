@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use crate::ssh::config::server::{load_server_config, ServerUser};
-    use anyhow::Context;
     use std::fs;
+
+    use anyhow::Context;
     use tempfile::tempdir;
+
+    use crate::ssh::config::server::{load_server_config, ServerUser};
 
     #[tokio::test]
     async fn test_load_server_config_missing_file() -> anyhow::Result<()> {
@@ -97,7 +99,8 @@ key = "value"
         server_config.users.insert(username.clone(), new_user);
 
         // 4. Save the updated config to file
-        let toml_string = toml::to_string_pretty(&server_config).context("Failed to serialize server config")?;
+        let toml_string =
+            toml::to_string_pretty(&server_config).context("Failed to serialize server config")?;
         fs::write(&config_path, toml_string).context("Failed to write updated server config")?;
 
         // 5. Reload the config from file

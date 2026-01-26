@@ -13,7 +13,7 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
-use std::str;
+use std::str::{self, FromStr};
 use tracing::{debug, error};
 
 use serde::{Deserialize, Serialize};
@@ -36,7 +36,7 @@ use crate::processor::BOOTSTRAP_RELAY2;
 const CONCURRENT_REQUESTS: usize = 16;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
@@ -49,19 +49,19 @@ pub enum Commands {
         /// The NIP number to search for (e.g., 1)
         nip: i32,
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Runs the watch mode to monitor relays and print their metadata
     Watch {
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Lists relays that are likely to support NIP-34 (Git collaboration)
     Nip34 {
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
 }
@@ -105,7 +105,7 @@ pub struct CliArgs {
     //#[clap(name = "pat", long = "grep")]
     ///// pattern to filter commit messages by
     //flag_grep: Option<String>,
-    #[clap(name = "dir", long = "git-dir")]
+    #[arg(value_name = "dir", long = "git-dir")]
     /// alternative git directory to use
     flag_git_dir: Option<String>,
     //#[clap(name = "skip", long)]
@@ -132,17 +132,14 @@ pub struct CliArgs {
     //#[clap(name = "min-parents")]
     ///// specify a minimum number of parents for a commit
     //flag_min_parents: Option<usize>,
-    #[clap(name = "patch", long, short)]
+    #[arg(value_name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[clap(
-        name = "nsec",
-        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    )]
+    #[arg(value_name = "nsec", default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
     arg_nsec: Option<String>,
-    #[clap(name = "commit")]
+    #[arg(value_name = "commit")]
     arg_commit: Vec<String>,
-    #[clap(name = "spec", last = true)]
+    #[arg(value_name = "spec", last = true)]
     arg_spec: Vec<String>,
 }
 
@@ -154,21 +151,22 @@ pub fn run(args: &CliArgs) -> Result<()> {
     //println!("{:?}", args.arg_nsec.clone());
     let _run_async = async {
         let opts = Options::new(); //.wait_for_send(true);
-        let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-        let relay_client = Client::new_with_opts(&app_keys, opts);
+        let secret_key = SecretKey::from_bech32(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+        let app_keys = Keys::new(secret_key);
+        let relay_client = Client::with_opts(&app_keys, opts);
         let _ = relay_client
-            .publish_text_note("run:async:11<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:11<--------------------------<<<<<", [])
             .await;
         let _ = relay_client
-            .publish_text_note("run:async:22<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:22<--------------------------<<<<<", [])
             .await;
         let _ = relay_client
-            .publish_text_note("run:async:33<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:33<--------------------------<<<<<", [])
             .await;
         let _ = relay_client
-            .publish_text_note("run:async:44<--------------------------<<<<<", &[])
+            .publish_text_note("run:async:44<--------------------------<<<<<", [])
             .await;
-        let _ = relay_client.publish_text_note("#gnostr", &[]).await;
+        let _ = relay_client.publish_text_note("#gnostr", []).await;
     };
 
     // Prepare the revwalk based on CLI parameters
@@ -302,7 +300,7 @@ pub fn run(args: &CliArgs) -> Result<()> {
     //}
 
     //println!("{:?}", args.arg_nsec.clone());
-    let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+    let app_keys = Keys::from_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor);
     let _run_async = relay_manager.run(vec![

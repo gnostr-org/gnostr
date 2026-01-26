@@ -22,14 +22,13 @@ use super::{
 use crate::{
     accessors,
     app::Environment,
+    components::{dialog_paragraph, Text},
     keys::{key_match, SharedKeyConfig},
     strings,
     ui::style::SharedTheme,
 };
 
-use crate::components::dialog_paragraph;
-use crate::components::Text;
-
+/// CommitDetailsComponent
 pub struct CommitDetailsComponent {
     commit: Option<CommitFilesParams>,
     single_details: DetailsComponent,
@@ -46,7 +45,7 @@ pub struct CommitDetailsComponent {
 impl CommitDetailsComponent {
     accessors!(self, [single_details, compare_details, file_tree, chat]);
 
-    ///
+    /// new
     pub fn new(env: &Environment, focused: bool) -> Self {
         Self {
             single_details: DetailsComponent::new(env, false),
@@ -72,7 +71,7 @@ impl CommitDetailsComponent {
         )
     }
 
-    ///
+    /// set_commits
     pub fn set_commits(
         &mut self,
         params: Option<CommitFilesParams>,
@@ -115,12 +114,12 @@ impl CommitDetailsComponent {
         Ok(())
     }
 
-    ///
+    /// any_work_pending
     pub fn any_work_pending(&self) -> bool {
         self.git_commit_files.is_pending()
     }
 
-    ///
+    /// files
     pub const fn files(&self) -> &StatusTreeComponent {
         &self.chat
     }
@@ -206,7 +205,7 @@ impl DrawableComponent for CommitDetailsComponent {
         f.render_widget(
             dialog_paragraph(
                 &format!(
-                    "209:commit_details/mod.rs:chat widget!!!!! {} {} w:{},h:{}",
+                    "214:commit_details/mod.rs:chat widget!!!!! {} {} w:{},h:{}",
                     strings::commit::details_message_title(&self.key_config,),
                     strings::commit::details_message_title(&self.key_config,),
                     chunks[2].width,

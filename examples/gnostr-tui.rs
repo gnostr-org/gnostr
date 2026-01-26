@@ -1,28 +1,31 @@
-use anyhow::Result;
-use clap::{Parser /*, Subcommand*/};
-use gnostr::cli::{get_app_cache_path, setup_logging, GnostrCli, GnostrCommands};
-use gnostr::sub_commands;
-use gnostr_asyncgit::sync::RepoPath;
 use std::env;
-use tracing::{debug, trace};
-use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::FmtSubscriber;
 
+use anyhow::Result;
+use clap::{Parser /* , Subcommand */};
+use gnostr::{
+    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
+    sub_commands,
+};
+use gnostr_asyncgit::sync::RepoPath;
 use serde::ser::StdError;
+use tracing::debug;
+use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::prelude::*; // Import SubscriberExt
+use tracing_subscriber::{fmt, util::SubscriberInitExt, EnvFilter, Registry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
+    env::set_var("GNOSTR_GITDIR", "");
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
     env::set_var("WOBBLE", "0");
     let args: GnostrCli = GnostrCli::parse();
 
     let app_cache = get_app_cache_path();
-    if args.logging {
-        let logging = setup_logging();
-        trace!("{:?}", logging);
-    };
-    let level = if args.debug {
+    debug!("app_cache={:?}", app_cache);
+
+    // Setup tracing subscriber once and globally
+    let base_level = if args.debug {
         LevelFilter::DEBUG
     } else if args.trace {
         LevelFilter::TRACE
@@ -33,14 +36,19 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     } else {
         LevelFilter::OFF
     };
-    let env_args: Vec<String> = env::args().collect();
-    for arg in &env_args {
-        debug!("24:arg={:?}", arg);
-    }
 
-    let subscriber = FmtSubscriber::builder().with_max_level(level).finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    trace!("{:?}", app_cache);
+    let filter = EnvFilter::builder()
+        .with_default_directive(base_level.into())
+        .from_env() // This reads RUST_LOG and builds the filter
+        .expect("Failed to build EnvFilter from environment");
+
+    let subscriber = Registry::default()
+        .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
+        .with(filter);
+
+    if let Err(e) = subscriber.try_init() {
+        eprintln!("Failed to initialize tracing subscriber: {}", e);
+    }
 
     if args.gitdir.is_some() {
         // Assuming 'args' and 'gitdir' are correctly defined elsewhere
@@ -58,8 +66,8 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         //replace gnostr tui --gitdir
         //std::process::exit(0);
     }
-    if args.workdir.is_some() {}
-    if args.directory.is_some() {}
+    let _ = args.workdir.is_some();
+    let _ = args.directory.is_some();
 
     // Post event
     match &args.command {

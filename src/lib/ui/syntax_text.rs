@@ -131,7 +131,7 @@ impl SyntaxText {
         })
     }
 
-    ///
+    /// Get the path of the syntax text.
     pub fn path(&self) -> &Path {
         &self.path
     }
@@ -195,7 +195,7 @@ impl AsyncSyntaxJob {
         }
     }
 
-    ///
+    /// Get the result of the syntax highlighting job.
     pub fn result(&self) -> Option<SyntaxText> {
         if let Ok(mut state) = self.state.lock() {
             if let Some(state) = state.take() {

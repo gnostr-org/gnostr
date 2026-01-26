@@ -1,18 +1,13 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::cli::NgitCommands;
-use crate::sub_commands::fetch;
-use crate::sub_commands::init;
-use crate::sub_commands::list;
-use crate::sub_commands::login;
-use crate::sub_commands::pull;
-use crate::sub_commands::push;
-use crate::sub_commands::send;
-use crate::sub_commands::query;
 use clap::Args;
-use nostr_sdk_0_34_0::prelude::*;
-
 use serde::ser::StdError;
+
+use crate::{
+    cli::NgitCommands,
+    sub_commands::{fetch, init, list, login, pull, push, query, send},
+    types::{Event, EventKind, Keys, Tag},
+};
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -26,10 +21,15 @@ pub struct NgitSubCommand {
     ///// password to decrypt nsec
     #[arg(short, long, global = true)]
     pub password: Option<String>,
-    #[arg(long, action)]
+    #[arg(long)]
     pub disable_cli_spinners: bool,
 }
 
+/// ngit
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
         NgitCommands::Login(args) => login::launch(args).await?,
@@ -43,4 +43,3 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
     }
     Ok(())
 }
-

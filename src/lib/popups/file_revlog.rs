@@ -44,7 +44,6 @@ impl FileRevOpen {
     }
 }
 
-///
 pub struct FileRevlogPopup {
     git_log: Option<AsyncLog>,
     git_diff: AsyncDiff,
@@ -65,7 +64,6 @@ pub struct FileRevlogPopup {
 }
 
 impl FileRevlogPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             theme: env.theme.clone(),
@@ -91,7 +89,6 @@ impl FileRevlogPopup {
         vec![&mut self.diff]
     }
 
-    ///
     pub fn open(&mut self, open_request: FileRevOpen) -> Result<()> {
         self.open_request = Some(open_request.clone());
 
@@ -115,12 +112,10 @@ impl FileRevlogPopup {
         Ok(())
     }
 
-    ///
     pub fn any_work_pending(&self) -> bool {
         self.git_diff.is_pending() || self.git_log.as_ref().is_some_and(AsyncLog::is_pending)
     }
 
-    ///
     pub fn update(&mut self) -> Result<()> {
         if let Some(ref mut git_log) = self.git_log {
             git_log.fetch()?;
@@ -132,7 +127,6 @@ impl FileRevlogPopup {
         Ok(())
     }
 
-    ///
     pub fn update_git(&mut self, event: AsyncGitNotification) -> Result<()> {
         if self.visible {
             match event {

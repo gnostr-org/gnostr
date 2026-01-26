@@ -1,11 +1,11 @@
-import { FileInput } from "./buttons/FileInput";
-import { MagnetInput } from "./buttons/MagnetInput";
+import { FileInput } from "./buttons/FileInput"
+import { MagnetInput } from "./buttons/MagnetInput"
 
 // @ts-ignore
-import Logo from "../../assets/logo.svg?react";
+import Logo from "../../assets/logo.svg?react"
 
 export const Header = ({ title }: { title: string }) => {
-  const [name, version] = title.split("-");
+  const [name, version] = title.split("-")
   return (
     <header className="bg-slate-50 drop-shadow-lg flex flex-wrap justify-center lg:justify-between items-center dark:bg-slate-800 mb-3">
       <div className="flex flex-nowrap items-center justify-between m-2">
@@ -22,5 +22,5 @@ export const Header = ({ title }: { title: string }) => {
         <FileInput className="flex-grow justify-center dark:text-white" />
       </div>
     </header>
-  );
-};
+  )
+}

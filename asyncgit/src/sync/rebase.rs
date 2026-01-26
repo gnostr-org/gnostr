@@ -245,11 +245,11 @@ mod test_conflict_free_rebase {
 
         write_commit_file(&repo, "test.txt", "test2", "commit2");
 
-        checkout_branch(repo_path, "master").unwrap();
+        checkout_branch(repo_path, "master", true).unwrap();
 
         write_commit_file(&repo, "test.txt", "test3", "commit3");
 
-        checkout_branch(repo_path, "foo").unwrap();
+        checkout_branch(repo_path, "foo", true).unwrap();
 
         let res = rebase_branch(repo_path, "master", BranchType::Local);
 
@@ -283,11 +283,11 @@ mod test_rebase {
 
         let c = write_commit_file(&repo, "test.txt", "test2", "commit2");
 
-        checkout_branch(repo_path, "master").unwrap();
+        checkout_branch(repo_path, "master", true).unwrap();
 
         write_commit_file(&repo, "test.txt", "test3", "commit3");
 
-        checkout_branch(repo_path, "foo").unwrap();
+        checkout_branch(repo_path, "foo", true).unwrap();
 
         assert!(get_rebase_progress(&repo).is_err());
 

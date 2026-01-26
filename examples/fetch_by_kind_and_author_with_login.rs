@@ -1,6 +1,9 @@
-use gnostr::{Command, Probe};
-use gnostr::types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage};
 use std::env;
+
+use gnostr::{
+    types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage},
+    Command, Probe,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

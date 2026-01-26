@@ -946,9 +946,9 @@ mod tests {
                 #[test]
                 fn with_encoded_relay() -> Result<()> {
                     let url = format!(
-						"nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/ngit?relay={}",
-						urlencoding::encode("wss://nos.lol")
-					);
+                        "nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/ngit?relay={}",
+                        urlencoding::encode("wss://nos.lol")
+                    );
                     assert_eq!(
                         NostrUrlDecoded::from_str(&url)?,
                         NostrUrlDecoded {
@@ -964,10 +964,10 @@ mod tests {
                 #[test]
                 fn with_multiple_encoded_relays() -> Result<()> {
                     let url = format!(
-						"nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/ngit?relay={}&relay1={}",
-						urlencoding::encode("wss://nos.lol"),
-						urlencoding::encode("wss://relay.damus.io"),
-					);
+                        "nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/ngit?relay={}&relay1={}",
+                        urlencoding::encode("wss://nos.lol"),
+                        urlencoding::encode("wss://relay.damus.io"),
+                    );
                     assert_eq!(
                     NostrUrlDecoded::from_str(&url)?,
                     NostrUrlDecoded {
@@ -1043,9 +1043,9 @@ mod tests {
                 #[test]
                 fn with_encoded_relay() -> Result<()> {
                     let url = format!(
-						"nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/{}/ngit",
-						urlencoding::encode("wss://nos.lol")
-					);
+                        "nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/{}/ngit",
+                        urlencoding::encode("wss://nos.lol")
+                    );
                     assert_eq!(
                         NostrUrlDecoded::from_str(&url)?,
                         NostrUrlDecoded {
@@ -1061,10 +1061,10 @@ mod tests {
                 #[test]
                 fn with_multiple_encoded_relays() -> Result<()> {
                     let url = format!(
-						"nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/{}/{}/ngit",
-						urlencoding::encode("wss://nos.lol"),
-						urlencoding::encode("wss://relay.damus.io"),
-					);
+                        "nostr://npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/{}/{}/ngit",
+                        urlencoding::encode("wss://nos.lol"),
+                        urlencoding::encode("wss://relay.damus.io"),
+                    );
                     assert_eq!(
                     NostrUrlDecoded::from_str(&url)?,
                     NostrUrlDecoded {

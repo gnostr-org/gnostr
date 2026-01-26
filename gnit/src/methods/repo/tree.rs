@@ -8,15 +8,15 @@ use std::{
     sync::Arc,
 };
 
+use crate::methods::filters;
 use crate::{
     git::{FileWithContent, PathDestination, TreeItem},
-    into_response,
-    methods::{
-        filters,
-        repo::{ChildPath, Repository, RepositoryPath, Result},
-    },
-    Git, ResponseEither,
+    into_response, Git, ResponseEither,
 };
+
+use crate::methods::repo::ChildPath;
+use crate::methods::repo::Repository;
+use crate::methods::repo::{Error, RepositoryPath};
 
 #[derive(Deserialize)]
 pub struct UriQuery {
@@ -70,7 +70,7 @@ pub async fn handle(
     Extension(ChildPath(child_path)): Extension<ChildPath>,
     Extension(git): Extension<Arc<Git>>,
     Query(query): Query<UriQuery>,
-) -> Result<impl IntoResponse> {
+) -> Result<impl IntoResponse, Error> {
     let open_repo = git.repo(repository_path, query.branch.clone()).await?;
 
     Ok(

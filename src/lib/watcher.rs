@@ -35,7 +35,6 @@ impl RepoWatcher {
         Self { receiver: out_rx }
     }
 
-
     pub fn receiver(&self) -> crossbeam_channel::Receiver<()> {
         self.receiver.clone()
     }

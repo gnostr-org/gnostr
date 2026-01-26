@@ -29,11 +29,12 @@ use crate::{
     },
     keys::{key_match, SharedKeyConfig},
     queue::{Action, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
-    strings, try_or_popup,
+    strings,
+    strings::symbol,
+    try_or_popup,
     ui::{self, Size},
 };
 
-///
 pub struct BranchListPopup {
     repo: RepoPathRef,
     branches: Vec<BranchInfo>,
@@ -306,7 +307,6 @@ impl BranchListPopup {
         Ok(EventState::NotConsumed)
     }
 
-    ///
     pub fn open(&mut self) -> Result<()> {
         self.show()?;
         self.update_branches()?;
@@ -339,12 +339,16 @@ impl BranchListPopup {
                     .position(|b| b.name.ends_with("/HEAD"))
                     .map(|idx| self.branches.remove(idx));
             }
+            self.branches
+                .iter()
+                .position(|b| !b.name.contains("pr/"))
+                .map(|idx| self.branches.remove(idx));
+
             self.set_selection(self.selection)?;
         }
         Ok(())
     }
 
-    ///
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::Push {
             self.update_branches()?;
@@ -425,7 +429,6 @@ impl BranchListPopup {
             .map(|b| b.top_commit)
     }
 
-    ///
     fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
         let new_selection = match scroll {
             ScrollType::Up => self.selection.saturating_add(1),
@@ -461,14 +464,15 @@ impl BranchListPopup {
 
     /// Get branches to display
     fn get_text(&self, theme: &SharedTheme, width_available: u16, height: usize) -> Text<'_> {
-        const UPSTREAM_SYMBOL: char = '\u{2191}';
-        const TRACKING_SYMBOL: char = '\u{2193}';
+        const UPSTREAM_SYMBOL: char = '\u{2191}'; // up arrow
+        const TRACKING_SYMBOL: char = '\u{2193}'; // down arrow
         const HEAD_SYMBOL: char = '*';
         const EMPTY_SYMBOL: char = ' ';
         const THREE_DOTS: &str = "...";
         const THREE_DOTS_LENGTH: usize = THREE_DOTS.len(); // "..."
         const COMMIT_HASH_LENGTH: usize = 8;
         const IS_HEAD_STAR_LENGTH: usize = 3; // "*  "
+        const IS_GNOSTR_PR: &str = symbol::CIRCLED_G_STR;
 
         let branch_name_length: usize = width_available as usize * 40 / 100;
         // commit message takes up the remaining width
@@ -486,6 +490,7 @@ impl BranchListPopup {
             .take(height)
             .enumerate()
         {
+            //if displaybranch.name.starts_with("pr") {
             let mut commit_message = displaybranch.top_commit_message.clone();
             if commit_message.len() > commit_message_length {
                 commit_message
@@ -494,12 +499,20 @@ impl BranchListPopup {
             }
 
             let mut branch_name = displaybranch.name.clone();
+
+            //
+
             if branch_name.len() > branch_name_length.saturating_sub(THREE_DOTS_LENGTH) {
                 branch_name = branch_name
                     .unicode_truncate(branch_name_length.saturating_sub(THREE_DOTS_LENGTH))
                     .0
                     .to_string();
                 branch_name += THREE_DOTS;
+            }
+
+            //TODO detect nip34 events
+            if branch_name.starts_with("pr") {
+                branch_name = IS_GNOSTR_PR.to_owned() + "  " + &branch_name;
             }
 
             let selected = (self.selection as usize - self.scroll.get_top()) == i;
@@ -517,16 +530,17 @@ impl BranchListPopup {
                 }
                 _ => EMPTY_SYMBOL,
             };
+            //};
 
             let span_prefix = Span::styled(
                 format!("{is_head_str}{upstream_tracking_str} "),
                 theme.commit_author(selected),
             );
             let span_hash = Span::styled(
-                format!("{} ", displaybranch.top_commit.get_short_string()),
+                format!("{} ", displaybranch.top_commit), //.get_short_string()),
                 theme.commit_hash(selected),
             );
-            let span_msg = Span::styled(commit_message.to_string(), theme.text(true, selected));
+            let _span_msg = Span::styled(commit_message.to_string(), theme.text(true, selected));
             let span_name = Span::styled(
                 format!("{branch_name:branch_name_length$} "),
                 theme.branch(selected, is_head),
@@ -536,14 +550,14 @@ impl BranchListPopup {
                 span_prefix,
                 span_name,
                 span_hash,
-                span_msg,
+                _span_msg,
             ]));
         }
 
+        //};
         Text::from(txt)
     }
 
-    ///
     fn switch_to_selected_branch(&mut self) -> Result<()> {
         if !self.valid_selection() {
             anyhow::bail!("no valid branch selected");

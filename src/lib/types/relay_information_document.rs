@@ -1,6 +1,6 @@
-use super::versioned::relay_information_document1::{FeeV1, RelayFeesV1, RelayRetentionV1};
-use super::versioned::relay_information_document2::{
-    RelayInformationDocumentV2, RelayLimitationV2,
+use super::versioned::{
+    relay_information_document1::{FeeV1, RelayFeesV1, RelayRetentionV1},
+    relay_information_document2::{RelayInformationDocumentV2, RelayLimitationV2},
 };
 
 /// Relay limitations

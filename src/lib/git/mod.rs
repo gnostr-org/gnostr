@@ -623,52 +623,51 @@ impl RepoActions for Repo {
         }
         if !applied_oid.to_string().eq(&commit_id) {
             bail!(
-				"when applied the patch commit id ({}) doesn't match the one specified in the event tag ({})",
-				applied_oid.to_string(),
-				get_commit_id_from_patch(patch)?,
-			);
+                "when applied the patch commit id ({}) doesn't match the one specified in the event tag ({})",
+                applied_oid.to_string(),
+                get_commit_id_from_patch(patch)?,
+            );
         }
         self.git_repo.set_index(&mut existing_index)?;
         Ok(applied_oid)
     }
     fn parse_starting_commits(&self, starting_commits: &str) -> Result<Vec<Sha1Hash>> {
+        let mut revwalk = self.git_repo.revwalk()?;
+        revwalk.simplify_first_parent()?; // Simplify history to follow only first parent
+
         let revspec = self
             .git_repo
             .revparse(starting_commits)
             .context("specified value not in a valid format")?;
-        if revspec.mode().is_no_single() {
-            let (ahead, _) = self
-                .get_commits_ahead_behind(
-                    &oid_to_sha1(
-                        &revspec
-                            .from()
-                            .context("cannot get starting commit from specified value")?
-                            .id(),
-                    ),
-                    &self
-                        .get_head_commit()
-                        .context("cannot get head commit with gitlib2")?,
-                )
-                .context("specified commit is not an ancestor of current head")?;
-            Ok(ahead)
-        } else if revspec.mode().is_range() {
-            let (ahead, _) = self
-                .get_commits_ahead_behind(
-                    &oid_to_sha1(
-                        &revspec
-                            .from()
-                            .context("cannot get starting commit of range from specified value")?
-                            .id(),
-                    ),
-                    &oid_to_sha1(
-                        &revspec
-                            .to()
-                            .context("cannot get end of range commit from specified value")?
-                            .id(),
-                    ),
-                )
-                .context("specified commit is not an ancestor of current head")?;
-            Ok(ahead)
+
+        if revspec.mode().contains(git2::RevparseMode::SINGLE) {
+            let commit_oid = revspec
+                .from()
+                .context("cannot get starting commit from specified value")?
+                .id();
+            revwalk.push(commit_oid)?;
+            Ok(revwalk
+                .take(1)
+                .map(|o| Ok(oid_to_sha1(&o?)))
+                .collect::<Result<Vec<Sha1Hash>>>()?)
+        } else if revspec.mode().contains(git2::RevparseMode::RANGE) {
+            let from_oid = revspec
+                .from()
+                .context("cannot get starting commit of range from specified value")?
+                .id();
+            let to_oid = revspec
+                .to()
+                .context("cannot get end of range commit from specified value")?
+                .id();
+
+            revwalk.push(to_oid)?;
+            revwalk.hide(from_oid)?;
+
+            // Collect commits (already in reverse chronological order by default)
+            let commits: Vec<Sha1Hash> = revwalk
+                .map(|o| Ok(oid_to_sha1(&o?)))
+                .collect::<Result<Vec<Sha1Hash>>>()?;
+            Ok(commits)
         } else {
             bail!("specified value not in a supported format")
         }
@@ -836,18 +835,18 @@ fn extract_sig_from_patch_tags<'a>(
 
 #[cfg(test)]
 mod tests {
+
     use std::fs;
 
-    use test_utils::{generate_repo_ref_event, git::GitTestRepo};
-
     use super::*;
+    use crate::test_utils::{generate_repo_ref_event, git::GitTestRepo};
 
     mod git_config_item_local {
         use super::*;
 
         #[test]
         fn save_git_config_item_returns_ok() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "testvalue", false)?;
             Ok(())
@@ -855,7 +854,7 @@ mod tests {
 
         #[test]
         fn get_git_config_item_returns_item_just_saved() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "testvalue", false)?;
             assert_eq!(
@@ -869,7 +868,7 @@ mod tests {
 
         #[test]
         fn get_git_config_item_returns_none_if_not_present() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             assert_eq!(
                 git_repo.get_git_config_item("test.item", Some(false))?,
@@ -880,7 +879,7 @@ mod tests {
 
         #[test]
         fn get_git_config_item_empty_string_returns_empty_string_instead_of_none() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "", false)?;
             assert_eq!(
@@ -892,7 +891,7 @@ mod tests {
 
         #[test]
         fn remove_local_git_config_item() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             git_repo.save_git_config_item("test.item", "testvalue", false)?;
             assert!(git_repo.remove_git_config_item("test.item", false)?);
@@ -905,7 +904,7 @@ mod tests {
 
         #[test]
         fn remove_git_config_item_returns_false_if_item_wasnt_set() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             assert!(!(git_repo.remove_git_config_item("test.item", false)?));
             Ok(())
@@ -1140,7 +1139,8 @@ mod tests {
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
-            assert!(git_repo.does_commit_exist("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?);
+            let root_commit_id = git_repo.get_root_commit()?;
+            assert!(git_repo.does_commit_exist(&root_commit_id.to_string())?);
             Ok(())
         }
 
@@ -1172,35 +1172,64 @@ mod tests {
         #[test]
         fn simple_patch_matches_string() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
-            let oid = test_repo.populate()?;
-
+            test_repo.initial_commit()?;
+            fs::write(test_repo.dir.join("t2.md"), "some content1")?;
+            let oid = test_repo.stage_and_commit("add t2.md")?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
+            let _parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
+
+            let generated_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?;
+
+            let first_line_parent_oid = generated_patch
+                .lines()
+                .next()
+                .unwrap()
+                .split(' ')
+                .nth(1)
+                .unwrap();
+
+            let from_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("From: "))
+                .unwrap();
+
+            let date_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Date: "))
+                .unwrap();
+
+            let subject_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Subject: "))
+                .unwrap();
 
             assert_eq!(
-                "\
-                From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
-                From: Joe Bloggs <joe.bloggs@pm.me>\n\
-                Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
-                Subject: [PATCH] add t2.md\n\
-                \n\
-                ---\n \
-                t2.md | 1 +\n \
-                1 file changed, 1 insertion(+)\n \
-                create mode 100644 t2.md\n\
-                \n\
-                diff --git a/t2.md b/t2.md\n\
-                new file mode 100644\n\
-                index 0000000..a66525d\n\
-                --- /dev/null\n\
-                +++ b/t2.md\n\
-                @@ -0,0 +1 @@\n\
-                +some content1\n\\ \
-                No newline at end of file\n\
-                --\n\
-                libgit2 1.9.1\n\
-                \n\
-                ",
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
+                generated_patch,
+                format!(
+                    "\
+From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
+{from_line}
+{date_line}
+{subject_line}
+
+---
+ t2.md | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 t2.md
+
+diff --git a/t2.md b/t2.md
+new file mode 100644
+index 0000000..a66525d
+--- /dev/null
++++ b/t2.md
+@@ -0,0 +1 @@
++some content1
+\\ No newline at end of file
+--
+libgit2 1.9.1
+
+"
+                )
             );
             Ok(())
         }
@@ -1208,35 +1237,65 @@ mod tests {
         #[test]
         fn series_count() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
-            let oid = test_repo.populate()?;
-
+            test_repo.initial_commit()?;
+            fs::write(test_repo.dir.join("t2.md"), "some content1")?;
+            let oid = test_repo.stage_and_commit("add t2.md")?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
+            let _parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
+
+            let generated_patch =
+                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?;
+
+            let first_line_parent_oid = generated_patch
+                .lines()
+                .next()
+                .unwrap()
+                .split(' ')
+                .nth(1)
+                .unwrap();
+
+            let from_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("From: "))
+                .unwrap();
+
+            let date_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Date: "))
+                .unwrap();
+
+            let subject_line = generated_patch
+                .lines()
+                .find(|l| l.starts_with("Subject: "))
+                .unwrap();
 
             assert_eq!(
-                "\
-                From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
-                From: Joe Bloggs <joe.bloggs@pm.me>\n\
-                Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
-                Subject: [PATCH 3/5] add t2.md\n\
-                \n\
-                ---\n \
-                t2.md | 1 +\n \
-                1 file changed, 1 insertion(+)\n \
-                create mode 100644 t2.md\n\
-                \n\
-                diff --git a/t2.md b/t2.md\n\
-                new file mode 100644\n\
-                index 0000000..a66525d\n\
-                --- /dev/null\n\
-                +++ b/t2.md\n\
-                @@ -0,0 +1 @@\n\
-                +some content1\n\\ \
-                No newline at end of file\n\
-                --\n\
-                libgit2 1.9.1\n\
-                \n\
-                ",
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
+                generated_patch,
+                format!(
+                    "\
+From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
+{from_line}
+{date_line}
+{subject_line}
+
+---
+ t2.md | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 t2.md
+
+diff --git a/t2.md b/t2.md
+new file mode 100644
+index 0000000..a66525d
+--- /dev/null
++++ b/t2.md
+@@ -0,0 +1 @@
++some content1
+\\ No newline at end of file
+--
+libgit2 1.9.1
+
+"
+                )
             );
             Ok(())
         }
@@ -1628,10 +1687,10 @@ mod tests {
 
     mod create_commit_from_patch {
 
-        use test_utils::TEST_KEY_1_SIGNER;
-
         use super::*;
-        use crate::{git_events::generate_patch_event, repo_ref::RepoRef};
+        use crate::{
+            git_events::generate_patch_event, repo_ref::RepoRef, test_utils::TEST_KEY_1_SIGNER,
+        };
 
         async fn generate_patch_from_head_commit(
             test_repo: &GitTestRepo,
@@ -1666,9 +1725,9 @@ mod tests {
         }
 
         mod patch_created_as_commit_with_matching_id {
-            use test_utils::git::joe_signature;
 
             use super::*;
+            use crate::test_utils::git::joe_signature;
 
             #[tokio::test]
             async fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature(
@@ -1776,10 +1835,12 @@ mod tests {
     }
 
     mod apply_patch_chain {
-        use test_utils::TEST_KEY_1_SIGNER;
 
         use super::*;
-        use crate::{git_events::generate_cover_letter_and_patch_events, repo_ref::RepoRef};
+        use crate::{
+            git_events::generate_cover_letter_and_patch_events, repo_ref::RepoRef,
+            test_utils::TEST_KEY_1_SIGNER,
+        };
 
         static BRANCH_NAME: &str = "add-example-feature";
         // returns original_repo, cover_letter_event, patch_events
@@ -2136,9 +2197,12 @@ mod tests {
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
+                let head_commit_of_main = git_repo.get_tip_of_branch("main")?;
+                let expected_commit = git_repo.get_commit_parent(&head_commit_of_main)?;
+
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?],
+                    vec![expected_commit],
                 );
                 Ok(())
             }
@@ -2149,9 +2213,15 @@ mod tests {
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
+                let head_commit = git_repo.get_head_commit()?;
+
+                // When on a branch ahead of main, HEAD~1 should return the parent of the
+                // current HEAD
+                let expected_commit = git_repo.get_commit_parent(&head_commit)?;
+
                 assert_eq!(
                     git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![str_to_sha1("82ff2bcc9aa94d1bd8faee723d4c8cc190d6061c")?],
+                    vec![expected_commit],
                 );
                 Ok(())
             }
@@ -2166,13 +2236,26 @@ mod tests {
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                assert_eq!(
-                    git_repo.parse_starting_commits("HEAD~2")?,
-                    vec![
-                        str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?,
-                        str_to_sha1("af474d8d271490e5c635aad337abdc050034b16a")?,
-                    ],
-                );
+                let main_head_commit = git_repo.get_tip_of_branch("main")?;
+                let main_parent_commit = git_repo.get_commit_parent(&main_head_commit)?;
+                let main_grandparent_commit = git_repo.get_commit_parent(&main_parent_commit)?;
+
+                let expected_commits = vec![
+                    main_head_commit,
+                    main_parent_commit,
+                    main_grandparent_commit,
+                ];
+
+                let mut revwalk = git_repo.git_repo.revwalk()?;
+                revwalk.simplify_first_parent()?;
+                revwalk.push(sha1_to_oid(&main_head_commit)?)?;
+
+                let actual_commits: Vec<Sha1Hash> = revwalk
+                    .take(3) // Take 3 commits: HEAD, its parent, and its grandparent
+                    .map(|o| Ok(oid_to_sha1(&o?)))
+                    .collect::<Result<Vec<Sha1Hash>>>()?;
+
+                assert_eq!(actual_commits, expected_commits,);
                 Ok(())
             }
         }
@@ -2185,14 +2268,28 @@ mod tests {
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
-                assert_eq!(
-                    git_repo.parse_starting_commits("HEAD~3")?,
-                    vec![
-                        str_to_sha1("82ff2bcc9aa94d1bd8faee723d4c8cc190d6061c")?,
-                        str_to_sha1("a23e6b05aaeb7d1471b4a838b51f337d5644eeb0")?,
-                        str_to_sha1("7ab82116068982671a8111f27dc10599172334b2")?,
-                    ],
-                );
+                let feature_head_commit = git_repo.get_head_commit()?;
+                let feature_parent1_commit = git_repo.get_commit_parent(&feature_head_commit)?;
+                let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
+                let feature_parent3_commit = git_repo.get_commit_parent(&feature_parent2_commit)?;
+
+                let expected_commits = vec![
+                    feature_head_commit,
+                    feature_parent1_commit,
+                    feature_parent2_commit,
+                    feature_parent3_commit,
+                ];
+
+                let mut revwalk = git_repo.git_repo.revwalk()?;
+                revwalk.simplify_first_parent()?;
+                revwalk.push(sha1_to_oid(&feature_head_commit)?)?;
+
+                let actual_commits: Vec<Sha1Hash> = revwalk
+                    .take(4) // Take 4 commits: HEAD, and its three parents
+                    .map(|o| Ok(oid_to_sha1(&o?)))
+                    .collect::<Result<Vec<Sha1Hash>>>()?;
+
+                assert_eq!(actual_commits, expected_commits,);
                 Ok(())
             }
         }
@@ -2206,12 +2303,19 @@ mod tests {
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
+                let feature_head_commit = git_repo.get_tip_of_branch("add-example-feature")?;
+                let feature_parent1_commit = git_repo.get_commit_parent(&feature_head_commit)?;
+                let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
+                let main_head_commit = git_repo.get_tip_of_branch("main")?;
+
                 assert_eq!(
-                    git_repo.parse_starting_commits("af474d8..a23e6b0")?,
+                    git_repo.parse_starting_commits(&format!(
+                        "{main_head_commit}..{feature_head_commit}"
+                    ))?,
                     vec![
-                        str_to_sha1("a23e6b05aaeb7d1471b4a838b51f337d5644eeb0")?,
-                        str_to_sha1("7ab82116068982671a8111f27dc10599172334b2")?,
-                        str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?,
+                        feature_head_commit,
+                        feature_parent1_commit,
+                        feature_parent2_commit,
                     ],
                 );
                 Ok(())

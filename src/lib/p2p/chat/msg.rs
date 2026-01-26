@@ -1,17 +1,19 @@
+use std::fmt::Display;
+
 use git2::Oid;
 use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use textwrap::{wrap, Options};
+
+use crate::types::Event; // Add this line
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
-    format!(
-        "{}",
-        std::env::var("USER")
-            .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string()),
-    )
+    std::env::var("USER")
+        .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string())
+        .to_string()
 });
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub enum MsgKind {
     #[default]
     Chat,
@@ -30,14 +32,21 @@ pub enum MsgKind {
     GitCommitHeader,
     GitCommitBody,
     GitCommitTime,
+    NostrEvent,
+    GitDiff,
+    OneShot,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Msg {
     pub from: String,
     pub content: Vec<String>,
     pub kind: MsgKind,
     pub commit_id: CommitId,
+    pub nostr_event: Option<Event>,
+    pub message_id: Option<String>,  // New field
+    pub sequence_num: Option<usize>, // New field
+    pub total_chunks: Option<usize>, // New field
 }
 
 impl Default for Msg {
@@ -47,6 +56,10 @@ impl Default for Msg {
             content: vec!["".to_string(), "".to_string()],
             kind: MsgKind::Chat,
             commit_id: CommitId::new(Oid::zero()),
+            nostr_event: None,
+            message_id: None,
+            sequence_num: None,
+            total_chunks: None,
         }
     }
 }
@@ -64,6 +77,31 @@ impl Msg {
 
     pub fn set_commit_id(mut self, commit_id: CommitId) -> Self {
         self.commit_id = commit_id;
+        self
+    }
+
+    pub fn set_nostr_event(mut self, event: Event) -> Self {
+        self.kind = MsgKind::NostrEvent;
+        self.content = vec![serde_json::to_string(&event).unwrap_or_default()];
+        self.nostr_event = Some(event);
+        self
+    }
+
+    // New setter for message_id
+    pub fn set_message_id(mut self, message_id: String) -> Self {
+        self.message_id = Some(message_id);
+        self
+    }
+
+    // New setter for sequence_num
+    pub fn set_sequence_num(mut self, sequence_num: usize) -> Self {
+        self.sequence_num = Some(sequence_num);
+        self
+    }
+
+    // New setter for total_chunks
+    pub fn set_total_chunks(mut self, total_chunks: usize) -> Self {
+        self.total_chunks = Some(total_chunks);
         self
     }
 
@@ -88,22 +126,11 @@ impl Msg {
 
 impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
     fn from(m: &'a Msg) -> Self {
-        use ratatui::style::{Color, Modifier, Style};
-        use ratatui::text::{Line, Span};
+        use ratatui::{
+            style::{Color, Modifier, Style},
+            text::{Line, Span},
+        };
         use MsgKind::*;
-
-        fn gen_color_by_hash(s: &str) -> Color {
-            static LIGHT_COLORS: [Color; 5] = [
-                Color::LightMagenta,
-                Color::LightGreen,
-                Color::LightYellow,
-                Color::LightBlue,
-                Color::LightCyan,
-                // Color::White,
-            ];
-            let h = s.bytes().fold(0, |acc, b| acc ^ b as usize);
-            LIGHT_COLORS[h % LIGHT_COLORS.len()]
-        }
 
         match m.kind {
             //System
@@ -128,31 +155,22 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                     .add_modifier(Modifier::ITALIC),
             )),
             Chat => {
-                if m.from == *USER_NAME {
-                    Line::default().left_aligned().spans(vec![
-                        Span::styled(
-                            format!("{}{} ", &m.from, ">"),
-                            Style::default().fg(gen_color_by_hash(&m.from)),
-                        ),
-                        m.content[0].clone().into(),
-                    ])
-                } else {
-                    Line::default().right_aligned().spans(vec![
-                        m.content[0].clone().into(),
-                        Span::styled(
-                            format!(" {}{}", "<", &m.from),
-                            Style::default().fg(gen_color_by_hash(&m.from)),
-                        ),
-                    ])
+                let mut spans = Vec::new();
+                // Assuming `m.from` is the sender's name
+                if let Some(first_line) = m.content.first() {
+                    spans.push(Span::raw(format!("{}: {}", m.from, first_line)));
                 }
+
+                for line in m.content.iter().skip(1) {
+                    spans.push(Span::raw(line.clone()));
+                }
+                Line::from(spans)
             }
             Raw => m.content[0].clone().into(),
             Command => Line::default().spans(vec![
                 Span::styled(
                     format!("Command: {}{} ", &m.from, ">"),
-                    Style::default()
-                        .fg(gen_color_by_hash(&m.from))
-                        .add_modifier(Modifier::ITALIC),
+                    Style::default().add_modifier(Modifier::ITALIC),
                 ),
                 m.content[0].clone().into(),
             ]),
@@ -161,7 +179,6 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
             //        Span::styled(
             //            format!("{}", m.content[0].clone()),
             //            Style::default()
-            //                .fg(gen_color_by_hash(&m.from))
             //                .add_modifier(Modifier::ITALIC),
             //        ),
             //        //m.content[1].clone().into(),
@@ -173,9 +190,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"commit\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -186,9 +201,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"tree\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -199,9 +212,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"Author\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -212,9 +223,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"parent\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -225,9 +234,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"msg\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -238,9 +245,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"name\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -251,9 +256,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"email\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -264,9 +267,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"time\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -277,9 +278,7 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"header\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
@@ -290,15 +289,54 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 [
                     Span::styled(
                         format!("{{\"body\": \"{}\"}}", m.content[0].clone()),
-                        Style::default()
-                            .fg(gen_color_by_hash(&m.from))
-                            .add_modifier(Modifier::ITALIC),
+                        Style::default().add_modifier(Modifier::ITALIC),
                     ),
                     m.content[1].clone().into(),
                 ]
                 .iter()
                 .map(|i| format!("{}", i)),
             ),
+            NostrEvent => Line::default().spans(vec![
+                Span::styled(
+                    "[Nostr Event]".to_string(),
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                m.content[0].clone().into(),
+            ]),
+            GitDiff => {
+                let mut spans = Vec::new();
+                for line in m.content.iter() {
+                    let style = if line.starts_with('+') {
+                        Style::default().fg(Color::Green)
+                    } else if line.starts_with('-') {
+                        Style::default().fg(Color::Red)
+                    } else if line.starts_with('@') || line.starts_with('\\') {
+                        Style::default().fg(Color::Cyan)
+                    } else {
+                        Style::default().fg(Color::White)
+                    };
+                    spans.push(Span::styled(line.clone(), style));
+                }
+                Line::from(spans)
+            }
+            OneShot => {
+                let mut spans = Vec::new();
+                let orange_style = Style::default().fg(Color::Rgb(255, 165, 0));
+
+                if let Some(first_line) = m.content.first() {
+                    spans.push(Span::styled(
+                        format!("[ONESHOT] {}: {}", m.from, first_line),
+                        orange_style,
+                    ));
+                }
+
+                for line in m.content.iter().skip(1) {
+                    spans.push(Span::styled(line.clone(), orange_style));
+                }
+                Line::from(spans)
+            }
         }
     }
 }
@@ -313,34 +351,83 @@ impl Display for Msg {
             MsgKind::Raw => write!(f, "{}", self.content[0]),
             MsgKind::Command => write!(f, "[Command] {}:{}", self.from, self.content[0]),
             MsgKind::GitCommitId => {
-                write!(f, "{{\"commit\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"commit\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitTree => {
-                write!(f, "{{\"tree\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"tree\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitParent => {
-                write!(f, "{{\"parent\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"parent\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitHeader => {
-                write!(f, "{{\"header\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"header\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitAuthor => {
-                write!(f, "{{\"Author\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"Author\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitEmail => {
-                write!(f, "{{\"email\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"email\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitName => {
-                write!(f, "{{\"name\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"name\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitBody => {
-                write!(f, "{{\"body\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"body\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitMessagePart => {
-                write!(f, "{{\"msg\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"msg\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitTime => {
-                write!(f, "{{\"time\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"time\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
+            }
+            MsgKind::NostrEvent => {
+                write!(f, "[Nostr Event] {}", self.content[0])
+            }
+            MsgKind::GitDiff => {
+                write!(f, "[Git Diff]")
+            }
+            MsgKind::OneShot => {
+                write!(f, "[ONESHOT] {}: {}", self.from, self.content[0])
             }
         }
     }

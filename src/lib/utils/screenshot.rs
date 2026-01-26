@@ -1,12 +1,13 @@
-use crate::blockheight;
-use crate::weeble;
-use crate::wobble;
-use std::io;
-use std::process::Command;
+use std::{
+    fs, io,
+    path::PathBuf,
+    process::Command,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 use clap::{Parser, Subcommand, ValueEnum};
-use std::path::PathBuf;
-use std::fs;
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::{blockheight, weeble, wobble};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -84,23 +85,23 @@ pub fn linux(command: Commands) {
             if tool == Tool::Gnome {
                 execute_and_handle_linux("gnome-screenshot", &[]);
             } else {
-                eprintln!("'scrot' does not have a dedicated full screen command. Use 'scrot <filename>' or 'scrot -s' to select the whole screen.");
+                eprintln!(
+                    "'scrot' does not have a dedicated full screen command. Use 'scrot <filename>' or 'scrot -s' to select the whole screen."
+                );
             }
         }
-        Commands::Area { tool, filename } => {
-            match tool {
-                Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-a"]),
-                Tool::Scrot => execute_and_handle_linux("scrot", &["-s", &filename]),
-            }
-        }
-        Commands::Window { tool, .. } => {
-             match tool {
-                Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-w"]),
-                Tool::Scrot => execute_and_handle_linux("scrot", &["-s"]),
-            }
-        }
+        Commands::Area { tool, filename } => match tool {
+            Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-a"]),
+            Tool::Scrot => execute_and_handle_linux("scrot", &["-s", &filename]),
+        },
+        Commands::Window { tool, .. } => match tool {
+            Tool::Gnome => execute_and_handle_linux("gnome-screenshot", &["-w"]),
+            Tool::Scrot => execute_and_handle_linux("scrot", &["-s"]),
+        },
         Commands::Clipboard { .. } => {
-            eprintln!("Clipboard capture is not implemented for Linux in this tool. You can pipe the output of scrot to xclip for example: `scrot -s -o /dev/stdout | xclip -selection clipboard -t image/png`");
+            eprintln!(
+                "Clipboard capture is not implemented for Linux in this tool. You can pipe the output of scrot to xclip for example: `scrot -s -o /dev/stdout | xclip -selection clipboard -t image/png`"
+            );
         }
     }
 }
@@ -145,7 +146,6 @@ fn execute_and_handle_macos(program: &str, args: &[&str]) {
         Err(e) => eprintln!("Command failed with error: {}", e),
     }
 }
-
 
 pub fn take_screenshot(output_path: &str) -> io::Result<()> {
     if cfg!(target_os = "macos") {
@@ -192,13 +192,11 @@ pub fn execute_linux_command(program: &str, args: &[&str]) -> io::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(
-            format!(
-                "Command failed: {} {}",
-                program,
-                String::from_utf8_lossy(&output.stderr)
-            ),
-        ))
+        Err(io::Error::other(format!(
+            "Command failed: {} {}",
+            program,
+            String::from_utf8_lossy(&output.stderr)
+        )))
     }
 }
 
@@ -207,22 +205,20 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(
-            format!(
-                "Command failed: {} {}",
-                program,
-                String::from_utf8_lossy(&output.stderr)
-            ),
-        ))
+        Err(io::Error::other(format!(
+            "Command failed: {} {}",
+            program,
+            String::from_utf8_lossy(&output.stderr)
+        )))
     }
 }
 
 /// # Captures a screenshot for debugging purposes during a test.
 ///
 /// This function is designed to be called from other tests to capture the UI
-/// state at a specific moment. The screenshot is saved in the `test_screenshots`
-/// directory with a filename that includes the provided context along with
-/// a timestamp.
+/// state at a specific moment. The screenshot is saved in the
+/// `test_screenshots` directory with a filename that includes the provided
+/// context along with a timestamp.
 ///
 /// ## Platform
 ///
@@ -242,8 +238,9 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 /// ## Example
 ///
 /// ```
-/// use assert_cmd::cargo::cargo_bin;
 /// use std::process::Command;
+///
+/// use assert_cmd::cargo::cargo_bin;
 /// fn my_tui_test() -> Result<(), Box<dyn std::error::Error>> {
 ///     let mut cmd = Command::new(cargo_bin("gnostr"));
 ///     cmd.arg("tui");
@@ -261,7 +258,10 @@ pub fn execute_macos_command(program: &str, args: &[&str]) -> io::Result<()> {
 ///     child.kill().expect("Failed to kill gnostr process");
 ///
 ///     // Assert that the screenshot was created
-///     assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+///     assert!(
+///         screenshot_path_result.is_ok(),
+///         "Failed to capture screenshot."
+///     );
 ///
 ///     Ok(())
 /// }
@@ -291,24 +291,66 @@ pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
     Ok(screenshot_path)
 }
 
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     #[ignore]
-    fn test_make_screenshot_macos() {
+    fn test_make_screenshot_cross_platform() {
         // This test now verifies that our new screenshot utility works correctly.
-        let screenshot_path =
-            make_screenshot("self_test").expect("Failed to capture screenshot during self-test");
+        let screenshot_path = make_screenshot_cross_platform("self_test")
+            .expect("Failed to capture screenshot during self-test");
 
         // --- Verify ---
-        let metadata =
-            fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+        let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
         assert!(metadata.is_file(), "Screenshot is not a file");
         assert!(metadata.len() > 0, "Screenshot file is empty");
 
         // --- Teardown ---
         // DO NOT DELETE THE SCREEN SHOT!
     }
+}
+/// # Captures a screenshot for debugging purposes during a test.
+///
+/// This function is designed to be called from other tests to capture the UI
+/// state at a specific moment. The screenshot is saved in the
+/// `test_screenshots` directory with a filename that includes the provided
+/// context along with a timestamp.
+///
+/// ## Error Handling
+///
+/// This function will not fail the test if the screenshot cannot be taken;
+/// it will return an `Err` instead. The calling test can then decide how to
+/// handle the failure.
+///
+/// ## File Management
+///
+/// The screenshot file is not deleted after being taken, so it can be
+/// inspected after the test run.
+#[allow(dead_code)] // Allow dead code because this is primarily for testing/debugging
+pub fn make_screenshot_cross_platform(context: &str) -> io::Result<PathBuf> {
+    let mut screenshot_path = std::env::current_dir()?;
+    screenshot_path.push("test_screenshots");
+    // These values are specific to the gnostr project's test environment setup.
+    // They provide unique subdirectories for organizing screenshots.
+    let weeble = weeble::weeble().unwrap_or(0.0) as u64;
+    let wobble = wobble::wobble().unwrap_or(0.0) as u64;
+    let blockheight = blockheight::blockheight().unwrap_or(0.0) as u64;
+    screenshot_path.push(weeble.to_string());
+    screenshot_path.push(blockheight.to_string());
+    screenshot_path.push(wobble.to_string());
+    fs::create_dir_all(&screenshot_path)?;
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| io::Error::other(e.to_string()))?
+        .as_secs();
+
+    let filename = format!("test_screenshot_{}_{}.png", context, timestamp);
+    screenshot_path.push(&filename);
+
+    take_screenshot(screenshot_path.to_str().unwrap())?;
+
+    Ok(screenshot_path)
 }

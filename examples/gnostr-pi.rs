@@ -1,14 +1,12 @@
-use std::str::FromStr;
-use std::{env, process};
+use std::{env, process, str::FromStr};
 
 use num_bigint::BigInt;
 
 // Helper function to get the help message string.
-// This function returns a String, making it testable without relying on stdout capture.
+// This function returns a String, making it testable without relying on stdout
+// capture.
 fn get_help_message() -> String {
-    format!(
-        "gnostr_pi <depth> <offset>\nNote:<depth> is NOT the returned number of digits!\nUsage:\nENTROPY=$(gnostr-pi 100 0); gnostr-sha256 $ENTROPY\n806b4aba301c1702df94bdb398f579da7b8419455274cb2235d45cc244de749f"
-    )
+    "gnostr_pi <depth> <offset>\nNote:<depth> is NOT the returned number of digits!\nUsage:\nENTROPY=$(gnostr-pi 100 0); gnostr-sha256 $ENTROPY\n806b4aba301c1702df94bdb398f579da7b8419455274cb2235d45cc244de749f".to_string()
 }
 
 // Helper function to get the version message string.
@@ -26,21 +24,17 @@ fn main() {
     //
     //
     //
-    if (args.len() - 1) >= 1 {
-        if &args[1] == "-h" || &args[1] == "--help" {
-            println!("{}", get_help_message());
-            process::exit(0);
-        }
+    if (args.len() - 1) >= 1 && (&args[1] == "-h" || &args[1] == "--help") {
+        println!("{}", get_help_message());
+        process::exit(0);
     }
-    if (args.len() - 1) >= 1 {
-        if &args[1] == "-v" || &args[1] == "-V" || &args[1] == "--version" {
-            println!("{}", get_version_message());
-            process::exit(0);
-        }
+    if (args.len() - 1) >= 1 && (&args[1] == "-v" || &args[1] == "-V" || &args[1] == "--version") {
+        println!("{}", get_version_message());
+        process::exit(0);
     }
     if (args.len() - 1) == 1 {
         let depth = u64::from_str(&args[1]).unwrap() * 5 + 1;
-        calculate_pi_digits_impl(depth as u64);
+        calculate_pi_digits_impl(depth);
         process::exit(0);
     }
     if (args.len() - 1) == 2 {
@@ -51,10 +45,10 @@ fn main() {
 
         if offset <= 1 {
             //TODO handle negative offset simular to gnostr-pi.c
-            calculate_pi_digits_impl(depth as u64);
+            calculate_pi_digits_impl(depth);
             process::exit(0);
         } else {
-            calculate_pi_digits_with_offset_impl(depth as u64, offset as u64);
+            calculate_pi_digits_with_offset_impl(depth, offset);
         }
 
         process::exit(0);
@@ -112,7 +106,7 @@ fn calculate_pi_digits_with_offset_impl(depth: u64, offset: u64) -> String {
             n = nn;
             r = nr;
         }
-        count = count + 1u64;
+        count += 1u64;
     }
 }
 
@@ -153,7 +147,7 @@ fn calculate_pi_digits_impl(limit: u64) -> String {
             n = nn;
             r = nr;
         }
-        count = count + 1u64;
+        count += 1u64;
     }
 }
 

@@ -1,11 +1,14 @@
-use super::EventV3;
-use crate::types::{Id, SubscriptionId};
-use serde::de::Error as DeError;
-use serde::de::{Deserialize, Deserializer, IgnoredAny, SeqAccess, Visitor};
-use serde::ser::{Serialize, SerializeSeq, Serializer};
+use std::fmt;
+
+use serde::{
+    de::{Deserialize, Deserializer, Error as DeError, IgnoredAny, SeqAccess, Visitor},
+    ser::{Serialize, SerializeSeq, Serializer},
+};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use super::EventV3;
+use crate::types::{Id, SubscriptionId};
 
 /// A message from a relay to a client
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -16,9 +19,9 @@ pub enum RelayMessageV5 {
 
     /// Used to indicate that a subscription was ended on the server side
     /// Every ClientMessage::Req _may_ trigger a RelayMessage::Closed response
-    /// The last parameter may have a colon-terminated machine-readable prefix of:
-    ///     duplicate, pow, blocked, rate-limited, invalid, auth-required,
-    ///     restricted, or error
+    /// The last parameter may have a colon-terminated machine-readable prefix
+    /// of:     duplicate, pow, blocked, rate-limited, invalid,
+    /// auth-required,     restricted, or error
     Closed(SubscriptionId, String),
 
     /// End of subscribed events notification
@@ -35,9 +38,9 @@ pub enum RelayMessageV5 {
 
     /// Used to notify clients if an event was successuful
     /// Every ClientMessage::Event will trigger a RelayMessage::OK response
-    /// The last parameter may have a colon-terminated machine-readable prefix of:
-    ///     duplicate, pow, blocked, rate-limited, invalid, auth-required,
-    ///     restricted or error
+    /// The last parameter may have a colon-terminated machine-readable prefix
+    /// of:     duplicate, pow, blocked, rate-limited, invalid,
+    /// auth-required,     restricted or error
     Ok(Id, bool, String),
 }
 

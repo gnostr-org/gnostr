@@ -1,5 +1,6 @@
-use crate::utils::{ureq_async, ureq_sync};
 use std::env;
+
+use crate::utils::{ureq_async, ureq_sync};
 
 pub fn blockhash() -> Result<String, ascii::AsciiChar> {
     let blockhash = match ureq_sync("https://mempool.space/api/blocks/tip/hash".to_string()) {
@@ -11,7 +12,8 @@ pub fn blockhash() -> Result<String, ascii::AsciiChar> {
 }
 
 pub async fn blockhash_async() -> String {
-    let blockhash = match ureq_async("https://mempool.space/api/blocks/tip/hash".to_string()).await {
+    let blockhash = match ureq_async("https://mempool.space/api/blocks/tip/hash".to_string()).await
+    {
         Ok(val) => val.to_string(),
         Err(_) => "0".to_string(),
     };

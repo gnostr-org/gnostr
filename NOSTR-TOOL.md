@@ -12,16 +12,17 @@
 A CLI tool to make it simple to specific send nostr events.
 
 ## Install
+
 Installation instructions can be found in [INSTALL.md](docs/INSTALL.md).
 
 ## Usage
+
 Run `nostr-tool -h` to see available options and subcommands. To get help with the sub commands, run `nostr-tool [subcommand] -h`, e.g. `nostr-tool text-note -h`.
 More examples can be found in [EXAMPLES.md](docs/EXAMPLES.md).
 
 ## Contributions
 
-Contributions are always welcome! If you find something the CLI is missing, a PR is very appreciated. If you can't 
+Contributions are always welcome! If you find something the CLI is missing, a PR is very appreciated. If you can't
 develop it yourself, please make an issue for it so that me or someone else can take a stab at it.
 
 Thank you for your contributions! Your help is greatly appreciated.
-

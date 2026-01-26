@@ -22,7 +22,6 @@ use crate::{
     strings, ui,
 };
 
-///
 pub struct HelpPopup {
     cmds: Vec<CommandInfo>,
     visible: bool,
@@ -38,7 +37,7 @@ impl DrawableComponent for HelpPopup {
             let scroll_threshold = SIZE.1 / 3;
             let scroll = self.selection.saturating_sub(scroll_threshold);
 
-            let area = ui::centered_rect_absolute(SIZE.0, SIZE.1, f.size());
+            let area = ui::centered_rect_absolute(SIZE.0, SIZE.1, f.area());
 
             f.render_widget(Clear, area);
             f.render_widget(
@@ -158,7 +157,6 @@ impl HelpPopup {
             key_config: env.key_config.clone(),
         }
     }
-    ///
     pub fn set_cmds(&mut self, cmds: Vec<CommandInfo>) {
         self.cmds = cmds
             .into_iter()
@@ -189,7 +187,7 @@ impl HelpPopup {
 
         let mut processed = 0_u16;
 
-        for (key, group) in &self.cmds.iter().group_by(|e| e.text.group) {
+        for (key, group) in &self.cmds.iter().chunk_by(|e| e.text.group) {
             txt.push(Line::from(Span::styled(
                 Cow::from(key.to_string()),
                 Style::default().add_modifier(Modifier::REVERSED),

@@ -77,7 +77,7 @@ pub fn tab_log(key_config: &SharedKeyConfig) -> String {
 pub fn tab_files(key_config: &SharedKeyConfig) -> String {
     format!("Files [{}]", key_config.get_hint(key_config.keys.tab_files))
 }
-pub fn tab_chat(key_config: &SharedKeyConfig) -> String {
+pub fn tab_chat(_key_config: &SharedKeyConfig) -> String {
     "🅖".to_string()
 }
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
@@ -336,7 +336,7 @@ pub mod commit {
         "Committer: ".to_string()
     }
     pub fn details_sha() -> String {
-        "339:commit ".to_string()
+        "details_sha:339:commit ".to_string()
     }
     pub fn details_date() -> String {
         "Date: ".to_string()

@@ -4,12 +4,11 @@
 
 use std::time::Duration;
 
-//use nostr_sdk_0_32_0::{EventBuilder, EventId, FromBech32, Keys, Kind, Metadata, SecretKey, Tag, Url};
+//use nostr_sdk_0_32_0::{EventBuilder, EventId, FromBech32, Keys, Kind, Metadata, SecretKey,
+// Tag, Url};
 use nostr_0_34_1::prelude::Tag;
 use nostr_0_34_1::prelude::*;
-use nostr_database_0_34_0::{
-    nostr::types::filter::Filter, NostrDatabase, Order,
-};
+use nostr_database_0_34_0::{nostr::types::filter::Filter, NostrDatabase, Order};
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use tracing_subscriber::fmt::format::FmtSpan;
 
@@ -113,11 +112,11 @@ async fn main() {
     let events = database
         .query(
             vec![Filter::new()
-                .kinds(vec![Kind::Metadata, Kind::Custom(123), Kind::TextNote])
-                .limit(1000)
-                //.kind(Kind::Custom(123))
-                //.identifier("myid5000")
-                .author(keys_a.public_key())],
+                    .kinds(vec![Kind::Metadata, Kind::Custom(123), Kind::TextNote])
+                    .limit(1000)
+                    //.kind(Kind::Custom(123))
+                    //.identifier("myid5000")
+                    .author(keys_a.public_key())],
             Order::Desc,
         )
         .await

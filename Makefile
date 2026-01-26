@@ -1,3 +1,7 @@
+ACT_VERBOSE ?= 
+ACT_BIND ?= --bind
+ACT_USE_NEW_ACTION_CACHE ?= ${ACT_BIND}
+
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 ifeq ($(TAG),)
 TAG := v$(shell cat Cargo.toml | grep 'version = "' | head -n 1 | sed 's/version = "\(.*\)".*/\1/')
@@ -112,7 +116,12 @@ cargo-test-types-nip_three_four: 	### 	cargo-test-types-nip34
 	cargo test -j $(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
 
 cargo-clippy-workspace: 	### 	cargo-clippy-workspace
-	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	cargo +nightly clippy --workspace --all-targets -- -D warnings
+	cargo +nightly clippy --workspace --all-targets --all-features -- -D warnings
+
+cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
+	cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
+	cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
 
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
@@ -134,11 +143,13 @@ cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog
 	git-cliff --output CHANGELOG.md || cargo install git-cliff
 
 dep-graph: 	### 	dep-graph
-	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
+	@cargo depgraph --depth 1 | dot -Tpng > graph.png || brew install graphviz || cargo install cargo-depgraph
 
 gnostr-chat: 	## 	gnostr-chat
-	cargo  b -j $(NPROC) --bin gnostr
-	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
+	cargo b -vv -j $(NPROC) --bin gnostr
+	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
+	./target/debug/gnostr chat --topic gnostr --oneshot "testing-1896/932295/797624" -n "9ce04d52aafc9d73c0cedd9a3b5841faa7fa2f28ea1b88068c910ef66c610be1"
+	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
 	cargo  -j $(NPROC) install --bin gnostr-fetch-by-id --path .
@@ -185,10 +196,19 @@ docker-shared: 	### 	docker container with volumes
 	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
 
 gh-act-run-all: 	### 	gh-act-run-all
-	gh extension install nektos/gh-act
-	gh act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+
 gnostr-bot-matrix: 	### 	gnostr-bot-matrix
-	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	gh act -vv --container-architecture linux/amd64 -W .github/workflows/gnostr-bot-matrix.yml
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64
+
+gnostr-bot-macos: 	### 	gnostr-bot-macos
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
+gnostr-bot-macos-intel: 	### 	gnostr-bot-macos
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

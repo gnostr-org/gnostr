@@ -1,4 +1,5 @@
 # gh.rs
+
 [GitHub](https://github.com/gh0st-work/gh.rs)
 
 [![Lines Of Code](https://tokei.rs/b1/github/gh0st-work/gh.rs?category=code)](https://github.com/gh0st-work/gh.rs)
@@ -8,42 +9,48 @@
 `bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_prebuilt_binary.sh)`
 
 ## Motivation
-Just wanted to fork one repo as private, 
+
+Just wanted to fork one repo as private,
 but found that it's kinda complicated & not a one-liner & requires web GUI usage.
 
-Then I wrote `gh.sh` script, 
-which allowed me to do this, 
+Then I wrote `gh.sh` script,
+which allowed me to do this,
 and also was creating repositories without GUI through the GitHub API.
 
-It was ~400 LOC, 
+It was ~400 LOC,
 with the same args parsing & `fork-private` and `new` commands.
 
 But, you know, sh-scripts are quite unstable,
-certainly not for 400 LOC, 
-and the sh-syntax was simply not particularly suitable for such tasks, 
-so I started rewriting it in Rust, 
-realizing that this engineering solution would also 
+certainly not for 400 LOC,
+and the sh-syntax was simply not particularly suitable for such tasks,
+so I started rewriting it in Rust,
+realizing that this engineering solution would also
 allow to implement **search dream-TUI in the future**.
 
 ## Installation
+
 **Linux only** for now. I provided some installation options to select from for your comfort.
 
 ### Script to install prebuilt binary
+
 `bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_prebuilt_binary.sh)`
 
 **Pros:**
+
 - Fast
 
 **Cons:**
+
 - Can possibly not work for your machine
 
 **Detailed steps:**
+
 - Logs every command
-- Checks required commands and permissions 
+- Checks required commands and permissions
 - Extracts your machine kernel info and architecture
 - Creates temporary directory
 - Fetches the latest release version number
-- Downloads the tarball archive with the latest release version of the prebuilt binary 
+- Downloads the tarball archive with the latest release version of the prebuilt binary
 - Unpacks the tarball archive
 - Renames `gh` binary to `gh.rs` (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
 - Gives execute (+x) permissions to `gh.rs` binary
@@ -53,22 +60,26 @@ allow to implement **search dream-TUI in the future**.
 - Cleans up
 
 ### Script to install from source
+
 `bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_from_source.sh)`
 
 **Pros:**
+
 - Stable af
 
 **Cons:**
+
 - Long installation time
 
 **Detailed steps:**
+
 - Logs every command
-- Checks required commands and permissions 
+- Checks required commands and permissions
 - Extracts your machine kernel info and architecture
 - Creates temporary directory
 - Installs Rust & cargo if not installed
 - Fetches the latest release version number
-- Downloads the tarball archive with the latest release version of the source code 
+- Downloads the tarball archive with the latest release version of the source code
 - Unpacks the tarball archive
 - Builds binary from the source code with Rust
 - Renames `gh` binary to `gh.rs` (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
@@ -79,7 +90,9 @@ allow to implement **search dream-TUI in the future**.
 - Cleans up
 
 ## Usage
+
 `gh.rs help-full`
+
 ```
 Usage: gh.rs <COMMAND>
 
@@ -92,7 +105,7 @@ Commands:
       -t, --token <access_token>       Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only                   CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                       Print help
-    
+
   publish, p, pub [OPTIONS]  Publish current directory to GitHub
     Options:
       -d, --description <description>  Set new repo description [aliases: descr]
@@ -100,14 +113,14 @@ Commands:
       -t, --token <access_token>       Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only                   CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                       Print help
-    
+
   clone, c [OPTIONS]         Clone GitHub repo
     Options:
       -e, --external <repo_url>   Set external repo url
       -t, --token <access_token>  Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only              CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                  Print help
-    
+
   fork, f [OPTIONS]          Fork GitHub repo
     Options:
       -e, --external <repo_url>   Set external repo url
@@ -116,14 +129,16 @@ Commands:
       -t, --token <access_token>  Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only              CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                  Print help
-    
+
   help-full                  Print help fully, describing every command
 
 gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 ```
 
 ### Examples
+
 #### `new`:
+
 - `gs.rs new --cli-only --name my-repo --description "My new repo description" --public --token ghp_...`
 - `gs.rs n -c -n my-repo -d "My new repo description" -p -t ghp_...`
 - `gs.rs new -c -n my-repo -d "My new repo description" -p`
@@ -132,7 +147,7 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 - `gs.rs new -c -n my-repo -d "My new repo description"`
 - ```
   gs.rs new -n my-repo -d "My new repo description"
-  Make it public? y(es) / n(o) [no]: yes   
+  Make it public? y(es) / n(o) [no]: yes
   ```
 - ```
   gs.rs new -n my-repo
@@ -152,7 +167,9 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
   GitHub new repo description: My new repo description
   Make it public? y(es) / n(o) [no]:
   ```
+
 #### `publish`:
+
 - `gs.rs publish --cli-only --description "My new repo description" --public --token ghp_...`
 - `gs.rs publish -c -d "My new repo description" -p -t ghp_...`
 - `gs.rs pub -c -d "My new repo description" -p -t ghp_...`
@@ -163,7 +180,7 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 - `gs.rs pub -c -d "My new repo description"`
 - ```
   gs.rs pub -d "My new repo description"
-  Make it public? y(es) / n(o) [no]: no   
+  Make it public? y(es) / n(o) [no]: no
   ```
 - ```
   gs.rs pub
@@ -176,7 +193,9 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
   GitHub new repo description: My new repo description
   Make it public? y(es) / n(o) [no]:
   ```
+
 #### `clone`:
+
 - `gs.rs clone --cli-only --external https://github.com/gh0st-work/gh.rs.git --token ghp_...`
 - `gs.rs clone -c -e gh0st-work/gh.rs -t ghp_...`
 - `gs.rs c -c -e gh0st-work/gh.rs -t ghp_...`
@@ -190,7 +209,9 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
   GitHub access token: ghp_...
   GitHub external repo url: gh0st-work/gh.rs
   ```
+
 #### `fork`:
+
 - `gs.rs fork --cli-only --external https://github.com/gh0st-work/gh.rs.git --name gh.rs-fork --public --token ghp_...`
 - `gs.rs f -c -e gh0st-work/gh.rs -n gh.rs-fork -p -t ghp_...`
 - `gs.rs fork -c -e gh0st-work/gh.rs -n gh.rs-fork -p -t ghp_...`
@@ -199,11 +220,11 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 - `gs.rs fork -e gh0st-work/gh.rs -n gh.rs-fork`
 - ```
   gs.rs fork -e gh0st-work/gh.rs -n gh.rs-fork
-  Make it public? y(es) / n(o) [no]: yes 
+  Make it public? y(es) / n(o) [no]: yes
   ```
 - ```
   gs.rs fork -e gh0st-work/gh.rs
-  GitHub new repo name [gh.rs]: gh.rs-fork 
+  GitHub new repo name [gh.rs]: gh.rs-fork
   Make it public? y(es) / n(o) [no]: y
   ```
 - ```
@@ -229,15 +250,17 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 ## Development
 
 ### Build on top of:
+
 - [tokio](https://crates.io/crates/tokio), [async_std](https://crates.io/crates/async_std) — for async
 - [clap](https://crates.io/crates/clap) — for CLI args parsing
 - [octocrab](https://crates.io/crates/octocrab), [serde](https://crates.io/crates/serde), [serde_json](https://cretes.io/crates/serde_json), [url](https://crates.io/crates/url) — for GitHub API access
 - [git2](https://crates.io/crates/git2) — for git repo management
 - [configparser](https://crates.io/crates/configparser) — for parsing ~/.gitconfig
 - [ssh_key](https://crates.io/crates/ssh_key), [rand_code](https://crates.io/crates/rand_core) — for SSH keys management
-- [regex](https://crates.io/crates/regex), [home](https://crates.io/crates/home), [thiserror](https://crates.io/crates/thiserror), [chrono](https://crates.io/crates/chrono), [terminal_size](https://crates.io/crates/terminal_size), [anstream](https://crates.io/crates/anstream) — as other helpers  
+- [regex](https://crates.io/crates/regex), [home](https://crates.io/crates/home), [thiserror](https://crates.io/crates/thiserror), [chrono](https://crates.io/crates/chrono), [terminal_size](https://crates.io/crates/terminal_size), [anstream](https://crates.io/crates/anstream) — as other helpers
 
 ### TODO (& devlog):
+
 - [x] Concept-proof with `gh.sh` (same commands in shell script)
 - [x] Create `gh.rs` project, start rewritting in Rust
 - [x] Start trying to implement command `new`
@@ -267,8 +290,6 @@ gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 - [x] Implement & simple test `install_from_source.sh`
 - [x] Compliment myself, bcuz... damn this is not bad for 4 days & first ever Rust project
 - [x] Modify `--help` outputs & implement `help-full` command
-- [ ] Write tests 
+- [ ] Write tests
 - [ ] Start implementing [lazyhub](https://github.com/ryo-ma/lazyhub)-like `search` command TUI with [ratatui](https://github.com/ratatui-org/ratatui)
 - [ ] Start implementing [cliclack](https://github.com/fadeevab/cliclack)-like TUI for other commands
-
-

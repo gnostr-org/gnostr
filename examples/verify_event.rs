@@ -1,5 +1,6 @@
-use gnostr::types::Event;
 use std::io::Read;
+
+use gnostr::types::Event;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

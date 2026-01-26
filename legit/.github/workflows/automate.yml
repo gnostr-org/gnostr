@@ -2,7 +2,7 @@
 
 name: automate.yml
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -11,12 +11,12 @@ on:
     schedule:
       - cron: "*/3 * * * *"
 
-    branches:       #[ master ]
-      - '*'         # matches every branch that doesn't contain a '/'
-      - '*/*'       # matches every branch containing a single '/'
-      - '**'        # matches every branch
-      - 'master'    # includes master
-      - 'main'      # includes main
+    branches: #[ master ]
+      - "*" # matches every branch that doesn't contain a '/'
+      - "*/*" # matches every branch containing a single '/'
+      - "**" # matches every branch
+      - "master" # includes master
+      - "main" # includes main
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

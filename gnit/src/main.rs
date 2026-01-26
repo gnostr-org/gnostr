@@ -1,406 +1,184 @@
-#![deny(clippy::pedantic)]
-use std::{
-    borrow::Cow,
-    fmt::{Display, Formatter},
-    future::IntoFuture,
-    net::{IpAddr, SocketAddr},
-    path::PathBuf,
-    str::FromStr,
-    sync::{Arc, OnceLock},
-    time::Duration,
-};
+//#![deny(warnings)]
+#![allow(unused)]
+use std::collections::HashMap;
+use std::sync::Arc;
 
-use anyhow::Context;
-use askama::Template;
-use axum::{
-    body::Body,
-    http,
-    http::{HeaderValue, StatusCode},
-    response::{IntoResponse, Response},
-    routing::get,
-    Extension, Router,
-};
+mod kill_process; // Declare the new module
+
 use clap::Parser;
-use const_format::formatcp;
-use database::schema::SCHEMA_VERSION;
-use rocksdb::{Options, SliceTransform};
-use tokio::{
-    net::TcpListener,
-    signal::unix::{signal, SignalKind},
-    sync::mpsc,
-};
-use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
-use tower_layer::layer_fn;
-use tracing::{error, info, instrument, warn};
-use tracing_subscriber::{
-    fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
-};
-use xxhash_rust::const_xxh3;
 
-use crate::{
-    database::schema::prefixes::{
-        COMMIT_COUNT_FAMILY, COMMIT_FAMILY, REFERENCE_FAMILY, REPOSITORY_FAMILY, TAG_FAMILY,
-    },
-    git::Git,
-    layers::logger::LoggingMiddleware,
-    syntax_highlight::prime_highlighters,
-    theme::Theme,
-};
+use handlebars::Handlebars;
+use serde::Serialize;
+use serde_json::json;
 
-mod database;
-mod git;
-mod layers;
-mod methods;
-mod syntax_highlight;
-mod theme;
-mod unified_diff_builder;
+use futures_util::{FutureExt, StreamExt};
+use warp::Filter;
 
-const CRATE_VERSION: &str = clap::crate_version!();
+use warp::reply;
+// reply::json(&response)
+use warp::reply::json;
 
-const GLOBAL_CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/statics/css/style.css"));
-const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
-    .const_format(&const_xxh3::xxh3_128(GLOBAL_CSS).to_be_bytes())
-    .as_str();
+//dev server
+use tiny_http::{Response, Server};
 
-static HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
-static DARK_HIGHLIGHT_CSS_HASH: OnceLock<Box<str>> = OnceLock::new();
+use gnostr_js::*;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about)]
-pub struct Args {
-    /// Path to a directory where the RocksDB database should be stored.
-    ///
-    /// This directory will be created if it doesn't exist. The RocksDB database is
-    /// quick to generate, so it can be pointed to temporary storage.
-    #[clap(short, long, value_parser, default_value = ".gnostr/web")]
-    db_store: PathBuf,
-    /// The IP address to bind to (e.g., 127.0.0.1, 0.0.0.0).
-    #[clap(long, value_parser, default_value = "127.0.0.1")]
-    bind_address: IpAddr,
-    /// The socket port to bind to (e.g., 3333).
-    #[arg(short, long, value_parser, default_value = "3333", env = "GNOSTR_GNIT_BIND_PORT")]
-    bind_port: u16,
-    /// The path in which your bare Git repositories reside.
-    ///
-    /// This directory will be scanned recursively for Git repositories.
-    #[clap(short, long, value_parser, default_value = ".")]
-    scan_path: PathBuf,
-    /// Configures the metadata refresh interval for Git repositories (e.g., "never" or "60s").
-    #[arg(long, default_value_t = RefreshInterval::Duration(Duration::from_secs(30)), env = "GNOSTR_GNIT_REFRESH_INTERVAL")]
-    refresh_interval: RefreshInterval,
-    /// Configures the request timeout for incoming HTTP requests (e.g., "10s").
-    #[arg(long, default_value_t = Duration::from_secs(10).into(), env = "GNOSTR_GNIT_REQUEST_TIMEOUT")]
-    request_timeout: humantime::Duration,
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Port to listen on for the main server
+    #[arg(short, long, default_value_t = 3030)]
+    port: u16,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum RefreshInterval {
-    Never,
-    Duration(Duration),
+struct WithTemplate<T: Serialize> {
+    name: &'static str,
+    value: T,
 }
 
-impl Display for RefreshInterval {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Never => write!(f, "never"),
-            Self::Duration(s) => write!(f, "{}", humantime::format_duration(*s)),
-        }
-    }
+fn render<T>(template: WithTemplate<T>, hbs: Arc<Handlebars<'_>>) -> impl warp::Reply
+where
+    T: Serialize,
+{
+    let render = hbs
+        .render(template.name, &template.value)
+        .unwrap_or_else(|err| err.to_string());
+    warp::reply::html(render)
 }
 
-impl FromStr for RefreshInterval {
-    type Err = &'static str;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s == "never" {
-            Ok(Self::Never)
-        } else if let Ok(v) = humantime::parse_duration(s) {
-            Ok(Self::Duration(v))
-        } else {
-            Err("must be seconds, a human readable duration (eg. '10m') or 'never'")
-        }
-    }
+// Define a simple structure for our response
+#[derive(Serialize)]
+struct Message {
+    text: String,
+}
+
+// 1. Define the handler function for the new path
+fn get_messages() -> impl warp::Reply {
+    let response = HashMap::from([
+        ("status", "ok"),
+        ("data", "This is the messages endpoint!")
+    ]);
+    json(&response)
 }
 
 #[tokio::main]
-#[allow(clippy::too_many_lines)]
-async fn main() -> Result<(), anyhow::Error> {
-    let args: Args = Args::parse();
+async fn main() {
+    let args = Args::parse();
 
-    if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "info");
-    }
+    // Define the relaxed CSP string
+    const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
 
-    let logger_layer = tracing_subscriber::fmt::layer().with_span_events(FmtSpan::CLOSE);
-    let env_filter = EnvFilter::from_default_env();
+    pretty_env_logger::init();
 
-    tracing_subscriber::registry()
-        .with(env_filter)
-        .with(logger_layer)
-        .init();
+    let main_js = js::main_js::JSMain::new();
+    let main_js_bytes: &[u8] = include_bytes!("js/main.js");
+    assert_eq!(main_js_bytes, main_js.main_js);
+    // if let Ok(main_js_string) = String::from_utf8(main_js_bytes.to_vec()) {
+    //     println!("main.js content: {}", main_js_string);
+    // } else {
+    //     println!("main.js is not valid UTF-8.");
+    // }
 
-    let db = open_db(&args)?;
+    let template = gnostr_js::template_html::TemplateHtml::new();
+    let mut hb = Handlebars::new();
+    hb.register_template_string("template.html", template.to_string())
+        .unwrap();
 
-    let indexer_wakeup_task =
-        run_indexer(db.clone(), args.scan_path.clone(), args.refresh_interval);
+    // Turn Handlebars instance into a Filter so we can combine it
+    // easily with others...
+    let hb = Arc::new(hb);
 
-    let css = {
-        let theme = toml::from_str::<Theme>(include_str!("../themes/solarized_light.toml"))
-            .unwrap()
-            .build_css();
-        let css = Box::leak(
-            format!(r#"@media (prefers-color-scheme: light){{{theme}}}"#)
-                .into_boxed_str()
-                .into_boxed_bytes(),
-        );
-        HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
-        css
-    };
+    // Create a reusable closure to render template
+    let handlebars = move |with_template| render(with_template, hb.clone());
 
-    let dark_css = {
-        let theme = toml::from_str::<Theme>(include_str!("../themes/solarized_dark.toml"))
-            .unwrap()
-            .build_css();
-        let css = Box::leak(
-            format!(r#"@media (prefers-color-scheme: dark){{{theme}}}"#)
-                .into_boxed_str()
-                .into_boxed_bytes(),
-        );
-        DARK_HIGHLIGHT_CSS_HASH.set(build_asset_hash(css)).unwrap();
-        css
-    };
+    //GET /
+    let route = warp::get()
+        .and(warp::path::end())
+        .map(|| WithTemplate {
+            name: "template.html",
+            value: json!({"user" : "🅖"}),
+        })
+        .map(handlebars.clone())
+        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
-    let static_favicon = |content: &'static [u8]| {
-        move || async move {
-            let mut resp = Response::new(Body::from(content));
-            resp.headers_mut().insert(
-                http::header::CONTENT_TYPE,
-                HeaderValue::from_static("image/x-icon"),
-            );
-            resp
-        }
-    };
-
-    let static_css = |content: &'static [u8]| {
-        move || async move {
-            let mut resp = Response::new(Body::from(content));
-            resp.headers_mut().insert(
-                http::header::CONTENT_TYPE,
-                HeaderValue::from_static("text/css"),
-            );
-            resp
-        }
-    };
-
-    info!("Priming highlighters...");
-    prime_highlighters();
-    info!("Server starting up...");
-
-    let app = Router::new()
-        .route("/", get(methods::index::handle))
-        .route(
-            formatcp!("/style-{}.css", GLOBAL_CSS_HASH),
-            get(static_css(GLOBAL_CSS)),
-        )
-        .route(
-            &format!("/highlight-{}.css", HIGHLIGHT_CSS_HASH.get().unwrap()),
-            get(static_css(css)),
-        )
-        .route(
-            &format!(
-                "/highlight-dark-{}.css",
-                DARK_HIGHLIGHT_CSS_HASH.get().unwrap()
-            ),
-            get(static_css(dark_css)),
-        )
-        .route(
-            "/favicon.ico",
-            get(static_favicon(include_bytes!("../statics/favicon.ico"))),
-        )
-        .fallback(methods::repo::service)
-        .layer(TimeoutLayer::new(args.request_timeout.into()))
-        .layer(layer_fn(LoggingMiddleware))
-        .layer(Extension(Arc::new(Git::new())))
-        .layer(Extension(db))
-        .layer(Extension(Arc::new(args.scan_path)))
-        .layer(CorsLayer::new());
-
-
-	println!("{}", &args.bind_port);
-	let socket = SocketAddr::new(args.bind_address, args.bind_port);
-
-
-    let listener = TcpListener::bind(&socket).await?;
-    let app = app.into_make_service_with_connect_info::<SocketAddr>();
-    let server = axum::serve(listener, app).into_future();
-
-    tokio::select! {
-        res = server => res.context("failed to run server"),
-        res = indexer_wakeup_task => res.context("failed to run indexer"),
-        _ = tokio::signal::ctrl_c() => {
-            info!("Received ctrl-c, shutting down");
-            Ok(())
-        }
-    }
-}
-
-fn open_db(args: &Args) -> Result<Arc<rocksdb::DB>, anyhow::Error> {
-    loop {
-        let mut db_options = Options::default();
-        db_options.create_missing_column_families(true);
-        db_options.create_if_missing(true);
-
-        let mut commit_family_options = Options::default();
-        commit_family_options.set_prefix_extractor(SliceTransform::create(
-            "commit_prefix",
-            |input| input.split(|&c| c == b'\0').next().unwrap_or(input),
-            None,
-        ));
-
-        let mut tag_family_options = Options::default();
-        tag_family_options.set_prefix_extractor(SliceTransform::create_fixed_prefix(
-            std::mem::size_of::<u64>(),
-        )); // repository id prefix
-
-        let db = rocksdb::DB::open_cf_with_opts(
-            &db_options,
-            &args.db_store,
-            vec![
-                (COMMIT_FAMILY, commit_family_options),
-                (REPOSITORY_FAMILY, Options::default()),
-                (TAG_FAMILY, tag_family_options),
-                (REFERENCE_FAMILY, Options::default()),
-                (COMMIT_COUNT_FAMILY, Options::default()),
-            ],
-        )?;
-
-        let needs_schema_regen = match db.get("schema_version")? {
-            Some(v) if v.as_slice() != SCHEMA_VERSION.as_bytes() => Some(Some(v)),
-            Some(_) => None,
-            None => {
-                db.put("schema_version", SCHEMA_VERSION)?;
-                None
-            }
-        };
-
-        if let Some(version) = needs_schema_regen {
-            let old_version = version
-                .as_deref()
-                .map_or(Cow::Borrowed("unknown"), String::from_utf8_lossy);
-
-            warn!("Clearing outdated database ({old_version} != {SCHEMA_VERSION})");
-
-            drop(db);
-            rocksdb::DB::destroy(&Options::default(), &args.db_store)?;
-        } else {
-            break Ok(Arc::new(db));
-        }
-    }
-}
-
-async fn run_indexer(
-    db: Arc<rocksdb::DB>,
-    scan_path: PathBuf,
-    refresh_interval: RefreshInterval,
-) -> Result<(), tokio::task::JoinError> {
-    let (indexer_wakeup_send, mut indexer_wakeup_recv) = mpsc::channel(10);
-
-    std::thread::spawn(move || loop {
-        info!("Running periodic index");
-        crate::database::indexer::run(&scan_path, &db);
-        info!("Finished periodic index");
-
-        if indexer_wakeup_recv.blocking_recv().is_none() {
-            break;
-        }
-    });
-
-    #[cfg(unix)]
-    {
-        use tokio::signal::unix::{signal, SignalKind};
-        tokio::spawn({
-            let mut sighup = signal(SignalKind::hangup()).expect("could not subscribe to sighup");
-            let build_sleeper = move || async move {
-                match refresh_interval {
-                    RefreshInterval::Never => futures_util::future::pending().await,
-                    RefreshInterval::Duration(v) => tokio::time::sleep(v).await,
-                };
-            };
-
-            async move {
-                loop {
-                    tokio::select! {
-                        _ = sighup.recv() => {},
-                        () = build_sleeper() => {},
+    let routes = warp::path("echo")
+        // The `ws()` filter will prepare the Websocket handshake.
+        .and(warp::ws())
+        .map(|ws: warp::ws::Ws| {
+            // And then our closure will be called when it completes...
+            ws.on_upgrade(|websocket| {
+                // Just echo all messages back...
+                let (tx, rx) = websocket.split();
+                rx.forward(tx).map(|result| {
+                    if let Err(e) = result {
+                        eprintln!("websocket error: {:?}", e);
                     }
+                })
+            })
+        });
 
-                    if indexer_wakeup_send.send(()).await.is_err() {
-                        error!("Indexing thread has died and is no longer accepting wakeup messages");
-                    }
-                }
+    // Serve files from the current directory for the root path (e.g., index.html)
+    let root_static_files = warp::fs::dir(".");
+
+    // 3. Define the new /messages route, now serving the main HTML for SPA routing
+    let messages_route = warp::path("messages")
+        .and(warp::get())
+        .map(|| WithTemplate {
+            name: "template.html",
+            value: json!({ "user": "🅖" }),
+        })
+        .map(handlebars.clone())
+        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
+
+    let pwa_route = warp::path("pwa").and(warp::fs::dir("src/pwa"));
+    let images_route = warp::path("images").and(warp::fs::dir("src/images"));
+    let js_files = warp::path("js").and(warp::fs::dir("src/js"));
+    let css_files = warp::path("css").and(warp::fs::dir("src/css"));
+
+    // New NIP-34 Detail Route
+    let nip34_detail_route = warp::path!("repository-details" / String)
+        .and(warp::get())
+        .map(|_repo_id: String| {
+            // The _repo_id is captured but not directly used here,
+            // as the client-side JS will parse it from the URL.
+            WithTemplate {
+                name: "template.html",
+                value: json!({ "user": "🅖" }),
             }
         })
-        .await
-    }
-    #[cfg(not(unix))]
-    {
-        tokio::spawn(async move {
-            if let RefreshInterval::Duration(v) = refresh_interval {
-                loop {
-                    tokio::time::sleep(v).await;
-                    if indexer_wakeup_send.send(()).await.is_err() {
-                        error!("Indexing thread has died and is no longer accepting wakeup messages");
-                    }
-                }
-            } else {
-                futures_util::future::pending().await
-            }
-        }).await
-    }
-}
+        .map(handlebars.clone())
+        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
-#[must_use]
-pub fn build_asset_hash(v: &[u8]) -> Box<str> {
-    let hasher = const_xxh3::xxh3_128(v);
-    let out = const_hex::encode(hasher.to_be_bytes());
-    Box::from(out)
-}
+    // New NIP-34 gnostr route
+    let gnostr = warp::path!("gnostr")
+        .and(warp::get())
+        .map(|| WithTemplate {
+            name: "template.html",
+            value: json!({ "user": "🅖" }),
+        })
+        .map(handlebars.clone())
+        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
-pub struct TemplateResponse<T> {
-    template: T,
-}
+    // 4. Combine the routes using .or(). Any request that doesn't match a specific
+    // route will fall back to serving the index HTML, allowing client-side routing.
+    let root_routes = root_static_files
+        .or(messages_route)
+        .or(pwa_route)
+        .or(images_route)
+        .or(js_files)
+        .or(css_files)
+        .or(nip34_detail_route)
+        .or(gnostr) // Add the new NIP-34 gnostr route
+        .or(warp::get().and(warp::path::end().map(|| WithTemplate {
+            name: "template.html",
+            value: json!({ "user": "🅖" }),
+        }).map(handlebars.clone()).map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING))))        .or(warp::get().and(warp::path::full()).map(|_| WithTemplate {
+            name: "template.html",
+            value: json!({ "user": "🅖" }),
+        }).map(handlebars).map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)));
 
-impl<T: Template> IntoResponse for TemplateResponse<T> {
-    #[instrument(skip_all)]
-    fn into_response(self) -> Response {
-        match self.template.render() {
-            Ok(body) => {
-                let headers = [(
-                    http::header::CONTENT_TYPE,
-                    HeaderValue::from_static(T::MIME_TYPE),
-                )];
-
-                (headers, body).into_response()
-            }
-            Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-        }
-    }
-}
-
-pub fn into_response<T: Template>(template: T) -> impl IntoResponse {
-    TemplateResponse { template }
-}
-
-pub enum ResponseEither<A, B> {
-    Left(A),
-    Right(B),
-}
-
-impl<A: IntoResponse, B: IntoResponse> IntoResponse for ResponseEither<A, B> {
-    fn into_response(self) -> Response {
-        match self {
-            Self::Left(a) => a.into_response(),
-            Self::Right(b) => b.into_response(),
-        }
-    }
+    let _ = open("127.0.0.1", args.port.try_into().unwrap());
+    println!("http://127.0.0.1:{}", args.port);
+    warp::serve(root_routes.clone()).run(([127, 0, 0, 1], args.port)).await;
 }

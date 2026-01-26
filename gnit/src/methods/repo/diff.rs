@@ -3,6 +3,7 @@ use std::{fmt::Write, sync::Arc};
 use askama::Template;
 use axum::{
     extract::Query,
+    http,
     http::HeaderValue,
     response::{IntoResponse, Response},
     Extension,
@@ -13,7 +14,7 @@ use time::format_description::well_known::Rfc2822;
 
 use crate::{
     git::Commit,
-    http, into_response,
+    into_response,
     methods::{
         filters,
         repo::{commit::UriQuery, Repository, RepositoryPath, Result},
@@ -27,6 +28,8 @@ pub struct View {
     pub repo: Repository,
     pub commit: Arc<Commit>,
     pub branch: Option<Arc<str>>,
+    pub _highlight_css_hash: &'static str,
+    pub _dark_highlight_css_hash: &'static str,
 }
 
 pub async fn handle(
@@ -46,6 +49,8 @@ pub async fn handle(
         repo,
         commit,
         branch: query.branch,
+        _highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
 

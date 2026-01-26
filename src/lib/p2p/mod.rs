@@ -1,26 +1,28 @@
-pub mod command_handler;
-pub mod kvs;
-pub mod opt;
-pub mod chat;
-pub mod network_config;
+pub mod args;
 pub mod behaviour;
-pub mod utils;
+pub mod chat;
+pub mod command_handler;
+pub mod event_handler;
 pub mod git_integration;
 pub mod git_publisher;
-pub mod swarm_builder;
-pub mod args;
-pub mod event_handler;
+pub mod kvs;
 pub mod lookup;
+pub mod network_config;
+pub mod opt;
+pub mod swarm_builder;
+pub mod utils;
 
-use crate::blockhash::blockhash_async;
-use crate::blockheight::blockheight_async;
-use crate::p2p::chat::msg::{Msg, MsgKind};
-use crate::p2p::chat::ChatSubCommands;
+use std::{
+    env,
+    error::Error,
+    hash::{DefaultHasher, Hash, Hasher},
+    thread,
+};
+
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub,
-    identify, identity,
+    gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -30,17 +32,20 @@ use libp2p::{
     swarm::SwarmEvent,
     tcp, yamux, PeerId,
 };
-use std::{
-    env,
-    error::Error,
-    hash::{DefaultHasher, Hash, Hasher},
-    thread,
-};
-use tokio::time::Duration;
-use tokio::{io, select};
+use serde_json;
+use tokio::{io, select, time::Duration};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
-use serde_json;
+
+use crate::{
+    blockhash::blockhash_async,
+    blockheight::blockheight_async,
+    p2p::chat::{
+        msg::{Msg, MsgKind},
+        ChatSubCommands,
+    },
+    types::Event,
+};
 
 //const TOPIC: &str = "gnostr";
 
@@ -64,8 +69,8 @@ pub async fn async_prompt(mempool_url: String) -> String {
     s.await.unwrap()
 }
 
-pub fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
-    let mut close_bytes = [0u8; 32];
+pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
+    let mut close_bytes;
     close_bytes = bytes;
 
     for (i, byte) in close_bytes.iter().enumerate() {
@@ -82,11 +87,11 @@ pub fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
             trace!("\n");
         }
     }
-    let mut keypair = 
+    let mut keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("262:{}", keypair.public().to_peer_id());
 
-    close_bytes[31] = bytes[31] ^ 0u8;
+    close_bytes[31] = bytes[31];
 
     for (i, byte) in close_bytes.iter().enumerate() {
         trace!("265:Byte {:02} [{:3} / {:#04x}]: ", i, byte, byte);
@@ -101,7 +106,7 @@ pub fn generate_close_peer_id(bytes: [u8; 32], common_bits: usize) -> PeerId {
         trace!("");
     }
 
-    keypair = 
+    keypair =
         identity::Keypair::ed25519_from_bytes(close_bytes).expect("only errors on wrong length");
     trace!("292:{}", keypair.public().to_peer_id());
     keypair.public().to_peer_id()
@@ -114,7 +119,8 @@ pub async fn evt_loop(
     recv: tokio::sync::mpsc::Sender<Msg>,
     topic: gossipsub::IdentTopic,
 ) -> Result<(), Box<dyn Error>> {
-    let keypair: identity::Keypair = crate::p2p::utils::generate_ed25519(args.nsec.clone().map(|s| s.as_bytes()[0]));
+    let keypair: identity::Keypair =
+        crate::p2p::utils::generate_ed25519(args.nsec.clone().map(|s| s.as_bytes()[0]));
     let public_key = keypair.public();
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);
@@ -125,8 +131,8 @@ pub async fn evt_loop(
         max_records: usize::MAX,
         max_value_bytes: usize::MAX,
     };
-    let _kad_memstore = MemoryStore::with_config(peer_id.clone(), kad_store_config.clone());
-	let _kad_config = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
+    let _kad_memstore = MemoryStore::with_config(peer_id, kad_store_config.clone());
+    let _kad_config = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
     let _message_id_fn = |message: &gossipsub::Message| {
         let mut s = DefaultHasher::new();
         message.data.hash(&mut s);
@@ -144,11 +150,12 @@ pub async fn evt_loop(
         info!("message.topic.hash:\n{0:0}", message.topic.clone());
         gossipsub::MessageId::from(s.finish().to_string())
     };
+    #[allow(clippy::redundant_closure)]
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
         .build()
-        .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+        .map_err(|msg| io::Error::other(msg))?;
 
     let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
@@ -157,8 +164,8 @@ pub async fn evt_loop(
             noise::Config::new,
             yamux::Config::default,
         )?
-        .with_quic() 
-        .with_dns()? 
+        .with_quic()
+        .with_dns()?
         .with_behaviour(|key| {
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
@@ -171,7 +178,7 @@ pub async fn evt_loop(
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id.clone(), kad_store_config);
+            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(key.public().to_peer_id());
@@ -202,7 +209,7 @@ pub async fn evt_loop(
                     key.public().to_peer_id(),
                 )?,
             })
-        })? 
+        })?
         .build();
 
     // subscribes to our topic
@@ -226,7 +233,7 @@ pub async fn evt_loop(
             // Get the current second
             let current_second = now.second();
 
-            if current_second % 2 != 0 {
+            if !current_second.is_multiple_of(2) {
                 debug!("Current second ({}) is odd!", current_second);
                 env::set_var("BLOCKHEIGHT", &blockheight_async().await);
                 env::set_var("BLOCKHASH", &blockhash_async().await);
@@ -276,7 +283,7 @@ pub async fn evt_loop(
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                     }
                 },
-                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message { 
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
                     message,
@@ -286,12 +293,27 @@ pub async fn evt_loop(
                         String::from_utf8_lossy(&message.data),
                     );
                     match serde_json::from_slice::<Msg>(&message.data) {
-                        Ok(msg) => {
+                        Ok(mut msg) => {
+                            if msg.kind == MsgKind::NostrEvent {
+                                match serde_json::from_str::<Event>(&msg.content[0]) {
+                                    Ok(event) => {
+                                        debug!("Deserialized Nostr Event: {:?}", event);
+                                        msg.nostr_event = Some(event.clone()); // Store the deserialized event
+                                        // For now, let's just re-serialize it back into content for display
+                                        msg = msg.set_content(format!("Nostr Event: {}", event.id.as_hex_string()), 0);
+                                    },
+                                    Err(e) => {
+                                        warn!("Error deserializing Nostr event from message content: {e:?}");
+                                        msg = msg.set_content(format!("Error processing Nostr Event: {e:?}"), 0);
+                                        msg.kind = MsgKind::System;
+                                    }
+                                }
+                            }
                             recv.send(msg).await?;
                         },
                         Err(e) => {
                             warn!("Error deserializing message: {e:?}");
-                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0_usize).set_kind(MsgKind::System);
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(MsgKind::System);
                             recv.send(m).await?;
                         }
                     }
@@ -299,7 +321,7 @@ pub async fn evt_loop(
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
                 }
-                _ => {} 
+                _ => {}
             }
         }
         debug!("p2p.rs:end loop");

@@ -34,9 +34,9 @@ pub fn decrypt_key(encrypted_key: &str, password: &str) -> Result<nostr_0_34_1::
 
 #[cfg(test)]
 mod tests {
-    use test_utils::*;
 
     use super::*;
+    use crate::test_utils::*;
 
     #[test]
     fn encrypt_key_produces_string_prefixed_with() -> Result<()> {

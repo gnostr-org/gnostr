@@ -110,7 +110,7 @@ impl OpenRepository {
     #[allow(clippy::too_many_lines)]
     pub async fn path(
         self: Arc<Self>,
-        path: Option<PathBuf>,
+        root_path_param: Option<PathBuf>,
         tree_id: Option<&str>,
         formatted: bool,
     ) -> Result<PathDestination> {
@@ -136,10 +136,16 @@ impl OpenRepository {
                     .context("Couldn't find HEAD for reference")?
             };
 
-            if let Some(path) = path.as_ref() {
+            let effective_path_buf = root_path_param.clone().unwrap_or_default();
+
+            let resolved_tree = if let Some(path_ref) = root_path_param
+                .as_ref()
+                .filter(|p| !p.as_os_str().is_empty())
+            {
                 let item = tree
-                    .peel_to_entry_by_path(path)?
+                    .peel_to_entry_by_path(path_ref)?
                     .context("Path doesn't exist in tree")?;
+
                 let object = item.object().context("Path in tree isn't an object")?;
 
                 match object.kind {
@@ -150,11 +156,14 @@ impl OpenRepository {
 
                         let content = match (formatted, simdutf8::basic::from_utf8(&blob.data)) {
                             (true, Err(_)) => Content::Binary(vec![]),
+
                             (true, Ok(data)) => Content::Text(Cow::Owned(format_file(
                                 data,
-                                FileIdentifier::Path(path.as_path()),
+                                FileIdentifier::Path(path_ref.as_path()),
                             )?)),
+
                             (false, Err(_)) => Content::Binary(blob.take_data()),
+
                             (false, Ok(_data)) => Content::Text(Cow::Owned(unsafe {
                                 String::from_utf8_unchecked(blob.take_data())
                             })),
@@ -163,21 +172,30 @@ impl OpenRepository {
                         return Ok(PathDestination::File(FileWithContent {
                             metadata: File {
                                 mode: item.mode().0,
+
                                 size,
-                                path: path.clone(),
+
+                                path: path_ref.clone(),
+
                                 name: item.filename().to_string(),
                             },
+
                             content,
                         }));
                     }
-                    Kind::Tree => {
-                        tree = object.into_tree();
-                    }
+
+                    Kind::Tree => object.into_tree(),
+
                     _ => anyhow::bail!("bad object of type {:?}", object.kind),
                 }
-            }
+            } else {
+                // If root_path_param is None or empty, we are at the root of the tree, so use the current `tree` itself.
+
+                tree
+            };
 
             let mut tree_items = Vec::new();
+
             let submodules = repo
                 .submodules()?
                 .into_iter()
@@ -185,13 +203,12 @@ impl OpenRepository {
                 .filter_map(|v| Some((v.name().to_path_lossy().to_path_buf(), v.url().ok()?)))
                 .collect::<BTreeMap<_, _>>();
 
-            for item in tree.iter() {
+            for item in resolved_tree.iter() {
                 let item = item?;
 
-                let path = path
-                    .clone()
-                    .unwrap_or_default()
-                    .join(item.filename().to_path_lossy());
+                // Construct the full path for the current item within the tree view
+
+                let item_path = effective_path_buf.join(item.filename().to_path_lossy());
 
                 match item.mode().kind() {
                     EntryKind::Tree
@@ -205,21 +222,26 @@ impl OpenRepository {
                         tree_items.push(match object.kind {
                             Kind::Blob => TreeItem::File(File {
                                 mode: item.mode().0,
+
                                 size: object.into_blob().data.len(),
-                                path,
+
+                                path: item_path.clone(),
+
                                 name: item.filename().to_string(),
                             }),
+
                             Kind::Tree => {
                                 let mut children = PathBuf::new();
 
                                 // if the tree only has one child, flatten it down
-                                while let Ok(Some(Ok(item))) = object
+
+                                while let Ok(Some(Ok(child_item))) = object
                                     .try_into_tree()
                                     .iter()
                                     .flat_map(gix::Tree::iter)
                                     .at_most_one()
                                 {
-                                    let nested_object = item.object().context(
+                                    let nested_object = child_item.object().context(
                                         "Expected item in tree to be object but it wasn't",
                                     )?;
 
@@ -228,29 +250,38 @@ impl OpenRepository {
                                     }
 
                                     object = nested_object;
-                                    children.push(item.filename().to_path_lossy());
+
+                                    children.push(child_item.filename().to_path_lossy());
                                 }
 
                                 TreeItem::Tree(Tree {
                                     mode: item.mode().0,
-                                    path,
+
+                                    path: item_path.clone(),
+
                                     children,
+
                                     name: item.filename().to_string(),
                                 })
                             }
+
                             _ => continue,
                         });
                     }
+
                     EntryKind::Commit => {
-                        if let Some(mut url) = submodules.get(path.as_path()).cloned() {
+                        if let Some(mut url) = submodules.get(item_path.as_path()).cloned() {
                             if matches!(url.scheme, Scheme::Git | Scheme::Ssh) {
                                 url.scheme = Scheme::Https;
                             }
 
                             tree_items.push(TreeItem::Submodule(Submodule {
                                 mode: item.mode().0,
+
                                 name: item.filename().to_string(),
+
                                 url,
+
                                 oid: item.object_id(),
                             }));
 
@@ -851,8 +882,11 @@ fn fetch_diff_and_stats(
              stats| {
                 (
                     max_file_name_length.max(stats.path.len()),
-                    max_change_length
-                        .max(((stats.insertions + stats.deletions).ilog10() + 1) as usize),
+                    max_change_length.max(if (stats.insertions + stats.deletions) > 0 {
+                        ((stats.insertions + stats.deletions).ilog10() + 1) as usize
+                    } else {
+                        0
+                    }),
                     files_changed + 1,
                     insertions + stats.insertions,
                     deletions + stats.deletions,

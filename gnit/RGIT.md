@@ -87,6 +87,7 @@ rgit [::]:3333 /path/to/my-bare-repos -d /tmp/rgit-cache.db
 ```
 
 **Notes:**
+
 - Repository indexing is recursive.
 - The database is quick to generate, so this can be pointed to temporary storage.
 

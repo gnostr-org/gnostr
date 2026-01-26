@@ -76,6 +76,9 @@ cargo-test-types-nip_three_four:
 cargo-clippy-workspace:
   @make cargo-clippy-workspace
 
+cargo-clippy-fix-workspace:
+  @make cargo-clippy-fix-workspace
+
 cargo-report:
   @make cargo-report
 
@@ -147,4 +150,10 @@ gh-act-run-all:
 
 gnostr-bot-matrix:
   @make gnostr-bot-matrix
+
+gnostr-bot-macos:
+  @make gnostr-bot-macos
+
+gnostr-bot-macos-intel:
+  @make gnostr-bot-macos-intel
 

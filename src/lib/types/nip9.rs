@@ -1,8 +1,9 @@
 // NIP-09: Event Deletion
 // https://github.com/nostr-protocol/nips/blob/master/09.md
 
-use crate::types::event::{Event, EventId, UnsignedEvent};
 use secp256k1::{SecretKey, XOnlyPublicKey};
+
+use crate::types::event::{Event, EventId, UnsignedEvent};
 
 /// Create a deletion event
 pub fn delete(

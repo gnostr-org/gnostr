@@ -1,5 +1,6 @@
-use gnostr::verify_keypair::is_valid;
 use std::{env, process};
+
+use gnostr::verify_keypair::is_valid;
 
 fn main() {
     let mut args = env::args();

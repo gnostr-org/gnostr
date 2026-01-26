@@ -201,10 +201,10 @@ fn run(args: &Args) -> Result<(), Error> {
         opts.id_abbrev(amt);
     }
     if let Some(ref s) = args.flag_src_prefix {
-        opts.old_prefix(&s);
+        opts.old_prefix(s);
     }
     if let Some(ref s) = args.flag_dst_prefix {
-        opts.new_prefix(&s);
+        opts.new_prefix(s);
     }
     if let Some("diff-index") = args.flag_format.as_ref().map(|s| &s[..]) {
         opts.id_abbrev(40);
@@ -304,7 +304,7 @@ fn print_stats(diff: &Diff, args: &Args) -> Result<(), Error> {
         format |= git2::DiffStatsFormat::INCLUDE_SUMMARY;
     }
     let buf = stats.to_buf(format, 80)?;
-    print!("{}", str::from_utf8(&*buf).unwrap());
+    print!("{}", str::from_utf8(&buf).unwrap());
     Ok(())
 }
 
@@ -326,7 +326,7 @@ fn resolve_blob<'a>(repo: &'a Repository, arg: Option<&String>) -> Result<Option
         Some(s) => Oid::from_str(s)?,
         None => return Ok(None),
     };
-    repo.find_blob(arg).map(|b| Some(b))
+    repo.find_blob(arg).map(Some)
 }
 
 impl Args {

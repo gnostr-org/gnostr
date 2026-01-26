@@ -44,6 +44,7 @@ pub fn time_to_string(secs: i64, short: bool) -> String {
     .to_string()
 }
 
+/// string_width_align
 #[inline]
 pub fn string_width_align(s: &str, width: usize) -> String {
     static POSTFIX: &str = "..";

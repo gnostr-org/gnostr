@@ -5,6 +5,7 @@ gnostr-gnit
 gnostr-gnit-server
 
 ### remotes example
+
 ```
 local	ssh://127.0.0.1:2222/gnostr-gnit.git (fetch)
 local	ssh://127.0.0.1:2222/gnostr-gnit.git (push)

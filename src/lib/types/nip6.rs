@@ -2,7 +2,7 @@
 // https://github.com/nostr-protocol/nips/blob/master/06.md
 
 use bip39::{Language, Mnemonic, Seed};
-use secp256k1::{Secp256k1, SecretKey};
+use secp256k1::SecretKey;
 use tiny_hderive::bip32::ExtendedPrivKey;
 
 /// Get a secret key from a mnemonic phrase

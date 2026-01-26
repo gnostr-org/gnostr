@@ -2,22 +2,24 @@ pub mod pwd;
 pub mod retry;
 pub mod screenshot;
 
-use log::{debug, error, info};
-use nostr_sdk_0_32_0::prelude::*;
-use serde_json;
-use serde_json::{Result as SerdeJsonResult, Value};
-use std::env;
-use std::fmt::Write;
-use std::time::Duration;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
-use ureq::Agent;
+pub mod windows;
 
-use std::path::PathBuf;
+use std::{
+    env,
+    fmt::Write,
+    net::TcpListener as StdTcpListener,
+    path::PathBuf,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
-use std::net::TcpListener as StdTcpListener;
+use anyhow::{Error as AnyhowError, Result};
 //use actix_rt::net::TcpListener as ActixRtTcpListener;
 use async_std::net::TcpListener as AsyncStdTcpListener;
+use log::{debug, error, info};
+use serde_json::{self, Result as SerdeJsonResult, Value};
+use ureq::Agent;
+
+use crate::types::{Client, Filter, Id, Keys, Nip19Profile, Options, PrivateKey, PublicKey};
 
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
@@ -40,7 +42,8 @@ pub fn value_to_string(value: &Value) -> String {
         Value::Null => "null".to_string(),
         Value::Bool(b) => b.to_string(),
         Value::Number(n) => n.to_string(),
-        Value::String(s) => serde_json::to_string(s).unwrap(), // Use serde_json to escape the string
+        Value::String(s) => serde_json::to_string(s).unwrap(), /* Use serde_json to escape the */
+        // string
         Value::Array(arr) => {
             let elements: Vec<String> = arr.iter().map(value_to_string).collect();
             format!("[{}]", elements.join(", "))
@@ -65,63 +68,72 @@ pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
 }
 
 /// parse_private_key
-pub async fn parse_private_key(private_key: Option<String>, print_keys: bool) -> Result<Keys> {
+pub async fn parse_private_key(
+    private_key: Option<String>,
+    print_keys: bool,
+) -> Result<crate::types::Keys, AnyhowError> {
     // Parse and validate private key
     let keys = match private_key {
         Some(pk) => {
             if pk.starts_with("nsec") {
-                Keys::new(SecretKey::from_bech32(pk)?)
+                let pk_obj = crate::types::PrivateKey::try_from_bech32_string(&pk)?;
+                crate::types::Keys::new(pk_obj)
             } else {
                 // We assume it's a hex formatted private key
-                Keys::new(SecretKey::from_hex(pk)?)
+                let pk_obj = crate::types::PrivateKey::try_from_hex_string(&pk)?;
+                crate::types::Keys::new(pk_obj)
             }
         }
         None => {
             // create a new identity with a new keypair
             println!("No private key provided, generating new identity");
-            Keys::generate()
+            crate::types::Keys::generate()
         }
     };
 
     if print_keys {
         println!("Private key:");
-        println!("{}", keys.secret_key()?.to_bech32()?);
-        println!("{}", keys.secret_key()?.display_secret());
+        if let Ok(mut sk) = keys.secret_key() {
+            println!("{}", sk.as_bech32_string());
+        }
 
         println!("Public key:");
-        println!("{}", keys.public_key().to_bech32()?);
-        println!("{}", keys.public_key());
+        println!("{}", keys.public_key().as_bech32_string());
+        println!("{}", keys.public_key().as_hex_string());
     }
 
     Ok(keys)
 }
 
 // Creates the websocket client that is used for communicating with relays
-pub async fn create_client(keys: &Keys, relays: Vec<String>, difficulty: u8) -> Result<Client> {
-    let opts = Options::new()
+pub async fn create_client(
+    keys: &crate::types::Keys,
+    relays: Vec<String>,
+    difficulty: u8,
+) -> Result<crate::types::Client, AnyhowError> {
+    let opts = crate::types::Options::new()
         .send_timeout(Some(Duration::from_secs(15)))
         .wait_for_send(true)
         .difficulty(difficulty);
-    let client = Client::with_opts(keys, opts);
+    let mut client = crate::types::Client::new(keys, opts);
     client.add_relays(relays).await?;
     client.connect().await;
     Ok(client)
 }
 
-pub async fn parse_key_or_id_to_hex_string(
-    input: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowError> {
     let hex_key_or_id = if input.starts_with("npub") {
-        PublicKey::from_bech32(input.clone()).unwrap().to_hex()
+        crate::types::PublicKey::try_from_bech32_string(&input, true)?.as_hex_string()
     } else if input.starts_with("nsec") {
-        SecretKey::from_bech32(input)?.display_secret().to_string()
+        crate::types::PrivateKey::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("note") {
-        EventId::from_bech32(input)?.to_hex()
+        crate::types::Id::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("nprofile") {
-        Nip19Profile::from_bech32(input)
-            .unwrap()
-            .public_key
-            .to_hex()
+        if let crate::types::Nip19::Profile(profile) = crate::types::Nip19::decode(&input)? {
+            profile.public_key.as_hex_string()
+        } else {
+            return Err(AnyhowError::msg("Invalid nprofile format for conversion"));
+        }
     } else {
         // If the key is not bech32 encoded, return it as is
         input.clone()
@@ -265,39 +277,42 @@ pub fn strip_trailing_newline(input: &str) -> &str {
 }
 
 pub fn find_available_port() -> u16 {
-      StdTcpListener::bind("127.0.0.1:0")
-          .unwrap()
-          .local_addr()
-          .unwrap()
-          .port()
+    StdTcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
 }
 pub async fn async_find_available_port() -> u16 {
-      AsyncStdTcpListener::bind("127.0.0.1:0")
-          .await.unwrap()
-          .local_addr()
-          .unwrap()
-          .port()
+    AsyncStdTcpListener::bind("127.0.0.1:0")
+        .await
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port()
 }
 
-pub fn generate_nostr_keys_from_commit_hash(commit_id: &str) -> Result<Keys> {
+pub fn generate_nostr_keys_from_commit_hash(
+    commit_id: &str,
+) -> Result<crate::types::Keys, AnyhowError> {
     let padded_commit_id = format!("{:0>64}", commit_id);
-    info!("padded_commit_id:{:?}", padded_commit_id);
-    let keys = Keys::parse(&padded_commit_id);
-    Ok(keys.unwrap())
+    // Use the padded commit ID to create a private key
+    let private_key = crate::types::PrivateKey::try_from_hex_string(&padded_commit_id);
+    let keys = crate::types::Keys::new(private_key?);
+    Ok(keys)
 }
 
 // Example usage (you would typically put this in a main function or a test)
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use serial_test::serial;
+
+    use super::*;
 
     // Initialize logging for tests
     fn setup_logging() {
         let _ = env_logger::builder().is_test(true).try_init();
     }
-
 
     #[tokio::test]
     async fn test_ureq_async_success() {
@@ -411,9 +426,11 @@ mod tests {
 
     #[test]
     fn test_split_value_by_newline_string() {
-        let json_value = serde_json::json!("line1
+        let json_value = serde_json::json!(
+            "line1
 line2
-line3");
+line3"
+        );
         let result = split_value_by_newline(&json_value);
         assert!(result.is_some());
         let lines = result.unwrap();
@@ -488,14 +505,16 @@ line3");
 
     #[tokio::test]
     async fn test_parse_private_key_some_nsec() {
-        let nsec_key = "nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3".to_string();
+        let nsec_key =
+            "nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3".to_string();
         let keys = parse_private_key(Some(nsec_key), false).await.unwrap();
         assert!(keys.secret_key().is_ok());
     }
 
     #[tokio::test]
     async fn test_parse_private_key_some_hex() {
-        let hex_key = "bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4".to_string();
+        let hex_key =
+            "bb720dbc876205ce600ca9eafbf87f092a04f0aa3f3e6bc5a296a0a983816ac4".to_string();
         let keys = parse_private_key(Some(hex_key), false).await.unwrap();
         assert!(keys.secret_key().is_ok());
     }
@@ -545,65 +564,80 @@ line3");
         let current_millisecs = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs_f64() * 1000.0;
+            .as_secs_f64()
+            * 1000.0;
         assert!((current_millisecs - millisecs).abs() < 5000.0); // Within 5 seconds
     }
 
-//    #[test]
-//    #[serial]
-//    #[ignore] //TODO fix flaky test
-//    fn test_get_current_working_dir() -> std::io::Result<()> {
-//        let original_cwd = env::current_dir()?;
-//        println!("Original CWD: {:?}", original_cwd);
-//
-//        // Manually create a temporary directory
-//        let unique_name = format!("test_temp_dir_{}", get_epoch_millisecs());
-//        let temp_dir_path = env::temp_dir().join(unique_name);
-//        println!("Attempting to create temporary directory: {:?}", temp_dir_path);
-//        std::fs::create_dir_all(&temp_dir_path)?;
-//        println!("Successfully created temporary directory: {:?}", temp_dir_path);
-//        std::thread::sleep(std::time::Duration::from_secs(1));
-//
-//        // // Ensure the directory exists and is a directory before changing to it
-//        // if !temp_dir_path.exists() {
-//        //     println!("Error: Manually created temporary directory does not exist: {:?}", temp_dir_path);
-//        // }
-//        // if !temp_dir_path.is_dir() {
-//        //     println!("Error: Manually created temporary path is not a directory: {:?}", temp_dir_path);
-//        // }
-//
-//        // env::set_current_dir(&temp_dir_path)?;
-//        // println!("Changed CWD to temporary directory: {:?}", env::current_dir()?);
-//
-//        let cwd = get_current_working_dir();
-//        println!("Result of get_current_working_dir(): {:?}", cwd);
-//
-//        assert!(cwd.is_ok());
-//        let path = cwd.unwrap();
-//        assert_eq!(std::fs::canonicalize(&path)?, std::fs::canonicalize(&temp_dir_path)?);
-//
-//        assert!(path.is_dir());
-//        println!("Asserted that returned path {:?} matches temp dir path {:?}", path, temp_dir_path);
-//        println!("Asserted that returned path {:?} is a directory", path);
-//
-//        // Clean up the manually created directory
-//        env::set_current_dir(&original_cwd)?;
-//        println!("Restored CWD to original: {:?}", env::current_dir()?);
-//        std::fs::remove_dir_all(&temp_dir_path)?;
-//        println!("Cleaned up temporary directory: {:?}", temp_dir_path);
-//        Ok(())
-//    }
+    //    #[test]
+    //    #[serial]
+    //    #[ignore] //TODO fix flaky test
+    //    fn test_get_current_working_dir() -> std::io::Result<()> {
+    //        let original_cwd = env::current_dir()?;
+    //        println!("Original CWD: {:?}", original_cwd);
+    //
+    //        // Manually create a temporary directory
+    //        let unique_name = format!("test_temp_dir_{}", get_epoch_millisecs());
+    //        let temp_dir_path = env::temp_dir().join(unique_name);
+    //        println!("Attempting to create temporary directory: {:?}",
+    // temp_dir_path);        std::fs::create_dir_all(&temp_dir_path)?;
+    //        println!("Successfully created temporary directory: {:?}",
+    // temp_dir_path);
+    //        std::thread::sleep(std::time::Duration::from_secs(1));
+    //
+    //        // // Ensure the directory exists and is a directory before changing
+    // to it        // if !temp_dir_path.exists() {
+    //        //     println!("Error: Manually created temporary directory does not
+    // exist: {:?}", temp_dir_path);        // }
+    //        // if !temp_dir_path.is_dir() {
+    //        //     println!("Error: Manually created temporary path is not a
+    // directory: {:?}", temp_dir_path);        // }
+    //
+    //        // env::set_current_dir(&temp_dir_path)?;
+    //        // println!("Changed CWD to temporary directory: {:?}",
+    // env::current_dir()?);
+    //
+    //        let cwd = get_current_working_dir();
+    //        println!("Result of get_current_working_dir(): {:?}", cwd);
+    //
+    //        assert!(cwd.is_ok());
+    //        let path = cwd.unwrap();
+    //        assert_eq!(std::fs::canonicalize(&path)?,
+    // std::fs::canonicalize(&temp_dir_path)?);
+    //
+    //        assert!(path.is_dir());
+    //        println!("Asserted that returned path {:?} matches temp dir path
+    // {:?}", path, temp_dir_path);        println!("Asserted that returned path
+    // {:?} is a directory", path);
+    //
+    //        // Clean up the manually created directory
+    //        env::set_current_dir(&original_cwd)?;
+    //        println!("Restored CWD to original: {:?}", env::current_dir()?);
+    //        std::fs::remove_dir_all(&temp_dir_path)?;
+    //        println!("Cleaned up temporary directory: {:?}", temp_dir_path);
+    //        Ok(())
+    //    }
 
     #[test]
     fn test_strip_trailing_newline_lf() {
-        assert_eq!(strip_trailing_newline("hello
-"), "hello");
+        assert_eq!(
+            strip_trailing_newline(
+                "hello
+"
+            ),
+            "hello"
+        );
     }
 
     #[test]
     fn test_strip_trailing_newline_crlf() {
-        assert_eq!(strip_trailing_newline("hello
-"), "hello");
+        assert_eq!(
+            strip_trailing_newline(
+                "hello
+"
+            ),
+            "hello"
+        );
     }
 
     #[test]

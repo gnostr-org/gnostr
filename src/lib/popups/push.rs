@@ -31,7 +31,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 #[derive(PartialEq, Eq)]
 enum PushComponentModifier {
     None,
@@ -49,7 +48,6 @@ impl PushComponentModifier {
     }
 }
 
-///
 pub struct PushPopup {
     repo: RepoPathRef,
     modifier: PushComponentModifier,
@@ -66,7 +64,6 @@ pub struct PushPopup {
 }
 
 impl PushPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -84,7 +81,6 @@ impl PushPopup {
         }
     }
 
-    ///
     pub fn push(
         &mut self,
         branch: String,
@@ -149,7 +145,6 @@ impl PushPopup {
         Ok(())
     }
 
-    ///
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::Push {
             self.update()?;
@@ -158,7 +153,6 @@ impl PushPopup {
         Ok(())
     }
 
-    ///
     fn update(&mut self) -> Result<()> {
         self.pending = self.git_push.is_pending()?;
         self.progress = self.git_push.progress()?;
@@ -174,12 +168,10 @@ impl PushPopup {
         Ok(())
     }
 
-    ///
     pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
     pub fn get_progress(progress: &Option<RemoteProgress>) -> (String, u8) {
         progress
             .as_ref()
@@ -208,7 +200,7 @@ impl DrawableComponent for PushPopup {
         if self.visible {
             let (state, progress) = Self::get_progress(&self.progress);
 
-            let area = ui::centered_rect_absolute(30, 3, f.size());
+            let area = ui::centered_rect_absolute(30, 3, f.area());
 
             f.render_widget(Clear, area);
             f.render_widget(

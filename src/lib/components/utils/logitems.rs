@@ -1,9 +1,9 @@
-use nostr_sdk_0_34_0::prelude::*;
 use std::{rc::Rc, slice::Iter};
 
 use chrono::{DateTime, Duration, Local, Utc};
 use gnostr_asyncgit::sync::{CommitId, CommitInfo};
 use indexmap::IndexSet;
+use nostr_sdk_0_34_0::prelude::*;
 
 #[cfg(feature = "ghemoji")]
 use super::emoji::emojifi_string;
@@ -91,7 +91,7 @@ impl LogEntry {
     }
 }
 
-///
+/// ItemBatch
 #[derive(Default)]
 pub struct ItemBatch {
     index_offset: Option<usize>,
@@ -104,17 +104,17 @@ impl ItemBatch {
         self.index_offset() + self.items.len()
     }
 
-    ///
+    /// index_offset
     pub fn index_offset(&self) -> usize {
         self.index_offset.unwrap_or_default()
     }
 
-    ///
+    /// index_offset_raw
     pub const fn index_offset_raw(&self) -> Option<usize> {
         self.index_offset
     }
 
-    ///
+    /// highlighting
     pub const fn highlighting(&self) -> bool {
         self.highlighting
     }
@@ -193,11 +193,11 @@ mod tests {
     fn test_emojifi_string_conversion_cases() {
         assert_eq!(&test_conversion("It's :hammer: time!"), "It's 🔨 time!");
         assert_eq!(
-			&test_conversion(
-				":red_circle::orange_circle::yellow_circle::green_circle::large_blue_circle::purple_circle:"
-			),
-			"🔴🟠🟡🟢🔵🟣"
-		);
+            &test_conversion(
+                ":red_circle::orange_circle::yellow_circle::green_circle::large_blue_circle::purple_circle:"
+            ),
+            "🔴🟠🟡🟢🔵🟣"
+        );
         assert_eq!(
             &test_conversion("It's raining :cat:s and :dog:s"),
             "It's raining 🐱s and 🐶s"

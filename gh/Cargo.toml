@@ -1,6 +1,6 @@
 [package]
 name = "gh-rs"
-version = "1906.925289.572444"
+version = "1895.933117.678085"
 edition = "2021"
 
 [dependencies]

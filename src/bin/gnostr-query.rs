@@ -1,6 +1,5 @@
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr_query::cli::cli;
-use gnostr_query::ConfigBuilder;
+use gnostr_query::{cli::cli, ConfigBuilder};
 use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
@@ -37,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(limit) = matches.get_one::<i32>("limit") {
         debug!("Applying limit filter: {}", limit);
         // ["EOSE","gnostr-query"] counts as a message!      + 1
-        filt.insert("limit".to_string(), json!(limit.clone() /*+ 1*/));
+        filt.insert("limit".to_string(), json!(limit.clone() /* + 1 */));
         limit_check = *limit;
     }
 
@@ -138,7 +137,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     debug!("Sending query to relays: {:?}", relays);
-    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check)).await
+    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check))
+        .await
         .map_err(|e| {
             error!("Failed to send query: {}", e);
             e
@@ -147,7 +147,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //trace
     debug!("vec_result:\n{:?}", vec_result.clone());
-	//for s in vec_result {println!("s={}", s)};
+    //for s in vec_result {println!("s={}", s)};
     //println!("vec_result:\n{:?}", vec_result);
 
     let mut json_result: Vec<String> = vec![];

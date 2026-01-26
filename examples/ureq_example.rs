@@ -1,11 +1,13 @@
 use std::time::Duration;
+
 use ureq::{Agent, AgentBuilder};
 
 fn main() -> Result<(), ureq::Error> {
     let blockheight = blockheight();
     println!("{:?}", blockheight);
     // 1. Global Timeout for the entire request
-    // This timeout covers the entire process from connecting to receiving the full body.
+    // This timeout covers the entire process from connecting to receiving the full
+    // body.
     let agent_with_global_timeout: Agent = AgentBuilder::new()
         .timeout(Duration::from_secs(1)) // Set global timeout to 1 second
         .build();
@@ -37,7 +39,8 @@ fn main() -> Result<(), ureq::Error> {
     }
 
     // 3. Read Timeout
-    // This timeout applies to reading the response headers and body after the connection is established.
+    // This timeout applies to reading the response headers and body after the
+    // connection is established.
     let agent_with_read_timeout: Agent = AgentBuilder::new()
         .timeout_read(Duration::from_secs(1)) // Set read timeout to 1 second
         .build();

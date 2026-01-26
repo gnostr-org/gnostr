@@ -1,6 +1,18 @@
-mod chat_details;
 mod details;
 mod style;
+use anyhow::Result;
+use details::DetailsComponent;
+use gnostr_asyncgit::{
+    sync::{commit_files::OldNew, CommitTags},
+    AsyncCommitFiles, CommitFilesParams,
+};
+use nostr_sdk_0_34_0::prelude::*;
+use ratatui::{
+    layout::{Constraint, Direction, Layout, Rect},
+    Frame,
+};
+
+use self::details::CompareDetailsComponent;
 use super::{
     command_pump, event_pump, CommandBlocking, CommandInfo, Component, DrawableComponent,
     EventState, StatusTreeComponent,
@@ -11,18 +23,8 @@ use crate::{
     keys::{key_match, SharedKeyConfig},
     strings,
 };
-use anyhow::Result;
-use chat_details::CompareDetailsComponent;
-use details::DetailsComponent;
-use gnostr_asyncgit::{
-    sync::{commit_files::OldNew, CommitTags},
-    AsyncCommitFiles, CommitFilesParams,
-};
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    Frame,
-};
 
+/// ChatDetailsComponent
 pub struct ChatDetailsComponent {
     commit: Option<CommitFilesParams>,
     single_details: DetailsComponent,
@@ -36,7 +38,7 @@ pub struct ChatDetailsComponent {
 impl ChatDetailsComponent {
     accessors!(self, [single_details, compare_details, file_tree]);
 
-    ///
+    /// new
     pub async fn new(env: &Environment) -> Self {
         Self {
             single_details: DetailsComponent::new(env, false),
@@ -60,7 +62,7 @@ impl ChatDetailsComponent {
         )
     }
 
-    ///
+    /// set_commits
     pub fn set_commits(
         &mut self,
         params: Option<CommitFilesParams>,
@@ -103,12 +105,12 @@ impl ChatDetailsComponent {
         Ok(())
     }
 
-    ///
+    /// any_work_pending
     pub fn any_work_pending(&self) -> bool {
         self.git_commit_files.is_pending()
     }
 
-    ///
+    /// files
     pub const fn files(&self) -> &StatusTreeComponent {
         &self.file_tree
     }

@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::ssh::utils::is_port_in_use;
     use tokio::net::TcpListener;
+
+    use crate::ssh::utils::is_port_in_use;
 
     #[tokio::test]
     async fn test_is_port_in_use_available() {

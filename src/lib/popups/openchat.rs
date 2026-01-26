@@ -25,7 +25,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct ExternalChatPopup {
     visible: bool,
     theme: SharedTheme,
@@ -33,7 +32,6 @@ pub struct ExternalChatPopup {
 }
 
 impl ExternalChatPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             visible: false,
@@ -116,7 +114,7 @@ impl DrawableComponent for ExternalChatPopup {
                     .collect::<Vec<Span>>(),
             );
 
-            let area = ui::centered_rect_absolute(25, 3, f.size());
+            let area = ui::centered_rect_absolute(25, 3, f.area());
             f.render_widget(Clear, area);
             f.render_widget(
                 Paragraph::new(txt)

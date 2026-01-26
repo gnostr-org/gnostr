@@ -1,7 +1,15 @@
+use std::{
+    error::Error,
+    io,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+
+use ratatui::style::Style;
 /// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
 //use crate::ui::event::Event;
-//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp, yamux};
-use ratatui::prelude::*;
+//use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour, swarm::SwarmEvent, tcp,
+// yamux};
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
@@ -15,18 +23,19 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame, Terminal,
 };
+use tui_input::{backend::crossterm::EventHandler, Input};
 
-use ratatui::style::Style;
-use std::{
-    error::Error,
-    io,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use tui_input::backend::crossterm::EventHandler;
-use tui_input::Input;
+use crate::p2p::chat::msg;
 
-use crate::chat::msg;
+pub struct TerminalCleanup;
+
+impl Drop for TerminalCleanup {
+    fn drop(&mut self) {
+        println!("TerminalCleanup::drop called - restoring terminal");
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
+    }
+}
 
 #[derive(Default)]
 pub enum InputMode {
@@ -34,7 +43,6 @@ pub enum InputMode {
     #[default]
     Editing,
 }
-
 /// App holds the state of the application
 pub struct App {
     /// Current value of the input box
@@ -84,6 +92,7 @@ impl App {
     }
 
     pub fn run(&mut self, cli: &crate::cli::GnostrCli) -> Result<(), Box<dyn Error>> {
+        let _cleanup_guard = TerminalCleanup;
         // setup terminal
         enable_raw_mode()?;
         let mut stdout = io::stdout();
@@ -93,15 +102,6 @@ impl App {
 
         // run app
         run_app(&mut terminal, self, cli.screenshots)?;
-
-        // restore terminal
-        disable_raw_mode()?;
-        execute!(
-            terminal.backend_mut(),
-            LeaveAlternateScreen,
-            DisableMouseCapture
-        )?;
-        terminal.show_cursor()?;
 
         Ok(())
     }
@@ -116,7 +116,7 @@ fn run_app<B: Backend>(
     let mut last_screenshot = std::time::Instant::now();
 
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, app))?;
 
         if let Some(interval) = screenshots {
             if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
@@ -128,7 +128,8 @@ fn run_app<B: Backend>(
                     .unwrap()
                     .as_secs();
                 path.push(format!("screenshot-{}.png", timestamp));
-                crate::utils::screenshot::make_screenshot_macos(&path).unwrap();
+                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap())
+                    .unwrap();
                 last_screenshot = std::time::Instant::now();
             }
         }
@@ -180,7 +181,8 @@ fn run_app<B: Backend>(
                 InputMode::Editing => match key.code {
                     KeyCode::Enter => {
                         if !app.input.value().trim().is_empty() {
-                            let m = msg::Msg::default().set_content(app.input.value().to_owned());
+                            let m =
+                                msg::Msg::default().set_content(app.input.value().to_owned(), 0);
                             app.add_message(m.clone());
                             if let Some(ref mut hook) = app._on_input_enter {
                                 hook(m);
@@ -207,7 +209,7 @@ fn ui(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         // .margin(2)
         .constraints([Constraint::Fill(5), Constraint::Length(3)].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let width = chunks[0].width.max(3) - 3; // keep 2 for borders and 1 for cursor
 
@@ -227,13 +229,14 @@ fn ui(f: &mut Frame, app: &App) {
             {}
 
         InputMode::Editing => {
-            // Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
-            f.set_cursor(
+            // Make the cursor visible and ask tui-rs to put it at the specified coordinates
+            // after rendering
+            f.set_cursor_position((
                 // Put cursor past the end of the input text
                 chunks[1].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
                 // Move one line down, from the border to the input line
                 chunks[1].y + 1,
-            )
+            ));
         }
     }
 

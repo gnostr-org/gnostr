@@ -1,16 +1,15 @@
-use crate::blockheight::{blockheight_async, blockheight_sync};
+use std::{env, time::SystemTime};
+
 use log::debug;
-use std::env;
-use std::time::SystemTime;
+
+use crate::blockheight::{blockheight_async, blockheight_sync};
 /// pub fn weeble() -> Result<f64, ascii::AsciiChar>
-///
 pub fn weeble() -> Result<f64, ascii::AsciiChar> {
     weeble_sync()
 }
 /// pub fn weeble_sync() -> Result<f64, ascii::AsciiChar>
-///
 pub fn weeble_sync() -> Result<f64, ascii::AsciiChar> {
-    //! weeble = utc_secs / blockheight
+    // weeble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -25,9 +24,8 @@ pub fn weeble_sync() -> Result<f64, ascii::AsciiChar> {
     Ok(weeble.floor())
 }
 /// pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar>
-///
 pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar> {
-    //! weeble = utc_secs / blockheight
+    // weeble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -43,9 +41,8 @@ pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar> {
     Ok(weeble.floor())
 }
 /// pub async fn weeble_async() -> Result<f64, ascii::AsciiChar>
-///
 pub async fn weeble_async() -> Result<f64, ascii::AsciiChar> {
-    //! weeble = utc_secs / blockheight
+    // weeble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");
@@ -60,9 +57,8 @@ pub async fn weeble_async() -> Result<f64, ascii::AsciiChar> {
     Ok(weeble.floor())
 }
 /// pub fn weeble_millis_async() -> Result<f64, ascii::AsciiChar>
-///
 pub async fn weeble_millis_async() -> Result<f64, ascii::AsciiChar> {
-    //! weeble = utc_secs / blockheight
+    // weeble = utc_secs / blockheight
     let since_the_epoch = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("get millis error");

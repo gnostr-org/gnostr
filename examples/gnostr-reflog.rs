@@ -94,7 +94,7 @@ mod std_input {
                 println!("{}:{}={}", _i, c, c.is_ascii_hexdigit());
                 #[cfg(debug_assertions)]
                 println!("{}", c);
-                count = count + 1;
+                count += 1;
             } //end is_ascii
         } //end for loop
 
@@ -105,7 +105,7 @@ mod std_input {
 
         //we assume the input is a key
         //we assume it is a privkey for now
-        if count == 64 && key_maybe == true {
+        if count == 64 && key_maybe {
             println!("handle key");
         } else {
             //println!("test for sub commands");
@@ -170,11 +170,11 @@ pub fn main() -> Result<(), git2::Error> {
     opts.optflag("p", "padded", "padded commit hashes");
     opts.optflag("m", "msgs", "print reflog with commit messages");
 
-    if args.len() >= 1 {
+    if !args.is_empty() {
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
             Err(f) => {
-                println!("Error: {}", f.to_string());
+                println!("Error: {}", f);
                 panic!("{}", f.to_string())
             }
         };

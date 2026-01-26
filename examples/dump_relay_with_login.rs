@@ -1,6 +1,9 @@
-use gnostr::{Command, Probe};
-use gnostr::types::{Filter, RelayMessage};
 use std::env;
+
+use gnostr::{
+    types::{Filter, RelayMessage},
+    Command, Probe,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

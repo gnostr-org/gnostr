@@ -27,17 +27,17 @@ use crate::{
     popups::{BlameFileOpen, FileRevOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order, symbol},
+    sub_commands::tui::*,
     try_or_popup,
     ui::{self, common_nav, style::SharedTheme},
 };
-
-use crate::sub_commands::tui::*;
 
 enum Focus {
     Tree,
     File,
 }
 
+/// RevisionFilesComponent
 pub struct RevisionFilesComponent {
     repo: RepoPathRef,
     queue: Queue,
@@ -55,7 +55,7 @@ pub struct RevisionFilesComponent {
 }
 
 impl RevisionFilesComponent {
-    ///
+    /// new
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -73,7 +73,7 @@ impl RevisionFilesComponent {
         }
     }
 
-    ///
+    /// set_commit
     pub fn set_commit(&mut self, commit: CommitId) -> Result<()> {
         self.show()?;
 
@@ -90,12 +90,12 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
-    ///
+    /// revision
     pub const fn revision(&self) -> Option<&CommitInfo> {
         self.revision.as_ref()
     }
 
-    ///
+    /// update
     pub fn update(&mut self, ev: AsyncNotification) -> Result<()> {
         self.current_file.update(ev);
 
@@ -106,6 +106,7 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
+    /// refresh_files
     fn refresh_files(&mut self) -> Result<(), anyhow::Error> {
         if let Some(last) = self.async_treefiles.take_last() {
             if let Some(result) = last.result() {
@@ -130,7 +131,7 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
-    ///
+    /// any_work_pending
     pub fn any_work_pending(&self) -> bool {
         self.current_file.any_work_pending() || self.async_treefiles.is_pending()
     }
@@ -206,6 +207,7 @@ impl RevisionFilesComponent {
         }
     }
 
+    /// find_file
     pub fn find_file(&mut self, file: &Path) {
         self.tree.collapse_but_root();
         if self.tree.select_file(file) {

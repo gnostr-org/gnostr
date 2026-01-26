@@ -24,20 +24,20 @@ The `auth` extension is configured in the relay's settings file.
 
 ```json
 {
-    "auth": {
-        "enabled": true,
-        "req": {
-            "ip_whitelist": ["127.0.0.1"],
-            "pubkey_whitelist": ["<pubkey>"],
-            "ip_blacklist": [],
-            "pubkey_blacklist": []
-        },
-        "event": {
-            "event_pubkey_whitelist": ["<pubkey>"],
-            "event_pubkey_blacklist": [],
-            "allow_mentioning_whitelisted_pubkeys": false
-        }
+  "auth": {
+    "enabled": true,
+    "req": {
+      "ip_whitelist": ["127.0.0.1"],
+      "pubkey_whitelist": ["<pubkey>"],
+      "ip_blacklist": [],
+      "pubkey_blacklist": []
+    },
+    "event": {
+      "event_pubkey_whitelist": ["<pubkey>"],
+      "event_pubkey_blacklist": [],
+      "allow_mentioning_whitelisted_pubkeys": false
     }
+  }
 }
 ```
 
@@ -67,10 +67,10 @@ Exposes Prometheus metrics for monitoring the relay.
 
 ```json
 {
-    "metrics": {
-        "enabled": true,
-        "auth": "your_secret_auth_key"
-    }
+  "metrics": {
+    "enabled": true,
+    "auth": "your_secret_auth_key"
+  }
 }
 ```
 
@@ -97,17 +97,19 @@ Provides rate limiting for incoming events based on IP address.
 
 ```json
 {
-    "rate_limiter": {
-        "enabled": true,
-        "event": [{
-            "name": "default",
-            "description": "Default rate limit",
-            "period": 60,
-            "limit": 100,
-            "kinds": [[0, 10000]],
-            "ip_whitelist": []
-        }]
-    }
+  "rate_limiter": {
+    "enabled": true,
+    "event": [
+      {
+        "name": "default",
+        "description": "Default rate limit",
+        "period": 60,
+        "limit": 100,
+        "kinds": [[0, 10000]],
+        "ip_whitelist": []
+      }
+    ]
+  }
 }
 ```
 
@@ -135,9 +137,9 @@ Implements NIP-45 for counting events on the relay.
 
 ```json
 {
-    "count": {
-        "enabled": true
-    }
+  "count": {
+    "enabled": true
+  }
 }
 ```
 
@@ -155,9 +157,9 @@ Implements NIP-50 for searching events on the relay.
 
 ```json
 {
-    "search": {
-        "enabled": true
-    }
+  "search": {
+    "enabled": true
+  }
 }
 ```
 

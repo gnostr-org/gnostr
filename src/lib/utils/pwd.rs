@@ -5,18 +5,18 @@ pub fn pwd() -> Result<String, &'static str> {
             .args(["/C", "echo %cd%"])
             .output()
             .expect("failed to execute process")
-    } else if cfg!(target_os = "macos") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("echo ${PWD##*/}")
-            .output()
-            .expect("failed to execute process")
-    } else if cfg!(target_os = "linux") {
-        Command::new("sh")
-            .arg("-c")
-            .arg("echo ${PWD##*/}")
-            .output()
-            .expect("failed to execute process")
+    //} else if cfg!(target_os = "macos") {
+    //    Command::new("sh")
+    //        .arg("-c")
+    //        .arg("echo ${PWD##*/}")
+    //        .output()
+    //        .expect("failed to execute process")
+    //} else if cfg!(target_os = "linux") {
+    //    Command::new("sh")
+    //        .arg("-c")
+    //        .arg("echo ${PWD##*/}")
+    //        .output()
+    //        .expect("failed to execute process")
     } else {
         Command::new("sh")
             .arg("-c")
@@ -31,5 +31,5 @@ pub fn pwd() -> Result<String, &'static str> {
 
     let _mutable_string = String::new();
     let mutable_string = _pwd.clone();
-    Ok(format!("{}", mutable_string))
+    Ok(mutable_string.to_string())
 } //end pwd()

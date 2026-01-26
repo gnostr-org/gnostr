@@ -26,6 +26,7 @@ use crate::{
 };
 
 #[derive(Default, Clone, Copy, Debug)]
+/// Options for stashing.
 pub struct StashingOptions {
     pub stash_untracked: bool,
     pub keep_index: bool,
@@ -42,10 +43,11 @@ pub struct Stashing {
     key_config: SharedKeyConfig,
 }
 
+/// Implements methods for the Stashing struct.
 impl Stashing {
     accessors!(self, [index]);
 
-    ///
+    /// Stashing new options.
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -66,7 +68,7 @@ impl Stashing {
         }
     }
 
-    ///
+    /// Update the stashing options.
     pub fn update(&mut self) -> Result<()> {
         if self.is_visible() {
             self.git_status
@@ -77,12 +79,12 @@ impl Stashing {
         Ok(())
     }
 
-    ///
+    /// Check if anything is pending.
     pub fn anything_pending(&self) -> bool {
         self.git_status.is_pending()
     }
 
-    ///
+    /// Update git.
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.is_visible() && ev == AsyncGitNotification::Status {
             let status = self.git_status.last()?;
@@ -125,6 +127,7 @@ impl Stashing {
     }
 }
 
+/// Implements the drawing functionality for the Stashing component.
 impl DrawableComponent for Stashing {
     fn draw(&self, f: &mut ratatui::Frame, rect: ratatui::layout::Rect) -> Result<()> {
         let chunks = Layout::default()

@@ -1,5 +1,6 @@
-use gnostr::types::Id;
 use std::env;
+
+use gnostr::types::Id;
 
 fn main() {
     let mut args = env::args();

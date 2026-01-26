@@ -3,10 +3,12 @@ use std::{
     env,
     path::{Path, PathBuf},
     rc::Rc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
 use anyhow::{bail, Result};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
@@ -26,7 +28,34 @@ use ratatui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-use crate::{    accessors,    cmdbar::CommandBar,    components::{        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,    },    input::{Input, InputEvent, InputState},    keys::{key_match, KeyConfig, SharedKeyConfig},    options::{Options, SharedOptions},    popup_stack::PopupStack,    popups::{        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,        TagCommitPopup, TagListPopup,    },    queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},    setup_popups,    strings::{self, ellipsis_trim_start, order},    sub_commands::tui::{AsyncAppNotification, AsyncNotification},    tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},    try_or_popup,    types::nip34,    ui::style::{SharedTheme, Theme},};
+use crate::{
+    accessors,
+    cmdbar::CommandBar,
+    components::{
+        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
+    },
+    input::{Input, InputEvent, InputState},
+    keys::{key_match, KeyConfig, SharedKeyConfig},
+    options::{Options, SharedOptions},
+    popup_stack::PopupStack,
+    popups::{
+        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
+        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
+        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,
+        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,
+        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,
+        TagCommitPopup, TagListPopup,
+    },
+    queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
+    setup_popups,
+    strings::{self, ellipsis_trim_start, order},
+    sub_commands::tui::{AsyncAppNotification, AsyncNotification},
+    tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
+    try_or_popup,
+    ui::style::{SharedTheme, Theme},
+    weeble::weeble_sync,
+    wobble::wobble_sync,
+};
 
 #[derive(Clone)]
 pub enum QuitState {
@@ -89,6 +118,7 @@ pub struct App {
     // "Flags"
     requires_redraw: Cell<bool>,
     file_to_open: Option<String>,
+    quit_flag: Arc<AtomicBool>,
 }
 
 pub struct Environment {
@@ -121,7 +151,6 @@ impl Environment {
 
 // public interface
 impl App {
-    ///
     #[allow(clippy::too_many_lines)]
     pub async fn new(
         repo: RepoPathRef,
@@ -130,6 +159,7 @@ impl App {
         input: Input,
         theme: Theme,
         key_config: KeyConfig,
+        quit_flag: Arc<AtomicBool>,
     ) -> Result<Self> {
         log::trace!("open repo at: {:?}", &repo);
 
@@ -203,6 +233,7 @@ impl App {
             repo: env.repo,
             repo_path_text,
             popup_stack: PopupStack::default(),
+            quit_flag,
         };
 
         app.set_tab(tab)?;
@@ -210,7 +241,6 @@ impl App {
         Ok(app)
     }
 
-    ///
     pub fn draw(&self, f: &mut Frame) -> Result<()> {
         let fsize = f.area();
 
@@ -262,7 +292,6 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn event(&mut self, ev: InputEvent) -> Result<()> {
         log::trace!("event: {:?}", ev);
 
@@ -354,7 +383,6 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
 
@@ -394,17 +422,16 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn is_quit(&self) -> bool {
-        !matches!(self.do_quit, QuitState::None) || self.input.is_aborted()
+        !matches!(self.do_quit, QuitState::None)
+            || self.input.is_aborted()
+            || self.quit_flag.load(Ordering::SeqCst)
     }
 
-    ///
     pub fn quit_state(&self) -> QuitState {
         self.do_quit.clone()
     }
 
-    ///
     pub fn any_work_pending(&self) -> bool {
         self.status_tab.anything_pending()
             || self.revlog.any_work_pending()
@@ -426,7 +453,6 @@ impl App {
             || self.tags_popup.any_work_pending()
     }
 
-    ///
     pub fn requires_redraw(&self) -> bool {
         if self.requires_redraw.get() {
             self.requires_redraw.set(false);
@@ -608,7 +634,6 @@ impl App {
     fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {
         match tab {
             //AppTabs::Chat => self.set_tab(0)?,
-            //
             AppTabs::Chat => self.set_tab(0)?,
             AppTabs::Status => self.set_tab(1)?,
             AppTabs::Log => self.set_tab(2)?,
@@ -662,8 +687,6 @@ impl App {
                 self.blame_file_popup.open(params)?;
             }
             //
-            //
-            //
             StackablePopupOpen::DisplayChat(param) => {
                 self.display_chat_popup.open(param)?;
             }
@@ -674,24 +697,17 @@ impl App {
             //    self.inspect_commit_popup.open(param)?;
             //}
             //
-            //
             StackablePopupOpen::FileRevlog(param) => {
                 self.file_revlog_popup.open(param)?;
             }
-            //
-            //
             //
             StackablePopupOpen::FileTree(param) => {
                 self.revision_files_popup.open(param)?;
             }
             //
-            //
-            //
             StackablePopupOpen::InspectChat(param) => {
                 self.inspect_chat_popup.open(param)?;
             }
-            //
-            //
             //
             StackablePopupOpen::InspectCommit(param) => {
                 self.inspect_commit_popup.open(param)?;
@@ -741,7 +757,8 @@ impl App {
             }
             InternalEvent::Update(u) => flags.insert(u),
             InternalEvent::ChatMessage(msg) => {
-                self.chat_tab.handle_internal_event(InternalEvent::ChatMessage(msg));
+                self.chat_tab
+                    .handle_internal_event(InternalEvent::ChatMessage(msg));
                 flags.insert(NeedsUpdate::ALL);
             }
             //
@@ -892,6 +909,7 @@ impl App {
             InternalEvent::CommitSearch(options) => {
                 self.revlog.search(options);
             }
+            InternalEvent::NostrEvent(_) | InternalEvent::NostrCommand(_) => todo!(),
         };
 
         Ok(flags)

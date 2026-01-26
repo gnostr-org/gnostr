@@ -1,14 +1,15 @@
-use serde::de::Error as DeError;
-use serde::de::{Deserializer, Visitor};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
+use std::{convert::From, fmt};
+
+use serde::{
+    de::{Deserializer, Error as DeError, Visitor},
+    ser::Serializer,
+    Deserialize, Serialize,
+};
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
-use std::convert::From;
+
 #[cfg(test)]
 use crate::test_serde;
-
-use std::fmt;
 
 macro_rules! define_event_kinds {
     ($($comment:expr, $name:ident = $value:expr),*) => {
@@ -245,6 +246,8 @@ define_event_kinds!(
     DraftClassifiedListing = 30403,
     "Repository Announcement (NIP-34)",
     RepositoryAnnouncement = 30617,
+    "Git Repository Announcement (NIP-34)",
+    GitRepoAnnouncement = 30618,
     "Wiki Article (NIP-54)",
     WikiArticle = 30818,
     "Date-Based Calendar Event (NIP-52)",

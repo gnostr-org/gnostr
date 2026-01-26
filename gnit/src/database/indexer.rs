@@ -12,7 +12,7 @@ use ini::Ini;
 use itertools::Itertools;
 use rocksdb::WriteBatch;
 use time::{OffsetDateTime, UtcOffset};
-use tracing::{error, info, info_span, instrument, warn};
+use tracing::{debug, debug_span, error, instrument, warn};
 
 use crate::database::schema::{
     commit::Commit,
@@ -21,22 +21,22 @@ use crate::database::schema::{
 };
 
 pub fn run(scan_path: &Path, db: &Arc<rocksdb::DB>) {
-    let span = info_span!("index_update");
+    let span = debug_span!("index_update");
     let _entered = span.enter();
 
-    info!("Starting index update");
+    debug!("Starting index update");
 
     update_repository_metadata(scan_path, db);
     update_repository_reflog(scan_path, db.clone());
     update_repository_tags(scan_path, db.clone());
 
-    info!("Flushing to disk");
+    debug!("Flushing to disk");
 
     if let Err(error) = db.flush() {
         error!(%error, "Failed to flush database to disk");
     }
 
-    info!("Finished index update");
+    debug!("Finished index update");
 }
 
 #[instrument(skip(db))]
@@ -48,6 +48,11 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         let Some(relative) = get_relative_path(scan_path, &repository) else {
             continue;
         };
+        debug!(
+            "Processing repository: relative={}, repository={}",
+            relative.display(),
+            repository.display()
+        );
 
         let id = match Repository::open(db, relative) {
             Ok(v) => v.map_or_else(RepositoryId::new, |v| {
@@ -65,7 +70,22 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
         let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
             continue;
         };
-        let description = std::fs::read(repository.join("description")).unwrap_or_default();
+        // Read description from correct location based on repository type
+        let description_path = if std::process::Command::new("git")
+            .args(["rev-parse", "--is-bare-repository"])
+            .current_dir(&repository)
+            .output()
+            .map(|output| output.status.success() && output.stdout.starts_with(b"true"))
+            .unwrap_or(false)
+        {
+            // Bare repository: description is in repo root
+            repository.join("description")
+        } else {
+            // Working tree: description is in .git directory
+            repository.join(".git").join("description")
+        };
+
+        let description = std::fs::read(&description_path).unwrap_or_default();
         let description = String::from_utf8(description)
             .ok()
             .filter(|v| !v.is_empty());
@@ -210,7 +230,7 @@ fn branch_index_update(
     git_repository: &gix::Repository,
     force_reindex: bool,
 ) -> Result<(), anyhow::Error> {
-    info!("Refreshing indexes");
+    debug!("Refreshing indexes");
 
     let commit_tree = db_repository.commit_tree(db.clone(), reference.name().as_bstr().to_str()?);
 
@@ -222,7 +242,7 @@ fn branch_index_update(
 
     let latest_indexed = if let Some(latest_indexed) = commit_tree.fetch_latest_one()? {
         if commit.id().as_bytes() == latest_indexed.get().hash.as_slice() {
-            info!("No commits since last index");
+            debug!("No commits since last index");
             return Ok(());
         }
 
@@ -259,7 +279,7 @@ fn branch_index_update(
             seen = true;
 
             if ((i + 1) % 25_000) == 0 {
-                info!("{} commits ingested", i + 1);
+                debug!("{} commits ingested", i + 1);
             }
 
             let commit = rev.object()?;
@@ -365,7 +385,7 @@ fn tag_index_update(
         .context("Failed to read newly discovered tag")?;
 
     if let Ok(tag) = reference.peel_to_tag() {
-        info!("Inserting newly discovered tag to index");
+        debug!("Inserting newly discovered tag to index");
 
         Tag::new(tag.tagger()?)?.insert(tag_tree, tag_name)?;
     }
@@ -375,7 +395,7 @@ fn tag_index_update(
 
 #[instrument(skip(tag_tree))]
 fn tag_index_delete(tag_name: &str, tag_tree: &TagTree) -> Result<(), anyhow::Error> {
-    info!("Removing stale tag from index");
+    debug!("Removing stale tag from index");
     tag_tree.remove(tag_name)?;
 
     Ok(())
@@ -388,7 +408,13 @@ fn open_repo<P: AsRef<Path> + Debug>(
     db_repository: &ArchivedRepository,
     db: &rocksdb::DB,
 ) -> Option<gix::Repository> {
-    match gix::open(scan_path.join(relative_path.as_ref())) {
+    let full_path = scan_path.join(relative_path.as_ref());
+    debug!(
+        "Attempting to open repository: {} (relative: {:?})",
+        full_path.display(),
+        relative_path
+    );
+    match gix::open(&full_path) {
         Ok(mut v) => {
             v.object_cache_size(10 * 1024 * 1024);
             Some(v)
@@ -414,26 +440,58 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
-    let current = match std::fs::read_dir(current) {
+    // First check if current path is itself a repository
+    if gix::open(current).is_ok() {
+        debug!("Discovered Git repository at: {}", current.display());
+        discovered_repos.push(current.to_path_buf());
+        return; // Stop recursion for this path
+    }
+
+    // Check if current is a directory that contains .git
+    if current.is_dir() {
+        let git_path = current.join(".git");
+
+        // Check if .git exists as either file or directory
+        if git_path.exists() {
+            // Try to open as repository (handles both .git file (worktree) and .git directory)
+            if gix::open(current).is_ok() {
+                debug!("Discovered Git repository at: {}", current.display());
+                discovered_repos.push(current.to_path_buf());
+                return; // Stop recursion for this path
+            } else {
+                debug!(
+                    "Found .git at {} but not a valid repository",
+                    current.display()
+                );
+            }
+        }
+    }
+
+    // If it's not a repository, and it's a directory, then we can recurse.
+    let current_dir_entries = match std::fs::read_dir(current) {
         Ok(v) => v,
         Err(error) => {
-            error!(%error, "Failed to enter repository directory {}", current.display());
+            // Don't log an error if we just can't read a directory, it might be permissions, etc.
+            // Only log if it's unexpected.
+            if error.kind() != std::io::ErrorKind::NotFound
+                && error.kind() != std::io::ErrorKind::PermissionDenied
+            {
+                error!(%error, "Failed to read directory {}", current.display());
+            }
             return;
         }
     };
 
-    let dirs = current
-        .filter_map(Result::ok)
-        .map(|v| v.path())
-        .filter(|path| path.is_dir());
+    for entry in current_dir_entries.filter_map(Result::ok) {
+        let path = entry.path();
 
-    for dir in dirs {
-        if dir.join("packed-refs").is_file() {
-            // we've hit what looks like a bare git repo, lets take it
-            discovered_repos.push(dir);
-        } else {
-            // probably not a bare git repo, lets recurse deeper
-            discover_repositories(&dir, discovered_repos);
+        if path.is_dir() {
+            // Skip directories under `target/`
+            if path.components().any(|c| c.as_os_str() == "target") {
+                debug!("Skipping target directory: {}", path.display());
+                continue;
+            }
+            discover_repositories(&path, discovered_repos);
         }
     }
 }

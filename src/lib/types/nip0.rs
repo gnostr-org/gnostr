@@ -1,13 +1,17 @@
 // NIP-05: Mapping Nostr keys to DNS-based internet identifiers
 // https://github.com/nostr-protocol/nips/blob/master/05.md
 
-use crate::types::event::{Event, UnsignedEvent};
-use crate::utils::ureq_async;
+use std::collections::HashMap;
+
 use anyhow::{anyhow, Result};
 use secp256k1::XOnlyPublicKey;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+
+use crate::{
+    types::event::{Event, UnsignedEvent},
+    utils::ureq_async,
+};
 
 /// A Nip05 record
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -71,10 +75,7 @@ pub async fn verify(public_key: &XOnlyPublicKey, nip05_identifier: &str) -> Resu
     let name = name.unwrap();
     let domain = domain.unwrap();
 
-    let url = format!(
-        "https://{}/.well-known/nostr.json?name={}",
-        domain, name
-    );
+    let url = format!("https://{}/.well-known/nostr.json?name={}", domain, name);
 
     let response_str = ureq_async(url).await.map_err(|e| anyhow!(e))?;
     let nip05_data: Nip05 = serde_json::from_str(&response_str)?;

@@ -31,7 +31,6 @@ use crate::{
     ui::{self, Size},
 };
 
-///
 pub struct TagListPopup {
     repo: RepoPathRef,
     theme: SharedTheme,
@@ -53,8 +52,8 @@ impl DrawableComponent for TagListPopup {
             const PERCENT_SIZE: Size = Size::new(80, 50);
             const MIN_SIZE: Size = Size::new(60, 20);
 
-            let area = ui::centered_rect(PERCENT_SIZE.width, PERCENT_SIZE.height, f.size());
-            let area = ui::rect_inside(MIN_SIZE, f.size().into(), area);
+            let area = ui::centered_rect(PERCENT_SIZE.width, PERCENT_SIZE.height, f.area());
+            let area = ui::rect_inside(MIN_SIZE, f.area().into(), area);
             let area = area.intersection(rect);
 
             let tag_name_width = self.tags.as_ref().map_or(0, |tags| {
@@ -248,7 +247,6 @@ impl TagListPopup {
         }
     }
 
-    ///
     pub fn open(&mut self) -> Result<()> {
         self.table_state.get_mut().select(Some(0));
         self.show()?;
@@ -281,7 +279,6 @@ impl TagListPopup {
         Ok(())
     }
 
-    ///
     pub fn update(&mut self, ev: AsyncNotification) {
         if matches!(ev, AsyncNotification::Git(AsyncGitNotification::RemoteTags)) {
             if let Some(job) = self.async_remote_tags.take_last() {
@@ -294,7 +291,6 @@ impl TagListPopup {
         }
     }
 
-    ///
     pub fn any_work_pending(&self) -> bool {
         self.async_remote_tags.is_pending()
     }
@@ -317,7 +313,6 @@ impl TagListPopup {
         }
     }
 
-    ///
     #[allow(clippy::needless_pass_by_ref_mut)]
     fn move_selection(&mut self, scroll_type: ScrollType) -> bool {
         let mut table_state = self.table_state.take();
@@ -361,14 +356,12 @@ impl TagListPopup {
             .is_some()
     }
 
-    ///
     fn get_rows(&self) -> Vec<Row<'_>> {
         self.tags.as_ref().map_or_else(Vec::new, |tags| {
             tags.iter().map(|tag| self.get_row(tag)).collect()
         })
     }
 
-    ///
     fn get_row(&self, tag: &TagWithMetadata) -> Row<'_> {
         const UPSTREAM_SYMBOL: &str = "\u{2191}";
         const ATTACHMENT_SYMBOL: &str = "@";

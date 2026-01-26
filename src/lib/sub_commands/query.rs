@@ -12,14 +12,43 @@ pub struct QuerySubCommand {
     /// Filter by author public keys (comma-separated).
     #[arg(long)]
     pub authors: Option<String>,
-    /// Filter by event IDs (comma-separated).
-    #[arg(long, short)]
+    #[arg(
+        short = 'i',
+        long = "ids",
+        value_name = "EVENT_IDS",
+        help = "Filter by event IDs (comma-separated).",
+        // This is the important part: a multi-line, verbatim example string
+        long_help = r#"
+    Filter by event IDs (comma-separated).
+
+    The argument supports complex command expansion patterns:
+
+    gnostr query -i $(gnostr bech32-to-any \
+    note1wx60lqwu2h8wdyn6t2r74whuwum0r3q4px3258pfnusnpx3pcumqwauly3 | \
+    jq .[] | sed 's/\"//g')
+
+    gnostr query -i \
+    $(gnostr bech32-to-any \
+    $(gnostr note -c "test" | \
+    jq .[] | sed 's/\"//g') | \
+    jq .[] | sed 's/\"//g')
+
+    gnostr query -i \
+    $(gnostr bech32-to-any \
+    $(gnostr --nsec $(gnostr --blockhash) \
+    note -c "test" | \
+    jq .[] | sed 's/\"//g') | \
+    jq .[] | sed 's/\"//g')
+
+    "#
+    )]
     pub ids: Option<String>,
+
     /// Maximum number of events to return.
     #[arg(long, default_value = "1")]
     pub limit: Option<i32>,
-    /// Generic filters in the format '#<tag> <value>'. Expects two space-separated values.
-    /// Example: --generic "#t" "general,nostr"
+    /// Generic filters in the format '#<tag> <value>'. Expects two
+    /// space-separated values. Example: --generic "#t" "general,nostr"
     #[arg(num_args = 2, value_delimiter = ' ', long)]
     pub generic: Option<Vec<String>>,
     /// Filter by hashtags (comma-separated).
@@ -34,8 +63,8 @@ pub struct QuerySubCommand {
     /// Filter by event kinds (comma-separated integers).
     #[arg(long)]
     pub kinds: Option<String>,
-    /// Search for text within event content. Can take multiple values, but only the first is used.
-    /// Example: --search "keyword1,keyword2"
+    /// Search for text within event content. Can take multiple values, but only
+    /// the first is used. Example: --search "keyword1,keyword2"
     #[arg(num_args = 1.., long)]
     pub search: Option<Vec<String>>,
     /// Specify a relay URL to connect to.
@@ -46,16 +75,7 @@ pub struct QuerySubCommand {
 /// Handles the 'query' subcommand functionality.
 /// It takes the parsed command-line arguments and executes the query.
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
-    debug!("Launching query subcommand with args: {:?}", args);
-    debug!("Launching query subcommand with args: {:?}", args);
-
     let (filt, limit_check) = build_filter_map(args)?;
-
-    // ConfigBuilder usage from original main.
-    // These values might need to be configurable or passed from the main app.
-    // For now, using defaults similar to the original bin.
-    debug!("Building gnostr_query config.");
-    debug!("Building gnostr_query config.");
     let _config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
@@ -91,10 +111,8 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
             .collect()
     };
 
-    debug!("Sending query to relays: {:?}", relays);
-    debug!("Sending query to relays: {:?}", relays);
-    // Convert the error from gnostr_query::send to anyhow::Error before propagating
-    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check)).await
+    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check))
+        .await
         .map_err(|e| {
             error!("Failed to send query: {}", e);
             anyhow!("Failed to send query: {}", e)
@@ -109,17 +127,16 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
         json_result.push(element);
     }
 
-    // In a library function, we should just print and return Ok(()).
-    // The exit code logic is usually handled by the main binary.
     for element in json_result {
-        print!("{}", element); // output to terminal
+        print!("{}", element);
     }
 
-    debug!("Query subcommand finished successfully.");
     Ok(())
 }
 
-fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<String, serde_json::Value>, i32)> {
+fn build_filter_map(
+    args: &QuerySubCommand,
+) -> anyhow::Result<(serde_json::Map<String, serde_json::Value>, i32)> {
     let mut filt = serde_json::Map::new();
     let mut limit_check: i32 = 0;
 
@@ -195,8 +212,6 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
     if let Some(search_vec) = &args.search {
         if !search_vec.is_empty() {
             let search_string = "search".to_string();
-            // The original bin code only used the first element of search if multiple were provided.
-            // Let's stick to that behavior.
             let val = search_vec[0].clone();
             debug!("Applying search filter: {}", val);
             filt.insert(search_string, json!(val));
@@ -205,221 +220,286 @@ fn build_filter_map(args: &QuerySubCommand) -> anyhow::Result<(serde_json::Map<S
     Ok((filt, limit_check))
 }
 
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        use clap::{Parser, Subcommand};
-        use serde_json::json;
-        use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+#[cfg(test)]
+mod tests {
+    use clap::{Parser, Subcommand};
+    use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+    use serde_json::json;
 
-        #[derive(Parser)]
-        #[clap(name = "gnostr", about = "A test CLI for gnostr")]
-        struct Cli {
-            #[clap(subcommand)]
-            command: Commands,
-        }
+    use super::*;
 
-        #[derive(Subcommand)]
-        enum Commands {
-            Query(QuerySubCommand),
-        }
+    #[derive(Parser)]
+    #[command(name = "gnostr", about = "A test CLI for gnostr")]
+    struct Cli {
+        #[command(subcommand)]
+        command: Commands,
+    }
 
-        // Helper function to create QuerySubCommand from args
-        fn create_query_subcommand(args: &[&str]) -> QuerySubCommand {
-            let full_args = std::iter::once("gnostr").chain(std::iter::once("query")).chain(args.iter().cloned());
-            let cli = Cli::parse_from(full_args);
-            match cli.command {
-                Commands::Query(query_subcommand) => query_subcommand,
-            }
-        }
+    #[derive(Subcommand)]
+    enum Commands {
+        Query(QuerySubCommand),
+    }
 
-        // Helper function to launch a query with a specific relay
-        async fn launch_with_relay(args: &QuerySubCommand, relay_url: &str) -> anyhow::Result<()> {
-            let mut modified_args = args.clone();
-            modified_args.relay = Some(relay_url.to_string());
-            launch(&modified_args).await
-        }
-
-        #[test]
-        fn test_build_filter_map_default_limit() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&[]);
-            let (filt, limit_check) = build_filter_map(&args)?;
-
-            assert_eq!(limit_check, 1); // Default limit
-            assert_eq!(filt.get("limit").unwrap(), &json!(1));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_authors() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--authors", "pubkey1,pubkey2"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(
-                filt.get("authors").unwrap(),
-                &json!(["pubkey1", "pubkey2"])
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_ids() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--ids", "id1,id2"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(filt.get("ids").unwrap(), &json!(["id1", "id2"]));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_custom_limit() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--limit", "10"]);
-            let (filt, limit_check) = build_filter_map(&args)?;
-
-            assert_eq!(limit_check, 10);
-            assert_eq!(filt.get("limit").unwrap(), &json!(10));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_generic() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--generic", "t", "general,nostr"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(
-                filt.get("#t").unwrap(),
-                &json!("general,nostr")
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_hashtag() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--hashtag", "rust,programming"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(
-                filt.get("#t").unwrap(),
-                &json!(["rust", "programming"])
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_mentions() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--mentions", "mention1,mention2"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(
-                filt.get("#p").unwrap(),
-                &json!(["mention1", "mention2"])
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_references() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--references", "ref1,ref2"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(
-                filt.get("#e").unwrap(),
-                &json!(["ref1", "ref2"])
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_kinds() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--kinds", "1,2,3"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2, 3]));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_invalid_kinds() {
-            let args = create_query_subcommand(&["--kinds", "1,abc,3"]);
-            let result = build_filter_map(&args);
-
-            assert!(result.is_err());
-            assert_eq!(
-                result.unwrap_err().to_string(),
-                "Error parsing kinds. Ensure they are integers."
-            );
-        }
-
-        #[test]
-        fn test_build_filter_map_with_search() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--search", "keyword1,keyword2"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(filt.get("search").unwrap(), &json!("keyword1,keyword2"));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_single_kind() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--kinds", "1630"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(filt.get("kinds").unwrap(), &json!([1630]));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_multiple_specific_kinds() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--kinds", "1630,1632,1621,30618,1633,1631,1617,30617"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(
-                filt.get("kinds").unwrap(),
-                &json!([1630, 1632, 1621, 30618, 1633, 1631, 1617, 30617])
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_kinds_and_authors() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--kinds", "1,2", "--authors", "pubkeyA"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2]));
-            assert_eq!(filt.get("authors").unwrap(), &json!(["pubkeyA"]));
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_empty_kinds() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--kinds", ""]);
-            let result = build_filter_map(&args);
-
-            assert!(result.is_err());
-            assert_eq!(
-                result.unwrap_err().to_string(),
-                "Error parsing kinds. Ensure they are integers."
-            );
-            Ok(())
-        }
-
-        #[test]
-        fn test_build_filter_map_with_duplicate_kinds() -> anyhow::Result<()> {
-            let args = create_query_subcommand(&["--kinds", "1,2,1"]);
-            let (filt, _) = build_filter_map(&args)?;
-
-            // The current implementation allows duplicates, which is acceptable for a filter list.
-            assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2, 1]));
-            Ok(())
-        }
-
-        #[tokio::test]
-        async fn test_launch_no_panic_with_all_bootstrap_relays() {
-            let base_args = create_query_subcommand(&[]);
-            for relay_url in BOOTSTRAP_RELAYS.iter().filter(|&r| r != &BOOTSTRAP_RELAYS[0] && r != &BOOTSTRAP_RELAYS[2]) {
-                debug!("Testing launch with relay: {}", relay_url);
-                let result = launch_with_relay(&base_args, relay_url).await;
-                assert!(result.is_ok(), "Launch failed for relay {}: {:?}", relay_url, result.err());
-            }
+    // Helper function to create QuerySubCommand from args
+    fn create_query_subcommand(args: &[&str]) -> QuerySubCommand {
+        let full_args = std::iter::once("gnostr")
+            .chain(std::iter::once("query"))
+            .chain(args.iter().cloned());
+        let cli = Cli::parse_from(full_args);
+        match cli.command {
+            Commands::Query(query_subcommand) => query_subcommand,
         }
     }
+
+    // Helper function to launch a query with a specific relay
+    async fn launch_with_relay(args: &QuerySubCommand, relay_url: &str) -> anyhow::Result<()> {
+        let mut modified_args = args.clone();
+        modified_args.relay = Some(relay_url.to_string());
+        launch(&modified_args).await
+    }
+
+    #[test]
+    fn test_build_filter_map_default_limit() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&[]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 1); // Default limit
+        assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_authors() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--authors", "pubkey1,pubkey2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("authors").unwrap(), &json!(["pubkey1", "pubkey2"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_ids() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--ids", "id1,id2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("ids").unwrap(), &json!(["id1", "id2"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_custom_limit() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--limit", "10"]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 10);
+        assert_eq!(filt.get("limit").unwrap(), &json!(10));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_generic() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--generic", "t", "general,nostr"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("#t").unwrap(), &json!("general,nostr"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_hashtag() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--hashtag", "rust,programming"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("#t").unwrap(), &json!(["rust", "programming"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_mentions() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--mentions", "mention1,mention2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("#p").unwrap(), &json!(["mention1", "mention2"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_references() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--references", "ref1,ref2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("#e").unwrap(), &json!(["ref1", "ref2"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_kinds() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--kinds", "1,2,3"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2, 3]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_invalid_kinds() {
+        let args = create_query_subcommand(&["--kinds", "1,abc,3"]);
+        let result = build_filter_map(&args);
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Error parsing kinds. Ensure they are integers."
+        );
+    }
+
+    #[test]
+    fn test_build_filter_map_with_search() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--search", "keyword1,keyword2"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("search").unwrap(), &json!("keyword1,keyword2"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_single_kind() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--kinds", "1630"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("kinds").unwrap(), &json!([1630]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_multiple_specific_kinds() -> anyhow::Result<()> {
+        let args =
+            create_query_subcommand(&["--kinds", "1630,1632,1621,30618,1633,1631,1617,30617"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("kinds").unwrap(),
+            &json!([1630, 1632, 1621, 30618, 1633, 1631, 1617, 30617])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_kinds_and_authors() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--kinds", "1,2", "--authors", "pubkeyA"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2]));
+        assert_eq!(filt.get("authors").unwrap(), &json!(["pubkeyA"]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_empty_kinds() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--kinds", ""]);
+        let result = build_filter_map(&args);
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Error parsing kinds. Ensure they are integers."
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_duplicate_kinds() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&["--kinds", "1,2,1"]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        // The current implementation allows duplicates, which is acceptable for a
+        // filter list.
+        assert_eq!(filt.get("kinds").unwrap(), &json!([1, 2, 1]));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_launch_no_panic_with_all_bootstrap_relays() {
+        let base_args = create_query_subcommand(&[]);
+        for relay_url in BOOTSTRAP_RELAYS
+            .iter()
+            .filter(|&r| r != &BOOTSTRAP_RELAYS[0] && r != &BOOTSTRAP_RELAYS[2])
+        {
+            debug!("Testing launch with relay: {}", relay_url);
+            let result = launch_with_relay(&base_args, relay_url).await;
+            assert!(
+                result.is_ok(),
+                "Launch failed for relay {}: {:?}",
+                relay_url,
+                result.err()
+            );
+        }
+    }
+
+    #[test]
+    fn test_build_filter_map_with_nostr_url_bech32_conversion() -> anyhow::Result<()> {
+        // Test equivalent to: gnostr query --authors $(gnostr bech32-to-any nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr --raw)
+        // The nostr URL contains the same npub, which should convert to the same hex pubkey
+        let expected_hex_pubkey =
+            "86a254249e6321386a1dcca7356a9a0792e21e8cc5a2b490266532d44a48d72c";
+
+        // This simulates what command substitution would produce
+        let args = create_query_subcommand(&["--authors", expected_hex_pubkey]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 1); // Default limit
+        assert_eq!(filt.get("authors").unwrap(), &json!([expected_hex_pubkey]));
+        assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "expensive_tests")]
+    fn test_bech32_to_any_with_nostr_url() -> anyhow::Result<()> {
+        use std::process::Command;
+
+        // Test the bech32-to-any command with nostr URL directly
+        let nostr_url = "nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr";
+
+        // Set environment to use gnostr binary for CliTester
+        std::env::set_var("CARGO_BIN_EXE_ngit", "gnostr");
+
+        let bech32_output = Command::new("cargo")
+            .args(&[
+                "run",
+                "--bin",
+                "gnostr",
+                "--",
+                "bech32-to-any",
+                nostr_url,
+                "--raw",
+            ])
+            .output()
+            .expect("Failed to run bech32-to-any command");
+
+        assert!(
+            bech32_output.status.success(),
+            "bech32-to-any should succeed"
+        );
+
+        let hex_pubkey = String::from_utf8(bech32_output.stdout)
+            .expect("Output should be valid UTF-8")
+            .trim()
+            .to_string();
+
+        // Verify the hex pubkey matches expected value
+        assert_eq!(
+            hex_pubkey,
+            "86a254249e6321386a1dcca7356a9a0792e21e8cc5a2b490266532d44a48d72c"
+        );
+
+        // Now verify this hex pubkey works in query filter map
+        let args = create_query_subcommand(&["--authors", &hex_pubkey]);
+        let (filt, limit_check) = build_filter_map(&args)?;
+
+        assert_eq!(limit_check, 1); // Default limit
+        assert_eq!(filt.get("authors").unwrap(), &json!([hex_pubkey]));
+        assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
+}

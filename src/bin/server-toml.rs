@@ -1,7 +1,6 @@
+use std::{collections::HashMap, fs, io};
+
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::io;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {

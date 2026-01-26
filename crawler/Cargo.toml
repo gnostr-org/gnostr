@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-crawler"
-version = "1906.925289.572444"
+version = "1895.933117.678085"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
@@ -25,7 +25,9 @@ git2 = "0.20.1"
 ##use ../Cargo.toml version for ngit
 indicatif = "0.14.0"
 log = "0.4.24"
-nostr-sdk = "0.19.1"
+nostr = "0.34.1"
+nostr-sdk = "0.34.0"
+#nostr-sdk = "0.19.1"
 predicates = "3.1.3"
 rand = "0.7.3"
 regex = "1.11.1"

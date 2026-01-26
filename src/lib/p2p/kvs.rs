@@ -22,7 +22,8 @@ use serde::{Deserialize, Serialize};
 
 /// Creates the network components, namely:
 ///
-/// - The network client to interact with the network layer from anywhere within your application.
+/// - The network client to interact with the network layer from anywhere within
+///   your application.
 ///
 /// - The network event stream, e.g. for incoming requests.
 ///
@@ -166,6 +167,7 @@ pub struct EventLoop {
     swarm: Swarm<Behaviour>,
     command_receiver: mpsc::Receiver<Command>,
     event_sender: mpsc::Sender<Event>,
+    #[allow(clippy::type_complexity)]
     pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), Box<dyn Error + Send>>>>,
     pending_start_providing: HashMap<kad::QueryId, oneshot::Sender<()>>,
     pending_get_providers: HashMap<kad::QueryId, oneshot::Sender<HashSet<PeerId>>>,
@@ -293,10 +295,7 @@ impl EventLoop {
             SwarmEvent::NewListenAddr { address, .. } => {
                 let local_peer_id = *self.swarm.local_peer_id();
                 let addr_with_peer_id = address.with(Protocol::P2p(local_peer_id));
-                eprintln!(
-                    "Local node is listening on {:?}",
-                    addr_with_peer_id.clone()
-                );
+                eprintln!("Local node is listening on {:?}", addr_with_peer_id.clone());
                 self.event_sender
                     .send(Event::NewListenAddr(addr_with_peer_id))
                     .await

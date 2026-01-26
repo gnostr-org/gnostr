@@ -1,6 +1,11 @@
+use std::{
+    error::Error,
+    hash::{DefaultHasher, Hash, Hasher},
+    time::Duration,
+};
+
 use libp2p::{
-    gossipsub,
-    identify, identity,
+    gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -10,16 +15,10 @@ use libp2p::{
     swarm::Swarm,
     tcp, yamux, PeerId,
 };
-use std::{
-    error::Error,
-    hash::{DefaultHasher, Hash, Hasher},
-    time::Duration,
-};
 use tokio::io;
 use tracing::info;
 
-use crate::p2p::behaviour::Behaviour;
-use crate::p2p::network_config::IPFS_PROTO_NAME;
+use crate::p2p::{behaviour::Behaviour, network_config::IPFS_PROTO_NAME};
 
 pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
     let peer_id = PeerId::from(keypair.public());
@@ -41,12 +40,13 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         gossipsub::MessageId::from(s.finish().to_string())
     };
 
+    #[allow(clippy::redundant_closure)]
     let gossipsub_config = gossipsub::ConfigBuilder::default()
         .heartbeat_interval(Duration::from_secs(1))
         .validation_mode(gossipsub::ValidationMode::Permissive)
         .message_id_fn(message_id_fn)
         .build()
-        .map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?;
+        .map_err(|msg| io::Error::other(msg))?;
 
     let swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
@@ -56,7 +56,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             yamux::Config::default,
         )?
         .with_quic()
-        .with_dns()? 
+        .with_dns()?
         .with_behaviour(move |key| {
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
@@ -69,7 +69,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id.clone(), kad_store_config);
+            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(key.public().to_peer_id());
@@ -101,7 +101,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                     key.public().to_peer_id(),
                 )?,
             })
-        })? 
+        })?
         .build();
 
     Ok(swarm)

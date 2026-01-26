@@ -2,9 +2,9 @@ use clap::Parser;
 use gnostr::sub_commands::sniper::{run_sniper, SniperArgs};
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about = "gnostr: a git+nostr workflow utility", long_about = None)]
+#[command(author, version, about = "gnostr: a git+nostr workflow utility", long_about = None)]
 struct Cli {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     command: Commands,
 }
 

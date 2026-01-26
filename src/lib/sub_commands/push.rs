@@ -1,7 +1,3 @@
-use crate::{
-    client::{send_events, Client},
-    git_events::{is_event_proposal_root_for_branch, tag_value},
-};
 use anyhow::{bail, Context, Result};
 use nostr_sdk_0_34_0::PublicKey;
 
@@ -19,10 +15,14 @@ use crate::{
     repo_ref::get_repo_coordinates,
     sub_commands,
 };
+use crate::{
+    client::{send_events, Client},
+    git_events::{is_event_proposal_root_for_branch, tag_value},
+};
 
 #[derive(Debug, clap::Args, Clone)]
 pub struct PushArgs {
-    #[arg(long, action)]
+    #[arg(long)]
     /// send proposal revision from checked out proposal branch
     pub force: bool,
     pub disable_cli_spinners: bool,
@@ -79,7 +79,7 @@ pub async fn launch(
             .await?
             .iter()
             .find(|e| {
-                is_event_proposal_root_for_branch(e, &branch_name, &logged_in_public_key)
+                is_event_proposal_root_for_branch(e, &branch_name, logged_in_public_key.as_ref())
                     .unwrap_or(false)
             })
             .context("cannot find proposal that matches the current branch name")?
@@ -176,9 +176,9 @@ pub async fn launch(
 
     if !behind.is_empty() {
         bail!(
-			"your local proposal branch is {} behind patches on nostr. consider rebasing or force pushing",
-			behind.len()
-		)
+            "your local proposal branch is {} behind patches on nostr. consider rebasing or force pushing",
+            behind.len()
+        )
     }
 
     println!(

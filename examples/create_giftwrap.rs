@@ -1,6 +1,6 @@
+use std::{env, io::Read};
+
 use gnostr::types::{PreEvent, PublicKey, Signer, Unixtime};
-use std::env;
-use std::io::Read;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -19,13 +19,13 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- *(crates-io-release)* Resolve issue with publishing to crates-io
+- _(crates-io-release)_ Resolve issue with publishing to crates-io
 
 ## [0.30.2] - 2025-04-21
 
 ### 🐛 Bug Fixes
 
-- *(crates-io-release)* Specify gitu-diff to not be published
+- _(crates-io-release)_ Specify gitu-diff to not be published
 
 ## [0.30.1] - 2025-04-21
 
@@ -46,7 +46,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- *(file-watcher)* Freeze on startup, log error and stop on failure
+- _(file-watcher)_ Freeze on startup, log error and stop on failure
 - Accurate --version in Github releases
 
 ## [0.29.0] - 2025-03-10
@@ -72,7 +72,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
-- *(Revert)* Add --no-edit flag (bound to -E)
+- _(Revert)_ Add --no-edit flag (bound to -E)
 - Update on file changes
 - Open help with `?` too, close with `h` / `?` (#280)
 
@@ -90,7 +90,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
-- *(config)* Collapse screen headers via e.g. `general.collapsed_sections = ["recent_commits"]`
+- _(config)_ Collapse screen headers via e.g. `general.collapsed_sections = ["recent_commits"]`
 
 ### 🐛 Bug Fixes
 
@@ -123,21 +123,21 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
-- *(status)* Detect renamed files
+- _(status)_ Detect renamed files
 
 ## [0.23.1] - 2024-07-23
 
 ### 🐛 Bug Fixes
 
-- *(instant fixup commit)* Would not work with some versions of Git
-- *(instant fixup commit)* Use --keep-empty and --autostash like Magit
-- *(instant fixup commit)* Errors wouldn't show
+- _(instant fixup commit)_ Would not work with some versions of Git
+- _(instant fixup commit)_ Use --keep-empty and --autostash like Magit
+- _(instant fixup commit)_ Errors wouldn't show
 
 ## [0.23.0] - 2024-07-18
 
 ### 🚀 Features
 
-- *(commit)* Instant fixup
+- _(commit)_ Instant fixup
 
 ### 🐛 Bug Fixes
 
@@ -164,7 +164,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Tabs would not be rendered, render them as 4 spaces for now
-- *(flake)* Add AppKit to build inputs
+- _(flake)_ Add AppKit to build inputs
 
 ## [0.21.0] - 2024-06-16
 
@@ -221,7 +221,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- *(ci)* Release dir would not be created
+- _(ci)_ Release dir would not be created
 
 ## [0.18.3] - 2024-04-20
 
@@ -237,7 +237,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- *(log)* Ignore `prefetch/remotes/` refs
+- _(log)_ Ignore `prefetch/remotes/` refs
 
 ## [0.17.1] - 2024-04-17
 
@@ -256,7 +256,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- When head detached show "?" instead of "*" on target match; update tests
+- When head detached show "?" instead of "\*" on target match; update tests
 
 ## [0.16.0] - 2024-04-14
 
@@ -510,4 +510,3 @@ All notable changes to this project will be documented in this file.
 ### 🎨 Styling
 
 - Selection_line & selection_area now extend fully to left
-

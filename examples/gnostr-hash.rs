@@ -1,6 +1,6 @@
+use std::{env, io::Read, process};
+
 use gnostr::hash;
-use std::io::Read;
-use std::{env, process};
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -8,7 +8,7 @@ fn main() {
         if i == args.len() {
             process::exit(i.try_into().unwrap());
         } else {
-            if args.len() == 0 {
+            if args.is_empty() {
                 print!("args.len() = {}", 0);
             };
             if args.len() == 1 {

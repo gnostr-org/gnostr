@@ -4,12 +4,12 @@ pub mod messages;
 pub mod options;
 pub mod remote_runner;
 pub mod tests;
-use clap::Parser;
-
-use crate::remote::options::Opt;
 use anyhow::Result;
+use clap::Parser;
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
+
+use crate::remote::options::Opt;
 
 pub fn remote() -> Result<()> {
     let opt = Opt::parse();

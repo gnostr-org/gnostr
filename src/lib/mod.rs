@@ -1,11 +1,11 @@
+#![allow(unused_imports)]
+#![deny(non_ascii_idents)]
 //! gnostr: a git+nostr workflow utility and library
-//!
+
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
 pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
 pub mod bug_report;
-///  <https://docs.rs/gnostr/latest/gnostr/chat/index.html>
-
 ///  <https://docs.rs/gnostr/latest/gnostr/cli/index.html>
 pub mod cli;
 ///  <https://docs.rs/gnostr/latest/gnostr/cli_interactor/index.html>
@@ -18,8 +18,8 @@ pub mod clipboard;
 pub mod cmdbar;
 ///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
 pub mod components;
-///  <https://docs.rs/gnostr/latest/gnostr/dashboard/index.html>
-pub mod dashboard;
+///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
+pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
@@ -28,8 +28,6 @@ pub mod git;
 pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
-///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
-pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
@@ -68,6 +66,8 @@ pub mod strings;
 pub mod sub_commands;
 ///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
 pub mod tabs;
+///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
+pub mod test_utils;
 ///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
 pub mod types;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
@@ -78,91 +78,51 @@ pub mod utils;
 pub mod verify_keypair;
 ///  <https://docs.rs/gnostr/latest/gnostr/watcher/index.html>
 pub mod watcher;
-///
-
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
-///
+/// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
+//avoid?//upgrade?
+//pub use lightning;
+use anyhow::{anyhow, Result};
 pub use base64::Engine;
-///
 pub use colorful::{Color, Colorful};
-///
-pub use futures_util::stream::FusedStream;
-///
-pub use futures_util::{SinkExt, StreamExt};
-///
+use directories::ProjectDirs;
+pub use futures_util::{stream::FusedStream, SinkExt, StreamExt};
 pub use http::Uri;
-///
 pub use lazy_static::lazy_static;
-///
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
+pub use nostr_sdk_0_32_0::prelude::rand;
+pub use tokio::sync::mpsc::{Receiver, Sender};
+pub use tokio_tungstenite::{connect_async, tungstenite::Message, WebSocketStream};
+//use tokio_tungstenite::WebSocketStream;
+pub use types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
 pub use types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
-//
-///
-pub use nostr_sdk_0_19_1::prelude::rand;
-//
-///
-pub use tokio::sync::mpsc::{Receiver, Sender};
-///
-pub use tungstenite::Message;
-///
 pub use zeroize::Zeroize;
-pub use types::nip44;
-//avoid?//upgrade?
-//pub use lightning;
-
-///
-use anyhow::{anyhow, Result};
-///
-use directories::ProjectDirs;
-
-///
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-///
 pub const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
-
-///
 pub const GNOSTR_SHA256: [u8; 32] = [
     0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,
     0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, 0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06,
 ];
-
-///
 pub const DEFAULT_POW_DIFFICULTY: u8 = 4;
-
-///
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
     ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
 }
-
-///
 type Ws =
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-
-///
 pub mod reflog;
-///
 pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message};
-
-///
-pub use relays::{
-    relays, relays_by_nip, relays_offline, relays_online, relays_paid, relays_public,
-};
-
-///
+pub use relays::{relays_all, relays_by_nip, relays_offline, relays_online, relays_paid};
 pub mod watch_list;
-///
 pub use watch_list::*;
-
 //TODO
 /// get_relays_by_nip
 /// pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str>
@@ -174,37 +134,37 @@ pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str> {
 /// get_relays <https://api.nostr.watch>
 /// pub fn get_relays() -> Result<String, &'static str>
 pub fn get_relays() -> Result<String, &'static str> {
-    let _relays_no_nl = relays().unwrap().to_string();
+    let _relays_no_nl = relays_all().unwrap().to_string();
 
-    Ok(format!("{}", relays().unwrap().to_string()))
+    Ok(relays_all().unwrap().to_string())
 }
 /// get_relays_online <https://api.nostr.watch>
 /// pub fn get_relays_online() -> Result<String, &'static str>
 pub fn get_relays_online() -> Result<String, &'static str> {
     let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_online().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_public <https://api.nostr.watch>
 /// pub fn get_relays_public() -> Result<String, &'static str>
 pub fn get_relays_public() -> Result<String, &'static str> {
-    let _relays_no_nl = relays_public().unwrap().to_string();
+    let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_public().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_paid <https://api.nostr.watch>
 /// pub fn get_relays_paid() -> Result<String, &'static str>
 pub fn get_relays_paid() -> Result<String, &'static str> {
     let _relays_no_nl = relays_paid().unwrap().to_string();
 
-    Ok(format!("{}", relays_paid().unwrap().to_string()))
+    Ok(relays_paid().unwrap().to_string())
 }
 /// get_relays_offline <https://api.nostr.watch>
 /// pub fn get_relays_offline() -> Result<String, &'static str>
 pub fn get_relays_offline() -> Result<String, &'static str> {
     let _relays_no_nl = relays_offline().unwrap().to_string();
 
-    Ok(format!("{}", relays_offline().unwrap().to_string()))
+    Ok(relays_offline().unwrap().to_string())
 }
 
 /// weeble
@@ -214,21 +174,15 @@ pub fn get_weeble() -> Result<String, &'static str> {
 }
 /// pub fn get_weeble_sync() -> Result<String, &'static str>
 pub fn get_weeble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", weeble_sync().unwrap_or(0_f64).to_string()))
+    Ok(weeble_sync().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_weeble_async() -> Result<String, &'static str>
 pub async fn get_weeble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(weeble_async().await.unwrap_or(0_f64).to_string())
 }
 /// pub fn get_weeble_millis_async() -> Result<String, &'static str>
 pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(weeble_millis_async().await.unwrap_or(0_f64).to_string())
 }
 /// wobble
 /// pub fn get_wobble() -> Result<String, &'static str>
@@ -237,34 +191,28 @@ pub fn get_wobble() -> Result<String, &'static str> {
 }
 /// pub fn get_wobble_sync() -> Result<String, &'static str>
 pub fn get_wobble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", wobble_sync().unwrap_or(0_f64).to_string()))
+    Ok(wobble_sync().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_wobble_async() -> Result<String, &'static str>
 pub async fn get_wobble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(wobble_async().await.unwrap_or(0_f64).to_string())
 }
 /// pub fn get_wobble_millis_async() -> Result<String, &'static str>
 pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(wobble_millis_async().await.unwrap_or(0_f64).to_string())
 }
 
 /// pub fn get_blockheight_sync() -> Result<String, &'static str>
 pub fn get_blockheight_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
+    Ok(blockheight().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_blockheight_async() -> Result<String, &'static str>
 pub async fn get_blockheight_async() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight_async().await))
+    Ok(blockheight_async().await.to_string())
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    Ok(format!("{}", blockhash().unwrap().to_string()))
+    Ok(blockhash().unwrap().to_string())
 }
 
 /// pub fn hash_list()
@@ -287,8 +235,9 @@ pub struct Config {
     /// pub query: String
     pub query: String,
 }
-use sha256::digest;
 use std::process;
+
+use sha256::digest;
 // impl Config {
 impl Config {
     /// pub fn build(args: &\[String\]) -> Result\<Config, &'static str\>
@@ -359,17 +308,11 @@ use crate::types::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;
-pub use weeble::weeble;
-pub use weeble::weeble_async;
-pub use weeble::weeble_millis_async;
-pub use weeble::weeble_sync;
+pub use weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
 pub mod wobble;
-pub use wobble::wobble;
-pub use wobble::wobble_async;
-pub use wobble::wobble_millis_async;
-pub use wobble::wobble_sync;
+pub use wobble::{wobble, wobble_async, wobble_millis_async, wobble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
 pub mod blockhash;
@@ -377,8 +320,7 @@ pub use blockhash::blockhash;
 
 /// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
 pub mod blockheight;
-pub use blockheight::blockheight;
-pub use blockheight::blockheight_async;
+pub use blockheight::{blockheight, blockheight_async};
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
@@ -491,7 +433,7 @@ impl Probe {
         loop {
             tokio::select! {
                 _ = ping_timer.tick() => {
-                    let msg = Message::Ping(vec![0x1]);
+                    let msg = Message::Ping(vec![0x1].into());
                     self.send(&mut websocket, msg).await?;
                 },
                 local_message = self.from_main.recv() => {
@@ -499,19 +441,19 @@ impl Probe {
                         Some(Command::PostEvent(event)) => {
                             let client_message = ClientMessage::Event(Box::new(event));
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::Auth(event)) => {
                             let client_message = ClientMessage::Auth(Box::new(event));
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::FetchEvents(subid, filters)) => {
                             let client_message = ClientMessage::Req(subid, filters);
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::Exit) => {
@@ -574,7 +516,7 @@ impl Probe {
                     RelayMessage::Auth(challenge) => {
                         eprintln!("{}: AUTH({})", PREFIXES.from_relay, challenge);
                     }
-                    RelayMessage::Event(sub, e) => {
+                    RelayMessage::Event(_sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
                         //#[cfg(debug_assertions)]
                         //eprintln!(
@@ -765,13 +707,15 @@ pub async fn req(
                 if sub == our_sub_id {
                     if why == Some(Why::AuthRequired) {
                         if authenticated.is_none() {
-                            eprintln!("Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)");
+                            eprintln!(
+                                "Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)"
+                            );
                             to_probe.send(Command::Exit).await?;
                             break;
                         }
 
-                        // We have already authenticated. We will resubmit once we get the
-                        // OK message.
+                        // We have already authenticated. We will resubmit once
+                        // we get the OK message.
                     } else {
                         to_probe.send(Command::Exit).await?;
                         break;

@@ -1,9 +1,11 @@
 // Copyright 2015-2020 nostr-proto Developers
 // Licensed under the MIT license <LICENSE-MIT or http://opensource.org/licenses/MIT>
-// This file may not be copied, modified, or distributed except according to those terms.
+// This file may not be copied, modified, or distributed except according to
+// those terms.
 
 //! This crate provides types for nostr protocol handling.
 
+#![allow(missing_docs)]
 #![deny(
     missing_debug_implementations,
     trivial_casts,
@@ -14,14 +16,13 @@
     unused_lifetimes,
     unused_labels,
     unused_extern_crates,
-    non_ascii_idents,
     keyword_idents,
     deprecated_in_future,
     unstable_features,
     single_use_lifetimes,
     //unsafe_code,
     unreachable_pub,
-    missing_docs,
+    //missing_docs,
     missing_copy_implementations
 )]
 #![deny(clippy::string_slice)]
@@ -42,51 +43,74 @@ mod error;
 pub use error::Error;
 
 mod event;
+mod event_builder;
 pub use event::{Event, PreEvent, Rumor, ZapData};
 
-mod event_kind;
+/// event_kind
+pub mod event_kind;
 pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
 
+/// event_reference
 mod event_reference;
 pub use event_reference::EventReference;
 
+/// filter
 mod filter;
 pub use filter::Filter;
 
+/// id
 mod id;
 pub use id::{Id, IdHex};
 
+/// identity
 mod identity;
 pub use identity::Identity;
 
-mod key_signer;
+pub mod key_signer;
 pub use key_signer::KeySigner;
 
-mod metadata;
+/// NIP-28: Public Chat Channels
+pub mod nip28;
+pub use nip28::*;
+
+/// metadata
+pub mod metadata;
 pub use metadata::Metadata;
 
+/// naddr
 mod naddr;
 pub use naddr::NAddr;
 
+/// nevent
 mod nevent;
 pub use nevent::NEvent;
 
 /// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
 pub mod nip0;
+mod nip05;
+/// NIP-10: Text Notes and Threads
+pub mod nip10;
+/// NIP-13: Proof of Work
+pub mod nip13;
+/// NIP-15: End of Stored Events Notice
+pub mod nip15;
+/// NIP-18: Reposts
+pub mod nip18;
 /// NIP-02: Contact List and Petnames
 pub mod nip2;
+/// NIP-26: Delegation
+pub mod nip26;
+/// NIP-03: OpenTimestamps Attestations for Events
+pub mod nip3;
+pub mod nip34;
 /// NIP-04: Encrypted Direct Message
 pub mod nip4;
+/// NIP-59: Gift Wrap
+pub mod nip59;
 /// NIP-06: Basic key derivation from mnemonic seed phrase
 pub mod nip6;
 /// NIP-09: Event Deletion
 pub mod nip9;
-/// NIP-15: End of Stored Events Notice
-pub mod nip15;
-/// NIP-26: Delegation
-pub mod nip26;
-pub mod nip34;
-mod nip05;
 pub use nip05::Nip05;
 
 mod nostr_url;
@@ -143,9 +167,30 @@ pub use unixtime::Unixtime;
 mod url;
 pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
+pub mod nip14;
+pub mod nip25;
+pub mod nip30;
+pub mod nip32;
+pub mod nip36;
+pub mod nip38;
+pub mod nip40;
 /// NIP-44 related types and functionalities for secure direct messages.
 pub mod nip44;
+pub mod nip53;
+pub mod nip94;
+pub mod nostr_client; // Added
 pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
+pub use nostr_client::*; // Added
+pub mod nip19;
+pub use nip19::*;
+pub mod keys;
+pub use keys::Keys;
+pub mod client;
+pub use client::{Client, FilterOptions, Options};
+pub mod image_dimensions;
+// Re-export bitcoin_hashes for use throughout the codebase
+pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
+pub use image_dimensions::ImageDimensions;
 
 #[cfg(test)]
 #[macro_export]
@@ -165,8 +210,8 @@ macro_rules! test_serde {
 
 // mod types;
 
-
-mod versioned;
+pub mod versioned;
+pub use event_builder::EventBuilder;
 pub use versioned::{
     ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
     MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,
@@ -309,7 +354,6 @@ pub fn add_subject_to_tags_if_missing(existing_tags: &mut Vec<Tag>, subject: Str
         existing_tags.push(Tag::new_subject(subject));
     }
 }
-
 
 #[cfg(test)]
 mod test {

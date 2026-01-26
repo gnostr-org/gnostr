@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Rustup update & install cross bin 
+      - name: Rustup update & install cross bin
         run: |
           rustup update stable
           curl -sSfL https://github.com/cross-rs/cross/releases/download/v${{ env.cross-version }}/cross-x86_64-unknown-linux-musl.tar.gz | sudo tar xzf - -C /usr/local/bin

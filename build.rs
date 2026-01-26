@@ -4,13 +4,14 @@ use std::{
     path::Path,
     process::Command,
 };
+
 use sha2::{Digest, Sha256};
 
-
-
-fn sync_nip44_vectors() {
-    const NIP44_VECTORS_URL: &str = "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
-    const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
+fn _sync_nip44_vectors() {
+    const NIP44_VECTORS_URL: &str =
+        "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
+    const NIP44_VECTORS_SHA256: &str =
+        "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
     let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join("src/lib/types/nip44/nip44.vectors.json");
 
@@ -47,7 +48,9 @@ fn sync_nip44_vectors() {
                 if hex_hash == NIP44_VECTORS_SHA256 {
                     let mut file = fs::File::create(&dest_path).unwrap();
                     file.write_all(&content).unwrap();
-                    println!("cargo:warning=Successfully downloaded and verified nip44.vectors.json.");
+                    println!(
+                        "cargo:warning=Successfully downloaded and verified nip44.vectors.json."
+                    );
                 } else {
                     panic!(
                         "Downloaded nip44.vectors.json has incorrect hash. Expected {}, got {}",
@@ -62,7 +65,10 @@ fn sync_nip44_vectors() {
                         e
                     );
                 } else {
-                    panic!("Failed to download nip44.vectors.json and no local copy available: {}", e);
+                    panic!(
+                        "Failed to download nip44.vectors.json and no local copy available: {}",
+                        e
+                    );
                 }
             }
         }
@@ -115,7 +121,9 @@ fn install_sccache() {
         } else if command_exists("dnf") {
             "dnf"
         } else {
-            println!("cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually.");
+            println!(
+                "cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually."
+            );
             return;
         };
 
@@ -175,7 +183,9 @@ fn install_sccache() {
                 }
             }
         } else {
-            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
             panic!("Homebrew not found.");
         }
     } else if target_os == "windows" {
@@ -192,7 +202,9 @@ fn install_sccache() {
         if !install_command.is_empty() {
             install_windows_dependency("sccache", install_command);
         } else {
-            println!("cargo:warning=Neither scoop nor winget found. Please install sccache manually.");
+            println!(
+                "cargo:warning=Neither scoop nor winget found. Please install sccache manually."
+            );
         }
     }
 }
@@ -296,7 +308,9 @@ fn install_xcb_deps() {
                 ],
             )
         } else {
-            println!("cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually.");
+            println!(
+                "cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually."
+            );
             return;
         };
 
@@ -320,14 +334,14 @@ fn install_xcb_deps() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                panic!("Failed to install required Linux dependencies.");
+                println!("cargo:warning=Continuing without xcb dependencies - some clipboard features may not work.");
             }
             Err(e) => {
                 println!(
                     "cargo:warning=Failed to run dependency installation command: {}",
                     e
                 );
-                panic!("Failed to run dependency installation command.");
+                println!("cargo:warning=Continuing without xcb dependencies - some clipboard features may not work.");
             }
         }
     } else if target_os == "macos" {
@@ -351,7 +365,9 @@ fn install_xcb_deps() {
                 }
             }
         } else {
-            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
             panic!("Failed to install required macOS dependencies.");
         }
     } else if target_os == "windows" {
@@ -473,8 +489,8 @@ fn get_git_hash() -> String {
 
 fn main() {
     println!("cargo:rerun-if-changed=src/empty");
-    make_empty();
-    sync_nip44_vectors();
+    //_make_empty();
+    //_sync_nip44_vectors();
 
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
@@ -490,7 +506,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
 
-    make_empty();
+    //_make_empty();
 
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
@@ -787,7 +803,7 @@ fn musl_install_pkg_config() {
     // Common build logic can go here
 }
 
-fn make_empty() {
+fn _make_empty() {
     let target_path = Path::new("src/empty");
 
     // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
@@ -960,12 +976,12 @@ git commit --allow-empty -m "initial commit"
     //    );
     //}
 
-    let _ = git_commit(dir_path);
+    let _ = _git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
 }
 
-fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
+fn _git_commit(dir_path: &Path) -> Result<(), io::Error> {
     // 1. Convert Path to &str safely using .ok_or_else()
     // This converts the Option<&str> to a Result<&str, io::Error>.
     // If the path is invalid UTF-8 (None), it generates a custom io::Error
@@ -1017,8 +1033,9 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
 
         // The failure block must return the error value, which is Err(io::Error).
         // We create a new io::Error here to indicate the child process failed.
-        Err(Error::other(
-            format!("'git commit' failed with status: {}", output.status),
-        ))
+        Err(Error::other(format!(
+            "'git commit' failed with status: {}",
+            output.status
+        )))
     }
 }

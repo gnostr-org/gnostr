@@ -1,13 +1,14 @@
 // Copyright 2015-2020 nostr-bins Developers
 // Licensed under the MIT license <LICENSE-MIT or http://opensource.org/licenses/MIT>
-// This file may not be copied, modified, or distributed except according to those terms.
+// This file may not be copied, modified, or distributed except according to
+// those terms.
 
 // TEMPORARILY
 #![allow(clippy::uninlined_format_args)]
 
+use std::{env, process};
+
 use k256::schnorr::{SigningKey, VerifyingKey};
-use std::env;
-use std::process;
 
 fn main() {
     let mut args = env::args();

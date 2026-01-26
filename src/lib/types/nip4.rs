@@ -1,10 +1,12 @@
 use aes::Aes256;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use cbc::{Decryptor, Encryptor};
-use cbc::cipher::{BlockEncrypt, BlockDecrypt, KeyInit, KeyIvInit, BlockEncryptMut, BlockDecryptMut};
 use block_padding::Pkcs7;
-use secp256k1::{ecdh, PublicKey, Secp256k1, SecretKey, XOnlyPublicKey};
+use cbc::{
+    cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit},
+    Decryptor, Encryptor,
+};
 use rand::RngCore;
+use secp256k1::{ecdh, Secp256k1, SecretKey, XOnlyPublicKey};
 
 type Aes256CbcEncryptor = Encryptor<Aes256>;
 type Aes256CbcDecryptor = Decryptor<Aes256>;
@@ -15,9 +17,10 @@ pub fn encrypt(
     recipient_public_key: &XOnlyPublicKey,
     content: &str,
 ) -> Result<String, anyhow::Error> {
-    let secp = Secp256k1::new();
+    let _secp = Secp256k1::new();
 
-    // NIP-04 specifies using the first 32 bytes of the sha256 of the shared secret point
+    // NIP-04 specifies using the first 32 bytes of the sha256 of the shared secret
+    // point
     let shared_secret = ecdh::shared_secret_point(
         &recipient_public_key.public_key(secp256k1::Parity::Even), // Simplified assumption
         sender_private_key,
@@ -43,13 +46,17 @@ pub fn decrypt(
     encrypted_content: &str,
 ) -> Result<String, anyhow::Error> {
     let mut parts = encrypted_content.split("?iv=");
-    let content_base64 = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid encrypted content format"))?;
-    let iv_base64 = parts.next().ok_or_else(|| anyhow::anyhow!("Invalid encrypted content format: missing iv"))?;
+    let content_base64 = parts
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("Invalid encrypted content format"))?;
+    let iv_base64 = parts
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("Invalid encrypted content format: missing iv"))?;
 
     let iv = BASE64.decode(iv_base64)?;
     let encrypted_bytes = BASE64.decode(content_base64)?;
 
-    let secp = Secp256k1::new();
+    let _secp = Secp256k1::new();
     let shared_secret = ecdh::shared_secret_point(
         &sender_public_key.public_key(secp256k1::Parity::Even), // Simplified assumption
         recipient_private_key,

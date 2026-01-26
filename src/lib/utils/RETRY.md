@@ -12,10 +12,10 @@ The run method expects the closure to return a `Result` type. The `Ok` variant s
 
 # Features
 
-* **Linear Retry**: In this strategy, the delay between retries is constant.
-* **Exponential Retry**: In this strategy, the delay between retries doubles after each retry.
-* **Linear Async Retry**: This is an asynchronous version of the linear retry strategy. This feature is only available when the `async` feature is enabled.
-* **Exponential Async Retry**: This is an asynchronous version of the exponential retry strategy. This feature is only available when the `async` feature is enabled.
+- **Linear Retry**: In this strategy, the delay between retries is constant.
+- **Exponential Retry**: In this strategy, the delay between retries doubles after each retry.
+- **Linear Async Retry**: This is an asynchronous version of the linear retry strategy. This feature is only available when the `async` feature is enabled.
+- **Exponential Async Retry**: This is an asynchronous version of the exponential retry strategy. This feature is only available when the `async` feature is enabled.
 
 # Examples
 
@@ -51,6 +51,7 @@ async fn main() {
 
 }
 ```
+
 # Usage
 
 Add this to your `Cargo.toml`:
@@ -81,73 +82,63 @@ This project is licensed under the MIT License.
 #![deny(missing_docs)]
 use std::fmt::Debug;
 //#[cfg(feature = "async")]
-use std::future::Future;
-#[derive(Debug, Copy, Clone)]
+use std::future::Future; #[derive(Debug, Copy, Clone)]
 
 /// `GnostrRetry` is an enum representing different kinds of retry strategies.
 pub enum GnostrRetry {
-    /// Represents a linear retry strategy.
-    Linear {
-        #[doc(hidden)]
-        /// The delay between retries in seconds.
-        delay: u64,
-        #[doc(hidden)]
-        /// The number of retries.
-        retries: u64,
-    },
-    /// Represents an exponential retry strategy.
-    Exponential {
-        /// The delay between retries in seconds.
-        #[doc(hidden)]
-        delay: u64,
-        /// The number of retries.
-        #[doc(hidden)]
-        retries: u64,
-    },
-    /// Represents an asynchronous version of the linear retry strategy.
-    ///
-    /// This variant is only available when the `async` feature is enabled.
-    //#[cfg(feature = "async")]
-    LinearAsync {
-        /// The delay between retries in seconds.
-        #[doc(hidden)]
-        delay: u64,
-        /// The number of retries.
-        #[doc(hidden)]
-        retries: u64,
-    },
-    /// Represents an asynchronous version of the exponential retry strategy.
-    ///
-    /// This variant is only available when the `async` feature is enabled.
-    //#[cfg(feature = "async")]
-    ExponentialAsync {
-        /// The delay between retries in seconds.
-        #[doc(hidden)]
-        delay: u64,
-        /// The number of retries.
-        #[doc(hidden)]
-        retries: u64,
-    },
+/// Represents a linear retry strategy.
+Linear { #[doc(hidden)]
+/// The delay between retries in seconds.
+delay: u64, #[doc(hidden)]
+/// The number of retries.
+retries: u64,
+},
+/// Represents an exponential retry strategy.
+Exponential {
+/// The delay between retries in seconds. #[doc(hidden)]
+delay: u64,
+/// The number of retries. #[doc(hidden)]
+retries: u64,
+},
+/// Represents an asynchronous version of the linear retry strategy.
+///
+/// This variant is only available when the `async` feature is enabled.
+//#[cfg(feature = "async")]
+LinearAsync {
+/// The delay between retries in seconds. #[doc(hidden)]
+delay: u64,
+/// The number of retries. #[doc(hidden)]
+retries: u64,
+},
+/// Represents an asynchronous version of the exponential retry strategy.
+///
+/// This variant is only available when the `async` feature is enabled.
+//#[cfg(feature = "async")]
+ExponentialAsync {
+/// The delay between retries in seconds. #[doc(hidden)]
+delay: u64,
+/// The number of retries. #[doc(hidden)]
+retries: u64,
+},
 }
 
 impl GnostrRetry {
-    /// Creates a new `GnostrRetry::Linear` variant with the specified delay and number of retries.
-    ///
-    /// # Arguments
-    ///
-    /// * `delay` - The delay between retries in seconds.
-    /// * `retries` - The number of retries.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gnostr::utils::retry::GnostrRetry;
+/// Creates a new `GnostrRetry::Linear` variant with the specified delay and number of retries.
+///
+/// # Arguments
+///
+/// _ `delay` - The delay between retries in seconds.
+/// _ `retries` - The number of retries.
+///
+/// # Examples
+///
+/// `    /// use gnostr::utils::retry::GnostrRetry;
     ///
     /// let retry_strategy = GnostrRetry::new_linear(100, 5);
-    /// ```
-    pub fn new_linear(delay: u64, retries: u64) -> Self {
-        GnostrRetry::Linear { delay, retries }
-    }
+    ///`
+pub fn new_linear(delay: u64, retries: u64) -> Self {
+GnostrRetry::Linear { delay, retries }
+}
 
     /// Creates a new `GnostrRetry::Exponential` variant with the specified initial delay and number of retries.
     ///
@@ -280,63 +271,64 @@ impl GnostrRetry {
             GnostrRetry::ExponentialAsync { .. } => Self::exponential,
         }
     }
+
 }
 
 fn do_retry<F, T, E>(mut f: F, t: GnostrRetry) -> Result<T, E>
 where
-    F: FnMut() -> Result<T, E>,
+F: FnMut() -> Result<T, E>,
 {
-    let mut retries: u64 = 0;
-    loop {
-        match f() {
-            Ok(v) => return Ok(v),
-            Err(e) => {
-                if retries >= t.get_retries() {
-                    return Err(e);
-                }
-                retries += 1;
-                std::thread::sleep(std::time::Duration::from_secs((t.retry_fn())( 
-                    t.get_delay(),
-                )));
-            }
-        }
-    }
+let mut retries: u64 = 0;
+loop {
+match f() {
+Ok(v) => return Ok(v),
+Err(e) => {
+if retries >= t.get_retries() {
+return Err(e);
+}
+retries += 1;
+std::thread::sleep(std::time::Duration::from_secs((t.retry_fn())(
+t.get_delay(),
+)));
+}
+}
+}
 }
 
 //#[cfg(feature = "async")]
 async fn do_retry_async<F, T, E>(mut f: F, t: GnostrRetry) -> Result<T, E>
 where
-    F: FnMut() -> std::pin::Pin<Box<dyn Future<Output = Result<T, E>>>>,
+F: FnMut() -> std::pin::Pin<Box<dyn Future<Output = Result<T, E>>>>,
 {
-    let mut retries = 0;
-    loop {
-        match f().await {
-            Ok(v) => return Ok(v),
-            Err(e) => {
-                if retries >= t.get_retries() {
-                    return Err(e);
-                }
-                retries += 1;
-                tokio::time::sleep(std::time::Duration::from_secs((t.retry_fn())(
-                    t.get_delay(),
-                )))
-                .await;
-            }
-        }
-    }
+let mut retries = 0;
+loop {
+match f().await {
+Ok(v) => return Ok(v),
+Err(e) => {
+if retries >= t.get_retries() {
+return Err(e);
+}
+retries += 1;
+tokio::time::sleep(std::time::Duration::from_secs((t.retry_fn())(
+t.get_delay(),
+)))
+.await;
+}
+}
+}
 }
 struct Retry;
 impl Retry {
-    //#[cfg(feature = "async")]
-    async fn run_async<T>(
-        mut f: T,
-        t: GnostrRetry,
-    ) -> Result<<T as AsyncReturn>::Item, <T as AsyncReturn>::Error>
-    where
-        T: AsyncReturn + 'static,
-    {
-        do_retry_async(move || Box::pin(f.run()), t).await
-    }
+//#[cfg(feature = "async")]
+async fn run_async<T>(
+mut f: T,
+t: GnostrRetry,
+) -> Result<<T as AsyncReturn>::Item, <T as AsyncReturn>::Error>
+where
+T: AsyncReturn + 'static,
+{
+do_retry_async(move || Box::pin(f.run()), t).await
+}
 
     fn run<T>(mut f: T, t: GnostrRetry) -> Result<<T as SyncReturn>::Item, <T as SyncReturn>::Error>
     where
@@ -344,6 +336,7 @@ impl Retry {
     {
         do_retry(move || f.run(), t)
     }
+
 }
 /// The `AsyncReturn` trait is used for operations that need to return a value asynchronously.
 ///
@@ -353,18 +346,17 @@ impl Retry {
 ///
 /// # Associated Types
 ///
-/// * `Item`: The type of the value returned by the `run` method. This type must implement the `Debug` trait.
-/// * `Error`: The type of the error returned by the `run` method. This type must also implement the `Debug` trait.
-/// * `Future`: The type of the `Future` returned by the `run` method. This `Future` should resolve to a `Result<Item, Error>`.
+/// _ `Item`: The type of the value returned by the `run` method. This type must implement the `Debug` trait.
+/// _ `Error`: The type of the error returned by the `run` method. This type must also implement the `Debug` trait.
+/// _ `Future`: The type of the `Future` returned by the `run` method. This `Future` should resolve to a `Result<Item, Error>`.
 ///
 /// # Methods
 ///
-/// * `run`: Performs the operation and returns a `Future` that resolves to the result.
+/// _ `run`: Performs the operation and returns a `Future` that resolves to the result.
 ///
 /// # Examples
 ///
-/// ```
-/// use gnostr::utils::retry::AsyncReturn;
+/// `/// use gnostr::utils::retry::AsyncReturn;
 /// use std::fmt::Debug;
 /// use futures::future::ready;
 ///
@@ -383,28 +375,29 @@ impl Retry {
 ///
 /// let mut operation = MyOperation;
 /// let future = operation.run();
-/// ```
+///`
 //#[cfg(feature = "async")]
 pub trait AsyncReturn {
-    /// The type of the value returned by the `run` method.
-    type Item: Debug;
-    /// The type of the error returned by the `run` method.
-    type Error: Debug;
-    /// The type of the `Future` returned by the `run` method.
-    type Future: Future<Output = Result<Self::Item, Self::Error>>;
+/// The type of the value returned by the `run` method.
+type Item: Debug;
+/// The type of the error returned by the `run` method.
+type Error: Debug;
+/// The type of the `Future` returned by the `run` method.
+type Future: Future<Output = Result<Self::Item, Self::Error>>;
 
     /// Performs the operation and returns a `Future` that resolves to the result.
     fn run(&mut self) -> Self::Future;
+
 }
 
 //#[cfg(feature = "async")]
 impl<I: Debug, E: Debug, T: Future<Output = Result<I, E>>, F: FnMut() -> T> AsyncReturn for F {
-    type Item = I;
-    type Error = E;
-    type Future = T;
-    fn run(&mut self) -> Self::Future {
-        self()
-    }
+type Item = I;
+type Error = E;
+type Future = T;
+fn run(&mut self) -> Self::Future {
+self()
+}
 }
 
 /// The `SyncReturn` trait is used for operations that need to return a value synchronously.
@@ -413,12 +406,12 @@ impl<I: Debug, E: Debug, T: Future<Output = Result<I, E>>, F: FnMut() -> T> Asyn
 ///
 /// # Type Parameters
 ///
-/// * `Item`: The type of the value returned by the `run` method. This type must implement the `Debug` trait.
-/// * `Error`: The type of the error returned by the `run` method. This type must also implement the `Debug` trait.
+/// _ `Item`: The type of the value returned by the `run` method. This type must implement the `Debug` trait.
+/// _ `Error`: The type of the error returned by the `run` method. This type must also implement the `Debug` trait.
 ///
 /// # Methods
 ///
-/// * `run`: Performs the operation and returns the result.
+/// \* `run`: Performs the operation and returns the result.
 ///
 /// # Errors
 ///
@@ -426,8 +419,7 @@ impl<I: Debug, E: Debug, T: Future<Output = Result<I, E>>, F: FnMut() -> T> Asyn
 ///
 /// # Examples
 ///
-/// ```
-/// use gnostr::utils::retry::SyncReturn;
+/// `/// use gnostr::utils::retry::SyncReturn;
 /// use std::fmt::Debug;
 ///
 /// struct MyOperation;
@@ -444,28 +436,29 @@ impl<I: Debug, E: Debug, T: Future<Output = Result<I, E>>, F: FnMut() -> T> Asyn
 ///
 /// let mut operation = MyOperation;
 /// assert_eq!(operation.run(), Ok(42));
-/// ```
+///`
 pub trait SyncReturn {
-    /// The type of the value returned by the `run` method.
-    type Item: Debug;
-    /// The type of the error returned by the `run` method.
-    type Error: Debug;
+/// The type of the value returned by the `run` method.
+type Item: Debug;
+/// The type of the error returned by the `run` method.
+type Error: Debug;
 
     /// Performs the operation and returns the result.
     fn run(&mut self) -> Result<Self::Item, Self::Error>;
+
 }
 
 impl<I: Debug, E: Debug, F: FnMut() -> Result<I, E>> SyncReturn for F {
-    type Item = I;
-    type Error = E;
-    fn run(&mut self) -> Result<Self::Item, Self::Error> {
-        self()
-    }
+type Item = I;
+type Error = E;
+fn run(&mut self) -> Result<Self::Item, Self::Error> {
+self()
+}
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
+use super::\*;
 
     #[derive(Debug, Clone)]
     struct NotCopy {
@@ -558,4 +551,5 @@ mod test {
         let elapsed = instant.elapsed();
         assert!(elapsed.as_secs() >= retries * delay);
     }
+
 }

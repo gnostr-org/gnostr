@@ -1,7 +1,13 @@
+use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use nostr_sdk_0_32_0::prelude::*;
 
-use crate::utils::{create_client, parse_private_key};
+use crate::{
+    types::{
+        Client, Event, EventBuilder, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl,
+        Unixtime,
+    },
+    utils::{create_client, parse_private_key},
+};
 
 #[derive(Args, Debug)]
 pub struct CreatePublicChannelSubCommand {
@@ -21,7 +27,7 @@ pub async fn create_public_channel(
     relays: Vec<String>,
     difficulty_target: u8,
     sub_command_args: &CreatePublicChannelSubCommand,
-) -> Result<()> {
+) -> Result<(), AnyhowError> {
     if relays.is_empty() {
         panic!("No relays specified, at least one relay is required!")
     }
@@ -31,25 +37,29 @@ pub async fn create_public_channel(
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
     // Create metadata
-    let mut metadata: Metadata = Metadata::new().name(sub_command_args.name.clone());
+    let mut metadata = Metadata::new();
+    metadata.name = Some(sub_command_args.name.clone());
 
     if let Some(about) = sub_command_args.about.clone() {
-        metadata = metadata.about(about);
+        metadata.about = Some(about);
     }
 
     if let Some(picture) = sub_command_args.picture.clone() {
-        metadata = metadata.picture(Url::parse(picture.as_str()).unwrap());
+        // TODO: Ensure UncheckedUrl::try_from_str works correctly with Url::parse
+        // behavior
+        metadata.picture = Some(UncheckedUrl::from_str(&picture).to_string());
     }
 
-    // Send event
-    let event: Event = EventBuilder::channel(&metadata).to_event(&keys).unwrap();
+    let private_key = keys.secret_key()?;
+    let event_builder = EventBuilder::channel(&metadata, &private_key.public_key());
+    let event = event_builder.to_event(&private_key)?;
     let event_id = client.send_event(event).await?;
 
     // Print results
     println!("\nCreated new public channel!");
     println!("Channel ID:");
-    println!("Hex: {}", event_id.to_hex());
-    println!("Bech32: {}", event_id.to_bech32()?);
+    println!("Hex: {}", event_id.as_hex_string());
+    println!("Bech32: {}", event_id.as_bech32_string());
 
     Ok(())
 }

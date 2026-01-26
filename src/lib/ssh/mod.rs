@@ -1,7 +1,7 @@
 pub mod config;
 pub mod git;
+pub mod server;
 pub mod site;
-pub mod ssh;
 pub mod state;
 pub mod utils;
 pub mod vars;
@@ -22,11 +22,11 @@ mod config_test;
 #[path = "./state_test.rs"]
 mod state_test;
 
+use std::{path::PathBuf, sync::Arc};
+
 use anyhow::anyhow;
 use log::info;
 use state::State;
-use std::path::PathBuf;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub async fn start() -> anyhow::Result<()> {
@@ -47,6 +47,6 @@ pub async fn start() -> anyhow::Result<()> {
     info!("Starting server on port {}...", port);
     #[cfg(not(target_os = "windows"))]
     let _ = sd_notify::notify(true, &[sd_notify::NotifyState::Ready]);
-    ssh::start_server(state).await?;
+    server::start_server(state).await?;
     Ok(())
 }

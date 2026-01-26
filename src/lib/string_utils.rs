@@ -1,7 +1,7 @@
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
-///
+/// Trims a string from the left to a specified width.
 pub fn trim_length_left(s: &str, width: usize) -> &str {
     let len = s.len();
     if len > width {

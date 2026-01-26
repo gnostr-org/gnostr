@@ -317,8 +317,8 @@ async fn get_repo_coordinates_from_maintainers_yaml(
                         if let Ok(maintainer) = PublicKey::parse(m) {
                             if current_user.eq(&maintainer) {
                                 println!(
-									"please run `ngit init` to add the repo identifier to maintainers.yaml"
-								);
+                                    "please run `ngit init` to add the repo identifier to maintainers.yaml"
+                                );
                             }
                         }
                     }
@@ -465,9 +465,9 @@ pub fn save_repo_config_to_yaml(
 
 #[cfg(test)]
 mod tests {
-    use test_utils::*;
 
     use super::*;
+    use crate::test_utils::*;
 
     async fn create() -> nostr_0_34_1::Event {
         RepoRef {

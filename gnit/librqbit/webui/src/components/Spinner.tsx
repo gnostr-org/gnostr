@@ -1,10 +1,4 @@
-export const Spinner = ({
-  label,
-  className,
-}: {
-  label?: string;
-  className?: string;
-}) => {
+export const Spinner = ({ label, className }: { label?: string; className?: string }) => {
   return (
     <div className={`flex gap-2 items-center ${className}`}>
       <svg
@@ -23,11 +17,7 @@ export const Spinner = ({
           fill="currentFill"
         />
       </svg>
-      {label ? (
-        <span className="text-sm">{label} ...</span>
-      ) : (
-        <span className="sr-only">Loading...</span>
-      )}
+      {label ? <span className="text-sm">{label} ...</span> : <span className="sr-only">Loading...</span>}
     </div>
-  );
-};
+  )
+}

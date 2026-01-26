@@ -1,9 +1,10 @@
-use crate::blockheight::blockheight_sync;
-use crate::weeble::weeble_sync;
+#![allow(clippy::print_with_newline)]
 use base64::Engine;
-use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
-use tungstenite::protocol::Message;
+use tokio_tungstenite::{tungstenite, tungstenite::Message};
+
+use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
+use crate::{blockheight::blockheight_sync, weeble::weeble_sync};
 
 pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(
@@ -54,7 +55,7 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
         tungstenite::connect(request).expect("Could not connect to relay");
 
     websocket
-        .send(Message::Text(wire))
+        .send(Message::Text(wire.into()))
         .expect("Could not send message to relay");
 
     loop {
@@ -88,7 +89,7 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
                                 return events;
                             }
                         };
-                        if let Err(e) = websocket.send(Message::Text(wire)) {
+                        if let Err(e) = websocket.send(Message::Text(wire.into())) {
                             println!("Could not write close subscription message: {}", e);
                             return events;
                         }
@@ -153,7 +154,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
 
     print!("{}\n", wire);
     websocket
-        .send(Message::Text(wire))
+        .send(Message::Text(wire.into()))
         .expect("Could not send message to relay");
 
     // Get and print one response message
@@ -199,8 +200,7 @@ pub(crate) fn post(host: String, uri: Uri, wire: String) {
             println!("IGNORING PONG")
         }
         Message::Close(_) => {
-            //println!("Closing");
-            return;
+            println!("Closing");
         }
         Message::Frame(_) => {
             println!("UNEXPECTED RAW WEBSOCKET FRAME")
