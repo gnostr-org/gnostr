@@ -4,11 +4,10 @@ use clap::{Parser, Subcommand};
 use gnostr::{
     queue::InternalEvent,
     types::{
-        nip18,
+        ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05, NostrClient,
+        PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime,
         nip2::{self, Contact},
-        nip26, nip59, nip9, ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05,
-        NostrClient, PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3,
-        UncheckedUrl, Unixtime,
+        nip9, nip18, nip26, nip59,
     },
 };
 use secp256k1::XOnlyPublicKey;
