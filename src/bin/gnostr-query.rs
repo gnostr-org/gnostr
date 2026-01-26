@@ -1,5 +1,5 @@
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr_query::{cli::cli, ConfigBuilder};
+use gnostr_query::{ConfigBuilder, cli::cli};
 use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
