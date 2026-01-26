@@ -192,8 +192,20 @@ jobs:
         run: |
           cpan install Locale::Maketext::Simple || true
 
-      - run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.sh | sh || \
+      - name: Get latest release
+        id: get_latest_release
+        run: |
+          # Use GitHub API to get the latest release tag
+          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
+          echo "Latest release tag: $LATEST_TAG"
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Install gnostr (latest release)
+        run: |
+          # Construct the installer URL using the latest tag
+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
+          echo "Installer URL: $INSTALLER_URL"
+          curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
