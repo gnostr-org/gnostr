@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
-    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
+    cli::{GnostrCli, GnostrCommands, get_app_cache_path},
     sub_commands,
     types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
@@ -13,7 +13,7 @@ use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
+use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt}; // Import the anyhow macro
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
