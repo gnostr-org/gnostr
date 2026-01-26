@@ -55,14 +55,14 @@ jobs:
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Run sccache-cache only on non-release runs
-        if: github.event_name != 'release'
+        if: github.event_name != 'release' && matrix.os != 'macos-15-intel'
         uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Set Rust caching env vars only on non-release runs
         run: |
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
           # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && matrix.os != 'macos-15-intel'
 
       - name: Calculate Odd/Even Status
         shell: bash
