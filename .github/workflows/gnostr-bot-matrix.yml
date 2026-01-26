@@ -23,7 +23,7 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [windows-latest] #[macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
+        os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: true
