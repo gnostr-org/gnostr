@@ -151,7 +151,95 @@ function model_get_relay_que(model, relay) {
 		profiles: [],
 		timestamp: 0,
 		contacts_init: false,
+		});
+}
+
+async function init_relay_ping_monitoring(model) {
+	if (!model || !model.pool) return;
+	
+	// Initialize ping tracking
+	if (!model.relay_pings) {
+		model.relay_pings = new Map();
+	}
+	
+	// Initial status check
+	setTimeout(() => {
+		model.relays.forEach(relayUrl => {
+			const relay = model.pool.relays.find(r => r.url === relayUrl);
+			if (relay) {
+				check_relay_connection_status(model, relay);
+			}
+		});
+	}, 1000); // Wait 1 second for relays to connect
+	
+	// Monitor status periodically
+	setInterval(() => {
+		model.relays.forEach(relayUrl => {
+			const relay = model.pool.relays.find(r => r.url === relayUrl);
+			if (relay) {
+				check_relay_connection_status(model, relay);
+			}
+		});
+	}, 10000); // Check every 10 seconds
+}
+
+function check_relay_connection_status(model, relay) {
+	if (!relay || !relay.url) return;
+	
+	const now = Date.now();
+	let status = 'disconnected';
+	
+	// Check WebSocket connection status
+	if (relay.ws) {
+		switch (relay.ws.readyState) {
+			case WebSocket.CONNECTING:
+				status = 'slow'; // Show yellow while connecting
+				break;
+			case WebSocket.OPEN:
+				status = 'connected';
+				break;
+			case WebSocket.CLOSING:
+			case WebSocket.CLOSED:
+				status = 'disconnected';
+				break;
+		}
+	}
+	
+	model.relay_pings.set(relay.url, {
+		lastPing: now,
+		status: status
 	});
+	
+	update_relay_status_display(relay.url);
+}
+
+function update_relay_status_display(relayUrl) {
+	const settingsEl = document.querySelector("#settings");
+	if (!settingsEl || settingsEl.classList.contains("hide")) return;
+	
+	const statusEl = document.querySelector(`[data-relay-url="${relayUrl}"] .relay-status`);
+	const pingEl = document.querySelector(`[data-relay-url="${relayUrl}"] .relay-ping`);
+	
+	if (!statusEl || !pingEl) return;
+	
+	const pingData = GNOSTR.relay_pings.get(relayUrl);
+	if (!pingData) {
+		statusEl.className = 'relay-status disconnected';
+		pingEl.textContent = '';
+		return;
+	}
+	
+	// Update status dot
+	statusEl.className = `relay-status ${pingData.status}`;
+	
+	// Update ping text
+	if (pingData.status === 'connected') {
+		pingEl.textContent = 'Connected';
+	} else if (pingData.status === 'slow') {
+		pingEl.textContent = 'Connecting...';
+	} else {
+		pingEl.textContent = 'Disconnected';
+	}
 }
 
 function model_que_profile(model, relay, pubkey) {
