@@ -334,14 +334,18 @@ fn install_xcb_deps() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                println!("cargo:warning=Continuing without xcb dependencies - some clipboard features may not work.");
+                println!(
+                    "cargo:warning=Continuing without xcb dependencies - some clipboard features may not work."
+                );
             }
             Err(e) => {
                 println!(
                     "cargo:warning=Failed to run dependency installation command: {}",
                     e
                 );
-                println!("cargo:warning=Continuing without xcb dependencies - some clipboard features may not work.");
+                println!(
+                    "cargo:warning=Continuing without xcb dependencies - some clipboard features may not work."
+                );
             }
         }
     } else if target_os == "macos" {
