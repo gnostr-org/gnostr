@@ -118,7 +118,7 @@ function model_process_event(model, relay, ev) {
 	                log_info(`Unknown NIP-34 event from followed profile ${ev.pubkey}: Kind ${ev.kind}, ID ${ev.id}\n${eventData}`);
 	        }
 	    }
-	// Queue event for rendering  
+	// Queue event for rendering
 	model.invalidated.push(ev.id);
 
 	// If the processing did not come from a relay, but instead storage then
@@ -192,7 +192,7 @@ function model_fetch_next_profile(model, relay) {
 	}
 	log_debug(`(${relay.url}) has '${que.profiles.length} left profiles to fetch'`);
 
-	const set = new Set(); 
+	const set = new Set();
 	let i = 0;
 	while (que.profiles.length > 0 && i < 100) {
 		set.add(que.profiles.shift());
@@ -203,21 +203,21 @@ function model_fetch_next_profile(model, relay) {
 	fetch_profiles(model.pool, relay, que.current);
 }
 
-/* model_process_event_profile updates the matching profile with the contents found 
+/* model_process_event_profile updates the matching profile with the contents found
  * in the event.
  */
 function model_process_event_metadata(model, ev, update_view) {
 	const profile = model_get_profile(model, ev.pubkey);
 	const evs = model.all_events;
-	if (profile.evid && 
+	if (profile.evid &&
 		evs[ev.id].created_at < evs[profile.evid].created_at)
 		return;
 	profile.evid = ev.id;
 	profile.data = safe_parse_json(ev.content, "profile contents");
 	if (update_view)
-		view_timeline_update_profiles(model, profile.pubkey); 
+		view_timeline_update_profiles(model, profile.pubkey);
 	// If it's my pubkey let's redraw my pfp that is not located in the view
-	// This has to happen regardless of update_view because of the it's not 
+	// This has to happen regardless of update_view because of the it's not
 	// related to events
 	/*if (profile.pubkey == model.pubkey) {
 		redraw_my_pfp(model);
@@ -294,9 +294,9 @@ async function model_process_event_relay_list(model, ev, update_view) {
 function model_process_event_dm(model, ev, update_view) {
 	if (!event_is_dm(ev, model.pubkey))
 		return;
-	// We have to identify who the target DM is for since we are also in the 
+	// We have to identify who the target DM is for since we are also in the
 	// chat. We simply use the first non-us key we find as the target. I am not
-	// sure that multi-sig chats are possible at this time in the spec. If no 
+	// sure that multi-sig chats are possible at this time in the spec. If no
 	// target, it's a bad DM.
 	let target;
 	const keys = event_get_pubkeys(ev);
@@ -312,8 +312,8 @@ function model_process_event_dm(model, ev, update_view) {
 	dm.needs_decryption = true;
 	dm.needs_redraw = true;
 	// It may be faster to not use binary search due to the newest always being
-	// at the front - but I could be totally wrong. Potentially it COULD be 
-	// slower during history if history is imported ASCENDINGLY. But anything 
+	// at the front - but I could be totally wrong. Potentially it COULD be
+	// slower during history if history is imported ASCENDINGLY. But anything
 	// after this will always be faster and is insurance (race conditions).
 	let i = 0;
 	for (; i < dm.events.length; i++) {
@@ -338,9 +338,9 @@ function model_get_dm(model, target) {
 			pubkey: target,
 			// events is an ordered list (new to old) of events referenced from
 			// all_events. It should not be a copy to reduce memory.
-			events: [], 
+			events: [],
 			// Last read event time by the client/user
-			last_viewed: 0, 
+			last_viewed: 0,
 			new_count: 0,
 			// Notifies the renderer that this dm is out of date
 			needs_redraw: false,
@@ -390,7 +390,7 @@ function model_process_event_reaction(model, ev, update_view) {
 	}
 	if (!model.reactions_to[reaction.e])
 		model.reactions_to[reaction.e] = new Set();
-	model.reactions_to[reaction.e].add(ev.id);	
+	model.reactions_to[reaction.e].add(ev.id);
 	if (update_view)
 		view_timeline_update_reaction(model, ev);
 }
@@ -416,7 +416,7 @@ function model_process_event_deletion(model, ev, update_view) {
 function model_remove_reaction(model, evid, update_view) {
 	// deleted_ev -> target_ev -> original_ev
 	// Here we want to find the original react event to and remove it from our
-	// reactions map, then we want to update the element on the page. If the 
+	// reactions map, then we want to update the element on the page. If the
 	// server does not clean up events correctly the increment/decrement method
 	// should work fine in theory.
 	const target_ev = model.all_events[evid];
@@ -450,7 +450,7 @@ function model_is_event_deleted(model, evid) {
 		const d_ev = model.all_events[id]
 		if (!d_ev)
 			continue
-		
+
 		// only allow deletes from the user who created it
 		if (d_ev.pubkey === ev.pubkey) {
 			model.deleted[ev.id] = d_ev
@@ -470,7 +470,7 @@ function model_events_arr(model) {
 	let arr = [];
 	for (const evid in events) {
 		const ev = events[evid];
-		const i = arr_bsearch_insert(arr, ev, event_cmp_created); 
+		const i = arr_bsearch_insert(arr, ev, event_cmp_created);
 		arr.splice(i, 0, ev);
 	}
 	return arr;
@@ -484,7 +484,7 @@ function test_model_events_arr() {
 		"e": {name: "e", created_at: 4},
 		"d": {name: "d", created_at: 3},
 	}});
-	let last;	
+	let last;
 	while(arr.length > 0) {
 		let ev = arr.pop();
 		log_debug("test:", ev.name, ev.created_at);
@@ -536,7 +536,7 @@ async function model_load_settings(model) {
 			const settings = ev.target.result;
 			if (settings) {
 				model.notifications.last_viewed = settings.notifications_last_viewed;
-				if (settings.relays.length) 
+				if (settings.relays.length)
 					model.relays = new Set(settings.relays);
 				model.embeds = settings.embeds ? settings.embeds : "friends";
 				model_set_dms_seen(model, settings.dms_seen);
@@ -551,7 +551,7 @@ async function model_load_settings(model) {
 			log_error("Could not load settings.");
 		};
 	}
-	return dbcall(_settings_load);	
+	return dbcall(_settings_load);
 }
 
 async function model_save_events(model) {
@@ -640,7 +640,7 @@ function new_model() {
 			"wss://relay.snort.social",
 			"wss://nos.lol",
 		]),
-		
+
 		max_depth: 2,
 		reactions_to: {},
 		deletions: {},
@@ -681,7 +681,7 @@ async function test_and_add_local_relay(model) {
 			// Send a REQ to test the relay
 			const sub_id = `test-${Math.random().toString(36).substring(7)}`;
 			relay.subscribe(sub_id, [{ limit: 1 }]);
-			
+
 			// Set a timeout to avoid waiting indefinitely
 			const timeout = setTimeout(() => {
 				relay.close();
