@@ -8,7 +8,7 @@ use std::time::Duration;
 // Tag, Url};
 use nostr_0_34_1::prelude::Tag;
 use nostr_0_34_1::prelude::*;
-use nostr_database_0_34_0::{nostr::types::filter::Filter, NostrDatabase, Order};
+use nostr_database_0_34_0::{NostrDatabase, Order, nostr::types::filter::Filter};
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use tracing_subscriber::fmt::format::FmtSpan;
 
@@ -111,12 +111,14 @@ async fn main() {
 
     let events = database
         .query(
-            vec![Filter::new()
+            vec![
+                Filter::new()
                     .kinds(vec![Kind::Metadata, Kind::Custom(123), Kind::TextNote])
                     .limit(1000)
                     //.kind(Kind::Custom(123))
                     //.identifier("myid5000")
-                    .author(keys_a.public_key())],
+                    .author(keys_a.public_key()),
+            ],
             Order::Desc,
         )
         .await

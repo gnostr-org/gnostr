@@ -1,8 +1,8 @@
 use std::env;
 
 use gnostr::{
-    types::{Filter, IdHex, RelayMessage},
     Command, Probe,
+    types::{Filter, IdHex, RelayMessage},
 };
 
 #[tokio::main]

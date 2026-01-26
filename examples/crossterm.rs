@@ -10,7 +10,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use futures::{future::FutureExt, select, StreamExt};
+use futures::{StreamExt, future::FutureExt, select};
 use futures_timer::Delay;
 
 const HELP: &str = r#"EventStream based on futures_util::Stream with tokio

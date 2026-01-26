@@ -1,8 +1,8 @@
 use std::env;
 
 use gnostr::{
-    types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage},
     Command, Probe,
+    types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage},
 };
 
 #[tokio::main]
