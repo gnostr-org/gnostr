@@ -80,6 +80,7 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
 
     // Explicitly add util.js first
     let util_js_path = in_dir.join("util.js");
+    println!("cargo:rerun-if-changed={}", util_js_path.display());
     let util_js_content = std::fs::read_to_string(&util_js_path).context(format!(
         "Failed to read JS file: {}",
         util_js_path.display()
@@ -87,31 +88,42 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
     all_js_content.push_str(&util_js_content);
     all_js_content.push_str("\n"); // Add newline for concatenation
 
-    // Add remaining JS files from statics/js, excluding util.js
-    for entry in std::fs::read_dir(&in_dir).context("Failed to read statics/js directory")? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file()
-            && path.extension().map_or(false, |ext| ext == "js")
-            && path != util_js_path
-        {
-            let content = std::fs::read_to_string(&path)
-                .context(format!("Failed to read JS file: {}", path.display()))?;
-            all_js_content.push_str(&content);
-            all_js_content.push_str("\n"); // Add newline for concatenation
-        }
+    // Collect and sort JS files from statics/js, excluding util.js for deterministic builds
+    let mut js_files: Vec<PathBuf> = std::fs::read_dir(&in_dir)
+        .context("Failed to read statics/js directory")?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.is_file()
+                && path.extension().map_or(false, |ext| ext == "js")
+                && *path != util_js_path
+        })
+        .collect();
+    js_files.sort();
+
+    for path in js_files {
+        println!("cargo:rerun-if-changed={}", path.display());
+        let content = std::fs::read_to_string(&path)
+            .context(format!("Failed to read JS file: {}", path.display()))?;
+        all_js_content.push_str(&content);
+        all_js_content.push_str("\n"); // Add newline for concatenation
     }
 
-    // Add JS files from statics/js/ui
-    for entry in std::fs::read_dir(ui_in_dir).context("Failed to read statics/js/ui directory")? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() && path.extension().map_or(false, |ext| ext == "js") {
-            let content = std::fs::read_to_string(&path)
-                .context(format!("Failed to read JS file: {}", path.display()))?;
-            all_js_content.push_str(&content);
-            all_js_content.push_str("\n"); // Add newline for concatenation
-        }
+    // Collect and sort JS files from statics/js/ui for deterministic builds
+    let mut ui_js_files: Vec<PathBuf> = std::fs::read_dir(&ui_in_dir)
+        .context("Failed to read statics/js/ui directory")?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file() && path.extension().map_or(false, |ext| ext == "js"))
+        .collect();
+    ui_js_files.sort();
+
+    for path in ui_js_files {
+        println!("cargo:rerun-if-changed={}", path.display());
+        let content = std::fs::read_to_string(&path)
+            .context(format!("Failed to read JS file: {}", path.display()))?;
+        all_js_content.push_str(&content);
+        all_js_content.push_str("\n"); // Add newline for concatenation
     }
 
     let output_file = out_dir.join("bundle.js");
