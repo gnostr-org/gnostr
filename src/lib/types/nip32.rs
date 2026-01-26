@@ -6,7 +6,7 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/32.md
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
