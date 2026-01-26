@@ -690,6 +690,48 @@ code {
 	word-break: break-all;
 }
 
+.relay-status {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	margin-right: 8px;
+}
+
+.relay-status.connected {
+	background-color: #28a745; /* Green */
+}
+
+.relay-status.disconnected {
+	background-color: #dc3545; /* Red */
+}
+
+.relay-status.slow {
+	background-color: #ffc107; /* Yellow */
+}
+
+.relay-ping {
+	font-size: 0.8em;
+	color: #666;
+	margin-left: 8px;
+}
+
+.column-address {
+	width: 60%;
+}
+
+.column-status {
+	width: 15%;
+}
+
+.column-ping {
+	width: 15%;
+}
+
+.column-action {
+	width: 10%;
+}
+
 /* Messaging */
 
 #dm-post {
