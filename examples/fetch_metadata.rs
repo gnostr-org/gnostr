@@ -1,9 +1,8 @@
 use std::env;
 
 use gnostr::{
-    get_weeble,
+    Command, Probe, get_weeble,
     types::{EventKind, Filter, PublicKeyHex, RelayMessage, SubscriptionId},
-    Command, Probe,
 };
 
 #[tokio::main]

@@ -2,12 +2,11 @@ use std::env;
 
 use base64::Engine;
 use gnostr::{
-    get_weeble,
+    Command, Probe, get_weeble,
     types::{
         ContentEncryptionAlgorithm, Event, EventKind, Filter, KeySigner, PreEvent, PrivateKey,
         PublicKey, RelayMessage, RelayUrl, Signer, SubscriptionId, Tag, Unixtime,
     },
-    Command, Probe,
 };
 use serde::{Deserialize, Serialize};
 
