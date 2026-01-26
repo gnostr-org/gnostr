@@ -1,5 +1,10 @@
 use thiserror::Error;
 
+/// Comprehensive error types for the Nostr types module
+///
+/// This enum covers all possible error conditions that can occur
+/// when working with Nostr protocol data structures and operations.
+
 /// Errors that can occur in the nostr-proto crate
 #[derive(Error, Debug)]
 pub enum Error {
@@ -236,6 +241,30 @@ pub enum Error {
     #[error("Invalid NIP-19 prefix")]
     InvalidNip19Prefix,
 
+    /// Content validation error
+    #[error("Content validation failed: {reason}")]
+    ContentValidation { reason: String },
+
+    /// Tag validation error
+    #[error("Tag validation failed: {reason}")]
+    TagValidation { reason: String },
+
+    /// Filter validation error
+    #[error("Filter validation failed: {reason}")]
+    FilterValidation { reason: String },
+
+    /// Relay connection error
+    #[error("Relay connection failed: {url} - {reason}")]
+    RelayConnection { url: String, reason: String },
+
+    /// Event validation error
+    #[error("Event validation failed: {field} - {reason}")]
+    EventValidation { field: String, reason: String },
+
+    /// Key derivation error
+    #[error("Key derivation failed: {source} - {reason}")]
+    KeyDerivation { source: String, reason: String },
+
     /// Boxed standard error
     #[error(transparent)]
     Custom(#[from] Box<dyn std::error::Error + Send + Sync + 'static>),
@@ -244,3 +273,53 @@ pub enum Error {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
 }
+
+impl Error {
+    /// Create a content validation error
+    pub fn content_validation(reason: impl Into<String>) -> Self {
+        Self::ContentValidation {
+            reason: reason.into(),
+        }
+    }
+
+    /// Create a tag validation error
+    pub fn tag_validation(reason: impl Into<String>) -> Self {
+        Self::TagValidation {
+            reason: reason.into(),
+        }
+    }
+
+    /// Create a filter validation error
+    pub fn filter_validation(reason: impl Into<String>) -> Self {
+        Self::FilterValidation {
+            reason: reason.into(),
+        }
+    }
+
+    /// Create a relay connection error
+    pub fn relay_connection(url: impl Into<String>, reason: impl Into<String>) -> Self {
+        Self::RelayConnection {
+            url: url.into(),
+            reason: reason.into(),
+        }
+    }
+
+    /// Create an event validation error
+    pub fn event_validation(field: impl Into<String>, reason: impl Into<String>) -> Self {
+        Self::EventValidation {
+            field: field.into(),
+            reason: reason.into(),
+        }
+    }
+
+    /// Create a key derivation error
+    pub fn key_derivation(source: impl Into<String>, reason: impl Into<String>) -> Self {
+        Self::KeyDerivation {
+            source: source.into(),
+            reason: reason.into(),
+        }
+    }
+}
+
+/// Result type for Nostr operations
+pub type Result<T> = std::result::Result<T, Error>;
