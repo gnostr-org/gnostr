@@ -27,17 +27,15 @@
 )]
 #![deny(clippy::string_slice)]
 
-/// internal
+/// Internal utilities and helpers
 pub mod internal;
 
+// Core protocol types
 mod client_message;
 pub use client_message::ClientMessage;
 
 mod content;
 pub use content::{ContentSegment, ShatteredContent, Span};
-
-mod delegation;
-pub use delegation::{DelegationConditions, EventDelegation};
 
 mod error;
 pub use error::Error;
@@ -46,78 +44,33 @@ mod event;
 mod event_builder;
 pub use event::{Event, PreEvent, Rumor, ZapData};
 
-/// event_kind
+/// Event kinds and related functionality
 pub mod event_kind;
 pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
 
-/// event_reference
+/// Event references and linking
 mod event_reference;
 pub use event_reference::EventReference;
 
-/// filter
+// Filtering and subscription
 mod filter;
 pub use filter::Filter;
 
-/// id
+// Cryptographic primitives
+mod delegation;
+pub use delegation::{DelegationConditions, EventDelegation};
+
 mod id;
 pub use id::{Id, IdHex};
 
-/// identity
 mod identity;
 pub use identity::Identity;
 
-pub mod key_signer;
+mod key_signer;
 pub use key_signer::KeySigner;
 
-/// NIP-28: Public Chat Channels
-pub mod nip28;
-pub use nip28::*;
-
-/// metadata
-pub mod metadata;
-pub use metadata::Metadata;
-
-/// naddr
-mod naddr;
-pub use naddr::NAddr;
-
-/// nevent
-mod nevent;
-pub use nevent::NEvent;
-
-/// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
-pub mod nip0;
-mod nip05;
-/// NIP-10: Text Notes and Threads
-pub mod nip10;
-/// NIP-13: Proof of Work
-pub mod nip13;
-/// NIP-15: End of Stored Events Notice
-pub mod nip15;
-/// NIP-18: Reposts
-pub mod nip18;
-/// NIP-02: Contact List and Petnames
-pub mod nip2;
-/// NIP-26: Delegation
-pub mod nip26;
-/// NIP-03: OpenTimestamps Attestations for Events
-pub mod nip3;
-pub mod nip34;
-/// NIP-04: Encrypted Direct Message
-pub mod nip4;
-/// NIP-59: Gift Wrap
-pub mod nip59;
-/// NIP-06: Basic key derivation from mnemonic seed phrase
-pub mod nip6;
-/// NIP-09: Event Deletion
-pub mod nip9;
-pub use nip05::Nip05;
-
-mod nostr_url;
-pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};
-
-mod pay_request_data;
-pub use pay_request_data::PayRequestData;
+mod keys;
+pub use keys::Keys;
 
 mod private_key;
 pub use private_key::{ContentEncryptionAlgorithm, EncryptedPrivateKey, KeySecurity, PrivateKey};
@@ -127,8 +80,14 @@ pub use profile::Profile;
 
 mod public_key;
 pub use public_key::{PublicKey, PublicKeyHex};
-pub use secp256k1::XOnlyPublicKey;
 
+mod signer;
+pub use signer::Signer;
+
+mod signature;
+pub use signature::{Signature, SignatureHex};
+
+// Relay and communication types
 mod relay_information_document;
 pub use relay_information_document::{
     Fee, RelayFees, RelayInformationDocument, RelayLimitation, RelayRetention,
@@ -143,20 +102,15 @@ pub use relay_message::RelayMessage;
 mod relay_usage;
 pub use relay_usage::{RelayUsage, RelayUsageSet};
 
-mod satoshi;
-pub use satoshi::MilliSatoshi;
-
-mod signature;
-pub use signature::{Signature, SignatureHex};
-
-mod signer;
-pub use signer::Signer;
-
 mod simple_relay_list;
 pub use simple_relay_list::{SimpleRelayList, SimpleRelayUsage};
 
 mod subscription_id;
 pub use subscription_id::SubscriptionId;
+
+// Utility and helper types
+mod satoshi;
+pub use satoshi::MilliSatoshi;
 
 mod tag;
 pub use tag::Tag;
@@ -167,30 +121,117 @@ pub use unixtime::Unixtime;
 mod url;
 pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
+mod image_dimensions;
+pub use image_dimensions::ImageDimensions;
+
+// Metadata and profile management
+mod metadata;
+pub use metadata::Metadata;
+
+mod nostr_client;
+pub use nostr_client::*;
+
+mod nostr_url;
+pub use nostr_url::{NostrBech32, NostrUrl, find_nostr_bech32_pos, find_nostr_url_pos};
+
+mod pay_request_data;
+pub use pay_request_data::PayRequestData;
+
+mod nevent;
+pub use nevent::NEvent;
+
+mod naddr;
+pub use naddr::NAddr;
+
+mod client;
+pub use client::{Client, FilterOptions, Options};
+
+// NIP implementations - organized logically
+
+// Core NIPs - Basic protocol functionality
+/// NIP-00: Basic protocol definitions
+pub mod nip0;
+/// NIP-01: Basic protocol flow and key derivation (handled in core types)
+/// NIP-02: Contact List and Petnames
+pub mod nip2;
+/// NIP-03: OpenTimestamps Attestations for Events
+pub mod nip3;
+/// NIP-04: Encrypted Direct Message
+pub mod nip4;
+
+// Identity and verification NIPs
+/// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
+pub mod nip05;
+pub use nip05::Nip05;
+/// NIP-06: Basic key derivation from mnemonic seed phrase
+pub mod nip6;
+/// NIP-09: Event Deletion
+pub mod nip9;
+
+// Content and event structure NIPs
+/// NIP-10: Text Notes and Threads
+pub mod nip10;
+/// NIP-13: Proof of Work
+pub mod nip13;
+/// NIP-14: Subject tag
 pub mod nip14;
+/// NIP-15: End of Stored Events Notice
+pub mod nip15;
+/// NIP-18: Reposts
+pub mod nip18;
+/// NIP-25: Reactions
 pub mod nip25;
+/// NIP-26: Delegation
+pub mod nip26;
+/// NIP-28: Public Chat Channels
+pub mod nip28;
+/// NIP-30: Custom Emoji
 pub mod nip30;
+/// NIP-32: Labels
 pub mod nip32;
+/// NIP-34: Git notes integration
+pub mod nip34;
+/// NIP-36:Sensitive Content
 pub mod nip36;
+/// NIP-38: User Statuses
 pub mod nip38;
+/// NIP-40: Expiration Timestamp
 pub mod nip40;
-/// NIP-44 related types and functionalities for secure direct messages.
+
+// Advanced features NIPs
+/// NIP-44: Encrypted content for secure direct messages
 pub mod nip44;
+pub use nip44::{Error as Nip44Error, decrypt, encrypt, get_conversation_key};
+/// NIP-53: Live Activities
 pub mod nip53;
+/// NIP-59: Gift Wrap
+pub mod nip59;
+/// NIP-94: File metadata
 pub mod nip94;
-pub mod nostr_client; // Added
-pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
-pub use nostr_client::*; // Added
+
+// Encoding and sharing NIPs
+/// NIP-19: bech32-encoded entities
 pub mod nip19;
 pub use nip19::*;
-pub mod keys;
-pub use keys::Keys;
-pub mod client;
-pub use client::{Client, FilterOptions, Options};
-pub mod image_dimensions;
-// Re-export bitcoin_hashes for use throughout the codebase
+
+// Include comprehensive test suite
+#[cfg(test)]
+mod tests;
+
+// Re-export commonly used external types
 pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
-pub use image_dimensions::ImageDimensions;
+pub use secp256k1::XOnlyPublicKey;
+
+// Versioned types for backwards compatibility
+pub mod versioned;
+pub use event_builder::EventBuilder;
+pub use versioned::{
+    ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
+    MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,
+    RelayInformationDocumentV1, RelayInformationDocumentV2, RelayLimitationV1, RelayLimitationV2,
+    RelayMessageV1, RelayMessageV2, RelayMessageV3, RelayMessageV4, RelayMessageV5,
+    RelayRetentionV1, RumorV1, RumorV2, RumorV3, TagV1, TagV2, TagV3, Why, ZapDataV1, ZapDataV2,
+};
 
 #[cfg(test)]
 #[macro_export]
