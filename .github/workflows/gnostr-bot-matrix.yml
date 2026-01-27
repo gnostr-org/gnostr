@@ -187,19 +187,19 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-+      - name: Get latest release tag
-+        id: get_release
-+        run: echo "RELEASE_TAG=$(gh release view --json tagName --jq '.tagName')" >> $GITHUB_ENV
-+        env:
-+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-+    
-+      - name: Use the latest release tag
-+        run: |
-+          echo "The latest release tag is ${{ env.RELEASE_TAG }}"
-+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.sh"
-           echo "Installer URL: $INSTALLER_URL"
-           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
-           cargo-binstall --force --no-confirm gnostr
+      - name: Get latest release tag
+        id: get_release
+        run: echo "RELEASE_TAG=$(gh release view --json tagName --jq '.tagName')" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use the latest release tag
+        run: |
+          echo "The latest release tag is ${{ env.RELEASE_TAG }}"
+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.sh"
+          echo "Installer URL: $INSTALLER_URL"
+          curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
+          cargo-binstall --force --no-confirm gnostr
 
       - name: powershell install gnostr
         shell: powershell
