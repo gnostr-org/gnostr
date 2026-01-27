@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use clap::{
     /* crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
@@ -98,7 +98,7 @@ pub struct NgitCli {
     #[arg(short, long, global = true)]
     pub password: Option<String>,
     /// disable spinner animations
-    #[arg(long, action = clap::ArgAction::SetTrue)]
+    #[arg(long, action = clap::ArgAction::SetTrue)] //
     pub disable_cli_spinners: bool,
 }
 
