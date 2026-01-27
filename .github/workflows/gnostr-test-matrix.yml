@@ -187,7 +187,7 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-      - name: Get latest release tag
+      - name: Install latest release
         id: get_tag
         run: |
           # Fetch the data
@@ -204,11 +204,6 @@ jobs:
 
           echo "Latest release tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Install gnostr (latest release)
-        shell: bash
-        run: |
           # Construct the installer URL using the latest tag
           INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
           echo "Installer URL: $INSTALLER_URL"
