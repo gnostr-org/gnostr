@@ -195,12 +195,13 @@ jobs:
 
           # Extract tag_name
           LATEST_TAG=$(echo "$RESPONSE" | jq -r ".tag_name")
-
+          echo $LATEST_TAG
           # Check if the tag is null or empty
           if [ "$LATEST_TAG" == "null" ] || [ -z "$LATEST_TAG" ]; then
             echo "No release found, defaulting to v1895.933123.668811"
             LATEST_TAG="v1895.933123.668811"
           fi
+          echo $LATEST_TAG
 
           echo "Latest release tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
