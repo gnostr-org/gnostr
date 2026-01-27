@@ -1,13 +1,14 @@
 use ansi_term::Style;
 use futures::stream::StreamExt;
 use libp2p::{
+    Multiaddr, PeerId, StreamProtocol, Swarm, SwarmBuilder,
     core::ConnectedPoint,
     identify,
     identity::Keypair,
-    kad::{store::MemoryStore, GetClosestPeersOk, ProgressStep, QueryResult},
+    kad::{GetClosestPeersOk, ProgressStep, QueryResult, store::MemoryStore},
     noise, ping, relay,
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, Multiaddr, PeerId, StreamProtocol, Swarm, SwarmBuilder,
+    tcp, yamux,
 };
 use log::debug;
 use thiserror::Error;

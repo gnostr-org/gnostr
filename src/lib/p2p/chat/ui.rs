@@ -10,24 +10,23 @@ use std::{
     time::Duration,
 };
 
-use ratatui::prelude::Stylize;
-use ratatui::style::Style;
 use ratatui::{
+    Frame,
+    Terminal,
     backend::{Backend, CrosstermBackend},
     crossterm::{
         event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
     layout::{Constraint, Direction, Layout},
     style::Color,
     text::{Line, Span}, // Added Span here
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
-    Frame,
-    Terminal,
 };
-use textwrap::{fill, Options};
-use tui_input::{backend::crossterm::EventHandler, Input};
+use ratatui::{prelude::Stylize, style::Style};
+use textwrap::{Options, fill};
+use tui_input::{Input, backend::crossterm::EventHandler};
 use uuid::Uuid;
 
 use crate::p2p::chat::msg::{self, MsgKind};
@@ -287,8 +286,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             // all_messages.clear(); // Clear existing messages
                             all_messages.extend(oneshot_messages); // Add existing OneShot messages back
                             all_messages.push(selected_diff); // Add the selected diff
-                                                              // TODO: handle better
-                                                              // app.msgs_scroll = usize::MAX; // Scroll to bottom
+                            // TODO: handle better
+                            // app.msgs_scroll = usize::MAX; // Scroll to bottom
 
                             app.mode = AppMode::Normal; // Exit selection mode
                         }

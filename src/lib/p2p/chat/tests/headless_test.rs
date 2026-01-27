@@ -85,8 +85,8 @@ mod tests {
                     .kill()
                     .await
                     .expect("Failed to kill detached headless chat process"); // Await the Future returned by kill()
-                                                                              // TODO: Add more sophisticated checks here if needed, e.g.,
-                                                                              // connecting to its P2P network
+                // TODO: Add more sophisticated checks here if needed, e.g.,
+                // connecting to its P2P network
             }
         }
     }

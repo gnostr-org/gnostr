@@ -5,15 +5,14 @@ use std::{
 };
 
 use libp2p::{
-    gossipsub, identify, identity,
+    PeerId, gossipsub, identify, identity,
     kad::{
-        self,
+        self, Config as KadConfig,
         store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
     },
     mdns, noise, ping, rendezvous,
     swarm::Swarm,
-    tcp, yamux, PeerId,
+    tcp, yamux,
 };
 use tokio::io;
 use tracing::info;
