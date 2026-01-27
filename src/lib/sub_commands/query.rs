@@ -438,8 +438,10 @@ mod tests {
 
     #[test]
     fn test_build_filter_map_with_nostr_url_bech32_conversion() -> anyhow::Result<()> {
-        // Test equivalent to: gnostr query --authors $(gnostr bech32-to-any nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr --raw)
-        // The nostr URL contains the same npub, which should convert to the same hex pubkey
+        // Test equivalent to: gnostr query --authors $(gnostr bech32-to-any
+        // nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/
+        // nostr.cro.social/gnostr --raw) The nostr URL contains the same npub,
+        // which should convert to the same hex pubkey
         let expected_hex_pubkey =
             "86a254249e6321386a1dcca7356a9a0792e21e8cc5a2b490266532d44a48d72c";
 

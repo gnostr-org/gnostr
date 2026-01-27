@@ -1,7 +1,8 @@
-use crate::types::{Client, Error, Id, Keys, PublicKey};
 use anyhow::Result;
 use async_trait::async_trait;
 use tracing::{error, info};
+
+use crate::types::{Client, Error, Id, Keys, PublicKey};
 
 #[async_trait]
 pub trait DmClientTrait {
@@ -52,13 +53,15 @@ pub async fn dm_command(
 
 #[cfg(test)]
 mod dm_tests {
-    use super::*;
-    use crate::types::client::{Client, Options};
-    use crate::types::ContentEncryptionAlgorithm;
-    use crate::types::{Keys, PrivateKey};
     use base64::Engine;
     use serial_test::serial;
     use tokio;
+
+    use super::*;
+    use crate::types::{
+        ContentEncryptionAlgorithm, Keys, PrivateKey,
+        client::{Client, Options},
+    };
 
     #[tokio::test]
     #[serial]
@@ -90,7 +93,8 @@ mod dm_tests {
 
         let message_content = "gnostr dm sub_command test!".to_string();
 
-        // Call the function under test (this will now use the real nip44_direct_message)
+        // Call the function under test (this will now use the real
+        // nip44_direct_message)
         let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
 
         // Assertions
@@ -111,7 +115,10 @@ mod dm_tests {
 
         // Add gnostr-relays
         client
-            .add_relays(vec!["wss://relay.damus.io".to_string(), "ws://localhost:8080".to_string()])
+            .add_relays(vec![
+                "wss://relay.damus.io".to_string(),
+                "ws://localhost:8080".to_string(),
+            ])
             .await
             .unwrap();
 
@@ -143,7 +150,8 @@ mod dm_tests {
     #[tokio::test]
     #[serial]
     async fn test_dm_command_failure() {
-        // Setup real client (we expect nip44_direct_message to potentially fail for other reasons)
+        // Setup real client (we expect nip44_direct_message to potentially fail for
+        // other reasons)
         let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
         )
@@ -176,9 +184,11 @@ mod dm_tests {
         assert!(result.is_err());
         let actual_error = result.unwrap_err();
         eprintln!("Actual error: {}", actual_error);
-        assert!(actual_error
-            .to_string()
-            .contains("Failed to send event to any configured relay."));
+        assert!(
+            actual_error
+                .to_string()
+                .contains("Failed to send event to any configured relay.")
+        );
     }
 
     #[tokio::test]
@@ -200,7 +210,8 @@ mod dm_tests {
         let recipient_pubkey = recipient_privkey.public_key();
         let _recipient_keys = Keys::new(recipient_privkey.clone());
 
-        // Add a dummy relay for the sender client (actual relay not needed for encryption/decryption logic)
+        // Add a dummy relay for the sender client (actual relay not needed for
+        // encryption/decryption logic)
         sender_client
             .add_relays(vec![
                 "wss://relay.damus.io".to_string(),
@@ -221,9 +232,10 @@ mod dm_tests {
 
         // In a real scenario, we would fetch the event from a relay.
         // For this test, we'll simulate an event that would be received.
-        // We need to construct an Event with the content that nip44_direct_message would produce.
-        // Since we refactored nip44_direct_message to use PrivateKey::encrypt, we can re-encrypt
-        // the message to get the expected content.
+        // We need to construct an Event with the content that nip44_direct_message
+        // would produce. Since we refactored nip44_direct_message to use
+        // PrivateKey::encrypt, we can re-encrypt the message to get the
+        // expected content.
 
         let encrypted_content_from_sender = sender_privkey
             .encrypt(
