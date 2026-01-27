@@ -32,6 +32,12 @@ nav {
 html {
   background: var(--clrBg);
   color: var(--clrText);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 h2,
@@ -50,6 +56,13 @@ body {
   font-family: var(--ffDefault);
   font-size: var(--fsReduced);
   tab-size: 4;
+  margin: 1%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 header {
