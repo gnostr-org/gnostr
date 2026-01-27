@@ -7,16 +7,16 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use dialoguer::theme::{ColorfulTheme, Theme};
 use expectrl::{
+    Eof, Expect,
     process::Process,
     session::{OsSession, Session},
-    Eof, Expect,
 };
 use futures::executor::block_on;
-pub use nostr_0_34_1::{self, nips::nip65::RelayMetadata, Event, Kind, Tag};
-use nostr_database_0_34_0::{nostr, NostrDatabase, Order};
+pub use nostr_0_34_1::{self, Event, Kind, Tag, nips::nip65::RelayMetadata};
+use nostr_database_0_34_0::{NostrDatabase, Order, nostr};
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 use once_cell::sync::Lazy;
@@ -1142,9 +1142,11 @@ pub fn get_proposal_branch_name(
 ) -> Result<String> {
     let events = block_on(get_events_from_cache(
         &test_repo.dir,
-        vec![nostr::Filter::default()
-            .kind(nostr_sdk_0_34_0::Kind::GitPatch)
-            .hashtag("root")],
+        vec![
+            nostr::Filter::default()
+                .kind(nostr_sdk_0_34_0::Kind::GitPatch)
+                .hashtag("root"),
+        ],
     ))?;
     get_proposal_branch_name_from_events(&events, branch_name_in_event)
 }
@@ -1389,8 +1391,8 @@ pub fn amend_last_commit(test_repo: &mut GitTestRepo, commit_msg: &str) -> Resul
     Ok(branch_name)
 }
 
-pub fn create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebased_proposal(
-) -> Result<(GitTestRepo, GitTestRepo)> {
+pub fn create_proposals_with_first_rebased_and_repo_with_latest_main_and_unrebased_proposal()
+-> Result<(GitTestRepo, GitTestRepo)> {
     let (_, mut test_repo) = create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 
     // recreate proposal 1 on top of a another commit (like a rebase
@@ -1449,8 +1451,8 @@ fn get_first_proposal_event_id() -> Result<nostr::EventId> {
     Ok(proposal_1_id)
 }
 
-pub fn create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout(
-) -> Result<(GitTestRepo, GitTestRepo)> {
+pub fn create_proposals_with_first_revised_and_repo_with_unrevised_proposal_checkedout()
+-> Result<(GitTestRepo, GitTestRepo)> {
     let (mut originating_repo, test_repo) =
         create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
 

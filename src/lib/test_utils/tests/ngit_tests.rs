@@ -6,7 +6,7 @@ use serial_test::serial;
 use crate::{
     cli::NgitCommands,
     sub_commands::{
-        ngit::{ngit, NgitSubCommand},
+        ngit::{NgitSubCommand, ngit},
         query::QuerySubCommand,
     },
     test_utils,

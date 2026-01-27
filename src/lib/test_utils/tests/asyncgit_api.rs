@@ -5,17 +5,19 @@ use std::{
     path::Path,
 };
 
-use crate::legit::command as legit_command;
-use crate::types::{Event, KeySigner, Keys, PreEvent, Signer, Tag};
 use git2::{Repository, Signature};
 use gnostr_asyncgit::sync::{
-    self, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
+    self, RepoPath, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,
     stage_add_file,
-    status::{get_status, StatusItemType, StatusType},
-    RepoPath,
+    status::{StatusItemType, StatusType, get_status},
 };
 use serial_test::serial;
 use tempfile::TempDir;
+
+use crate::{
+    legit::command as legit_command,
+    types::{Event, KeySigner, Keys, PreEvent, Signer, Tag},
+};
 
 // Helper function to set up a temporary git repository for testing.
 fn setup_test_repo() -> (TempDir, RepoPath) {

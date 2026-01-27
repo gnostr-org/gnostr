@@ -5,9 +5,9 @@ mod tests {
     use serial_test::serial;
 
     use crate::{
-        get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
+        Config, get_blockhash, get_blockheight_sync, get_dirs, get_relays, get_relays_by_nip,
         get_relays_offline, get_relays_online, get_relays_paid, get_relays_public, get_weeble_sync,
-        get_wobble_sync, Config,
+        get_wobble_sync,
     };
 
     static INIT: Once = Once::new();
