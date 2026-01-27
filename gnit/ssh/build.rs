@@ -11,7 +11,7 @@ fn check_brew() -> bool {
 
 fn install_openssl_brew() {
     println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
-    let install_result = Command::new("brew").args(["install", "openssl@3"]).status();
+    let install_result = Command::new("brew").args(["install", "openssl"]).status();
     match install_result {
         Ok(status) if status.success() => {
             println!("cargo:warning=Successfully installed openssl@3 via Homebrew.");
@@ -140,13 +140,13 @@ fn main() {
                 install_openssl_brew();
 
                 if target_os == "aarch64-apple-darwin" {
-                    println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                    //println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
+                    //println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    //println!("cargo:rustc-link-lib=dylib=crypto@3");
                 } else if target_os == "x86_64-apple-darwin" {
-                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                    //println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
+                    //println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    //println!("cargo:rustc-link-lib=dylib=crypto@3");
                 }
             } else {
                 println!("cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:");
