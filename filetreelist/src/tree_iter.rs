@@ -22,7 +22,12 @@ impl<'a> Iterator for TreeIterator<'a> {
 
 	fn next(&mut self) -> Option<Self::Item> {
 		self.item_iter.next().map(|(index, item)| {
-			(item, self.selection.is_some_and(|i| i == index))
+			(
+				item,
+				self.selection
+					.map(|i| i == index)
+					.unwrap_or_default(),
+			)
 		})
 	}
 }

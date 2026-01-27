@@ -1,12 +1,14 @@
 [package]
-name = "gnostr-invalidstring"
-version = "1895.933117.678085"
-authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
+name = "invalidstring"
+version = "0.1.2"
+authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "just for testing invalid string data"
-homepage = "https://github.com/gnostr-org/gnostr"
-repository = "https://github.com/gnostgr-org/gnostr"
+homepage = "https://github.com/extrawurst/gitui"
+repository = "https://github.com/extrawurst/gitui"
 readme = "README.md"
 license = "MIT"
 categories = ["development-tools", "development-tools::testing", "encoding"]
 keywords = ["string"]
+
+[dependencies]

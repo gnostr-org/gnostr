@@ -1,14 +1,13 @@
+use crate::{
+	error::Error,
+	item::{FileTreeItemKind, PathCollapsed},
+	FileTreeItem,
+};
+use crate::{error::Result, treeitems_iter::TreeItemsIterator};
 use std::{
 	collections::{BTreeSet, HashMap},
 	path::{Path, PathBuf},
 	usize,
-};
-
-use crate::{
-	FileTreeItem,
-	error::{Error, Result},
-	item::{FileTreeItemKind, PathCollapsed},
-	treeitems_iter::TreeItemsIterator,
 };
 
 ///
@@ -61,7 +60,8 @@ impl FileTreeItems {
 	}
 
 	/// how many individual items (files/paths) are in the list
-	    pub const fn len(&self) -> usize {		self.tree_items.len()
+	pub fn len(&self) -> usize {
+		self.tree_items.len()
 	}
 
 	/// how many files were added to this list
@@ -81,9 +81,8 @@ impl FileTreeItems {
 	fn push_dirs<'a>(
 		item_path: &'a Path,
 		nodes: &mut Vec<FileTreeItem>,
-		// helps to only add new nodes for paths that were not added
-		// before we also count the number of children a node has
-		// for later folding
+		// helps to only add new nodes for paths that were not added before
+		// we also count the number of children a node has for later folding
 		paths_added: &mut HashMap<&'a Path, usize>,
 		collapsed: &BTreeSet<&String>,
 	) -> Result<()> {
@@ -96,8 +95,7 @@ impl FileTreeItems {
 				// add node and set count to have no children
 				paths_added.insert(c, 0);
 
-				// increase the number of children in the parent node
-				// count
+				// increase the number of children in the parent node count
 				if let Some(parent) = c.parent() {
 					if !parent.as_os_str().is_empty() {
 						*paths_added.entry(parent).or_insert(0) += 1;
@@ -111,8 +109,7 @@ impl FileTreeItems {
 			}
 		}
 
-		// increase child count in parent node (the above ancenstor
-		// ignores the leaf component)
+		// increase child count in parent node (the above ancenstor ignores the leaf component)
 		if let Some(parent) = item_path.parent() {
 			*paths_added.entry(parent).or_insert(0) += 1;
 		}
@@ -185,11 +182,12 @@ impl FileTreeItems {
 				}
 			}
 
-			        	self.update_visibility(
-			        		Some(full_path).as_ref(),
-			        		index + 1,
-			        		false,
-			        	);		}
+			self.update_visibility(
+				&Some(full_path),
+				index + 1,
+				false,
+			);
+		}
 	}
 
 	/// makes sure `index` is visible.
@@ -259,7 +257,8 @@ impl FileTreeItems {
 			if item.info().indent() == current_folder.1 {
 				item.show();
 				shown += 1;
-			} else if current_folder.1 > 0 && item.info().indent() == current_folder.1 - 1 {
+			}
+			if item.info().indent() == current_folder.1 - 1 {
 				// this must be our parent
 
 				item.show();
@@ -275,13 +274,13 @@ impl FileTreeItems {
 		Some(shown)
 	}
 
-	    fn update_visibility(
-	        &mut self,
-	        prefix: Option<&PathBuf>,
-	        start_idx: usize,
-	        set_defaults: bool,
-	    ) {		// if we are in any subpath that is collapsed we keep skipping
-		// over it
+	fn update_visibility(
+		&mut self,
+		prefix: &Option<PathBuf>,
+		start_idx: usize,
+		set_defaults: bool,
+	) {
+		// if we are in any subpath that is collapsed we keep skipping over it
 		let mut inner_collapsed: Option<PathBuf> = None;
 
 		for i in start_idx..self.tree_items.len() {
@@ -307,14 +306,15 @@ impl FileTreeItems {
 
 			if matches!(item_kind, FileTreeItemKind::Path(PathCollapsed(collapsed)) if collapsed)
 			{
-				// we encountered an inner path that is still
-				// collapsed
+				// we encountered an inner path that is still collapsed
 				inner_collapsed = Some(item_path.into());
 			}
 
-			            if prefix
-			                .is_none_or(|prefix| item_path.starts_with(prefix))
-			            {				self.tree_items[i].info_mut().set_visible(true);
+			if prefix
+				.as_ref()
+				.map_or(true, |prefix| item_path.starts_with(prefix))
+			{
+				self.tree_items[i].info_mut().set_visible(true);
 			} else {
 				// if we do not set defaults we can early out
 				if set_defaults {
@@ -346,7 +346,8 @@ impl FileTreeItems {
 
 						if items
 							.get(i + 1)
-							.is_some_and(|item| item.kind().is_path())
+							.map(|item| item.kind().is_path())
+							.unwrap_or_default()
 						{
 							let next_item = items.remove(i + 1);
 							let item_mut = &mut items[i];
@@ -385,9 +386,8 @@ impl FileTreeItems {
 
 #[cfg(test)]
 mod tests {
-	use pretty_assertions::assert_eq;
-
 	use super::*;
+	use pretty_assertions::assert_eq;
 
 	#[test]
 	fn test_simple() {
@@ -483,10 +483,10 @@ mod tests {
 			.map(|i| i.info().full_path_str().to_string())
 			.collect::<Vec<_>>();
 
-		assert_eq!(res, vec![
-			String::from("a"),
-			String::from("a/file.txt"),
-		]);
+		assert_eq!(
+			res,
+			vec![String::from("a"), String::from("a/file.txt"),]
+		);
 	}
 
 	#[test]
@@ -544,11 +544,14 @@ mod tests {
 			.map(|i| i.info().full_path_str().to_string())
 			.collect::<Vec<_>>();
 
-		assert_eq!(res, vec![
-			String::from("a"),
-			String::from("a/file.txt"),
-			String::from("a/file2.txt"),
-		]);
+		assert_eq!(
+			res,
+			vec![
+				String::from("a"),
+				String::from("a/file.txt"),
+				String::from("a/file2.txt"),
+			]
+		);
 	}
 
 	#[test]
@@ -588,7 +591,7 @@ mod tests {
 		assert_eq!(it.next(), None);
 	}
 
-	pub fn get_visible(tree: &FileTreeItems) -> Vec<bool> {
+	pub fn get_visibles(tree: &FileTreeItems) -> Vec<bool> {
 		tree.tree_items
 			.iter()
 			.map(|e| e.info().is_visible())
@@ -612,25 +615,31 @@ mod tests {
 
 		tree.collapse(1, false);
 
-		let visibles = get_visible(&tree);
+		let visibles = get_visibles(&tree);
 
-		assert_eq!(visibles, vec![
-			true,  //
-			true,  //
-			false, //
-			true,
-		]);
+		assert_eq!(
+			visibles,
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,
+			]
+		);
 
 		tree.expand(1, false);
 
-		let visibles = get_visible(&tree);
+		let visibles = get_visibles(&tree);
 
-		assert_eq!(visibles, vec![
-			true, //
-			true, //
-			true, //
-			true,
-		]);
+		assert_eq!(
+			visibles,
+			vec![
+				true, //
+				true, //
+				true, //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -652,23 +661,29 @@ mod tests {
 		tree.collapse(1, false);
 		tree.collapse(0, false);
 
-		assert_eq!(get_visible(&tree), vec![
-			true,  //
-			false, //
-			false, //
-			false, //
-			false,
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true,  //
+				false, //
+				false, //
+				false, //
+				false,
+			]
+		);
 
 		tree.expand(0, false);
 
-		assert_eq!(get_visible(&tree), vec![
-			true,  //
-			true,  //
-			false, //
-			true,  //
-			true,
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,  //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -688,14 +703,17 @@ mod tests {
 
 		tree.collapse(0, false);
 
-		let visibles = get_visible(&tree);
+		let visibles = get_visibles(&tree);
 
-		assert_eq!(visibles, vec![
-			true,  //
-			false, //
-			true,  //
-			true,
-		]);
+		assert_eq!(
+			visibles,
+			vec![
+				true,  //
+				false, //
+				true,  //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -715,36 +733,45 @@ mod tests {
 
 		tree.collapse(1, false);
 
-		let visibles = get_visible(&tree);
+		let visibles = get_visibles(&tree);
 
-		assert_eq!(visibles, vec![
-			true,  //
-			true,  //
-			false, //
-			true,
-		]);
+		assert_eq!(
+			visibles,
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,
+			]
+		);
 
 		tree.collapse(0, false);
 
-		let visibles = get_visible(&tree);
+		let visibles = get_visibles(&tree);
 
-		assert_eq!(visibles, vec![
-			true,  //
-			false, //
-			false, //
-			false,
-		]);
+		assert_eq!(
+			visibles,
+			vec![
+				true,  //
+				false, //
+				false, //
+				false,
+			]
+		);
 
 		tree.expand(0, false);
 
-		let visible = get_visible(&tree);
+		let visibles = get_visibles(&tree);
 
-		assert_eq!(visible, vec![
-			true,  //
-			true,  //
-			false, //
-			true,
-		]);
+		assert_eq!(
+			visibles,
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -772,14 +799,17 @@ mod tests {
 		assert!(tree.tree_items[3].kind().is_path());
 		assert!(!tree.tree_items[3].kind().is_path_collapsed());
 
-		assert_eq!(get_visible(&tree), vec![
-			true,  //
-			true,  //
-			false, //
-			true,  //
-			true,  //
-			true,
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true,  //
+				true,  //
+				false, //
+				true,  //
+				true,  //
+				true,
+			]
+		);
 	}
 
 	#[test]
@@ -798,20 +828,26 @@ mod tests {
 
 		tree.collapse(0, true);
 
-		assert_eq!(get_visible(&tree), vec![
-			true,  //
-			false, //
-			false, //
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true,  //
+				false, //
+				false, //
+			]
+		);
 
 		let res = tree.show_element(1).unwrap();
 		assert_eq!(res, 2);
 
-		assert_eq!(get_visible(&tree), vec![
-			true, //
-			true, //
-			true, //
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true, //
+				true, //
+				true, //
+			]
+		);
 	}
 
 	#[test]
@@ -836,13 +872,16 @@ mod tests {
 		let res = tree.show_element(2).unwrap();
 		assert_eq!(res, 4);
 
-		assert_eq!(get_visible(&tree), vec![
-			true, //
-			true, //
-			true, //
-			true, //
-			true, //
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true, //
+				true, //
+				true, //
+				true, //
+				true, //
+			]
+		);
 	}
 
 	#[test]
@@ -859,28 +898,33 @@ mod tests {
 
 		tree.collapse(0, true);
 
-		assert_eq!(get_visible(&tree), vec![
-			true,  //
-			false, //
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true,  //
+				false, //
+			]
+		);
 
 		let res = tree.show_element(1).unwrap();
 		assert_eq!(res, 1);
 		assert!(tree.tree_items[0].kind().is_path());
 		assert!(!tree.tree_items[0].kind().is_path_collapsed());
 
-		assert_eq!(get_visible(&tree), vec![
-			true, //
-			true, //
-		]);
+		assert_eq!(
+			get_visibles(&tree),
+			vec![
+				true, //
+				true, //
+			]
+		);
 	}
 }
 
 #[cfg(test)]
 mod test_merging {
-	use pretty_assertions::assert_eq;
-
 	use super::*;
+	use pretty_assertions::assert_eq;
 
 	#[test]
 	fn test_merge_simple() {

@@ -1,9 +1,8 @@
-use std::{collections::BTreeSet, path::Path, usize};
-
 use crate::{
-	TreeItemInfo, error::Result, filetreeitems::FileTreeItems,
-	tree_iter::TreeIterator,
+	error::Result, filetreeitems::FileTreeItems,
+	tree_iter::TreeIterator, TreeItemInfo,
 };
+use std::{collections::BTreeSet, path::Path, usize};
 
 ///
 #[derive(Copy, Clone, Debug)]
@@ -24,8 +23,7 @@ pub struct VisualSelection {
 	pub index: usize,
 }
 
-/// wraps `FileTreeItems` as a datastore and adds selection
-/// functionality
+/// wraps `FileTreeItems` as a datastore and adds selection functionality
 #[derive(Default)]
 pub struct FileTree {
 	items: FileTreeItems,
@@ -116,37 +114,38 @@ impl FileTree {
 
 	///
 	pub fn move_selection(&mut self, dir: MoveSelection) -> bool {
-		        self.selection.is_some_and(|selection| {
-		            let new_index = match dir {
-		                MoveSelection::Up => {
-		                    self.selection_updown(selection, true)
-		                }
-		                MoveSelection::Down => {
-		                    self.selection_updown(selection, false)
-		                }
-		                MoveSelection::Left => self.selection_left(selection),
-		                MoveSelection::Right => {
-		                    self.selection_right(selection)
-		                }
-		                MoveSelection::Top => {
-		                    Self::selection_start(selection)
-		                }
-		                MoveSelection::End => self.selection_end(selection),
-		                MoveSelection::PageDown | MoveSelection::PageUp => {
-		                    None
-		                }
-		            };
-		
-		            let changed_index =
-		                new_index.is_some_and(|i| i != selection);
-		
-		            if changed_index {
-		                self.selection = new_index;
-		                self.visual_selection = self.calc_visual_selection();
-		            }
-		
-		            changed_index || new_index.is_some()
-		        })	}
+		self.selection.map_or(false, |selection| {
+			let new_index = match dir {
+				MoveSelection::Up => {
+					self.selection_updown(selection, true)
+				}
+				MoveSelection::Down => {
+					self.selection_updown(selection, false)
+				}
+				MoveSelection::Left => self.selection_left(selection),
+				MoveSelection::Right => {
+					self.selection_right(selection)
+				}
+				MoveSelection::Top => {
+					Self::selection_start(selection)
+				}
+				MoveSelection::End => self.selection_end(selection),
+				MoveSelection::PageDown | MoveSelection::PageUp => {
+					None
+				}
+			};
+
+			let changed_index =
+				new_index.map(|i| i != selection).unwrap_or_default();
+
+			if changed_index {
+				self.selection = new_index;
+				self.visual_selection = self.calc_visual_selection();
+			}
+
+			changed_index || new_index.is_some()
+		})
+	}
 
 	pub fn select_file(&mut self, path: &Path) -> bool {
 		let new_selection = self
@@ -175,7 +174,11 @@ impl FileTree {
 			.iterate(0, self.items.len())
 			.enumerate()
 			.find_map(|(i, (abs, _))| {
-				if i == visual_index { Some(abs) } else { None }
+				if i == visual_index {
+					Some(abs)
+				} else {
+					None
+				}
 			})
 	}
 
@@ -201,7 +204,11 @@ impl FileTree {
 	}
 
 	const fn selection_start(current_index: usize) -> Option<usize> {
-		if current_index == 0 { None } else { Some(0) }
+		if current_index == 0 {
+			None
+		} else {
+			Some(0)
+		}
 	}
 
 	fn selection_end(&self, current_index: usize) -> Option<usize> {
@@ -328,17 +335,16 @@ impl FileTree {
 		self.items
 			.tree_items
 			.get(index)
-			.is_some_and(|item| item.info().is_visible())
+			.map(|item| item.info().is_visible())
+			.unwrap_or_default()
 	}
 }
 
 #[cfg(test)]
 mod test {
-	use std::{collections::BTreeSet, path::Path};
-
-	use pretty_assertions::assert_eq;
-
 	use crate::{FileTree, MoveSelection};
+	use pretty_assertions::assert_eq;
+	use std::{collections::BTreeSet, path::Path};
 
 	#[test]
 	fn test_selection() {
