@@ -187,26 +187,17 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-      - name: Install latest release
-        id: get_latest_release
+
+      - name: Get latest release tag
+        id: get_release
+        run: echo "RELEASE_TAG=$(gh release view --json tagName --jq '.tagName')" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+      - name: Use the latest release tag
         run: |
-          # Fetch the data
-          RESPONSE=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest)
-
-          # Extract tag_name
-          LATEST_TAG=$(echo "$RESPONSE" | jq -r ".tag_name")
-
-          # Check if the tag is null or empty
-          if [ "$LATEST_TAG" == "null" ] || [ -z "$LATEST_TAG" ]; then
-            echo "No release found, defaulting to v1895.933123.668811"
-            LATEST_TAG="v1895.933123.668811"
-          fi
-
-          echo "Latest release tag: $LATEST_TAG"
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          # Construct the installer URL using the latest tag
-          echo "${{ steps.get_latest_release.outputs.latest_tag }}"
-          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
+          echo "The latest release tag is ${{ env.RELEASE_TAG }}"
+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.sh"
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
