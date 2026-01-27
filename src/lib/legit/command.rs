@@ -20,8 +20,8 @@ use tracing::{debug, error, info};
 
 use crate::{
     types::{
-        nostr_client, Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag,
-        UncheckedUrl, Unixtime,
+        Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
+        Unixtime, nostr_client,
     },
     utils::{parse_json, split_json_string},
 };
