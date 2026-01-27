@@ -346,7 +346,6 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE;
-            gnostr query -i $EVENT -r ${{ env.DAMUS }};
             echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
