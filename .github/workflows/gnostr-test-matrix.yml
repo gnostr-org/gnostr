@@ -203,9 +203,7 @@ jobs:
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr;
-          gnostr chat --oneshot \
-         "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)-message from gh CI" \
-         --topic gnostr
+          gnostr chat --oneshot "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)-message from gh CI" --topic gnostr
 
       #- name: powershell install gnostr
       #  shell: powershell
