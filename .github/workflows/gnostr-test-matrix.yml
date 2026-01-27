@@ -202,6 +202,10 @@ jobs:
           INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.sh"
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
+
+      - name: gnostr chat --oneshot
+        shell: bash
+        run: |
           cargo-binstall --force --no-confirm gnostr;
           gnostr chat --oneshot "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)-message from gh CI" --topic gnostr
 
