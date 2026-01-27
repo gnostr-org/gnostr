@@ -205,6 +205,15 @@ jobs:
           cargo-binstall --force --no-confirm gnostr
         #if: runner.os != 'windows'
 
+      - name: gnostr-chat-oneshot
+        shell: bash
+        run: |
+          gnostr \
+          chat \
+          --oneshot \
+         "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble):message from gh CI" \
+         --topic gnostr
+
       #- name: powershell install gnostr
       #  shell: powershell
       #  run: |
