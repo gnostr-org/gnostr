@@ -3,9 +3,7 @@
 
 {% block tree_nav_class %}active{% endblock %}
 
-{% block subnav %}
-    {% call breadcrumbs::breadcrumbs(repo_path, query) %}
-{% endblock %}
+{% block subnav %}{% endblock %}
 
 {% block content %}
 <div class="table-responsive">
@@ -13,7 +11,7 @@
     <thead>
     <tr>
         <th style="width: 10rem;">Mode</th>
-        <th>Name</th>
+        <th>Path: {% call breadcrumbs::breadcrumbs(repo_path, query) %}</th>
         <th>Size</th>
     </tr>
     </thead>
@@ -21,6 +19,7 @@
     <tbody>
     {% for item in items -%}
     <tr>
+<!-- Mode -->
         {% match item -%}
         {%- when crate::git::TreeItem::Tree with (tree) -%}
         <td><pre>{{ tree.mode|file_perms }}</pre></td>
@@ -31,13 +30,13 @@
         </pre></td>
         <td></td>
         <td></td>
-
+<!-- Name -->
         {%- when crate::git::TreeItem::File with (file) -%}
         <td><pre>{{ file.mode|file_perms }}</pre></td>
         <td><pre><a href="/{{ repo.display() }}/tree/{{ file.path.display() }}{{ query }}">{{ file.name }}</a></pre></td>
         <td><pre>{{ file.size }}</pre></td>
         <td></td>
-
+<!-- Size -->
         {%- when crate::git::TreeItem::Submodule with (submodule) -%}
         <td><pre>{{ submodule.mode|file_perms }}</pre></td>
         <td><pre>🔗 <a href="{{ submodule.url }}">{{ submodule.name }}</a> @ {{ submodule.oid.to_hex_with_len(7) }}</pre></td>
