@@ -20,10 +20,11 @@ nav {
     padding: 2px 0.75em;
     color: var(--clrTextLight);
     font-size: 110%;
+    text-decoration: none;
 
     &.active {
       color: var(--clrText);
-      background-color: var(--clrBgAction);
+      todo_background-color: var(--clrBg);
     }
   }
 }
