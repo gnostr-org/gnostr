@@ -205,6 +205,15 @@ jobs:
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
 
+      - name: powershell install gnostr
+        shell: powershell
+        run: |
+          # Construct the installer URL using the latest tag
+          $INSTALLER_URL = "https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.ps1"
+          Write-Host "Installer URL: $INSTALLER_URL"
+          irm "$INSTALLER_URL" | iex
+        if: runner.os == 'windows'
+
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
 
@@ -262,11 +271,6 @@ jobs:
       - name: brew install cargo-llvm-cov cargo-llvm-lines
         run: brew install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
-
-      - name: powershell install gnostr
-        shell: powershell
-        run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
-        if: runner.os == 'windows'
 
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
