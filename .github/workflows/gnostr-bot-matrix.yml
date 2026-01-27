@@ -187,14 +187,24 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-      - name: Get latest release
-        shell: bash
-        id: get_latest_release
+      - name: Get latest release tag
+        id: get_tag
         run: |
-          # Use GitHub API to get the latest release tag
-          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
+          # Fetch the data
+          RESPONSE=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest)
+
+          # Extract tag_name
+          LATEST_TAG=$(echo "$RESPONSE" | jq -r ".tag_name")
+
+          # Check if the tag is null or empty
+          if [ "$LATEST_TAG" == "null" ] || [ -z "$LATEST_TAG" ]; then
+            echo "No release found, defaulting to v1895.933123.668811"
+            LATEST_TAG="v1895.933123.668811"
+          fi
+
           echo "Latest release tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Install gnostr (latest release)
         shell: bash
