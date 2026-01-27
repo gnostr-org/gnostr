@@ -82,10 +82,10 @@ pub async fn service(mut request: Request<Body>) -> Response {
     let root_repo_path = scan_path.join(".git");
     let is_root_repo = root_repo_path.is_dir() || root_repo_path.is_file();
     let root_repo_exists_in_db =
-        crate::database::schema::repository::Repository::exists(db, &PathBuf::from(""))
+        crate::database::schema::repository::Repository::exists(db, &PathBuf::from(&root_repo_path))
             .unwrap_or_default();
 
-    debug!(
+    println!(
         "Root repo detection - path: {}, is_dir: {}, is_file: {}, exists_in_db: {}",
         root_repo_path.display(),
         root_repo_path.is_dir(),
@@ -124,7 +124,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
             //We detect repo types
             let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() //<repo>.git/HEAD
             && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
-            let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
+            let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git is_file indicates there must be a .git/ parent directory
             let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
             let exists_in_db =
                 crate::database::schema::repository::Repository::exists(db, &potential_repo_name)
@@ -135,7 +135,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
             );
 
             // Only consider it a repository if it exists on disk *and* is in the database
-            if (is_bare_repo || is_working_tree || is_working_tree_repo) && exists_in_db {
+            if (is_bare_repo || is_working_tree || is_working_tree_repo) {// && exists_in_db {
                 repository_name = potential_repo_name;
 
                 // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
