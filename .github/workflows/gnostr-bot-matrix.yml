@@ -218,7 +218,7 @@ jobs:
       #  if: runner.os == 'windows'
 
       - name: Install Strawberry Perl
-        run: choco install strawberryperl
+        run: choco install strawberryperl -y
         if: runner.os == 'windows'
       - name: Install Perl modules
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
