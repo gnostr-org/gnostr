@@ -22,15 +22,14 @@ use std::{
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub, identify, identity,
+    PeerId, gossipsub, identify, identity,
     kad::{
-        self,
+        self, Config as KadConfig,
         store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
     },
     mdns, noise, ping, rendezvous,
     swarm::SwarmEvent,
-    tcp, yamux, PeerId,
+    tcp, yamux,
 };
 use serde_json;
 use tokio::{io, select, time::Duration};
@@ -41,8 +40,8 @@ use crate::{
     blockhash::blockhash_async,
     blockheight::blockheight_async,
     p2p::chat::{
-        msg::{Msg, MsgKind},
         ChatSubCommands,
+        msg::{Msg, MsgKind},
     },
     types::Event,
 };

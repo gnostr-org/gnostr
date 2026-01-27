@@ -4,7 +4,7 @@ use git2::Oid;
 use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use textwrap::{wrap, Options};
+use textwrap::{Options, wrap};
 
 use crate::types::Event; // Add this line
 
@@ -126,11 +126,11 @@ impl Msg {
 
 impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
     fn from(m: &'a Msg) -> Self {
+        use MsgKind::*;
         use ratatui::{
             style::{Color, Modifier, Style},
             text::{Line, Span},
         };
-        use MsgKind::*;
 
         match m.kind {
             //System
