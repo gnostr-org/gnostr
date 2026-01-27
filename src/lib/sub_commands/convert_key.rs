@@ -5,7 +5,7 @@ use clap::Args;
 
 use crate::{
     types::{Id, PublicKey},
-    utils::{parse_key_or_id_to_hex_string, Prefix},
+    utils::{Prefix, parse_key_or_id_to_hex_string},
 };
 
 #[derive(Args, Debug)]

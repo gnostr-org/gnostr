@@ -88,7 +88,7 @@ pub async fn award_badge(
 
     // TODO: Implement EventBuilder::award_badge and to_pow_event without nostr_sdk
     let mut event = Event::new_dummy(); // Placeholder event
-                                        // Modify dummy event with relevant tags and kind
+    // Modify dummy event with relevant tags and kind
     event.kind = EventKind::BadgeAward;
     event.tags.push(Tag::new_event(
         badge_definition_event.id,

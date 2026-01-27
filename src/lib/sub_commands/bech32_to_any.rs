@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use nostr_0_34_1::bech32;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::types::{NEvent, NostrBech32, PrivateKey};
 
@@ -162,7 +162,8 @@ mod tests {
         assert!(result.is_ok());
 
         // Capture stdout and verify it contains the expected event ID
-        // Note: This test would need stdout capturing in a real test environment
+        // Note: This test would need stdout capturing in a real test
+        // environment
     }
 
     #[test]
@@ -190,10 +191,12 @@ mod tests {
 
         let result = bech32_to_any(&args);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("naddr doesn't have a specific event ID"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("naddr doesn't have a specific event ID")
+        );
     }
 
     #[test]
@@ -207,10 +210,12 @@ mod tests {
 
         let result = bech32_to_any(&args);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid bech32 string for --event-id"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid bech32 string for --event-id")
+        );
     }
 
     #[test]
@@ -336,8 +341,8 @@ mod tests {
         };
 
         let result = bech32_to_any(&args);
-        // The function should handle this gracefully, either succeeding with JSON output
-        // containing the decoded data or failing with a proper error
+        // The function should handle this gracefully, either succeeding with JSON
+        // output containing the decoded data or failing with a proper error
         assert!(result.is_ok() || result.is_err());
     }
 

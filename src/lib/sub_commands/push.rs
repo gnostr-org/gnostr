@@ -1,13 +1,17 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use nostr_sdk_0_34_0::PublicKey;
 
 use crate::{
+    client::{Client, send_events},
+    git_events::{is_event_proposal_root_for_branch, tag_value},
+};
+use crate::{
     //cli::Cli,
     client::{
-        fetching_with_report, get_all_proposal_patch_events_from_cache,
-        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache, Connect,
+        Connect, fetching_with_report, get_all_proposal_patch_events_from_cache,
+        get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
     },
-    git::{identify_ahead_behind, str_to_sha1, Repo, RepoActions},
+    git::{Repo, RepoActions, identify_ahead_behind, str_to_sha1},
     git_events::{
         generate_patch_event, get_commit_id_from_patch, get_most_recent_patch_with_ancestors,
     },
@@ -15,16 +19,13 @@ use crate::{
     repo_ref::get_repo_coordinates,
     sub_commands,
 };
-use crate::{
-    client::{send_events, Client},
-    git_events::{is_event_proposal_root_for_branch, tag_value},
-};
 
 #[derive(Debug, clap::Args, Clone)]
 pub struct PushArgs {
     #[arg(long)]
     /// send proposal revision from checked out proposal branch
     pub force: bool,
+    #[arg(long, action = clap::ArgAction::SetTrue)]
     pub disable_cli_spinners: bool,
     pub password: Option<String>,
     pub nsec: Option<String>,

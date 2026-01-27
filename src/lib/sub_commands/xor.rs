@@ -84,10 +84,10 @@ mod tests {
 
         let _stdin_mock = simulate_stdin(input);
         let _original_stdin = io::stdin(); // Save original stdin
-                                           // Replace stdin with mock (this part is tricky, may need to use external crate
-                                           // like `mock_stdin`) For actual tests, this would ideally involve
-                                           // mocking std::io::stdin directly or passing a Read trait.
-                                           // For simplicity in this test, we'll manually xor and compare.
+        // Replace stdin with mock (this part is tricky, may need to use external crate
+        // like `mock_stdin`) For actual tests, this would ideally involve
+        // mocking std::io::stdin directly or passing a Read trait.
+        // For simplicity in this test, we'll manually xor and compare.
 
         // Manually calculate expected output
         let key_bytes = hex::decode("00")?; // 00 hex = 0 decimal

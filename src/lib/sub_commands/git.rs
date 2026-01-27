@@ -5,7 +5,7 @@ use clap::{Parser, Subcommand};
 use crossterm::{
     event::DisableMouseCapture,
     execute,
-    terminal::{disable_raw_mode, LeaveAlternateScreen},
+    terminal::{LeaveAlternateScreen, disable_raw_mode},
 };
 use env_logger::Env;
 use which::which;
