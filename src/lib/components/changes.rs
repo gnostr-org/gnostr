@@ -3,20 +3,20 @@ use std::path::Path;
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    sync::{self, RepoPathRef},
     StatusItem, StatusItemType,
+    sync::{self, RepoPathRef},
 };
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 
 use super::{
+    CommandBlocking, DrawableComponent,
     status_tree::StatusTreeComponent,
     utils::filetree::{FileTreeItem, FileTreeItemKind},
-    CommandBlocking, DrawableComponent,
 };
 use crate::{
     app::Environment,
     components::{CommandInfo, Component, EventState},
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     options::SharedOptions,
     queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
     strings, try_or_popup,

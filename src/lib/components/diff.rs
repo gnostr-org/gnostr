@@ -4,30 +4,30 @@ use anyhow::Result;
 use bytesize::ByteSize;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    hash,
-    sync::{self, diff::DiffLinePosition, RepoPathRef},
     //DiffLine, DiffLineType, FileDiff,
     DiffLine,
     DiffLineType,
     FileDiff,
+    hash,
+    sync::{self, RepoPathRef, diff::DiffLinePosition},
 };
 use ratatui::{
+    Frame,
     layout::Rect,
     symbols,
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
-    Frame,
 };
 use sha2::{Digest, Sha256};
 
 use super::{
-    utils::{scroll_horizontal::HorizontalScroll, scroll_vertical::VerticalScroll},
     CommandBlocking, Direction, DrawableComponent, HorizontalScrollType, ScrollType,
+    utils::{scroll_horizontal::HorizontalScroll, scroll_vertical::VerticalScroll},
 };
 use crate::{
     app::Environment,
     components::{CommandInfo, Component, EventState},
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     options::SharedOptions,
     queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
     string_utils::{tabs_to_spaces, trim_offset},
