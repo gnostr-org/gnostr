@@ -7,13 +7,13 @@ use std::{collections::HashSet, str::FromStr};
 
 use secp256k1::{SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use crate::types::{
-    event_kind::{EventKind, EventKindOrRange},
-    versioned::event3::{EventV3, PreEventV3},
     Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
     Signer, TagV3, UncheckedUrl, Unixtime,
+    event_kind::{EventKind, EventKindOrRange},
+    versioned::event3::{EventV3, PreEventV3},
 };
 
 /// Event Kind 40: Create channel
@@ -705,12 +705,11 @@ mod test {
 
     use super::*;
     use crate::{
-        test_serde,
+        KeySigner, test_serde,
         types::{
             Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
             UncheckedUrl, Unixtime,
         },
-        KeySigner,
     };
 
     #[test]

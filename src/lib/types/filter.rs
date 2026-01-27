@@ -1,9 +1,9 @@
 use std::{collections::BTreeMap, fmt};
 
 use serde::{
+    Deserialize, Serialize,
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
-    Deserialize, Serialize,
 };
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
@@ -209,10 +209,12 @@ impl Filter {
         );
 
         Filter {
-            ids: vec![IdHex::try_from_str(
-                "3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084",
-            )
-            .unwrap()],
+            ids: vec![
+                IdHex::try_from_str(
+                    "3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084",
+                )
+                .unwrap(),
+            ],
             authors: vec![],
             kinds: vec![EventKind::TextNote, EventKind::Metadata],
             tags: map,
@@ -355,8 +357,8 @@ mod test {
     #[test]
     fn test_event_matches() {
         use crate::{
-            types::{PrivateKey, UncheckedUrl},
             Id, KeySigner, PreEvent, Signer, Tag,
+            types::{PrivateKey, UncheckedUrl},
         };
 
         let signer = {

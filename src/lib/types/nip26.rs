@@ -1,7 +1,7 @@
 // NIP-26: Delegation
 // https://github.com/nostr-protocol/nips/blob/master/26.md
 
-use secp256k1::{schnorr::Signature, Keypair, Message, Secp256k1, SecretKey, XOnlyPublicKey};
+use secp256k1::{Keypair, Message, Secp256k1, SecretKey, XOnlyPublicKey, schnorr::Signature};
 use sha2::{Digest, Sha256};
 
 /// A delegation, which allows one key to sign an event on behalf of another
