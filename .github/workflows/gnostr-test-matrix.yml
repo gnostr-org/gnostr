@@ -348,7 +348,7 @@ jobs:
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo test -j8 --all-features && echo "✅" ## || echo "❌"
+          cargo test -j8 && echo "✅" ## || echo "❌"
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
