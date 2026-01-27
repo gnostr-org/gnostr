@@ -1,0 +1,23 @@
+name: Gnostr Test Matrix
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install OpenSSL
+      run: |
+        choco install openssl
+
+    - name: Build
+      run: |
+        # Include your build commands here
+        echo Building the project
