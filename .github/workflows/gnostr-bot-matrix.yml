@@ -195,7 +195,6 @@ jobs:
           LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
           echo "Latest release tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo $GITHUB_OUTPUT
 
       - name: Install gnostr (latest release)
         shell: bash
