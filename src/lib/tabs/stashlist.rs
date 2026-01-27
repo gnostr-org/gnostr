@@ -5,10 +5,10 @@ use gnostr_asyncgit::sync::{self, CommitId, RepoPath, RepoPathRef};
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, CommitList, Component,
-        DrawableComponent, EventState,
+        CommandBlocking, CommandInfo, CommitList, Component, DrawableComponent, EventState,
+        visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     popups::InspectCommitOpen,
     queue::{Action, InternalEvent, Queue, StackablePopupOpen},
     strings,
