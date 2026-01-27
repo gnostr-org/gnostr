@@ -20,7 +20,7 @@ name = "gnostr_asyncgit"
 path = "src/lib.rs"
 
 [features]
-default = ["trace-libgit", "vendor-openssl"]
+default = ["trace-libgit", "git2/vendored-openssl"]
 trace-libgit = []
 vendor-openssl = ["openssl-sys"]
 
@@ -98,7 +98,7 @@ url = "2.2.2"
 ## harness = false
 
 [dev-dependencies]
-cargo-insta = "1.43.1"
+#cargo-insta = "1.43.1"
 criterion = "0.5.1"
 env_logger = "0.11"
 insta = "1.42.2"
