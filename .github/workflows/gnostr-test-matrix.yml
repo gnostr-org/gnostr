@@ -201,6 +201,7 @@ jobs:
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
+        if: runner.os != 'windows'
 
       - name: powershell install gnostr
         shell: powershell
