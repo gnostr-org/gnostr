@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use secp256k1::XOnlyPublicKey;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

@@ -1,37 +1,24 @@
+use std::time::Duration;
+
 #[allow(unused)]
 // Working Nostr Client Implementation with proper interface
 use anyhow::Result;
-use futures_util::{SinkExt, StreamExt};
-use serde_json::json;
-use std::time::Duration;
-use tokio::net::TcpStream;
-use tokio::sync::mpsc;
-use tokio_tungstenite::{
-    connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
-};
-
-use crate::types::{
-    private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
-    EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayUrl, SubscriptionId, Tag,
-    UncheckedUrl, Unixtime,
-};
-use tracing::{debug, info, warn};
-
 // NIP-44 related imports
 use base64::{
-    engine::general_purpose::{GeneralPurpose, STANDARD},
     Engine,
+    engine::general_purpose::{GeneralPurpose, STANDARD},
 };
 use chacha20poly1305::{
-    aead::{Aead, KeyInit, OsRng},
     XChaCha20Poly1305,
+    aead::{Aead, KeyInit, OsRng},
 };
+use futures_util::{SinkExt, StreamExt};
 use hkdf::Hkdf;
 use k256::{
     ecdsa::SigningKey,
     elliptic_curve::{
-        sec1::{FromEncodedPoint, ToEncodedPoint},
         FieldBytes, SecretKey,
+        sec1::{FromEncodedPoint, ToEncodedPoint},
     },
     schnorr::Signature,
 };
@@ -40,7 +27,19 @@ use secp256k1::ecdh::shared_secret_point; // Use secp256k1's shared_secret_point
 use secp256k1::{
     Parity, SecretKey as Secp256k1SecretKey, XOnlyPublicKey as Secp256k1XOnlyPublicKey,
 }; // Import secp256k1 types for ECDH and Parity
+use serde_json::json;
 use sha2::Sha256;
+use tokio::{net::TcpStream, sync::mpsc};
+use tokio_tungstenite::{
+    MaybeTlsStream, WebSocketStream, connect_async, tungstenite::Message as WsMessage,
+};
+use tracing::{debug, info, warn};
+
+use crate::types::{
+    ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
+    RelayUrl, SubscriptionId, Tag, UncheckedUrl, Unixtime,
+    private_key::content_encryption::ContentEncryptionAlgorithm,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum FilterOptions {
