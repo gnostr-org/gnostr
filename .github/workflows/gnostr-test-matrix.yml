@@ -232,6 +232,13 @@ jobs:
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
 
+      - name: Install OpenSSL
+        run: |
+          vcpkg install openssl:x64-windows-static
+          $env:OPENSSL_DIR = "C:\path\to\vcpkg\installed\x64-windows-static"
+          $env:OPENSSL_STATIC = "1"
+        if: runner.os == 'windows'
+
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
