@@ -1,23 +1,23 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    sync::{self, commit_files::OldNew, CommitId, RepoPathRef},
     AsyncDiff, AsyncGitNotification, CommitFilesParams, DiffParams, DiffType,
+    sync::{self, CommitId, RepoPathRef, commit_files::OldNew},
 };
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     widgets::Clear,
-    Frame,
 };
 
 use crate::{
     accessors,
     app::Environment,
     components::{
-        command_pump, event_pump, visibility_blocking, CommandBlocking, CommandInfo,
-        CommitDetailsComponent, Component, DiffComponent, DrawableComponent, EventState,
+        CommandBlocking, CommandInfo, CommitDetailsComponent, Component, DiffComponent,
+        DrawableComponent, EventState, command_pump, event_pump, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     options::SharedOptions,
     popups::InspectCommitOpen,
     queue::{InternalEvent, Queue, StackablePopupOpen},

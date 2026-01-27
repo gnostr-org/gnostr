@@ -1,13 +1,13 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    sync::{CommitId, CommitTags},
     AsyncDiff, AsyncGitNotification, DiffParams, DiffType,
+    sync::{CommitId, CommitTags},
 };
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     widgets::Clear,
-    Frame,
 };
 
 use super::FileTreeOpen;
@@ -15,10 +15,10 @@ use crate::{
     accessors,
     app::Environment,
     components::{
-        command_pump, event_pump, visibility_blocking, ChatDetailsComponent, CommandBlocking,
-        CommandInfo, Component, DiffComponent, DrawableComponent, EventState,
+        ChatDetailsComponent, CommandBlocking, CommandInfo, Component, DiffComponent,
+        DrawableComponent, EventState, command_pump, event_pump, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     options::SharedOptions,
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings,

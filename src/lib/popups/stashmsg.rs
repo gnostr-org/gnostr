@@ -1,15 +1,15 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{self, RepoPathRef};
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, InputType, TextInputComponent,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, InputType,
+        TextInputComponent, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     queue::{AppTabs, InternalEvent, Queue},
     strings,
     tabs::StashingOptions,
