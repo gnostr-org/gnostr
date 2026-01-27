@@ -3,15 +3,15 @@ use std::path::Path;
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::CommitId;
-use ratatui::{layout::Rect, widgets::Clear, Frame};
+use ratatui::{Frame, layout::Rect, widgets::Clear};
 
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, RevisionFilesComponent,
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
+        RevisionFilesComponent, visibility_blocking,
     },
-    keys::{key_match, SharedKeyConfig},
+    keys::{SharedKeyConfig, key_match},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self},
     sub_commands::tui::AsyncNotification,
