@@ -10,7 +10,7 @@ mod tests {
     use tracing::{debug, info};
 
     use crate::{
-        test_utils::{git::GitTestRepo, CliTester},
+        test_utils::{CliTester, git::GitTestRepo},
         utils::screenshot::make_screenshot,
     };
 

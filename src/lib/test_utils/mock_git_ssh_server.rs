@@ -1,12 +1,17 @@
 // Mock Git SSH Server for Testing
 // Solves hanging test issues by providing controlled, predictable behavior
 
-use anyhow::{anyhow, Result};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
+
+use anyhow::{Result, anyhow};
 use log::info;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::{TcpListener, TcpStream},
+};
 
 /// Mock Git SSH Server that simulates git operations without complexity
 /// Designed to prevent hanging and provide deterministic test behavior
@@ -135,8 +140,9 @@ impl MockGitSshServer {
 
 #[cfg(test)]
 mod tests {
+    use tokio::time::{Duration, timeout};
+
     use super::*;
-    use tokio::time::{timeout, Duration};
 
     #[tokio::test]
     async fn test_mock_server_basic_functionality() -> Result<()> {

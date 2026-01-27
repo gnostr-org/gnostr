@@ -3,9 +3,9 @@
 
 use std::{
     fmt,
-    io::{self, prelude::*, BufReader},
+    io::{self, BufReader, prelude::*},
     result,
-    sync::mpsc::{channel, Receiver},
+    sync::mpsc::{Receiver, channel},
     thread, time,
 };
 

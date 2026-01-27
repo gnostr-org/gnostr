@@ -487,10 +487,12 @@ mod tests {
         // Test non-existent branch
         let result = repo.get_tip_of_local_branch("non-existent-branch");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("cannot find branch non-existent-branch"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("cannot find branch non-existent-branch")
+        );
 
         Ok(())
     }

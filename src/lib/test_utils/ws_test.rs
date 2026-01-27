@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
 use tokio::{net::TcpStream, time::timeout};
-use tokio_tungstenite::{tungstenite, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite};
 
-use crate::ws::{launch_from_listener, Error, Event, Message, Responder};
+use crate::ws::{Error, Event, Message, Responder, launch_from_listener};
 
 // Helper to find an available port and return a bound TcpListener
 #[allow(unused)]
