@@ -48,7 +48,7 @@ use tracing_subscriber::{
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
-pub struct Args {
+pub struct GitWebArgs {
     /// Path to a directory where the RocksDB database should be stored.
     ///
     /// This directory will be created if it doesn't exist. The RocksDB database is
@@ -147,7 +147,7 @@ fn build_daemon_args() -> Vec<String> {
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() -> Result<(), anyhow::Error> {
-    let args: Args = Args::parse();
+    let args: GitWebArgs = GitWebArgs::parse();
 
     // Handle service mode before any other setup
     if args.detach {
