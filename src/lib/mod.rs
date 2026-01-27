@@ -83,18 +83,18 @@ pub mod ws;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 //avoid?//upgrade?
 //pub use lightning;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 pub use base64::Engine;
 pub use colorful::{Color, Colorful};
 use directories::ProjectDirs;
-pub use futures_util::{stream::FusedStream, SinkExt, StreamExt};
+pub use futures_util::{SinkExt, StreamExt, stream::FusedStream};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use nostr_types::RelayMessageV5;
 pub use nostr_sdk_0_32_0::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
-pub use tokio_tungstenite::{connect_async, tungstenite::Message, WebSocketStream};
+pub use tokio_tungstenite::{WebSocketStream, connect_async, tungstenite::Message};
 //use tokio_tungstenite::WebSocketStream;
 pub use types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>

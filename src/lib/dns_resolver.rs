@@ -5,9 +5,9 @@ use std::{
 };
 
 use trust_dns_resolver::{
+    TokioAsyncResolver,
     config::{NameServerConfig, Protocol, ResolverConfig, ResolverOpts},
     proto::rr::{RData, RecordType},
-    TokioAsyncResolver,
 };
 
 use crate::global_rt::global_rt;

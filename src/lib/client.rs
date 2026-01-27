@@ -19,7 +19,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use async_trait::async_trait;
 use console::Style;
 use futures::{
@@ -30,11 +30,11 @@ use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressState, ProgressStyle};
 #[cfg(test)]
 use mockall::*;
-use nostr_0_34_1::{nips::nip01::Coordinate, Event};
+use nostr_0_34_1::{Event, nips::nip01::Coordinate};
 use nostr_database_0_34_0::{NostrDatabase, Order};
 use nostr_sdk_0_34_0::{
-    prelude::RelayLimits, EventBuilder, EventId, Kind, NostrSigner, Options, PublicKey,
-    SingleLetterTag, Timestamp, Url,
+    EventBuilder, EventId, Kind, NostrSigner, Options, PublicKey, SingleLetterTag, Timestamp, Url,
+    prelude::RelayLimits,
 };
 use nostr_sqlite_0_34_0::SQLiteDatabase;
 
@@ -915,15 +915,17 @@ async fn create_relays_request(
 
         for event in &get_events_from_cache(
             git_repo_path,
-            vec![nostr_0_34_1::Filter::default()
-                .kinds(vec![Kind::GitPatch])
-                .custom_tag(
-                    SingleLetterTag::lowercase(nostr_sdk_0_34_0::Alphabet::A),
-                    repo_coordinates_without_relays
-                        .iter()
-                        .map(std::string::ToString::to_string)
-                        .collect::<Vec<String>>(),
-                )],
+            vec![
+                nostr_0_34_1::Filter::default()
+                    .kinds(vec![Kind::GitPatch])
+                    .custom_tag(
+                        SingleLetterTag::lowercase(nostr_sdk_0_34_0::Alphabet::A),
+                        repo_coordinates_without_relays
+                            .iter()
+                            .map(std::string::ToString::to_string)
+                            .collect::<Vec<String>>(),
+                    ),
+            ],
         )
         .await?
         {
@@ -1305,9 +1307,11 @@ pub fn get_fetch_filters(
         if proposal_ids.is_empty() {
             vec![]
         } else {
-            vec![nostr_0_34_1::Filter::default()
-                .events(proposal_ids.clone())
-                .kinds([vec![Kind::GitPatch, Kind::EventDeletion], status_kinds()].concat())]
+            vec![
+                nostr_0_34_1::Filter::default()
+                    .events(proposal_ids.clone())
+                    .kinds([vec![Kind::GitPatch, Kind::EventDeletion], status_kinds()].concat()),
+            ]
         },
         if required_profiles.is_empty() {
             vec![]
@@ -1500,15 +1504,17 @@ pub async fn get_proposals_and_revisions_from_cache(
 ) -> Result<Vec<nostr_0_34_1::Event>> {
     let mut proposals = get_events_from_cache(
         git_repo_path,
-        vec![nostr_0_34_1::Filter::default()
-            .kind(nostr_0_34_1::Kind::GitPatch)
-            .custom_tag(
-                nostr_0_34_1::SingleLetterTag::lowercase(nostr_sdk_0_34_0::Alphabet::A),
-                repo_coordinates
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>(),
-            )],
+        vec![
+            nostr_0_34_1::Filter::default()
+                .kind(nostr_0_34_1::Kind::GitPatch)
+                .custom_tag(
+                    nostr_0_34_1::SingleLetterTag::lowercase(nostr_sdk_0_34_0::Alphabet::A),
+                    repo_coordinates
+                        .iter()
+                        .map(std::string::ToString::to_string)
+                        .collect::<Vec<String>>(),
+                ),
+        ],
     )
     .await?
     .iter()
@@ -1540,11 +1546,13 @@ pub async fn get_all_proposal_patch_events_from_cache(
 
     let permissioned_users: HashSet<PublicKey> = [
         repo_ref.maintainers.clone(),
-        vec![commit_events
-            .iter()
-            .find(|e| e.id().eq(proposal_id))
-            .context("proposal not in cache")?
-            .author()],
+        vec![
+            commit_events
+                .iter()
+                .find(|e| e.id().eq(proposal_id))
+                .context("proposal not in cache")?
+                .author(),
+        ],
     ]
     .concat()
     .iter()
@@ -1561,10 +1569,12 @@ pub async fn get_all_proposal_patch_events_from_cache(
     if !revision_roots.is_empty() {
         for event in get_events_from_cache(
             git_repo_path,
-            vec![nostr_0_34_1::Filter::default()
-                .kind(nostr_0_34_1::Kind::GitPatch)
-                .events(revision_roots)
-                .authors(permissioned_users.clone())],
+            vec![
+                nostr_0_34_1::Filter::default()
+                    .kind(nostr_0_34_1::Kind::GitPatch)
+                    .events(revision_roots)
+                    .authors(permissioned_users.clone()),
+            ],
         )
         .await?
         {
