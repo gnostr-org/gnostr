@@ -3,11 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>{% block title %}gnostr.org/{% endblock %}</title>
+    <title>
+    {% block title %}
+    gnostr.org/
+    {% endblock %}
+    <aside>
+    {%- block subnav %}{% endblock %}
+    </aside>
+    </title>
     <link rel="stylesheet" type="text/css" href="/style-{{ crate::GLOBAL_CSS_HASH }}.css" />
     {%- block head -%}{%- endblock %}
   </head>
-
   <body>
     <header>
       <h1>
@@ -17,23 +23,18 @@
         {% block header -%}gnostr.org{%- endblock %}
       </h1>
     </header>
-
+      <div>{%- block subnav %}{% endblock %}</div>
     {%- block nav -%}
     <nav>
       <div>
-        <a href="/" class="active">index</a>
+        <a href="/" class="active">gnostr</a>
       </div>
-
         <div class="grow"></div>
-
         <div>{%- block extra_nav_links %}{% endblock %}</div>
-      </nav>
-      {%- endblock -%}
-
-      <aside>{%- block subnav %}{% endblock %}</aside>
-
+    </nav>
+    {%- endblock -%}
     <main>{%- block content %}{% endblock -%}</main>
-
+    <div class="grow"></div>
     <footer>
       <a href="https://github.com/gnostr-org/gnostr" target="_blank">gnostr.org</a> v{{ crate::CRATE_VERSION }} at {{
       time::OffsetDateTime::now_utc()|format_time }} in {{
