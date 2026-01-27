@@ -1,4 +1,4 @@
-pub use clap::{value_parser, Parser};
+pub use clap::{Parser, value_parser};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Opt {
