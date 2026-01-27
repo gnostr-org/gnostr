@@ -203,16 +203,16 @@ jobs:
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
-        if: runner.os != 'windows'
+        #if: runner.os != 'windows'
 
-      - name: powershell install gnostr
-        shell: powershell
-        run: |
-          # Construct the installer URL using the latest tag
-          $INSTALLER_URL = "https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.ps1"
-          Write-Host "Installer URL: $INSTALLER_URL"
-          irm "$INSTALLER_URL" | iex
-        if: runner.os == 'windows'
+      #- name: powershell install gnostr
+      #  shell: powershell
+      #  run: |
+      #    # Construct the installer URL using the latest tag
+      #    $INSTALLER_URL = "https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.ps1"
+      #    Write-Host "Installer URL: $INSTALLER_URL"
+      #    irm "$INSTALLER_URL" | iex
+      #  if: runner.os == 'windows'
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
