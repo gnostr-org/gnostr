@@ -8,7 +8,7 @@ use std::{
 use anyhow::Context;
 use clean_path::Clean;
 use log::info;
-use russh::{server::Handle, ChannelId, CryptoVec};
+use russh::{ChannelId, CryptoVec, server::Handle};
 use shellwords::split;
 use tokio::{io::AsyncReadExt, process::Command};
 

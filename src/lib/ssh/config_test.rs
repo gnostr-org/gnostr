@@ -5,7 +5,7 @@ mod tests {
     use anyhow::Context;
     use tempfile::tempdir;
 
-    use crate::ssh::config::server::{load_server_config, ServerUser};
+    use crate::ssh::config::server::{ServerUser, load_server_config};
 
     #[tokio::test]
     async fn test_load_server_config_missing_file() -> anyhow::Result<()> {

@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Context as AnyhowContext;
-use comrak::{markdown_to_html, ComrakOptions};
+use comrak::{ComrakOptions, markdown_to_html};
 use tempfile::tempdir;
 use tera::{Context, Tera};
 

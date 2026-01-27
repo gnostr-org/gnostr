@@ -3,7 +3,7 @@ use std::{
     process::ExitStatus,
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 
 pub struct Repo {
     dir: PathBuf,
