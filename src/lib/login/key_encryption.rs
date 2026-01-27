@@ -1,5 +1,5 @@
 use anyhow::Result;
-use nostr_0_34_1::{prelude::*, Keys};
+use nostr_0_34_1::{Keys, prelude::*};
 
 pub fn encrypt_key(keys: &Keys, password: &str) -> Result<String> {
     let log2_rounds: u8 = if password.len() > 20 {

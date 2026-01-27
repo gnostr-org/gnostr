@@ -1,9 +1,9 @@
 use std::{collections::HashSet, path::Path, str::FromStr, time::Duration};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use nostr_0_34_1::{
-    nips::{nip05, nip46::NostrConnectURI},
     PublicKey,
+    nips::{nip05, nip46::NostrConnectURI},
 };
 use nostr_sdk_0_34_0::{
     Alphabet, FromBech32, JsonUtil, Keys, Kind, NostrSigner, SingleLetterTag, Timestamp, ToBech32,
@@ -19,7 +19,7 @@ use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptPasswordParms,
     },
-    client::{fetch_public_key, get_event_from_global_cache, Connect},
+    client::{Connect, fetch_public_key, get_event_from_global_cache},
     git::{Repo, RepoActions},
 };
 
