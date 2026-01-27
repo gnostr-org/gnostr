@@ -5,7 +5,6 @@
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
 use core::str;
-
 use std::{
     collections::HashSet,
     env, io,
@@ -13,14 +12,10 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{bail, Context, Result};
-
-use client::{consolidate_fetch_reports, get_repo_ref_from_cache, Connect};
-
-use git::{nostr_url::NostrUrlDecoded, RepoActions};
-
+use anyhow::{Context, Result, bail};
+use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
+use git::{RepoActions, nostr_url::NostrUrlDecoded};
 use gnostr::{client, git};
-
 use utils::read_line;
 
 use crate::{client::Client, git::Repo};
