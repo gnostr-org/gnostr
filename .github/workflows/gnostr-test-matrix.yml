@@ -216,9 +216,8 @@ jobs:
       #  run: |
       #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
       #  if: runner.os == 'windows'
-
       - name: Install Strawberry Perl
-        run: choco install strawberryperl
+        run: choco install strawberryperl -y
         if: runner.os == 'windows'
       - name: Install Perl modules
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
