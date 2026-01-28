@@ -133,11 +133,11 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
                 tree_sitter_javascript::INJECTION_QUERY,
                 tree_sitter_javascript::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_c::LANGUAGE {
+        } else if lang == &tree_sitter_c::language() {
             (tree_sitter_c::HIGHLIGHT_QUERY, "", "")
         } else if lang == &tree_sitter_json::LANGUAGE {
             (tree_sitter_json::HIGHLIGHTS_QUERY, "", "")
-        } else if lang == &tree_sitter_cpp::LANGUAGE {
+        } else if lang == &tree_sitter_cpp::language() {
             (tree_sitter_cpp::HIGHLIGHT_QUERY, "", "")
         } else if lang == &tree_sitter_ruby::LANGUAGE {
             (
