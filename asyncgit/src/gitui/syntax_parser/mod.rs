@@ -88,8 +88,7 @@ fn determine_lang(path: &Path) -> Option<(&'static Grammar, Language)> {
     let file_language = tree_sitter_grammar_repository::Language::from_file_name(path)?;
     let grammar_variant = file_language.grammar();
     let params = Grammar::highlight_configuration_params(grammar_variant);
-    Some((&grammar_variant, Language::new((params.language).into_raw()).expect("Language::new failed")))
-}
+    Some((&grammar_variant, Language((params.language).into_raw() as *const _)))}
 
 fn create_highlight_config(grammar_variant: &'static Grammar, language: &Language) -> HighlightConfiguration {
     let params = Grammar::highlight_configuration_params(*grammar_variant);
