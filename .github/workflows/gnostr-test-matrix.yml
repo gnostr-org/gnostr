@@ -14,7 +14,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  gnostr-bot:
+  gnostr-test:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -26,7 +26,7 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
-      fail-fast: true
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -187,23 +187,36 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-      - name: Get latest release
-        shell: bash
-        id: get_latest_release
-        run: |
-          # Use GitHub API to get the latest release tag
-          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
-          echo "Latest release tag: $LATEST_TAG"
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
-      - name: Install gnostr (latest release)
+      - name: Get latest release tag
+        shell: bash
+        id: get_release
+        run: echo "RELEASE_TAG=$(gh release view --json tagName --jq '.tagName')" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use the latest release tag
         shell: bash
         run: |
-          # Construct the installer URL using the latest tag
-          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
+          echo "The latest release tag is ${{ env.RELEASE_TAG }}"
+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.sh"
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
-          cargo-binstall --force --no-confirm gnostr
+          cargo-binstall --force --no-confirm gnostr;
+
+      - name: gnostr chat --oneshot
+        shell: bash
+        run: |
+          gnostr chat --oneshot "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)-message from gh CI" --topic gnostr
+
+      #- name: powershell install gnostr
+      #  shell: powershell
+      #  run: |
+      #    # Construct the installer URL using the latest tag
+      #    $INSTALLER_URL = "https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.ps1"
+      #    Write-Host "Installer URL: $INSTALLER_URL"
+      #    irm "$INSTALLER_URL" | iex
+      #  if: runner.os == 'windows'
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
@@ -221,6 +234,13 @@ jobs:
         if: runner.os == 'windows'
       - name: Install Perl modules
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
+        if: runner.os == 'windows'
+
+      - name: Install OpenSSL
+        run: |
+          vcpkg install openssl:x64-windows-static
+          $env:OPENSSL_DIR = "C:\path\to\vcpkg\installed\x64-windows-static"
+          $env:OPENSSL_STATIC = "1"
         if: runner.os == 'windows'
 
       - name: brew install
@@ -261,11 +281,6 @@ jobs:
       - name: brew install cargo-llvm-cov cargo-llvm-lines
         run: brew install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
-
-      - name: powershell install gnostr
-        shell: powershell
-        run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
-        if: runner.os == 'windows'
 
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
@@ -335,7 +350,6 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE;
-            gnostr query -i $EVENT -r ${{ env.DAMUS }};
             echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
@@ -348,7 +362,9 @@ jobs:
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo test -j8 --all-features && echo "✅" ## || echo "❌"
+          cargo test -j8 --manifest-path ./asyncgit/Cargo.toml&& echo "✅" ## || echo "❌"
+          cargo test -j8 --manifest-path ./legit/Cargo.toml&& echo "✅" ## || echo "❌"
+          cargo test -j8 && echo "✅" ## || echo "❌"
 
       - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
