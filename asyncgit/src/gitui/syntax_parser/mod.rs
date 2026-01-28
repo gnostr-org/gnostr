@@ -58,7 +58,7 @@ impl AsRef<str> for SyntaxTag {
 }
 
 /// Safety: The `ptr` must be a valid `*const ffi::TSLanguage`.
-unsafe fn unsafe_language_from_ptr(ptr: *const ffi::TSLanguage) -> Language {
+unsafe fn unsafe_language_from_ptr(ptr: *const ()) -> Language {
     std::mem::transmute(ptr)
 }
 
