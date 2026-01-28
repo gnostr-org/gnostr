@@ -382,11 +382,11 @@ fn install_xcb_deps() {
 
 fn install_openssl_brew() {
     println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
-    let install_result = Command::new("brew").args(["install", "openssl@3"]).status();
+    let install_result = Command::new("brew").args(["install", "openssl"]).status();
 
     match install_result {
         Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed openssl@3 via Homebrew.");
+            println!("cargo:warning=Successfully installed openssl via Homebrew.");
             // Instruct rustc to link against the OpenSSL libraries installed by
             // Brew. The exact paths might vary slightly based on
             // Brew's configuration. It's generally safer to rely on
@@ -402,7 +402,7 @@ fn install_openssl_brew() {
             println!(
                 "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
             );
-            println!("cargo:warning=  brew install openssl@3");
+            println!("cargo:warning=  brew install openssl");
         }
         Err(e) => {
             println!(
@@ -442,6 +442,7 @@ fn install_pkg_config() {
     }
 }
 fn install_zlib() {
+    if check_brew() {
     println!("cargo:warning=Attempting to install zlib using Homebrew...");
     let install_result = Command::new("brew").args(["install", "zlib"]).status();
 
@@ -466,6 +467,7 @@ fn install_zlib() {
                 e
             );
         }
+    }
     }
 }
 
@@ -605,9 +607,9 @@ fn main() {
                 // The `openssl` crate generally handles finding these libraries.
                 // If you need explicit linking (less recommended):
                 if target_arch == "aarch64" {
-                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    println!("cargo:rustc-link-lib=dylib=crypto@3");
+                    //println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
+                    //println!("cargo:rustc-link-lib=dylib=ssl@3");
+                    //println!("cargo:rustc-link-lib=dylib=crypto@3");
                 } else if target_arch == "x86_64" {
                     println!("cargo:rustc-link-search=native=/usr/local/opt/openssl/lib");
                     println!("cargo:rustc-link-lib=dylib=ssl");
@@ -637,6 +639,7 @@ fn if_windows() -> bool {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "windows" {
+        println!("{} may require additional configuration for vendored/openssl?", target_os);
         println!("cargo:rustc-cfg=target_os_windows");
         println!("cargo:warning=Building for Windows.");
         // Add Windows-specific build logic here
