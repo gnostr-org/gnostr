@@ -423,6 +423,13 @@ sd-notify = "0.4.1"
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winnt", "handleapi", "processthreadsapi", "errhandlingapi"] }
 
+# If sccache is using 0.48, add this too
+windows-sys_048 = { package = "windows-sys", version = "0.48", features = ["Win32_System_Threading", "Win32_Foundation"] }
+
+# Patch for version 0.52
+windows-sys_052 = { package = "windows-sys", version = "0.52", features = ["Win32_System_Threading", "Win32_Foundation"] }
+# other patches
+
 [build-dependencies]
 anyhow = "1.0.75"
 cc = { version = "1.0.106", features = ["parallel"] }
