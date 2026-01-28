@@ -682,8 +682,8 @@ fn if_linux_unknown() -> bool {
                 if String::from_utf8_lossy(&output.stdout).contains("libssl.so")
                     && String::from_utf8_lossy(&output.stdout).contains("libcrypto.so") =>
             {
-                println!("cargo:rustc-link-lib=dylib=ssl");
-                println!("cargo:rustc-link-lib=dylib=crypto");
+                //println!("cargo:rustc-link-lib=dylib=ssl");
+                //println!("cargo:rustc-link-lib=dylib=crypto");
             }
             _ => {
                 println!(
@@ -696,8 +696,8 @@ fn if_linux_unknown() -> bool {
         true
     } else if target_os == "linux" {
         // Logic for other Linux platforms
-        println!("cargo:rustc-link-lib=dylib=ssl");
-        println!("cargo:rustc-link-lib=dylib=crypto");
+        //println!("cargo:rustc-link-lib=dylib=ssl");
+        //println!("cargo:rustc-link-lib=dylib=crypto");
         true
     } else {
         false
