@@ -106,7 +106,7 @@ fn determine_lang(path: &Path) -> Option<Language> {
         "sh" | "bash" | ".bashrc" | ".bash_profile" | "ebuild" | "eclass" => {
             Some(tree_sitter_bash::LANGUAGE)
         }
-        "php" => Some(tree_sitter_php::LANGUAGE),
+        "php" => Some(tree_sitter_php::language()),
         "java" => Some(tree_sitter_java::language()),
         "scala" | "sbt" => Some(tree_sitter_scala::language()),
         "ml" => Some(tree_sitter_ocaml::language_ocaml()),
@@ -122,7 +122,7 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
         if lang == &tree_sitter_rust::language() {
             (
                 tree_sitter_rust::HIGHLIGHT_QUERY,
-                tree_sitter_rust::HIGHLIGHTS_QUERY,
+                tree_sitter_rust::HIGHLIGHT_QUERY,
                 "",
             )
         } else if lang == &tree_sitter_toml::language() {
@@ -167,7 +167,7 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
             )
         } else if lang == &tree_sitter_bash::LANGUAGE {
             (tree_sitter_bash::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_php::LANGUAGE {
+        } else if lang == &tree_sitter_php::language() {
             (
                 tree_sitter_php::HIGHLIGHTS_QUERY,
                 tree_sitter_php::INJECTIONS_QUERY,
@@ -193,7 +193,7 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
                 tree_sitter_html::INJECTIONS_QUERY,
                 "",
             )
-        } else if lang == &tree_sitter_elixir::LANGUAGE {
+        } else if lang == &tree_sitter_elixir::language() {
             (tree_sitter_elixir::HIGHLIGHTS_QUERY, "", "")
         } else {
             panic!("Undefined language");
