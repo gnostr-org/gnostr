@@ -10,3 +10,7 @@ readme = "README.md"
 license = "MIT"
 categories = ["development-tools", "development-tools::testing", "encoding"]
 keywords = ["string"]
+
+[lib]
+name = "gnostr_invalidstring"
+path = "src/lib.rs"
