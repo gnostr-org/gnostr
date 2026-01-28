@@ -97,37 +97,37 @@ fn determine_lang(path: &Path) -> Option<Language> {
         "json" => Some(tree_sitter_json::LANGUAGE),
         "cc" => Some(tree_sitter_cpp::language()),
         "rb" => Some(tree_sitter_ruby::language()),
-        "hs" => Some(tree_sitter_haskell::LANGUAGE),
-        "go" => Some(tree_sitter_go::LANGUAGE),
-        "cs" => Some(tree_sitter_c_sharp::LANGUAGE),
-        "py" => Some(tree_sitter_python::LANGUAGE),
+        "hs" => Some(tree_sitter_haskell::language()),
+        "go" => Some(tree_sitter_go::language()),
+        "cs" => Some(tree_sitter_c_sharp::language()),
+        "py" => Some(tree_sitter_python::language()),
         "ts" => Some(tree_sitter_typescript::language_typescript()),
         "tsx" => Some(tree_sitter_typescript::language_tsx()),
         "sh" | "bash" | ".bashrc" | ".bash_profile" | "ebuild" | "eclass" => {
             Some(tree_sitter_bash::LANGUAGE)
         }
         "php" => Some(tree_sitter_php::LANGUAGE),
-        "java" => Some(tree_sitter_java::LANGUAGE),
-        "scala" | "sbt" => Some(tree_sitter_scala::LANGUAGE),
+        "java" => Some(tree_sitter_java::language()),
+        "scala" | "sbt" => Some(tree_sitter_scala::language()),
         "ml" => Some(tree_sitter_ocaml::language_ocaml()),
         "mli" => Some(tree_sitter_ocaml::language_ocaml_interface()),
-        "html" => Some(tree_sitter_html::LANGUAGE),
-        "ex" | "exs" => Some(tree_sitter_elixir::LANGUAGE),
+        "html" => Some(tree_sitter_html::language()),
+        "ex" | "exs" => Some(tree_sitter_elixir::language()),
         _ => None,
     }
 }
 
 fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
     let (highlights_query, injections_query, locals_query) =
-        if lang == &tree_sitter_rust::LANGUAGE {
+        if lang == &tree_sitter_rust::language() {
             (
                 tree_sitter_rust::HIGHLIGHT_QUERY,
                 tree_sitter_rust::HIGHLIGHTS_QUERY,
                 "",
             )
-        } else if lang == &tree_sitter_toml::LANGUAGE {
+        } else if lang == &tree_sitter_toml::language() {
             (tree_sitter_toml::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_javascript::LANGUAGE {
+        } else if lang == &tree_sitter_javascript::language() {
             (
                 tree_sitter_javascript::HIGHLIGHT_QUERY,
                 tree_sitter_javascript::INJECTION_QUERY,
