@@ -1,6 +1,7 @@
 use tree_sitter_grammar_repository::{Grammar, HighlightConfigurationParams};
 use std::{cell::RefCell, collections::HashMap, ops::Range, path::Path};
 use tree_sitter::Language;
+use tree_sitter::ffi;
 use tree_sitter_highlight::{Highlight, HighlightConfiguration, HighlightEvent, Highlighter};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SyntaxTag {
