@@ -14,7 +14,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  gnostr-test:
+  gnostr-bot:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -26,7 +26,7 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
-      fail-fast: false
+      fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -187,36 +187,23 @@ jobs:
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
 
-
-      - name: Get latest release tag
+      - name: Get latest release
         shell: bash
-        id: get_release
-        run: echo "RELEASE_TAG=$(gh release view --json tagName --jq '.tagName')" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: get_latest_release
+        run: |
+          # Use GitHub API to get the latest release tag
+          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
+          echo "Latest release tag: $LATEST_TAG"
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
-      - name: Use the latest release tag
+      - name: Install gnostr (latest release)
         shell: bash
         run: |
-          echo "The latest release tag is ${{ env.RELEASE_TAG }}"
-          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.sh"
+          # Construct the installer URL using the latest tag
+          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
           echo "Installer URL: $INSTALLER_URL"
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
-          cargo-binstall --force --no-confirm gnostr;
-
-      - name: gnostr chat --oneshot
-        shell: bash
-        run: |
-          gnostr chat --oneshot "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)-message from gh CI" --topic gnostr
-
-      #- name: powershell install gnostr
-      #  shell: powershell
-      #  run: |
-      #    # Construct the installer URL using the latest tag
-      #    $INSTALLER_URL = "https://github.com/gnostr-org/gnostr/releases/download/${{ env.RELEASE_TAG }}/gnostr-installer.ps1"
-      #    Write-Host "Installer URL: $INSTALLER_URL"
-      #    irm "$INSTALLER_URL" | iex
-      #  if: runner.os == 'windows'
+          cargo-binstall --force --no-confirm gnostr
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
@@ -229,31 +216,19 @@ jobs:
       #  run: |
       #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
       #  if: runner.os == 'windows'
+
       - name: Install Strawberry Perl
-        shell: bash
         run: choco install strawberryperl -y
         if: runner.os == 'windows'
-
       - name: Install Perl modules
-        shell: bash
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
 
-      - name: Install OpenSSL
-        shell: bash
-        run: |
-          vcpkg install openssl:x64-windows-static
-          $env:OPENSSL_DIR = "C:\path\to\vcpkg\installed\x64-windows-static"
-          $env:OPENSSL_STATIC = "1"
-        if: runner.os == 'windows'
-
       - name: brew install
-        shell: bash
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
-        shell: bash
         run: |
           set -e
           for i in {1..5}; do
@@ -269,29 +244,29 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
-        shell: bash
         run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: runner.os != 'windows'
 
       - name: brew tap nostorg/nostr
-        shell: bash
         run: brew tap nostorg/nostr || true
         if: runner.os != 'windows'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
-        shell: bash
         run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os != 'windows'
 
       - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        shell: bash
         run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
         if: runner.os != 'windows'
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines
-        shell: bash
         run: brew install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
+
+      #- name: powershell install gnostr
+      #  shell: powershell
+      #  run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
+      #  if: runner.os == 'windows'
 
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
@@ -361,6 +336,7 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE;
+            gnostr query -i $EVENT -r ${{ env.DAMUS }};
             echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
@@ -373,12 +349,25 @@ jobs:
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo test -j8 --manifest-path ./asyncgit/Cargo.toml&& echo "✅" ## || echo "❌"
-          cargo test -j8 --manifest-path ./legit/Cargo.toml&& echo "✅" ## || echo "❌"
+          cargo run --bin gnostr -- nip34 --help
+          cargo run --bin gnostr -- nip34 repo-announcement --help
+          cargo run --bin gnostr -- nip34 repo-state --help
+          cargo run --bin gnostr -- nip34 patch --help
+          cargo run --bin gnostr -- nip34 pull-request --help
+          cargo run --bin gnostr -- nip34 issue --help
+          cargo run --bin gnostr -- nip34 status --help
           cargo test -j8 && echo "✅" ## || echo "❌"
 
-      - name: 🌙 UTC second is ODD
+      - name: gnostr ngit fetch
         shell: bash
+        run: |
+          git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+          cargo run --bin gnostr -- ngit --help
+          cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
+          cargo run --bin gnostr -- ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
+        if: ${{ !env.ACT }}
+
+      - name: 🌙 UTC second is ODD
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
         run: |
           make gnostr-chat &
@@ -389,7 +378,6 @@ jobs:
           gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
-        shell: bash
         if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
         run: |
           echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
@@ -400,7 +388,7 @@ jobs:
 
       - name: Cleanup lingering gnostr processes (Windows)
         if: success() && (matrix.os == 'windows-latest')
-        shell: bash
+        shell: pwsh
         run: |
           echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
           Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue || true
@@ -409,7 +397,6 @@ jobs:
         continue-on-error: true
 
       - name: Debug GITHUB_API_URL
-        shell: bash
         run: |
           echo "GITHUB_API_URL: ${{ env.GITHUB_API_URL }}"
 
@@ -437,7 +424,6 @@ jobs:
           fi
 
       - name: Output Current Job Log URL
-        shell: bash
         run: echo ${{ steps.jobs.outputs.html_url }}
 
       - name: Execute script on failure
