@@ -139,26 +139,26 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
             (tree_sitter_json::HIGHLIGHTS_QUERY, "", "")
         } else if lang == &tree_sitter_cpp::language() {
             (tree_sitter_cpp::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_ruby::LANGUAGE {
+        } else if lang == &tree_sitter_ruby::language() {
             (
                 tree_sitter_ruby::HIGHLIGHT_QUERY,
                 "",
                 tree_sitter_ruby::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_haskell::LANGUAGE {
+        } else if lang == &tree_sitter_haskell::language() {
             (
                 tree_sitter_haskell::HIGHLIGHTS_QUERY,
                 "",
                 tree_sitter_haskell::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_go::LANGUAGE {
+        } else if lang == &tree_sitter_go::language() {
             (tree_sitter_go::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_c_sharp::LANGUAGE {
+        } else if lang == &tree_sitter_c_sharp::language() {
             (tree_sitter_c_sharp::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_python::LANGUAGE {
+        } else if lang == &tree_sitter_python::language() {
             (tree_sitter_python::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_typescript::LANGUAGE
-            || lang == &tree_sitter_typescript::LANGUAGE_TSX
+        } else if lang == &tree_sitter_typescript::language_typescript()
+            || lang == &tree_sitter_typescript::language_tsx()
         {
             (
                 tree_sitter_typescript::HIGHLIGHT_QUERY,
@@ -173,21 +173,21 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
                 tree_sitter_php::INJECTIONS_QUERY,
                 "",
             )
-        } else if lang == &tree_sitter_java::LANGUAGE {
+        } else if lang == &tree_sitter_java::language() {
             (tree_sitter_java::HIGHLIGHT_QUERY, "", "")
-        } else if lang == &tree_sitter_scala::LANGUAGE {
+        } else if lang == &tree_sitter_scala::language() {
             (
                 tree_sitter_scala::HIGHLIGHTS_QUERY,
                 "",
                 tree_sitter_scala::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_ocaml::LANGUAGE_OCAML {
+        } else if lang == &tree_sitter_ocaml::language_ocaml() {
             (
                 tree_sitter_ocaml::HIGHLIGHTS_QUERY,
                 "",
                 tree_sitter_ocaml::LOCALS_QUERY,
             )
-        } else if lang == &tree_sitter_html::LANGUAGE {
+        } else if lang == &tree_sitter_html::language() {
             (
                 tree_sitter_html::HIGHLIGHTS_QUERY,
                 tree_sitter_html::INJECTIONS_QUERY,
