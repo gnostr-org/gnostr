@@ -89,7 +89,7 @@ fn determine_lang(path: &Path) -> Option<(&'static Grammar, Language)> {
     for variant in Grammar::VARIANTS {
         let params = Grammar::highlight_configuration_params(*variant);
         if params.name == extension {
-            return Some((variant, params.language()));
+            return Some((variant, (params.language)()));
         }
     }
     None
