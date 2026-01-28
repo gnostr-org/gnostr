@@ -362,9 +362,11 @@ jobs:
         shell: bash
         run: |
           git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+          gnostr ngit --version
+          gnostr ngit -V
           gnostr ngit --help
-          #gnostr ngit --nsec $(gnostr --hash "") list
-          gnostr ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
+          gnostr ngit --nsec ${{ secrets.NSEC_SECRET_HASH }} list 2>/dev/null || true
+          gnostr ngit --nsec ${{ secrets.NSEC_SECRET_HASH }} fetch 2>/dev/null || true
         if: ${{ !env.ACT }}
 
       - name: 🌙 UTC second is ODD
