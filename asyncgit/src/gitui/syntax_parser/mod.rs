@@ -97,7 +97,7 @@ fn determine_lang(path: &Path) -> Option<(Grammar, Language)> {
 
     let params = Grammar::highlight_configuration_params(grammar_variant);
 
-    Some((grammar_variant, unsafe { unsafe_language_from_ptr((params.language.into_raw())() as *const ffi::TSLanguage) }))
+    Some((grammar_variant, unsafe { unsafe_language_from_ptr((params.language.into_raw())() as *const ()) }))
 
 }
 
