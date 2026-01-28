@@ -1405,7 +1405,7 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "toml",
- "tree-sitter 0.23.2",
+ "tree-sitter",
  "tree-sitter-grammar-repository",
  "tree-sitter-highlight",
  "tui-prompts",
@@ -3928,18 +3928,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tree-sitter"
-version = "0.23.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0203df02a3b6dd63575cc1d6e609edc2181c9a11867a271b25cfd2abff3ec5ca"
-dependencies = [
- "cc",
- "regex",
- "regex-syntax",
- "tree-sitter-language",
-]
-
-[[package]]
 name = "tree-sitter-grammar-repository"
 version = "1895.933117.678085"
 dependencies = [
@@ -3966,7 +3954,7 @@ checksum = "042342584c5a7a0b833d9fc4e2bdab3f9868ddc6c4b339a1e01451c6720868bc"
 dependencies = [
  "regex",
  "thiserror 1.0.69",
- "tree-sitter 0.20.10",
+ "tree-sitter",
 ]
 
 [[package]]

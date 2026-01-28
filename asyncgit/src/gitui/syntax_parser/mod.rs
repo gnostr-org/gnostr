@@ -84,16 +84,22 @@ fn tags_by_highlight_index() -> [SyntaxTag; 22] {
     ]
 }
 
-fn determine_lang(path: &Path) -> Option<Language> {
+fn determine_lang(path: &Path) -> Option<(&'static Grammar, Language)> {
     let extension = path.extension().and_then(|s| s.to_str())?;
-    Grammar::from_file_name(extension).map(Into::into)
+    for variant in Grammar::VARIANTS {
+        let params = Grammar::highlight_configuration_params(*variant);
+        if params.name == extension {
+            return Some((variant, (params.language)()));
+        }
+    }
+    None
 }
 
-fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
-    let params = Grammar::highlight_configuration_params(lang.into());
+fn create_highlight_config(grammar_variant: &'static Grammar, language: &Language) -> HighlightConfiguration {
+    let params = Grammar::highlight_configuration_params(*grammar_variant);
 
     let mut highlight_config =
-        HighlightConfiguration::new(*lang, params.highlights_query, params.injection_query, params.locals_query)
+        HighlightConfiguration::new(*language, params.highlights_query, params.injection_query, params.locals_query)
             .unwrap();
 
     highlight_config.configure(&tags_by_highlight_index());
@@ -102,21 +108,21 @@ fn create_highlight_config(lang: &Language) -> HighlightConfiguration {
 
 thread_local! {
     pub static HIGHLIGHTER: RefCell<Highlighter> = RefCell::new(Highlighter::new());
-    pub static LANG_CONFIGS: RefCell<HashMap<Language, HighlightConfiguration>> = RefCell::new(HashMap::new());
+    pub static LANG_CONFIGS: RefCell<HashMap<Grammar, HighlightConfiguration>> = RefCell::new(HashMap::new());
 }
 
 pub fn parse<'a>(path: &'a Path, content: &'a str) -> Vec<(Range<usize>, SyntaxTag)> {
     let tags = tags_by_highlight_index();
 
-    let Some(lang) = determine_lang(path) else {
+    let Some((grammar_variant, language)) = determine_lang(path) else {
         return vec![];
     };
 
     LANG_CONFIGS.with(|highlight_configs| {
         let mut highlight_configs_borrow = highlight_configs.borrow_mut();
         let config = highlight_configs_borrow
-            .entry(lang)
-            .or_insert_with_key(create_highlight_config);
+            .entry(grammar_variant)
+            .or_insert_with_key(|_| create_highlight_config(grammar_variant, &language));
 
         HIGHLIGHTER.with_borrow_mut(|highlighter| {
             highlighter
