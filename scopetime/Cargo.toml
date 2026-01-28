@@ -11,6 +11,10 @@ readme = "README.md"
 categories = ["development-tools::profiling"]
 keywords = ["profiling", "logging"]
 
+[lib]
+name = "gnostr_scopetime"
+path = "src/lib.rs"
+
 [features]
 default = []
 enabled = []
