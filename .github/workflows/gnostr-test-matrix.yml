@@ -230,13 +230,17 @@ jobs:
       #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
       #  if: runner.os == 'windows'
       - name: Install Strawberry Perl
+        shell: bash
         run: choco install strawberryperl -y
         if: runner.os == 'windows'
+
       - name: Install Perl modules
+        shell: bash
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
 
       - name: Install OpenSSL
+        shell: bash
         run: |
           vcpkg install openssl:x64-windows-static
           $env:OPENSSL_DIR = "C:\path\to\vcpkg\installed\x64-windows-static"
@@ -244,10 +248,12 @@ jobs:
         if: runner.os == 'windows'
 
       - name: brew install
+        shell: bash
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
+        shell: bash
         run: |
           set -e
           for i in {1..5}; do
@@ -263,22 +269,27 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
+        shell: bash
         run: brew tap gnostr-org/homebrew-gnostr-org || true
         if: runner.os != 'windows'
 
       - name: brew tap nostorg/nostr
+        shell: bash
         run: brew tap nostorg/nostr || true
         if: runner.os != 'windows'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
+        shell: bash
         run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os != 'windows'
 
       - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
+        shell: bash
         run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
         if: runner.os != 'windows'
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines
+        shell: bash
         run: brew install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
 
@@ -367,6 +378,7 @@ jobs:
           cargo test -j8 && echo "✅" ## || echo "❌"
 
       - name: 🌙 UTC second is ODD
+        shell: bash
         if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
         run: |
           make gnostr-chat &
@@ -377,6 +389,7 @@ jobs:
           gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
+        shell: bash
         if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
         run: |
           echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
@@ -387,7 +400,7 @@ jobs:
 
       - name: Cleanup lingering gnostr processes (Windows)
         if: success() && (matrix.os == 'windows-latest')
-        shell: pwsh
+        shell: bash
         run: |
           echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
           Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue || true
@@ -396,6 +409,7 @@ jobs:
         continue-on-error: true
 
       - name: Debug GITHUB_API_URL
+        shell: bash
         run: |
           echo "GITHUB_API_URL: ${{ env.GITHUB_API_URL }}"
 
@@ -423,6 +437,7 @@ jobs:
           fi
 
       - name: Output Current Job Log URL
+        shell: bash
         run: echo ${{ steps.jobs.outputs.html_url }}
 
       - name: Execute script on failure
