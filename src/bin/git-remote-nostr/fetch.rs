@@ -1,14 +1,16 @@
 use core::str;
 use std::{
+    collections::HashMap,
     io::Stdin,
     sync::{Arc, Mutex},
     time::Instant,
 };
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
 use git2::{Progress, Repository};
-use gnostr::{
+use ngit::{
+    cli_interactor::count_lines_per_msg_vec,
     git::{
         Repo, RepoActions,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
@@ -18,18 +20,18 @@ use gnostr::{
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use nostr_0_34_1::{ToBech32, nips::nip19};
+use nostr_0_37_0::nips::nip19;
+use nostr_sdk_0_37_0::{Event, ToBech32};
 
 use crate::utils::{
-    Direction, count_lines_per_msg_vec, fetch_or_list_error_is_not_authentication_failure,
-    find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch, get_open_proposals,
-    get_read_protocols_to_try, join_with_and, set_protocol_preference,
+    Direction, fetch_or_list_error_is_not_authentication_failure,
+    find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch,
+    get_open_or_draft_proposals, get_read_protocols_to_try, join_with_and, set_protocol_preference,
 };
 
 pub async fn run_fetch(
     git_repo: &Repo,
     repo_ref: &RepoRef,
-    decoded_nostr_url: &NostrUrlDecoded,
     stdin: &Stdin,
     oid: &str,
     refstr: &str,
@@ -51,7 +53,7 @@ pub async fn run_fetch(
             git_repo,
             &oids_from_git_servers,
             git_server_url,
-            decoded_nostr_url,
+            &repo_ref.to_nostr_git_url(&None),
             &term,
         ) {
             errors.push(error);
@@ -77,67 +79,99 @@ pub async fn run_fetch(
 
     fetch_batch.retain(|refstr, _| refstr.contains("refs/heads/pr/"));
 
-    if !fetch_batch.is_empty() {
-        let open_proposals = get_open_proposals(git_repo, repo_ref).await?;
-
-        let current_user = get_curent_user(git_repo)?;
-
-        for (refstr, oid) in fetch_batch {
-            if let Some((_, (_, patches))) = find_proposal_and_patches_by_branch_name(
-                &refstr,
-                &open_proposals,
-                current_user.as_ref(),
-            ) {
-                if !git_repo.does_commit_exist(&oid)? {
-                    let mut patches_ancestor_first = patches.clone();
-                    patches_ancestor_first.reverse();
-                    if git_repo.does_commit_exist(&tag_value(
-                        patches_ancestor_first.first().unwrap(),
-                        "parent-commit",
-                    )?)? {
-                        for patch in &patches_ancestor_first {
-                            if let Err(error) = git_repo.create_commit_from_patch(patch) {
-                                term.write_line(
-                                    format!(
-                                        "WARNING: cannot create branch for {refstr}, error: {error} for patch {}",
-                                        nip19::Nip19Event {
-                                            event_id: patch.id(),
-                                            author: Some(patch.author()),
-                                            kind: Some(patch.kind()),
-                                            relays: if let Some(relay) = repo_ref.relays.first() {
-                                                vec![relay.clone()]
-                                            } else { vec![]},
-                                        }.to_bech32().unwrap_or_default()
-                                    )
-                                    .as_str(),
-                                )?;
-                                break;
-                            }
-                        }
-                    } else {
-                        term.write_line(
-                            format!("WARNING: cannot find parent commit for {refstr}").as_str(),
-                        )?;
-                    }
-                }
-            } else {
-                term.write_line(format!("WARNING: cannot find proposal for {refstr}").as_str())?;
-            }
-        }
-    }
-
+    fetch_open_or_draft_proposals(git_repo, &term, repo_ref, &fetch_batch).await?;
     term.flush()?;
     println!();
     Ok(())
 }
 
-fn fetch_from_git_server(
+pub fn make_commits_for_proposal(
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    patches_ancestor_last: &[Event],
+) -> Result<String> {
+    let patches_ancestor_first: Vec<&Event> = patches_ancestor_last.iter().rev().collect();
+    let mut tip_commit_id = if let Ok(parent_commit) = tag_value(
+        patches_ancestor_first
+            .first()
+            .context("proposal should have at least one patch")?,
+        "parent-commit",
+    ) {
+        parent_commit
+    } else {
+        // TODO choose most recent commit on master before patch timestamp so it doesnt
+        // constantly get rebased
+        let (_, hash) = git_repo.get_main_or_master_branch()?;
+        hash.to_string()
+    };
+
+    for patch in &patches_ancestor_first {
+        let commit_id = git_repo
+            .create_commit_from_patch(patch, Some(tip_commit_id.clone()))
+            .context(format!(
+                "failed to create commit for patch {}",
+                nip19::Nip19Event {
+                    event_id: patch.id,
+                    author: Some(patch.pubkey),
+                    kind: Some(patch.kind),
+                    relays: if let Some(relay) = repo_ref.relays.first() {
+                        vec![relay.to_string()]
+                    } else {
+                        vec![]
+                    },
+                }
+                .to_bech32()
+                .unwrap_or_default()
+            ))?;
+        tip_commit_id = commit_id.to_string();
+    }
+    Ok(tip_commit_id)
+}
+
+async fn fetch_open_or_draft_proposals(
+    git_repo: &Repo,
+    term: &console::Term,
+    repo_ref: &RepoRef,
+    proposal_refs: &HashMap<String, String>,
+) -> Result<()> {
+    if !proposal_refs.is_empty() {
+        let open_and_draft_proposals = get_open_or_draft_proposals(git_repo, repo_ref).await?;
+
+        let current_user = get_curent_user(git_repo)?;
+
+        for refstr in proposal_refs.keys() {
+            if let Some((_, (_, patches))) = find_proposal_and_patches_by_branch_name(
+                refstr,
+                &open_and_draft_proposals,
+                current_user.as_ref(),
+            ) {
+                if let Err(error) = make_commits_for_proposal(git_repo, repo_ref, patches) {
+                    term.write_line(
+                        format!("WARNING: failed to create branch for {refstr}, error: {error}",)
+                            .as_str(),
+                    )?;
+                    break;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn fetch_from_git_server(
     git_repo: &Repo,
     oids: &[String],
     git_server_url: &str,
     decoded_nostr_url: &NostrUrlDecoded,
     term: &console::Term,
 ) -> Result<()> {
+    let already_have_oids = oids
+        .iter()
+        .all(|oid| git_repo.does_commit_exist(oid).is_ok_and(|outcome| outcome));
+    if already_have_oids {
+        return Ok(());
+    }
+
     let server_url = git_server_url.parse::<CloneUrl>()?;
 
     let protocols_to_attempt = get_read_protocols_to_try(git_repo, &server_url, decoded_nostr_url);
@@ -210,8 +244,7 @@ fn report_on_transfer_progress(
     }
     let received = progress_stats.received_objects() as f64;
     let percentage = ((received / total) * 100.0)
-        // always round down because 100% complete is misleading when
-        // its not complete
+        // always round down because 100% complete is misleading when its not complete
         .floor();
 
     let received_bytes = progress_stats.received_bytes() as f64;
@@ -247,8 +280,7 @@ fn report_on_transfer_progress(
         let indexed_deltas = progress_stats.indexed_deltas() as f64;
         let total_deltas = progress_stats.total_deltas() as f64;
         let percentage = ((indexed_deltas / total_deltas) * 100.0)
-            // always round down because 100% complete is misleading
-            // when its not complete
+            // always round down because 100% complete is misleading when its not complete
             .floor();
         if total_deltas > 0.0 {
             report.push(format!(
@@ -316,8 +348,7 @@ impl<'a> FetchReporter<'a> {
                 let existing_lines = self.count_all_existing_lines();
                 let msg = data.to_string();
                 if let Some(last) = self.remote_msgs.last() {
-                    // if previous line begins with x but doesnt
-                    // finish with y then its part of the
+                    // if previous line begins with x but doesnt finish with y then its part of the
                     // same msg
                     if (last.starts_with("Enume") && !last.ends_with(", done."))
                         || ((last.starts_with("Compre") || last.starts_with("Count"))
@@ -325,8 +356,8 @@ impl<'a> FetchReporter<'a> {
                     {
                         let last = self.remote_msgs.pop().unwrap();
                         self.remote_msgs.push(format!("{last}{msg}"));
-                    // if previous msg contains % and its not 100%
-                    // then it should be overwritten
+                    // if previous msg contains % and its not 100% then it
+                    // should be overwritten
                     } else if (last.contains('%') && !last.contains("100%"))
                         // but also if the next message is identical with "", done." appended
                         || last == &msg.replace(", done.", "")
@@ -357,9 +388,8 @@ impl<'a> FetchReporter<'a> {
             if self.end_time.is_none() && updated.first().is_some_and(|f| f.contains("100%")) {
                 self.end_time = Some(Instant::now());
             }
-            // once "Resolving Deltas" is complete, deltas get reset
-            // to 0 and it stops reporting on it so we want to keep
-            // the old report
+            // once "Resolving Deltas" is complete, deltas get reset to 0 and it stops
+            // reporting on it so we want to keep the old report
             self.transfer_progress_msgs = updated;
         }
         self.just_write_transfer_progress(existing_lines);
@@ -412,9 +442,7 @@ fn fetch_from_git_server_url(
 #[cfg(test)]
 mod tests {
 
-    use crate::fetch::FetchReporter;
-
-    type E = anyhow::Error;
+    use super::*;
 
     fn pass_through_fetch_reporter_proces_remote_msg(msgs: Vec<&str>) -> Vec<String> {
         let term = console::Term::stdout();
@@ -603,229 +631,6 @@ mod tests {
                     "Counting objects: 100% (2195/2195), done.",
                 ]
             );
-        }
-    }
-
-    mod integration_tests {
-        use std::collections::HashSet;
-
-        use serial_test::serial;
-        use tokio::join;
-        type E = anyhow::Error;
-        type AnyhowResult<T> = anyhow::Result<T>;
-        use gnostr::test_utils::{
-            FEATURE_BRANCH_NAME_1, GitTestRepo, cli_tester_create_proposal_branches_ready_to_send,
-            generate_repo_ref_event_with_git_server, generate_test_key_1_metadata_event,
-            generate_test_key_1_relay_list_event, get_proposal_branch_name_from_events,
-            git_remote::{
-                cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo,
-                prep_git_repo_minus_1_commit, prep_source_repo_and_events_including_proposals,
-            },
-            nostr_0_34_1::Event,
-            relay::{Relay, shutdown_relay},
-        };
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn fetch_downloads_specified_commits_from_git_server() -> Result<(), E> {
-            let source_git_repo = prep_git_repo()?;
-            let source_path = source_git_repo.dir.to_str().unwrap().to_string();
-
-            std::fs::write(source_git_repo.dir.join("commit.md"), "some content")?;
-            let main_commit_id = source_git_repo.stage_and_commit("commit.md")?;
-
-            source_git_repo.create_branch("vnext")?;
-            source_git_repo.checkout("vnext")?;
-            std::fs::write(source_git_repo.dir.join("vnext.md"), "some content")?;
-            let vnext_commit_id = source_git_repo.stage_and_commit("vnext.md")?;
-
-            let git_repo = prep_git_repo()?;
-            let events = vec![
-                generate_test_key_1_metadata_event("fred"),
-                generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![
-                    source_git_repo.dir.to_str().unwrap().to_string(),
-                ]),
-            ];
-            // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events;
-
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                assert!(git_repo.git_repo.find_commit(vnext_commit_id).is_err());
-
-                let mut p = cli_tester_after_fetch(&git_repo)?;
-                p.send_line(format!("fetch {main_commit_id} main").as_str())?;
-                p.send_line(format!("fetch {vnext_commit_id} vnext").as_str())?;
-                p.send_line("")?;
-                p.expect(format!("fetching {source_path} over filesystem...\r\n").as_str())?;
-                p.expect_eventually_and_print("\r\n")?;
-
-                assert!(git_repo.git_repo.find_commit(main_commit_id).is_ok());
-                assert!(git_repo.git_repo.find_commit(vnext_commit_id).is_ok());
-
-                p.exit()?;
-                for p in [51, 52, 53, 55, 56, 57] {
-                    relay::shutdown_relay(8000 + p)?;
-                }
-                Ok(())
-            });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-            cli_tester_handle.join().unwrap()?;
-            Ok(())
-        }
-
-        mod when_first_git_server_fails_ {
-
-            //use futures::join;
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<(), E> {
-                let (state_event, source_git_repo): (Event, GitTestRepo) =
-                    generate_repo_with_state_event().await?;
-                // let source_path =
-                // source_git_repo.dir.to_str().unwrap().to_string();
-                let error_path = "./path-doesnt-exist".to_string();
-
-                let main_commit_id = source_git_repo.get_tip_of_local_branch("main")?;
-
-                let git_repo = prep_git_repo_minus_1_commit()?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        error_path.to_string(),
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                    state_event,
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    assert!(git_repo.git_repo.find_commit(main_commit_id).is_err());
-
-                    let mut p = cli_tester_after_fetch(&git_repo)?;
-                    p.send_line(format!("fetch {main_commit_id} main").as_str())?;
-                    p.send_line("")?;
-                    p.expect(format!("fetching {error_path} over filesystem...\r\n").as_str())?;
-                    // not sure why the below isn't appearing
-                    // p.expect(format!("fetching over filesystem from
-                    // {source_path}...\r\n").as_str())?;
-
-                    p.expect_eventually_and_print("\r\n")?;
-                    // p.expect("\r\n")?;
-
-                    assert!(git_repo.git_repo.find_commit(main_commit_id).is_ok());
-
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        shutdown_relay(8000 + p)?;
-                    }
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-        }
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> AnyhowResult<(), E>
-        {
-            let (events, source_git_repo): (Vec<Event>, GitTestRepo) =
-                prep_source_repo_and_events_including_proposals().await?;
-            let source_path = source_git_repo.dir.to_str().unwrap().to_string();
-
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events.clone();
-
-            let git_repo = prep_git_repo()?;
-
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                let branch_name =
-                    get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
-                let proposal_tip = cli_tester_create_proposal_branches_ready_to_send()?
-                    .get_tip_of_local_branch(FEATURE_BRANCH_NAME_1)?;
-
-                assert!(git_repo.git_repo.find_commit(proposal_tip).is_err());
-
-                let mut p = cli_tester_after_fetch(&git_repo)?;
-                p.send_line(format!("fetch {proposal_tip} refs/heads/{branch_name}").as_str())?;
-                p.send_line("")?;
-                p.expect(format!("fetching {source_path} over filesystem...\r\n").as_str())?;
-                // expect no errors
-                p.expect_after_whitespace("\r\n")?;
-                p.exit()?;
-                for p in [51, 52, 53, 55, 56, 57] {
-                    relay::shutdown_relay(8000 + p)?;
-                }
-
-                assert!(git_repo.git_repo.find_commit(proposal_tip).is_ok());
-
-                Ok(())
-            });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-
-            cli_tester_handle.join().unwrap()?;
-
-            Ok(())
         }
     }
 }

@@ -8,29 +8,33 @@ use std::{
 
 use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
-use client::{STATE_KIND, get_events_from_cache, get_state_from_cache, send_events, sign_event};
+use client::{
+    STATE_KIND, get_events_from_local_cache, get_state_from_cache, send_events, sign_event,
+};
 use console::Term;
 use git::{RepoActions, sha1_to_oid};
 use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
 use git2::{Oid, Repository};
-use gnostr::{
+use ngit::{
+    cli_interactor::count_lines_per_msg_vec,
     client::{self, get_event_from_cache_by_id},
     git::{
         self,
         nostr_url::{CloneUrl, NostrUrlDecoded},
         oid_to_shorthand_string,
     },
-    git_events::{self, get_event_root},
-    login::{self, get_curent_user},
-    repo_ref, repo_state,
+    git_events::{self, event_to_cover_letter, get_event_root},
+    login::{self, user::UserRef},
+    repo_ref::{self, get_repo_config_from_yaml},
+    repo_state,
 };
-use nostr_0_34_1::{
-    Event, EventBuilder, EventId, Kind, PublicKey, Tag, hashes::sha1::Hash as Sha1Hash,
-    nips::nip10::Marker,
+use nostr_0_37_0::nips::nip10::Marker;
+use nostr_sdk_0_37_0::{
+    Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag,
+    hashes::sha1::Hash as Sha1Hash,
 };
-use nostr_signer_0_34_0::NostrSigner;
 use repo_ref::RepoRef;
 use repo_state::RepoState;
 
@@ -39,18 +43,16 @@ use crate::{
     git::Repo,
     list::list_from_remotes,
     utils::{
-        Direction, count_lines_per_msg_vec, find_proposal_and_patches_by_branch_name,
-        get_all_proposals, get_remote_name_by_url, get_short_git_server_name,
-        get_write_protocols_to_try, join_with_and, push_error_is_not_authentication_failure,
-        read_line, set_protocol_preference,
+        Direction, find_proposal_and_patches_by_branch_name, get_all_proposals,
+        get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,
+        join_with_and, push_error_is_not_authentication_failure, read_line,
+        set_protocol_preference,
     },
 };
 
-#[allow(clippy::too_many_lines)]
 pub async fn run_push(
     git_repo: &Repo,
     repo_ref: &RepoRef,
-    decoded_nostr_url: &NostrUrlDecoded,
     stdin: &Stdin,
     initial_refspec: &str,
     client: &Client,
@@ -72,16 +74,18 @@ pub async fn run_push(
 
     let term = console::Term::stderr();
 
-    let list_outputs = match list_outputs {
-        Some(outputs) => outputs,
-        _ => list_from_remotes(&term, git_repo, &repo_ref.git_server, decoded_nostr_url),
-    };
-
-    let nostr_state = get_state_from_cache(git_repo.get_path()?, repo_ref).await;
+    let list_outputs = list_outputs.unwrap_or_else(|| {
+        list_from_remotes(
+            &term,
+            git_repo,
+            &repo_ref.git_server,
+            &repo_ref.to_nostr_git_url(&None),
+        )
+    });
 
     let existing_state = {
         // if no state events - create from first git server listed
-        if let Ok(nostr_state) = &nostr_state {
+        if let Ok(nostr_state) = &get_state_from_cache(Some(git_repo.get_path()?), repo_ref).await {
             nostr_state.state.clone()
         } else if let Some(url) = repo_ref
             .git_server
@@ -91,7 +95,7 @@ pub async fn run_push(
             list_outputs.get(url).unwrap().to_owned()
         } else {
             bail!(
-                "cannot connect to git servers: {}",
+                "failed to connect to git servers: {}",
                 repo_ref.git_server.join(" ")
             );
         }
@@ -106,7 +110,7 @@ pub async fn run_push(
     )?;
 
     git_server_refspecs.retain(|refspec| {
-        if let Some(rejected) = rejected_refspecs.get(&refspec.clone()) {
+        if let Some(rejected) = rejected_refspecs.get(&refspec.to_string()) {
             let (_, to) = refspec_to_from_to(refspec).unwrap();
             println!("error {to} {} out of sync with nostr", rejected.join(" "));
             false
@@ -115,234 +119,292 @@ pub async fn run_push(
         }
     });
 
-    let mut events = vec![];
+    // all refspecs aren't rejected
+    if !(git_server_refspecs.is_empty() && proposal_refspecs.is_empty()) {
+        let (rejected_proposal_refspecs, rejected) = create_and_publish_events(
+            git_repo,
+            repo_ref,
+            &git_server_refspecs,
+            &proposal_refspecs,
+            client,
+            existing_state,
+            &term,
+        )
+        .await?;
 
-    if git_server_refspecs.is_empty() && proposal_refspecs.is_empty() {
-        // all refspecs rejected
-        println!();
-        return Ok(());
+        if !rejected {
+            for refspec in git_server_refspecs.iter().chain(proposal_refspecs.iter()) {
+                if rejected_proposal_refspecs.contains(refspec) {
+                    continue;
+                }
+                let (_, to) = refspec_to_from_to(refspec)?;
+                println!("ok {to}");
+                update_remote_refs_pushed(
+                    &git_repo.git_repo,
+                    refspec,
+                    &repo_ref.to_nostr_git_url(&None).to_string(),
+                )
+                .context("could not update remote_ref locally")?;
+            }
+
+            // TODO make async - check gitlib2 callbacks work async
+
+            for (git_server_url, remote_refspecs) in remote_refspecs {
+                let remote_refspecs = remote_refspecs
+                    .iter()
+                    .filter(|refspec| git_server_refspecs.contains(refspec))
+                    .cloned()
+                    .collect::<Vec<String>>();
+                if !refspecs.is_empty() {
+                    let _ = push_to_remote(
+                        git_repo,
+                        &git_server_url,
+                        &repo_ref.to_nostr_git_url(&None),
+                        &remote_refspecs,
+                        &term,
+                    );
+                }
+            }
+        }
     }
 
-    let (signer, user_ref) = login::launch(
-        git_repo,
-        &None,
-        &None,
-        &None,
-        &None,
-        Some(client),
-        false,
-        true,
-    )
-    .await?;
+    println!();
+    Ok(())
+}
+
+async fn create_and_publish_events(
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    git_server_refspecs: &Vec<String>,
+    proposal_refspecs: &Vec<String>,
+    client: &Client,
+    existing_state: HashMap<String, String>,
+    term: &Term,
+) -> Result<(Vec<String>, bool)> {
+    let (signer, user_ref, _) =
+        login::login_or_signup(&Some(git_repo), &None, &None, Some(client), true).await?;
 
     if !repo_ref.maintainers.contains(&user_ref.public_key) {
-        for refspec in &git_server_refspecs {
+        for refspec in git_server_refspecs {
             let (_, to) = refspec_to_from_to(refspec).unwrap();
-            println!(
+            eprintln!(
                 "error {to} your nostr account {} isn't listed as a maintainer of the repo",
                 user_ref.metadata.name
             );
         }
-        git_server_refspecs.clear();
         if proposal_refspecs.is_empty() {
-            println!();
-            return Ok(());
+            return Ok((vec![], true));
         }
     }
 
+    let mut events = vec![];
+
     if !git_server_refspecs.is_empty() {
-        let new_state = generate_updated_state(git_repo, &existing_state, &git_server_refspecs)?;
+        let new_state = generate_updated_state(git_repo, &existing_state, git_server_refspecs)?;
 
-        let new_repo_state =
-            RepoState::build(repo_ref.identifier.clone(), new_state, &signer).await?;
+        let store_state =
+            if let Ok(Some(nostate)) = git_repo.get_git_config_item("nostr.nostate", None) {
+                !nostate.eq("true")
+            } else {
+                true
+            };
 
-        events.push(new_repo_state.event);
+        if store_state {
+            let new_repo_state =
+                RepoState::build(repo_ref.identifier.clone(), new_state, &signer).await?;
+            events.push(new_repo_state.event);
+        }
 
         for event in get_merged_status_events(
-            &term,
+            term,
+            &repo_ref.to_nostr_git_url(&None),
             repo_ref,
             git_repo,
-            &decoded_nostr_url.original_string,
             &signer,
-            &git_server_refspecs,
+            git_server_refspecs,
         )
         .await?
         {
             events.push(event);
         }
+
+        if let Ok(Some(repo_ref_event)) = get_maintainers_yaml_update(
+            term,
+            &repo_ref.to_nostr_git_url(&None),
+            repo_ref,
+            git_repo,
+            &signer,
+            git_server_refspecs,
+        )
+        .await
+        {
+            events.push(repo_ref_event);
+        }
     }
 
+    let (proposal_events, rejected_proposal_refspecs) = process_proposal_refspecs(
+        git_repo,
+        repo_ref,
+        proposal_refspecs,
+        &user_ref,
+        &signer,
+        term,
+    )
+    .await?;
+    for e in proposal_events {
+        events.push(e);
+    }
+
+    // TODO check whether tip of each branch pushed is on at least one git server
+    // before broadcasting the nostr state
+    if !events.is_empty() {
+        term.write_line("broadcast to nostr relays:")?;
+        send_events(
+            client,
+            Some(git_repo.get_path()?),
+            events,
+            user_ref.relays.write(),
+            repo_ref.relays.clone(),
+            true,
+            false,
+        )
+        .await?;
+    }
+    Ok((rejected_proposal_refspecs, false))
+}
+
+#[allow(clippy::too_many_lines)]
+async fn process_proposal_refspecs(
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    proposal_refspecs: &Vec<String>,
+    user_ref: &UserRef,
+    signer: &Arc<dyn NostrSigner>,
+    term: &Term,
+) -> Result<(Vec<Event>, Vec<String>)> {
+    let mut events = vec![];
     let mut rejected_proposal_refspecs = vec![];
-    if !proposal_refspecs.is_empty() {
-        let all_proposals = get_all_proposals(git_repo, repo_ref).await?;
-        let current_user = get_curent_user(git_repo)?;
+    if proposal_refspecs.is_empty() {
+        return Ok((events, rejected_proposal_refspecs));
+    }
+    let all_proposals = get_all_proposals(git_repo, repo_ref).await?;
+    let current_user = &user_ref.public_key;
 
-        for refspec in &proposal_refspecs {
-            let (from, to) = refspec_to_from_to(refspec).unwrap();
-            let tip_of_pushed_branch = git_repo.get_commit_or_tip_of_reference(from)?;
+    for refspec in proposal_refspecs {
+        let (from, to) = refspec_to_from_to(refspec).unwrap();
+        let tip_of_pushed_branch = git_repo.get_commit_or_tip_of_reference(from)?;
 
-            if let Some((_, (proposal, patches))) =
-                find_proposal_and_patches_by_branch_name(to, &all_proposals, current_user.as_ref())
+        // this failed to find existing PR from user
+        if let Some((_, (proposal, patches))) =
+            find_proposal_and_patches_by_branch_name(to, &all_proposals, Some(current_user))
+        {
+            if [repo_ref.maintainers.clone(), vec![proposal.pubkey]]
+                .concat()
+                .contains(&user_ref.public_key)
             {
-                if [repo_ref.maintainers.clone(), vec![proposal.author()]]
-                    .concat()
-                    .contains(&user_ref.public_key)
-                {
-                    if refspec.starts_with('+') {
-                        // force push
-                        let (_, main_tip) = git_repo.get_main_or_master_branch()?;
-                        let (mut ahead, _) =
-                            git_repo.get_commits_ahead_behind(&main_tip, &tip_of_pushed_branch)?;
+                if refspec.starts_with('+') {
+                    // force push
+                    let (_, main_tip) = git_repo.get_main_or_master_branch()?;
+                    let (mut ahead, _) =
+                        git_repo.get_commits_ahead_behind(&main_tip, &tip_of_pushed_branch)?;
+                    ahead.reverse();
+                    for patch in generate_cover_letter_and_patch_events(
+                        None,
+                        git_repo,
+                        &ahead,
+                        signer,
+                        repo_ref,
+                        &Some(proposal.id.to_string()),
+                        &[],
+                    )
+                    .await?
+                    {
+                        events.push(patch);
+                    }
+                } else {
+                    // fast forward push
+                    let tip_patch = patches.first().unwrap();
+                    let tip_of_proposal = get_commit_id_from_patch(tip_patch)?;
+                    let tip_of_proposal_commit =
+                        git_repo.get_commit_or_tip_of_reference(&tip_of_proposal)?;
+
+                    let (mut ahead, behind) = git_repo
+                        .get_commits_ahead_behind(&tip_of_proposal_commit, &tip_of_pushed_branch)?;
+                    if behind.is_empty() {
+                        let thread_id = if let Ok(root_event_id) = get_event_root(tip_patch) {
+                            root_event_id
+                        } else {
+                            // tip patch is the root proposal
+                            tip_patch.id
+                        };
+                        let mut parent_patch = tip_patch.clone();
                         ahead.reverse();
-                        for patch in generate_cover_letter_and_patch_events(
-                            None,
-                            git_repo,
-                            &ahead,
-                            &signer,
-                            repo_ref,
-                            &Some(proposal.id().to_string()),
-                            &[],
-                        )
-                        .await?
-                        {
-                            events.push(patch);
+                        for (i, commit) in ahead.iter().enumerate() {
+                            let new_patch = generate_patch_event(
+                                git_repo,
+                                &git_repo.get_root_commit()?,
+                                commit,
+                                Some(thread_id),
+                                signer,
+                                repo_ref,
+                                Some(parent_patch.id),
+                                Some((
+                                    (patches.len() + i + 1).try_into().unwrap(),
+                                    (patches.len() + ahead.len()).try_into().unwrap(),
+                                )),
+                                None,
+                                &None,
+                                &[],
+                            )
+                            .await
+                            .context("failed to make patch event from commit")?;
+                            events.push(new_patch.clone());
+                            parent_patch = new_patch;
                         }
                     } else {
-                        // fast forward push
-                        let tip_patch = patches.first().unwrap();
-                        let tip_of_proposal = get_commit_id_from_patch(tip_patch)?;
-                        let tip_of_proposal_commit =
-                            git_repo.get_commit_or_tip_of_reference(&tip_of_proposal)?;
-
-                        let (mut ahead, behind) = git_repo.get_commits_ahead_behind(
-                            &tip_of_proposal_commit,
-                            &tip_of_pushed_branch,
-                        )?;
-                        if behind.is_empty() {
-                            let thread_id = if let Ok(root_event_id) = get_event_root(tip_patch) {
-                                root_event_id
-                            } else {
-                                // tip patch is the root proposal
-                                tip_patch.id()
-                            };
-                            let mut parent_patch = tip_patch.clone();
-                            ahead.reverse();
-                            for (i, commit) in ahead.iter().enumerate() {
-                                let new_patch = generate_patch_event(
-                                    git_repo,
-                                    &git_repo.get_root_commit()?,
-                                    commit,
-                                    Some(thread_id),
-                                    &signer,
-                                    repo_ref,
-                                    Some(parent_patch.id()),
-                                    Some((
-                                        (patches.len() + i + 1).try_into().unwrap(),
-                                        (patches.len() + ahead.len()).try_into().unwrap(),
-                                    )),
-                                    None,
-                                    &None,
-                                    &[],
-                                )
-                                .await
-                                .context("cannot make patch event from commit")?;
-                                events.push(new_patch.clone());
-                                parent_patch = new_patch;
-                            }
-                        } else {
-                            // we shouldn't get here
-                            term.write_line(
+                        // we shouldn't get here
+                        term.write_line(
                                 format!(
                                     "WARNING: failed to push {from} as nostr proposal. Try and force push ",
                                 )
                                 .as_str(),
                             )
                             .unwrap();
-                            println!(
-                                "error {to} cannot fastforward as newer patches found on proposal"
-                            );
-                            rejected_proposal_refspecs.push(refspec.clone());
-                        }
+                        println!(
+                            "error {to} failed to fastforward as newer patches found on proposal"
+                        );
+                        rejected_proposal_refspecs.push(refspec.to_string());
                     }
-                } else {
-                    println!(
-                        "error {to} permission denied. you are not the proposal author or a repo maintainer"
-                    );
-                    rejected_proposal_refspecs.push(refspec.clone());
                 }
             } else {
-                // TODO new proposal / couldn't find exisiting
-                // proposal
-                let (_, main_tip) = git_repo.get_main_or_master_branch()?;
-                let (mut ahead, _) =
-                    git_repo.get_commits_ahead_behind(&main_tip, &tip_of_pushed_branch)?;
-                ahead.reverse();
-                for patch in generate_cover_letter_and_patch_events(
-                    None,
-                    git_repo,
-                    &ahead,
-                    &signer,
-                    repo_ref,
-                    &None,
-                    &[],
-                )
-                .await?
-                {
-                    events.push(patch);
-                }
+                println!(
+                    "error {to} permission denied. you are not the proposal author or a repo maintainer"
+                );
+                rejected_proposal_refspecs.push(refspec.to_string());
+            }
+        } else {
+            // TODO new proposal / couldn't find exisiting proposal
+            let (_, main_tip) = git_repo.get_main_or_master_branch()?;
+            let (mut ahead, _) =
+                git_repo.get_commits_ahead_behind(&main_tip, &tip_of_pushed_branch)?;
+            ahead.reverse();
+            for patch in generate_cover_letter_and_patch_events(
+                None,
+                git_repo,
+                &ahead,
+                signer,
+                repo_ref,
+                &None,
+                &[],
+            )
+            .await?
+            {
+                events.push(patch);
             }
         }
     }
 
-    // TODO check whether tip of each branch pushed is on at least one
-    // git server before broadcasting the nostr state
-    if !events.is_empty() {
-        send_events(
-            client,
-            git_repo.get_path()?,
-            events,
-            user_ref.relays.write(),
-            repo_ref.relays.clone(),
-            false,
-            true,
-        )
-        .await?;
-    }
-
-    for refspec in &[git_server_refspecs.clone(), proposal_refspecs.clone()].concat() {
-        if rejected_proposal_refspecs.contains(refspec) {
-            continue;
-        }
-        let (_, to) = refspec_to_from_to(refspec)?;
-        println!("ok {to}");
-        update_remote_refs_pushed(
-            &git_repo.git_repo,
-            refspec,
-            &decoded_nostr_url.original_string,
-        )
-        .context("could not update remote_ref locally")?;
-    }
-
-    // TODO make async - check gitlib2 callbacks work async
-
-    for (git_server_url, remote_refspecs) in remote_refspecs {
-        let remote_refspecs = remote_refspecs
-            .iter()
-            .filter(|refspec| git_server_refspecs.contains(refspec))
-            .cloned()
-            .collect::<Vec<String>>();
-        if !refspecs.is_empty() {
-            let _ = push_to_remote(
-                git_repo,
-                &git_server_url,
-                decoded_nostr_url,
-                &remote_refspecs,
-                &term,
-            );
-        }
-    }
-    println!();
-    Ok(())
+    Ok((events, rejected_proposal_refspecs))
 }
 
 fn push_to_remote(
@@ -465,16 +527,14 @@ fn push_to_remote_url(
                             .replace("refs/tags/", "tags/"),
                     )
                 };
-                // other possibilities will result in push to fail but
-                // better reporting is needed:
+                // other possibilities will result in push to fail but better reporting is
+                // needed:
                 // deleting a non-existant branch:
-                // ! [remote rejected] <old-branch-name> ->
-                // <old-branch-name> (not found) adding a branch
-                // that already exists: ! [remote rejected]
-                // <new-branch-name> -> <new-branch-name> (already
-                // exists) pushing without non-fast-forward
-                // without force: ! [rejected]
-                // <branch-name> -> <branch-name> (non-fast-forward)
+                // ! [remote rejected] <old-branch-name> -> <old-branch-name> (not found)
+                // adding a branch that already exists:
+                // ! [remote rejected] <new-branch-name> -> <new-branch-name> (already exists)
+                // pushing without non-fast-forward without force:
+                // ! [rejected]        <branch-name> -> <branch-name> (non-fast-forward)
                 reporter.negotiation.push(msg);
             }
             reporter.write_all(existing_lines);
@@ -519,8 +579,7 @@ fn report_on_transfer_progress(
         return None;
     }
     let percentage = ((current as f64 / total as f64) * 100.0)
-        // always round down because 100% complete is misleading when
-        // its not complete
+        // always round down because 100% complete is misleading when its not complete
         .floor();
     let (size, unit) = if bytes as f64 >= (1024.0 * 1024.0) {
         (bytes as f64 / (1024.0 * 1024.0), "MiB")
@@ -687,8 +746,7 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                         if is_remote_tip_ancestor_of_commit {
                             refspecs_for_remote.push(refspec.clone());
                         } else {
-                            // this is a force push so we need to
-                            // force push to git server too
+                            // this is a force push so we need to force push to git server too
                             if refspec.starts_with('+') {
                                 refspecs_for_remote.push(refspec.clone());
                             } else {
@@ -717,14 +775,13 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                                     &remote_value_tip,
                                 )?;
                             if ahead_of_nostr.is_empty() {
-                                // ancestor of nostr and we are force
-                                // pushing anyway...
+                                // ancestor of nostr and we are force pushing anyway...
                                 refspecs_for_remote.push(refspec.clone());
                             } else {
                                 rejected_refspecs
-                                    .entry(refspec.clone())
-                                    .and_modify(|a| a.push(url.clone()))
-                                    .or_insert(vec![url.clone()]);
+                                    .entry(refspec.to_string())
+                                    .and_modify(|a| a.push(url.to_string()))
+                                    .or_insert(vec![url.to_string()]);
                                 term.write_line(
                                     format!(
                                         "ERROR: {short_name} {to} conflicts with nostr ({} ahead {} behind) and local ({} ahead {} behind). either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote",
@@ -735,16 +792,16 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                                     ).as_str(),
                                 )?;
                             }
-                        }
+                        };
                     } else {
                         // remote_value oid is not present locally
                         // TODO can we download the remote reference?
 
                         // cant soft push
                         rejected_refspecs
-                            .entry(refspec.clone())
-                            .and_modify(|a| a.push(url.clone()))
-                            .or_insert(vec![url.clone()]);
+                            .entry(refspec.to_string())
+                            .and_modify(|a| a.push(url.to_string()))
+                            .or_insert(vec![url.to_string()]);
                         term.write_line(
                             format!("ERROR: {short_name} {to} conflicts with nostr and is not an ancestor of local branch. either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote").as_str(),
                         )?;
@@ -772,9 +829,9 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                     } else {
                         // cant soft push
                         rejected_refspecs
-                            .entry(refspec.clone())
-                            .and_modify(|a| a.push(url.clone()))
-                            .or_insert(vec![url.clone()]);
+                            .entry(refspec.to_string())
+                            .and_modify(|a| a.push(url.to_string()))
+                            .or_insert(vec![url.to_string()]);
                         term.write_line(
                                     format!(
                                         "ERROR: {short_name} already contains {to} {} ahead and {} behind local branch. either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote",
@@ -788,9 +845,9 @@ fn create_rejected_refspecs_and_remotes_refspecs(
                     // TODO fetch oid from remote
                     // cant soft push
                     rejected_refspecs
-                        .entry(refspec.clone())
-                        .and_modify(|a| a.push(url.clone()))
-                        .or_insert(vec![url.clone()]);
+                        .entry(refspec.to_string())
+                        .and_modify(|a| a.push(url.to_string()))
+                        .or_insert(vec![url.to_string()]);
                     term.write_line(
                         format!("ERROR: {short_name} already contains {to} at {remote_value} which is not an ancestor of local branch. either:\r\n  1. pull from that git server and resolve\r\n  2. force push your branch to the git server before pushing to nostr remote").as_str(),
                     )?;
@@ -801,16 +858,15 @@ fn create_rejected_refspecs_and_remotes_refspecs(
             }
         }
         if !refspecs_for_remote.is_empty() {
-            refspecs_for_remotes.insert(url.clone(), refspecs_for_remote);
+            refspecs_for_remotes.insert(url.to_string(), refspecs_for_remote);
         }
     }
 
-    // remove rejected refspecs so they dont get pushed to some
-    // remotes
+    // remove rejected refspecs so they dont get pushed to some remotes
     let mut remotes_refspecs_without_rejected = HashMap::new();
     for (url, value) in &refspecs_for_remotes {
         remotes_refspecs_without_rejected.insert(
-            url.clone(),
+            url.to_string(),
             value
                 .iter()
                 .filter(|refspec| !rejected_refspecs.contains_key(*refspec))
@@ -869,12 +925,81 @@ fn generate_updated_state(
     Ok(new_state)
 }
 
-async fn get_merged_status_events(
+async fn get_maintainers_yaml_update(
     term: &console::Term,
+    decoded_nostr_url: &NostrUrlDecoded,
     repo_ref: &RepoRef,
     git_repo: &Repo,
-    remote_nostr_url: &str,
-    signer: &NostrSigner,
+    signer: &Arc<dyn NostrSigner>,
+    refspecs_to_git_server: &Vec<String>,
+) -> Result<Option<Event>> {
+    for refspec in refspecs_to_git_server {
+        let (from, to) = refspec_to_from_to(refspec)?;
+        if to.eq("refs/heads/main") || to.eq("refs/heads/master") {
+            let tip_of_pushed_branch = git_repo.get_commit_or_tip_of_reference(from)?;
+            let tip_of_remote_branch =
+                git_repo.get_commit_or_tip_of_reference(&refspec_remote_ref_name(
+                    &git_repo.git_repo,
+                    refspec,
+                    &decoded_nostr_url.original_string,
+                )?)?;
+            let diff = git_repo.git_repo.diff_tree_to_tree(
+                Some(
+                    &git_repo
+                        .git_repo
+                        .find_commit(sha1_to_oid(&tip_of_pushed_branch)?)?
+                        .tree()?,
+                ),
+                Some(
+                    &git_repo
+                        .git_repo
+                        .find_commit(sha1_to_oid(&tip_of_remote_branch)?)?
+                        .tree()?,
+                ),
+                None,
+            )?;
+            for delta in diff.deltas() {
+                // File was added or updated
+                if let Some(path) = delta.new_file().path() {
+                    if path.to_string_lossy() == "maintainers.yaml" {
+                        let config = get_repo_config_from_yaml(git_repo)?;
+                        if config.identifier == Some(repo_ref.identifier.clone())
+                            || config.identifier.is_none()
+                        {
+                            let config_maintainers = config
+                                .maintainers
+                                .iter()
+                                .filter_map(|s| PublicKey::parse(s).ok())
+                                .collect::<Vec<PublicKey>>();
+                            let config_relays = config
+                                .relays
+                                .iter()
+                                .filter_map(|s| RelayUrl::parse(s).ok())
+                                .collect::<Vec<RelayUrl>>();
+                            if repo_ref.maintainers != config_maintainers
+                                || repo_ref.relays != config_relays
+                            {
+                                let mut repo_ref = repo_ref.clone();
+                                repo_ref.maintainers = config_maintainers;
+                                repo_ref.relays = config_relays;
+                                term.write_line("maintainers.yaml update detected so publishing repo announcement update")?;
+                                return Ok(Some(repo_ref.to_event(signer).await?));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(None)
+}
+
+async fn get_merged_status_events(
+    term: &console::Term,
+    decoded_nostr_url: &NostrUrlDecoded,
+    repo_ref: &RepoRef,
+    git_repo: &Repo,
+    signer: &Arc<dyn NostrSigner>,
     refspecs_to_git_server: &Vec<String>,
 ) -> Result<Vec<Event>> {
     let mut events = vec![];
@@ -882,120 +1007,303 @@ async fn get_merged_status_events(
         let (from, to) = refspec_to_from_to(refspec)?;
         if to.eq("refs/heads/main") || to.eq("refs/heads/master") {
             let tip_of_pushed_branch = git_repo.get_commit_or_tip_of_reference(from)?;
-            let Ok(tip_of_remote_branch) = git_repo.get_commit_or_tip_of_reference(
-                &refspec_remote_ref_name(&git_repo.git_repo, refspec, remote_nostr_url)?,
-            ) else {
+            let Ok(tip_of_remote_branch) =
+                git_repo.get_commit_or_tip_of_reference(&refspec_remote_ref_name(
+                    &git_repo.git_repo,
+                    refspec,
+                    &decoded_nostr_url.original_string,
+                )?)
+            else {
                 // branch not on remote
                 continue;
             };
             let (ahead, _) =
                 git_repo.get_commits_ahead_behind(&tip_of_remote_branch, &tip_of_pushed_branch)?;
-            for commit_hash in ahead {
-                let commit = git_repo.git_repo.find_commit(sha1_to_oid(&commit_hash)?)?;
-                if commit.parent_count() > 1 {
-                    // merge commit
-                    for parent in commit.parents() {
-                        // lookup parent id
-                        let commit_events = get_events_from_cache(
-                            git_repo.get_path()?,
-                            vec![
-                                nostr_0_34_1::Filter::default()
-                                    .kind(nostr_0_34_1::Kind::GitPatch)
-                                    .reference(parent.id().to_string()),
-                            ],
-                        )
-                        .await?;
-                        if let Some(commit_event) = commit_events.iter().find(|e| {
-                            e.tags.iter().any(|t| {
-                                t.as_vec()[0].eq("commit")
-                                    && t.as_vec()[1].eq(&parent.id().to_string())
-                            })
-                        }) {
-                            let (proposal_id, revision_id) =
-                                get_proposal_and_revision_root_from_patch(git_repo, commit_event)
-                                    .await?;
-                            term.write_line(
-                                format!(
-                                    "merge commit {}: create nostr proposal status event",
-                                    &commit.id().to_string()[..7],
-                                )
-                                .as_str(),
-                            )?;
 
-                            events.push(
-                                create_merge_status(
-                                    signer,
-                                    repo_ref,
-                                    &get_event_from_cache_by_id(git_repo, &proposal_id).await?,
-                                    if let Some(revision_id) = revision_id {
-                                        Some(
-                                            get_event_from_cache_by_id(git_repo, &revision_id)
-                                                .await?,
-                                        )
-                                    } else {
-                                        None
-                                    }
-                                    .as_ref(),
-                                    &commit_hash,
-                                    commit_event.id(),
-                                )
-                                .await?,
-                            );
-                        }
-                    }
-                }
+            let commit_events = get_events_from_local_cache(git_repo.get_path()?, vec![
+                nostr_0_37_0::Filter::default().kind(nostr_0_37_0::Kind::GitPatch),
+                // TODO: limit by repo_ref
+            ])
+            .await?;
+
+            let merged_proposals_info =
+                get_merged_proposals_info(git_repo, &ahead, &commit_events).await?;
+
+            for event in
+                create_merge_events(term, git_repo, repo_ref, signer, &merged_proposals_info)
+                    .await?
+            {
+                events.push(event);
             }
         }
     }
     Ok(events)
 }
 
+/// (`proposal_id`, `revision_id`)
+type MergedProposalsInfo =
+    HashMap<EventId, (Option<EventId>, HashMap<Sha1Hash, MergedPRCommitType>)>;
+
+async fn get_merged_proposals_info(
+    git_repo: &Repo,
+    ahead: &Vec<Sha1Hash>,
+    available_patches: &[Event],
+) -> Result<MergedProposalsInfo> {
+    let mut proposals: MergedProposalsInfo = HashMap::new();
+
+    for commit_hash in ahead {
+        let commit = git_repo.git_repo.find_commit(sha1_to_oid(commit_hash)?)?;
+        // three-way merge - just to set merge commit id as the merged branch commits
+        // are in ahead
+        if commit.parent_count() > 1 {
+            for parent in commit.parents() {
+                for patch_event in available_patches
+                    .iter()
+                    .filter(|e| {
+                        e.tags.iter().any(|t| {
+                            t.as_slice().len() > 1
+                                && t.as_slice()[0].eq("commit")
+                                && t.as_slice()[1].eq(&parent.id().to_string())
+                        })
+                    })
+                    .collect::<Vec<&Event>>()
+                {
+                    if let Ok((proposal_id, revision_id)) =
+                        get_proposal_and_revision_root_from_patch(git_repo, patch_event).await
+                    {
+                        let (entry_revision_id, merged_patches) =
+                            proposals.entry(proposal_id).or_default();
+                        if entry_revision_id == &revision_id {
+                            merged_patches.insert(*commit_hash, MergedPRCommitType::MergeCommit);
+                        }
+                    }
+                }
+            }
+        } else {
+            // three way merge or fast forward merge commits
+            // note: ahead included commits of three-way merged branches
+            let mut matching_patches = available_patches
+                .iter()
+                .filter(|e| {
+                    e.tags.iter().any(|t| {
+                        t.as_slice().len() > 1
+                            && t.as_slice()[0].eq("commit")
+                            && t.as_slice()[1].eq(&commit_hash.to_string())
+                    })
+                })
+                .collect::<Vec<&Event>>();
+            for patch_event in &matching_patches {
+                if let Ok((proposal_id, revision_id)) =
+                    get_proposal_and_revision_root_from_patch(git_repo, patch_event).await
+                {
+                    let (entry_revision_id, merged_patches) =
+                        proposals.entry(proposal_id).or_default();
+                    // ignore revisions without all the merged commits
+                    if entry_revision_id == &revision_id {
+                        merged_patches.insert(*commit_hash, MergedPRCommitType::PatchCommit {
+                            event_id: patch_event.id,
+                        });
+                    }
+                }
+            }
+            // applied commits - this is done after so that merged revisions take priority
+            if matching_patches.is_empty() {
+                let author = git_repo.get_commit_author(commit_hash)?;
+                matching_patches = available_patches
+                    .iter()
+                    .filter(|e| {
+                        if let Ok(patch_author) = get_patch_author(e) {
+                            patch_author == author
+                        } else {
+                            false
+                        }
+                    })
+                    .collect::<Vec<&Event>>();
+                for patch_event in matching_patches {
+                    if let Ok((proposal_id, revision_id)) =
+                        get_proposal_and_revision_root_from_patch(git_repo, patch_event).await
+                    {
+                        let (entry_revision_id, merged_patches) =
+                            proposals.entry(proposal_id).or_default();
+                        // ignore revisions without all the applied commits
+                        if entry_revision_id == &revision_id {
+                            merged_patches.insert(*commit_hash, MergedPRCommitType::PatchApplied {
+                                event_id: patch_event.id,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(proposals)
+}
+
+fn get_patch_author(event: &Event) -> Result<Vec<String>> {
+    for t in event.tags.clone() {
+        match t.as_slice() {
+            [tag, name, email, unixtime, offset] if tag == "author" => {
+                return Ok(vec![
+                    name.to_string(),
+                    email.to_string(),
+                    unixtime.to_string(),
+                    offset.to_string(),
+                ]);
+            }
+            _ => (),
+        }
+    }
+    bail!("could not find valid author tag")
+}
+
+async fn create_merge_events(
+    term: &console::Term,
+    git_repo: &Repo,
+    repo_ref: &RepoRef,
+    signer: &Arc<dyn NostrSigner>,
+    merged_proposals_info: &MergedProposalsInfo,
+) -> Result<Vec<Event>> {
+    let mut events = vec![];
+    for (proposal_id, (revision_id, merged_patches)) in merged_proposals_info {
+        let proposal = get_event_from_cache_by_id(git_repo, proposal_id).await?;
+
+        if merged_patches
+            .values()
+            .any(|m| *m == MergedPRCommitType::MergeCommit)
+        {
+            term.write_line(
+                format!(
+                    "merge commit {}: create nostr proposal status event",
+                    &merged_patches.keys().next().unwrap().to_string()[..7],
+                )
+                .as_str(),
+            )?;
+        } else if merged_patches
+            .values()
+            .any(|m| matches!(m, MergedPRCommitType::PatchApplied { .. }))
+        {
+            term.write_line(
+                format!(
+                    "applied commits from proposal: create nostr proposal status event for {}",
+                    event_to_cover_letter(&proposal)?
+                        .get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                )
+                .as_str(),
+            )?;
+        } else {
+            term.write_line(
+                format!(
+                    "fast-forward merge: create nostr proposal status event for {}",
+                    event_to_cover_letter(&proposal)?
+                        .get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                )
+                .as_str(),
+            )?;
+        }
+        events.push(
+            create_merge_status(
+                signer,
+                repo_ref,
+                &proposal,
+                if let Some(revision_id) = revision_id {
+                    Some(get_event_from_cache_by_id(git_repo, revision_id).await?)
+                } else {
+                    None
+                }
+                .as_ref(),
+                if let Some((commit, _)) = merged_patches
+                    .iter()
+                    .find(|(_, m)| **m == MergedPRCommitType::MergeCommit)
+                {
+                    vec![*commit]
+                } else {
+                    // child commits were added to merged_patches first so we reverse it
+                    let mut t: Vec<Sha1Hash> = merged_patches.keys().copied().collect();
+                    t.reverse();
+                    t
+                },
+                merged_patches
+                    .values()
+                    .filter_map(|m| match m {
+                        MergedPRCommitType::MergeCommit => None,
+                        MergedPRCommitType::PatchApplied { event_id }
+                        | MergedPRCommitType::PatchCommit { event_id } => Some(*event_id),
+                    })
+                    .collect(),
+                !merged_patches
+                    .iter()
+                    .any(|(_, m)| *m == MergedPRCommitType::MergeCommit)
+                    && merged_patches
+                        .values()
+                        .any(|m| matches!(m, MergedPRCommitType::PatchApplied { .. })),
+            )
+            .await?,
+        );
+    }
+    Ok(events)
+}
+
+#[derive(PartialEq, Debug)]
+enum MergedPRCommitType {
+    MergeCommit,
+    PatchCommit { event_id: EventId },
+    PatchApplied { event_id: EventId },
+}
+
 async fn create_merge_status(
-    signer: &NostrSigner,
+    signer: &Arc<dyn NostrSigner>,
     repo_ref: &RepoRef,
     proposal: &Event,
     revision: Option<&Event>,
-    merge_commit: &Sha1Hash,
-    merged_patch: EventId,
+    merge_commits: Vec<Sha1Hash>,
+    merged_patches: Vec<EventId>,
+    applied: bool,
 ) -> Result<Event> {
     let mut public_keys = repo_ref
         .maintainers
         .iter()
         .copied()
         .collect::<HashSet<PublicKey>>();
-    public_keys.insert(proposal.author());
+    public_keys.insert(proposal.pubkey);
     if let Some(revision) = revision {
-        public_keys.insert(revision.author());
+        public_keys.insert(revision.pubkey);
     }
     sign_event(
-        EventBuilder::new(
-            Kind::GitStatusApplied,
-            String::new(),
+        EventBuilder::new(nostr_0_37_0::event::Kind::GitStatusApplied, String::new()).tags(
             [
                 vec![
                     Tag::custom(
-                        nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
+                        nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed("alt")),
                         vec!["git proposal merged / applied".to_string()],
                     ),
-                    Tag::from_standardized(nostr_0_34_1::TagStandard::Event {
-                        event_id: proposal.id(),
-                        relay_url: repo_ref.relays.first().map(nostr_0_34_1::UncheckedUrl::new),
+                    Tag::from_standardized(nostr_0_37_0::TagStandard::Event {
+                        event_id: proposal.id,
+                        relay_url: repo_ref.relays.first().cloned(),
                         marker: Some(Marker::Root),
                         public_key: None,
-                    }),
-                    Tag::from_standardized(nostr_0_34_1::TagStandard::Event {
-                        event_id: merged_patch,
-                        relay_url: repo_ref.relays.first().map(nostr_0_34_1::UncheckedUrl::new),
-                        marker: Some(Marker::Mention),
-                        public_key: None,
+                        uppercase: false,
                     }),
                 ],
+                // Tags for merged patches
+                merged_patches
+                    .iter()
+                    .map(|merged_patch| {
+                        Tag::from_standardized(nostr_0_37_0::TagStandard::Event {
+                            event_id: *merged_patch,
+                            relay_url: repo_ref.relays.first().cloned(),
+                            marker: Some(Marker::Mention),
+                            public_key: None,
+                            uppercase: false,
+                        })
+                    })
+                    .collect::<Vec<Tag>>(),
                 if let Some(revision) = revision {
-                    vec![Tag::from_standardized(nostr_0_34_1::TagStandard::Event {
-                        event_id: revision.id(),
-                        relay_url: repo_ref.relays.first().map(nostr_0_34_1::UncheckedUrl::new),
+                    vec![Tag::from_standardized(nostr_0_37_0::TagStandard::Event {
+                        event_id: revision.id,
+                        relay_url: repo_ref.relays.first().cloned(),
                         marker: Some(Marker::Root),
                         public_key: None,
+                        uppercase: false,
                     })]
                 } else {
                     vec![]
@@ -1007,19 +1315,29 @@ async fn create_merge_status(
                     .map(|c| Tag::coordinate(c.clone()))
                     .collect::<Vec<Tag>>(),
                 vec![
-                    Tag::from_standardized(nostr_0_34_1::TagStandard::Reference(
-                        repo_ref.root_commit.clone(),
+                    Tag::from_standardized(nostr_0_37_0::TagStandard::Reference(
+                        repo_ref.root_commit.to_string(),
                     )),
-                    Tag::from_standardized(nostr_0_34_1::TagStandard::Reference(format!(
-                        "{merge_commit}"
-                    ))),
                     Tag::custom(
-                        nostr_0_34_1::TagKind::Custom(std::borrow::Cow::Borrowed(
-                            "merge-commit-id",
-                        )),
-                        vec![format!("{merge_commit}")],
+                        nostr_0_37_0::TagKind::Custom(std::borrow::Cow::Borrowed(if applied {
+                            "applied-as-commits"
+                        } else {
+                            "merge-commit-id"
+                        })),
+                        merge_commits
+                            .iter()
+                            .map(|merge_commit| format!("{merge_commit}"))
+                            .collect::<Vec<String>>(),
                     ),
                 ],
+                merge_commits
+                    .iter()
+                    .map(|merge_commit| {
+                        Tag::from_standardized(nostr_0_37_0::TagStandard::Reference(format!(
+                            "{merge_commit}"
+                        )))
+                    })
+                    .collect::<Vec<Tag>>(),
             ]
             .concat(),
         ),
@@ -1032,7 +1350,11 @@ async fn get_proposal_and_revision_root_from_patch(
     git_repo: &Repo,
     patch: &Event,
 ) -> Result<(EventId, Option<EventId>)> {
-    let proposal_or_revision = if patch.tags.iter().any(|t| t.as_vec()[1].eq("root")) {
+    let proposal_or_revision = if patch
+        .tags
+        .iter()
+        .any(|t| t.as_slice().len() > 1 && t.as_slice()[1].eq("root"))
+    {
         patch.clone()
     } else {
         let proposal_or_revision_id = EventId::parse(
@@ -1041,30 +1363,29 @@ async fn get_proposal_and_revision_root_from_patch(
             } else if let Some(t) = patch.tags.iter().find(|t| t.is_reply()) {
                 t.clone()
             } else {
-                Tag::event(patch.id())
+                Tag::event(patch.id)
             }
-            .as_vec()[1]
+            .as_slice()[1]
                 .clone(),
         )?;
 
-        get_events_from_cache(
-            git_repo.get_path()?,
-            vec![nostr_0_34_1::Filter::default().id(proposal_or_revision_id)],
-        )
+        get_events_from_local_cache(git_repo.get_path()?, vec![
+            nostr_0_37_0::Filter::default().id(proposal_or_revision_id),
+        ])
         .await?
         .first()
         .unwrap()
         .clone()
     };
 
-    if !proposal_or_revision.kind().eq(&Kind::GitPatch) {
+    if !proposal_or_revision.kind.eq(&Kind::GitPatch) {
         bail!("thread root is not a git patch");
     }
 
     if proposal_or_revision
         .tags
         .iter()
-        .any(|t| t.as_vec()[1].eq("revision-root"))
+        .any(|t| t.as_slice().len() > 1 && t.as_slice()[1].eq("revision-root"))
     {
         Ok((
             EventId::parse(
@@ -1073,13 +1394,13 @@ async fn get_proposal_and_revision_root_from_patch(
                     .iter()
                     .find(|t| t.is_reply())
                     .unwrap()
-                    .as_vec()[1]
+                    .as_slice()[1]
                     .clone(),
             )?,
-            Some(proposal_or_revision.id()),
+            Some(proposal_or_revision.id),
         ))
     } else {
-        Ok((proposal_or_revision.id(), None))
+        Ok((proposal_or_revision.id, None))
     }
 }
 
@@ -1098,7 +1419,7 @@ fn update_remote_refs_pushed(
         }
     } else {
         let commit = reference_to_commit(git_repo, from)
-            .context(format!("cannot get commit of reference {from}"))?;
+            .context(format!("failed to get commit of reference {from}"))?;
         if let Ok(mut remote_ref) = git_repo.find_reference(&target_ref_name) {
             remote_ref.set_target(commit, "updated by nostr remote helper")?;
         } else {
@@ -1143,8 +1464,7 @@ fn refspec_remote_ref_name(
     Ok(format!(
         "refs/remotes/{}/{}",
         nostr_remote.name().context("remote should have a name")?,
-        to.replace("refs/heads/", ""), /* TODO only replace if it
-                                        * begins with this
+        to.replace("refs/heads/", ""), /* TODO only replace if it begins with this
                                         * TODO what about tags? */
     ))
 }
@@ -1152,9 +1472,9 @@ fn refspec_remote_ref_name(
 fn reference_to_commit(git_repo: &Repository, reference: &str) -> Result<Oid> {
     Ok(git_repo
         .find_reference(reference)
-        .context(format!("cannot find reference: {reference}"))?
+        .context(format!("failed to find reference: {reference}"))?
         .peel_to_commit()
-        .context(format!("cannot get commit from reference: {reference}"))?
+        .context(format!("failed to get commit from reference: {reference}"))?
         .id())
 }
 
@@ -1162,13 +1482,13 @@ fn reference_to_commit(git_repo: &Repository, reference: &str) -> Result<Oid> {
 fn reference_to_ref_value(git_repo: &Repository, reference: &str) -> Result<String> {
     let reference_obj = git_repo
         .find_reference(reference)
-        .context(format!("cannot find reference: {reference}"))?;
+        .context(format!("failed to find reference: {reference}"))?;
     if let Some(symref) = reference_obj.symbolic_target() {
         Ok(symref.to_string())
     } else {
         Ok(reference_obj
             .peel_to_commit()
-            .context(format!("cannot get commit from reference: {reference}"))?
+            .context(format!("failed to get commit from reference: {reference}"))?
             .id()
             .to_string())
     }
@@ -1196,23 +1516,22 @@ trait BuildRepoState {
     async fn build(
         identifier: String,
         state: HashMap<String, String>,
-        signer: &NostrSigner,
+        signer: &Arc<dyn NostrSigner>,
     ) -> Result<RepoState>;
 }
 impl BuildRepoState for RepoState {
     async fn build(
         identifier: String,
         state: HashMap<String, String>,
-        signer: &NostrSigner,
+        signer: &Arc<dyn NostrSigner>,
     ) -> Result<RepoState> {
         let mut tags = vec![Tag::identifier(identifier.clone())];
         for (name, value) in &state {
-            tags.push(Tag::custom(
-                nostr_sdk_0_34_0::TagKind::Custom(name.into()),
-                vec![value.clone()],
-            ));
+            tags.push(Tag::custom(nostr_sdk_0_37_0::TagKind::Custom(name.into()), vec![
+                value.clone(),
+            ]));
         }
-        let event = sign_event(EventBuilder::new(STATE_KIND, "", tags), signer).await?;
+        let event = sign_event(EventBuilder::new(STATE_KIND, "").tags(tags), signer).await?;
         Ok(RepoState {
             identifier,
             state,
@@ -1223,1605 +1542,15 @@ impl BuildRepoState for RepoState {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
-    type E = anyhow::Error;
+    mod refspec_to_from_to {
+        use super::*;
 
-    mod refspec_to_from_to_tests {
-        use crate::push::refspec_to_from_to;
         #[test]
         fn trailing_plus_stripped() {
             let (from, _) = refspec_to_from_to("+testing:testingb").unwrap();
             assert_eq!(from, "testing");
-        }
-    }
-
-    mod integration_tests {
-        use serial_test::serial;
-        use tokio::join;
-        type E = anyhow::Error;
-        type AnyhowResult<T> = anyhow::Result<T>;
-        use gnostr::test_utils::{
-            FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
-            generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-            get_proposal_branch_name_from_events,
-            git::GitTestRepo,
-            git_remote::{cli_tester_after_fetch, generate_repo_with_state_event, prep_git_repo},
-            relay::{Relay, shutdown_relay},
-        };
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn new_branch_when_no_state_event_exists() -> AnyhowResult<(), E> {
-            generate_repo_with_state_event().await?;
-            Ok(())
-        }
-        mod two_branches_in_batch_one_added_one_updated {
-            use serial_test::serial;
-            use tokio::join;
-            type E = anyhow::Error;
-            use gnostr::test_utils::{
-                FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
-                generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-                git::GitTestRepo,
-                git_remote::{cli_tester_after_fetch, prep_git_repo},
-                relay::{Relay, shutdown_relay},
-            };
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn updates_branch_on_git_server() -> Result<(), E> {
-                let git_repo = prep_git_repo()?;
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
-                let main_commit_id = git_repo.stage_and_commit("commit.md")?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("vnext.md")?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    assert_ne!(
-                        source_git_repo.get_tip_of_local_branch("main")?,
-                        main_commit_id
-                    );
-
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-
-                    p.send_line("push refs/heads/main:refs/heads/main")?;
-                    p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect_eventually("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-
-                    assert_eq!(
-                        source_git_repo.get_tip_of_local_branch("main")?,
-                        main_commit_id
-                    );
-
-                    assert_eq!(
-                        source_git_repo.get_tip_of_local_branch("vnext")?,
-                        vnext_commit_id
-                    );
-
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn remote_refs_updated_in_local_git() -> AnyhowResult<(), E> {
-                let git_repo = prep_git_repo()?;
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
-                let main_commit_id = git_repo.stage_and_commit("commit.md")?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("vnext.md")?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    assert_ne!(
-                        source_git_repo.get_tip_of_local_branch("main")?,
-                        main_commit_id
-                    );
-
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                    p.send_line("push refs/heads/main:refs/heads/main")?;
-                    p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect_eventually("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-
-                    assert_eq!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/main")?
-                            .peel_to_commit()?
-                            .id(),
-                        main_commit_id,
-                    );
-
-                    assert_eq!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")?
-                            .peel_to_commit()?
-                            .id(),
-                        vnext_commit_id
-                    );
-
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn prints_git_helper_ok_respose() -> AnyhowResult<(), E> {
-                let git_repo = prep_git_repo()?;
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
-                let main_commit_id = git_repo.stage_and_commit("commit.md")?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                git_repo.stage_and_commit("vnext.md")?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    assert_ne!(
-                        source_git_repo.get_tip_of_local_branch("main")?,
-                        main_commit_id
-                    );
-
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-
-                    p.send_line("push refs/heads/main:refs/heads/main")?;
-                    p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect("ok refs/heads/main\r\n")?;
-                    p.expect("ok refs/heads/vnext\r\n")?;
-                    p.expect_eventually("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event()
-            -> AnyhowResult<(), E> {
-                let git_repo = prep_git_repo()?;
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                std::fs::write(git_repo.dir.join("commit.md"), "some content")?;
-                let main_commit_id = git_repo.stage_and_commit("commit.md")?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("vnext.md")?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                    p.send_line("push refs/heads/main:refs/heads/main")?;
-                    p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect_eventually_and_print("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-
-                let state_event = r56
-                    .events
-                    .iter()
-                    .find(|e| e.kind().eq(&STATE_KIND))
-                    .context("state event not created")?;
-
-                assert_eq!(
-                    state_event.identifier(),
-                    generate_repo_ref_event().identifier(),
-                );
-                // println!("{:#?}", state_event);
-                assert_eq!(
-                    state_event
-                        .tags
-                        .iter()
-                        .filter(|t| t.kind().to_string().as_str().ne("d"))
-                        .map(|t| t.as_vec().to_vec())
-                        .collect::<HashSet<Vec<String>>>(),
-                    HashSet::from([
-                        vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
-                        vec!["refs/heads/main".to_string(), main_commit_id.to_string()],
-                        vec!["refs/heads/vnext".to_string(), vnext_commit_id.to_string()],
-                    ]),
-                );
-                Ok(())
-            }
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn existing_state_event_published_in_nostr_state_event() -> AnyhowResult<(), E> {
-                let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
-
-                let git_repo = prep_git_repo()?;
-                let example_branch_commit_id =
-                    git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
-
-                std::fs::write(git_repo.dir.join("new.md"), "some content")?;
-                let main_commit_id = git_repo.stage_and_commit("new.md")?;
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("more.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("more.md")?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                    state_event.clone(),
-                ];
-
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                    p.send_line("push refs/heads/main:refs/heads/main")?;
-                    p.send_line("push refs/heads/vnext:refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect_eventually_and_print("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-                    // local refs updated
-                    assert_eq!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/main")?
-                            .peel_to_commit()?
-                            .id(),
-                        main_commit_id,
-                    );
-
-                    assert_eq!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")?
-                            .peel_to_commit()?
-                            .id(),
-                        vnext_commit_id
-                    );
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-
-                cli_tester_handle.join().unwrap()?;
-
-                // git_server updated
-                assert_eq!(
-                    source_git_repo.get_tip_of_local_branch("main")?,
-                    main_commit_id
-                );
-
-                assert_eq!(
-                    source_git_repo.get_tip_of_local_branch("vnext")?,
-                    vnext_commit_id
-                );
-
-                // state annoucement updated
-                let state_event = r56
-                    .events
-                    .iter()
-                    .find(|e| e.kind().eq(&STATE_KIND))
-                    .context("state event not created")?;
-
-                // println!("{:#?}", state_event);
-                assert_eq!(
-                    state_event
-                        .tags
-                        .iter()
-                        .filter(|t| t.kind().to_string().as_str().ne("d"))
-                        .map(|t| t.as_vec().to_vec())
-                        .collect::<HashSet<Vec<String>>>(),
-                    HashSet::from([
-                        vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
-                        vec!["refs/heads/main".to_string(), main_commit_id.to_string()],
-                        vec![
-                            "refs/heads/example-branch".to_string(),
-                            example_branch_commit_id.to_string(),
-                        ],
-                        vec!["refs/heads/vnext".to_string(), vnext_commit_id.to_string()],
-                    ]),
-                );
-                Ok(())
-            }
-        }
-        mod delete_one_branch {
-            use serial_test::serial;
-            use tokio::join;
-            type E = anyhow::Error;
-            use gnostr::test_utils::{
-                FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
-                generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-                git::GitTestRepo,
-                git_remote::{cli_tester_after_fetch, prep_git_repo},
-                relay::{Relay, shutdown_relay},
-            };
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn deletes_branch_on_git_server() -> AnyhowResult<(), E> {
-                let git_repo = prep_git_repo()?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("vnext.md")?;
-
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    assert_eq!(
-                        source_git_repo
-                            .git_repo
-                            .find_reference("refs/heads/vnext")?,
-                        vnext_commit_id
-                    );
-
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                    p.send_line("push :refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect_eventually_and_print("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-
-                    assert!(
-                        source_git_repo
-                            .git_repo
-                            .find_reference("refs/heads/vnext")
-                            .is_err()
-                    );
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn remote_refs_updated_in_local_git() -> AnyhowResult<(), E> {
-                let git_repo = prep_git_repo()?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("vnext.md")?;
-
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                git_repo.git_repo.reference(
-                    "refs/remotes/nostr/vnext",
-                    vnext_commit_id,
-                    true,
-                    "",
-                )?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    assert_eq!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")?,
-                        vnext_commit_id
-                    );
-
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                    p.send_line("push :refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect_eventually("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-                    assert!(
-                        git_repo
-                            .git_repo
-                            .find_reference("refs/remotes/nostr/vnext")
-                            .is_err()
-                    );
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-
-            #[tokio::test]
-            #[serial]
-            #[cfg(feature = "expensive_tests")]
-            async fn prints_git_helper_ok_respose() -> AnyhowResult<(), E> {
-                let git_repo = prep_git_repo()?;
-
-                git_repo.create_branch("vnext")?;
-                git_repo.checkout("vnext")?;
-                std::fs::write(git_repo.dir.join("vnext.md"), "some content")?;
-                let vnext_commit_id = git_repo.stage_and_commit("vnext.md")?;
-
-                let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
-
-                git_repo.git_repo.reference(
-                    "refs/remotes/nostr/vnext",
-                    vnext_commit_id,
-                    true,
-                    "",
-                )?;
-
-                let events = vec![
-                    generate_test_key_1_metadata_event("fred"),
-                    generate_test_key_1_relay_list_event(),
-                    generate_repo_ref_event_with_git_server(vec![
-                        source_git_repo.dir.to_str().unwrap().to_string(),
-                    ]),
-                ];
-                // fallback (51,52) user write (53, 55) repo (55, 56) blaster
-                // (57)
-                let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                    Relay::new(8051, None, None),
-                    Relay::new(8052, None, None),
-                    Relay::new(8053, None, None),
-                    Relay::new(8055, None, None),
-                    Relay::new(8056, None, None),
-                    Relay::new(8057, None, None),
-                );
-                r51.events = events.clone();
-                r55.events = events;
-
-                let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                    let mut p =
-                        cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                    p.send_line("push :refs/heads/vnext")?;
-                    p.send_line("")?;
-                    p.expect("ok refs/heads/vnext\r\n")?;
-                    p.expect_eventually("\r\n\r\n")?;
-                    p.exit()?;
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-                    Ok(())
-                });
-                // launch relays
-                let _ = join!(
-                    r51.listen_until_close(),
-                    r52.listen_until_close(),
-                    r53.listen_until_close(),
-                    r55.listen_until_close(),
-                    r56.listen_until_close(),
-                    r57.listen_until_close(),
-                );
-                cli_tester_handle.join().unwrap()?;
-                Ok(())
-            }
-
-            mod when_existing_state_event {
-                use serial_test::serial;
-                use tokio::join;
-                type E = anyhow::Error;
-                use gnostr::test_utils::{
-                    FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
-                    generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-                    git::GitTestRepo,
-                    git_remote::{cli_tester_after_fetch, prep_git_repo},
-                    relay::{Relay, shutdown_relay},
-                };
-
-                #[tokio::test]
-                #[serial]
-                #[cfg(feature = "expensive_tests")]
-                async fn state_event_updated_and_branch_deleted_and_ok_printed()
-                -> AnyhowResult<(), E> {
-                    let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
-
-                    let git_repo = prep_git_repo()?;
-                    let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
-
-                    let events = vec![
-                        generate_test_key_1_metadata_event("fred"),
-                        generate_test_key_1_relay_list_event(),
-                        generate_repo_ref_event_with_git_server(vec![
-                            source_git_repo.dir.to_str().unwrap().to_string(),
-                        ]),
-                        state_event.clone(),
-                    ];
-
-                    // fallback (51,52) user write (53, 55) repo (55, 56)
-                    // blaster (57)
-                    let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                        Relay::new(8051, None, None),
-                        Relay::new(8052, None, None),
-                        Relay::new(8053, None, None),
-                        Relay::new(8055, None, None),
-                        Relay::new(8056, None, None),
-                        Relay::new(8057, None, None),
-                    );
-                    r51.events = events.clone();
-                    r55.events = events;
-
-                    let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                        let mut p = cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
-                            &git_repo,
-                        )?;
-                        p.send_line("push :refs/heads/example-branch")?;
-                        p.send_line("")?;
-                        p.expect("ok refs/heads/example-branch\r\n")?;
-                        p.expect_eventually("\r\n\r\n")?;
-                        p.exit()?;
-                        for p in [51, 52, 53, 55, 56, 57] {
-                            relay::shutdown_relay(8000 + p)?;
-                        }
-                        Ok(())
-                    });
-                    // launch relays
-                    let _ = join!(
-                        r51.listen_until_close(),
-                        r52.listen_until_close(),
-                        r53.listen_until_close(),
-                        r55.listen_until_close(),
-                        r56.listen_until_close(),
-                        r57.listen_until_close(),
-                    );
-
-                    cli_tester_handle.join().unwrap()?;
-
-                    let state_event = r56
-                        .events
-                        .iter()
-                        .find(|e| e.kind().eq(&STATE_KIND))
-                        .context("state event not created")?;
-
-                    // println!("{:#?}", state_event);
-                    assert_eq!(
-                        state_event
-                            .tags
-                            .iter()
-                            .filter(|t| t.kind().to_string().as_str().ne("d"))
-                            .map(|t| t.as_vec().to_vec())
-                            .collect::<HashSet<Vec<String>>>(),
-                        HashSet::from([
-                            vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
-                            vec!["refs/heads/main".to_string(), main_commit_id.to_string()],
-                        ]),
-                    );
-                    Ok(())
-                }
-
-                mod already_deleted_on_git_server {
-                    use serial_test::serial;
-                    use tokio::join;
-                    type E = anyhow::Error;
-                    type AnyhowResult<T> = anyhow::Result<T>;
-                    use gnostr::test_utils::{
-                        FEATURE_BRANCH_NAME_1, generate_repo_ref_event_with_git_server,
-                        generate_test_key_1_metadata_event, generate_test_key_1_relay_list_event,
-                        git::GitTestRepo,
-                        git_remote::{cli_tester_after_fetch, prep_git_repo},
-                        relay::{Relay, shutdown_relay},
-                    };
-
-                    #[tokio::test]
-                    #[serial]
-                    #[cfg(feature = "expensive_tests")]
-                    async fn existing_state_event_updated_and_ok_printed() -> AnyhowResult<(), E> {
-                        let (state_event, source_git_repo) =
-                            generate_repo_with_state_event().await?;
-
-                        {
-                            // delete branch on git server
-                            let tmp_repo = GitTestRepo::clone_repo(&source_git_repo)?;
-                            let mut remote = tmp_repo.git_repo.find_remote("origin")?;
-                            remote.push(&[":refs/heads/example-branch"], None)?;
-                        }
-
-                        let git_repo = prep_git_repo()?;
-                        let main_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string(); // same as example
-
-                        let events = vec![
-                            generate_test_key_1_metadata_event("fred"),
-                            generate_test_key_1_relay_list_event(),
-                            generate_repo_ref_event_with_git_server(vec![
-                                source_git_repo.dir.to_str().unwrap().to_string(),
-                            ]),
-                            state_event.clone(),
-                        ];
-
-                        // fallback (51,52) user write (53, 55) repo (55, 56)
-                        // blaster (57)
-                        let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                            Relay::new(8051, None, None),
-                            Relay::new(8052, None, None),
-                            Relay::new(8053, None, None),
-                            Relay::new(8055, None, None),
-                            Relay::new(8056, None, None),
-                            Relay::new(8057, None, None),
-                        );
-                        r51.events = events.clone();
-                        r55.events = events;
-
-                        let cli_tester_handle =
-                            std::thread::spawn(move || -> AnyhowResult<(), E> {
-                                let mut p =
-                                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
-                                        &git_repo,
-                                    )?;
-                                p.send_line("push :refs/heads/example-branch")?;
-                                p.send_line("")?;
-                                p.expect("ok refs/heads/example-branch\r\n")?;
-                                p.expect_eventually("\r\n")?;
-                                p.exit()?;
-                                for p in [51, 52, 53, 55, 56, 57] {
-                                    relay::shutdown_relay(8000 + p)?;
-                                }
-                                Ok(())
-                            });
-                        // launch relays
-                        let _ = join!(
-                            r51.listen_until_close(),
-                            r52.listen_until_close(),
-                            r53.listen_until_close(),
-                            r55.listen_until_close(),
-                            r56.listen_until_close(),
-                            r57.listen_until_close(),
-                        );
-
-                        cli_tester_handle.join().unwrap()?;
-
-                        let state_event = r56
-                            .events
-                            .iter()
-                            .find(|e| e.kind().eq(&STATE_KIND))
-                            .context("state event not created")?;
-
-                        // println!("{:#?}", state_event);
-                        assert_eq!(
-                            state_event
-                                .tags
-                                .iter()
-                                .filter(|t| t.kind().to_string().as_str().ne("d"))
-                                .map(|t| t.as_vec().to_vec())
-                                .collect::<HashSet<Vec<String>>>(),
-                            HashSet::from([
-                                vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
-                                vec!["refs/heads/main".to_string(), main_commit_id.to_string()],
-                            ]),
-                        );
-                        Ok(())
-                    }
-                }
-            }
-        }
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn pushes_to_all_git_servers_listed_and_ok_printed() -> AnyhowResult<(), E> {
-            let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
-            let second_source_git_repo = GitTestRepo::duplicate(&source_git_repo)?;
-
-            // uppdate announcement with extra git server
-
-            let git_repo = prep_git_repo()?;
-
-            std::fs::write(git_repo.dir.join("new.md"), "some content")?;
-            let main_commit_id = git_repo.stage_and_commit("new.md")?;
-
-            let events = vec![
-                generate_test_key_1_metadata_event("fred"),
-                generate_test_key_1_relay_list_event(),
-                generate_repo_ref_event_with_git_server(vec![
-                    source_git_repo.dir.to_str().unwrap().to_string(),
-                    second_source_git_repo.dir.to_str().unwrap().to_string(),
-                ]),
-                state_event.clone(),
-            ];
-
-            // fallback (51,52) user write (53, 55) repo (55, 56) blaster (57)
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events;
-
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<(), E> {
-                let mut p =
-                    cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(&git_repo)?;
-                p.send_line("push refs/heads/main:refs/heads/main")?;
-                p.send_line("")?;
-                p.expect("ok refs/heads/main\r\n")?;
-                p.expect_eventually("\r\n\r\r\n")?;
-                p.exit()?;
-                for p in [51, 52, 53, 55, 56, 57] {
-                    relay::shutdown_relay(8000 + p)?;
-                }
-                Ok(())
-            });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-
-            cli_tester_handle.join().unwrap()?;
-
-            // git_server updated
-            assert_eq!(
-                source_git_repo.get_tip_of_local_branch("main")?,
-                main_commit_id
-            );
-            assert_eq!(
-                second_source_git_repo.get_tip_of_local_branch("main")?,
-                main_commit_id
-            );
-
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn proposal_merge_commit_pushed_to_main_leads_to_status_event_issued()
-        -> AnyhowResult<(), E> {
-            //
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
-            let source_path = source_git_repo.dir.to_str().unwrap().to_string();
-
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events.clone();
-
-            #[allow(clippy::mutable_key_type)]
-            let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
-
-            let cli_tester_handle =
-                std::thread::spawn(move || -> AnyhowResult<(String, Oid), E> {
-                    let branch_name =
-                        get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
-
-                    let git_repo = clone_git_repo_with_nostr_url()?;
-                    git_repo.checkout_remote_branch(&branch_name)?;
-                    git_repo.checkout("refs/heads/main")?;
-
-                    std::fs::write(git_repo.dir.join("new.md"), "some content")?;
-                    git_repo.stage_and_commit("new.md")?;
-
-                    CliTester::new_git_with_remote_helper_from_dir(
-                        &git_repo.dir,
-                        ["merge", &branch_name, "-m", "proposal merge commit message"],
-                    )
-                    .expect_end_eventually_and_print()?;
-
-                    let oid = git_repo.get_tip_of_local_branch("main")?;
-
-                    let mut p =
-                        CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
-                    cli_expect_nostr_fetch(&mut p)?;
-                    p.expect(
-                        format!("fetching {} ref list over filesystem...\r\n", source_path)
-                            .as_str(),
-                    )?;
-                    p.expect("list: connecting...\r\n")?;
-                    p.expect_after_whitespace("merge commit ")?;
-                    // shorthand merge commit id appears in this gap
-                    p.expect_eventually(": create nostr proposal status event\r\n")?;
-                    // status updates printed here
-                    p.expect_eventually(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
-                    let output = p.expect_end_eventually()?;
-
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-
-                    Ok((output, oid))
-                });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-
-            let (output, oid) = cli_tester_handle.join().unwrap()?;
-
-            assert_eq!(
-                output,
-                format!("   431b84e..{}  main -> main\r\n", &oid.to_string()[..7])
-            );
-
-            let new_events = r55
-                .events
-                .iter()
-                .cloned()
-                .collect::<HashSet<Event>>()
-                .difference(&before)
-                .cloned()
-                .collect::<Vec<Event>>();
-
-            assert_eq!(new_events.len(), 2, "{new_events:?}");
-
-            let proposal = r55
-                .events
-                .iter()
-                .find(|e| {
-                    e.tags()
-                        .iter()
-                        .find(|t| t.as_vec()[0].eq("branch-name"))
-                        .is_some_and(|t| t.as_vec()[1].eq(FEATURE_BRANCH_NAME_1))
-                })
-                .unwrap();
-
-            let merge_status = new_events
-                .iter()
-                .find(|e| e.kind().eq(&Kind::GitStatusApplied))
-                .unwrap();
-
-            assert_eq!(
-                oid.to_string(),
-                merge_status
-                    .tags
-                    .iter()
-                    .find(|t| t.as_vec()[0].eq("merge-commit-id"))
-                    .unwrap()
-                    .as_vec()[1],
-                "status sets correct merge-commit-id tag"
-            );
-
-            let proposal_tip = r55
-                .events
-                .iter()
-                .filter(|e| {
-                    e.tags()
-                        .iter()
-                        .any(|t| t.as_vec()[1].eq(&proposal.id().to_string()))
-                        && e.kind().eq(&Kind::GitPatch)
-                })
-                .last()
-                .unwrap();
-
-            assert_eq!(
-                proposal_tip.id().to_string(),
-                merge_status
-                    .tags
-                    .iter()
-                    .find(|t| t.as_vec().len().eq(&4) && t.as_vec()[3].eq("mention"))
-                    .unwrap()
-                    .as_vec()[1],
-                "status mentions proposal tip event \r\nmerge status:\r\n{}\r\nproposal tip:\r\n{}",
-                merge_status.as_json(),
-                proposal_tip.as_json(),
-            );
-
-            assert_eq!(
-                proposal.id().to_string(),
-                merge_status
-                    .tags
-                    .iter()
-                    .find(|t| t.is_root())
-                    .unwrap()
-                    .as_vec()[1],
-                "status tags proposal id as root \r\nmerge status:\r\n{}\r\nproposal:\r\n{}",
-                merge_status.as_json(),
-                proposal.as_json(),
-            );
-
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn push_2_commits_to_existing_proposal() -> AnyhowResult<(), E> {
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
-            let source_path = source_git_repo.dir.to_str().unwrap().to_string();
-
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events.clone();
-
-            #[allow(clippy::mutable_key_type)]
-            let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
-
-            let cli_tester_handle =
-                std::thread::spawn(move || -> AnyhowResult<(String, String), E> {
-                    let branch_name =
-                        get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
-
-                    let git_repo = clone_git_repo_with_nostr_url()?;
-                    git_repo.checkout_remote_branch(&branch_name)?;
-
-                    std::fs::write(git_repo.dir.join("new.md"), "some content")?;
-                    git_repo.stage_and_commit("new.md")?;
-
-                    std::fs::write(git_repo.dir.join("new2.md"), "some content")?;
-                    git_repo.stage_and_commit("new2.md")?;
-
-                    let mut p =
-                        CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
-                    cli_expect_nostr_fetch(&mut p)?;
-                    p.expect(
-                        format!("fetching {} ref list over filesystem...\r\n", source_path)
-                            .as_str(),
-                    )?;
-                    p.expect("list: connecting...\r\n\r\r\r")?;
-                    p.expect(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
-                    let output = p.expect_end_eventually()?;
-
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-
-                    Ok((output, branch_name))
-                });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-
-            let (output, branch_name) = cli_tester_handle.join().unwrap()?;
-
-            assert_eq!(
-                output,
-                format!("   eb5d678..7de5e41  {branch_name} -> {branch_name}\r\n").as_str(),
-            );
-
-            let new_events = r55
-                .events
-                .iter()
-                .cloned()
-                .collect::<HashSet<Event>>()
-                .difference(&before)
-                .cloned()
-                .collect::<Vec<Event>>();
-            assert_eq!(new_events.len(), 2);
-            let first_new_patch = new_events
-                .iter()
-                .find(|e| e.content.contains("new.md"))
-                .unwrap();
-            let second_new_patch = new_events
-                .iter()
-                .find(|e| e.content.contains("new2.md"))
-                .unwrap();
-            assert!(
-                first_new_patch.content.contains("[PATCH 3/4]"),
-                "first patch labeled with         [PATCH 3/4]"
-            );
-            assert!(
-                second_new_patch.content.contains("[PATCH 4/4]"),
-                "second patch labeled with         [PATCH 4/4]"
-            );
-
-            let proposal = r55
-                .events
-                .iter()
-                .find(|e| {
-                    e.tags()
-                        .iter()
-                        .find(|t| t.as_vec()[0].eq("branch-name"))
-                        .is_some_and(|t| t.as_vec()[1].eq(FEATURE_BRANCH_NAME_1))
-                })
-                .unwrap();
-
-            assert_eq!(
-                proposal.id().to_string(),
-                first_new_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_root())
-                    .unwrap()
-                    .as_vec()[1],
-                "first patch sets proposal id as root"
-            );
-
-            assert_eq!(
-                first_new_patch.id().to_string(),
-                second_new_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_reply())
-                    .unwrap()
-                    .as_vec()[1],
-                "second new patch replies to the first new patch"
-            );
-
-            let previous_proposal_tip_event = r55
-                .events
-                .iter()
-                .find(|e| {
-                    e.tags()
-                        .iter()
-                        .any(|t| t.as_vec()[1].eq(&proposal.id().to_string()))
-                        && e.content.contains("[PATCH 2/2]")
-                })
-                .unwrap();
-
-            assert_eq!(
-                previous_proposal_tip_event.id().to_string(),
-                first_new_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_reply())
-                    .unwrap()
-                    .as_vec()[1],
-                "first patch replies to the previous tip of proposal"
-            );
-
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        async fn force_push_creates_proposal_revision() -> AnyhowResult<(String, String), E> {
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
-            let source_path = source_git_repo.dir.to_str().unwrap().to_string();
-
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events.clone();
-
-            #[allow(clippy::mutable_key_type)]
-            let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
-
-            let cli_tester_handle =
-                std::thread::spawn(move || -> AnyhowResult<(String, String), E> {
-                    let branch_name =
-                        get_proposal_branch_name_from_events(&events, FEATURE_BRANCH_NAME_1)?;
-
-                    let git_repo = clone_git_repo_with_nostr_url()?;
-                    let oid = git_repo.checkout_remote_branch(&branch_name)?;
-                    // remove last commit
-                    git_repo.checkout("main")?;
-                    git_repo.git_repo.branch(
-                        &branch_name,
-                        &git_repo.git_repo.find_commit(oid)?.parent(0)?,
-                        true,
-                    )?;
-                    git_repo.checkout(&branch_name)?;
-
-                    std::fs::write(git_repo.dir.join("new.md"), "some content")?;
-                    git_repo.stage_and_commit("new.md")?;
-
-                    std::fs::write(git_repo.dir.join("new2.md"), "some content")?;
-                    git_repo.stage_and_commit("new2.md")?;
-
-                    let mut p = CliTester::new_git_with_remote_helper_from_dir(
-                        &git_repo.dir,
-                        ["push", "--force"],
-                    );
-                    cli_expect_nostr_fetch(&mut p)?;
-                    p.expect(
-                        format!("fetching {} ref list over filesystem...\r\n", source_path)
-                            .as_str(),
-                    )?;
-                    p.expect("list: connecting...\r\n")?;
-                    p.expect_after_whitespace(
-                        format!("To {}\r\n", get_nostr_remote_url()?).as_str(),
-                    )?;
-                    let output = p.expect_end_eventually()?;
-
-                    for p in [51, 52, 53, 55, 56, 57] {
-                        relay::shutdown_relay(8000 + p)?;
-                    }
-
-                    Ok((output, branch_name))
-                });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-
-            let (output, branch_name) = cli_tester_handle.join().unwrap()?;
-
-            assert_eq!(
-                output,
-                format!(" + eb5d678...8a296c8 {branch_name} -> {branch_name} (forced update)\r\n")
-                    .as_str(),
-            );
-
-            let new_events = r55
-                .events
-                .iter()
-                .cloned()
-                .collect::<HashSet<Event>>()
-                .difference(&before)
-                .cloned()
-                .collect::<Vec<Event>>();
-            assert_eq!(new_events.len(), 3);
-
-            let proposal = r55
-                .events
-                .iter()
-                .find(|e| {
-                    e.tags()
-                        .iter()
-                        .find(|t| t.as_vec()[0].eq("branch-name"))
-                        .is_some_and(|t| t.as_vec()[1].eq(FEATURE_BRANCH_NAME_1))
-                })
-                .unwrap();
-
-            let revision_root_patch = new_events
-                .iter()
-                .find(|e| e.tags().iter().any(|t| t.as_vec()[1].eq("revision-root")))
-                .unwrap();
-
-            assert_eq!(
-                proposal.id().to_string(),
-                revision_root_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_reply())
-                    .unwrap()
-                    .as_vec()[1],
-                "revision root patch replies to original proposal"
-            );
-
-            assert!(
-                revision_root_patch.content.contains("[PATCH 1/3]"),
-                "revision root labeled with    [PATCH 1/3] event: {revision_root_patch:?}",
-            );
-
-            let second_patch = new_events
-                .iter()
-                .find(|e| e.content.contains("new.md"))
-                .unwrap();
-            let third_patch = new_events
-                .iter()
-                .find(|e| e.content.contains("new2.md"))
-                .unwrap();
-            assert!(
-                second_patch.content.contains("[PATCH 2/3]"),
-                "second patch labeled with     [PATCH 2/3]"
-            );
-            assert!(
-                third_patch.content.contains("[PATCH 3/3]"),
-                "third patch labeled with     [PATCH 3/3]"
-            );
-
-            assert_eq!(
-                revision_root_patch.id().to_string(),
-                second_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_root())
-                    .unwrap()
-                    .as_vec()[1],
-                "second patch sets revision id as root"
-            );
-
-            assert_eq!(
-                second_patch.id().to_string(),
-                third_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_reply())
-                    .unwrap()
-                    .as_vec()[1],
-                "third patch replies to the second new patch"
-            );
-
-            Ok(())
-        }
-
-        #[tokio::test]
-        #[serial]
-        #[cfg(feature = "expensive_tests")]
-        //async fn push_new_pr_branch_creates_proposal() -> AnyhowResult<String, E> {
-        async fn push_new_pr_branch_creates_proposal() -> AnyhowResult<()> {
-            let (events, source_git_repo) =
-                prep_source_repo_and_events_including_proposals().await?;
-            let source_path = source_git_repo.dir.to_str().unwrap().to_string();
-
-            let (mut r51, mut r52, mut r53, mut r55, mut r56, mut r57) = (
-                Relay::new(8051, None, None),
-                Relay::new(8052, None, None),
-                Relay::new(8053, None, None),
-                Relay::new(8055, None, None),
-                Relay::new(8056, None, None),
-                Relay::new(8057, None, None),
-            );
-            r51.events = events.clone();
-            r55.events = events.clone();
-
-            #[allow(clippy::mutable_key_type)]
-            let before = r55.events.iter().cloned().collect::<HashSet<Event>>();
-            let branch_name = "pr/my-new-proposal";
-
-            let cli_tester_handle = std::thread::spawn(move || -> AnyhowResult<String, E> {
-                let mut git_repo = clone_git_repo_with_nostr_url()?;
-                git_repo.delete_dir_on_drop = false;
-                git_repo.create_branch(branch_name)?;
-                git_repo.checkout(branch_name)?;
-
-                std::fs::write(git_repo.dir.join("new.md"), "some content")?;
-                git_repo.stage_and_commit("new.md")?;
-
-                std::fs::write(git_repo.dir.join("new2.md"), "some content")?;
-                git_repo.stage_and_commit("new2.md")?;
-
-                let mut p = CliTester::new_git_with_remote_helper_from_dir(
-                    &git_repo.dir,
-                    ["push", "-u", "origin", branch_name],
-                );
-                cli_expect_nostr_fetch(&mut p)?;
-                p.expect(
-                    format!("fetching {} ref list over filesystem...\r\n", source_path).as_str(),
-                )?;
-                p.expect("list: connecting...\r\n\r\r\r")?;
-                p.expect(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
-                let output = p.expect_end_eventually()?;
-
-                for p in [51, 52, 53, 55, 56, 57] {
-                    relay::shutdown_relay(8000 + p)?;
-                }
-
-                Ok(output)
-            });
-            // launch relays
-            let _ = join!(
-                r51.listen_until_close(),
-                r52.listen_until_close(),
-                r53.listen_until_close(),
-                r55.listen_until_close(),
-                r56.listen_until_close(),
-                r57.listen_until_close(),
-            );
-
-            let output = cli_tester_handle.join().unwrap()?;
-
-            assert_eq!(
-                    output,
-                    format!(" * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n").as_str(),
-                );
-
-            let new_events = r55
-                .events
-                .iter()
-                .cloned()
-                .collect::<HashSet<Event>>()
-                .difference(&before)
-                .cloned()
-                .collect::<Vec<Event>>()
-                .collect::<Vec<Event>>();
-            assert_eq!(new_events.len(), 2);
-
-            let proposal = new_events
-                .iter()
-                .find(|e| e.tags().iter().any(|t| t.as_vec()[1].eq("root")))
-                .unwrap();
-
-            assert!(
-                proposal.content.contains("new.md"),
-                "first patch is proposal root"
-            );
-
-            assert!(
-                proposal.content.contains("[PATCH 1/2]"),
-                "proposal root labeled with[PATCH 1/2] event: {proposal:?}"
-            );
-
-            assert_eq!(
-                proposal
-                    .tags()
-                    .iter()
-                    .find(|t| t.as_vec()[0].eq("branch-name"))
-                    .unwrap()
-                    .as_vec()[1],
-                branch_name.replace("pr/", ""),
-            );
-
-            let second_patch = new_events
-                .iter()
-                .find(|e| e.content.contains("new2.md"))
-                .unwrap();
-
-            assert!(
-                second_patch.content.contains("[PATCH 2/2]"),
-                "second patch labeled with     [PATCH 2/2]"
-            );
-
-            assert_eq!(
-                proposal.id().to_string(),
-                second_patch
-                    .tags
-                    .iter()
-                    .find(|t| t.is_root())
-                    .unwrap()
-                    .as_vec()[1],
-                "second patch sets proposal id as root"
-            );
-
-            Ok(())
         }
     }
 }
