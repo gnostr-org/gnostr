@@ -121,7 +121,7 @@ pub fn parse<'a>(path: &'a Path, content: &'a str) -> Vec<(Range<usize>, SyntaxT
     LANG_CONFIGS.with(|highlight_configs| {
         let mut highlight_configs_borrow = highlight_configs.borrow_mut();
         let config = highlight_configs_borrow
-            .entry(grammar_variant)
+            .entry(*grammar_variant)
             .or_insert_with_key(|_| create_highlight_config(grammar_variant, &language));
 
         HIGHLIGHTER.with_borrow_mut(|highlighter| {
