@@ -67,7 +67,7 @@ ssh-key = { version = "0.6.6", features = ["crypto", "encryption"] }
 strip-ansi-escapes = "0.2.1"
 thiserror = "1.0"
 toml = "0.8.20"
-tree-sitter = "0.23.2"
+tree-sitter = "0.20.10"
 tree-sitter-highlight = "0.20.1"
 tree-sitter-grammar-repository = { version = "1895.933117.678085", path = "../js/tree-sitter-grammar-repository" }
 tui-prompts = "0.5.0"
