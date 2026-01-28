@@ -11,7 +11,7 @@ default-run = "gnostr_js"
 section = "web"
 
 [workspace]
-members = ["ssh", "tree-sitter-grammar-repository"]
+members = ["tree-sitter-grammar-repository"]
 
 [[bin]]
 name = "gnostr-gnit"
@@ -20,10 +20,6 @@ path = "src/bin/gnostr-gnit.rs"
 [[bin]]
 name = "gnostr-web"
 path = "src/bin/gnostr-web.rs"
-
-[[bin]]
-name = "gnostr-ssh"
-path = "ssh/src/bin/gnostr-ssh.rs"
 
 [dependencies]
 anyhow = "1.0"
@@ -61,7 +57,6 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-gnostr-ssh = { version = "1895.933117.678085", path = "ssh" }
 handlebars = "6.3.2"
 httparse = "1.7"
 humantime = "2.1"
