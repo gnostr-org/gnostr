@@ -114,7 +114,7 @@ async-std = { version = "1.12", features = ["attributes"] }
 async-trait = "0.1.73"
 
 ##nostr
-auth-git2 = "0.5.5"
+auth-git2 = "^0.5"
 
 axum = { version = "0.7", default-features = false, features = [
   "query",
@@ -187,7 +187,7 @@ futures-util = "0.3"
 fuzzy-matcher = "0.3"
 getopts = "0.2.21"
 gh-emoji = { version = "1.0", optional = true }
-git2 = "0.20.1" ## asyncgit ^0.19
+git2 = "^0.20" ## asyncgit ^0.19
 
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
@@ -459,7 +459,7 @@ env_logger = "0.11"
 expectrl = "0.8.0"
 futures-util = "0.3.31"
 gag = "1.0.0"
-git2 = "0.20.1"
+git2 = "^0.20"
 grcov = "0.10.5"
 mockall = "0.11.4"
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
