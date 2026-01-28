@@ -85,14 +85,10 @@ fn tags_by_highlight_index() -> [SyntaxTag; 22] {
 }
 
 fn determine_lang(path: &Path) -> Option<(&'static Grammar, Language)> {
-    let extension = path.extension().and_then(|s| s.to_str())?;
-    for variant in Grammar::VARIANTS {
-        let params = Grammar::highlight_configuration_params(*variant);
-        if params.name == extension {
-            return Some((variant, (params.language)()));
-        }
-    }
-    None
+    let file_language = tree_sitter_grammar_repository::Language::from_file_name(path)?;
+    let grammar_variant = file_language.grammar();
+    let params = Grammar::highlight_configuration_params(grammar_variant);
+    Some((&grammar_variant, (params.language)()))
 }
 
 fn create_highlight_config(grammar_variant: &'static Grammar, language: &Language) -> HighlightConfiguration {
