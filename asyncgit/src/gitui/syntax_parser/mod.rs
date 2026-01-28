@@ -96,7 +96,7 @@ fn determine_lang(path: &Path) -> Option<(Grammar, Language)> {
 
 }
 
-fn create_highlight_config(grammar_variant: &'static Grammar, language: &Language) -> HighlightConfiguration {
+fn create_highlight_config(grammar_variant: Grammar, language: &Language) -> HighlightConfiguration {
     let params = Grammar::highlight_configuration_params(*grammar_variant);
 
     let mut highlight_config =
