@@ -21,12 +21,14 @@ count = []
 [dependencies]
 actix = "0.13.5"
 actix-web = "4.9.0"
-gnostr-relay = { version = "1895.933117.678085", path = "..", features = ["search"] }
+gnostr-relay = { version = "1895.933117.678085", path = "..", features = [
+  "search",
+] }
 governor = { version = "0.6.3", optional = true }
 
 metrics = "0.23.0"
 metrics-exporter-prometheus = { version = "0.15.3", optional = true, default-features = false, features = [
-    "push-gateway",
+  "push-gateway",
 ] }
 metrics-util = { version = "0.17.0", optional = true }
 parking_lot = "0.12.3"
