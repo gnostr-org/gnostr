@@ -17,6 +17,10 @@ categories = ["command-line-utilities"]
 name = "gnostr_legit"
 path = "src/lib.rs"
 
+[[bin]]
+name = "gnostr-legit"
+path = "src/main.rs"
+
 [dependencies]
 argparse = "0.2.2"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
