@@ -3,16 +3,16 @@ use std::{borrow::Cow, cell::Cell};
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{
-    self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag, commit_files::OldNew,
+    self, commit_files::OldNew, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag,
 };
 use log::debug;
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_sqlite_0_34_0::{Error, SQLiteDatabase};
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span, Text},
+    Frame,
 };
 use sync::CommitTags;
 
@@ -20,12 +20,12 @@ use super::style::Detail;
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
         chat_details::style::style_detail,
         dialog_paragraph,
         utils::{scroll_vertical::VerticalScroll, time_to_string},
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     strings::{self, order},
     ui::style::SharedTheme,
 };
