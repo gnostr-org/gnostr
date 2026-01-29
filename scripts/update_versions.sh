@@ -27,6 +27,29 @@ ensure_taplo_installed() {
 
 ensure_taplo_installed
 
+SED_CMD="sed"
+
+# Check if on macOS and if brew is installed
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    if command -v brew &> /dev/null; then
+        echo "Homebrew detected. Checking for gsed..."
+        if ! command -v gsed &> /dev/null; then
+            echo "gsed not found. Installing gnu-sed via Homebrew..."
+            if brew install gnu-sed; then
+                echo "gnu-sed installed successfully."
+                SED_CMD="gsed"
+            else
+                echo "Warning: Failed to install gnu-sed. Falling back to default sed."
+            fi
+        else
+            echo "gsed is already installed."
+            SED_CMD="gsed"
+        fi
+    else
+        echo "Homebrew not found on macOS. Falling back to default sed."
+    fi
+fi
+
 # Get the version from the root Cargo.toml
 ROOT_CARGO_TOML="./Cargo.toml"
 if [ ! -f "$ROOT_CARGO_TOML" ]; then
