@@ -23,7 +23,7 @@ path = "src/main.rs"
 
 clap = { version = "4", features = ["derive"] }
 futures = "0.3"
-gnostr-crawler = { path = "../crawler", version = "1894.934224.276199"}
+gnostr-crawler = { path = "../crawler", version = "1894.934224.276199" }
 log = "0.4.27"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
