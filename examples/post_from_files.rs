@@ -1,8 +1,8 @@
 use std::{env, fs, io::Read};
 
 use gnostr::{
-    Command, Probe,
     types::{Event, RelayMessage},
+    Command, Probe,
 };
 
 #[tokio::main]

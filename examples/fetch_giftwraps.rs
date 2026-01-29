@@ -1,8 +1,8 @@
 use std::env;
 
 use gnostr::{
-    Command, Probe,
     types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer},
+    Command, Probe,
 };
 
 //use gnostr::Signer;
