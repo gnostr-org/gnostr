@@ -28,8 +28,3 @@ hex = "0.4.3"
 image = "0.25.2"
 qrcode = "0.14.1"
 sha2 = "0.10.8"
-
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
