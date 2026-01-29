@@ -1,5 +1,5 @@
 [package]
-name = "gnostr-grammar"
+name = "tree-sitter-grammar-repository"
 description = "tree-sitter grammars built from Helix with support for dynamic linking"
 version = "1895.933117.678085"
 edition = "2021"
@@ -13,7 +13,7 @@ tree-sitter-language = "0.1"
 
 [build-dependencies]
 anyhow = "1.0"
-cc = "^1"
+cc = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
 threadpool = "1.8"
