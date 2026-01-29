@@ -337,10 +337,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         let git_data_tags = filter.tags.get(&'t').unwrap();
                                         assert!(git_data_tags.contains(&"gnostr-repo".to_string()));
                                         assert!(git_data_tags.contains(&"git-data".to_string()));
-                                        assert!(
-                                            git_data_tags
-                                                .contains(&format!("git-ref:{}", ref_name))
-                                        );
+                                        assert!(git_data_tags
+                                            .contains(&format!("git-ref:{}", ref_name)));
                                     }
 
                                     #[tokio::test]
@@ -481,8 +479,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                                     #[tokio::test]
                                     #[serial]
-                                    async fn malformed_event_data_handling()
-                                    -> Result<(), Box<dyn std::error::Error>>
+                                    async fn malformed_event_data_handling(
+                                    ) -> Result<(), Box<dyn std::error::Error>>
                                     {
                                         // Test handling of corrupted event structures
                                         let event = create_test_event();
@@ -612,8 +610,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                     #[tokio::test]
                                     #[serial]
                                     #[ignore] // Memory usage test
-                                    async fn memory_usage_with_large_events()
-                                    -> Result<(), Box<dyn std::error::Error>>
+                                    async fn memory_usage_with_large_events(
+                                    ) -> Result<(), Box<dyn std::error::Error>>
                                     {
                                         // Test memory efficiency with large event data
                                         let large_content = "x".repeat(10000);
@@ -975,8 +973,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                         #[tokio::test]
                         #[serial]
-                        async fn malformed_event_data_handling()
-                        -> Result<(), Box<dyn std::error::Error>> {
+                        async fn malformed_event_data_handling(
+                        ) -> Result<(), Box<dyn std::error::Error>> {
                             // Test handling of corrupted event structures
                             let event = create_test_event();
 
@@ -1099,8 +1097,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                         #[tokio::test]
                         #[serial]
                         #[ignore] // Memory usage test
-                        async fn memory_usage_with_large_events()
-                        -> Result<(), Box<dyn std::error::Error>> {
+                        async fn memory_usage_with_large_events(
+                        ) -> Result<(), Box<dyn std::error::Error>> {
                             // Test memory efficiency with large event data
                             let large_content = "x".repeat(10000);
 
@@ -1536,12 +1534,10 @@ mod tests {
         // Test with invalid protocol
         let result = parse_gnostr_url("http://test.com");
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("URL must start with gnostr://")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("URL must start with gnostr://"));
     }
 
     #[test]
@@ -1549,12 +1545,10 @@ mod tests {
         // Test with invalid format after gnostr://
         let result = parse_gnostr_url("gnostr://invalidformat");
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Invalid gnostr URL format")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid gnostr URL format"));
     }
 
     #[test]

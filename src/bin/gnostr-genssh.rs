@@ -2,7 +2,7 @@ use std::{
     env, fs,
     io::Result,
     path::{Path, PathBuf},
-    process::{Command, exit},
+    process::{exit, Command},
 };
 
 fn main() {
