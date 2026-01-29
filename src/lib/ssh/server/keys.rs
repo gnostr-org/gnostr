@@ -1,5 +1,5 @@
 use std::{
-    fs::{File, read_to_string},
+    fs::{read_to_string, File},
     path::PathBuf,
 };
 
