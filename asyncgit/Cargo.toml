@@ -2,9 +2,9 @@
 name = "gnostr-asyncgit"
 version = "1894.934224.276199"
 authors = [
-    "gnostr <admin@gnostr.org>",
-    "extrawurst <mail@rusticorn.com>",
-    "altsem <altem@unknown.com>",
+  "gnostr <admin@gnostr.org>",
+  "extrawurst <mail@rusticorn.com>",
+  "altsem <altem@unknown.com>",
 ]
 edition = "2021"
 description = "gnostr:fork of asyncgit"
@@ -41,7 +41,7 @@ figment = { version = "0.10.19", features = ["toml"] }
 fuzzy-matcher = "0.3"
 git-version = "0.3.9"
 git2 = { version = "^0.20", default-features = false }
-git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1895.933117.678085" }
+git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1894.934224.276199" }
 itertools = "0.14.0"
 log = "0.4"
 # log = "0.4.27"
