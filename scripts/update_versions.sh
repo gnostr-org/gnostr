@@ -47,12 +47,17 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
         DEP_PATH_RELATIVE=$(echo "$dep_line" | awk -F'path = "' '{print $2}' | awk -F'"' '{print $1}')
 
         if [ -n "$DEP_PATH_RELATIVE" ] && [ -n "$DEP_NAME" ]; then
+            echo "DEBUG: CRATE_DIR = $CRATE_DIR"
+            echo "DEBUG: DEP_NAME = $DEP_NAME"
+            echo "DEBUG: DEP_PATH_RELATIVE = $DEP_PATH_RELATIVE"
             # Resolve absolute path for the dependency's Cargo.toml
             # Construct absolute path for the dependency's Cargo.toml
             # This avoids using realpath --relative-to which is not portable
             DEP_CARGO_TOML="$CRATE_DIR/$DEP_PATH_RELATIVE/Cargo.toml"
+            echo "DEBUG: Before normalize, DEP_CARGO_TOML = $DEP_CARGO_TOML"
             # Normalize the path to handle '..' etc.
             DEP_CARGO_TOML=$(cd $(dirname "$DEP_CARGO_TOML") && pwd)/$(basename "$DEP_CARGO_TOML")
+            echo "DEBUG: After normalize, DEP_CARGO_TOML = $DEP_CARGO_TOML"
             
             if [ -f "$DEP_CARGO_TOML" ]; then
                 DEP_CURRENT_VERSION=$(grep '^version =' "$DEP_CARGO_TOML" | head -1 | awk -F'"' '{print $2}')
