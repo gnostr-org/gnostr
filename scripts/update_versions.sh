@@ -111,13 +111,13 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
             ACTUAL_DEP_VERSION=$(grep '^version =' "$DEP_CARGO_TOML_PATH" | head -1 | awk -F'"' '{print $2}')
 
             if [ -n "$ACTUAL_DEP_VERSION" ]; then
-                ESCAPED_ACTUAL_DEP_VERSION=$(escape_sed_regex "$ACTUAL_DEP_VERSION")
+                ESCAPED_ACTUAL_DEP_VERSION_REPL=$(escape_sed_replacement "$ACTUAL_DEP_VERSION")
                 ESCAPED_DEP_VAR_NAME=$(escape_sed_regex "$DEP_VAR_NAME")
                 
                 # Replace version for dependencies with path = "..."
-                sed -i '' "s/\($ESCAPED_DEP_VAR_NAME = { [^}]*version = "\)[^"]*\(", path = [^}]*}\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
+                sed -i '' "s|\(${ESCAPED_DEP_VAR_NAME} = \{ [^}]*version = \"\)[^"]*\(\", path = [^}]*\}\}|\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\2|" "$current_cargo_toml"
                 # Replace version for direct dependencies (e.g., name = "^1.2.3")
-                sed -i '' "s/\($ESCAPED_DEP_VAR_NAME = "[~^=]*\)[^"]*\("\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
+                sed -i '' "s|\(${ESCAPED_DEP_VAR_NAME} = \"[~^=]*\)[^"]*\(\"\)|\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\2|" "$current_cargo_toml"
                 
                 echo "    Synchronized $CRATE_ID_NAME version in $current_cargo_toml to $ACTUAL_DEP_VERSION"
             else
