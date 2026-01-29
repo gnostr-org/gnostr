@@ -1,7 +1,10 @@
 [package]
-name    = "gnostr-legit"
+name = "gnostr-legit"
 version = "1894.934224.276199"
-authors = ["@RandyMcMillan <randy.lee.mcmillan@gmail.com>", "John <john@throttle.io>"]
+authors = [
+  "@RandyMcMillan <randy.lee.mcmillan@gmail.com>",
+  "John <john@throttle.io>",
+]
 edition = "2021"
 rust-version = "1.61.0"
 description = "add proof of work to a git commit"
@@ -28,7 +31,12 @@ env_logger = "0.10.0"
 git2 = "^0.20"
 log = "0.4"
 rust-crypto = "^0.2"
-time-0-3 = { package = "time", version = "0.3.34", features = ["formatting", "parsing", "macros", "local-offset"] }
+time-0-3 = { package = "time", version = "0.3.34", features = [
+  "formatting",
+  "parsing",
+  "macros",
+  "local-offset",
+] }
 
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }

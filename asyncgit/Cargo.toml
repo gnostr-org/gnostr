@@ -2,9 +2,9 @@
 name = "gnostr-asyncgit"
 version = "1894.934224.276199"
 authors = [
-    "gnostr <admin@gnostr.org>",
-    "extrawurst <mail@rusticorn.com>",
-    "altsem <altem@unknown.com>",
+  "gnostr <admin@gnostr.org>",
+  "extrawurst <mail@rusticorn.com>",
+  "altsem <altem@unknown.com>",
 ]
 edition = "2021"
 description = "gnostr:fork of asyncgit"
@@ -26,7 +26,7 @@ vendor-openssl = ["openssl-sys"]
 
 [dependencies]
 arboard = { version = "3.4.0", default-features = false, features = [
-    "windows-sys",
+  "windows-sys",
 ] }
 #anyhow = "1.0"
 bitflags = "2"
