@@ -115,9 +115,9 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
                 ESCAPED_DEP_VAR_NAME=$(escape_sed_regex "$DEP_VAR_NAME")
                 
                 # Replace version for dependencies with path = "..."
-                sed -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \")[^\"]*(\", path = [^}]*})#\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\2#" "$current_cargo_toml"
+                sed -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \"")[^\""]*(\"\", path = [^}]*})#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
                 # Replace version for direct dependencies (e.g., name = "^1.2.3")
-                sed -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = \"[~^=]*)[^\"]*(\")#\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\2#" "$current_cargo_toml"
+                sed -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = \"[~^=]*)[^\""]*(\"\")#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
                 
                 echo "    Synchronized $CRATE_ID_NAME version in $current_cargo_toml to $ACTUAL_DEP_VERSION"
             else
