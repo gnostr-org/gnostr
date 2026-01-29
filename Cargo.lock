@@ -4995,7 +4995,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1894.934259.230663"
+version = "1894.934259.231324-test"
 dependencies = [
  "actix-cors",
  "actix-http",
