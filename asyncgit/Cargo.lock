@@ -1337,7 +1337,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1894.934217.283628"
+version = "1894.934224.276199"
 dependencies = [
  "arboard",
  "bitflags 2.10.0",
@@ -1392,7 +1392,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "1895.933117.678085"
+version = "1894.934224.276199"
 dependencies = [
  "git2",
  "log",
@@ -1402,11 +1402,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "1895.933117.678085"
+version = "1894.934224.276199"
 
 [[package]]
 name = "gnostr-scopetime"
-version = "1895.933117.678085"
+version = "1894.934224.276199"
 dependencies = [
  "log",
 ]
@@ -3910,7 +3910,7 @@ dependencies = [
 
 [[package]]
 name = "tree-sitter-grammar-repository"
-version = "1895.933117.678085"
+version = "1894.934224.276199"
 dependencies = [
  "anyhow",
  "cc",
