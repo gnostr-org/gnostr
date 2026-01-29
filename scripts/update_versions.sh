@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Function to escape a string for use in a sed regex pattern
+escape_sed_regex() {
+    printf "$1" | sed -e 's/[\/&.]/\\&/g'
+}
+
 if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
     echo "Error: CARGO_REGISTRY_TOKEN is not set."
     echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
@@ -59,8 +64,8 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
                 
                 if [ -n "$DEP_CURRENT_VERSION" ]; then
                     echo "  - Found local dependency $DEP_NAME (path: $DEP_PATH_RELATIVE). Its version is $DEP_CURRENT_VERSION."
-                    ESCAPED_DEP_NAME=$(echo "$DEP_NAME" | sed 's/[^^$.*[\]&\\/]/\\&/g')
-                    ESCAPED_DEP_PATH_RELATIVE=$(echo "$DEP_PATH_RELATIVE" | sed 's/[^^$.*[\]&\\/]/\\&/g')
+                    ESCAPED_DEP_NAME=$(escape_sed_regex "$DEP_NAME")
+                    ESCAPED_DEP_PATH_RELATIVE=$(escape_sed_regex "$DEP_PATH_RELATIVE")
                     # Update the version in the current crate_file
                     sed -i '' "s/^$ESCAPED_DEP_NAME = { version = \".*\", path = \"$ESCAPED_DEP_PATH_RELATIVE\"}/$ESCAPED_DEP_NAME = { version = \"$DEP_CURRENT_VERSION\", path = \"$ESCAPED_DEP_PATH_RELATIVE\"}/" "$crate_file"
                     echo "    Updated $DEP_NAME version in $crate_file"
@@ -100,8 +105,8 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
             ACTUAL_DEP_VERSION=$(grep '^version =' "$DEP_CARGO_TOML_PATH" | head -1 | awk -F'"' '{print $2}')
 
             if [ -n "$ACTUAL_DEP_VERSION" ]; then
-                ESCAPED_ACTUAL_DEP_VERSION=$(echo "$ACTUAL_DEP_VERSION" | sed 's/[.&*\/]/\\&/g')
-                ESCAPED_DEP_VAR_NAME=$(echo "$DEP_VAR_NAME" | sed 's/[^^$.*[\]&\\/]/\\&/g')
+                ESCAPED_ACTUAL_DEP_VERSION=$(escape_sed_regex "$ACTUAL_DEP_VERSION")
+                ESCAPED_DEP_VAR_NAME=$(escape_sed_regex "$DEP_VAR_NAME")
                 
                 # Replace version for dependencies with path = "..."
                 sed -i '' "s/\($ESCAPED_DEP_VAR_NAME = { [^}]*version = "\)[^"]*\(", path = [^}]*}\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
