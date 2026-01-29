@@ -15,40 +15,40 @@ permissions:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   windows-vcpkg:
-     strategy:
-       matrix:
-         os:
-           - runner: windows-latest
-             arch: x64
-           - runner: windows-11-arm
-             arch: arm64
-       fail-fast: false
-     name: windows-vcpkg-${{ matrix.os.arch }}
-     runs-on: ${{ matrix.os.runner }}
-     steps:
-       - uses: actions/checkout@v6
-       - uses: sfackler/actions/rustup@master
-       - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
-         id: rust-version
-       - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-       - run: vcpkg install openssl:${{ matrix.os.arch }}-windows-static-md
-       - uses: actions/cache@v5
-         with:
-           path: ~/.cargo/registry/index
-           key: index-${{ runner.os }}-${{ github.run_number }}
-           restore-keys: |
-             index-${{ runner.os }}-
-       - run: cargo generate-lockfile
-       - uses: actions/cache@v5
-         with:
-           path: ~/.cargo/registry/cache
-           key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-       - run: cargo fetch
-       - uses: actions/cache@v5
-         with:
-           path: target
-           key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-       - run: cargo test -j8
+    strategy:
+      matrix:
+        os:
+          - runner: windows-latest
+            arch: x64
+          - runner: windows-11-arm
+            arch: arm64
+      fail-fast: false
+    name: windows-vcpkg-${{ matrix.os.arch }}
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: sfackler/actions/rustup@master
+      - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
+        id: rust-version
+      - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: vcpkg install openssl:${{ matrix.os.arch }}-windows-static-md
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cargo/registry/index
+          key: index-${{ runner.os }}-${{ github.run_number }}
+          restore-keys: |
+            index-${{ runner.os }}-
+      - run: cargo generate-lockfile
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cargo/registry/cache
+          key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo fetch
+      - uses: actions/cache@v5
+        with:
+          path: target
+          key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo test -j8
 
   gnostr-bot:
     env:
@@ -312,7 +312,6 @@ jobs:
       #  shell: powershell
       #  run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
       #  if: runner.os == 'windows'
-
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
       #  run: |
