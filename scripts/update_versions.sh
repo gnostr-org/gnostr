@@ -166,9 +166,7 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
                 echo "    Synchronized $CRATE_ID_NAME version in $current_cargo_toml to $ACTUAL_DEP_VERSION"
             else
                 echo "    Warning: Could not extract actual version from $DEP_CARGO_TOML_PATH for $CRATE_ID_NAME. Skipping synchronization."
-            fi
         fi
-    done
 done
 
 echo "All gnostr-* dependencies versions synchronized."
