@@ -241,7 +241,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
           cargo-binstall --force --no-confirm gnostr
 
-      - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
+      - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
         if: matrix.os == 'ubuntu-latest'
 
       #- run: cargo install sccache --force -j8
@@ -262,6 +262,15 @@ jobs:
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if: runner.os == 'macos'
+
+      - name: Install OpenSSL for macOS
+        run: |
+          brew install openssl@1.1
+          echo "export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"" >> $GITHUB_ENV
+          echo "export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"" >> $GITHUB_ENV
+          echo "export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"" >> $GITHUB_ENV
+          echo "export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@1.1/lib/pkgconfig"" >> $GITHUB_ENV
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
