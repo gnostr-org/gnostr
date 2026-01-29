@@ -495,3 +495,24 @@ url = "2.2.2"
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+[workspace]
+members = [
+    ".", # Root crate
+    "asyncgit",
+    "relay",
+    "legit",
+    "query",
+    "crawler",
+    "git2-testing",
+    "git2-hooks",
+    "invalidstring",
+    "filetreelist",
+    "scopetime",
+    "qr",
+    "grammar",
+    "js",
+    "js/html",
+    "js/tree-sitter-grammar-repository",
+    "gh",
+]
