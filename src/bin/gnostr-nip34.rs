@@ -1,5 +1,3 @@
-#[allow(unused)]
-#[allow(dead_code)]
 use std::{
     collections::HashSet,
     io,
@@ -22,7 +20,6 @@ use ratatui::{
 };
 use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
-#[allow(dead_code)]
 /// Represents a relevant subset of a Git commit's data.
 #[derive(Debug, Clone)]
 struct Commit {
@@ -33,7 +30,6 @@ struct Commit {
     committer_date: String,
 }
 
-#[allow(dead_code)]
 /// Represents a Git branch's data.
 #[derive(Debug, Clone)]
 struct Branch {
@@ -871,8 +867,12 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
                 "  "
             };
             let content = format!(
-                "{}[{}] {} - {}\n",
-                selected_indicator, c.hash, c.author, c.summary
+                "{}[{}] {} - {} ({})\n", // Added committer_date here
+                selected_indicator,
+                c.hash,
+                c.author,
+                c.summary,
+                c.committer_date // Added committer_date
             );
             let style = if app.selected_commits.contains(&index) {
                 Style::default().fg(Color::Yellow)
@@ -983,7 +983,7 @@ fn render_branches_view(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 "  "
             };
-            let content = format!("{}{} - {}\n", prefix, b.name, b.commit_message);
+            let content = format!("{}{} - {} ({}) - {}\n", prefix, b.name, b.commit_message, b.author, b.commit_hash); // Added commit_hash and author
             let style = if b.is_current {
                 Style::default().fg(Color::Green)
             } else if b.is_remote {
