@@ -10,12 +10,30 @@ escape_sed_replacement() {
     printf "%s" "$1" | sed -e 's/[\&/]/\\&/g'
 }
 
+# Function to ensure taplo-cli is installed
+ensure_taplo_installed() {
+    if ! command -v taplo &> /dev/null; then
+        echo "taplo-cli not found. Installing it..."
+        if cargo install taplo-cli; then
+            echo "taplo-cli installed successfully."
+        else
+            echo "Error: Failed to install taplo-cli. Please install it manually using 'cargo install taplo-cli'."
+            exit 1
+        fi
+    else
+        echo "taplo-cli is already installed."
+    fi
+}
+
 if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+
     echo "Error: CARGO_REGISTRY_TOKEN is not set."
     echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
     echo "You can get one from https://crates.io/settings/tokens"
     exit 1
 fi
+
+ensure_taplo_installed
 
 # Get the version from the root Cargo.toml
 ROOT_CARGO_TOML="./Cargo.toml"
@@ -35,6 +53,7 @@ echo "Root version found: $CURRENT_VERSION"
 
 # Find all other Cargo.toml files and update them
 find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | while read -r file; do
+    taplo format "$file"
     echo "Updating $file..."
     # Use sed to replace the version line
     # -i ensures in-place editing
@@ -49,6 +68,7 @@ echo "All Cargo.toml files updated."
 
 # Update versions for local path dependencies
 find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | while read -r crate_file; do
+    taplo format "$crate_file"
     CRATE_DIR=$(dirname "$crate_file")
     echo "Checking local dependencies in $crate_file..."
 
@@ -91,6 +111,7 @@ echo "Synchronizing versions for gnostr-* dependencies across all Cargo.toml fil
 
 # Iterate through all Cargo.toml files, including the root one
 find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | while read -r current_cargo_toml; do
+    taplo format "$current_cargo_toml"
     echo "Processing dependencies in $current_cargo_toml..."
 
     # Find all gnostr-* dependencies in the current Cargo.toml
