@@ -22,6 +22,7 @@ jobs:
              arch: x64
            - runner: windows-11-arm
              arch: arm64
+       fail-fast: false
      name: windows-vcpkg-${{ matrix.os.arch }}
      runs-on: ${{ matrix.os.runner }}
      steps:
@@ -61,7 +62,7 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
-      fail-fast: true
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
