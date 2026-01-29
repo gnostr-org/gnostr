@@ -1355,6 +1355,7 @@ dependencies = [
  "git-version",
  "git2",
  "gnostr-git2-hooks",
+ "gnostr-grammar",
  "gnostr-invalidstring",
  "gnostr-scopetime",
  "insta",
@@ -1381,7 +1382,6 @@ dependencies = [
  "thiserror 1.0.69",
  "toml",
  "tree-sitter",
- "tree-sitter-grammar-repository",
  "tree-sitter-highlight",
  "tui-prompts",
  "unicode-segmentation",
@@ -1398,6 +1398,25 @@ dependencies = [
  "log",
  "shellexpand",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "gnostr-grammar"
+version = "1895.933117.678085"
+dependencies = [
+ "anyhow",
+ "cc",
+ "globset",
+ "heck",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "serde",
+ "syn",
+ "threadpool",
+ "toml",
+ "tree-sitter-language",
 ]
 
 [[package]]
@@ -3906,25 +3925,6 @@ checksum = "e747b1f9b7b931ed39a548c1fae149101497de3c1fc8d9e18c62c1a66c683d3d"
 dependencies = [
  "cc",
  "regex",
-]
-
-[[package]]
-name = "tree-sitter-grammar-repository"
-version = "1895.933117.678085"
-dependencies = [
- "anyhow",
- "cc",
- "globset",
- "heck",
- "prettyplease",
- "proc-macro2",
- "quote",
- "regex",
- "serde",
- "syn",
- "threadpool",
- "toml",
- "tree-sitter-language",
 ]
 
 [[package]]

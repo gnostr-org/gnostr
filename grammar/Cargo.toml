@@ -1,5 +1,5 @@
 [package]
-name = "tree-sitter-grammar-repository"
+name = "gnostr-grammar"
 description = "tree-sitter grammars built from Helix with support for dynamic linking"
 version = "1895.933117.678085"
 edition = "2021"
