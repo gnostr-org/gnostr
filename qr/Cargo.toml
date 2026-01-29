@@ -16,8 +16,12 @@ eula = false
 
 [[bin]]
 name = "gnostr-qr"
-source = "src/bin/gnostr-qr.rs"
+path = "src/bin/gnostr-qr.rs"
 doc = true
+
+[lib]
+name = "gnostr_qr"
+path = "src/lib.rs"
 
 [dependencies]
 hex = "0.4.3"

@@ -3,8 +3,8 @@ name = "gh-rs"
 version = "1894.934224.276199"
 edition = "2021"
 
-[[bin]]
-name = "gh"
+[lib]
+name = "gh_rs"
 path = "src/lib.rs"
 
 [dependencies]

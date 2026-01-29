@@ -68,7 +68,7 @@ strip-ansi-escapes = "0.2.1"
 thiserror = "1.0"
 toml = "0.8.20"
 tree-sitter = "0.20.10"
-tree-sitter-grammar-repository = { path = "../js/tree-sitter-grammar-repository", version = "1894.934224.276199" }
+tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "../grammar", version = "1894.934224.276199" }
 tree-sitter-highlight = "0.20.1"
 tui-prompts = "0.5.0"
 unicode-segmentation = "1.12.0"

@@ -512,7 +512,5 @@ members = [
     "qr",
     "grammar",
     "js",
-    "js/html",
-    "js/tree-sitter-grammar-repository",
     "gh",
 ]
