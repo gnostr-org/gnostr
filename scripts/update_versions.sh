@@ -25,14 +25,6 @@ ensure_taplo_installed() {
     fi
 }
 
-if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
-
-    echo "Error: CARGO_REGISTRY_TOKEN is not set."
-    echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
-    echo "You can get one from https://crates.io/settings/tokens"
-    exit 1
-fi
-
 ensure_taplo_installed
 
 # Get the version from the root Cargo.toml
@@ -149,6 +141,14 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
 done
 
 echo "All gnostr-* dependencies versions synchronized."
+
+if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+
+    echo "Error: CARGO_REGISTRY_TOKEN is not set."
+    echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
+    echo "You can get one from https://crates.io/settings/tokens"
+    exit 1
+fi
 
 #publishing order
 
