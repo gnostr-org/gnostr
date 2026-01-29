@@ -176,7 +176,7 @@ duration-str = { version = "0.11.2", default-features = false }
 easy-cast = "0.5"
 env_logger = "0.11"
 expectrl = "0.8.0"
-filetreelist = { version = "1895.933117.678085", package = "gnostr-filetreelist", path = "filetreelist" }
+filetreelist = { version = "1894.934224.276199", package = "gnostr-filetreelist", path = "filetreelist" }
 flate2 = { version = "1.0", optional = true }
 
 flume = "0.10"
@@ -201,12 +201,12 @@ globset = "0.4"
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { version = "1894.934217.283628", default-features = false, path = "asyncgit" }
-gnostr-crawler = { version = "1895.933117.678085", path = "crawler" }
-#gnostr-grammar = { version = "1895.933117.678085", path = "grammar" }
-gnostr-legit = { version = "1895.933117.678085", path = "legit" }
-gnostr-query = { version = "1895.933117.678085", path = "query" }
-gnostr-relay = { version = "1895.933117.678085", path = "relay" }
-gnostr_qr = { version = "1895.933117.678085", path = "qr" }
+gnostr-crawler = { version = "1894.934224.276199", path = "crawler" }
+#gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
+gnostr-legit = { version = "1894.934224.276199", path = "legit" }
+gnostr-query = { version = "1894.934224.276199", path = "query" }
+gnostr-relay = { version = "1894.934224.276199", path = "relay" }
+gnostr_qr = { version = "1894.934224.276199", path = "qr" }
 hex = "0.4.3"
 hkdf = "0.12"
 hmac = "0.12"
