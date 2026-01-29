@@ -1362,7 +1362,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1895.933117.678085"
+version = "1894.934217.283628"
 dependencies = [
  "arboard",
  "bitflags 2.10.0",
