@@ -44,11 +44,15 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
     # Find local path dependencies in the current Cargo.toml
     grep -E '\w+ = { version = ".*", path = ".*" }' "$crate_file" | while read -r dep_line; do
         DEP_NAME=$(echo "$dep_line" | awk -F' = ' '{print $1}')
-        DEP_PATH_RELATIVE=$(echo "$dep_line" | grep -oP 'path = "\K[^"]+')
+        DEP_PATH_RELATIVE=$(echo "$dep_line" | awk -F'path = "' '{print $2}' | awk -F'"' '{print $1}')
 
         if [ -n "$DEP_PATH_RELATIVE" ] && [ -n "$DEP_NAME" ]; then
             # Resolve absolute path for the dependency's Cargo.toml
-            DEP_CARGO_TOML="$(realpath --relative-to="$(pwd)" "$CRATE_DIR/$DEP_PATH_RELATIVE/Cargo.toml")"
+            # Construct absolute path for the dependency's Cargo.toml
+            # This avoids using realpath --relative-to which is not portable
+            DEP_CARGO_TOML="$CRATE_DIR/$DEP_PATH_RELATIVE/Cargo.toml"
+            # Normalize the path to handle '..' etc.
+            DEP_CARGO_TOML=$(cd $(dirname "$DEP_CARGO_TOML") && pwd)/$(basename "$DEP_CARGO_TOML")
             
             if [ -f "$DEP_CARGO_TOML" ]; then
                 DEP_CURRENT_VERSION=$(grep '^version =' "$DEP_CARGO_TOML" | head -1 | awk -F'"' '{print $2}')
@@ -69,6 +73,47 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
 done
 
 echo "All local path dependencies updated."
+
+echo "Synchronizing versions for gnostr-* dependencies across all Cargo.toml files..."
+
+# Iterate through all Cargo.toml files, including the root one
+find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | while read -r current_cargo_toml; do
+    echo "Processing dependencies in $current_cargo_toml..."
+
+    # Find all gnostr-* dependencies in the current Cargo.toml
+    grep -E '^\s*(gnostr-\w+|filetreelist)\s*=' "$current_cargo_toml" | while read -r dep_entry_line; do
+        DEP_VAR_NAME=$(echo "$dep_entry_line" | awk -F'=' '{print $1}' | tr -d ' ' | tr -d '\t')
+
+        # Map `filetreelist` to `gnostr-filetreelist` for consistency in lookup
+        CRATE_ID_NAME="$DEP_VAR_NAME"
+        if [ "$DEP_VAR_NAME" = "filetreelist" ]; then
+            CRATE_ID_NAME="gnostr-filetreelist"
+        fi
+
+        # Determine the local crate's directory name (e.g., filetreelist from gnostr-filetreelist)
+        CRATE_FOLDER_NAME=$(echo "$CRATE_ID_NAME" | sed 's/^gnostr-//')
+        DEP_CARGO_TOML_PATH="./$CRATE_FOLDER_NAME/Cargo.toml"
+
+        if [ -f "$DEP_CARGO_TOML_PATH" ]; then
+            ACTUAL_DEP_VERSION=$(grep '^version =' "$DEP_CARGO_TOML_PATH" | head -1 | awk -F'"' '{print $2}')
+
+            if [ -n "$ACTUAL_DEP_VERSION" ]; then
+                ESCAPED_ACTUAL_DEP_VERSION=$(echo "$ACTUAL_DEP_VERSION" | sed 's/[.&*\/]/\\&/g')
+                
+                # Replace version for dependencies with path = "..."
+                sed -i '' "s/\($DEP_VAR_NAME = { [^}]*version = "\)[^"]*\(".*}\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
+                # Replace version for direct dependencies (e.g., name = "^1.2.3")
+                sed -i '' "s/\($DEP_VAR_NAME = "[~^=]*\)[^"]*\("\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
+                
+                echo "    Synchronized $CRATE_ID_NAME version in $current_cargo_toml to $ACTUAL_DEP_VERSION"
+            else
+                echo "    Warning: Could not extract actual version from $DEP_CARGO_TOML_PATH for $CRATE_ID_NAME. Skipping synchronization."
+            fi
+        fi
+    done
+done
+
+echo "All gnostr-* dependencies versions synchronized."
 
 #publishing order
 
