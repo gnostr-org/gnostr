@@ -1,7 +1,7 @@
 [package]
 name = "gnostr_js"
 description = "gnostr:git server library and binary"
-version = "1894.933767.818058"
+version = "1894.934224.276199"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
