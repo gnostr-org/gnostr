@@ -4,34 +4,30 @@ pub mod relay_manager;
 pub mod relays;
 pub mod stats;
 
+use crate::crawler::processor::Processor;
+use crate::crawler::processor::APP_SECRET_KEY;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
+use crate::crawler::processor::BOOTSTRAP_RELAY0;
+use crate::crawler::processor::BOOTSTRAP_RELAY1;
+use crate::crawler::processor::BOOTSTRAP_RELAY2;
+use crate::crawler::relay_manager::RelayManager;
+
 use clap::{Parser, Subcommand};
 use futures::{stream, StreamExt};
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use reqwest::header::ACCEPT;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str::{self, FromStr};
+use ::time::macros::format_description;
 use tracing::{debug, error};
 
-use serde::{Deserialize, Serialize};
-
-use ::time::at;
-use ::time::Timespec;
-use nostr_sdk::prelude::*;
-
-use crate::processor::Processor;
-use crate::processor::APP_SECRET_KEY;
-use crate::relay_manager::RelayManager;
-
-#[allow(unused_imports)]
-use crate::processor::LOCALHOST_8080;
-use crate::processor::BOOTSTRAP_RELAYS;
-use crate::processor::BOOTSTRAP_RELAY0;
-use crate::processor::BOOTSTRAP_RELAY1;
-use crate::processor::BOOTSTRAP_RELAY2;
+use nostr_sdk_0_34_0::prelude::*;
+use nostr_0_34_1::SecretKey;
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -354,19 +350,24 @@ pub fn print_commit(commit: &Commit) {
     println!();
 }
 
+use ::time::{OffsetDateTime, format_description};
+
 pub fn print_time(time: &Time, prefix: &str) {
     let (offset, sign) = match time.offset_minutes() {
         n if n < 0 => (-n, '-'),
         n => (n, '+'),
     };
     let (hours, minutes) = (offset / 60, offset % 60);
-    let ts = Timespec::new(time.seconds() + (time.offset_minutes() as i64) * 60, 0);
-    let time = at(ts);
+
+    let offset_seconds = (time.offset_minutes() as i64) * 60;
+    let datetime = OffsetDateTime::from_unix_timestamp(time.seconds() + offset_seconds).unwrap();
+
+    let format = format_description!("[weekday repr:short] [month repr:short] [day] [hour]:[minute]:[second] [year]");
 
     println!(
         "{}{} {}{:02}{:02}",
         prefix,
-        time.strftime("%a %b %e %T %Y").unwrap(),
+        datetime.format(&format).unwrap(),
         sign,
         hours,
         minutes

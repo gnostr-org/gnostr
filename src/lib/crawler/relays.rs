@@ -1,6 +1,6 @@
 //use log::info;
 //use log::{debug, trace};
-use nostr_sdk::prelude::Url;
+use nostr_sdk_0_34_0::prelude::Url;
 use std::collections::HashSet;
 
 /// Maintain a list of all encountered relays

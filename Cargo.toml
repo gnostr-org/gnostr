@@ -10,7 +10,7 @@ authors = [
 ]
 readme = "README.md"
 homepage = "https://github.com/gnostr-org/gnostr"
-repository = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr.git"
 license = "MIT"
 keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
@@ -201,10 +201,10 @@ globset = "0.4"
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { version = "1894.934217.283628", default-features = false, path = "asyncgit" }
-gnostr-crawler = { version = "1894.934224.276199", path = "crawler" }
+#gnostr-crawler = { version = "1894.934224.276199", path = "crawler" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
 gnostr-legit = { version = "1894.934224.276199", path = "legit" }
-gnostr-query = { version = "1894.934224.276199", path = "query" }
+#gnostr-query = { version = "1894.934224.276199", path = "query" }
 gnostr-relay = { version = "1894.934224.276199", path = "relay" }
 gnostr_qr = { version = "1894.934224.276199", path = "qr" }
 hex = "0.4.3"
@@ -485,7 +485,6 @@ structopt = "0.3.26"
 temp-env = "0.3.6"
 tempfile = "3.12.0"
 thiserror = "1.0.34"
-time = "0.3.36"
 tmux_interface = "0.3.1"
 tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] }
 tracing-subscriber = "0.3.18"
@@ -502,8 +501,6 @@ members = [
     "asyncgit",
     "relay",
     "legit",
-    "query",
-    "crawler",
     "git2-testing",
     "git2-hooks",
     "invalidstring",

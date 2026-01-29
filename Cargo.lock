@@ -1324,12 +1324,6 @@ dependencies = [
 
 [[package]]
 name = "base64"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
-
-[[package]]
-name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
@@ -2365,45 +2359,15 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c0994e656bba7b922d8dd1245db90672ffb701e684e45be58f20719d69abc5a"
-dependencies = [
- "encode_unicode 0.3.6",
- "lazy_static",
- "libc",
- "regex",
- "terminal_size 0.1.17",
- "termios",
- "unicode-width 0.1.14",
- "winapi",
- "winapi-util",
-]
-
-[[package]]
-name = "console"
 version = "0.15.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "054ccb5b10f9f2cbf51eb355ca1d05c2d279ce1804688d0db74b4733a5aeafd8"
 dependencies = [
- "encode_unicode 1.0.0",
+ "encode_unicode",
  "libc",
  "once_cell",
  "unicode-width 0.2.0",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "console"
-version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03e45a4a8926227e4197636ba97a9fc9b00477e9f4bd711395687c5f0734bec4"
-dependencies = [
- "encode_unicode 1.0.0",
- "libc",
- "once_cell",
- "unicode-width 0.2.0",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3196,7 +3160,7 @@ version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59c6f2989294b9a498d3ad5491a79c6deb604617378e1cdc4bfc1c1361fe2f87"
 dependencies = [
- "console 0.15.11",
+ "console",
  "shell-words",
  "tempfile",
  "zeroize",
@@ -3357,18 +3321,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dns-lookup"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf5597a4b7fe5275fc9dcf88ce26326bc8e4cb87d0130f33752d4c5f717793cf"
-dependencies = [
- "cfg-if 1.0.4",
- "libc",
- "socket2 0.6.2",
- "windows-sys 0.60.2",
-]
-
-[[package]]
 name = "doc-comment"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3519,12 +3471,6 @@ dependencies = [
  "subtle 2.6.1",
  "zeroize",
 ]
-
-[[package]]
-name = "encode_unicode"
-version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
 name = "encode_unicode"
@@ -5168,7 +5114,7 @@ dependencies = [
  "comma",
  "comrak",
  "config",
- "console 0.15.11",
+ "console",
  "const-hex",
  "const_format",
  "constant_time_eq 0.1.5",
@@ -5201,10 +5147,8 @@ dependencies = [
  "gix",
  "globset",
  "gnostr-asyncgit",
- "gnostr-crawler",
  "gnostr-filetreelist",
  "gnostr-legit",
- "gnostr-query",
  "gnostr-relay",
  "gnostr-scopetime",
  "gnostr_qr",
@@ -5219,7 +5163,7 @@ dependencies = [
  "httparse",
  "humantime",
  "indexmap",
- "indicatif 0.17.11",
+ "indicatif",
  "itertools 0.13.0",
  "k256",
  "kanal",
@@ -5413,36 +5357,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnostr-crawler"
-version = "1894.934224.276199"
-dependencies = [
- "assert_cmd",
- "chrono",
- "clap 4.5.55",
- "console 0.11.3",
- "ctrlc",
- "dns-lookup",
- "env_logger 0.11.8",
- "futures",
- "git2",
- "indicatif 0.14.0",
- "log",
- "nostr 0.34.1",
- "nostr-sdk 0.34.0",
- "predicates 3.1.3",
- "rand 0.7.3",
- "regex",
- "reqwest 0.11.27",
- "serde",
- "serde_json",
- "time 0.1.45",
- "tokio",
- "tracing",
- "tracing-core",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "gnostr-filetreelist"
 version = "1894.934224.276199"
 dependencies = [
@@ -5511,21 +5425,6 @@ dependencies = [
  "rust-crypto",
  "sha2 0.10.9",
  "time 0.3.46",
-]
-
-[[package]]
-name = "gnostr-query"
-version = "1894.934224.276199"
-dependencies = [
- "clap 4.5.55",
- "futures",
- "gnostr-crawler",
- "log",
- "serde",
- "serde_json",
- "tokio",
- "tokio-tungstenite 0.13.0",
- "url",
 ]
 
 [[package]]
@@ -6600,24 +6499,12 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49a68371cf417889c9d7f98235b7102ea7c54fc59bcbd22f3dea785be9d27e40"
-dependencies = [
- "console 0.16.2",
- "lazy_static",
- "number_prefix 0.3.0",
- "regex",
-]
-
-[[package]]
-name = "indicatif"
 version = "0.17.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "183b3088984b400f4cfac3620d5e076c84da5364016b4f49473de574b2586235"
 dependencies = [
- "console 0.15.11",
- "number_prefix 0.4.0",
+ "console",
+ "number_prefix",
  "portable-atomic",
  "unicode-width 0.2.0",
  "web-time",
@@ -6689,21 +6576,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "input_buffer"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f97967975f448f1a7ddb12b0bc41069d09ed6a1c161a92687e057325db35d413"
-dependencies = [
- "bytes",
-]
-
-[[package]]
 name = "insta"
 version = "1.46.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "248b42847813a1550dafd15296fd9748c651d0c32194559dbc05d804d54b21e8"
 dependencies = [
- "console 0.15.11",
+ "console",
  "once_cell",
  "similar",
  "tempfile",
@@ -9165,12 +9043,6 @@ checksum = "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9"
 dependencies = [
  "libc",
 ]
-
-[[package]]
-name = "number_prefix"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17b02fc0ff9a9e4b35b3342880f48e896ebf69f2967921fe8646bf5b7125956a"
 
 [[package]]
 name = "number_prefix"
@@ -11920,7 +11792,7 @@ dependencies = [
  "memchr",
  "memmap2",
  "mime",
- "number_prefix 0.4.0",
+ "number_prefix",
  "object",
  "opendal",
  "rand 0.8.5",
@@ -12281,19 +12153,6 @@ dependencies = [
  "plist",
  "which 4.4.2",
  "xml-rs",
-]
-
-[[package]]
-name = "sha-1"
-version = "0.9.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99cd6713db3cf16b6c84e06321e049a9b9f699826e16096d23bbcc44d15d51a6"
-dependencies = [
- "block-buffer 0.9.0",
- "cfg-if 1.0.4",
- "cpufeatures",
- "digest 0.9.0",
- "opaque-debug 0.3.1",
 ]
 
 [[package]]
@@ -13195,16 +13054,6 @@ dependencies = [
 
 [[package]]
 name = "terminal_size"
-version = "0.1.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "633c1a546cee861a1a6d0dc69ebeca693bf4296661ba7852b9d21d159e0506df"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
-name = "terminal_size"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
@@ -13221,15 +13070,6 @@ checksum = "60b8cb979cb11c32ce1603f8137b22262a9d131aaa5c37b5678025f22b8becd0"
 dependencies = [
  "rustix 1.1.3",
  "windows-sys 0.60.2",
-]
-
-[[package]]
-name = "termios"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "411c5bf740737c7918b8b1fe232dca4dc9f8e754b8ad5e20966814001ed0ac6b"
-dependencies = [
- "libc",
 ]
 
 [[package]]
@@ -13608,21 +13448,6 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
-]
-
-[[package]]
-name = "tokio-tungstenite"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1a5f475f1b9d077ea1017ecbc60890fda8e54942d680ca0b1d2b47cfa2d861b"
-dependencies = [
- "futures-util",
- "log",
- "native-tls",
- "pin-project",
- "tokio",
- "tokio-native-tls",
- "tungstenite 0.12.0",
 ]
 
 [[package]]
@@ -14056,26 +13881,6 @@ dependencies = [
  "crossterm",
  "ratatui 0.28.1",
  "unicode-width 0.1.14",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ada8297e8d70872fa9a551d93250a9f407beb9f37ef86494eb20012a2ff7c24"
-dependencies = [
- "base64 0.13.1",
- "byteorder",
- "bytes",
- "http 0.2.12",
- "httparse",
- "input_buffer",
- "log",
- "native-tls",
- "rand 0.8.5",
- "sha-1",
- "url",
- "utf-8",
 ]
 
 [[package]]

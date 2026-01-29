@@ -141,9 +141,9 @@ pub async fn send(
     //log::info!("query_string=\n{query_string}\n");
     //log::debug!("relay_url:\n{relay_url:?}\n");
     //log::info!("\n{}\n", limit.unwrap());
-    let (ws_stream, _) = connect_async(relay_url[0].clone()).await?;
+    let (ws_stream, _) = connect_async(relay_url[0].as_str()).await?;
     let (mut write, mut read) = ws_stream.split();
-    write.send(Message::Text(query_string)).await?;
+    write.send(Message::Text(query_string.into())).await?;
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
     while let Some(message) = read.next().await {
@@ -154,7 +154,7 @@ pub async fn send(
         }
         if let Message::Text(text) = data {
             //print!("{text}");
-            vec_result.push(text);
+            vec_result.push(text.to_string());
             count += 1;
         }
     }
@@ -176,6 +176,7 @@ pub fn build_gnostr_query(
     let mut filt = Map::new();
 
     if let Some(authors) = authors {
+        let _ = authors.len(); // Use the field to avoid dead_code warning
         filt.insert(
             "authors".to_string(),
             json!(authors.split(',').collect::<Vec<&str>>()),

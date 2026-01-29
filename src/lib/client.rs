@@ -26,7 +26,7 @@ use futures::{
     future::join_all,
     stream::{self, StreamExt},
 };
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressState, ProgressStyle};
 #[cfg(test)]
 use mockall::*;

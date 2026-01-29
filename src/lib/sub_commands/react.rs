@@ -1,7 +1,7 @@
 use std::{process::exit, time::Duration};
 
 use clap::Args;
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use tracing::debug;
 
 use crate::{

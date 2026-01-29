@@ -11,7 +11,7 @@ use std::{
 use anyhow::anyhow;
 use git2::{ObjectType, Repository, RepositoryState};
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_legit::gitminer::{self, Gitminer};
 use once_cell::sync::OnceCell;
 use serde_json::{self, Value};
