@@ -267,7 +267,6 @@ jobs:
       #  shell: powershell
       #  run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
       #  if: runner.os == 'windows'
-
       #- name: gnostr ${{ matrix.commands }}
       #  shell: bash
       #  run: |
