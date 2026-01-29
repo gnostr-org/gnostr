@@ -223,7 +223,7 @@ fn build_filter_map(
 #[cfg(test)]
 mod tests {
     use clap::{Parser, Subcommand};
-    use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+    use crate::crawler::processor::BOOTSTRAP_RELAYS;
     use serde_json::json;
 
     use super::*;

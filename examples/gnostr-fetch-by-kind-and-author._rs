@@ -1,5 +1,5 @@
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr_types::{EventKind, Filter, PublicKey, PublicKeyHex};
+use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::types::{EventKind, Filter, PublicKey, PublicKeyHex};
 use std::env;
 
 fn main() {

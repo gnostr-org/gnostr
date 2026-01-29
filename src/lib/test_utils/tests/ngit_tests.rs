@@ -1,6 +1,6 @@
 use std::error::Error as StdError;
 
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use serial_test::serial;
 
 use crate::{
@@ -183,7 +183,7 @@ async fn test_ngit_query_multiple_kinds_with_all_bootstrap_relays() -> Result<()
             kinds_string, relay_url
         );
         let ngit_command = NgitCommands::Query(QuerySubCommand {
-            relay: Some(relay_url.clone()),
+            relay: Some(relay_url.to_string()),
             ..base_query_args.clone()
         });
         let sub_command_args = create_dummy_ngit_subcommand(ngit_command);
