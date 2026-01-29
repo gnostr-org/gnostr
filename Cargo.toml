@@ -324,7 +324,7 @@ russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
 rust-ini = { version = "0.21.1", optional = true }
 scopeguard = "1.2"
-scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1895.933117.678085" }
+scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1894.934224.276199" }
 scrypt = "0.11.0"
 #rand = "0.8"
 #rand_core = "0.6"
