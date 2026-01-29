@@ -150,18 +150,20 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
                 ESCAPED_ACTUAL_DEP_VERSION_REPL=$(escape_sed_replacement "$ACTUAL_DEP_VERSION")
                 # For gsed -E, we need unescaped regex characters
                 GSYNC_DEP_VAR_NAME=$(printf "%s" "$DEP_VAR_NAME")
+                # Escape shell-special characters for GSYNC_DEP_VAR_NAME when used inside double-quoted shell string
+                SHELL_ESCAPED_GSYNC_DEP_VAR_NAME=$(printf %q "$GSYNC_DEP_VAR_NAME")
                 # For standard sed, we need escaped regex characters
                 SED_DEP_VAR_NAME=$(escape_sed_regex "$DEP_VAR_NAME")
                 
                 # Replace version for dependencies with path = "..."
                 if [ "$SED_CMD" = "gsed" ]; then
-                    ${SED_CMD} -i '' -E "s#^(${GSYNC_DEP_VAR_NAME} = { [^}]*version = \"")[^\""]*(\"\", path = [^}]*})#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#g" "$current_cargo_toml"
+                    ${SED_CMD} -i '' -E "s#^(${SHELL_ESCAPED_GSYNC_DEP_VAR_NAME} = { [^}]*version = \"")[^\""]*(\"\", path = [^}]*})#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#g" "$current_cargo_toml"
                 else
-                    ${SED_CMD} -i '' "s#^\\(${SED_DEP_VAR_NAME} = { [^}]*version = \\\")\\([^\\\"]*\\)\\\"\\\", path = [^}]*\\})#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#g" "$current_cargo_toml"
+                    ${SED_CMD} -i '' "s#^\\(${SED_DEP_VAR_NAME} = { [^}]*version = \\\"\)[^\\\"]*\\(\\\"\\\", path = [^}]*\\})#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#g" "$current_cargo_toml"
                 fi
                 # Replace version for direct dependencies (e.g., name = "^1.2.3")
                 if [ "$SED_CMD" = "gsed" ]; then
-                    ${SED_CMD} -i '' -E "s#^(${GSYNC_DEP_VAR_NAME} = \"")[~^=]*(\"\")#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#g" "$current_cargo_toml"
+                    ${SED_CMD} -i '' -E "s#^(${SHELL_ESCAPED_GSYNC_DEP_VAR_NAME} = \"")[~^=]*(\"\")#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#g" "$current_cargo_toml"
                 else
                     ${SED_CMD} -i '' "s#^\\(${SED_DEP_VAR_NAME} = \\\"[~^=]*\\\)[^\\\"\\\"]*\\(\\\"\\\"\\)#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#g" "$current_cargo_toml"
                 fi
