@@ -2,7 +2,12 @@
 
 # Function to escape a string for use in a sed regex pattern
 escape_sed_regex() {
-    printf "$1" | sed -e 's/[\/&.]/\\&/g'
+    printf "%s" "$1" | sed -e 's/[\[\]\\.^$*(){}+?|&]/\\&/g'
+}
+
+# Function to escape a string for use in a sed replacement string
+escape_sed_replacement() {
+    printf "%s" "$1" | sed -e 's/[\&/]/\\&/g'
 }
 
 if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
@@ -34,7 +39,8 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
     # Use sed to replace the version line
     # -i ensures in-place editing
     # The regex matches a line starting with 'version =' and replaces it with the new version
-    sed -i '' "s/^version = \".*\"/$CURRENT_VERSION/" "$file"
+    ESCAPED_CURRENT_VERSION_REPLACEMENT=$(escape_sed_replacement "$CURRENT_VERSION")
+    sed -i '' "s|^version = \".*\"|$ESCAPED_CURRENT_VERSION_REPLACEMENT|" "$file"
     echo "Updated $file"
 done
 
@@ -67,7 +73,7 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
                     ESCAPED_DEP_NAME=$(escape_sed_regex "$DEP_NAME")
                     ESCAPED_DEP_PATH_RELATIVE=$(escape_sed_regex "$DEP_PATH_RELATIVE")
                     # Update the version in the current crate_file
-                    sed -i '' "s/^$ESCAPED_DEP_NAME = { version = \".*\", path = \"$ESCAPED_DEP_PATH_RELATIVE\"}/$ESCAPED_DEP_NAME = { version = \"$DEP_CURRENT_VERSION\", path = \"$ESCAPED_DEP_PATH_RELATIVE\"}/" "$crate_file"
+                    sed -i '' "s|^${ESCAPED_DEP_NAME} = \{ version = \".*\", path = \"${ESCAPED_DEP_PATH_RELATIVE}\"\}|${ESCAPED_DEP_NAME} = \{ version = \"$(escape_sed_replacement "$DEP_CURRENT_VERSION")\", path = \"${ESCAPED_DEP_PATH_RELATIVE}\"\}|" "$crate_file"
                     echo "    Updated $DEP_NAME version in $crate_file"
                 else
                     echo "    Warning: Could not find version in $DEP_CARGO_TOML for dependency $DEP_NAME."
