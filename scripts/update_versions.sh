@@ -47,25 +47,22 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
         DEP_PATH_RELATIVE=$(echo "$dep_line" | awk -F'path = "' '{print $2}' | awk -F'"' '{print $1}')
 
         if [ -n "$DEP_PATH_RELATIVE" ] && [ -n "$DEP_NAME" ]; then
-            echo "DEBUG: CRATE_DIR = $CRATE_DIR"
-            echo "DEBUG: DEP_NAME = $DEP_NAME"
-            echo "DEBUG: DEP_PATH_RELATIVE = $DEP_PATH_RELATIVE"
             # Resolve absolute path for the dependency's Cargo.toml
             # Construct absolute path for the dependency's Cargo.toml
             # This avoids using realpath --relative-to which is not portable
             DEP_CARGO_TOML="$CRATE_DIR/$DEP_PATH_RELATIVE/Cargo.toml"
-            echo "DEBUG: Before normalize, DEP_CARGO_TOML = $DEP_CARGO_TOML"
             # Normalize the path to handle '..' etc.
             DEP_CARGO_TOML=$(cd $(dirname "$DEP_CARGO_TOML") && pwd)/$(basename "$DEP_CARGO_TOML")
-            echo "DEBUG: After normalize, DEP_CARGO_TOML = $DEP_CARGO_TOML"
             
             if [ -f "$DEP_CARGO_TOML" ]; then
                 DEP_CURRENT_VERSION=$(grep '^version =' "$DEP_CARGO_TOML" | head -1 | awk -F'"' '{print $2}')
                 
                 if [ -n "$DEP_CURRENT_VERSION" ]; then
                     echo "  - Found local dependency $DEP_NAME (path: $DEP_PATH_RELATIVE). Its version is $DEP_CURRENT_VERSION."
+                    ESCAPED_DEP_NAME=$(echo "$DEP_NAME" | sed 's/[^^$.*[\]&\\/]/\\&/g')
+                    ESCAPED_DEP_PATH_RELATIVE=$(echo "$DEP_PATH_RELATIVE" | sed 's/[^^$.*[\]&\\/]/\\&/g')
                     # Update the version in the current crate_file
-                    sed -i '' "s/^$DEP_NAME = { version = \".*\", path = \"$DEP_PATH_RELATIVE\"}/$DEP_NAME = { version = \"$DEP_CURRENT_VERSION\", path = \"$DEP_PATH_RELATIVE\"}/" "$crate_file"
+                    sed -i '' "s/^$ESCAPED_DEP_NAME = { version = \".*\", path = \"$ESCAPED_DEP_PATH_RELATIVE\"}/$ESCAPED_DEP_NAME = { version = \"$DEP_CURRENT_VERSION\", path = \"$ESCAPED_DEP_PATH_RELATIVE\"}/" "$crate_file"
                     echo "    Updated $DEP_NAME version in $crate_file"
                 else
                     echo "    Warning: Could not find version in $DEP_CARGO_TOML for dependency $DEP_NAME."
@@ -104,11 +101,12 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
 
             if [ -n "$ACTUAL_DEP_VERSION" ]; then
                 ESCAPED_ACTUAL_DEP_VERSION=$(echo "$ACTUAL_DEP_VERSION" | sed 's/[.&*\/]/\\&/g')
+                ESCAPED_DEP_VAR_NAME=$(echo "$DEP_VAR_NAME" | sed 's/[^^$.*[\]&\\/]/\\&/g')
                 
                 # Replace version for dependencies with path = "..."
-                sed -i '' "s/\($DEP_VAR_NAME = { [^}]*version = "\)[^"]*\(".*}\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
+                sed -i '' "s/\($ESCAPED_DEP_VAR_NAME = { [^}]*version = "\)[^"]*\(", path = [^}]*}\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
                 # Replace version for direct dependencies (e.g., name = "^1.2.3")
-                sed -i '' "s/\($DEP_VAR_NAME = "[~^=]*\)[^"]*\("\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
+                sed -i '' "s/\($ESCAPED_DEP_VAR_NAME = "[~^=]*\)[^"]*\("\)/\1$ESCAPED_ACTUAL_DEP_VERSION\2/" "$current_cargo_toml"
                 
                 echo "    Synchronized $CRATE_ID_NAME version in $current_cargo_toml to $ACTUAL_DEP_VERSION"
             else
