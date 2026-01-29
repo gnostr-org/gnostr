@@ -2,9 +2,9 @@
 name = "gnostr-asyncgit"
 version = "1894.934224.276199"
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "extrawurst <mail@rusticorn.com>",
-  "altsem <altem@unknown.com>",
+    "gnostr <admin@gnostr.org>",
+    "extrawurst <mail@rusticorn.com>",
+    "altsem <altem@unknown.com>",
 ]
 edition = "2021"
 description = "gnostr:fork of asyncgit"
@@ -84,7 +84,7 @@ url = "2.2.2"
 criterion = "0.5.1"
 env_logger = "0.11"
 insta = "1.42.2"
-invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1895.933117.678085" }
+invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1894.934224.276199" }
 pretty_assertions = "1.4"
 serial_test = "3.1"
 # pretty_assertions = "1.4.0"
