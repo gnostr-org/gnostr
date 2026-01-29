@@ -4,7 +4,7 @@ use gnostr::{
     Command, Probe, get_weeble,
     types::{Filter, IdHex, RelayMessage, SubscriptionId},
 };
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 #[tokio::main]
