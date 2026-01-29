@@ -247,7 +247,6 @@ libp2p = { version = "0.54.1", features = [
 ] }
 libp2p-quic = { version = "^0.12", features = ["async-std"] }
 libp2p-tls = "^0.6"
-rcgen = "^0.13"
 #hex = "0.4"
 #lazy_static = "1.4"
 lightning-invoice = "0.33.2"
@@ -310,6 +309,7 @@ ratatui = { version = "0.28", default-features = false, features = [
     'serde',
 ] }
 rayon-core = "1.12"
+rcgen = "^0.13"
 regex = "1.11"
 #regex = "1.10.2"
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
