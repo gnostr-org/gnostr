@@ -152,13 +152,13 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
                 
                 # Replace version for dependencies with path = "..."
                 if [ "$SED_CMD" = "gsed" ]; then
-                    ${SED_CMD} -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \"")[^\""]*(\"\", path = [^}]*})#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
+                    ${SED_CMD} -i '' -E 's#^('${ESCAPED_DEP_VAR_NAME}' = { [^}]*version = "')[^""]*("", path = [^}]*})#\1'"${ESCAPED_ACTUAL_DEP_VERSION_REPL}"'\2#g' "$current_cargo_toml"
                 else
                     ${SED_CMD} -i '' "s#^\\(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \\\"\)[^\\\"\"]*\\(\\\"\\\", path = [^}]*\\}\)#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#" "$current_cargo_toml"
                 fi
                 # Replace version for direct dependencies (e.g., name = "^1.2.3")
                 if [ "$SED_CMD" = "gsed" ]; then
-                    ${SED_CMD} -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = \"")[~^=]*(\"\")#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
+                    ${SED_CMD} -i '' -E 's#^('${ESCAPED_DEP_VAR_NAME}' = ")[~^=]*("")#\1'"${ESCAPED_ACTUAL_DEP_VERSION_REPL}"'\2#g' "$current_cargo_toml"
                 else
                     ${SED_CMD} -i '' "s#^\\(${ESCAPED_DEP_VAR_NAME} = \\\"[~^=]*\\\)[^\\\"\"]*\\(\\\"\\\"\\)#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#" "$current_cargo_toml"
                 fi
