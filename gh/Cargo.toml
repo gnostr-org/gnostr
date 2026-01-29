@@ -3,15 +3,20 @@ name = "gh-rs"
 version = "1895.933117.678085"
 edition = "2021"
 
+[[bin]]
+name = "gh"
+path = "src/lib.rs"
+
 [dependencies]
+anstream = "0.6.4"
 async-std = "1.12.0"
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 configparser = { version = "3.0.2", features = ["async-std", "indexmap"] }
-openssl = { version = "0.10", features = ["vendored"] }
 git2 = "0.20.1"
 home = "0.5.5"
 octocrab = "0.32.0"
+openssl = { version = "0.10", features = ["vendored"] }
 rand_core = { version = "0.6", features = ["getrandom"] }
 regex = "1.10.2"
 serde = { version = "1.0.203", features = ["derive", "rc"] }
@@ -21,11 +26,6 @@ terminal_size = "0.3.0"
 thiserror = "1.0.63"
 tokio = { version = "1.33.0", features = ["full"] }
 url = "2.5.0"
-anstream = "0.6.4"
-
-[[bin]]
-name = "gh"
-path = "src/lib.rs"
 
 [dev-dependencies]
 
