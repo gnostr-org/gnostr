@@ -200,7 +200,7 @@ globset = "0.4"
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { version = "1895.933117.678085", default-features = false, path = "asyncgit" }
+gnostr-asyncgit = { version = "1894.934217.283628", default-features = false, path = "asyncgit" }
 gnostr-crawler = { version = "1895.933117.678085", path = "crawler" }
 #gnostr-grammar = { version = "1895.933117.678085", path = "grammar" }
 gnostr-legit = { version = "1895.933117.678085", path = "legit" }
