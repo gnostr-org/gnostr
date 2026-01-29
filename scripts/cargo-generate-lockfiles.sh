@@ -33,3 +33,4 @@ find "$TARGET_DIR" -name "target" -prune -o -name "Cargo.toml" -print | while re
 done
 
 echo "Recursive lockfile generation complete."
+git diff || true
