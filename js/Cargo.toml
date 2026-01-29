@@ -10,9 +10,6 @@ default-run = "gnostr_js"
 [package.metadata.deb]
 section = "web"
 
-[workspace]
-members = ["tree-sitter-grammar-repository"]
-
 [[bin]]
 name = "gnostr-gnit"
 path = "src/bin/gnostr-gnit.rs"
@@ -111,7 +108,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "parking_lot",
   "fmt",
 ] }
-tree-sitter-grammar-repository = { path = "./tree-sitter-grammar-repository" }
+tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "../grammar" }
 tree-sitter-highlight = "0.23"
 unix_mode = "0.1"
 uuid = { version = "1.7", features = ["v4"] }
