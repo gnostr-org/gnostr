@@ -199,6 +199,7 @@ sleep 1 && pushd relay && $COMMAND || true && popd
 
 COMMAND='cargo publish -j8'
 
+sleep 1 && pushd invalidstring && $COMMAND || true && popd
 sleep 1 && pushd git2-hooks && $COMMAND || true && popd
 sleep 1 && pushd grammar && $COMMAND || true && popd
 sleep 1 && pushd filetreelist && $COMMAND || true && popd
@@ -207,7 +208,6 @@ sleep 1 && pushd asyncgit && $COMMAND || true && popd
 
 sleep 1 && pushd crawler && $COMMAND || true && popd
 sleep 1 && pushd query && $COMMAND || true && popd
-sleep 1 && pushd invalidstring && $COMMAND || true && popd
 sleep 1 && pushd legit && $COMMAND || true && popd
 sleep 1 && pushd qr && $COMMAND || true && popd
 sleep 1 && pushd relay && $COMMAND || true && popd
