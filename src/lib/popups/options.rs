@@ -2,20 +2,20 @@ use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::ShowUntrackedFilesConfig;
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, string_width_align,
-        visibility_blocking,
+        string_width_align, visibility_blocking, CommandBlocking, CommandInfo, Component,
+        DrawableComponent, EventState,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
     queue::{InternalEvent, Queue},
     strings,

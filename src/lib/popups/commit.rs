@@ -1,34 +1,35 @@
 use std::{
-    fs::{File, read_to_string},
+    fs::{read_to_string, File},
     io::{Read, Write},
     path::PathBuf,
     str::FromStr,
 };
 
-use anyhow::{Ok, Result, bail};
+use anyhow::{bail, Ok, Result};
 use crossterm::event::Event;
 use easy_cast::Cast;
 use gnostr_asyncgit::{
-    StatusItem, StatusItemType, cached,
+    cached,
     sync::{
-        self, CommitId, HookResult, PrepareCommitMsgSource, RepoPathRef, RepoState,
-        commit::commit_message_prettify, get_config_string,
+        self, commit::commit_message_prettify, get_config_string, CommitId, HookResult,
+        PrepareCommitMsgSource, RepoPathRef, RepoState,
     },
+    StatusItem, StatusItemType,
 };
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     widgets::Paragraph,
+    Frame,
 };
 
 use super::ExternalEditorPopup;
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, TextInputComponent,
-        visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
+        EventState, TextInputComponent,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
     popups::ExternalChatPopup,
     queue::{InternalEvent, NeedsUpdate, Queue},
