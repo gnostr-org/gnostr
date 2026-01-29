@@ -2,9 +2,9 @@
 name = "gnostr-asyncgit"
 version = "1894.934224.276199"
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "extrawurst <mail@rusticorn.com>",
-  "altsem <altem@unknown.com>",
+    "gnostr <admin@gnostr.org>",
+    "extrawurst <mail@rusticorn.com>",
+    "altsem <altem@unknown.com>",
 ]
 edition = "2021"
 description = "gnostr:fork of asyncgit"
