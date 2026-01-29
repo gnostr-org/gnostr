@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-query"
-version = "1895.933117.678085"
+version = "1894.934224.276199"
 authors = ["gnostr-org <admin@gnostr.org>"]
 description = "gnostr-query: retrieve nostr events."
 repository = "https://github.com/gnostr-org/gnostr-query.git"

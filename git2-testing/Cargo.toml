@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-git2-testing"
-version = "1895.933117.678085"
+version = "1894.934224.276199"
 authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "convenience functions to write unittests on top of git2-rs"
