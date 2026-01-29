@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail};
 use clap::Args;
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr_query::ConfigBuilder;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
+use crate::query::ConfigBuilder;
 use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
@@ -111,7 +111,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
             .collect()
     };
 
-    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check))
+    let vec_result = crate::query::send(query_string.clone(), relays, Some(limit_check))
         .await
         .map_err(|e| {
             error!("Failed to send query: {}", e);

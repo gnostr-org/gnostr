@@ -2,9 +2,6 @@ src/lib/empty
 
 .tmp-prettierignore
 
-bin/
-gnit/test-repo
-gnit/bin/
 !relay/src/bin/
 !gnit/src/bin/
 graph.png

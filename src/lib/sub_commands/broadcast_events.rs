@@ -1,6 +1,6 @@
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use crate::{

@@ -1,9 +1,9 @@
 #[allow(unused_imports)]
-use crate::processor::Processor;
-use crate::relays::Relays;
-use crate::CliArgs;
-use crate::APP_SECRET_KEY;
-use nostr_sdk::{
+use crate::crawler::processor::Processor;
+use crate::crawler::relays::Relays;
+use crate::crawler::CliArgs;
+use crate::crawler::APP_SECRET_KEY;
+use nostr_sdk_0_34_0::{
     prelude::{
         Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, /*Tag, */Timestamp,
         Url, TagStandard

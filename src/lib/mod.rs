@@ -20,6 +20,8 @@ pub mod cmdbar;
 pub mod components;
 ///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
 pub mod core;
+///  <https://docs.rs/gnostr/latest/gnostr/crawler/index.html>
+pub mod crawler;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
@@ -46,6 +48,8 @@ pub mod p2p;
 pub mod popup_stack;
 ///  <https://docs.rs/gnostr/latest/gnostr/popup/index.html>
 pub mod popups;
+///  <https://docs.rs/gnostr/latest/gnostr/query/index.html>
+pub mod query;
 ///  <https://docs.rs/gnostr/latest/gnostr/queue/index.html>
 pub mod queue;
 ///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>

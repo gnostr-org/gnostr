@@ -414,6 +414,7 @@ impl App {
                 let new_event = unsigned_event
                     .sign(&self.secret_key)
                     .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+                //ensure the event is pushed to all relays
                 self.nip34_events.push(new_event);
             }
         }
