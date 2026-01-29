@@ -74,7 +74,7 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
     # -i ensures in-place editing
     # The regex matches a line starting with 'version =' and replaces it with the new version
     ESCAPED_CURRENT_VERSION_REPLACEMENT=$(escape_sed_replacement "$CURRENT_VERSION")
-    sed -i '' "s|^version = \".*\"|$ESCAPED_CURRENT_VERSION_REPLACEMENT|" "$file"
+    ${SED_CMD} -i '' "s|^version = \".*\"|$ESCAPED_CURRENT_VERSION_REPLACEMENT|" "$file"
     echo "Updated $file"
 done
 
@@ -108,7 +108,7 @@ find . -type f -name "Cargo.toml" ! -path "./Cargo.toml" ! -path "*/target/*" ! 
                     ESCAPED_DEP_NAME=$(escape_sed_regex "$DEP_NAME")
                     ESCAPED_DEP_PATH_RELATIVE=$(escape_sed_regex "$DEP_PATH_RELATIVE")
                     # Update the version in the current crate_file
-                    sed -i '' "s|^${ESCAPED_DEP_NAME} = { version = \"[^\"]*\", path = \"${ESCAPED_DEP_PATH_RELATIVE}\"}|${ESCAPED_DEP_NAME} = { version = \"$(escape_sed_replacement "$DEP_CURRENT_VERSION")\", path = \"${ESCAPED_DEP_PATH_RELATIVE}\"}| "$crate_file"
+                    ${SED_CMD} -i '' "s|^${ESCAPED_DEP_NAME} = { version = \"[^\"]*\", path = \"${ESCAPED_DEP_PATH_RELATIVE}\"}|${ESCAPED_DEP_NAME} = { version = \"$(escape_sed_replacement "$DEP_CURRENT_VERSION")\", path = \"${ESCAPED_DEP_PATH_RELATIVE}\"}| "$crate_file"
                     echo "    Updated $DEP_NAME version in $crate_file"
                 else
                     echo "    Warning: Could not find version in $DEP_CARGO_TOML for dependency $DEP_NAME."
@@ -151,9 +151,17 @@ find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | wh
                 ESCAPED_DEP_VAR_NAME=$(escape_sed_regex "$DEP_VAR_NAME")
                 
                 # Replace version for dependencies with path = "..."
-                sed -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \"")[^\""]*(\"\", path = [^}]*})#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
+                if [ "$SED_CMD" = "gsed" ]; then
+                    ${SED_CMD} -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \\\")[^\\\"]*(\\\"\\\", path = [^}]*})#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
+                else
+                    ${SED_CMD} -i '' "s#^\\(${ESCAPED_DEP_VAR_NAME} = { [^}]*version = \\\"\)[^\\\"\"]*\\(\\\"\\\", path = [^}]*\\}\)#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#" "$current_cargo_toml"
+                fi
                 # Replace version for direct dependencies (e.g., name = "^1.2.3")
-                sed -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = \"[~^=]*)[^\""]*(\"\")#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
+                if [ "$SED_CMD" = "gsed" ]; then
+                    ${SED_CMD} -i '' -E "s#^(${ESCAPED_DEP_VAR_NAME} = \\\")[~^=]*(\\\"\\\"\\)#\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\2#" "$current_cargo_toml"
+                else
+                    ${SED_CMD} -i '' "s#^\\(${ESCAPED_DEP_VAR_NAME} = \\\"[~^=]*\\\)[^\\\"\"]*\\(\\\"\\\"\\)#\\\\1${ESCAPED_ACTUAL_DEP_VERSION_REPL}\\\\2#" "$current_cargo_toml"
+                fi
                 
                 echo "    Synchronized $CRATE_ID_NAME version in $current_cargo_toml to $ACTUAL_DEP_VERSION"
             else
