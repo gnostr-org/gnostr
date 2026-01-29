@@ -14,21 +14,21 @@ pub struct Args {
     ///     - single char-keys: a, b, c, ...
     ///     - special keys: `<backspace>`, `<enter>`, `<up>`, `<tab>`, `<delete>`, `<esc>`, ...
     ///     - modifiers: <ctrl+a>, <ctrl+shift+alt+a>, <shift+delete>
-    #[clap(short, long, verbatim_doc_comment)]
+    #[arg(short, long, verbatim_doc_comment)]
     ///
     pub keys: Option<String>,
 
     /// Print one frame and exit. Useful for debugging.
-    #[clap(long, action)]
+    #[arg(long)]
     ///
     pub print: bool,
 
     /// Enable logging to 'gnostr-asyncgit.log'
-    #[clap(long, action)]
+    #[arg(long)]
     ///
     pub log: bool,
 
-    #[clap(long, action)]
+    #[arg(long)]
     /// Print version
     pub version: bool,
 }
