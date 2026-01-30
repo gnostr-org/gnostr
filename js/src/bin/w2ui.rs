@@ -87,7 +87,7 @@ async fn main() {
             {}
         </head>
         <body>
-            <h1>Hello from Rust with embedded JS and CSS!</h1>
+            <h1>Hello from Rust with embedded w2ui JS and CSS!</h1>
             {}
             {}
         </body>
