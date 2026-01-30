@@ -136,25 +136,25 @@ impl Processor {
             Kind::ContactList => {
                 self.stats.add_contacts();
                 // count p tags
-                //let mut cnt = 0;
+                let mut cnt = 0;
                 for t in &event.tags {
                     if let Some(TagStandard::PublicKey { public_key, .. }) = t.as_standardized() {
                         self.pubkeys.add(public_key);
-                        //cnt += 1;
+                        cnt += 1;
                     }
                 }
-                //println!("Contacts {} \t ", cnt); // event.pubkey.to_bech32().unwrap(),
-                // self.print_summary();
+                println!("Contacts {} \t ", cnt); // event.pubkey.to_bech32().unwrap(),
+                self.print_summary();
 
-                //println!("{:?}", event);
+                println!("{:?}", event);
             }
             Kind::RecommendRelay => {
                 self.stats.add_relays();
-                //println!("{:?}", event);
+                println!("{:?}", event);
             }
             _ => {
-                //println!("{:?}", event.kind)
-                println!("processing...")
+                println!("{:?}", event.kind);
+                println!("processing...");
             }
         }
     }
@@ -176,5 +176,6 @@ impl Processor {
         );
         println!();
         self.pubkeys.dump();
+        self.print_summary();
     }
 }
