@@ -26,5 +26,7 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("ui/settings.js".to_string(), include_bytes!("ui/settings.js") as &'static [u8]);
     assets.insert("ui/state.js".to_string(), include_bytes!("ui/state.js") as &'static [u8]);
     assets.insert("ui/util.js".to_string(), include_bytes!("ui/util.js") as &'static [u8]);
+    assets.insert("ui/w2ui-1.5.min.js".to_string(), include_bytes!("ui/w2ui-1.5.min.js") as &'static [u8]);
+    assets.insert("jquery-4.0.0.js".to_string(), include_bytes!("jquery-4.0.0.js") as &'static [u8]);
     assets
 }
