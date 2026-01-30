@@ -389,7 +389,17 @@ pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("./crawler/relays.yaml").unwrap();
+    let relays_path = Path::new("./relays.yaml");
+    if !relays_path.exists() {
+        match File::create(relays_path) {
+            Ok(_) => debug!("Created empty relays.yaml"),
+            Err(e) => {
+                error!("Failed to create relays.yaml: {}", e);
+                return Err(e.into());
+            }
+        }
+    }
+    let relays = load_file(relays_path).unwrap();
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
@@ -597,7 +607,17 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 }
 
 pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("./crawler/relays.yaml").unwrap();
+    let relays_path = Path::new("./relays.yaml");
+    if !relays_path.exists() {
+        match File::create(relays_path) {
+            Ok(_) => debug!("Created empty relays.yaml"),
+            Err(e) => {
+                error!("Failed to create relays.yaml: {}", e);
+                return Err(e.into());
+            }
+        }
+    }
+    let relays = load_file(relays_path).unwrap();
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
