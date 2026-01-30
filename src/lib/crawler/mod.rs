@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::{self, FromStr};
 use ::time::macros::format_description;
 use tracing::{debug, error};
@@ -389,12 +389,12 @@ pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let relays_path = Path::new("./relays.yaml");
+    let relays_path = Path::new(".gnostr/relays.yaml");
     if !relays_path.exists() {
         match File::create(relays_path) {
-            Ok(_) => debug!("Created empty relays.yaml"),
+            Ok(_) => debug!("Created empty .gnostr/relays.yaml"),
             Err(e) => {
-                error!("Failed to create relays.yaml: {}", e);
+                error!("Failed to create .gnostr/relays.yaml: {}", e);
                 return Err(e.into());
             }
         }
@@ -460,11 +460,11 @@ pub async fn run_sniper(
                             debug!("software:{:?}", &relay_info.software);
                             debug!("version:{:?}", &relay_info.version);
 
-                            let dir_name = format!("{}", nip_lower);
+                            let dir_name = format!(".gnostr/{}", nip_lower);
                             let path = Path::new(&dir_name);
 
                             if !path.exists() {
-                                match fs::create_dir(path) {
+                                match fs::create_dir(PathBuf::from(path)) {
                                     Ok(_) => debug!("created {}", nip_lower),
                                     Err(e) => eprintln!("Error creating directory: {}", e),
                                 }
@@ -607,12 +607,12 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 }
 
 pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    let relays_path = Path::new("./relays.yaml");
+    let relays_path = Path::new(".gnostr/relays.yaml");
     if !relays_path.exists() {
         match File::create(relays_path) {
-            Ok(_) => debug!("Created empty relays.yaml"),
+            Ok(_) => debug!("Created empty .gnostr/relays.yaml"),
             Err(e) => {
-                error!("Failed to create relays.yaml: {}", e);
+                error!("Failed to create .gnostr/relays.yaml: {}", e);
                 return Err(e.into());
             }
         }
