@@ -38,9 +38,9 @@ impl PubKeys {
         self.add(&pp)
     }
 
-    // pub fn count(&self) -> usize {
-    //     self.p.len()
-    // }
+    pub fn count(&self) -> usize {
+        self.p.len()
+    }
 
     pub fn dump(&self) {
         println!("Found  {}  public keys:", self.p.len());
