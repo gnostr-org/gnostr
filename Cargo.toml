@@ -478,6 +478,7 @@ expectrl = "0.8.0"
 futures-util = "0.3.31"
 gag = "1.0.0"
 git2 = "^0.20"
+gnostr-crawler = "1906.925289.572444"
 grcov = "0.10.5"
 mockall = "0.11.4"
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
