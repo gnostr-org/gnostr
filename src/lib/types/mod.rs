@@ -27,6 +27,9 @@
 )]
 #![deny(clippy::string_slice)]
 
+/// nostr_sdk bridge
+pub mod bridge;
+
 /// internal
 pub mod internal;
 
