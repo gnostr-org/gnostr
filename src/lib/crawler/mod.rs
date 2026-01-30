@@ -30,6 +30,8 @@ use nostr_sdk_0_34_0::prelude::*;
 use nostr_0_34_1::SecretKey;
 use nostr_sdk_0_34_0::{Client, Options};
 use nostr_0_34_1::Keys;
+use crate::crawler::relay_manager::ActiveRelayList;
+use tokio::sync::mpsc;
 
 
 const CONCURRENT_REQUESTS: usize = 16;
@@ -301,7 +303,9 @@ pub fn run(args: &CliArgs) -> Result<(), git2::Error> {
     //println!("{:?}", args.arg_nsec.clone());
     let app_keys = Keys::from_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor);
+    let active_relay_list = ActiveRelayList::new();
+    let (update_sender, _update_receiver) = mpsc::channel(100);
+    let mut relay_manager = RelayManager::new(app_keys, processor, active_relay_list, update_sender);
     let _run_async = relay_manager.run(vec![
         BOOTSTRAP_RELAY0,
         BOOTSTRAP_RELAY1,
@@ -513,7 +517,9 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
     let app_keys = Keys::new(app_secret_key);
     let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor);
+    let active_relay_list = ActiveRelayList::new();
+    let (update_sender, _update_receiver) = mpsc::channel(100);
+    let mut relay_manager = RelayManager::new(app_keys, processor, active_relay_list, update_sender);
 
     let bootstrap_relays = vec![
         BOOTSTRAP_RELAY0,

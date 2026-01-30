@@ -14,6 +14,7 @@ use std::collections::HashSet;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::str::FromStr;
 use std::time::Duration;
+use tokio::sync::mpsc;
 
 use clap::Parser;
 
@@ -27,27 +28,75 @@ use log::trace;
 const MAX_ACTIVE_RELAYS: usize = 2; //usize::MAX;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 
+use std::sync::{Arc, Mutex};
+
+/// A thread-safe, shared list of active Nostr relays.
+#[derive(Clone)]
+pub struct ActiveRelayList {
+    active_relays: Arc<Mutex<Vec<Url>>>,
+}
+
+impl ActiveRelayList {
+    /// Creates a new, empty ActiveRelayList.
+    pub fn new() -> Self {
+        Self {
+            active_relays: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    /// Adds a relay to the active list.
+    pub fn add_relay(&self, relay_url: Url) {
+        let mut active_relays = self.active_relays.lock().unwrap();
+        if !active_relays.contains(&relay_url) {
+            active_relays.push(relay_url);
+        }
+    }
+
+    /// Removes a relay from the active list.
+    pub fn remove_relay(&self, relay_url: &Url) {
+        let mut active_relays = self.active_relays.lock().unwrap();
+        active_relays.retain(|r| r != relay_url);
+    }
+
+    /// Returns a clone of the current list of active relays.
+    pub fn get_active_relays(&self) -> Vec<Url> {
+        self.active_relays.lock().unwrap().clone()
+    }
+}
+
+impl Default for ActiveRelayList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Keeps a set of active connections to relays
 pub struct RelayManager {
-    // app_keys: Keys,
     pub relays: Relays,
     relay_client: Client,
     pub processor: Processor,
-    /// Time of last event seen (real time, Unix timestamp)
     time_last_event: u64,
+    active_relay_list: ActiveRelayList,
+    update_sender: tokio::sync::mpsc::Sender<Vec<Url>>,
 }
 
 impl RelayManager {
-    pub fn new(app_keys: Keys, processor: Processor) -> Self {
+    pub fn new(
+        app_keys: Keys,
+        processor: Processor,
+        active_relay_list: ActiveRelayList,
+        update_sender: tokio::sync::mpsc::Sender<Vec<Url>>,
+    ) -> Self {
         let opts = Options::new(); //.wait_for_send(false);
         let relay_client = Client::with_opts(&app_keys, opts);
         let _proxy = Some(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9050)));
         Self {
-            // app_keys,
             relays: Relays::new(),
             relay_client,
             processor,
             time_last_event: Self::now(),
+            active_relay_list,
+            update_sender,
         }
     }
 
@@ -92,6 +141,19 @@ impl RelayManager {
     pub async fn run(&mut self, bootstrap_relays: Vec<&str>) -> Result<()> {
         self.add_bootstrap_relays_if_needed(bootstrap_relays);
         self.add_some_relays().await?;
+
+        let active_relay_list_clone = self.active_relay_list.clone();
+        let relay_client_clone = self.relay_client.clone();
+        let update_sender_clone = self.update_sender.clone();
+
+        tokio::spawn(async move {
+            Self::monitor_relays(
+                active_relay_list_clone,
+                relay_client_clone,
+                update_sender_clone,
+            ).await;
+        });
+
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
         for url in &some_relays {
             //if url NOT contain
@@ -107,6 +169,47 @@ impl RelayManager {
         ////self.relays.dump_list();
         self.relays.print();
         Ok(())
+    }
+
+    async fn monitor_relays(
+        active_relay_list: ActiveRelayList,
+        relay_client: Client,
+        update_sender: mpsc::Sender<Vec<Url>>,
+    ) {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        interval.tick().await; // consume the first immediate tick
+
+        loop {
+            interval.tick().await;
+            debug!("Monitoring relays...");
+
+            let mut current_active_relays = Vec::new();
+            let relays = relay_client.relays().await;
+            for (url, relay_handle) in relays.into_iter() {
+                match relay_handle.status().await {
+                    RelayStatus::Connected => {
+                        debug!("Relay {} is connected.", url);
+                        active_relay_list.add_relay(url.clone());
+                        current_active_relays.push(url);
+                    },
+                    RelayStatus::Connecting => {
+                        debug!("Relay {} is connecting.", url);
+                        // Consider connecting relays as active for now, or add a separate state.
+                        active_relay_list.add_relay(url.clone());
+                        current_active_relays.push(url);
+                    }
+                    _ => {
+                        debug!("Relay {} is not connected.", url);
+                        active_relay_list.remove_relay(&url);
+                    }
+                }
+            }
+            
+            // Send update if there are changes (simplified check for now)
+            if !current_active_relays.is_empty() {
+                let _ = update_sender.send(current_active_relays).await;
+            }
+        }
     }
 
     async fn connect(&mut self) -> Result<()> {
