@@ -136,7 +136,7 @@ pub struct CliArgs {
     arg_spec: Vec<String>,
 }
 
-pub fn run(args: &CliArgs) -> Result<(), git2::Error> {
+pub async fn run(args: &CliArgs) -> Result<(), git2::Error> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
     let _revwalk = repo.revwalk()?;
@@ -302,9 +302,8 @@ pub fn run(args: &CliArgs) -> Result<(), git2::Error> {
         BOOTSTRAP_RELAY0,
         BOOTSTRAP_RELAY1,
         BOOTSTRAP_RELAY2,
-    ]);
-    //.await;
-    //relay_manager.processor.dump();
+    ]).await;
+    relay_manager.processor.dump();
 
     Ok(())
 }
@@ -392,7 +391,7 @@ pub async fn run_sniper(
     let relays_path = PathBuf::from(".gnostr/relays.yaml");
     if !relays_path.exists() {
         match File::create(&relays_path) {
-            Ok(_) => debug!("Created empty .gnostr/relays.yaml"),
+            Ok(_) => println!("Created empty .gnostr/relays.yaml"),
             Err(e) => {
                 error!("Failed to create .gnostr/relays.yaml: {}", e);
                 return Err(e.into());
@@ -402,7 +401,7 @@ pub async fn run_sniper(
 
     let mut relays = load_file(&relays_path)?;
     if relays.is_empty() {
-        debug!("relays.yaml is empty, initializing with bootstrap relays.");
+        println!("relays.yaml is empty, initializing with bootstrap relays.");
         relays.push(BOOTSTRAP_RELAY0.to_string());
         relays.push(BOOTSTRAP_RELAY1.to_string());
         relays.push(BOOTSTRAP_RELAY2.to_string());
@@ -466,22 +465,22 @@ pub async fn run_sniper(
                 if let Ok(relay_info) = data {
                     for n in &relay_info.supported_nips {
                         if n == &nip_lower {
-                            debug!("contact:{:?}", &relay_info.contact);
-                            debug!("description:{:?}", &relay_info.description);
-                            debug!("name:{:?}", &relay_info.name);
-                            debug!("software:{:?}", &relay_info.software);
-                            debug!("version:{:?}", &relay_info.version);
+                            println!("contact:{:?}", &relay_info.contact);
+                            println!("description:{:?}", &relay_info.description);
+                            println!("name:{:?}", &relay_info.name);
+                            println!("software:{:?}", &relay_info.software);
+                            println!("version:{:?}", &relay_info.version);
 
                             let dir_name = format!(".gnostr/{}", nip_lower);
                             let path = Path::new(&dir_name);
 
                             if !path.exists() {
                                 match fs::create_dir(PathBuf::from(path)) {
-                                    Ok(_) => debug!("created {}", nip_lower),
+                                    Ok(_) => println!("created {}", nip_lower),
                                     Err(e) => eprintln!("Error creating directory: {}", e),
                                 }
                             } else {
-                                debug!("{} already exists...", dir_name);
+                                println!("{} already exists...", dir_name);
                             }
 
                             let file_name = url
@@ -492,16 +491,16 @@ pub async fn run_sniper(
                                 + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!(
+                            println!(
                                 "\n\n{}\n\n",
                                 file_path_str
                             );
 
                             match File::create(&file_path) {
                                 Ok(mut file) => {
-                                    debug!("{}", &file_path_str);
+                                    println!("{}", &file_path_str);
                                     match file.write_all(json_string.as_bytes()) {
-                                        Ok(_) => debug!("wrote relay metadata:{}", &file_path_str),
+                                        Ok(_) => println!("wrote relay metadata:{}", &file_path_str),
                                         Err(e) => {
                                             error!("Failed to write to {}: {}", &file_path_str, e)
                                         }
@@ -597,7 +596,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
                     print!("{{\"nips\":\"");
                     let mut nip_count = relay_info.supported_nips.len();
                     for n in &relay_info.supported_nips {
-                        debug!("nip_count:{}", nip_count);
+                        println!("nip_count:{}", nip_count);
                         if nip_count > 1 {
                             print!("{:0>2} ", n);
                         } else {
@@ -622,7 +621,7 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     let relays_path = PathBuf::from(".gnostr/relays.yaml");
     if !relays_path.exists() {
         match File::create(&relays_path) {
-            Ok(_) => debug!("Created empty .gnostr/relays.yaml"),
+            Ok(_) => println!("Created empty .gnostr/relays.yaml"),
             Err(e) => {
                 error!("Failed to create .gnostr/relays.yaml: {}", e);
                 return Err(e.into());
@@ -632,7 +631,7 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 
     let mut relays = load_file(&relays_path)?;
     if relays.is_empty() {
-        debug!("relays.yaml is empty, initializing with bootstrap relays.");
+        println!("relays.yaml is empty, initializing with bootstrap relays.");
         relays.push(BOOTSTRAP_RELAY0.to_string());
         relays.push(BOOTSTRAP_RELAY1.to_string());
         relays.push(BOOTSTRAP_RELAY2.to_string());
