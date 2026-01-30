@@ -28,6 +28,7 @@ async fn main() {
     let script_tags = {
         let mut tags = String::new();
         // Explicitly load db.js, model.js, and ui/state.js first due to dependencies
+        tags.push_str("<script src=\"/js/core.js\"></script>\n");
         tags.push_str("<script src=\"/js/db.js\"></script>\n");
         tags.push_str("<script src=\"/js/model.js\"></script>\n");
         tags.push_str("<script src=\"/js/ui/state.js\"></script>\n");
@@ -36,7 +37,10 @@ async fn main() {
         filenames.sort();
         for filename in filenames {
             // Skip db.js, model.js and ui/state.js as they're already added
-            if filename == "db.js" || filename == "model.js" || filename == "ui/state.js" {
+            if filename == "core.js" ||
+                filename == "db.js" ||
+                filename == "model.js" ||
+                filename == "ui/state.js" {
                 continue;
             }
             tags.push_str(&format!("<script src=\"/js/{}\"></script>\n", filename));
