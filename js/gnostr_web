@@ -1,4 +1,44 @@
 #!/usr/bin/env bash
+
+GNOSTR_GIT_REPO="gnostr.git"
+GNOSTR_GIT_REMOTE=$(git remote get-url gnostr.git)
+#git remote remove $GNOSTR_GIT_REPO >/dev/null || true
+
+remove_remote(){
+echo remove_remote
+    git remote remove gnostr.git && sleep 1
+echo ok
+}
+add_remote(){
+echo add_remote
+    git remote add gnostr.git gnostr.git  && sleep 1
+echo ok
+}
+push_to_remote(){
+echo push_to_remote
+    git push --all gnostr.git || add_remote
+echo ok
+}
+clone_to_gnostr_git(){
+echo clone_to_gnostr_Git
+    git clone ../ gnostr.git --bare  && sleep 1
+    cd gnostr.git && git remote add  local-gnostr.git ../../
+echo ok
+}
+
+echo GNOSTR_GIT_REPO="$GNOSTR_GIT_REPO";
+if [ ! -d "$GNOSTR_GIT_REPO" ]; then
+    clone_to_gnostr_git && sleep 10;
+    push_to_remote;
+fi
+GNOSTR_GIT_REMOTE=$(git remote get-url gnostr.git)
+export GNOSTR_GIT_REMOTE;
+echo GNOSTR_GIT_REMOTE="$GNOSTR_GIT_REMOTE";
+if [ -z "$GNOSTR_GIT_REMOTE" ]; then
+    add_remote;
+    push_to_remote;
+fi
+
 LOG_LEVEL=${1:-}
 PORT=${2:-3333}
 if [ ! $(uname -s) = 'Darwin' ]; then
