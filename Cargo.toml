@@ -56,6 +56,10 @@ path = "src/bin/git-remote-gnostr.rs"
 name = "gnostr-crawler"
 path = "src/bin/gnostr-crawler.rs"
 
+[[bin]]
+name = "gnostr-crawler-service"
+path = "src/bin/gnostr-crawler-service.rs"
+
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit"]
 expensive_tests = [] #nostr
