@@ -389,9 +389,9 @@ pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let relays_path = Path::new(".gnostr/relays.yaml");
+    let relays_path = PathBuf::from(".gnostr/relays.yaml");
     if !relays_path.exists() {
-        match File::create(relays_path) {
+        match File::create(&relays_path) {
             Ok(_) => debug!("Created empty .gnostr/relays.yaml"),
             Err(e) => {
                 error!("Failed to create .gnostr/relays.yaml: {}", e);
@@ -399,7 +399,19 @@ pub async fn run_sniper(
             }
         }
     }
-    let relays = load_file(relays_path).unwrap();
+
+    let mut relays = load_file(&relays_path)?;
+    if relays.is_empty() {
+        debug!("relays.yaml is empty, initializing with bootstrap relays.");
+        relays.push(BOOTSTRAP_RELAY0.to_string());
+        relays.push(BOOTSTRAP_RELAY1.to_string());
+        relays.push(BOOTSTRAP_RELAY2.to_string());
+        // Write these bootstrap relays to the file
+        let mut file = File::create(&relays_path)?;
+        for relay in &relays {
+            writeln!(file, "{}", relay)?;
+        }
+    }
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
@@ -607,9 +619,9 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 }
 
 pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    let relays_path = Path::new(".gnostr/relays.yaml");
+    let relays_path = PathBuf::from(".gnostr/relays.yaml");
     if !relays_path.exists() {
-        match File::create(relays_path) {
+        match File::create(&relays_path) {
             Ok(_) => debug!("Created empty .gnostr/relays.yaml"),
             Err(e) => {
                 error!("Failed to create .gnostr/relays.yaml: {}", e);
@@ -617,7 +629,19 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
             }
         }
     }
-    let relays = load_file(relays_path).unwrap();
+
+    let mut relays = load_file(&relays_path)?;
+    if relays.is_empty() {
+        debug!("relays.yaml is empty, initializing with bootstrap relays.");
+        relays.push(BOOTSTRAP_RELAY0.to_string());
+        relays.push(BOOTSTRAP_RELAY1.to_string());
+        relays.push(BOOTSTRAP_RELAY2.to_string());
+        // Write these bootstrap relays to the file
+        let mut file = File::create(&relays_path)?;
+        for relay in &relays {
+            writeln!(file, "{}", relay)?;
+        }
+    }
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
