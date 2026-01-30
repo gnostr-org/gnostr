@@ -4,11 +4,11 @@
     "gnostr-ssh",
 ]
 "gnostr_js 1894.934224.276199 (path+file:///Users/Shared/gnostr-org/.github/gnostr/js)" = [
-    "embedded_js",
     "embedded_main_js",
     "gnostr-gnit",
     "gnostr-web",
     "gnostr_js",
+    "gnostr_welcome",
     "warp_filters",
     "websockets_chat",
 ]
