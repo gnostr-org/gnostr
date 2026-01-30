@@ -136,7 +136,7 @@ pub struct CliArgs {
     arg_spec: Vec<String>,
 }
 
-pub async fn run(args: &CliArgs) -> Result<(), git2::Error> {
+pub async fn run(args: &CliArgs) -> Result<(), Box<dyn std::error::Error>> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
     let _revwalk = repo.revwalk()?;
@@ -298,11 +298,11 @@ pub async fn run(args: &CliArgs) -> Result<(), git2::Error> {
     let active_relay_list = ActiveRelayList::new();
     let (update_sender, _update_receiver) = mpsc::channel(100);
     let mut relay_manager = RelayManager::new(app_keys, processor, active_relay_list, update_sender);
-    let _run_async = relay_manager.run(vec![
+    relay_manager.run(vec![
         BOOTSTRAP_RELAY0,
         BOOTSTRAP_RELAY1,
         BOOTSTRAP_RELAY2,
-    ]).await;
+    ]).await?;
     relay_manager.processor.dump();
 
     Ok(())
@@ -465,22 +465,22 @@ pub async fn run_sniper(
                 if let Ok(relay_info) = data {
                     for n in &relay_info.supported_nips {
                         if n == &nip_lower {
-                            println!("contact:{:?}", &relay_info.contact);
-                            println!("description:{:?}", &relay_info.description);
-                            println!("name:{:?}", &relay_info.name);
-                            println!("software:{:?}", &relay_info.software);
-                            println!("version:{:?}", &relay_info.version);
+                            debug!("contact:{:?}", &relay_info.contact);
+                            debug!("description:{:?}", &relay_info.description);
+                            debug!("name:{:?}", &relay_info.name);
+                            debug!("software:{:?}", &relay_info.software);
+                            debug!("version:{:?}", &relay_info.version);
 
                             let dir_name = format!(".gnostr/{}", nip_lower);
                             let path = Path::new(&dir_name);
 
                             if !path.exists() {
                                 match fs::create_dir(PathBuf::from(path)) {
-                                    Ok(_) => println!("created {}", nip_lower),
+                                    Ok(_) => debug!("created {}", nip_lower),
                                     Err(e) => eprintln!("Error creating directory: {}", e),
                                 }
                             } else {
-                                println!("{} already exists...", dir_name);
+                                debug!("{} already exists...", dir_name);
                             }
 
                             let file_name = url
@@ -491,16 +491,16 @@ pub async fn run_sniper(
                                 + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            println!(
+                            debug!(
                                 "\n\n{}\n\n",
                                 file_path_str
                             );
 
                             match File::create(&file_path) {
                                 Ok(mut file) => {
-                                    println!("{}", &file_path_str);
+                                    debug!("{}", &file_path_str);
                                     match file.write_all(json_string.as_bytes()) {
-                                        Ok(_) => println!("wrote relay metadata:{}", &file_path_str),
+                                        Ok(_) => debug!("wrote relay metadata:{}", &file_path_str),
                                         Err(e) => {
                                             error!("Failed to write to {}: {}", &file_path_str, e)
                                         }
