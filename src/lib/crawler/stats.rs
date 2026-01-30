@@ -28,7 +28,7 @@ impl Stats {
         self.count_relays += 1;
     }
 
-    // pub fn print_summary(&self) {
-    //     println!("ev_cnts {} {} \t ", self.count_contacts, self.count_relays);
-    // }
+    pub fn print_summary(&self) {
+        println!("ev_cnts {} {} \t ", self.count_contacts, self.count_relays);
+    }
 }

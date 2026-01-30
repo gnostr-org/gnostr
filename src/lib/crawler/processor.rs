@@ -55,84 +55,84 @@ impl Processor {
         //println!("{:}", event.as_json());
         //println!("age {:?}  created_at {:?}", Self::age(event.created_at), event.created_at);
         match event.kind {
-            //Kind::Metadata => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::TextNote => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::EncryptedDirectMessage => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::EventDeletion => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::Repost => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::Reaction => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ChannelCreation => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ChannelMetadata => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ChannelMessage => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ChannelHideMessage => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ChannelMuteUser => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::PublicChatReserved45 => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::PublicChatReserved46 => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::PublicChatReserved47 => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::PublicChatReserved48 => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::PublicChatReserved49 => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::Reporting => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ZapRequest => {
-            //    println!("{:?}", event.kind);
-            //}
+            Kind::Metadata => {
+                println!("{:?}", event.kind);
+            }
+            Kind::TextNote => {
+                println!("{:?}", event.kind);
+            }
+            Kind::EncryptedDirectMessage => {
+                println!("{:?}", event.kind);
+            }
+            Kind::EventDeletion => {
+                println!("{:?}", event.kind);
+            }
+            Kind::Repost => {
+                println!("{:?}", event.kind);
+            }
+            Kind::Reaction => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ChannelCreation => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ChannelMetadata => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ChannelMessage => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ChannelHideMessage => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ChannelMuteUser => {
+                println!("{:?}", event.kind);
+            }
+            Kind::PublicChatReserved45 => {
+                println!("{:?}", event.kind);
+            }
+            Kind::PublicChatReserved46 => {
+                println!("{:?}", event.kind);
+            }
+            Kind::PublicChatReserved47 => {
+                println!("{:?}", event.kind);
+            }
+            Kind::PublicChatReserved48 => {
+                println!("{:?}", event.kind);
+            }
+            Kind::PublicChatReserved49 => {
+                println!("{:?}", event.kind);
+            }
+            Kind::Reporting => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ZapRequest => {
+                println!("{:?}", event.kind);
+            }
             //Kind::Zap => {
             //    println!("{:?}", event.kind);
             //}
-            //Kind::Authentication => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::NostrConnect => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::RelayList => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::Replaceable(u16) => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::Ephemeral(u16) => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::ParameterizedReplaceable(u16) => {
-            //    println!("{:?}", event.kind);
-            //}
-            //Kind::Custom(u64) => {
-            //    println!("{:?}", event.kind);
-            //}
+            Kind::Authentication => {
+                println!("{:?}", event.kind);
+            }
+            Kind::NostrConnect => {
+                println!("{:?}", event.kind);
+            }
+            Kind::RelayList => {
+                println!("{:?}", event.kind);
+            }
+            Kind::Replaceable(_u16) => {
+                println!("{:?}", event.kind);
+            }
+            Kind::Ephemeral(_u16) => {
+                println!("{:?}", event.kind);
+            }
+            Kind::ParameterizedReplaceable(_u16) => {
+                println!("{:?}", event.kind);
+            }
+            Kind::Custom(_u64) => {
+                println!("{:?}", event.kind);
+            }
             Kind::ContactList => {
                 self.stats.add_contacts();
                 // count p tags
@@ -159,22 +159,22 @@ impl Processor {
         }
     }
 
-    // fn print_summary(&self) {
-    //     print!("pks {} \t ", self.pubkeys.count());
-    //     self.stats.print_summary();
-    // }
+    fn print_summary(&self) {
+        print!("pks {} \t ", self.pubkeys.count());
+        self.stats.print_summary();
+    }
 
     pub fn dump(&self) {
-        //println!();
-        //println!(
-        //    "Number of ContactList events:      \t {}",
-        //    self.stats.count_contacts
-        //);
-        //println!(
-        //    "Number of RecommendedRelay events: \t {}",
-        //    self.stats.count_relays
-        //);
-        //println!();
-        //self.pubkeys.dump();
+        println!();
+        println!(
+            "Number of ContactList events:      \t {}",
+            self.stats.count_contacts
+        );
+        println!(
+            "Number of RecommendedRelay events: \t {}",
+            self.stats.count_relays
+        );
+        println!();
+        self.pubkeys.dump();
     }
 }
