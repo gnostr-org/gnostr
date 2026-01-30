@@ -83,44 +83,8 @@ impl RelayManager {
             println!("\n\n\n\n\n{:?}\n\n\n\n", commit);
         }
 
-        //async {
-        let opts = Options::new(); //.wait_for_send(true);
-        let app_keys = Keys::from_str(APP_SECRET_KEY).unwrap();
-        let relay_client = Client::with_opts(&app_keys, opts);
-        //let _ = relay_client.publish_text_note(path, []).await;
-        //let _ = relay_client
-        //    .publish_text_note("relay_manager:1<--------------------------<<<<<", [])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("2<--------------------------<<<<<", [])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("3<--------------------------<<<<<", [])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("4<--------------------------<<<<<", [])
-        //    .await;
-        let _ = relay_client.publish_text_note("#gnostr", []).await;
-        //};
-
         for r in some_relays {
-            //self.relay_client.add_relay(r, None).await?;
             self.relay_client.add_relay(r.clone()).await?;
-            //self.relay_client
-            //    .publish_text_note("relay_manager:5<--------<<<<<<<<<", [])
-            //    .await?;
-            //self.relay_client
-            //    .publish_text_note("6<--------<<<<<<<<<", [])
-            //    .await?;
-            //self.relay_client
-            //    .publish_text_note("7<--------<<<<<<<<<", [])
-            //    .await?;
-            //self.relay_client
-            //    .publish_text_note("888888<--------<<<<<<<<<", [])
-            //    .await?;
-            self.relay_client
-                .publish_text_note(format!("{}", r), [])
-                .await?;
         }
         Ok(())
     }

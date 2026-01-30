@@ -28,6 +28,9 @@ use tracing::{debug, error};
 
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_0_34_1::SecretKey;
+use nostr_sdk_0_34_0::{Client, Options};
+use nostr_0_34_1::Keys;
+
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -139,7 +142,7 @@ pub struct CliArgs {
     arg_spec: Vec<String>,
 }
 
-pub fn run(args: &CliArgs) -> Result<()> {
+pub fn run(args: &CliArgs) -> Result<(), git2::Error> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
     let _revwalk = repo.revwalk()?;
@@ -390,7 +393,7 @@ pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("relays.yaml").unwrap();
+    let relays = load_file("./crawler/relays.yaml").unwrap();
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
@@ -596,7 +599,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 }
 
 pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("relays.yaml").unwrap();
+    let relays = load_file("./crawler/relays.yaml").unwrap();
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
