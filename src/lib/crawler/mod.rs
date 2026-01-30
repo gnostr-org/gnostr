@@ -3,6 +3,7 @@ pub mod pubkeys;
 pub mod relay_manager;
 pub mod relays;
 pub mod stats;
+pub mod types;
 
 use crate::crawler::processor::Processor;
 use crate::crawler::processor::APP_SECRET_KEY;
@@ -11,6 +12,8 @@ use crate::crawler::processor::BOOTSTRAP_RELAY0;
 use crate::crawler::processor::BOOTSTRAP_RELAY1;
 use crate::crawler::processor::BOOTSTRAP_RELAY2;
 use crate::crawler::relay_manager::RelayManager;
+use crate::crawler::relay_manager::ActiveRelayList;
+use crate::crawler::types::RelayInfo as Relay;
 
 use clap::{Parser, Subcommand};
 use futures::{stream, StreamExt};
@@ -25,13 +28,12 @@ use std::path::Path;
 use std::str::{self, FromStr};
 use ::time::macros::format_description;
 use tracing::{debug, error};
+use tokio::sync::mpsc;
 
 use nostr_sdk_0_34_0::prelude::*;
 use nostr_0_34_1::SecretKey;
 use nostr_sdk_0_34_0::{Client, Options};
 use nostr_0_34_1::Keys;
-use crate::crawler::relay_manager::ActiveRelayList;
-use tokio::sync::mpsc;
 
 
 const CONCURRENT_REQUESTS: usize = 16;
@@ -65,16 +67,6 @@ pub enum Commands {
         #[arg(long, short)]
         shitlist: Option<String>,
     },
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Relay {
-    pub contact: String,
-    pub description: String,
-    pub name: String,
-    pub software: String,
-    pub supported_nips: Vec<i32>,
-    pub version: String,
 }
 
 pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
