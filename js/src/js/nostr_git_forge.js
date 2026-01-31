@@ -2,6 +2,7 @@ import { w2layout } from './w2layout.js'
 import { w2sidebar } from './w2sidebar.js'
 import { w2grid } from './w2grid.js'
 import { query } from './query.js'
+import { w2popup } from './w2popup.js'
 import { KIND_REPO_ANNOUNCE, KIND_REPO_STATE_ANNOUNCE, KIND_REPO_PATCH, KIND_REPO_PULL_REQ, KIND_REPO_PULL_REQ_UPDATE, KIND_REPO_ISSUE, KIND_REPO_STATUS_OPEN, KIND_REPO_STATUS_APPLIED, KIND_REPO_STATUS_CLOSED, KIND_REPO_STATUS_DRAFT, log_info } from './util.js'; // Assuming these are in util.js for now
 import { render_repo_event_summary } from './ui/render.js';
 import { model_get_profile } from './model.js'; // Assuming this is in model.js
@@ -62,26 +63,38 @@ export function init_nostr_git_forge() {
                 header: true,
                 lineNumbers: true
             },
-            columns: [
-                { field: 'name', text: 'Repository Name', size: '30%', sortable: true },
-                { field: 'description', text: 'Description', size: '50%', sortable: true },
-                { field: 'maintainers', text: 'Maintainers', size: '20%', sortable: true }
-            ],
-            records: [],
-            onSelect: function(event) {
-                const selected_repo_id = event.detail.recid;
-                const selected_repo = repo_grid.get(selected_repo_id);
-                if (selected_repo && selected_repo.event) {
-                    const repo_event = selected_repo.event;
-                    // Render detailed summary using render_repo_event_summary
-                    const details_html = render_repo_event_summary(GNOSTR_MODEL, repo_event);
-                    layout.html('main', `<div style="padding: 10px;">${details_html}</div>`);
-                }
-            }
-        }
-    };
-
-    layout = new w2layout(config.layout);
+                            columns: [
+                                { field: 'name', text: 'Repository Name', size: '30%', sortable: true },
+                                { field: 'description', text: 'Description', size: '50%', sortable: true },
+                                { field: 'maintainers', text: 'Maintainers', size: '20%', sortable: true }
+                            ],
+                            records: [],
+                            onSelect: function(event) {
+                                const selected_repo_id = event.detail.recid;
+                                const selected_repo = repo_grid.get(selected_repo_id);
+                                if (selected_repo && selected_repo.event) {
+                                    const repo_event = selected_repo.event;
+                                    const details_html = render_repo_event_summary(GNOSTR_MODEL, repo_event);
+                                    layout.html('main', `<div style="padding: 10px;">${details_html}</div>`);
+                                }
+                            },
+                            onDblClick: function(event) {
+                                const selected_repo_id = event.detail.recid;
+                                const selected_repo = repo_grid.get(selected_repo_id);
+                                if (selected_repo && selected_repo.event) {
+                                    const raw_event_json = JSON.stringify(selected_repo.event, null, 2);
+                                    w2popup.open({
+                                        title   : 'Raw NIP-34 Event',
+                                        body    : `<div style="padding: 10px; white-space: pre-wrap; overflow-y: auto; max-height: 400px;">${raw_event_json}</div>`,
+                                        buttons : '<button class="w2ui-btn" onclick="w2popup.close()">Close</button>',
+                                        width   : 800,
+                                        height  : 600
+                                    });
+                                }
+                            }
+                        }
+                    };
+                layout = new w2layout(config.layout);
     sidebar = new w2sidebar(config.sidebar);
     repo_grid = new w2grid(config.repo_grid);
 
@@ -177,35 +190,46 @@ export function init_nostr_git_forge() {
         };
     }
 
+    let active_my_repos_sub_id = null;
+
     function loadMyRepositories() {
         console.log("Loading my repositories...");
         repo_grid.clear();
         layout.html('main', repo_grid);
 
         if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool || !GNOSTR_MODEL.pubkey) {
-            console.warn("GNOSTR_MODEL, GNOSTR_MODEL.pool, or GNOSTR_MODEL.pubkey not available.");
+            console.warn("GNOSTR_MODEL, GNOSTR_MODEL.pool, or GNOSTR_MODEL.pubkey not available. Cannot load user repositories.");
             layout.html('main', '<div style="padding: 10px;">Please sign in to view your repositories.</div>');
             return;
         }
 
+        // Unsubscribe from previous 'my_repos' subscription if active
+        if (active_my_repos_sub_id) {
+            GNOSTR_MODEL.pool.unsubscribe(active_my_repos_sub_id);
+            active_my_repos_sub_id = null;
+        }
+
         const sub_id = `git-forge-my-repos-${Date.now()}`;
-        let current_repos = [];
+        active_my_repos_sub_id = sub_id;
+        let current_repos_map = new Map(); // Map: event_id -> repo_data
 
-        GNOSTR_MODEL.pool.subscribe(
-            sub_id,
-            [
-                { kinds: [KIND_REPO_ANNOUNCE], authors: [GNOSTR_MODEL.pubkey] }
-            ]
-        );
+        const filter = {
+            kinds: [KIND_REPO_ANNOUNCE],
+            authors: [GNOSTR_MODEL.pubkey]
+            // limit: 100 // Fetch a reasonable number of events
+        };
 
-        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
-        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+        log_info(`Subscribing to current user's NIP-34 repo announce events with sub_id: ${sub_id}`);
+        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
 
-        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+        // Custom event handler for this specific subscription
+        const handleNip34Event = (relay, received_sub_id, ev) => {
             if (received_sub_id === sub_id && ev.kind === KIND_REPO_ANNOUNCE) {
+                if (current_repos_map.has(ev.id)) return; // Avoid processing duplicates
+
                 let repo_name = "Unknown";
                 let description = "";
-                let maintainers = "";
+                let maintainers = [];
 
                 for (const tag of ev.tags) {
                     if (tag[0] === "d") {
@@ -213,37 +237,196 @@ export function init_nostr_git_forge() {
                     } else if (tag[0] === "description") {
                         description = tag[1];
                     } else if (tag[0] === "maintainers") {
-                        maintainers = tag.slice(1).map(pk => model_get_profile(GNOSTR_MODEL, pk).data.name || pk.substring(0, 8)).join(", ");
+                        maintainers = tag.slice(1).map(pk => model_get_profile(GNOSTR_MODEL, pk).data.name || pk.substring(0, 8));
                     }
                 }
-                current_repos.push({ recid: ev.id, name: repo_name, description: description, maintainers: maintainers, event: ev });
+                const repo_data = { recid: ev.id, name: repo_name, description: description, maintainers: maintainers.join(", "), event: ev };
+                current_repos_map.set(ev.id, repo_data);
+
+                // Add to grid immediately for a more responsive feel
+                repo_grid.add([repo_data]);
             }
-            originalOnEvent?.(relay, received_sub_id, ev); // Call original handler
         };
 
-        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+        const handleNip34Eose = (relay, received_sub_id) => {
             if (received_sub_id === sub_id) {
-                log_info(`EOSE for ${sub_id}. Populating grid.`);
-                repo_grid.records = current_repos;
-                repo_grid.refresh();
-                layout.html('main', repo_grid); // Ensure grid is displayed after data load
-                GNOSTR_MODEL.pool.unsubscribe(sub_id); // Unsubscribe after receiving all data
-
-                // Restore original handlers
-                GNOSTR_MODEL.pool.onfn.event = originalOnEvent;
-                GNOSTR_MODEL.pool.onfn.eose = originalOnEose;
+                log_info(`EOSE for ${sub_id}. All user repositories loaded.`);
+                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                active_my_repos_sub_id = null; // Mark as no longer active
             }
+        };
+
+        // Attach custom handlers for this subscription's lifecycle
+        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
+        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+
+        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+            handleNip34Event(relay, received_sub_id, ev);
+            originalOnEvent?.(relay, received_sub_id, ev); // Call original handler
+        };
+        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+            handleNip34Eose(relay, received_sub_id);
             originalOnEose?.(relay, received_sub_id); // Call original handler
         };
     }
 
+    let active_issues_sub_id = null;
+
     function loadIssues() {
         console.log("Loading issues...");
-        layout.html('main', '<div style="padding: 10px;">Issues content will go here. (NIP-34 Kind 30617)</div>');
+        repo_grid.clear();
+        layout.html('main', repo_grid);
+
+        // Update columns for issues
+        repo_grid.columns = [
+            { field: 'title', text: 'Issue Title', size: '50%', sortable: true },
+            { field: 'status', text: 'Status', size: '20%', sortable: true },
+            { field: 'repository', text: 'Repository', size: '30%', sortable: true }
+        ];
+        repo_grid.refreshColumns(); // Refresh columns display
+
+        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool) {
+            console.warn("GNOSTR_MODEL or GNOSTR_MODEL.pool not available. Cannot load issues.");
+            return;
+        }
+
+        if (active_issues_sub_id) {
+            GNOSTR_MODEL.pool.unsubscribe(active_issues_sub_id);
+            active_issues_sub_id = null;
+        }
+
+        const sub_id = `git-forge-issues-${Date.now()}`;
+        active_issues_sub_id = sub_id;
+        let current_issues_map = new Map();
+
+        const filter = {
+            kinds: [KIND_REPO_ISSUE]
+        };
+
+        log_info(`Subscribing to NIP-34 issue events with sub_id: ${sub_id}`);
+        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
+
+        const handleIssueEvent = (relay, received_sub_id, ev) => {
+            if (received_sub_id === sub_id && ev.kind === KIND_REPO_ISSUE) {
+                if (current_issues_map.has(ev.id)) return;
+
+                let issue_title = "Untitled Issue";
+                let status = "Unknown"; // Default status
+                let repo_name = "Unknown Repository";
+
+                for (const tag of ev.tags) {
+                    if (tag[0] === "title") {
+                        issue_title = tag[1];
+                    } else if (tag[0] === "status") {
+                        status = tag[1];
+                    } else if (tag[0] === "d") { // Repository ID tag
+                        repo_name = tag[1]; // Using 'd' tag value as repo name for now
+                    }
+                }
+                const issue_data = { recid: ev.id, title: issue_title, status: status, repository: repo_name, event: ev };
+                current_issues_map.set(ev.id, issue_data);
+                repo_grid.add([issue_data]);
+            }
+        };
+
+        const handleIssueEose = (relay, received_sub_id) => {
+            if (received_sub_id === sub_id) {
+                log_info(`EOSE for ${sub_id}. All issues loaded.`);
+                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                active_issues_sub_id = null;
+            }
+        };
+
+        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
+        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+
+        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+            handleIssueEvent(relay, received_sub_id, ev);
+            originalOnEvent?.(relay, received_sub_id, ev);
+        };
+        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+            handleIssueEose(relay, received_sub_id);
+            originalOnEose?.(relay, received_sub_id);
+        };
     }
+
+    let active_pull_requests_sub_id = null;
 
     function loadPullRequests() {
         console.log("Loading pull requests...");
-        layout.html('main', '<div style="padding: 10px;">Pull Requests content will go here. (NIP-34 Kinds 30618, 30619)</div>');
+        repo_grid.clear();
+        layout.html('main', repo_grid);
+
+        // Update columns for pull requests
+        repo_grid.columns = [
+            { field: 'title', text: 'Pull Request Title', size: '50%', sortable: true },
+            { field: 'status', text: 'Status', size: '20%', sortable: true },
+            { field: 'repository', text: 'Repository', size: '30%', sortable: true }
+        ];
+        repo_grid.refreshColumns(); // Refresh columns display
+
+        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool) {
+            console.warn("GNOSTR_MODEL or GNOSTR_MODEL.pool not available. Cannot load pull requests.");
+            return;
+        }
+
+        if (active_pull_requests_sub_id) {
+            GNOSTR_MODEL.pool.unsubscribe(active_pull_requests_sub_id);
+            active_pull_requests_sub_id = null;
+        }
+
+        const sub_id = `git-forge-pull-requests-${Date.now()}`;
+        active_pull_requests_sub_id = sub_id;
+        let current_pull_requests_map = new Map();
+
+        const filter = {
+            kinds: [KIND_REPO_PULL_REQ, KIND_REPO_PULL_REQ_UPDATE]
+        };
+
+        log_info(`Subscribing to NIP-34 pull request events with sub_id: ${sub_id}`);
+        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
+
+        const handlePullRequestEvent = (relay, received_sub_id, ev) => {
+            if (received_sub_id === sub_id && (ev.kind === KIND_REPO_PULL_REQ || ev.kind === KIND_REPO_PULL_REQ_UPDATE)) {
+                if (current_pull_requests_map.has(ev.id)) return;
+
+                let pr_title = "Untitled Pull Request";
+                let status = "Unknown"; // Default status
+                let repo_name = "Unknown Repository";
+
+                for (const tag of ev.tags) {
+                    if (tag[0] === "title") {
+                        pr_title = tag[1];
+                    } else if (tag[0] === "status") {
+                        status = tag[1];
+                    } else if (tag[0] === "d") { // Repository ID tag
+                        repo_name = tag[1]; // Using 'd' tag value as repo name for now
+                    }
+                }
+                const pr_data = { recid: ev.id, title: pr_title, status: status, repository: repo_name, event: ev };
+                current_pull_requests_map.set(ev.id, pr_data);
+                repo_grid.add([pr_data]);
+            }
+        };
+
+        const handlePullRequestEose = (relay, received_sub_id) => {
+            if (received_sub_id === sub_id) {
+                log_info(`EOSE for ${sub_id}. All pull requests loaded.`);
+                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                active_pull_requests_sub_id = null;
+            }
+        };
+
+        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
+        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+
+        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+            handlePullRequestEvent(relay, received_sub_id, ev);
+            originalOnEvent?.(relay, received_sub_id, ev);
+        };
+        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+            handlePullRequestEose(relay, received_sub_id);
+            originalOnEose?.(relay, received_sub_id);
+        };
     }
 }
