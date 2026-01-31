@@ -20,6 +20,10 @@ use crate::database::schema::{
     tag::{Tag, TagTree},
 };
 
+fn is_bare_repository(path: &Path) -> bool {
+    path.join("HEAD").is_file() && path.join("objects").is_dir()
+}
+
 pub fn run(scan_path: &Path, db: &Arc<rocksdb::DB>) {
     let span = debug_span!("index_update");
     let _entered = span.enter();
@@ -440,7 +444,14 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
-    // First check if current path is itself a repository
+    // First check if current path is itself a bare repository
+    if is_bare_repository(current) {
+        debug!("Discovered bare Git repository at: {}", current.display());
+        discovered_repos.push(current.to_path_buf());
+        return; // Stop recursion for this path
+    }
+
+    // Existing check for working tree or normal repository
     if gix::open(current).is_ok() {
         debug!("Discovered Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
