@@ -85,17 +85,63 @@ export function init_nostr_git_forge() {
     // Helper functions (to be implemented)
     function loadAllRepositories() {
         console.log("Loading all repositories...");
-        // Simulate fetching data
-        setTimeout(() => {
-            const dummy_repos = [
-                { recid: 1, name: 'nostr-protocol', description: 'The Nostr protocol specification', maintainers: 'fiatjaf' },
-                { recid: 2, name: 'gnostr-client-js', description: 'A Nostr web client in JavaScript', maintainers: 'randymcmillan' },
-                { recid: 3, name: 'awesome-nostr', description: 'A curated list of Nostr resources', maintainers: 'Various' }
-            ];
-            repo_grid.records = dummy_repos;
-            repo_grid.refresh();
-            layout.html('main', repo_grid);
-        }, 500);
+        repo_grid.clear();
+        layout.html('main', repo_grid);
+
+        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool) {
+            console.warn("GNOSTR_MODEL or GNOSTR_MODEL.pool not available.");
+            return;
+        }
+
+        const sub_id = `git-forge-all-repos-${Date.now()}`;
+        let current_repos = [];
+
+        GNOSTR_MODEL.pool.subscribe(
+            sub_id,
+            [
+                { kinds: [KIND_REPO_ANNOUNCE] }
+            ]
+        );
+
+        // Temporarily override on_pool_event and on_pool_eose to handle this specific subscription
+        // NOTE: This is a simplified approach. In a real app, you'd manage subscriptions more robustly.
+        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
+        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+
+        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+            if (received_sub_id === sub_id && ev.kind === KIND_REPO_ANNOUNCE) {
+                let repo_name = "Unknown";
+                let description = "";
+                let maintainers = "";
+
+                for (const tag of ev.tags) {
+                    if (tag[0] === "d") {
+                        repo_name = tag[1];
+                    } else if (tag[0] === "description") {
+                        description = tag[1];
+                    } else if (tag[0] === "maintainers") {
+                        maintainers = tag.slice(1).map(pk => model_get_profile(GNOSTR_MODEL, pk).data.name || pk.substring(0, 8)).join(", ");
+                    }
+                }
+                current_repos.push({ recid: ev.id, name: repo_name, description: description, maintainers: maintainers, event: ev });
+            }
+            originalOnEvent?.(relay, received_sub_id, ev); // Call original handler
+        };
+
+        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+            if (received_sub_id === sub_id) {
+                log_info(`EOSE for ${sub_id}. Populating grid.`);
+                repo_grid.records = current_repos;
+                repo_grid.refresh();
+                layout.html('main', repo_grid); // Ensure grid is displayed after data load
+                GNOSTR_MODEL.pool.unsubscribe(sub_id); // Unsubscribe after receiving all data
+
+                // Restore original handlers
+                GNOSTR_MODEL.pool.onfn.event = originalOnEvent;
+                GNOSTR_MODEL.pool.onfn.eose = originalOnEose;
+            }
+            originalOnEose?.(relay, received_sub_id); // Call original handler
+        };
     }
 
     function loadMyRepositories() {
