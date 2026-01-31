@@ -48,5 +48,6 @@ pub fn get_images_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("gnostr.svg".to_string(), include_bytes!("gnostr.svg") as &'static [u8]);
     assets.insert("logo-inverted.svg".to_string(), include_bytes!("logo-inverted.svg") as &'static [u8]);
     assets.insert("open-thread-here.svg".to_string(), include_bytes!("open-thread-here.svg") as &'static [u8]);
-    assets
-}
+    assets.insert("open-thread-here.svg".to_string(), include_bytes!("open-thread-here.svg") as &'static [u8]);
+    assets.insert("icon-256.png".to_string(), include_bytes!("../pwa/icon-256.png") as &'static [u8]);
+    assets}
