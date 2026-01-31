@@ -43,7 +43,7 @@ use self::{
     thread::handle as handle_thread, // GEMINI: Import thread handler
     tree::handle as handle_tree,
 };
-use crate::database::schema::tag::YokedString;
+use crate::{database::schema::tag::YokedString, database::indexer::run as indexer_run};
 use crate::{
     database::schema::{commit::YokedCommit, tag::YokedTag},
     layers::UnwrapInfallible,
@@ -107,6 +107,10 @@ pub async fn service(mut request: Request<Body>) -> Response {
         } else {
             Vec::new()
         };
+    } else if is_root_repo && !root_repo_exists_in_db {
+        debug!("Root repository exists on disk but not in DB, triggering reindex");
+        indexer_run(&scan_path, db);
+        return RepositoryNotFound.into_response();
     } else {
         // If not root repository, continue with normal detection
         while current_segment_index < uri_segments.len() {
