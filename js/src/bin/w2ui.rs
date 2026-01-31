@@ -3,26 +3,23 @@ use warp::Filter;
 use std::collections::HashMap;
 use std::sync::Arc;
 use clap::Parser;
+
+// CONSTRUCTIONS
 use gnostr_js::images::images_bundle::get_images_assets;
 use gnostr_js::js::js_bundle::get_js_assets;
 use gnostr_js::css::css_bundle::get_css_assets;
 use gnostr_js::template_html::get_template_assets;
 use gnostr_js::layout_html::get_layout_assets;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Port to listen on
-    #[arg(short, long, default_value_t = 3030)]
-    port: u16,
-}
+use gnostr_js::W2UiArgs;
 
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
+    let args = W2UiArgs::parse();
 
     pretty_env_logger::init();
 
+    // CONSTRUCTIONS BEGIN
     let js_assets_map = Arc::new(get_js_assets());
     let css_assets_map = Arc::new(get_css_assets());
     let images_assets_map = Arc::new(get_images_assets());
@@ -102,6 +99,11 @@ async fn main() {
         }
         tags
     };
+
+    // CONSTRUCTIONS END
+
+    //1. construct the layout_html
+    //2. insert other elements
 
     let index_html_content = format!(
         r#"<!DOCTYPE html>

@@ -36,7 +36,7 @@ use gnostr_js::{
     OPEN_THREAD_HERE_SVG_HASH, OPEN_THREAD_SVG, OPEN_THREAD_SVG_HASH, PROFILE_WEBSITE_SVG,
     PROFILE_WEBSITE_SVG_HASH, PROFILE_ZAP_SVG, PROFILE_ZAP_SVG_HASH, PUBKEY_SVG, PUBKEY_SVG_HASH,
     READ_MORE_SVG, READ_MORE_SVG_HASH, SETTINGS_ACTIVE_SVG, SETTINGS_ACTIVE_SVG_HASH, SETTINGS_SVG,
-    SETTINGS_SVG_HASH, SIGN_OUT_SVG, SIGN_OUT_SVG_HASH,
+    SETTINGS_SVG_HASH, SIGN_OUT_SVG, SIGN_OUT_SVG_HASH, GnitArgs
 };
 use tokio::net::TcpListener;
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
@@ -45,49 +45,6 @@ use tracing::info;
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
-
-#[derive(Parser, Debug)]
-#[clap(author, version, about)]
-pub struct GitWebArgs {
-    /// Path to a directory where the RocksDB database should be stored.
-    ///
-    /// This directory will be created if it doesn't exist. The RocksDB database is
-    /// quick to generate, so it can be pointed to temporary storage.
-    #[clap(short, long, value_parser, default_value = ".gnostr/web")]
-    db_store: PathBuf,
-    /// The IP address to bind to (e.g., 127.0.0.1, 0.0.0.0).
-    #[clap(long, value_parser, default_value = "127.0.0.1")]
-    bind_address: std::net::IpAddr,
-    /// The socket port to bind to (e.g., 3333).
-    #[arg(
-        short,
-        long,
-        value_parser,
-        default_value = "3333",
-        env = "GNOSTR_GNIT_BIND_PORT"
-    )]
-    bind_port: u16,
-    /// The path in which your bare Git repositories reside.
-    ///
-    /// This directory will be scanned recursively for Git repositories.
-    #[clap(short, long, value_parser, default_value = ".")]
-    scan_path: PathBuf,
-    /// Configures the metadata refresh interval for Git repositories (e.g., "never" or "60s").
-    #[arg(long, default_value_t = RefreshInterval::Duration(std::time::Duration::from_secs(30)), env = "GNOSTR_GNIT_REFRESH_INTERVAL")]
-    refresh_interval: RefreshInterval,
-    /// Configures the request timeout for incoming HTTP requests (e.g., "10s").
-    #[arg(long, default_value_t = humantime::Duration::from(std::time::Duration::from_secs(10)), env = "GNOSTR_GNIT_REQUEST_TIMEOUT")]
-    request_timeout: humantime::Duration,
-    /// debug logging
-    #[clap(long, value_parser, default_value = "false")]
-    debug: bool,
-    /// info logging
-    #[clap(long, value_parser, default_value = "false")]
-    info: bool,
-    /// Run the process in the background (daemonize)
-    #[clap(long, value_parser, default_value = "false")]
-    detach: bool,
-}
 
 async fn run_as_service() -> Result<(), anyhow::Error> {
     info!("Starting gnostr-gnit in daemon mode...");
@@ -147,7 +104,7 @@ fn build_daemon_args() -> Vec<String> {
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() -> Result<(), anyhow::Error> {
-    let args: GitWebArgs = GitWebArgs::parse();
+    let args: GnitArgs = GnitArgs::parse();
 
     // Handle service mode before any other setup
     if args.detach {
