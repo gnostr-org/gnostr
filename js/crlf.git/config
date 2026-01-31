@@ -1,0 +1,7 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = true
+	ignorecase = true
+[remote "origin"]
+	url = /Users/Shared/gnostr-org/.github/gnostr/js/tests/resources/crlf.git
