@@ -2,9 +2,9 @@ import { w2layout } from './w2layout.js'
 import { w2sidebar } from './w2sidebar.js'
 import { w2grid } from './w2grid.js'
 import { query } from './query.js'
-// Import other gnostr_js modules as needed
-// import { GNOSTR, model_get_profile, KIND_REPO_ANNOUNCE, /* ... other kinds */ } from './main.js'
-// import { render_repo_event_summary } from './ui/render.js'
+import { KIND_REPO_ANNOUNCE, KIND_REPO_STATE_ANNOUNCE, KIND_REPO_PATCH, KIND_REPO_PULL_REQ, KIND_REPO_PULL_REQ_UPDATE, KIND_REPO_ISSUE, KIND_REPO_STATUS_OPEN, KIND_REPO_STATUS_APPLIED, KIND_REPO_STATUS_CLOSED, KIND_REPO_STATUS_DRAFT, log_info } from './util.js'; // Assuming these are in util.js for now
+import { render_repo_event_summary } from './ui/render.js';
+import { model_get_profile } from './model.js'; // Assuming this is in model.js
 
 // Placeholder for GNOSTR model (will be passed or imported properly later)
 const GNOSTR_MODEL = window.GNOSTR; // Assuming GNOSTR is globally available from main.js
