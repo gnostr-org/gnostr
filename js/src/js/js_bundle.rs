@@ -48,5 +48,6 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
 
     //defer? 
     assets.insert("w2layout.js".to_string(), include_bytes!("w2layout.js") as &'static [u8]);
+    assets.insert("nostr_git_forge.js".to_string(), include_bytes!("nostr_git_forge.js") as &'static [u8]);
     assets
 }
