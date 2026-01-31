@@ -140,9 +140,14 @@ async fn main() -> Result<(), anyhow::Error> {
         .with(logger_layer)
         .init();
 
+    let canonical_scan_path = args
+        .scan_path
+        .canonicalize()
+        .context("Could not canonicalize scan path")?;
+
     let config = Config {
         db_store: args.db_store.clone(),
-        scan_path: args.scan_path.clone(),
+        scan_path: canonical_scan_path.clone(),
         refresh_interval: args.refresh_interval,
         bind_address: args.bind_address,
         bind_port: args.bind_port,
@@ -154,12 +159,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let db = open_database(&config)?;
 
-    let scan_path = args
-        .scan_path
-        .canonicalize()
-        .context("Could not canonicalize scan path")?;
-
-    let indexer_wakeup_task = run_indexer(db.clone(), scan_path.clone(), args.refresh_interval);
+    let indexer_wakeup_task = run_indexer(db.clone(), canonical_scan_path.clone(), args.refresh_interval);
 
     let static_ico = |content: &'static [u8]| {
         move || async move {
@@ -474,7 +474,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(layer_fn(LoggingMiddleware))
         .layer(Extension(Arc::new(Git::new())))
         .layer(Extension(db))
-        .layer(Extension(Arc::new(scan_path)))
+        .layer(Extension(Arc::new(canonical_scan_path)))
         .layer(CorsLayer::new());
 
     println!("{}", &args.bind_port);
