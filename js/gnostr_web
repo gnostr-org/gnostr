@@ -61,7 +61,13 @@ SERVER_PID=$!
 
 # Wait for server to start
 echo "Waiting for server to start..."
-sleep 5
+STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
+while [ "$STATUS" -ne 200 ]; do
+  sleep 1
+  echo $SERVER_PID;
+  STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
+done
+echo "Server started successfully."
 
 echo "Testing server endpoints..."
 echo "=========================================="
