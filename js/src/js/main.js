@@ -83,6 +83,7 @@ async function webapp_init() {
   init_my_pfp(model)
   init_postbox(model)
   init_profile()
+  init_nostr_git_forge()
 
   view_show_spinner(true)
 
