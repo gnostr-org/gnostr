@@ -1,3 +1,5 @@
+import { init_nostr_git_forge } from './nostr_git_forge.js'
+
 let GNOSTR = new_model()
 
 // TODO autogenerate these constants with a bash script

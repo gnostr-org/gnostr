@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f0f0f" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src *; manifest-src *; connect-src * ws: wss:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline'; style-src * 'unsafe-inline'; 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;"
+    />
+    <title>gnostr Git Forge</title>
+    <link rel="manifest" href="/pwa/manifest.json" />
+    <link rel="icon" href="/images/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/pwa/icon-256.png" />
+    {}
+  </head>
+  <body>
+    <div id="layout" style="width: 100%; height: 100%;"></div>
+
+    {}
+
+    <script>
+        let config = {
+            layout: {
+                name: 'layout',
+                padding: 0,
+                panels: [
+                    { type: 'left', size: 200, resizable: true, minSize: 120 },
+                    { type: 'main', minSize: 550, overflow: 'hidden' }
+                ]
+            },
+            sidebar: {
+                name: 'sidebar',
+                nodes: [
+                    { id: 'repositories', text: 'Repositories', group: true, expanded: true, nodes: [
+                        { id: 'all_repos', text: 'All Repositories', icon: 'fa fa-folder-o', selected: true },
+                        { id: 'my_repos', text: 'My Repositories', icon: 'fa fa-user' }
+                    ]},
+                    { id: 'issues', text: 'Issues', icon: 'fa fa-bug' },
+                    { id: 'pull_requests', text: 'Pull Requests', icon: 'fa fa-code-fork' }
+                ],
+                onClick(event) {
+                    // This will be handled by main.js or a new JS file
+                    console.log('Sidebar item clicked:', event.target);
+                    // For now, let's just update the main panel with some text
+                    layout.html('main', '<div style="padding: 10px;">' + event.target + ' content will go here.</div>');
+                }
+            },
+            // Define w2grid configurations for displaying lists of repositories, issues, etc.
+            repo_grid: {
+                name: 'repo_grid',
+                show: {
+                    toolbar: true,
+                    footer: true,
+                    header: true,
+                    lineNumbers: true
+                },
+                columns: [
+                    { field: 'name', text: 'Repository Name', size: '30%', sortable: true },
+                    { field: 'description', text: 'Description', size: '50%', sortable: true },
+                    { field: 'maintainers', text: 'Maintainers', size: '20%', sortable: true }
+                ],
+                records: [] // This will be populated dynamically
+            }
+        };
+
+        // Initialize w2ui layout and sidebar
+        let layout = new w2layout(config.layout);
+        let sidebar = new w2sidebar(config.sidebar);
+        let repo_grid = new w2grid(config.repo_grid);
+
+        layout.render('#layout');
+        layout.html('left', sidebar);
+        layout.html('main', repo_grid); // Initially show an empty grid for repositories
+
+        // Load Nostr Git Forge specific JS logic here
+        // This will be moved to a separate JS file later
+        // For now, let's just simulate loading data
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM fully loaded and parsed');
+            // Simulate fetching and populating repository data
+            setTimeout(() => {
+                const dummy_repos = [
+                    { recid: 1, name: 'nostr-protocol', description: 'The Nostr protocol specification', maintainers: 'fiatjaf' },
+                    { recid: 2, name: 'gnostr-client-js', description: 'A Nostr web client in JavaScript', maintainers: 'randymcmillan' },
+                    { recid: 3, name: 'awesome-nostr', description: 'A curated list of Nostr resources', maintainers: 'Various' }
+                ];
+                repo_grid.records = dummy_repos;
+                repo_grid.refresh();
+                layout.html('main', repo_grid);
+            }, 1000);
+        });
+    </script>
+  </body>
+</html>
