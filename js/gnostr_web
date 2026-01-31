@@ -1,8 +1,48 @@
 #!/usr/bin/env bash
 
-GNOSTR_GIT_REPO="gnostr.git"
+CLRF_GIT_BARE_REPO="clrf.git"
+CLRF_GIT_REMOTE=$(git remote get-url gnostr.git)
+#git remote remove $CLRF_GIT_BARE_REPO >/dev/null || true
+
+remove_clrf_remote(){
+echo remove_remote
+    git remote remove clrf.git && sleep 1
+echo ok
+}
+add_clrf_remote(){
+echo add_remote
+    git remote add clrf.git clrf.git  && sleep 1
+echo ok
+}
+push_to_clrf_remote(){
+echo push_to_clrf_remote
+    git push --all clrf.git || add_clrf_remote
+echo ok
+}
+clone_to_clrf_git(){
+echo clone_to_clrf_git
+    git clone ../ clrf.git --bare  && sleep 1
+    cd clrf.git && git remote add  local-clrf.git ../tests/resources/crlf.git
+echo ok
+}
+
+echo CLRF_GIT_BARE_REPO="$CLRF_GIT_BARE_REPO";
+if [ ! -d "$CLRF_GIT_BARE_REPO" ]; then
+    clone_to_clrf_git && sleep 10;
+    push_to_clrf_remote;
+fi
+CLRF_GIT_REMOTE=$(git remote get-url clrf.git)
+export CLRF_GIT_REMOTE;
+echo CLRF_GIT_REMOTE="$CLRF_GIT_REMOTE";
+if [ -z "$CLRf_GIT_REMOTE" ]; then
+    add_clrf_remote;
+    push_to_clrf_remote;
+fi
+
+# setup test repo
+GNOSTR_GIT_BARE_REPO="gnostr.git"
 GNOSTR_GIT_REMOTE=$(git remote get-url gnostr.git)
-#git remote remove $GNOSTR_GIT_REPO >/dev/null || true
+#git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
 remove_remote(){
 echo remove_remote
@@ -20,14 +60,14 @@ echo push_to_remote
 echo ok
 }
 clone_to_gnostr_git(){
-echo clone_to_gnostr_Git
+echo clone_to_gnostr_git
     git clone ../ gnostr.git --bare  && sleep 1
     cd gnostr.git && git remote add  local-gnostr.git ../../
 echo ok
 }
 
-echo GNOSTR_GIT_REPO="$GNOSTR_GIT_REPO";
-if [ ! -d "$GNOSTR_GIT_REPO" ]; then
+echo GNOSTR_GIT_BARE_REPO="$GNOSTR_GIT_BARE_REPO";
+if [ ! -d "$GNOSTR_GIT_BARE_REPO" ]; then
     clone_to_gnostr_git && sleep 10;
     push_to_remote;
 fi
@@ -41,6 +81,7 @@ fi
 
 LOG_LEVEL=${1:-}
 PORT=${2:-3333}
+SCAN_PATH=${3:-.}
 if [ ! $(uname -s) = 'Darwin' ]; then
 	if grep -q Microsoft /proc/version; then
 		# Ubuntu on Windows using the Linux subsystem
@@ -49,14 +90,13 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 		alias open='xdg-open';
 	fi
 fi
-cargo install -j8 --path . --root . --force;
 
 echo "Starting gnostr-gnit server..."
 cargo run --bin gnostr-gnit -- \
 $LOG_LEVEL \
 -d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT \
 -b $PORT \
--s . &
+-s $SCAN_PATH &
 SERVER_PID=$!
 
 # Wait for server to start
