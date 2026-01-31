@@ -145,6 +145,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .canonicalize()
         .context("Could not canonicalize scan path")?;
 
+    println!("canonical_scan_path={}", &canonical_scan_path.display());
     let config = Config {
         db_store: args.db_store.clone(),
         scan_path: canonical_scan_path.clone(),
