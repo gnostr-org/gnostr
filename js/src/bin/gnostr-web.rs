@@ -22,7 +22,7 @@ use gnostr_js::*;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args {
+struct WebArgs {
     /// Port to listen on for the main server
     #[arg(short, long, default_value_t = 3030)]
     port: u16,
@@ -72,7 +72,7 @@ fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
 
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
+    let args = WebArgs::parse();
 
     // Define the relaxed CSP string
     const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
