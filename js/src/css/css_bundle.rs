@@ -6,6 +6,6 @@ pub fn get_css_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("styles.css".to_string(), include_bytes!("styles.css") as &'static [u8]);
     assets.insert("utils.css".to_string(), include_bytes!("utils.css") as &'static [u8]);
     assets.insert("vars.css".to_string(), include_bytes!("vars.css") as &'static [u8]);
-    assets.insert("w2ui-1.5.css".to_string(), include_bytes!("w2ui-1.5.css") as &'static [u8]);
+
     assets
 }
