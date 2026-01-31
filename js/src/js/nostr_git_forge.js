@@ -3,17 +3,20 @@ import { w2sidebar } from './w2sidebar.js'
 import { w2grid } from './w2grid.js'
 import { query } from './query.js'
 import { w2popup } from './w2popup.js'
-import { KIND_REPO_ANNOUNCE, KIND_REPO_STATE_ANNOUNCE, KIND_REPO_PATCH, KIND_REPO_PULL_REQ, KIND_REPO_PULL_REQ_UPDATE, KIND_REPO_ISSUE, KIND_REPO_STATUS_OPEN, KIND_REPO_STATUS_APPLIED, KIND_REPO_STATUS_CLOSED, KIND_REPO_STATUS_DRAFT, log_info } from './util.js'; // Assuming these are in util.js for now
+import { GNOSTR, KIND_REPO_ANNOUNCE, KIND_REPO_STATE_ANNOUNCE, KIND_REPO_PATCH, KIND_REPO_PULL_REQ, KIND_REPO_PULL_REQ_UPDATE, KIND_REPO_ISSUE, KIND_REPO_STATUS_OPEN, KIND_REPO_STATUS_APPLIED, KIND_REPO_STATUS_CLOSED, KIND_REPO_STATUS_DRAFT, log_info } from './main.js';
 import { render_repo_event_summary } from './ui/render.js';
-import { model_get_profile } from './model.js'; // Assuming this is in model.js
-
-// Placeholder for GNOSTR model (will be passed or imported properly later)
-const GNOSTR_MODEL = window.GNOSTR; // Assuming GNOSTR is globally available from main.js
-
-let layout, sidebar, repo_grid;
-
+import { model_get_profile } from './model.js';
 export function init_nostr_git_forge() {
     console.log("Initializing Nostr Git Forge");
+
+    const model = GNOSTR;
+
+    if (!model) {
+        console.error("GNOSTR is not available. Nostr Git Forge might not function correctly.");
+        return;
+    }
+
+    let layout, sidebar, repo_grid;
 
     let config = {
         layout: {
@@ -74,7 +77,7 @@ export function init_nostr_git_forge() {
                                 const selected_repo = repo_grid.get(selected_repo_id);
                                 if (selected_repo && selected_repo.event) {
                                     const repo_event = selected_repo.event;
-                                    const details_html = render_repo_event_summary(GNOSTR_MODEL, repo_event);
+                                    const details_html = render_repo_event_summary(model, repo_event);
                                     layout.html('main', `<div style="padding: 10px;">${details_html}</div>`);
                                 }
                             },
@@ -113,14 +116,14 @@ export function init_nostr_git_forge() {
         repo_grid.clear();
         layout.html('main', repo_grid);
 
-        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool) {
-            console.warn("GNOSTR_MODEL or GNOSTR_MODEL.pool not available.");
+        if (!model || !model.pool) {
+            console.warn("model or model.pool not available.");
             return;
         }
 
         // Unsubscribe from previous 'all_repos' subscription if active
         if (active_all_repos_sub_id) {
-            GNOSTR_MODEL.pool.unsubscribe(active_all_repos_sub_id);
+            model.pool.unsubscribe(active_all_repos_sub_id);
             active_all_repos_sub_id = null;
         }
 
@@ -134,7 +137,7 @@ export function init_nostr_git_forge() {
         };
 
         log_info(`Subscribing to all NIP-34 repo announce events with sub_id: ${sub_id}`);
-        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
+        model.pool.subscribe(sub_id, [filter]);
 
         // Custom event handler for this specific subscription
         const handleNip34Event = (relay, received_sub_id, ev) => {
@@ -151,7 +154,7 @@ export function init_nostr_git_forge() {
                     } else if (tag[0] === "description") {
                         description = tag[1];
                     } else if (tag[0] === "maintainers") {
-                        maintainers = tag.slice(1).map(pk => model_get_profile(GNOSTR_MODEL, pk).data.name || pk.substring(0, 8));
+                        maintainers = tag.slice(1).map(pk => model_get_profile(model, pk).data.name || pk.substring(0, 8));
                     }
                 }
                 const repo_data = { recid: ev.id, name: repo_name, description: description, maintainers: maintainers.join(", "), event: ev };
@@ -169,22 +172,22 @@ export function init_nostr_git_forge() {
                 // The grid should already be populated by handleNip34Event.
                 // We can potentially unsubscribe here, but keeping it open might be useful for live updates.
                 // For now, let's unsubscribe to avoid resource leaks.
-                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                model.pool.unsubscribe(sub_id);
                 active_all_repos_sub_id = null; // Mark as no longer active
             }
         };
 
         // Attach custom handlers for this subscription's lifecycle
-        // Temporarily modify GNOSTR_MODEL.pool's event handlers to catch our subscription's events
+        // Temporarily modify model.pool's event handlers to catch our subscription's events
         // This is still a bit hacky. A more robust RelayPool implementation would allow per-subscription handlers.
-        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
-        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+        const originalOnEvent = model.pool.onfn.event;
+        const originalOnEose = model.pool.onfn.eose;
 
-        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+        model.pool.onfn.event = (relay, received_sub_id, ev) => {
             handleNip34Event(relay, received_sub_id, ev);
             originalOnEvent?.(relay, received_sub_id, ev); // Call original handler
         };
-        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+        model.pool.onfn.eose = (relay, received_sub_id) => {
             handleNip34Eose(relay, received_sub_id);
             originalOnEose?.(relay, received_sub_id); // Call original handler
         };
@@ -197,15 +200,15 @@ export function init_nostr_git_forge() {
         repo_grid.clear();
         layout.html('main', repo_grid);
 
-        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool || !GNOSTR_MODEL.pubkey) {
-            console.warn("GNOSTR_MODEL, GNOSTR_MODEL.pool, or GNOSTR_MODEL.pubkey not available. Cannot load user repositories.");
+        if (!model || !model.pool || !model.pubkey) {
+            console.warn("model, model.pool, or model.pubkey not available. Cannot load user repositories.");
             layout.html('main', '<div style="padding: 10px;">Please sign in to view your repositories.</div>');
             return;
         }
 
         // Unsubscribe from previous 'my_repos' subscription if active
         if (active_my_repos_sub_id) {
-            GNOSTR_MODEL.pool.unsubscribe(active_my_repos_sub_id);
+            model.pool.unsubscribe(active_my_repos_sub_id);
             active_my_repos_sub_id = null;
         }
 
@@ -215,12 +218,12 @@ export function init_nostr_git_forge() {
 
         const filter = {
             kinds: [KIND_REPO_ANNOUNCE],
-            authors: [GNOSTR_MODEL.pubkey]
+            authors: [model.pubkey]
             // limit: 100 // Fetch a reasonable number of events
         };
 
         log_info(`Subscribing to current user's NIP-34 repo announce events with sub_id: ${sub_id}`);
-        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
+        model.pool.subscribe(sub_id, [filter]);
 
         // Custom event handler for this specific subscription
         const handleNip34Event = (relay, received_sub_id, ev) => {
@@ -237,7 +240,7 @@ export function init_nostr_git_forge() {
                     } else if (tag[0] === "description") {
                         description = tag[1];
                     } else if (tag[0] === "maintainers") {
-                        maintainers = tag.slice(1).map(pk => model_get_profile(GNOSTR_MODEL, pk).data.name || pk.substring(0, 8));
+                        maintainers = tag.slice(1).map(pk => model_get_profile(model, pk).data.name || pk.substring(0, 8));
                     }
                 }
                 const repo_data = { recid: ev.id, name: repo_name, description: description, maintainers: maintainers.join(", "), event: ev };
@@ -251,20 +254,20 @@ export function init_nostr_git_forge() {
         const handleNip34Eose = (relay, received_sub_id) => {
             if (received_sub_id === sub_id) {
                 log_info(`EOSE for ${sub_id}. All user repositories loaded.`);
-                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                model.pool.unsubscribe(sub_id);
                 active_my_repos_sub_id = null; // Mark as no longer active
             }
         };
 
         // Attach custom handlers for this subscription's lifecycle
-        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
-        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+        const originalOnEvent = model.pool.onfn.event;
+        const originalOnEose = model.pool.onfn.eose;
 
-        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+        model.pool.onfn.event = (relay, received_sub_id, ev) => {
             handleNip34Event(relay, received_sub_id, ev);
             originalOnEvent?.(relay, received_sub_id, ev); // Call original handler
         };
-        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+        model.pool.onfn.eose = (relay, received_sub_id) => {
             handleNip34Eose(relay, received_sub_id);
             originalOnEose?.(relay, received_sub_id); // Call original handler
         };
@@ -285,13 +288,13 @@ export function init_nostr_git_forge() {
         ];
         repo_grid.refreshColumns(); // Refresh columns display
 
-        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool) {
-            console.warn("GNOSTR_MODEL or GNOSTR_MODEL.pool not available. Cannot load issues.");
+        if (!model || !model.pool) {
+            console.warn("model or model.pool not available. Cannot load issues.");
             return;
         }
 
         if (active_issues_sub_id) {
-            GNOSTR_MODEL.pool.unsubscribe(active_issues_sub_id);
+            model.pool.unsubscribe(active_issues_sub_id);
             active_issues_sub_id = null;
         }
 
@@ -304,7 +307,7 @@ export function init_nostr_git_forge() {
         };
 
         log_info(`Subscribing to NIP-34 issue events with sub_id: ${sub_id}`);
-        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
+        model.pool.subscribe(sub_id, [filter]);
 
         const handleIssueEvent = (relay, received_sub_id, ev) => {
             if (received_sub_id === sub_id && ev.kind === KIND_REPO_ISSUE) {
@@ -332,19 +335,19 @@ export function init_nostr_git_forge() {
         const handleIssueEose = (relay, received_sub_id) => {
             if (received_sub_id === sub_id) {
                 log_info(`EOSE for ${sub_id}. All issues loaded.`);
-                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                model.pool.unsubscribe(sub_id);
                 active_issues_sub_id = null;
             }
         };
 
-        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
-        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+        const originalOnEvent = model.pool.onfn.event;
+        const originalOnEose = model.pool.onfn.eose;
 
-        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+        model.pool.onfn.event = (relay, received_sub_id, ev) => {
             handleIssueEvent(relay, received_sub_id, ev);
             originalOnEvent?.(relay, received_sub_id, ev);
         };
-        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+        model.pool.onfn.eose = (relay, received_sub_id) => {
             handleIssueEose(relay, received_sub_id);
             originalOnEose?.(relay, received_sub_id);
         };
@@ -365,13 +368,13 @@ export function init_nostr_git_forge() {
         ];
         repo_grid.refreshColumns(); // Refresh columns display
 
-        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool) {
-            console.warn("GNOSTR_MODEL or GNOSTR_MODEL.pool not available. Cannot load pull requests.");
+        if (!model || !model.pool) {
+            console.warn("model or model.pool not available. Cannot load pull requests.");
             return;
         }
 
         if (active_pull_requests_sub_id) {
-            GNOSTR_MODEL.pool.unsubscribe(active_pull_requests_sub_id);
+            model.pool.unsubscribe(active_pull_requests_sub_id);
             active_pull_requests_sub_id = null;
         }
 
@@ -384,7 +387,7 @@ export function init_nostr_git_forge() {
         };
 
         log_info(`Subscribing to NIP-34 pull request events with sub_id: ${sub_id}`);
-        GNOSTR_MODEL.pool.subscribe(sub_id, [filter]);
+        model.pool.subscribe(sub_id, [filter]);
 
         const handlePullRequestEvent = (relay, received_sub_id, ev) => {
             if (received_sub_id === sub_id && (ev.kind === KIND_REPO_PULL_REQ || ev.kind === KIND_REPO_PULL_REQ_UPDATE)) {
@@ -412,19 +415,19 @@ export function init_nostr_git_forge() {
         const handlePullRequestEose = (relay, received_sub_id) => {
             if (received_sub_id === sub_id) {
                 log_info(`EOSE for ${sub_id}. All pull requests loaded.`);
-                GNOSTR_MODEL.pool.unsubscribe(sub_id);
+                model.pool.unsubscribe(sub_id);
                 active_pull_requests_sub_id = null;
             }
         };
 
-        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
-        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+        const originalOnEvent = model.pool.onfn.event;
+        const originalOnEose = model.pool.onfn.eose;
 
-        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+        model.pool.onfn.event = (relay, received_sub_id, ev) => {
             handlePullRequestEvent(relay, received_sub_id, ev);
             originalOnEvent?.(relay, received_sub_id, ev);
         };
-        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+        model.pool.onfn.eose = (relay, received_sub_id) => {
             handlePullRequestEose(relay, received_sub_id);
             originalOnEose?.(relay, received_sub_id);
         };
