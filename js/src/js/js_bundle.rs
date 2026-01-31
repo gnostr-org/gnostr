@@ -27,21 +27,26 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("ui/state.js".to_string(), include_bytes!("ui/state.js") as &'static [u8]);
     assets.insert("ui/util.js".to_string(), include_bytes!("ui/util.js") as &'static [u8]);
 
-    assets.insert("ui/w2base.js".to_string(), include_bytes!("ui/w2base.js") as &'static [u8]);
-    assets.insert("ui/w2compat.js".to_string(), include_bytes!("ui/w2compat.js") as &'static [u8]);
-    assets.insert("ui/w2field.js".to_string(), include_bytes!("ui/w2field.js") as &'static [u8]);
-    assets.insert("ui/w2form.js".to_string(), include_bytes!("ui/w2form.js") as &'static [u8]);
-    assets.insert("ui/w2grid.js".to_string(), include_bytes!("ui/w2grid.js") as &'static [u8]);
-    assets.insert("ui/w2layout.js".to_string(), include_bytes!("ui/w2layout.js") as &'static [u8]);
-    assets.insert("ui/w2locale.js".to_string(), include_bytes!("ui/w2locale.js") as &'static [u8]);
-    assets.insert("ui/w2popup.js".to_string(), include_bytes!("ui/w2popup.js") as &'static [u8]);
-    assets.insert("ui/w2sidebar.js".to_string(), include_bytes!("ui/w2sidebar.js") as &'static [u8]);
-    assets.insert("ui/w2tabs.js".to_string(), include_bytes!("ui/w2tabs.js") as &'static [u8]);
-    assets.insert("ui/w2toolbar.js".to_string(), include_bytes!("ui/w2toolbar.js") as &'static [u8]);
-    assets.insert("ui/w2tooltip.js".to_string(), include_bytes!("ui/w2tooltip.js") as &'static [u8]);
-    assets.insert("ui/w2utils.js".to_string(), include_bytes!("ui/w2utils.js") as &'static [u8]);
-    assets.insert("ui/w2ui-1.5.js".to_string(), include_bytes!("ui/w2ui-1.5.js") as &'static [u8]);
-    assets.insert("query.js".to_string(), include_bytes!("query.js") as &'static [u8]);
-    assets.insert("jquery-4.0.0.js".to_string(), include_bytes!("jquery-4.0.0.js") as &'static [u8]);
+    //assets.insert("w2ui-1.5.js".to_string(), include_bytes!("w2ui-1.5.js") as &'static [u8]); //manually insert
+
+    //2.0
+    assets.insert("w2ui-2.0.js".to_string(), include_bytes!("w2ui-2.0.js") as &'static [u8]);
+    //assets.insert("w2base.js".to_string(), include_bytes!("w2base.js") as &'static [u8]);
+    //assets.insert("w2compat.js".to_string(), include_bytes!("w2compat.js") as &'static [u8]);
+    //assets.insert("w2field.js".to_string(), include_bytes!("w2field.js") as &'static [u8]);
+    //assets.insert("w2form.js".to_string(), include_bytes!("w2form.js") as &'static [u8]);
+    //assets.insert("w2grid.js".to_string(), include_bytes!("w2grid.js") as &'static [u8]);
+    //assets.insert("w2locale.js".to_string(), include_bytes!("w2locale.js") as &'static [u8]);
+    //assets.insert("w2popup.js".to_string(), include_bytes!("w2popup.js") as &'static [u8]);
+    //assets.insert("w2sidebar.js".to_string(), include_bytes!("w2sidebar.js") as &'static [u8]);
+    //assets.insert("w2tabs.js".to_string(), include_bytes!("w2tabs.js") as &'static [u8]);
+    //assets.insert("w2toolbar.js".to_string(), include_bytes!("w2toolbar.js") as &'static [u8]);
+    //assets.insert("w2tooltip.js".to_string(), include_bytes!("w2tooltip.js") as &'static [u8]);
+    //assets.insert("w2utils.js".to_string(), include_bytes!("w2utils.js") as &'static [u8]);
+    assets.insert("query.js".to_string(), include_bytes!("query.js") as &'static [u8]); //manually insert
+    //assets.insert("jquery.js".to_string(), include_bytes!("jquery-4.0.0.js") as &'static [u8]); //manually insert
+
+    //defer? 
+    assets.insert("w2layout.js".to_string(), include_bytes!("w2layout.js") as &'static [u8]);
     assets
 }
