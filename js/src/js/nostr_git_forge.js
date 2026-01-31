@@ -67,7 +67,17 @@ export function init_nostr_git_forge() {
                 { field: 'description', text: 'Description', size: '50%', sortable: true },
                 { field: 'maintainers', text: 'Maintainers', size: '20%', sortable: true }
             ],
-            records: []
+            records: [],
+            onSelect: function(event) {
+                const selected_repo_id = event.detail.recid;
+                const selected_repo = repo_grid.get(selected_repo_id);
+                if (selected_repo && selected_repo.event) {
+                    const repo_event = selected_repo.event;
+                    // Render detailed summary using render_repo_event_summary
+                    const details_html = render_repo_event_summary(GNOSTR_MODEL, repo_event);
+                    layout.html('main', `<div style="padding: 10px;">${details_html}</div>`);
+                }
+            }
         }
     };
 
@@ -146,16 +156,71 @@ export function init_nostr_git_forge() {
 
     function loadMyRepositories() {
         console.log("Loading my repositories...");
-        layout.html('main', '<div style="padding: 10px;">My Repositories content.</div>');
+        repo_grid.clear();
+        layout.html('main', repo_grid);
+
+        if (!GNOSTR_MODEL || !GNOSTR_MODEL.pool || !GNOSTR_MODEL.pubkey) {
+            console.warn("GNOSTR_MODEL, GNOSTR_MODEL.pool, or GNOSTR_MODEL.pubkey not available.");
+            layout.html('main', '<div style="padding: 10px;">Please sign in to view your repositories.</div>');
+            return;
+        }
+
+        const sub_id = `git-forge-my-repos-${Date.now()}`;
+        let current_repos = [];
+
+        GNOSTR_MODEL.pool.subscribe(
+            sub_id,
+            [
+                { kinds: [KIND_REPO_ANNOUNCE], authors: [GNOSTR_MODEL.pubkey] }
+            ]
+        );
+
+        const originalOnEvent = GNOSTR_MODEL.pool.onfn.event;
+        const originalOnEose = GNOSTR_MODEL.pool.onfn.eose;
+
+        GNOSTR_MODEL.pool.onfn.event = (relay, received_sub_id, ev) => {
+            if (received_sub_id === sub_id && ev.kind === KIND_REPO_ANNOUNCE) {
+                let repo_name = "Unknown";
+                let description = "";
+                let maintainers = "";
+
+                for (const tag of ev.tags) {
+                    if (tag[0] === "d") {
+                        repo_name = tag[1];
+                    } else if (tag[0] === "description") {
+                        description = tag[1];
+                    } else if (tag[0] === "maintainers") {
+                        maintainers = tag.slice(1).map(pk => model_get_profile(GNOSTR_MODEL, pk).data.name || pk.substring(0, 8)).join(", ");
+                    }
+                }
+                current_repos.push({ recid: ev.id, name: repo_name, description: description, maintainers: maintainers, event: ev });
+            }
+            originalOnEvent?.(relay, received_sub_id, ev); // Call original handler
+        };
+
+        GNOSTR_MODEL.pool.onfn.eose = (relay, received_sub_id) => {
+            if (received_sub_id === sub_id) {
+                log_info(`EOSE for ${sub_id}. Populating grid.`);
+                repo_grid.records = current_repos;
+                repo_grid.refresh();
+                layout.html('main', repo_grid); // Ensure grid is displayed after data load
+                GNOSTR_MODEL.pool.unsubscribe(sub_id); // Unsubscribe after receiving all data
+
+                // Restore original handlers
+                GNOSTR_MODEL.pool.onfn.event = originalOnEvent;
+                GNOSTR_MODEL.pool.onfn.eose = originalOnEose;
+            }
+            originalOnEose?.(relay, received_sub_id); // Call original handler
+        };
     }
 
     function loadIssues() {
         console.log("Loading issues...");
-        layout.html('main', '<div style="padding: 10px;">Issues content.</div>');
+        layout.html('main', '<div style="padding: 10px;">Issues content will go here. (NIP-34 Kind 30617)</div>');
     }
 
     function loadPullRequests() {
         console.log("Loading pull requests...");
-        layout.html('main', '<div style="padding: 10px;">Pull Requests content.</div>');
+        layout.html('main', '<div style="padding: 10px;">Pull Requests content will go here. (NIP-34 Kinds 30618, 30619)</div>');
     }
 }
