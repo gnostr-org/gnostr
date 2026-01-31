@@ -53,6 +53,7 @@ async fn main() {
             "w2tooltip.js",
             "w2utils.js",
             "nostr_git_forge.js",
+            "main.js",
         ].iter().cloned().collect();
 
         let mut filenames: Vec<_> = js_assets_map.keys().cloned().collect();
@@ -69,7 +70,7 @@ async fn main() {
                 continue;
             }
             let script_tag = if module_filenames.contains(filename.as_str()) {
-                format!("")//format!("<script type=\"module\" src=\"/js/{}\"></script>\n", filename)
+                format!("<script type=\"module\" src=\"/js/{}\"></script>\n", filename)
             } else {
                 format!("<script src=\"/js/{}\"></script>\n", filename)
             };
