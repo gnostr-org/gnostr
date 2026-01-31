@@ -93,7 +93,10 @@ async fn main() {
     let base_html = TemplateW2Layout::new().to_string();
 
     let first_placeholder_idx = base_html.find("{}").expect("First placeholder not found in template_w2_layout.html");
-    let second_placeholder_idx = base_html.find("{}", first_placeholder_idx + 1).expect("Second placeholder not found in template_w2_layout.html");
+    // Search for the second "{}" *after* the first one
+    let remaining_html = &base_html[first_placeholder_idx + 1..]; // Start search after the first character of the first "{}"
+    let second_placeholder_relative_idx = remaining_html.find("{}").expect("Second placeholder not found in template_w2_layout.html");
+    let second_placeholder_idx = first_placeholder_idx + 1 + second_placeholder_relative_idx; // Adjust to absolute index
 
     let part1 = &base_html[..first_placeholder_idx];
     let part2 = &base_html[first_placeholder_idx + 2..second_placeholder_idx]; // +2 to skip "{}"
