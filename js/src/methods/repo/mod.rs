@@ -78,18 +78,20 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
 
-    // Check if root path should be treated as a repository
-    let root_repo_path = scan_path.join(".git");
-    let is_root_repo = root_repo_path.is_dir() || root_repo_path.is_file();
+    // Check if scan_path itself is a repository
+    let scan_path_is_bare_repo = scan_path.join("HEAD").is_file() && scan_path.join("objects").is_dir();
+    let scan_path_is_working_tree = scan_path.join(".git").is_dir() || scan_path.join(".git").is_file(); // .git file for submodules
+
+    let is_root_repo = scan_path_is_bare_repo || scan_path_is_working_tree;
     let root_repo_exists_in_db =
-        crate::database::schema::repository::Repository::exists(db, &PathBuf::from(&root_repo_path))
+        crate::database::schema::repository::Repository::exists(db, &**scan_path)
             .unwrap_or_default();
 
     println!(
-        "Root repo detection - path: {}, is_dir: {}, is_file: {}, exists_in_db: {}",
-        root_repo_path.display(),
-        root_repo_path.is_dir(),
-        root_repo_path.is_file(),
+        "Root repo detection - path: {}, is_bare: {}, is_working_tree: {}, exists_in_db: {}",
+        scan_path.display(),
+        scan_path_is_bare_repo,
+        scan_path_is_working_tree,
         root_repo_exists_in_db
     );
 
@@ -201,15 +203,22 @@ pub async fn service(mut request: Request<Body>) -> Response {
     debug!("Final Child Path: {:?}", child_path);
 
     let repository_abs_path = if repository_name.as_os_str().is_empty() {
-        // Root repository - use .git directory
-        scan_path.join(".git")
+        // This is the root repository case
+        if scan_path_is_bare_repo {
+            scan_path.clone() // If scan_path itself is a bare repo
+        } else if scan_path_is_working_tree {
+            scan_path.join(".git").into() // If scan_path is a working tree
+        } else {
+            // Fallback, though ideally this case shouldn't be reached if is_root_repo was true and exists_in_db
+            scan_path.join(".git").into()
+        }
     } else {
-        // Check if this is a working tree repo and use .git subdirectory
+        // This is a sub-repository case (repository_name is not empty)
         let repo_path = scan_path.join(&repository_name);
         if repo_path.join(".git").is_dir() {
-            repo_path.join(".git")
+            repo_path.join(".git").into()
         } else {
-            repo_path
+            repo_path.into()
         }
     };
 
@@ -218,9 +227,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     request.extensions_mut().insert(ChildPath(child_path));
     request.extensions_mut().insert(Repository(repository_name));
-    request
-        .extensions_mut()
-        .insert(RepositoryPath(repository_abs_path));
+    request.extensions_mut().insert(RepositoryPath((*repository_abs_path).clone()));
 
     service
         .call(request)
