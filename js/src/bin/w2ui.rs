@@ -28,54 +28,43 @@ async fn main() {
 
     let script_tags = {
         let mut tags = String::new();
-        // Explicitly load db.js, model.js, and ui/state.js first due to dependencies
-        tags.push_str("<script type=\"modules\" src=\"/js/query.js\"></script>\n");
-        //tags.push_str("<script src=\"/js/w2ui-2.0.js\"></script>\n");
+
+        // Core w2ui dependencies (modules)
+        tags.push_str("<script type=\"module\" src=\"/js/query.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2base.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2compat.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2field.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2form.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2grid.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2layout.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2locale.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2popup.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2sidebar.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2tabs.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2toolbar.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2tooltip.js\"></script>\n");
+        tags.push_str("<script type=\"module\" src=\"/js/w2utils.js\"></script>\n");
+
+        // Other application-specific JS files (non-modules first, then modules)
         tags.push_str("<script src=\"/js/core.js\"></script>\n");
         tags.push_str("<script src=\"/js/db.js\"></script>\n");
         tags.push_str("<script src=\"/js/model.js\"></script>\n");
         tags.push_str("<script src=\"/js/ui/state.js\"></script>\n");
+        tags.push_str("<script src=\"/js/util.js\"></script>\n"); // Assuming util.js is not a module
+        tags.push_str("<script src=\"/js/contacts.js\"></script>\n");
+        tags.push_str("<script src=\"/js/event.js\"></script>\n");
+        tags.push_str("<script src=\"/js/lib.js\"></script>\n");
+        tags.push_str("<script src=\"/js/nostr.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/safe-html.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/util.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/render.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/fmt.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/profile.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/settings.js\"></script>\n");
+        tags.push_str("<script src=\"/js/ui/dm.js\"></script>\n");
+
         tags.push_str("<script type=\"module\" src=\"/js/nostr_git_forge.js\"></script>\n");
-
-        let module_filenames: std::collections::HashSet<&str> = [
-            "query.js",
-            "w2base.js",
-            "w2compat.js",
-            "w2field.js",
-            "w2form.js",
-            "w2grid.js",
-            "w2layout.js",
-            "w2locale.js",
-            "w2popup.js",
-            "w2sidebar.js",
-            "w2tabs.js",
-            "w2toolbar.js",
-            "w2tooltip.js",
-            "w2utils.js",
-            "nostr_git_forge.js",
-            "main.js",
-        ].iter().cloned().collect();
-
-        let mut filenames: Vec<_> = js_assets_map.keys().cloned().collect();
-        filenames.sort();
-
-        for filename in filenames {
-            // Skip db.js, model.js and ui/state.js as they're already added
-            if filename == "core.js" ||
-                filename == "db.js" ||
-                filename == "model.js" ||
-                filename == "ui/state.js" { //||
-                //filename == "jquery-4.0.0.js" ||
-                //filename == "w2ui-1.5.js" {
-                continue;
-            }
-            let script_tag = if module_filenames.contains(filename.as_str()) {
-                format!("<script type=\"module\" src=\"/js/{}\"></script>\n", filename)
-            } else {
-                format!("<script src=\"/js/{}\"></script>\n", filename)
-            };
-            tags.push_str(&script_tag);
-        }
+        tags.push_str("<script type=\"module\" src=\"/js/main.js\"></script>\n");
         tags
     };
 
