@@ -6,6 +6,8 @@ use clap::Parser;
 use gnostr_js::images::images_bundle::get_images_assets;
 use gnostr_js::js::js_bundle::get_js_assets;
 use gnostr_js::css::css_bundle::get_css_assets;
+use gnostr_js::template_html::get_template_assets;
+use gnostr_js::layout_html::get_layout_assets;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,6 +26,8 @@ async fn main() {
     let js_assets_map = Arc::new(get_js_assets());
     let css_assets_map = Arc::new(get_css_assets());
     let images_assets_map = Arc::new(get_images_assets());
+    let template_assets_map = Arc::new(get_template_assets());
+    let layout_assets_map = Arc::new(get_layout_assets());
 
     let script_tags = {
         let mut tags = String::new();
