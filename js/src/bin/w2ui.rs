@@ -91,13 +91,21 @@ async fn main() {
 
 
     let base_html = TemplateW2Layout::new().to_string();
+
+    let first_placeholder_idx = base_html.find("{}").expect("First placeholder not found in template_w2_layout.html");
+    let second_placeholder_idx = base_html.find("{}", first_placeholder_idx + 1).expect("Second placeholder not found in template_w2_layout.html");
+
+    let part1 = &base_html[..first_placeholder_idx];
+    let part2 = &base_html[first_placeholder_idx + 2..second_placeholder_idx]; // +2 to skip "{}"
+    let part3 = &base_html[second_placeholder_idx + 2..]; // +2 to skip "{}"
+
     let index_html_content = format!(
-        "{}{}{}{}{}",
-        &base_html[..base_html.find("    <link rel=\"stylesheet\" href=\"/css/vars.css?v=1\" />").unwrap_or(base_html.len())],
+        "{}{}{}{}{}", // 5 placeholders for (part1, link_tags, part2, script_tags, part3)
+        part1,
         link_tags,
-        &base_html[base_html.find("    <link rel=\"stylesheet\" href=\"/css/vars.css?v=1\" />").unwrap_or(base_html.len())..base_html.find("    <script>").unwrap_or(base_html.len())],
+        part2,
         script_tags,
-        &base_html[base_html.find("    <script>").unwrap_or(base_html.len())..],
+        part3,
     );
 
 
