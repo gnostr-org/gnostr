@@ -28,7 +28,6 @@ async fn main() {
     let script_tags = {
         let mut tags = String::new();
         // Explicitly load db.js, model.js, and ui/state.js first due to dependencies
-        tags.push_str("<script src=\"/js/jquery-4.0.0.js\"></script>\n");
         tags.push_str("<script src=\"/js/ui/w2ui-1.5.js\"></script>\n");
         tags.push_str("<script src=\"/js/core.js\"></script>\n");
         tags.push_str("<script src=\"/js/db.js\"></script>\n");
