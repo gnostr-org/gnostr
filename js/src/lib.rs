@@ -28,6 +28,7 @@ pub mod template_html;
 pub mod theme;
 pub mod unified_diff_builder;
 pub mod websock_index_html;
+pub mod template_w2_layout_rs;
 pub use crate::{
     database::schema::{commit::Commit, repository::Repository, tag::Tag},
     git::Git,
