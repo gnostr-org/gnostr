@@ -46,13 +46,17 @@ pub fn run(scan_path: &Path, db: &Arc<rocksdb::DB>) {
 #[instrument(skip(db))]
 fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
     let mut discovered = Vec::new();
+
+    // discover_repositories
     discover_repositories(scan_path, &mut discovered);
 
     for repository in discovered {
+
+        // get_relative_path
         let Some(relative) = get_relative_path(scan_path, &repository) else {
             continue;
         };
-        debug!(
+        println!(
             "Processing repository: relative={}, repository={}",
             relative.display(),
             repository.display()
@@ -440,11 +444,14 @@ fn open_repo<P: AsRef<Path> + Debug>(
 }
 
 fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a Path> {
+    println!("get_relative_path:full_path:{}", &full_path.display());
+    println!("get_relative_path:full_path:{}", &relative_to.display());
     full_path.strip_prefix(relative_to).ok()
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
     // First check if current path is itself a bare repository
+    // is_bare_repository
     if is_bare_repository(current) {
         debug!("Discovered bare Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
@@ -476,6 +483,8 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
                 );
             }
         }
+    } else {
+        println!("current.is_file()={}", current.is_file());
     }
 
     // If it's not a repository, and it's a directory, then we can recurse.

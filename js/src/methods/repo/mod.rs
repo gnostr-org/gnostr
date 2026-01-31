@@ -67,7 +67,9 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .split('/')
         .collect();
 
-    debug!("URI Segments: {:?}", uri_segments);
+    for segment in &uri_segments {
+        println!("URI Segments: {:?}", segment);
+    }
 
     let mut repository_name = PathBuf::new();
     let mut handler_segment = None;
