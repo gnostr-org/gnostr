@@ -25,6 +25,7 @@ pub mod layers;
 pub mod methods;
 pub mod syntax_highlight;
 pub mod template_html;
+pub mod layout_html;
 pub mod theme;
 pub mod unified_diff_builder;
 pub mod websock_index_html;
