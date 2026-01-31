@@ -135,7 +135,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
             );
 
             // Only consider it a repository if it exists on disk *and* is in the database
-            if (is_bare_repo || is_working_tree || is_working_tree_repo) {// && exists_in_db {
+            if is_bare_repo || is_working_tree || is_working_tree_repo {// && exists_in_db {
                 repository_name = potential_repo_name;
 
                 // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
