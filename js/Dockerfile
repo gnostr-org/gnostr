@@ -8,4 +8,4 @@ COPY . .
 
 RUN nix build .#
 
-CMD ["/app/result/bin/rgit"]
+CMD ["/app/result/bin/gnostr-gnit"]

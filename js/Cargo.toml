@@ -28,6 +28,7 @@ axum = { version = "0.7", default-features = false, features = [
   "tokio",
   "http1",
 ] }
+axum-extra = "0.4"
 bytes = "1.5"
 clap = { version = "4.5.20", features = [
   "std",
