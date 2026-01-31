@@ -2,7 +2,7 @@
 
 if [ -z ${REFRESH_INTERVAL+x} ];
 then 
-	./rgit "[::]:8000" /git -d /tmp/rgit-cache.db;
+	./bin/gnostr-gnit -b 8000 -s /git -d /tmp/gnostr-gnit-cache.db;
 else
-	./rgit "[::]:8000" /git -d /tmp/rgit-cache.db --refresh-interval "$REFRESH_INTERVAL";
+	./bin/gnostr-gnit -b 8000 -s /git -d /tmp/gnostr-gnit-cache.db --refresh-interval "$REFRESH_INTERVAL";
 fi
