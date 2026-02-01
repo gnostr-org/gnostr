@@ -3,7 +3,7 @@
 pkill -9 gnostr-gnit
 
 # setup test repo
-GNOSTR_GIT_BARE_REPO="gnostr.git"
+GNOSTR_GIT_BARE_REPO="$(gnostr --weeble)-gnostr.git"
 GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
@@ -113,7 +113,7 @@ run_tests(){
 
 echo CRLF_GIT_BARE_REPO="$CRLF_GIT_BARE_REPO";
 if [ ! -d "$CRLF_GIT_BARE_REPO" ]; then
-    clone_to_crlf_git && sleep 10;
+    clone_to_crlf_git && sleep 5;
     push_to_crlf_remote;
 fi
 CRLF_GIT_REMOTE=$(git remote get-url $CRLF_GIT_BARE_REPO)
