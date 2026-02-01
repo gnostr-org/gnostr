@@ -3,7 +3,7 @@
 pkill -9 gnostr-gnit
 
 WEEBLE=$(gnostr --weeble)
-#WEEBLE=${WEEBLE:-"0"}
+WEEBLE=${WEEBLE:-"0"}
 BLOCKHEIGHT=$(gnostr --blockheight)
 BLOCKHASH=$(gnostr --blockhash)
 WOBBLE=$(gnostr --wobble)
@@ -14,19 +14,19 @@ GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
 ## Define the patterns to check
-#patterns=("$WEEBLE" "$WEEBLE-*")
-#
-#for entry in "${patterns[@]}"; do
-#    # -q: quiet mode
-#    # -x: match the whole line exactly
-#    # -F: treat the pattern as a literal string (don't interpret * as a regex)
-#    if ! grep -qxF "$entry" .gitignore; then
-#        echo "$entry" >> .gitignore
-#        echo "Added $entry to .gitignore"
-#    else
-#        echo "$entry already exists."
-#    fi
-#done
+patterns=("$WEEBLE" "$WEEBLE-*")
+
+for entry in "${patterns[@]}"; do
+    # -q: quiet mode
+    # -x: match the whole line exactly
+    # -F: treat the pattern as a literal string (don't interpret * as a regex)
+    if ! grep -qxF "$entry" .gitignore; then
+        echo "$entry" >> .gitignore
+        echo "Added $entry to .gitignore"
+    else
+        echo "$entry already exists."
+    fi
+done
 
 remove_remote(){
 echo remove_remote
