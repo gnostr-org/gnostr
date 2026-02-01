@@ -3,7 +3,7 @@
 pkill -9 gnostr-gnit
 
 # setup test repo
-GNOSTR_GIT_BARE_REPO="$(gnostr --weeble)-gnostr.git"
+GNOSTR_GIT_BARE_REPO="$(gnostr --weeble)/$(gnostr --blockheight)/gnostr-$(gnostr --wobble)/.git"
 GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
@@ -25,7 +25,7 @@ echo ok
 clone_to_gnostr_git(){
 echo clone_to_gnostr_git
     git clone ../  $GNOSTR_GIT_BARE_REPO --bare  && sleep 1
-    cd $GNOSTR_GIT_BARE_REPO && git remote add local-gnostr.git ../../
+    pushd $GNOSTR_GIT_BARE_REPO && git remote add local-gnostr.git ../../ && echo $GNOSTR_GIT_BARE_REPO > description;popd;
 echo ok
 }
 
@@ -55,13 +55,13 @@ push_to_crlf_remote(){
 clone_to_crlf_git(){
 	echo clone_to_crlf_git
 	    git clone ../ $CRLF_GIT_BARE_REPO --bare  && sleep 1
-	    cd $CRLF_GIT_BARE_REPO && git remote add  local-crlf.git ../$CRLF_REMOTE_REPO
+	    pushd $CRLF_GIT_BARE_REPO && git remote add  local-crlf.git ../$CRLF_REMOTE_REPO && echo $CRLF_GIT_BARE_REPO > description; popd
 	echo ok
 }
 run_tests(){
-	while [ "$STATUS" -e 200 ]; do
+	while [ "$STATUS" == 200 ]; do
 	  sleep 1
-	  echo $SERVER_PID;
+	  #echo $SERVER_PID;
 	  STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
 	echo "Testing server endpoints..."
 	echo "=========================================="
@@ -137,9 +137,9 @@ if [ -z "$GNOSTR_GIT_REMOTE" ]; then
     push_to_remote;
 fi
 
-LOG_LEVEL=${1:-}
-PORT=${2:-3333}
-SCAN_PATH=${3:-.}
+LOG_LEVEL="--debug"
+PORT=3333
+SCAN_PATH=${1:-.}
 if [ ! $(uname -s) = 'Darwin' ]; then
 	if grep -q Microsoft /proc/version; then
 		# Ubuntu on Windows using the Linux subsystem
@@ -162,7 +162,7 @@ echo "Waiting for server to start..."
 STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
 while [ "$STATUS" -ne 200 ]; do
   sleep 1
-  echo $SERVER_PID;
+  #echo $SERVER_PID;
   STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
 done
 echo "Server started successfully."
@@ -170,6 +170,7 @@ echo "Server started successfully."
 echo -e "\n=========================================="
 echo "Opening browser..."
 open http://localhost:$PORT
+run_tests
 
 # Keep server running, or kill if script exits
 trap "kill $SERVER_PID 2>/dev/null" EXIT
