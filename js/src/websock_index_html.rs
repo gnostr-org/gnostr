@@ -1,4 +1,3 @@
-
 pub static WEBSOCKET_INDEX_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">
     <head>
