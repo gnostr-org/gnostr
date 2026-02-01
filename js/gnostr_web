@@ -215,6 +215,7 @@ SERVER_PID=$!
 # nohup "$0" --detached > /dev/null 2>&1 #& disown
 
 if [[ "$1" == "--child" ]]; then
+  CHILD_PID=$!
 
   # Wait for server to start
   echo "Waiting for server to start..."
@@ -244,4 +245,5 @@ echo "Parent (PID: $$) is done."
 
 # Keep server running, or kill if script exits
 trap "kill $SERVER_PID 2>/dev/null" EXIT
+trap "kill $CHILD_PID 2>/dev/null" EXIT
 wait $SERVER_PID
