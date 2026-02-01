@@ -43,7 +43,7 @@ use self::{
     thread::handle as handle_thread, // GEMINI: Import thread handler
     tree::handle as handle_tree,
 };
-use crate::{database::schema::tag::YokedString, database::indexer::run as indexer_run};
+use crate::database::schema::tag::YokedString;
 use crate::{
     database::schema::{commit::YokedCommit, tag::YokedTag},
     layers::UnwrapInfallible,
@@ -67,9 +67,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .split('/')
         .collect();
 
-    for segment in &uri_segments {
-        println!("URI Segments: {:?}", segment);
-    }
+    debug!("URI Segments: {:?}", uri_segments);
 
     let mut repository_name = PathBuf::new();
     let mut handler_segment = None;
@@ -80,20 +78,18 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
 
-    // Check if scan_path itself is a repository
-    let scan_path_is_bare_repo = scan_path.join("HEAD").is_file() && scan_path.join("objects").is_dir();
-    let scan_path_is_working_tree = scan_path.join(".git").is_dir() || scan_path.join(".git").is_file(); // .git file for submodules
-
-    let is_root_repo = scan_path_is_bare_repo || scan_path_is_working_tree;
+    // Check if root path should be treated as a repository
+    let root_repo_path = scan_path.join("");
+    let is_root_repo = root_repo_path.is_dir() || root_repo_path.is_file();
     let root_repo_exists_in_db =
-        crate::database::schema::repository::Repository::exists(db, &**scan_path)
+        crate::database::schema::repository::Repository::exists(db, &PathBuf::from(""))
             .unwrap_or_default();
 
-    println!(
-        "Root repo detection - path: {}, is_bare: {}, is_working_tree: {}, exists_in_db: {}",
-        scan_path.display(),
-        scan_path_is_bare_repo,
-        scan_path_is_working_tree,
+    debug!(
+        "Root repo detection - path: {}, is_dir: {}, is_file: {}, exists_in_db: {}",
+        root_repo_path.display(),
+        root_repo_path.is_dir(),
+        root_repo_path.is_file(),
         root_repo_exists_in_db
     );
 
@@ -109,10 +105,6 @@ pub async fn service(mut request: Request<Body>) -> Response {
         } else {
             Vec::new()
         };
-    } else if is_root_repo && !root_repo_exists_in_db {
-        debug!("Root repository exists on disk but not in DB, triggering reindex");
-        indexer_run(&scan_path, db);
-        return RepositoryNotFound.into_response();
     } else {
         // If not root repository, continue with normal detection
         while current_segment_index < uri_segments.len() {
@@ -132,7 +124,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
             //We detect repo types
             let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() //<repo>.git/HEAD
             && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
-            let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git is_file indicates there must be a .git/ parent directory
+            let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
             let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
             let exists_in_db =
                 crate::database::schema::repository::Repository::exists(db, &potential_repo_name)
@@ -143,7 +135,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
             );
 
             // Only consider it a repository if it exists on disk *and* is in the database
-            if is_bare_repo || is_working_tree || is_working_tree_repo {// && exists_in_db {
+            if (is_bare_repo || is_working_tree || is_working_tree_repo) && exists_in_db {
                 repository_name = potential_repo_name;
 
                 // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
@@ -209,22 +201,15 @@ pub async fn service(mut request: Request<Body>) -> Response {
     debug!("Final Child Path: {:?}", child_path);
 
     let repository_abs_path = if repository_name.as_os_str().is_empty() {
-        // This is the root repository case
-        if scan_path_is_bare_repo {
-            scan_path.clone() // If scan_path itself is a bare repo
-        } else if scan_path_is_working_tree {
-            scan_path.join(".git").into() // If scan_path is a working tree
-        } else {
-            // Fallback, though ideally this case shouldn't be reached if is_root_repo was true and exists_in_db
-            scan_path.join(".git").into()
-        }
+        // Root repository - use .git directory
+        scan_path.join(".git")
     } else {
-        // This is a sub-repository case (repository_name is not empty)
+        // Check if this is a working tree repo and use .git subdirectory
         let repo_path = scan_path.join(&repository_name);
         if repo_path.join(".git").is_dir() {
-            repo_path.join(".git").into()
+            repo_path.join(".git")
         } else {
-            repo_path.into()
+            repo_path
         }
     };
 
@@ -233,7 +218,9 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     request.extensions_mut().insert(ChildPath(child_path));
     request.extensions_mut().insert(Repository(repository_name));
-    request.extensions_mut().insert(RepositoryPath((*repository_abs_path).clone()));
+    request
+        .extensions_mut()
+        .insert(RepositoryPath(repository_abs_path));
 
     service
         .call(request)
