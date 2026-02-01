@@ -5,7 +5,7 @@ version = "1894.934224.276199"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
-default-run = "gnostr_js"
+default-run = "gnostr-gnit"
 
 [package.metadata.deb]
 section = "web"
