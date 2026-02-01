@@ -2,10 +2,31 @@
 
 pkill -9 gnostr-gnit
 
+WEEBLE=$(gnostr --weeble)
+#WEEBLE=${WEEBLE:-"0"}
+BLOCKHEIGHT=$(gnostr --blockheight)
+BLOCKHASH=$(gnostr --blockhash)
+WOBBLE=$(gnostr --wobble)
+WOBBLE=${WOBBLE:-"0"}
 # setup test repo
-GNOSTR_GIT_BARE_REPO="$(gnostr --weeble)/$(gnostr --blockheight)/gnostr-$(gnostr --wobble)/.git"
+GNOSTR_GIT_BARE_REPO="$WEEBLE/$BLOCKHEIGHT"
 GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
+
+## Define the patterns to check
+#patterns=("$WEEBLE" "$WEEBLE-*")
+#
+#for entry in "${patterns[@]}"; do
+#    # -q: quiet mode
+#    # -x: match the whole line exactly
+#    # -F: treat the pattern as a literal string (don't interpret * as a regex)
+#    if ! grep -qxF "$entry" .gitignore; then
+#        echo "$entry" >> .gitignore
+#        echo "Added $entry to .gitignore"
+#    else
+#        echo "$entry already exists."
+#    fi
+#done
 
 remove_remote(){
 echo remove_remote
@@ -24,14 +45,31 @@ echo ok
 }
 clone_to_gnostr_git(){
 echo clone_to_gnostr_git
-    git clone ../  $GNOSTR_GIT_BARE_REPO --bare  && sleep 1
-    pushd $GNOSTR_GIT_BARE_REPO && git remote add local-gnostr.git ../../ && echo $GNOSTR_GIT_BARE_REPO > description;popd;
+    A_NEW_REPO=$(gnostr --wobble)/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
+    git clone  ../  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$(gnostr --wobble)/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
+    git clone  ../  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$(gnostr --weeble)/$GNOSTR_GIT_BARE_REPO/$(gnostr --weeble)
+    git clone  ../  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$WOBBLE
+    git clone  ../  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$WOBBLE.git
+    git clone  ../  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
+    #A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$(gnostr --weeble)/.git
+    #echo $A_NEW_REPO
+    #git clone  ../  $A_NEW_REPO --bare  && sleep 1
+    #pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
 echo ok
 }
 
-CRLF_GIT_BARE_REPO="crlf.git"
+CRLF_GIT_BARE_REPO="crlf"
 export CRLF_GIT_BARE_REPO;
-CRLF_REMOTE_REPO="tests/resources/$CRLF_GIT_BARE_REPO"
+CRLF_REMOTE_REPO="tests/resources/$CRLF_GIT_BARE_REPO".git
 export CRLF_REMOTE_REPO;
 CRLF_GIT_REMOTE=$(git remote get-url gnostr.git)
 export CRLF_GIT_REMOTE;
@@ -54,8 +92,24 @@ push_to_crlf_remote(){
 }
 clone_to_crlf_git(){
 	echo clone_to_crlf_git
-	    git clone ../ $CRLF_GIT_BARE_REPO --bare  && sleep 1
-	    pushd $CRLF_GIT_BARE_REPO && git remote add  local-crlf.git ../$CRLF_REMOTE_REPO && echo $CRLF_GIT_BARE_REPO > description; popd
+    A_NEW_REPO=$(gnostr --wobble)/$CRLF_GIT_BARE_REPO/$(gnostr --wobble).git
+    git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git $CRLF_REMOVE_REPO && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$(gnostr --wobble)/$CRLF_GIT_BARE_REPO/$(gnostr --wobble).git
+    git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git $CRLF_REMOVE_REPO && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$CRLF_GIT_BARE_REPO/$(gnostr --wobble).git
+    git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git $CRLF_REMOVE_REPO && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$CRLF_GIT_BARE_REPO/$WOBBLE.git
+    git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git $CRLF_REMOVE_REPO && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$CRLF_GIT_BARE_REPO/$WOBBLE
+    git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
+    A_NEW_REPO=$WEEBLE/$WOBBLE/$CRLF_GIT_BARE_REPO/$WOBBLE
+    git clone  $CRLF_REMOTE_REPO  $A_NEW_REPO --bare  && sleep 1
+    pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
 	echo ok
 }
 run_tests(){
@@ -139,7 +193,7 @@ fi
 
 LOG_LEVEL="--debug"
 PORT=3333
-SCAN_PATH=${1:-.}
+SCAN_PATH=.
 if [ ! $(uname -s) = 'Darwin' ]; then
 	if grep -q Microsoft /proc/version; then
 		# Ubuntu on Windows using the Linux subsystem
@@ -152,7 +206,7 @@ fi
 echo "Starting gnostr-gnit server..."
 cargo run --bin gnostr-gnit -- \
 $LOG_LEVEL \
--d .gnostr/web/$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)/$PORT \
+-d .gnostr/web/$WEEBLE/$BLOCKHEIGHT/$(gnostr --weeble)/$PORT \
 -b $PORT \
 -s $SCAN_PATH &
 SERVER_PID=$!
@@ -170,7 +224,30 @@ echo "Server started successfully."
 echo -e "\n=========================================="
 echo "Opening browser..."
 open http://localhost:$PORT
-run_tests
+
+
+if [[ "$1" == "--detached" ]]; then
+    run_tests
+    sleep 10
+    echo "Detached work complete" >> log.txt
+    #exit 0
+fi
+
+# Disown ensures the shell doesn't kill it when the parent dies
+# nohup "$0" --detached > /dev/null 2>&1 #& disown
+
+if [[ "$1" == "--child" ]]; then
+    echo "I am the child process (PID: $$)"
+    clone_to_gnostr_git
+    run_tests >> tests.log
+    sleep 5
+    #exit 0
+fi
+
+echo "I am the parent. Launching child..."
+"$0" --child
+echo "Parent (PID: $$) is done."
+
 
 # Keep server running, or kill if script exits
 trap "kill $SERVER_PID 2>/dev/null" EXIT
