@@ -1,77 +1,135 @@
 #!/usr/bin/env bash
 
-CLRF_GIT_BARE_REPO="clrf.git"
-CLRF_GIT_REMOTE=$(git remote get-url gnostr.git)
-#git remote remove $CLRF_GIT_BARE_REPO >/dev/null || true
-
-remove_clrf_remote(){
-echo remove_remote
-    git remote remove clrf.git && sleep 1
-echo ok
-}
-add_clrf_remote(){
-echo add_remote
-    git remote add clrf.git clrf.git  && sleep 1
-echo ok
-}
-push_to_clrf_remote(){
-echo push_to_clrf_remote
-    git push --all clrf.git || add_clrf_remote
-echo ok
-}
-clone_to_clrf_git(){
-echo clone_to_clrf_git
-    git clone ../ clrf.git --bare  && sleep 1
-    cd clrf.git && git remote add  local-clrf.git ../tests/resources/crlf.git
-echo ok
-}
-
-echo CLRF_GIT_BARE_REPO="$CLRF_GIT_BARE_REPO";
-if [ ! -d "$CLRF_GIT_BARE_REPO" ]; then
-    clone_to_clrf_git && sleep 10;
-    push_to_clrf_remote;
-fi
-CLRF_GIT_REMOTE=$(git remote get-url clrf.git)
-export CLRF_GIT_REMOTE;
-echo CLRF_GIT_REMOTE="$CLRF_GIT_REMOTE";
-if [ -z "$CLRf_GIT_REMOTE" ]; then
-    add_clrf_remote;
-    push_to_clrf_remote;
-fi
+pkill -9 gnostr-gnit
 
 # setup test repo
 GNOSTR_GIT_BARE_REPO="gnostr.git"
-GNOSTR_GIT_REMOTE=$(git remote get-url gnostr.git)
+GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
 remove_remote(){
 echo remove_remote
-    git remote remove gnostr.git && sleep 1
+    git remote remove $GNOSTR_GIT_BARE_REPO && sleep 1
 echo ok
 }
 add_remote(){
 echo add_remote
-    git remote add gnostr.git gnostr.git  && sleep 1
+    git remote add $GNOSTR_GIT_BARE_REPO $GNOSTR_GIT_BARE_REPO && sleep 1
 echo ok
 }
 push_to_remote(){
 echo push_to_remote
-    git push --all gnostr.git || add_remote
+    git push --all $GNOSTR_GIT_BARE_REPO || add_remote
 echo ok
 }
 clone_to_gnostr_git(){
 echo clone_to_gnostr_git
-    git clone ../ gnostr.git --bare  && sleep 1
-    cd gnostr.git && git remote add  local-gnostr.git ../../
+    git clone ../  $GNOSTR_GIT_BARE_REPO --bare  && sleep 1
+    cd $GNOSTR_GIT_BARE_REPO && git remote add local-gnostr.git ../../
 echo ok
 }
+
+CRLF_GIT_BARE_REPO="crlf.git"
+export CRLF_GIT_BARE_REPO;
+CRLF_REMOTE_REPO="tests/resources/$CRLF_GIT_BARE_REPO"
+export CRLF_REMOTE_REPO;
+CRLF_GIT_REMOTE=$(git remote get-url gnostr.git)
+export CRLF_GIT_REMOTE;
+#git remote remove $CRLF_GIT_BARE_REPO >/dev/null || true
+
+remove_crlf_remote(){
+	echo remove_remote
+	    git remote remove $CRLF_GIT_BARE_REPO && sleep 1
+	echo ok
+}
+add_crlf_remote(){
+	echo add_remote
+	    git remote add $CRLF_GIT_BARE_REPO $CRLF_GIT_BARE_REPO && sleep 1
+	echo ok
+}
+push_to_crlf_remote(){
+	echo push_to_crlf_remote
+	    git push --all $CRLF_GIT_BARE_REPO || add_crlf_remote
+	echo ok
+}
+clone_to_crlf_git(){
+	echo clone_to_crlf_git
+	    git clone ../ $CRLF_GIT_BARE_REPO --bare  && sleep 1
+	    cd $CRLF_GIT_BARE_REPO && git remote add  local-crlf.git ../$CRLF_REMOTE_REPO
+	echo ok
+}
+run_tests(){
+	while [ "$STATUS" -e 200 ]; do
+	  sleep 1
+	  echo $SERVER_PID;
+	  STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
+	echo "Testing server endpoints..."
+	echo "=========================================="
+	
+	# Test basic server
+	echo "1. Testing root endpoint:"
+	curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/ -o /dev/null
+	
+	# Test crlf.git repository directly
+	echo -e "\n2. Testing crlf.git repository:"
+	curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/$CRLF_GIT_BARE_REPO/tree -o /dev/null
+	curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/$CRLF_GIT_BARE_REPO/commit -o /dev/null
+	
+	# Test mount point redirects
+	echo -e "\n3. Testing mount point redirects:"
+	echo "3a. /test/tree -> /$CRLF_GIT_BARE_REPO/tree:"
+	curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/tree | grep -E "(HTTP|location)"
+	
+	echo -e "\n3b. /test/commit -> /crlf.git/commit:"
+	curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/commit | grep -E "(HTTP|location)"
+	
+	echo -e "\n3c. /test/ -> /$CRLF_GIT_BARE_REPO/tree:"
+	curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/ | grep -E "(HTTP|location)"
+	
+	# Test follow redirects
+	echo -e "\n4. Testing following redirects:"
+	echo "4a. Following /test/tree redirect:"
+	curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/tree -o /dev/null
+	
+	echo -e "\n4b. Following /test/commit redirect:"
+	curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/commit -o /dev/null
+	
+	# Test patch endpoint
+	echo -e "\n5. Testing patch endpoint:"
+	echo "5a. Testing patch with specific commit ID:"
+	curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/$CRLF_GIT_BARE_REPO/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297 -o /dev/null
+	
+	echo "5b. Verifying patch content format:"
+	curl -s http://localhost:$PORT/$CRLF_GIT_BARE_REPO/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297 | head -5
+	
+	echo "5c. Testing patch endpoint error handling:"
+	curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/$CRLF_GIT_BARE_REPO/patch?id=invalidcommitid -o /dev/null
+	
+	# Test invalid paths
+	echo -e "\n6. Testing invalid paths:"
+	curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/nonexistent -o /dev/null
+	done
+}
+
+echo CRLF_GIT_BARE_REPO="$CRLF_GIT_BARE_REPO";
+if [ ! -d "$CRLF_GIT_BARE_REPO" ]; then
+    clone_to_crlf_git && sleep 10;
+    push_to_crlf_remote;
+fi
+CRLF_GIT_REMOTE=$(git remote get-url $CRLF_GIT_BARE_REPO)
+export CRLF_GIT_REMOTE;
+echo CRLF_GIT_REMOTE="$CRLF_GIT_REMOTE";
+if [ -z "$CRLf_GIT_REMOTE" ]; then
+    add_crlf_remote;
+    push_to_crlf_remote;
+fi
 
 echo GNOSTR_GIT_BARE_REPO="$GNOSTR_GIT_BARE_REPO";
 if [ ! -d "$GNOSTR_GIT_BARE_REPO" ]; then
     clone_to_gnostr_git && sleep 10;
     push_to_remote;
 fi
-GNOSTR_GIT_REMOTE=$(git remote get-url gnostr.git)
+GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 export GNOSTR_GIT_REMOTE;
 echo GNOSTR_GIT_REMOTE="$GNOSTR_GIT_REMOTE";
 if [ -z "$GNOSTR_GIT_REMOTE" ]; then
@@ -108,52 +166,6 @@ while [ "$STATUS" -ne 200 ]; do
   STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
 done
 echo "Server started successfully."
-
-echo "Testing server endpoints..."
-echo "=========================================="
-
-# Test basic server
-echo "1. Testing root endpoint:"
-curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/ -o /dev/null
-
-# Test crlf.git repository directly
-echo -e "\n2. Testing crlf.git repository:"
-curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/tree -o /dev/null
-curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/commit -o /dev/null
-
-# Test mount point redirects
-echo -e "\n3. Testing mount point redirects:"
-echo "3a. /test/tree -> /crlf.git/tree:"
-curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/tree | grep -E "(HTTP|location)"
-
-echo -e "\n3b. /test/commit -> /crlf.git/commit:"
-curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/commit | grep -E "(HTTP|location)"
-
-echo -e "\n3c. /test/ -> /crlf.git/tree:"
-curl -s -I -w "Redirect Status: %{http_code}\n" http://localhost:$PORT/test/ | grep -E "(HTTP|location)"
-
-# Test follow redirects
-echo -e "\n4. Testing following redirects:"
-echo "4a. Following /test/tree redirect:"
-curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/tree -o /dev/null
-
-echo -e "\n4b. Following /test/commit redirect:"
-curl -s -L -w "Final Status: %{http_code}\n" http://localhost:$PORT/test/commit -o /dev/null
-
-# Test patch endpoint
-echo -e "\n5. Testing patch endpoint:"
-echo "5a. Testing patch with specific commit ID:"
-curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297 -o /dev/null
-
-echo "5b. Verifying patch content format:"
-curl -s http://localhost:$PORT/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297 | head -5
-
-echo "5c. Testing patch endpoint error handling:"
-curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/crlf.git/patch?id=invalidcommitid -o /dev/null
-
-# Test invalid paths
-echo -e "\n6. Testing invalid paths:"
-curl -s -w "Status: %{http_code}\n" http://localhost:$PORT/nonexistent -o /dev/null
 
 echo -e "\n=========================================="
 echo "Opening browser..."
