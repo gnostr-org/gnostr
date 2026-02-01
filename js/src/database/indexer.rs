@@ -444,8 +444,8 @@ fn open_repo<P: AsRef<Path> + Debug>(
 }
 
 fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a Path> {
-    println!("get_relative_path:full_path:{}", &full_path.display());
-    println!("get_relative_path:full_path:{}", &relative_to.display());
+    println!("get_relative_path:relative_to:{} (scan_path)", &relative_to.display()); //scan_path
+    println!("get_relative_path:full_path:{} (repository)", &full_path.display()); //repository
     full_path.strip_prefix(relative_to).ok()
 }
 
