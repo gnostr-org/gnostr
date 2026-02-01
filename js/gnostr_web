@@ -3,7 +3,7 @@
 pkill -9 gnostr-gnit
 
 WEEBLE=$(gnostr --weeble)
-WEEBLE=${WEEBLE:-"0"}
+#WEEBLE=${WEEBLE:-"0"}
 BLOCKHEIGHT=$(gnostr --blockheight)
 BLOCKHASH=$(gnostr --blockhash)
 WOBBLE=$(gnostr --wobble)
@@ -14,19 +14,19 @@ GNOSTR_GIT_REMOTE=$(git remote get-url $GNOSTR_GIT_BARE_REPO)
 #git remote remove $GNOSTR_GIT_BARE_REPO >/dev/null || true
 
 ## Define the patterns to check
-patterns=("$WEEBLE" "$WEEBLE-*")
-
-for entry in "${patterns[@]}"; do
-    # -q: quiet mode
-    # -x: match the whole line exactly
-    # -F: treat the pattern as a literal string (don't interpret * as a regex)
-    if ! grep -qxF "$entry" .gitignore; then
-        echo "$entry" >> .gitignore
-        echo "Added $entry to .gitignore"
-    else
-        echo "$entry already exists."
-    fi
-done
+#patterns=("$WEEBLE" "$WEEBLE-*")
+#
+#for entry in "${patterns[@]}"; do
+#    # -q: quiet mode
+#    # -x: match the whole line exactly
+#    # -F: treat the pattern as a literal string (don't interpret * as a regex)
+#    if ! grep -qxF "$entry" .gitignore; then
+#        echo "$entry" >> .gitignore
+#        echo "Added $entry to .gitignore"
+#    else
+#        echo "$entry already exists."
+#    fi
+#done
 
 remove_remote(){
 echo remove_remote
@@ -203,46 +203,6 @@ if [ ! $(uname -s) = 'Darwin' ]; then
 	fi
 fi
 
-if [[ "$1" == "--open_browser" ]]; then
-    echo "I am the child process (PID: $$)"
-    echo -e "\n=========================================="
-    echo "Opening browser..."
-    open http://localhost:$PORT
-    sleep 5
-    exit 0
-fi
-
-if [[ "$1" == "--detached" ]]; then
-    echo "I am the child process --detached (PID: $!)"
-    run_tests
-    sleep 10
-    echo "Detached work complete" >> log.txt
-    #exit 0
-    trap "kill $$ 2>/dev/null" EXIT
-    wait $!
-fi
-
-# Disown ensures the shell doesn't kill it when the parent dies
-# nohup "$0" --detached > /dev/null 2>&1 #& disown
-
-if [[ "$1" == "--run_tests" ]]; then
-    echo "I am the child process --run_tests (PID: $$)"
-    run_tests >> tests.log
-    sleep 5
-    trap "kill $! 2>/dev/null" EXIT
-    wait $$
-    exit 0
-fi
-if [[ "$1" == "--clone_to_gnostr_git" ]]; then
-    echo "I am the child process --clone_to_gnostr_git (PID: $$)"
-    clone_to_gnostr_git
-    sleep 5
-    trap "kill $! 2>/dev/null" EXIT
-    wait $!
-    exit 0
-fi
-
-if [[ "$1" == "--start_server" ]]; then
 echo "Starting gnostr-gnit server..."
 cargo run --bin gnostr-gnit -- \
 $LOG_LEVEL \
@@ -260,13 +220,32 @@ while [ "$STATUS" -ne 200 ]; do
   STATUS=$(curl -s -w "%{http_code}" http://localhost:$PORT/ -o /dev/null)
 done
 echo "Server started successfully."
+
+echo -e "\n=========================================="
+echo "Opening browser..."
+open http://localhost:$PORT
+
+
+if [[ "$1" == "--detached" ]]; then
+    run_tests
+    sleep 10
+    echo "Detached work complete" >> log.txt
+    #exit 0
 fi
 
+# Disown ensures the shell doesn't kill it when the parent dies
+# nohup "$0" --detached > /dev/null 2>&1 #& disown
+
+if [[ "$1" == "--child" ]]; then
+    echo "I am the child process (PID: $$)"
+    clone_to_gnostr_git
+    run_tests >> tests.log
+    sleep 5
+    #exit 0
+fi
 
 echo "I am the parent. Launching child..."
-"$0" --clone_to_gnostr_git & disown
-#"$0" --start_server && disown
-#"$0" --open_browser && disown
+"$0" --child
 echo "Parent (PID: $$) is done."
 
 
