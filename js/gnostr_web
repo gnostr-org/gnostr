@@ -45,13 +45,13 @@ echo ok
 }
 clone_to_gnostr_git(){
 echo clone_to_gnostr_git
-    A_NEW_REPO=$(gnostr --wobble)/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
+    A_NEW_REPO=$WEEBLE/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
     git clone  ../  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
-    A_NEW_REPO=$(gnostr --wobble)/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
+    A_NEW_REPO=$WEEBLE/$GNOSTR_GIT_BARE_REPO/$(gnostr --wobble)
     git clone  ../  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
-    A_NEW_REPO=$(gnostr --weeble)/$GNOSTR_GIT_BARE_REPO/$(gnostr --weeble)
+    A_NEW_REPO=$WEEBLE/$GNOSTR_GIT_BARE_REPO/$(gnostr --weeble)
     git clone  ../  $A_NEW_REPO --bare  && sleep 1
     pushd $A_NEW_REPO && git remote add local-gnostr.git ../../ && echo $A_NEW_REPO > description;popd;
     A_NEW_REPO=$GNOSTR_GIT_BARE_REPO/$WOBBLE
@@ -206,7 +206,7 @@ fi
 echo "Starting gnostr-gnit server..."
 cargo run --bin gnostr-gnit -- \
 $LOG_LEVEL \
--d .gnostr/web/$WEEBLE/$BLOCKHEIGHT/$(gnostr --weeble)/$PORT \
+-d .gnostr/web/$WEEBLE/$BLOCKHEIGHT/$(gnostr --wobble)/$PORT \
 -b $PORT \
 -s $SCAN_PATH &
 SERVER_PID=$!
@@ -241,7 +241,7 @@ if [[ "$1" == "--child" ]]; then
     clone_to_gnostr_git
     run_tests >> tests.log
     sleep 5
-    #exit 0
+    exit 0
 fi
 
 echo "I am the parent. Launching child..."
