@@ -1,0 +1,145 @@
+/*************************************************
+* ---- Tabs ----
+*/
+
+.w2ui-tabs {
+    cursor: default;
+    overflow: hidden;
+    position: relative;
+    background-color: #fff;
+    min-height: 28px;
+    padding: 0px;
+    margin: 0px;
+
+    .w2ui-tabs-line {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        z-index: 1;
+        border: 0;
+        height: 1px;
+        background-color: #e2e2e2;
+    }
+
+    .w2ui-scroll-left,
+    .w2ui-scroll-right {
+        z-index: 30;
+        display: flex;
+    }
+
+    .w2ui-scroll-wrapper {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-content: flex-start;
+        padding: 0 2px;
+        // position: relative;
+        // height: 32px;
+        .w2ui-tab {
+            height: 28px;
+            position: relative;
+            z-index: 20;
+            padding: 7px 20px 4px 20px;
+            text-align: center;
+            color: black;
+            background-color: transparent;
+            border: 2px solid transparent;
+            white-space: nowrap;
+            margin: 0px 1px;
+            border-radius: 0;
+            cursor: default;
+            user-select: none;
+            &.active {
+                color: #0175ff;
+                background-color: transparent;
+                border: 2px solid transparent;
+                border-bottom: 2px solid #0175ff;
+                margin-bottom: 0px;
+                .w2ui-tab-icon {
+                    color: #0175ff;
+                }
+            }
+            &:hover {
+                background-color: #dfe1e630;
+            }
+            &.moving {
+                color: inherit;
+                background-color: #eee;
+                border: 2px solid transparent;
+                border-radius: 0px;
+                margin-bottom: 0px;
+            }
+            &.closable {
+                padding: 6px 28px 6px 20px;
+            }
+            .w2ui-tab-icon {
+                color: #888889;
+                margin-right: 8px;
+                display: inline-block;
+                font-size: 13px;
+                margin-top: -1px;
+            }
+            .w2ui-tab-close {
+                position: absolute;
+                right: 3px;
+                top: 5px;
+                color: #555;
+                float: right;
+                margin-top: -3px;
+                padding: 2px 4px;
+                width: 20px;
+                height: 20px;
+                opacity: 0.6;
+                border: 0px;
+                border-top: 3px solid transparent;
+                border-radius: 3px;
+                &:hover {
+                    background-color: #f9e7e7;
+                    color: red;
+                    opacity: 1;
+                    font-weight: bold;
+                }
+                &:active {
+                    background-color: #ffd1d1;
+                }
+                &:before {
+                    position: relative;
+                    top: -2px;
+                    left: 0px;
+                    color: inherit;
+                    text-shadow: inherit;
+                    content: 'x';
+                }
+            }
+        }
+
+        .w2ui-tabs-right {
+            padding: 8px 2px;
+            width: 100%;
+            text-align: right;
+            white-space: nowrap;
+        }
+    }
+
+    // upwards tabs
+    &.w2ui-tabs-up {
+        .w2ui-tabs-line {
+            top: 0px;
+            bottom: auto;
+        }
+        .w2ui-scroll-wrapper {
+            .w2ui-tab {
+                border: 2px solid transparent;
+                border-top: 2px solid transparent;
+                border-radius: 0 0 4px 4px;
+                &.active {
+                    border: 2px solid transparent;
+                    border-top: 2px solid #0175ff;
+                    margin-top: 0px;
+                }
+            }
+        }
+   }
+}

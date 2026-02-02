@@ -96,6 +96,8 @@ nightly = []
 coverage = []
 relay-search = ["nostr-db/search", "gnostr-relay/search"]
 
+[workspace.dependencies]
+
 [dependencies]
 
 ## relay
@@ -519,7 +521,7 @@ members = [
     "filetreelist",
     "scopetime",
     "qr",
-    "grammar",
     "js",
+    "grammar",
     "gh",
 ]
