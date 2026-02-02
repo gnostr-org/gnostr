@@ -1,10 +1,13 @@
-test:
-	cargo test
-	cargo bench --no-run
-	cargo clippy ##-- -Dwarnings
-	cargo fmt ##--check
-  # FIXME cargo deny complaining about vulnerabilities
-	# cargo deny check
-	git cliff --unreleased
-install:
-	cargo install --path .
+all: fake
+	@cargo build && cargo run
+
+example-dev-mode:
+	@cd examples/dev_mode && cargo run
+
+tags: fake
+	find js -name '*.js' | xargs ctags > "$@"
+
+emojiregex: fake
+	@curl -sL 'https://raw.githubusercontent.com/mathiasbynens/emoji-test-regex-pattern/main/dist/latest/javascript.txt'
+
+.PHONY: fake

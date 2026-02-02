@@ -1,0 +1,277 @@
+.w2ui-popup {
+    position: fixed;
+    z-index: 1600;
+    overflow: hidden;
+    font-family: @main-font-family;
+    border-radius: 6px;
+    padding: 0px;
+    margin: 0px;
+    border: 1px solid #777;
+    background-color: #fafafa;
+    box-shadow: 0 0 25px #0000005d;
+
+    &.w2ui-non-blocking {
+        border: 1px solid #c8c8c8;
+        box-shadow: 0 0 2px #555;
+    }
+
+    &, & * {
+        box-sizing: border-box;
+    }
+
+    &.w2ui-anim-open {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    &.w2ui-anim-close {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    .w2ui-popup-title-btns {
+        position: absolute;
+        z-index: 1021;
+        right: 0;
+        margin: 10px 10px 0 0;
+        font-size: 17px;
+        .w2ui-popup-button {
+            float: right;
+            width: 25px;
+            height: 23px;
+            cursor: pointer;
+            color: #888;
+            margin: 0 0 0 2px;
+            z-index: 301;
+            position: relative;
+            span.w2ui-icon {
+                width: 24px;
+                height: 23px;
+                margin-top: 0px;
+            }
+            &.w2ui-popup-close:hover {
+                color: #222;
+            }
+            &.w2ui-popup-max:hover {
+                color: #222;
+            }
+        }
+    }
+
+    .w2ui-popup-title {
+        padding: 10px;
+        border-radius: 6px 6px 0px 0px;
+        .linear-gradient-vertical(#fff, #fff);
+        border-bottom: 1px solid #eee;
+        position: absolute;
+        overflow: hidden;
+        height: 42px;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        text-overflow: ellipsis;
+        // text-align: center;
+        .user-select;
+        cursor: move;
+        font-size: 17px;
+        color: #555;
+        z-index: 300;
+    }
+
+    .w2ui-box, .w2ui-box-temp { // w2ui-box & w2ui-box-temp needed for transitions
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 42px;
+        bottom: 58px;
+        z-index: 100;
+    }
+
+    .w2ui-popup-body {
+        font-size: 12px;
+        line-height: 130%;
+        padding: 0px 7px 7px 7px;
+        color: #000;
+        background-color: #fafafa;
+        position: absolute;
+        overflow: auto;
+        width: 100%;
+        height: 100%;
+    }
+
+    .w2ui-popup-buttons {
+        font-size: 11px;
+        padding: 14px;
+        border-radius: 0px 0px 6px 6px;
+        border-top: 1px solid #eee;
+        background-color: #fff;
+        text-align: center;
+        position: absolute;
+        overflow: hidden;
+        height: 56px;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        z-index: 200;
+    }
+
+    .w2ui-popup-no-title {
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        top: 0px;
+    }
+
+    .w2ui-popup-no-buttons {
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+        bottom: 0px;
+    }
+
+    .w2ui-msg-text {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .w2ui-prompt {
+        font-size: 12px;
+        padding: 0 10px;
+        &.textarea {
+            margin-top: 20px;
+        }
+        > div {
+            margin-bottom: 5px
+        }
+        > label {
+            margin-right: 5px;
+        }
+        input {
+            width: 230px;
+        }
+        textarea {
+            width: 100%;
+            height: 50px;
+            resize: none
+        }
+    }
+
+    .w2ui-popup-resizer {
+        z-index: 201;
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 10px;
+        height: 10px;
+        cursor: nwse-resize;
+        color: #aaa;
+        box-shadow: none;
+
+        &.resize-point {
+            box-sizing: border-box;
+            display: inline-block;
+            font-size: inherit;
+            font-style: normal;
+            text-indent: -9999px;
+            vertical-align: middle;
+            width: 1em;
+            height: 1em;
+            line-height: 100%;
+        }
+
+        &.resize-point::before,
+        &.resize-point::after {
+            content: "";
+            display: block;
+            left: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        &.resize-icon::before {
+            border: .1rem solid currentColor;
+            border-right: 0;
+            border-top: 0;
+            border-left: 0;
+            height: 1.4em;
+            transform: translate(-84%, -84%) rotate(-45deg);
+            width: 1.4em;
+        }
+
+        &.resize-icon::after {
+            border: .1rem solid currentColor;
+            border-right: 0;
+            border-top: 0;
+            border-left: 0;
+            height: .7em;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            width: .7em;
+        }
+    }
+}
+
+// slide down message - not just popup, but also grid, form, layout
+.w2ui-message {
+    font-size: 12px;
+    position: absolute;
+    z-index: 250;
+
+    background-color: #fcfcfc;
+    border: 1px solid #999;
+    box-shadow: 0 0 15px #0000003d;
+    box-sizing: border-box;
+    border-top: 0px;
+    border-radius: 0px 0px 6px 6px;
+    overflow: auto;
+
+    .w2ui-msg-text {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .w2ui-message-body {
+        position: absolute;
+        top: 0px;
+        bottom: 45px;
+        left: 0px;
+        right: 0px;
+        overflow: auto;
+        & .w2ui-centered {
+            line-height: 1.5
+        }
+    }
+
+    .w2ui-message-buttons {
+        position: absolute;
+        height: 45px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        border-top: 1px solid #efefef;
+        background-color: white;
+        text-align: center;
+        padding: 8px;
+    }
+
+    .w2ui-prompt {
+        font-size: 12px;
+        padding: 0 10px;
+        &.textarea {
+            margin-top: 20px;
+        }
+        > div {
+            margin-bottom: 5px
+        }
+        > label {
+            margin-right: 5px;
+        }
+        input {
+            width: 230px;
+        }
+        textarea {
+            width: 100%;
+            height: 50px;
+            resize: none
+        }
+    }
+
+}

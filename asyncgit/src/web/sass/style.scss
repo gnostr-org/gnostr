@@ -1,0 +1,70 @@
+@import "util";
+@import "nostr-styles";
+@import "nostr-utils";
+@import "nostr-vars";
+@import "diff";
+@import "tables";
+@import "code";
+@import "colours";
+
+nav {
+  margin-top: 2rem;
+  border-bottom: solid 3px var(--clrBorder);
+  display: flex;
+
+  .grow {
+    flex-grow: 1;
+  }
+
+  a {
+    padding: 2px 0.75em;
+    color: var(--clrTextLight);
+    font-size: 110%;
+    text-decoration: none;
+
+    &.active {
+      color: var(--clrText);
+      todo_background-color: var(--clrBg);
+    }
+  }
+}
+
+html {
+  background: var(--clrBg);
+  color: var(--clrText);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+h2,
+h3 {
+  color: var(--clrTextLight);
+}
+
+a:any-link {
+  color: var(--clrLink);
+}
+a:any-link:active {
+  color: var(--clrLink); /* Use the same color as link for active state */
+}
+
+body {
+  font-family: var(--ffDefault);
+  font-size: var(--fsReduced);
+  tab-size: 4;
+  margin: 1%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+header {
+  border-bottom: solid 1px var(--clrBorder);
+}

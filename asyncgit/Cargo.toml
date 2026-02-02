@@ -25,25 +25,71 @@ trace-libgit = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
+
+anyhow = "1.0"
+
 arboard = { version = "3.4.0", default-features = false, features = [
   "windows-sys",
 ] }
+arc-swap = "1.7"
+askama = { version = "0.12.0", default-features = false }
+async-trait = "0.1.68"
+axum = { version = "0.7", default-features = false, features = [
+  "query",
+  "tokio",
+  "http1",
+] }
+axum-extra = "0.4"
 #anyhow = "1.0"
 bitflags = "2"
+bytes = "1.5"
 chrono = "0.4.40"
-clap = { version = "4.5.34", features = ["derive"] }
+clap = { version = "4.5.20", features = [
+  "std",
+  "cargo",
+  "derive",
+  "help",
+  "usage",
+  "env",
+] }
+clean-path = "0.2.1"
+colored = "2.0.0"
+comrak = { version = "0.28.0", default-features = false }
+const-hex = "1.12"
+const_format = "0.2"
 crossbeam-channel = "0.5"
 crossterm = "0.28.1"
 dirs = "5.0.1"
 easy-cast = "0.5"
 etcetera = "0.10.0"
+
+expectrl = "0.8.0"
 figment = { version = "0.10.19", features = ["toml"] }
+flate2 = "1.0"
+futures = "0.3"
+futures-util = "0.3.31"
 fuzzy-matcher = "0.3"
 git-version = "0.3.9"
 git2 = { version = "^0.20", default-features = false }
 git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1894.934224.276199" }
+gix = { version = "0.66", default-features = false, features = [
+  "fast-sha1",
+  "tracing",
+  "parallel",
+  "blob-diff",
+  "revision",
+] }
+handlebars = "6.3.2"
+httparse = "1.7"
+humantime = "2.1"
 itertools = "0.14.0"
+kanal = "0.1.0-pre8"
+lazy_static = "1.5.0"
+libc = "0.2.180"
 log = "0.4"
+
+md5 = "0.7"
+moka = { version = "0.12.0", features = ["future"] }
 # log = "0.4.27"
 nom = "7.1.3"
 nostr-sdk = { version = "0.37.0", features = ["all-nips"] }
@@ -53,41 +99,90 @@ notify = "7.0.0"
 # git2 = { git="https://github.com/extrawurst/git2-rs.git", rev="fc13dcc", features = ["vendored-openssl"]}
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
 openssl-sys = { version = '0.9', optional = true }
+path-clean = "1.0.1"
+pretty_env_logger = "0.5.0"
+rand = "0.8.5"
 ratatui = { version = "0.29.0", features = ["serde"] }
 rayon = "1.10"
 rayon-core = "1.12"
 regex = "1.11.1"
+rkyv = "0.8"
+rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = { version = "0.37.1" }
+rust-ini = "0.21.1"
 scopetime = { package = "gnostr-scopetime", path = "../scopetime", version = "1894.934224.276199" }
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
-# serde = { version = "1.0.219", features = ["derive"] }
+#[dependencies.comrak]
+#version = "0.18.0"
+#[dependencies.futures]
+#version = "0.3.28"
+sd-notify = "0.4.1"
+serde = { version = "1.0.219", features = ["derive", "rc"] }
+serde_json = "1.0.140"
+service-manager = { version = "0.10.0", features = ["clap"] }
+sha2 = "0.10.8"
+shellwords = "1.1.0"
+simdutf8 = "0.1.5"
 similar = { version = "2.7.0", features = ["unicode", "inline"] }
 simple-logging = "2.0.2"
 ssh-key = { version = "0.6.6", features = ["crypto", "encryption"] }
 strip-ansi-escapes = "0.2.1"
+structopt = "0.3.26"
+tar = { version = "0.4", default-features = false }
+tempfile = "3.8.1"
+tera = "1.18.1"
+#[dependencies.serde]#version = "1.0.159"#features = ["derive"]
+textwrap = "0.16.0"
 thiserror = "1.0"
-toml = "0.8.20"
+time = { version = "0.3", features = ["serde", "formatting"] }
+timeago = { version = "0.4.2", default-features = false }
+tiny_http = "0.12.0"
+tokio = { version = "1.19", features = ["full", "tracing"] }
+tokio-stream = "0.1.17"
+tokio-util = { version = "0.7.10", features = ["io"] }
+toml = { version = "0.7.3", default-features = true, features = ["parse"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "timeout", "fs"] }
+tower-layer = "0.3"
+tower-service = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "env-filter",
+  "smallvec",
+  "parking_lot",
+  "fmt",
+] }
 tree-sitter = "0.20.10"
 tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "../grammar", version = "1894.934224.276199" }
 tree-sitter-highlight = "0.20.1"
 tui-prompts = "0.5.0"
 unicode-segmentation = "1.12.0"
 unicode-truncate = "1.0"
+unix_mode = "0.1"
 url = "2.2.2"
+uuid = { version = "1.7", features = ["v4"] }
+v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
+warp = "0.3"
+webbrowser = "0.8"
+xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
+yoke = { version = "0.7.1", features = ["derive"] }
 
-## [[bench]]
-## name = "show"
-## harness = false
+[build-dependencies]
+anyhow = "1.0"
+rsass = "0.28.0"
 
 [dev-dependencies]
 #cargo-insta = "1.43.1"
 criterion = "0.5.1"
 env_logger = "0.11"
+expectrl = "0.8.0"
 insta = "1.42.2"
 invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1894.934224.276199" }
 pretty_assertions = "1.4"
+reqwest = { version = "0.11", features = ["json"] }
 serial_test = "3.1"
 # pretty_assertions = "1.4.0"
 temp-dir = "0.1.13"
-tempfile = "3"
+tempfile = "3.8.1"
+tokio = { version = "1", features = ["full"] }
 unicode-width = "0.2.0"

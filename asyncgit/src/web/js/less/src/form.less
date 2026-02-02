@@ -1,0 +1,319 @@
+/*************************************************
+* ---- Forms ----
+*/
+
+@form-step-label: 20px;
+@form-step-field: 8;
+
+.w2ui-form {
+    position: relative;
+    color: @form-color;
+    background-color: @form-background-color;
+    border: @form-border;
+    border-radius: @form-border-radius;
+    padding: 0px;
+    overflow: hidden;
+
+    > .w2ui-form-box {
+        position: absolute;
+        overflow: hidden;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .w2ui-form-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 36px;
+        padding: 10px;
+        overflow: hidden;
+        font-size: 16px;
+        color: @form-header-color;
+        .linear-gradient-vertical(@form-header-linear-gradient-start, @form-header-linear-gradient-end);
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+        border-bottom: @form-header-border-bottom;
+    }
+
+    .w2ui-form-toolbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 2px;
+        border-top-left-radius: 3px;
+        border-top-right-radius: 3px;
+        border-bottom: @form-buttons-border-top;
+    }
+
+    .w2ui-form-tabs {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 0;
+        height: 32px;
+        border-top-left-radius: 3px;
+        border-top-right-radius: 3px;
+        padding-top: 4px;
+        background-color: @form-tabs-background-color;
+        .w2ui-tab.active {
+            background-color: @form-background-color;
+        }
+    }
+
+    .w2ui-page {
+        position: absolute;
+        left: 0;
+        right: 0;
+        overflow: auto;
+        padding: 10px 5px 0 5px;
+        border-left: @form-page-border;
+        border-right: @form-page-border;
+        background-color: @form-page-background-color;
+        border-radius: 3px;
+    }
+    .w2ui-column-container {
+        display: flex;
+        padding: 0;
+        .w2ui-column {
+            width: 100%;
+            &.col-0,
+            &.col-1,
+            &.col-2,
+            &.col-3,
+            &.col-4,
+            &.col-5,
+            &.col-6,
+            &.col-7,
+            &.col-8,
+            &.col-9,
+            &.col-10 {
+                padding: 0;
+                padding-left: 10px
+            }
+            &.col-0 {
+                padding-left: 0px;
+            }
+        }
+    }
+
+    .w2ui-field-columns {
+        display: flex;
+        flex-flow: row;
+    }
+
+    .w2ui-buttons {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        text-align: center;
+        border-top: @form-buttons-border-top;
+        border-bottom: @form-buttons-border-bottom;
+        background-color: @form-buttons-background-color;
+        padding: 15px 0px;
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 3px;
+
+        input[type="button"], button {
+            min-width: 80px;
+            margin-right: 5px;
+        }
+    }
+
+    input[type=checkbox]:not(.w2ui-toggle),
+    input[type=radio] {
+        margin-top: 4px;
+        margin-bottom: 4px;
+        width: 14px;
+        height: 14px;
+    }
+}
+
+// ==================================================
+// --- It is outside of the form on purpose
+
+.w2ui-group-title {
+    padding: 5px 2px 0px 5px;
+    color: #656164cc;
+    text-shadow: 1px 1px 2px rgb(253, 253, 253);
+    font-size: 120%;
+}
+
+.w2ui-group-fields {
+    background-color: @form-group-background-color;
+    margin: 5px 0px 14px 0px;
+    padding: 10px 5px;
+    border-top: @form-group-border;
+    border-bottom: @form-group-border;
+}
+
+.w2ui-field {
+    > label {
+        display: block;
+        float: left;
+        margin-top: 10px;
+        margin-bottom: 0px;
+        width: 120px;
+        padding: 0px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: right;
+        min-height: 20px;
+        color: #666;
+    }
+    > div {
+        /* do not include width */
+        margin-bottom: 3px;
+        margin-left: 128px;
+        padding: 4px;
+        min-height: 28px;
+        float: none;
+    }
+    .w2ui-form-switch {
+        display: inline-block;
+        position: relative;
+        max-width: 100%;
+        height: 34px;
+        margin-top: -5px;
+        padding: 0px;
+        border-radius: 2px;
+        background-color: transparent;
+
+        &.w2ui-tb-focus {
+            outline: 1px dashed gray;
+        }
+    }
+    &.w2ui-required > div {
+        position: relative;
+    }
+    &.w2ui-required:not(.w2ui-field-inline) > div::before {
+        content: '*';
+        position: absolute;
+        margin-top: 7px;
+        margin-left: -8px;
+        color: @form-required-color;
+    }
+    &.w2ui-required.w2ui-field-inline > div .w2ui-inline-label::after {
+        content: '*';
+        color: @form-required-color;
+    }
+    &.w2ui-disabled {
+        background-color: transparent !important;
+        // this is needed so that anchored fields will nto get disabled
+        > label,
+        &.w2ui-field-inline span.w2ui-inline-label {
+            opacity: 0.45;
+        }
+        > div {
+            & > input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]),
+            & > select,
+            & > textarea {
+                opacity: 0.45;
+                color: #777;
+                border: 1px solid #bdc0c3 !important;
+                background-color: #f3f3f3 !important;
+            }
+        }
+    }
+    > div > .w2ui-inline-label {
+        display: inline-block;
+        overflow: hidden;
+        text-align: right;
+    }
+    &.w2ui-span-none {
+        > label {
+            margin: 0;
+            padding: 5px 12px 0 4px;
+            display: block;
+            width: 98%;
+            text-align: left;
+        }
+        > div { margin-left: 0; }
+    }
+    .w2ui-anchor-span-none {
+        color: gray;
+        position: relative;
+        top: -15px;
+        left: 3px;
+    }
+    &.w2ui-span0 {
+        > label, > div > .w2ui-inline-label { display: none; }
+        > div { margin-left: 0; }
+    }
+    &.w2ui-span1 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 1); }
+        > div { margin-left: ((@form-step-label * 1) + @form-step-field); }
+    }
+    &.w2ui-span2 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 2); }
+        > div { margin-left: ((@form-step-label * 2) + @form-step-field); }
+    }
+    &.w2ui-span3 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 3); }
+        > div { margin-left: ((@form-step-label * 3) + @form-step-field); }
+    }
+    &.w2ui-span4 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 4); }
+        > div { margin-left: ((@form-step-label * 4) + @form-step-field); }
+    }
+    &.w2ui-span5 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 5); }
+        > div { margin-left: ((@form-step-label * 5) + @form-step-field); }
+    }
+    &.w2ui-span6 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 6); }
+        > div { margin-left: ((@form-step-label * 6) + @form-step-field); }
+    }
+    &.w2ui-span7 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 7); }
+        > div { margin-left: ((@form-step-label * 7) + @form-step-field); }
+    }
+    &.w2ui-span8 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 8); }
+        > div { margin-left: ((@form-step-label * 8) + @form-step-field); }
+    }
+    &.w2ui-span9 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 9); }
+        > div { margin-left: ((@form-step-label * 9) + @form-step-field); }
+    }
+    &.w2ui-span10 {
+        > label, > div > .w2ui-inline-label { width: (@form-step-label * 10); }
+        > div { margin-left: ((@form-step-label * 10) + @form-step-field); }
+    }
+    &.w2ui-field-inline {
+        display: inline;
+
+        > div {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+    }
+    .w2ui-box-label {
+        user-select: none;
+        vertical-align: middle;
+        & span, & input {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        & span {
+            padding-left: 3px;
+        }
+        & input {
+            margin: 4px 0px 3px 0;
+        }
+    }
+}
+
+input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]).w2ui-error,
+textarea.w2ui-error {
+    border: @form-error-border;
+    background-color: @form-error-background-color;
+}
