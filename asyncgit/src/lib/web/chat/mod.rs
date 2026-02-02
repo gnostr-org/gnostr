@@ -1,9 +1,6 @@
 #![allow(unused)]
-use super::images;
-use super::js;
-use crate::css;
-use crate::template_html;
-use crate::websock_index_html;
+use crate::web::template_html;
+use crate::web::websock_index_html;
 
 /// TEMPLATE_HTML
 pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>

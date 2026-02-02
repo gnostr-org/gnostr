@@ -9,7 +9,7 @@ pub struct LayoutHtml {
 
 impl LayoutHtml {
     pub fn new() -> Self {
-        let layout_html_bytes: &'static [u8] = include_bytes!("layout.html");
+        let layout_html_bytes: &'static [u8] = include_bytes!("../../layout.html");
         LayoutHtml {
             layout_html: layout_html_bytes,
         }
@@ -28,13 +28,13 @@ impl LayoutHtml {
     }
     pub fn get_layout_assets() -> HashMap<String, &'static [u8]> {
         let mut assets = HashMap::new();
-        assets.insert("layout.html".to_string(), include_bytes!("layout.html") as &'static [u8]);
+        assets.insert("layout.html".to_string(), include_bytes!("../../layout.html") as &'static [u8]);
         assets
     }
 }
 
 pub fn get_layout_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
-    assets.insert("layout.html".to_string(), include_bytes!("layout.html") as &'static [u8]);
+    assets.insert("layout.html".to_string(), include_bytes!("../../layout.html") as &'static [u8]);
     assets
 }

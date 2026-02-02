@@ -5,13 +5,13 @@ use askama::Template;
 use axum::{response::IntoResponse, Extension};
 use rkyv::string::ArchivedString;
 
-use crate::into_response;
-use crate::methods::filters;
-use crate::methods::repo::Refs;
-use crate::methods::repo::Repository;
-use crate::methods::repo::YokedCommit;
-use crate::methods::repo::YokedRepository;
-use crate::methods::repo::{Error, DEFAULT_BRANCHES};
+use crate::web::into_response;
+use crate::web::methods::filters;
+use crate::web::methods::repo::Refs;
+use crate::web::methods::repo::Repository;
+use crate::web::methods::repo::YokedCommit;
+use crate::web::methods::repo::YokedRepository;
+use crate::web::methods::repo::{Error, DEFAULT_BRANCHES};
 
 #[derive(Template)]
 #[template(path = "repo/summary.html")]
@@ -27,7 +27,7 @@ pub async fn handle(
     Extension(db): Extension<Arc<rocksdb::DB>>,
 ) -> Result<impl IntoResponse, Error> {
     tokio::task::spawn_blocking(move || {
-        let repository = crate::database::schema::repository::Repository::open(&db, &*repo)?
+        let repository = crate::web::database::schema::repository::Repository::open(&db, &*repo)?
             .context("Repository does not exist")?;
         let commits = get_default_branch_commits(&repository, &db)?;
 

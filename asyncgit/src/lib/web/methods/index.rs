@@ -5,7 +5,7 @@ use askama::Template;
 use axum::{response::IntoResponse, Extension};
 
 use super::filters;
-use crate::{
+use crate::web::{
     database::schema::repository::{Repository, YokedRepository},
     into_response,
 };

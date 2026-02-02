@@ -12,7 +12,7 @@ use bytes::{BufMut, BytesMut};
 use clap::crate_version;
 use time::format_description::well_known::Rfc2822;
 
-use crate::{
+use crate::web::{
     git::Commit,
     into_response,
     methods::{

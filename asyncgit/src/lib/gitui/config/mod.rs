@@ -10,7 +10,7 @@ use ratatui::style::{Color, Modifier, Style};
 use serde::Deserialize;
 
 ///
-const DEFAULT_CONFIG: &str = include_str!("../../default_config.toml");
+const DEFAULT_CONFIG: &str = include_str!("../../../default_config.toml");
 
 ///
 #[derive(Default, Debug, Deserialize)]
