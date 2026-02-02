@@ -61,6 +61,7 @@ mod status;
 pub mod sync;
 mod tags;
 mod treefiles;
+pub mod web;
 
 use std::{
     collections::hash_map::DefaultHasher,
