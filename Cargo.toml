@@ -520,6 +520,5 @@ members = [
     "scopetime",
     "qr",
     "grammar",
-    "js",
     "gh",
 ]
