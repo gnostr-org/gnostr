@@ -17,14 +17,20 @@ keywords = ["git"]
 
 [lib]
 name = "gnostr_asyncgit"
-path = "src/lib.rs"
+path = "src/lib/mod.rs"
 
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
+gnostr_web = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
+humantime = "2.1"
+askama = { version = "0.12.0", default-features = false }
+
+rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
+
 anyhow = "1.0.100"
 arboard = { version = "3.4.0", default-features = false, features = [
   "windows-sys",
@@ -101,7 +107,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "parking_lot",
   "fmt",
 ] }
-#tree-sitter = "0.20.10"
+tree-sitter = "0.23.2"
 tree-sitter-language = "0.1"
 tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "../grammar", version = "1894.934224.276199" }
 tree-sitter-highlight = "0.23"
@@ -109,9 +115,13 @@ tui-prompts = "0.5.0"
 unicode-segmentation = "1.12.0"
 unicode-truncate = "1.0"
 url = "2.2.2"
+uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
 warp = "0.3"
 webbrowser = "0.8"
+const_format = "0.2"
+xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
+
 
 [build-dependencies]
 anyhow = "1.0.100"
