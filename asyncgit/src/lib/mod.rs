@@ -35,6 +35,8 @@
     clippy::empty_docs
 )]
 
+/// pub mod web
+pub mod web;
 /// pub mod unified_diff_builder
 pub mod unified_diff_builder;
 /// pub mod syntax_highlight

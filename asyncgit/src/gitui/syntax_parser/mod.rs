@@ -1,7 +1,8 @@
 use tree_sitter_grammar_repository::{Grammar, HighlightConfigurationParams};
 use std::{cell::RefCell, collections::HashMap, ops::Range, path::Path};
-use tree_sitter_grammar_repository::Language;
+use tree_sitter_grammar_repository::Language as GnostrLanguage;
 use tree_sitter_highlight::{Highlight, HighlightConfiguration, HighlightEvent, Highlighter};
+use tree_sitter::Language;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SyntaxTag {
     Attribute,
@@ -57,10 +58,6 @@ impl AsRef<str> for SyntaxTag {
     }
 }
 
-/// Safety: The `ptr` must be a valid `*const ffi::TSLanguage`.
-unsafe fn unsafe_language_from_ptr(ptr: *const ()) -> Language {
-    std::mem::transmute(ptr)
-}
 
 fn tags_by_highlight_index() -> [SyntaxTag; 22] {
     [
@@ -89,23 +86,20 @@ fn tags_by_highlight_index() -> [SyntaxTag; 22] {
     ]
 }
 
-fn determine_lang(path: &Path) -> Option<(Grammar, Language)> {
+fn determine_lang(path: &Path) -> Option<(Grammar, tree_sitter::Language)> {
 
-    let file_language = tree_sitter_grammar_repository::Language::from_file_name(path)?;
-
-    let grammar_variant = file_language.grammar();
+    let file_language = GnostrLanguage::from_file_name(path)?;    let grammar_variant = file_language.grammar();
 
     let params = Grammar::highlight_configuration_params(grammar_variant);
 
-    Some((grammar_variant, unsafe { unsafe_language_from_ptr((params.language.into_raw())() as *const ()) }))
-
+    Some((grammar_variant, unsafe { tree_sitter::Language::from_raw((params.language.into_raw())() as *const tree_sitter::ffi::TSLanguage) }))
 }
 
-fn create_highlight_config(grammar_variant: Grammar, language: &Language) -> HighlightConfiguration {
+fn create_highlight_config(grammar_variant: Grammar, language: tree_sitter::Language) -> HighlightConfiguration {
     let params = Grammar::highlight_configuration_params(grammar_variant);
 
     let mut highlight_config =
-        HighlightConfiguration::new(*language, params.highlights_query, params.injection_query, params.locals_query)
+        HighlightConfiguration::new(language, params.highlights_query, params.injection_query, params.locals_query, "")
             .unwrap();
 
     highlight_config.configure(&tags_by_highlight_index());
@@ -128,7 +122,7 @@ pub fn parse<'a>(path: &'a Path, content: &'a str) -> Vec<(Range<usize>, SyntaxT
         let mut highlight_configs_borrow = highlight_configs.borrow_mut();
         let config = highlight_configs_borrow
             .entry(grammar_variant)
-            .or_insert_with_key(|g_variant| create_highlight_config(*g_variant, &language));
+            .or_insert_with_key(|g_variant| create_highlight_config(*g_variant, language));
 
         HIGHLIGHTER.with_borrow_mut(|highlighter| {
             highlighter
