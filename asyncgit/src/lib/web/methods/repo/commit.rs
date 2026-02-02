@@ -4,14 +4,14 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
-use crate::methods::filters;
-use crate::{
+use crate::web::methods::filters;
+use crate::web::{
     git::{Commit, OpenRepository},
     into_response, Git,
 };
 
-use crate::methods::repo::Error;
-use crate::methods::repo::{Repository, RepositoryPath};
+use crate::web::methods::repo::Error;
+use crate::web::methods::repo::{Repository, RepositoryPath};
 
 #[derive(Template)]
 #[template(path = "repo/commit.html")]
@@ -51,8 +51,8 @@ pub async fn handle(
         branch: query.branch,
         id: query.id,
         dl_branch,
-        _highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
-        _dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _highlight_css_hash: crate::web::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _dark_highlight_css_hash: crate::web::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
 

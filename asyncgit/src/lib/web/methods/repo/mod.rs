@@ -12,7 +12,7 @@ mod tag;
 mod thread; // GEMINI: Add thread module
 mod tree;
 
-use crate::database::schema::repository::YokedRepository;
+use crate::web::database::schema::repository::YokedRepository;
 
 use std::{
     collections::BTreeMap,
@@ -43,8 +43,8 @@ use self::{
     thread::handle as handle_thread, // GEMINI: Import thread handler
     tree::handle as handle_tree,
 };
-use crate::database::schema::tag::YokedString;
-use crate::{
+use crate::web::database::schema::tag::YokedString;
+use crate::web::{
     database::schema::{commit::YokedCommit, tag::YokedTag},
     layers::UnwrapInfallible,
 };
@@ -82,7 +82,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
     let root_repo_path = scan_path.join("");
     let is_root_repo = root_repo_path.is_dir() || root_repo_path.is_file();
     let root_repo_exists_in_db =
-        crate::database::schema::repository::Repository::exists(db, &PathBuf::from(""))
+        crate::web::database::schema::repository::Repository::exists(db, &PathBuf::from(""))
             .unwrap_or_default();
 
     debug!(
@@ -127,7 +127,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
             let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
             let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
             let exists_in_db =
-                crate::database::schema::repository::Repository::exists(db, &potential_repo_name)
+                crate::web::database::schema::repository::Repository::exists(db, &potential_repo_name)
                     .unwrap_or_default();
             debug!(
                 "  Is Bare: {}, Is Working Tree: {}, Is Working Tree Repo:{}, Exists in DB: {}",

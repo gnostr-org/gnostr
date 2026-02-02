@@ -4,8 +4,8 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
-use crate::{
-    git::ReadmeFormat,
+use crate::web::{
+    git::DetailedTag,
     into_response,
     methods::{
         filters,
@@ -17,17 +17,15 @@ use crate::{
 #[derive(Deserialize)]
 pub struct UriQuery {
     #[serde(rename = "h")]
-    pub branch: Option<Arc<str>>,
+    name: Arc<str>,
 }
 
 #[derive(Template)]
-#[template(path = "repo/about.html")]
+#[template(path = "repo/tag.html")]
 pub struct View {
     repo: Repository,
-    readme: Option<(ReadmeFormat, Arc<str>)>,
+    tag: DetailedTag,
     branch: Option<Arc<str>>,
-    pub _highlight_css_hash: &'static str,
-    pub _dark_highlight_css_hash: &'static str,
 }
 
 pub async fn handle(
@@ -36,17 +34,12 @@ pub async fn handle(
     Extension(git): Extension<Arc<Git>>,
     Query(query): Query<UriQuery>,
 ) -> Result<impl IntoResponse> {
-    let open_repo = git
-        .clone()
-        .repo(repository_path, query.branch.clone())
-        .await?;
-    let readme = open_repo.readme().await?;
+    let open_repo = git.repo(repository_path, Some(query.name.clone())).await?;
+    let tag = open_repo.tag_info().await?;
 
     Ok(into_response(View {
         repo,
-        readme,
-        branch: query.branch,
-        _highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
-        _dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
+        tag,
+        branch: Some(query.name),
     }))
 }

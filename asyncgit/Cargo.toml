@@ -26,7 +26,13 @@ gnostr_web = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
+rust-ini = "0.21.1"
+
+yoke = { version = "0.7.1", features = ["derive"] }
+
 humantime = "2.1"
+timeago = { version = "0.4.2", default-features = false }
+
 askama = { version = "0.12.0", default-features = false }
 
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
@@ -41,7 +47,14 @@ axum = { version = "0.7", features = ["query", "tokio", "http1"] }
 bitflags = "2"
 bytes = "1.5"
 chrono = "0.4.40"
-clap = { version = "4.5.34", features = ["derive"] }
+clap = { version = "4.5.34", features = [
+  "std",
+  "cargo",
+  "derive",
+  "help",
+  "usage",
+  "env",
+] }
 comrak = { version = "0.28.0", default-features = false }
 crossbeam-channel = "0.5"
 crossterm = "0.28.1"
@@ -95,6 +108,7 @@ time = { version = "0.3", features = ["serde", "formatting"] }
 tiny_http = "0.12"
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"
+tokio-util = { version = "0.7.10", features = ["io"] }
 toml = "0.8.20"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "timeout", "fs"] }
@@ -121,6 +135,12 @@ warp = "0.3"
 webbrowser = "0.8"
 const_format = "0.2"
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
+const-hex = "1.12"
+arc-swap = "1.7"
+rkyv = "0.8"
+httparse = "1.7"
+md5 = "0.7"
+rand = "0.8.5"
 
 
 [build-dependencies]

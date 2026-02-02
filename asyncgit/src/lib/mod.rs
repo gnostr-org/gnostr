@@ -37,25 +37,6 @@
 
 /// pub mod web
 pub mod web;
-/// pub mod unified_diff_builder
-pub mod unified_diff_builder;
-/// pub mod syntax_highlight
-pub mod syntax_highlight;
-/// pub mod git
-pub mod git;
-/// pub mod layout_html
-pub mod layout_html;
-/// pub mod template_html
-pub mod template_html;
-
-/// pub mod js
-pub mod js;
-
-/// pub mod css
-pub mod css;
-
-/// pub mod images
-pub mod images;
 
 /// pub mod gitui
 pub mod gitui;

@@ -15,25 +15,22 @@ use warp::reply::json as warpReplayJson;
 
 
 pub mod chat;
-pub mod css;
+//pub mod css;
 pub mod database;
 pub mod git;
-pub mod images;
-pub mod js;
+//pub mod js;
 pub mod kill_process;
 pub mod layers;
 pub mod methods;
 pub mod syntax_highlight;
 pub mod template_html;
 pub mod layout_html;
-pub mod theme;
 pub mod unified_diff_builder;
 pub mod websock_index_html;
-pub use crate::{
+pub use crate::web::{
     database::schema::{commit::Commit, repository::Repository, tag::Tag},
     git::Git,
     syntax_highlight::prime_highlighters,
-    theme::Theme,
     unified_diff_builder::UnifiedDiffBuilder,
 };
 
@@ -323,7 +320,7 @@ use std::{
 use rocksdb::{Options, SliceTransform};
 use xxhash_rust::const_xxh3;
 
-use crate::database::schema::prefixes::{
+use crate::web::database::schema::prefixes::{
     COMMIT_COUNT_FAMILY, COMMIT_FAMILY, REFERENCE_FAMILY, REPOSITORY_FAMILY, TAG_FAMILY,
 };
 
@@ -466,7 +463,7 @@ pub async fn run_indexer(
 
     std::thread::spawn(move || loop {
         tracing::info!("Running periodic index");
-        crate::database::indexer::run(&scan_path, &db);
+        crate::web::database::indexer::run(&scan_path, &db);
         tracing::info!("Finished periodic index");
 
         if indexer_wakeup_recv.blocking_recv().is_none() {
@@ -515,7 +512,7 @@ pub fn init_static_asset_hashes() {
     // for now we set the css for dark and light here.
     let css = {
         let theme =
-            toml::from_str::<crate::theme::Theme>(include_str!("../themes/solarized_light.toml"))
+            toml::from_str::<crate::theme::Theme>(include_str!("../../themes/solarized_light.toml"))
                 .unwrap()
                 .build_css();
         Box::leak(
@@ -526,12 +523,12 @@ pub fn init_static_asset_hashes() {
     };
     HIGHLIGHT_CSS_BYTES.set(css).unwrap();
     HIGHLIGHT_CSS_HASH
-        .set(crate::build_asset_hash(css))
+        .set(crate::web::build_asset_hash(css))
         .unwrap();
 
     let dark_css = {
         let theme =
-            toml::from_str::<crate::theme::Theme>(include_str!("../themes/solarized_dark.toml"))
+            toml::from_str::<crate::web::theme::Theme>(include_str!("../../themes/solarized_dark.toml"))
                 .unwrap()
                 .build_css();
         Box::leak(
@@ -542,144 +539,144 @@ pub fn init_static_asset_hashes() {
     };
     DARK_HIGHLIGHT_CSS_BYTES.set(dark_css).unwrap();
     DARK_HIGHLIGHT_CSS_HASH
-        .set(crate::build_asset_hash(dark_css))
+        .set(crate::web::build_asset_hash(dark_css))
         .unwrap();
 
     // Image hashes
     ADD_RELAY_SVG_HASH
-        .set(crate::build_asset_hash(ADD_RELAY_SVG))
+        .set(crate::web::build_asset_hash(ADD_RELAY_SVG))
         .unwrap();
     CLOSE_MODAL_SVG_HASH
-        .set(crate::build_asset_hash(CLOSE_MODAL_SVG))
+        .set(crate::web::build_asset_hash(CLOSE_MODAL_SVG))
         .unwrap();
     CONTENT_WARNING_SVG_HASH
-        .set(crate::build_asset_hash(CONTENT_WARNING_SVG))
+        .set(crate::web::build_asset_hash(CONTENT_WARNING_SVG))
         .unwrap();
     EDIT_PROFILE_SVG_HASH
-        .set(crate::build_asset_hash(EDIT_PROFILE_SVG))
+        .set(crate::web::build_asset_hash(EDIT_PROFILE_SVG))
         .unwrap();
     EVENT_DELETE_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_DELETE_SVG))
+        .set(crate::web::build_asset_hash(EVENT_DELETE_SVG))
         .unwrap();
     EVENT_DETAILS_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_DETAILS_SVG))
+        .set(crate::web::build_asset_hash(EVENT_DETAILS_SVG))
         .unwrap();
     EVENT_LIKE_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_LIKE_SVG))
+        .set(crate::web::build_asset_hash(EVENT_LIKE_SVG))
         .unwrap();
     EVENT_LIKED_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_LIKED_SVG))
+        .set(crate::web::build_asset_hash(EVENT_LIKED_SVG))
         .unwrap();
     EVENT_OPTIONS_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_OPTIONS_SVG))
+        .set(crate::web::build_asset_hash(EVENT_OPTIONS_SVG))
         .unwrap();
     EVENT_REPLY_ALL_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_REPLY_ALL_SVG))
+        .set(crate::web::build_asset_hash(EVENT_REPLY_ALL_SVG))
         .unwrap();
     EVENT_REPLY_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_REPLY_SVG))
+        .set(crate::web::build_asset_hash(EVENT_REPLY_SVG))
         .unwrap();
     EVENT_SHARE_SVG_HASH
-        .set(crate::build_asset_hash(EVENT_SHARE_SVG))
+        .set(crate::web::build_asset_hash(EVENT_SHARE_SVG))
         .unwrap();
     EXPLORE_ACTIVE_SVG_HASH
-        .set(crate::build_asset_hash(EXPLORE_ACTIVE_SVG))
+        .set(crate::web::build_asset_hash(EXPLORE_ACTIVE_SVG))
         .unwrap();
     EXPLORE_SVG_HASH
-        .set(crate::build_asset_hash(EXPLORE_SVG))
+        .set(crate::web::build_asset_hash(EXPLORE_SVG))
         .unwrap();
     FAVICON_NOTIF_ICO_HASH
-        .set(crate::build_asset_hash(FAVICON_NOTIF_ICO))
+        .set(crate::web::build_asset_hash(FAVICON_NOTIF_ICO))
         .unwrap();
     FAVICON_ICO_HASH
-        .set(crate::build_asset_hash(FAVICON_ICO))
+        .set(crate::web::build_asset_hash(FAVICON_ICO))
         .unwrap();
     GNOSTR_NOTIF_SVG_HASH
-        .set(crate::build_asset_hash(GNOSTR_NOTIF_SVG))
+        .set(crate::web::build_asset_hash(GNOSTR_NOTIF_SVG))
         .unwrap();
     GNOSTR_NOBG_SVG_HASH
-        .set(crate::build_asset_hash(GNOSTR_NOBG_SVG))
+        .set(crate::web::build_asset_hash(GNOSTR_NOBG_SVG))
         .unwrap();
     GNOSTR_SVG_HASH
-        .set(crate::build_asset_hash(GNOSTR_SVG))
+        .set(crate::web::build_asset_hash(GNOSTR_SVG))
         .unwrap();
     HOME_ACTIVE_SVG_HASH
-        .set(crate::build_asset_hash(HOME_ACTIVE_SVG))
+        .set(crate::web::build_asset_hash(HOME_ACTIVE_SVG))
         .unwrap();
     HOME_SVG_HASH
-        .set(crate::build_asset_hash(HOME_SVG))
+        .set(crate::web::build_asset_hash(HOME_SVG))
         .unwrap();
     ICON_MASKABLE_SVG_HASH
-        .set(crate::build_asset_hash(ICON_MASKABLE_SVG))
+        .set(crate::web::build_asset_hash(ICON_MASKABLE_SVG))
         .unwrap();
     ICON_ICNS_HASH
-        .set(crate::build_asset_hash(ICON_ICNS))
+        .set(crate::web::build_asset_hash(ICON_ICNS))
         .unwrap();
     ICON_SVG_HASH
-        .set(crate::build_asset_hash(ICON_SVG))
+        .set(crate::web::build_asset_hash(ICON_SVG))
         .unwrap();
-    KEY_SVG_HASH.set(crate::build_asset_hash(KEY_SVG)).unwrap();
+    KEY_SVG_HASH.set(crate::web::build_asset_hash(KEY_SVG)).unwrap();
     LOADER_FRAGMENT_SVG_HASH
-        .set(crate::build_asset_hash(LOADER_FRAGMENT_SVG))
+        .set(crate::web::build_asset_hash(LOADER_FRAGMENT_SVG))
         .unwrap();
     LOGO_INVERTED_SVG_HASH
-        .set(crate::build_asset_hash(LOGO_INVERTED_SVG))
+        .set(crate::web::build_asset_hash(LOGO_INVERTED_SVG))
         .unwrap();
     LOGO_SVG_HASH
-        .set(crate::build_asset_hash(LOGO_SVG))
+        .set(crate::web::build_asset_hash(LOGO_SVG))
         .unwrap();
     MESSAGE_USER_SVG_HASH
-        .set(crate::build_asset_hash(MESSAGE_USER_SVG))
+        .set(crate::web::build_asset_hash(MESSAGE_USER_SVG))
         .unwrap();
     MESSAGES_ACTIVE_SVG_HASH
-        .set(crate::build_asset_hash(MESSAGES_ACTIVE_SVG))
+        .set(crate::web::build_asset_hash(MESSAGES_ACTIVE_SVG))
         .unwrap();
     MESSAGES_SVG_HASH
-        .set(crate::build_asset_hash(MESSAGES_SVG))
+        .set(crate::web::build_asset_hash(MESSAGES_SVG))
         .unwrap();
     NEW_NOTE_SVG_HASH
-        .set(crate::build_asset_hash(NEW_NOTE_SVG))
+        .set(crate::web::build_asset_hash(NEW_NOTE_SVG))
         .unwrap();
     NO_USER_SVG_HASH
-        .set(crate::build_asset_hash(NO_USER_SVG))
+        .set(crate::web::build_asset_hash(NO_USER_SVG))
         .unwrap();
     NOTIFICATIONS_ACTIVE_SVG_HASH
-        .set(crate::build_asset_hash(NOTIFICATIONS_ACTIVE_SVG))
+        .set(crate::web::build_asset_hash(NOTIFICATIONS_ACTIVE_SVG))
         .unwrap();
     NOTIFICATIONS_SVG_HASH
-        .set(crate::build_asset_hash(NOTIFICATIONS_SVG))
+        .set(crate::web::build_asset_hash(NOTIFICATIONS_SVG))
         .unwrap();
     OPEN_THREAD_HERE_SVG_HASH
-        .set(crate::build_asset_hash(OPEN_THREAD_HERE_SVG))
+        .set(crate::web::build_asset_hash(OPEN_THREAD_HERE_SVG))
         .unwrap();
     OPEN_THREAD_SVG_HASH
-        .set(crate::build_asset_hash(OPEN_THREAD_SVG))
+        .set(crate::web::build_asset_hash(OPEN_THREAD_SVG))
         .unwrap();
     PROFILE_WEBSITE_SVG_HASH
-        .set(crate::build_asset_hash(PROFILE_WEBSITE_SVG))
+        .set(crate::web::build_asset_hash(PROFILE_WEBSITE_SVG))
         .unwrap();
     PROFILE_ZAP_SVG_HASH
-        .set(crate::build_asset_hash(PROFILE_ZAP_SVG))
+        .set(crate::web::build_asset_hash(PROFILE_ZAP_SVG))
         .unwrap();
     PUBKEY_SVG_HASH
-        .set(crate::build_asset_hash(PUBKEY_SVG))
+        .set(crate::web::build_asset_hash(PUBKEY_SVG))
         .unwrap();
     READ_MORE_SVG_HASH
-        .set(crate::build_asset_hash(READ_MORE_SVG))
+        .set(crate::web::build_asset_hash(READ_MORE_SVG))
         .unwrap();
     SETTINGS_ACTIVE_SVG_HASH
-        .set(crate::build_asset_hash(SETTINGS_ACTIVE_SVG))
+        .set(crate::web::build_asset_hash(SETTINGS_ACTIVE_SVG))
         .unwrap();
     SETTINGS_SVG_HASH
-        .set(crate::build_asset_hash(SETTINGS_SVG))
+        .set(crate::web::build_asset_hash(SETTINGS_SVG))
         .unwrap();
     SIGN_OUT_SVG_HASH
-        .set(crate::build_asset_hash(SIGN_OUT_SVG))
+        .set(crate::web::build_asset_hash(SIGN_OUT_SVG))
         .unwrap();
 
     // JS bundle hash
     JS_BUNDLE_HASH
-        .set(crate::build_asset_hash(JS_BUNDLE))
+        .set(crate::web::build_asset_hash(JS_BUNDLE))
         .unwrap();
 }
 pub struct TemplateResponse<T> {
