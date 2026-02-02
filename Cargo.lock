@@ -1258,12 +1258,15 @@ dependencies = [
  "pin-project-lite",
  "rustversion",
  "serde",
+ "serde_json",
+ "serde_path_to_error",
  "serde_urlencoded",
  "sync_wrapper 1.0.2",
  "tokio",
  "tower 0.5.3",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -1301,6 +1304,7 @@ dependencies = [
  "sync_wrapper 1.0.2",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -5453,10 +5457,14 @@ dependencies = [
 name = "gnostr-asyncgit"
 version = "1894.934224.276199"
 dependencies = [
+ "anyhow",
  "arboard",
+ "async-trait",
+ "axum 0.7.9",
  "bitflags 2.10.0",
  "chrono",
  "clap 4.5.55",
+ "comrak",
  "criterion",
  "crossbeam-channel 0.5.15",
  "crossterm",
@@ -5465,13 +5473,16 @@ dependencies = [
  "env_logger 0.11.8",
  "etcetera",
  "figment",
+ "futures-util",
  "fuzzy-matcher",
  "git-version",
  "git2",
+ "gix",
  "gnostr-git2-hooks",
  "gnostr-grammar",
  "gnostr-invalidstring",
  "gnostr-scopetime",
+ "handlebars",
  "insta",
  "itertools 0.14.0",
  "log",
@@ -5480,10 +5491,12 @@ dependencies = [
  "notify 7.0.0",
  "openssl-sys",
  "pretty_assertions",
+ "pretty_env_logger",
  "ratatui 0.29.0",
  "rayon",
  "rayon-core",
  "regex",
+ "rsass",
  "serde",
  "serde_json",
  "serial_test 3.3.1",
@@ -5494,7 +5507,16 @@ dependencies = [
  "temp-dir",
  "tempfile",
  "thiserror 1.0.69",
+ "tiny_http",
+ "tokio",
+ "tokio-stream",
  "toml 0.8.23",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "tracing-subscriber",
  "tree-sitter 0.20.10",
  "tree-sitter-highlight 0.20.1",
  "tui-prompts",
@@ -5502,6 +5524,8 @@ dependencies = [
  "unicode-truncate",
  "unicode-width 0.2.0",
  "url",
+ "warp",
+ "webbrowser",
 ]
 
 [[package]]
@@ -13970,6 +13994,7 @@ dependencies = [
  "tokio",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]

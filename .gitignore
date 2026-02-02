@@ -110,7 +110,6 @@ src/libcjson/
 src/nostril/
 tui/
 vostro
-web/
 workspace/
 xq/bash_profile.log
 xq/template
