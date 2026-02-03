@@ -5552,7 +5552,6 @@ dependencies = [
  "tracing-subscriber",
  "tree-sitter 0.23.2",
  "tree-sitter-highlight 0.23.2",
- "tree-sitter-language",
  "tui-prompts",
  "unicode-segmentation",
  "unicode-truncate",
