@@ -41,11 +41,11 @@ pub use xxhash_rust;
 
 // Constants that were previously in main.rs
 pub const CRATE_VERSION: &str = clap::crate_version!();
-pub const GLOBAL_CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/src/css/style.css"));
+pub const GLOBAL_CSS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/src/lib/css/style.css"));
 pub const GLOBAL_CSS_HASH: &str = const_hex::Buffer::<16, false>::new()
     .const_format(&xxhash_rust::const_xxh3::xxh3_128(GLOBAL_CSS).to_be_bytes())
     .as_str();
-pub const JS_BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/src/js/bundle.js"));
+pub const JS_BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/src/lib/js/bundle.js"));
 
 pub static HIGHLIGHT_CSS_HASH: OnceLock<&'static str> = OnceLock::new();
 pub static HIGHLIGHT_CSS_BYTES: OnceLock<&'static [u8]> = OnceLock::new();
