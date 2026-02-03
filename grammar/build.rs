@@ -342,10 +342,6 @@ fn read_local_query(query_path: &Path, language: &str, filename: &str) -> String
     let query =
         fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to fetch {path:?}: {e:?}"));
 
-    if language == "rust" && filename == "injections.scm" {
-        return query;
-    }
-
     INHERITS_REGEX
         .replace_all(&query, |captures: &regex::Captures| {
             captures[1]
