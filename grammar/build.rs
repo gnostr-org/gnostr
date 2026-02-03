@@ -67,8 +67,11 @@ fn main() -> anyhow::Result<()> {
 
         let helix_root = sources.join("helix");
 
-        fetch_git_repository(GRAMMAR_REPOSITORY_URL, GRAMMAR_REPOSITORY_REF, &helix_root)
-            .context(GRAMMAR_REPOSITORY_URL)?;
+        //TODO detect if available/internet connectivity else use existing
+        if !helix_root.exists() {
+            fetch_git_repository(GRAMMAR_REPOSITORY_URL, GRAMMAR_REPOSITORY_REF, &helix_root)
+                .context(GRAMMAR_REPOSITORY_URL)?;
+        }
 
         let config: HelixLanguages = toml::from_str(
             &fs::read_to_string(helix_root.join(GRAMMAR_REPOSITORY_CONFIG_PATH))
