@@ -38,8 +38,8 @@ fn run() -> anyhow::Result<()> {
 }
 
 fn build_scss(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("src/sass");
-    let out_dir = paths.statics_out_dir.join("src/css");
+    let in_dir = paths.statics_in_dir.join("src/lib/sass");
+    let out_dir = paths.statics_out_dir.join("src/lib/css");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory")?;
 
     println!("cargo:rerun-if-changed={}", in_dir.display());
@@ -68,9 +68,9 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
 }
 
 fn build_js(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("src/js");
+    let in_dir = paths.statics_in_dir.join("src/lib/js");
     let ui_in_dir = in_dir.join("ui");
-    let out_dir = paths.statics_out_dir.join("src/js");
+    let out_dir = paths.statics_out_dir.join("src/lib/js");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
 
     println!("cargo:rerun-if-changed={}", in_dir.display());

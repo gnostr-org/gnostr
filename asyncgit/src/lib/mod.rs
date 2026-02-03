@@ -35,6 +35,8 @@
     clippy::empty_docs
 )]
 
+/// pub mod images
+pub mod images;
 /// pub mod css
 pub mod css;
 /// pub mod js
