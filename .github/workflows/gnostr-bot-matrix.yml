@@ -2,8 +2,8 @@ name: gnostr-bot-matrix
 
 # Controls when the action will run.
 on:
-  schedule:
-    - cron: '*/30 * * * *' # run 30th minute
+  #schedule:
+  #  - cron: '*/30 * * * *' # run 30th minute
   push:
     branches:
       - '**'
