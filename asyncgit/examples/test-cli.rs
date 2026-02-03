@@ -1,4 +1,6 @@
 #![deny(warnings)]
+use gnostr_asyncgit::js::main_js::JSMain;
+use gnostr_asyncgit::web::template_html::TemplateHtml;
 use std::sync::Arc;
 
 use handlebars::Handlebars;
@@ -9,12 +11,8 @@ use futures_util::{FutureExt, StreamExt};
 use structopt::StructOpt;
 use warp::Filter; // Add structopt
 
-use crate::template_html::TemplateHtml;
-
 //dev server
 use tiny_http::{Response, Server};
-
-use gnostr_gnit::*;
 
 #[derive(StructOpt)]
 struct Cli {
@@ -56,9 +54,9 @@ async fn main() {
 }
 
 async fn serve() {
-    let main_js = js::main_js::JSMain::new();
+    let main_js = JSMain::new();
 
-    let main_js_bytes: &[u8] = include_bytes!("../statics/js/main.js");
+    let main_js_bytes: &[u8] = include_bytes!("../src/lib/js/main.js");
     assert_eq!(main_js_bytes, main_js.main_js);
 
     let template = TemplateHtml::new();

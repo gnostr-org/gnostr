@@ -5514,6 +5514,7 @@ dependencies = [
  "rayon",
  "rayon-core",
  "regex",
+ "reqwest 0.11.27",
  "rkyv 0.8.14",
  "rocksdb",
  "rsass",
