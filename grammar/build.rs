@@ -345,22 +345,26 @@ fn read_local_query(query_path: &Path, language: &str, filename: &str) -> String
     let query =
         fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to fetch {path:?}: {e:?}"));
 
-    INHERITS_REGEX
-        .replace_all(&query, |captures: &regex::Captures| {
-            captures[1]
-                .split(',')
-                .fold(String::new(), |mut output, language| {
-                    // `write!` to a String cannot fail.
-                    write!(
-                        output,
-                        "\n{}\n",
-                        read_local_query(query_path, language, filename)
-                    )
-                    .unwrap();
-                    output
-                })
-        })
-        .to_string()
+    if filename == "injections.scm" {
+        query
+    } else {
+        INHERITS_REGEX
+            .replace_all(&query, |captures: &regex::Captures| {
+                captures[1]
+                    .split(',')
+                    .fold(String::new(), |mut output, language| {
+                        // `write!` to a String cannot fail.
+                        write!(
+                            output,
+                            "\n{}\n",
+                            read_local_query(query_path, language, filename)
+                        )
+                        .unwrap();
+                        output
+                    })
+            })
+            .to_string()
+    }
 }
 
 fn fetch_and_build_grammar(
