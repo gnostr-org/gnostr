@@ -56,8 +56,9 @@ fn get_messages() -> impl warp::Reply {
 }
 
 use webbrowser;
+use std::io;
 
-fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+fn open(host: &str, port: i32) -> io::Result<()> {
     let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 
     println!("Attempting to open: {}", url);

@@ -9,7 +9,7 @@ Here's a breakdown of how it works:
     - `pretty_env_logger::init()`: Initializes a logger for better debugging output.
 
 2.  **JavaScript Asset Loading**:
-    - `let js_assets_map = Arc::new(get_js_assets());`: It calls `get_js_assets()` (from `gnostr_js::js::js_bundle`) to retrieve a `HashMap` where keys are JavaScript filenames (e.g., "main.js", "util.js") and values are their static byte content. This `HashMap` is then wrapped in an `Arc` (Atomic Reference Count) to allow it to be safely shared across multiple asynchronous tasks (routes) that `warp` creates.
+    - `let js_assets_map = Arc::new(get_js_assets());`: It calls `get_js_assets()` (from `gnostr_asyncgit::js::js_bundle`) to retrieve a `HashMap` where keys are JavaScript filenames (e.g., "main.js", "util.js") and values are their static byte content. This `HashMap` is then wrapped in an `Arc` (Atomic Reference Count) to allow it to be safely shared across multiple asynchronous tasks (routes) that `warp` creates.
 
 3.  **Dynamic HTML Generation**:
     - `let script_tags = {...};`: This block dynamically generates `<script>` HTML tags for each JavaScript file found in `js_assets_map`. It iterates through the filenames, sorts them for consistent order, and creates a `<script src="/js/filename.js"></script>` tag for each.

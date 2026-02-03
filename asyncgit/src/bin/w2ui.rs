@@ -23,8 +23,8 @@ async fn main() {
     let js_assets_map = Arc::new(get_js_assets());
     let css_assets_map = Arc::new(get_css_assets());
     let images_assets_map = Arc::new(get_images_assets());
-    let template_assets_map = Arc::new(get_template_assets());
-    let layout_assets_map = Arc::new(get_layout_assets());
+    let _template_assets_map = Arc::new(get_template_assets());
+    let _layout_assets_map = Arc::new(get_layout_assets());
 
     let script_tags = {
         let mut tags = String::new();
