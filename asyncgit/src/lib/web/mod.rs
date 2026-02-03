@@ -512,7 +512,7 @@ pub fn init_static_asset_hashes() {
     // for now we set the css for dark and light here.
     let css = {
         let theme =
-            toml::from_str::<crate::theme::Theme>(include_str!("../../themes/solarized_light.toml"))
+            toml::from_str::<crate::theme::Theme>(include_str!("../../../themes/solarized_light.toml"))
                 .unwrap()
                 .build_css();
         Box::leak(
@@ -528,7 +528,7 @@ pub fn init_static_asset_hashes() {
 
     let dark_css = {
         let theme =
-            toml::from_str::<crate::web::theme::Theme>(include_str!("../../themes/solarized_dark.toml"))
+            toml::from_str::<crate::theme::Theme>(include_str!("../../../themes/solarized_dark.toml"))
                 .unwrap()
                 .build_css();
         Box::leak(

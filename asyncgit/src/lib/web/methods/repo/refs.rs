@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use crate::into_response;
-use crate::methods::filters;
-use crate::methods::repo::{Error, Refs, Repository};
+use crate::web::into_response;
+use crate::web::methods::filters;
+use crate::web::methods::repo::{Error, Refs, Repository};
 use anyhow::Context;
 use askama::Template;
 use axum::{response::IntoResponse, Extension};
@@ -22,7 +22,7 @@ pub async fn handle(
     Extension(db): Extension<Arc<rocksdb::DB>>,
 ) -> Result<impl IntoResponse, Error> {
     tokio::task::spawn_blocking(move || {
-        let repository = crate::database::schema::repository::Repository::open(&db, &*repo)?
+        let repository = crate::web::database::schema::repository::Repository::open(&db, &*repo)?
             .context("Repository does not exist")?;
         let repository = repository.get();
 
