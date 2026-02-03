@@ -1,4 +1,3 @@
-#[allow(unused_imports)] //TODO
 use axum::{
     http::StatusCode,
     response::{Html, IntoResponse, Redirect},
@@ -6,9 +5,10 @@ use axum::{
 
 use askama::Template;
 use tracing::debug;
-
+use crate::web::{GLOBAL_CSS_HASH, GNOSTR_SVG_HASH, CRATE_VERSION};
+use crate::web::layers::logger;
 use crate::web::methods::filters;
-#[allow(unused_imports)] //TODO
+#[allow(unused_imports)] //TODO If Error is truly not used, remove this line.
 use crate::web::methods::repo::Error;
 
 #[derive(Template)]

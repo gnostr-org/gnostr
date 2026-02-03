@@ -44,7 +44,7 @@ pub async fn handle_spa() -> impl IntoResponse {
     // For SPA routes, we don't need repositories data, just serve the template
     let empty_repositories: BTreeMap<
         Option<String>,
-        Vec<crate::database::schema::repository::YokedRepository>,
+        Vec<crate::web::database::schema::repository::YokedRepository>,
     > = BTreeMap::new();
     into_response(View {
         repositories: empty_repositories,

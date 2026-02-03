@@ -49,8 +49,8 @@ pub async fn handle(
         repo,
         commit,
         branch: query.branch,
-        _highlight_css_hash: crate::HIGHLIGHT_CSS_HASH.get().unwrap(),
-        _dark_highlight_css_hash: crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _highlight_css_hash: crate::web::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _dark_highlight_css_hash: crate::web::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
 

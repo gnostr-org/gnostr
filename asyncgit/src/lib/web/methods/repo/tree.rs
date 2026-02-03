@@ -8,15 +8,19 @@ use std::{
     sync::Arc,
 };
 
-use crate::methods::filters;
-use crate::{
-    git::{FileWithContent, PathDestination, TreeItem},
+use crate::theme::*;
+use crate::web::methods::filters;
+use crate::web::{*,
+    git::{FileWithContent, PathDestination, TreeItem as GitTreeItem},
+    layers::*,
     into_response, Git, ResponseEither,
 };
+pub use crate::web::git::TreeItem;
+pub use crate::web::git::Content;
 
-use crate::methods::repo::ChildPath;
-use crate::methods::repo::Repository;
-use crate::methods::repo::{Error, RepositoryPath};
+use crate::web::methods::repo::ChildPath;
+use crate::web::methods::repo::Repository;
+use crate::web::methods::repo::{Error, RepositoryPath};
 
 #[derive(Deserialize)]
 pub struct UriQuery {
