@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1894.934259.231324-test"
+version = "1893.935010.246953"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -231,7 +231,7 @@ globset = "0.4"
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { version = "1894.934217.283628", default-features = false, path = "asyncgit" }
+gnostr-asyncgit = { version = "1893.935010.246953", default-features = false, path = "asyncgit" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
 gnostr-legit = { version = "1894.934224.276199", path = "legit" }
 #gnostr-query = { version = "1894.934224.276199", path = "query" }
