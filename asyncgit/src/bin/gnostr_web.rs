@@ -1,7 +1,6 @@
 //#![deny(warnings)]
 #![allow(unused)]
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, env, path::PathBuf, sync::Arc};
 
 use clap::Parser;
 
@@ -127,8 +126,10 @@ async fn main() {
             })
         });
 
-    // Serve files from the current directory for the root path (e.g., index.html)
-    let root_static_files = warp::fs::dir(".");
+    let cargo_manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    // Serve files from the `asyncgit` crate's root directory for the root path (e.g., index.html)
+    let root_static_files = warp::fs::dir(cargo_manifest_dir.join("."));
 
     // 3. Define the new /messages route, now serving the main HTML for SPA routing
     let messages_route = warp::path("messages")
@@ -140,10 +141,10 @@ async fn main() {
         .map(handlebars.clone())
         .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
-    let pwa_route = warp::path("pwa").and(warp::fs::dir("src/pwa"));
-    let images_route = warp::path("images").and(warp::fs::dir("src/images"));
-    let js_files = warp::path("js").and(warp::fs::dir("src/js"));
-    let css_files = warp::path("css").and(warp::fs::dir("src/css"));
+    let pwa_route = warp::path("pwa").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/pwa")));
+    let images_route = warp::path("images").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/images")));
+    let js_files = warp::path("js").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/js")));
+    let css_files = warp::path("css").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/css")));
 
     // New NIP-34 Detail Route
     let nip34_detail_route = warp::path!("repository-details" / String)
