@@ -19,6 +19,10 @@ keywords = ["git"]
 name = "gnostr_asyncgit"
 path = "src/lib/mod.rs"
 
+[[bin]]
+name = "gnostr_gnit"
+path = "src/bin/gnostr_gnit.rs"
+
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
@@ -26,21 +30,14 @@ gnostr_web = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
-rust-ini = "0.21.1"
-
-yoke = { version = "0.7.1", features = ["derive"] }
-
-humantime = "2.1"
-timeago = { version = "0.4.2", default-features = false }
-
-askama = { version = "0.12.0", default-features = false }
-
-rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 anyhow = "1.0.100"
 arboard = { version = "3.4.0", default-features = false, features = [
   "windows-sys",
 ] }
+arc-swap = "1.7"
+
+askama = { version = "0.12.0", default-features = false }
 async-trait = "0.1.68"
 axum = { version = "0.7", features = ["query", "tokio", "http1"] }
 #anyhow = "1.0"
@@ -55,14 +52,19 @@ clap = { version = "4.5.34", features = [
   "usage",
   "env",
 ] }
+clean-path = "0.2.1"
 comrak = { version = "0.28.0", default-features = false }
+const-hex = "1.12"
+const_format = "0.2"
 crossbeam-channel = "0.5"
 crossterm = "0.28.1"
 dirs = "5.0.1"
 easy-cast = "0.5"
 etcetera = "0.10.0"
+expectrl = "0.8.0"
 figment = { version = "0.10.19", features = ["toml"] }
 flate2 = "1"
+futures = "0.3"
 futures-util = "0.3.31"
 fuzzy-matcher = "0.3"
 git-version = "0.3.9"
@@ -76,8 +78,15 @@ gix = { version = "0.66", default-features = false, features = [
   "revision",
 ] }
 handlebars = "6.3.2"
+httparse = "1.7"
+
+humantime = "2.1"
 itertools = "0.14.0"
+kanal = "0.1.0-pre8"
+lazy_static = "1.5.0"
+libc = "0.2.180"
 log = "0.4"
+md5 = "0.7"
 moka = { version = "0.12.0", features = ["future"] }
 # log = "0.4.27"
 nom = "7.1.3"
@@ -88,23 +97,36 @@ notify = "7.0.0"
 # git2 = { git="https://github.com/extrawurst/git2-rs.git", rev="fc13dcc", features = ["vendored-openssl"]}
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
 openssl-sys = { version = '0.9', optional = true }
+path-clean = "1.0.1"
 pretty_env_logger = "0.5"
+rand = "0.8.5"
 ratatui = { version = "0.29.0", features = ["serde"] }
 rayon = "1.10"
 rayon-core = "1.12"
 regex = "1.11.1"
+rkyv = "0.8"
+
+rocksdb = { workspace = true }
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = { version = "0.37.1" }
+rust-ini = "0.21.1"
 scopetime = { package = "gnostr-scopetime", path = "../scopetime", version = "1894.934224.276199" }
+sd-notify = "0.4.1"
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
+sha2 = "0.10.8"
+shellwords = "1.1.0"
 simdutf8 = "0.1.5"
 # serde = { version = "1.0.219", features = ["derive"] }
 similar = { version = "2.7.0", features = ["unicode", "inline"] }
 simple-logging = "2.0.2"
 ssh-key = { version = "0.6.6", features = ["crypto", "encryption"] }
 strip-ansi-escapes = "0.2.1"
+structopt = "0.3.26"
 tar = { version = "0.4", default-features = false }
 thiserror = "1.0"
 time = { version = "0.3", features = ["serde", "formatting"] }
+timeago = { version = "0.4.2", default-features = false }
 tiny_http = "0.12"
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"
@@ -128,34 +150,15 @@ tree-sitter-highlight = "0.23" ##check version
 tui-prompts = "0.5.0"
 unicode-segmentation = "1.12.0"
 unicode-truncate = "1.0"
+unix_mode = "0.1"
 url = "2.2.2"
 uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
 warp = "0.3"
 webbrowser = "0.8"
-const_format = "0.2"
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
-const-hex = "1.12"
-arc-swap = "1.7"
-rkyv = "0.8"
-httparse = "1.7"
-md5 = "0.7"
-rand = "0.8.5"
-clean-path = "0.2.1"
-expectrl = "0.8.0"
-futures = "0.3"
-kanal = "0.1.0-pre8"
-lazy_static = "1.5.0"
-libc = "0.2.180"
-path-clean = "1.0.1"
-russh = { version = "0.37.1", features = ["openssl"] }
-russh-keys = { version = "0.37.1" }
-sd-notify = "0.4.1"
-sha2 = "0.10.8"
-shellwords = "1.1.0"
-structopt = "0.3.26"
-unix_mode = "0.1"
 
+yoke = { version = "0.7.1", features = ["derive"] }
 
 [build-dependencies]
 anyhow = "1.0.100"
@@ -170,14 +173,14 @@ warp = "0.3"
 #cargo-insta = "1.43.1"
 criterion = "0.5.1"
 env_logger = "0.11"
+expectrl = "0.8.0"
 insta = "1.42.2"
 invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1894.934224.276199" }
 pretty_assertions = "1.4"
+reqwest = { version = "0.11", features = ["json"] }
 serial_test = "3.1"
 # pretty_assertions = "1.4.0"
 temp-dir = "0.1.13"
 tempfile = "3"
-unicode-width = "0.2.0"
-expectrl = "0.8.0"
-reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
+unicode-width = "0.2.0"
