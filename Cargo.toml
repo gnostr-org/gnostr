@@ -59,6 +59,11 @@ members = [
 ]
 [workspace.dependencies]
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
+handlebars = { version = "6.3.2" }
+warp = { version = "0.3" }
+tiny_http = { version = "0.12" }
+webbrowser = { version = "0.8" }
+pretty_env_logger = { version = "0.5" }
 
 [lib]
 name = "gnostr"
@@ -80,11 +85,15 @@ path = "src/bin/git-remote-gnostr.rs"
 name = "gnostr-crawler"
 path = "src/bin/gnostr-crawler.rs"
 
-
 [[bin]]
 name = "gnostr-gnit"
 path = "src/bin/gnostr-gnit.rs"
+
+[[bin]]
+name = "gnostr-web"
+path = "src/bin/gnostr-web.rs"
 required-features = ["gnostr-web"]
+
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit"]
@@ -112,6 +121,11 @@ gnostr-web = [
     "actix-web-actors",
     "rocket",
     "gnostr-asyncgit/gnostr_web",
+    "handlebars",
+    "warp",
+    "tiny_http",
+    "webbrowser",
+    "pretty_env_logger",
 ]
 # regex-* features are mutually exclusive.
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
@@ -130,6 +144,11 @@ actix-cors = { version = "0.7.0", optional = true }
 actix-http = { version = "3.9.0", optional = true }
 actix-web = { version = "4.9.0", optional = true }
 actix-web-actors = { version = "4.3.1", optional = true }
+handlebars = { workspace = true, optional = true }
+warp = { workspace = true, optional = true }
+tiny_http = { workspace = true, optional = true }
+webbrowser = { workspace = true, optional = true }
+pretty_env_logger = { workspace = true, optional = true }
 ## TYPES DEPS
 aes = "0.8"
 ansi_term = "0.12"

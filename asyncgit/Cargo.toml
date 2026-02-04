@@ -85,7 +85,7 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-handlebars = "6.3.2"
+handlebars = { workspace = true }
 httparse = "1.7"
 
 humantime = "2.1"
@@ -106,7 +106,7 @@ notify = "7.0.0"
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
 openssl-sys = { version = '0.9', optional = true }
 path-clean = "1.0.1"
-pretty_env_logger = "0.5"
+pretty_env_logger = { workspace = true }
 rand = "0.8.5"
 ratatui = { version = "0.29.0", features = ["serde"] }
 rayon = "1.10"
@@ -135,7 +135,7 @@ tar = { version = "0.4", default-features = false }
 thiserror = "1.0"
 time = { version = "0.3", features = ["serde", "formatting"] }
 timeago = { version = "0.4.2", default-features = false }
-tiny_http = "0.12"
+tiny_http = { workspace = true }
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"
 tokio-util = { version = "0.7.10", features = ["io"] }
@@ -162,8 +162,8 @@ unix_mode = "0.1"
 url = "2.2.2"
 uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
-warp = "0.3"
-webbrowser = "0.8"
+warp = { workspace = true }
+webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 
 yoke = { version = "0.7.1", features = ["derive"] }
