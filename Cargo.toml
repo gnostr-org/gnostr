@@ -65,6 +65,10 @@ name = "gnostr"
 path = "src/lib/mod.rs"
 
 [[bin]]
+name = "gnostr-crawler-service"
+path = "src/bin/gnostr-crawler-service.rs"
+
+[[bin]]
 name = "git-remote-nostr"
 path = "src/bin/git-remote-nostr/main.rs"
 
@@ -76,9 +80,11 @@ path = "src/bin/git-remote-gnostr.rs"
 name = "gnostr-crawler"
 path = "src/bin/gnostr-crawler.rs"
 
+
 [[bin]]
-name = "gnostr-crawler-service"
-path = "src/bin/gnostr-crawler-service.rs"
+name = "gnostr-gnit"
+path = "src/bin/gnostr-gnit.rs"
+required-features = ["gnostr-web"]
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit"]
@@ -105,6 +111,7 @@ gnostr-web = [
     "actix-web",
     "actix-web-actors",
     "rocket",
+    "gnostr-asyncgit/gnostr_web",
 ]
 # regex-* features are mutually exclusive.
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
