@@ -27,14 +27,18 @@ static BLACKLISTED_MODULES: &[&str] = &[
     "mint",
     "hare",
     "wren",
+    "vhdl",
     // doesn't compile on macos
-    "gemini",
+    // "gemini",
 ];
 
 fn main() -> anyhow::Result<()> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
+    println!("out_dir={}", &out_dir.display());
 
     let root = std::env::var("TREE_SITTER_GRAMMAR_LIB_DIR").ok();
+    println!("root={:?}", &root);
+
     println!("cargo::rerun-if-env-changed=TREE_SITTER_GRAMMAR_LIB_DIR");
 
     let (root, dylib) = if let Some(root) = root.as_deref() {
