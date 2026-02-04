@@ -29,7 +29,7 @@ static BLACKLISTED_MODULES: &[&str] = &[
     "wren",
     "vhdl",
     // doesn't compile on macos
-    // "gemini",
+    "gemini",
 ];
 
 fn main() -> anyhow::Result<()> {
