@@ -5219,7 +5219,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1894.934259.231324-test"
+version = "1893.935010.246953"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -5455,7 +5455,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "anyhow",
  "arboard",
