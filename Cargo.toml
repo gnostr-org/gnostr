@@ -54,6 +54,7 @@ members = [
     "legit",
     "qr",
     "relay",
+    "relay/extensions",
     "scopetime",
 ]
 [workspace.dependencies]
@@ -95,7 +96,7 @@ path = "src/bin/gnostr-web.rs"
 required-features = ["gnostr-web"]
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit", "gnostr-web"]
+default = ["ghemoji", "regex-fancy", "trace-libgit"]
 expensive_tests = [] #nostr
 ghemoji = ["gh-emoji"]
 gnostr-web = [
@@ -255,7 +256,7 @@ gnostr-asyncgit = { version = "1893.935010.246953", default-features = false, pa
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
 gnostr-legit = { version = "1894.934224.276199", path = "legit" }
 #gnostr-query = { version = "1894.934224.276199", path = "query" }
-gnostr-relay = { version = "1894.934224.276199", path = "relay" }
+gnostr-relay = { version = "1894.934224.276199", path = "relay", default-features = false }
 gnostr_qr = { version = "1894.934224.276199", path = "qr" }
 handlebars = { workspace = true, optional = true }
 hex = "0.4.3"
