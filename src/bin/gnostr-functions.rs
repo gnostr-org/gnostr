@@ -1,7 +1,6 @@
 use std::{
     env,
-    fs,
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::Command,
 };
 
@@ -62,10 +61,10 @@ fn rustup_clean() {
         Ok(output) => {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                let toolchains: Vec<&str> = stdout
+                let toolchains: Vec<String> = stdout
                     .lines()
                     .filter_map(|line| {
-                        let trimmed_line = line.replace("(active,", "").replace("default", "").trim();
+                        let trimmed_line = line.replace("(active,", "").replace("default", "").trim().to_string();
                         if !trimmed_line.is_empty() {
                             Some(trimmed_line)
                         } else {
@@ -86,7 +85,7 @@ fn rustup_clean() {
                     let uninstall_output = Command::new("rustup")
                         .arg("toolchain")
                         .arg("uninstall")
-                        .arg(toolchain)
+                        .arg(&toolchain)
                         .output();
 
                     match uninstall_output {
@@ -250,7 +249,7 @@ fn bitcoin_make_depends() {
     println!("bitcoin-make-depends completed.");
 }
 
-fn bitcoin_dl_install_depends() {
+fn cargo_dl_install_depends() {
     println!("Running bitcoin-dl-install-depends...");
 
     let os_type = env::var("OSTYPE").unwrap_or_default();
@@ -270,10 +269,10 @@ fn bitcoin_dl_install_depends() {
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
                 brew install wget curl autoconf automake berkeley-db4 libtool boost miniupnpc pkg-config python qt libevent qrencode librsvg
             fi
-            # The original script had pushd/popd and repeated make/configure commands
-            # which indicates it expects to be run from specific directories like ~/gui or ~/bitcoin.
-            # For simplicity in a single Rust binary, we assume it's run from the project root
-            # or that paths are relative to where the binary is executed. Adjust paths if necessary.
+            // The original script had pushd/popd and repeated make/configure commands
+            // which indicates it expects to be run from specific directories like ~/gui or ~/bitcoin.
+            // For simplicity in a single Rust binary, we assume it's run from the project root
+            // or that paths are relative to where the binary is executed. Adjust paths if necessary.
             make download install -C depends
             ./autogen.sh && ./configure --disable-tests && make download install -C depends
         "#
@@ -287,6 +286,55 @@ fn bitcoin_dl_install_depends() {
     } else {
         println!("bitcoin-dl-install-depends completed.");
     }
+}
+
+fn cargo_clean_r() {
+    println!("Running cargo-clean-r...");
+    let original_dir = env::current_dir().expect("Failed to get current directory");
+
+    match fs::read_dir(".") {
+        Ok(entries) => {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let dir_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                        // Only process if it looks like a repo directory (not . or .. or target/)
+                        if dir_name != "." && dir_name != ".." && dir_name != "target" {
+                            println!("Entering directory: {}", path.display());
+                            if let Err(e) = env::set_current_dir(&path) {
+                                eprintln!("Failed to change directory to {}: {}", path.display(), e);
+                                continue;
+                            }
+
+                            let status = Command::new("cargo")
+                                .arg("clean")
+                                .output();
+
+                            match status {
+                                Ok(output) => {
+                                    if !output.status.success() {
+                                        eprintln!("cargo clean failed in {}: {}\n{}", path.display(), String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+                                    } else {
+                                        println!("cargo clean successful in {}.", path.display());
+                                    }
+                                }
+                                Err(e) => eprintln!("Failed to execute cargo clean in {}: {}", path.display(), e),
+                            }
+
+                            // Change back to the original directory
+                            if let Err(e) = env::set_current_dir(&original_dir) {
+                                eprintln!("Failed to change back to original directory: {}", e);
+                                // Critical error, might need to panic or exit
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => eprintln!("Failed to read current directory: {}", e),
+    }
+    println!("cargo-clean-r completed.");
 }
 
 fn main() {
