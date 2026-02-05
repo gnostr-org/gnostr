@@ -338,6 +338,85 @@ fn cargo_clean_r() {
     println!("cargo-clean-r completed.");
 }
 
+fn cargo_sweep_r(args: &[String]) {
+    println!("Running cargo-sweep-r...");
+    let original_dir = env::current_dir().expect("Failed to get current directory");
+
+    let time_arg = args.get(0).map_or("1", |s| s.as_str());
+
+    match fs::read_dir(".") {
+        Ok(entries) => {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let dir_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                        // Only process if it looks like a repo directory (not . or .. or target/)
+                        if dir_name != "." && dir_name != ".." && dir_name != "target" {
+                            println!("Entering directory: {}", path.display());
+                            if let Err(e) = env::set_current_dir(&path) {
+                                eprintln!("Failed to change directory to {}: {}", path.display(), e);
+                                continue;
+                            }
+
+                            // Remove .deps
+                            let _ = fs::remove_dir_all(".deps");
+                            // Remove .venv
+                            let _ = fs::remove_dir_all(".venv");
+                            // Remove rust-toolchain.toml
+                            let _ = fs::remove_file("rust-toolchain.toml");
+
+                            let status_clean = Command::new("cargo")
+                                .arg("clean")
+                                .output();
+
+                            match status_clean {
+                                Ok(output) => {
+                                    if !output.status.success() {
+                                        eprintln!("cargo clean failed in {}: {}\n{}", path.display(), String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+                                    } else {
+                                        println!("cargo clean successful in {}.", path.display());
+                                    }
+                                }
+                                Err(e) => eprintln!("Failed to execute cargo clean in {}: {}", path.display(), e),
+                            }
+
+                            let status_sweep = Command::new("cargo")
+                                .arg("sweep")
+                                .arg("-v")
+                                .arg("-t")
+                                .arg(time_arg)
+                                .output();
+
+                            match status_sweep {
+                                Ok(output) => {
+                                    if !output.status.success() {
+                                        eprintln!("cargo sweep failed in {}: {}\n{}", path.display(), String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+                                    } else {
+                                        println!("cargo sweep successful in {}.", path.display());
+                                    }
+                                }
+                                Err(e) => eprintln!("Failed to execute cargo sweep in {}: {}", path.display(), e),
+                            }
+
+                            // Change back to the original directory
+                            if let Err(e) = env::set_current_dir(&original_dir) {
+                                eprintln!("Failed to change back to original directory: {}", e);
+                                // Critical error, might need to panic or exit
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => eprintln!("Failed to read current directory: {}", e),
+    }
+
+    // rm-rf-node_modules || true - this part is separate in the bash script, will implement as a separate Rust function
+
+    println!("cargo-sweep-r completed.");
+}
+
 fn iftop() {
     println!("Running iftop. Press Ctrl+C to exit.");
     let status = Command::new("iftop")
@@ -415,6 +494,7 @@ fn main() {
             "bitcoin-make-depends" => bitcoin_make_depends(),
             "bitcoin-dl-install-depends" => cargo_dl_install_depends(),
             "cargo-clean-r" => cargo_clean_r(),
+            "cargo-sweep-r" => cargo_sweep_r(&args[2..]),
             _ => {
                 println!("gnostr-functions binary will contain Rust equivalents of bash functions.");
                 println!("Usage:");
@@ -434,6 +514,7 @@ fn main() {
                 println!("  gnostr-functions bitcoin-make-depends");
                 println!("  gnostr-functions bitcoin-dl-install-depends");
                 println!("  gnostr-functions cargo-clean-r");
+                println!("  gnostr-functions cargo-sweep-r <time>");
             }
         }
     } else {
