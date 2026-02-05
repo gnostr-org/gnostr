@@ -382,7 +382,7 @@ const w2locale = {
     }
 }
 /* mQuery 0.7 (nightly) (10/10/2022, 11:30:36 AM), vitmalina@gmail.com */
-class Query {
+class W2uiQuery {
     static version = 0.7
     constructor(selector, context, previous) {
         this.context = context ?? document
