@@ -374,5 +374,5 @@
   const IMG_GNOSTR = "/gnostr-{{ crate::GNOSTR_SVG_HASH.get().unwrap() }}.svg"
   const IMG_GNOSTR_NOTIF = "/gnostr_notif-{{ crate::GNOSTR_NOTIF_SVG_HASH.get().unwrap() }}.svg"
 </script>
-<script defer src="/js-{{ crate::JS_BUNDLE_HASH.get().unwrap() }}.js"></script>
+<script defer type="module" src="/js-{{ crate::JS_BUNDLE_HASH.get().unwrap() }}.js"></script>
 {% endblock %}

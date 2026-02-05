@@ -31,6 +31,10 @@ path = "src/bin/git_tui.rs"
 name = "gnostr_web"
 path = "src/bin/gnostr_web.rs"
 
+[[bin]]
+name = "gnostr_nip34"
+path = "src/bin/gnostr_nip34.rs"
+
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
@@ -47,7 +51,7 @@ arc-swap = "1.7"
 
 askama = { version = "0.12.0", default-features = false }
 async-trait = "0.1.68"
-axum = { version = "0.7", features = ["query", "tokio", "http1"] }
+axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
 #anyhow = "1.0"
 bitflags = "2"
 bytes = "1.5"
