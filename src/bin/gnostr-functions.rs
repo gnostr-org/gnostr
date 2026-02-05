@@ -338,19 +338,61 @@ fn cargo_clean_r() {
     println!("cargo-clean-r completed.");
 }
 
-// Placeholder function for 'iftop'
 fn iftop() {
-    eprintln!("Error: `iftop` function is not implemented.");
+    println!("Running iftop. Press Ctrl+C to exit.");
+    let status = Command::new("iftop")
+        .status();
+
+    match status {
+        Ok(s) if s.success() => println!("iftop executed successfully."),
+        Ok(s) => eprintln!("iftop exited with status: {}", s),
+        Err(e) => eprintln!("Failed to execute iftop: {}. Please ensure iftop is installed and in your PATH.", e),
+    }
+    println!("iftop completed.");
 }
 
-// Placeholder function for 'install_gnumakefile'
 fn install_gnumakefile() {
-    eprintln!("Error: `install_gnumakefile` function is not implemented.");
+    println!("Running install-gnumakefile...");
+
+    let output = Command::new("which").arg("gmake").output();
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                println!("GNU Make (gmake) is already installed: {}", String::from_utf8_lossy(&output.stdout).trim());
+                println!("install-gnumakefile completed.");
+                return;
+            }
+        }
+        Err(e) => eprintln!("Failed to execute 'which gmake': {}", e),
+    }
+
+    let output = Command::new("which").arg("make").output();
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                println!("Make is installed: {}", String::from_utf8_lossy(&output.stdout).trim());
+            }
+        }
+        Err(e) => eprintln!("Failed to execute 'which make': {}", e),
+    }
+
+    eprintln!("GNU Make (gmake) not found. On macOS, you can install it via Homebrew: brew install gnu-make");
+    println!("install-gnumakefile completed.");
 }
 
-// Placeholder function for 'bitcoin_autogen'
 fn bitcoin_autogen() {
-    eprintln!("Error: `bitcoin_autogen` function is not implemented.");
+    println!("Running bitcoin-autogen (./autogen.sh)...");
+    let status = Command::new("sh")
+        .arg("-c")
+        .arg("./autogen.sh")
+        .status();
+
+    match status {
+        Ok(s) if s.success() => println!("./autogen.sh executed successfully."),
+        Ok(s) => eprintln!("./autogen.sh exited with status: {}", s),
+        Err(e) => eprintln!("Failed to execute ./autogen.sh: {}. Please ensure the script exists and is executable.", e),
+    }
+    println!("bitcoin-autogen completed.");
 }
 
 fn main() {
@@ -372,6 +414,7 @@ fn main() {
             "bitcoin-make-appbundle" => bitcoin_make_appbundle(),
             "bitcoin-make-depends" => bitcoin_make_depends(),
             "bitcoin-dl-install-depends" => cargo_dl_install_depends(),
+            "cargo-clean-r" => cargo_clean_r(),
             _ => {
                 println!("gnostr-functions binary will contain Rust equivalents of bash functions.");
                 println!("Usage:");
@@ -390,6 +433,7 @@ fn main() {
                 println!("  gnostr-functions bitcoin-make-appbundle");
                 println!("  gnostr-functions bitcoin-make-depends");
                 println!("  gnostr-functions bitcoin-dl-install-depends");
+                println!("  gnostr-functions cargo-clean-r");
             }
         }
     } else {
