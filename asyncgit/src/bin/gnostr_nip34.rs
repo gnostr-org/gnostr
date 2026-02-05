@@ -1,5 +1,10 @@
 
-use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
+use std::{
+    future::IntoFuture,
+    net::SocketAddr,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 use anyhow::Context;
 use axum::{
@@ -46,12 +51,15 @@ use gnostr_asyncgit::web::{
 };
 use tokio::net::TcpListener;
 use tokio::sync::broadcast;
+use tokio::time::{interval, sleep};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message as WsMessage};
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 use tower_layer::layer_fn;
 use tracing::info;
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
+use url::Url;
 
 // WebSocket handler function
 async fn ws_handler(
@@ -110,6 +118,78 @@ async fn handle_socket(socket: WebSocket, tx: broadcast::Sender<String>) {
     }
 
     info!("WebSocket connection closed");
+}
+
+async fn ping_nostr_relay(relay_url: &str) {
+    info!("Pinging relay: {}", relay_url);
+    let start_time = Instant::now();
+
+    let url = match Url::parse(relay_url) {
+        Ok(url) => url,
+        Err(e) => {
+            info!("Failed to parse relay URL {}: {}", relay_url, e);
+            return;
+        }
+    };
+
+    let (mut ws_stream, _response) = if let Ok((stream, response)) = connect_async(url).await {
+        info!(
+            "Connected to relay {} in {:?}",
+            relay_url,
+            start_time.elapsed()
+        );
+        (stream, response)
+    } else {
+        info!("Failed to connect to relay {}", relay_url);
+        return;
+    };
+
+    // Send a REQ for a single event to test responsiveness
+    let req_id = "test_ping";
+    let req_message = format!(
+        r#"["REQ", "{}", {{"limit": 1}}]"#,
+        req_id
+    );
+    match ws_stream.send(WsMessage::Text(req_message)).await {
+        Ok(_) => info!("Sent REQ to {}", relay_url),
+        Err(e) => {
+            info!("Failed to send REQ to {}: {}", relay_url, e);
+            let _ = ws_stream.close(None).await;
+            return;
+        }
+    }
+
+    // Wait for an EOSE or an EVENT message for up to 5 seconds
+    let ping_timeout = Duration::from_secs(5);
+    let response_start_time = Instant::now();
+    let mut received_response = false;
+
+    tokio::select! {
+        _ = sleep(ping_timeout) => {
+            info!("Relay {} timed out after {:?} waiting for response", relay_url, ping_timeout);
+        }
+        message = ws_stream.next() => {
+            if let Some(Ok(msg)) = message {
+                match msg {
+                    WsMessage::Text(text) => {
+                        if text.contains("EOSE") || text.contains("EVENT") {
+                            info!("Relay {} responded in {:?}", relay_url, response_start_time.elapsed());
+                            received_response = true;
+                        }
+                    }
+                    _ => {},
+                }
+            }
+        }
+    }
+
+    if !received_response {
+        info!("Relay {} did not send a valid Nostr event/EOSE within {:?}", relay_url, ping_timeout);
+    }
+
+    // Close the connection gracefully
+    let _ = ws_stream.close(None).await;
+    info!("Closed connection to relay {}", relay_url);
 }
 
 async fn run_as_service() -> Result<(), anyhow::Error> {
@@ -278,6 +358,27 @@ async fn main() -> Result<(), anyhow::Error> {
     info!("Server starting up...");
 
     let (tx, _rx) = broadcast::channel::<String>(100);
+
+    // Define the list of relays to ping
+    let relays_to_ping = Arc::new(vec![
+        "wss://relay.nostr.band".to_string(),
+        "ws://relay.gnostr.org".to_string(),
+        "wss://relay.snort.social".to_string(),
+        "wss://nos.lol".to_string(),
+        "ws://127.0.0.1:8080".to_string(), // Local relay for testing
+    ]);
+
+    // Spawn a background task for relay pinging
+    let relay_pinger_task = tokio::spawn(async move {
+        let mut interval = interval(Duration::from_secs(30)); // Ping every 30 seconds
+        loop {
+            interval.tick().await;
+            info!("Initiating relay pings...");
+            for relay_url in relays_to_ping.iter() {
+                ping_nostr_relay(relay_url).await;
+            }
+        }
+    });
 
     #[allow(deprecated)]
     let app = Router::new()
@@ -559,6 +660,10 @@ async fn main() -> Result<(), anyhow::Error> {
     tokio::select! {
         res = server => res.context("failed to run server"),
         res = indexer_wakeup_task => res.context("failed to run indexer"),
+        _ = relay_pinger_task => {
+            info!("Relay pinger task finished unexpectedly");
+            Ok(())
+        }, // Handle pinger task completion
         _ = tokio::signal::ctrl_c() => {
             info!("Received ctrl-c, shutting down");
             Ok(())
