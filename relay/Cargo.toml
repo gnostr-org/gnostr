@@ -12,6 +12,7 @@ keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
 categories = ["network-programming", "web-programming"]
 
 [features]
+default = []
 search = ["nostr-db/search"]
 
 [dependencies]
