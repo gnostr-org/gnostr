@@ -2,6 +2,7 @@ use std::{
     env,
     path::PathBuf,
     process::Command,
+    fs,
 };
 
 fn pathappend(args: &[String]) {
@@ -337,6 +338,21 @@ fn cargo_clean_r() {
     println!("cargo-clean-r completed.");
 }
 
+// Placeholder function for 'iftop'
+fn iftop() {
+    eprintln!("Error: `iftop` function is not implemented.");
+}
+
+// Placeholder function for 'install_gnumakefile'
+fn install_gnumakefile() {
+    eprintln!("Error: `install_gnumakefile` function is not implemented.");
+}
+
+// Placeholder function for 'bitcoin_autogen'
+fn bitcoin_autogen() {
+    eprintln!("Error: `bitcoin_autogen` function is not implemented.");
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
@@ -349,13 +365,13 @@ fn main() {
             "iftop" => iftop(),
             "install-gnumakefile" => install_gnumakefile(),
             "bitcoin-autogen" => bitcoin_autogen(),
-            "bitcoin-configure-disable-tests-bench-fuzz" => bitcoin_configure_disable_tests_bench_fuzz(),
-            "bitcoin-configure-disable-wallet-tests-bench-fuzz" => bitcoin_configure_disable_wallet_tests_bench_fuzz(),
+            "bitcoin-configure-disable-tests-bench-fuzz" => bitcoin_configure_disable_tests_bench(),
+            "bitcoin-configure-disable-wallet-tests-bench-fuzz" => bitcoin_configure_disable_wallet_tests_bench(),
             "bitcoin-configure-disable-wallet-tests-bench" => bitcoin_configure_disable_wallet_tests_bench(),
             "bitcoin-configure-disable-tests-bench" => bitcoin_configure_disable_tests_bench(),
             "bitcoin-make-appbundle" => bitcoin_make_appbundle(),
             "bitcoin-make-depends" => bitcoin_make_depends(),
-            "bitcoin-dl-install-depends" => bitcoin_dl_install_depends(),
+            "bitcoin-dl-install-depends" => cargo_dl_install_depends(),
             _ => {
                 println!("gnostr-functions binary will contain Rust equivalents of bash functions.");
                 println!("Usage:");
