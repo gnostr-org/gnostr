@@ -51,7 +51,6 @@ members = [
     "git2-testing",
     "grammar",
     "invalidstring",
-    "js",
     "legit",
     "qr",
     "relay",
