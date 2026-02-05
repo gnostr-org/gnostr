@@ -34,10 +34,32 @@ fn run() -> anyhow::Result<()> {
     build_scss(paths).context("Failed to build CSS stylesheets")?;
     build_js(paths).context("Failed to build JS bundle")?;
 
+
+    //
+    let manifest_dir =
+        PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
+    let statics_in_dir = manifest_dir;
+
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
+    //
+    let out_dir = Path::new(".");
+    let statics_out_dir = out_dir;
+
+    let paths = Paths {
+        statics_in_dir: &statics_in_dir,
+        statics_out_dir: &statics_out_dir,
+    };
+
+    build_scss(paths).context("Failed to build CSS stylesheets")?;
+    build_js(paths).context("Failed to build JS bundle")?;
+
+    println!("cargo:rerun-if-changed=build.rs");
     Ok(())
 }
 
 fn build_scss(paths: Paths) -> anyhow::Result<()> {
+
+    //gnostr-gnit
     let in_dir = paths.statics_in_dir.join("src/lib/sass");
     let out_dir = paths.statics_out_dir.join("src/lib/css");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory")?;
@@ -46,6 +68,27 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
 
     let input_file = in_dir.join("style.scss");
     let output_file = out_dir.join("style.css");
+    let format = rsass::output::Format {
+        style: rsass::output::Style::Compressed,
+        ..rsass::output::Format::default()
+    };
+
+    let output_content =
+        rsass::compile_scss_path(&input_file, format).context("Failed to compile SASS")?;
+
+    let mut output_file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(output_file)
+        .context("Failed to open output file")?;
+    output_file
+        .write_all(&output_content)
+        .context("Failed to write compiled CSS to output")?;
+
+    //gnostr-web
+    let input_file = in_dir.join("nostr-styles.scss");
+    let output_file = out_dir.join("styles.css");
     let format = rsass::output::Format {
         style: rsass::output::Style::Compressed,
         ..rsass::output::Format::default()
@@ -136,6 +179,8 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
     output_file
         .write_all(all_js_content.as_bytes())
         .context("Failed to write compiled JS bundle to output")?;
+
+    //We output to CARGO_MANIFEST_DIR/src/lib/js/ also
 
     Ok(())
 }
