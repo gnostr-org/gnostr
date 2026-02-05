@@ -547,6 +547,7 @@ fn main() {
             "cargo-clean-r" => cargo_clean_r(),
             "cargo-sweep-r" => cargo_sweep_r(&args[2..]),
             "rm-rf-node_modules" => rm_rf_node_modules(),
+            "git-fetch-all" => git_fetch_all(),
             _ => {
                 println!("gnostr-functions binary will contain Rust equivalents of bash functions.");
                 println!("Usage:");
@@ -568,6 +569,7 @@ fn main() {
                 println!("  gnostr-functions cargo-clean-r");
                 println!("  gnostr-functions cargo-sweep-r <time>");
                 println!("  gnostr-functions rm-rf-node_modules");
+                println!("  gnostr-functions git-fetch-all");
             }
         }
     } else {
