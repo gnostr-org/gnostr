@@ -97,12 +97,16 @@ pub async fn broadcast_textnote(
 
     let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
     let event = signer.sign_event(pre_event)?;
+    if sub_command_args.verbose {
+        println!("{}", event.clone());
+    }
 
     // Publish event
     let event_id = client.send_event(event).await?;
 
     if sub_command_args.hex {
-        print!("{{\"id\":\"{}\"}}", event_id.as_hex_string());
+        // print!("{{\"id\":\"{}\"}}", event_id.as_hex_string());
+        print!("{}", event_id.as_hex_string());
     } else {
         print!("{{\"id\":\"{}\"}}", event_id.as_bech32_string());
     }
