@@ -446,6 +446,28 @@ fn rm_rf_node_modules() {
     println!("rm-rf-node_modules completed.");
 }
 
+fn git_fetch_all() {
+    println!("Running git-fetch-all (git fetch --all)...");
+    let status = Command::new("git")
+        .arg("fetch")
+        .arg("--all")
+        .output(); // Use output to capture stderr and stdout
+
+    match status {
+        Ok(output) => {
+            if output.status.success() {
+                println!("git fetch --all executed successfully.");
+            } else {
+                eprintln!("git fetch --all exited with error:\nStdout: {}\nStderr: {}",
+                            String::from_utf8_lossy(&output.stdout),
+                            String::from_utf8_lossy(&output.stderr));
+            }
+        }
+        Err(e) => eprintln!("Failed to execute git fetch --all: {}", e),
+    }
+    println!("git-fetch-all completed.");
+}
+
 fn iftop() {
     println!("Running iftop. Press Ctrl+C to exit.");
     let status = Command::new("iftop")
