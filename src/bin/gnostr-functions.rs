@@ -417,6 +417,35 @@ fn cargo_sweep_r(args: &[String]) {
     println!("cargo-sweep-r completed.");
 }
 
+fn rm_rf_node_modules() {
+    println!("Running rm-rf-node_modules...");
+
+    match fs::read_dir(".") {
+        Ok(entries) => {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let dir_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                        // Check if it's a directory that might contain node_modules
+                        if dir_name != "." && dir_name != ".." && dir_name != "target" {
+                            let node_modules_path = path.join("node_modules");
+                            if node_modules_path.is_dir() {
+                                println!("Removing {}", node_modules_path.display());
+                                if let Err(e) = fs::remove_dir_all(&node_modules_path) {
+                                    eprintln!("Failed to remove {}: {}", node_modules_path.display(), e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => eprintln!("Failed to read current directory: {}", e),
+    }
+    println!("rm-rf-node_modules completed.");
+}
+
 fn iftop() {
     println!("Running iftop. Press Ctrl+C to exit.");
     let status = Command::new("iftop")
@@ -495,6 +524,7 @@ fn main() {
             "bitcoin-dl-install-depends" => cargo_dl_install_depends(),
             "cargo-clean-r" => cargo_clean_r(),
             "cargo-sweep-r" => cargo_sweep_r(&args[2..]),
+            "rm-rf-node_modules" => rm_rf_node_modules(),
             _ => {
                 println!("gnostr-functions binary will contain Rust equivalents of bash functions.");
                 println!("Usage:");
@@ -515,6 +545,7 @@ fn main() {
                 println!("  gnostr-functions bitcoin-dl-install-depends");
                 println!("  gnostr-functions cargo-clean-r");
                 println!("  gnostr-functions cargo-sweep-r <time>");
+                println!("  gnostr-functions rm-rf-node_modules");
             }
         }
     } else {
