@@ -35,23 +35,6 @@ fn run() -> anyhow::Result<()> {
     build_js(paths).context("Failed to build JS bundle")?;
 
 
-    //
-    let manifest_dir =
-        PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
-    let statics_in_dir = manifest_dir;
-
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
-    //
-    let out_dir = Path::new(".");
-    let statics_out_dir = out_dir;
-
-    let paths = Paths {
-        statics_in_dir: &statics_in_dir,
-        statics_out_dir: &statics_out_dir,
-    };
-
-    build_scss(paths).context("Failed to build CSS stylesheets")?;
-    build_js(paths).context("Failed to build JS bundle")?;
 
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
