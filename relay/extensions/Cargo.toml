@@ -12,7 +12,7 @@ keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
 categories = ["network-programming", "web-programming"]
 
 [features]
-default = ["metrics", "rate_limiter", "count", "search"]
+default = ["metrics", "rate_limiter", "count"]
 search = ["gnostr-relay/search"]
 metrics = ["metrics-exporter-prometheus", "metrics-util"]
 rate_limiter = ["governor"]
@@ -20,8 +20,8 @@ count = []
 
 [dependencies]
 actix = "0.13.5"
-actix-web = "4.9.0"
-gnostr-relay = { version = "1895.933117.678085", path = "..", features = [
+actix-web = "4.9.0" ## part of gnostr tokio runtime conflict
+gnostr-relay = { version = "1894.934224.276199", path = "..", features = [
   "search",
 ] }
 governor = { version = "0.6.3", optional = true }
@@ -38,7 +38,7 @@ tracing = "0.1.40"
 uuid = { version = "1.10.0", features = ["v4", "fast-rng"] }
 
 [dev-dependencies]
-actix-rt = "2.10.0"
+actix-rt = "2.10.0" ## part of gnostr tokio runtime conflict
 actix-test = "0.1.5"
 actix-web-actors = "4.3.1"
 anyhow = "1.0.86"
