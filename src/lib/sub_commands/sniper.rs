@@ -1,6 +1,7 @@
 use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::fs::{self, File};
 use std::{
     io::{self, BufRead, BufReader, Write},
@@ -25,6 +26,55 @@ fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
     BufReader::new(fs::File::open(filename)?).lines().collect()
 }
 
+/// Create a HashSet of blocked relay domains for O(1) lookup performance
+fn create_blocklist() -> HashSet<&'static str> {
+    let mut blocklist = HashSet::with_capacity(40);
+    blocklist.insert("monad.jb55.com");
+    blocklist.insert("onlynotes");
+    blocklist.insert("archives");
+    blocklist.insert("relay.siamstr.com");
+    blocklist.insert("no.str");
+    blocklist.insert("multiplexer.huszonegy.world");
+    blocklist.insert("relay.0xchat.com");
+    blocklist.insert("snort.social");
+    blocklist.insert("mguy");
+    blocklist.insert("stoner.com");
+    blocklist.insert("nostr.nodeofsven.com");
+    blocklist.insert("nvote.co");
+    blocklist.insert("utxo");
+    blocklist.insert("relay.lexingtonbitcoin.org");
+    blocklist.insert("nostr.info");
+    blocklist.insert("nostr.band");
+    blocklist.insert("bitcoin.ninja");
+    blocklist.insert("brb.io");
+    blocklist.insert("nbo.angani.co");
+    blocklist.insert("nostr.relayer.se");
+    blocklist.insert("relay.nostr.nu");
+    blocklist.insert("knostr.neutrine.com");
+    blocklist.insert("nostr.easydns.ca");
+    blocklist.insert("relay.nostrgraph.net");
+    blocklist.insert("gruntwerk.org");
+    blocklist.insert("nostr.noones.com");
+    blocklist.insert("relay.nonce.academy");
+    blocklist.insert("relay.r3d.red");
+    blocklist.insert("nostr.bitcoiner.social");
+    blocklist.insert("btc.klendazu.com");
+    blocklist.insert("vulpem.com");
+    blocklist.insert("bch.ninja");
+    blocklist.insert("sg.qemura.xyz");
+    blocklist.insert("relay.schnitzel.world");
+    blocklist.insert("nostr.datamagik.com");
+    blocklist.insert("nostrid");
+    blocklist.insert("damus.io");
+    blocklist.insert(".local");
+    blocklist
+}
+
+/// Check if a URL contains any blocked domain
+fn is_url_blocked(url: &str, blocklist: &HashSet<&str>) -> bool {
+    blocklist.iter().any(|blocked| url.contains(blocked))
+}
+
 #[derive(Parser, Debug, Clone)]
 pub struct SniperArgs {
     /// The minimum NIP version to filter relays by.
@@ -39,9 +89,12 @@ pub struct SniperArgs {
 pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Error>> {
     let relays = load_file("relays.yaml").unwrap();
     let client = reqwest::Client::new();
+    let blocklist = create_blocklist();
+    
     let bodies = stream::iter(relays)
         .map(|url| {
             let client = &client;
+            let blocklist = &blocklist;
             let _nip_lower = args.nip_lower; // Capture nip_lower from args
             async move {
                 let resp = client
@@ -51,50 +104,9 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
                     .await?;
                 let text = resp.text().await?;
 
-                let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
+                // Avoid cloning - move url ownership into the result
+                let r: Result<(String, String), reqwest::Error> = Ok((url, text));
 
-                //shitlist - This filtering logic should ideally be configurable or more robust.
-                if !url.contains("monad.jb55.com")
-                    && !url.contains("onlynotes")
-                    && !url.contains("archives")
-                    && !url.contains("relay.siamstr.com")
-                    && !url.contains("no.str")
-                    && !url.contains("multiplexer.huszonegy.world")
-                    && !url.contains("relay.0xchat.com")
-                    && !url.contains("snort.social")
-                    && !url.contains("mguy")
-                    && !url.contains("stoner.com")
-                    && !url.contains("nostr.nodeofsven.com")
-                    && !url.contains("nvote.co")
-                    && !url.contains("utxo")
-                    && !url.contains("relay.lexingtonbitcoin.org")
-                    && !url.contains("nostr.info")
-                    && !url.contains("nostr.band")
-                    && !url.contains("bitcoin.ninja")
-                    && !url.contains("brb.io")
-                    && !url.contains("nbo.angani.co")
-                    && !url.contains("nostr.relayer.se")
-                    && !url.contains("relay.nostr.nu")
-                    && !url.contains("knostr.neutrine.com")
-                    && !url.contains("nostr.easydns.ca")
-                    && !url.contains("relay.nostrgraph.net")
-                    && !url.contains("gruntwerk.org")
-                    && !url.contains("nostr.noones.com")
-                    && !url.contains("relay.nonce.academy")
-                    && !url.contains("relay.r3d.red")
-                    && !url.contains("nostr.bitcoiner.social")
-                    && !url.contains("btc.klendazu.com")
-                    && !url.contains("vulpem.com")
-                    && !url.contains("bch.ninja")
-                    && !url.contains("sg.qemura.xyz")
-                    && !url.contains("relay.schnitzel.world")
-                    && !url.contains("nostr.datamagik.com")
-                    && !url.contains("nostrid")
-                    && !url.contains("damus.io")
-                    && !url.contains(".local")
-                {
-                    //we want a view of the network
-                }
                 r
             }
         })
@@ -103,6 +115,11 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
     bodies
         .for_each(|b| async {
             if let Ok((url, json)) = b {
+                // Skip blocked relays using efficient HashSet lookup
+                if is_url_blocked(&url, &blocklist) {
+                    return;
+                }
+                
                 let data: Result<Relay, _> = serde_json::from_str(&json);
                 if let Ok(relay_info) = data {
                     for n in &relay_info.supported_nips {
