@@ -1129,7 +1129,7 @@ impl Session {
     pub fn unpause(self: &Arc<Self>, handle: &ManagedTorrentHandle) -> anyhow::Result<()> {
         let peer_rx = self.make_peer_rx(
             handle.info_hash(),
-            handle.info().trackers.clone().into_iter().collect(),
+            handle.info().trackers.iter().cloned().collect(),
             self.tcp_listen_port,
             handle.info().options.force_tracker_interval,
         )?;
