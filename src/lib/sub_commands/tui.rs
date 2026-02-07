@@ -268,7 +268,7 @@ pub async fn tui(
     let key_config = KeyConfig::init()
         .map_err(|e| eprintln!("KeyConfig loading error: {e}"))
         .unwrap_or_default();
-    let theme = Theme::init(&sub_command_args.theme.clone().unwrap());
+    let theme = Theme::init(sub_command_args.theme.as_ref().unwrap());
 
     setup_terminal()?;
     defer! {
@@ -329,9 +329,10 @@ pub async fn tui(
     let _ = subscriber.try_init();
     debug!("\n{:?}\n", &sub_command_args);
 
-    if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
+    if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.is_some()
     {
-        let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+        // Use as_ref to avoid cloning - only take a reference
+        let keys = Keys::parse(sub_command_args.nsec.as_ref().unwrap()).unwrap();
         debug!(
             "{{\"private_key\":\"{}\"}}",
             keys.secret_key().display_secret()

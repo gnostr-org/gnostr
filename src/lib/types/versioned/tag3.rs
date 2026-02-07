@@ -40,17 +40,17 @@ impl TagV3 {
 
     /// Set the string at the given index
     pub fn set_index(&mut self, index: usize, value: String) {
-        while self.0.len() <= index {
-            self.0.push("".to_owned());
+        if self.0.len() <= index {
+            // Pre-allocate to avoid multiple push operations
+            self.0.resize(index + 1, String::new());
         }
         self.0[index] = value;
     }
 
     /// Push more values onto the tag
     pub fn push_values(&mut self, mut values: Vec<String>) {
-        for value in values.drain(..) {
-            self.0.push(value);
-        }
+        // Extend is more efficient than draining and pushing one by one
+        self.0.extend(values.drain(..));
     }
 
     /// Get the tag name for the tag (the first string in the array)
