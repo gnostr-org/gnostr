@@ -167,13 +167,14 @@ pub async fn create_custom_event(
     // Set up tags
     let mut tags: Vec<Tag> = vec![];
 
-    for tag in sub_command_args.tags.clone().iter() {
+    for tag in &sub_command_args.tags {
         let parts: Vec<String> = tag.split('|').map(String::from).collect();
-        let tag_kind = parts.first().unwrap().clone();
-        tags.push(Tag::custom(
-            TagKind::Custom(Cow::from(tag_kind)),
-            parts[1..].to_vec(),
-        ));
+        if let Some(tag_kind) = parts.first() {
+            tags.push(Tag::custom(
+                TagKind::Custom(Cow::from(tag_kind.as_str())),
+                parts[1..].to_vec(),
+            ));
+        }
     }
 
     // Initialize event builder
