@@ -46,5 +46,13 @@
 
 --
 
+## Documentation
+
+* [docs/EXAMPLES.md](docs/EXAMPLES.md) - Usage examples
+* [docs/INSTALL.md](docs/INSTALL.md) - Installation instructions
+* [docs/TECHNICAL_WRITING_GUIDE.md](docs/TECHNICAL_WRITING_GUIDE.md) - Guide for writing precise technical specifications
+
+--
+
 ### [CHANGELOG](CHANGELOG.md)
 
