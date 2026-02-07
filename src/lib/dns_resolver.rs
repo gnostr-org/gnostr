@@ -7,6 +7,11 @@ use trust_dns_resolver::TokioAsyncResolver;
 use std::process::Command;
 use std::str;
 
+/// Performs DNS resolution using the system's `dig` command
+/// 
+/// # Performance Note
+/// This function blocks while executing the external `dig` command.
+/// For async contexts, consider using the async `dns_resolver()` function instead.
 pub fn dns_resolver_sys() -> Result<String, Box<dyn std::error::Error>> {
     // Specify the dig command and its arguments
     let output = Command::new("dig")
@@ -31,11 +36,24 @@ pub fn dns_resolver_sys() -> Result<String, Box<dyn std::error::Error>> {
         Ok(stderr)
     }
 }
+/// Performs DNS resolution using the Tokio async resolver
+/// 
+/// # Performance Note
+/// This function uses `block_on` to bridge from sync to async code.
+/// When called from an already-async context, this creates a synchronous blocking point
+/// that prevents the async runtime from doing other work.
+/// 
+/// # Design Consideration
+/// The `block_on` is necessary here because:
+/// 1. This function is called from synchronous code paths
+/// 2. It reuses the global Tokio runtime to avoid creating multiple runtimes
+/// 3. For pure async contexts, consider refactoring to use `async fn` instead
 pub fn dns_resolver() -> Result<Vec<IpAddr>, Box<dyn std::error::Error>> {
     // Get the global Tokio runtime. This avoids creating multiple runtimes.
     let runtime = global_rt();
 
     // Block on the asynchronous operation within the global runtime.
+    // Note: This creates a blocking point in async contexts
     runtime.block_on(async {
         // --- 1. Configure the Resolver to use a specific nameserver (8.8.8.8) ---
         let mut config = ResolverConfig::new();

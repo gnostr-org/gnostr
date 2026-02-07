@@ -75,6 +75,20 @@ fn is_url_blocked(url: &str, blocklist: &HashSet<&str>) -> bool {
     blocklist.iter().any(|blocked| url.contains(blocked))
 }
 
+/// Strip protocol prefixes from URL more efficiently than chained .replace() calls
+/// Handles wss://, https://, and ws:// protocols
+fn strip_protocol(url: &str) -> &str {
+    if let Some(stripped) = url.strip_prefix("wss://") {
+        stripped
+    } else if let Some(stripped) = url.strip_prefix("https://") {
+        stripped
+    } else if let Some(stripped) = url.strip_prefix("ws://") {
+        stripped
+    } else {
+        url
+    }
+}
+
 #[derive(Parser, Debug, Clone)]
 pub struct SniperArgs {
     /// The minimum NIP version to filter relays by.
@@ -142,11 +156,7 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
                                 debug!("{dir_name} already exists...");
                             }
 
-                            let file_name = url
-                                .replace("wss://", "")
-                                .replace("https://", "")
-                                .replace("ws://", "")
-                                + ".json";
+                            let file_name = format!("{}.json", strip_protocol(&url));
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
                             debug!("
@@ -171,9 +181,7 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
                             println!(
                                 "{}/{}",
                                 args.nip_lower, // Use nip_lower from args
-                                url.replace("https://", "")
-                                    .replace("wss://", "")
-                                    .replace("ws://", "")
+                                strip_protocol(&url)
                             );
                         }
                     }
