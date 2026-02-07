@@ -174,7 +174,8 @@ impl Handler {
                     info!("Reloading server config...");
                     knob.info("Reloading server config...").await?;
                     let config_path = state.lock().await.config_path.clone();
-                    state.lock().await.server_config = load_server_config(config_path).await?;
+                    let new_config = load_server_config(config_path).await?;
+                    state.lock().await.server_config = new_config;
                 } else {
                     knob.info("Reloading repo information...").await?;
                     state.lock().await.rebuild_site(&repo_path).await?;
