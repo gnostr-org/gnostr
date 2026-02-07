@@ -71,6 +71,14 @@ fn create_blocklist() -> HashSet<&'static str> {
 }
 
 /// Check if a URL contains any blocked domain
+/// 
+/// Note: This still iterates through the blocklist, but uses HashSet to:
+/// 1. Make the blocklist easily configurable and maintainable
+/// 2. Allow early return on first match via .any()
+/// 3. Reduce code duplication vs 40+ sequential && checks
+/// 
+/// For further optimization, a trie-based approach could be used if the
+/// blocked domains follow common patterns (e.g., all have same TLD).
 fn is_url_blocked(url: &str, blocklist: &HashSet<&str>) -> bool {
     blocklist.iter().any(|blocked| url.contains(blocked))
 }
@@ -156,7 +164,12 @@ pub async fn run_sniper(args: SniperArgs) -> Result<(), Box<dyn std::error::Erro
                                 debug!("{dir_name} already exists...");
                             }
 
-                            let file_name = format!("{}.json", strip_protocol(&url));
+                            // Pre-allocate string capacity to avoid reallocation
+                            let stripped = strip_protocol(&url);
+                            let mut file_name = String::with_capacity(stripped.len() + 5);
+                            file_name.push_str(stripped);
+                            file_name.push_str(".json");
+                            
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
                             debug!("
