@@ -7,19 +7,11 @@ use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
 
-pub const BOOTSTRAP_RELAY0: &str = "wss://nos.lol";
-pub const BOOTSTRAP_RELAY1: &str = "wss://nos.lol";
-pub const BOOTSTRAP_RELAY2: &str = "wss://relay.damus.io";
-
-
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
-    // The vec! macro and String::from calls are now inside a closure,
-    // which is executed at runtime when the static variable is first needed.
-    vec![
-        String::from(BOOTSTRAP_RELAY0),
-        String::from(BOOTSTRAP_RELAY1),
-        String::from(BOOTSTRAP_RELAY2),
-    ]
+    include_str!("relays.yaml")
+        .lines()
+        .map(String::from)
+        .collect()
 });
 
 //pub const APP_SECRET_KEY: &str = "nsec1ufnus6pju578ste3v90xd5m2decpuzpql2295m3sknqcjzyys9ls0qlc85";

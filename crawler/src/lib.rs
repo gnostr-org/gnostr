@@ -31,9 +31,6 @@ use crate::relay_manager::RelayManager;
 #[allow(unused_imports)]
 use crate::processor::LOCALHOST_8080;
 use crate::processor::BOOTSTRAP_RELAYS;
-use crate::processor::BOOTSTRAP_RELAY0;
-use crate::processor::BOOTSTRAP_RELAY1;
-use crate::processor::BOOTSTRAP_RELAY2;
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -161,7 +158,7 @@ pub struct CliArgs {
     arg_spec: Vec<String>,
 }
 
-pub fn run(args: &CliArgs) -> Result<()> {
+pub async fn run(args: &CliArgs) -> Result<()> {
     let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
     let repo = Repository::discover(path)?;
     let _revwalk = repo.revwalk()?;
@@ -320,12 +317,8 @@ pub fn run(args: &CliArgs) -> Result<()> {
     let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor);
-    let _run_async = relay_manager.run(vec![
-        BOOTSTRAP_RELAY0,
-        BOOTSTRAP_RELAY1,
-        BOOTSTRAP_RELAY2,
-    ]);
-    //.await;
+    let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
+    let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
     //relay_manager.processor.dump();
 
     Ok(())
@@ -523,15 +516,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor);
 
-    let bootstrap_relays = vec![
-        BOOTSTRAP_RELAY0,
-        BOOTSTRAP_RELAY1,
-        BOOTSTRAP_RELAY2,
-        BOOTSTRAP_RELAYS
-            .get(2)
-            .expect("BOOTSTRAP_RELAYS should have at least 4 elements")
-            .as_str(),
-    ];
+    let bootstrap_relays: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
     relay_manager.run(bootstrap_relays).await?;
     let relays: Vec<String> = relay_manager.relays.get_all();
 
