@@ -5,6 +5,7 @@ pub mod relays;
 pub mod stats;
 
 use clap::{Parser, Subcommand};
+use directories::ProjectDirs;
 use futures::{stream, StreamExt};
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
@@ -14,7 +15,8 @@ use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str;
-use tracing::{debug, error};
+#[allow(unused_imports)]
+use tracing::{debug, error, info, trace, warn};
 
 use serde::{Deserialize, Serialize};
 
@@ -76,9 +78,24 @@ pub struct Relay {
     pub version: String,
 }
 
-pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-    BufReader::new(fs::File::open(filename)?).lines().collect()
-}
+pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {                                     
+     let base_dir = ProjectDirs::from("org", "gnostr", "gnostr-crawler")
+         .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
+         .unwrap_or_else(|| Path::new(".").to_path_buf());
+                                                                                                              
+     let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));   
+                                                                                                              
+     if let Some(parent) = file_path.parent() {                                                               
+         fs::create_dir_all(parent)?;                                                                         
+     }                                                                                                        
+                                                                                                              
+     debug!("Loading file: {}", file_path.display());                                                          
+     BufReader::new(fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect()
+ } 
+
+//pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
+//    BufReader::new(fs::File::open(filename)?).lines().collect()
+//}
 
 pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
     BufReader::new(fs::File::open(filename)?).lines().collect()
@@ -561,6 +578,8 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
                     .send()
                     .await?;
                 let text = resp.text().await?;
+
+                //TODO parse response and detect errors
                 Ok((url, text))
             }
         })
@@ -569,29 +588,31 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     bodies
         .for_each(|b: Result<(String, String), reqwest::Error>| async {
             if let Ok((url, json_string)) = b {
-                println!("{{\"relay\":\"{}\", \"data\":{}}}", url, json_string);
+                //TODO parse json_string data detect errors and add to shitlist
+                trace!("{{\"relay\":\"{}\", \"data\":{}}}", url, json_string);
                 let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json_string);
                 if let Ok(relay_info) = data {
-                    print!("{{\"nips\":\"");
+                    //print!("{{\"nips\":\"");
                     let mut nip_count = relay_info.supported_nips.len();
                     for n in &relay_info.supported_nips {
-                        debug!("nip_count:{}", nip_count);
+                        trace!("nip_count:{}", nip_count);
                         if nip_count > 1 {
-                            print!("{:0>2} ", n);
+                              println!("nip-count > 1 -- {:0>2} ", n);
+                              run_sniper(*n, None).await;
                         } else {
-                            print!("{:0>2}", n);
+                        //    print!("{:0>2}", n);
                         }
                         nip_count -= 1;
                     }
-                    print!("}}");
-                    println!();
+                    //print!("}}");
+                    //println!();
                 }
             }
         })
         .await;
 
     // Add the processor.dump() call here
-    relay_manager.processor.dump();
+    //relay_manager.processor.dump();
 
     Ok(())
 }
