@@ -32,6 +32,7 @@ async fn main() -> Result<()> {
     // Define relay sources
     let sources = vec![
         ("bitchat", "https://raw.githubusercontent.com/RandyMcMillan/bitchat/refs/heads/main/relays/online_relays_gps.csv"),
+        ("bitchat", "https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv"),
         ("sesseor", "https://raw.githubusercontent.com/sesseor/nostr-relays-list/main/relays.txt"),
     ];
 
