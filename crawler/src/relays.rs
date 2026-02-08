@@ -26,7 +26,7 @@ impl Relays {
         if let Ok(u) = Url::parse(s1) {
             res = self.r.insert(u);
             if res {
-                self.print();
+                //self.print();
             }
         }
         res
@@ -38,6 +38,10 @@ impl Relays {
 
     pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
         let list: Vec<Url> = list.to_vec();
+        list
+    }
+    pub fn de_dup_string(&self, list: &[String]) -> Vec<String> {
+        let list: Vec<String> = list.to_vec();
         list
     }
 
@@ -54,7 +58,8 @@ impl Relays {
     }
 
     pub fn get_all(&self) -> Vec<String> {
-        self.r.iter().map(|u| u.to_string()).collect()
+        let list: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
+        self.de_dup_string(&list)
     }
 
     pub fn print(&self) {
