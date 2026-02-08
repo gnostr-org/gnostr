@@ -4,9 +4,10 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use tracing::debug;
+use tracing::{debug, warn};
 use reqwest::Client;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
+use reqwest::header::ACCEPT;
 
 pub fn get_config_dir_path() -> PathBuf {
     ProjectDirs::from("org", "gnostr", "gnostr/crawler")
@@ -27,6 +28,33 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
 
     debug!("Fetched {} online relays", relays.len());
     Ok(relays)
+}
+
+pub async fn check_relay_liveness(url_str: &str) -> bool {
+    let client = Client::new();
+    let http_url = url_str
+        .replace("wss://", "https://")
+        .replace("ws://", "http://");
+
+    match client
+        .head(&http_url)
+        .header(ACCEPT, "application/nostr+json")
+        .timeout(std::time::Duration::from_secs(5)) // 5 second timeout
+        .send()
+        .await
+    {
+        Ok(response) => {
+            let is_success = response.status().is_success();
+            if !is_success {
+                warn!("Liveness check failed for {}: Status {}", url_str, response.status());
+            }
+            is_success
+        }
+        Err(e) => {
+            warn!("Liveness check error for {}: {}", url_str, e);
+            false
+        }
+    }
 }
 
 /// Maintain a list of all encountered relays
