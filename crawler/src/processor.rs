@@ -8,9 +8,11 @@ use std::sync::LazyLock;
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
 
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
-    include_str!("relays.yaml")
-        .lines()
-        .map(String::from)
+    let relays_yaml_bytes = include_bytes!("relays.yaml");
+    let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
+    relays_yaml_content.lines()
+        .filter(|line: &&str| !line.trim().is_empty())
+        .map(|line: &str| String::from(line))
         .collect()
 });
 

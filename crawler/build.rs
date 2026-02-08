@@ -73,17 +73,10 @@ async fn main() -> Result<()> {
         writeln!(file, "{}", relay_url)?;
     }
 
-    // Copy the generated relays.yaml from OUT_DIR to src/relays.yaml
-    let src_relays_yaml_path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("src").join("relays.yaml");
-    if let Some(parent) = src_relays_yaml_path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-    fs::copy(&generated_relays_path_in_out_dir, &src_relays_yaml_path)?;
-
+    // Tell Cargo the path to the generated file
+    println!("cargo:rustc-env=RELAYS_YAML_PATH={}", generated_relays_path_in_out_dir.display());
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
-    // Tell Cargo to rerun if src/relays.yaml (the consumed file) changes or is deleted
-    println!("cargo:rerun-if-changed={}", src_relays_yaml_path.display());
 
     // Write updated hashes to cache file
     cached_hashes.hashes = new_hashes;
