@@ -1,6 +1,16 @@
 use nostr_sdk::prelude::Url;
+use directories::ProjectDirs;
 use std::collections::HashSet;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use tracing::debug;
+
+pub fn get_config_dir_path() -> PathBuf {
+    ProjectDirs::from("org", "gnostr", "gnostr-crawler")
+        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
+        .unwrap_or_else(|| Path::new(".").to_path_buf())
+}
 
 /// Maintain a list of all encountered relays
 pub struct Relays {
@@ -86,12 +96,21 @@ impl Relays {
     }
 
     pub fn dump_list(&self) {
-        //TODO detect location of relays.yaml from Directories crate and write relays.yaml from list
-        let mut count = 0;
-        for u in &self.r {
-            print!("relays::91:::{{\"{}\":\"{}\"}}", count, u);
-            count += 1;
+        self.dump_to_file("relays.yaml");
+    }
+
+    pub fn dump_to_file(&self, filename: &str) {
+        let config_dir = get_config_dir_path();
+        let file_path = config_dir.join(filename);
+
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent).expect("Failed to create directory");
         }
-        print!("{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
+
+        let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
+        for u in &self.r {
+            writeln!(file, "{}", u).expect("Failed to write relay URL");
+        }
+        debug!("Relays dumped to {}", file_path.display());
     }
 }

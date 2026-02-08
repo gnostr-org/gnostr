@@ -137,7 +137,6 @@ impl RelayManager {
         let get_all = self.relays.get_all();
         for string in get_all {
             print!("{} ", string);
-            //TODO update relays.yaml
         }
         Ok(())
     }
