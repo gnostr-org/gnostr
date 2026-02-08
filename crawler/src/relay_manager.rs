@@ -129,12 +129,16 @@ impl RelayManager {
         }
         self.connect().await?;
         self.wait_and_handle_messages().await?;
-        ////self.relays.dump_list();
+        print!("relay_manager::run::self.relays.dump_list()");
+        self.relays.dump_list(); //TODO convert relays.dump_list to relays.yaml write operation
         //self.relays.print();
         //let get_some = self.relays.get_some(50);
         //for url in get_some { println!("url={}", url.to_string());}
         let get_all = self.relays.get_all();
-        for string in get_all { print!("{} ", string); }
+        for string in get_all {
+            print!("{} ", string);
+            //TODO update relays.yaml
+        }
         Ok(())
     }
 
@@ -214,12 +218,12 @@ impl RelayManager {
 
         let mut notifications = self.relay_client.notifications();
         while let Ok(notification) = notifications.recv().await {
-            debug!("relaynotif {:?}", notification);
+            trace!("relay_manager::wait_and_handle_messages::relaynotif {:?}", notification);
             match notification {
                 RelayPoolNotification::Event(_url, event) => {
-                    self.handle_event(&event);
+                    self.handle_event(&event); //self.handle_event
                     // invoke callback
-                    self.processor.handle_event(&event);
+                    self.processor.handle_event(&event); //self.processor.handle_event
                 }
                 RelayPoolNotification::Message(url, relaymsg) => match relaymsg {
                     RelayMessage::EndOfStoredEvents(_sub_id) => {
@@ -282,7 +286,7 @@ impl RelayManager {
                 debug!("{:?}", event.kind);
             }
             Kind::EncryptedDirectMessage => {
-                info!("{:?}", event.kind);
+                debug!("{:?}", event.kind);
             }
             Kind::EventDeletion => {
                 debug!("{:?}", event.kind);
@@ -355,7 +359,7 @@ impl RelayManager {
                 }
             }
             Kind::RelayList => {
-                debug!("{:?}", event.kind);
+                debug!("relay_manger::Kind::RelayList={:?}", event.kind);
             }
             Kind::Replaceable(_u16) => {
                 debug!("{:?}", event.kind);
@@ -375,20 +379,20 @@ impl RelayManager {
                 let mut count = 0;
                 for _t in &event.tags {
                     if let Tag::PubKey(_pk, Some(ss)) = _t {
-                        //state.pubkeys.add(pk);
+                        //state.pubkeys.add(pk); //TODO neccesary?
                         //if let Some(ss) = s {
-                        debug!("    {ss}");
+                        trace!("    {ss}");
                         let _ = self.relays.add(ss);
                         let _pub_future = self.relay_client.publish_text_note(ss.to_string(), &[]);
                         //}
-                        debug!("    {}", count);
+                        trace!("    {}", count);
                         count += 1;
                     }
                 }
             }
             Kind::RecommendRelay => {
                 self.update_event_time();
-                debug!("\n393:Relay(s): {}\n", event.content);
+                debug!("\n395:Relay(s): {}\n", event.content);
                 let _ = self.relays.add(&event.content);
             }
         }
