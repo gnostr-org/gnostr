@@ -4,7 +4,11 @@ use gnostr_crawler::{Cli, Commands, run_sniper, run_watch, run_nip34};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env().add_directive("nostr_sdk::relay=off".parse()?))
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
+        .add_directive("nostr_sdk::relay=off".parse()?)
+        .add_directive("hyper=off".parse()?)
+
+        /**/)/**/
         .init();
 
     let cli = Cli::parse();

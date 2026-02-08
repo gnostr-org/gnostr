@@ -67,6 +67,9 @@ impl RelayManager {
             if relay_urls.is_empty() {
                 break;
             }
+            for relay_url in &relay_urls {
+                debug!("removing relay_url:{}", relay_url.to_string());
+            }
             self.relay_client
                 .remove_relay(relay_urls[0].to_string())
                 .await?;
@@ -89,6 +92,7 @@ impl RelayManager {
         //};
 
         for r in some_relays {
+            debug!("r={}", &r);
             //self.relay_client.add_relay(r, None).await?;
             self.relay_client.add_relay(r.clone(), None).await?;
             //self.relay_client
