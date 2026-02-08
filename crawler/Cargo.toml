@@ -132,3 +132,9 @@ version = "0.1.33"
 [dependencies.tracing-subscriber]
 version = "0.3"
 features = ["env-filter"]
+
+[dependencies.directories]
+version = "6.0.0"
+
+[dependencies.anyhow]
+version = "1.0.100"
