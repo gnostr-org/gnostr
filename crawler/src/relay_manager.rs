@@ -20,7 +20,6 @@ use git2::Repository;
 use std::str;
 
 use log::debug;
-use log::info;
 use log::trace;
 
 const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
@@ -88,7 +87,7 @@ impl RelayManager {
         //async {
         let opts = Options::new(); //.wait_for_send(true);
         let app_keys = Keys::from_sk_str(APP_SECRET_KEY).unwrap();
-        let relay_client = Client::new_with_opts(&app_keys, opts);
+        let _relay_client = Client::new_with_opts(&app_keys, opts);
         //};
 
         for r in some_relays {
