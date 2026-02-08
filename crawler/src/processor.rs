@@ -1,6 +1,6 @@
 use crate::pubkeys::PubKeys;
 use crate::stats::Stats;
-use log::{debug, info};
+use log::debug;
 
 use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
 use std::sync::LazyLock;
@@ -120,16 +120,16 @@ impl Processor {
             Kind::RelayList => {
                 println!("{:?}", event.kind);
             }
-            Kind::Replaceable(u16) => {
+            Kind::Replaceable(_u16) => {
                 println!("{:?}", event.kind);
             }
-            Kind::Ephemeral(u16) => {
+            Kind::Ephemeral(_u16) => {
                 println!("{:?}", event.kind);
             }
-            Kind::ParameterizedReplaceable(u16) => {
+            Kind::ParameterizedReplaceable(_u16) => {
                 println!("{:?}", event.kind);
             }
-            Kind::Custom(u64) => {
+            Kind::Custom(_u64) => {
                 println!("{:?}", event.kind);
             }
             Kind::ContactList => {
