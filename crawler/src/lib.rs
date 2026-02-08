@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 use ::time::at;
 use ::time::Timespec;
 use nostr_sdk::prelude::*;
+use url::Url;
 
 use crate::processor::Processor;
 use crate::processor::APP_SECRET_KEY;
@@ -466,30 +467,25 @@ pub async fn run_sniper(
                             debug!("software:{:?}", &relay_info.software);
                             debug!("version:{:?}", &relay_info.version);
 
-                            let dir_name = format!("{}", nip_lower);
-                            let path = Path::new(&dir_name);
-
-                            if !path.exists() {
-                                match fs::create_dir(path) {
-                                    Ok(_) => debug!("created {}", nip_lower),
-                                    Err(e) => eprintln!("Error creating directory: {}", e),
+                            let parsed_url = match Url::parse(&url) {
+                                Ok(u) => u,
+                                Err(e) => {
+                                    error!("Failed to parse URL {}: {}", url, e);
+                                    return;
                                 }
-                            } else {
-                                debug!("{} already exists...", dir_name);
-                            }
+                            };
+                            let host = parsed_url.host_str().unwrap_or("unknown");
 
-                            let file_name = url
-                                .replace("https://", "")
-                                .replace("http://", "")
-                                .replace("ws://", "")
-                                .replace("wss://", "")
-                                + ".json";
-                            let file_path = path.join(&file_name);
+                            let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
+                            if let Err(e) = fs::create_dir_all(&dir_path) {
+                                error!("Failed to create directory {}: {}", dir_path.display(), e);
+                                return;
+                            };
+
+                            let file_name = format!("{}.json", host);
+                            let file_path = dir_path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!(
-                                "\n\n{}\n\n",
-                                file_path_str
-                            );
+                            debug!("\n\n{}\n\n", file_path_str);
 
                             match File::create(&file_path) {
                                 Ok(mut file) => {
@@ -595,7 +591,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
                         trace!("nip_count:{}", nip_count);
                         if nip_count > 1 {
                               println!("nip-count > 1 -- {:0>2} ", n);
-                              run_sniper(*n, None).await;
+                              let _ = run_sniper(*n, None).await;
                         } else {
                         //    print!("{:0>2}", n);
                         }
