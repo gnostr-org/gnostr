@@ -147,10 +147,49 @@ impl RelayManager {
             trace!("{:?} ", u.to_string())
         }
         debug!("\n");
-        // Warning: error is not handled here, should check back status
+
+        // Initiate connection
         self.relay_client.connect().await;
-        debug!("Connected");
-        Ok(())
+
+        // Wait for all relays to be connected
+        let mut all_connected = false;
+        let mut attempts = 0;
+        let max_attempts = 10; // Try for 10 seconds (10 * 1 second sleep)
+
+        while !all_connected && attempts < max_attempts {
+            all_connected = true;
+            let relays = self.relay_client.relays().await;
+            for relay in relays.values() {
+                match relay.status().await {
+                    RelayStatus::Connected => {
+                        debug!("Relay {} is connected.", relay.url().to_string());
+                    },
+                    RelayStatus::Disconnected | RelayStatus::Terminated | RelayStatus::Connecting => {
+                        debug!("Relay {} is not yet connected. Status: {:?}", relay.url().to_string(), relay.status().await);
+                        all_connected = false;
+                    }
+                    _ => {
+                        debug!("Relay {} has unknown status: {:?}", relay.url().to_string(), relay.status().await);
+                        all_connected = false;
+                    }
+                }
+            }
+
+            if !all_connected {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                attempts += 1;
+            }
+        }
+
+        if all_connected {
+            debug!("All relays connected.");
+            Ok(())
+        } else {
+            debug!("Failed to connect to all relays after {} attempts.", max_attempts);
+            // It's acceptable to still return Ok(()) here, but log the warning
+            // The system might still function with some disconnected relays, but the user is informed.
+            Ok(())
+        }
     }
 
     async fn disconnect(&mut self) -> Result<()> {
