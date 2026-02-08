@@ -5,7 +5,6 @@ pub mod relays;
 pub mod stats;
 
 use clap::{Parser, Subcommand};
-use directories::ProjectDirs;
 use futures::{stream, StreamExt};
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
@@ -79,9 +78,7 @@ pub struct Relay {
 }
 
 pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-     let base_dir = ProjectDirs::from("org", "gnostr", "gnostr-crawler")
-         .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
-         .unwrap_or_else(|| Path::new(".").to_path_buf());
+     let base_dir = crate::relays::get_config_dir_path();
 
      let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
 
