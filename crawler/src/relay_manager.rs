@@ -23,7 +23,7 @@ use log::debug;
 use log::info;
 use log::trace;
 
-const MAX_ACTIVE_RELAYS: usize = 2; //usize::MAX;
+const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 
 /// Keeps a set of active connections to relays
@@ -86,20 +86,6 @@ impl RelayManager {
         let opts = Options::new(); //.wait_for_send(true);
         let app_keys = Keys::from_sk_str(APP_SECRET_KEY).unwrap();
         let relay_client = Client::new_with_opts(&app_keys, opts);
-        //let _ = relay_client.publish_text_note(path, &[]).await;
-        //let _ = relay_client
-        //    .publish_text_note("relay_manager:1<--------------------------<<<<<", &[])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("2<--------------------------<<<<<", &[])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("3<--------------------------<<<<<", &[])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("4<--------------------------<<<<<", &[])
-        //    .await;
-        let _ = relay_client.publish_text_note("#gnostr", &[]).await;
         //};
 
         for r in some_relays {
@@ -140,7 +126,11 @@ impl RelayManager {
         self.connect().await?;
         self.wait_and_handle_messages().await?;
         ////self.relays.dump_list();
-        self.relays.print();
+        //self.relays.print();
+        //let get_some = self.relays.get_some(50);
+        //for url in get_some { println!("url={}", url.to_string());}
+        let get_all = self.relays.get_all();
+        for string in get_all { print!("{} ", string); }
         Ok(())
     }
 
