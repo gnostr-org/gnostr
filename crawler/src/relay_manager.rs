@@ -288,9 +288,12 @@ impl RelayManager {
                     RelayMessage::Event {
                         subscription_id: _,
                         event: _,
-                    } => {}
+                    } => {},
+                    RelayMessage::Empty => {
+                        trace!("Received empty message from {url}");
+                    }
                     _ => {
-                        debug!("{{\"{:?}\":\"{url}\"}}", relaymsg);
+                        debug!("Received unhandled relay message from {url}: {{\"{:?}\":\"{url}\"}}", relaymsg);
                     }
                 },
                 RelayPoolNotification::Shutdown => break,
