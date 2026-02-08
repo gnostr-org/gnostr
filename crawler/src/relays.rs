@@ -1,7 +1,6 @@
-//use log::info;
-//use log::{debug, trace};
 use nostr_sdk::prelude::Url;
 use std::collections::HashSet;
+use tracing::debug;
 
 /// Maintain a list of all encountered relays
 pub struct Relays {
@@ -38,6 +37,7 @@ impl Relays {
 
     pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
         let list: Vec<Url> = list.to_vec();
+        for url in &list { debug!("de_dup:: url={}", url); }
         list
     }
     pub fn de_dup_string(&self, list: &[String]) -> Vec<String> {
@@ -86,9 +86,10 @@ impl Relays {
     }
 
     pub fn dump_list(&self) {
+        //TODO detect location of relays.yaml from Directories crate and write relays.yaml from list
         let mut count = 0;
         for u in &self.r {
-            print!("78:{{\"{}\":\"{}\"}}", count, u);
+            print!("relays::91:::{{\"{}\":\"{}\"}}", count, u);
             count += 1;
         }
         print!("{{\"{}\":\"wss://relay.gnostr.org\"}}", count);

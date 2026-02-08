@@ -78,20 +78,20 @@ pub struct Relay {
     pub version: String,
 }
 
-pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {                                     
+pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
      let base_dir = ProjectDirs::from("org", "gnostr", "gnostr-crawler")
          .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
          .unwrap_or_else(|| Path::new(".").to_path_buf());
-                                                                                                              
-     let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));   
-                                                                                                              
-     if let Some(parent) = file_path.parent() {                                                               
-         fs::create_dir_all(parent)?;                                                                         
-     }                                                                                                        
-                                                                                                              
-     debug!("Loading file: {}", file_path.display());                                                          
+
+     let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
+
+     if let Some(parent) = file_path.parent() {
+         fs::create_dir_all(parent)?;
+     }
+
+     debug!("Loading file: {}", file_path.display());
      BufReader::new(fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect()
- } 
+ }
 
 //pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 //    BufReader::new(fs::File::open(filename)?).lines().collect()
