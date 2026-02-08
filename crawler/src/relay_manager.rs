@@ -1,5 +1,6 @@
 use crate::processor::Processor;
-use crate::relays::Relays;
+use crate::{load_file};
+use crate::relays::{Relays, fetch_online_relays};
 use crate::CliArgs;
 use crate::APP_SECRET_KEY;
 use nostr_sdk::prelude::FromSkStr;
@@ -36,13 +37,51 @@ pub struct RelayManager {
 }
 
 impl RelayManager {
-    pub fn new(app_keys: Keys, processor: Processor) -> Self {
+    pub async fn new(app_keys: Keys, processor: Processor) -> Self {
         let opts = Options::new(); //.wait_for_send(false);
         let relay_client = Client::new_with_opts(&app_keys, opts);
         let _proxy = Some(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9050)));
+
+        let mut relays_instance = Relays::new();
+
+        // Load relays from relays.yaml
+        match load_file("relays.yaml") {
+            Ok(urls) => {
+                for url_str in urls {
+                    relays_instance.add(&url_str);
+                }
+                debug!("Loaded {} relays from relays.yaml", relays_instance.count());
+            },
+            Err(e) => debug!("Could not load relays.yaml: {}", e),
+        }
+
+        // Fetch online relays (RandyMcMillan/bitchat)
+        let bitchat_online_relays_url = "https://raw.githubusercontent.com/RandyMcMillan/bitchat/refs/heads/main/relays/online_relays_gps.csv";
+        match fetch_online_relays(bitchat_online_relays_url).await {
+            Ok(urls) => {
+                for url_str in urls {
+                    relays_instance.add(&url_str);
+                }
+                debug!("Loaded {} relays from online CSV (bitchat)", relays_instance.count());
+            },
+            Err(e) => debug!("Could not fetch online relays from bitchat: {}", e),
+        }
+
+        // Fetch online relays (sesseor/nostr-relays-list)
+        let sesseor_online_relays_url = "https://raw.githubusercontent.com/sesseor/nostr-relays-list/main/relays.txt";
+        match fetch_online_relays(sesseor_online_relays_url).await {
+            Ok(urls) => {
+                for url_str in urls {
+                    relays_instance.add(&url_str);
+                }
+                debug!("Loaded {} relays from online TXT (sesseor)", relays_instance.count());
+            },
+            Err(e) => debug!("Could not fetch online relays from sesseor: {}", e),
+        }
+
         Self {
             // app_keys,
-            relays: Relays::new(),
+            relays: relays_instance,
             relay_client,
             processor,
             time_last_event: Self::now(),

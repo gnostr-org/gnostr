@@ -316,7 +316,7 @@ pub async fn run(args: &CliArgs) -> Result<()> {
     //println!("{:?}", args.arg_nsec.clone());
     let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor);
+    let mut relay_manager = RelayManager::new(app_keys, processor).await;
     let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
     let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
     //relay_manager.processor.dump();
@@ -514,7 +514,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
     let app_keys = Keys::new(app_secret_key);
     let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor);
+    let mut relay_manager = RelayManager::new(app_keys, processor).await;
 
     let bootstrap_relays: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
     relay_manager.run(bootstrap_relays).await?;
@@ -532,7 +532,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
         std::collections::HashSet::new()
     };
 
-    let relays_iterator = relays.into_iter().filter(|url| {
+    let relays_iterator = relays.into_iter().filter(|url: &String| {
         if shitlist.is_empty() {
             true
         } else {
@@ -544,7 +544,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 
     let client = reqwest::Client::new();
     let bodies = stream::iter(relays_iterator)
-        .map(|url| {
+        .map(|url: String| {
             let client = &client;
             async move {
                 let resp = client

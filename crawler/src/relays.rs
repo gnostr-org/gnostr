@@ -5,11 +5,28 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use tracing::debug;
+use reqwest::Client;
+use anyhow::Result;
 
 pub fn get_config_dir_path() -> PathBuf {
-    ProjectDirs::from("org", "gnostr", "gnostr-crawler")
+    ProjectDirs::from("org", "gnostr", "gnostr/crawler")
         .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
         .unwrap_or_else(|| Path::new(".").to_path_buf())
+}
+
+pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
+    debug!("Fetching online relays from: {}", url);
+    let client = Client::new();
+    let response = client.get(url).send().await?.error_for_status()?;
+    let text = response.text().await?;
+
+    let relays: Vec<String> = text.lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(String::from)
+        .collect();
+
+    debug!("Fetched {} online relays", relays.len());
+    Ok(relays)
 }
 
 /// Maintain a list of all encountered relays
