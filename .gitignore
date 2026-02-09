@@ -1,6 +1,6 @@
 crlf.git
 asyncgit/crlf.git
-src/lib/empty
+src/lib/empty/
 
 .tmp-prettierignore
 
@@ -162,3 +162,5 @@ src/lib/ui/ui.md
 src/lib/utils/utils.md
 src/lib/xq/xq.md
 src/src.md
+!asyncgit/src/lib/gitui/cli/
+!asyncgit/src/lib/gitui/cli/mod.rs
