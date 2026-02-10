@@ -84,7 +84,8 @@ pub mod verify_keypair;
 pub mod watcher;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
-/// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
+/// <https://docs.rs/gnostr/latest/gnostr/node/index.html>
+pub mod node;
 //avoid?//upgrade?
 //pub use lightning;
 use anyhow::{Result, anyhow};

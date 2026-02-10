@@ -16,6 +16,7 @@ keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
+
 exclude = [
     ".git/",
     ".github/",
@@ -95,13 +96,24 @@ name = "gnostr-web"
 path = "src/bin/gnostr-web.rs"
 required-features = ["gnostr-web"]
 
+[[bin]]
+name = "gnostr-node"
+path = "src/bin/gnostr-node.rs"
+
+[[bin]]
+name = "git-remote-gnostr-node"
+path = "src/lib/node/remote_helper.rs"
+
+[[bin]]
+name = "gnostr-shell"
+path = "src/lib/node/git_shell.rs"
+
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit"]
 expensive_tests = [] #nostr
-ghemoji = ["gh-emoji"]
+ghemoji = ["dep:gh-emoji"]
 gnostr-web = [
     "askama",
-    "axum",
     "httparse",
     "flate2",
     "moka",
@@ -166,11 +178,13 @@ async-trait = "0.1.73"
 ##nostr
 auth-git2 = "^0.5"
 
-axum = { version = "0.7", default-features = false, features = [
+axum = { version = "0.7", features = [
   "query",
   "tokio",
   "http1",
-], optional = true }
+  "macros",
+  "ws",
+] }
 backtrace = "0.3"
 #url = "2.5"
 #zeroize = "1.7"
@@ -333,6 +347,7 @@ nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
 nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
+nostr = "0.29"
 
 notify = "6.1.1"
 notify-debouncer-mini = "0.4"
@@ -410,7 +425,10 @@ syntect = { version = "5.2", default-features = false, features = [
 ] }
 tar = { version = "0.4", default-features = false, optional = true }
 tempfile = "3.5.0"
-tera = { version = "1.18.1", optional = false }
+tera = "1.19"
+axum-template = { version = "0.12", features = ["tera"] }
+sled = "0.34"
+walkdir = "2.4"
 terminal_size = "0.3.0"
 # causes cyclic error test_utils = { path = "test_utils" }
 textwrap = "0.16.0"
@@ -432,7 +450,7 @@ tokio-stream = { version = "0.1", optional = true }
 tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] }
 tokio-util = { version = "0.7.17", features = ["io"] }
 
-toml = "0.7.3"
+toml = "0.8"
 ##tokio-util = { version = "0.7.10", features = ["io"] }
 
 tower = { version = "0.5", optional = true }
