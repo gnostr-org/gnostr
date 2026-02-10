@@ -58,13 +58,122 @@ members = [
     "relay/extensions",
     "scopetime",
 ]
+
 [workspace.dependencies]
+anyhow = "1.0.100"
+arc-swap = "1.8.0"
+askama = { version = "0.12.1", default-features = false }
+assert_cmd = "2.0.17"
+async-trait = "0.1.89"
+axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
+axum-core = "0.4.5"
+base64 = "0.22.1"
+bytes = "1.11.0"
+chrono = "0.4.43"
+clap = { version = "4.5.55", features = ["std", "cargo", "derive", "help", "usage", "env"] }
+crossbeam-channel = "0.5.15"
+crossterm = "0.28.1"
+dialoguer = "0.10.4"
+directories = "5.0.1"
+env_logger = "0.11"
+expectrl = "0.8.0"
+flate2 = "1.1.8"
+futures = "0.3.31"
+futures-util = "0.3.31"
+git2 = "^0.20"
 handlebars = { version = "6.3.2" }
-pretty_env_logger = { version = "0.5" }
+httparse = "1.10.1"
+humantime = "2.1.3"
+itertools = "0.14.0"
+kanal = "0.1.1"
+lazy_static = "1.5.0"
+libp2p = { version = "0.54.1", features = ["async-std", "cbor", "dns", "gossipsub", "identify", "kad", "macros", "mdns", "noise", "ping", "quic", "relay", "rendezvous", "request-response", "tcp", "tokio", "yamux", "websocket"] }
+log = "0.4.29"
+md5 = "0.7.0"
+moka = { version = "0.12.13", features = ["future"] }
+nostr = "0.37.0"
+nostr-sdk = { version = "0.37.0", features = ["all-nips"] }
+notify = "7.0.0"
+once_cell = "1.21.3"
+parking_lot = "0.12.3"
+predicates = "3.1.3"
+pretty_env_logger = { version = "0.5.0" }
+proc-macro2 = "1.0"
+quote = "1.0"
+regex = "1.11"
+reqwest = { version = "0.12.28", features = ["blocking", "json"] }
+rkyv = "0.8.14"
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
+ron = "0.8.1"
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = "0.37.1"
+rust-ini = "0.21.3"
+scopetime = { package = "gnostr-scopetime", path = "./scopetime" }
+scrypt = "0.11.0"
+secp256k1 = { version = "0.29.1", features = ["hashes", "global-context", "rand-std", "serde"] }
+serde = { version = "1.0.228", features = ["derive", "rc"] }
+serde_json = "1.0.146"
+serde_yaml = "0.9.34"
+service-manager = { version = "0.10.0", features = ["clap"] }
+sha2 = "0.10.9"
+sha256 = "1.6.0"
+shellexpand = "3.1.1"
+shellwords = "1.1.0"
+simdutf8 = "0.1.5"
+simple_logger = "4.3.3"
+sled = "0.34.7"
+ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
+strip-ansi-escapes = "0.2.1"
+struct-patch = "0.4.1"
+syn = "2.0"
+syntect = { version = "5.3.0", default-features = false, features = ["parsing", "default-syntaxes", "default-themes", "html", "regex-fancy"] }
+tar = { version = "0.4.44", default-features = false }
+tempfile = "3.24.0"
+tera = "1.20.1"
+terminal_size = "0.3.0"
+textwrap = "0.16.2"
+thiserror = "1.0.69"
+thread-priority = "1.2.0"
+time = { version = "0.3.46", features = ["macros", "formatting"] }
+timeago = { version = "0.4.2", default-features = false }
+tiny-hderive = "0.3.0"
 tiny_http = { version = "0.12" }
+tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
+tokio-stream = "0.1.18"
+tokio-tungstenite = { version = "0.28.0", features = ["connect", "handshake", "rustls-tls-webpki-roots", "native-tls"] }
+tokio-util = { version = "0.7.18", features = ["io"] }
+toml = "0.8.20"
+tower = "0.5.3"
+tower-http = { version = "0.6.8", features = ["cors", "timeout", "fs"] }
+tower-layer = "0.3.3"
+tower-service = "0.3.3"
+tracing = "0.1.44"
+tracing-core = "0.1.36"
+tracing-subscriber = { version = "0.3.22", default-features = false, features = ["env-filter", "smallvec", "parking_lot", "fmt"] }
+tree-sitter = "0.23.2"
+tree-sitter-highlight = "0.23.2"
+tree-sitter-language = "0.1.6"
+trust-dns-resolver = "0.23.2"
+tui-input = "0.10.1"
+tui-textarea = "0.6.1"
+two-face = { version = "0.4.5", default-features = false }
+unicode-normalization = "0.1.25"
+unicode-segmentation = "1.12.0"
+unicode-truncate = "1.1.0"
+unicode-width = "0.1.14"
+unix_mode = "0.1.4"
+ureq = { version = "2.12.1", features = ["json", "charset"] }
+url = "2.5.8"
+urlencoding = "2.1.3"
+uuid = { version = "1.20.0", features = ["v4"] }
+v_htmlescape = { version = "0.15.8", features = ["bytes-buf"] }
+walkdir = "2.5.0"
 warp = { version = "0.3" }
 webbrowser = { version = "0.8" }
+which = "6.0.3"
+xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
+yoke = { version = "0.7.5", features = ["derive"] }
+zeroize = "1.8.2"
 
 [lib]
 name = "gnostr"
@@ -95,10 +204,6 @@ required-features = ["gnostr-web"]
 name = "gnostr-web"
 path = "src/bin/gnostr-web.rs"
 required-features = ["gnostr-web"]
-
-[[bin]]
-name = "gnostr-node"
-path = "src/bin/gnostr-node.rs"
 
 [[bin]]
 name = "git-remote-gnostr-node"
@@ -185,6 +290,8 @@ axum = { version = "0.7", features = [
   "macros",
   "ws",
 ] }
+axum-core = "0.4.5"
+axum-template = { version = "0.3.0", features = ["tera"] }
 backtrace = "0.3"
 #url = "2.5"
 #zeroize = "1.7"
@@ -325,6 +432,7 @@ log = "0.4.24"
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
+nostr = "0.29"
 
 ## nostr deps
 ## primary 0.34.0/1
@@ -347,7 +455,6 @@ nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
 nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
-nostr = "0.29"
 
 notify = "6.1.1"
 notify-debouncer-mini = "0.4"
@@ -410,6 +517,7 @@ shellwords = "1.1.0"
 
 simdutf8 = "0.1.5"
 simple_logger = "4.1"
+sled = "0.34"
 #serde = { version = "1.0", features = [ "derive" ] }
 #serde_json = "1.0"
 #sha2 = "0.10"
@@ -426,9 +534,6 @@ syntect = { version = "5.2", default-features = false, features = [
 tar = { version = "0.4", default-features = false, optional = true }
 tempfile = "3.5.0"
 tera = "1.19"
-axum-template = { version = "0.12", features = ["tera"] }
-sled = "0.34"
-walkdir = "2.4"
 terminal_size = "0.3.0"
 # causes cyclic error test_utils = { path = "test_utils" }
 textwrap = "0.16.0"
@@ -484,6 +589,7 @@ url = "2.2.2"
 urlencoding = "2.1.3"
 uuid = { version = "1.19.0", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
+walkdir = "2.4"
 warp = { workspace = true, optional = true }
 webbrowser = { workspace = true, optional = true }
 which = "6.0"
@@ -503,70 +609,72 @@ windows-sys_048 = { package = "windows-sys", version = "0.48", features = ["Win3
 
 # Patch for version 0.52
 windows-sys_052 = { package = "windows-sys", version = "0.52", features = ["Win32_System_Threading", "Win32_Foundation"] }
-# other patches
 
 [build-dependencies]
-anyhow = "1.0.75"
-cc = { version = "1.0.106", features = ["parallel"] }
-chrono = { version = "0.4", default-features = false, features = ["clock"] }
-heck = "0.5"
+anyhow = { workspace = true }
+cc = "1.2.54"
+chrono = { workspace = true, features = ["clock"] }
+heck = "0.5.0"
 hex = "0.4.3"
-prettyplease = "0.2"
-proc-macro2 = "1.0"
-quote = "1.0"
-regex = "1.11"
-reqwest = { version = "0.11", features = ["blocking"] }
-rsass = "0.28"
+prettyplease = "0.2.37"
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+regex = { workspace = true }
+reqwest = { workspace = true, features = ["blocking"] }
+rsass = "0.28.10"
 sccache = "0.13.0"
-serde = { version = "1.0", features = ["derive"] }
-sha2 = "0.10"
-syn = "2.0"
-threadpool = "1.8"
-#cc = "1.1"
-#serde = { version = "1.0", features = ["derive"] }
-toml = "0.8"
+serde = { workspace = true, features = ["derive"] }
+sha2 = { workspace = true }
+syn = { workspace = true }
+threadpool = "1.8.1"
+toml = { workspace = true }
 
 [dev-dependencies]
-actix-rt = "2.10.0"
+actix-rt = "2.11.0"
 actix-test = "0.1.5"
-anyhow = "1.0.86"
-assert_cmd = "2.0.17"
-comma = "1.0"
-crossterm = "0.28.0"
-ctor = "0.6.1"
+anyhow = { workspace = true }
+assert_cmd = { workspace = true }
+comma = "1.0.0"
+crossterm = { workspace = true }
+ctor = "0.6.3"
 dep-graph = "0.2.0"
-dialoguer = "0.10.4"
-directories = "5.0.1"
-env_logger = "0.11"
-expectrl = "0.8.0"
-futures-util = "0.3.31"
+dialoguer = { workspace = true }
+directories = { workspace = true }
+env_logger = { workspace = true }
+expectrl = { workspace = true }
+futures-util = { workspace = true }
 gag = "1.0.0"
-git2 = "^0.20"
+git2 = { workspace = true }
 gnostr-crawler = "1906.925289.572444"
 grcov = "0.10.5"
 mockall = "0.11.4"
-nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
-nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
-once_cell = "1.18.0"
-predicates = "3.1.3"
-pretty_assertions = "1.4"
-quinn = { version = "0.11.7", default-features = false }
-rand = "0.8"
-#regex = "1"
-reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" } # Kept for now, will remove later
+nostr_0_34_1 = { package = "nostr", version = "0.34.1" } # Kept for now, will remove later
+once_cell = { workspace = true }
+predicates = { workspace = true }
+pretty_assertions = "1.4.1"
+quinn = { version = "0.11.9", default-features = false }
+rand = "0.8.5"
+reqwest = { workspace = true, features = ["json"] }
 serial_test = "2.0.0"
 signal-child = "1.0.6"
-strip-ansi-escapes = "0.2.0"
+strip-ansi-escapes = { workspace = true }
 structopt = "0.3.26"
 temp-env = "0.3.6"
-tempfile = "3.12.0"
-thiserror = "1.0.34"
-tmux_interface = "0.3.1"
-tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] }
-tracing-subscriber = "0.3.18"
-url = "2.2.2"
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tmux_interface = "0.3.2"
+tokio-tungstenite = { workspace = true }
+tracing-subscriber = { workspace = true }
+url = { workspace = true }
 
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
+# other patches
+
+# # The profile that 'dist' will build with
+# [profile.dist]
+# inherits = "release"
+# lto = "thin"

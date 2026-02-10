@@ -1,0 +1,15 @@
+FROM rust:1.75-slim as builder
+WORKDIR /usr/src/app
+COPY . .
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && cargo build --release
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y libssl3 ca-certificates curl git openssh-server \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir /var/run/sshd && useradd -m -s /usr/local/bin/gnostr-shell git && mkdir -p /home/git/.ssh
+COPY --from=builder /usr/src/app/target/release/gnostr-node /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/gnostr-shell /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/git-remote-gnostr-node /usr/local/bin/
+EXPOSE 3000 22
+RUN echo "#!/bin/bash\n/usr/sbin/sshd\ngnostr-node --web-port 3000" > /start.sh && chmod +x /start.sh
+ENTRYPOINT ["/start.sh"]

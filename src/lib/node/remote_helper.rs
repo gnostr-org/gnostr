@@ -1,4 +1,4 @@
-use nostr_gnostr_node::prelude::*;
+use nostr::prelude::*;
 use std::io::{self, BufRead};
 use base64::Engine;
 
