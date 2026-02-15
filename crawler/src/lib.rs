@@ -615,6 +615,7 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     debug!("run_api_server: Starting API server on port {}", port);
 
     let app = Router::new()
+        .route("/", get(get_index_html))
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
@@ -721,4 +722,17 @@ async fn get_relays_txt() -> Response {
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml for relays.txt: {}", e))).into_response()
         }
     }
+}
+
+// Serve index.html from the compiled-in asset
+async fn get_index_html() -> Response {
+    let html_content = include_bytes!("index.html");
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "text/html")
+        .body(Body::from(html_content.as_ref() as &[u8]))
+        .unwrap_or_else(|e| {
+            error!("Failed to build HTML response: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+        })
 }

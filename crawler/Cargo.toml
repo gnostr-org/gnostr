@@ -143,3 +143,4 @@ tokio = { version = "1", features = ["full"] }
 anyhow = "1.0.100"
 url = "2.5.0"
 sha2 = "0.10"
+pulldown-cmark = "0.10"
