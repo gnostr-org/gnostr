@@ -24,12 +24,17 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
     let relays: Vec<String> = text.lines()
         .filter(|line| !line.trim().is_empty())
         .filter_map(|line| {
-            match Url::parse(line) {
-                Ok(url) => Some(url.to_string()),
-                Err(_) => {
-                    warn!("Skipping invalid relay URL fetched: {}", line);
-                    None
+            if line.starts_with("wss://") || line.starts_with("ws://") {
+                match Url::parse(line) {
+                    Ok(url) => Some(url.to_string()),
+                    Err(_) => {
+                        warn!("Skipping invalid URL format (after schema check): {}", line);
+                        None
+                    }
                 }
+            } else {
+                warn!("Skipping non-websocket URL: {}", line);
+                None
             }
         })
         .collect();
