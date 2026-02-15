@@ -5,8 +5,8 @@ use gnostr_crawler::{Cli, Commands, run_sniper, run_watch, run_nip34};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
-        .add_directive("nostr_sdk::relay=off".parse()?)
-        .add_directive("hyper=off".parse()?)
+        // .add_directive("nostr_sdk::relay=off".parse()?)
+        // .add_directive("hyper=off".parse()?)
 
         /**/)/**/
         .init();
@@ -22,6 +22,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Nip34 { shitlist } => {
             run_nip34(shitlist.clone()).await?;
+        }
+        Commands::Crawl(args) => {
+            gnostr_crawler::run(args).await?;
         }
     }
 

@@ -48,10 +48,6 @@ path = "src/main.rs"
 name = "gnostr-test"
 path = "src/bin/gnostr-test.rs"
 
-[[bin]]
-name = "gnostr-unified"
-path = "src/bin/gnostr-unified.rs"
-
 [[example]]
 name = "string_pop"
 path = "examples/string_pop.rs"

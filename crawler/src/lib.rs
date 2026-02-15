@@ -39,6 +39,7 @@ const CONCURRENT_REQUESTS: usize = 16;
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
+    //nsec: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -63,6 +64,8 @@ pub enum Commands {
         #[clap(long, short)]
         shitlist: Option<String>,
     },
+    /// Runs the main gnostr-crawler logic
+    Crawl(CliArgs),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -97,7 +100,7 @@ pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> 
 }
 
 #[allow(clippy::manual_strip)]
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct CliArgs {
     //#[clap(name = "topo-order", long)]
     ///// sort commits in topological order
@@ -156,170 +159,28 @@ pub struct CliArgs {
     arg_commit: Vec<String>,
     #[clap(name = "spec", last = true)]
     arg_spec: Vec<String>,
+    #[clap(long)]
+    arg_dump: bool,
 }
 
 pub async fn run(args: &CliArgs) -> Result<()> {
-    let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
-    let repo = Repository::discover(path)?;
-    let _revwalk = repo.revwalk()?;
 
-    //println!("{:?}", args.arg_nsec.clone());
     let _run_async = async {
         let opts = Options::new(); //.wait_for_send(true);
         let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
         let relay_client = Client::new_with_opts(&app_keys, opts);
-        let _ = relay_client
-            .publish_text_note("run:async:11<--------------------------<<<<<", &[])
-            .await;
-        let _ = relay_client
-            .publish_text_note("run:async:22<--------------------------<<<<<", &[])
-            .await;
-        let _ = relay_client
-            .publish_text_note("run:async:33<--------------------------<<<<<", &[])
-            .await;
-        let _ = relay_client
-            .publish_text_note("run:async:44<--------------------------<<<<<", &[])
-            .await;
         let _ = relay_client.publish_text_note("#gnostr", &[]).await;
     };
 
-    // Prepare the revwalk based on CLI parameters
-    //let base = if args.flag_reverse {
-    //    git2::Sort::REVERSE
-    //} else {
-    //    git2::Sort::NONE
-    //};
-    //revwalk.set_sorting(
-    //    base | if args.flag_topo_order {
-    //        git2::Sort::TOPOLOGICAL
-    //    } else if args.flag_date_order {
-    //        git2::Sort::TIME
-    //    } else {
-    //        git2::Sort::NONE
-    //    },
-    //)?;
-    //for commit in &args.arg_commit {
-    //    #[allow(clippy::manual_strip)]
-    //    if commit.starts_with('^') {
-    //        let obj = repo.revparse_single(&commit[1..])?;
-    //        revwalk.hide(obj.id())?;
-    //        continue;
-    //    }
-    //    let revspec = repo.revparse(commit)?;
-    //    if revspec.mode().contains(git2::RevparseMode::SINGLE) {
-    //        revwalk.push(revspec.from().unwrap().id())?;
-    //    } else {
-    //        let from = revspec.from().unwrap().id();
-    //        let to = revspec.to().unwrap().id();
-    //        revwalk.push(to)?;
-    //        if revspec.mode().contains(git2::RevparseMode::MERGE_BASE) {
-    //            let base = repo.merge_base(from, to)?;
-    //            let o = repo.find_object(base, Some(ObjectType::Commit))?;
-    //            revwalk.push(o.id())?;
-    //        }
-    //        revwalk.hide(from)?;
-    //    }
-    //}
-    //if args.arg_commit.is_empty() {
-    //    revwalk.push_head()?;
-    //}
-
-    //// Prepare our diff options and pathspec matcher
-    //let (mut diffopts, mut diffopts2) = (DiffOptions::new(), DiffOptions::new());
-    //for spec in &args.arg_spec {
-    //    diffopts.pathspec(spec);
-    //    diffopts2.pathspec(spec);
-    //}
-    //let ps = Pathspec::new(args.arg_spec.iter())?;
-
-    //// Filter our revwalk based on the CLI parameters
-    //macro_rules! filter_try {
-    //    ($e:expr) => {
-    //        match $e {
-    //            Ok(t) => t,
-    //            Err(e) => return Some(Err(e)),
-    //        }
-    //    };
-    //}
-    //let revwalk = revwalk
-    //    .filter_map(|id| {
-    //        let id = filter_try!(id);
-    //        let commit = filter_try!(repo.find_commit(id));
-    //        let parents = commit.parents().len();
-    //        if parents < args.min_parents() {
-    //            return None;
-    //        }
-    //        if let Some(n) = args.max_parents() {
-    //            if parents >= n {
-    //                return None;
-    //            }
-    //        }
-    //        if !args.arg_spec.is_empty() {
-    //            match commit.parents().len() {
-    //                0 => {
-    //                    let tree = filter_try!(commit.tree());
-    //                    let flags = git2::PathspecFlags::NO_MATCH_ERROR;
-    //                    if ps.match_tree(&tree, flags).is_err() {
-    //                        return None;
-    //                    }
-    //                }
-    //                _ => {
-    //                    let m = commit.parents().all(|parent| {
-    //                        match_with_parent(&repo, &commit, &parent, &mut diffopts)
-    //                            .unwrap_or(false)
-    //                    });
-    //                    if !m {
-    //                        return None;
-    //                    }
-    //                }
-    //            }
-    //        }
-    //        if !sig_matches(&commit.author(), &args.flag_author) {
-    //            return None;
-    //        }
-    //        if !sig_matches(&commit.committer(), &args.flag_committer) {
-    //            return None;
-    //        }
-    //        if !log_message_matches(commit.message(), &args.flag_grep) {
-    //            return None;
-    //        }
-    //        Some(Ok(commit))
-    //    })
-    //    .skip(args.flag_skip.unwrap_or(0))
-    //    .take(args.flag_max_count.unwrap_or(!0));
-
-    //// print!
-    //for commit in revwalk {
-    //    let commit = commit?;
-    //    //print_commit(&commit);
-    //    if !args.flag_patch || commit.parents().len() > 1 {
-    //        continue;
-    //    }
-    //    let a = if commit.parents().len() == 1 {
-    //        let parent = commit.parent(0)?;
-    //        Some(parent.tree()?)
-    //    } else {
-    //        None
-    //    };
-    //    let b = commit.tree()?;
-    //    let diff = repo.diff_tree_to_tree(a.as_ref(), Some(&b), Some(&mut diffopts2))?;
-    //    diff.print(DiffFormat::Patch, |_delta, _hunk, line| {
-    //        match line.origin() {
-    //            ' ' | '+' | '-' => print!("{}", line.origin()),
-    //            _ => {}
-    //        }
-    //        print!("230:{}", str::from_utf8(line.content()).unwrap());
-    //        true
-    //    })?;
-    //}
-
-    //println!("{:?}", args.arg_nsec.clone());
     let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor).await;
     let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
     let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
-    //relay_manager.processor.dump();
+
+     if args.arg_dump {
+        relay_manager.processor.dump();
+    }
 
     Ok(())
 }
@@ -399,7 +260,20 @@ pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("lib::run_sniper");
+
+    //TODO run_watcher populates relays.yaml
+    // add async background thread here
+    // allow to run for a few seconds
+    // giving the sniper a populated list
+
+
+    // Allow some time for the watcher to populate relays.yaml
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    debug!("run_sniper: Finished initial sleep.");
+
     let relays = load_file("relays.yaml").unwrap();
+    debug!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
     let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
@@ -413,33 +287,42 @@ pub async fn run_sniper(
     } else {
         std::collections::HashSet::new()
     };
+    debug!("run_sniper: Shitlist loaded. Contains {} entries.", shitlist.len());
 
+    let initial_relay_count = relays.len();
     let filtered_relays: Vec<String> = relays
         .into_iter()
         .filter(|url| {
             if shitlist.is_empty() {
                 true
             } else {
-                !shitlist
+                let is_shitlisted = shitlist
                     .iter()
-                    .any(|shitlisted_url| url.contains(shitlisted_url))
+                    .any(|shitlisted_url| url.contains(shitlisted_url));
+                if is_shitlisted {
+                    debug!("run_sniper: Filtering out shitlisted relay: {}", url);
+                }
+                !is_shitlisted
             }
         })
         .collect();
+    debug!("run_sniper: Filtered from {} to {} relays.", initial_relay_count, filtered_relays.len());
 
     let bodies = stream::iter(filtered_relays)
         .map(|url| {
-            let client = &client;
+            debug!("run_sniper: Processing URL: {}", url);
+            let client = client.clone();
             async move {
+                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
+                debug!("run_sniper: Sending request to: {}", http_url);
                 let resp = client
-                    .get(
-                        url.replace("wss://", "https://")
-                            .replace("ws://", "http://"),
-                    )
+                    .get(&http_url)
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
+                debug!("run_sniper: Received response status: {:?}", resp.status());
                 let text = resp.text().await?;
+                debug!("run_sniper: Received JSON string: {}", text);
 
                 let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
                 r
@@ -451,58 +334,72 @@ pub async fn run_sniper(
         .for_each(|b: Result<(String, String), reqwest::Error>| async {
             if let Ok((url, json_string)) = b {
                 let data: Result<Relay, _> = serde_json::from_str(&json_string);
-                if let Ok(relay_info) = data {
-                    for n in &relay_info.supported_nips {
-                        if n == &nip_lower {
-                            debug!("contact:{:?}", &relay_info.contact);
-                            debug!("description:{:?}", &relay_info.description);
-                            debug!("name:{:?}", &relay_info.name);
-                            debug!("software:{:?}", &relay_info.software);
-                            debug!("version:{:?}", &relay_info.version);
+                match data {
+                    Ok(relay_info) => {
+                        debug!("run_sniper: Successfully parsed relay info for {}", url);
+                        for n in &relay_info.supported_nips {
+                            if n == &nip_lower {
+                                debug!("run_sniper: Found NIP-{} support on relay: {}", nip_lower, url);
+                                debug!("contact:{:?}", &relay_info.contact);
+                                debug!("description:{:?}", &relay_info.description);
+                                debug!("name:{:?}", &relay_info.name);
+                                debug!("software:{:?}", &relay_info.software);
+                                debug!("version:{:?}", &relay_info.version);
 
-                            let parsed_url = match Url::parse(&url) {
-                                Ok(u) => u,
-                                Err(e) => {
-                                    error!("Failed to parse URL {}: {}", url, e);
+                                let parsed_url = match Url::parse(&url) {
+                                    Ok(u) => u,
+                                    Err(e) => {
+                                        error!("Failed to parse URL {}: {}", url, e);
+                                        return;
+                                    }
+                                };
+                                let host = parsed_url.host_str().unwrap_or("unknown");
+                                debug!("run_sniper: Host for {} is {}", url, host);
+
+                                let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
+                                if let Err(e) = fs::create_dir_all(&dir_path) {
+                                    error!("Failed to create directory {}: {}", dir_path.display(), e);
                                     return;
-                                }
-                            };
-                            let host = parsed_url.host_str().unwrap_or("unknown");
+                                };
+                                debug!("run_sniper: Ensured directory exists: {}", dir_path.display());
 
-                            let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
-                            if let Err(e) = fs::create_dir_all(&dir_path) {
-                                error!("Failed to create directory {}: {}", dir_path.display(), e);
-                                return;
-                            };
-
-                            let file_name = format!("{}.json", host);
+                                let file_name = format!("{}.json", host);
                             let file_path = dir_path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!("\n\n{}\n\n", file_path_str);
+                            debug!("run_sniper: Attempting to write to file: {}\n\n{}", file_path_str, file_path_str);
 
-                            match File::create(&file_path) {
-                                Ok(mut file) => {
-                                    debug!("{}", &file_path_str);
-                                    match file.write_all(json_string.as_bytes()) {
-                                        Ok(_) => debug!("wrote relay metadata:{}", &file_path_str),
-                                        Err(e) => {
-                                            error!("Failed to write to {}: {}", &file_path_str, e)
+                                match File::create(&file_path) {
+                                    Ok(mut file) => {
+                                        debug!("run_sniper: File created: {}", &file_path_str);
+                                        match file.write_all(json_string.as_bytes()) {
+                                            Ok(_) => debug!("run_sniper: Wrote relay metadata to: {}", &file_path_str),
+                                            Err(e) => {
+                                                error!("Failed to write to {}: {}", &file_path_str, e)
+                                            }
                                         }
                                     }
+                                    Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
                                 }
-                                Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
-                            }
 
-                            println!(
-                                "{}/{}",
-                                nip_lower,
-                                url.replace("https://", "")
-                                    .replace("wss://", "")
-                                    .replace("ws://", "")
-                            );
+                                debug!(
+                                    "run_sniper: Processed NIP {} for relay: {}/{}",
+                                    nip_lower,
+                                    nip_lower,
+                                    url.replace("https://", "")
+                                        .replace("wss://", "")
+                                        .replace("ws://", "")
+                                );
+                            } else {
+                                trace!("run_sniper: Relay {} does not support NIP-{}", url, nip_lower);
+                            }
                         }
+                    },
+                    Err(e) => {
+                        error!("run_sniper: Failed to parse JSON for {}: {}. JSON: {}", url, e, json_string);
                     }
                 }
+            } else if let Err(e) = b {
+                error!("run_sniper: Error fetching relay data: {}", e);
             }
         })
         .await;
@@ -511,6 +408,7 @@ pub async fn run_sniper(
 }
 
 pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("lib::run_watch");
     let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
     let app_keys = Keys::new(app_secret_key);
     let processor = Processor::new();
@@ -545,7 +443,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     let client = reqwest::Client::new();
     let bodies = stream::iter(relays_iterator)
         .map(|url: String| {
-            let client = &client;
+            let client = client.clone();
             async move {
                 let resp = client
                     .get(
@@ -575,10 +473,12 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
                     for n in &relay_info.supported_nips {
                         trace!("nip_count:{}", nip_count);
                         if nip_count > 1 {
-                              println!("nip-count > 1 -- {:0>2} ", n);
+                              debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
+                              trace!("LINE::581 lib::run_watch");
                               let _ = run_sniper(*n, None).await;
                         } else {
-                        //    print!("{:0>2}", n);
+                             trace!("{:0>2}", n);
+                             //TODO nip_count < 1 -- add to shitlist? 
                         }
                         nip_count -= 1;
                     }
@@ -626,7 +526,7 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 
     let bodies = stream::iter(filtered_relays)
         .map(|url| {
-            let client = &client;
+            let client = client.clone();
             async move {
                 let resp = client
                     .get(
@@ -649,10 +549,12 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
             if let Ok((url, json_string)) = b {
                 let data: Result<Relay, _> = serde_json::from_str(&json_string);
                 if let Ok(relay_info) = data {
-                    let supports_nip01 = relay_info.supported_nips.contains(&1);
-                    let supports_nip11 = relay_info.supported_nips.contains(&11);
+                    let _supports_nip01 = relay_info.supported_nips.contains(&1);
+                    let _supports_nip11 = relay_info.supported_nips.contains(&11);
+                    let supports_nip34 = relay_info.supported_nips.contains(&34);
 
-                    if supports_nip01 && supports_nip11 {
+                    //if supports_nip01 && supports_nip11 {
+                    if supports_nip34 {
                         println!("{}", url);
                     }
                 }

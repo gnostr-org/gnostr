@@ -15,8 +15,16 @@ pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
         .map(|line: &str| String::from(line))
         .collect()
 });
+pub static SHITLIST_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
+    let relays_yaml_bytes = include_bytes!("shitlist.yaml");
+    let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
+    relays_yaml_content.lines()
+        .filter(|line: &&str| !line.trim().is_empty())
+        .map(|line: &str| String::from(line))
+        .collect()
+});
 
-//pub const APP_SECRET_KEY: &str = "nsec1ufnus6pju578ste3v90xd5m2decpuzpql2295m3sknqcjzyys9ls0qlc85";
+// try gnostr bech32-to-any nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36
 pub const APP_SECRET_KEY: &str = "nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36";
 pub struct Processor {
     pubkeys: PubKeys,

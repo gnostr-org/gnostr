@@ -1,7 +1,7 @@
 use crate::processor::Processor;
 use crate::{load_file};
 use crate::relays::{Relays, fetch_online_relays};
-use crate::CliArgs;
+
 use crate::APP_SECRET_KEY;
 use nostr_sdk::prelude::FromSkStr;
 use nostr_sdk::{
@@ -15,13 +15,15 @@ use std::collections::HashSet;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::time::Duration;
 
-use clap::Parser;
 
-use git2::Repository;
+
+
 use std::str;
 
 use log::debug;
+use log::info;
 use log::trace;
+use log::warn;
 
 const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
@@ -48,6 +50,7 @@ impl RelayManager {
         match load_file("relays.yaml") {
             Ok(urls) => {
                 for url_str in urls {
+                    debug!("relay_manager::new::url_str={}", &url_str);
                     relays_instance.add(&url_str);
                 }
                 debug!("Loaded {} relays from relays.yaml", relays_instance.count());
@@ -55,8 +58,8 @@ impl RelayManager {
             Err(e) => debug!("Could not load relays.yaml: {}", e),
         }
 
-        // Fetch online relays (RandyMcMillan/bitchat)
-        let bitchat_online_relays_url = "https://raw.githubusercontent.com/RandyMcMillan/bitchat/refs/heads/main/relays/online_relays_gps.csv";
+        // Fetch online relays (permissionlesstech/bitchat)
+        let bitchat_online_relays_url = "https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv";
         match fetch_online_relays(bitchat_online_relays_url).await {
             Ok(urls) => {
                 for url_str in urls {
@@ -89,15 +92,18 @@ impl RelayManager {
     }
 
     fn add_bootstrap_relays_if_needed(&mut self, bootstrap_relays: Vec<&str>) {
+
+        debug!("relay_manager::add_bootstrap_relays_if_needed");
         for us in &bootstrap_relays {
             if self.relays.count() >= MAX_ACTIVE_RELAYS {
-                return;
+                //return;
             }
             self.relays.add(us);
         }
     }
 
     async fn add_some_relays(&mut self) -> Result<()> {
+        debug!("relay_manager::add_some_relays");
         // remove all
         loop {
             let relays = self.relay_client.relays().await;
@@ -108,20 +114,13 @@ impl RelayManager {
             for relay_url in &relay_urls {
                 debug!("removing relay_url:{}", relay_url.to_string());
             }
-            self.relay_client
-                .remove_relay(relay_urls[0].to_string())
-                .await?;
+            //self.relay_client
+            //    .remove_relay(relay_urls[0].to_string())
+            //    .await?;
         }
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
 
-        let args = CliArgs::parse();
 
-        let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
-        let repo = Repository::discover(path)?;
-        let revwalk = repo.revwalk()?;
-        for commit in revwalk {
-            println!("\n\n\n\n\n{:?}\n\n\n\n", commit);
-        }
 
         //async {
         let opts = Options::new(); //.wait_for_send(true);
@@ -153,6 +152,7 @@ impl RelayManager {
     }
 
     pub async fn run(&mut self, bootstrap_relays: Vec<&str>) -> Result<()> {
+        debug!("relay_manager::run");
         self.add_bootstrap_relays_if_needed(bootstrap_relays);
         self.add_some_relays().await?;
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
@@ -167,23 +167,24 @@ impl RelayManager {
         }
         self.connect().await?;
         self.wait_and_handle_messages().await?;
-        print!("relay_manager::run::self.relays.dump_list()");
+        debug!("relay_manager::run::self.relays.dump_list()");
         self.relays.dump_list(); //TODO convert relays.dump_list to relays.yaml write operation
         //self.relays.print();
         //let get_some = self.relays.get_some(50);
         //for url in get_some { println!("url={}", url.to_string());}
         let get_all = self.relays.get_all();
-        for string in get_all {
-            print!("{} ", string);
+        for relay in get_all {
+            debug!("relay_manager::run::184 relay={} ", relay);
         }
         Ok(())
     }
 
     async fn connect(&mut self) -> Result<()> {
+        debug!("relay_manager::connect");
         let relays = self.relay_client.relays().await;
-        debug!("Connecting to {} relays ...", relays.len());
+        info!("Connecting to {} relays ...", relays.len());
         for u in relays.keys() {
-            trace!("{:?} ", u.to_string())
+            debug!("u={:?} ", u.to_string())
         }
         debug!("\n");
 
@@ -193,7 +194,7 @@ impl RelayManager {
         // Wait for all relays to be connected
         let mut all_connected = false;
         let mut attempts = 0;
-        let max_attempts = 10; // Try for 10 seconds (10 * 1 second sleep)
+        let max_attempts = 2; // Try for 10 seconds (10 * 1 second sleep)
 
         while !all_connected && attempts < max_attempts {
             all_connected = true;
@@ -201,14 +202,14 @@ impl RelayManager {
             for relay in relays.values() {
                 match relay.status().await {
                     RelayStatus::Connected => {
-                        debug!("Relay {} is connected.", relay.url().to_string());
+                        info!("Relay {} is connected.", relay.url().to_string());
                     },
                     RelayStatus::Disconnected | RelayStatus::Terminated | RelayStatus::Connecting => {
-                        debug!("Relay {} is not yet connected. Status: {:?}", relay.url().to_string(), relay.status().await);
+                        warn!("Relay {} is not yet connected. Status: {:?}", relay.url().to_string(), relay.status().await);
                         all_connected = false;
                     }
                     _ => {
-                        debug!("Relay {} has unknown status: {:?}", relay.url().to_string(), relay.status().await);
+                        warn!("Relay {} has unknown status: {:?}", relay.url().to_string(), relay.status().await);
                         all_connected = false;
                     }
                 }
@@ -224,9 +225,8 @@ impl RelayManager {
             debug!("All relays connected.");
             Ok(())
         } else {
-            debug!("Failed to connect to all relays after {} attempts.", max_attempts);
-            // It's acceptable to still return Ok(()) here, but log the warning
-            // The system might still function with some disconnected relays, but the user is informed.
+            warn!("Failed to connect to all relays after {} attempts.", max_attempts);
+            //TODO append to shitlist.yaml in user space
             Ok(())
         }
     }
