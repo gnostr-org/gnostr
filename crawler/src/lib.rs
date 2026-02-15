@@ -698,22 +698,23 @@ async fn get_relays_txt() -> Response {
 
     match fs::read_to_string(&file_path).await {
         Ok(content) => {
-            let mut relays_output = String::new();
-            for line in content.lines() {
-                // Basic validation for relay URLs. It should start with wss:// or ws://
-                if line.starts_with("wss://") || line.starts_with("ws://") {
-                    relays_output.push_str(line);
-                    relays_output.push_str("\n");
+            match serde_yaml::from_str::<Vec<String>>(&content) {
+                Ok(relays) => {
+                    let relays_output = relays.join(" ");
+                    Response::builder()
+                        .status(StatusCode::OK)
+                        .header(CONTENT_TYPE, "text/plain")
+                        .body(Body::from(relays_output))
+                        .unwrap_or_else(|e| {
+                            error!("Failed to build TXT response: {}", e);
+                            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                        })
+                },
+                Err(e) => {
+                    error!("Failed to parse relays.yaml for relays.txt: {}", e);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to parse relays.yaml for relays.txt: {}", e))).into_response()
                 }
             }
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "text/plain")
-                .body(Body::from(relays_output))
-                .unwrap_or_else(|e| {
-                    error!("Failed to build TXT response: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                })
         },
         Err(e) => {
             error!("Failed to read relays.yaml for relays.txt: {}. Path: {}", e, file_path.display());
