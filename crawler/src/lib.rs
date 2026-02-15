@@ -610,14 +610,27 @@ async fn get_relays_yaml() -> Response {
 
     match fs::read_to_string(&file_path).await {
         Ok(content) => {
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "application/x-yaml")
-                .body(Body::from(content))
-                .unwrap_or_else(|e| {
-                    error!("Failed to build YAML response: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                })
+            let relays: Vec<String> = content.lines()
+                .filter(|line| !line.trim().is_empty())
+                .map(String::from)
+                .collect();
+
+            match serde_yaml::to_string(&relays) {
+                Ok(yaml_content) => {
+                    Response::builder()
+                        .status(StatusCode::OK)
+                        .header(CONTENT_TYPE, "application/x-yaml")
+                        .body(Body::from(yaml_content))
+                        .unwrap_or_else(|e| {
+                            error!("Failed to build YAML response: {}", e);
+                            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                        })
+                },
+                Err(e) => {
+                    error!("Failed to serialize relays to YAML: {}", e);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to serialize relays to YAML: {}", e))).into_response()
+                }
+            }
         },
         Err(e) => {
             error!("Failed to read relays.yaml: {}. Path: {}", e, file_path.display());

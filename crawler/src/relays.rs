@@ -23,7 +23,15 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
 
     let relays: Vec<String> = text.lines()
         .filter(|line| !line.trim().is_empty())
-        .map(String::from)
+        .filter_map(|line| {
+            match Url::parse(line) {
+                Ok(url) => Some(url.to_string()),
+                Err(_) => {
+                    warn!("Skipping invalid relay URL fetched: {}", line);
+                    None
+                }
+            }
+        })
         .collect();
 
     debug!("Fetched {} online relays", relays.len());
@@ -142,11 +150,18 @@ impl Relays {
             fs::create_dir_all(parent).expect("Failed to create directory");
         }
 
-        let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
-        for u in &self.r {
-            writeln!(file, "{}", u).expect("Failed to write relay URL");
+        let relays: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
+        match serde_yaml::to_string(&relays) {
+            Ok(yaml_content) => {
+                let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
+                write!(file, "{}", yaml_content).expect("Failed to write YAML content");
+                debug!("Relays dumped to {}", file_path.display());
+                debug!("Relays.yaml written to: {}", file_path.canonicalize().unwrap_or_default().display());
+            },
+            Err(e) => {
+                warn!("Failed to serialize relays to YAML for {}: {}", filename, e);
+            }
         }
-        debug!("Relays dumped to {}", file_path.display());
     }
 
     pub fn dump_to_json(&self, filename: &str) {
