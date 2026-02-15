@@ -10,8 +10,7 @@ use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use reqwest::header::ACCEPT;
 use std::collections::HashSet;
-use std::fs as sync_fs; // Renamed std::fs to sync_fs
-use std::fs::File; // Explicitly import File
+use std::fs as sync_fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str;
@@ -589,6 +588,7 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     let app = Router::new()
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
+        .route("/relays.txt", get(get_relays_txt))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
@@ -645,6 +645,37 @@ async fn get_relays_json() -> Response {
         Err(e) => {
             error!("Failed to read relays.json: {}. Path: {}", e, file_path.display());
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.json: {}", e))).into_response()
+        }
+    }
+}
+
+async fn get_relays_txt() -> Response {
+    let config_dir = crate::relays::get_config_dir_path();
+    let file_path = config_dir.join("relays.yaml"); // Use relays.yaml as source
+    debug!("Attempting to serve relays.txt (from relays.yaml) from: {}", file_path.display());
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => {
+            let mut relays_output = String::new();
+            for line in content.lines() {
+                // Basic validation for relay URLs. It should start with wss:// or ws://
+                if line.starts_with("wss://") || line.starts_with("ws://") {
+                    relays_output.push_str(line);
+                    relays_output.push_str("\n");
+                }
+            }
+            Response::builder()
+                .status(StatusCode::OK)
+                .header(CONTENT_TYPE, "text/plain")
+                .body(Body::from(relays_output))
+                .unwrap_or_else(|e| {
+                    error!("Failed to build TXT response: {}", e);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                })
+        },
+        Err(e) => {
+            error!("Failed to read relays.yaml for relays.txt: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml for relays.txt: {}", e))).into_response()
         }
     }
 }

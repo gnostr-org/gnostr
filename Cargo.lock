@@ -772,6 +772,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-compression"
+version = "0.4.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68650b7df54f0293fd061972a0fb05aaf4fc0879d3b3d21a638a182c5c543b9f"
+dependencies = [
+ "compression-codecs",
+ "compression-core",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
 name = "async-executor"
 version = "1.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2465,6 +2477,26 @@ dependencies = [
  "serde",
  "static_assertions",
 ]
+
+[[package]]
+name = "compression-codecs"
+version = "0.4.36"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00828ba6fd27b45a448e57dbfe84f1029d4c9f26b368157e9a448a5f49a2ec2a"
+dependencies = [
+ "brotli",
+ "compression-core",
+ "flate2",
+ "memchr",
+ "zstd",
+ "zstd-safe",
+]
+
+[[package]]
+name = "compression-core"
+version = "0.4.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75984efb6ed102a0d42db99afb6c1948f0380d1d91808d5529916e6c08b49d8d"
 
 [[package]]
 name = "comrak"
@@ -5667,14 +5699,15 @@ dependencies = [
 [[package]]
 name = "gnostr-crawler"
 version = "1906.925289.572444"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97d28f0891f8a7be7c60113947580a64eb9670b3e2035adb22f45f742a35c7d7"
 dependencies = [
+ "anyhow",
  "assert_cmd",
+ "axum 0.7.9",
  "chrono",
  "clap 4.5.55",
  "console 0.11.3",
  "ctrlc",
+ "directories 6.0.0",
  "dns-lookup",
  "env_logger 0.11.8",
  "futures",
@@ -5688,11 +5721,15 @@ dependencies = [
  "reqwest 0.11.27",
  "serde",
  "serde_json",
+ "serde_yaml",
+ "sha2 0.10.9",
  "time 0.1.45",
  "tokio",
+ "tower-http 0.5.2",
  "tracing",
  "tracing-core",
  "tracing-subscriber",
+ "url",
 ]
 
 [[package]]
@@ -14343,6 +14380,37 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
+]
+
+[[package]]
+name = "tower-http"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e9cd434a998747dd2c4276bc96ee2e0c7a2eadf3cae88e52be55a05fa9053f5"
+dependencies = [
+ "async-compression",
+ "base64 0.21.7",
+ "bitflags 2.10.0",
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "http 1.4.0",
+ "http-body 1.0.1",
+ "http-body-util",
+ "http-range-header 0.4.2",
+ "httpdate",
+ "iri-string",
+ "mime",
+ "mime_guess",
+ "percent-encoding",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
+ "tower 0.4.13",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]

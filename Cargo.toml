@@ -46,6 +46,7 @@ members = [
     ".",
     # Root crate
     "asyncgit",
+    "crawler",
     "filetreelist",
     "gh",
     "git2-hooks",
@@ -374,6 +375,8 @@ globset = "0.4"
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { version = "1893.935010.246953", default-features = false, path = "asyncgit" }
+gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
+#gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
 gnostr-legit = { version = "1894.934224.276199", path = "legit" }
 #gnostr-query = { version = "1894.934224.276199", path = "query" }
@@ -645,7 +648,7 @@ expectrl = { workspace = true }
 futures-util = { workspace = true }
 gag = "1.0.0"
 git2 = { workspace = true }
-gnostr-crawler = "1906.925289.572444"
+#gnostr-crawler = "1906.925289.572444"
 grcov = "0.10.5"
 mockall = "0.11.4"
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" } # Kept for now, will remove later
