@@ -438,7 +438,23 @@ impl RelayManager {
                 }
             }
             Kind::RelayList => {
-                debug!("relay_manger::Kind::RelayList={:?}", event.kind);
+                self.update_event_time();
+                debug!("relay_manager::Kind::RelayList={:?}", event.kind);
+
+                match serde_json::from_str::<serde_json::Value>(&event.content) {
+                    Ok(json_value) => {
+                        if let Some(relays_map) = json_value.as_object() {
+                            for (url_str, _read_write) in relays_map {
+                                if self.relays.add(url_str) {
+                                    trace!("Added relay from Kind::RelayList: {}", url_str);
+                                }
+                            }
+                        }
+                    },
+                    Err(e) => {
+                        warn!("Failed to parse Kind::RelayList event content as JSON: {}. Content: {}", e, event.content);
+                    }
+                }
             }
             Kind::Replaceable(_u16) => {
                 debug!("{:?}", event.kind);
@@ -471,7 +487,7 @@ impl RelayManager {
             }
             Kind::RecommendRelay => {
                 self.update_event_time();
-                debug!("\n395:Relay(s): {}\n", event.content);
+                debug!("\n490:Relay(s): {}\n", event.content);
                 let _ = self.relays.add(&event.content);
             }
         }

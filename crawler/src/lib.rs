@@ -87,12 +87,12 @@ pub enum Commands {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Relay {
-    pub contact: String,
-    pub description: String,
-    pub name: String,
-    pub software: String,
-    pub supported_nips: Vec<i32>,
-    pub version: String,
+    pub contact: Option<String>,
+    pub description: Option<String>,
+    pub name: Option<String>,
+    pub software: Option<String>,
+    pub supported_nips: Option<Vec<i32>>,
+    pub version: Option<String>,
 }
 
 pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
@@ -105,7 +105,28 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
      }
 
      debug!("Loading file: {}", file_path.display());
-     BufReader::new(sync_fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect()
+
+     let file_content = BufReader::new(sync_fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect::<io::Result<Vec<String>>>()?;
+
+     let filtered_relays: Vec<String> = file_content.into_iter()
+         .filter_map(|line| {
+             let trimmed_line = line.trim();
+             if trimmed_line.starts_with("wss://") || trimmed_line.starts_with("ws://") {
+                 match Url::parse(trimmed_line) {
+                     Ok(url) => Some(url.to_string()),
+                     Err(_) => {
+                         warn!("Skipping invalid URL in relays.yaml: {}", trimmed_line);
+                         None
+                     }
+                 }
+             } else {
+                 warn!("Skipping non-websocket URL in relays.yaml: {}", trimmed_line);
+                 None
+             }
+         })
+         .collect();
+
+     Ok(filtered_relays)
  }
 
 //pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
@@ -337,9 +358,15 @@ pub async fn run_sniper(
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
+
+                if !resp.status().is_success() {
+                    warn!("run_sniper: Failed to fetch NIP-11 document for {}: HTTP Status {}", url, resp.status());
+                    return Ok((url, String::new())); // Return empty string to skip JSON parsing
+                }
+
                 debug!("run_sniper: Received response status: {:?}", resp.status());
                 let text = resp.text().await?;
-                debug!("run_sniper: Received JSON string: {}", text);
+                debug!("run_sniper: Raw response text from {}: {}", http_url, text); // Added debug log
 
                 let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
                 r
@@ -354,7 +381,7 @@ pub async fn run_sniper(
                 match data {
                     Ok(relay_info) => {
                         debug!("run_sniper: Successfully parsed relay info for {}", url);
-                        for n in &relay_info.supported_nips {
+                        for n in &relay_info.supported_nips.unwrap_or_default() {
                             if n == &nip_lower {
                                 debug!("run_sniper: Found NIP-{} support on relay: {}", nip_lower, url);
                                 debug!("contact:{:?}", &relay_info.contact);
@@ -486,8 +513,9 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
                 let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json_string);
                 if let Ok(relay_info) = data {
                     //print!("{{\"nips\":\"");
-                    let mut nip_count = relay_info.supported_nips.len();
-                    for n in &relay_info.supported_nips {
+                    let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                    let mut nip_count = supported_nips.len();
+                    for n in &supported_nips {
                         trace!("nip_count:{}", nip_count);
                         if nip_count > 1 {
                               debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
@@ -566,11 +594,12 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
             if let Ok((url, json_string)) = b {
                 let data: Result<Relay, _> = serde_json::from_str(&json_string);
                 if let Ok(relay_info) = data {
-                    let _supports_nip01 = relay_info.supported_nips.contains(&1);
-                    let _supports_nip11 = relay_info.supported_nips.contains(&11);
-                    let supports_nip34 = relay_info.supported_nips.contains(&34);
+                    let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                    let _supports_nip01 = supported_nips.contains(&1);
+                    let _supports_nip11 = supported_nips.contains(&11);
+                    let supports_nip34 = supported_nips.contains(&34);
 
-                    //if supports_nip01 && supports_nip11 {
+                    //if _supports_nip01 && _supports_nip11 {
                     if supports_nip34 {
                         println!("{}", url);
                     }

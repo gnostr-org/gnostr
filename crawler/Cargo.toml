@@ -74,8 +74,9 @@ version = "0.14.0"
 [dependencies.log]
 version = "0.4.24"
 
-[dependencies.nostr-sdk]
+[dependencies.nostr-sdk] ##TODO remove and use gnostr/src/lib/types
 version = "0.19.1"
+features = ["all-nips"]
 
 [dependencies.predicates]
 version = "3.1.3"
