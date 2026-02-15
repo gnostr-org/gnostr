@@ -6,7 +6,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use tracing::{debug, warn};
 use reqwest::Client;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use reqwest::header::ACCEPT;
 
 pub fn get_config_dir_path() -> PathBuf {
@@ -122,26 +122,16 @@ impl Relays {
             let mut relay = format!("{}", u);
             if relay.ends_with('/') {
                 relay.pop();
-                println!("{}", relay);
+                debug!("relays::125:{}", relay);
             } else {
-                println!("{}", relay);
+                debug!("relays::127:{}", relay);
             }
         }
     }
 
-    pub fn dump_json_object(&self) {
-        let mut count = 0;
-        print!("[\"RELAYS\",");
-        for u in &self.r {
-            print!("{{\"{}\":\"{}\"}},", count, u);
-            count += 1;
-        }
-        print!("{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
-        print!("]");
-    }
-
     pub fn dump_list(&self) {
         self.dump_to_file("relays.yaml");
+        self.dump_to_json("relays.json");
     }
 
     pub fn dump_to_file(&self, filename: &str) {
@@ -156,6 +146,29 @@ impl Relays {
         for u in &self.r {
             writeln!(file, "{}", u).expect("Failed to write relay URL");
         }
+        debug!("Relays dumped to {}", file_path.display());
+    }
+
+    pub fn dump_to_json(&self, filename: &str) {
+        let config_dir = get_config_dir_path();
+        let file_path = config_dir.join(filename);
+
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent).expect("Failed to create directory");
+        }
+
+        let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
+        debug!("file={:?}", file);
+
+        let mut count = 0;
+        let _ = writeln!(file, "[\"RELAYS\",");
+        for u in &self.r {
+            let _ = writeln!(file, "{{\"{}\":\"{}\"}},", count, u);
+            count += 1;
+        }
+        let _ = writeln!(file, "{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
+        let _ = writeln!(file, "]");
+
         debug!("Relays dumped to {}", file_path.display());
     }
 }
