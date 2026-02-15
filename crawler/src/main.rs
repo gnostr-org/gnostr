@@ -1,5 +1,5 @@
 use clap::Parser;
-use gnostr_crawler::{Cli, Commands, run_sniper, run_watch, run_nip34};
+use gnostr_crawler::{Cli, Commands, run_sniper, run_watch, run_nip34, run_api_server};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,6 +25,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Crawl(args) => {
             gnostr_crawler::run(args).await?;
+        }
+        Commands::Serve { port } => {
+            run_api_server(*port).await?;
         }
     }
 

@@ -10,7 +10,8 @@ use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use reqwest::header::ACCEPT;
 use std::collections::HashSet;
-use std::fs::{self, File};
+use std::fs as sync_fs; // Renamed std::fs to sync_fs
+use std::fs::File; // Explicitly import File
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str;
@@ -31,6 +32,17 @@ use crate::relay_manager::RelayManager;
 #[allow(unused_imports)]
 use crate::processor::LOCALHOST_8080;
 use crate::processor::BOOTSTRAP_RELAYS;
+
+use axum::{
+    routing::get,
+    response::{IntoResponse, Response},
+    Router,
+    body::Body, // Added for explicit body type
+    http::{StatusCode, header::CONTENT_TYPE}, // Changed to axum::http
+};
+use std::net::SocketAddr;
+use tokio::fs; // For async file operations
+use tower_http::trace::{self, TraceLayer}; // For logging requests
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -66,6 +78,12 @@ pub enum Commands {
     },
     /// Runs the main gnostr-crawler logic
     Crawl(CliArgs),
+    /// Starts a web server to serve relay information
+    Serve {
+        /// The port to listen on for the API server
+        #[clap(long, short, default_value = "3000")]
+        port: u16,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -84,19 +102,19 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
      let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
 
      if let Some(parent) = file_path.parent() {
-         fs::create_dir_all(parent)?;
+         sync_fs::create_dir_all(parent)?;
      }
 
      debug!("Loading file: {}", file_path.display());
-     BufReader::new(fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect()
+     BufReader::new(sync_fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect()
  }
 
 //pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-//    BufReader::new(fs::File::open(filename)?).lines().collect()
+//    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
 //}
 
 pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
-    BufReader::new(fs::File::open(filename)?).lines().collect()
+    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
 }
 
 #[allow(clippy::manual_strip)]
@@ -357,7 +375,7 @@ pub async fn run_sniper(
                                 debug!("run_sniper: Host for {} is {}", url, host);
 
                                 let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
-                                if let Err(e) = fs::create_dir_all(&dir_path) {
+                                if let Err(e) = sync_fs::create_dir_all(&dir_path) {
                                     error!("Failed to create directory {}: {}", dir_path.display(), e);
                                     return;
                                 };
@@ -368,7 +386,7 @@ pub async fn run_sniper(
                             let file_path_str = file_path.display().to_string();
                             debug!("run_sniper: Attempting to write to file: {}\n\n{}", file_path_str, file_path_str);
 
-                                match File::create(&file_path) {
+                                match sync_fs::File::create(&file_path) {
                                     Ok(mut file) => {
                                         debug!("run_sniper: File created: {}", &file_path_str);
                                         match file.write_all(json_string.as_bytes()) {
@@ -563,4 +581,70 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
         .await;
 
     Ok(())
+}
+
+pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("run_api_server: Starting API server on port {}", port);
+
+    let app = Router::new()
+        .route("/relays.yaml", get(get_relays_yaml))
+        .route("/relays.json", get(get_relays_json))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
+                .on_response(trace::DefaultOnResponse::new().include_headers(true)),
+        );
+
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    info!("run_api_server: listening on {}", addr);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, app.into_make_service()).await?;
+
+    Ok(())
+}
+
+async fn get_relays_yaml() -> Response {
+    let config_dir = crate::relays::get_config_dir_path();
+    let file_path = config_dir.join("relays.yaml");
+    debug!("Attempting to serve relays.yaml from: {}", file_path.display());
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => {
+            Response::builder()
+                .status(StatusCode::OK)
+                .header(CONTENT_TYPE, "application/x-yaml")
+                .body(Body::from(content))
+                .unwrap_or_else(|e| {
+                    error!("Failed to build YAML response: {}", e);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                })
+        },
+        Err(e) => {
+            error!("Failed to read relays.yaml: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml: {}", e))).into_response()
+        }
+    }
+}
+
+async fn get_relays_json() -> Response {
+    let config_dir = crate::relays::get_config_dir_path();
+    let file_path = config_dir.join("relays.json");
+    debug!("Attempting to serve relays.json from: {}", file_path.display());
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => {
+            Response::builder()
+                .status(StatusCode::OK)
+                .header(CONTENT_TYPE, "application/json")
+                .body(Body::from(content))
+                .unwrap_or_else(|e| {
+                    error!("Failed to build JSON response: {}", e);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                })
+        },
+        Err(e) => {
+            error!("Failed to read relays.json: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.json: {}", e))).into_response()
+        }
+    }
 }
