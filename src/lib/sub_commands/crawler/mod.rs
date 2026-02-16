@@ -688,7 +688,63 @@ async fn get_relays_txt() -> Response {
 }
 
 async fn get_index_html() -> Response {
-    let html_content = b"<html><body><h1>Gnostr Crawler Web UI</h1><p>Relay information will be available here.</p></body></html>";
+    let html_content = r#"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gnostr Crawler Endpoints</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 0.5em;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gnostr Crawler Endpoints</h1>
+        <p>Explore the available data endpoints for the Gnostr Crawler:</p>
+        <ul>
+            <li><a href="/relays.txt" target="_blank">/relays.txt</a>: A plain text list of detected relays.</li>
+            <li><a href="/relays.yaml" target="_blank">/relays.yaml</a>: Relays in YAML format.</li>
+            <li><a href="/relays.json" target="_blank">/relays.json</a>: Relays in JSON format.</li>
+        </ul>
+        <p>These endpoints are served by the <code>gnostr-crawler</code> API server. To view them, ensure the crawler is running in serve mode (e.g., <code>cargo run -- serve</code>).</p>
+    </div>
+</body>
+</html>
+"#;
+
     Response::builder()
         .status(StatusCode::OK)
         .header(CONTENT_TYPE, "text/html")
