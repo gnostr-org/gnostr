@@ -697,49 +697,111 @@ async fn get_index_html() -> Response {
     <title>Gnostr Crawler Endpoints</title>
     <style>
         body {
-            font-family: sans-serif;
-            margin: 2em;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
             line-height: 1.6;
-            background-color: #f4f4f4;
-            color: #333;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
         .container {
             max-width: 800px;
-            margin: auto;
-            background: #fff;
+            margin: 1em;
+            background: #2c2c2c;
             padding: 2em;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5em;
+        }
+        .header svg {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+            fill: #9a4fe6; /* Adjusted to a purple color */
         }
         h1 {
-            color: #2c3e50;
+            color: #e0e0e0;
+            font-weight: 300;
+        }
+        p {
+            font-size: 1.1em;
         }
         ul {
             list-style-type: none;
             padding: 0;
+            margin-top: 1.5em;
         }
         li {
-            margin-bottom: 0.5em;
+            margin-bottom: 1em;
+            background: #3c3c3c;
+            padding: 0.8em;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        li:hover {
+            background-color: #4c4c4c;
         }
         a {
-            color: #3498db;
+            color: #a56de2; /* Lighter purple for links */
             text-decoration: none;
+            font-weight: bold;
         }
         a:hover {
             text-decoration: underline;
+        }
+        footer {
+            margin-top: 2em;
+            font-size: 0.9em;
+            color: #888;
+        }
+        @media (max-width: 600px) {
+            body {
+                margin: 0;
+            }
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                padding: 1em;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .header svg {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Gnostr Crawler Endpoints</h1>
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                <g>
+                    <path style="fill-rule:nonzero;" d="M 978.710938 468.800781 L 555.1875 45.296875 C 530.800781 20.902344 491.246094 20.902344 466.839844 45.296875 L 378.902344 133.257812 L 490.453125 244.808594 C 516.382812 236.046875 546.109375 241.929688 566.769531 262.597656 C 587.554688 283.394531 593.382812 313.375 584.398438 339.398438 L 691.929688 446.917969 C 717.949219 437.945312 747.953125 443.75 768.726562 464.558594 C 797.757812 493.589844 797.757812 540.628906 768.726562 569.683594 C 739.675781 598.722656 692.636719 598.722656 663.574219 569.683594 C 641.742188 547.828125 636.335938 515.738281 647.410156 488.839844 L 547.121094 388.558594 L 547.121094 652.445312 C 554.195312 655.953125 560.878906 660.617188 566.769531 666.507812 C 595.800781 695.539062 595.800781 742.578125 566.769531 771.640625 C 537.738281 800.664062 490.664062 800.664062 461.65625 771.640625 C 432.625 742.570312 432.625 695.527344 461.65625 666.507812 C 468.832031 659.339844 477.140625 653.914062 486.007812 650.28125 L 486.007812 383.9375 C 477.140625 380.304688 468.855469 374.933594 461.65625 367.710938 C 439.664062 345.730469 434.375 313.449219 445.652344 286.445312 L 335.683594 176.457031 L 45.265625 466.839844 C 20.871094 491.257812 20.871094 530.8125 45.265625 555.207031 L 468.8125 978.722656 C 493.199219 1003.117188 532.742188 1003.117188 557.160156 978.722656 L 978.710938 557.171875 C 1003.109375 532.777344 1003.109375 493.199219 978.710938 468.800781 Z M 978.710938 468.800781 "/>
+                </g>
+            </svg>
+            <h1>Gnostr Crawler Endpoints</h1>
+        </div>
         <p>Explore the available data endpoints for the Gnostr Crawler:</p>
         <ul>
-            <li><a href="/relays.txt" target="_blank">/relays.txt</a>: A plain text list of detected relays.</li>
-            <li><a href="/relays.yaml" target="_blank">/relays.yaml</a>: Relays in YAML format.</li>
-            <li><a href="/relays.json" target="_blank">/relays.json</a>: Relays in JSON format.</li>
+            <li><a href="/relays.txt" target="_blank">/relays.txt</a></li>
+            <li><a href="/relays.yaml" target="_blank">/relays.yaml</a></li>
+            <li><a href="/relays.json" target="_blank">/relays.json</a></li>
         </ul>
-        <p>These endpoints are served by the <code>gnostr-crawler</code> API server. To view them, ensure the crawler is running in serve mode (e.g., <code>cargo run -- serve</code>).</p>
+        <footer>
+            <p>These endpoints are served by the <code>gnostr-crawler</code> API server.</p>
+        </footer>
     </div>
 </body>
 </html>
