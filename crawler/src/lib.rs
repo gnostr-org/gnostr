@@ -41,6 +41,7 @@ use axum::{
 };
 use std::net::SocketAddr;
 use tokio::fs; // For async file operations
+use tokio::spawn; // Added for spawning async tasks
 use tower_http::trace::{self, TraceLayer}; // For logging requests
 
 const CONCURRENT_REQUESTS: usize = 16;
@@ -665,6 +666,13 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 
 pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     debug!("run_api_server: Starting API server on port {}", port);
+
+    // Start the watch process in a separate asynchronous task
+    tokio::spawn(async move {
+        if let Err(e) = run_watch(None).await {
+            error!("Watch process failed: {}", e);
+        }
+    });
 
     let app = Router::new()
         .route("/", get(get_index_html))
