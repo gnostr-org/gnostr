@@ -56,7 +56,6 @@ use std::net::SocketAddr;
 use tokio::fs; // For async file operations
 #[allow(unused_imports)] // Suppress false positive for tokio::task::spawn
 use tokio::task::spawn; // Added for spawning async tasks
-#[cfg(feature = "gnostr-web")]
 use tower_http::trace::{self, TraceLayer}; // For logging requests
 
 const CONCURRENT_REQUESTS: usize = 16;
@@ -86,7 +85,6 @@ pub enum InnerCrawlerCommand {
     /// Runs the main gnostr-crawler logic
     Crawl(CliArgs),
     /// Starts a web server to serve relay information
-    #[cfg(feature = "gnostr-web")]
     Serve {
         /// The port to listen on for the API server
         #[clap(long, short, default_value = "3000")]
@@ -94,7 +92,7 @@ pub enum InnerCrawlerCommand {
     },
 }
 
-#[derive(Parser, Debug)]
+#[derive(clap::Args, Debug, Clone)]
 #[command(author, version, about = "Gnostr Crawler Subcommand", long_about = None)]
 pub struct CrawlerSubCommand {
     #[clap(subcommand)]
@@ -565,7 +563,6 @@ pub async fn run_nip34(shitlist_path: Option<String>, client: &reqwest::Client) 
     Ok(())
 }
 
-#[cfg(feature = "gnostr-web")]
 pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     debug!("run_api_server: Starting API server on port {}", port);
 
@@ -599,7 +596,6 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
 }
 
 // Handlers for the API server - placeholders
-#[cfg(feature = "gnostr-web")]
 async fn get_relays_yaml() -> Response {
     let config_dir = get_config_dir_path();
     let file_path = config_dir.join("relays.yaml");
@@ -636,7 +632,6 @@ async fn get_relays_yaml() -> Response {
     }
 }
 
-#[cfg(feature = "gnostr-web")]
 async fn get_relays_json() -> Response {
     let config_dir = get_config_dir_path();
     let file_path = config_dir.join("relays.json");
@@ -660,7 +655,6 @@ async fn get_relays_json() -> Response {
     }
 }
 
-#[cfg(feature = "gnostr-web")]
 async fn get_relays_txt() -> Response {
     let config_dir = get_config_dir_path();
     let file_path = config_dir.join("relays.yaml"); // Use relays.yaml as source
@@ -693,7 +687,6 @@ async fn get_relays_txt() -> Response {
     }
 }
 
-#[cfg(feature = "gnostr-web")]
 async fn get_index_html() -> Response {
     let html_content = b"<html><body><h1>Gnostr Crawler Web UI</h1><p>Relay information will be available here.</p></body></html>";
     Response::builder()
@@ -723,7 +716,6 @@ pub async fn dispatch_crawler_command(
         InnerCrawlerCommand::Crawl(args) => {
             run(&args).await?;
         }
-        #[cfg(feature = "gnostr-web")]
         InnerCrawlerCommand::Serve { port } => {
             run_api_server(port).await?;
         }
