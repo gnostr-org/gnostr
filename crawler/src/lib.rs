@@ -95,39 +95,96 @@ pub struct Relay {
     pub version: Option<String>,
 }
 
+pub fn preprocess_line(line: &str) -> String {
+    let mut trimmed_line = line.trim().to_string();
+    // Truncate at the first comma, if any
+    if let Some(comma_idx) = trimmed_line.find(',') {
+        trimmed_line.truncate(comma_idx);
+        trimmed_line = trimmed_line.trim().to_string(); // Re-trim after truncation
+    }
+    trimmed_line
+}
+
 pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-     let base_dir = crate::relays::get_config_dir_path();
+    let base_dir = crate::relays::get_config_dir_path();
+    let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
 
-     let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
+    if let Some(parent) = file_path.parent() {
+        sync_fs::create_dir_all(parent)?;
+    }
 
-     if let Some(parent) = file_path.parent() {
-         sync_fs::create_dir_all(parent)?;
-     }
+    debug!("Loading file: {}", file_path.display());
 
-     debug!("Loading file: {}", file_path.display());
+    let file_content = sync_fs::read_to_string(&file_path)?;
 
-     let file_content = BufReader::new(sync_fs::OpenOptions::new().read(true).write(true).create(true).open(file_path)?).lines().collect::<io::Result<Vec<String>>>()?;
+    // Preprocess each line to truncate after a comma and trim whitespace
+    let preprocessed_lines: Vec<String> = file_content.lines()
+        .map(|line| preprocess_line(line))
+        .filter(|line| !line.is_empty())
+        .collect();
 
-     let filtered_relays: Vec<String> = file_content.into_iter()
-         .filter_map(|line| {
-             let trimmed_line = line.trim();
-             if trimmed_line.starts_with("wss://") || trimmed_line.starts_with("ws://") {
-                 match Url::parse(trimmed_line) {
-                     Ok(url) => Some(url.to_string()),
-                     Err(_) => {
-                         warn!("Skipping invalid URL in relays.yaml: {}", trimmed_line);
-                         None
-                     }
-                 }
-             } else {
-                 warn!("Skipping non-websocket URL in relays.yaml: {}", trimmed_line);
-                 None
-             }
-         })
-         .collect();
+    let preprocessed_content_for_yaml = preprocessed_lines.join("\n");
 
-     Ok(filtered_relays)
- }
+    let mut relays: Vec<String> = Vec::new();
+
+    // Try parsing as YAML first
+    match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
+        Ok(yaml_relays) => {
+            relays = yaml_relays;
+        },
+        Err(e) => {
+            // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
+            warn!("Failed to parse {} as YAML: {}. Falling back to preprocessed lines.", file_path.display(), e);
+            relays = preprocessed_lines;
+        }
+    }
+
+    let filtered_relays: Vec<String> = relays.into_iter()
+        .filter_map(|line| {
+            // Lines are already preprocessed for truncation and trimming.
+            // Now, refine filtering to differentiate between actual non-websocket URLs and non-URL lines.
+            if line.is_empty() {
+                return None;
+            }
+
+            let mut final_line = line.clone();
+
+            // Attempt to prepend wss:// if it looks like a hostname without a scheme
+            if !final_line.contains("://") {
+                let potential_url = format!("wss://{}", final_line);
+                match Url::parse(&potential_url) {
+                    Ok(url) => {
+                        debug!("Prepended 'wss://' to form valid URL: {}", url);
+                        final_line = url.to_string();
+                    },
+                    Err(_) => {
+                        // If prepending wss:// doesn't form a valid URL, keep the original line
+                        // and let the next checks handle it as a non-URL line.
+                        debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
+                    }
+                }
+            }
+
+            if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
+                match Url::parse(&final_line) {
+                    Ok(url) => Some(url.to_string()),
+                    Err(_) => {
+                        warn!("Skipping invalid WEBSOCKET URL in {}: {}", filename.as_ref().display(), final_line);
+                        None
+                    }
+                }
+            } else if final_line.contains("://") { // It's a URL, but not a websocket URL
+                warn!("Skipping non-websocket URL scheme in {}: {}", filename.as_ref().display(), final_line);
+                None
+            } else { // It's not a URL at all (e.g., "Relay URL")
+                debug!("Silently skipping non-URL line in {}: {}", filename.as_ref().display(), final_line);
+                None
+            }
+        })
+        .collect();
+
+    Ok(filtered_relays)
+}
 
 //pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 //    BufReader::new(sync_fs::File::open(filename)?).lines().collect()

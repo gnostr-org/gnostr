@@ -1,5 +1,6 @@
 use nostr_sdk::prelude::Url;
 use directories::ProjectDirs;
+use crate::preprocess_line;
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
@@ -22,22 +23,86 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
     let text = response.text().await?;
 
     let relays: Vec<String> = text.lines()
-        .filter(|line| !line.trim().is_empty())
         .filter_map(|line| {
-            if line.starts_with("wss://") || line.starts_with("ws://") {
-                match Url::parse(line) {
-                    Ok(url) => Some(url.to_string()),
-                    Err(_) => {
-                        warn!("Skipping invalid URL format (after schema check): {}", line);
-                        None
-                    }
-                }
-            } else {
-                warn!("Skipping non-websocket URL: {}", line);
-                None
-            }
-        })
-        .collect();
+            let preprocessed_line = preprocess_line(line);
+
+                        if preprocessed_line.is_empty() {
+
+                            return None;
+
+                        }
+
+            
+
+                        let mut final_line = preprocessed_line;
+
+            
+
+                        // Attempt to prepend wss:// if it looks like a hostname without a scheme
+
+                        if !final_line.contains("://") {
+
+                            let potential_url = format!("wss://{}", final_line);
+
+                            match Url::parse(&potential_url) {
+
+                                Ok(url) => {
+
+                                    debug!("Prepended 'wss://' to form valid URL: {}", url);
+
+                                    final_line = url.to_string();
+
+                                },
+
+                                Err(_) => {
+
+                                    // If prepending wss:// doesn't form a valid URL, keep the original line
+
+                                    // and let the next checks handle it as a non-URL line.
+
+                                    debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
+
+                                }
+
+                            }
+
+                        }
+
+            
+
+                        if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
+
+                            match Url::parse(&final_line) {
+
+                                Ok(url) => Some(url.to_string()),
+
+                                Err(_) => {
+
+                                    warn!("Skipping invalid WEBSOCKET URL format: {}", final_line);
+
+                                    None
+
+                                }
+
+                            }
+
+                        } else if final_line.contains(":://") { // It's a URL, but not a websocket URL
+
+                            warn!("Skipping non-websocket URL scheme: {}", final_line);
+
+                            None
+
+                        } else { // It's not a URL at all (e.g., "Relay URL")
+
+                            debug!("Silently skipping non-URL line: {}", final_line);
+
+                            None
+
+                        }
+
+                    })
+
+                    .collect();
 
     debug!("Fetched {} online relays", relays.len());
     Ok(relays)
