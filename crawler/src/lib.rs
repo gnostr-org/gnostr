@@ -4,6 +4,17 @@ pub mod relay_manager;
 pub mod relays;
 pub mod stats;
 
+pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
+        .add_directive("nostr_sdk::relay=off".parse()?)
+        //.add_directive("hyper=off".parse()?)
+
+        /**/)/**/
+        .init();
+    Ok(())
+}
+
 use clap::{Parser, Subcommand};
 use futures::{stream, StreamExt};
 use git2::Error;
@@ -277,6 +288,27 @@ pub async fn run(args: &CliArgs) -> Result<()> {
     Ok(())
 }
 
+pub async fn dispatch_cli_command(cli: Cli, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
+    match &cli.command {
+        Commands::Sniper { nip, shitlist } => {
+            run_sniper(*nip, shitlist.clone(), client).await?;
+        }
+        Commands::Watch { shitlist } => {
+            run_watch(shitlist.clone(), client).await?;
+        }
+        Commands::Nip34 { shitlist } => {
+            run_nip34(shitlist.clone(), client).await?;
+        }
+        Commands::Crawl(args) => {
+            crate::run(args).await?;
+        }
+        Commands::Serve { port } => {
+            run_api_server(*port).await?;
+        }
+    }
+    Ok(())
+}
+
 pub fn sig_matches(sig: &Signature, arg: &Option<String>) -> bool {
     match *arg {
         Some(ref s) => {
@@ -351,6 +383,7 @@ pub fn match_with_parent(
 pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
+    client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
     debug!("lib::run_sniper");
 
@@ -366,7 +399,6 @@ pub async fn run_sniper(
 
     let relays = load_file("relays.yaml").unwrap();
     debug!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
-    let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
         match load_shitlist(&path) {
@@ -505,7 +537,7 @@ pub async fn run_sniper(
     Ok(())
 }
 
-pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_watch(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
     debug!("lib::run_watch");
     let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
     let app_keys = Keys::new(app_secret_key);
@@ -538,7 +570,6 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
         }
     });
 
-    let client = reqwest::Client::new();
     let bodies = stream::iter(relays_iterator)
         .map(|url: String| {
             let client = client.clone();
@@ -574,7 +605,7 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
                         if nip_count > 1 {
                               debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
                               trace!("LINE::581 lib::run_watch");
-                              let _ = run_sniper(*n, None).await;
+                              let _ = run_sniper(*n, None, client).await;
                         } else {
                              trace!("{:0>2}", n);
                              //TODO nip_count < 1 -- add to shitlist? 
@@ -594,9 +625,8 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_nip34(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
     let relays = load_file("relays.yaml").unwrap();
-    let client = reqwest::Client::new();
 
     let shitlist = if let Some(path) = shitlist_path {
         match load_shitlist(&path) {
@@ -668,9 +698,12 @@ pub async fn run_nip34(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
 pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     debug!("run_api_server: Starting API server on port {}", port);
 
+    let client = reqwest::Client::new();
+
     // Start the watch process in a separate asynchronous task
+    let client_for_watch = client.clone();
     tokio::task::spawn(async move {
-        if let Err(e) = run_watch(None).await {
+        if let Err(e) = run_watch(None, &client_for_watch).await {
             error!("Watch process failed: {}", e);
         }
     });
