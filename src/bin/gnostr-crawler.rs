@@ -1,14 +1,14 @@
-use clap::Parser;
-use gnostr_crawler::{Cli, init_tracing, dispatch_cli_command};
+
+use crate::sub_commands::crawler::{init_tracing, dispatch_crawler_command, CliArgs, CrawlerSubCommand};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_tracing()?;
 
-    let cli = Cli::parse();
+    let cli_subcommand = CrawlerSubCommand::parse();
     let client = reqwest::Client::new(); // Centralized client creation
 
-    dispatch_cli_command(cli, &client).await?;
+    dispatch_crawler_command(cli_subcommand.command, &client).await?;
 
     Ok(())
 }

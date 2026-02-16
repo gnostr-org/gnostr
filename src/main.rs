@@ -525,6 +525,13 @@ async fn main() -> anyhow::Result<()> {
             sub_commands::privkey_to_bech32::privkey_to_bech32(sub_command_args)
                 .map_err(|e| anyhow!("Error in privkey_to_bech32 subcommand: {}", e))
         }
+        Some(GnostrCommands::Crawler(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            let client = reqwest::Client::new(); // Centralized client creation
+            sub_commands::crawler::dispatch_crawler_command(sub_command_args.command.clone(), &client)
+                .await
+                .map_err(|e| anyhow!("Error in crawler subcommand: {}", e))
+        }
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
