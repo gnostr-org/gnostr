@@ -125,19 +125,14 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 
     let preprocessed_content_for_yaml = preprocessed_lines.join("\n");
 
-    let mut relays: Vec<String> = Vec::new();
-
-    // Try parsing as YAML first
-    match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
-        Ok(yaml_relays) => {
-            relays = yaml_relays;
-        },
+    let relays: Vec<String> = match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
+        Ok(yaml_relays) => yaml_relays,
         Err(e) => {
             // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
             warn!("Failed to parse {} as YAML: {}. Falling back to preprocessed lines.", file_path.display(), e);
-            relays = preprocessed_lines;
+            preprocessed_lines
         }
-    }
+    };
 
     let filtered_relays: Vec<String> = relays.into_iter()
         .filter_map(|line| {
