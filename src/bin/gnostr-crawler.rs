@@ -1,5 +1,5 @@
 
-use crate::sub_commands::crawler::{init_tracing, dispatch_crawler_command, CliArgs, CrawlerSubCommand};
+use gnostr::sub_commands::crawler::{init_tracing, dispatch_crawler_command, CliArgs, CrawlerSubCommand};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

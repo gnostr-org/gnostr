@@ -27,6 +27,7 @@ exclude = [
     "*assets/",
     "*benches/",
     "*ci/",
+    "*crawler/",
     "*docs/",
     "*examples/",
     "*target/",
