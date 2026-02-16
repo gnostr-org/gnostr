@@ -79,20 +79,7 @@ async fn main() -> Result<()> {
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
 
-    // Process README.md into HTML
-    let readme_path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("README.md");
-    eprintln!("build.rs: README path: {}", readme_path.display());
-    let readme_content = fs::read_to_string(&readme_path)?;
-    eprintln!("build.rs: README content length: {}", readme_content.len());
-    let parser = pulldown_cmark::Parser::new(&readme_content);
-    let mut html_output = String::new();
-    pulldown_cmark::html::push_html(&mut html_output, parser);
-    eprintln!("build.rs: Generated HTML content length: {}", html_output.len());
 
-    let generated_index_html_path = out_dir.join("index.html");
-    eprintln!("build.rs: Generated index.html path: {}", generated_index_html_path.display());
-    fs::write(&generated_index_html_path, html_output)?;
-    println!("cargo:rustc-env=INDEX_HTML_PATH={}", generated_index_html_path.display());
 
     // Write updated hashes to cache file
     cached_hashes.hashes = new_hashes;
