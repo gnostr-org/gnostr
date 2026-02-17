@@ -127,33 +127,42 @@ fn build_html(url: &str, files: Vec<FileInfo>) -> Result<String> {
     cxml.push_str("&lt;/documents&gt;");
 
     Ok(format!(
-        r#"<!DOCTYPE html><html><head><meta charset="utf-8">
-        <style>
-            body {{ font-family: sans-serif; display: grid; grid-template-columns: 250px 1fr; margin: 0; }}
-            nav {{ border-right: 1px solid #ccc; height: 100vh; overflow-y: auto; padding: 10px; position: sticky; top: 0; background: #f9f9f9; }}
-            main {{ padding: 20px; }}
-            textarea {{ width: 100%; height: 500px; }}
-            .view-btn {{ padding: 10px; cursor: pointer; }}
-        </style>
-        <script>
-            function show(id) {{ 
-                document.getElementById('human').style.display = id === 'h' ? 'block' : 'none';
-                document.getElementById('llm').style.display = id === 'l' ? 'block' : 'none';
-            }}
-        </script>
-        </head><body>
-        <nav><strong>Files</strong><ul style="padding-left:15px; font-size:12px;">{toc}</ul></nav>
-        <main>
-            <h1>Repo: {url}</h1>
-            <button class="view-btn" onclick="show('h')">👤 Human View</button>
-            <button class="view-btn" onclick="show('l')">🤖 LLM View</button>
-            <div id="human">{sections}</div>
-            <div id="llm" style="display:none;">
-                <h2>LLM CXML</h2>
-                <textarea readonly>{cxml}</textarea>
-            </div>
-        </main>
-        </body></html>"#,
+        r#"
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {{ font-family: sans-serif; display: grid; grid-template-columns: 250px 1fr; margin: 0; }}
+nav {{ border-right: 1px solid #ccc; height: 100vh; overflow-y: auto; padding: 10px; position: sticky; top: 0; background: #f9f9f9; }}
+main {{ padding: 20px; }}
+textarea {{ width: 100%; height: 500px; }}
+.view-btn {{ padding: 10px; cursor: pointer; }}
+</style>
+<script>
+function show(id) {{
+document.getElementById('human').style.display = id === 'h' ? 'block' : 'none';
+document.getElementById('llm').style.display = id === 'l' ? 'block' : 'none';
+}}
+</script>
+</head>
+<body>
+<nav>
+<strong>Files</strong>
+<ul style="padding-left:15px; font-size:12px;">{toc}</ul>
+</nav>
+<main>
+<h1>Repo: {url}</h1>
+<button class="view-btn" onclick="show('h')">👤 Human View</button>
+<button class="view-btn" onclick="show('l')">🤖 LLM View</button>
+<div id="human">{sections}</div>
+<div id="llm" style="display:none;">
+<h2>LLM CXML</h2>
+<textarea readonly>{cxml}</textarea>
+</div>
+</main>
+</body></html>
+"#,
         url = url, toc = toc, sections = sections, cxml = cxml
     ))
 }
