@@ -94,11 +94,11 @@ fn highlight_code(code: &str) -> String {
     let re_str = Regex::new(r#"(&quot;.*?&quot;|&#39;.*?&#39;)"#).unwrap();
     let re_comment = Regex::new(r"((//|#).*?(\n|$))").unwrap();
 
-    let res = re_kw.replace_all(&escaped, r#"<span style="color: #d73a49; font-weight: bold;">$1</span>"#);
-    let res = re_str.replace_all(&res, r#"<span style="color: #032f62;">$1</span>"#);
-    let res = re_comment.replace_all(&res, r#"<span style="color: #6a737d; font-style: italic;">$1</span>"#);
+    let first_pass = re_kw.replace_all(&escaped, r#"<span style=\"color: #d73a49; font-weight: bold;\">$1</span>"#);
+    let second_pass = re_str.replace_all(&first_pass, r#"<span style=\"color: #032f62;\">$1</span>"#);
+    let third_pass = re_comment.replace_all(&second_pass, r#"<span style=\"color: #6a737d; font-style: italic;\">$1</span>"#);
     
-    res.to_string()
+    third_pass.to_string()
 }
 
 fn build_html(url: &str, files: Vec<FileInfo>) -> Result<String> {
