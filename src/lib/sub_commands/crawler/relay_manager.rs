@@ -30,7 +30,7 @@ const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 
 /// Keeps a set of active connections to relays
 pub struct RelayManager {
-    // app_keys: Keys,
+    app_keys: Keys,
     pub relays: Relays,
     relay_client: Client,
     pub processor: Processor,
@@ -83,7 +83,7 @@ impl RelayManager {
         }
 
         Self {
-            // app_keys,
+            app_keys,
             relays: relays_instance,
             relay_client,
             processor,
@@ -241,8 +241,7 @@ impl RelayManager {
     async fn subscribe(&mut self, time_start: Timestamp, time_end: Timestamp) -> Result<()> {
         self.relay_client
             .subscribe(vec![Filter::new()
-                // .pubkey(keys.public_key())
-                // .kind(Kind::RecommendRelay)
+                .pubkey(self.app_keys.public_key())
                 .kinds(vec![Kind::ContactList, Kind::RecommendRelay])
                 .since(time_start)
                 .until(time_end)])
