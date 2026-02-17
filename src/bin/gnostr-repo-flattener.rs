@@ -26,7 +26,7 @@ struct FileInfo {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    
+
     // Approved tempfile 3.23.0
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
     let repo_path = tmp_dir.path().join("repo");
@@ -47,12 +47,12 @@ fn main() -> Result<()> {
     for entry in WalkDir::new(&repo_path).sort_by_file_name() {
         let entry = entry?;
         let path = entry.path();
-        
+
         if path.is_file() {
             let rel = path.strip_prefix(&repo_path)?
                 .to_string_lossy()
                 .replace('\\', "/");
-            
+
             if rel.starts_with(".git/") { continue; }
 
             let size = entry.metadata()?.len();
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
             if size <= args.max_bytes && !is_binary(path) {
                 content = fs::read_to_string(path).ok();
             }
-            
+
             files.push(FileInfo { rel, size, content });
         }
     }
@@ -116,7 +116,7 @@ fn build_html(url: &str, files: Vec<FileInfo>) -> Result<String> {
                     idx+1, f.rel, escape_html(c)));
                 format!("<pre style='background:#f6f8fa; padding:10px; border-radius:5px;'><code>{}</code></pre>", highlight_code(c))
             },
-            None => "<p style='color:red;'>Skipped: Binary or too large.</p>".to_string(),
+            None => format!("<p style=\"color:red;\">Skipped: Binary or too large (Size: {} bytes).</p>", f.size),
         };
 
         sections.push_str(&format!(
