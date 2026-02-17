@@ -320,7 +320,7 @@ pub async fn run_sniper(
 
                 debug!("run_sniper: Received response status: {:?}", resp.status());
                 let text = resp.text().await?;
-                debug!("run_sniper: Raw response text from {}: {}", http_url, text); // Added debug log
+                trace!("run_sniper: Raw response text from {}: {}", http_url, text); // avoid some html content from being displayed in terminal
 
                 let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
                 r
@@ -393,7 +393,8 @@ pub async fn run_sniper(
                         }
                     },
                     Err(e) => {
-                        error!("run_sniper: Failed to parse JSON for {}: {}. JSON: {}", url, e, json_string);
+                        trace!("run_sniper: Failed to parse JSON for {}: {}. JSON: {}", url, e, json_string);
+                        error!("TODO: add {} to shitlist.yaml: reason: {}", url, e);
                     }
                 }
             } else if let Err(e) = b {
