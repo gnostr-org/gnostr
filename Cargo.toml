@@ -61,6 +61,8 @@ members = [
 ]
 
 [workspace.dependencies]
+ascii = "1.1.0"
+lightning-invoice = "0.33.2"
 pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
 rand_core = { version = "0.6", features = ["getrandom"] }
 hkdf = "0.12"
@@ -291,7 +293,7 @@ anyhow = "1.0.75"
 
 arc-swap = "1.7"
 argparse    = "0.2.2"
-ascii = "1.1.0"
+ascii = { workspace = true }
 
 askama = { version = "0.12.0", default-features = false, optional = true }
 assert_cmd = "2.0.17"
@@ -439,7 +441,7 @@ libp2p-quic = { version = "^0.12", features = ["async-std"] }
 libp2p-tls = "^0.6"
 #hex = "0.4"
 #lazy_static = "1.4"
-lightning-invoice = "0.33.2"
+lightning-invoice = { workspace = true }
 #lightning-invoice = { path = "../lightning/lightning-invoice", version = "0.31.0-beta" }
 #lightning = { version = "0.0.123-beta", path = "../lightning/lightning" }
 linkify = { workspace = true }
