@@ -731,11 +731,11 @@ fn linux_install_pkg_config() {
                 println!("cargo:warning=Found `pkg-config` in your PATH.");
                 // You can now use `pkg-config` to get build information
                 // For example:
-                let config_output = Command::new("pkg-config").arg("--libs").output().unwrap();
-                println!(
-                    "cargo:rustc-link-lib={}",
-                    String::from_utf8_lossy(&config_output.stdout).trim()
-                );
+                // let config_output = Command::new("pkg-config").arg("--libs").output().unwrap();
+                // println!(
+                //    "cargo:rustc-link-lib={}",
+                //    String::from_utf8_lossy(&config_output.stdout).trim()
+                // );
             }
             _ => {
                 println!(
