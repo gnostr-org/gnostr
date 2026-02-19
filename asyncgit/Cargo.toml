@@ -202,6 +202,8 @@ rand_core = { workspace = true }
 ureq = { workspace = true }
 tiny-hderive = {workspace = true}
 pbkdf2 = { workspace = true }
+lightning-invoice = { workspace = true }
+ascii = { workspace = true }
 
 [build-dependencies]
 anyhow = "1.0.100"

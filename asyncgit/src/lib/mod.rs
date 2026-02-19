@@ -40,8 +40,20 @@ use tracing::debug;
 use ureq::Agent;
 use std::time::Duration;
 
+/// pub mod weeble
+pub mod weeble;
+
+/// pub mod wobble
+pub mod wobble;
+
 /// pub mod images
 pub mod images;
+
+/// pub mod blockheight
+pub mod blockheight;
+
+/// pub mod blockhash
+pub mod blockhash;
 
 /// pub mod css
 pub mod css;
