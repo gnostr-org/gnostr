@@ -1,5 +1,9 @@
 use std::fmt;
 
+use std::net::Ipv4Addr;
+use std::net::Ipv6Addr;
+
+use anyhow;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
@@ -104,13 +108,13 @@ impl Url {
                     }
                 }
                 url::Host::Ipv4(addr) => {
-                    let addrx = core_net::Ipv4Addr::from(addr.octets());
+                    let addrx = Ipv4Addr::from(addr.octets());
                     if !addrx.is_global() {
                         return Err(Error::InvalidUrlHost(format!("{host}")));
                     }
                 }
                 url::Host::Ipv6(addr) => {
-                    let addrx = core_net::Ipv6Addr::from(addr.octets());
+                    let addrx = Ipv6Addr::from(addr.octets());
                     if !addrx.is_global() {
                         return Err(Error::InvalidUrlHost(format!("{host}")));
                     }

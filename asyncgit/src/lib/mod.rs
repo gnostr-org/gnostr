@@ -35,14 +35,25 @@
     clippy::empty_docs
 )]
 
+use tracing::error;
+use tracing::debug;
+use ureq::Agent;
+use std::time::Duration;
+
 /// pub mod images
 pub mod images;
+
 /// pub mod css
 pub mod css;
+
 /// pub mod js
 pub mod js;
+
 /// pub mod theme
 pub mod theme;
+
+/// pub mod types
+pub mod types;
 
 /// pub mod web
 pub mod web;
@@ -172,3 +183,87 @@ pub fn register_tracing_logging() -> bool {
 pub fn register_tracing_logging() -> bool {
     true
 }
+
+/// Synchronous HTTP request using ureq.
+/// Handles errors gracefully instead of panicking.
+//pub fn ureq_sync(url: String) -> Result<String, String> {
+pub fn ureq_sync(url: String) -> Result<String> {
+    // Build the ureq agent with more generous timeouts.
+    // 5 seconds for read and write should be more robust for network operations.
+    let agent: Agent = ureq::AgentBuilder::new()
+        .timeout_read(Duration::from_secs(5)) // Increased timeout
+        .timeout_write(Duration::from_secs(5)) // Increased timeout
+        .build();
+
+    // Attempt to make the GET request and handle potential errors.
+    match agent.get(&url).call() {
+        Ok(response) => {
+            // If the call was successful, try to convert the response into a string.
+            match response.into_string() {
+                Ok(body) => {
+                    debug!("ureq_sync:body:\n{}", body); // Debug log the body
+                    Ok(body)
+                }
+                Err(e) => {
+                    // Log an error if converting the response to string fails.
+                    error!(
+                        "Failed to convert ureq_sync response to string for URL {}: {}",
+                        url, e
+                    );
+                    Err(Error::Generic(format!("Failed to convert response to string: {}", e)))
+                }
+            }
+        }
+        Err(e) => {
+            // Log a detailed error if the ureq call fails.
+            // This will show up in your logs if the log level is configured to show errors.
+            error!("ureq_sync:agent.get(&url) failed for URL {}: {:?}", url, e);
+            Err(Error::Generic(format!("HTTP request failed: {}", e)))
+        }
+    }
+}
+
+/// Asynchronous HTTP request using tokio and ureq.
+/// Handles errors gracefully instead of panicking.
+//pub async fn ureq_async(url: String) -> Result<String, String> {
+pub async fn ureq_async(url: String) -> Result<String> {
+    let s = tokio::spawn(async move {
+        // Build the ureq agent with more generous timeouts.
+        let agent: Agent = ureq::AgentBuilder::new()
+            .timeout_read(Duration::from_secs(5)) // Increased timeout
+            .timeout_write(Duration::from_secs(5)) // Increased timeout
+            .build();
+
+        // Attempt to make the GET request and handle potential errors.
+        match agent.get(&url).call() {
+            Ok(response) => {
+                // If the call was successful, try to convert the response into a string.
+                match response.into_string() {
+                    Ok(body) => {
+                        debug!("ureq_async:body:\n{}", body); // Debug log the body
+                        Ok(body)
+                    }
+                    Err(e) => {
+                        // Log an error if converting the response to string fails.
+                        error!(
+                            "Failed to convert ureq_async response to string for URL {}: {}",
+                            url, e
+                        );
+                        Err(Error::Generic(format!("Failed to convert response to string: {}", e)))
+                    }
+                }
+            }
+            Err(e) => {
+                // Log a detailed error if the ureq call fails.
+                error!("ureq_async:agent.get(&url) failed for URL {}: {:?}", url, e);
+                Err(Error::Generic(format!("HTTP request failed: {}", e)))
+            }
+        }
+    });
+
+    // Await the spawned task and handle its result.
+    // The `?` operator here will propagate any `Err` from the spawned task.
+    s.await
+        .map_err(|e| Error::Generic(format!("Asynchronous task failed: {}", e)))?
+}
+

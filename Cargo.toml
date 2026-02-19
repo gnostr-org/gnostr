@@ -47,7 +47,6 @@ members = [
     ".",
     # Root crate
     "asyncgit",
-
     "filetreelist",
     "gh",
     "git2-hooks",
@@ -62,8 +61,16 @@ members = [
 ]
 
 [workspace.dependencies]
+pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+hkdf = "0.12"
+k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
+tiny-hderive = "0.3.0"
+linkify = "0.10"
+#url = "2.2.2"
+#urlencoding = "2.1.3"
+cbc = { version = "0.1", features = [ "std" ] }
 aes = "0.8"
-num_cpus = "1.16.0"
 	anyhow = "1.0.100"
 	arc-swap = "1.8.0"
 	askama = { version = "0.12.1", default-features = false }
@@ -73,12 +80,17 @@ num_cpus = "1.16.0"
 	axum-core = "0.4.5"
 	base64 = "0.22.1"
 	bech32 = "0.11"
+bip39 = { package = "tiny-bip39", version = "2.0.0" }
+bitcoin_hashes = "0.14.0"
 	bytes = "1.11.0"
+chacha20 = "0.9"
+chacha20poly1305 = "0.10.1"
 	chrono = "0.4.43"
 	clap = { version = "4.5.55", features = ["std", "cargo", "derive", "help", "usage", "env"] }
 	constant_time_eq = "0.1"
 	crossbeam-channel = "0.5.15"
 	crossterm = "0.28.1"
+derive_more = "0.99"
 	dialoguer = "0.10.4"
 	directories = "5.0.1"
 	env_logger = "0.11"
@@ -88,6 +100,11 @@ num_cpus = "1.16.0"
 	futures-util = "0.3.31"
 	git2 = "^0.20"
 	handlebars = { version = "6.3.2" }
+#zeroize = "1.6.0"
+
+hex = "0.4.3"
+hmac = "0.12"
+http = "1.1"
 	httparse = "1.10.1"
 	humantime = "2.1.3"
 	itertools = "0.14.0"
@@ -100,6 +117,7 @@ num_cpus = "1.16.0"
 	nostr = "0.37.0"
 	nostr-sdk = { version = "0.37.0", features = ["all-nips"] }
 	notify = "7.0.0"
+num_cpus = "1.16.0"
 	once_cell = "1.21.3"
 	parking_lot = "0.12.3"
 	predicates = "3.1.3"
@@ -128,6 +146,7 @@ num_cpus = "1.16.0"
 	simdutf8 = "0.1.5"
 	simple_logger = "4.3.3"
 	sled = "0.34.7"
+speedy = { version = "0.8.7" }
 	ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
 	strip-ansi-escapes = "0.2.1"
 	struct-patch = "0.4.1"
@@ -142,7 +161,6 @@ num_cpus = "1.16.0"
 	thread-priority = "1.2.0"
 	time = { version = "0.3.46", features = ["macros", "formatting"] }
 	timeago = { version = "0.4.2", default-features = false }
-	tiny-hderive = "0.3.0"
 	tiny_http = { version = "0.12" }
 	tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
 	tokio-stream = "0.1.18"
@@ -196,8 +214,6 @@ path = "src/bin/git-remote-nostr/main.rs"
 [[bin]]
 name = "git-remote-gnostr"
 path = "src/bin/git-remote-gnostr.rs"
-
-
 
 [[bin]]
 name = "gnostr-gnit"
@@ -296,16 +312,14 @@ axum-core = "0.4.5"
 axum-template = { version = "0.3.0", features = ["tera"] }
 backtrace = "0.3"
 #url = "2.5"
-#zeroize = "1.7"
 
 ## TYPES DEPS
 base64 = { workspace = true }
 bech32 = { workspace = true }
 
 bincode = "1.3.1"
-bip39 = { package = "tiny-bip39", version = "2.0.0" }
 ## bip39 = "2.2.0"
-bitcoin_hashes = "0.14.0"
+bitcoin_hashes = { workspace = true }
 bitflags = "2.9.0"
 block-padding = "0.3.3"
 bugreport = "0.5"
@@ -313,10 +327,10 @@ bwrap = { version = "1.3", features = ["use_std"] }
 bytes = "1.7.1"
 bytesize = { version = "1.3", default-features = false }
 bytestring = "1.3.1"
-cbc = { version = "0.1", features = [ "std" ] }
+cbc = { workspace = true } 
 #cc = "1.0.106"
-chacha20 = "0.9"
-chacha20poly1305 = "0.10.1"
+chacha20 = { workspace = true }
+chacha20poly1305 = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
 clap = { version = "4.5.34", features = ["derive", "env", "cargo"] } ## align with asyncgit version
 clean-path = "0.2.1"
@@ -334,7 +348,7 @@ console = "0.15.7"
 ##comrak = { version = "0.28.0", default-features = false }
 const-hex = "1.12"
 const_format = "0.2"
-constant_time_eq = { workspace = true}
+constant_time_eq = { workspace = true }
 #chacha20poly1305 = "0.10"
 core-net = "0.1"
 crossbeam-channel = "0.5"
@@ -342,7 +356,7 @@ crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
 csv = "1.3.0"
 ctrlc = { version = "3.4.7", features = ["termination"] }
 
-derive_more = "0.99"
+derive_more = { workspace = true }
 dialoguer = "0.10.4"
 directories = "5.0.1"
 dirs = "5.0.1"
@@ -383,21 +397,21 @@ gnostr-legit = { version = "1894.934224.276199", path = "legit" }
 gnostr-relay = { version = "1894.934224.276199", path = "relay", default-features = false }
 gnostr_qr = { version = "1894.934224.276199", path = "qr" }
 handlebars = { workspace = true, optional = true }
-hex = "0.4.3"
-hkdf = "0.12"
-hmac = "0.12"
+hex = { workspace = true }
+hkdf = { workspace = true }
+hmac = { workspace = true }
 home = "0.5.5"
 
 #hex = "0.4"
 hostname = "0.3.1"
-http = "1.1"
+http = { workspace = true }
 
 httparse = { version = "1.7", optional = true }
 humantime = "2.1"
 indexmap = "2"
 indicatif = "0.17.7"
 itertools = "0.13"
-k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
+#k256 = { woekspace = true }
 kanal = "0.1.0-pre8"
 #indicatif = "0.17.7"
 lazy_static = "1.4"
@@ -428,7 +442,7 @@ libp2p-tls = "^0.6"
 lightning-invoice = "0.33.2"
 #lightning-invoice = { path = "../lightning/lightning-invoice", version = "0.31.0-beta" }
 #lightning = { version = "0.0.123-beta", path = "../lightning/lightning" }
-linkify = "0.10"
+linkify = { workspace = true }
 
 log = "0.4.24"
 
@@ -478,12 +492,12 @@ passwords = "3.1.13"
 #tree-sitter-highlight = "0.23"
 path-clean = "1.0.1"
 #num_cpus = "1"
-pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
+pbkdf2 = { workspace = true }
 pretty_env_logger = { workspace = true, optional = true }
 proc-macro2 = { version = "1.0", optional = true }
 proctitle = "0.1.1"
 rand = "0.8"
-rand_core = { version = "0.6", features = ["getrandom"] }
+rand_core = { workspace = true }
 ratatui = { version = "0.28", default-features = false, features = [
     'crossterm',
     'serde',
@@ -526,7 +540,7 @@ sled = "0.34"
 #serde = { version = "1.0", features = [ "derive" ] }
 #serde_json = "1.0"
 #sha2 = "0.10"
-speedy = { version = "0.8.7", optional = true }
+speedy = { workspace = true }
 ssh-key = { version = "0.6.2", features = ["ed25519"] }
 strip-ansi-escapes = "0.2.0"
 struct-patch = "0.4"
@@ -551,7 +565,7 @@ thread-priority = { workspace = true }
 time = { version = "0.3.41", features = ["macros", "formatting"] }
 
 timeago = { version = "0.4.2", default-features = false, optional = true }
-tiny-hderive = "0.3.0"
+tiny-hderive = { workspace = true }
 tiny_http = { workspace = true, optional = true }
 tokio = { version = "1.33.0", features = ["full", "tracing"] }
 
@@ -560,10 +574,10 @@ tokio-stream = { version = "0.1", optional = true }
 tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] }
 tokio-util = { version = "0.7.17", features = ["io"] }
 
+toml = "0.8"
+
 tower = { workspace = true } ##{ version = "0.5.3", optional = true }
 tower-http = { workspace = true } ##{ version = "0.6", features = ["cors", "timeout"], optional = true }
-
-toml = "0.8"
 ##tokio-util = { version = "0.7.10", features = ["io"] }
 
 tower-layer = { version = "0.3", optional = true }
@@ -585,14 +599,14 @@ tui-input = "0.10.1"
 tui-textarea = "0.6"
 #tungstenite = { version = "0.28", features = [ "rustls-tls-webpki-roots" ] }
 two-face = { version = "0.4.0", default-features = false }
-unicode-normalization = "0.1"
-unicode-segmentation = "1.12"
-unicode-truncate = "1.0"
-unicode-width = "0.1.12"
+unicode-normalization = { workspace = true }
+unicode-segmentation = { workspace = true }
+unicode-truncate = { workspace = true }
+unicode-width = { workspace = true }
 unix_mode = "0.1"
-ureq = { version = "2", features = ["json", "charset"] }
-url = "2.2.2"
-urlencoding = "2.1.3"
+ureq = { workspace = true }
+#url = "2.2.2"
+#urlencoding = "2.1.3"
 uuid = { version = "1.19.0", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
 walkdir = "2.4"
@@ -602,19 +616,26 @@ which = "6.0"
 
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
-zeroize = "1.6.0"
+zeroize = { workspace = true }
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winnt", "handleapi", "processthreadsapi", "errhandlingapi"] }
+# [target.'cfg(windows)'.dependencies.windows-sys]
+# version = "0.52" # or the version matching your error
+# features = [
+#     "Win32_System_Threading",
+#     "Win32_Foundation",
+#     "Win32_Security",
+# ]
 
 # If sccache is using 0.48, add this too
-windows-sys_048 = { package = "windows-sys", version = "0.48", features = ["Win32_System_Threading", "Win32_Foundation"] }
+windows-sys_048 = { package = "windows-sys", version = "0.48", features = ["Win32_System_Threading", "Win32_Foundation", "Win32_Security"] }
 
 # Patch for version 0.52
-windows-sys_052 = { package = "windows-sys", version = "0.52", features = ["Win32_System_Threading", "Win32_Foundation"] }
+windows-sys_052 = { package = "windows-sys", version = "0.52", features = ["Win32_System_Threading", "Win32_Foundation", "Win32_Security"] }
 
 [build-dependencies]
 anyhow = { workspace = true }
@@ -684,7 +705,6 @@ lto = "thin"
 # [profile.dist]
 # inherits = "release"
 # lto = "thin"
-
 
 # Optimized for development speed
 [profile.dev]

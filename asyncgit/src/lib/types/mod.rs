@@ -27,8 +27,10 @@
 )]
 #![deny(clippy::string_slice)]
 
-/// nostr_sdk bridge
-pub mod bridge;
+use ureq::Agent;
+
+// TODO /// nostr_sdk bridge
+//TODO pub mod bridge;
 
 /// internal
 pub mod internal;
@@ -105,7 +107,7 @@ pub mod nip2;
 pub mod nip26;
 /// NIP-03: OpenTimestamps Attestations for Events
 pub mod nip3;
-pub mod nip34;
+// TODO fix pub mod nip34;
 /// NIP-04: Encrypted Direct Message
 pub mod nip4;
 /// NIP-59: Gift Wrap
@@ -181,9 +183,9 @@ pub mod nip40;
 pub mod nip44;
 pub mod nip53;
 pub mod nip94;
-pub mod nostr_client; // Added
+// TODO pub mod nostr_client; // Added
 pub use nip44::{Error as Nip44Error, decrypt, encrypt, get_conversation_key};
-pub use nostr_client::*; // Added
+// TODO pub use nostr_client::*; // Added
 pub mod nip19;
 pub use nip19::*;
 pub mod keys;

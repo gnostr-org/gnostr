@@ -8,9 +8,10 @@ use secp256k1::XOnlyPublicKey;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+// TODO fix circular dep use gnostr::utils::ureq_async;
 use crate::{
     types::event::{Event, UnsignedEvent},
-    utils::ureq_async,
+	ureq_async,
 };
 
 /// A Nip05 record

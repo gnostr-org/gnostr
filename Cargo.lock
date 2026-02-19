@@ -5383,7 +5383,6 @@ dependencies = [
  "indexmap",
  "indicatif",
  "itertools 0.13.0",
- "k256",
  "kanal",
  "lazy_static",
  "libp2p",
@@ -5482,7 +5481,6 @@ dependencies = [
  "threadpool",
  "time 0.3.46",
  "timeago",
- "tiny-bip39",
  "tiny-hderive",
  "tiny_http",
  "tmux_interface",
@@ -5512,7 +5510,6 @@ dependencies = [
  "unix_mode",
  "ureq",
  "url",
- "urlencoding",
  "uuid",
  "v_htmlescape",
  "walkdir",
@@ -5540,8 +5537,12 @@ dependencies = [
  "axum 0.7.9",
  "base64 0.22.1",
  "bech32 0.11.1",
+ "bitcoin_hashes 0.14.1",
  "bitflags 2.10.0",
  "bytes",
+ "cbc",
+ "chacha20",
+ "chacha20poly1305",
  "chrono",
  "clap 4.5.55",
  "clean-path",
@@ -5552,6 +5553,7 @@ dependencies = [
  "criterion",
  "crossbeam-channel 0.5.15",
  "crossterm",
+ "derive_more 0.99.20",
  "dirs 5.0.1",
  "easy-cast",
  "env_logger 0.11.8",
@@ -5570,13 +5572,19 @@ dependencies = [
  "gnostr-invalidstring",
  "gnostr-scopetime",
  "handlebars",
+ "hex",
+ "hkdf",
+ "hmac 0.12.1",
+ "http 1.4.0",
  "httparse",
  "humantime",
  "insta",
  "itertools 0.14.0",
+ "k256",
  "kanal",
  "lazy_static",
  "libc",
+ "linkify",
  "log",
  "md5",
  "moka",
@@ -5586,9 +5594,11 @@ dependencies = [
  "num_cpus",
  "openssl-sys",
  "path-clean",
+ "pbkdf2 0.12.2",
  "pretty_assertions",
  "pretty_env_logger",
  "rand 0.8.5",
+ "rand_core 0.6.4",
  "ratatui 0.29.0",
  "rayon",
  "rayon-core",
@@ -5611,6 +5621,7 @@ dependencies = [
  "simdutf8",
  "similar",
  "simple-logging",
+ "speedy",
  "ssh-key",
  "strip-ansi-escapes",
  "structopt",
@@ -5621,6 +5632,8 @@ dependencies = [
  "thread-priority",
  "time 0.3.46",
  "timeago",
+ "tiny-bip39",
+ "tiny-hderive",
  "tiny_http",
  "tokio",
  "tokio-stream",
@@ -5636,10 +5649,13 @@ dependencies = [
  "tree-sitter 0.23.2",
  "tree-sitter-highlight 0.23.2",
  "tui-prompts",
+ "unicode-normalization",
  "unicode-segmentation",
  "unicode-truncate",
+ "unicode-width 0.1.14",
  "unicode-width 0.2.0",
  "unix_mode",
+ "ureq",
  "url",
  "uuid",
  "v_htmlescape",
@@ -5647,6 +5663,7 @@ dependencies = [
  "webbrowser",
  "xxhash-rust",
  "yoke 0.7.5",
+ "zeroize",
 ]
 
 [[package]]
@@ -14842,12 +14859,6 @@ dependencies = [
  "serde",
  "serde_derive",
 ]
-
-[[package]]
-name = "urlencoding"
-version = "2.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "utf-8"
