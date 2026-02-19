@@ -108,16 +108,16 @@ impl Url {
                     }
                 }
                 url::Host::Ipv4(addr) => {
-                    let addrx = Ipv4Addr::from(addr.octets());
-                    if !addrx.is_global() {
-                        return Err(Error::InvalidUrlHost(format!("{host}")));
-                    }
+                    let _addrx = Ipv4Addr::from(addr.octets());
+                    // if !addrx.is_global() {
+                    //    return Err(Error::InvalidUrlHost(format!("{host}")));
+                    // }
                 }
                 url::Host::Ipv6(addr) => {
-                    let addrx = Ipv6Addr::from(addr.octets());
-                    if !addrx.is_global() {
-                        return Err(Error::InvalidUrlHost(format!("{host}")));
-                    }
+                    let _addrx = Ipv6Addr::from(addr.octets());
+                    // if !addrx.is_global() {
+                    //    return Err(Error::InvalidUrlHost(format!("{host}")));
+                    // }
                 }
             }
         } else {
