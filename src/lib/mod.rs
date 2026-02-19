@@ -311,21 +311,17 @@ pub fn print_event(event: &Event) {
 
 use crate::types::internal::*;
 
-/// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
-pub mod weeble;
-pub use weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
+pub use gnostr_asyncgit::weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
 
-/// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
-pub mod wobble;
-pub use wobble::{wobble, wobble_async, wobble_millis_async, wobble_sync};
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/wobble/index.html>
+pub use gnostr_asyncgit::wobble::{wobble, wobble_async, wobble_millis_async, wobble_sync};
 
-/// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
-pub mod blockhash;
-pub use blockhash::blockhash;
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockhash/index.html>
+pub use gnostr_asyncgit::blockhash::blockhash;
 
-/// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
-pub mod blockheight;
-pub use blockheight::{blockheight, blockheight_async};
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockheight/index.html>
+pub use gnostr_asyncgit::blockheight::{blockheight, blockheight_async};
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
