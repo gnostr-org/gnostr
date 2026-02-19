@@ -62,120 +62,124 @@ members = [
 ]
 
 [workspace.dependencies]
-anyhow = "1.0.100"
-arc-swap = "1.8.0"
-askama = { version = "0.12.1", default-features = false }
-assert_cmd = "2.0.17"
-async-trait = "0.1.89"
-axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
-axum-core = "0.4.5"
-base64 = "0.22.1"
-bytes = "1.11.0"
-chrono = "0.4.43"
-clap = { version = "4.5.55", features = ["std", "cargo", "derive", "help", "usage", "env"] }
-crossbeam-channel = "0.5.15"
-crossterm = "0.28.1"
-dialoguer = "0.10.4"
-directories = "5.0.1"
-env_logger = "0.11"
-expectrl = "0.8.0"
-flate2 = "1.1.8"
-futures = "0.3.31"
-futures-util = "0.3.31"
-git2 = "^0.20"
-handlebars = { version = "6.3.2" }
-httparse = "1.10.1"
-humantime = "2.1.3"
-itertools = "0.14.0"
-kanal = "0.1.1"
-lazy_static = "1.5.0"
-libp2p = { version = "0.54.1", features = ["async-std", "cbor", "dns", "gossipsub", "identify", "kad", "macros", "mdns", "noise", "ping", "quic", "relay", "rendezvous", "request-response", "tcp", "tokio", "yamux", "websocket"] }
-log = "0.4.29"
-md5 = "0.7.0"
-moka = { version = "0.12.13", features = ["future"] }
-nostr = "0.37.0"
-nostr-sdk = { version = "0.37.0", features = ["all-nips"] }
-notify = "7.0.0"
-once_cell = "1.21.3"
-parking_lot = "0.12.3"
-predicates = "3.1.3"
-pretty_env_logger = { version = "0.5.0" }
-proc-macro2 = "1.0"
-quote = "1.0"
-regex = "1.11"
-reqwest = { version = "0.12.28", features = ["blocking", "json"] }
-rkyv = "0.8.14"
-rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
-ron = "0.8.1"
-russh = { version = "0.37.1", features = ["openssl"] }
-russh-keys = "0.37.1"
-rust-ini = "0.21.3"
-scopetime = { package = "gnostr-scopetime", path = "./scopetime" }
-scrypt = "0.11.0"
-secp256k1 = { version = "0.29.1", features = ["hashes", "global-context", "rand-std", "serde"] }
-serde = { version = "1.0.228", features = ["derive", "rc"] }
-serde_json = "1.0.146"
-serde_yaml = "0.9.34"
-service-manager = { version = "0.10.0", features = ["clap"] }
-sha2 = "0.10.9"
-sha256 = "1.6.0"
-shellexpand = "3.1.1"
-shellwords = "1.1.0"
-simdutf8 = "0.1.5"
-simple_logger = "4.3.3"
-sled = "0.34.7"
-ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
-strip-ansi-escapes = "0.2.1"
-struct-patch = "0.4.1"
-syn = "2.0"
-syntect = { version = "5.3.0", default-features = false, features = ["parsing", "default-syntaxes", "default-themes", "html", "regex-fancy"] }
-tar = { version = "0.4.44", default-features = false }
-tempfile = "3.24.0"
-tera = "1.20.1"
-terminal_size = "0.3.0"
-textwrap = "0.16.2"
-thiserror = "1.0.69"
-thread-priority = "1.2.0"
-time = { version = "0.3.46", features = ["macros", "formatting"] }
-timeago = { version = "0.4.2", default-features = false }
-tiny-hderive = "0.3.0"
-tiny_http = { version = "0.12" }
-tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
-tokio-stream = "0.1.18"
-tokio-tungstenite = { version = "0.28.0", features = ["connect", "handshake", "rustls-tls-webpki-roots", "native-tls"] }
-tokio-util = { version = "0.7.18", features = ["io"] }
-toml = "0.8.20"
-tower = { version = "0.5.3" }
-tower-http = { version = "0.6.8", features = ["cors", "timeout", "fs", "trace"] }
-tower-layer = "0.3.3"
-tower-service = "0.3.3"
-tracing = "0.1.44"
-tracing-core = "0.1.36"
-tracing-subscriber = { version = "0.3.22", default-features = false, features = ["env-filter", "smallvec", "parking_lot", "fmt"] }
-tree-sitter = "0.23.2"
-tree-sitter-highlight = "0.23.2"
-tree-sitter-language = "0.1.6"
-trust-dns-resolver = "0.23.2"
-tui-input = "0.10.1"
-tui-textarea = "0.6.1"
-two-face = { version = "0.4.5", default-features = false }
-unicode-normalization = "0.1.25"
-unicode-segmentation = "1.12.0"
-unicode-truncate = "1.1.0"
-unicode-width = "0.1.14"
-unix_mode = "0.1.4"
-ureq = { version = "2.12.1", features = ["json", "charset"] }
-url = "2.5.8"
-urlencoding = "2.1.3"
-uuid = { version = "1.20.0", features = ["v4"] }
-v_htmlescape = { version = "0.15.8", features = ["bytes-buf"] }
-walkdir = "2.5.0"
-warp = { version = "0.3" }
-webbrowser = { version = "0.8" }
-which = "6.0.3"
-xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
-yoke = { version = "0.7.5", features = ["derive"] }
-zeroize = "1.8.2"
+aes = "0.8"
+num_cpus = "1.16.0"
+	anyhow = "1.0.100"
+	arc-swap = "1.8.0"
+	askama = { version = "0.12.1", default-features = false }
+	assert_cmd = "2.0.17"
+	async-trait = "0.1.89"
+	axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
+	axum-core = "0.4.5"
+	base64 = "0.22.1"
+	bech32 = "0.11"
+	bytes = "1.11.0"
+	chrono = "0.4.43"
+	clap = { version = "4.5.55", features = ["std", "cargo", "derive", "help", "usage", "env"] }
+	constant_time_eq = "0.1"
+	crossbeam-channel = "0.5.15"
+	crossterm = "0.28.1"
+	dialoguer = "0.10.4"
+	directories = "5.0.1"
+	env_logger = "0.11"
+	expectrl = "0.8.0"
+	flate2 = "1.1.8"
+	futures = "0.3.31"
+	futures-util = "0.3.31"
+	git2 = "^0.20"
+	handlebars = { version = "6.3.2" }
+	httparse = "1.10.1"
+	humantime = "2.1.3"
+	itertools = "0.14.0"
+	kanal = "0.1.1"
+	lazy_static = "1.5.0"
+	libp2p = { version = "0.54.1", features = ["async-std", "cbor", "dns", "gossipsub", "identify", "kad", "macros", "mdns", "noise", "ping", "quic", "relay", "rendezvous", "request-response", "tcp", "tokio", "yamux", "websocket"] }
+	log = "0.4.29"
+	md5 = "0.7.0"
+	moka = { version = "0.12.13", features = ["future"] }
+	nostr = "0.37.0"
+	nostr-sdk = { version = "0.37.0", features = ["all-nips"] }
+	notify = "7.0.0"
+	once_cell = "1.21.3"
+	parking_lot = "0.12.3"
+	predicates = "3.1.3"
+	pretty_env_logger = { version = "0.5.0" }
+	proc-macro2 = "1.0"
+	quote = "1.0"
+	regex = "1.11"
+	reqwest = { version = "0.12.28", features = ["blocking", "json"] }
+	rkyv = "0.8.14"
+	rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
+	ron = "0.8.1"
+	russh = { version = "0.37.1", features = ["openssl"] }
+	russh-keys = "0.37.1"
+	rust-ini = "0.21.3"
+	scopetime = { package = "gnostr-scopetime", path = "./scopetime" }
+	scrypt = "0.11.0"
+	secp256k1 = { version = "0.29.1", features = ["hashes", "global-context", "rand-std", "serde"] }
+	serde = { version = "1.0.228", features = ["derive", "rc"] }
+	serde_json = "1.0.146"
+	serde_yaml = "0.9.34"
+	service-manager = { version = "0.10.0", features = ["clap"] }
+	sha2 = "0.10.9"
+	sha256 = "1.6.0"
+	shellexpand = "3.1.1"
+	shellwords = "1.1.0"
+	simdutf8 = "0.1.5"
+	simple_logger = "4.3.3"
+	sled = "0.34.7"
+	ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
+	strip-ansi-escapes = "0.2.1"
+	struct-patch = "0.4.1"
+	syn = "2.0"
+	syntect = { version = "5.3.0", default-features = false, features = ["parsing", "default-syntaxes", "default-themes", "html", "regex-fancy"] }
+	tar = { version = "0.4.44", default-features = false }
+	tempfile = "3.24.0"
+	tera = "1.20.1"
+	terminal_size = "0.3.0"
+	textwrap = "0.16.2"
+	thiserror = "1.0.69"
+	thread-priority = "1.2.0"
+	time = { version = "0.3.46", features = ["macros", "formatting"] }
+	timeago = { version = "0.4.2", default-features = false }
+	tiny-hderive = "0.3.0"
+	tiny_http = { version = "0.12" }
+	tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
+	tokio-stream = "0.1.18"
+	tokio-tungstenite = { version = "0.28.0", features = ["connect", "handshake", "rustls-tls-webpki-roots", "native-tls"] }
+	tokio-util = { version = "0.7.18", features = ["io"] }
+	toml = "0.8.20"
+	tower = { version = "0.5.3" }
+	tower-http = { version = "0.6.8", features = ["cors", "timeout", "fs", "trace"] }
+	tower-layer = "0.3.3"
+	tower-service = "0.3.3"
+	tracing = "0.1.44"
+	tracing-core = "0.1.36"
+	tracing-subscriber = { version = "0.3.22", default-features = false, features = ["env-filter", "smallvec", "parking_lot", "fmt"] }
+	tree-sitter = "0.23.2"
+	tree-sitter-highlight = "0.23.2"
+	tree-sitter-language = "0.1.6"
+	trust-dns-resolver = "0.23.2"
+	tui-input = "0.10.1"
+	tui-textarea = "0.6.1"
+	two-face = { version = "0.4.5", default-features = false }
+	unicode-normalization = "0.1.25"
+	unicode-segmentation = "1.12.0"
+	unicode-truncate = "1.1.0"
+	unicode-width = "0.1.14"
+	unix_mode = "0.1.4"
+	ureq = { version = "2.12.1", features = ["json", "charset"] }
+	url = "2.5.8"
+	urlencoding = "2.1.3"
+	uuid = { version = "1.20.0", features = ["v4"] }
+	v_htmlescape = { version = "0.15.8", features = ["bytes-buf"] }
+	walkdir = "2.5.0"
+	warp = { version = "0.3" }
+	webbrowser = { version = "0.8" }
+	which = "6.0.3"
+	xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
+	yoke = { version = "0.7.5", features = ["derive"] }
+	zeroize = "1.8.2"
 
 [lib]
 name = "gnostr"
@@ -260,7 +264,7 @@ actix-http = { version = "3.9.0", optional = true }
 actix-web = { version = "4.9.0", optional = true }
 actix-web-actors = { version = "4.3.1", optional = true }
 ## TYPES DEPS
-aes = "0.8"
+aes = { workspace = true }
 ansi_term = "0.12"
 
 anstream = "0.6.4"
@@ -293,10 +297,10 @@ axum-template = { version = "0.3.0", features = ["tera"] }
 backtrace = "0.3"
 #url = "2.5"
 #zeroize = "1.7"
+
 ## TYPES DEPS
-base64 = "0.22"
-#base64 = "0.22"
-bech32 = "0.11"
+base64 = { workspace = true }
+bech32 = { workspace = true }
 
 bincode = "1.3.1"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
@@ -330,7 +334,7 @@ console = "0.15.7"
 ##comrak = { version = "0.28.0", default-features = false }
 const-hex = "1.12"
 const_format = "0.2"
-constant_time_eq = "0.1"
+constant_time_eq = { workspace = true}
 #chacha20poly1305 = "0.10"
 core-net = "0.1"
 crossbeam-channel = "0.5"
@@ -460,7 +464,7 @@ nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
 notify = "6.1.1"
 notify-debouncer-mini = "0.4"
 num-bigint = "0.4.6"
-num_cpus = "1.16.0"
+num_cpus = { workspace = true }
 
 #num_cpus = "1.16.0"
 once_cell = "1.21.3"
@@ -501,12 +505,12 @@ rust-crypto = "0.2.36"
 rust-ini = { version = "0.21.1", optional = true }
 scopeguard = "1.2"
 scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1894.934224.276199" }
-scrypt = "0.11.0"
+scrypt = { workspace = true }
 #rand = "0.8"
 #rand_core = "0.6"
 #regex = "1.10"
 #scrypt = "0.11"
-secp256k1 = { version = "0.29", features = [ "hashes", "global-context", "rand-std", "serde" ] }
+secp256k1 = { workspace = true }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
 serde_yaml = "0.9.27"
@@ -542,7 +546,7 @@ textwrap = "0.16.0"
 #serde_json = "1.0.127"
 thiserror = "1.0.63"
 #thiserror = "1.0"
-thread-priority = "1.0"
+thread-priority = { workspace = true }
 #thiserror = "1"
 time = { version = "0.3.41", features = ["macros", "formatting"] }
 
@@ -680,3 +684,25 @@ lto = "thin"
 # [profile.dist]
 # inherits = "release"
 # lto = "thin"
+
+
+# Optimized for development speed
+[profile.dev]
+# 0 = no optimizations (fastest build), 1 = basic (good balance)
+opt-level = 0 
+
+# Reduce debug info: 0 = none, 1 = line tables only, 2 = full
+# Setting this to 1 significantly speeds up the linking stage.
+debug = 1
+
+# Enable "Incremental" compilation (usually on by default)
+incremental = true
+
+# Use a faster linker if your OS supports it (lld or mold)
+# This is often set in .cargo/config.toml, but impacts build speed here.
+
+# --- Optimized for faster Check/Build across dependencies ---
+[profile.dev.package."*"]
+# Keeping dependencies slightly optimized can actually speed up 
+# overall build times if your code calls them heavily.
+opt-level = 0
