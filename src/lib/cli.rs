@@ -264,80 +264,80 @@ impl Default for GnostrCli {
 /// GnostrCommands
 #[derive(Subcommand)]
 pub enum GnostrCommands {
-    /// Gnostr sub commands
-    Tui(crate::core::GnostrSubCommands),
-    /// Perform actions related to sniping relays
-    Sniper(sniper::SniperArgs),
+    /// Publish award badge event
+    AwardBadge(award_badge::AwardBadgeSubCommand),
+    /// Convert bech32 string to other formats
+    Bech32ToAny(bech32_to_any::Bech32ToAnySubCommand),
+    /// Broadcast events from file
+    BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
     /// Chat sub commands
     Chat(crate::p2p::chat::ChatSubCommands),
-    /// Legit sub commands
-    Legit(legit::LegitSubCommand),
-    /// Ngit sub commands
-    Ngit(ngit::NgitSubCommand),
-    /// Set metadata.
-    /// CAUTION!
-    /// This will replace your current kind 0 event.
-    SetMetadata(set_metadata::SetMetadataSubCommand),
-    /// Send text note
-    Note(note::NoteSubCommand),
-    /// Publish contacts from a CSV file
-    PublishContactListCsv(publish_contactlist_csv::PublishContactListCsvSubCommand),
+    /// Convert key from bech32 to hex or hex to bech32
+    ConvertKey(convert_key::ConvertKeySubCommand),
+    /// Create a new badge
+    CreateBadge(create_badge::CreateBadgeSubCommand),
+    /// Create a new public channel
+    CreatePublicChannel(create_public_channel::CreatePublicChannelSubCommand),
+    /// Crawler sub commands
+    Crawler(crate::sub_commands::crawler::CrawlerSubCommand),
+    /// Create custom event    more --help
+    CustomEvent(custom_event::CustomEventCommand),
     /// Delete an event
     DeleteEvent(delete_event::DeleteEventSubCommand),
     /// Delete a profile
     DeleteProfile(delete_profile::DeleteProfileSubCommand),
-    /// React to an event
-    React(react::ReactionSubCommand),
-    /// Get all events
-    ListEvents(list_events::ListEventsSubCommand),
-    /// Generate a new keypair
-    GenerateKeypair(generate_keypair::GenerateKeypairSubCommand),
-    /// Convert key from bech32 to hex or hex to bech32
-    ConvertKey(convert_key::ConvertKeySubCommand),
-    /// Vanity public key mining
-    Vanity(vanity::VanitySubCommand),
-    /// Create a new public channel
-    CreatePublicChannel(create_public_channel::CreatePublicChannelSubCommand),
-    /// Update channel metadata
-    SetChannelMetadata(set_channel_metadata::SetChannelMetadataSubCommand),
-    /// Send a message to a public channel
-    SendChannelMessage(send_channel_message::SendChannelMessageSubCommand),
-    /// Hide a message in a public chat room
-    HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
-    /// Mute a public key
-    MutePublicKey(mute_publickey::MutePublickeySubCommand),
-    /// Broadcast events from file
-    BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
-    /// Create a new badge
-    CreateBadge(create_badge::CreateBadgeSubCommand),
-    /// Publish award badge event
-    AwardBadge(award_badge::AwardBadgeSubCommand),
-    /// Set profile badges
-    ProfileBadges(profile_badges::ProfileBadgesSubCommand),
-    /// Create custom event    more --help
-    CustomEvent(custom_event::CustomEventCommand),
-    /// Create a user status event
-    SetUserStatus(user_status::UserStatusSubCommand),
-    /// Convert bech32 string to other formats
-    Bech32ToAny(bech32_to_any::Bech32ToAnySubCommand),
-    /// Convert a private key to its bech32 representation
-    PrivkeyToBech32(privkey_to_bech32::PrivkeyToBech32SubCommand),
-    /// Fetch an event by ID
-    FetchById(fetch_by_id::FetchByIdSubCommand),
-    /// Relay sub commands
-    Relay(relay::RelaySubCommand),
-    /// Add the query subcommand here, using the new QuerySubCommand struct
-    Query(QuerySubCommand),
-    /// Git sub commands
-    Git(git::GitSubCommand),
-    /// Nip34 sub commands
-    Nip34(crate::sub_commands::nip34::Nip34Command),
-    /// XOR utility subcommand
-    Xor(crate::sub_commands::xor::XorArgs),
     /// Send a NIP-44 direct message
     Dm(DmArgs),
-    /// Crawler sub commands
-    Crawler(crate::sub_commands::crawler::CrawlerSubCommand),
+    /// Fetch an event by ID
+    FetchById(fetch_by_id::FetchByIdSubCommand),
+    /// Generate a new keypair
+    GenerateKeypair(generate_keypair::GenerateKeypairSubCommand),
+    /// Git sub commands
+    Git(git::GitSubCommand),
+    /// Hide a message in a public chat room
+    HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
+    /// Legit sub commands
+    Legit(legit::LegitSubCommand),
+    /// Get all events
+    ListEvents(list_events::ListEventsSubCommand),
+    /// Mute a public key
+    MutePublicKey(mute_publickey::MutePublickeySubCommand),
+    /// Ngit sub commands
+    Ngit(ngit::NgitSubCommand),
+    /// Nip34 sub commands
+    Nip34(crate::sub_commands::nip34::Nip34Command),
+    /// Send text note
+    Note(note::NoteSubCommand),
+    /// Convert a private key to its bech32 representation
+    PrivkeyToBech32(privkey_to_bech32::PrivkeyToBech32SubCommand),
+    /// Set profile badges
+    ProfileBadges(profile_badges::ProfileBadgesSubCommand),
+    /// Publish contacts from a CSV file
+    PublishContactListCsv(publish_contactlist_csv::PublishContactListCsvSubCommand),
+    /// Add the query subcommand here, using the new QuerySubCommand struct
+    Query(QuerySubCommand),
+    /// React to an event
+    React(react::ReactionSubCommand),
+    /// Relay sub commands
+    Relay(relay::RelaySubCommand),
+    /// Send a message to a public channel
+    SendChannelMessage(send_channel_message::SendChannelMessageSubCommand),
+    /// Update channel metadata
+    SetChannelMetadata(set_channel_metadata::SetChannelMetadataSubCommand),
+    /// Set metadata.
+    /// CAUTION!
+    /// This will replace your current kind 0 event.
+    SetMetadata(set_metadata::SetMetadataSubCommand),
+    /// Create a user status event
+    SetUserStatus(user_status::UserStatusSubCommand),
+    /// Perform actions related to sniping relays
+    Sniper(sniper::SniperArgs),
+    /// Gnostr sub commands
+    Tui(crate::core::GnostrSubCommands),
+    /// Vanity public key mining
+    Vanity(vanity::VanitySubCommand),
+    /// XOR utility subcommand
+    Xor(crate::sub_commands::xor::XorArgs),
 }
 
 /// DmArgs
