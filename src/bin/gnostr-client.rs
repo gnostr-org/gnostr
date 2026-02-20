@@ -12,7 +12,7 @@ use gnostr_asyncgit::{
         nip9, nip18, nip26, nip59,
     },
 };
-use crate::nostr_client;
+use gnostr::nostr_client;
 
 use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;
