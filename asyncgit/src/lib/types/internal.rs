@@ -23,15 +23,15 @@ pub(crate) fn event_to_wire(event: Event) -> String {
     let message = ClientMessage::Event(Box::new(event));
     serde_json::to_string(&message).expect("Could not serialize message")
 }
-//use nostr_types::EventV2;
-//pub(crate) fn event_to_wire_v2(event: EventV2) -> String {
-//    let message = ClientMessage::Event_V2(Box::new(event));
-//    serde_json::to_string(&message).expect("Could not serialize message")
-//}
-//pub(crate) fn event_to_wire(event: EventV3) -> String {
-//    let message = ClientMessage::Event(Box::new(event));
-//    serde_json::to_string(&message).expect("Could not serialize message")
-//}
+//use gnostrasyncgit::_types::EventV2;
+pub(crate) fn event_to_wire_v2(event: EventV2) -> String {
+    let message = ClientMessage::Event_V2(Box::new(event));
+    serde_json::to_string(&message).expect("Could not serialize message")
+}
+pub(crate) fn event_to_wire(event: EventV3) -> String {
+    let message = ClientMessage::Event(Box::new(event));
+    serde_json::to_string(&message).expect("Could not serialize message")
+}
 
 pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
     let mut events: Vec<Event> = Vec::new();

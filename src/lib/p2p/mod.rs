@@ -37,8 +37,8 @@ use tracing::{debug, info, trace, warn};
 use ureq::Agent;
 
 use crate::{
-    blockhash::blockhash_async,
-    blockheight::blockheight_async,
+    gnostr_asyncgit::blockhash::blockhash_async,
+    gnostr_asyncgit::blockheight::blockheight_async,
     p2p::chat::{
         ChatSubCommands,
         msg::{Msg, MsgKind},

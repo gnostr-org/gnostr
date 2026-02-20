@@ -72,8 +72,8 @@ pub mod sub_commands;
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
 pub mod test_utils;
-///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
-pub mod types;
+///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/index.html>
+pub use gnostr_asyncgit::types;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -96,14 +96,14 @@ pub use futures_util::{SinkExt, StreamExt, stream::FusedStream};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
-// pub //use nostr_types::RelayMessageV5;
+// pub //use gnostr_asyncgit::types::RelayMessageV5;
 pub use nostr_sdk_0_32_0::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
 pub use tokio_tungstenite::{WebSocketStream, connect_async, tungstenite::Message};
 //use tokio_tungstenite::WebSocketStream;
-pub use types::nip44;
+pub use gnostr_asyncgit::types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
-pub use types::{
+pub use gnostr_asyncgit::types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
@@ -281,23 +281,23 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = event_to_wire(event);
+    let wire =  gnostr_asyncgit::event_to_wire(event);
     post(host, uri, wire)
 }
 // /// use nostr_types::EventV2;
-// use nostr_types::EventV2;
+use gnostr_asyncgit::types::EventV2;
 // /// pub fn post_event_v2(url: &str, event_v2: EventV2)
-// pub fn post_event_v2(url: &str, event_v2: EventV2) {
-//     let (host, uri) = url_to_host_and_uri(url);
-//     let wire = event_to_wire_v2(event_v2);
-//     post(host, uri, wire)
-// }
+pub fn post_event_v2(url: &str, event_v2: EventV2) {
+    let (host, uri) = url_to_host_and_uri(url);
+    let wire =  gnostr_asyncgit::event_to_wire_v2(event_v2);
+    post(host, uri, wire)
+}
 /// use nostr_types::EventV3;
-use types::EventV3;
+use gnostr_asyncgit::types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = event_to_wire(event);
+    let wire = gnostr_asyncgit::event_to_wire(event);
     post(host, uri, wire)
 }
 
@@ -309,7 +309,7 @@ pub fn print_event(event: &Event) {
     );
 }
 
-use crate::types::internal::*;
+use gnostr_asyncgit::types::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
 pub use gnostr_asyncgit::weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
@@ -346,7 +346,7 @@ pub mod relays;
 /// pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec\<Event\>
 pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec<Event> {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = filters_to_wire(vec![filter]);
+    let wire = gnostr_asyncgit::filters_to_wire(vec![filter]);
     fetch(host, uri, wire)
 }
 

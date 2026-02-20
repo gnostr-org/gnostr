@@ -19,6 +19,9 @@ use uuid::Uuid;
 use self::msg::{Msg, MsgKind};
 use crate::{
     queue::InternalEvent,
+};
+use gnostr_asyncgit::{
+    //queue::InternalEvent,
     types::{
         Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
         metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
@@ -175,14 +178,14 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         // TODO: Implement proper key generation.
         "0000000000000000000000000000000000000000000000000000000000000001".to_string()
     };
-    let private_key = crate::types::PrivateKey::try_from_hex_string(&nsec_hex).unwrap();
+    let private_key = gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&nsec_hex).unwrap();
     let keys = crate::types::KeySigner::from_private_key(private_key, "", 1).unwrap();
     let public_key = keys.public_key();
 
     // Initialize NostrClient and channels
     let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let client = crate::types::nostr_client::NostrClient::new(peer_tx.clone());
+    let client = gnostr_asyncgit::types::nostr_client::NostrClient::new(peer_tx.clone());
 
     // Send NIP-01 metadata event
     let name = args
@@ -200,10 +203,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         m
     };
 
-    let pre_event = crate::types::PreEvent {
+    let pre_event = gnostr_asyncgit::types::PreEvent {
         pubkey: public_key,
-        created_at: crate::types::Unixtime::now(),
-        kind: crate::types::EventKind::Metadata,
+        created_at: gnostr_asyncgit::types::Unixtime::now(),
+        kind: gnostr_asyncgit::types::EventKind::Metadata,
         tags: vec![TagV3::new(&["gnostr"])],
         content: serde_json::to_string(&metadata).unwrap(),
     };
@@ -211,7 +214,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     tracing::info!("\n{:?}\n", &sub_command_args);
     println!(
         "pre_event={:?}",
-        Into::<crate::types::PublicKeyHex>::into(pre_event.pubkey)
+        Into::<gnostr_asyncgit::types::PublicKeyHex>::into(pre_event.pubkey)
     );
 
     let id = pre_event.hash().unwrap();

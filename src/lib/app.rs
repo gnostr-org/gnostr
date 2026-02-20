@@ -52,8 +52,8 @@ use crate::{
     tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
     try_or_popup,
     ui::style::{SharedTheme, Theme},
-    weeble::weeble_sync,
-    wobble::wobble_sync,
+    gnostr_asyncgit::weeble::weeble_sync,
+    gnostr_asyncgit::wobble::wobble_sync,
 };
 
 #[derive(Clone)]

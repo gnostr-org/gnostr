@@ -69,7 +69,6 @@ hkdf = "0.12"
 k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 tiny-hderive = "0.3.0"
 linkify = "0.10"
-#url = "2.2.2"
 #urlencoding = "2.1.3"
 cbc = { version = "0.1", features = [ "std" ] }
 aes = "0.8"
@@ -189,7 +188,7 @@ speedy = { version = "0.8.7" }
 	unicode-width = "0.1.14"
 	unix_mode = "0.1.4"
 	ureq = { version = "2.12.1", features = ["json", "charset"] }
-	url = "2.5.8"
+	url = "2.5.8" ## 2.2.2?
 	urlencoding = "2.1.3"
 	uuid = { version = "1.20.0", features = ["v4"] }
 	v_htmlescape = { version = "0.15.8", features = ["bytes-buf"] }
@@ -313,7 +312,6 @@ axum = { version = "0.7", features = [
 axum-core = "0.4.5"
 axum-template = { version = "0.3.0", features = ["tera"] }
 backtrace = "0.3"
-#url = "2.5"
 
 ## TYPES DEPS
 base64 = { workspace = true }
@@ -607,8 +605,8 @@ unicode-truncate = { workspace = true }
 unicode-width = { workspace = true }
 unix_mode = "0.1"
 ureq = { workspace = true }
-#url = "2.2.2"
-#urlencoding = "2.1.3"
+url = { workspace = true }
+urlencoding = { workspace = true }
 uuid = { version = "1.19.0", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
 walkdir = "2.4"
