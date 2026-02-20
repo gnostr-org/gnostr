@@ -90,6 +90,9 @@ pub mod watcher;
 pub mod ws;
 /// <https://docs.rs/gnostr/latest/gnostr/node/index.html>
 pub mod node;
+/// <https://docs.rs/gnostr/latest/gnostr/nostr_client/index.html>
+pub mod nostr_client;
+
 //avoid?//upgrade?
 //pub use lightning;
 use anyhow::{Result, anyhow};
@@ -213,7 +216,7 @@ pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
 
 /// pub fn get_blockheight_sync() -> Result<String, &'static str>
 pub fn get_blockheight_sync() -> Result<String, &'static str> {
-    Ok(blockheight().unwrap_or(0_f64).to_string())
+    Ok(blockheight::blockheight().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_blockheight_async() -> Result<String, &'static str>
 pub async fn get_blockheight_async() -> Result<String, &'static str> {
@@ -221,7 +224,7 @@ pub async fn get_blockheight_async() -> Result<String, &'static str> {
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    Ok(blockhash().unwrap().to_string())
+    Ok(blockhash::blockhash().unwrap().to_string())
 }
 
 /// pub fn hash_list()
@@ -316,16 +319,20 @@ pub fn print_event(event: &Event) {
 use gnostr_asyncgit::types::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
-pub use gnostr_asyncgit::weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
+pub mod weeble { pub use gnostr_asyncgit::weeble::*; }
+pub use gnostr_asyncgit::weeble::{weeble_async, weeble_millis_async, weeble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/wobble/index.html>
-pub use gnostr_asyncgit::wobble::{wobble, wobble_async, wobble_millis_async, wobble_sync};
+pub mod wobble { pub use gnostr_asyncgit::wobble::*; }
+pub use gnostr_asyncgit::wobble::{wobble_async, wobble_millis_async, wobble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockhash/index.html>
-pub use gnostr_asyncgit::blockhash::blockhash;
+pub mod blockhash { pub use gnostr_asyncgit::blockhash::*; }
+pub use gnostr_asyncgit::blockhash::blockhash_async;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockheight/index.html>
-pub use gnostr_asyncgit::blockheight::{blockheight, blockheight_async};
+pub mod blockheight { pub use gnostr_asyncgit::blockheight::*; }
+pub use gnostr_asyncgit::blockheight::blockheight_async;
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
