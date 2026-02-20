@@ -10,7 +10,7 @@ use crossterm::{
 use env_logger::Env;
 use which::which;
 
-use crate::{blockheight, weeble, wobble};
+use gnostr_asyncgit::{blockheight, weeble, wobble};
 
 struct TerminalCleanup;
 

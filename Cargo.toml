@@ -61,6 +61,13 @@ members = [
 ]
 
 [workspace.dependencies]
+gnostr-asyncgit = { version = "1893.935010.246953", default-features = false, path = "asyncgit" }
+#gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
+#gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
+gnostr-legit = { version = "1894.934224.276199", path = "legit" }
+#gnostr-query = { version = "1894.934224.276199", path = "query" }
+gnostr-relay = { version = "1894.934224.276199", path = "relay", default-features = false }
+gnostr_qr = { version = "1894.934224.276199", path = "qr" }
 ascii = "1.1.0"
 lightning-invoice = "0.33.2"
 pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
@@ -389,13 +396,13 @@ globset = "0.4"
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { version = "1893.935010.246953", default-features = false, path = "asyncgit" }
-#gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
-#gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { version = "1894.934224.276199", path = "legit" }
-#gnostr-query = { version = "1894.934224.276199", path = "query" }
-gnostr-relay = { version = "1894.934224.276199", path = "relay", default-features = false }
-gnostr_qr = { version = "1894.934224.276199", path = "qr" }
+gnostr-asyncgit = { workspace = true } ##version = "1893.935010.246953", default-features = false, path = "asyncgit" }
+#gnostr-crawler = { workspace = true } ##version = "1906.925289.572444", path = "crawler" }
+#gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
+gnostr-legit = { workspace = true } ##version = "1894.934224.276199", path = "legit" }
+#gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
+gnostr-relay = { workspace = true } ##version = "1894.934224.276199", path = "relay", default-features = false }
+gnostr_qr = { workspace = true } ##version = "1894.934224.276199", path = "qr" }
 handlebars = { workspace = true, optional = true }
 hex = { workspace = true }
 hkdf = { workspace = true }
@@ -411,7 +418,7 @@ humantime = "2.1"
 indexmap = "2"
 indicatif = "0.17.7"
 itertools = "0.13"
-#k256 = { woekspace = true }
+k256 = { workspace = true }
 kanal = "0.1.0-pre8"
 #indicatif = "0.17.7"
 lazy_static = "1.4"

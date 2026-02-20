@@ -35,6 +35,7 @@
     clippy::empty_docs
 )]
 
+// use crate::nostr_client;
 use tracing::error;
 use tracing::debug;
 use ureq::Agent;

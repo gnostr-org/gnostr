@@ -183,9 +183,8 @@ pub mod nip40;
 pub mod nip44;
 pub mod nip53;
 pub mod nip94;
-// TODO pub mod nostr_client; // Added
 pub use nip44::{Error as Nip44Error, decrypt, encrypt, get_conversation_key};
-// TODO pub use nostr_client::*; // Added
+//pub use crate::nostr_client::*;
 pub mod nip19;
 pub use nip19::*;
 pub mod keys;

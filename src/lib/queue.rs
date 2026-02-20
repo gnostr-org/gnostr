@@ -14,7 +14,7 @@ use crate::{
     },
     tabs::StashingOptions,
 };
-use gnostr_asyncgit::types::{Id, UncheckedUrl, versioned::event3::EventV3};
+use gnostr_asyncgit::types::{Id, UncheckedUrl, EventV3};
 
 bitflags! {
     /// flags defining what part of the app need to update

@@ -34,6 +34,8 @@ pub mod global_rt;
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
 pub mod keys;
+///  <https://docs.rs/gnostr/latest/gnostr/asyncgit/types/nostr_client/index.html>
+//mod nostr_client;
 ///  <https://docs.rs/gnostr/latest/gnostr/legit/index.html>
 pub mod legit;
 ///  <https://docs.rs/gnostr/latest/gnostr/login/index.html>
@@ -72,6 +74,8 @@ pub mod sub_commands;
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
 pub mod test_utils;
+///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/internal/index.html>
+pub use gnostr_asyncgit::types::internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/index.html>
 pub use gnostr_asyncgit::types;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
@@ -281,24 +285,24 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire =  gnostr_asyncgit::event_to_wire(event);
-    post(host, uri, wire)
+    let wire =  gnostr_asyncgit::types::internal::event_to_wire(event);
+    gnostr_asyncgit::types::internal::post(host, uri, wire)
 }
 // /// use nostr_types::EventV2;
 use gnostr_asyncgit::types::EventV2;
 // /// pub fn post_event_v2(url: &str, event_v2: EventV2)
 pub fn post_event_v2(url: &str, event_v2: EventV2) {
-    let (host, uri) = url_to_host_and_uri(url);
-    let wire =  gnostr_asyncgit::event_to_wire_v2(event_v2);
-    post(host, uri, wire)
+    // let (host, uri) = url_to_host_and_uri(url);
+    // let wire =  gnostr_asyncgit::types::internal::event_to_wire_v2(event_v2);
+    // gnostr_asyncgit::types::internal::post(host, uri, wire)
 }
 /// use nostr_types::EventV3;
 use gnostr_asyncgit::types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = gnostr_asyncgit::event_to_wire(event);
-    post(host, uri, wire)
+    let wire = gnostr_asyncgit::types::internal::event_to_wire(event);
+    gnostr_asyncgit::types::internal::post(host, uri, wire)
 }
 
 /// pub fn print_event(event: &Event)
@@ -346,7 +350,7 @@ pub mod relays;
 /// pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec\<Event\>
 pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec<Event> {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = gnostr_asyncgit::filters_to_wire(vec![filter]);
+    let wire = internal::filters_to_wire(vec![filter]);
     fetch(host, uri, wire)
 }
 

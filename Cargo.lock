@@ -5383,6 +5383,7 @@ dependencies = [
  "indexmap",
  "indicatif",
  "itertools 0.13.0",
+ "k256",
  "kanal",
  "lazy_static",
  "libp2p",

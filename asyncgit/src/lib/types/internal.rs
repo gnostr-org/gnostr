@@ -3,10 +3,10 @@ use base64::Engine;
 use http::Uri;
 use tokio_tungstenite::{tungstenite, tungstenite::Message};
 
-use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
+use super::{ClientMessage, Event, EventV2, EventV3, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use crate::{blockheight::blockheight_sync, weeble::weeble_sync};
 
-pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
+pub fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(
         SubscriptionId(format!(
             "{:?}/{:?}/{:?}",
@@ -19,21 +19,17 @@ pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
     serde_json::to_string(&message).expect("Could not serialize message")
 }
 
-pub(crate) fn event_to_wire(event: Event) -> String {
-    let message = ClientMessage::Event(Box::new(event));
-    serde_json::to_string(&message).expect("Could not serialize message")
-}
-//use gnostrasyncgit::_types::EventV2;
-pub(crate) fn event_to_wire_v2(event: EventV2) -> String {
-    let message = ClientMessage::Event_V2(Box::new(event));
-    serde_json::to_string(&message).expect("Could not serialize message")
-}
-pub(crate) fn event_to_wire(event: EventV3) -> String {
+pub fn event_to_wire(event: Event) -> String {
     let message = ClientMessage::Event(Box::new(event));
     serde_json::to_string(&message).expect("Could not serialize message")
 }
 
-pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
+// pub(crate) fn event_to_wire_v2(event: EventV2) -> String {
+//    let message = ClientMessage::Event_V2(Box::new(event));
+//    serde_json::to_string(&message).expect("Could not serialize message")
+//}
+
+pub fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
     let mut events: Vec<Event> = Vec::new();
 
     let key: [u8; 16] = rand::random();
@@ -132,7 +128,7 @@ pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
     events
 }
 
-pub(crate) fn post(host: String, uri: Uri, wire: String) {
+pub fn post(host: String, uri: Uri, wire: String) {
     //gnostr key here
     let key: [u8; 16] = rand::random();
     let request = http::request::Request::builder()

@@ -39,6 +39,7 @@ path = "src/bin/gnostr_nip34.rs"
 default = ["trace-libgit"]
 trace-libgit = []
 gnostr_web = []
+speedy = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
