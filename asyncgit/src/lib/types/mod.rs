@@ -107,7 +107,7 @@ pub mod nip2;
 pub mod nip26;
 /// NIP-03: OpenTimestamps Attestations for Events
 pub mod nip3;
-// TODO fix pub mod nip34;
+pub mod nip34;
 /// NIP-04: Encrypted Direct Message
 pub mod nip4;
 /// NIP-59: Gift Wrap
