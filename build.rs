@@ -13,7 +13,7 @@ fn _sync_nip44_vectors() {
     const NIP44_VECTORS_SHA256: &str =
         "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
     let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("src/lib/types/nip44/nip44.vectors.json");
+    let dest_path = Path::new(&out_dir).join("asyncgit/src/lib/types/nip44/nip44.vectors.json");
 
     println!("cargo:rerun-if-changed={}", dest_path.display());
 
