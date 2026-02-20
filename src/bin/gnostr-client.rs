@@ -3,6 +3,8 @@ use std::str::FromStr;
 use clap::{Parser, Subcommand};
 use gnostr::{
     queue::InternalEvent,
+};
+use gnostr_asyncgit::{
     types::{
         ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05, NostrClient,
         PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime,

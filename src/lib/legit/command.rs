@@ -18,13 +18,13 @@ use serde_json::{self, Value};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 
-use crate::{
+use gnostr_asyncgit::{
     types::{
         Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
-        Unixtime, nostr_client,
+        Unixtime,
     },
-    utils::{parse_json, split_json_string},
 };
+use crate::utils::{parse_json, split_json_string};
 
 pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let _start = SystemTime::now();
@@ -213,7 +213,7 @@ pub async fn create_event(
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
     let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-    let mut client = gnostr_asyncgit::types::nostr_client::NostrClient::new(queue_tx.clone());
+    let mut client = crate::nostr_client::NostrClient::new(queue_tx.clone());
 
     for relay in BOOTSTRAP_RELAYS.iter().cloned() {
         debug!("{}", relay);
@@ -541,7 +541,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             //create nostr client with commit based keys
             //let client = Client::new(keys);
             let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-            let mut client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
+            let mut client = crate::nostr_client::NostrClient::new(queue_tx.clone());
 
             for relay in BOOTSTRAP_RELAYS.iter().cloned() {
                 debug!("{}", relay);

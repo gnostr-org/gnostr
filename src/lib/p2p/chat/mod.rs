@@ -185,7 +185,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     // Initialize NostrClient and channels
     let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let client = gnostr_asyncgit::types::nostr_client::NostrClient::new(peer_tx.clone());
+    let client = crate::nostr_client::NostrClient::new(peer_tx.clone());
 
     // Send NIP-01 metadata event
     let name = args

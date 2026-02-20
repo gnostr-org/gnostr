@@ -10,14 +10,14 @@ use tokio::{net::TcpStream, sync::mpsc};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite};
 use tracing::{debug, info, warn};
 
-use crate::types::{
+use gnostr_asyncgit::types::{
     ClientMessage, EventKind, Filter, PublicKey, RelayMessage, SubscriptionId, UncheckedUrl,
     Unixtime,
 }; // Added PublicKey
-use crate::{
-    queue::{InternalEvent, Queue},
-    types::versioned::{client_message3::ClientMessageV3, event3::EventV3},
+use gnostr_asyncgit::{
+    types::{ClientMessageV3, EventV3},
 };
+use crate::queue::{InternalEvent, Queue};
 
 type WsSink =
     SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;

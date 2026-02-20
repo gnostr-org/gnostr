@@ -10,7 +10,7 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use gnostr::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
+use gnostr_asyncgit::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
