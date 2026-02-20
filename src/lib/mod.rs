@@ -93,6 +93,8 @@ pub mod node;
 /// <https://docs.rs/gnostr/latest/gnostr/nostr_client/index.html>
 pub mod nostr_client;
 
+use gnostr_asyncgit::types::TagV3;
+
 //avoid?//upgrade?
 //pub use lightning;
 use anyhow::{Result, anyhow};
@@ -295,10 +297,24 @@ pub fn post_event(url: &str, event: Event) {
 use gnostr_asyncgit::types::EventV2;
 // /// pub fn post_event_v2(url: &str, event_v2: EventV2)
 pub fn post_event_v2(url: &str, event_v2: EventV2) {
-    // let (host, uri) = url_to_host_and_uri(url);
-    // let wire =  gnostr_asyncgit::types::internal::event_to_wire_v2(event_v2);
-    // gnostr_asyncgit::types::internal::post(host, uri, wire)
+    let (host, uri) = url_to_host_and_uri(url);
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    let event_v3 = EventV3 {
+        id: event_v2.id,
+        pubkey: event_v2.pubkey,
+        created_at: event_v2.created_at,
+        kind: event_v2.kind,
+        sig: event_v2.sig,
+        content: event_v2.content,
+        tags: event_v2.tags.into_iter().map(TagV3::from).collect(),
+    };
+    let wire = gnostr_asyncgit::types::internal::event_to_wire(event_v3);
+    gnostr_asyncgit::types::internal::post(host, uri, wire)
 }
+/// use nostr_types::EventV3;
 /// use nostr_types::EventV3;
 use gnostr_asyncgit::types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
