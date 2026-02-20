@@ -35,7 +35,7 @@ pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
 pub mod keys;
 ///  <https://docs.rs/gnostr/latest/gnostr/asyncgit/types/nostr_client/index.html>
-mod nostr_client;
+// mod nostr_client;
 ///  <https://docs.rs/gnostr/latest/gnostr/legit/index.html>
 pub mod legit;
 ///  <https://docs.rs/gnostr/latest/gnostr/login/index.html>
