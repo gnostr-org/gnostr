@@ -47,6 +47,7 @@ test
 gnostr.git
 .gnostr/*
 relays.yaml**
+!config/relays.yaml
 **DS_Store
 **/target
 .idea
