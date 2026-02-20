@@ -1,3 +1,6 @@
+[env]
+SCCACHE_CACHE_SIZE = "10G"
+
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-elf-gcc"
 
