@@ -6,6 +6,7 @@ gnostr/*
 .gnostr/*
 *.png
 relays.yaml**
+!config/relays.yaml
 **DS_Store
 **/target
 .idea
