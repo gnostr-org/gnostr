@@ -200,7 +200,7 @@ fn install_sccache() {
         };
 
         if !install_command.is_empty() {
-            //install_windows_dependency("sccache", install_command);
+            //_install_windows_dependency("sccache", install_command);
         } else {
             println!(
                 "cargo:warning=Neither scoop nor winget found. Please install sccache manually."
@@ -208,7 +208,7 @@ fn install_sccache() {
         }
     }
 }
-fn install_windows_dependency(name: &str, install_command: &str) {
+fn _install_windows_dependency(name: &str, install_command: &str) {
     // Check if the dependency is already installed using the Windows 'where'
     // command.
     let check_command = format!("where.exe {} >nul 2>nul", name);
