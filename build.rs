@@ -200,7 +200,7 @@ fn install_sccache() {
         };
 
         if !install_command.is_empty() {
-            install_windows_dependency("sccache", install_command);
+            //install_windows_dependency("sccache", install_command);
         } else {
             println!(
                 "cargo:warning=Neither scoop nor winget found. Please install sccache manually."
