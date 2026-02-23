@@ -10,6 +10,7 @@ pub mod lookup;
 pub mod network_config;
 pub mod opt;
 pub mod swarm_builder;
+pub mod time;
 pub mod utils;
 
 use std::{
