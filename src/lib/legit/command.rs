@@ -221,13 +221,13 @@ pub async fn create_event(
     let (signed_event, _unsigned_event) =
         create_event_with_custom_tags(&keys, content, custom_tags).await?;
 
-    info!("{}", serde_json::to_string_pretty(&signed_event)?);
+    info!("gnostr/src/lib/legit/command.rs:224:signed_event={}", serde_json::to_string_pretty(&signed_event)?);
 
     let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
     let mut client = crate::nostr_client::NostrClient::new(queue_tx.clone());
 
-    for relay in BOOTSTRAP_RELAYS.iter().cloned() {
-        debug!("{}", relay);
+    for relay in BOOTSTRAP_RELAYS.iter().cloned() { //TODO get from crawler
+        debug!("gnostr/src/lib/legit/command.rs:230:relay={}", relay);
         client
             .connect_relay(UncheckedUrl(relay.to_string()))
             .await?;
