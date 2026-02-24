@@ -71,6 +71,7 @@ ext/
 ffi/
 get-relays/
 !src/lib/git/
+!bitcoin/
 gnostr-act
 gnostr-am
 gnostr-client

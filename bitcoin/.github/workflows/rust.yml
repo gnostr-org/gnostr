@@ -1,0 +1,80 @@
+name: Quality checks 👌🧪
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "master"
+  workflow_call:
+    inputs:
+      commit:
+        required: true
+        type: string
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  dependency-review:
+    name: Vulnerable dependencies 🔎
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5.0.0
+        with:
+          ref: ${{ inputs.commit }}
+          show-progress: false
+
+      - name: Scan
+        uses: actions/dependency-review-action@v4.8.1
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha || github.event.before || 'master' }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  quality:
+    name: Run ${{ matrix.command }} 🕵️‍♂️
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - lint
+          - test
+          - check:types
+          - analyze:cycles
+
+    steps:
+      - name: Checkout ⬇️
+        uses: actions/checkout@v5.0.0
+        with:
+          ref: ${{ inputs.commit }}
+          show-progress: false
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4.8.1
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha || github.event.before || github.ref }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+
+  commits_checks:
+    name: Commit linting 💬✅
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout ⬇️
+        uses: actions/checkout@v5.0.0
+        with:
+          ref: ${{ inputs.commit }}
+          show-progress: false
+
+      - name: Check if all commits comply with the specification
+        uses: webiny/action-conventional-commits@v1.3.0
+
+      - name: Check for merge commits
+        run: |
+          git log --merges --oneline | grep -q "^" && exit 1 || exit 0
