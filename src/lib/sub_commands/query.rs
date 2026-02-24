@@ -98,7 +98,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
 
     let q = json!(["REQ", "gnostr-query", filt]);
     let query_string = to_string(&q)?;
-    debug!("Constructed query string: {}", query_string);
+    debug!("{}", query_string);
 
     let relays = if let Some(relay_str) = &args.relay {
         debug!("Using specified relay: {}", relay_str);
