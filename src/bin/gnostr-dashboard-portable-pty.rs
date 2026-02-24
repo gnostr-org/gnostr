@@ -63,8 +63,8 @@ impl TuiNode {
     }
 
     fn spawn(&self, args: Vec<String>, cwd: PathBuf) -> io::Result<()> {
-        let mut cmd = CommandBuilder::new("cargo");
-        cmd.args(["run", "--bin", "gnostr-bitcoin", "--"]);
+        let mut cmd = CommandBuilder::new("gnostr");
+        //cmd.args(["run", "--bin", "gnostr-bitcoin", "--"]);
         cmd.args(args);
         cmd.cwd(cwd); 
         cmd.env("TERM", "xterm-256color");
