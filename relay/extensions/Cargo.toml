@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-extensions"
-version = "1894.934224.276199"
+version.workspace = true
 description = "gostr-relay extensions."
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
@@ -21,9 +21,9 @@ count = []
 [dependencies]
 actix = "0.13.5"
 actix-web = "4.9.0" ## part of gnostr tokio runtime conflict
-gnostr-relay = { version = "1894.934224.276199", path = "..", features = [
-  "search",
-] }
+gnostr-relay = {workspace = true } #{ version = "1894.934224.276199", path = "..", features = [
+  #"search",
+#] }
 governor = { version = "0.6.3", optional = true }
 
 metrics = "0.23.0"

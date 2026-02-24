@@ -4490,7 +4490,7 @@ dependencies = [
 
 [[package]]
 name = "gh-rs"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "anstream",
  "async-std",
@@ -5364,7 +5364,12 @@ dependencies = [
  "gix",
  "globset",
  "gnostr-asyncgit",
+ "gnostr-extensions",
  "gnostr-filetreelist",
+ "gnostr-git2-hooks",
+ "gnostr-git2-testing",
+ "gnostr-grammar",
+ "gnostr-invalidstring",
  "gnostr-legit",
  "gnostr-relay",
  "gnostr-scopetime",
@@ -5672,7 +5677,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "actix",
  "actix-rt",
@@ -5699,7 +5704,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -5707,7 +5712,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "git2",
  "gnostr-git2-testing",
@@ -5720,7 +5725,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "env_logger 0.11.8",
  "git2",
@@ -5730,7 +5735,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "anyhow",
  "cc",
@@ -5749,11 +5754,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 
 [[package]]
 name = "gnostr-legit"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "argparse",
  "chrono",
@@ -5770,7 +5775,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "actix",
  "actix-cors",
@@ -5804,14 +5809,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "log",
 ]
 
 [[package]]
 name = "gnostr_qr"
-version = "1894.934224.276199"
+version = "1893.935010.246953"
 dependencies = [
  "hex",
  "image",

@@ -33,7 +33,7 @@ static BLACKLISTED_MODULES: &[&str] = &[
 ];
 
 fn main() -> anyhow::Result<()> {
-    println!("cargo:warning=DEBUG: gnostr-grammar build.rs is executing.");
+    //println!("cargo:warning=DEBUG: gnostr-grammar build.rs is executing.");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
     println!("out_dir={}", &out_dir.display());
 
@@ -411,7 +411,7 @@ fn fetch_and_build_grammar(
                 .filter(|s| s.exists())
                 .or_else(|| Some(grammar_src.join("parser.cc")))
                 .filter(|s| s.exists());
-            let scanner_file = Some(grammar_src.join("scanner.c"))
+            let _scanner_file = Some(grammar_src.join("scanner.c"))
                 .filter(|s| s.exists())
                 .or_else(|| Some(grammar_src.join("scanner.cc")))
                 .filter(|s| s.exists());
@@ -428,7 +428,7 @@ fn fetch_and_build_grammar(
             }
 
             // If a parser exists but no scanner file was found, create a dummy scanner file.
-            if parser_file.is_some() && actual_scanner_file.is_none() {
+            if grammar.name == "groovy" || (parser_file.is_some() && actual_scanner_file.is_none()) {
                 let dummy_scanner_path = grammar_src.join("scanner.c"); // Always create a .c scanner
                 let snake_case_name = grammar.name.to_snake_case();
                 let create_fn = format!("tree_sitter_{}_external_scanner_create", snake_case_name);
@@ -475,7 +475,7 @@ void {destroy_fn}(void *payload) {{
                     .with_context(|| format!("failed to write dummy scanner to {dummy_scanner_path:?}"))
                     .unwrap();
                 actual_scanner_file = Some(dummy_scanner_path); // Update scanner_file to point to our new dummy
-                println!("cargo:warning=DEBUG: Injected dummy scanner for {}.", grammar.name);
+                //println!("cargo:warning=DEBUG: Injected dummy scanner for {}.", grammar.name);
             }
 
             if let Some(parser_file) = parser_file {
@@ -489,7 +489,7 @@ void {destroy_fn}(void *payload) {{
             }
 
             if let Some(scanner_file_path) = actual_scanner_file {
-                println!("cargo:warning=DEBUG: Compiling scanner for {}: path={:?}", grammar.name, &scanner_file_path);
+                //println!("cargo:warning=DEBUG: Compiling scanner for {}: path={:?}", grammar.name, &scanner_file_path);
                 cc::Build::new()
                     .cpp(scanner_file_path.extension() == Some(OsStr::new("cc")))
                     .file(&scanner_file_path)

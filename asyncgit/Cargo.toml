@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "1893.935010.246953"
+version.workspace = true
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
@@ -91,7 +91,7 @@ futures-util = "0.3.31"
 fuzzy-matcher = "0.3"
 git-version = "0.3.9"
 git2 = { version = "^0.20", default-features = false }
-git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1894.934224.276199" }
+git2-hooks = {workspace = true} ##{ package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1894.934224.276199" }
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
   "tracing",
@@ -137,7 +137,7 @@ rocksdb = { workspace = true }
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = { version = "0.37.1" }
 rust-ini = "0.21.1"
-scopetime = { package = "gnostr-scopetime", path = "../scopetime", version = "1894.934224.276199" }
+scopetime = {workspace = true } #{ package = "gnostr-scopetime", path = "../scopetime", version = "1894.934224.276199" }
 scrypt = { workspace = true }
 sd-notify = "0.4.1"
 secp256k1 = { workspace = true }
@@ -177,7 +177,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 tree-sitter = "0.23.2" # check version
 ##tree-sitter-language = "0.1" ##check version
-tree-sitter-grammar-repository = { package = "gnostr-grammar", path = "../grammar", version = "1894.934224.276199" }
+gnostr-grammar = { workspace = true }
 tree-sitter-highlight = "0.23" ##check version
 tui-prompts = "0.5.0"
 
@@ -221,7 +221,7 @@ criterion = "0.5.1"
 env_logger = "0.11"
 expectrl = "0.8.0"
 insta = "1.42.2"
-invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1894.934224.276199" }
+invalidstring = {workspace = true } #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1894.934224.276199" }
 pretty_assertions = "1.4"
 reqwest = { version = "0.11", features = ["json"] }
 serial_test = "3.1"

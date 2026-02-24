@@ -17,6 +17,9 @@ categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
 
+[workspace.package]
+version = "1893.935010.246953"
+
 exclude = [
     ".git/",
     ".github/",
@@ -61,13 +64,21 @@ members = [
 ]
 
 [workspace.dependencies]
-gnostr-asyncgit = { version = "1893.935010.246953", default-features = false, path = "asyncgit" }
+gnostr-asyncgit = { path = "asyncgit", default-features = false }
 #gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
+tree-sitter-grammar-repository = { path = "grammar" }
+gnostr-grammar = { path = "grammar" }
+filetreelist = { path = "filetreelist", package = "gnostr-filetreelist" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { version = "1894.934224.276199", path = "legit" }
-#gnostr-query = { version = "1894.934224.276199", path = "query" }
-gnostr-relay = { version = "1894.934224.276199", path = "relay", default-features = false }
-gnostr_qr = { version = "1894.934224.276199", path = "qr" }
+gnostr-legit = { path = "legit" }
+#gh = { path = "gh", package = "gh-rs" }
+git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks" }
+git2-testing = { path = "git2-testing", package = "gnostr-git2-testing" }
+gnostr-extensions = { path = "relay/extensions" }
+gnostr-relay = { path = "relay", default-features = false }
+gnostr_qr = { path = "qr" }
+invalidstring = { path = "invalidstring", package = "gnostr-invalidstring" }
+scopetime = { path = "scopetime", package = "gnostr-scopetime" }
 ascii = "1.1.0"
 lightning-invoice = "0.33.2"
 pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
@@ -140,7 +151,6 @@ num_cpus = "1.16.0"
 	russh = { version = "0.37.1", features = ["openssl"] }
 	russh-keys = "0.37.1"
 	rust-ini = "0.21.3"
-	scopetime = { package = "gnostr-scopetime", path = "./scopetime" }
 	scrypt = "0.11.0"
 	secp256k1 = { version = "0.29.1", features = ["hashes", "global-context", "rand-std", "serde"] }
 	serde = { version = "1.0.228", features = ["derive", "rc"] }
@@ -372,7 +382,7 @@ duration-str = { version = "0.11.2", default-features = false }
 easy-cast = "0.5"
 env_logger = "0.11"
 expectrl = "0.8.0"
-filetreelist = { version = "1894.934224.276199", package = "gnostr-filetreelist", path = "filetreelist" }
+filetreelist = { workspace = true }
 flate2 = { version = "1.0", optional = true }
 
 flume = "0.10"
@@ -396,13 +406,20 @@ globset = "0.4"
 
 ##gitui
 #anyhow = "1.0"
-gnostr-asyncgit = { workspace = true } ##version = "1893.935010.246953", default-features = false, path = "asyncgit" }
+gnostr-asyncgit = { workspace = true }
+gnostr-grammar = { workspace = true }
+gnostr-legit = { workspace = true }
+gnostr-relay = { workspace = true }
+gnostr_qr = { workspace = true }
+#gh = { workspace = true }
+git2-hooks = { workspace = true }
+git2-testing = { workspace = true }
+invalidstring = { workspace = true }
+gnostr-extensions = { workspace = true }
+scopetime = { workspace = true }
 #gnostr-crawler = { workspace = true } ##version = "1906.925289.572444", path = "crawler" }
 #gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { workspace = true } ##version = "1894.934224.276199", path = "legit" }
 #gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
-gnostr-relay = { workspace = true } ##version = "1894.934224.276199", path = "relay", default-features = false }
-gnostr_qr = { workspace = true } ##version = "1894.934224.276199", path = "qr" }
 handlebars = { workspace = true, optional = true }
 hex = { workspace = true }
 hkdf = { workspace = true }
@@ -524,8 +541,6 @@ russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
 rust-ini = { version = "0.21.1", optional = true }
-scopeguard = "1.2"
-scopetime = { package = "gnostr-scopetime", path = "./scopetime", version = "1894.934224.276199" }
 scrypt = { workspace = true }
 #rand = "0.8"
 #rand_core = "0.6"
@@ -624,6 +639,7 @@ which = "6.0"
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
+scopeguard = "1.2.0"
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
