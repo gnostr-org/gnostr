@@ -31,8 +31,13 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let _start = SystemTime::now();
     let _system_time = SystemTime::now();
 
-	let kind = &opts.kind;
-	debug!("gnostr legit:kind={:?}", &kind);
+    let kind = &opts.kind;
+    debug!("gnostr legit:kind={:?}", &kind);
+
+	for message in &opts.message {
+		println!("opts.message={}", message);
+	}
+
     let repo = Repository::discover(&opts.repo).expect("Couldn't open repository");
 
     if repo.state() != RepositoryState::Clean {
@@ -55,6 +60,8 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
             .unwrap();
     }
 
+
+
     if opts.message.is_empty() {
         let output = if cfg!(target_os = "windows") {
             Command::new("cmd")
@@ -70,15 +77,15 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
                 .expect("failed to execute process")
         };
 
-		//TODO if message contains "Nothing to commit"
+        //TODO if message contains "Nothing to commit"
         let message = String::from_utf8(output.stdout)
             .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
             .unwrap();
         opts.message = [message.to_string()].to_vec();
     }
 
-	//TODO create nostr event and inject into multi line message BEFORE mining
-	//TODO --event-pow for nostr event creation
+    //TODO create nostr event and inject into multi line message BEFORE mining
+    //TODO --event-pow for nostr event creation
     let mut miner = Gitminer::new(opts.clone())
         .map_err(|e| io::Error::other(format!("Failed to start git miner: {}", e)))?;
     debug!("Gitminer options: {:?}", opts);
@@ -204,9 +211,7 @@ pub async fn create_kind_event(
 
 pub async fn create_event(
     keys: KeySigner,
-
     custom_tags: HashMap<String, Vec<String>>,
-
     content: &str,
 ) -> anyhow::Result<Event> {
     // Changed return type
