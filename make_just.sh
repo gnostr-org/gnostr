@@ -20,6 +20,7 @@ curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-
 # Example: Install a configuration file.
 INSTALL_DIR="$HOME/.my_app"
 CONFIG_FILE=${1:-default_config.conf}
+touch $CONFIG_FILE
 
 mkdir -p "$INSTALL_DIR"
 echo $CONFIG_FILE
@@ -104,16 +105,14 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. \$(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b -j \$(NPROC) \$(QUIET)
-cargo-install: 	crawler asyncgit 	###         cargo install --path . \$(FORCE)
+cargo-install: 	asyncgit 	###         cargo install --path . \$(FORCE)
 	@. \$(HOME)/.cargo/env
 	@cargo install -j \$(NPROC) --path . \$(FORCE)
 
 cargo-sort: 	cargo-sort
 	for cargo_toml in \$(shell ls */Cargo.toml); do cargo sort -n \$(cargo_toml);done
 
-.PHONY:crawler asyncgit relay query
-crawler: 	###     crawler
-	@cargo install -j \$(NPROC) --path ./crawler \$(FORCE)
+.PHONY:asyncgit relay query
 asyncgit: 	###     asyncgit
 	@cargo  install -j \$(NPROC) --path ./asyncgit \$(FORCE)
 relay: 	###     relay

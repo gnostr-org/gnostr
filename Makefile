@@ -61,16 +61,14 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b -j $(NPROC) $(QUIET)
-cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
+cargo-install: 	asyncgit 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install -j $(NPROC) --path . $(FORCE)
 
 cargo-sort: 	cargo-sort
 	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
 
-.PHONY:crawler asyncgit relay query
-crawler: 	###     crawler
-	@cargo install -j $(NPROC) --path ./crawler $(FORCE)
+.PHONY:asyncgit relay query
 asyncgit: 	###     asyncgit
 	@cargo  install -j $(NPROC) --path ./asyncgit $(FORCE)
 relay: 	###     relay
@@ -148,7 +146,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j $(NPROC) --bin gnostr
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	./target/debug/gnostr chat --topic gnostr --oneshot "testing-1896/932295/797624" -n "9ce04d52aafc9d73c0cedd9a3b5841faa7fa2f28ea1b88068c910ef66c610be1"
+	./target/debug/gnostr chat --topic gnostr --oneshot "testing-1888/938154/718288" -n "9988ad0a66f28fe8611962a06a593865c1c8103f87258e3920986fc2a4ba2d0e"
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id

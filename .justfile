@@ -34,9 +34,6 @@ cargo-install:
 cargo-sort:
   @make cargo-sort
 
-crawler:
-  @make crawler
-
 asyncgit:
   @make asyncgit
 
