@@ -40,6 +40,7 @@ fn main() -> io::Result<()> {
     //let ip_address_hash: String = format!("{:X}", sha256.finalize());
 
 
+	//TODO kind 1617 patch default
     let mut opts = gitminer::Options{
         threads: count.try_into().unwrap(),
         target:  "000".to_string(),

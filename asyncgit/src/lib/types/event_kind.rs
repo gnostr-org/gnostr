@@ -34,7 +34,7 @@ macro_rules! define_event_kinds {
             /// Group Metadata events
             GroupMetadata(u32),
             /// Something else?
-            Other(u32),
+            Other(u32), //TODO support nip34 kinds explicitly
         }
 
         static WELL_KNOWN_KINDS: &[EventKind] = &[
@@ -66,7 +66,7 @@ macro_rules! define_event_kinds {
                     Replaceable(u) => u,
                     Ephemeral(u) => u,
                     GroupMetadata(u) => u,
-                    Other(u) => u,
+                    Other(u) => u, //TODO support nip34 kinds explicitly
                 }
             }
         }
@@ -502,6 +502,7 @@ pub enum EventKindOrRange {
     Range(Vec<EventKind>),
 }
 
+//TODO legit command nip34 kinds
 #[cfg(test)]
 mod test {
     use super::*;

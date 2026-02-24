@@ -117,7 +117,7 @@ pub async fn create_event_with_custom_tags(
     let pre_event = PreEvent {
         pubkey: keys.public_key(),
         created_at: Unixtime::now(),
-        kind: EventKind::TextNote,
+        kind: EventKind::TextNote, //TODO kind 1617 patch default
         tags,
         content: content.to_string(),
     };
