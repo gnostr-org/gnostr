@@ -5283,7 +5283,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1893.935010.246953"
+version = "1888.938178.687038"
 dependencies = [
  "actix-cors",
  "actix-http",

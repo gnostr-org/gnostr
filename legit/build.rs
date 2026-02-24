@@ -121,9 +121,7 @@ fn install_sccache() {
         } else if command_exists("dnf") {
             "dnf"
         } else {
-            println!(
-                "cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually."
-            );
+            println!("cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually if desired. Continuing build without sccache.");
             return;
         };
 
@@ -152,11 +150,12 @@ fn install_sccache() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install sccache: {}", stderr);
-                panic!("Failed to install required Linux dependencies.");
+                println!("cargo:warning=Failed to install sccache: {}\nContinuing build without sccache.", stderr);
+                return;
             }
             Err(e) => {
-                println!("cargo:warning=Failed to run installation command: {}", e);
-                panic!("Failed to run dependency installation command.");
+                println!("cargo:warning=Failed to run installation command for sccache: {}\nContinuing build without sccache.", e);
+                return;
             }
         }
     } else if target_os == "macos" {
@@ -175,18 +174,17 @@ fn install_sccache() {
                         "cargo:warning=Failed to install sccache with brew: {}",
                         stderr
                     );
-                    panic!("Failed to install required macOS dependencies.");
+                    println!("cargo:warning=Failed to install sccache with brew: {}\nContinuing build without sccache.", stderr);
+                    return;
                 }
                 Err(e) => {
-                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                    panic!("Failed to run Homebrew command.");
+                    println!("cargo:warning=Failed to run Homebrew command for sccache: {}\nContinuing build without sccache.", e);
+                    return;
                 }
             }
         } else {
-            println!(
-                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
-            );
-            panic!("Homebrew not found.");
+            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.\nContinuing build without sccache.");
+            return;
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
