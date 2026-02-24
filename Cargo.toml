@@ -29,6 +29,7 @@ exclude = [
     "**.md",
     "*assets/",
     "*benches/",
+    "./bitcoin/",
     "*ci/",
     "*crawler/",
     "*docs/",
@@ -50,6 +51,7 @@ members = [
     ".",
     # Root crate
     "asyncgit",
+    # "bitcoin",
     "filetreelist",
     "gh",
     "git2-hooks",
