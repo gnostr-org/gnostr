@@ -31,6 +31,8 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let _start = SystemTime::now();
     let _system_time = SystemTime::now();
 
+	let kind = &opts.kind;
+	debug!("gnostr legit:kind={:?}", &kind);
     let repo = Repository::discover(&opts.repo).expect("Couldn't open repository");
 
     if repo.state() != RepositoryState::Clean {
