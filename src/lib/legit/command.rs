@@ -35,7 +35,7 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     debug!("gnostr legit:kind={:?}", &kind);
 
 	for message in &opts.message {
-		println!("opts.message={}", message);
+		println!("----------->>>\nopts.message={}\n", message);
 	}
 
     let repo = Repository::discover(&opts.repo).expect("Couldn't open repository");
