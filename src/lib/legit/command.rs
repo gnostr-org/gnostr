@@ -359,10 +359,10 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     let mut custom_tags = HashMap::new();
     custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
-
+    let custom_tags_clone = custom_tags.clone();
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event = create_event(empty_hash_keys, custom_tags, "gnostr/src/lib/legit/command.rs365:gnostr-legit:event").await;
+        let signed_event = create_event(empty_hash_keys, custom_tags_clone, "gnostr/src/lib/legit/command.rs365:gnostr-legit:event").await;
         println!("signed_event:\n{:?}", signed_event);
         io::stdout().flush().unwrap(); // Flush stdout
     });
@@ -379,6 +379,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     let commit = obj.peel_to_commit()?;
     let serialized_commit = serialize_commit(&commit)?;
     debug!("Serialized commit:\n{}", serialized_commit.clone());
+    custom_tags.insert("serialized_commit".to_string(), vec![serialized_commit.clone()]);
     let commit_id = commit.id().to_string();
     //some info wrangling
     debug!("commit_id:\n{}", commit_id);
