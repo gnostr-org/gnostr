@@ -569,7 +569,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
                 pubkey: padded_keys.public_key(),
                 created_at: Unixtime::now(),
                 kind: EventKind::TextNote,
-                tags: vec![],
+                tags: vec![], //insert tag serialized_commit?
                 content: serialized_commit.clone(),
             };
 
@@ -588,7 +588,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
             //send git gnostr event
             let output = client.send_event(git_gnostr_event.clone()).await.expect("");
-            info!("{:?}", output);
+            println!("\ngnostr/src/lib/legit/command.rs:591:\n{:?}\n", output);
             Ok(())
         }
         .await;
