@@ -277,7 +277,7 @@ pub async fn create_event(
         created_at: Unixtime::now(),
         kind: EventKind::TextNote,
         tags,
-        content: format!("gnostr:legit {}", pubkey_keys.as_hex_string()).to_string(),
+        content: format!("gnostr/src/lib/legit/command.rs:280:\n{}", pubkey_keys.as_hex_string()).to_string(),
     };
 
     let id = pre_event.hash().unwrap();
@@ -294,7 +294,7 @@ pub async fn create_event(
     };
 
     let output_send_event = client.send_event(text_note_event.clone()).await?;
-    print!("putput_send_event={:?}", output_send_event);
+    print!("output_send_event={:?}", output_send_event);
 
     let mut filter_one = gnostr_asyncgit::types::Filter::new();
     filter_one
