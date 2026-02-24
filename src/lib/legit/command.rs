@@ -362,7 +362,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
 
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event = create_event(empty_hash_keys, custom_tags, "gnostr-legit:event").await;
+        let signed_event = create_event(empty_hash_keys, custom_tags, "gnostr/src/lib/legit/command.rs365:gnostr-legit:event").await;
         println!("signed_event:\n{:?}", signed_event);
         io::stdout().flush().unwrap(); // Flush stdout
     });
@@ -409,7 +409,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             //send to create_event function with &"custom content"
             //send to create_event function with &"custom content"
             let create_event_result =
-                create_event(padded_keys.clone(), custom_tags, "gnostr-legit:event").await?;
+                create_event(padded_keys.clone(), custom_tags, "gnostr/src/lib/legit/command.rs:412:gnostr-legit:event").await?;
             println!(
                 "Commit-based create_event result:\n{:?}",
                 create_event_result
