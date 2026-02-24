@@ -36,7 +36,7 @@ pub struct LegitSubCommand {
     #[arg(short, long, action = clap::ArgAction::Append)]
     message: Option<Vec<String>>,
     /// Nostr event kind to use for the git event
-    #[arg(long)]
+    #[arg(long, default_value = "1617")]
     kind: Option<u16>,
 }
 
