@@ -229,7 +229,7 @@ pub async fn create_event(
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
-    info!("signed_event sent:\n{:?}", signed_event);
+    print!("signed_event sent:\n{:?}", signed_event);
 
     debug!("signed_event.content: {}", signed_event.content);
 
@@ -246,6 +246,7 @@ pub async fn create_event(
 
     // Publish a text note
 
+	//TODO test tags
     let pubkey_keys = keys.public_key();
     info!("pubkey={}", pubkey_keys.as_hex_string());
 
@@ -283,7 +284,7 @@ pub async fn create_event(
     };
 
     let output_send_event = client.send_event(text_note_event.clone()).await?;
-    info!("{:?}", output_send_event);
+    print!("putput_send_event={:?}", output_send_event);
 
     let mut filter_one = gnostr_asyncgit::types::Filter::new();
     filter_one
