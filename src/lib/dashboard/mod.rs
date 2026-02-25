@@ -9,11 +9,11 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Clear, Paragraph},
+    widgets::{Block, Borders, Clear, Paragraph},
     Terminal,
 };
 use std::{
-    io::{self, Read},
+    io::{self, Read, Write},
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
@@ -46,7 +46,9 @@ const BITCOIN_LOGO: [&str; 15] = [
 
 pub struct TuiNode {
     parser: Arc<Mutex<Parser>>,
-    pty_pair: portable_pty::PtyPair,
+    master: Arc<Mutex<Box<dyn portable_pty::MasterPty + Send>>>,
+    writer: Arc<Mutex<Box<dyn std::io::Write + Send>>>,
+    slave: Box<dyn portable_pty::SlavePty + Send>,
     byte_count: Arc<AtomicUsize>,
     gnostr_presented: Arc<AtomicBool>,
 }
@@ -63,9 +65,13 @@ impl TuiNode {
             })
             .expect("failed to open pty");
 
+        let writer = pty_pair.master.take_writer().expect("failed to take writer");
+
         Self {
             parser: Arc::new(Mutex::new(Parser::new(height, width, 100))),
-            pty_pair,
+            writer: Arc::new(Mutex::new(writer)),
+            master: Arc::new(Mutex::new(pty_pair.master)),
+            slave: pty_pair.slave,
             byte_count: Arc::new(AtomicUsize::new(0)),
             gnostr_presented: Arc::new(AtomicBool::new(false)),
         }
@@ -80,15 +86,15 @@ impl TuiNode {
         cmd.env("COLORTERM", "truecolor");
 
         let mut _child = self
-            .pty_pair
             .slave
             .spawn_command(cmd)
             .expect("failed to spawn command");
-        let mut reader = self
-            .pty_pair
-            .master
-            .try_clone_reader()
-            .expect("failed to clone reader");
+        
+        let mut reader = {
+            let master = self.master.lock().unwrap();
+            master.try_clone_reader().expect("failed to clone reader")
+        };
+        
         let parser = Arc::clone(&self.parser);
         let byte_count = Arc::clone(&self.byte_count);
         let gnostr_presented = Arc::clone(&self.gnostr_presented);
@@ -116,7 +122,8 @@ impl TuiNode {
         let mut p = self.parser.lock().unwrap();
         if p.screen().size() != (h, w) {
             p.set_size(h, w);
-            let _ = self.pty_pair.master.resize(PtySize {
+            let master = self.master.lock().unwrap();
+            let _ = master.resize(PtySize {
                 rows: h,
                 cols: w,
                 pixel_width: 0,
@@ -126,8 +133,8 @@ impl TuiNode {
     }
 
     pub fn write_input(&self, input: &[u8]) -> io::Result<()> {
-        let mut master = self.pty_pair.master.try_clone_writer().expect("failed to clone writer");
-        master.write_all(input)
+        let mut writer = self.writer.lock().unwrap();
+        writer.write_all(input)
     }
 }
 
