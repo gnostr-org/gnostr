@@ -159,6 +159,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let mut active_node: Option<usize> = None;
     let mut selected_node: usize = 0;
     let mut show_help: bool = false;
+    let mut last_esc_time: Option<Instant> = None;
 
     loop {
         terminal.draw(|f| {
@@ -228,8 +229,8 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                     Line::from("  [q]      : Quit Dashboard"),
                     Line::from(""),
                     Line::from("Node Controls (when a node is focused):"),
-                    Line::from("  [Ctrl+X]: Unfocus the current node"),
-                    Line::from("  [All]   : All other keys are forwarded to the node's PTY"),
+                    Line::from("  [Double ESC]: Unfocus the current node"),
+                    Line::from("  [All]       : All other keys are forwarded to the node's PTY"),
                     Line::from(""),
                     Line::from(vec![Span::styled(
                         "Press '.' or 'ESC' to return to the dashboard.",
@@ -288,7 +289,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                         " Node {} {} ",
                         idx + 1,
                         if active_node == Some(idx) {
-                            "[ACTIVE - Press Ctrl+X to unfocus]"
+                            "[ACTIVE - Double ESC to unfocus]"
                         } else if active_node.is_none() && selected_node == idx {
                             "[SELECTED - Press Enter to focus]"
                         } else {
@@ -309,9 +310,24 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
             match event::read()? {
                 Event::Key(key) => {
                     if let Some(idx) = active_node {
-                        if key.code == KeyCode::Char('x') && key.modifiers.contains(KeyModifiers::CONTROL) {
-                            active_node = None;
+                        let mut deactivated = false;
+                        if key.code == KeyCode::Esc {
+                            if let Some(time) = last_esc_time {
+                                if time.elapsed() < Duration::from_millis(500) {
+                                    active_node = None;
+                                    last_esc_time = None;
+                                    deactivated = true;
+                                } else {
+                                    last_esc_time = Some(Instant::now());
+                                }
+                            } else {
+                                last_esc_time = Some(Instant::now());
+                            }
                         } else {
+                            last_esc_time = None;
+                        }
+
+                        if !deactivated {
                             // Basic key mapping for PTY input
                             let input = match key.code {
                                 KeyCode::Char(c) => {
