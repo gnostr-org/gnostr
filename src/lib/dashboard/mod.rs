@@ -189,6 +189,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
     let mut last_esc_time: Option<Instant> = None;
     let mut was_ready = false;
     let mut force_redraw = false;
+    let mut layout_direction = Direction::Vertical;
 
     loop {
         if force_redraw {
@@ -260,12 +261,13 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                     )]),
                     Line::from(""),
                     Line::from("Global Controls (when no node is focused):"),
-                    Line::from("  [Up/Down]: Select a node"),
-                    Line::from("  [Enter]  : Focus the selected node"),
-                    Line::from("  [1]      : Focus Node 1"),
-                    Line::from("  [2]      : Focus Node 2"),
-                    Line::from("  [.]      : Toggle Help Screen"),
-                    Line::from("  [q]      : Quit Dashboard"),
+                    Line::from("  [Up/Down]  : Select a node"),
+                    Line::from("  [Left/Right]: Toggle horizontal/vertical layout"),
+                    Line::from("  [Enter]    : Focus the selected node"),
+                    Line::from("  [1]        : Focus Node 1"),
+                    Line::from("  [2]        : Focus Node 2"),
+                    Line::from("  [.]        : Toggle Help Screen"),
+                    Line::from("  [q]        : Quit Dashboard"),
                     Line::from(""),
                     Line::from("Node Controls (when a node is focused):"),
                     Line::from("  [Double ESC]: Unfocus the current node"),
@@ -286,7 +288,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
             } else {
                 // DASHBOARD VIEW
                 let chunks = Layout::default()
-                    .direction(Direction::Vertical)
+                    .direction(layout_direction)
                     .constraints([
                         Constraint::Percentage(48),
                         Constraint::Min(2),
@@ -339,8 +341,13 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                             ""
                         }
                     );
+                    let borders = match layout_direction {
+                        Direction::Vertical => Borders::TOP | Borders::BOTTOM,
+                        Direction::Horizontal => Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM,
+                    };
+
                     let block = Block::default()
-                        .borders(Borders::TOP | Borders::BOTTOM)
+                        .borders(borders)
                         .title(title)
                         .border_style(block_style);
 
@@ -369,6 +376,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                                     active_node = None;
                                     last_esc_time = None;
                                     deactivated = true;
+                                    force_redraw = true;
                                 } else {
                                     last_esc_time = Some(Instant::now());
                                 }
@@ -410,6 +418,13 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                                 } else {
                                     selected_node = 0;
                                 }
+                            }
+                            KeyCode::Left | KeyCode::Right => {
+                                layout_direction = match layout_direction {
+                                    Direction::Vertical => Direction::Horizontal,
+                                    Direction::Horizontal => Direction::Vertical,
+                                };
+                                force_redraw = true;
                             }
                             KeyCode::Enter => {
                                 active_node = Some(selected_node);
