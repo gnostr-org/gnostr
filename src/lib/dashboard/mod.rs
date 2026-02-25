@@ -356,6 +356,11 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                     force_redraw = true;
                 }
                 Event::Key(key) => {
+                    // Global Ctrl+C handler
+                    if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                        break;
+                    }
+
                     if let Some(idx) = active_node {
                         let mut deactivated = false;
                         if key.code == KeyCode::Esc {
