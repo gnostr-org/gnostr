@@ -124,6 +124,11 @@ impl TuiNode {
             });
         }
     }
+
+    pub fn write_input(&self, input: &[u8]) -> io::Result<()> {
+        let mut master = self.pty_pair.master.try_clone_writer().expect("failed to clone writer");
+        master.write_all(input)
+    }
 }
 
 pub async fn run_dashboard() -> anyhow::Result<()> {
@@ -135,18 +140,16 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
-        let mut args = vec!["--gitdir".into(), ".".into()];// format!("{}", i + 1)];
+        let mut args = vec!["--gitdir".into(), ".".into()]; // format!("{}", i + 1)];
         if i == 1 {
-            args.extend(vec![
-                //"".into(),
-                //"`pwd`".into(),
-            ]);
+            args.extend(vec![]);
         }
         node.spawn(args, project_root.clone())?;
     }
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
+    let mut active_node: Option<usize> = None;
 
     loop {
         terminal.draw(|f| {
@@ -161,7 +164,8 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
 
             let all_ready = match ready_since {
                 Some(t) => {
-                    t.elapsed() > Duration::from_secs(1) || start_time.elapsed() > Duration::from_secs(10)
+                    t.elapsed() > Duration::from_secs(1)
+                        || start_time.elapsed() > Duration::from_secs(10)
                 }
                 None => start_time.elapsed() > Duration::from_secs(10), // Fallback
             };
@@ -198,7 +202,20 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                         }
                         lines.push(Line::from(spans));
                     }
-                    f.render_widget(Paragraph::new(lines), chunk);
+
+                    let block_style = if active_node == Some(idx) {
+                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+
+                    let title = format!(" Node {} {} ", idx + 1, if active_node == Some(idx) { "[ACTIVE]" } else { "" });
+                    let block = Block::default()
+                        .borders(Borders::ALL)
+                        .title(title)
+                        .border_style(block_style);
+
+                    f.render_widget(Paragraph::new(lines).block(block), chunk);
                 }
             } else {
                 // SPLASH VIEW
@@ -234,10 +251,38 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
         })?;
 
         if event::poll(Duration::from_millis(33))? {
-            if let Event::Key(key) = event::read()? {
-                if key.code == KeyCode::Char('q') {
-                    break;
+            match event::read()? {
+                Event::Key(key) => {
+                    if let Some(idx) = active_node {
+                        if key.code == KeyCode::Esc {
+                            active_node = None;
+                        } else {
+                            // Basic key mapping for PTY input
+                            let input = match key.code {
+                                KeyCode::Char(c) => vec![c as u8],
+                                KeyCode::Enter => vec![b'\r'],
+                                KeyCode::Backspace => vec![8],
+                                KeyCode::Tab => vec![b'\t'],
+                                KeyCode::Up => vec![27, 91, 65],
+                                KeyCode::Down => vec![27, 91, 66],
+                                KeyCode::Right => vec![27, 91, 67],
+                                KeyCode::Left => vec![27, 91, 68],
+                                _ => vec![],
+                            };
+                            if !input.is_empty() {
+                                nodes[idx].write_input(&input)?;
+                            }
+                        }
+                    } else {
+                        match key.code {
+                            KeyCode::Char('q') => break,
+                            KeyCode::Char('1') => active_node = Some(0),
+                            KeyCode::Char('2') => active_node = Some(1),
+                            _ => {}
+                        }
+                    }
                 }
+                _ => {}
             }
         }
     }
