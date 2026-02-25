@@ -157,6 +157,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
     let mut active_node: Option<usize> = None;
+    let mut show_help: bool = false;
 
     loop {
         terminal.draw(|f| {
@@ -177,7 +178,69 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                 None => start_time.elapsed() > Duration::from_secs(10), // Fallback
             };
 
-            if all_ready {
+            if !all_ready {
+                // SPLASH VIEW
+                f.render_widget(Clear, area);
+
+                let vertical_chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Min(0),
+                        Constraint::Length(15),
+                        Constraint::Length(2),
+                        Constraint::Length(1),
+                        Constraint::Min(0),
+                    ])
+                    .split(area);
+
+                let logo_lines: Vec<Line> = BITCOIN_LOGO
+                    .iter()
+                    .map(|&l| Line::from(Span::styled(l, Style::default().fg(BITCOIN_ORANGE))))
+                    .collect();
+
+                f.render_widget(
+                    Paragraph::new(logo_lines).alignment(Alignment::Center),
+                    vertical_chunks[1],
+                );
+                f.render_widget(
+                    Paragraph::new("INITIALIZING GNOSTR...")
+                        .style(Style::default().fg(Color::Gray).add_modifier(Modifier::BOLD))
+                        .alignment(Alignment::Center),
+                    vertical_chunks[3],
+                );
+            } else if show_help {
+                // HELP VIEW
+                f.render_widget(Clear, area);
+
+                let help_text = vec![
+                    Line::from(vec![Span::styled(
+                        "GNOSTR DASHBOARD HELP",
+                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD),
+                    )]),
+                    Line::from(""),
+                    Line::from("Global Controls (when no node is focused):"),
+                    Line::from("  [1]     : Focus Node 1"),
+                    Line::from("  [2]     : Focus Node 2"),
+                    Line::from("  [.]     : Toggle Help Screen"),
+                    Line::from("  [q]     : Quit Dashboard"),
+                    Line::from(""),
+                    Line::from("Node Controls (when a node is focused):"),
+                    Line::from("  [Ctrl+X]: Unfocus the current node"),
+                    Line::from("  [All]   : All other keys are forwarded to the node's PTY"),
+                    Line::from(""),
+                    Line::from(vec![Span::styled(
+                        "Press '.' or 'ESC' to return to the dashboard.",
+                        Style::default().fg(Color::Gray),
+                    )]),
+                ];
+
+                let block = Block::default()
+                    .borders(Borders::ALL)
+                    .title(" Help ")
+                    .border_style(Style::default().fg(BITCOIN_ORANGE));
+
+                f.render_widget(Paragraph::new(help_text).block(block).alignment(Alignment::Left), area);
+            } else {
                 // DASHBOARD VIEW
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
@@ -224,36 +287,6 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
 
                     f.render_widget(Paragraph::new(lines).block(block), chunk);
                 }
-            } else {
-                // SPLASH VIEW
-                f.render_widget(Clear, area);
-
-                let vertical_chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Min(0),
-                        Constraint::Length(15),
-                        Constraint::Length(2),
-                        Constraint::Length(1),
-                        Constraint::Min(0),
-                    ])
-                    .split(area);
-
-                let logo_lines: Vec<Line> = BITCOIN_LOGO
-                    .iter()
-                    .map(|&l| Line::from(Span::styled(l, Style::default().fg(BITCOIN_ORANGE))))
-                    .collect();
-
-                f.render_widget(
-                    Paragraph::new(logo_lines).alignment(Alignment::Center),
-                    vertical_chunks[1],
-                );
-                f.render_widget(
-                    Paragraph::new("INITIALIZING GNOSTR...")
-                        .style(Style::default().fg(Color::Gray).add_modifier(Modifier::BOLD))
-                        .alignment(Alignment::Center),
-                    vertical_chunks[3],
-                );
             }
         })?;
 
@@ -288,11 +321,18 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                                 nodes[idx].write_input(&input)?;
                             }
                         }
+                    } else if show_help {
+                        match key.code {
+                            KeyCode::Char('.') | KeyCode::Esc => show_help = false,
+                            KeyCode::Char('q') => break,
+                            _ => {}
+                        }
                     } else {
                         match key.code {
                             KeyCode::Char('q') => break,
                             KeyCode::Char('1') => active_node = Some(0),
                             KeyCode::Char('2') => active_node = Some(1),
+                            KeyCode::Char('.') => show_help = true,
                             _ => {}
                         }
                     }
