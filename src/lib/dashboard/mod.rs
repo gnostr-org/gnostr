@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -216,7 +216,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                         Style::default().fg(Color::Gray)
                     };
 
-                    let title = format!(" Node {} {} ", idx + 1, if active_node == Some(idx) { "[ACTIVE]" } else { "" });
+                    let title = format!(" Node {} {} ", idx + 1, if active_node == Some(idx) { "[ACTIVE - Press Ctrl+X to unfocus]" } else { "" });
                     let block = Block::default()
                         .borders(Borders::ALL)
                         .title(title)
@@ -261,12 +261,20 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
             match event::read()? {
                 Event::Key(key) => {
                     if let Some(idx) = active_node {
-                        if key.code == KeyCode::Esc {
+                        if key.code == KeyCode::Char('x') && key.modifiers.contains(KeyModifiers::CONTROL) {
                             active_node = None;
                         } else {
                             // Basic key mapping for PTY input
                             let input = match key.code {
-                                KeyCode::Char(c) => vec![c as u8],
+                                KeyCode::Char(c) => {
+                                    if key.modifiers.contains(KeyModifiers::CONTROL) && c.is_ascii_alphabetic() {
+                                        // Map Ctrl+letter to 1..26
+                                        vec![(c as u8 & 0x1f)]
+                                    } else {
+                                        vec![c as u8]
+                                    }
+                                },
+                                KeyCode::Esc => vec![27],
                                 KeyCode::Enter => vec![b'\r'],
                                 KeyCode::Backspace => vec![8],
                                 KeyCode::Tab => vec![b'\t'],
