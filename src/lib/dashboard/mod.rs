@@ -304,7 +304,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
 
                 for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
                     let chunk = chunks[chunk_idx];
-                    nodes[idx].resize(chunk.width, chunk.height.saturating_sub(2), force_redraw);
+                    nodes[idx].resize(chunk.width.saturating_sub(2), chunk.height.saturating_sub(2), force_redraw);
 
                     let p = nodes[idx].parser.lock().unwrap();
                     let screen = p.screen();
