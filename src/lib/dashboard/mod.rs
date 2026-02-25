@@ -77,10 +77,22 @@ impl TuiNode {
         }
     }
 
-    pub fn spawn(&self, args: Vec<String>, cwd: PathBuf) -> io::Result<()> {
-        let mut cmd = CommandBuilder::new("gnostr");
-        //cmd.args(["--gitdir", "."]);
-        cmd.args(args);
+    pub fn spawn(&self, args: Vec<String>, cwd: PathBuf, command_override: Option<String>) -> io::Result<()> {
+        let mut cmd = if let Some(cmd_str) = command_override {
+            let parts: Vec<&str> = cmd_str.split_whitespace().collect();
+            if parts.is_empty() {
+                CommandBuilder::new("gnostr")
+            } else {
+                let mut cb = CommandBuilder::new(parts[0]);
+                cb.args(&parts[1..]);
+                cb
+            }
+        } else {
+            let mut cb = CommandBuilder::new("gnostr");
+            cb.args(args);
+            cb
+        };
+        
         cmd.cwd(cwd);
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
@@ -138,7 +150,7 @@ impl TuiNode {
     }
 }
 
-pub async fn run_dashboard() -> anyhow::Result<()> {
+pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
@@ -147,11 +159,13 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
-        let mut args = vec!["--gitdir".into(), ".".into()]; // format!("{}", i + 1)];
-        if i == 1 {
-            args.extend(vec![]);
-        }
-        node.spawn(args, project_root.clone())?;
+        let cmd_override = commands.get(i).cloned();
+        let args = if cmd_override.is_none() {
+            vec!["--gitdir".into(), ".".into()]
+        } else {
+            vec![]
+        };
+        node.spawn(args, project_root.clone(), cmd_override)?;
     }
 
     let start_time = Instant::now();
