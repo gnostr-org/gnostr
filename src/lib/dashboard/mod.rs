@@ -268,7 +268,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
 
                 for (idx, &chunk_idx) in [0, 2].iter().enumerate() {
                     let chunk = chunks[chunk_idx];
-                    nodes[idx].resize(chunk.width, chunk.height, force_redraw);
+                    nodes[idx].resize(chunk.width, chunk.height.saturating_sub(2), force_redraw);
 
                     let p = nodes[idx].parser.lock().unwrap();
                     let screen = p.screen();
@@ -308,7 +308,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                         }
                     );
                     let block = Block::default()
-                        .borders(Borders::ALL)
+                        .borders(Borders::TOP | Borders::BOTTOM)
                         .title(title)
                         .border_style(block_style);
 
