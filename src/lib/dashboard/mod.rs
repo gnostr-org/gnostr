@@ -288,6 +288,23 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                 f.render_widget(Paragraph::new(help_text).block(block).alignment(Alignment::Left), area);
             } else {
                 // DASHBOARD VIEW
+                let main_chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Length(1), // Header
+                        Constraint::Min(0),    // Rest of dashboard
+                    ])
+                    .split(area);
+
+                // Render Header
+                let header_text = vec![Line::from(Span::styled(
+                    crate::strings::symbol::CIRCLED_G_STR,
+                    Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD),
+                ))];
+                f.render_widget(Paragraph::new(header_text), main_chunks[0]);
+
+                let dashboard_area = main_chunks[1];
+
                 let visible_indices: Vec<usize> = nodes.iter().enumerate()
                     .filter(|&(i, _)| visible_nodes[i])
                     .map(|(i, _)| i)
@@ -300,7 +317,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                 let chunks = Layout::default()
                     .direction(layout_direction)
                     .constraints(constraints)
-                    .split(area);
+                    .split(dashboard_area);
 
                 for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
                     let chunk = chunks[chunk_idx];
@@ -458,12 +475,43 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                                     if visible_nodes[selected_node] { break; }
                                 }
                             }
-                            KeyCode::Left | KeyCode::Right => {
-                                layout_direction = match layout_direction {
-                                    Direction::Vertical => Direction::Horizontal,
-                                    Direction::Horizontal => Direction::Vertical,
-                                };
-                                force_redraw = true;
+                            KeyCode::Left => {
+                                let mut prev_idx = selected_node.checked_sub(1);
+                                let mut found = false;
+                                while let Some(idx) = prev_idx {
+                                    if visible_nodes[idx] {
+                                        selected_node = idx;
+                                        found = true;
+                                        break;
+                                    }
+                                    prev_idx = idx.checked_sub(1);
+                                }
+                                if !found {
+                                    layout_direction = match layout_direction {
+                                        Direction::Vertical => Direction::Horizontal,
+                                        Direction::Horizontal => Direction::Vertical,
+                                    };
+                                    force_redraw = true;
+                                }
+                            }
+                            KeyCode::Right => {
+                                let mut next_idx = selected_node + 1;
+                                let mut found = false;
+                                while next_idx < nodes.len() {
+                                    if visible_nodes[next_idx] {
+                                        selected_node = next_idx;
+                                        found = true;
+                                        break;
+                                    }
+                                    next_idx += 1;
+                                }
+                                if !found {
+                                    layout_direction = match layout_direction {
+                                        Direction::Vertical => Direction::Horizontal,
+                                        Direction::Horizontal => Direction::Vertical,
+                                    };
+                                    force_redraw = true;
+                                }
                             }
                             KeyCode::Enter => {
                                 active_node = Some(selected_node);
