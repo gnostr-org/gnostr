@@ -72,8 +72,8 @@ impl TuiNode {
     }
 
     pub fn spawn(&self, args: Vec<String>, cwd: PathBuf) -> io::Result<()> {
-        let mut cmd = CommandBuilder::new("cargo");
-        cmd.args(["run", "--bin", "gnostr", "--"]);
+        let mut cmd = CommandBuilder::new("gnostr");
+        //cmd.args(["--gitdir", "."]);
         cmd.args(args);
         cmd.cwd(cwd);
         cmd.env("TERM", "xterm-256color");
@@ -135,11 +135,11 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
-        let mut args = vec!["--gitdir".into()];// format!("{}", i + 1)];
+        let mut args = vec!["--gitdir".into(), ".".into()];// format!("{}", i + 1)];
         if i == 1 {
             args.extend(vec![
                 //"".into(),
-                ".".into(),
+                //"`pwd`".into(),
             ]);
         }
         node.spawn(args, project_root.clone())?;
