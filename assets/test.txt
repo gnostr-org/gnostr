@@ -1,0 +1,106 @@
+# Visual Text Fuzzing Test
+
+## 1. Standard ASCII
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789
+!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~
+
+## 2. Extended ASCII / Latin-1 Supplement
+¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿
+ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞß
+àáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ
+
+## 3. Unicode Typography & Symbols
+Quotes: ‘single’ “double” ‚low single‘ „low double“
+Dashes: hyphen- minus− en– em—
+Spaces: [ ] normal, [ ] en space, [ ] em space, [ ] 1/3 em, [ ] 1/4 em, [ ] 1/6 em, [ ] thin space, [ ] hair space, [​] zero-width space
+Other: … ellipsis, • bullet, † bullet, ‡ dagger, ‰ per mille, ′ prime, ″ double prime
+Math: ± × ÷ − ± ∞ ≈ ≠ ≡ ≤ ≥ √ ∫ ∝ ∑ ∏ π
+Misc: ♠ ♣ ♥ ♦ ♪ ♫ ♀ ♂ ☼ ☁ ☂ ☃ ☄ ★ ☆ ☎ ☏ ⎈ ☤ ☥ ☧ ☨ ☩ ☪ ☫ ☬ ☭ ☮ ☯ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ ☸ ☹ ☺ ☻ ☼ ☽ ☾ ☿ ♀ ♁ ♂ ♃ ♄ ♅ ♆ ♇ ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓
+
+## 4. International Scripts
+Cyrillic: АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ абвгдежзийклмнопрстуфхцчшщъыьэюя
+Greek: ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ αβγδεζηθικλμνξοπρστυφχψω
+Arabic: ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي
+Hebrew: אבγδεζηθικλμνξοπρστυφχψω
+Devanagari: अ आ इ ई उ ऊ ऋ ॠ ऌ ॡ ए ऐ ओ औ
+CJK (Chinese/Japanese/Korean):
+你好，世界！
+こんにちは世界！
+안녕하세요, 세상!
+Bopomofo: ㄅ ㄆ ㄇ ㄈ ㄉ ㄊ ㄋ ㄌ ㄍ ㄎ ㄏ ㄐ ㄑ ㄒ ㄓ ㄔ ㄕ ㄖ ㄗ ㄘ ㄙ ㄧ ㄨ ㄩ ㄚ ㄛ ㄜ ㄝ ㄞ ㄟ ㄠ ㄡ ㄢ ㄣ ㄤ ㄥ ㄦ
+Hiragana: あ い う え お か き く け こ さ し す せ そ
+Katakana: ア イ ウ エ オ カ キ ク ケ コ サ シ ス セ ソ
+
+## 5. Emojis and Modifier Sequences
+Smileys: 😀 😃 😄 😁 😆 😅 😂 🤣 🥲 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🫣 🤗 🫡 🤔 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾
+Skin Tones: ✋ ✋🏻 ✋🏼 ✋🏽 ✋🏾 ✋🏿
+ZWJ Sequences: 👨‍👩‍👧‍👦 🏳️‍🌈 👁️‍🗨️ 🏴‍☠️
+Flags: 🇺🇳 🇦🇫 🇦🇽 🇦🇱 🇩🇿 🇩🇿 🇦🇸 🇦🇩 🇦🇩 🇦🇴 🇦🇮 🇦🇶 🇦🇬 🇦🇶 🇦🇬 🇦🇷 🇦🇲 🇦🇼 🇦🇺 🇦🇹 🇦🇹 🇦🇿 🇧🇸 🇧🇭 🇧🇭 🇧🇩 🇧🇩
+
+## 6. ANSI Escape Codes (Styling & Colors)
+
+### Standard Styles
+\x1b[0mNormal\x1b[0m
+\x1b[1mBold\x1b[0m
+\x1b[2mFaint / Dim\x1b[0m
+\x1b[3mItalic\x1b[0m
+\x1b[4mUnderline\x1b[0m
+\x1b[5mSlow Blink\x1b[0m
+\x1b[6mRapid Blink\x1b[0m
+\x1b[7mReverse / Invert\x1b[0m
+\x1b[8mConceal / Hide\x1b[0m
+\x1b[9mStrikethrough / Crossed-out\x1b[0m
+
+### Combinations
+\x1b[1;3;4mBold Italic Underline\x1b[0m
+\x1b[1;31;42mBold Red on Green\x1b[0m
+
+### Standard 8 Foreground Colors
+\x1b[30mBlack\x1b[0m \x1b[31mRed\x1b[0m \x1b[32mGreen\x1b[0m \x1b[33mYellow\x1b[0m \x1b[34mBlue\x1b[0m \x1b[35mMagenta\x1b[0m \x1b[36mCyan\x1b[0m \x1b[37mWhite\x1b[0m
+
+### Bright / High-Intensity Foreground Colors
+\x1b[90mBright Black (Gray)\x1b[0m \x1b[91mBright Red\x1b[0m \x1b[92mBright Green\x1b[0m \x1b[93mBright Yellow\x1b[0m \x1b[94mBright Blue\x1b[0m \x1b[95mBright Magenta\x1b[0m \x1b[96mBright Cyan\x1b[0m \x1b[97mBright White\x1b[0m
+
+### Standard 8 Background Colors
+\x1b[40m Black \x1b[0m \x1b[41m Red \x1b[0m \x1b[42m Green \x1b[0m \x1b[43m Yellow \x1b[0m \x1b[44m Blue \x1b[0m \x1b[45m Magenta \x1b[0m \x1b[46m Cyan \x1b[0m \x1b[47m White \x1b[0m
+
+### Bright / High-Intensity Background Colors
+\x1b[100m Bright Black \x1b[0m \x1b[101m Bright Red \x1b[0m \x1b[102m Bright Green \x1b[0m \x1b[103m Bright Yellow \x1b[0m \x1b[104m Bright Blue \x1b[0m \x1b[105m Bright Magenta \x1b[0m \x1b[106m Bright Cyan \x1b[0m \x1b[107m Bright White \x1b[0m
+
+### 256 Colors (Extended)
+Foreground: \x1b[38;5;82mGray 82\x1b[0m | \x1b[38;5;196mGreen 196\x1b[0m | \x1b[38;5;208mOrange 208\x1b[0m
+Background: \x1b[48;5;82m Gray 82 \x1b[0m | \x1b[48;5;196m Green 196 \x1b[0m | \x1b[48;5;208m Orange 208 \x1b[0m
+
+### True Color (RGB 24-bit)
+Foreground: \x1b[38;2;255;128;0mOrange RGB(255,128,0)\x1b[0m | \x1b[38;2;0;255;255mCyan RGB(0,255,255)\x1b[0m
+Background: \x1b[48;2;255;128;0m Orange RGB(255,128,0) \x1b[0m | \x1b[48;2;0;255;255m Cyan RGB(0,255,255) \x1b[0m
+
+## 7. Edge Cases and Layout Stress
+
+### Very Long Line Without Breaks
+ThisIsAVeryLongLineThatHasNoSpacesAndShouldForceTheTerminalOrTextEditorToWrapItAccordingToItsInternalRulesWhichMightVaryDependingOnTheImplementationOfTheTerminalEmulatorOrTheTextRenderingEngineUsedByTheApplicationForExampleRatatuiWillWrapItUsuallyByCharacter.
+
+### Tab Stops and Alignment
+Column 1	Column 2	Column 3
+A		B		C
+Long text here	Short	Medium
+
+### Overlapping Control Codes
+\x1b[31mRed \x1b[32mGreen \x1b[34mBlue \x1b[39mDefault \x1b[0m
+\x1b[1mBold \x1b[22mNot Bold \x1b[4mUnderline \x1b[24mNot Underline \x1b[0m
+
+### Combining Diacritical Marks
+Zalgo Text: h̶̦̲̖̫̉̏̃e̵̡̧̛̬̪l̴̙̜̝͇̅l̶͙͕̹̗̊̓ó̷̲̭͎ ̵̡̛̬̪ẃ̷̲̭͎ó̷̲̭͎r̶̡̛̬̪l̶̙̜̝͇̅d̶̦̲̖̫̉̏̃
+More Zalgo: T̴h̶i̸s̶ ̶i̷s̶ ̶Z̸a̶l̸g̶o̸ ̶t̶e̵x̷t̴ ̸w̷h̵i̵c̴h̶ ̵u̷s̵e̷s̶ ̵m̵a̵n̶y̷ ̴c̸o̷m̷b̷i̸n̴i̶n̶g̸ ̸c̷h̷a̵r̴a̸c̷t̶e̵r̴s̶ ̵t̵h̶a̴t̸ ̶s̴t̶a̸c̸k̵ ̴v̶e̶r̴t̸i̴c̴a̴l̵l̸y̵
+
+### Empty Lines and Trailing Whitespace
+
+Line below this is completely empty
+
+Line above this is completely empty
+Line below has trailing spaces   
+Line above has trailing spaces
+
+## End of Fuzzing Test

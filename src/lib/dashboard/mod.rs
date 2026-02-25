@@ -190,6 +190,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
     let mut was_ready = false;
     let mut force_redraw = false;
     let mut layout_direction = Direction::Vertical;
+    let mut visible_nodes = vec![true; nodes.len()];
 
     loop {
         if force_redraw {
@@ -287,16 +288,21 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                 f.render_widget(Paragraph::new(help_text).block(block).alignment(Alignment::Left), area);
             } else {
                 // DASHBOARD VIEW
+                let visible_indices: Vec<usize> = nodes.iter().enumerate()
+                    .filter(|&(i, _)| visible_nodes[i])
+                    .map(|(i, _)| i)
+                    .collect();
+
+                let constraints: Vec<Constraint> = visible_indices.iter()
+                    .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
+                    .collect();
+
                 let chunks = Layout::default()
                     .direction(layout_direction)
-                    .constraints([
-                        Constraint::Percentage(48),
-                        Constraint::Min(2),
-                        Constraint::Percentage(48),
-                    ])
+                    .constraints(constraints)
                     .split(area);
 
-                for (idx, &chunk_idx) in [0, 2].iter().enumerate() {
+                for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
                     let chunk = chunks[chunk_idx];
                     nodes[idx].resize(chunk.width, chunk.height.saturating_sub(2), force_redraw);
 
@@ -401,22 +407,55 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                         }
                     } else {
                         match key.code {
-                            KeyCode::Char('q') => break,
-                            KeyCode::Char('1') => active_node = Some(0),
-                            KeyCode::Char('2') => active_node = Some(1),
+                            KeyCode::Char('q') => {
+                                let visible_count = visible_nodes.iter().filter(|&&v| v).count();
+                                if visible_count <= 1 {
+                                    break; // Quit if only 1 node is visible
+                                } else {
+                                    visible_nodes[selected_node] = false;
+                                    // Move selection to next visible node
+                                    loop {
+                                        if selected_node < nodes.len().saturating_sub(1) {
+                                            selected_node += 1;
+                                        } else {
+                                            selected_node = 0;
+                                        }
+                                        if visible_nodes[selected_node] {
+                                            break;
+                                        }
+                                    }
+                                    force_redraw = true;
+                                }
+                            }
+                            KeyCode::Char('1') => {
+                                if visible_nodes.get(0).copied().unwrap_or(false) {
+                                    active_node = Some(0);
+                                }
+                            }
+                            KeyCode::Char('2') => {
+                                if visible_nodes.get(1).copied().unwrap_or(false) {
+                                    active_node = Some(1);
+                                }
+                            }
                             KeyCode::Char('.') => show_help = true,
                             KeyCode::Up => {
-                                if selected_node > 0 {
-                                    selected_node -= 1;
-                                } else {
-                                    selected_node = nodes.len().saturating_sub(1);
+                                loop {
+                                    if selected_node > 0 {
+                                        selected_node -= 1;
+                                    } else {
+                                        selected_node = nodes.len().saturating_sub(1);
+                                    }
+                                    if visible_nodes[selected_node] { break; }
                                 }
                             }
                             KeyCode::Down => {
-                                if selected_node < nodes.len().saturating_sub(1) {
-                                    selected_node += 1;
-                                } else {
-                                    selected_node = 0;
+                                loop {
+                                    if selected_node < nodes.len().saturating_sub(1) {
+                                        selected_node += 1;
+                                    } else {
+                                        selected_node = 0;
+                                    }
+                                    if visible_nodes[selected_node] { break; }
                                 }
                             }
                             KeyCode::Left | KeyCode::Right => {
