@@ -1,4 +1,7 @@
+use clap::Parser;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    gnostr::dashboard::run_dashboard().await
+    let args = gnostr::cli::GnostrCli::parse();
+    gnostr::dashboard::run_dashboard(args.commands).await
 }

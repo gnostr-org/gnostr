@@ -51,6 +51,7 @@ pub struct TuiNode {
     slave: Box<dyn portable_pty::SlavePty + Send>,
     byte_count: Arc<AtomicUsize>,
     gnostr_presented: Arc<AtomicBool>,
+    is_tui: Arc<AtomicBool>,
 }
 
 impl TuiNode {
@@ -74,6 +75,7 @@ impl TuiNode {
             slave: pty_pair.slave,
             byte_count: Arc::new(AtomicUsize::new(0)),
             gnostr_presented: Arc::new(AtomicBool::new(false)),
+            is_tui: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -110,6 +112,7 @@ impl TuiNode {
         let parser = Arc::clone(&self.parser);
         let byte_count = Arc::clone(&self.byte_count);
         let gnostr_presented = Arc::clone(&self.gnostr_presented);
+        let is_tui = Arc::clone(&self.is_tui);
 
         std::thread::spawn(move || {
             let mut buf = [0u8; 8192];
@@ -117,9 +120,19 @@ impl TuiNode {
                 if n == 0 {
                     break;
                 }
+                let chunk = &buf[..n];
                 byte_count.fetch_add(n, Ordering::SeqCst);
+                
+                // Detect alternate screen buffer (CSI ? 1049 h) or hide cursor (CSI ? 25 l)
+                if !is_tui.load(Ordering::SeqCst) {
+                    if chunk.windows(8).any(|w| w == b"\x1b[?1049h" || w == b"\x1b[?1047h") 
+                        || chunk.windows(6).any(|w| w == b"\x1b[?25l") {
+                        is_tui.store(true, Ordering::SeqCst);
+                    }
+                }
+
                 let mut p = parser.lock().unwrap();
-                p.process(&buf[..n]);
+                p.process(chunk);
                 if !gnostr_presented.load(Ordering::SeqCst)
                     && p.screen().contents().to_lowercase().contains("gnostr")
                 {
@@ -185,9 +198,10 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
         terminal.draw(|f| {
             let area = f.area();
 
-            let currently_ready = nodes
-                .iter()
-                .all(|n| n.gnostr_presented.load(Ordering::SeqCst));
+            let currently_ready = nodes.iter().all(|n| {
+                n.gnostr_presented.load(Ordering::SeqCst) || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
+            });
+            
             if currently_ready && ready_since.is_none() {
                 ready_since = Some(Instant::now());
             }
@@ -309,10 +323,14 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                     } else {
                         Style::default().fg(Color::Gray)
                     };
+                    
+                    let is_tui = nodes[idx].is_tui.load(Ordering::SeqCst);
+                    let type_str = if is_tui { "TUI" } else { "CLI" };
 
                     let title = format!(
-                        " Node {} {} ",
+                        " Node {} [{}] {} ",
                         idx + 1,
+                        type_str,
                         if active_node == Some(idx) {
                             "[ACTIVE - Double ESC to unfocus]"
                         } else if active_node.is_none() && selected_node == idx {
