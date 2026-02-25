@@ -118,9 +118,9 @@ impl TuiNode {
         Ok(())
     }
 
-    pub fn resize(&self, w: u16, h: u16) {
+    pub fn resize(&self, w: u16, h: u16, force: bool) {
         let mut p = self.parser.lock().unwrap();
-        if p.screen().size() != (h, w) {
+        if p.screen().size() != (h, w) || force {
             p.set_size(h, w);
             let master = self.master.lock().unwrap();
             let _ = master.resize(PtySize {
@@ -160,8 +160,14 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let mut selected_node: usize = 0;
     let mut show_help: bool = false;
     let mut last_esc_time: Option<Instant> = None;
+    let mut was_ready = false;
+    let mut force_redraw = false;
 
     loop {
+        if force_redraw {
+            terminal.clear()?;
+        }
+
         terminal.draw(|f| {
             let area = f.area();
 
@@ -179,6 +185,11 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                 }
                 None => start_time.elapsed() > Duration::from_secs(10), // Fallback
             };
+
+            if all_ready && !was_ready {
+                was_ready = true;
+                force_redraw = true; // Force a redraw on transition
+            }
 
             if !all_ready {
                 // SPLASH VIEW
@@ -257,7 +268,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
 
                 for (idx, &chunk_idx) in [0, 2].iter().enumerate() {
                     let chunk = chunks[chunk_idx];
-                    nodes[idx].resize(chunk.width, chunk.height);
+                    nodes[idx].resize(chunk.width, chunk.height, force_redraw);
 
                     let p = nodes[idx].parser.lock().unwrap();
                     let screen = p.screen();
@@ -305,9 +316,13 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                 }
             }
         })?;
+        force_redraw = false;
 
         if event::poll(Duration::from_millis(33))? {
             match event::read()? {
+                Event::Resize(_, _) => {
+                    force_redraw = true;
+                }
                 Event::Key(key) => {
                     if let Some(idx) = active_node {
                         let mut deactivated = false;
