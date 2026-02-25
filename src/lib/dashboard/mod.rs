@@ -157,6 +157,7 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
     let mut active_node: Option<usize> = None;
+    let mut selected_node: usize = 0;
     let mut show_help: bool = false;
 
     loop {
@@ -219,10 +220,12 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                     )]),
                     Line::from(""),
                     Line::from("Global Controls (when no node is focused):"),
-                    Line::from("  [1]     : Focus Node 1"),
-                    Line::from("  [2]     : Focus Node 2"),
-                    Line::from("  [.]     : Toggle Help Screen"),
-                    Line::from("  [q]     : Quit Dashboard"),
+                    Line::from("  [Up/Down]: Select a node"),
+                    Line::from("  [Enter]  : Focus the selected node"),
+                    Line::from("  [1]      : Focus Node 1"),
+                    Line::from("  [2]      : Focus Node 2"),
+                    Line::from("  [.]      : Toggle Help Screen"),
+                    Line::from("  [q]      : Quit Dashboard"),
                     Line::from(""),
                     Line::from("Node Controls (when a node is focused):"),
                     Line::from("  [Ctrl+X]: Unfocus the current node"),
@@ -275,11 +278,23 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
 
                     let block_style = if active_node == Some(idx) {
                         Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                    } else if active_node.is_none() && selected_node == idx {
+                        Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::Gray)
                     };
 
-                    let title = format!(" Node {} {} ", idx + 1, if active_node == Some(idx) { "[ACTIVE - Press Ctrl+X to unfocus]" } else { "" });
+                    let title = format!(
+                        " Node {} {} ",
+                        idx + 1,
+                        if active_node == Some(idx) {
+                            "[ACTIVE - Press Ctrl+X to unfocus]"
+                        } else if active_node.is_none() && selected_node == idx {
+                            "[SELECTED - Press Enter to focus]"
+                        } else {
+                            ""
+                        }
+                    );
                     let block = Block::default()
                         .borders(Borders::ALL)
                         .title(title)
@@ -333,6 +348,23 @@ pub async fn run_dashboard() -> anyhow::Result<()> {
                             KeyCode::Char('1') => active_node = Some(0),
                             KeyCode::Char('2') => active_node = Some(1),
                             KeyCode::Char('.') => show_help = true,
+                            KeyCode::Up => {
+                                if selected_node > 0 {
+                                    selected_node -= 1;
+                                } else {
+                                    selected_node = nodes.len().saturating_sub(1);
+                                }
+                            }
+                            KeyCode::Down => {
+                                if selected_node < nodes.len().saturating_sub(1) {
+                                    selected_node += 1;
+                                } else {
+                                    selected_node = 0;
+                                }
+                            }
+                            KeyCode::Enter => {
+                                active_node = Some(selected_node);
+                            }
                             _ => {}
                         }
                     }
