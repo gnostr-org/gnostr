@@ -375,26 +375,7 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                         }
 
                         if !deactivated {
-                            // Basic key mapping for PTY input
-                            let input = match key.code {
-                                KeyCode::Char(c) => {
-                                    if key.modifiers.contains(KeyModifiers::CONTROL) && c.is_ascii_alphabetic() {
-                                        // Map Ctrl+letter to 1..26
-                                        vec![(c as u8 & 0x1f)]
-                                    } else {
-                                        vec![c as u8]
-                                    }
-                                },
-                                KeyCode::Esc => vec![27],
-                                KeyCode::Enter => vec![b'\r'],
-                                KeyCode::Backspace => vec![8],
-                                KeyCode::Tab => vec![b'\t'],
-                                KeyCode::Up => vec![27, 91, 65],
-                                KeyCode::Down => vec![27, 91, 66],
-                                KeyCode::Right => vec![27, 91, 67],
-                                KeyCode::Left => vec![27, 91, 68],
-                                _ => vec![],
-                            };
+                            let input = encode_key(key);
                             if !input.is_empty() {
                                 nodes[idx].write_input(&input)?;
                             }
@@ -452,4 +433,68 @@ fn map_vt_color(c: vt100::Color) -> Color {
         vt100::Color::Idx(i) => Color::Indexed(i),
         vt100::Color::Rgb(r, g, b) => Color::Rgb(r, g, b),
     }
+}
+
+fn encode_key(key: event::KeyEvent) -> Vec<u8> {
+    use crossterm::event::{KeyCode, KeyModifiers};
+    let mut buf = Vec::new();
+    
+    if key.modifiers.contains(KeyModifiers::ALT) {
+        buf.push(27); // ESC
+    }
+
+    match key.code {
+        KeyCode::Char(c) => {
+            if key.modifiers.contains(KeyModifiers::CONTROL) {
+                let c = c.to_ascii_uppercase();
+                if c >= '@' && c <= '_' {
+                    buf.push((c as u8) - 64);
+                } else if c == '?' {
+                    buf.push(127); // DEL
+                } else if c == ' ' {
+                    buf.push(0); // Ctrl+Space
+                } else {
+                    let mut char_buf = [0; 4];
+                    buf.extend_from_slice(c.encode_utf8(&mut char_buf).as_bytes());
+                }
+            } else {
+                let mut char_buf = [0; 4];
+                buf.extend_from_slice(c.encode_utf8(&mut char_buf).as_bytes());
+            }
+        }
+        KeyCode::Backspace => buf.push(127), // 127 is standard for backspace in many terminals
+        KeyCode::Enter => buf.push(b'\r'),
+        KeyCode::Left => buf.extend_from_slice(b"\x1b[D"),
+        KeyCode::Right => buf.extend_from_slice(b"\x1b[C"),
+        KeyCode::Up => buf.extend_from_slice(b"\x1b[A"),
+        KeyCode::Down => buf.extend_from_slice(b"\x1b[B"),
+        KeyCode::Home => buf.extend_from_slice(b"\x1b[H"),
+        KeyCode::End => buf.extend_from_slice(b"\x1b[F"),
+        KeyCode::PageUp => buf.extend_from_slice(b"\x1b[5~"),
+        KeyCode::PageDown => buf.extend_from_slice(b"\x1b[6~"),
+        KeyCode::Tab => buf.push(b'\t'),
+        KeyCode::BackTab => buf.extend_from_slice(b"\x1b[Z"),
+        KeyCode::Delete => buf.extend_from_slice(b"\x1b[3~"),
+        KeyCode::Insert => buf.extend_from_slice(b"\x1b[2~"),
+        KeyCode::F(n) => {
+            match n {
+                1 => buf.extend_from_slice(b"\x1bOP"),
+                2 => buf.extend_from_slice(b"\x1bOQ"),
+                3 => buf.extend_from_slice(b"\x1bOR"),
+                4 => buf.extend_from_slice(b"\x1bOS"),
+                5 => buf.extend_from_slice(b"\x1b[15~"),
+                6 => buf.extend_from_slice(b"\x1b[17~"),
+                7 => buf.extend_from_slice(b"\x1b[18~"),
+                8 => buf.extend_from_slice(b"\x1b[19~"),
+                9 => buf.extend_from_slice(b"\x1b[20~"),
+                10 => buf.extend_from_slice(b"\x1b[21~"),
+                11 => buf.extend_from_slice(b"\x1b[23~"),
+                12 => buf.extend_from_slice(b"\x1b[24~"),
+                _ => {}
+            }
+        }
+        KeyCode::Esc => buf.push(27),
+        _ => {}
+    }
+    buf
 }
