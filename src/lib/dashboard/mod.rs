@@ -9,7 +9,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph},
+    widgets::{Block, Borders, Clear, Paragraph, Tabs},
     Terminal,
 };
 use std::{
@@ -193,6 +193,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut force_redraw = false;
     let mut layout_direction = Direction::Vertical;
     let mut visible_nodes = vec![true; nodes.len()];
+    let mut active_tab: usize = 0;
+    let tab_titles = vec!["Nodes", "Relays", "Help"];
 
     loop {
         if force_redraw {
@@ -295,90 +297,133 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 let main_chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([
-                        Constraint::Length(1), // Header
-                        Constraint::Min(0),    // Rest of dashboard
+                        Constraint::Length(1), // Header + Tab bar
+                        Constraint::Min(0),    // Content
                     ])
                     .split(area);
 
-                // Render Header
-                let header_text = vec![Line::from(Span::styled(
-                    crate::strings::symbol::CIRCLED_G_STR,
-                    Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD),
-                ))];
-                f.render_widget(Paragraph::new(header_text), main_chunks[0]);
+                // Render Header & Tab Bar
+                let header_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([
+                        Constraint::Length(3), // CIRCLED_G
+                        Constraint::Min(0),    // Tabs
+                    ])
+                    .split(main_chunks[0]);
+
+                f.render_widget(
+                    Paragraph::new(crate::strings::symbol::CIRCLED_G_STR)
+                        .style(Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)),
+                    header_chunks[0],
+                );
+
+                let tabs = Tabs::new(tab_titles.iter().map(|t| Line::from(*t)).collect::<Vec<_>>())
+                    .block(Block::default().borders(Borders::NONE))
+                    .select(active_tab)
+                    .style(Style::default().fg(Color::Gray))
+                    .highlight_style(Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD))
+                    .divider(Span::raw(" | "));
+                
+                f.render_widget(tabs, header_chunks[1]);
 
                 let dashboard_area = main_chunks[1];
 
-                let visible_indices: Vec<usize> = nodes.iter().enumerate()
-                    .filter(|&(i, _)| visible_nodes[i])
-                    .map(|(i, _)| i)
-                    .collect();
+                if active_tab == 0 { // Nodes Tab
+                    let visible_indices: Vec<usize> = nodes.iter().enumerate()
+                        .filter(|&(i, _)| visible_nodes[i])
+                        .map(|(i, _)| i)
+                        .collect();
 
-                let constraints: Vec<Constraint> = visible_indices.iter()
-                    .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
-                    .collect();
+                    let constraints: Vec<Constraint> = visible_indices.iter()
+                        .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
+                        .collect();
 
-                let chunks = Layout::default()
-                    .direction(layout_direction)
-                    .constraints(constraints)
-                    .split(dashboard_area);
+                    let chunks = Layout::default()
+                        .direction(layout_direction)
+                        .constraints(constraints)
+                        .split(dashboard_area);
 
-                for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
-                    let chunk = chunks[chunk_idx];
-                    nodes[idx].resize(chunk.width.saturating_sub(2), chunk.height.saturating_sub(2), force_redraw);
+                    for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
+                        let chunk = chunks[chunk_idx];
+                        nodes[idx].resize(chunk.width.saturating_sub(2), chunk.height.saturating_sub(2), force_redraw);
 
-                    let p = nodes[idx].parser.lock().unwrap();
-                    let screen = p.screen();
-                    let mut lines = Vec::new();
-                    for row in 0..screen.size().0 {
-                        let mut spans = Vec::new();
-                        for col in 0..screen.size().1 {
-                            if let Some(cell) = screen.cell(row, col) {
-                                spans.push(Span::styled(
-                                    cell.contents().to_string(),
-                                    Style::default()
-                                        .fg(map_vt_color(cell.fgcolor()))
-                                        .bg(map_vt_color(cell.bgcolor())),
-                                ));
+                        let p = nodes[idx].parser.lock().unwrap();
+                        let screen = p.screen();
+                        let mut lines = Vec::new();
+                        for row in 0..screen.size().0 {
+                            let mut spans = Vec::new();
+                            for col in 0..screen.size().1 {
+                                if let Some(cell) = screen.cell(row, col) {
+                                    spans.push(Span::styled(
+                                        cell.contents().to_string(),
+                                        Style::default()
+                                            .fg(map_vt_color(cell.fgcolor()))
+                                            .bg(map_vt_color(cell.bgcolor())),
+                                    ));
+                                }
                             }
+                            lines.push(Line::from(spans));
                         }
-                        lines.push(Line::from(spans));
-                    }
 
-                    let block_style = if active_node == Some(idx) {
-                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
-                    } else if active_node.is_none() && selected_node == idx {
-                        Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
-                    } else {
-                        Style::default().fg(Color::Gray)
-                    };
-                    
-                    let is_tui = nodes[idx].is_tui.load(Ordering::SeqCst);
-                    let type_str = if is_tui { "TUI" } else { "CLI" };
-
-                    let title = format!(
-                        " Node {} [{}] {} ",
-                        idx + 1,
-                        type_str,
-                        if active_node == Some(idx) {
-                            "[ACTIVE - Double ESC to unfocus]"
+                        let block_style = if active_node == Some(idx) {
+                            Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
                         } else if active_node.is_none() && selected_node == idx {
-                            "[SELECTED - Press Enter to focus]"
+                            Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
                         } else {
-                            ""
-                        }
-                    );
-                    let borders = match layout_direction {
-                        Direction::Vertical => Borders::TOP | Borders::BOTTOM,
-                        Direction::Horizontal => Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM,
-                    };
+                            Style::default().fg(Color::Gray)
+                        };
+                        
+                        let is_tui = nodes[idx].is_tui.load(Ordering::SeqCst);
+                        let type_str = if is_tui { "TUI" } else { "CLI" };
 
-                    let block = Block::default()
-                        .borders(borders)
-                        .title(title)
-                        .border_style(block_style);
+                        let title = format!(
+                            " Node {} [{}] {} ",
+                            idx + 1,
+                            type_str,
+                            if active_node == Some(idx) {
+                                "[ACTIVE - Double ESC to unfocus]"
+                            } else if active_node.is_none() && selected_node == idx {
+                                "[SELECTED - Press Enter to focus]"
+                            } else {
+                                ""
+                            }
+                        );
+                        let borders = match layout_direction {
+                            Direction::Vertical => Borders::TOP | Borders::BOTTOM,
+                            Direction::Horizontal => Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM,
+                        };
 
-                    f.render_widget(Paragraph::new(lines).block(block), chunk);
+                        let block = Block::default()
+                            .borders(borders)
+                            .title(title)
+                            .border_style(block_style);
+
+                        f.render_widget(Paragraph::new(lines).block(block), chunk);
+                    }
+                } else if active_tab == 1 { // Relays Tab
+                    f.render_widget(Paragraph::new("Relays content placeholder"), dashboard_area);
+                } else if active_tab == 2 { // Help Tab
+                    let help_text = vec![
+                        Line::from(vec![Span::styled(
+                            "GNOSTR DASHBOARD HELP",
+                            Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD),
+                        )]),
+                        Line::from(""),
+                        Line::from("Global Controls (when no node is focused):"),
+                        Line::from("  [Tab]       : Cycle through tabs"),
+                        Line::from("  [Up/Down]   : Select a node"),
+                        Line::from("  [Left/Right]: Toggle horizontal/vertical layout (if at edge)"),
+                        Line::from("  [Left/Right]: Select adjacent node (if not at edge)"),
+                        Line::from("  [Enter]     : Focus the selected node"),
+                        Line::from("  [1-9]       : Focus Node 1-9"),
+                        Line::from("  [q]         : Hide selected node (Quits if only 1 node visible)"),
+                        Line::from("  [Ctrl+C]    : Force Quit Dashboard"),
+                        Line::from(""),
+                        Line::from("Node Controls (when a node is focused):"),
+                        Line::from("  [Double ESC]: Unfocus the current node"),
+                        Line::from("  [All]       : All other keys are forwarded to the node's PTY"),
+                    ];
+                    f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), dashboard_area);
                 }
             }
         })?;
@@ -428,6 +473,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         }
                     } else {
                         match key.code {
+                            KeyCode::Tab => {
+                                active_tab = (active_tab + 1) % tab_titles.len();
+                                force_redraw = true;
+                            }
                             KeyCode::Char('q') => {
                                 let visible_count = visible_nodes.iter().filter(|&&v| v).count();
                                 if visible_count <= 1 {
