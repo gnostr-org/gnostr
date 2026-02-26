@@ -469,7 +469,32 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         break;
                     }
 
-                    if let Some(idx) = active_node {
+                    if is_git_tui_active {
+                        let mut deactivated = false;
+                        if key.code == KeyCode::Esc {
+                            if let Some(time) = last_esc_time {
+                                if time.elapsed() < Duration::from_millis(500) {
+                                    is_git_tui_active = false;
+                                    last_esc_time = None;
+                                    deactivated = true;
+                                    force_redraw = true;
+                                } else {
+                                    last_esc_time = Some(Instant::now());
+                                }
+                            } else {
+                                last_esc_time = Some(Instant::now());
+                            }
+                        } else {
+                            last_esc_time = None;
+                        }
+
+                        if !deactivated {
+                            let input = encode_key(key);
+                            if !input.is_empty() {
+                                git_tui_node.write_input(&input)?;
+                            }
+                        }
+                    } else if let Some(idx) = active_node {
                         let mut deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
@@ -497,20 +522,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     } else {
                         match key.code {
                             KeyCode::Char('\\') => {
-                                // Hand over terminal to git-tui
-                                execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
-                                disable_raw_mode()?;
-
-                                let mut child = std::process::Command::new("cargo")
-                                    .args(["run", "--bin", "git-tui"])
-                                    .spawn()
-                                    .expect("Failed to start git-tui");
-                                
-                                let _ = child.wait();
-
-                                // Restore dashboard terminal state
-                                enable_raw_mode()?;
-                                execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
+                                active_tab = if active_tab == 3 { 0 } else { 3 };
                                 force_redraw = true;
                             }
                             KeyCode::Tab => {
@@ -609,7 +621,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Enter => {
-                                if visible_nodes[selected_node] {
+                                if active_tab == 3 {
+                                    is_git_tui_active = true;
+                                } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
                                     active_node = Some(selected_node);
                                     active_tab = 0;
                                 }
