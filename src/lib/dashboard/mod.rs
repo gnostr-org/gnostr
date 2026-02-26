@@ -187,7 +187,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut ready_since: Option<Instant> = None;
     let mut active_node: Option<usize> = None;
     let mut selected_node: usize = 0;
-    let mut show_help: bool = false;
     let mut last_esc_time: Option<Instant> = None;
     let mut was_ready = false;
     let mut force_redraw = false;
@@ -255,43 +254,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         .alignment(Alignment::Center),
                     vertical_chunks[3],
                 );
-            } else if show_help {
-                // HELP VIEW
-                f.render_widget(Clear, area);
-
-                let help_text = vec![
-                    Line::from(vec![Span::styled(
-                        "GNOSTR DASHBOARD HELP",
-                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD),
-                    )]),
-                    Line::from(""),
-                    Line::from("Global Controls (when no node is focused):"),
-                    Line::from("  [Up/Down]   : Select a node"),
-                    Line::from("  [Left/Right]: Toggle horizontal/vertical layout (if at edge)"),
-                    Line::from("  [Left/Right]: Select adjacent node (if not at edge)"),
-                    Line::from("  [Enter]     : Focus the selected node"),
-                    Line::from("  [1]         : Focus Node 1"),
-                    Line::from("  [2]         : Focus Node 2"),
-                    Line::from("  [.]         : Toggle Help Screen"),
-                    Line::from("  [q]         : Hide selected node (Quits if only 1 node visible)"),
-                    Line::from("  [Ctrl+C]    : Force Quit Dashboard"),
-                    Line::from(""),
-                    Line::from("Node Controls (when a node is focused):"),
-                    Line::from("  [Double ESC]: Unfocus the current node"),
-                    Line::from("  [All]       : All other keys are forwarded to the node's PTY"),
-                    Line::from(""),
-                    Line::from(vec![Span::styled(
-                        "Press '.' or 'ESC' to return to the dashboard.",
-                        Style::default().fg(Color::Gray),
-                    )]),
-                ];
-
-                let block = Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Help ")
-                    .border_style(Style::default().fg(BITCOIN_ORANGE));
-
-                f.render_widget(Paragraph::new(help_text).block(block).alignment(Alignment::Left), area);
             } else {
                 // DASHBOARD VIEW
                 let main_chunks = Layout::default()
@@ -326,7 +288,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 
                 f.render_widget(tabs, header_chunks[1]);
 
-                let dashboard_area = main_chunks[1];
+                let content_area = main_chunks[1];
 
                 if active_tab == 0 { // Nodes Tab
                     let visible_indices: Vec<usize> = nodes.iter().enumerate()
@@ -334,74 +296,78 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         .map(|(i, _)| i)
                         .collect();
 
-                    let constraints: Vec<Constraint> = visible_indices.iter()
-                        .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
-                        .collect();
+                    if visible_indices.is_empty() {
+                        f.render_widget(Paragraph::new("No nodes visible. Press 'q' to exit."), content_area);
+                    } else {
+                        let constraints: Vec<Constraint> = visible_indices.iter()
+                            .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
+                            .collect();
 
-                    let chunks = Layout::default()
-                        .direction(layout_direction)
-                        .constraints(constraints)
-                        .split(dashboard_area);
+                        let chunks = Layout::default()
+                            .direction(layout_direction)
+                            .constraints(constraints)
+                            .split(content_area);
 
-                    for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
-                        let chunk = chunks[chunk_idx];
-                        nodes[idx].resize(chunk.width.saturating_sub(2), chunk.height.saturating_sub(2), force_redraw);
+                        for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
+                            let chunk = chunks[chunk_idx];
+                            nodes[idx].resize(chunk.width.saturating_sub(2), chunk.height.saturating_sub(2), force_redraw);
 
-                        let p = nodes[idx].parser.lock().unwrap();
-                        let screen = p.screen();
-                        let mut lines = Vec::new();
-                        for row in 0..screen.size().0 {
-                            let mut spans = Vec::new();
-                            for col in 0..screen.size().1 {
-                                if let Some(cell) = screen.cell(row, col) {
-                                    spans.push(Span::styled(
-                                        cell.contents().to_string(),
-                                        Style::default()
-                                            .fg(map_vt_color(cell.fgcolor()))
-                                            .bg(map_vt_color(cell.bgcolor())),
-                                    ));
+                            let p = nodes[idx].parser.lock().unwrap();
+                            let screen = p.screen();
+                            let mut lines = Vec::new();
+                            for row in 0..screen.size().0 {
+                                let mut spans = Vec::new();
+                                for col in 0..screen.size().1 {
+                                    if let Some(cell) = screen.cell(row, col) {
+                                        spans.push(Span::styled(
+                                            cell.contents().to_string(),
+                                            Style::default()
+                                                .fg(map_vt_color(cell.fgcolor()))
+                                                .bg(map_vt_color(cell.bgcolor())),
+                                        ));
+                                    }
                                 }
+                                lines.push(Line::from(spans));
                             }
-                            lines.push(Line::from(spans));
-                        }
 
-                        let block_style = if active_node == Some(idx) {
-                            Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
-                        } else if active_node.is_none() && selected_node == idx {
-                            Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
-                        } else {
-                            Style::default().fg(Color::Gray)
-                        };
-                        
-                        let is_tui = nodes[idx].is_tui.load(Ordering::SeqCst);
-                        let type_str = if is_tui { "TUI" } else { "CLI" };
-
-                        let title = format!(
-                            " Node {} [{}] {} ",
-                            idx + 1,
-                            type_str,
-                            if active_node == Some(idx) {
-                                "[ACTIVE - Double ESC to unfocus]"
+                            let block_style = if active_node == Some(idx) {
+                                Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
                             } else if active_node.is_none() && selected_node == idx {
-                                "[SELECTED - Press Enter to focus]"
+                                Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
                             } else {
-                                ""
-                            }
-                        );
-                        let borders = match layout_direction {
-                            Direction::Vertical => Borders::TOP | Borders::BOTTOM,
-                            Direction::Horizontal => Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM,
-                        };
+                                Style::default().fg(Color::Gray)
+                            };
+                            
+                            let is_tui = nodes[idx].is_tui.load(Ordering::SeqCst);
+                            let type_str = if is_tui { "TUI" } else { "CLI" };
 
-                        let block = Block::default()
-                            .borders(borders)
-                            .title(title)
-                            .border_style(block_style);
+                            let title = format!(
+                                " Node {} [{}] {} ",
+                                idx + 1,
+                                type_str,
+                                if active_node == Some(idx) {
+                                    "[ACTIVE - Double ESC to unfocus]"
+                                } else if active_node.is_none() && selected_node == idx {
+                                    "[SELECTED - Press Enter to focus]"
+                                } else {
+                                    ""
+                                }
+                            );
+                            let borders = match layout_direction {
+                                Direction::Vertical => Borders::TOP | Borders::BOTTOM,
+                                Direction::Horizontal => Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM,
+                            };
 
-                        f.render_widget(Paragraph::new(lines).block(block), chunk);
+                            let block = Block::default()
+                                .borders(borders)
+                                .title(title)
+                                .border_style(block_style);
+
+                            f.render_widget(Paragraph::new(lines).block(block), chunk);
+                        }
                     }
                 } else if active_tab == 1 { // Relays Tab
-                    f.render_widget(Paragraph::new("Relays content placeholder"), dashboard_area);
+                    f.render_widget(Paragraph::new("Relays content placeholder"), content_area);
                 } else if active_tab == 2 { // Help Tab
                     let help_text = vec![
                         Line::from(vec![Span::styled(
@@ -417,13 +383,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         Line::from("  [Enter]     : Focus the selected node"),
                         Line::from("  [1-9]       : Focus Node 1-9"),
                         Line::from("  [q]         : Hide selected node (Quits if only 1 node visible)"),
+                        Line::from("  [.]         : Toggle Help Screen"),
                         Line::from("  [Ctrl+C]    : Force Quit Dashboard"),
                         Line::from(""),
                         Line::from("Node Controls (when a node is focused):"),
                         Line::from("  [Double ESC]: Unfocus the current node"),
                         Line::from("  [All]       : All other keys are forwarded to the node's PTY"),
                     ];
-                    f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), dashboard_area);
+                    f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
                 }
             }
         })?;
@@ -465,12 +432,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 nodes[idx].write_input(&input)?;
                             }
                         }
-                    } else if show_help {
-                        match key.code {
-                            KeyCode::Char('.') | KeyCode::Esc => show_help = false,
-                            KeyCode::Char('q') => break,
-                            _ => {}
-                        }
                     } else {
                         match key.code {
                             KeyCode::Tab => {
@@ -501,9 +462,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 let target_idx = (c as usize) - ('1' as usize);
                                 if visible_nodes.get(target_idx).copied().unwrap_or(false) {
                                     active_node = Some(target_idx);
+                                    active_tab = 0;
                                 }
                             }
-                            KeyCode::Char('.') => show_help = true,
+                            KeyCode::Char('.') => {
+                                active_tab = if active_tab == 2 { 0 } else { 2 };
+                                force_redraw = true;
+                            }
                             KeyCode::Up => {
                                 loop {
                                     if selected_node > 0 {
@@ -512,6 +477,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                         selected_node = nodes.len().saturating_sub(1);
                                     }
                                     if visible_nodes[selected_node] { break; }
+                                    if visible_nodes.iter().all(|&v| !v) { break; }
                                 }
                             }
                             KeyCode::Down => {
@@ -522,6 +488,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                         selected_node = 0;
                                     }
                                     if visible_nodes[selected_node] { break; }
+                                    if visible_nodes.iter().all(|&v| !v) { break; }
                                 }
                             }
                             KeyCode::Left => {
@@ -563,7 +530,16 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Enter => {
-                                active_node = Some(selected_node);
+                                if visible_nodes[selected_node] {
+                                    active_node = Some(selected_node);
+                                    active_tab = 0;
+                                }
+                            }
+                            KeyCode::Esc => {
+                                if active_tab != 0 {
+                                    active_tab = 0;
+                                    force_redraw = true;
+                                }
                             }
                             _ => {}
                         }
