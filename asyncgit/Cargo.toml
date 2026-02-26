@@ -179,7 +179,7 @@ tree-sitter = "0.23.2" # check version
 ##tree-sitter-language = "0.1" ##check version
 gnostr-grammar = { workspace = true }
 tree-sitter-highlight = "0.23" ##check version
-tui-prompts = "0.5.0"
+tui-prompts = "0.4"
 
 unicode-normalization = { workspace = true }
 unicode-segmentation = { workspace = true }
