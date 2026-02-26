@@ -144,6 +144,8 @@ impl TuiNode {
     }
 
     pub fn resize(&self, w: u16, h: u16, force: bool) {
+        let w = w.max(1);
+        let h = h.max(1);
         let mut p = self.parser.lock().unwrap();
         if p.screen().size() != (h, w) || force {
             p.set_size(h, w);
