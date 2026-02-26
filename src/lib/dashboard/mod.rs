@@ -181,6 +181,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     
     // Initialize specific node for git-tui
     let git_tui_node = TuiNode::new(120, 24);
+    let relay_node = TuiNode::new(120, 24);
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
@@ -189,6 +190,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     }
     
     git_tui_node.spawn(vec![], project_root.clone(), Some("cargo run --bin git-tui".to_string()))?;
+    relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
@@ -200,8 +202,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut layout_direction = Direction::Vertical;
     let mut visible_nodes = vec![true; nodes.len()];
     let mut active_tab: usize = 0;
-    let tab_titles = vec!["Nodes", "Relays", "Help"];
+    let tab_titles = vec!["Nodes", "Relay", "Help"];
     let mut is_git_tui_active = false;
+    let mut is_relay_active = false;
 
     loop {
         if force_redraw {
@@ -213,7 +216,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
             let currently_ready = nodes.iter().all(|n| {
                 n.gnostr_presented.load(Ordering::SeqCst) || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
-            }) && (git_tui_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3));
+            }) && (git_tui_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
+               && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3));
             
             if currently_ready && ready_since.is_none() {
                 ready_since = Some(Instant::now());
@@ -428,8 +432,36 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             f.render_widget(Paragraph::new(lines).block(block), chunk);
                         }
                     }
-                } else if active_tab == 1 { // Relays Tab
-                    f.render_widget(Paragraph::new("Relays content placeholder"), content_area);
+                } else if active_tab == 1 { // Relay Tab
+                    relay_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+                    
+                    let p = relay_node.parser.lock().unwrap();
+                    let screen = p.screen();
+                    let mut lines = Vec::new();
+                    for row in 0..screen.size().0 {
+                        let mut spans = Vec::new();
+                        for col in 0..screen.size().1 {
+                            if let Some(cell) = screen.cell(row, col) {
+                                spans.push(Span::styled(
+                                    cell.contents().to_string(),
+                                    Style::default()
+                                        .fg(map_vt_color(cell.fgcolor()))
+                                        .bg(map_vt_color(cell.bgcolor())),
+                                ));
+                            }
+                        }
+                        lines.push(Line::from(spans));
+                    }
+                    
+                    let block_style = if is_relay_active {
+                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+                    
+                    let title = if is_relay_active { " Relay [ACTIVE - Double ESC to unfocus] " } else { " Relay [SELECTED - Press Enter to focus] " };
+                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    f.render_widget(Paragraph::new(lines).block(block), content_area);
                 } else if active_tab == 2 { // Help Tab
                     let help_text = vec![
                         Line::from(vec![Span::styled(
@@ -492,6 +524,31 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             let input = encode_key(key);
                             if !input.is_empty() {
                                 git_tui_node.write_input(&input)?;
+                            }
+                        }
+                    } else if is_relay_active {
+                        let mut deactivated = false;
+                        if key.code == KeyCode::Esc {
+                            if let Some(time) = last_esc_time {
+                                if time.elapsed() < Duration::from_millis(500) {
+                                    is_relay_active = false;
+                                    last_esc_time = None;
+                                    deactivated = true;
+                                    force_redraw = true;
+                                } else {
+                                    last_esc_time = Some(Instant::now());
+                                }
+                            } else {
+                                last_esc_time = Some(Instant::now());
+                            }
+                        } else {
+                            last_esc_time = None;
+                        }
+
+                        if !deactivated {
+                            let input = encode_key(key);
+                            if !input.is_empty() {
+                                relay_node.write_input(&input)?;
                             }
                         }
                     } else if let Some(idx) = active_node {
@@ -623,6 +680,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             KeyCode::Enter => {
                                 if active_tab == 3 {
                                     is_git_tui_active = true;
+                                } else if active_tab == 1 {
+                                    is_relay_active = true;
                                 } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
                                     active_node = Some(selected_node);
                                     active_tab = 0;
