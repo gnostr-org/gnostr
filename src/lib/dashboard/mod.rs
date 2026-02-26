@@ -23,25 +23,65 @@ use std::{
 };
 use vt100::Parser;
 
-// Standard Bitcoin Orange: #F7931A
-const BITCOIN_ORANGE: Color = Color::Rgb(247, 147, 26);
+// Standard Gnostr Purple: #960096
+const GNOSTR_PURPLE: Color = Color::Rgb(150, 0, 150);
 
-const BITCOIN_LOGO: [&str; 15] = [
-    "⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣷⣶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀",
-    "⠀⠀⠀⠀⠀⣠⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣄⠀⠀⠀⠀⠀",
-    "⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀",
-    "⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⠟⠿⠿⡿⠀⢰⣿⠁⢈⣿⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀",
-    "⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣤⣄⠀⠀⠀⠈⠉⠀⠸⠿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀",
-    "⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⢠⣶⣶⣤⡀⠀⠈⢻⣿⣿⣿⣿⣿⣿⣿⡆",
-    "⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⠀⠼⣿⣿⡿⠃⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣷",
-    "⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠀⢀⣀⣀⠀⠀⠀⠀⢴⣿⣿⣿⣿⣿⣿⣿⣿⣿",
-    "⢿⣿⣿⣿⣿⣿⣿⣿⢿⣿⠁⠀⠀⣼⣿⣿⣿⣦⠀⠀⠈⢻⣿⣿⣿⣿⣿⣿⣿⡿",
-    "⠸⣿⣿⣿⣿⣿⣿⣏⠀⠀⠀⠀⠀⠛⠛⠿⠟⠋⠀⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⠇",
-    "⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⣤⡄⠀⣀⣀⣀⣀⣠⣾⣿⣿⣿⣿⣿⣿⣿⡟⠀",
-    "⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣄⣰⣿⠁⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀",
-    "⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀",
-    "⠀⠀⠀⠀⠀⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⠀⠀⠀⠀⠀",
-    "⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠻⠿⢿⣿⣿⣿⣿⡿⠿⠟⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀",
+const GNOSTR_ICON: [&str; 55] = [
+"                                                                                                  ",
+"                                              ######                                              ",
+"                                            ##########                                            ",
+"                                          ##############                                          ",
+"                                        ##################                                        ",
+"                                      ######################                                      ",
+"                                    ##########################                                    ",
+"                                    ###########################                                   ",
+"                                      ###########################                                 ",
+"                               ##      ############################                               ",
+"                             ######      ############################                             ",
+"                           #########       ############################                           ",
+"                         #############       ###########################                          ",
+"                        ################       #  ########################                        ",
+"                      ####################            ######################                      ",
+"                    #######################            #######################                    ",
+"                  ########################              ########################                  ",
+"                ###########################             ##########################                ",
+"              #############################             ###########################               ",
+"             ################################            ############################             ",
+"           ####################################            ############################           ",
+"         ######################################     ###      ############################         ",
+"       ########################################     ####       ############################       ",
+"     ##########################################     ######       ###########################      ",
+"    ###########################################     ########           #######################    ",
+"  #############################################     ##########            ######################  ",
+" ##############################################     ##########             ###################### ",
+" ##############################################     ##########              ##################### ",
+" ##############################################     ##########              ##################### ",
+"  #############################################     ###########            #####################  ",
+"    ###########################################     ############         #####################    ",
+"      #########################################     #########################################     ",
+"       ########################################     #######################################       ",
+"         ######################################     #####################################         ",
+"           ####################################     ###################################           ",
+"             #################################      #################################             ",
+"               #############################           #############################              ",
+"                ###########################             ##########################                ",
+"                  ########################              ########################                  ",
+"                    #######################             ######################                    ",
+"                      ######################           #####################                      ",
+"                        #####################        #####################                        ",
+"                          ###############################################                         ",
+"                           ############################################                           ",
+"                             ########################################                             ",
+"                               ####################################                               ",
+"                                 ################################                                 ",
+"                                   #############################                                  ",
+"                                    ##########################                                    ",
+"                                      ######################                                      ",
+"                                        ##################                                        ",
+"                                          ##############                                          ",
+"                                            ##########                                            ",
+"                                              ######                                              ",
+"                                                                                                  ",
 ];
 
 pub struct TuiNode {
@@ -251,9 +291,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     ])
                     .split(area);
 
-                let logo_lines: Vec<Line> = BITCOIN_LOGO
+				//TODO we want to use a smaller font size here to reduce the size of the icon
+                let logo_lines: Vec<Line> = GNOSTR_ICON
                     .iter()
-                    .map(|&l| Line::from(Span::styled(l, Style::default().fg(BITCOIN_ORANGE))))
+                    .map(|&l| Line::from(Span::styled(l, Style::default().fg(GNOSTR_PURPLE))))
                     .collect();
 
                 f.render_widget(
@@ -261,8 +302,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     vertical_chunks[1],
                 );
                 f.render_widget(
-                    Paragraph::new("INITIALIZING GNOSTR...")
-                        .style(Style::default().fg(Color::Gray).add_modifier(Modifier::BOLD))
+                    Paragraph::new("GNOSTR")
+                        .style(Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD))
                         .alignment(Alignment::Center),
                     vertical_chunks[3],
                 );
@@ -288,7 +329,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
                 f.render_widget(
                     Paragraph::new(crate::strings::symbol::CIRCLED_G_STR)
-                        .style(Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)),
+                        .style(Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD)),
                     header_chunks[0],
                 );
 
@@ -296,13 +337,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     .block(Block::default().borders(Borders::NONE))
                     .select(if active_tab == 3 { 999 } else { active_tab }) // Hack to clear selection if tab 3 is active
                     .style(Style::default().fg(Color::Gray))
-                    .highlight_style(Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD))
+                    .highlight_style(Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD))
                     .divider(Span::raw(" | "));
                 
                 f.render_widget(tabs, header_chunks[1]);
 
                 let git_tab_style = if active_tab == 3 {
-                    Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                    Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Color::Gray)
                 };
@@ -336,7 +377,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
                     
                     let block_style = if is_git_tui_active {
-                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                        Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::Gray)
                     };
@@ -397,7 +438,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             }
 
                             let block_style = if active_node == Some(idx) {
-                                Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                                Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD)
                             } else if active_node.is_none() && selected_node == idx {
                                 Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
                             } else {
@@ -454,7 +495,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
                     
                     let block_style = if is_relay_active {
-                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                        Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::Gray)
                     };
@@ -466,7 +507,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     let help_text = vec![
                         Line::from(vec![Span::styled(
                             "GNOSTR DASHBOARD HELP",
-                            Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD),
+                            Style::default().fg(GNOSTR_PURPLE).add_modifier(Modifier::BOLD),
                         )]),
                         Line::from(""),
                         Line::from("Global Controls (when no node is focused):"),
