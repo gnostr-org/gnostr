@@ -178,12 +178,17 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     for _ in 0..commands.len() {
         nodes.push(TuiNode::new(120, 24));
     }
+    
+    // Initialize specific node for git-tui
+    let git_tui_node = TuiNode::new(120, 24);
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
         let cmd_override = commands.get(i).cloned();
         node.spawn(vec![], project_root.clone(), cmd_override)?;
     }
+    
+    git_tui_node.spawn(vec![], project_root.clone(), Some("cargo run --bin git-tui".to_string()))?;
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
@@ -196,6 +201,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut visible_nodes = vec![true; nodes.len()];
     let mut active_tab: usize = 0;
     let tab_titles = vec!["Nodes", "Relays", "Help"];
+    let mut is_git_tui_active = false;
 
     loop {
         if force_redraw {
@@ -207,7 +213,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
             let currently_ready = nodes.iter().all(|n| {
                 n.gnostr_presented.load(Ordering::SeqCst) || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
-            });
+            }) && (git_tui_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3));
             
             if currently_ready && ready_since.is_none() {
                 ready_since = Some(Instant::now());
@@ -271,7 +277,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     .direction(Direction::Horizontal)
                     .constraints([
                         Constraint::Length(3), // CIRCLED_G
-                        Constraint::Min(0),    // Tabs
+                        Constraint::Min(0),    // Left Tabs
+                        Constraint::Length(9), // Right Tab (GitUI)
                     ])
                     .split(main_chunks[0]);
 
@@ -283,16 +290,57 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
                 let tabs = Tabs::new(tab_titles.iter().map(|t| Line::from(*t)).collect::<Vec<_>>())
                     .block(Block::default().borders(Borders::NONE))
-                    .select(active_tab)
+                    .select(if active_tab == 3 { 999 } else { active_tab }) // Hack to clear selection if tab 3 is active
                     .style(Style::default().fg(Color::Gray))
                     .highlight_style(Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD))
                     .divider(Span::raw(" | "));
                 
                 f.render_widget(tabs, header_chunks[1]);
 
+                let git_tab_style = if active_tab == 3 {
+                    Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().fg(Color::Gray)
+                };
+                
+                f.render_widget(
+                    Paragraph::new("GitUI [\\\\]").style(git_tab_style).alignment(Alignment::Right),
+                    header_chunks[2],
+                );
+
                 let content_area = main_chunks[1];
 
-                if active_tab == 0 { // Nodes Tab
+                if active_tab == 3 { // GitUI Tab
+                    git_tui_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+                    
+                    let p = git_tui_node.parser.lock().unwrap();
+                    let screen = p.screen();
+                    let mut lines = Vec::new();
+                    for row in 0..screen.size().0 {
+                        let mut spans = Vec::new();
+                        for col in 0..screen.size().1 {
+                            if let Some(cell) = screen.cell(row, col) {
+                                spans.push(Span::styled(
+                                    cell.contents().to_string(),
+                                    Style::default()
+                                        .fg(map_vt_color(cell.fgcolor()))
+                                        .bg(map_vt_color(cell.bgcolor())),
+                                ));
+                            }
+                        }
+                        lines.push(Line::from(spans));
+                    }
+                    
+                    let block_style = if is_git_tui_active {
+                        Style::default().fg(BITCOIN_ORANGE).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+                    
+                    let title = if is_git_tui_active { " GitUI [ACTIVE - Double ESC to unfocus] " } else { " GitUI [SELECTED - Press Enter to focus] " };
+                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    f.render_widget(Paragraph::new(lines).block(block), content_area);
+                } else if active_tab == 0 { // Nodes Tab
                     let visible_indices: Vec<usize> = nodes.iter().enumerate()
                         .filter(|&(i, _)| visible_nodes[i])
                         .map(|(i, _)| i)
@@ -448,6 +496,23 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         }
                     } else {
                         match key.code {
+                            KeyCode::Char('\\') => {
+                                // Hand over terminal to git-tui
+                                execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
+                                disable_raw_mode()?;
+
+                                let mut child = std::process::Command::new("cargo")
+                                    .args(["run", "--bin", "git-tui"])
+                                    .spawn()
+                                    .expect("Failed to start git-tui");
+                                
+                                let _ = child.wait();
+
+                                // Restore dashboard terminal state
+                                enable_raw_mode()?;
+                                execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
+                                force_redraw = true;
+                            }
                             KeyCode::Tab => {
                                 active_tab = (active_tab + 1) % tab_titles.len();
                                 force_redraw = true;

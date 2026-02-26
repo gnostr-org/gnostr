@@ -246,7 +246,7 @@ impl From<&SymbolStyleConfigEntry> for Style {
 }
 
 ///
-pub(crate) fn init_config() -> Res<Config> {
+pub fn init_config() -> Res<Config> {
     let config_path = config_path();
 
     if config_path.exists() {

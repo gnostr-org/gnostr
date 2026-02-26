@@ -50,7 +50,7 @@ fn parse_special_key(input: &str) -> IResult<&str, (KeyModifiers, KeyCode)> {
         value(KeyCode::BackTab, tag("backtab")),
         value(KeyCode::Delete, tag("delete")),
         value(KeyCode::Insert, tag("insert")),
-        value(KeyCode::Esc, tag("esc")),
+        //DISABLE for now value(KeyCode::Esc, tag("esc")),
         value(KeyCode::CapsLock, tag("capslock")),
     ))(input)
     .map(|(rem, key)| (rem, (KeyModifiers::NONE, key)))

@@ -89,8 +89,8 @@ flate2 = "1"
 futures = "0.3"
 futures-util = "0.3.31"
 fuzzy-matcher = "0.3"
-git-version = "0.3.9"
-git2 = { version = "^0.20", default-features = false }
+git-version = { workspace = true }
+git2 = { workspace = true } ##{ version = "^0.20", default-features = false }
 git2-hooks = {workspace = true} ##{ package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1894.934224.276199" }
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
@@ -148,7 +148,7 @@ shellwords = "1.1.0"
 simdutf8 = "0.1.5"
 # serde = { version = "1.0.219", features = ["derive"] }
 similar = { version = "2.7.0", features = ["unicode", "inline"] }
-simple-logging = "2.0.2"
+simple-logging = { workspace = true }
 speedy = { workspace = true }
 ssh-key = { version = "0.6.6", features = ["crypto", "encryption"] }
 strip-ansi-escapes = "0.2.1"

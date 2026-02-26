@@ -206,9 +206,15 @@ impl State {
                 if self.prompt.state.is_focused() {
                     self.prompt.state.handle_key_event(key);
                 } else if key.code == KeyCode::Esc && self.screen().screen_type == ScreenType::Show {
+					//could be a ScreenType count error
                     self.screens.pop();
+                } else if key.code == KeyCode::Esc && self.pending_menu.is_none() {
+                    // Ignore ESC in root mode to prevent accidental interactions
+                    // but allow clearing of pending keys/logs
+                    self.pending_keys.clear();
+                    self.stage_redraw();
                 } else {
-                    self.handle_key_input(term, key)?;
+                    self.handle_key_input(term, key)?; //Esc disabled for now
                 }
 
                 self.stage_redraw();
