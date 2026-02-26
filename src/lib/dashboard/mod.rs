@@ -299,9 +299,21 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     if visible_indices.is_empty() {
                         f.render_widget(Paragraph::new("No nodes visible. Press 'q' to exit."), content_area);
                     } else {
-                        let constraints: Vec<Constraint> = visible_indices.iter()
-                            .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
-                            .collect();
+                        let constraints: Vec<Constraint> = if let Some(active_idx) = active_node {
+                            visible_indices.iter()
+                                .map(|&idx| {
+                                    if idx == active_idx {
+                                        Constraint::Min(0)
+                                    } else {
+                                        Constraint::Length(3)
+                                    }
+                                })
+                                .collect()
+                        } else {
+                            visible_indices.iter()
+                                .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
+                                .collect()
+                        };
 
                         let chunks = Layout::default()
                             .direction(layout_direction)
@@ -415,7 +427,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                     active_node = None;
                                     last_esc_time = None;
                                     deactivated = true;
-                                    force_redraw = true;
+                                    force_redraw = true; // Trigger full redraw on exit
                                 } else {
                                     last_esc_time = Some(Instant::now());
                                 }
