@@ -163,22 +163,24 @@ impl TuiNode {
     }
 }
 
-pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
+pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
+    if commands.is_empty() {
+        commands.push("gnostr".to_string());
+    }
+
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
 
-    let nodes = vec![TuiNode::new(120, 24), TuiNode::new(120, 24)];
+    let mut nodes = Vec::new();
+    for _ in 0..commands.len() {
+        nodes.push(TuiNode::new(120, 24));
+    }
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
         let cmd_override = commands.get(i).cloned();
-        let args = if cmd_override.is_none() {
-            vec!["--gitdir".into(), ".".into()]
-        } else {
-            vec![]
-        };
-        node.spawn(args, project_root.clone(), cmd_override)?;
+        node.spawn(vec![], project_root.clone(), cmd_override)?;
     }
 
     let start_time = Instant::now();
@@ -446,14 +448,10 @@ pub async fn run_dashboard(commands: Vec<String>) -> anyhow::Result<()> {
                                     force_redraw = true;
                                 }
                             }
-                            KeyCode::Char('1') => {
-                                if visible_nodes.get(0).copied().unwrap_or(false) {
-                                    active_node = Some(0);
-                                }
-                            }
-                            KeyCode::Char('2') => {
-                                if visible_nodes.get(1).copied().unwrap_or(false) {
-                                    active_node = Some(1);
+                            KeyCode::Char(c) if c.is_ascii_digit() && c != '0' => {
+                                let target_idx = (c as usize) - ('1' as usize);
+                                if visible_nodes.get(target_idx).copied().unwrap_or(false) {
+                                    active_node = Some(target_idx);
                                 }
                             }
                             KeyCode::Char('.') => show_help = true,
