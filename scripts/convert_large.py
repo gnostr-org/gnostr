@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 def braille_convert(icon_lines):
     braille_lines = []
@@ -24,11 +25,11 @@ def braille_convert(icon_lines):
         braille_lines.append(line)
     return braille_lines
 
-def upscale_icon(icon_lines, factor=2):
+def upscale_icon(icon_lines, factor_x=2, factor_y=2):
     upscaled = []
     for line in icon_lines:
-        new_line = "".join([c * factor for c in line])
-        for _ in range(factor):
+        new_line = "".join([c * factor_x for c in line])
+        for _ in range(factor_y):
             upscaled.append(new_line)
     return upscaled
 
@@ -90,7 +91,13 @@ icon = [
     "                                                                                                  ",
 ]
 
-upscaled_icon = upscale_icon(icon, factor=2)
-for l in braille_convert(upscaled_icon):
+print("SMALL_STRETCHED")
+small_icon = upscale_icon(icon, factor_x=1, factor_y=2)
+for l in braille_convert(small_icon):
+    print(f'"{l}",')
+
+print("LARGE_STRETCHED")
+large_icon = upscale_icon(icon, factor_x=2, factor_y=4)
+for l in braille_convert(large_icon):
     print(f'"{l}",')
 
