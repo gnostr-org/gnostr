@@ -271,6 +271,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     // Initialize specific node for git-tui
     let git_tui_node = TuiNode::new(120, 24);
     let relay_node = TuiNode::new(120, 24);
+    let chat_node = TuiNode::new(120, 24);
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
@@ -280,6 +281,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     
     git_tui_node.spawn(vec![], project_root.clone(), Some("cargo run --bin git-tui".to_string()))?;
     relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
+    chat_node.spawn(vec![], project_root.clone(), Some("gnostr chat".to_string()))?;
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
@@ -291,9 +293,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut layout_direction = Direction::Vertical;
     let mut visible_nodes = vec![true; nodes.len()];
     let mut active_tab: usize = 0;
-    let tab_titles = vec!["Nodes", "Relay", "Help"];
+    let tab_titles = vec!["Nodes", "Relay", "Chat", "Help"];
     let mut is_git_tui_active = false;
     let mut is_relay_active = false;
+    let mut is_chat_active = false;
 
     loop {
         if force_redraw {
@@ -306,7 +309,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
             let currently_ready = nodes.iter().all(|n| {
                 n.gnostr_presented.load(Ordering::SeqCst) || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
             }) && (git_tui_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
-               && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3));
+               && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
+               && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3));
             
             if currently_ready && ready_since.is_none() {
                 ready_since = Some(Instant::now());
@@ -391,14 +395,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
                 let tabs = Tabs::new(tab_titles.iter().map(|t| Line::from(*t)).collect::<Vec<_>>())
                     .block(Block::default().borders(Borders::NONE))
-                    .select(if active_tab == 3 { 999 } else { active_tab }) // Hack to clear selection if tab 3 is active
+                    .select(if active_tab == 4 { 999 } else { active_tab }) // Hack to clear selection if tab 4 is active
                     .style(Style::default().fg(Color::Gray))
                     .highlight_style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD))
                     .divider(Span::raw(" | "));
                 
                 f.render_widget(tabs, header_chunks[1]);
 
-                let git_tab_style = if active_tab == 3 {
+                let git_tab_style = if active_tab == 4 {
                     Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Color::Gray)
@@ -411,7 +415,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
                 let content_area = main_chunks[1];
 
-                if active_tab == 3 { // GitUI Tab
+                if active_tab == 4 { // GitUI Tab
                     git_tui_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
                     
                     let p = git_tui_node.parser.lock().unwrap();
@@ -559,7 +563,37 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     let title = if is_relay_active { " Relay [ACTIVE - Double ESC to unfocus] " } else { " Relay [SELECTED - Press Enter to focus] " };
                     let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
-                } else if active_tab == 2 { // Help Tab
+                } else if active_tab == 2 { // Chat Tab
+                    chat_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+                    
+                    let p = chat_node.parser.lock().unwrap();
+                    let screen = p.screen();
+                    let mut lines = Vec::new();
+                    for row in 0..screen.size().0 {
+                        let mut spans = Vec::new();
+                        for col in 0..screen.size().1 {
+                            if let Some(cell) = screen.cell(row, col) {
+                                spans.push(Span::styled(
+                                    cell.contents().to_string(),
+                                    Style::default()
+                                        .fg(map_vt_color(cell.fgcolor()))
+                                        .bg(map_vt_color(cell.bgcolor())),
+                                ));
+                            }
+                        }
+                        lines.push(Line::from(spans));
+                    }
+                    
+                    let block_style = if is_chat_active {
+                        Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+                    
+                    let title = if is_chat_active { " Chat [ACTIVE - Double ESC to unfocus] " } else { " Chat [SELECTED - Press Enter to focus] " };
+                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    f.render_widget(Paragraph::new(lines).block(block), content_area);
+                } else if active_tab == 3 { // Help Tab
                     let help_text = vec![
                         Line::from(vec![Span::styled(
                             "GNOSTR DASHBOARD HELP",
@@ -648,6 +682,31 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 relay_node.write_input(&input)?;
                             }
                         }
+                    } else if is_chat_active {
+                        let mut deactivated = false;
+                        if key.code == KeyCode::Esc {
+                            if let Some(time) = last_esc_time {
+                                if time.elapsed() < Duration::from_millis(500) {
+                                    is_chat_active = false;
+                                    last_esc_time = None;
+                                    deactivated = true;
+                                    force_redraw = true;
+                                } else {
+                                    last_esc_time = Some(Instant::now());
+                                }
+                            } else {
+                                last_esc_time = Some(Instant::now());
+                            }
+                        } else {
+                            last_esc_time = None;
+                        }
+
+                        if !deactivated {
+                            let input = encode_key(key);
+                            if !input.is_empty() {
+                                chat_node.write_input(&input)?;
+                            }
+                        }
                     } else if let Some(idx) = active_node {
                         let mut deactivated = false;
                         if key.code == KeyCode::Esc {
@@ -676,7 +735,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     } else {
                         match key.code {
                             KeyCode::Char('\\') => {
-                                active_tab = if active_tab == 3 { 0 } else { 3 };
+                                active_tab = if active_tab == 4 { 0 } else { 4 };
                                 force_redraw = true;
                             }
                             KeyCode::Tab => {
@@ -711,7 +770,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Char('.') => {
-                                active_tab = if active_tab == 2 { 0 } else { 2 };
+                                active_tab = if active_tab == 3 { 0 } else { 3 };
                                 force_redraw = true;
                             }
                             KeyCode::Up => {
@@ -775,8 +834,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Enter => {
-                                if active_tab == 3 {
+                                if active_tab == 4 {
                                     is_git_tui_active = true;
+                                } else if active_tab == 2 {
+                                    is_chat_active = true;
                                 } else if active_tab == 1 {
                                     is_relay_active = true;
                                 } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
