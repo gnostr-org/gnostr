@@ -24,7 +24,7 @@ name = "gnostr_gnit"
 path = "src/bin/gnostr_gnit.rs"
 
 [[bin]]
-name = "git-tui"
+name = "git_tui"
 path = "src/bin/git_tui.rs"
 
 [[bin]]
