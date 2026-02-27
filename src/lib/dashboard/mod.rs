@@ -329,8 +329,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 // SPLASH VIEW
                 f.render_widget(Clear, area);
 
-                let use_large_icon = area.height >= 65 && area.width >= 100;
-                let icon_height = if use_large_icon { 55 } else { 28 };
+                let (icon_to_use, icon_height) = if area.height >= 65 && area.width >= 100 {
+                    (&GNOSTR_ICON_LARGE[..], 55)
+                } else if area.height >= 35 {
+                    (&GNOSTR_ICON[..], 28)
+                } else {
+                    (&GNOSTR_ICON_TINY[..], 7)
+                };
 
                 let vertical_chunks = Layout::default()
                     .direction(Direction::Vertical)
@@ -343,7 +348,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     ])
                     .split(area);
 
-                let icon_to_use = if use_large_icon { &GNOSTR_ICON_LARGE[..] } else { &GNOSTR_ICON[..] };
                 let logo_lines: Vec<Line> = icon_to_use
                     .iter()
                     .map(|&l| Line::from(Span::styled(l, Style::default().fg(gnostr_purple()))))
