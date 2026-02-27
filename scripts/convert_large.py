@@ -33,6 +33,14 @@ def upscale_icon(icon_lines, factor_x=2, factor_y=2):
             upscaled.append(new_line)
     return upscaled
 
+def downscale_icon(icon_lines, factor=2):
+    downscaled = []
+    for i in range(0, len(icon_lines), factor):
+        line = icon_lines[i]
+        new_line = line[::factor]
+        downscaled.append(new_line)
+    return downscaled
+
 icon = [
 "                                                                                                  ",
 "                                              ######                                              ",
@@ -99,5 +107,10 @@ for l in braille_convert(small_icon):
 print("LARGE_STRETCHED")
 large_icon = upscale_icon(icon, factor_x=2, factor_y=4)
 for l in braille_convert(large_icon):
+    print(f'"{l}",')
+
+print("TINY")
+tiny_icon = downscale_icon(icon, factor=2)
+for l in braille_convert(tiny_icon):
     print(f'"{l}",')
 
