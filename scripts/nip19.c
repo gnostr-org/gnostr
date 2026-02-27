@@ -1,14 +1,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 /**
  * BIP-64MOD + GCC MONOLITHIC IMPLEMENTATION
- * This file contains:
- * 1. Bech32 Constants & Polymod logic
- * 2. Bit conversion (8-bit to 5-bit)
- * 3. NIP-19 npub encoding
- * 4. Main execution loop
+ * Features: --prefix flag support for npub, nsec, note.
  */
 
 // --- BECH32 ENGINE ---
@@ -48,28 +45,19 @@ int convert_bits(uint8_t *out, size_t *outlen, int outbits, const uint8_t *in, s
 int bech32_encode(char *output, const char *hrp, const uint8_t *data, size_t data_len) {
     uint32_t chk = 1;
     size_t hrp_len = strlen(hrp);
-    
-    // HRP Checksum part 1
     for (size_t i = 0; i < hrp_len; ++i) {
         chk = bech32_polymod_step(chk) ^ (hrp[i] >> 5);
         output[i] = hrp[i];
     }
     output[hrp_len] = '1';
     chk = bech32_polymod_step(chk);
-    
-    // HRP Checksum part 2
     for (size_t i = 0; i < hrp_len; ++i) chk = bech32_polymod_step(chk) ^ (hrp[i] & 0x1f);
-    
-    // Data encoding
     for (size_t i = 0; i < data_len; ++i) {
         chk = bech32_polymod_step(chk) ^ data[i];
         output[hrp_len + 1 + i] = CHARSET[data[i]];
     }
-    
-    // Final checksum
     for (int i = 0; i < 6; ++i) chk = bech32_polymod_step(chk);
-    chk ^= 1; // NIP-19 uses Bech32 constant 1
-    
+    chk ^= 1; 
     for (int i = 0; i < 6; ++i) {
         output[hrp_len + 1 + data_len + i] = CHARSET[(chk >> ((5 - i) * 5)) & 0x1f];
     }
@@ -77,38 +65,57 @@ int bech32_encode(char *output, const char *hrp, const uint8_t *data, size_t dat
     return 1;
 }
 
-// --- NOSTR WRAPPER ---
-void nostr_hex_to_npub(const uint8_t *pubkey, char *output) {
-    uint8_t words[64];
-    size_t words_len = 0;
-    
-    // Step 1: Convert 8-bit hex to 5-bit words
-    convert_bits(words, &words_len, 5, pubkey, 32, 8, 1);
-    
-    // Step 2: Encode with 'npub' prefix
-    bech32_encode(output, "npub", words, words_len);
+// --- UTILS ---
+int hex_to_bytes(const char *hex, uint8_t *bytes) {
+    if (strlen(hex) != 64) return 0; // Nostr keys/ids are 32 bytes (64 hex chars)
+    for (int i = 0; i < 32; i++) {
+        sscanf(hex + 2 * i, "%02hhx", &bytes[i]);
+    }
+    return 1;
 }
 
-// --- MAIN TEST ---
-int main() {
-    // Example: This is a 32-byte Ed25519 hex public key
-    uint8_t my_pubkey[32] = {
-        0x3b, 0xf0, 0xc6, 0x3f, 0xc0, 0x3d, 0x07, 0x37, 
-        0x30, 0x47, 0xc5, 0xed, 0x2e, 0xcc, 0x46, 0x94, 
-        0x47, 0xa9, 0x62, 0x15, 0x9b, 0x67, 0x7c, 0x7a, 
-        0x7b, 0xbc, 0x05, 0x5d, 0x0d, 0x7e, 0x11, 0x23
-    };
+void print_usage() {
+    printf("Usage: ./nostr_tool --prefix <npub|nsec|note> <hex_string>\n");
+}
 
-    char npub_string[128];
-    nostr_hex_to_npub(my_pubkey, npub_string);
+// --- MAIN ---
+int main(int argc, char *argv[]) {
+    if (argc < 4) {
+        print_usage();
+        return 1;
+    }
 
-    printf("BIP-64MOD Context: NIP-19 Monolithic Encoder\n");
-    printf("------------------------------------------\n");
-    printf("Input Hex: ");
-    for(int i=0; i<32; i++) printf("%02x", my_pubkey[i]);
-    
-    printf("\nNostr npub: %s\n", npub_string);
-    printf("------------------------------------------\n");
+    char *prefix = NULL;
+    char *hex_input = NULL;
+
+    // Basic Flag Parsing
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--prefix") == 0 && i + 1 < argc) {
+            prefix = argv[++i];
+        } else {
+            hex_input = argv[i];
+        }
+    }
+
+    if (!prefix || !hex_input) {
+        print_usage();
+        return 1;
+    }
+
+    uint8_t raw_data[32];
+    if (!hex_to_bytes(hex_input, raw_data)) {
+        fprintf(stderr, "Error: Input must be a 64-character hex string (32 bytes).\n");
+        return 1;
+    }
+
+    uint8_t words[64];
+    size_t words_len = 0;
+    char encoded_output[1024];
+
+    convert_bits(words, &words_len, 5, raw_data, 32, 8, 1);
+    bech32_encode(encoded_output, prefix, words, words_len);
+
+    printf("%s\n", encoded_output);
 
     return 0;
 }
