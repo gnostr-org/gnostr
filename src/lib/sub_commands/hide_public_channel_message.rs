@@ -1,10 +1,8 @@
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    types::{Client, Id, Keys},
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Id, Keys};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct HidePublicChannelMessageSubCommand {

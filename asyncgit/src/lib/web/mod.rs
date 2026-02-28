@@ -802,16 +802,16 @@ pub struct W2UiArgs {
 }
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about)]
+#[command(author, version, about, long_about = None)]
 pub struct GnitArgs {
     /// Path to a directory where the RocksDB database should be stored.
     ///
     /// This directory will be created if it doesn't exist. The RocksDB database is
     /// quick to generate, so it can be pointed to temporary storage.
-    #[clap(short, long, value_parser, default_value = ".gnostr/web")]
+    #[arg(short, long, value_parser, default_value = ".gnostr/web")]
     pub db_store: PathBuf,
     /// The IP address to bind to (e.g., 127.0.0.1, 0.0.0.0).
-    #[clap(long, value_parser, default_value = "127.0.0.1")]
+    #[arg(long, value_parser, default_value = "127.0.0.1")]
     pub bind_address: std::net::IpAddr,
     /// The socket port to bind to (e.g., 3333).
     #[arg(
@@ -825,7 +825,7 @@ pub struct GnitArgs {
     /// The path in which your bare Git repositories reside.
     ///
     /// This directory will be scanned recursively for Git repositories.
-    #[clap(short, long, value_parser, default_value = ".")]
+    #[arg(short, long, value_parser, default_value = ".")]
     pub scan_path: PathBuf,
     /// Configures the metadata refresh interval for Git repositories (e.g., "never" or "60s").
     #[arg(long, default_value_t = RefreshInterval::Duration(std::time::Duration::from_secs(30)), env = "GNOSTR_GNIT_REFRESH_INTERVAL")]
@@ -834,12 +834,12 @@ pub struct GnitArgs {
     #[arg(long, default_value_t = humantime::Duration::from(std::time::Duration::from_secs(10)), env = "GNOSTR_GNIT_REQUEST_TIMEOUT")]
     pub request_timeout: humantime::Duration,
     /// debug logging
-    #[clap(long, value_parser, default_value = "false")]
+    #[arg(long, value_parser, default_value = "false")]
     pub debug: bool,
     /// info logging
-    #[clap(long, value_parser, default_value = "false")]
+    #[arg(long, value_parser, default_value = "false")]
     pub info: bool,
     /// Run the process in the background (daemonize)
-    #[clap(long, value_parser, default_value = "false")]
+    #[arg(long, value_parser, default_value = "false")]
     pub detach: bool,
 }

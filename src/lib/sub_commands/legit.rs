@@ -5,12 +5,8 @@ use clap::Args;
 use gnostr_legit::gitminer;
 use serde::ser::StdError;
 
-use crate::{
-    cli::LegitCommands,
-    legit::command,
-    sub_commands::{fetch, init, list, login, pull, push, send},
-    types::{Event, EventKind, Keys, Tag},
-};
+use crate::{cli::LegitCommands, sub_commands::legit::command, sub_commands::{fetch, init, list, login, pull, push, send}};
+use gnostr_asyncgit::types::{Event, EventKind, Keys, Tag};
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]

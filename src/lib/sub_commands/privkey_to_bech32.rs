@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use zeroize::Zeroize;
 
-use crate::types::PrivateKey;
+use gnostr_asyncgit::types::PrivateKey;
 
 #[derive(Parser, Debug, Clone)]
 pub struct PrivkeyToBech32SubCommand {
@@ -21,7 +21,7 @@ pub fn privkey_to_bech32(sub_command_args: &PrivkeyToBech32SubCommand) -> Result
         private_key_hex = rpassword::prompt_password("Private key hex: ").unwrap();
     }
 
-    let mut private_key = PrivateKey::try_from_hex_string(&private_key_hex)?;
+    let mut private_key = gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&private_key_hex)?;
     private_key_hex.zeroize(); // Zeroize after use
 
     let mut bech32 = private_key.as_bech32_string();

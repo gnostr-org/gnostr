@@ -3,12 +3,8 @@ use std::{ops::Add, str::FromStr, time::Duration};
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    types::{
-        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime,
-    },
-    utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime};
+use crate::utils::{create_client, parse_key_or_id_to_hex_string, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct UserStatusSubCommand {
@@ -65,14 +61,14 @@ pub async fn set_user_status(
     // Add p-tag
     if let Some(p) = sub_command_args.ptag.clone() {
         let pubkey_hex = parse_key_or_id_to_hex_string(p).await?;
-        let pubkey: PublicKey = PublicKey::try_from_hex_string(&pubkey_hex, true)?;
+        let pubkey: gnostr_asyncgit::types::PublicKey = gnostr_asyncgit::types::PublicKey::try_from_hex_string(&pubkey_hex, true)?;
         tags.push(Tag::new(&["p", &pubkey.as_hex_string()]));
     }
 
     // Add e-tag
     if let Some(e) = sub_command_args.etag.clone() {
         let event_id_hex = parse_key_or_id_to_hex_string(e).await?;
-        let event_id: Id = Id::try_from_hex_string(&event_id_hex)?;
+        let event_id: gnostr_asyncgit::types::Id = gnostr_asyncgit::types::Id::try_from_hex_string(&event_id_hex)?;
         tags.push(Tag::new(&["e", &event_id.as_hex_string()]));
     }
 

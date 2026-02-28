@@ -3,10 +3,8 @@ use std::str::FromStr;
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    types::{Client, Keys, PublicKey},
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Keys, PublicKey};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct MutePublickeySubCommand {
@@ -32,8 +30,7 @@ pub async fn mute_publickey(
     let client = create_client(&keys, relays, difficulty_target).await?;
 
     // Set up pubkey to mute
-    let pubkey_to_mute = PublicKey::try_from_hex_string(&sub_command_args.public_key, true)?;
-
+    let pubkey_to_mute = gnostr_asyncgit::types::PublicKey::try_from_hex_string(&sub_command_args.public_key, true)?;
     let event_id = client
         .mute_channel_user(
             pubkey_to_mute,

@@ -1,13 +1,8 @@
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    types::{
-        Client, Event, EventKind, Id, KeySigner, Keys, Metadata, PreEventV3, Signer, Tag,
-        UncheckedUrl, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventKind, Id, KeySigner, Keys, Metadata, PreEventV3, Signer, Tag, UncheckedUrl, Unixtime};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct SetChannelMetadataSubCommand {
@@ -41,7 +36,7 @@ pub async fn set_channel_metadata(
     let keys = parse_private_key(private_key, false).await?;
     let client = create_client(&keys, relays.clone(), difficulty_target).await?;
 
-    let channel_id: Id = Id::try_from_hex_string(&sub_command_args.channel_id)?;
+    let channel_id: gnostr_asyncgit::types::Id = gnostr_asyncgit::types::Id::try_from_hex_string(&sub_command_args.channel_id)?;
 
     // Build metadata
     let mut metadata = Metadata::new();

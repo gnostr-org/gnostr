@@ -80,7 +80,7 @@ pub async fn award_badge(
         .map(|pubkey_string| {
             // TODO: Ensure PublicKey::try_from_hex_string is robust enough
             Tag::new_pubkey(
-                crate::types::PublicKey::try_from_hex_string(pubkey_string, true)
+                gnostr_asyncgit::types::PublicKey::try_from_hex_string(pubkey_string, true)
                     .expect("Unable to parse public key"),
                 None, // No recommended relay URL
                 None, // No petname

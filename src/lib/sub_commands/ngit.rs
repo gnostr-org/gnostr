@@ -3,11 +3,8 @@
 use clap::Args;
 use serde::ser::StdError;
 
-use crate::{
-    cli::NgitCommands,
-    sub_commands::{fetch, init, list, login, pull, push, query, send},
-    types::{Event, EventKind, Keys, Tag},
-};
+use crate::{cli::NgitCommands, sub_commands::{fetch, init, list, login, pull, push, query, send}};
+use gnostr_asyncgit::types::{Event, EventKind, Keys, Tag};
 
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]

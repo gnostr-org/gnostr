@@ -3,7 +3,7 @@ use clap::Parser;
 use nostr_0_34_1::bech32;
 use serde_json::{Value, json};
 
-use crate::types::{NEvent, NostrBech32, PrivateKey};
+use gnostr_asyncgit::types::{NEvent, NostrBech32, PrivateKey};
 
 #[derive(Parser, Debug, Clone)]
 pub struct Bech32ToAnySubCommand {
@@ -38,17 +38,17 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
 
     if sub_command_args.event_id {
         // Try nevent first
-        if let Ok(nevent) = crate::types::NEvent::try_from_bech32_string(bech32) {
+        if let Ok(nevent) = gnostr_asyncgit::types::NEvent::try_from_bech32_string(bech32) {
             println!("{}", nevent.id.as_hex_string());
             return Ok(());
         }
         // Try note (direct event ID)
-        else if let Ok(note) = crate::types::Id::try_from_bech32_string(bech32) {
+        else if let Ok(note) = gnostr_asyncgit::types::Id::try_from_bech32_string(bech32) {
             println!("{}", note.as_hex_string());
             return Ok(());
         }
         // Try naddr (parameterized replaceable event)
-        else if let Ok(_naddr) = crate::types::NAddr::try_from_bech32_string(bech32) {
+        else if let Ok(_naddr) = gnostr_asyncgit::types::NAddr::try_from_bech32_string(bech32) {
             // naddr doesn't have a specific event ID, it's a coordinate
             eprintln!(
                 "Error: --event-id cannot be used with naddr (parameterized replaceable event)."
@@ -148,7 +148,7 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Id, NEvent, NostrBech32};
+    use gnostr_asyncgit::types::{Id, NEvent, NostrBech32};
 
     #[test]
     fn test_event_id_with_nevent() {

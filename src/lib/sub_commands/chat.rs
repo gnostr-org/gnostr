@@ -10,7 +10,7 @@ use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::S
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::ChatSubCommands;
-use crate::types::PrivateKey;
+use gnostr_asyncgit::types::PrivateKey;
 
 /// chat
 ///
@@ -39,7 +39,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
     } else if let Some(nsec_hex) = sub_command_args.nsec.clone() {
         // If --name is not provided, but --nsec is, try to derive the public key
         // fingerprint.
-        match PrivateKey::try_from_hex_string(&nsec_hex) {
+        match gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&nsec_hex) {
             Ok(private_key) => {
                 let public_key = private_key.public_key();
                 Some(public_key.as_hex_string().chars().take(8).collect()) // Use first 8 chars of public key hex as fingerprint

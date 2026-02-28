@@ -71,23 +71,23 @@ pub fn split_json_string(value: &Value, separator: &str) -> Vec<String> {
 pub async fn parse_private_key(
     private_key: Option<String>,
     print_keys: bool,
-) -> Result<crate::types::Keys, AnyhowError> {
+) -> Result<gnostr_asyncgit::types::Keys, AnyhowError> {
     // Parse and validate private key
     let keys = match private_key {
         Some(pk) => {
             if pk.starts_with("nsec") {
-                let pk_obj = crate::types::PrivateKey::try_from_bech32_string(&pk)?;
-                crate::types::Keys::new(pk_obj)
+                let pk_obj = gnostr_asyncgit::types::PrivateKey::try_from_bech32_string(&pk)?;
+                gnostr_asyncgit::types::Keys::new(pk_obj)
             } else {
                 // We assume it's a hex formatted private key
-                let pk_obj = crate::types::PrivateKey::try_from_hex_string(&pk)?;
-                crate::types::Keys::new(pk_obj)
+                let pk_obj = gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&pk)?;
+                gnostr_asyncgit::types::Keys::new(pk_obj)
             }
         }
         None => {
             // create a new identity with a new keypair
             println!("No private key provided, generating new identity");
-            crate::types::Keys::generate()
+            gnostr_asyncgit::types::Keys::generate()
         }
     };
 
@@ -107,15 +107,15 @@ pub async fn parse_private_key(
 
 // Creates the websocket client that is used for communicating with relays
 pub async fn create_client(
-    keys: &crate::types::Keys,
+    keys: &gnostr_asyncgit::types::Keys,
     relays: Vec<String>,
     difficulty: u8,
-) -> Result<crate::types::Client, AnyhowError> {
-    let opts = crate::types::Options::new()
+) -> Result<gnostr_asyncgit::types::Client, AnyhowError> {
+    let opts = gnostr_asyncgit::types::Options::new()
         .send_timeout(Some(Duration::from_secs(15)))
         .wait_for_send(true)
         .difficulty(difficulty);
-    let mut client = crate::types::Client::new(keys, opts);
+    let mut client = gnostr_asyncgit::types::Client::new(keys, opts);
     client.add_relays(relays).await?;
     client.connect().await;
     Ok(client)
@@ -123,13 +123,13 @@ pub async fn create_client(
 
 pub async fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowError> {
     let hex_key_or_id = if input.starts_with("npub") {
-        crate::types::PublicKey::try_from_bech32_string(&input, true)?.as_hex_string()
+        gnostr_asyncgit::types::PublicKey::try_from_bech32_string(&input, true)?.as_hex_string()
     } else if input.starts_with("nsec") {
-        crate::types::PrivateKey::try_from_bech32_string(&input)?.as_hex_string()
+        gnostr_asyncgit::types::PrivateKey::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("note") {
-        crate::types::Id::try_from_bech32_string(&input)?.as_hex_string()
+        gnostr_asyncgit::types::Id::try_from_bech32_string(&input)?.as_hex_string()
     } else if input.starts_with("nprofile") {
-        if let crate::types::Nip19::Profile(profile) = crate::types::Nip19::decode(&input)? {
+        if let gnostr_asyncgit::types::Nip19::Profile(profile) = gnostr_asyncgit::types::Nip19::decode(&input)? {
             profile.public_key.as_hex_string()
         } else {
             return Err(AnyhowError::msg("Invalid nprofile format for conversion"));
@@ -294,11 +294,11 @@ pub async fn async_find_available_port() -> u16 {
 
 pub fn generate_nostr_keys_from_commit_hash(
     commit_id: &str,
-) -> Result<crate::types::Keys, AnyhowError> {
+) -> Result<gnostr_asyncgit::types::Keys, AnyhowError> {
     let padded_commit_id = format!("{:0>64}", commit_id);
     // Use the padded commit ID to create a private key
-    let private_key = crate::types::PrivateKey::try_from_hex_string(&padded_commit_id);
-    let keys = crate::types::Keys::new(private_key?);
+    let private_key = gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&padded_commit_id);
+    let keys = gnostr_asyncgit::types::Keys::new(private_key?);
     Ok(keys)
 }
 

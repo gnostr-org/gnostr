@@ -1,13 +1,8 @@
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    types::{
-        Client, Event, EventBuilder, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl,
-        Unixtime,
-    },
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventBuilder, EventKind, Id, Keys, Metadata, PublicKey, Tag, UncheckedUrl, Unixtime};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct CreatePublicChannelSubCommand {

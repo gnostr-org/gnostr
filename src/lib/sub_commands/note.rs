@@ -4,12 +4,8 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 use tracing::trace;
 
-use crate::{
-    types::{
-        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct NoteSubCommand {
@@ -60,12 +56,12 @@ pub async fn broadcast_textnote(
 
     // Add p-tags
     for ptag in sub_command_args.ptag.iter() {
-        let public_key = PublicKey::try_from_hex_string(ptag, true)?;
+        let public_key = gnostr_asyncgit::types::PublicKey::try_from_hex_string(ptag, true)?;
         tags.push(Tag::new(&["p", &public_key.as_hex_string()]));
     }
     // Add e-tags
     for etag in sub_command_args.etag.iter() {
-        let event_id = Id::try_from_hex_string(etag)?;
+        let event_id = gnostr_asyncgit::types::Id::try_from_hex_string(etag)?;
         tags.push(Tag::new(&["e", &event_id.as_hex_string()]));
     }
     // Add tags

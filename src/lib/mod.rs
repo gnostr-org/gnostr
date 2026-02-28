@@ -3,6 +3,7 @@ pub mod client;
 pub mod git;
 pub mod git_events;
 pub mod login;
+pub mod nostr_client;
 pub mod repo_ref;
 pub mod repo_state;
 pub mod sub_commands;

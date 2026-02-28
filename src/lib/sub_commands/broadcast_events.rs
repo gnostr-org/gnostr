@@ -3,10 +3,8 @@ use clap::Args;
 use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
-use crate::{
-    types::{Client, Event, Filter, Id, Keys, PrivateKey, PublicKey},
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, Filter, Id, Keys, PrivateKey, PublicKey};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct BroadcastEventsSubCommand {

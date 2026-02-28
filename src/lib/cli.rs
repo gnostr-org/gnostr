@@ -29,7 +29,6 @@ use crate::sub_commands::{bech32_to_any, broadcast_events, convert_key, create_b
     privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, send,
     send_channel_message, set_channel_metadata, set_metadata, sniper, user_status, vanity,
 };
-use crate::sub_commands::crawler;
 
 /// CliArgs
 #[derive(Parser, Debug)]

@@ -2,7 +2,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use tracing::{error, info};
 
-use crate::types::{Client, Error, Id, Keys, PublicKey};
+use gnostr_asyncgit::types::{Client, Error, Id, Keys, PublicKey};
 
 #[async_trait]
 pub trait DmClientTrait {
@@ -58,10 +58,7 @@ mod dm_tests {
     use tokio;
 
     use super::*;
-    use crate::types::{
-        ContentEncryptionAlgorithm, Keys, PrivateKey,
-        client::{Client, Options},
-    };
+    use gnostr_asyncgit::types::{ContentEncryptionAlgorithm, Keys, PrivateKey, client::{Client, Options}};
 
     #[tokio::test]
     #[serial]

@@ -4,10 +4,8 @@ use clap::Args;
 use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use tracing::debug;
 
-use crate::{
-    types::{Error, Event, Filter, Id, PublicKey},
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Error, Event, Filter, Id, PublicKey};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct ReactionSubCommand {
@@ -46,7 +44,7 @@ pub async fn react_to_event(
         exit(0)
     }
 
-    let event_id = Id::try_from_hex_string(&sub_command_args.event_id)?;
+    let event_id = gnostr_asyncgit::types::Id::try_from_hex_string(&sub_command_args.event_id)?;
     // TODO: Implement Filter::event and Filter::author methods in
     // src/lib/types/filter.rs
     let subscription: Filter = Filter::new(); // Placeholder

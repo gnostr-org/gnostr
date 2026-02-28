@@ -4,13 +4,8 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 use serde_json::Value;
 
-use crate::{
-    types::{
-        Client, Event, EventKind, Filter, Id, KeySigner, Keys, Metadata, PreEventV3, PublicKey,
-        Signer, Tag, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventKind, Filter, Id, KeySigner, Keys, Metadata, PreEventV3, PublicKey, Signer, Tag, Unixtime};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct DeleteProfileSubCommand {

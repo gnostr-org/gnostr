@@ -3,12 +3,8 @@ use std::{str::FromStr, time::Duration};
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    types::{
-        Client, Event, EventKind, Filter, Id, KeySigner, Keys, PreEventV3, Signer, Tag, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventKind, Filter, Id, KeySigner, Keys, PreEventV3, Signer, Tag, Unixtime};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct ProfileBadgesSubCommand {
@@ -36,7 +32,7 @@ pub async fn set_profile_badges(
     let badge_definition_event_ids: Vec<Id> = sub_command_args
         .badge_id
         .iter()
-        .map(|badge_id| Id::try_from_hex_string(badge_id).unwrap())
+        .map(|badge_id| gnostr_asyncgit::types::Id::try_from_hex_string(badge_id).unwrap())
         .collect();
     let mut badge_definition_filter = Filter::new();
     badge_definition_filter.ids = badge_definition_event_ids
@@ -52,7 +48,7 @@ pub async fn set_profile_badges(
     let award_event_ids: Vec<Id> = sub_command_args
         .award_id
         .iter()
-        .map(|award_event_id| Id::try_from_hex_string(award_event_id).unwrap())
+        .map(|award_event_id| gnostr_asyncgit::types::Id::try_from_hex_string(award_event_id).unwrap())
         .collect();
     let mut badge_award_filter = Filter::new();
     badge_award_filter.ids = award_event_ids.into_iter().map(|id| id.into()).collect();

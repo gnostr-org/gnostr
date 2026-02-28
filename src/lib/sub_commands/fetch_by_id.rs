@@ -1,10 +1,8 @@
 use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
-use crate::{
-    Command, Probe, get_weeble,
-    types::{Filter, Id, IdHex, RelayMessage, SubscriptionId},
-};
+use gnostr::{Command, Probe, get_weeble};
+use gnostr_asyncgit::types::{Filter, Id, IdHex, RelayMessage, SubscriptionId};
 
 #[derive(clap::Args, Debug, Clone)]
 pub struct FetchByIdSubCommand {
@@ -21,11 +19,11 @@ pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn s
         Some(id_val) => {
             if id_val.starts_with("note1") {
                 // bech32
-                let id = Id::try_from_bech32_string(&id_val)?;
+                let id = gnostr_asyncgit::types::Id::try_from_bech32_string(&id_val)?;
                 id.into()
             } else {
                 // hex
-                IdHex::try_from_str(&id_val)?
+                gnostr_asyncgit::types::IdHex::try_from_str(&id_val)?
             }
         }
         None => "fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c"

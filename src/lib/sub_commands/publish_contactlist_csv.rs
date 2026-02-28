@@ -4,13 +4,8 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 use serde::Deserialize;
 
-use crate::{
-    types::{
-        Client, Event, EventKind, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag,
-        UncheckedUrl, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
-};
+use gnostr_asyncgit::types::{Client, Event, EventKind, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, UncheckedUrl, Unixtime};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct PublishContactListCsvSubCommand {
@@ -52,7 +47,7 @@ pub async fn publish_contact_list_from_csv_file(
     let mut tags: Vec<Tag> = vec![];
     for result in rdr.deserialize() {
         let tag_data: ContactListTag = result?;
-        let pubkey = PublicKey::try_from_hex_string(&tag_data.pubkey, true)?;
+        let pubkey = gnostr_asyncgit::types::PublicKey::try_from_hex_string(&tag_data.pubkey, true)?;
         let mut tag_vec = vec!["p".to_string(), pubkey.as_hex_string()];
         if let Some(relay) = tag_data.relay {
             tag_vec.push(relay);
