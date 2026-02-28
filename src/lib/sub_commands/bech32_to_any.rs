@@ -22,10 +22,11 @@ pub struct Bech32ToAnySubCommand {
 pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
     let bech32 = sub_command_args.bech32_string.trim();
 
-    // Extract bech32 part from nostr URLs if present
-    let bech32 = if bech32.starts_with("nostr://") {
-        // Extract the bech32 part after "nostr://" and before any "/"
-        let after_prefix = &bech32[8..]; // Remove "nostr://"
+    // Extract bech32 part from nostr or gnostr URLs if present
+    let bech32 = if bech32.starts_with("nostr://") || bech32.starts_with("gnostr://") {
+        let prefix_len = if bech32.starts_with("nostr://") { 8 } else { 9 };
+        // Extract the bech32 part after the protocol and before any "/"
+        let after_prefix = &bech32[prefix_len..];
         if let Some(slash_pos) = after_prefix.find('/') {
             &after_prefix[..slash_pos]
         } else {

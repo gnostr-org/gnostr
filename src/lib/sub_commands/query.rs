@@ -457,11 +457,11 @@ mod tests {
 
     #[test]
     #[cfg(feature = "expensive_tests")]
-    fn test_bech32_to_any_with_nostr_url() -> anyhow::Result<()> {
+    fn test_bech32_to_any_with_gnostr_url() -> anyhow::Result<()> {
         use std::process::Command;
 
-        // Test the bech32-to-any command with nostr URL directly
-        let nostr_url = "nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr";
+        // Test the bech32-to-any command with gnostr URL directly
+        let gnostr_url = "gnostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr";
 
         // Set environment to use gnostr binary for CliTester
         std::env::set_var("CARGO_BIN_EXE_ngit", "gnostr");
@@ -473,7 +473,7 @@ mod tests {
                 "gnostr",
                 "--",
                 "bech32-to-any",
-                nostr_url,
+                gnostr_url,
                 "--raw",
             ])
             .output()
