@@ -179,7 +179,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         "0000000000000000000000000000000000000000000000000000000000000001".to_string()
     };
     let private_key = gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&nsec_hex).unwrap();
-    let keys = gnostr_async::types::KeySigner::from_private_key(private_key, "", 1).unwrap();
+    let keys = gnostr_asyncgit::types::KeySigner::from_private_key(private_key, "", 1).unwrap();
     let public_key = keys.public_key();
 
     // Initialize NostrClient and channels
