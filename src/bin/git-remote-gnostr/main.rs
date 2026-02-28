@@ -122,7 +122,7 @@ async fn process_args() -> Result<Option<(NostrUrlDecoded, Repo)>> {
         println!("nostr plugin for git");
         println!("Usage:");
         println!(
-            " - clone a nostr repository, or add as a remote, by using the url format nostr://pub123/identifier"
+            " - clone a gnostr repository, or add as a remote, by using the url format gnostr://pub123/identifier"
         );
         println!(
             " - remote branches beginning with `pr/` are open PRs from contributors; `ngit list` can be used to view all PRs"

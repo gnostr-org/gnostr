@@ -6,7 +6,10 @@ use std::{
 use anyhow::{Context, Result, bail};
 use git2::{DiffOptions, Oid, Revwalk};
 pub use identify_ahead_behind::identify_ahead_behind;
-use nostr_sdk_0_34_0::hashes::{Hash, sha1::Hash as Sha1Hash};
+use nostr_sdk_0_37_0::{
+    Tags,
+    hashes::{Hash, sha1::Hash as Sha1Hash},
+};
 
 use crate::git_events::{get_commit_id_from_patch, tag_value};
 pub mod identify_ahead_behind;
@@ -77,9 +80,13 @@ pub trait RepoActions {
     fn apply_patch_chain(
         &self,
         branch_name: &str,
-        patch_and_ancestors: Vec<nostr_0_34_1::Event>,
-    ) -> Result<Vec<nostr_0_34_1::Event>>;
-    fn create_commit_from_patch(&self, patch: &nostr_0_34_1::Event) -> Result<Oid>;
+        patch_and_ancestors: Vec<nostr_0_37_0::Event>,
+    ) -> Result<Vec<nostr_0_37_0::Event>>;
+    fn create_commit_from_patch(
+        &self,
+        patch: &nostr_0_37_0::Event,
+        parent_commit_id_override: Option<String>,
+    ) -> Result<Oid>;
     fn parse_starting_commits(&self, starting_commits: &str) -> Result<Vec<Sha1Hash>>;
     fn ancestor_of(&self, decendant: &Sha1Hash, ancestor: &Sha1Hash) -> Result<bool>;
     fn get_git_config_item(&self, item: &str, global: Option<bool>) -> Result<Option<String>>;
@@ -92,16 +99,16 @@ impl RepoActions for Repo {
         self.git_repo
             .path()
             .parent()
-            .context("cannot find repositiory path as .git has  no parent")
+            .context("failed to find repositiory path as .git has  no parent")
     }
 
     fn get_origin_url(&self) -> Result<String> {
         Ok(self
             .git_repo
             .find_remote("origin")
-            .context("cannot find origin")?
+            .context("failed to find origin")?
             .url()
-            .context("cannot find origin url")?
+            .context("failed to find origin url")?
             .to_string())
     }
 
@@ -109,7 +116,7 @@ impl RepoActions for Repo {
         let main_branch_name = {
             let remote_branches = self
                 .get_remote_branch_names()
-                .context("cannot find any local branches")?;
+                .context("failed to find any local branches")?;
             if remote_branches.contains(&"origin/main".to_string()) {
                 "origin/main"
             } else if remote_branches.contains(&"origin/master".to_string()) {
@@ -122,7 +129,7 @@ impl RepoActions for Repo {
         let tip = self
             .get_tip_of_branch(main_branch_name)
             .context(format!(
-                "branch {main_branch_name} was listed as a remote branch but cannot get its tip commit id",
+                "branch {main_branch_name} was listed as a remote branch but failed to get its tip commit id",
             ))?;
 
         Ok((main_branch_name, tip))
@@ -132,7 +139,7 @@ impl RepoActions for Repo {
         let main_branch_name = {
             let local_branches = self
                 .get_local_branch_names()
-                .context("cannot find any local branches")?;
+                .context("failed to find any local branches")?;
             if local_branches.contains(&"main".to_string()) {
                 "main"
             } else if local_branches.contains(&"master".to_string()) {
@@ -145,7 +152,7 @@ impl RepoActions for Repo {
         let tip = self
             .get_tip_of_branch(main_branch_name)
             .context(format!(
-                "branch {main_branch_name} was listed as a local branch but cannot get its tip commit id",
+                "branch {main_branch_name} was listed as a local branch but failed to get its tip commit id",
             ))?;
 
         Ok((main_branch_name, tip))
@@ -210,13 +217,15 @@ impl RepoActions for Repo {
         let branch = if let Ok(branch) = self
             .git_repo
             .find_branch(branch_name, git2::BranchType::Local)
-            .context(format!("cannot find local branch {branch_name}"))
+            .context(format!("failed to find local branch {branch_name}"))
         {
             branch
         } else {
             self.git_repo
                 .find_branch(branch_name, git2::BranchType::Remote)
-                .context(format!("cannot find local or remote branch {branch_name}"))?
+                .context(format!(
+                    "failed to find local or remote branch {branch_name}"
+                ))?
         };
         Ok(oid_to_sha1(&branch.into_reference().peel_to_commit()?.id()))
     }
@@ -378,7 +387,7 @@ impl RepoActions for Repo {
             .context("failed to extract signature - perhaps there is no signature?")?;
 
         Ok(std::str::from_utf8(&sign)
-            .context("commit signature cannot be converted to a utf8 string")?
+            .context("commit signature failed to be converted to a utf8 string")?
             .to_owned())
     }
 
@@ -411,8 +420,7 @@ impl RepoActions for Repo {
             Ok(revwalk)
         };
 
-        // scan through the base commit ancestory until a common
-        // ancestor is found
+        // scan through the base commit ancestory until a common ancestor is found
         let most_recent_shared_commit = match get_revwalk(base_commit)
             .context("failed to get revwalk for base_commit")?
             .find(|base_res| {
@@ -424,8 +432,7 @@ impl RepoActions for Repo {
                 {
                     true
                 } else {
-                    // add commits not found in latest ancestory to
-                    // 'behind' vector
+                    // add commits not found in latest ancestory to 'behind' vector
                     behind.push(oid_to_sha1(base_oid));
                     false
                 }
@@ -439,8 +446,7 @@ impl RepoActions for Repo {
             Some(res) => res.context("revwalk failed to reveal commit")?,
         };
 
-        // scan through the latest commits until shared commit is
-        // reached
+        // scan through the latest commits until shared commit is reached
         get_revwalk(latest_commit)
             .context("failed to get revwalk for latest_commit")?
             .any(|latest_res| {
@@ -496,12 +502,12 @@ impl RepoActions for Repo {
     fn apply_patch_chain(
         &self,
         branch_name: &str,
-        patch_and_ancestors: Vec<nostr_0_34_1::Event>,
-    ) -> Result<Vec<nostr_0_34_1::Event>> {
+        patch_and_ancestors: Vec<nostr_0_37_0::Event>,
+    ) -> Result<Vec<nostr_0_37_0::Event>> {
         let branch_tip_result = self.get_tip_of_branch(branch_name);
 
         // filter out existing ancestors in branch
-        let mut patches_to_apply: Vec<nostr_0_34_1::Event> = patch_and_ancestors
+        let mut patches_to_apply: Vec<nostr_0_37_0::Event> = patch_and_ancestors
             .into_iter()
             .filter(|e| {
                 let commit_id = get_commit_id_from_patch(e).unwrap();
@@ -521,7 +527,7 @@ impl RepoActions for Repo {
                 last_patch
             } else {
                 self.checkout(branch_name)
-                    .context("no patches and so cannot create a proposal branch")?;
+                    .context("no patches and so failed to create a proposal branch")?;
                 return Ok(vec![]);
             },
             "parent-commit",
@@ -529,7 +535,7 @@ impl RepoActions for Repo {
 
         // check patches can be applied
         if !self.does_commit_exist(&parent_commit_id)? {
-            bail!("cannot find parent commit ({parent_commit_id}). run git pull and try again.")
+            bail!("failed to find parent commit ({parent_commit_id}). run git pull and try again.")
         }
 
         // checkout branch
@@ -543,19 +549,30 @@ impl RepoActions for Repo {
             let commit_id = get_commit_id_from_patch(patch)?;
             // only create new commits - otherwise make them the tip
             if !self.does_commit_exist(&commit_id)? {
-                self.create_commit_from_patch(patch)?;
+                self.create_commit_from_patch(patch, None)?;
             }
             self.create_branch_at_commit(branch_name, &commit_id)?;
             self.checkout(branch_name)?;
         }
         Ok(patches_to_apply)
     }
-    fn create_commit_from_patch(&self, patch: &nostr_0_34_1::Event) -> Result<Oid> {
-        let commit_id = get_commit_id_from_patch(patch)?;
-        if self.does_commit_exist(&commit_id)? {
-            return Ok(Oid::from_str(&commit_id)?);
+    fn create_commit_from_patch(
+        &self,
+        patch: &nostr_0_37_0::Event,
+        parent_commit_id_override: Option<String>,
+    ) -> Result<Oid> {
+        let commit_id = get_commit_id_from_patch(patch);
+        if let Ok(commit_id) = &commit_id {
+            if self.does_commit_exist(commit_id).unwrap_or(false) {
+                return Ok(Oid::from_str(commit_id)?);
+            }
         }
-        let parent_commit_id = tag_value(patch, "parent-commit")?;
+
+        let parent_commit_id = if let Some(commit_id) = parent_commit_id_override.clone() {
+            commit_id
+        } else {
+            tag_value(patch, "parent-commit")?
+        };
 
         let parent_commit = self
             .git_repo
@@ -603,71 +620,84 @@ impl RepoActions for Repo {
             )
             .context("failed to create signed commit")?;
 
-        // I beleive this was added to address a bug where commit
-        // author / committer were identical when in a scenario when
-        // they should be different but I dont think we have a test
-        // case for it. surely we should be using the
+        // I beleive this was added to address a bug where commit author / committer
+        // were identical when in a scenario when they should be different but I dont
+        // think we have a test case for it. surely we should be using the
         // extract_sig_from_patch_tags outputs to address this?
-        if !applied_oid.to_string().eq(&commit_id) {
-            let commit = self.git_repo.find_commit(applied_oid)?;
-            applied_oid = commit
-                .amend(
-                    None,
-                    Some(&commit.author()),
-                    Some(&commit.committer()),
-                    None,
-                    None,
-                    None,
-                )
-                .context("cannot amend commit to produce new oid")?;
-        }
-        if !applied_oid.to_string().eq(&commit_id) {
-            bail!(
-                "when applied the patch commit id ({}) doesn't match the one specified in the event tag ({})",
-                applied_oid.to_string(),
-                get_commit_id_from_patch(patch)?,
-            );
+        let custom_parent = if let Some(ovderride_parent) = parent_commit_id_override {
+            if let Ok(tag_parent) = tag_value(patch, "parent-commit") {
+                ovderride_parent != tag_parent
+            } else {
+                true
+            }
+        } else {
+            false
+        };
+        if !custom_parent {
+            if let Ok(commit_id) = &commit_id {
+                if !applied_oid.to_string().eq(commit_id) {
+                    let commit = self.git_repo.find_commit(applied_oid)?;
+                    applied_oid = commit
+                        .amend(
+                            None,
+                            Some(&commit.author()),
+                            Some(&commit.committer()),
+                            None,
+                            None,
+                            None,
+                        )
+                        .context("failed to amend commit to produce new oid")?;
+                }
+                if !applied_oid.to_string().eq(commit_id) {
+                    bail!(
+                        "when applied the patch commit id ({}) doesn't match the one specified in the event tag ({})",
+                        applied_oid.to_string(),
+                        get_commit_id_from_patch(patch)?,
+                    );
+                }
+            }
         }
         self.git_repo.set_index(&mut existing_index)?;
         Ok(applied_oid)
     }
     fn parse_starting_commits(&self, starting_commits: &str) -> Result<Vec<Sha1Hash>> {
-        let mut revwalk = self.git_repo.revwalk()?;
-        revwalk.simplify_first_parent()?; // Simplify history to follow only first parent
-
         let revspec = self
             .git_repo
             .revparse(starting_commits)
             .context("specified value not in a valid format")?;
-
-        if revspec.mode().contains(git2::RevparseMode::SINGLE) {
-            let commit_oid = revspec
-                .from()
-                .context("cannot get starting commit from specified value")?
-                .id();
-            revwalk.push(commit_oid)?;
-            Ok(revwalk
-                .take(1)
-                .map(|o| Ok(oid_to_sha1(&o?)))
-                .collect::<Result<Vec<Sha1Hash>>>()?)
-        } else if revspec.mode().contains(git2::RevparseMode::RANGE) {
-            let from_oid = revspec
-                .from()
-                .context("cannot get starting commit of range from specified value")?
-                .id();
-            let to_oid = revspec
-                .to()
-                .context("cannot get end of range commit from specified value")?
-                .id();
-
-            revwalk.push(to_oid)?;
-            revwalk.hide(from_oid)?;
-
-            // Collect commits (already in reverse chronological order by default)
-            let commits: Vec<Sha1Hash> = revwalk
-                .map(|o| Ok(oid_to_sha1(&o?)))
-                .collect::<Result<Vec<Sha1Hash>>>()?;
-            Ok(commits)
+        if revspec.mode().is_no_single() {
+            let (ahead, _) = self
+                .get_commits_ahead_behind(
+                    &oid_to_sha1(
+                        &revspec
+                            .from()
+                            .context("failed to get starting commit from specified value")?
+                            .id(),
+                    ),
+                    &self
+                        .get_head_commit()
+                        .context("failed to get head commit with gitlib2")?,
+                )
+                .context("specified commit is not an ancestor of current head")?;
+            Ok(ahead)
+        } else if revspec.mode().is_range() {
+            let (ahead, _) = self
+                .get_commits_ahead_behind(
+                    &oid_to_sha1(
+                        &revspec
+                            .from()
+                            .context("failed to get starting commit of range from specified value")?
+                            .id(),
+                    ),
+                    &oid_to_sha1(
+                        &revspec
+                            .to()
+                            .context("failed to get end of range commit from specified value")?
+                            .id(),
+                    ),
+                )
+                .context("specified commit is not an ancestor of current head")?;
+            Ok(ahead)
         } else {
             bail!("specified value not in a supported format")
         }
@@ -685,18 +715,20 @@ impl RepoActions for Repo {
         }
     }
 
-    /// setting global to None will suppliment local config with
-    /// global items not in local
+    /// setting global to None will suppliment local config with global items
+    /// not in local
     fn get_git_config_item(&self, item: &str, global: Option<bool>) -> Result<Option<String>> {
         let just_global = global.unwrap_or(false);
         match if just_global {
             self.git_repo
                 .config()
-                .context("cannot open git config")?
+                .context("failed to open git config")?
                 .open_global()
-                .context("cannot open global git config")?
+                .context("failed to open global git config")?
         } else {
-            self.git_repo.config().context("cannot open git config")?
+            self.git_repo
+                .config()
+                .context("failed to open git config")?
         }
         .get_entry(item)
         {
@@ -704,15 +736,17 @@ impl RepoActions for Repo {
                 if let Some(global) = global {
                     if item.level().eq(&git2::ConfigLevel::Local) {
                         if global {
-                            bail!("only local repository login available")
+                            // bail!("only local repository login available")
+                            return Ok(None);
                         }
                     } else if !global {
-                        bail!("only global repository login available")
+                        // bail!("only global repository login available")
+                        return Ok(None);
                     }
                 }
                 Ok(Some(
                     item.value()
-                        .context("cannot find git config item")?
+                        .context("failed to find git config item")?
                         .to_string(),
                 ))
             }
@@ -724,15 +758,17 @@ impl RepoActions for Repo {
         if global {
             self.git_repo
                 .config()
-                .context("cannot open git config")?
+                .context("failed to open git config")?
                 .open_global()
-                .context("cannot open global git config")?
+                .context("failed to open global git config")?
         } else {
-            self.git_repo.config().context("cannot open git config")?
+            self.git_repo
+                .config()
+                .context("failed to open git config")?
         }
         .set_str(item, value)
         .context(format!(
-            "cannot set {} git config item {}",
+            "failed to set {} git config item {}",
             if global { "global" } else { "local" },
             item
         ))?;
@@ -747,14 +783,16 @@ impl RepoActions for Repo {
             if global {
                 self.git_repo
                     .config()
-                    .context("cannot open git config")?
+                    .context("failed to open git config")?
                     .open_global()
-                    .context("cannot open global git config")?
+                    .context("failed to open global git config")?
             } else {
-                self.git_repo.config().context("cannot open git config")?
+                self.git_repo
+                    .config()
+                    .context("failed to open git config")?
             }
             .remove(item)
-            .context("cannot remove existing git config item")?;
+            .context("failed to remove existing git config item")?;
             Ok(true)
         }
     }
@@ -778,9 +816,9 @@ pub fn oid_to_shorthand_string(oid: Oid) -> Result<String> {
 // fn oid_to_sha1_string(oid: Oid) -> Result<String> {
 //     let b = oid.as_bytes();
 //     String::from_utf8(vec![
-//         b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9],
-// b[10], b[11], b[12], b[13],         b[14], b[15], b[16], b[17],
-// b[18], b[19],     ])
+//         b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10],
+// b[11], b[12], b[13],         b[14], b[15], b[16], b[17], b[18], b[19],
+//     ])
 //     .context("oid should contain 20 u8 btyes of utf8")
 // }
 
@@ -809,15 +847,12 @@ fn git_sig_to_tag_vec(sig: &git2::Signature) -> Vec<String> {
     ]
 }
 
-fn extract_sig_from_patch_tags<'a>(
-    tags: &'a [nostr_0_34_1::Tag],
-    tag_name: &str,
-) -> Result<git2::Signature<'a>> {
+fn extract_sig_from_patch_tags<'a>(tags: &'a Tags, tag_name: &str) -> Result<git2::Signature<'a>> {
     let v = tags
         .iter()
-        .find(|t| t.as_vec()[0].eq(tag_name))
+        .find(|t| !t.as_slice().is_empty() && t.as_slice()[0].eq(tag_name))
         .context(format!("tag '{tag_name}' not present in patch"))?
-        .as_vec();
+        .as_slice();
     if v.len() != 5 {
         bail!("tag '{tag_name}' is incorrectly formatted")
     }
@@ -833,13 +868,54 @@ fn extract_sig_from_patch_tags<'a>(
     .context("failed to create git signature")
 }
 
+pub fn get_git_config_item(git_repo: &Option<&Repo>, item: &str) -> Result<Option<String>> {
+    if let Some(git_repo) = git_repo {
+        git_repo.get_git_config_item(item, Some(false))
+    } else {
+        Ok(
+            match git2::Config::open_default()?.open_global()?.get_entry(item) {
+                Ok(item) => item.value().map(|v| v.to_string()),
+                Err(_) => None,
+            },
+        )
+    }
+}
+
+pub fn save_git_config_item(git_repo: &Option<&Repo>, item: &str, value: &str) -> Result<()> {
+    if let Some(git_repo) = git_repo {
+        git_repo.save_git_config_item(item, value, false)
+    } else {
+        git2::Config::open_default()?
+            .open_global()?
+            .set_str(item, value)
+            .context(format!("failed to set global git config item {}", item))
+    }
+}
+
+pub fn remove_git_config_item(git_repo: &Option<&Repo>, item: &str) -> Result<bool> {
+    if let Some(git_repo) = git_repo {
+        git_repo.remove_git_config_item(item, false)
+    } else if get_git_config_item(&None, item)?.is_none() {
+        Ok(false)
+    } else {
+        git2::Config::open_default()?
+            .open_global()?
+            .remove(item)
+            .context(format!(
+                "failed to remove existing git config item {}",
+                item
+            ))?;
+        Ok(true)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-
     use std::fs;
 
+    use test_utils::{generate_repo_ref_event, git::GitTestRepo};
+
     use super::*;
-    use crate::test_utils::{generate_repo_ref_event, git::GitTestRepo};
 
     mod git_config_item_local {
         use super::*;
@@ -913,7 +989,7 @@ mod tests {
 
     #[test]
     fn get_commit_parent() -> Result<()> {
-        let mut test_repo = GitTestRepo::default();
+        let test_repo = GitTestRepo::default();
         let parent_oid = test_repo.populate()?;
         std::fs::write(test_repo.dir.join("t100.md"), "some content")?;
         let child_oid = test_repo.stage_and_commit("add t100.md")?;
@@ -921,8 +997,7 @@ mod tests {
         let git_repo = Repo::from_path(&test_repo.dir)?;
 
         assert_eq!(
-            // Sha1Hash::from_byte_array("bla".to_string().
-            // as_bytes()),
+            // Sha1Hash::from_byte_array("bla".to_string().as_bytes()),
             oid_to_sha1(&parent_oid),
             git_repo.get_commit_parent(&oid_to_sha1(&child_oid))?,
         );
@@ -932,7 +1007,7 @@ mod tests {
     mod get_commit_message {
         use super::*;
         fn run(message: &str) -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             std::fs::write(test_repo.dir.join("t100.md"), "some content")?;
             let oid = test_repo.stage_and_commit(message)?;
@@ -966,7 +1041,7 @@ mod tests {
     mod get_commit_message_summary {
         use super::*;
         fn run(message: &str, summary: &str) -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             std::fs::write(test_repo.dir.join("t100.md"), "some content")?;
             let oid = test_repo.stage_and_commit(message)?;
@@ -1007,7 +1082,7 @@ mod tests {
         static EMAIL: &str = "carole@pm.me";
 
         fn prep(time: &git2::Time) -> Result<Vec<String>> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             fs::write(test_repo.dir.join("x1.md"), "some content")?;
             let oid = test_repo.stage_and_commit_custom_signature(
@@ -1066,10 +1141,10 @@ mod tests {
             fn test(time: git2::Time) -> Result<()> {
                 assert_eq!(
                     extract_sig_from_patch_tags(
-                        &[nostr_0_34_1::Tag::custom(
-                            nostr_0_34_1::TagKind::Custom("author".to_string().into()),
+                        &Tags::new(vec![nostr_0_37_0::Tag::custom(
+                            nostr_0_37_0::TagKind::Custom("author".to_string().into()),
                             prep(&time)?,
-                        )],
+                        )]),
                         "author",
                     )?
                     .to_string(),
@@ -1102,7 +1177,7 @@ mod tests {
         static EMAIL: &str = "carole@pm.me";
 
         fn prep(time: &git2::Time) -> Result<Vec<String>> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             fs::write(test_repo.dir.join("x1.md"), "some content")?;
             let oid = test_repo.stage_and_commit_custom_signature(
@@ -1135,19 +1210,18 @@ mod tests {
 
         #[test]
         fn existing_commits_results_in_true() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
-            let root_commit_id = git_repo.get_root_commit()?;
-            assert!(git_repo.does_commit_exist(&root_commit_id.to_string())?);
+            assert!(git_repo.does_commit_exist("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?);
             Ok(())
         }
 
         #[test]
         fn correctly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_false()
         -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
@@ -1158,7 +1232,7 @@ mod tests {
         #[test]
         fn incorrectly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_error()
         -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
@@ -1171,131 +1245,72 @@ mod tests {
         use super::*;
         #[test]
         fn simple_patch_matches_string() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
-            test_repo.initial_commit()?;
-            fs::write(test_repo.dir.join("t2.md"), "some content1")?;
-            let oid = test_repo.stage_and_commit("add t2.md")?;
+            let test_repo = GitTestRepo::default();
+            let oid = test_repo.populate()?;
+
             let git_repo = Repo::from_path(&test_repo.dir)?;
-            let _parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
-
-            let generated_patch = git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?;
-
-            let first_line_parent_oid = generated_patch
-                .lines()
-                .next()
-                .unwrap()
-                .split(' ')
-                .nth(1)
-                .unwrap();
-
-            let from_line = generated_patch
-                .lines()
-                .find(|l| l.starts_with("From: "))
-                .unwrap();
-
-            let date_line = generated_patch
-                .lines()
-                .find(|l| l.starts_with("Date: "))
-                .unwrap();
-
-            let subject_line = generated_patch
-                .lines()
-                .find(|l| l.starts_with("Subject: "))
-                .unwrap();
 
             assert_eq!(
-                generated_patch,
-                format!(
-                    "\
-From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
-{from_line}
-{date_line}
-{subject_line}
-
----
- t2.md | 1 +
- 1 file changed, 1 insertion(+)
- create mode 100644 t2.md
-
-diff --git a/t2.md b/t2.md
-new file mode 100644
-index 0000000..a66525d
---- /dev/null
-+++ b/t2.md
-@@ -0,0 +1 @@
-+some content1
-\\ No newline at end of file
---
-libgit2 1.9.1
-
-"
-                )
+                "\
+                From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
+                From: Joe Bloggs <joe.bloggs@pm.me>\n\
+                Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
+                Subject: [PATCH] add t2.md\n\
+                \n\
+                ---\n \
+                t2.md | 1 +\n \
+                1 file changed, 1 insertion(+)\n \
+                create mode 100644 t2.md\n\
+                \n\
+                diff --git a/t2.md b/t2.md\n\
+                new file mode 100644\n\
+                index 0000000..a66525d\n\
+                --- /dev/null\n\
+                +++ b/t2.md\n\
+                @@ -0,0 +1 @@\n\
+                +some content1\n\\ \
+                No newline at end of file\n\
+                --\n\
+                libgit2 1.7.2\n\
+                \n\
+                ",
+                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
             );
             Ok(())
         }
 
         #[test]
         fn series_count() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
-            test_repo.initial_commit()?;
-            fs::write(test_repo.dir.join("t2.md"), "some content1")?;
-            let oid = test_repo.stage_and_commit("add t2.md")?;
+            let test_repo = GitTestRepo::default();
+            let oid = test_repo.populate()?;
+
             let git_repo = Repo::from_path(&test_repo.dir)?;
-            let _parent_oid = git_repo.get_commit_parent(&oid_to_sha1(&oid))?;
-
-            let generated_patch =
-                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?;
-
-            let first_line_parent_oid = generated_patch
-                .lines()
-                .next()
-                .unwrap()
-                .split(' ')
-                .nth(1)
-                .unwrap();
-
-            let from_line = generated_patch
-                .lines()
-                .find(|l| l.starts_with("From: "))
-                .unwrap();
-
-            let date_line = generated_patch
-                .lines()
-                .find(|l| l.starts_with("Date: "))
-                .unwrap();
-
-            let subject_line = generated_patch
-                .lines()
-                .find(|l| l.starts_with("Subject: "))
-                .unwrap();
 
             assert_eq!(
-                generated_patch,
-                format!(
-                    "\
-From {first_line_parent_oid} Mon Sep 17 00:00:00 2001
-{from_line}
-{date_line}
-{subject_line}
-
----
- t2.md | 1 +
- 1 file changed, 1 insertion(+)
- create mode 100644 t2.md
-
-diff --git a/t2.md b/t2.md
-new file mode 100644
-index 0000000..a66525d
---- /dev/null
-+++ b/t2.md
-@@ -0,0 +1 @@
-+some content1
-\\ No newline at end of file
---
-libgit2 1.9.1
-
-"
-                )
+                "\
+                From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
+                From: Joe Bloggs <joe.bloggs@pm.me>\n\
+                Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
+                Subject: [PATCH 3/5] add t2.md\n\
+                \n\
+                ---\n \
+                t2.md | 1 +\n \
+                1 file changed, 1 insertion(+)\n \
+                create mode 100644 t2.md\n\
+                \n\
+                diff --git a/t2.md b/t2.md\n\
+                new file mode 100644\n\
+                index 0000000..a66525d\n\
+                --- /dev/null\n\
+                +++ b/t2.md\n\
+                @@ -0,0 +1 @@\n\
+                +some content1\n\\ \
+                No newline at end of file\n\
+                --\n\
+                libgit2 1.7.2\n\
+                \n\
+                ",
+                git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
             );
             Ok(())
         }
@@ -1307,10 +1322,10 @@ libgit2 1.9.1
 
         #[test]
         fn return_origin_main_if_exists() -> Result<()> {
-            let mut test_origin_repo = GitTestRepo::new("main")?;
+            let test_origin_repo = GitTestRepo::new("main")?;
             let main_origin_oid = test_origin_repo.populate()?;
 
-            let mut test_repo = GitTestRepo::new("main")?;
+            let test_repo = GitTestRepo::new("main")?;
             test_repo.populate()?;
             test_repo.add_remote("origin", test_origin_repo.dir.to_str().unwrap())?;
             test_repo
@@ -1332,7 +1347,7 @@ libgit2 1.9.1
             use super::*;
             #[test]
             fn when_it_exists() -> Result<()> {
-                let mut test_repo = GitTestRepo::new("main")?;
+                let test_repo = GitTestRepo::new("main")?;
                 let main_oid = test_repo.populate()?;
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 let (name, commit_hash) = git_repo.get_main_or_master_branch()?;
@@ -1343,7 +1358,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_it_exists_and_other_branch_checkedout() -> Result<()> {
-                let mut test_repo = GitTestRepo::new("main")?;
+                let test_repo = GitTestRepo::new("main")?;
                 let main_oid = test_repo.populate()?;
                 test_repo.create_branch("feature")?;
                 test_repo.checkout("feature")?;
@@ -1360,7 +1375,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_exists_even_if_master_is_checkedout() -> Result<()> {
-                let mut test_repo = GitTestRepo::new("main")?;
+                let test_repo = GitTestRepo::new("main")?;
                 let main_oid = test_repo.populate()?;
                 test_repo.create_branch("master")?;
                 test_repo.checkout("master")?;
@@ -1378,7 +1393,7 @@ libgit2 1.9.1
 
         #[test]
         fn returns_master_if_exists_and_main_doesnt() -> Result<()> {
-            let mut test_repo = GitTestRepo::new("master")?;
+            let test_repo = GitTestRepo::new("master")?;
             let master_oid = test_repo.populate()?;
             test_repo.create_branch("feature")?;
             test_repo.checkout("feature")?;
@@ -1394,7 +1409,7 @@ libgit2 1.9.1
         }
         #[test]
         fn returns_error_if_no_main_or_master() -> Result<()> {
-            let mut test_repo = GitTestRepo::new("feature")?;
+            let test_repo = GitTestRepo::new("feature")?;
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
             assert!(git_repo.get_main_or_master_branch().is_err());
@@ -1407,7 +1422,7 @@ libgit2 1.9.1
 
         #[test]
         fn returns_origin_url() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.add_remote("origin", "https://localhost:1000")?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
             assert_eq!(git_repo.get_origin_url()?, "https://localhost:1000");
@@ -1419,7 +1434,7 @@ libgit2 1.9.1
 
         #[test]
         fn returns_checked_out_branch_name() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let _ = test_repo.populate()?;
             // create feature branch
             test_repo.create_branch("example-feature")?;
@@ -1442,7 +1457,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_on_same_commit_return_empty() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let oid = test_repo.populate()?;
                 // create feature branch
                 test_repo.create_branch("feature")?;
@@ -1459,7 +1474,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_2_commit_behind() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 test_repo.populate()?;
                 // create feature branch
                 test_repo.create_branch("feature")?;
@@ -1478,16 +1493,16 @@ libgit2 1.9.1
                     &oid_to_sha1(&feature_oid),
                 )?;
                 assert_eq!(ahead, vec![]);
-                assert_eq!(
-                    behind,
-                    vec![oid_to_sha1(&behind_2_oid), oid_to_sha1(&behind_1_oid),],
-                );
+                assert_eq!(behind, vec![
+                    oid_to_sha1(&behind_2_oid),
+                    oid_to_sha1(&behind_1_oid),
+                ],);
                 Ok(())
             }
 
             #[test]
             fn when_2_commit_ahead() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let main_oid = test_repo.populate()?;
                 // create feature branch and add 2 commits
                 test_repo.create_branch("feature")?;
@@ -1503,17 +1518,17 @@ libgit2 1.9.1
                     &oid_to_sha1(&main_oid),
                     &oid_to_sha1(&ahead_2_oid),
                 )?;
-                assert_eq!(
-                    ahead,
-                    vec![oid_to_sha1(&ahead_2_oid), oid_to_sha1(&ahead_1_oid),],
-                );
+                assert_eq!(ahead, vec![
+                    oid_to_sha1(&ahead_2_oid),
+                    oid_to_sha1(&ahead_1_oid),
+                ],);
                 assert_eq!(behind, vec![]);
                 Ok(())
             }
 
             #[test]
             fn when_2_commit_ahead_and_2_commits_behind() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 test_repo.populate()?;
                 // create feature branch and add 2 commits
                 test_repo.create_branch("feature")?;
@@ -1535,14 +1550,14 @@ libgit2 1.9.1
                     &oid_to_sha1(&behind_2_oid),
                     &oid_to_sha1(&ahead_2_oid),
                 )?;
-                assert_eq!(
-                    ahead,
-                    vec![oid_to_sha1(&ahead_2_oid), oid_to_sha1(&ahead_1_oid)],
-                );
-                assert_eq!(
-                    behind,
-                    vec![oid_to_sha1(&behind_2_oid), oid_to_sha1(&behind_1_oid)],
-                );
+                assert_eq!(ahead, vec![
+                    oid_to_sha1(&ahead_2_oid),
+                    oid_to_sha1(&ahead_1_oid)
+                ],);
+                assert_eq!(behind, vec![
+                    oid_to_sha1(&behind_2_oid),
+                    oid_to_sha1(&behind_1_oid)
+                ],);
                 Ok(())
             }
         }
@@ -1552,7 +1567,7 @@ libgit2 1.9.1
         use super::*;
         #[test]
         fn doesnt_error() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             // create feature branch and add 2 commits
             test_repo.create_branch("feature")?;
@@ -1572,7 +1587,7 @@ libgit2 1.9.1
 
         #[test]
         fn branch_gets_created() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             // create feature branch and add 2 commits
             test_repo.create_branch("feature")?;
@@ -1593,7 +1608,7 @@ libgit2 1.9.1
 
         #[test]
         fn branch_created_with_correct_commit() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             // create feature branch and add 2 commits
             test_repo.create_branch("feature")?;
@@ -1617,7 +1632,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_new_tip_specified_it_is_updated() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 test_repo.populate()?;
                 // create feature branch and add 2 commits
                 test_repo.create_branch("feature")?;
@@ -1639,7 +1654,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_same_tip_is_specified_it_doesnt_error() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 test_repo.populate()?;
                 // create feature branch and add 2 commits
                 test_repo.create_branch("feature")?;
@@ -1661,7 +1676,7 @@ libgit2 1.9.1
 
             #[test]
             fn when_branch_is_checkedout_new_tip_specified_it_is_updated() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 test_repo.populate()?;
                 // create feature branch and add 2 commits
                 test_repo.create_branch("feature")?;
@@ -1687,23 +1702,21 @@ libgit2 1.9.1
 
     mod create_commit_from_patch {
 
-        use super::*;
-        use crate::{
-            git_events::generate_patch_event, repo_ref::RepoRef, test_utils::TEST_KEY_1_SIGNER,
-        };
+        use test_utils::TEST_KEY_1_SIGNER;
 
-        async fn generate_patch_from_head_commit(
-            test_repo: &GitTestRepo,
-        ) -> Result<nostr_0_34_1::Event> {
+        use super::*;
+        use crate::{git_events::generate_patch_event, repo_ref::RepoRef};
+
+        async fn generate_patch_from_head_commit(test_repo: &GitTestRepo) -> Result<nostr_0_37_0::Event> {
             let original_oid = test_repo.git_repo.head()?.peel_to_commit()?.id();
             let git_repo = Repo::from_path(&test_repo.dir)?;
             generate_patch_event(
                 &git_repo,
                 &git_repo.get_root_commit()?,
                 &oid_to_sha1(&original_oid),
-                Some(nostr_0_34_1::EventId::all_zeros()),
+                Some(nostr_0_37_0::EventId::all_zeros()),
                 &TEST_KEY_1_SIGNER,
-                &RepoRef::try_from(generate_repo_ref_event()).unwrap(),
+                &RepoRef::try_from((generate_repo_ref_event(), None)).unwrap(),
                 None,
                 None,
                 None,
@@ -1712,12 +1725,12 @@ libgit2 1.9.1
             )
             .await
         }
-        fn test_patch_applies_to_repository(patch_event: nostr_0_34_1::Event) -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+        fn test_patch_applies_to_repository(patch_event: nostr_0_37_0::Event) -> Result<()> {
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
             let git_repo = Repo::from_path(&test_repo.dir)?;
             println!("{:?}", &patch_event);
-            git_repo.create_commit_from_patch(&patch_event)?;
+            git_repo.create_commit_from_patch(&patch_event, None)?;
             let commit_id = tag_value(&patch_event, "commit")?;
             // does commit with id exist?
             assert!(git_repo.does_commit_exist(&commit_id)?);
@@ -1725,14 +1738,14 @@ libgit2 1.9.1
         }
 
         mod patch_created_as_commit_with_matching_id {
+            use test_utils::git::joe_signature;
 
             use super::*;
-            use crate::test_utils::git::joe_signature;
 
             #[tokio::test]
             async fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature()
             -> Result<()> {
-                let mut source_repo = GitTestRepo::default();
+                let source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
                 source_repo.stage_and_commit("add x1.md")?;
@@ -1744,7 +1757,7 @@ libgit2 1.9.1
 
             #[tokio::test]
             async fn signature_with_specific_author_time() -> Result<()> {
-                let mut source_repo = GitTestRepo::default();
+                let source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
                 source_repo.stage_and_commit_custom_signature(
@@ -1764,7 +1777,7 @@ libgit2 1.9.1
 
             #[tokio::test]
             async fn author_name_and_email_not_current_git_user() -> Result<()> {
-                let mut source_repo = GitTestRepo::default();
+                let source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
                 source_repo.stage_and_commit_custom_signature(
@@ -1784,7 +1797,7 @@ libgit2 1.9.1
 
             #[tokio::test]
             async fn comiiter_name_and_email_not_current_git_user_or_author() -> Result<()> {
-                let mut source_repo = GitTestRepo::default();
+                let source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
                 source_repo.stage_and_commit_custom_signature(
@@ -1810,7 +1823,7 @@ libgit2 1.9.1
 
             #[tokio::test]
             async fn unique_author_and_commiter_details() -> Result<()> {
-                let mut source_repo = GitTestRepo::default();
+                let source_repo = GitTestRepo::default();
                 source_repo.populate()?;
                 fs::write(source_repo.dir.join("x1.md"), "some content")?;
                 source_repo.stage_and_commit_custom_signature(
@@ -1835,18 +1848,16 @@ libgit2 1.9.1
     }
 
     mod apply_patch_chain {
+        use test_utils::TEST_KEY_1_SIGNER;
 
         use super::*;
-        use crate::{
-            git_events::generate_cover_letter_and_patch_events, repo_ref::RepoRef,
-            test_utils::TEST_KEY_1_SIGNER,
-        };
+        use crate::{git_events::generate_cover_letter_and_patch_events, repo_ref::RepoRef};
 
         static BRANCH_NAME: &str = "add-example-feature";
         // returns original_repo, cover_letter_event, patch_events
         async fn generate_test_repo_and_events()
-        -> Result<(GitTestRepo, nostr_0_34_1::Event, Vec<nostr_0_34_1::Event>)> {
-            let mut original_repo = GitTestRepo::default();
+        -> Result<(GitTestRepo, nostr_0_37_0::Event, Vec<nostr_0_37_0::Event>)> {
+            let original_repo = GitTestRepo::default();
             let oid3 = original_repo.populate_with_test_branch()?;
             let oid2 = original_repo.git_repo.find_commit(oid3)?.parent_id(0)?;
             let oid1 = original_repo.git_repo.find_commit(oid2)?.parent_id(0)?;
@@ -1858,7 +1869,7 @@ libgit2 1.9.1
                 &git_repo,
                 &[oid_to_sha1(&oid1), oid_to_sha1(&oid2), oid_to_sha1(&oid3)],
                 &TEST_KEY_1_SIGNER,
-                &RepoRef::try_from(generate_repo_ref_event()).unwrap(),
+                &RepoRef::try_from((generate_repo_ref_event(), None)).unwrap(),
                 &None,
                 &[],
             )
@@ -1878,7 +1889,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_gets_created_with_name_specified_in_proposal() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
@@ -1893,7 +1904,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
@@ -1907,7 +1918,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn patches_get_created_as_commits() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
@@ -1921,7 +1932,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
@@ -1935,7 +1946,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn previously_checked_out_branch_tip_does_not_change() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let existing_branch = test_repo.get_checked_out_branch_name()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -1952,7 +1963,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     let res = git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
@@ -1967,7 +1978,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_gets_created_with_name_specified_in_proposal() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     std::fs::write(test_repo.dir.join("m3.md"), "some content")?;
                     test_repo.stage_and_commit("add m3.md")?;
@@ -1984,7 +1995,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     std::fs::write(test_repo.dir.join("m3.md"), "some content")?;
                     test_repo.stage_and_commit("add m3.md")?;
@@ -2000,7 +2011,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     std::fs::write(test_repo.dir.join("m3.md"), "some content")?;
                     test_repo.stage_and_commit("add m3.md")?;
@@ -2016,7 +2027,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn previously_checked_out_branch_tip_does_not_change() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     std::fs::write(test_repo.dir.join("m3.md"), "some content")?;
                     test_repo.stage_and_commit("add m3.md")?;
@@ -2035,7 +2046,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     let res = git_repo.apply_patch_chain(BRANCH_NAME, patch_events)?;
@@ -2057,7 +2068,7 @@ libgit2 1.9.1
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, mut patch_events) =
                         generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, vec![patch_events.pop().unwrap()])?;
@@ -2073,7 +2084,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, vec![patch_events.pop().unwrap()])?;
@@ -2089,7 +2100,7 @@ libgit2 1.9.1
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, mut patch_events) =
                         generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, vec![patch_events.pop().unwrap()])?;
@@ -2106,7 +2117,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, vec![patch_events.pop().unwrap()])?;
@@ -2123,7 +2134,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, vec![patch_events.pop().unwrap()])?;
@@ -2144,7 +2155,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn returns_all_patches_applied_0() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events.clone())?;
@@ -2159,7 +2170,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events.clone())?;
@@ -2176,7 +2187,7 @@ libgit2 1.9.1
                 #[tokio::test]
                 async fn returns_all_patches_applied_0() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
-                    let mut test_repo = GitTestRepo::default();
+                    let test_repo = GitTestRepo::default();
                     test_repo.populate()?;
                     let git_repo = Repo::from_path(&test_repo.dir)?;
                     git_repo.apply_patch_chain(BRANCH_NAME, patch_events.clone())?;
@@ -2196,37 +2207,26 @@ libgit2 1.9.1
 
             #[test]
             fn when_on_main_and_other_commits_are_more_recent_on_feature_branch() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                let head_commit_of_main = git_repo.get_tip_of_branch("main")?;
-                let expected_commit = git_repo.get_commit_parent(&head_commit_of_main)?;
-
-                assert_eq!(
-                    git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![expected_commit],
-                );
+                assert_eq!(git_repo.parse_starting_commits("HEAD~1")?, vec![
+                    str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?
+                ],);
                 Ok(())
             }
 
             #[test]
             fn when_checked_out_branch_ahead_of_main() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
-                let head_commit = git_repo.get_head_commit()?;
-
-                // When on a branch ahead of main, HEAD~1 should return the parent of the
-                // current HEAD
-                let expected_commit = git_repo.get_commit_parent(&head_commit)?;
-
-                assert_eq!(
-                    git_repo.parse_starting_commits("HEAD~1")?,
-                    vec![expected_commit],
-                );
+                assert_eq!(git_repo.parse_starting_commits("HEAD~1")?, vec![
+                    str_to_sha1("82ff2bcc9aa94d1bd8faee723d4c8cc190d6061c")?
+                ],);
                 Ok(())
             }
         }
@@ -2235,31 +2235,15 @@ libgit2 1.9.1
 
             #[test]
             fn when_on_main_and_other_commits_are_more_recent_on_feature_branch() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                let main_head_commit = git_repo.get_tip_of_branch("main")?;
-                let main_parent_commit = git_repo.get_commit_parent(&main_head_commit)?;
-                let main_grandparent_commit = git_repo.get_commit_parent(&main_parent_commit)?;
-
-                let expected_commits = vec![
-                    main_head_commit,
-                    main_parent_commit,
-                    main_grandparent_commit,
-                ];
-
-                let mut revwalk = git_repo.git_repo.revwalk()?;
-                revwalk.simplify_first_parent()?;
-                revwalk.push(sha1_to_oid(&main_head_commit)?)?;
-
-                let actual_commits: Vec<Sha1Hash> = revwalk
-                    .take(3) // Take 3 commits: HEAD, its parent, and its grandparent
-                    .map(|o| Ok(oid_to_sha1(&o?)))
-                    .collect::<Result<Vec<Sha1Hash>>>()?;
-
-                assert_eq!(actual_commits, expected_commits,);
+                assert_eq!(git_repo.parse_starting_commits("HEAD~2")?, vec![
+                    str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?,
+                    str_to_sha1("af474d8d271490e5c635aad337abdc050034b16a")?,
+                ],);
                 Ok(())
             }
         }
@@ -2268,32 +2252,15 @@ libgit2 1.9.1
 
             #[test]
             fn when_checked_out_branch_ahead_of_main() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
 
-                let feature_head_commit = git_repo.get_head_commit()?;
-                let feature_parent1_commit = git_repo.get_commit_parent(&feature_head_commit)?;
-                let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
-                let feature_parent3_commit = git_repo.get_commit_parent(&feature_parent2_commit)?;
-
-                let expected_commits = vec![
-                    feature_head_commit,
-                    feature_parent1_commit,
-                    feature_parent2_commit,
-                    feature_parent3_commit,
-                ];
-
-                let mut revwalk = git_repo.git_repo.revwalk()?;
-                revwalk.simplify_first_parent()?;
-                revwalk.push(sha1_to_oid(&feature_head_commit)?)?;
-
-                let actual_commits: Vec<Sha1Hash> = revwalk
-                    .take(4) // Take 4 commits: HEAD, and its three parents
-                    .map(|o| Ok(oid_to_sha1(&o?)))
-                    .collect::<Result<Vec<Sha1Hash>>>()?;
-
-                assert_eq!(actual_commits, expected_commits,);
+                assert_eq!(git_repo.parse_starting_commits("HEAD~3")?, vec![
+                    str_to_sha1("82ff2bcc9aa94d1bd8faee723d4c8cc190d6061c")?,
+                    str_to_sha1("a23e6b05aaeb7d1471b4a838b51f337d5644eeb0")?,
+                    str_to_sha1("7ab82116068982671a8111f27dc10599172334b2")?,
+                ],);
                 Ok(())
             }
         }
@@ -2302,26 +2269,16 @@ libgit2 1.9.1
 
             #[test]
             fn when_checked_out_branch_ahead_of_main() -> Result<()> {
-                let mut test_repo = GitTestRepo::default();
+                let test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
                 test_repo.populate_with_test_branch()?;
                 test_repo.checkout("main")?;
 
-                let feature_head_commit = git_repo.get_tip_of_branch("add-example-feature")?;
-                let feature_parent1_commit = git_repo.get_commit_parent(&feature_head_commit)?;
-                let feature_parent2_commit = git_repo.get_commit_parent(&feature_parent1_commit)?;
-                let main_head_commit = git_repo.get_tip_of_branch("main")?;
-
-                assert_eq!(
-                    git_repo.parse_starting_commits(&format!(
-                        "{main_head_commit}..{feature_head_commit}"
-                    ))?,
-                    vec![
-                        feature_head_commit,
-                        feature_parent1_commit,
-                        feature_parent2_commit,
-                    ],
-                );
+                assert_eq!(git_repo.parse_starting_commits("af474d8..a23e6b0")?, vec![
+                    str_to_sha1("a23e6b05aaeb7d1471b4a838b51f337d5644eeb0")?,
+                    str_to_sha1("7ab82116068982671a8111f27dc10599172334b2")?,
+                    str_to_sha1("431b84edc0d2fa118d63faa3c2db9c73d630a5ae")?,
+                ],);
                 Ok(())
             }
         }
@@ -2331,7 +2288,7 @@ libgit2 1.9.1
 
         #[test]
         fn deep_ancestor_returns_true() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             let from_main_in_feature_history = test_repo.populate()?;
 
             // create feature branch and add 2 commits
@@ -2354,7 +2311,7 @@ libgit2 1.9.1
 
         #[test]
         fn commit_parent_returns_true() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
 
             // create feature branch and add 2 commits
@@ -2374,7 +2331,7 @@ libgit2 1.9.1
 
         #[test]
         fn same_commit_returns_false() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
 
             // create feature branch and add 2 commits
@@ -2394,7 +2351,7 @@ libgit2 1.9.1
 
         #[test]
         fn commit_not_in_history_returns_false() -> Result<()> {
-            let mut test_repo = GitTestRepo::default();
+            let test_repo = GitTestRepo::default();
             test_repo.populate()?;
 
             // create feature branch and add 2 commits

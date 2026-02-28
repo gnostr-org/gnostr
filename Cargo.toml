@@ -17,6 +17,25 @@ categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
 
+[workspace]
+members = [
+    ".",
+    # Root crate
+    "asyncgit",
+    # "bitcoin",
+    "filetreelist",
+    "gh",
+    "git2-hooks",
+    "git2-testing",
+    "grammar",
+    "invalidstring",
+    "legit",
+    "qr",
+    "relay",
+    "relay/extensions",
+    "scopetime",
+]
+
 [workspace.package]
 version = "1893.935010.246953"
 
@@ -46,64 +65,15 @@ exclude = [
     #"test_utils",
 ]
 
-[workspace]
-members = [
-    ".",
-    # Root crate
-    "asyncgit",
-    # "bitcoin",
-    "filetreelist",
-    "gh",
-    "git2-hooks",
-    "git2-testing",
-    "grammar",
-    "invalidstring",
-    "legit",
-    "qr",
-    "relay",
-    "relay/extensions",
-    "scopetime",
-]
-
 [workspace.dependencies]
-git-version = "0.3.9"
-simple-logging = "2.0.2"
-ratatui = { version = "0.28", default-features = false, features = [
-    'crossterm',
-    'serde',
-] }
-vt100 = "0.15.0"
-gnostr-asyncgit = { path = "asyncgit", default-features = false }
-#gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
-tree-sitter-grammar-repository = { path = "grammar" }
-gnostr-grammar = { path = "grammar" }
-filetreelist = { path = "filetreelist", package = "gnostr-filetreelist" }
-#gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { path = "legit" }
-#gh = { path = "gh", package = "gh-rs" }
-git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks" }
-git2-testing = { path = "git2-testing", package = "gnostr-git2-testing" }
-gnostr-extensions = { path = "relay/extensions" }
-gnostr-relay = { path = "relay", default-features = false }
-gnostr_qr = { path = "qr" }
-invalidstring = { path = "invalidstring", package = "gnostr-invalidstring" }
-scopetime = { path = "scopetime", package = "gnostr-scopetime" }
-ascii = "1.1.0"
-lightning-invoice = "0.33.2"
-pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
-rand_core = { version = "0.6", features = ["getrandom"] }
-hkdf = "0.12"
-k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
-tiny-hderive = "0.3.0"
-linkify = "0.10"
-#urlencoding = "2.1.3"
-cbc = { version = "0.1", features = [ "std" ] }
-aes = "0.8"
-	anyhow = "1.0.100"
+    aes = "0.8"
+    anyhow = "1.0.75"
 	arc-swap = "1.8.0"
+    ascii = "1.1.0"
 	askama = { version = "0.12.1", default-features = false }
 	assert_cmd = "2.0.17"
-	async-trait = "0.1.89"
+    async-trait = "0.1.73"
+    auth-git2 = "0.5.4"
 	axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
 	axum-core = "0.4.5"
 	base64 = "0.22.1"
@@ -111,48 +81,84 @@ aes = "0.8"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
 	bytes = "1.11.0"
+    #urlencoding = "2.1.3"    cbc = { version = "0.1", features = [ "std" ] }S
+    cbc = { version = "0.1", features = [ "std" ] }
 chacha20 = "0.9"
-chacha20poly1305 = "0.10.1"
+    chacha20poly1305 = "0.10.1"
 	chrono = "0.4.43"
-	clap = { version = "4.5.55", features = ["std", "cargo", "derive", "help", "usage", "env"] }
+	clap = { version = "4.5.34", features = ["std", "cargo", "derive", "help", "usage", "env"] }
+    console = "0.15.7"
 	constant_time_eq = "0.1"
 	crossbeam-channel = "0.5.15"
 	crossterm = "0.28.1"
 derive_more = "0.99"
-	dialoguer = "0.10.4"
-	directories = "5.0.1"
+    dialoguer = "0.10.4"
+    directories = "5.0.1"
 	env_logger = "0.11"
 	expectrl = "0.8.0"
+    filetreelist = { path = "filetreelist", package = "gnostr-filetreelist" }
 	flate2 = "1.1.8"
-	futures = "0.3.31"
+    futures = "0.3.28"
 	futures-util = "0.3.31"
-	git2 = "^0.20"
+    git-version = "0.3.9"
+    git2 = "0.20.1"
+    #gh = { path = "gh", package = "gh-rs" }
+    git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks" }
+    git2-testing = { path = "git2-testing", package = "gnostr-git2-testing" }
+    gnostr-asyncgit = { path = "asyncgit", default-features = false }
+    gnostr-extensions = { path = "relay/extensions" }
+    gnostr-grammar = { path = "grammar" }
+    #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
+    gnostr-legit = { path = "legit" }
+    gnostr-relay = { path = "relay", default-features = false }
+    gnostr_qr = { path = "qr" }
 	handlebars = { version = "6.3.2" }
 #zeroize = "1.6.0"
 
 hex = "0.4.3"
+    hkdf = "0.12"
 hmac = "0.12"
 http = "1.1"
 	httparse = "1.10.1"
 	humantime = "2.1.3"
+    indicatif = "0.17.7"
+    invalidstring = { path = "invalidstring", package = "gnostr-invalidstring" }
 	itertools = "0.14.0"
+    k256 = { version = "0.13", features = [ "schnorr", "ecdh" ] }
 	kanal = "0.1.1"
+    keyring = "2.0.5"
 	lazy_static = "1.5.0"
 	libp2p = { version = "0.54.1", features = ["async-std", "cbor", "dns", "gossipsub", "identify", "kad", "macros", "mdns", "noise", "ping", "quic", "relay", "rendezvous", "request-response", "tcp", "tokio", "yamux", "websocket"] }
+    lightning-invoice = "0.33.2"
+    linkify = "0.10"
 	log = "0.4.29"
 	md5 = "0.7.0"
 	moka = { version = "0.12.13", features = ["future"] }
 	nostr = "0.37.0"
+    nostr-connect = "0.37.0"
+    nostr-database = "0.37.0"
+    nostr-lmdb = "0.37.0"
 	nostr-sdk = { version = "0.37.0", features = ["all-nips"] }
+    nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
+    nostr_0_37_0 = { package = "nostr", version = "0.37.0", features = ["nip05", "nip49"] }
 	notify = "7.0.0"
 num_cpus = "1.16.0"
 	once_cell = "1.21.3"
 	parking_lot = "0.12.3"
+    passwords = "3.1.13"
+    pbkdf2 = { version = "0.12", default-features = false, features = [ "hmac", "sha2", "std" ] }
 	portable-pty = "0.8.1"
 	predicates = "3.1.3"
 	pretty_env_logger = { version = "0.5.0" }
 	proc-macro2 = "1.0"
+    qrcode = { version = "0.14.1", default-features = false }
 	quote = "1.0"
+    rand = "0.8"
+    rand_core = { version = "0.6", features = ["getrandom"] }
+    ratatui = { version = "0.28", default-features = false, features = [
+        'crossterm',
+        'serde',
+    ] }
 	regex = "1.11"
 	reqwest = { version = "0.12.28", features = ["blocking", "json"] }
 	rkyv = "0.8.14"
@@ -161,17 +167,20 @@ num_cpus = "1.16.0"
 	russh = { version = "0.37.1", features = ["openssl"] }
 	russh-keys = "0.37.1"
 	rust-ini = "0.21.3"
-	scrypt = "0.11.0"
+        rustls = { version = "0.23.37", features = ["ring"] }
+    scopetime = { path = "scopetime", package = "gnostr-scopetime" }
+    scrypt = "0.11.0"
 	secp256k1 = { version = "0.29.1", features = ["hashes", "global-context", "rand-std", "serde"] }
-	serde = { version = "1.0.228", features = ["derive", "rc"] }
-	serde_json = "1.0.146"
-	serde_yaml = "0.9.34"
+    serde = { version = "1.0.181", features = ["derive"] }
+    serde_json = "1.0.105"
+    serde_yaml = "0.9.27"
 	service-manager = { version = "0.10.0", features = ["clap"] }
 	sha2 = "0.10.9"
 	sha256 = "1.6.0"
 	shellexpand = "3.1.1"
 	shellwords = "1.1.0"
 	simdutf8 = "0.1.5"
+    simple-logging = "2.0.2"
 	simple_logger = "4.3.3"
 	sled = "0.34.7"
 speedy = { version = "0.8.7" }
@@ -189,6 +198,7 @@ speedy = { version = "0.8.7" }
 	thread-priority = "1.2.0"
 	time = { version = "0.3.46", features = ["macros", "formatting"] }
 	timeago = { version = "0.4.2", default-features = false }
+    tiny-hderive = "0.3.0"
 	tiny_http = { version = "0.12" }
 	tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
 	tokio-stream = "0.1.18"
@@ -203,6 +213,8 @@ speedy = { version = "0.8.7" }
 	tracing-core = "0.1.36"
 	tracing-subscriber = { version = "0.3.22", default-features = false, features = ["env-filter", "smallvec", "parking_lot", "fmt"] }
 	tree-sitter = "0.23.2"
+    #gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
+    tree-sitter-grammar-repository = { path = "grammar" }
 	tree-sitter-highlight = "0.23.2"
 	tree-sitter-language = "0.1.6"
 	trust-dns-resolver = "0.23.2"
@@ -215,18 +227,19 @@ speedy = { version = "0.8.7" }
 	unicode-width = "0.1.14"
 	unix_mode = "0.1.4"
 	#vt100 = "0.15.0"
-	ureq = { version = "2.12.1", features = ["json", "charset"] }
+    ureq = { version = "2.12.1", features = ["json", "charset"] }
 	url = "2.5.8" ## 2.2.2?
-	urlencoding = "2.1.3"
+    urlencoding = "2.1.3"
 	uuid = { version = "1.20.0", features = ["v4"] }
 	v_htmlescape = { version = "0.15.8", features = ["bytes-buf"] }
+    vt100 = "0.15.0"
 	walkdir = "2.5.0"
 	warp = { version = "0.3" }
 	webbrowser = { version = "0.8" }
 	which = "6.0.3"
 	xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
 	yoke = { version = "0.7.5", features = ["derive"] }
-	zeroize = "1.8.2"
+    zeroize = "1.6.0"
 
 [lib]
 name = "gnostr"
@@ -242,7 +255,7 @@ path = "src/bin/git-remote-nostr/main.rs"
 
 [[bin]]
 name = "git-remote-gnostr"
-path = "src/bin/git-remote-gnostr.rs"
+path = "src/bin/git-remote-gnostr/main.rs"
 
 [[bin]]
 name = "gnostr-gnit"
@@ -302,8 +315,6 @@ coverage = []
 relay-search = ["nostr-db/search", "gnostr-relay/search"]
 
 [dependencies]
-simple-logging = { workspace = true }
-git-version = { workspace = true }
 
 ## relay
 actix-cors = { version = "0.7.0", optional = true }
@@ -362,7 +373,6 @@ cbc = { workspace = true }
 chacha20 = { workspace = true }
 chacha20poly1305 = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
-clap = { version = "4.5.34", features = ["derive", "env", "cargo"] } ## align with asyncgit version
 clean-path = "0.2.1"
 # clipboard = "0.5.0" # unused - using xclip/xsel/wl-copy via command line instead
 
@@ -406,7 +416,11 @@ futures-util = "0.3"
 fuzzy-matcher = "0.3"
 getopts = "0.2.21"
 gh-emoji = { version = "1.0", optional = true }
+git-version = { workspace = true }
 git2 = "^0.20" ## asyncgit ^0.19
+#gh = { workspace = true }
+git2-hooks = { workspace = true }
+git2-testing = { workspace = true }
 
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
@@ -420,16 +434,11 @@ globset = "0.4"
 ##gitui
 #anyhow = "1.0"
 gnostr-asyncgit = { workspace = true }
+gnostr-extensions = { workspace = true }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
 gnostr_qr = { workspace = true }
-#gh = { workspace = true }
-git2-hooks = { workspace = true }
-git2-testing = { workspace = true }
-invalidstring = { workspace = true }
-gnostr-extensions = { workspace = true }
-scopetime = { workspace = true }
 #gnostr-crawler = { workspace = true } ##version = "1906.925289.572444", path = "crawler" }
 #gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
 #gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
@@ -447,6 +456,7 @@ httparse = { version = "1.7", optional = true }
 humantime = "2.1"
 indexmap = "2"
 indicatif = "0.17.7"
+invalidstring = { workspace = true }
 itertools = "0.13"
 k256 = { workspace = true }
 kanal = "0.1.0-pre8"
@@ -473,7 +483,7 @@ libp2p = { version = "0.54.1", features = [
   "websocket"
 ] }
 libp2p-quic = { version = "^0.12", features = ["async-std"] }
-libp2p-tls = "^0.6"
+libp2p-tls = "^0.6" ##TODO check graph and compatibility
 #hex = "0.4"
 #lazy_static = "1.4"
 lightning-invoice = { workspace = true }
@@ -488,12 +498,16 @@ metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
 nostr = "0.29"
 
+nostr-connect = "0.37.0"
+nostr-database = "0.37.0"
+
 ## nostr deps
 ## primary 0.34.0/1
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 
 ## relay
 nostr-db = { version = "0.4.5" }
+nostr-lmdb = "0.37.0"
 
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 
@@ -505,8 +519,8 @@ nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
 ## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
-nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
-nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
+##nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
+##nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 ## TODO remove and upgrade
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
@@ -524,7 +538,7 @@ pad = "0.1.6"
 parking_lot = "0.12.3"
 #once_cell = "1"
 # pin until upgrading this does not introduce a duplicate dependency
-parking_lot_core = "=0.9.9"
+parking_lot_core = "^0.9"
 passwords = "3.1.13"
 #tree-sitter-highlight = "0.23"
 path-clean = "1.0.1"
@@ -534,11 +548,11 @@ portable-pty = { workspace = true }
 pretty_env_logger = { workspace = true, optional = true }
 proc-macro2 = { version = "1.0", optional = true }
 proctitle = "0.1.1"
-rand = "0.8"
+qrcode = { workspace = true }
+rand = { workspace = true }
 rand_core = { workspace = true }
 ratatui = { workspace = true } #{ version = "0.28", default-features = false, features = [
-    #'crossterm',
-    #'serde',
+    #'crossterm',    #'serde',
 #] }
 rayon-core = "1.12"
 rcgen = "^0.13"
@@ -555,6 +569,9 @@ russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
 rust-ini = { version = "0.21.1", optional = true }
+rustls = { workspace = true } ## { version = "0.23.37", features = ["ring"] }
+scopeguard = "1.2.0"
+scopetime = { workspace = true }
 scrypt = { workspace = true }
 #rand = "0.8"
 #rand_core = "0.6"
@@ -571,6 +588,7 @@ shellexpand = "3.1"
 shellwords = "1.1.0"
 
 simdutf8 = "0.1.5"
+simple-logging = { workspace = true }
 simple_logger = "4.1"
 sled = "0.34"
 #serde = { version = "1.0", features = [ "derive" ] }
@@ -607,7 +625,7 @@ tokio = { version = "1.33.0", features = ["full", "tracing"] }
 
 ##tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = { version = "0.1", optional = true }
-tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] }
+tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] } ##TODO check graph and compatibility
 tokio-util = { version = "0.7.17", features = ["io"] }
 
 toml = "0.8"
@@ -640,12 +658,12 @@ unicode-segmentation = { workspace = true }
 unicode-truncate = { workspace = true }
 unicode-width = { workspace = true }
 unix_mode = "0.1"
-vt100 = { workspace = true }
 ureq = { workspace = true }
 url = { workspace = true }
 urlencoding = { workspace = true }
 uuid = { version = "1.19.0", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
+vt100 = { workspace = true }
 walkdir = "2.4"
 warp = { workspace = true, optional = true }
 webbrowser = { workspace = true, optional = true }
@@ -654,7 +672,6 @@ which = "6.0"
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
-scopeguard = "1.2.0"
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
@@ -699,6 +716,9 @@ actix-rt = "2.11.0"
 actix-test = "0.1.5"
 anyhow = { workspace = true }
 assert_cmd = { workspace = true }
+bitcoin = { version = "0.32.0", features = ["bitcoinconsensus"] }
+## cargo-bloat = "0.12.1" ## use as test for git2 vendored
+## cargo-udeps = "0.1.60" ## use as test for git2 vendored
 comma = "1.0.0"
 crossterm = { workspace = true }
 ctor = "0.6.3"

@@ -69,7 +69,7 @@ pub struct NostrUrlDecoded {
     pub user: Option<String>,
 }
 
-static INCORRECT_NOSTR_URL_FORMAT_ERROR: &str = "incorrect nostr git url format. try nostr://naddr123 or nostr://npub123/my-repo or nostr://ssh/npub123/relay.damus.io/my-repo";
+static INCORRECT_NOSTR_URL_FORMAT_ERROR: &str = "incorrect nostr git url format. try nostr://naddr123 or gnostr://npub123/my-repo or gnostr://ssh/npub123/relay.damus.io/my-repo";
 
 impl std::str::FromStr for NostrUrlDecoded {
     type Err = anyhow::Error;
@@ -80,9 +80,14 @@ impl std::str::FromStr for NostrUrlDecoded {
         let mut user = None;
         let mut relays = vec![];
 
-        if !url.starts_with("nostr://") {
-            bail!("nostr git url must start with nostr://");
-        }
+        let prefix_len = if url.starts_with("nostr://") {
+            8
+        } else if url.starts_with("gnostr://") {
+            9
+        } else {
+            bail!("nostr git url must start with nostr:// or gnostr://");
+        };
+
         // process get url parameters if present
         for (name, value) in Url::parse(url)?.query_pairs() {
             if name.contains("relay") {
@@ -109,7 +114,7 @@ impl std::str::FromStr for NostrUrlDecoded {
             }
         }
 
-        let mut parts: Vec<&str> = url[8..]
+        let mut parts: Vec<&str> = url[prefix_len..]
             .split('?')
             .next()
             .unwrap_or("")
@@ -419,9 +424,12 @@ pub fn convert_clone_url_to_https(url: &str) -> Result<String> {
     else if stripped_url.starts_with("git://") {
         return Ok(stripped_url.replace("git://", "https://"));
     }
-    // Convert nostr:// to https://
+    // Convert nostr:// or gnostr:// to https://
     else if stripped_url.starts_with("nostr://") {
         return Ok(stripped_url.replace("nostr://", "https://"));
+    }
+    else if stripped_url.starts_with("gnostr://") {
+        return Ok(stripped_url.replace("gnostr://", "https://"));
     }
 
     // If the URL is neither HTTPS, SSH, nor git@, return an error

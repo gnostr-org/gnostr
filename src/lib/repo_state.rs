@@ -6,21 +6,21 @@ use git2::Oid;
 pub struct RepoState {
     pub identifier: String,
     pub state: HashMap<String, String>,
-    pub event: nostr_0_34_1::Event,
+    pub event: nostr_0_37_0::Event,
 }
 
 impl RepoState {
-    pub fn try_from(mut state_events: Vec<nostr_0_34_1::Event>) -> Result<Self> {
+    pub fn try_from(mut state_events: Vec<nostr_0_37_0::Event>) -> Result<Self> {
         state_events.sort_by_key(|e| e.created_at);
         let event = state_events.first().context("no state events")?;
         let mut state = HashMap::new();
-        for tag in &event.tags {
-            if let Some(name) = tag.as_vec().first() {
+        for tag in event.tags.iter() {
+            if let Some(name) = tag.as_slice().first() {
                 if ["refs/heads/", "refs/tags", "HEAD"]
                     .iter()
                     .any(|s| name.starts_with(*s))
                 {
-                    if let Some(value) = tag.as_vec().get(1) {
+                    if let Some(value) = tag.as_slice().get(1) {
                         if Oid::from_str(value).is_ok() || value.contains("ref: refs/") {
                             state.insert(name.to_owned(), value.to_owned());
                         }
@@ -30,6 +30,7 @@ impl RepoState {
         }
         Ok(RepoState {
             identifier: event
+                .tags
                 .identifier()
                 .context("existing event must have an identifier")?
                 .to_string(),

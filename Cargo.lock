@@ -20,7 +20,7 @@ dependencies = [
  "futures-util",
  "log",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project-lite",
  "smallvec",
  "tokio",
@@ -558,7 +558,7 @@ dependencies = [
  "objc2",
  "objc2-app-kit",
  "objc2-foundation",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "percent-encoding",
  "windows-sys 0.60.2",
  "x11rb",
@@ -1453,7 +1453,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "457d7ed3f888dfd2c7af56d4975cade43c622f74bdcddfed6d4352f57acc6310"
 dependencies = [
  "futures-util",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "portable-atomic",
  "tokio",
 ]
@@ -1649,6 +1649,7 @@ dependencies = [
  "bitcoin-io",
  "bitcoin-units",
  "bitcoin_hashes 0.14.1",
+ "bitcoinconsensus",
  "hex-conservative 0.2.2",
  "hex_lit",
  "secp256k1 0.29.1",
@@ -1734,6 +1735,15 @@ dependencies = [
  "bitcoin-io",
  "hex-conservative 0.2.2",
  "serde",
+]
+
+[[package]]
+name = "bitcoinconsensus"
+version = "0.105.0+25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f260ac8fb2c621329013fc0ed371c940fcc512552dcbcb9095ed0179098c9e18"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -2537,7 +2547,7 @@ dependencies = [
  "encode_unicode",
  "libc",
  "once_cell",
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
  "windows-sys 0.59.0",
 ]
 
@@ -2823,6 +2833,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-queue"
+version = "0.3.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f58bbc28f91df819d0aa2a2c00cd19754769c2fad90579b3592b1c9ba7a3115"
+dependencies = [
+ "crossbeam-utils 0.8.21",
+]
+
+[[package]]
 name = "crossbeam-utils"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2849,7 +2868,7 @@ dependencies = [
  "crossterm_winapi",
  "futures-core",
  "mio 1.1.1",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "rustix 0.38.44",
  "serde",
  "signal-hook",
@@ -3096,7 +3115,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "lock_api",
  "once_cell",
- "parking_lot_core 0.9.9",
+ "parking_lot_core 0.9.12",
 ]
 
 [[package]]
@@ -3110,7 +3129,7 @@ dependencies = [
  "hashbrown 0.14.5",
  "lock_api",
  "once_cell",
- "parking_lot_core 0.9.9",
+ "parking_lot_core 0.9.12",
 ]
 
 [[package]]
@@ -3934,18 +3953,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 
 [[package]]
-name = "fallible-iterator"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2acce4a10f12dc2fb14a218589d4f1f62ef011b2d0cc4b3cb1bba8e94da14649"
-
-[[package]]
-name = "fallible-streaming-iterator"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
-
-[[package]]
 name = "fancy-regex"
 version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4309,7 +4316,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f2f12607f92c69b12ed746fabf9ca4f5c482cba46679c1a75b874ed7c26adb"
 dependencies = [
  "futures-io",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
 ]
 
@@ -4443,7 +4450,7 @@ version = "0.2.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfe4fbac503b8d1f88e6676011885f34b7174f46e59956bba534ba83abded4df"
 dependencies = [
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -4805,7 +4812,7 @@ dependencies = [
  "gix-utils",
  "libc",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "prodash",
  "sha1",
  "sha1_smol",
@@ -4875,7 +4882,7 @@ checksum = "7ddf80e16f3c19ac06ce415a38b8591993d3f73aede049cb561becb5b3a8e242"
 dependencies = [
  "gix-hash",
  "hashbrown 0.14.5",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
 ]
 
 [[package]]
@@ -4964,7 +4971,7 @@ dependencies = [
  "gix-pack",
  "gix-path",
  "gix-quote",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "tempfile",
  "thiserror 1.0.69",
 ]
@@ -5140,7 +5147,7 @@ dependencies = [
  "gix-fs",
  "libc",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "tempfile",
 ]
 
@@ -5316,6 +5323,7 @@ dependencies = [
  "base64 0.22.1",
  "bech32 0.11.1",
  "bincode 1.3.3",
+ "bitcoin 0.32.8",
  "bitcoin_hashes 0.14.1",
  "bitflags 2.10.0",
  "block-padding 0.3.3",
@@ -5329,7 +5337,6 @@ dependencies = [
  "chacha20",
  "chacha20poly1305",
  "chrono",
- "clap 4.5.55",
  "clean-path",
  "colored",
  "colorful",
@@ -5412,14 +5419,15 @@ dependencies = [
  "nostr 0.32.1",
  "nostr 0.34.1",
  "nostr 0.37.0",
+ "nostr-connect",
  "nostr-database 0.34.0",
+ "nostr-database 0.37.0",
  "nostr-db",
+ "nostr-lmdb",
  "nostr-sdk 0.19.1",
  "nostr-sdk 0.32.0",
  "nostr-sdk 0.34.0",
  "nostr-sdk 0.37.0",
- "nostr-signer 0.34.0",
- "nostr-sqlite",
  "notify 6.1.1",
  "notify-debouncer-mini",
  "num-bigint",
@@ -5427,8 +5435,8 @@ dependencies = [
  "once_cell",
  "openssl",
  "pad",
- "parking_lot 0.12.3",
- "parking_lot_core 0.9.9",
+ "parking_lot 0.12.5",
+ "parking_lot_core 0.9.12",
  "passwords",
  "path-clean",
  "pbkdf2 0.12.2",
@@ -5439,6 +5447,7 @@ dependencies = [
  "prettyplease",
  "proc-macro2",
  "proctitle",
+ "qrcode",
  "quinn",
  "quote",
  "rand 0.8.5",
@@ -5459,6 +5468,7 @@ dependencies = [
  "russh-keys",
  "rust-crypto",
  "rust-ini",
+ "rustls 0.23.37",
  "sccache",
  "scopeguard",
  "scrypt",
@@ -5672,7 +5682,7 @@ dependencies = [
  "unicode-segmentation",
  "unicode-truncate",
  "unicode-width 0.1.14",
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
  "unix_mode",
  "ureq",
  "url",
@@ -5702,7 +5712,7 @@ dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-util",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "serde",
  "serde_json",
  "temp-env",
@@ -5806,7 +5816,7 @@ dependencies = [
  "nostr-db",
  "notify 6.1.1",
  "num_cpus",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "serde",
  "serde_json",
  "temp-env",
@@ -5846,7 +5856,7 @@ dependencies = [
  "futures-timer",
  "no-std-compat",
  "nonzero_ext",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "portable-atomic",
  "quanta",
  "rand 0.8.5",
@@ -6024,15 +6034,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hashlink"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ba4ff7128dee98c7dc9794b6a411377e1404dba1c97deb8d1a55297bd25d8af"
-dependencies = [
- "hashbrown 0.14.5",
-]
-
-[[package]]
 name = "headers"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6076,6 +6077,40 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
+name = "heed"
+version = "0.20.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d4f449bab7320c56003d37732a917e18798e2f1709d80263face2b4f9436ddb"
+dependencies = [
+ "bitflags 2.10.0",
+ "byteorder",
+ "heed-traits",
+ "heed-types",
+ "libc",
+ "lmdb-master-sys",
+ "once_cell",
+ "page_size",
+ "synchronoise",
+ "url",
+]
+
+[[package]]
+name = "heed-traits"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb3130048d404c57ce5a1ac61a903696e8fcde7e8c2991e9fcfc1f27c3ef74ff"
+
+[[package]]
+name = "heed-types"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d3f528b053a6d700b2734eabcd0fd49cb8230647aa72958467527b0b7917114"
+dependencies = [
+ "byteorder",
+ "heed-traits",
+]
 
 [[package]]
 name = "hermit-abi"
@@ -6171,7 +6206,7 @@ dependencies = [
  "ipconfig",
  "lru-cache",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "rand 0.8.5",
  "resolv-conf",
  "smallvec",
@@ -6406,7 +6441,7 @@ dependencies = [
  "hyper 1.8.1",
  "hyper-util",
  "log",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-native-certs 0.8.3",
  "rustls-pki-types",
  "tokio",
@@ -6806,7 +6841,7 @@ dependencies = [
  "console",
  "number_prefix",
  "portable-atomic",
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
  "web-time",
 ]
 
@@ -7396,7 +7431,7 @@ dependencies = [
  "multihash",
  "multistream-select",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project",
  "quick-protobuf",
  "rand 0.8.5",
@@ -7423,7 +7458,7 @@ dependencies = [
  "multiaddr",
  "multihash",
  "multistream-select",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project",
  "quick-protobuf",
  "rand 0.8.5",
@@ -7446,7 +7481,7 @@ dependencies = [
  "hickory-resolver",
  "libp2p-core 0.42.0",
  "libp2p-identity",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "smallvec",
  "tracing",
 ]
@@ -7653,11 +7688,11 @@ dependencies = [
  "libp2p-core 0.42.0",
  "libp2p-identity",
  "libp2p-tls 0.5.0",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "quinn",
  "rand 0.8.5",
  "ring 0.17.14",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "socket2 0.5.10",
  "thiserror 1.0.69",
  "tokio",
@@ -7680,7 +7715,7 @@ dependencies = [
  "quinn",
  "rand 0.8.5",
  "ring 0.17.14",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "socket2 0.5.10",
  "thiserror 2.0.18",
  "tracing",
@@ -7824,7 +7859,7 @@ dependencies = [
  "libp2p-identity",
  "rcgen 0.11.3",
  "ring 0.17.14",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-webpki 0.101.7",
  "thiserror 1.0.69",
  "x509-parser 0.16.0",
@@ -7843,7 +7878,7 @@ dependencies = [
  "libp2p-identity",
  "rcgen 0.13.2",
  "ring 0.17.14",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-webpki 0.103.9",
  "thiserror 2.0.18",
  "x509-parser 0.17.0",
@@ -7877,7 +7912,7 @@ dependencies = [
  "futures-rustls",
  "libp2p-core 0.42.0",
  "libp2p-identity",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project-lite",
  "rw-stream-sink",
  "soketto",
@@ -7941,17 +7976,6 @@ dependencies = [
  "sha2 0.8.2",
  "subtle 2.6.1",
  "typenum",
-]
-
-[[package]]
-name = "libsqlite3-sys"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c10584274047cb335c23d3e61bcef8e323adae7c5c8c760540f73610177fc3f"
-dependencies = [
- "cc",
- "pkg-config",
- "vcpkg",
 ]
 
 [[package]]
@@ -8546,7 +8570,7 @@ dependencies = [
  "equivalent",
  "event-listener 5.4.1",
  "futures-util",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "portable-atomic",
  "smallvec",
  "tagptr",
@@ -9044,6 +9068,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nostr-connect"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b1bf2a6324d2c1739be462e83d27caa2c025fd7ca14b401b4bc4b7cac11d382"
+dependencies = [
+ "async-trait",
+ "async-utility",
+ "nostr 0.37.0",
+ "nostr-relay-pool 0.37.0",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "nostr-database"
 version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9064,7 +9103,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1926ef55392f3eea1bbe4a1358b64bbf12dd6eb554f40f483941a102c6263fc6"
 dependencies = [
  "async-trait",
- "flatbuffers",
  "lru",
  "nostr 0.34.1",
  "thiserror 1.0.69",
@@ -9079,6 +9117,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23696338d51e45cd44e061823847f4b0d1d362eca80d5033facf9c184149f72f"
 dependencies = [
  "async-trait",
+ "flatbuffers",
  "lru",
  "nostr 0.37.0",
  "thiserror 1.0.69",
@@ -9111,8 +9150,22 @@ checksum = "c8c4f3d68a8e39636e728edfa6f1f914257445b7334e196c8c90f4a1f1e1905b"
 dependencies = [
  "libc",
  "lmdb-master-sys",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "nostr-lmdb"
+version = "0.37.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70c97ff4e384735527af2dc74b6c8f0042f02daea476bad6c7bb56be32739250"
+dependencies = [
+ "heed",
+ "nostr 0.37.0",
+ "nostr-database 0.37.0",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -9280,21 +9333,6 @@ dependencies = [
  "async-utility",
  "nostr 0.34.1",
  "nostr-relay-pool 0.34.1",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "nostr-sqlite"
-version = "0.34.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b634d2a908feccd7b6b2e8d2cea47bc4061b350b7a120cd6c6f2520e4e1fc1a"
-dependencies = [
- "async-trait",
- "nostr 0.34.1",
- "nostr-database 0.34.0",
- "rusqlite",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -9953,6 +9991,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "page_size"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d5b2194ed13191c1999ae0704b7839fb18384fa22e49b57eeaa97d79ce40da"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "papergrid"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9960,7 +10008,7 @@ checksum = "6978128c8b51d8f4080631ceb2302ab51e32cc6e8615f735ee2f83fd269ae3f1"
 dependencies = [
  "bytecount",
  "fnv",
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -9982,12 +10030,12 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.12.3"
+version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1bf18183cf54e8d6059647fc3063646a1801cf30896933ec2311622cc4b9a27"
+checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
 dependencies = [
  "lock_api",
- "parking_lot_core 0.9.9",
+ "parking_lot_core 0.9.12",
 ]
 
 [[package]]
@@ -10006,15 +10054,15 @@ dependencies = [
 
 [[package]]
 name = "parking_lot_core"
-version = "0.9.9"
+version = "0.9.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c42a9226546d68acdd9c0a280d17ce19bfe27a46bf68784e4066115788d008e"
+checksum = "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1"
 dependencies = [
  "cfg-if 1.0.4",
  "libc",
- "redox_syscall 0.4.1",
+ "redox_syscall 0.5.18",
  "smallvec",
- "windows-targets 0.48.5",
+ "windows-link",
 ]
 
 [[package]]
@@ -10739,7 +10787,7 @@ checksum = "504ee9ff529add891127c4827eb481bd69dc0ebc72e9a682e187db4caa60c3ca"
 dependencies = [
  "dtoa",
  "itoa",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "prometheus-client-derive-encode",
 ]
 
@@ -10946,7 +10994,7 @@ dependencies = [
  "quinn-proto",
  "quinn-udp",
  "rustc-hash 2.1.1",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "socket2 0.6.2",
  "thiserror 2.0.18",
  "tokio",
@@ -10966,7 +11014,7 @@ dependencies = [
  "rand 0.9.2",
  "ring 0.17.14",
  "rustc-hash 2.1.1",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "slab",
  "thiserror 2.0.18",
@@ -11356,7 +11404,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rand 0.9.2",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-native-certs 0.8.3",
  "ryu",
  "sha1_smol",
@@ -11384,11 +11432,11 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.4.1"
+version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4722d768eff46b75989dd134e5c353f0d6296e5aaa3132e776cbdb56be7731aa"
+checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
 dependencies = [
- "bitflags 1.3.2",
+ "bitflags 2.10.0",
 ]
 
 [[package]]
@@ -11679,7 +11727,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "quinn",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-native-certs 0.8.3",
  "rustls-pki-types",
  "serde",
@@ -11836,7 +11884,7 @@ dependencies = [
  "memchr",
  "multer 3.1.0",
  "num_cpus",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project-lite",
  "rand 0.8.5",
  "ref-cast",
@@ -12026,20 +12074,6 @@ checksum = "a7cc970b249fbe527d6e02e0a227762c9108b2f49d81094fe357ffc6d14d7f6f"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "rusqlite"
-version = "0.31.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b838eba278d213a8beaf485bd313fd580ca4505a00d5871caeb1457c55322cae"
-dependencies = [
- "bitflags 2.10.0",
- "fallible-iterator",
- "fallible-streaming-iterator",
- "hashlink",
- "libsqlite3-sys",
- "smallvec",
 ]
 
 [[package]]
@@ -12251,9 +12285,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.36"
+version = "0.23.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c665f33d38cea657d9614f766881e4d510e0eda4239891eea56b4cadcf01801b"
+checksum = "758025cb5fccfd3bc2fd74708fd4682be41d99e5dff73c377c0646c6012c73a4"
 dependencies = [
  "aws-lc-rs",
  "log",
@@ -12816,7 +12850,7 @@ dependencies = [
  "futures",
  "lazy_static",
  "log",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "serial_test_derive 2.0.0",
 ]
 
@@ -12830,7 +12864,7 @@ dependencies = [
  "futures-util",
  "log",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "scc",
  "serial_test_derive 3.3.1",
 ]
@@ -13608,6 +13642,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "synchronoise"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3dbc01390fc626ce8d1cffe3376ded2b72a11bb70e1c75f404a210e4daa4def2"
+dependencies = [
+ "crossbeam-queue",
+]
+
+[[package]]
 name = "synstructure"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13755,7 +13798,7 @@ version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96374855068f47402c3121c6eed88d29cb1de8f3ab27090e273e420bdabcf050"
 dependencies = [
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
 ]
 
 [[package]]
@@ -13853,7 +13896,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f8daae29995a24f65619e19d8d31dea5b389f3d853d8bf297bbf607cd0014cc"
 dependencies = [
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -13873,7 +13916,7 @@ checksum = "c13547615a44dc9c452a8a534638acdf07120d4b6847c8178705da06306a3057"
 dependencies = [
  "smawk",
  "unicode-linebreak",
- "unicode-width 0.2.0",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
@@ -14124,7 +14167,7 @@ dependencies = [
  "bytes",
  "libc",
  "mio 1.1.1",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.6.2",
@@ -14191,7 +14234,7 @@ version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
 dependencies = [
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "tokio",
 ]
 
@@ -14266,7 +14309,7 @@ checksum = "c6989540ced10490aaf14e6bad2e3d33728a2813310a0c71d1574304c49631cd"
 dependencies = [
  "futures-util",
  "log",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "tokio",
  "tokio-rustls 0.26.4",
@@ -14282,7 +14325,7 @@ checksum = "edc5f74e248dc973e0dbb7b74c7e0d6fcc301c694ff50049504004ef4d0cdcd9"
 dependencies = [
  "futures-util",
  "log",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "tokio",
  "tokio-rustls 0.26.4",
@@ -14299,7 +14342,7 @@ dependencies = [
  "futures-util",
  "log",
  "native-tls",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "tokio",
  "tokio-native-tls",
@@ -14558,7 +14601,7 @@ dependencies = [
  "matchers",
  "nu-ansi-term",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "regex-automata",
  "sharded-slab",
  "smallvec",
@@ -14655,7 +14698,7 @@ dependencies = [
  "ipconfig",
  "lru-cache",
  "once_cell",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "rand 0.8.5",
  "resolv-conf",
  "smallvec",
@@ -14757,7 +14800,7 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.8.5",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "sha1",
  "thiserror 1.0.69",
@@ -14777,7 +14820,7 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.8.5",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "sha1",
  "thiserror 1.0.69",
@@ -14797,7 +14840,7 @@ dependencies = [
  "log",
  "native-tls",
  "rand 0.9.2",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "sha1",
  "thiserror 2.0.18",
@@ -14946,9 +14989,9 @@ checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
 
 [[package]]
 name = "unicode-width"
-version = "0.2.0"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fc81956842c57dac11422a97c3b8195a1ff727f06e85c84ed2e8aa277c9a0fd"
+checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
 
 [[package]]
 name = "unicode-xid"
@@ -15025,7 +15068,7 @@ dependencies = [
  "flate2",
  "log",
  "once_cell",
- "rustls 0.23.36",
+ "rustls 0.23.37",
  "rustls-pki-types",
  "serde",
  "serde_json",
@@ -16180,7 +16223,7 @@ dependencies = [
  "futures",
  "log",
  "nohash-hasher",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project",
  "rand 0.8.5",
  "static_assertions",
@@ -16195,7 +16238,7 @@ dependencies = [
  "futures",
  "log",
  "nohash-hasher",
- "parking_lot 0.12.3",
+ "parking_lot 0.12.5",
  "pin-project",
  "rand 0.9.2",
  "static_assertions",

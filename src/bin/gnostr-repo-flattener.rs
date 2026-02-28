@@ -1,15 +1,15 @@
 use anyhow::{Context, Result};
 use clap::Parser;
+use gnostr_asyncgit::sync::repo_clone;
 use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use walkdir::WalkDir;
 
 const MAX_DEFAULT_BYTES: u64 = 51200; // 50 KiB
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "Strictly-compliant Repo Flattener")]
+#[command(author, version, about = "gnostr-repo-flattener: a git+nostr repo flattener")]
 struct Args {
     repo_url: String,
     #[arg(short, long)]
@@ -27,23 +27,12 @@ struct FileInfo {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Approved tempfile 3.23.0
-    let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
-    let repo_path = tmp_dir.path().join("repo");
-
-    println!("Cloning repository...");
-    let status = Command::new("git")
-        .args(["clone", "--depth", "1", &args.repo_url, "repo"])
-        .current_dir(tmp_dir.path())
-        .status()
-        .context("Git command failed")?;
-
-    if !status.success() {
-        anyhow::bail!("Failed to clone repository.");
-    }
+    println!("Cloning repository {} ...", args.repo_url);
+    let (tmp_dir, _repo) = repo_clone(&args.repo_url)
+        .context("Failed to clone repository using asyncgit")?;
+    let repo_path = tmp_dir.path();
 
     let mut files = Vec::new();
-    // Approved walkdir 2.5.0
     for entry in WalkDir::new(&repo_path).sort_by_file_name() {
         let entry = entry?;
         let path = entry.path();
@@ -86,17 +75,15 @@ fn escape_html(s: &str) -> String {
      .replace('\'', "&#39;")
 }
 
-/// A basic regex-based highlighter using approved Regex 1.12.2
 fn highlight_code(code: &str) -> String {
     let escaped = escape_html(code);
-    // Highlight keywords (Rust/JS/C/Python style)
     let re_kw = Regex::new(r"\b(fn|let|mut|var|const|if|else|return|import|export|class|struct|impl|pub|type|use|for|while|match)\b").unwrap();
     let re_str = Regex::new(r#"(&quot;.*?&quot;|&#39;.*?&#39;)"#).unwrap();
     let re_comment = Regex::new(r"((//|#).*?(\n|$))").unwrap();
 
-    let first_pass = re_kw.replace_all(&escaped, r#"<span style=\"color: #d73a49; font-weight: bold;\">$1</span>"#);
-    let second_pass = re_str.replace_all(&first_pass, r#"<span style=\"color: #032f62;\">$1</span>"#);
-    let third_pass = re_comment.replace_all(&second_pass, r#"<span style=\"color: #6a737d; font-style: italic;\">$1</span>"#);
+    let first_pass = re_kw.replace_all(&escaped, r#"<span style="color: #d73a49; font-weight: bold;">$1</span>"#);
+    let second_pass = re_str.replace_all(&first_pass, r#"<span style="color: #032f62;">$1</span>"#);
+    let third_pass = re_comment.replace_all(&second_pass, r#"<span style="color: #6a737d; font-style: italic;">$1</span>"#);
     
     third_pass.to_string()
 }
