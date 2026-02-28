@@ -3,10 +3,10 @@
 use anyhow::{Context, Result};
 use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
-use crate::types::Tag;
+use gnostr_asyncgit::types::Tag;
 
 /// Convert nostr_0_34_1::Tag to local Tag type
-fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {
+fn convert_nostr_tag_to_local(nostr_tag: &gnostr_asyncgit::types::Tag) -> Result<Tag> {
     // Convert nostr_0_34_1::Tag to Vec<String>
     let tag_vec: Vec<String> = nostr_tag
         .clone()
@@ -15,7 +15,7 @@ fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {
         .map(|field| field.to_string())
         .collect();
 
-    Ok(Tag::from_strings(tag_vec))
+    Ok(gnostr_asyncgit::types::Tag::from_strings(tag_vec))
 }
 
 async fn get_root_proposal_id_and_mentions_from_in_reply_to(
@@ -33,7 +33,7 @@ async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     for (i, reply_to) in in_reply_to.iter().enumerate() {
         if i.ne(&0) || root_proposal_id.is_none() {
             // Create a simple mention tag
-            mention_tags.push(Tag::from_strings(vec!["p".to_string(), reply_to.clone()]));
+            mention_tags.push(gnostr_asyncgit::types::Tag::from_strings(vec!["p".to_string(), reply_to.clone()]));
         }
     }
 
