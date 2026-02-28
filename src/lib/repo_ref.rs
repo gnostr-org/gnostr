@@ -408,7 +408,7 @@ async fn get_repo_coordinate_from_user_prompt(
             {
                 nostr_url.coordinate
             } else {
-                eprintln!("not a valid naddr or git nostr remote URL starting nostr://");
+                eprintln!("not a valid naddr or git remote URL starting gnostr://");
                 continue;
             };
             let term = console::Term::stderr();
