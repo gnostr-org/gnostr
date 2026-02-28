@@ -9,7 +9,10 @@ use gnostr::{
     types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
 };
-use gnostr_asyncgit::sync::RepoPath;
+use gnostr_asyncgit::{
+    types::{Keys, PrivateKey, PublicKey},
+    sync::RepoPath;
+};
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
@@ -486,13 +489,13 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let mut client = gnostr::types::client::Client::new(
+            let mut client = gnostr_asyncgit::types::client::Client::new(
                 &Keys::new(PrivateKey::try_from_hex_string(
                     &gnostr_cli_args
                         .nsec
                         .ok_or_else(|| anyhow!("nsec not provided"))?,
                 )?),
-                gnostr::types::client::Options::new(),
+                gnostr_asyncgit::types::client::Options::new(),
             );
             // Try to parse the recipient string as a PublicKey
             let recipient_pubkey =
@@ -535,7 +538,7 @@ async fn main() -> anyhow::Result<()> {
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
-            sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default(), &gnostr_cli_args)
+            sub_commands::tui::tui(gnostr_asyncgit::core::GnostrSubCommands::default(), &gnostr_cli_args)
                 .await
                 .map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }

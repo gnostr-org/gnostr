@@ -45,6 +45,7 @@ use crate::{
     },
     types::Event,
 };
+use gnostr_async::types::Event;
 
 //const TOPIC: &str = "gnostr";
 

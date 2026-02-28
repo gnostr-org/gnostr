@@ -5,6 +5,19 @@ pub mod git_events;
 pub mod login;
 pub mod repo_ref;
 pub mod repo_state;
+pub mod sub_commands;
+pub mod utils;
+pub mod core;
+
+// Added missing modules
+pub mod cli;
+pub mod dashboard;
+pub mod p2p;
+
+// Re-export from gnostr_asyncgit
+pub use gnostr_asyncgit::blockheight;
+pub use gnostr_asyncgit::weeble;
+pub use gnostr_asyncgit::wobble;
 
 use anyhow::{Result, anyhow};
 use directories::ProjectDirs;

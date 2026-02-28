@@ -6,7 +6,7 @@ use std::{backtrace::Backtrace, panic, rc::Rc, time::{Duration, Instant}};
 use crossterm::event::{self, Event, KeyCode};
 
 pub fn main() -> Res<()> {
-    let args = Args::parse();
+    let args = Args::try_parse();
 
     if args.version {
         println!(
