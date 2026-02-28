@@ -2,78 +2,62 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use console::Style;
-use nostr_0_34_1::{
+use ngit::{client::send_events, git_events::generate_cover_letter_and_patch_events};
+use nostr_0_37_0::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
 };
-use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
 use crate::{
-    //cli::Cli,
+    cli::{Cli, extract_signer_cli_arguments},
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
-    client::{Connect, fetching_with_report, get_events_from_cache, get_repo_ref_from_cache},
+    client::{
+        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
+    },
     git::{Repo, RepoActions, identify_ahead_behind},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,
-    repo_ref::get_repo_coordinates,
-};
-//use crate::client::Client;
-use crate::{
-    client::{Client, send_events},
-    git_events::generate_cover_letter_and_patch_events,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
-#[derive(Debug, clap::Args, Clone)]
-pub struct SendArgs {
+#[derive(Debug, clap::Args)]
+pub struct SubCommandArgs {
     #[arg(default_value = "")]
-    /// commits to send as proposal; like in `git format-patch` eg.
-    /// HEAD~2
+    /// commits to send as proposal; like in `git format-patch` eg. HEAD~2
     pub(crate) since_or_range: String,
-    #[arg(long, num_args = 0.., value_delimiter = ' ')]
+    #[clap(long, value_parser, num_args = 0.., value_delimiter = ' ')]
     /// references to an existing proposal for which this is a new
     /// version and/or events / npubs to tag as mentions
     pub(crate) in_reply_to: Vec<String>,
     /// don't prompt for a cover letter
-    #[arg(long)]
+    #[arg(long, action)]
     pub(crate) no_cover_letter: bool,
     /// optional cover letter title
-    #[arg(short, long)]
+    #[clap(short, long)]
     pub(crate) title: Option<String>,
-    #[arg(short, long)]
+    #[clap(short, long)]
     /// optional cover letter description
     pub(crate) description: Option<String>,
-    #[arg(long, action = clap::ArgAction::SetTrue)]
-    pub(crate) disable_cli_spinners: bool,
-    pub(crate) password: Option<String>,
-    pub(crate) nsec: Option<String>,
-    pub(crate) bunker_app_key: Option<String>,
-    pub(crate) bunker_uri: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(
-    //cli_args: &Cli,
-    args: &SendArgs,
-    no_fetch: bool,
-) -> Result<()> {
-    let git_repo = Repo::discover().context("cannot find a git repository")?;
+pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
+    let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
     let (main_branch_name, main_tip) = git_repo
         .get_main_or_master_branch()
         .context("the default branches (main or master) do not exist")?;
-    #[cfg(test)]
-    let client: &mut crate::client::MockConnect = &mut Default::default();
-    //let mut client: &mut Client::MockConnect = &mut Default::default();
-    #[cfg(not(test))]
+
     let mut client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
     if !no_fetch {
-        fetching_with_report(git_repo_path, &client, &repo_coordinates, true).await?;
+        fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
     }
 
     let (root_proposal_id, mention_tags) =
@@ -99,7 +83,7 @@ pub async fn launch(
         } else {
             git_repo
                 .parse_starting_commits(&args.since_or_range)
-                .context("cannot parse specified starting commit or range")?
+                .context("failed to parse specified starting commit or range")?
         }
     };
 
@@ -191,21 +175,19 @@ pub async fn launch(
     } else {
         None
     };
-    let (signer, user_ref) = login::launch(
-        &git_repo,
-        &args.bunker_uri,
-        &args.bunker_app_key,
-        &args.nsec,
-        &args.password,
+
+    let (signer, user_ref, _) = login::login_or_signup(
+        &Some(&git_repo),
+        &extract_signer_cli_arguments(cli_args).unwrap_or(None),
+        &cli_args.password,
         Some(&client),
-        false,
-        false,
+        true,
     )
     .await?;
 
     client.set_signer(signer.clone()).await;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
     // oldest first
     commits.reverse();
@@ -244,11 +226,11 @@ pub async fn launch(
 
     send_events(
         &client,
-        git_repo_path,
+        Some(git_repo_path),
         events.clone(),
         user_ref.relays.write(),
         repo_ref.relays.clone(),
-        !args.disable_cli_spinners, //
+        !cli_args.disable_cli_spinners,
         false,
     )
     .await?;
@@ -256,9 +238,9 @@ pub async fn launch(
     if root_proposal_id.is_none() {
         if let Some(event) = events.first() {
             let event_bech32 = if let Some(relay) = repo_ref.relays.first() {
-                Nip19Event::new(event.id(), vec![relay]).to_bech32()?
+                Nip19Event::new(event.id, vec![relay.to_string()]).to_bech32()?
             } else {
-                event.id().to_bech32()?
+                event.id.to_bech32()?
             };
             println!(
                 "{}",
@@ -375,21 +357,21 @@ fn summarise_commit_for_selection(git_repo: &Repo, commit: &Sha1Hash) -> Result<
 async fn get_root_proposal_id_and_mentions_from_in_reply_to(
     git_repo_path: &Path,
     in_reply_to: &[String],
-) -> Result<(Option<String>, Vec<nostr_0_34_1::Tag>)> {
+) -> Result<(Option<String>, Vec<nostr_0_37_0::Tag>)> {
     let root_proposal_id = if let Some(first) = in_reply_to.first() {
         match event_tag_from_nip19_or_hex(first, "in-reply-to", Marker::Root, true, false)?
             .as_standardized()
         {
-            Some(nostr_sdk_0_34_0::TagStandard::Event {
+            Some(nostr_sdk_0_37_0::TagStandard::Event {
                 event_id,
                 relay_url: _,
                 marker: _,
                 public_key: _,
+                uppercase: false,
             }) => {
-                let events = get_events_from_cache(
-                    git_repo_path,
-                    vec![nostr_0_34_1::Filter::new().id(*event_id)],
-                )
+                let events = get_events_from_local_cache(git_repo_path, vec![
+                    nostr_0_37_0::Filter::new().id(*event_id),
+                ])
                 .await?;
 
                 if let Some(first) = events.iter().find(|e| e.id.eq(event_id)) {

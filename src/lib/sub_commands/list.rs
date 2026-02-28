@@ -1,71 +1,69 @@
 use std::{io::Write, ops::Add};
 
 use anyhow::{Context, Result, bail};
-use nostr_sdk_0_34_0::Kind;
+use ngit::{
+    client::{get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache},
+    git_events::{
+        get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
+    },
+};
+use nostr_sdk_0_37_0::Kind;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::{
-        Client, Connect, fetching_with_report, get_all_proposal_patch_events_from_cache,
-        get_events_from_cache, get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
+        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
     },
     git::{Repo, RepoActions, str_to_sha1},
     git_events::{
         commit_msg_from_patch_oneliner, event_is_revision_root, event_to_cover_letter,
-        get_commit_id_from_patch, get_most_recent_patch_with_ancestors, patch_supports_commit_ids,
-        status_kinds, tag_value,
+        patch_supports_commit_ids,
     },
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch() -> Result<()> {
-    let git_repo = Repo::discover().context("cannot find a git repository")?;
+    let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
     // TODO: check for empty repo
     // TODO: check for existing maintaiers file
     // TODO: check for other claims
 
-    #[cfg(test)]
-    let client: &crate::client::MockConnect = &mut Default::default();
-    #[cfg(not(test))]
     let client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
-    fetching_with_report(git_repo_path, &client, &repo_coordinates, true).await?;
+    fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
-    let proposals_and_revisions: Vec<nostr_0_34_1::Event> =
+    let proposals_and_revisions: Vec<nostr_0_37_0::Event> =
         get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates()).await?;
     if proposals_and_revisions.is_empty() {
         println!("no proposals found... create one? try `ngit send`");
         return Ok(());
     }
 
-    let statuses: Vec<nostr_0_34_1::Event> = {
-        let mut statuses = get_events_from_cache(
-            git_repo_path,
-            vec![
-                nostr_0_34_1::Filter::default()
-                    .kinds(status_kinds().clone())
-                    .events(proposals_and_revisions.iter().map(nostr_0_34_1::Event::id)),
-            ],
-        )
+    let statuses: Vec<nostr_0_37_0::Event> = {
+        let mut statuses = get_events_from_local_cache(git_repo_path, vec![
+            nostr_0_37_0::Filter::default()
+                .kinds(status_kinds().clone())
+                .events(proposals_and_revisions.iter().map(|e| e.id)),
+        ])
         .await?;
         statuses.sort_by_key(|e| e.created_at);
         statuses.reverse();
         statuses
     };
 
-    let mut open_proposals: Vec<&nostr_0_34_1::Event> = vec![];
-    let mut draft_proposals: Vec<&nostr_0_34_1::Event> = vec![];
-    let mut closed_proposals: Vec<&nostr_0_34_1::Event> = vec![];
-    let mut applied_proposals: Vec<&nostr_0_34_1::Event> = vec![];
+    let mut open_proposals: Vec<&nostr_0_37_0::Event> = vec![];
+    let mut draft_proposals: Vec<&nostr_0_37_0::Event> = vec![];
+    let mut closed_proposals: Vec<&nostr_0_37_0::Event> = vec![];
+    let mut applied_proposals: Vec<&nostr_0_37_0::Event> = vec![];
 
-    let proposals: Vec<nostr_0_34_1::Event> = proposals_and_revisions
+    let proposals: Vec<nostr_0_37_0::Event> = proposals_and_revisions
         .iter()
         .filter(|e| !event_is_revision_root(e))
         .cloned()
@@ -75,15 +73,15 @@ pub async fn launch() -> Result<()> {
         let status = if let Some(e) = statuses
             .iter()
             .filter(|e| {
-                status_kinds().contains(&e.kind())
-                    && e.tags()
-                        .iter()
-                        .any(|t| t.as_vec()[1].eq(&proposal.id.to_string()))
+                status_kinds().contains(&e.kind)
+                    && e.tags.iter().any(|t| {
+                        t.as_slice().len() > 1 && t.as_slice()[1].eq(&proposal.id.to_string())
+                    })
             })
-            .collect::<Vec<&nostr_0_34_1::Event>>()
+            .collect::<Vec<&nostr_0_37_0::Event>>()
             .first()
         {
-            e.kind()
+            e.kind
         } else {
             Kind::GitStatusOpen
         };
@@ -161,6 +159,7 @@ pub async fn launch() -> Result<()> {
         let selected_index = Interactor::default().choice(
             PromptChoiceParms::default()
                 .with_prompt(prompt)
+                .with_default(0)
                 .with_choices(choices.clone()),
         )?;
 
@@ -178,12 +177,12 @@ pub async fn launch() -> Result<()> {
         }
 
         let cover_letter = event_to_cover_letter(proposals_for_status[selected_index])
-            .context("cannot extract proposal details from proposal root event")?;
+            .context("failed to extract proposal details from proposal root event")?;
 
-        let commits_events: Vec<nostr_0_34_1::Event> = get_all_proposal_patch_events_from_cache(
+        let commits_events: Vec<nostr_0_37_0::Event> = get_all_proposal_patch_events_from_cache(
             git_repo_path,
             &repo_ref,
-            &proposals_for_status[selected_index].id(),
+            &proposals_for_status[selected_index].id,
         )
         .await?;
 
@@ -194,7 +193,7 @@ pub async fn launch() -> Result<()> {
                 PromptConfirmParms::default()
                     .with_default(true)
                     .with_prompt(
-                        "cannot find any patches on this proposal. choose another proposal?",
+                        "failed to find any patches on this proposal. choose another proposal?",
                     ),
             )? {
                 continue;
@@ -262,11 +261,15 @@ pub async fn launch() -> Result<()> {
             .get_local_branch_names()
             .context("gitlib2 will not show a list of local branch names")?
             .iter()
-            .any(|n| n.eq(&cover_letter.get_branch_name().unwrap()));
+            .any(|n| {
+                n.eq(&cover_letter
+                    .get_branch_name_with_pr_prefix_and_shorthand_id()
+                    .unwrap())
+            });
 
         let checked_out_proposal_branch = git_repo
             .get_checked_out_branch_name()?
-            .eq(&cover_letter.get_branch_name()?);
+            .eq(&cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?);
 
         let proposal_base_commit = str_to_sha1(&tag_value(
             most_recent_proposal_patch_chain.last().context(
@@ -274,25 +277,23 @@ pub async fn launch() -> Result<()> {
             )?,
             "parent-commit",
         )?)
-        .context("cannot get valid parent commit id from patch")?;
+        .context("failed to get valid parent commit id from patch")?;
 
         let (main_branch_name, master_tip) = git_repo.get_main_or_master_branch()?;
 
         if !git_repo.does_commit_exist(&proposal_base_commit.to_string())? {
             println!("your '{main_branch_name}' branch may not be up-to-date.");
             println!("the proposal parent commit doesnt exist in your local repository.");
-            return match Interactor::default().choice(
-                PromptChoiceParms::default()
-                    .with_default(0)
-                    .with_choices(vec![
-                        format!(
+            return match Interactor::default().choice(PromptChoiceParms::default().with_default(0).with_choices(
+                vec![
+                    format!(
                         "manually run `git pull` on '{main_branch_name}' and select proposal again"
                     ),
-                        format!("apply to current branch with `git am`"),
-                        format!("download to ./patches"),
-                        "back".to_string(),
-                    ]),
-            )? {
+                    format!("apply to current branch with `git am`"),
+                    format!("download to ./patches"),
+                    "back".to_string(),
+                ],
+            ))? {
                 0 | 3 => continue,
                 1 => launch_git_am_with_patches(most_recent_proposal_patch_chain),
                 2 => save_patches_to_dir(most_recent_proposal_patch_chain, &git_repo),
@@ -306,41 +307,38 @@ pub async fn launch() -> Result<()> {
             &get_commit_id_from_patch(most_recent_proposal_patch_chain.first().context(
                 "there should be at least one patch as we have already checked for this",
             )?)
-            .context("cannot get valid commit_id from patch")?,
+            .context("failed to get valid commit_id from patch")?,
         )
-        .context("cannot get valid commit_id from patch")?;
+        .context("failed to get valid commit_id from patch")?;
 
         let (_, proposal_behind_main) =
             git_repo.get_commits_ahead_behind(&master_tip, &proposal_base_commit)?;
 
         // branch doesnt exist
         if !branch_exists {
-            return match Interactor::default().choice(
-                PromptChoiceParms::default()
-                    .with_default(0)
-                    .with_choices(vec![
-                        format!(
+            return match Interactor::default()
+                .choice(PromptChoiceParms::default().with_default(0).with_choices(vec![
+                format!(
                     "create and checkout proposal branch ({} ahead {} behind '{main_branch_name}')",
                     most_recent_proposal_patch_chain.len(),
                     proposal_behind_main.len(),
                 ),
-                        format!("apply to current branch with `git am`"),
-                        format!("download to ./patches"),
-                        "back".to_string(),
-                    ]),
-            )? {
+                format!("apply to current branch with `git am`"),
+                format!("download to ./patches"),
+                "back".to_string(),
+            ]))? {
                 0 => {
                     check_clean(&git_repo)?;
                     let _ = git_repo
                         .apply_patch_chain(
-                            &cover_letter.get_branch_name()?,
+                            &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
                             most_recent_proposal_patch_chain,
                         )
-                        .context("cannot apply patch chain")?;
+                        .context("failed to apply patch chain")?;
 
                     println!(
                         "checked out proposal as '{}' branch",
-                        cover_letter.get_branch_name()?
+                        cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?
                     );
                     Ok(())
                 }
@@ -353,7 +351,8 @@ pub async fn launch() -> Result<()> {
             };
         }
 
-        let local_branch_tip = git_repo.get_tip_of_branch(&cover_letter.get_branch_name()?)?;
+        let local_branch_tip = git_repo
+            .get_tip_of_branch(&cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?)?;
 
         // up-to-date
         if proposal_tip.eq(&local_branch_tip) {
@@ -388,10 +387,12 @@ pub async fn launch() -> Result<()> {
             )? {
                 0 => {
                     check_clean(&git_repo)?;
-                    git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                    git_repo.checkout(
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                    )?;
                     println!(
                         "checked out proposal as '{}' branch",
-                        cover_letter.get_branch_name()?
+                        cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?
                     );
                     Ok(())
                 }
@@ -425,13 +426,15 @@ pub async fn launch() -> Result<()> {
             )? {
                 0 => {
                     check_clean(&git_repo)?;
-                    git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                    git_repo.checkout(
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                    )?;
                     let _ = git_repo
                         .apply_patch_chain(
-                            &cover_letter.get_branch_name()?,
+                            &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
                             most_recent_proposal_patch_chain,
                         )
-                        .context("cannot apply patch chain")?;
+                        .context("failed to apply patch chain")?;
                     println!(
                         "checked out proposal branch and applied {} appendments ({} ahead {} behind '{main_branch_name}')",
                         &index,
@@ -450,8 +453,8 @@ pub async fn launch() -> Result<()> {
         }
 
         // new proposal revision / rebase
-        // tip of local in proposal history (new, amended or rebased
-        // version but no local changes)
+        // tip of local in proposal history (new, amended or rebased version but no
+        // local changes)
         if commits_events.iter().any(|patch| {
             get_commit_id_from_patch(patch)
                 .unwrap_or_default()
@@ -478,17 +481,19 @@ pub async fn launch() -> Result<()> {
                 0 => {
                     check_clean(&git_repo)?;
                     git_repo.create_branch_at_commit(
-                        &cover_letter.get_branch_name()?,
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
                         &proposal_base_commit.to_string(),
                     )?;
-                    git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                    git_repo.checkout(
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                    )?;
                     let chain_length = most_recent_proposal_patch_chain.len();
                     let _ = git_repo
                         .apply_patch_chain(
-                            &cover_letter.get_branch_name()?,
+                            &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
                             most_recent_proposal_patch_chain,
                         )
-                        .context("cannot apply patch chain")?;
+                        .context("failed to apply patch chain")?;
                     println!(
                         "checked out new version of proposal ({} ahead {} behind '{main_branch_name}'), replacing old version ({} ahead {} behind '{main_branch_name}')",
                         chain_length,
@@ -500,7 +505,9 @@ pub async fn launch() -> Result<()> {
                 }
                 1 => {
                     check_clean(&git_repo)?;
-                    git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                    git_repo.checkout(
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                    )?;
                     println!(
                         "checked out old proposal in existing branch ({} ahead {} behind '{main_branch_name}')",
                         local_ahead_of_main.len(),
@@ -516,12 +523,14 @@ pub async fn launch() -> Result<()> {
                 }
             };
         }
-        // tip of proposal in branch in history (local appendments
-        // made to up-to-date proposal)
+        // tip of proposal in branch in history (local appendments made to up-to-date
+        // proposal)
         else if git_repo.ancestor_of(&local_branch_tip, &proposal_tip)? {
             let (local_ahead_of_proposal, _) = git_repo
                 .get_commits_ahead_behind(&proposal_tip, &local_branch_tip)
-                .context("cannot get commits ahead behind for propsal_top and local_branch_tip")?;
+                .context(
+                    "failed to get commits ahead behind for propsal_top and local_branch_tip",
+                )?;
 
             println!(
                 "local proposal branch exists with {} unpublished commits on top of the most up-to-date version of the proposal ({} ahead {} behind '{main_branch_name}')",
@@ -541,7 +550,9 @@ pub async fn launch() -> Result<()> {
                     ]),
             )? {
                 0 => {
-                    git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                    git_repo.checkout(
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
+                    )?;
                     println!(
                         "checked out proposal branch with {} unpublished commits ({} ahead {} behind '{main_branch_name}')",
                         local_ahead_of_proposal.len(),
@@ -558,11 +569,10 @@ pub async fn launch() -> Result<()> {
         }
 
         println!("you have an amended/rebase version the proposal that is unpublished");
-        // user probably has a unpublished amended or rebase version
-        // of the latest proposal version
-        // if tip of proposal commits exist (were once part of branch
-        // but have been amended and git clean up job hasn't removed
-        // them)
+        // user probably has a unpublished amended or rebase version of the latest
+        // proposal version
+        // if tip of proposal commits exist (were once part of branch but have been
+        // amended and git clean up job hasn't removed them)
         if git_repo.does_commit_exist(&proposal_tip.to_string())? {
             println!(
                 "you have previously applied the latest version of the proposal ({} ahead {} behind '{main_branch_name}') but your local proposal branch has amended or rebased it ({} ahead {} behind '{main_branch_name}')",
@@ -572,8 +582,8 @@ pub async fn launch() -> Result<()> {
                 local_beind_main.len(),
             );
         }
-        // user probably has a unpublished amended or rebase version
-        // of an older proposal version
+        // user probably has a unpublished amended or rebase version of an older
+        // proposal version
         else {
             println!(
                 "your local proposal branch ({} ahead {} behind '{main_branch_name}') has conflicting changes with the latest published proposal ({} ahead {} behind '{main_branch_name}')",
@@ -609,7 +619,8 @@ pub async fn launch() -> Result<()> {
         )? {
             0 => {
                 check_clean(&git_repo)?;
-                git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                git_repo
+                    .checkout(&cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?)?;
                 println!(
                     "checked out old proposal in existing branch ({} ahead {} behind '{main_branch_name}')",
                     local_ahead_of_main.len(),
@@ -620,18 +631,19 @@ pub async fn launch() -> Result<()> {
             1 => {
                 check_clean(&git_repo)?;
                 git_repo.create_branch_at_commit(
-                    &cover_letter.get_branch_name()?,
+                    &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
                     &proposal_base_commit.to_string(),
                 )?;
                 let chain_length = most_recent_proposal_patch_chain.len();
                 let _ = git_repo
                     .apply_patch_chain(
-                        &cover_letter.get_branch_name()?,
+                        &cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?,
                         most_recent_proposal_patch_chain,
                     )
-                    .context("cannot apply patch chain")?;
+                    .context("failed to apply patch chain")?;
 
-                git_repo.checkout(&cover_letter.get_branch_name()?)?;
+                git_repo
+                    .checkout(&cover_letter.get_branch_name_with_pr_prefix_and_shorthand_id()?)?;
                 println!(
                     "checked out latest version of proposal ({} ahead {} behind '{main_branch_name}'), replacing unpublished version ({} ahead {} behind '{main_branch_name}')",
                     chain_length,
@@ -651,7 +663,7 @@ pub async fn launch() -> Result<()> {
     }
 }
 
-fn launch_git_am_with_patches(mut patches: Vec<nostr_0_34_1::Event>) -> Result<()> {
+fn launch_git_am_with_patches(mut patches: Vec<nostr_0_37_0::Event>) -> Result<()> {
     println!("applying to current branch with `git am`");
     // TODO: add PATCH x/n to appended patches
     patches.reverse();
@@ -682,11 +694,11 @@ fn launch_git_am_with_patches(mut patches: Vec<nostr_0_34_1::Event>) -> Result<(
     Ok(())
 }
 
-fn event_id_extra_shorthand(event: &nostr_0_34_1::Event) -> String {
+fn event_id_extra_shorthand(event: &nostr_0_37_0::Event) -> String {
     event.id.to_string()[..5].to_string()
 }
 
-fn save_patches_to_dir(mut patches: Vec<nostr_0_34_1::Event>, git_repo: &Repo) -> Result<()> {
+fn save_patches_to_dir(mut patches: Vec<nostr_0_37_0::Event>, git_repo: &Repo) -> Result<()> {
     // TODO: add PATCH x/n to appended patches
     patches.reverse();
     let path = git_repo.get_path()?.join("patches");
@@ -709,7 +721,7 @@ fn save_patches_to_dir(mut patches: Vec<nostr_0_34_1::Event>, git_repo: &Repo) -
             .truncate(true)
             .open(path)
             .context("open new patch file with write and truncate options")?;
-        file.write_all(patch.content().as_bytes())?;
+        file.write_all(patch.content.as_bytes())?;
         file.write_all("\n\n".as_bytes())?;
         file.flush()?;
     }
@@ -720,7 +732,7 @@ fn save_patches_to_dir(mut patches: Vec<nostr_0_34_1::Event>, git_repo: &Repo) -
 fn check_clean(git_repo: &Repo) -> Result<()> {
     if git_repo.has_outstanding_changes()? {
         bail!(
-            "cannot pull proposal branch when repository is not clean. discard or stash (un)staged changes and try again."
+            "failed to pull proposal branch when repository is not clean. discard or stash (un)staged changes and try again."
         );
     }
     Ok(())

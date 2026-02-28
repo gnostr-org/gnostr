@@ -19,7 +19,7 @@ use log::{debug, error, info};
 use serde_json::{self, Result as SerdeJsonResult, Value};
 use ureq::Agent;
 
-use crate::types::{Client, Filter, Id, Keys, Nip19Profile, Options, PrivateKey, PublicKey};
+use gnostr_asyncgit::types::{Client, Filter, Id, Keys, Nip19Profile, Options, PrivateKey, PublicKey};
 
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
