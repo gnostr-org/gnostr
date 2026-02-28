@@ -1,6 +1,6 @@
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use super::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use gnostr_asyncgit::types::{Client, Event, Filter, Id, Keys, PrivateKey, PublicKey};

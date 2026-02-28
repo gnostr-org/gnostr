@@ -6,7 +6,7 @@ use clap::Args;
 use crate::{
     utils::{create_client, parse_private_key},
 };
-use gnost_asyncgit::{
+use gnostr_asyncgit::{
     types::{
         Client, Event, EventBuilder, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19,
         Options, PrivateKey, PublicKey, Tag,

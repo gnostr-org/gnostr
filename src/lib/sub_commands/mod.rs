@@ -12,6 +12,7 @@ pub mod chat;
 pub mod convert_key;
 pub mod create_badge;
 pub mod create_public_channel;
+pub mod crawler;
 pub mod custom_event;
 pub mod delete_event;
 pub mod delete_profile;

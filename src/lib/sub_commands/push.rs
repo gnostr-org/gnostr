@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use nostr_sdk_0_34_0::PublicKey;
+use nostr_sdk_0_37_0::PublicKey;
 
 use crate::{
     client::{Client, send_events},
