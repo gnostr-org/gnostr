@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_asyncgit::types::{EventKind, Filter, PublicKeyHex};
-use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::sub_commands::crawler::processor::BOOTSTRAP_RELAYS;
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name

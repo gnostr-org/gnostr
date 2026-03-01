@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_asyncgit::types::Filter;
-use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::sub_commands::crawler::processor::BOOTSTRAP_RELAYS;
 
 //fetch_by_filter "{\"REQ\":[\"kind\",\"1\"]}" wss://relay.damus.io | gnostr-xq
 fn main() {

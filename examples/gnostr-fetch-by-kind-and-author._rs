@@ -1,4 +1,4 @@
-use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::sub_commands::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_asyncgit::types::{EventKind, Filter, PublicKey, PublicKeyHex};
 use std::env;
 
