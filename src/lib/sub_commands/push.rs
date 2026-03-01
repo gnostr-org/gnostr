@@ -64,7 +64,7 @@ pub async fn launch(
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
-    fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
+    fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
 
     let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
@@ -89,7 +89,7 @@ pub async fn launch(
     let commit_events = get_all_proposal_patch_events_from_cache(
         git_repo_path,
         &repo_ref,
-        &proposal_root_event.id(),
+        &proposal_root_event.id,
     )
     .await?;
 
@@ -126,10 +126,8 @@ pub async fn launch(
     if args.force {
         println!("preparing to force push proposal revision...");
         sub_commands::send::launch(
-            //args,
+            cli_args,
             &sub_commands::send::SubCommandArgs {
-                // if not ahead of master prompt, otherwise assume
-                // proposal revision is all commits ahead
                 since_or_range: if let Ok((_, _, ahead, _)) =
                     identify_ahead_behind(&git_repo, &None, &None)
                 {
@@ -145,11 +143,6 @@ pub async fn launch(
                 title: None,
                 description: None,
                 no_cover_letter: true,
-                bunker_app_key: None,
-                bunker_uri: None,
-                disable_cli_spinners: args.disable_cli_spinners,
-                nsec: None,
-                password: None,
             },
             true,
         )

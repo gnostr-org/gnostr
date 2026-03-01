@@ -136,7 +136,7 @@ pub enum AccountCommands {
     ExportKeys,
 }
 
-#[derive(clap::Parser)]
+#[derive(clap::Parser, Debug)]
 pub struct AccountSubCommandArgs {
     #[command(subcommand)]
     pub account_command: AccountCommands,
