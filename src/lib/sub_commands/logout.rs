@@ -5,7 +5,7 @@ use crate::ngit::{
 };
 
 use crate::sub_commands::login::{format_items_as_list, get_global_login_config_items_set};
-use crate::ngit::Repo;
+use crate::ngit::git::Repo;
 
 pub async fn launch() -> Result<()> {
     let git_repo_result = Repo::discover().context("failed to find a git repository");
