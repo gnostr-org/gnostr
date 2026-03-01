@@ -57,12 +57,12 @@ pub struct LegitCli {
 #[derive(Subcommand, Debug)]
 pub enum LegitCommands {
     /// update cache with latest updates from nostr
-    Fetch(fetch::FetchArgs),
+    Fetch(fetch::SubCommandArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(init::InitArgs),
+    Init(init::SubCommandArgs),
     /// issue commits as a proposal
-    Send(send::SendArgs),
+    Send(send::SubCommandArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
@@ -71,7 +71,7 @@ pub enum LegitCommands {
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(login::LoginArgs),
+    Login(login::SubCommandArgs),
     /// Mine a git commit with a given prefix
     Mine,
 }
@@ -105,23 +105,41 @@ pub struct NgitCli {
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
     /// update cache with latest updates from nostr
-    Fetch(fetch::FetchArgs),
+    Fetch(fetch::SubCommandArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(init::InitArgs),
+    Init(init::SubCommandArgs),
     /// issue commits as a proposal
-    Send(send::SendArgs),
+    Send(send::SubCommandArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(push::PushArgs),
+    Push(push::SubCommandArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(login::LoginArgs),
+    Login(login::SubCommandArgs),
     /// Query events from relays
     Query(QuerySubCommand),
+    /// login, logout or export keys
+    Account(AccountSubCommandArgs),
+}
+
+#[derive(Subcommand)]
+pub enum AccountCommands {
+    /// login with nsec or nostr connect
+    Login(login::SubCommandArgs),
+    /// remove nostr account details stored in git config
+    Logout,
+    /// export nostr keys to login to other nostr clients
+    ExportKeys,
+}
+
+#[derive(clap::Parser)]
+pub struct AccountSubCommandArgs {
+    #[command(subcommand)]
+    pub account_command: AccountCommands,
 }
 
 /// GnostrCli
@@ -301,7 +319,7 @@ pub enum GnostrCommands {
     /// Hide a message in a public chat room
     HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
     /// Legit sub commands
-    Legit(legit::LegitSubCommand),
+    Legit(legit::SubCommandArgs),
     /// Get all events
     ListEvents(list_events::ListEventsSubCommand),
     /// Mute a public key

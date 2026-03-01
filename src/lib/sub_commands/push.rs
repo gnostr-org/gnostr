@@ -16,7 +16,7 @@ use crate::{
         generate_patch_event, get_commit_id_from_patch, get_most_recent_patch_with_ancestors,
     },
     login,
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
     sub_commands,
 };
 
@@ -62,7 +62,7 @@ pub async fn launch(
     #[cfg(not(test))]
     let mut client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
 
     fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
 
@@ -127,7 +127,7 @@ pub async fn launch(
         println!("preparing to force push proposal revision...");
         sub_commands::send::launch(
             //args,
-            &sub_commands::send::SendArgs {
+            &sub_commands::send::SubCommandArgs {
                 // if not ahead of master prompt, otherwise assume
                 // proposal revision is all commits ahead
                 since_or_range: if let Ok((_, _, ahead, _)) =

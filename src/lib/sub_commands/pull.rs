@@ -11,7 +11,7 @@ use crate::{
         get_commit_id_from_patch, get_most_recent_patch_with_ancestors,
         is_event_proposal_root_for_branch, tag_value,
     },
-    repo_ref::get_repo_coordinates,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -36,7 +36,7 @@ pub async fn launch() -> Result<()> {
     #[cfg(not(test))]
     let client = Client::default();
 
-    let repo_coordinates = get_repo_coordinates(&git_repo, &client).await?;
+    let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
     fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
 
     let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
