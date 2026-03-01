@@ -49,16 +49,4 @@ async fn logout(git_repo: Option<&Repo>) -> Result<()> {
                     eprintln!("{error:?}");
                     eprintln!(
                         "consider manually removing {} git config items: {}",
-                        if source == SignerInfoSource::GitGlobal {
-                            "global"
-                        } else {
-                            "local"
-                        },
-                        format_items_as_list(&get_global_login_config_items_set())
-                    );
-                    return Ok(());
-                }
-            }
-            println!(
-                "logged out {}as {}",
-                if source == crate::cli::SignerInfoSource::GitLocal {
+                        if source == crate::cli::SignerInfoSource::GitGlobal {
