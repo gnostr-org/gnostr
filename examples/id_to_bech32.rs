@@ -1,6 +1,6 @@
 use std::env;
 
-use gnostr::types::Id;
+use gnostr_asyncgit::types::Id;
 
 fn main() {
     let mut args = env::args();

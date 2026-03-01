@@ -3,7 +3,7 @@
 
 use std::env;
 
-use gnostr::types::Filter;
+use gnostr_asyncgit::types::Filter;
 
 fn main() {
     let mut args = env::args();

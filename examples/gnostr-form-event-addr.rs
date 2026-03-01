@@ -1,6 +1,6 @@
 use std::env;
 
-use gnostr::types::{EventKind, NAddr, NostrUrl, PublicKey, UncheckedUrl};
+use gnostr_asyncgit::types::{EventKind, NAddr, NostrUrl, PublicKey, UncheckedUrl};
 
 fn main() {
     let mut args = env::args();

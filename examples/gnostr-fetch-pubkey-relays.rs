@@ -1,6 +1,6 @@
 use std::env;
 
-use gnostr::types::{EventKind, Filter, PublicKeyHex};
+use gnostr_asyncgit::types::{EventKind, Filter, PublicKeyHex};
 
 fn main() {
     println!("{:#}", gnostr::get_relays_public().unwrap());

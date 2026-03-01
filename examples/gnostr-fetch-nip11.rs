@@ -3,7 +3,7 @@
 
 use std::{env, time::Duration};
 
-use gnostr::types::RelayInformationDocument;
+use gnostr_asyncgit::types::RelayInformationDocument;
 use reqwest::{blocking::Client, redirect::Policy};
 
 fn main() {

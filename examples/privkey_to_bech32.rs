@@ -1,4 +1,4 @@
-use gnostr::types::PrivateKey;
+use gnostr_asyncgit::types::PrivateKey;
 use zeroize::Zeroize;
 
 // The zeroize in here is really silly because we print it.

@@ -1,6 +1,6 @@
 use std::env;
 
-use gnostr::types::{NostrBech32, PrivateKey};
+use gnostr_asyncgit::types::{NostrBech32, PrivateKey};
 use nostr_0_34_1::bech32;
 
 fn main() {
