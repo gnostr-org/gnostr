@@ -174,12 +174,9 @@ pub async fn launch(
         ahead.len()
     );
 
-    let (signer, user_ref) = login::launch(
+    let (signer, user_ref) = crate::ngit::login::launch(
         &git_repo,
-        &args.bunker_uri,
-        &args.bunker_app_key,
-        &args.nsec,
-        &args.password,
+        &crate::cli::extract_signer_cli_arguments(cli_args),
         Some(&client),
         false,
         false,
