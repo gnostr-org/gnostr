@@ -81,7 +81,7 @@ async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool
                         },
                         user_ref.metadata.name
                     ))
-                    .with_choices(if source == SignerInfoSource::GitGlobal {
+                    .with_choices(if source == crate::cli::SignerInfoSource::GitGlobal {
                         vec![
                             "logout".to_string(),
                             "remain logged in".to_string(),
@@ -102,7 +102,7 @@ async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool
                         "nostr.bunker-app-key",
                     ] {
                         if let Err(error) = remove_git_config_item(
-                            if source == SignerInfoSource::GitLocal {
+                            if source == crate::cli::SignerInfoSource::GitLocal {
                                 &git_repo
                             } else {
                                 &None
@@ -113,7 +113,7 @@ async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool
 
                             eprintln!(
                                 "consider manually removing {} git config items: {}",
-                                if source == SignerInfoSource::GitGlobal {
+                                if source == crate::cli::SignerInfoSource::GitGlobal {
                                     "global"
                                 } else {
                                     "local"

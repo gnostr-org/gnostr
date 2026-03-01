@@ -1,8 +1,5 @@
 use anyhow::{Context, Result};
-use ngit::{
-    git::remove_git_config_item,
-    login::{SignerInfoSource, existing::load_existing_login},
-};
+use crate::ngit::{git::remove_git_config_item, login::{SignerInfoSource, existing::load_existing_login},};
 
 use crate::{
     git::Repo,
@@ -19,9 +16,9 @@ pub async fn launch() -> Result<()> {
 
 async fn logout(git_repo: Option<&Repo>) -> Result<()> {
     for source in if std::env::var("NGITTEST").is_ok() {
-        vec![SignerInfoSource::GitLocal]
+        vec![crate::cli::SignerInfoSource::GitLocal]
     } else {
-        vec![SignerInfoSource::GitLocal, SignerInfoSource::GitGlobal]
+        vec![crate::cli::SignerInfoSource::GitLocal, crate::cli::SignerInfoSource::GitGlobal]
     } {
         if let Ok((_, user_ref, source)) = load_existing_login(
             &git_repo,
@@ -42,16 +39,7 @@ async fn logout(git_repo: Option<&Repo>) -> Result<()> {
                 "nostr.bunker-app-key",
             ] {
                 if let Err(error) = remove_git_config_item(
-                    if source == SignerInfoSource::GitLocal {
-                        &git_repo
-                    } else {
-                        &None
-                    },
-                    item,
-                ) {
-                    println!(
-                        "failed to log out {}as {}",
-                        if source == SignerInfoSource::GitLocal {
+                    if source == crate::cli::SignerInfoSource::GitLocal {
                             "from local git repository "
                         } else {
                             ""
@@ -73,15 +61,4 @@ async fn logout(git_repo: Option<&Repo>) -> Result<()> {
             }
             println!(
                 "logged out {}as {}",
-                if source == SignerInfoSource::GitLocal {
-                    "from local git repository "
-                } else {
-                    ""
-                },
-                user_ref.metadata.name
-            );
-            return Ok(());
-        }
-    }
-    Ok(())
-}
+                if source == crate::cli::SignerInfoSource::GitLocal {
