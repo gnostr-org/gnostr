@@ -3,7 +3,7 @@ use clap;
 use crate::{cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms}, git::{get_git_config_item, remove_git_config_item}, login::{SignerInfoSource, existing::load_existing_login},};
 
 use crate::cli::GnostrCli;
-use crate::login::extract_signer_cli_arguments;
+use crate::cli::extract_signer_cli_arguments;
 use crate::{client::{Client, Connect}, git::Repo, login::fresh::fresh_login_or_signup};
 
 #[derive(clap::Args, Debug)]
