@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use crate::ngit::{git::remove_git_config_item, login::{SignerInfoSource, existing::load_existing_login},};
+use crate::ngit::{git::{remove_git_config_item, get_git_config_item}, login::{SignerInfoSource, existing::load_existing_login},};
 
 use crate::{ngit::git::Repo, sub_commands::login::{format_items_as_list, get_global_login_config_items_set},};
 
