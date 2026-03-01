@@ -1,29 +1,46 @@
-pub mod cli_interactor;
-pub mod client;
-pub mod git;
-pub mod git_events;
-pub mod login;
-pub mod repo_ref;
-pub mod repo_state;
 pub mod sub_commands;
 pub mod utils;
 pub mod core;
-
-// Added missing modules
+pub mod strings;
 pub mod cli;
 pub mod dashboard;
 pub mod p2p;
+pub mod app;
+pub mod bug_report;
+pub mod clipboard;
+pub mod cmdbar;
+pub mod components;
+pub mod decrypt_privkey;
+pub mod dns_resolver;
+pub mod fetch_by_kind_and_commit;
+pub mod global_rt;
+pub mod hash;
+pub mod input;
+pub mod keys;
+pub mod legit;
+pub mod node;
+pub mod notify_mutex;
+pub mod options;
+pub mod popup_stack;
+pub mod popups;
+pub mod queue;
+pub mod reflog;
+pub mod relays;
+pub mod remote;
+pub mod spinner;
+pub mod ssh;
+pub mod string_utils;
+pub mod tabs;
+pub mod test_utils;
+pub mod types;
+pub mod ui;
+pub mod verify_keypair;
+pub mod watch_list;
+pub mod watcher;
+pub mod ws;
+pub mod xq;
+pub mod ngit;
 
-// Re-export from gnostr_asyncgit
 pub use gnostr_asyncgit::blockheight;
 pub use gnostr_asyncgit::weeble;
 pub use gnostr_asyncgit::wobble;
-
-use anyhow::{Result, anyhow};
-use directories::ProjectDirs;
-
-pub fn get_dirs() -> Result<ProjectDirs> {
-    ProjectDirs::from("", "", "ngit").ok_or(anyhow!(
-        "should find operating system home directories with rust-directories crate"
-    ))
-}
