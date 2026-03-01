@@ -38,7 +38,7 @@ Ok(HashSet::from([get_repo_coordinates_when_remote_unknown(&git_repo, &client).a
         for repo in &args.repo {
             repo_coordinates.insert(Coordinate::parse(repo.clone())?);
         }
-        repo_coordinates
+        Ok(repo_coordinates)
     };
     fetching_with_report(git_repo.get_path()?, &client, &repo_coordinates).await?;
     client.disconnect().await?;
