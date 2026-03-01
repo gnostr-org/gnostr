@@ -80,7 +80,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
 
     let (signer, user_ref, _) = login::login_or_signup(
         &Some(&git_repo),
-        &extract_signer_cli_arguments(cli_args).unwrap_or(None),
+        &extract_signer_cli_arguments(cli_args),
         &cli_args.password,
         Some(&client),
         true,
