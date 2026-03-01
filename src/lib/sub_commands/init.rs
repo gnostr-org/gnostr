@@ -14,11 +14,11 @@ use nostr_sdk_0_37_0::{Kind, RelayUrl};
 
 use crate::{
     cli::{GnostrCli, extract_signer_cli_arguments},
-    cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
-    client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
-    git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
-    login,
-    repo_ref::{
+    ngit::cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
+    ngit::client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
+    ngit::git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
+    ngit::login,
+    ngit::repo_ref::{
         RepoRef, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml,
         try_and_get_repo_coordinates_when_remote_unknown,
     },
