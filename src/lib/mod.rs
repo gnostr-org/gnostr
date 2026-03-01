@@ -50,8 +50,6 @@ pub mod query;
 pub mod queue;
 ///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>
 pub mod remote;
-///  <https://docs.rs/gnostr/latest/gnostr/repo_ref/index.html>
-pub mod repo_ref;
 ///  <https://docs.rs/gnostr/latest/gnostr/spinner/index.html>
 pub mod spinner;
 ///  <https://docs.rs/gnostr/latest/gnostr/ssh/index.html>

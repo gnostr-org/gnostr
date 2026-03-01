@@ -11,7 +11,7 @@ use nostr_sdk_0_37_0::{
     hashes::{Hash, sha1::Hash as Sha1Hash},
 };
 
-use crate::git_events::{get_commit_id_from_patch, tag_value};
+use crate::ngit::git_events::{get_commit_id_from_patch, tag_value};
 pub mod identify_ahead_behind;
 pub mod nostr_url;
 pub mod utils;

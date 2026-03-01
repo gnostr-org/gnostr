@@ -10,7 +10,7 @@ use nostr_0_37_0::{
 use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
 use crate::ngit::{
-    cli::{Cli, extract_signer_cli_arguments},
+    /*TODO fix*/cli::{Cli, extract_signer_cli_arguments},
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },

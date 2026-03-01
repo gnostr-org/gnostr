@@ -6,10 +6,10 @@ use nostr_sdk_0_37_0::{Alphabet, JsonUtil, Kind, SingleLetterTag, Timestamp, ToB
 use serde::{self, Deserialize, Serialize};
 
 #[cfg(not(test))]
-use crate::client::Client;
+use crate::ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::client::{Connect, get_event_from_global_cache};
+use crate::ngit::client::MockConnect;
+use crate::ngit::client::{Connect, get_event_from_global_cache};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct UserRef {
