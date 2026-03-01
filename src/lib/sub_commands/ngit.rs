@@ -34,7 +34,7 @@ pub async fn ngit(cli_args: &crate::cli::GnostrCli, sub_command_args: &NgitSubCo
         NgitCommands::Send(args) => send::launch(cli_args, args, true).await?,
         NgitCommands::List => list::launch().await?,
         NgitCommands::Pull => pull::launch().await?,
-        NgitCommands::Push(args) => push::launch(args).await?,
+        NgitCommands::Push(args) => push::launch(cli_args, args).await?,
         NgitCommands::Fetch(args) => fetch::launch(args).await?,
         NgitCommands::Query(args) => query::launch(args).await?,
     }

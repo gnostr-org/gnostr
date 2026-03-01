@@ -52,7 +52,7 @@ pub async fn legit(cli_args: &crate::cli::GnostrCli, sub_command_args: &LegitSub
         Some(LegitCommands::Send(args)) => send::launch(cli_args, args, true).await?,
         Some(LegitCommands::List) => list::launch().await?,
         Some(LegitCommands::Pull) => pull::launch().await?,
-        Some(LegitCommands::Push(args)) => push::launch(args).await?,
+        Some(LegitCommands::Push(args)) => push::launch(cli_args, args).await?,
         Some(LegitCommands::Fetch(args)) => fetch::launch(args).await?,
         Some(LegitCommands::Mine) | None => {
             #[allow(clippy::cast_possible_truncation)]

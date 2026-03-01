@@ -32,7 +32,7 @@ pub async fn launch(
     let client = Client::default();
 
     let repo_coordinates = if args.repo.is_empty() {
-        get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?
+Ok(HashSet::from([get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?]))
     } else {
         let mut repo_coordinates = HashSet::new();
         for repo in &args.repo {
