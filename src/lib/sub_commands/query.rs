@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail};
 use clap::Args;
-use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use crate::sub_commands::crawler::processor::BOOTSTRAP_RELAYS;
 use crate::sub_commands::query::ConfigBuilder;
 use log::{debug, error};
 use serde_json::{json, to_string};

@@ -39,7 +39,7 @@ pub async fn launch() -> Result<()> {
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
     fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {

@@ -40,7 +40,7 @@ use crate::app::{App, QuitState};
 use crate::blockheight;
 use crate::core::{GnostrSubCommands, ui::style::Theme};
 use crate::input::{Input, InputEvent, InputState};
-use crate::keys::KeyConfig;
+use gnostr_asyncgit::keys::KeyConfig;
 use crate::spinner::Spinner;
 use crate::watcher::RepoWatcher;
 use crate::weeble;
@@ -370,7 +370,7 @@ pub async fn tui(
         let keys = gnostr_asyncgit::types::Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
         debug!(
             "{{\"private_key\":\"{}\"}}",
-            keys.secret_key().display_secret()
+            keys.secret_key().unwrap().0.display_secret()
         );
         debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
     }

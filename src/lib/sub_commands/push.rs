@@ -209,7 +209,7 @@ pub async fn launch(
                 Some(proposal_root_event.id),
                 &signer,
                 &repo_ref,
-                patch_events.last().map(nostr_0_37_0::Event::id),
+                patch_events.last().map(|e| e.id),
                 None,
                 None,
                 &None,
