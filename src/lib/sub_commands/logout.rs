@@ -40,12 +40,12 @@ async fn logout(git_repo: Option<&Repo>) -> Result<()> {
             ] {
                 if let Err(error) = remove_git_config_item(
                     if source == crate::cli::SignerInfoSource::GitLocal {
-                            "from local git repository "
-                        } else {
-                            ""
-                        },
-                        user_ref.metadata.name
-                    );
+                        &git_repo
+                    } else {
+                        &None
+                    },
+                    item,
+                ) {
                     eprintln!("{error:?}");
                     eprintln!(
                         "consider manually removing {} git config items: {}",
