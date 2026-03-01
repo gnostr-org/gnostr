@@ -4,10 +4,8 @@ use crate::ngit::{
     login::{SignerInfoSource, existing::load_existing_login},
 };
 
-use crate::ngit::{
-    git::Repo,
-    sub_commands::login::{format_items_as_list, get_global_login_config_items_set},
-};
+use crate::sub_commands::login::{format_items_as_list, get_global_login_config_items_set};
+use crate::ngit::Repo;
 
 pub async fn launch() -> Result<()> {
     let git_repo_result = Repo::discover().context("failed to find a git repository");
