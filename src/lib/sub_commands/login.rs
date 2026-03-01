@@ -1,9 +1,13 @@
 use anyhow::{Context, Result};
 use clap;
-use crate::ngit::{cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms}, git::{get_git_config_item, remove_git_config_item}, login::{SignerInfoSource, existing::load_existing_login},};
+use crate::ngit::{
+    cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
+    git::{get_git_config_item, remove_git_config_item},
+    login::{SignerInfoSource, existing::load_existing_login},
+};
 
-use crate::{
-    cli::{GnostrCli, extract_signer_cli_arguments},
+use crate::ngit::{
+    cli::{Cli, extract_signer_cli_arguments},
     client::{Client, Connect},
     git::Repo,
     login::fresh::fresh_login_or_signup,
@@ -34,10 +38,10 @@ pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
 
     let (logged_out, log_in_locally_only) = logout(git_repo.as_ref(), command_args.local).await?;
     if logged_out || log_in_locally_only {
-        crate::ngit::login::fresh::fresh_login_or_signup(
+        fresh_login_or_signup(
             &git_repo.as_ref(),
             client.as_ref(),
-            crate::cli::extract_signer_cli_arguments(args),
+            extract_signer_cli_arguments(args)?,
             log_in_locally_only || command_args.local,
         )
         .await?;
@@ -53,11 +57,11 @@ pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
 /// return ( bool - logged out, bool - log in to local git locally)
 async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool)> {
     for source in if local_only || std::env::var("NGITTEST").is_ok() {
-        vec![crate::cli::SignerInfoSource::GitLocal]
+        vec![SignerInfoSource::GitLocal]
     } else {
-        vec![crate::cli::SignerInfoSource::GitLocal, crate::cli::SignerInfoSource::GitGlobal]
+        vec![SignerInfoSource::GitLocal, SignerInfoSource::GitGlobal]
     } {
-        if let Ok((_, user_ref, source)) = crate::ngit::login::existing::load_existing_login(
+        if let Ok((_, user_ref, source)) = load_existing_login(
             &git_repo,
             &None,
             &None,
@@ -74,14 +78,14 @@ async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool
                     .with_default(0)
                     .with_prompt(format!(
                         "logged in {}as {}",
-                        if source == crate::cli::SignerInfoSource::GitLocal {
+                        if source == SignerInfoSource::GitLocal {
                             "to local git repository "
                         } else {
                             ""
                         },
                         user_ref.metadata.name
                     ))
-                    .with_choices(if source == crate::cli::SignerInfoSource::GitGlobal {
+                    .with_choices(if source == SignerInfoSource::GitGlobal {
                         vec![
                             "logout".to_string(),
                             "remain logged in".to_string(),
@@ -102,7 +106,7 @@ async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool
                         "nostr.bunker-app-key",
                     ] {
                         if let Err(error) = remove_git_config_item(
-                            if source == crate::cli::SignerInfoSource::GitLocal {
+                            if source == SignerInfoSource::GitLocal {
                                 &git_repo
                             } else {
                                 &None
@@ -113,7 +117,7 @@ async fn logout(git_repo: Option<&Repo>, local_only: bool) -> Result<(bool, bool
 
                             eprintln!(
                                 "consider manually removing {} git config items: {}",
-                                if source == crate::cli::SignerInfoSource::GitGlobal {
+                                if source == SignerInfoSource::GitGlobal {
                                     "global"
                                 } else {
                                     "local"

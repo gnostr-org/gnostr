@@ -18,7 +18,9 @@ pub mod hash;
 pub mod input;
 pub mod keys;
 pub mod legit;
+pub mod ngit;
 pub mod node;
+pub mod nostr_client;
 pub mod notify_mutex;
 pub mod options;
 pub mod popup_stack;
@@ -32,14 +34,13 @@ pub mod ssh;
 pub mod string_utils;
 pub mod tabs;
 pub mod test_utils;
-pub mod types;
+//pub mod types; //moved to ./asyncgit/src/lib/types
 pub mod ui;
 pub mod verify_keypair;
 pub mod watch_list;
 pub mod watcher;
 pub mod ws;
 pub mod xq;
-pub mod ngit;
 
 pub use gnostr_asyncgit::blockheight;
 pub use gnostr_asyncgit::weeble;

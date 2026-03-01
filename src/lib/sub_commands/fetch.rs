@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use clap;
 use nostr_0_34_1::nips::nip01::Coordinate;
 
-use crate::{
+use crate::ngit::{
     //cli::Cli,
     client::{Client, Connect, fetching_with_report},
     git::{Repo, RepoActions},

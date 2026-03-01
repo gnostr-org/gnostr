@@ -2,7 +2,10 @@ use std::collections::{HashMap, HashSet};
 
 use anyhow::{Context, Result};
 use console::{Style, Term};
-use crate::ngit::{cli_interactor::PromptConfirmParms, git::nostr_url::{NostrUrlDecoded, save_nip05_to_git_config_cache},};
+use crate::ngit::{
+    cli_interactor::PromptConfirmParms,
+    git::nostr_url::{NostrUrlDecoded, save_nip05_to_git_config_cache},
+};
 use nostr_0_37_0::{
     FromBech32, PublicKey, ToBech32,
     nips::{
@@ -12,13 +15,13 @@ use nostr_0_37_0::{
 };
 use nostr_sdk_0_37_0::{Kind, RelayUrl};
 
-use crate::{
-    cli::{GnostrCli, extract_signer_cli_arguments},
-    ngit::cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
-    ngit::client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
-    ngit::git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
-    ngit::login,
-    ngit::repo_ref::{
+use crate::ngit::{
+    cli::{Cli, extract_signer_cli_arguments},
+    cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
+    client::{Client, Connect, fetching_with_report, get_repo_ref_from_cache, send_events},
+    git::{Repo, RepoActions, nostr_url::convert_clone_url_to_https},
+    login,
+    repo_ref::{
         RepoRef, extract_pks, get_repo_config_from_yaml, save_repo_config_to_yaml,
         try_and_get_repo_coordinates_when_remote_unknown,
     },
@@ -75,9 +78,10 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs) -> Result<()> {
         None
     };
 
-    let (signer, user_ref, _) = crate::ngit::login::login_or_signup(
+    let (signer, user_ref, _) = login::login_or_signup(
         &Some(&git_repo),
-        &crate::cli::extract_signer_cli_arguments(cli_args),
+        &extract_signer_cli_arguments(cli_args).unwrap_or(None),
+        &cli_args.password,
         Some(&client),
         true,
     )

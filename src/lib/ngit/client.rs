@@ -37,7 +37,7 @@ use nostr_sdk_0_37_0::{
     Timestamp, prelude::RelayLimits,
 };
 
-use crate::{
+use crate::ngit::{
     get_dirs,
     git::{Repo, RepoActions},
     git_events::{

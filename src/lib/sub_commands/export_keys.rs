@@ -8,7 +8,7 @@ use crate::ngit::{
     },
 };
 
-use crate::git::Repo;
+use crate::ngit::git::Repo;
 
 pub async fn launch() -> Result<()> {
     let git_repo_result = Repo::discover().context("failed to find a git repository");

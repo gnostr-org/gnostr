@@ -93,9 +93,9 @@ pub enum NostrCommand {
     SendChannelMessage {
         channel_id: String,
         message: String,
-        reply_to_id: Option<crate::types::Id>,
-        root_message_id: Option<crate::types::Id>,
-        relay_url: Option<crate::types::UncheckedUrl>,
+        reply_to_id: Option<gnostr_asyncgit::types::Id>,
+        root_message_id: Option<gnostr_asyncgit::types::Id>,
+        relay_url: Option<gnostr_asyncgit::types::UncheckedUrl>,
     },
     /// Create a NIP-28 channel
     CreateChannel {
@@ -103,7 +103,7 @@ pub enum NostrCommand {
         channel_name: String,
         channel_description: String,
         channel_picture: Option<String>,
-        relay_url: Option<crate::types::UncheckedUrl>,
+        relay_url: Option<gnostr_asyncgit::types::UncheckedUrl>,
     },
 }
 

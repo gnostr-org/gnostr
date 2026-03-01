@@ -126,7 +126,7 @@ pub enum NgitCommands {
     Account(AccountSubCommandArgs),
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 pub enum AccountCommands {
     /// login with nsec or nostr connect
     Login(login::SubCommandArgs),

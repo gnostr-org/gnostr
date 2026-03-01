@@ -15,7 +15,6 @@ pub enum ServerProtocol {
     Git,
     Ftp,
     Filesystem,
-    Nostr,
     #[default]
     Unspecified,
     UnauthHttps, // used for read to enable non-interactive failures over https
@@ -30,7 +29,6 @@ impl fmt::Display for ServerProtocol {
             ServerProtocol::Ssh => write!(f, "ssh"),
             ServerProtocol::Git => write!(f, "git"),
             ServerProtocol::Filesystem => write!(f, "filesystem"),
-            ServerProtocol::Nostr => write!(f, "nostr"),
             ServerProtocol::Unspecified => write!(f, "unsepcified"),
             ServerProtocol::UnauthHttps => write!(f, "https (unauthenticated)"),
             ServerProtocol::UnauthHttp => write!(f, "http (unauthenticated)"),
@@ -50,7 +48,6 @@ impl FromStr for ServerProtocol {
             "ssh" => Ok(ServerProtocol::Ssh),
             "git" => Ok(ServerProtocol::Git),
             "filesystem" => Ok(ServerProtocol::Filesystem),
-            "nostr" => Ok(ServerProtocol::Nostr),
             "http (unauthenticated)" => Ok(ServerProtocol::UnauthHttp),
             "https (unauthenticated)" => Ok(ServerProtocol::UnauthHttps),
             _ => bail!("not listed as a server protocol"),
@@ -100,7 +97,7 @@ impl fmt::Display for NostrUrlDecoded {
     }
 }
 
-static INCORRECT_NOSTR_URL_FORMAT_ERROR: &str = "incorrect nostr git url format. try nostr://naddr123 or gnostr://npub123/my-repo or gnostr://ssh/npub123/relay.damus.io/my-repo";
+static INCORRECT_NOSTR_URL_FORMAT_ERROR: &str = "incorrect nostr git url format. try nostr://naddr123 or nostr://npub123/my-repo or nostr://ssh/npub123/relay.damus.io/my-repo";
 
 impl NostrUrlDecoded {
     pub async fn parse_and_resolve(url: &str, git_repo: &Option<&Repo>) -> Result<Self> {
@@ -109,14 +106,9 @@ impl NostrUrlDecoded {
         let mut relays = vec![];
         let mut nip05 = None;
 
-        let prefix_len = if url.starts_with("nostr://") {
-            8
-        } else if url.starts_with("gnostr://") {
-            9
-        } else {
-            bail!("nostr git url must start with nostr:// or gnostr://");
-        };
-
+        if !url.starts_with("nostr://") {
+            bail!("nostr git url must start with nostr://");
+        }
         // process get url parameters if present
         for (name, value) in Url::parse(url)?.query_pairs() {
             if name.contains("relay") {
@@ -135,7 +127,6 @@ impl NostrUrlDecoded {
                     "https" => Some(ServerProtocol::Https),
                     "http" => Some(ServerProtocol::Http),
                     "git" => Some(ServerProtocol::Git),
-                    "nostr" => Some(ServerProtocol::Nostr),
                     _ => None,
                 };
             } else if name == "user" {
@@ -143,7 +134,7 @@ impl NostrUrlDecoded {
             }
         }
 
-        let mut parts: Vec<&str> = url[prefix_len..]
+        let mut parts: Vec<&str> = url[8..]
             .split('?')
             .next()
             .unwrap_or("")
@@ -529,13 +520,6 @@ pub fn convert_clone_url_to_https(url: &str) -> Result<String> {
     // Convert git:// to https://
     else if stripped_url.starts_with("git://") {
         return Ok(stripped_url.replace("git://", "https://"));
-    }
-    // Convert nostr:// or gnostr:// to https://
-    else if stripped_url.starts_with("nostr://") {
-        return Ok(stripped_url.replace("nostr://", "https://"));
-    }
-    else if stripped_url.starts_with("gnostr://") {
-        return Ok(stripped_url.replace("gnostr://", "https://"));
     }
 
     // If the URL is neither HTTPS, SSH, nor git@, return an error

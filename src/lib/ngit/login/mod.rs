@@ -6,11 +6,10 @@ use nostr_0_37_0::PublicKey;
 use nostr_sdk_0_37_0::{NostrSigner, Timestamp, ToBech32};
 
 #[cfg(not(test))]
-use crate::client::Client;
+use crate::ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::git::{Repo, RepoActions};
-use crate::cli::{SignerInfo, SignerInfoSource};
+use crate::ngit::client::MockConnect;
+use crate::ngit::git::{Repo, RepoActions};
 
 pub mod existing;
 mod key_encryption;
@@ -45,6 +44,26 @@ pub async fn login_or_signup(
     }
 }
 
+#[derive(Clone)]
+pub enum SignerInfo {
+    Nsec {
+        nsec: String,
+        password: Option<String>,
+        npub: Option<String>,
+    },
+    Bunker {
+        bunker_uri: String,
+        bunker_app_key: String,
+        npub: Option<String>,
+    },
+}
+
+#[derive(PartialEq, Clone)]
+pub enum SignerInfoSource {
+    GitLocal,
+    GitGlobal,
+    CommandLineArguments,
+}
 
 fn print_logged_in_as(
     user_ref: &UserRef,

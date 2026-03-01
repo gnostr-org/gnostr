@@ -7,7 +7,7 @@ use nostr_sdk_0_37_0::{
     TagStandard, hashes::sha1::Hash as Sha1Hash,
 };
 
-use crate::{
+use crate::ngit::{
     cli_interactor::{Interactor, InteractorPrompt, PromptInputParms},
     client::sign_event,
     git::{Repo, RepoActions},

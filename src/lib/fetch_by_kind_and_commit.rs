@@ -1,4 +1,4 @@
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
+use crate::sub_commands::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_asyncgit::types::{EventKind, Filter, PublicKey, PublicKeyHex};
 use log::debug;
 fn fetch_by_kind_and_commit(author_pubkey: &str, kind: &str, relay: &str) {
@@ -38,7 +38,7 @@ fn fetch_by_kind_and_commit(author_pubkey: &str, kind: &str, relay: &str) {
         ..Default::default()
     };
 
-    for event in crate::fetch_by_filter(&relay_url, filter) {
-        crate::print_event(&event);
+    for event in gnostr::fetch_by_filter(&relay_url, filter) {
+        gnostr::print_event(&event);
     }
 }

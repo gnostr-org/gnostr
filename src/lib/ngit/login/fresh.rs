@@ -17,10 +17,10 @@ use super::{
     user::{UserRef, get_user_details},
 };
 #[cfg(not(test))]
-use crate::client::Client;
+use crate::ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::{
+use crate::ngit::client::MockConnect;
+use crate::ngit::{
     cli_interactor::{
         Interactor, InteractorPrompt, Printer, PromptChoiceParms, PromptConfirmParms,
         PromptInputParms, PromptPasswordParms,

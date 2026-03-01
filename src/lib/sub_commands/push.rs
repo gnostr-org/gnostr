@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
 use nostr_sdk_0_37_0::PublicKey;
 
-use crate::{
+use crate::ngit::{
     client::{Client, send_events},
     git_events::{is_event_proposal_root_for_branch, tag_value},
 };

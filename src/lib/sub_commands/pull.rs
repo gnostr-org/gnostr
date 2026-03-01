@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
 use nostr_sdk_0_37_0::PublicKey;
 
-use crate::{
+use crate::ngit::{
     client::{
         Client, Connect, fetching_with_report, get_all_proposal_patch_events_from_cache,
         get_proposals_and_revisions_from_cache, get_repo_ref_from_cache,
@@ -32,7 +32,7 @@ pub async fn launch() -> Result<()> {
     }
 
     #[cfg(test)]
-    let client: &crate::client::MockConnect = &mut Default::default();
+    let client: &crate::ngit::client::MockConnect = &mut Default::default();
     #[cfg(not(test))]
     let client = Client::default();
 

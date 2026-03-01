@@ -9,7 +9,7 @@ use crate::ngit::{
 };
 use nostr_sdk_0_37_0::Kind;
 
-use crate::{
+use crate::ngit::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
     client::{
         Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
