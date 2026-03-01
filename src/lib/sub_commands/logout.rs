@@ -47,6 +47,46 @@ async fn logout(git_repo: Option<&Repo>) -> Result<()> {
                     item,
                 ) {
                     eprintln!("{error:?}");
+                    let source_type = if source == crate::cli::SignerInfoSource::GitGlobal { "global" } else { "local" };
                     eprintln!(
-                        "consider manually removing {} git config items: {}",
-                        if source == crate::cli::SignerInfoSource::GitGlobal {
+                        "consider manually removing {source_type} git config items: {}",
+                        format_items_as_list(&get_global_login_config_items_set())
+                    );
+                    return Ok(());
+                }
+            }
+            let source_prefix = if source == crate::cli::SignerInfoSource::GitLocal { "from local git repository " } else { "" };
+            println!(
+                "logged out {source_prefix}as {}",
+                user_ref.metadata.name
+            );
+            return Ok(());
+        }
+    }
+    Ok(())
+}
+
+pub fn get_global_login_config_items_set() -> Vec<&'static str> {
+    [
+        "nostr.nsec",
+        "nostr.npub",
+        "nostr.bunker-uri",
+        "nostr.bunker-app-key",
+    ]
+    .iter()
+    .copied()
+    .filter(|item| get_git_config_item(&None, item).is_ok_and(|item| item.is_some()))
+    .collect::<Vec<&str>>()
+}
+
+pub fn format_items_as_list(items: &[&str]) -> String {
+    match items.len() {
+        0 => String::new(),
+        1 => items[0].to_string(),
+        2 => format!("{} and {}", items[0], items[1]),
+        _ => {
+            let all_but_last = items[..items.len() - 1].join(", ");
+            format!("{}, and {}", all_but_last, items[items.len() - 1])
+        }
+    }
+}

@@ -521,7 +521,7 @@ nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 ## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
 nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
 ##nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
-##nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
+nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
 ## TODO remove and upgrade
 nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
 nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
