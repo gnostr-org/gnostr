@@ -25,17 +25,11 @@ pub struct PushArgs {
     #[arg(long)]
     /// send proposal revision from checked out proposal branch
     pub force: bool,
-    #[arg(long, action = clap::ArgAction::SetTrue)]
-    pub disable_cli_spinners: bool,
-    pub password: Option<String>,
-    pub nsec: Option<String>,
-    pub bunker_app_key: Option<String>,
-    pub bunker_uri: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
 pub async fn launch(
-    //cli_args: &Cli,
+    cli_args: &crate::cli::GnostrCli,
     args: &PushArgs,
 ) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
@@ -222,7 +216,7 @@ pub async fn launch(
         patch_events,
         user_ref.relays.write(),
         repo_ref.relays.clone(),
-        args.disable_cli_spinners,
+        !cli_args.disable_cli_spinners,
         false,
     )
     .await?;
