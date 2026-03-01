@@ -2,16 +2,26 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use console::Style;
-use crate::{client::send_events, git_events::generate_cover_letter_and_patch_events};
+use ngit::{client::send_events, git_events::generate_cover_letter_and_patch_events};
 use nostr_0_37_0::{
     ToBech32,
     nips::{nip10::Marker, nip19::Nip19Event},
 };
 use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
-use crate::cli::GnostrCli;
-use crate::cli::extract_signer_cli_arguments;
-use crate::{cli_interactor::{Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms}, client::{Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache}, git::{Repo, RepoActions, identify_ahead_behind}, git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex}, login, repo_ref::get_repo_coordinates_when_remote_unknown};
+use crate::{
+    cli::{Cli, extract_signer_cli_arguments},
+    cli_interactor::{
+        Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
+    },
+    client::{
+        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
+    },
+    git::{Repo, RepoActions, identify_ahead_behind},
+    git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
+    login,
+    repo_ref::get_repo_coordinates_when_remote_unknown,
+};
 
 #[derive(Debug, clap::Args)]
 pub struct SubCommandArgs {
@@ -34,7 +44,7 @@ pub struct SubCommandArgs {
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn launch(cli_args: &GnostrCli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
+pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Result<()> {
     let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
@@ -168,7 +178,7 @@ pub async fn launch(cli_args: &GnostrCli, args: &SubCommandArgs, no_fetch: bool)
 
     let (signer, user_ref, _) = login::login_or_signup(
         &Some(&git_repo),
-        &extract_signer_cli_arguments(cli_args),
+        &extract_signer_cli_arguments(cli_args).unwrap_or(None),
         &cli_args.password,
         Some(&client),
         true,

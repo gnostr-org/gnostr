@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use crate::{
+use crate::ngit::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
     login::{
         SignerInfo, SignerInfoSource,
