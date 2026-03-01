@@ -10,6 +10,7 @@ use crate::client::Client;
 #[cfg(test)]
 use crate::client::MockConnect;
 use crate::git::{Repo, RepoActions};
+use crate::cli::{SignerInfo, SignerInfoSource};
 
 pub mod existing;
 mod key_encryption;
