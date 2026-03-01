@@ -37,14 +37,13 @@ use tracing::{Level, debug};
 use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::app::{App, QuitState};
-use crate::blockheight;
-use crate::core::{GnostrSubCommands, ui::style::Theme};
+use crate::core::GnostrSubCommands;
 use crate::input::{Input, InputEvent, InputState};
-use gnostr_asyncgit::keys::KeyConfig;
+use crate::keys::KeyConfig;
 use crate::spinner::Spinner;
+use crate::ui::style::Theme;
 use crate::watcher::RepoWatcher;
-use crate::weeble;
-use crate::wobble;
+use crate::{blockheight, weeble, wobble};
 
 //use crate::{app::App, cli::process_cmdline};
 pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;

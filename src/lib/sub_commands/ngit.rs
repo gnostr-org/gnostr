@@ -27,11 +27,11 @@ pub struct NgitSubCommand {
 /// # Errors
 ///
 /// This function will return an error if the command fails.
-pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
+pub async fn ngit(cli_args: &crate::cli::GnostrCli, sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
-        NgitCommands::Login(args) => login::launch(args).await?,
-        NgitCommands::Init(args) => init::launch(args).await?,
-        NgitCommands::Send(args) => send::launch(args, true).await?,
+        NgitCommands::Login(args) => login::launch(cli_args, args).await?,
+        NgitCommands::Init(args) => init::launch(cli_args, args).await?,
+        NgitCommands::Send(args) => send::launch(cli_args, args, true).await?,
         NgitCommands::List => list::launch().await?,
         NgitCommands::Pull => pull::launch().await?,
         NgitCommands::Push(args) => push::launch(args).await?,

@@ -37,7 +37,7 @@ pub async fn launch() -> Result<()> {
     let client = Client::default();
 
     let repo_coordinates = get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?;
-    fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
+    fetching_with_report(git_repo_path, &client, &repo_coordinates).await?;
 
     let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
@@ -49,7 +49,7 @@ pub async fn launch() -> Result<()> {
         };
 
     let proposal_root_event =
-        get_proposals_and_revisions_from_cache(Some(git_repo_path), repo_ref.coordinates())
+        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
             .await?
             .iter()
             .find(|e| {
@@ -62,7 +62,7 @@ pub async fn launch() -> Result<()> {
     let commit_events = get_all_proposal_patch_events_from_cache(
         git_repo_path,
         &repo_ref,
-        &proposal_root_event.id(),
+        &proposal_root_event.id,
     )
     .await?;
 

@@ -170,6 +170,18 @@ pub struct GnostrCli {
     "#
     )]
     pub nsec: Option<String>,
+    /// password to decrypt nsec
+    #[arg(short, long, global = true, hide = true)]
+    pub password: Option<String>,
+    /// remote signer address
+    #[arg(long, global = true, hide = true)]
+    pub bunker_uri: Option<String>,
+    /// remote signer app secret key
+    #[arg(long, global = true, hide = true)]
+    pub bunker_app_key: Option<String>,
+    /// disable spinner animations
+    #[arg(long, action = clap::ArgAction::SetTrue, hide = true)]
+    pub disable_cli_spinners: bool,
     /// hash
     #[arg(long, help = "gnostr --hash <string>")]
     pub hash: Option<String>,
@@ -257,6 +269,10 @@ impl Default for GnostrCli {
             nsec: Some(
                 "0000000000000000000000000000000000000000000000000000000000000001".to_string(),
             ),
+            password: None,
+            bunker_uri: None,
+            bunker_app_key: None,
+            disable_cli_spinners: false,
             hash: None,
             workdir: Some(".".to_string()),
             gitdir: Some(".".into()),
