@@ -176,10 +176,9 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Re
         None
     };
 
-    let (signer, user_ref, _) = login::login_or_signup(
+    let (signer, user_ref, _) = crate::ngit::login::login_or_signup(
         &Some(&git_repo),
-        &extract_signer_cli_arguments(cli_args).unwrap_or(None),
-        &cli_args.password,
+        &crate::cli::extract_signer_cli_arguments(cli_args),
         Some(&client),
         true,
     )
