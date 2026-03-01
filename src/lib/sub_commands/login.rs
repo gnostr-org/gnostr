@@ -6,12 +6,10 @@ use crate::ngit::{
     login::{SignerInfoSource, existing::load_existing_login},
 };
 
-use crate::ngit::{
-    cli::{Cli, extract_signer_cli_arguments},
-    client::{Client, Connect},
-    git::Repo,
-    login::fresh::fresh_login_or_signup,
-};
+use crate::cli::{Cli, extract_signer_cli_arguments};
+use crate::ngit::client::{Client, Connect};
+use crate::ngit::git::Repo;
+use crate::ngit::login::fresh::fresh_login_or_signup;
 
 #[derive(clap::Args, Debug)]
 pub struct SubCommandArgs {
