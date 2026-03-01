@@ -44,26 +44,6 @@ pub async fn login_or_signup(
     }
 }
 
-#[derive(Clone)]
-pub enum SignerInfo {
-    Nsec {
-        nsec: String,
-        password: Option<String>,
-        npub: Option<String>,
-    },
-    Bunker {
-        bunker_uri: String,
-        bunker_app_key: String,
-        npub: Option<String>,
-    },
-}
-
-#[derive(PartialEq, Clone)]
-pub enum SignerInfoSource {
-    GitLocal,
-    GitGlobal,
-    CommandLineArguments,
-}
 
 fn print_logged_in_as(
     user_ref: &UserRef,

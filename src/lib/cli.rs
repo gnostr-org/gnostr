@@ -405,7 +405,41 @@ pub fn get_app_config_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-//#[test]
-//fn verify_app() {
-//    app().debug_assert();
-//}
+#[derive(Clone)]
+pub enum SignerInfo {
+    Nsec {
+        nsec: String,
+        password: Option<String>,
+        npub: Option<String>,
+    },
+    Bunker {
+        bunker_uri: String,
+        bunker_app_key: String,
+        npub: Option<String>,
+    },
+}
+
+#[derive(PartialEq, Clone)]
+pub enum SignerInfoSource {
+    GitLocal,
+    GitGlobal,
+    CommandLineArguments,
+}
+
+pub fn extract_signer_cli_arguments(cli_args: &GnostrCli) -> Option<SignerInfo> {
+    if let Some(nsec) = &cli_args.nsec {
+        Some(SignerInfo::Nsec {
+            nsec: nsec.clone(),
+            password: cli_args.password.clone(),
+            npub: None, // This will be fetched or derived later
+        })
+    } else if let (Some(bunker_uri), Some(bunker_app_key)) = (&cli_args.bunker_uri, &cli_args.bunker_app_key) {
+        Some(SignerInfo::Bunker {
+            bunker_uri: bunker_uri.clone(),
+            bunker_app_key: bunker_app_key.clone(),
+            npub: None, // This will be fetched or derived later
+        })
+    } else {
+        None
+    }
+}
