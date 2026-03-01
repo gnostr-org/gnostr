@@ -1,7 +1,7 @@
 use std::{process::exit, time::Duration};
 
 use clap::Args;
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
 use tracing::debug;
 
 use gnostr_asyncgit::types::{Error, Event, Filter, Id, PublicKey};

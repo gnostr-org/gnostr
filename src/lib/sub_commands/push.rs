@@ -66,7 +66,7 @@ pub async fn launch(
 
     fetching_with_report(git_repo_path, &client, &repo_coordinates, false).await?;
 
-    let repo_ref = get_repo_ref_from_cache(git_repo_path, &repo_coordinates).await?;
+    let repo_ref = get_repo_ref_from_cache(Some(git_repo_path), &repo_coordinates).await?;
 
     let logged_in_public_key =
         if let Ok(Some(npub)) = git_repo.get_git_config_item("nostr.npub", None) {
@@ -199,7 +199,7 @@ pub async fn launch(
     )
     .await?;
 
-    let mut patch_events: Vec<nostr_0_34_1::Event> = vec![];
+    let mut patch_events: Vec<nostr_0_37_0::Event> = vec![];
     for commit in &ahead {
         patch_events.push(
             generate_patch_event(
@@ -209,7 +209,7 @@ pub async fn launch(
                 Some(proposal_root_event.id),
                 &signer,
                 &repo_ref,
-                patch_events.last().map(nostr_0_34_1::Event::id),
+                patch_events.last().map(nostr_0_37_0::Event::id),
                 None,
                 None,
                 &None,
@@ -225,7 +225,7 @@ pub async fn launch(
 
     send_events(
         &client,
-        git_repo_path,
+        Some(git_repo_path),
         patch_events,
         user_ref.relays.write(),
         repo_ref.relays.clone(),

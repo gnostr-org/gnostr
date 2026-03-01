@@ -28,7 +28,7 @@ use gnostr_asyncgit::{
     AsyncGitNotification,
     sync::{RepoPath, utils::repo_work_dir},
 };
-use nostr_sdk_0_37_0::Keys;
+use gnostr_asyncgit::types::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::{self, scope_time};
@@ -36,17 +36,15 @@ use serde::ser::StdError;
 use tracing::{Level, debug};
 use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::{
-    app::{App, QuitState},
-    blockheight,
-    core::GnostrSubCommands,
-    input::{Input, InputEvent, InputState},
-    keys::KeyConfig,
-    spinner::Spinner,
-    ui::style::Theme,
-    watcher::RepoWatcher,
-    weeble, wobble,
-};
+use crate::app::{App, QuitState};
+use crate::blockheight;
+use crate::core::{GnostrSubCommands, ui::style::Theme};
+use crate::input::{Input, InputEvent, InputState};
+use crate::keys::KeyConfig;
+use crate::spinner::Spinner;
+use crate::watcher::RepoWatcher;
+use crate::weeble;
+use crate::wobble;
 
 //use crate::{app::App, cli::process_cmdline};
 pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
@@ -369,7 +367,7 @@ pub async fn tui(
 
     if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
     {
-        let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+        let keys = gnostr_asyncgit::types::Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
         debug!(
             "{{\"private_key\":\"{}\"}}",
             keys.secret_key().display_secret()

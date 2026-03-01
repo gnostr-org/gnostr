@@ -43,9 +43,8 @@ use crate::{
         ChatSubCommands,
         msg::{Msg, MsgKind},
     },
-    types::Event,
 };
-use gnostr_async::types::Event;
+use gnostr_asyncgit::types::Event;
 
 //const TOPIC: &str = "gnostr";
 

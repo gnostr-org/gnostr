@@ -1,17 +1,10 @@
 use anyhow::{Context, Result};
 use clap;
-use ngit::{
-    cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms},
-    git::{get_git_config_item, remove_git_config_item},
-    login::{SignerInfoSource, existing::load_existing_login},
-};
+use crate::{cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms}, git::{get_git_config_item, remove_git_config_item}, login::{SignerInfoSource, existing::load_existing_login},};
 
-use crate::{
-    cli::{Cli, extract_signer_cli_arguments},
-    client::{Client, Connect},
-    git::Repo,
-    login::fresh::fresh_login_or_signup,
-};
+use crate::cli::GnostrCli;
+use crate::login::extract_signer_cli_arguments;
+use crate::{client::{Client, Connect}, git::Repo, login::fresh::fresh_login_or_signup};
 
 #[derive(clap::Args, Debug)]
 pub struct SubCommandArgs {
@@ -24,7 +17,7 @@ pub struct SubCommandArgs {
     offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &GnostrCli, command_args: &SubCommandArgs) -> Result<()> {
     let client = if command_args.offline {
         None
     } else {

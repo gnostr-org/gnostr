@@ -49,7 +49,7 @@ pub async fn launch() -> Result<()> {
         };
 
     let proposal_root_event =
-        get_proposals_and_revisions_from_cache(git_repo_path, repo_ref.coordinates())
+        get_proposals_and_revisions_from_cache(Some(git_repo_path), repo_ref.coordinates())
             .await?
             .iter()
             .find(|e| {

@@ -1,4 +1,4 @@
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
+use super::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use gnostr::{Command, Probe, get_weeble};
