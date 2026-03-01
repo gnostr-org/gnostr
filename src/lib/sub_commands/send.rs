@@ -10,17 +10,13 @@ use nostr_0_37_0::{
 use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
 
 use crate::{
-    cli::{Cli, extract_signer_cli_arguments},
-    cli_interactor::{
-        Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
-    },
-    client::{
-        Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache,
-    },
-    git::{Repo, RepoActions, identify_ahead_behind},
-    git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
-    login,
-    repo_ref::get_repo_coordinates_when_remote_unknown,
+    cli::{GnostrCli, extract_signer_cli_arguments},
+    ngit::cli_interactor::{Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms},
+    ngit::client::{Client, Connect, fetching_with_report, get_events_from_local_cache, get_repo_ref_from_cache},
+    ngit::git::{Repo, RepoActions, identify_ahead_behind},
+    ngit::git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
+    ngit::login,
+    ngit::repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
 #[derive(Debug, clap::Args)]
