@@ -12,10 +12,10 @@ use super::{
     user::{UserRef, get_user_details},
 };
 #[cfg(not(test))]
-use crate::client::Client;
+use crate::ngit::client::Client;
 #[cfg(test)]
-use crate::client::MockConnect;
-use crate::{
+use crate::ngit::client::MockConnect;
+use crate::ngit::{
     cli_interactor::{Interactor, InteractorPrompt, PromptPasswordParms},
     client::fetch_public_key,
     git::{Repo, RepoActions, get_git_config_item},

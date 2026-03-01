@@ -1,6 +1,6 @@
-use gnostr::crawler::relay_manager::{ActiveRelayList, RelayManager};
-use gnostr::crawler::processor::Processor;
-use gnostr::crawler::processor::{BOOTSTRAP_RELAY0, BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3};
+use crate::sub_commands::crawler::relay_manager::{ActiveRelayList, RelayManager};
+use crate::sub_commands::crawler::processor::Processor;
+use crate::sub_commands::crawler::processor::{BOOTSTRAP_RELAY0, BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3};
 use nostr_0_34_1::Keys;
 use std::str::FromStr;
 use tokio::sync::mpsc;

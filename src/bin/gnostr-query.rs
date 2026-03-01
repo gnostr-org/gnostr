@@ -1,4 +1,4 @@
-use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use crate::sub_commands::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr::query::cli::cli;
 use gnostr::query::ConfigBuilder;
 use serde_json::{json, to_string};
