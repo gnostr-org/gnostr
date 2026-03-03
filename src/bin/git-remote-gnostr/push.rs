@@ -13,14 +13,16 @@ use console::Term;
 use gnostr::ngit::git::{RepoActions, sha1_to_oid, Repo};
 use gnostr::ngit::git_events::{generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch, event_to_cover_letter, get_event_root};
 use git2::{Oid, Repository};
-use gnostr::ngit::{cli_interactor::count_lines_per_msg_vec, client::get_event_from_cache_by_id, git::{nostr_url::{CloneUrl, NostrUrlDecoded}, oid_to_shorthand_string,}, login::{self, user::UserRef}, repo_ref::{self, get_repo_config_from_yaml}, repo_ref::RepoRef, repo_state::RepoState};
+use gnostr::ngit::{cli_interactor::count_lines_per_msg_vec, client::get_event_from_cache_by_id, git::{nostr_url::{CloneUrl, NostrUrlDecoded}, oid_to_shorthand_string,}, login::{self, user::UserRef}, repo_ref::{self, get_repo_config_from_yaml}};
+use gnostr::ngit::repo_ref::RepoRef;
+use gnostr::ngit::repo_state::RepoState; // Ensure RepoState is directly imported
 use nostr_0_37_0::nips::nip10::Marker;
 use nostr_sdk_0_37_0::{
     Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag,
     hashes::sha1::Hash as Sha1Hash,
 };
 
-use gnostr::utils::{
+use crate::utils::{
     Direction, find_proposal_and_patches_by_branch_name, get_all_proposals,
     get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,
     join_with_and, push_error_is_not_authentication_failure, read_line,
@@ -332,7 +334,7 @@ async fn process_proposal_refspecs(
                                 )),
                                 None,
                                 &None,
-                                &[],
+                                &[]
                             )
                             .await
                             .context("failed to make patch event from commit")?;
@@ -373,7 +375,7 @@ async fn process_proposal_refspecs(
                 signer,
                 repo_ref,
                 &None,
-                &[],
+                &[]
             )
             .await?
             {
