@@ -3,32 +3,21 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
-use gnostr::ngit::client::get_state_from_cache;
-use git::RepoActions;
-use gnostr::ngit::{
-    client,
+use crate::lib::ngit::client::get_state_from_cache;
+use crate::lib::ngit::git::Repo;
+use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
+use crate::lib::ngit::git::RepoActions;
+use crate::lib::ngit::{
     git::{
         self,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
     },
     git_events::event_to_cover_letter,
     login::get_curent_user,
-    repo_ref,
-};
-use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
-use gnostr::ngit::repo_ref::RepoRef;
-
-use gnostr::ngit::{
-    fetch::{fetch_from_git_server, make_commits_for_proposal},
-    git::Repo,
-    utils::{
-        Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals,
-        get_read_protocols_to_try, get_short_git_server_name, join_with_and,
-        set_protocol_preference,
-    },
+    repo_ref::RepoRef,
 };
 
-pub async fn run_list(
+use crate::lib::utils::{Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals, get_read_protocols_to_try, get_short_git_server_name, join_with_and, set_protocol_preference};
     git_repo: &Repo,
     repo_ref: &RepoRef,
     for_push: bool,
