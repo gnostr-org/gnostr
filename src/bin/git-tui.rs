@@ -3,7 +3,7 @@ use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res, state, co
 use log::LevelFilter;
 use ratatui::Terminal;
 use std::{backtrace::Backtrace, panic, rc::Rc, time::{Duration, Instant}};
-use crossterm::event::{self, Event, KeyCode};
+use crossterm::event::{Event, KeyCode};
 
 pub fn main() -> Res<()> {
     let args = Args::try_parse()?;
