@@ -58,6 +58,15 @@ pub enum SignerInfo {
     },
 }
 
+impl From<crate::cli::SignerInfo> for SignerInfo {
+    fn from(cli_signer_info: crate::cli::SignerInfo) -> Self {
+        match cli_signer_info {
+            crate::cli::SignerInfo::Nsec { nsec, password, npub } => SignerInfo::Nsec { nsec, password, npub },
+            crate::cli::SignerInfo::Bunker { bunker_uri, bunker_app_key, npub } => SignerInfo::Bunker { bunker_uri, bunker_app_key, npub },
+        }
+    }
+}
+
 #[derive(PartialEq, Clone)]
 pub enum SignerInfoSource {
     GitLocal,
