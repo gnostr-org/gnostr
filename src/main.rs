@@ -6,12 +6,11 @@ use gnostr::{
     blockhash, blockheight,
     cli::{GnostrCli, GnostrCommands, get_app_cache_path},
     sub_commands,
-    types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
 };
 use gnostr_asyncgit::{
     types::{Keys, PrivateKey, PublicKey},
-    sync::RepoPath;
+    sync::RepoPath,
 };
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
