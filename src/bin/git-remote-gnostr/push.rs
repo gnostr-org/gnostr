@@ -8,47 +8,27 @@ use std::{
 
 use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
-use gnostr::ngit::client::{
-    STATE_KIND, get_events_from_local_cache, get_state_from_cache, send_events, sign_event,
-};
+use crate::lib::ngit::client::{STATE_KIND, get_events_from_local_cache, get_state_from_cache, send_events, sign_event,};
 use console::Term;
 use git::{RepoActions, sha1_to_oid};
-use gnostr::ngit::git_events::{
-    generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
-};
+use crate::lib::ngit::git_events::{generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,};
 use git2::{Oid, Repository};
-use gnostr::ngit::{
-    cli_interactor::count_lines_per_msg_vec,
-    client::{self, get_event_from_cache_by_id},
-    git::{
-        self,
-        nostr_url::{CloneUrl, NostrUrlDecoded},
-        oid_to_shorthand_string,
-    },
-    git_events::{self, event_to_cover_letter, get_event_root},
-    login::{self, user::UserRef},
-    repo_ref::{self, get_repo_config_from_yaml},
-    repo_state,
-};
+use crate::lib::ngit::{cli_interactor::count_lines_per_msg_vec, client::get_event_from_cache_by_id, git::{nostr_url::{CloneUrl, NostrUrlDecoded}, oid_to_shorthand_string,}, git_events::{event_to_cover_letter, get_event_root}, login::user::UserRef, repo_ref::get_repo_config_from_yaml,};
 use nostr_0_37_0::nips::nip10::Marker;
 use nostr_sdk_0_37_0::{
     Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag,
     hashes::sha1::Hash as Sha1Hash,
 };
-use gnostr::ngit::repo_ref::RepoRef;
-use gnostr::ngit::repo_state::RepoState;
+use crate::lib::ngit::repo_ref::RepoRef;
+use crate::lib::ngit::repo_state::RepoState;
 
-use gnostr::ngit::{
-    client::Client,
-    git::Repo,
-    list::list_from_remotes,
-    utils::{
-        Direction, find_proposal_and_patches_by_branch_name, get_all_proposals,
-        get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,
-        join_with_and, push_error_is_not_authentication_failure, read_line,
-        set_protocol_preference,
-    },
+use crate::lib::utils::{
+    Direction, find_proposal_and_patches_by_branch_name, get_all_proposals,
+    get_remote_name_by_url, get_short_git_server_name, get_write_protocols_to_try,
+    join_with_and, push_error_is_not_authentication_failure, read_line,
+    set_protocol_preference,
 };
+use list::list_from_remotes;
 
 pub async fn run_push(
     git_repo: &Repo,
