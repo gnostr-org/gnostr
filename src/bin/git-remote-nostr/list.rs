@@ -3,11 +3,11 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
-use crate::lib::ngit::client::get_state_from_cache;
-use crate::lib::ngit::git::Repo;
+use gnostr::ngit::client::get_state_from_cache;
+use gnostr::ngit::git::Repo;
 use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
-use crate::lib::ngit::git::RepoActions;
-use crate::lib::ngit::{
+use gnostr::ngit::git::RepoActions;
+use gnostr::ngit::{
     git::{
         self,
         nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
@@ -16,7 +16,9 @@ use crate::lib::ngit::{
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-use crate::lib::utils::{Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals, get_read_protocols_to_try, get_short_git_server_name, join_with_and, set_protocol_preference};
+use gnostr::utils::{Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals, get_read_protocols_to_try, get_short_git_server_name, join_with_and, set_protocol_preference};
+use super::fetch; // Add this for fetch_from_git_server and make_commits_for_proposal
+
 
 pub async fn run_list(
     git_repo: &Repo,
@@ -117,7 +119,7 @@ async fn get_open_and_draft_proposals_state(
     // without trusting commit_id we must apply each patch which requires the oid of
     // the parent so we much do a fetch
     for (git_server_url, oids_from_git_servers) in remote_states {
-        if fetch_from_git_server(
+        if fetch::fetch_from_git_server(
             git_repo,
             &oids_from_git_servers
                 .values()
@@ -149,7 +151,7 @@ async fn get_open_and_draft_proposals_state(
                 } else {
                     branch_name
                 };
-                match make_commits_for_proposal(git_repo, repo_ref, &patches) {
+                match fetch::make_commits_for_proposal(git_repo, repo_ref, &patches) {
                     Ok(tip) => {
                         state.insert(format!("refs/heads/{branch_name}"), tip);
                     }
