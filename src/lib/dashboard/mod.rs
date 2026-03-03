@@ -279,7 +279,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
         node.spawn(vec![], project_root.clone(), cmd_override)?;
     }
     
-    git_tui_node.spawn(vec![], project_root.clone(), Some("cargo run --bin git-tui".to_string()))?;
+    git_tui_node.spawn(vec![], project_root.clone(), Some("git-tui".to_string()))?;
     relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
     chat_node.spawn(vec![], project_root.clone(), Some("gnostr chat".to_string()))?;
 
