@@ -12,13 +12,15 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use gnostr::ngit::client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache, Client};
-use gnostr::ngit::git::{RepoActions, nostr_url::NostrUrlDecoded, Repo};
-use gnostr::ngit::login::existing::load_existing_login;
+use client::{Connect, consolidate_fetch_reports, get_repo_ref_from_cache};
+use gnostr::ngit::git::{RepoActions, nostr_url::NostrUrlDecoded};
+use gnostr::ngit::{client, git, login::existing::load_existing_login};
 use nostr_0_37_0::nips::nip01::Coordinate;
-use crate::utils::read_line; // Corrected path for read_line
+use utils::read_line;
 
+use gnostr::ngit::{client::Client, git::Repo};
 
+//adjust for gnostr::ngit usage
 mod fetch;
 mod list;
 mod push;
