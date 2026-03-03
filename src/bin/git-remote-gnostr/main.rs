@@ -16,7 +16,7 @@ use gnostr::ngit::client::{Connect, consolidate_fetch_reports, get_repo_ref_from
 use gnostr::ngit::git::{RepoActions, nostr_url::NostrUrlDecoded, Repo};
 use gnostr::ngit::login::existing::load_existing_login;
 use nostr_0_37_0::nips::nip01::Coordinate;
-use gnostr::utils::read_line;
+use crate::utils::read_line; // Corrected path for read_line
 
 
 mod fetch;
