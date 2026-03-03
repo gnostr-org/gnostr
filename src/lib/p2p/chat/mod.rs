@@ -17,7 +17,7 @@ use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::S
 use uuid::Uuid;
 
 use self::msg::{Msg, MsgKind};
-use crate::app::queue::InternalEvent;
+use crate::queue::InternalEvent;
 use gnostr_asyncgit::types::{*};
 use gnostr_asyncgit::types::metadata::{DEFAULT_AVATAR, DEFAULT_BANNER};
 
