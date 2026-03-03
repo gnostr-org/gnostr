@@ -8,16 +8,16 @@ use std::{
 
 use anyhow::{Context, Result, anyhow, bail};
 use auth_git2::GitAuthenticator;
-use client::{
+use gnostr::ngit::client::{
     STATE_KIND, get_events_from_local_cache, get_state_from_cache, send_events, sign_event,
 };
 use console::Term;
 use git::{RepoActions, sha1_to_oid};
-use git_events::{
+use gnostr::ngit::git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
 use git2::{Oid, Repository};
-use gnostr::{
+use gnostr::ngit::{
     cli_interactor::count_lines_per_msg_vec,
     client::{self, get_event_from_cache_by_id},
     git::{
@@ -35,10 +35,10 @@ use nostr_sdk_0_37_0::{
     Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag,
     hashes::sha1::Hash as Sha1Hash,
 };
-use repo_ref::RepoRef;
-use repo_state::RepoState;
+use gnostr::ngit::repo_ref::RepoRef;
+use gnostr::ngit::repo_state::RepoState;
 
-use crate::{
+use gnostr::ngit::{
     client::Client,
     git::Repo,
     list::list_from_remotes,
