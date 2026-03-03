@@ -3,9 +3,9 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result, anyhow};
 use auth_git2::GitAuthenticator;
-use client::get_state_from_cache;
+use gnostr::ngit::client::get_state_from_cache;
 use git::RepoActions;
-use gnostr::{
+use gnostr::ngit::{
     client,
     git::{
         self,
@@ -16,9 +16,9 @@ use gnostr::{
     repo_ref,
 };
 use nostr_sdk_0_37_0::hashes::sha1::Hash as Sha1Hash;
-use repo_ref::RepoRef;
+use gnostr::ngit::repo_ref::RepoRef;
 
-use crate::{
+use gnostr::ngit::{
     fetch::{fetch_from_git_server, make_commits_for_proposal},
     git::Repo,
     utils::{
