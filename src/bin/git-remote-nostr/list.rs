@@ -16,8 +16,9 @@ use crate::lib::ngit::{
     login::get_curent_user,
     repo_ref::RepoRef,
 };
-
 use crate::lib::utils::{Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals, get_read_protocols_to_try, get_short_git_server_name, join_with_and, set_protocol_preference};
+
+pub async fn run_list(
     git_repo: &Repo,
     repo_ref: &RepoRef,
     for_push: bool,
