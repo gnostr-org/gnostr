@@ -1,4 +1,5 @@
 use std::{fmt::Display, io, string};
+use clap;
 
 ///
 #[derive(Debug)]
@@ -101,10 +102,19 @@ pub enum Error {
     PromptAborted,
     /// NoMoreEvents,
     NoMoreEvents,
+    /// Clap(clap::error::Error),
+    Clap(clap::Error),
 }
 
 ///
 impl std::error::Error for Error {}
+
+///
+impl From<clap::Error> for Error {
+    fn from(e: clap::Error) -> Self {
+        Self::Clap(e)
+    }
+}
 
 ///
 impl Display for Error {
@@ -191,6 +201,7 @@ impl Display for Error {
             }
             Error::OpenLogFile(e) => f.write_fmt(format_args!("Couldn't open log file: {}", e)),
             Error::PromptAborted => f.write_str("Aborted"),
+            Error::Clap(e) => f.write_fmt(format_args!("CLI argument error: {}", e)),
             Error::NoMoreEvents => unimplemented!(),
         }
     }
