@@ -173,12 +173,12 @@ pub async fn launch(
         ahead.len()
     );
 
-    let (signer, user_ref) = crate::ngit::login::launch(
-        &git_repo,
-        &crate::cli::extract_signer_cli_arguments(cli_args),
+    let (signer, user_ref, _) = crate::ngit::login::login_or_signup(
+        &Some(&git_repo),
+        &crate::cli::extract_signer_cli_arguments(cli_args).map(Into::into),
+        &cli_args.password,
         Some(&client),
-        false,
-        false,
+        false, // fetch_profile_updates
     )
     .await?;
 

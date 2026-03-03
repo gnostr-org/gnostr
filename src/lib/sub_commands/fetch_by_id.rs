@@ -1,7 +1,7 @@
 use super::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
-use gnostr_asyncgit::{Command, Probe, get_weeble};
+use crate::{Command, Probe, get_weeble};
 use gnostr_asyncgit::types::{Filter, Id, IdHex, RelayMessage, SubscriptionId};
 
 #[derive(clap::Args, Debug, Clone)]

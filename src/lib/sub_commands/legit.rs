@@ -11,7 +11,7 @@ use gnostr_asyncgit::types::{Event, EventKind, Keys, Tag};
 #[derive(Args, Debug)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
-pub struct LegitSubCommand {
+pub struct SubCommandArgs {
     #[command(subcommand)]
     command: Option<LegitCommands>,
     /// Path to your git repository
@@ -45,7 +45,7 @@ pub struct LegitSubCommand {
 /// # Errors
 ///
 /// This function will return an error if the command fails.
-pub async fn legit(cli_args: &crate::cli::GnostrCli, sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
+pub async fn legit(cli_args: &crate::cli::GnostrCli, sub_command_args: &SubCommandArgs) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
         Some(LegitCommands::Login(args)) => login::launch(cli_args, args).await?,
         Some(LegitCommands::Init(args)) => init::launch(cli_args, args).await?,
@@ -53,7 +53,7 @@ pub async fn legit(cli_args: &crate::cli::GnostrCli, sub_command_args: &LegitSub
         Some(LegitCommands::List) => list::launch().await?,
         Some(LegitCommands::Pull) => pull::launch().await?,
         Some(LegitCommands::Push(args)) => push::launch(cli_args, args).await?,
-        Some(LegitCommands::Fetch(args)) => fetch::launch(args).await?,
+        Some(LegitCommands::Fetch(args)) => fetch::launch(cli_args, args).await?,
         Some(LegitCommands::Mine) | None => {
             #[allow(clippy::cast_possible_truncation)]
             let opts = gitminer::Options {

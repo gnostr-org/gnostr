@@ -6,7 +6,7 @@ use crate::ngit::{
     login::{SignerInfoSource, existing::load_existing_login},
 };
 
-use crate::cli::{Cli, extract_signer_cli_arguments};
+use crate::cli::{GnostrCli, extract_signer_cli_arguments};
 use crate::ngit::client::{Client, Connect};
 use crate::ngit::git::Repo;
 use crate::ngit::login::fresh::fresh_login_or_signup;
@@ -22,7 +22,7 @@ pub struct SubCommandArgs {
     offline: bool,
 }
 
-pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
+pub async fn launch(args: &GnostrCli, command_args: &SubCommandArgs) -> Result<()> {
     let client = if command_args.offline {
         None
     } else {
@@ -39,7 +39,7 @@ pub async fn launch(args: &Cli, command_args: &SubCommandArgs) -> Result<()> {
         fresh_login_or_signup(
             &git_repo.as_ref(),
             client.as_ref(),
-            extract_signer_cli_arguments(args)?,
+            extract_signer_cli_arguments(args).map(Into::into),
             log_in_locally_only || command_args.local,
         )
         .await?;

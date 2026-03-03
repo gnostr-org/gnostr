@@ -3,7 +3,9 @@
 use clap::Args;
 use serde::ser::StdError;
 
-use crate::{cli::NgitCommands, sub_commands::{fetch, init, list, login, pull, push, query, send}};
+use crate::cli::GnostrCli;
+use crate::cli::NgitCommands;
+use crate::sub_commands::{fetch, init, list, login, pull, push, query, send};
 use gnostr_asyncgit::types::{Event, EventKind, Keys, Tag};
 
 #[derive(Args, Debug)]
@@ -27,7 +29,7 @@ pub struct NgitSubCommand {
 /// # Errors
 ///
 /// This function will return an error if the command fails.
-pub async fn ngit(cli_args: &crate::cli::GnostrCli, sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
+pub async fn ngit(cli_args: &GnostrCli, sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdError>> {
     match &sub_command_args.command {
         NgitCommands::Login(args) => login::launch(cli_args, args).await?,
         NgitCommands::Init(args) => init::launch(cli_args, args).await?,
@@ -35,8 +37,9 @@ pub async fn ngit(cli_args: &crate::cli::GnostrCli, sub_command_args: &NgitSubCo
         NgitCommands::List => list::launch().await?,
         NgitCommands::Pull => pull::launch().await?,
         NgitCommands::Push(args) => push::launch(cli_args, args).await?,
-        NgitCommands::Fetch(args) => fetch::launch(args).await?,
+        NgitCommands::Fetch(args) => fetch::launch(cli_args, args).await?,
         NgitCommands::Query(args) => query::launch(args).await?,
+        &NgitCommands::Account(_) | &NgitCommands::Legit(_) => todo!(),
     }
     Ok(())
 }
