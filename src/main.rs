@@ -5,6 +5,7 @@ use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
     cli::{GnostrCli, GnostrCommands, get_app_cache_path},
+    core::GnostrSubCommands,
     sub_commands,
     weeble, wobble,
 };
@@ -171,13 +172,13 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Legit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::legit::legit(sub_command_args)
+            sub_commands::legit::legit(&gnostr_cli_args, sub_command_args)
                 .await
                 .map_err(|e| anyhow!("Error in legit subcommand: {}", e))
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::ngit::ngit(sub_command_args)
+            sub_commands::ngit::ngit(&gnostr_cli_args, sub_command_args)
                 .await
                 .map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
         }
@@ -537,7 +538,7 @@ async fn main() -> anyhow::Result<()> {
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
-            sub_commands::tui::tui(gnostr_asyncgit::core::GnostrSubCommands::default(), &gnostr_cli_args)
+            sub_commands::tui::tui(GnostrSubCommands::default(), &gnostr_cli_args)
                 .await
                 .map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
