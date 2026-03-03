@@ -1,6 +1,8 @@
+use git2::Repository;
+use tempfile::tempdir;
+
 use anyhow::{Context, Result};
 use clap::Parser;
-use gnostr_asyncgit::sync::repo_clone;
 use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -28,8 +30,9 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     println!("Cloning repository {} ...", args.repo_url);
-    let (tmp_dir, _repo) = repo_clone(&args.repo_url)
-        .context("Failed to clone repository using asyncgit")?;
+    let tmp_dir = tempdir()?;
+    let _repo = Repository::clone(&args.repo_url, tmp_dir.path())
+        .context("Failed to clone repository")?;
     let repo_path = tmp_dir.path();
 
     let mut files = Vec::new();
