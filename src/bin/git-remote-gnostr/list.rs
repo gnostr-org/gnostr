@@ -13,8 +13,8 @@ use gnostr::ngit::{
     },
     git_events::event_to_cover_letter,
     login::get_curent_user,
+    repo_ref::RepoRef,
 };
-use gnostr::ngit::repo_ref::RepoRef;
 use crate::utils::{Direction, fetch_or_list_error_is_not_authentication_failure, get_open_or_draft_proposals, get_read_protocols_to_try, get_short_git_server_name, join_with_and, set_protocol_preference};
 use super::fetch; // Add this for fetch_from_git_server and make_commits_for_proposal
 
@@ -74,7 +74,7 @@ pub async fn run_list(
             .git_server
             .iter()
             .filter_map(|server| remote_states.get(server))
-            .cloned())
+            .cloned()
             .collect::<Vec<HashMap<String, String>>>()
             .first()
             .context("failed to get refs from git server")?
