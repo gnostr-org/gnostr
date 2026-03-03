@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 
 // Remove simplelog imports
 use std::{
@@ -30,6 +30,14 @@ use crate::sub_commands::{bech32_to_any, broadcast_events, convert_key, create_b
     send_channel_message, set_channel_metadata, set_metadata, sniper, user_status, vanity,
 };
 
+// Imports for subcommand argument structs
+use crate::sub_commands::fetch::SubCommandArgs as FetchArgs;
+use crate::sub_commands::init::SubCommandArgs as InitArgs;
+use crate::sub_commands::send::SubCommandArgs as SendArgs;
+use crate::sub_commands::login::SubCommandArgs as LoginArgs;
+use crate::sub_commands::push::PushArgs;
+use crate::sub_commands::legit::SubCommandArgs as LegitSubCommandArgs;
+
 /// CliArgs
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -57,21 +65,21 @@ pub struct LegitCli {
 #[derive(Subcommand, Debug)]
 pub enum LegitCommands {
     /// update cache with latest updates from nostr
-    Fetch(fetch::SubCommandArgs),
+    Fetch(FetchArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(init::SubCommandArgs),
+    Init(InitArgs),
     /// issue commits as a proposal
-    Send(send::SubCommandArgs),
+    Send(SendArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(push::PushArgs),
+    Push(PushArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(login::SubCommandArgs),
+    Login(LoginArgs),
     /// Mine a git commit with a given prefix
     Mine,
 }
@@ -105,31 +113,33 @@ pub struct NgitCli {
 #[derive(Subcommand, Debug)]
 pub enum NgitCommands {
     /// update cache with latest updates from nostr
-    Fetch(fetch::SubCommandArgs),
+    Fetch(FetchArgs),
     /// signal you are this repo's maintainer accepting proposals via
     /// nostr
-    Init(init::SubCommandArgs),
+    Init(InitArgs),
     /// issue commits as a proposal
-    Send(send::SubCommandArgs),
+    Send(SendArgs),
     /// list proposals; checkout, apply or download selected
     List,
     /// send proposal revision
-    Push(push::SubCommandArgs),
+    Push(PushArgs),
     /// fetch and apply new proposal commits / revisions linked to
     /// branch
     Pull,
     /// run with --nsec flag to change npub
-    Login(login::SubCommandArgs),
+    Login(LoginArgs),
     /// Query events from relays
     Query(QuerySubCommand),
     /// login, logout or export keys
     Account(AccountSubCommandArgs),
+    /// Legit sub commands
+    Legit(LegitSubCommandArgs),
 }
 
 #[derive(Debug, Subcommand)]
 pub enum AccountCommands {
     /// login with nsec or nostr connect
-    Login(login::SubCommandArgs),
+    Login(LoginArgs),
     /// remove nostr account details stored in git config
     Logout,
     /// export nostr keys to login to other nostr clients
@@ -335,7 +345,7 @@ pub enum GnostrCommands {
     /// Hide a message in a public chat room
     HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
     /// Legit sub commands
-    Legit(legit::SubCommandArgs),
+    Legit(LegitSubCommandArgs),
     /// Get all events
     ListEvents(list_events::ListEventsSubCommand),
     /// Mute a public key
