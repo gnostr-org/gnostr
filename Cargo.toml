@@ -626,7 +626,7 @@ tokio = { version = "1.33.0", features = ["full", "tracing"] }
 
 ##tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = { version = "0.1", optional = true }
-tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots", "native-tls" ] } ##TODO check graph and compatibility
+tokio-tungstenite = { version = "0.28.0", features = [ "connect", "handshake", "rustls-tls-webpki-roots" ] } ##TODO check graph and compatibility
 tokio-util = { version = "0.7.17", features = ["io"] }
 
 toml = "0.8"
