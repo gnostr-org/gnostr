@@ -1,19 +1,17 @@
 use std::{
     borrow::Cow,
-    ffi::OsStr,
     fmt::Write,
     fs,
     path::{Path, PathBuf},
-    process::Command,
     sync::LazyLock,
 };
 
-use anyhow::{bail, Context};
+use anyhow::Context;
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use quote::{format_ident, quote};
 use serde::Deserialize;
-use threadpool::ThreadPool;
 
+static GRAMMAR_REPOSITORY_CONFIG_PATH: &str = "languages.toml";
 
 static BLACKLISTED_MODULES: &[&str] = &[
     // these languages all don't have corresponding grammars

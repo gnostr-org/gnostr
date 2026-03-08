@@ -167,7 +167,7 @@ num_cpus = "1.16.0"
 	russh = { version = "0.37.1", features = ["openssl"] }
 	russh-keys = "0.37.1"
 	rust-ini = "0.21.3"
-        rustls = { version = "0.23.37", features = ["ring"] }
+        rustls = { version = "0.23.37", default-features = false, features = ["ring", "std"] }
     scopetime = { path = "scopetime", package = "gnostr-scopetime" }
     scrypt = "0.11.0"
 	secp256k1 = { version = "0.29.1", features = ["hashes", "global-context", "rand-std", "serde"] }
