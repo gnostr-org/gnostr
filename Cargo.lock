@@ -5557,8 +5557,6 @@ dependencies = [
  "warp",
  "webbrowser",
  "which 6.0.3",
- "winapi",
- "windows-sys 0.48.0",
  "windows-sys 0.52.0",
  "xxhash-rust",
  "yoke 0.7.5",
