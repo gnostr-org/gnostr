@@ -677,21 +677,13 @@ zeroize = { workspace = true }
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
 
+
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winnt", "handleapi", "processthreadsapi", "errhandlingapi"] }
-# [target.'cfg(windows)'.dependencies.windows-sys]
-# version = "0.52" # or the version matching your error
-# features = [
-#     "Win32_System_Threading",
-#     "Win32_Foundation",
-#     "Win32_Security",
-# ]
-
-# If sccache is using 0.48, add this too
-windows-sys_048 = { package = "windows-sys", version = "0.48", features = ["Win32_System_Threading", "Win32_Foundation", "Win32_Security"] }
-
-# Patch for version 0.52
-windows-sys_052 = { package = "windows-sys", version = "0.52", features = ["Win32_System_Threading", "Win32_Foundation", "Win32_Security"] }
+windows-sys = { version = "0.52", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+] }
 
 [build-dependencies]
 anyhow = { workspace = true }
