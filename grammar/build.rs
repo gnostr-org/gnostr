@@ -1,17 +1,18 @@
 use std::{
     borrow::Cow,
-    ffi::OsStr,
     fmt::Write,
     fs,
     path::{Path, PathBuf},
-    process::Command,
     sync::LazyLock,
 };
 
-use anyhow::{bail, Context};
+use anyhow::bail;
+use anyhow::Context;
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use quote::{format_ident, quote};
 use serde::Deserialize;
+use std::ffi::OsStr;
+use std::process::Command;
 use threadpool::ThreadPool;
 
 const GRAMMAR_REPOSITORY_URL: &str = "https://github.com/helix-editor/helix";
