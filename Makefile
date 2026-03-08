@@ -1,4 +1,4 @@
-ACT_VERBOSE ?= 
+ACT_VERBOSE ?=
 ACT_BIND ?= --bind
 ACT_USE_NEW_ACTION_CACHE ?= ${ACT_BIND}
 
@@ -68,9 +68,11 @@ cargo-install: 	asyncgit 	###         cargo install --path . $(FORCE)
 cargo-sort: 	cargo-sort
 	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
 
-.PHONY:asyncgit relay query
+.PHONY:asyncgit grammar relay query
 asyncgit: 	###     asyncgit
 	@cargo  install -j $(NPROC) --path ./asyncgit $(FORCE)
+grammar: 	###     grammar
+	@cargo  build -j $(NPROC) --manifest-path ./grammar/Cargo.toml
 relay: 	###     relay
 	@cargo install -j $(NPROC) --path ./relay $(FORCE)
 query: 	###     query
@@ -146,7 +148,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j $(NPROC) --bin gnostr
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	./target/debug/gnostr chat --topic gnostr --oneshot "testing-1888/938154/718288" -n "9988ad0a66f28fe8611962a06a593865c1c8103f87258e3920986fc2a4ba2d0e"
+	./target/debug/gnostr chat --topic gnostr --oneshot "testing-//" -n ""
 	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
@@ -191,7 +193,7 @@ docker-tui: 	### 	gnostr tui in a docker container
 docker-chat: 	### 	gnostr chat in a docker container
 	docker buildx build . -t gnostr:latest && docker run  -it gnostr:latest -c "git init && git config --global init.defaultBranch gnostr && gnostr chat --name gnostr-docker-$(shell gnostr-wobble) --topic gnostr"
 docker-shared: 	### 	docker container with volumes
-	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
+	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/randymcmillan:/Users/randymcmillan gnostr:latest
 
 gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act || true
