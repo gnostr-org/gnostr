@@ -28,6 +28,9 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Install the ring crypto provider for rustls to resolve conflicts.
+    rustls::crypto::ring::install_default();
+
     let Some((decoded_nostr_url, git_repo)) = process_args().await? else {
         return Ok(());
     };
