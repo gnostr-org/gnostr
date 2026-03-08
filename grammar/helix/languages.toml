@@ -132,25 +132,6 @@ paramName = "All"
 paramType = true
 await = true
 
-
-[language-server.gopls]
-command = "gopls"
-
-[language-server.gopls.config.hints]
-assignVariableTypes = true
-compositeLiteralFields = true
-constantValues = true
-functionTypeParameters = true
-parameterNames = true
-rangeVariableTypes = true
-
-[language-server.golangci-lint-lsp]
-command = "golangci-lint-langserver"
-
-[language-server.golangci-lint-lsp.config]
-command = ["golangci-lint", "run", "--out-format", "json", "--issues-exit-code=1"]
-
-
 [language-server.rust-analyzer]
 command = "rust-analyzer"
 
@@ -621,26 +602,6 @@ indent = { tab-width = 2, unit = "  " }
 name = "spicedb"
 source = { git = "https://github.com/jzelinskie/tree-sitter-spicedb", rev = "a4e4645651f86d6684c15dfa9931b7841dc52a66" }
 
-[[language]]
-name = "go"
-scope = "source.go"
-injection-regex = "go"
-file-types = ["go"]
-roots = ["go.work", "go.mod"]
-auto-format = true
-comment-token = "//"
-block-comment-tokens = { start = "/*", end = "*/" }
-language-servers = [ "gopls", "golangci-lint-lsp" ]
-# TODO: gopls needs utf-8 offsets?
-indent = { tab-width = 4, unit = "\t" }
-
-[language.debugger]
-name = "go"
-transport = "tcp"
-command = "dlv"
-args = ["dap"]
-port-arg = "-l 127.0.0.1:{}"
-
 [[language.debugger.templates]]
 name = "source"
 request = "launch"
@@ -670,52 +631,6 @@ name = "core"
 request = "launch"
 completion = [ { name = "binary", completion = "filename" }, { name = "core", completion = "filename" } ]
 args = { mode = "core", program = "{0}", coreFilePath = "{1}" }
-
-[[grammar]]
-name = "go"
-source = { git = "https://github.com/tree-sitter/tree-sitter-go", rev = "64457ea6b73ef5422ed1687178d4545c3e91334a" }
-
-[[language]]
-name = "gomod"
-scope = "source.gomod"
-injection-regex = "gomod"
-file-types = [{ glob = "go.mod" }]
-auto-format = true
-comment-token = "//"
-language-servers = [ "gopls" ]
-indent = { tab-width = 4, unit = "\t" }
-
-[[grammar]]
-name = "gomod"
-source = { git = "https://github.com/camdencheek/tree-sitter-go-mod", rev = "e8f51f8e4363a3d9a427e8f63f4c1bbc5ef5d8d0" }
-
-[[language]]
-name = "gotmpl"
-scope = "source.gotmpl"
-injection-regex = "gotmpl"
-file-types = ["gotmpl"]
-comment-token = "//"
-block-comment-tokens = { start = "/*", end = "*/" }
-language-servers = [ "gopls" ]
-indent = { tab-width = 2, unit = " " }
-
-[[grammar]]
-name = "gotmpl"
-source = { git = "https://github.com/ngalaiko/tree-sitter-go-template", rev = "04270cd3512e2c7de0c5f2823725d7b0c4c01fda" }
-
-[[language]]
-name = "gowork"
-scope = "source.gowork"
-injection-regex = "gowork"
-file-types = [{ glob = "go.work" }]
-auto-format = true
-comment-token = "//"
-language-servers = [ "gopls" ]
-indent = { tab-width = 4, unit = "\t" }
-
-[[grammar]]
-name = "gowork"
-source = { git = "https://github.com/omertuc/tree-sitter-go-work", rev = "6dd9dd79fb51e9f2abc829d5e97b15015b6a8ae2" }
 
 [[language]]
 name = "javascript"
@@ -3562,15 +3477,6 @@ language-servers = [
     "diagnostics",
   ], name = "bash-language-server" },
 ]
-
-[[language]]
-name = "helm"
-grammar = "gotmpl"
-scope = "source.helm"
-roots = ["Chart.yaml"]
-comment-token = "#"
-language-servers = ["helm_ls"]
-file-types = [ { glob = "templates/*.yaml" }, { glob = "templates/*.yml" }, { glob = "templates/_*.tpl"}, { glob = "templates/NOTES.txt" } ]
 
 [[language]]
 name = "glimmer"
