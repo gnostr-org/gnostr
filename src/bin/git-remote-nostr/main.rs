@@ -17,6 +17,7 @@ use gnostr::ngit::git::{RepoActions, nostr_url::NostrUrlDecoded};
 use gnostr::ngit::{client, git, login::existing::load_existing_login};
 use nostr_0_37_0::nips::nip01::Coordinate;
 use utils::read_line;
+use rustls::crypto::ring;
 
 use gnostr::ngit::{client::Client, git::Repo};
 
@@ -29,7 +30,8 @@ mod utils;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Install the ring crypto provider for rustls to resolve conflicts.
-    rustls::crypto::ring::install_default();
+    ring::default_provider().install_default()
+        .expect("Failed to install default crypto provider");
 
     let Some((decoded_nostr_url, git_repo)) = process_args().await? else {
         return Ok(());
