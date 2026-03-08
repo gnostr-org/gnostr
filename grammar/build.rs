@@ -382,23 +382,9 @@ pub enum FileType {
 #[serde(rename_all = "kebab-case")]
 pub struct GrammarDefinition {
     name: String,
-    source: GrammarSource,
 }
 
-#[derive(Deserialize, Clone)]
-#[serde(rename_all = "lowercase", untagged)]
-enum GrammarSource {
-    Git {
-        #[serde(rename = "git")]
-        remote: String,
-        #[serde(rename = "rev")]
-        revision: String,
-        subpath: Option<String>,
-    },
-    Local {
-        path: PathBuf,
-    },
-}
+
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
