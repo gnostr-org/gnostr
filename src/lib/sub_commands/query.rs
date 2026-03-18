@@ -221,6 +221,7 @@ fn build_filter_map(
 }
 
 #[cfg(test)]
+#[allow(unused_imports)] // Temporarily allow unused imports to quiet warnings
 mod tests {
     use clap::{Parser, Subcommand};
     use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
