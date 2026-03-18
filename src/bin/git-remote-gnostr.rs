@@ -136,11 +136,13 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                     use serial_test::serial;
 
                     // Test infrastructure for CLI testing
+                    #[allow(dead_code)]
                     pub struct GnostrCliTester {
                         output: std::sync::Mutex<Vec<String>>,
                         input: std::sync::Mutex<Vec<String>>,
                     }
 
+                    #[allow(dead_code)]
                     impl GnostrCliTester {
                         pub fn new() -> Self {
                             Self {
@@ -171,11 +173,13 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                 use serial_test::serial;
 
                                 // Test infrastructure for CLI testing
+                                #[allow(dead_code)]
                                 pub struct GnostrCliTester {
                                     output: std::sync::Mutex<Vec<String>>,
                                     input: std::sync::Mutex<Vec<String>>,
                                 }
 
+                                #[allow(dead_code)]
                                 impl GnostrCliTester {
                                     pub fn new() -> Self {
                                         Self {
@@ -1268,7 +1272,7 @@ async fn handle_fetch(
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct GnostrRepoInfo {
+pub struct GnostrRepoInfo {
     author: PublicKey,
     #[allow(dead_code)]
     relays: Vec<RelayUrl>,
