@@ -60,7 +60,7 @@ impl Options {
 pub struct Client {
     keys: Keys,
     relays: Vec<RelayUrl>,
-    options: Options,
+    _options: Options,
 }
 
 impl Client {
@@ -68,7 +68,7 @@ impl Client {
         Self {
             keys: keys.clone(),
             relays: Vec::new(),
-            options,
+            _options: options,
         }
     }
 
