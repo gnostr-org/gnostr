@@ -15,6 +15,8 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let result = weeble::weeble();
+	env::set_var("GITUI_BUILD_NAME", result.unwrap().into());
     env::set_var("GNOSTR_GITDIR", "");
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
