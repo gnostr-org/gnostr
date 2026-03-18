@@ -7,6 +7,7 @@
 /// macro with the subcommand name.
 #[cfg(not(feature = "nightly"))]
 #[cfg(test)]
+#[allow(unused_macros)] // Allow unused macro definition
 mod tests {
 
     use std::{fs, io::Write, path::Path, process::Command};
