@@ -29,13 +29,10 @@ use futures::{
 use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget, ProgressState, ProgressStyle};
 #[cfg(test)]
 use mockall::*;
-use nostr_0_37_0::{Event, nips::nip01::Coordinate, signer::SignerBackend};
+use nostr_0_37_0::{nips::nip01::Coordinate, signer::SignerBackend};
 use nostr_database::NostrEventsDatabase;
 use nostr_lmdb::NostrLMDB;
-use nostr_sdk_0_37_0::{
-    EventBuilder, EventId, Kind, NostrSigner, Options, PublicKey, RelayUrl, SingleLetterTag,
-    Timestamp, prelude::RelayLimits,
-};
+use nostr_sdk_0_37_0::{Event, EventBuilder, EventId, Kind, NostrSigner, Options, PublicKey, RelayUrl, SingleLetterTag, Timestamp, prelude::RelayLimits,};
 
 use crate::ngit::{
     get_dirs,
