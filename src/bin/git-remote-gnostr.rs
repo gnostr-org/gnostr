@@ -1378,8 +1378,8 @@ fn create_ref_filter(repo_info: &GnostrRepoInfo) -> Filter {
 
     // Filter by repository tags
     let mut tags = BTreeMap::new();
-    tags.insert('t', vec!["gnostr-repo".to_string()]);
-    tags.insert('t', vec!["git-ref".to_string()]);
+    tags.entry('t').or_insert_with(Vec::new).push("gnostr-repo".to_string());
+    tags.entry('t').or_insert_with(Vec::new).push("git-ref".to_string());
     filter.tags = tags;
 
     filter
@@ -1479,9 +1479,9 @@ fn create_data_filter(repo_info: &GnostrRepoInfo, ref_name: &str) -> Filter {
 
     // Filter by specific ref
     let mut tags = BTreeMap::new();
-    tags.insert('t', vec!["gnostr-repo".to_string()]);
-    tags.insert('t', vec![format!("git-ref:{}", ref_name)]);
-    tags.insert('t', vec!["git-data".to_string()]);
+    tags.entry('t').or_insert_with(Vec::new).push("gnostr-repo".to_string());
+    tags.entry('t').or_insert_with(Vec::new).push(format!("git-ref:{}", ref_name));
+    tags.entry('t').or_insert_with(Vec::new).push("git-data".to_string());
     filter.tags = tags;
 
     filter
