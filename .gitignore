@@ -172,3 +172,6 @@ src/lib/xq/xq.md
 src/src.md
 !asyncgit/src/lib/gitui/cli/
 !asyncgit/src/lib/gitui/cli/mod.rs
+
+.gemini/
+gha-creds-*.json
