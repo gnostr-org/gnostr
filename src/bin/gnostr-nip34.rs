@@ -27,16 +27,16 @@ struct Commit {
     full_hash: String,
     author: String,
     summary: String,
-    committer_date: String,
+    _committer_date: String,
 }
 
 /// Represents a Git branch's data.
 #[derive(Debug, Clone)]
 struct Branch {
     name: String,
-    commit_hash: String,
+    _commit_hash: String,
     commit_message: String,
-    author: String,
+    _author: String,
     is_current: bool,
     is_remote: bool,
 }
@@ -98,7 +98,7 @@ impl App {
                     full_hash,
                     author: author.name().unwrap_or("Unknown").to_string(),
                     summary,
-                    committer_date,
+                    _committer_date: committer_date,
                 }
             })
             .collect();
@@ -121,9 +121,9 @@ impl App {
                         let author = commit.author();
                         branches.push(Branch {
                             name: branch_name.to_string(),
-                            commit_hash: commit.id().to_string().chars().take(8).collect(),
+                            _commit_hash: commit.id().to_string().chars().take(8).collect(),
                             commit_message: commit.summary().unwrap_or_default().to_string(),
-                            author: author.name().unwrap_or("Unknown").to_string(),
+                            _author: author.name().unwrap_or("Unknown").to_string(),
                             is_current,
                             is_remote: false,
                         });
