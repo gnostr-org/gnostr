@@ -964,7 +964,12 @@ impl CliTester {
             }
 
             match self.exp_string(message) {
-                Ok(result) => return Ok(result),
+                Ok(_result) => {
+
+                    let before = self.exp_string(message).context("exp_string failed")?;
+                    return Ok(before)
+
+                },
                 Err(_) => {
                     // Small delay before retry
                     std::thread::sleep(std::time::Duration::from_millis(100));
@@ -972,9 +977,6 @@ impl CliTester {
                 }
             }
         }
-
-        let before = self.exp_string(message).context("exp_string failed")?;
-        Ok(before)
     }
 
     pub fn expect_eventually_and_print<S>(&mut self, message: S) -> Result<String>
