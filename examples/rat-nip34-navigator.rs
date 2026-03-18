@@ -21,6 +21,7 @@ use ratatui::{
 use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
 /// Represents a relevant subset of a Git commit's data.
+#[allow(dead_code)] // Allow unused fields in this struct
 #[derive(Debug, Clone)]
 struct Commit {
     hash: String,
@@ -31,6 +32,7 @@ struct Commit {
 }
 
 /// Represents a Git branch's data.
+#[allow(dead_code)] // Allow unused fields in this struct
 #[derive(Debug, Clone)]
 struct Branch {
     name: String,
