@@ -42,7 +42,7 @@ rm $MAKEFILE 2>/dev/null || true
 touch $MAKEFILE
 
 tee -a $MAKEFILE <<EOF
-ACT_VERBOSE ?= 
+ACT_VERBOSE ?=
 ACT_BIND ?= --bind
 ACT_USE_NEW_ACTION_CACHE ?= \${ACT_BIND}
 
@@ -112,9 +112,11 @@ cargo-install: 	asyncgit 	###         cargo install --path . \$(FORCE)
 cargo-sort: 	cargo-sort
 	for cargo_toml in \$(shell ls */Cargo.toml); do cargo sort -n \$(cargo_toml);done
 
-.PHONY:asyncgit relay query
+.PHONY:asyncgit grammar relay query
 asyncgit: 	###     asyncgit
 	@cargo  install -j \$(NPROC) --path ./asyncgit \$(FORCE)
+grammar: 	###     grammar
+	@cargo  build -j \$(NPROC) --manifest-path ./grammar/Cargo.toml
 relay: 	###     relay
 	@cargo install -j \$(NPROC) --path ./relay \$(FORCE)
 query: 	###     query
