@@ -15,8 +15,8 @@ use std::ffi::OsStr;
 use std::process::Command;
 use threadpool::ThreadPool;
 
-const GRAMMAR_REPOSITORY_URL: &str = "https://github.com/helix-editor/helix";
-const GRAMMAR_REPOSITORY_REF: &str = "82dd96369302f60a9c83a2d54d021458f82bcd36";
+const GRAMMAR_REPOSITORY_URL: &str = "git@github.com:helix-editor/helix.git";
+const GRAMMAR_REPOSITORY_REF: &str = "a05c151bb6e8e9c65ec390b0ae2afe7a5efd619b";
 const GRAMMAR_REPOSITORY_CONFIG_PATH: &str = "languages.toml";
 
 static BLACKLISTED_MODULES: &[&str] = &[
