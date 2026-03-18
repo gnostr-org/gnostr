@@ -509,7 +509,7 @@ void {destroy_fn}(void *payload) {{
 
 fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Result<()> {
     if !destination.exists() {
-        let res = Command::new("git").arg("init").arg(destination).status()?;
+        let res = Command::new("git").arg("init").arg(destination).env("GIT_SSH_COMMAND", "ssh").status()?;
         if !res.success() {
             bail!("git init failed with exit code {res}");
         }
@@ -517,6 +517,7 @@ fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Re
         let res = Command::new("git")
             .args(["remote", "add", "origin", url])
             .current_dir(destination)
+            .env("GIT_SSH_COMMAND", "ssh")
             .status()?;
         if !res.success() {
             bail!("git remote failed with exit code {res}");
@@ -526,6 +527,7 @@ fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Re
     let res = Command::new("git")
         .args(["rev-parse", "HEAD"])
         .current_dir(destination)
+        .env("GIT_SSH_COMMAND", "ssh")
         .output()?
         .stdout;
     if res == ref_.as_bytes() {
@@ -535,6 +537,7 @@ fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Re
     let res = Command::new("git")
         .args(["fetch", "--depth", "1", "origin", ref_])
         .current_dir(destination)
+        .env("GIT_SSH_COMMAND", "ssh")
         .status()?;
     if !res.success() {
         bail!("git fetch failed with exit code {res}");
@@ -543,6 +546,7 @@ fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Re
     let res = Command::new("git")
         .args(["reset", "--hard", ref_])
         .current_dir(destination)
+        .env("GIT_SSH_COMMAND", "ssh")
         .status()?;
     if !res.success() {
         bail!("git fetch failed with exit code {res}");
