@@ -37,6 +37,9 @@ cargo-sort:
 asyncgit:
   @make asyncgit
 
+grammar:
+  @make grammar
+
 relay:
   @make relay
 
