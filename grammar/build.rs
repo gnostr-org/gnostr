@@ -14,8 +14,8 @@ use quote::{format_ident, quote};
 use serde::Deserialize;
 use threadpool::ThreadPool;
 
-const GRAMMAR_REPOSITORY_URL: &str = "https://github.com/helix-editor/helix";
-const GRAMMAR_REPOSITORY_REF: &str = "82dd96369302f60a9c83a2d54d021458f82bcd36";
+const GRAMMAR_REPOSITORY_URL: &str = "https://github.com/gnostr-org/helix";
+const GRAMMAR_REPOSITORY_REF: &str = "19602595c45cbe1a46594d4237b8a37e725e47a7";
 const GRAMMAR_REPOSITORY_CONFIG_PATH: &str = "languages.toml";
 
 static BLACKLISTED_MODULES: &[&str] = &[
