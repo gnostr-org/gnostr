@@ -1220,6 +1220,7 @@ impl BuildRepoState for RepoState {
 }
 
 #[cfg(test)]
+#[allow(unused_imports)] // Temporarily allow unused imports to quiet warnings
 mod tests {
 
     type E = anyhow::Error;

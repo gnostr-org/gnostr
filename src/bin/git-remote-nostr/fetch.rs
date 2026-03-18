@@ -411,6 +411,7 @@ fn fetch_from_git_server_url(
 }
 
 #[cfg(test)]
+#[allow(unused_imports)] // Temporarily allow unused imports to quiet warnings
 mod tests {
 
     use crate::fetch::FetchReporter;
