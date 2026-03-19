@@ -40,6 +40,8 @@ pub mod gitui;
 
 /// pub mod gnostr
 pub mod gnostr;
+pub mod types;
+pub mod web;
 
 pub mod asyncjob;
 mod blame;

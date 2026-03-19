@@ -1,0 +1,6 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = true
+[remote "origin"]
+	url = /Users/Shared/gnostr-org/.github/gnostr/asyncgit/tests/resources/crlf.git

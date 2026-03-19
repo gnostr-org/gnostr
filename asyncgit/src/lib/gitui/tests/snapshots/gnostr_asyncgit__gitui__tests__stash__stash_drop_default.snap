@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/stash.rs
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+▌Your branch is up to date with 'origin/main'.                                  |
+                                                                                |
+ Stashes                                                                        |
+ stash@0 On main: file-one                                                      |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git stash drop 0                                                              |
+Dropped refs/stash@{0} (866ae6e6fb018bbc32c37e658e097d95dceee8c0)               |
+styles_hash: dfd2a495b8602e3f
