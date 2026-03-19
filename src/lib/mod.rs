@@ -20,6 +20,8 @@ pub mod cmdbar;
 pub mod components;
 ///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
 pub mod core;
+///  <https://docs.rs/gnostr/latest/gnostr/crawler/index.html>
+pub mod crawler;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
