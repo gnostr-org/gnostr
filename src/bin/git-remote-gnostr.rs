@@ -7,7 +7,6 @@ use std::{
 use gnostr::types::{
     Client, Event, EventKind, Filter, Id, Keys, Options, PublicKey, RelayUrl, Tag, Unixtime,
 };
-
 // Re-export test helpers for all modules to use
 #[cfg(test)]
 pub use test_helpers::*;
@@ -132,17 +131,16 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                 #[cfg(test)]
                 mod integration_tests {
-                    use super::*;
                     use serial_test::serial;
 
+                    use super::*;
+
                     // Test infrastructure for CLI testing
-                    #[allow(dead_code)]
                     pub struct GnostrCliTester {
                         output: std::sync::Mutex<Vec<String>>,
                         input: std::sync::Mutex<Vec<String>>,
                     }
 
-                    #[allow(dead_code)]
                     impl GnostrCliTester {
                         pub fn new() -> Self {
                             Self {
@@ -169,17 +167,16 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             #[cfg(test)]
                             mod integration_tests {
 
-                                use super::*;
                                 use serial_test::serial;
 
+                                use super::*;
+
                                 // Test infrastructure for CLI testing
-                                #[allow(dead_code)]
                                 pub struct GnostrCliTester {
                                     output: std::sync::Mutex<Vec<String>>,
                                     input: std::sync::Mutex<Vec<String>>,
                                 }
 
-                                #[allow(dead_code)]
                                 impl GnostrCliTester {
                                     pub fn new() -> Self {
                                         Self {
@@ -225,7 +222,10 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                                         let repo_info = result.unwrap();
                                         assert_eq!(repo_info.url, url);
-                                        assert_eq!(repo_info.author.as_hex_string(), "0000000000000000000000000000000000000000000000000000001");
+                                        assert_eq!(
+                                            repo_info.author.as_hex_string(),
+                                            "0000000000000000000000000000000000000000000000000000001"
+                                        );
                                     }
 
                                     #[tokio::test]
@@ -259,8 +259,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                                 mod list_command_integration {
 
-                                    use super::super::super::create_test_repo_info;
-                                    use super::*;
+                                    use super::{super::super::create_test_repo_info, *};
 
                                     #[tokio::test]
                                     #[serial]
@@ -299,7 +298,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         let cli_tester = GnostrCliTester::new();
 
                                         // Simulate list command execution
-                                        // In real scenario, this would connect to relays and format output
+                                        // In real scenario, this would connect to relays and format
+                                        // output
                                         cli_tester.send_line("list");
 
                                         // Verify output contains expected git remote format
@@ -337,8 +337,10 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         let git_data_tags = filter.tags.get(&'t').unwrap();
                                         assert!(git_data_tags.contains(&"gnostr-repo".to_string()));
                                         assert!(git_data_tags.contains(&"git-data".to_string()));
-                                        assert!(git_data_tags
-                                            .contains(&format!("git-ref:{}", ref_name)));
+                                        assert!(
+                                            git_data_tags
+                                                .contains(&format!("git-ref:{}", ref_name))
+                                        );
                                     }
 
                                     #[tokio::test]
@@ -366,7 +368,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         cli_tester.send_line("fetch abc123 refs/heads/main");
 
                                         // Should attempt to fetch and report status
-                                        // Output should include "ok" on success or "error" on failure
+                                        // Output should include "ok" on success or "error" on
+                                        // failure
                                         let output = cli_tester.get_output();
                                         let has_ok = output.iter().any(|line| line.contains("ok"));
                                         let has_error =
@@ -451,7 +454,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         );
 
                                         assert!(result.is_ok());
-                                        // Note: In real scenario, we'd capture the event and verify its tags
+                                        // Note: In real scenario, we'd capture
+                                        // the event and verify its tags
                                         // For now, we verify creation succeeds
                                     }
                                 }
@@ -463,7 +467,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                     #[serial]
                                     async fn network_error_scenarios() {
                                         // Test behavior when relays are unavailable
-                                        // This would involve testing timeout handling in real client
+                                        // This would involve testing timeout handling in real
+                                        // client
                                         let repo_info = create_test_repo_info();
 
                                         // Should create filters even if network is down
@@ -476,8 +481,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                                     #[tokio::test]
                                     #[serial]
-                                    async fn malformed_event_data_handling(
-                                    ) -> Result<(), Box<dyn std::error::Error>>
+                                    async fn malformed_event_data_handling()
+                                    -> Result<(), Box<dyn std::error::Error>>
                                     {
                                         // Test handling of corrupted event structures
                                         let event = create_test_event();
@@ -528,9 +533,9 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                 }
 
                                 mod async_behavior_integration {
+                                    use std::{sync::Arc, thread};
+
                                     use super::*;
-                                    use std::sync::Arc;
-                                    use std::thread;
 
                                     #[tokio::test]
                                     #[serial]
@@ -566,7 +571,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         let repo_info = create_test_repo_info();
 
                                         // Test error propagation in filter functions
-                                        // (These are currently synchronous, but test structure for future async extensions)
+                                        // (These are currently synchronous, but test structure for
+                                        // future async extensions)
                                         let ref_filter = create_ref_filter(&repo_info);
                                         let data_filter = create_data_filter(&repo_info, "test");
 
@@ -606,8 +612,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                     #[tokio::test]
                                     #[serial]
                                     #[ignore] // Memory usage test
-                                    async fn memory_usage_with_large_events(
-                                    ) -> Result<(), Box<dyn std::error::Error>>
+                                    async fn memory_usage_with_large_events()
+                                    -> Result<(), Box<dyn std::error::Error>>
                                     {
                                         // Test memory efficiency with large event data
                                         let large_content = "x".repeat(10000);
@@ -723,7 +729,10 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                             let repo_info = result.unwrap();
                             assert_eq!(repo_info.url, url);
-                            assert_eq!(repo_info.author.as_hex_string(), "0000000000000000000000000000000000000000000000000000000000000000000000001");
+                            assert_eq!(
+                                repo_info.author.as_hex_string(),
+                                "0000000000000000000000000000000000000000000000000000000000000000000000001"
+                            );
                         }
 
                         #[tokio::test]
@@ -940,7 +949,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             );
 
                             assert!(result.is_ok());
-                            // Note: In real scenario, we'd capture the event and verify its tags
+                            // Note: In real scenario, we'd capture the event
+                            // and verify its tags
                             // For now, we verify creation succeeds
                         }
                     }
@@ -965,8 +975,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
 
                         #[tokio::test]
                         #[serial]
-                        async fn malformed_event_data_handling(
-                        ) -> Result<(), Box<dyn std::error::Error>> {
+                        async fn malformed_event_data_handling()
+                        -> Result<(), Box<dyn std::error::Error>> {
                             // Test handling of corrupted event structures
                             let event = create_test_event();
 
@@ -982,7 +992,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                 created_at: Unixtime::now(),
                                 kind: EventKind::TextNote,
                                 tags: vec![
-                                    Tag::new_identifier("malformed-git-ref".to_string()), // Missing "git-ref:" prefix
+                                    Tag::new_identifier("malformed-git-ref".to_string()), /* Missing "git-ref:" prefix */
                                     Tag::new_identifier("gnostr-repo".to_string()),
                                 ],
                                 content: "Test malformed event".to_string(),
@@ -1013,9 +1023,9 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                     }
 
                     mod async_behavior_integration {
+                        use std::{sync::Arc, thread};
+
                         use super::*;
-                        use std::sync::Arc;
-                        use std::thread;
 
                         #[tokio::test]
                         #[serial]
@@ -1050,7 +1060,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             let repo_info = create_test_repo_info();
 
                             // Test error propagation in filter functions
-                            // (These are currently synchronous, but test structure for future async extensions)
+                            // (These are currently synchronous, but test structure for future async
+                            // extensions)
                             let ref_filter = create_ref_filter(&repo_info);
                             let data_filter = create_data_filter(&repo_info, "test");
 
@@ -1088,8 +1099,8 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                         #[tokio::test]
                         #[serial]
                         #[ignore] // Memory usage test
-                        async fn memory_usage_with_large_events(
-                        ) -> Result<(), Box<dyn std::error::Error>> {
+                        async fn memory_usage_with_large_events()
+                        -> Result<(), Box<dyn std::error::Error>> {
                             // Test memory efficiency with large event data
                             let large_content = "x".repeat(10000);
 
@@ -1272,7 +1283,7 @@ async fn handle_fetch(
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct GnostrRepoInfo {
+struct GnostrRepoInfo {
     author: PublicKey,
     #[allow(dead_code)]
     relays: Vec<RelayUrl>,
@@ -1378,8 +1389,7 @@ fn create_ref_filter(repo_info: &GnostrRepoInfo) -> Filter {
 
     // Filter by repository tags
     let mut tags = BTreeMap::new();
-    tags.entry('t').or_insert_with(Vec::new).push("gnostr-repo".to_string());
-    tags.entry('t').or_insert_with(Vec::new).push("git-ref".to_string());
+    tags.insert('t', vec!["gnostr-repo".to_string(), "git-ref".to_string()]);
     filter.tags = tags;
 
     filter
@@ -1479,9 +1489,14 @@ fn create_data_filter(repo_info: &GnostrRepoInfo, ref_name: &str) -> Filter {
 
     // Filter by specific ref
     let mut tags = BTreeMap::new();
-    tags.entry('t').or_insert_with(Vec::new).push("gnostr-repo".to_string());
-    tags.entry('t').or_insert_with(Vec::new).push(format!("git-ref:{}", ref_name));
-    tags.entry('t').or_insert_with(Vec::new).push("git-data".to_string());
+    tags.insert(
+        't',
+        vec![
+            "gnostr-repo".to_string(),
+            format!("git-ref:{}", ref_name),
+            "git-data".to_string(),
+        ],
+    );
     filter.tags = tags;
 
     filter
@@ -1500,7 +1515,10 @@ mod tests {
         assert!(result.is_ok());
 
         let repo_info = result.unwrap();
-        assert_eq!(repo_info.url, "gnostr://naddr1qqzynhx9qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v93qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v9");
+        assert_eq!(
+            repo_info.url,
+            "gnostr://naddr1qqzynhx9qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v93qcrqcpzamhxue69uhkumttpwfjhxqgr0ys8qsqqqqqqpqqqqqyqumfnqv3xcm5v9"
+        );
     }
 
     #[test]
@@ -1518,10 +1536,12 @@ mod tests {
         // Test with invalid protocol
         let result = parse_gnostr_url("http://test.com");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("URL must start with gnostr://"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("URL must start with gnostr://")
+        );
     }
 
     #[test]
@@ -1529,10 +1549,12 @@ mod tests {
         // Test with invalid format after gnostr://
         let result = parse_gnostr_url("gnostr://invalidformat");
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid gnostr URL format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid gnostr URL format")
+        );
     }
 
     #[test]

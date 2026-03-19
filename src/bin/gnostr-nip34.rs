@@ -8,15 +8,15 @@ use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use gnostr::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
+use gnostr_asyncgit::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
 use ratatui::{
+    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
-    Frame, Terminal,
 };
 use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
@@ -27,16 +27,16 @@ struct Commit {
     full_hash: String,
     author: String,
     summary: String,
-    _committer_date: String,
+    committer_date: String,
 }
 
 /// Represents a Git branch's data.
 #[derive(Debug, Clone)]
 struct Branch {
     name: String,
-    _commit_hash: String,
+    commit_hash: String,
     commit_message: String,
-    _author: String,
+    author: String,
     is_current: bool,
     is_remote: bool,
 }
@@ -98,7 +98,7 @@ impl App {
                     full_hash,
                     author: author.name().unwrap_or("Unknown").to_string(),
                     summary,
-                    _committer_date: committer_date,
+                    committer_date,
                 }
             })
             .collect();
@@ -121,9 +121,9 @@ impl App {
                         let author = commit.author();
                         branches.push(Branch {
                             name: branch_name.to_string(),
-                            _commit_hash: commit.id().to_string().chars().take(8).collect(),
+                            commit_hash: commit.id().to_string().chars().take(8).collect(),
                             commit_message: commit.summary().unwrap_or_default().to_string(),
-                            _author: author.name().unwrap_or("Unknown").to_string(),
+                            author: author.name().unwrap_or("Unknown").to_string(),
                             is_current,
                             is_remote: false,
                         });
@@ -414,6 +414,7 @@ impl App {
                 let new_event = unsigned_event
                     .sign(&self.secret_key)
                     .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+                //ensure the event is pushed to all relays
                 self.nip34_events.push(new_event);
             }
         }
@@ -867,8 +868,12 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
                 "  "
             };
             let content = format!(
-                "{}[{}] {} - {}\n",
-                selected_indicator, c.hash, c.author, c.summary
+                "{}[{}] {} - {} ({})\n", // Added committer_date here
+                selected_indicator,
+                c.hash,
+                c.author,
+                c.summary,
+                c.committer_date // Added committer_date
             );
             let style = if app.selected_commits.contains(&index) {
                 Style::default().fg(Color::Yellow)
@@ -947,14 +952,14 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
         //);
 
         //f.render_widget(
-        //    Paragraph::new(format!("Selected: {} commits", app.selected_commits.len()))
-        //        .style(Style::default().fg(Color::Yellow)),
-        //    details_chunk[1],
+        //    Paragraph::new(format!("Selected: {} commits",
+        // app.selected_commits.len()))        .style(Style::default().
+        // fg(Color::Yellow)),    details_chunk[1],
         //);
 
         //f.render_widget(
-        //    Paragraph::new("Press 'n' to create NIP-34 patch from selected commits")
-        //        .style(Style::default().fg(Color::Green)),
+        //    Paragraph::new("Press 'n' to create NIP-34 patch from selected
+        // commits")        .style(Style::default().fg(Color::Green)),
         //    details_chunk[2],
         //);
     }
@@ -979,7 +984,7 @@ fn render_branches_view(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 "  "
             };
-            let content = format!("{}{} - {}\n", prefix, b.name, b.commit_message);
+            let content = format!("{}{} - {} ({}) - {}\n", prefix, b.name, b.commit_message, b.author, b.commit_hash); // Added commit_hash and author
             let style = if b.is_current {
                 Style::default().fg(Color::Green)
             } else if b.is_remote {
