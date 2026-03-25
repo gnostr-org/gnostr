@@ -1,7 +1,139 @@
-//use log::info;
-//use log::{debug, trace};
 use nostr_sdk::prelude::Url;
+use directories::ProjectDirs;
+use crate::preprocess_line;
 use std::collections::HashSet;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use tracing::{debug, warn};
+use reqwest::Client;
+use anyhow::Result;
+use reqwest::header::ACCEPT;
+
+pub fn get_config_dir_path() -> PathBuf {
+    ProjectDirs::from("org", "gnostr", "gnostr/crawler")
+        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
+        .unwrap_or_else(|| Path::new(".").to_path_buf())
+}
+
+pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
+    debug!("Fetching online relays from: {}", url);
+    let client = Client::new();
+    let response = client.get(url).send().await?.error_for_status()?;
+    let text = response.text().await?;
+
+    let relays: Vec<String> = text.lines()
+        .filter_map(|line| {
+            let preprocessed_line = preprocess_line(line);
+
+                        if preprocessed_line.is_empty() {
+
+                            return None;
+
+                        }
+
+            
+
+                        let mut final_line = preprocessed_line;
+
+            
+
+                        // Attempt to prepend wss:// if it looks like a hostname without a scheme
+
+                        if !final_line.contains("://") {
+
+                            let potential_url = format!("wss://{}", final_line);
+
+                            match Url::parse(&potential_url) {
+
+                                Ok(url) => {
+
+                                    debug!("Prepended 'wss://' to form valid URL: {}", url);
+
+                                    final_line = url.to_string();
+
+                                },
+
+                                Err(_) => {
+
+                                    // If prepending wss:// doesn't form a valid URL, keep the original line
+
+                                    // and let the next checks handle it as a non-URL line.
+
+                                    debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
+
+                                }
+
+                            }
+
+                        }
+
+            
+
+                        if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
+
+                            match Url::parse(&final_line) {
+
+                                Ok(url) => Some(url.to_string()),
+
+                                Err(_) => {
+
+                                    warn!("Skipping invalid WEBSOCKET URL format: {}", final_line);
+
+                                    None
+
+                                }
+
+                            }
+
+                        } else if final_line.contains(":://") { // It's a URL, but not a websocket URL
+
+                            warn!("Skipping non-websocket URL scheme: {}", final_line);
+
+                            None
+
+                        } else { // It's not a URL at all (e.g., "Relay URL")
+
+                            debug!("Silently skipping non-URL line: {}", final_line);
+
+                            None
+
+                        }
+
+                    })
+
+                    .collect();
+
+    debug!("Fetched {} online relays", relays.len());
+    Ok(relays)
+}
+
+pub async fn check_relay_liveness(url_str: &str) -> bool {
+    let client = Client::new();
+    let http_url = url_str
+        .replace("wss://", "https://")
+        .replace("ws://", "http://");
+
+    match client
+        .head(&http_url)
+        .header(ACCEPT, "application/nostr+json")
+        .timeout(std::time::Duration::from_secs(5)) // 5 second timeout
+        .send()
+        .await
+    {
+        Ok(response) => {
+            let is_success = response.status().is_success();
+            if !is_success {
+                warn!("Liveness check failed for {}: Status {}", url_str, response.status());
+            }
+            is_success
+        }
+        Err(e) => {
+            warn!("Liveness check error for {}: {}", url_str, e);
+            false
+        }
+    }
+}
 
 /// Maintain a list of all encountered relays
 pub struct Relays {
@@ -26,7 +158,7 @@ impl Relays {
         if let Ok(u) = Url::parse(s1) {
             res = self.r.insert(u);
             if res {
-                self.print();
+                //self.print();
             }
         }
         res
@@ -38,6 +170,11 @@ impl Relays {
 
     pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
         let list: Vec<Url> = list.to_vec();
+        for url in &list { debug!("de_dup:: url={}", url); }
+        list
+    }
+    pub fn de_dup_string(&self, list: &[String]) -> Vec<String> {
+        let list: Vec<String> = list.to_vec();
         list
     }
 
@@ -54,7 +191,8 @@ impl Relays {
     }
 
     pub fn get_all(&self) -> Vec<String> {
-        self.r.iter().map(|u| u.to_string()).collect()
+        let list: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
+        self.de_dup_string(&list)
     }
 
     pub fn print(&self) {
@@ -62,30 +200,60 @@ impl Relays {
             let mut relay = format!("{}", u);
             if relay.ends_with('/') {
                 relay.pop();
-                println!("{}", relay);
+                debug!("relays::125:{}", relay);
             } else {
-                println!("{}", relay);
+                debug!("relays::127:{}", relay);
             }
         }
     }
 
-    pub fn dump_json_object(&self) {
-        let mut count = 0;
-        print!("[\"RELAYS\",");
-        for u in &self.r {
-            print!("{{\"{}\":\"{}\"}},", count, u);
-            count += 1;
-        }
-        print!("{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
-        print!("]");
+    pub fn dump_list(&self) {
+        self.dump_to_file("relays.yaml");
+        self.dump_to_json("relays.json");
     }
 
-    pub fn dump_list(&self) {
+    pub fn dump_to_file(&self, filename: &str) {
+        let config_dir = get_config_dir_path();
+        let file_path = config_dir.join(filename);
+
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent).expect("Failed to create directory");
+        }
+
+        let relays: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
+        match serde_yaml::to_string(&relays) {
+            Ok(yaml_content) => {
+                let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
+                write!(file, "{}", yaml_content).expect("Failed to write YAML content");
+                debug!("Relays dumped to {}", file_path.display());
+                debug!("Relays.yaml written to: {}", file_path.canonicalize().unwrap_or_default().display());
+            },
+            Err(e) => {
+                warn!("Failed to serialize relays to YAML for {}: {}", filename, e);
+            }
+        }
+    }
+
+    pub fn dump_to_json(&self, filename: &str) {
+        let config_dir = get_config_dir_path();
+        let file_path = config_dir.join(filename);
+
+        if let Some(parent) = file_path.parent() {
+            fs::create_dir_all(parent).expect("Failed to create directory");
+        }
+
+        let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
+        debug!("file={:?}", file);
+
         let mut count = 0;
+        let _ = writeln!(file, "[\"RELAYS\",");
         for u in &self.r {
-            print!("78:{{\"{}\":\"{}\"}}", count, u);
+            let _ = writeln!(file, "{{\"{}\":\"{}\"}},", count, u);
             count += 1;
         }
-        print!("{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
+        let _ = writeln!(file, "{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
+        let _ = writeln!(file, "]");
+
+        debug!("Relays dumped to {}", file_path.display());
     }
 }

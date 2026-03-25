@@ -1,30 +1,31 @@
-#[allow(unused_imports)]
 use crate::processor::Processor;
-use crate::relays::Relays;
-use crate::CliArgs;
+use crate::{load_file};
+use crate::relays::{Relays, fetch_online_relays};
+
 use crate::APP_SECRET_KEY;
+use nostr_sdk::prelude::FromSkStr;
 use nostr_sdk::{
     prelude::{
-        Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, /*Tag, */Timestamp,
-        Url, TagStandard
+        Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, Tag, Timestamp,
+        Url,
     },
     RelayMessage, RelayStatus,
 };
 use std::collections::HashSet;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-use std::str::FromStr;
 use std::time::Duration;
 
-use clap::Parser;
 
-use git2::Repository;
+
+
 use std::str;
 
 use log::debug;
 use log::info;
 use log::trace;
+use log::warn;
 
-const MAX_ACTIVE_RELAYS: usize = 2; //usize::MAX;
+const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 
 /// Keeps a set of active connections to relays
@@ -38,13 +39,52 @@ pub struct RelayManager {
 }
 
 impl RelayManager {
-    pub fn new(app_keys: Keys, processor: Processor) -> Self {
+    pub async fn new(app_keys: Keys, processor: Processor) -> Self {
         let opts = Options::new(); //.wait_for_send(false);
-        let relay_client = Client::with_opts(&app_keys, opts);
+        let relay_client = Client::new_with_opts(&app_keys, opts);
         let _proxy = Some(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9050)));
+
+        let mut relays_instance = Relays::new();
+
+        // Load relays from relays.yaml
+        match load_file("relays.yaml") {
+            Ok(urls) => {
+                for url_str in urls {
+                    debug!("relay_manager::new::url_str={}", &url_str);
+                    relays_instance.add(&url_str);
+                }
+                debug!("Loaded {} relays from relays.yaml", relays_instance.count());
+            },
+            Err(e) => debug!("Could not load relays.yaml: {}", e),
+        }
+
+        // Fetch online relays (permissionlesstech/bitchat)
+        let bitchat_online_relays_url = "https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv";
+        match fetch_online_relays(bitchat_online_relays_url).await {
+            Ok(urls) => {
+                for url_str in urls {
+                    relays_instance.add(&url_str);
+                }
+                debug!("Loaded {} relays from online CSV (bitchat)", relays_instance.count());
+            },
+            Err(e) => debug!("Could not fetch online relays from bitchat: {}", e),
+        }
+
+        // Fetch online relays (sesseor/nostr-relays-list)
+        let sesseor_online_relays_url = "https://raw.githubusercontent.com/sesseor/nostr-relays-list/main/relays.txt";
+        match fetch_online_relays(sesseor_online_relays_url).await {
+            Ok(urls) => {
+                for url_str in urls {
+                    relays_instance.add(&url_str);
+                }
+                debug!("Loaded {} relays from online TXT (sesseor)", relays_instance.count());
+            },
+            Err(e) => debug!("Could not fetch online relays from sesseor: {}", e),
+        }
+
         Self {
             // app_keys,
-            relays: Relays::new(),
+            relays: relays_instance,
             relay_client,
             processor,
             time_last_event: Self::now(),
@@ -52,15 +92,18 @@ impl RelayManager {
     }
 
     fn add_bootstrap_relays_if_needed(&mut self, bootstrap_relays: Vec<&str>) {
+
+        debug!("relay_manager::add_bootstrap_relays_if_needed");
         for us in &bootstrap_relays {
             if self.relays.count() >= MAX_ACTIVE_RELAYS {
-                return;
+                //return;
             }
             self.relays.add(us);
         }
     }
 
     async fn add_some_relays(&mut self) -> Result<()> {
+        debug!("relay_manager::add_some_relays");
         // remove all
         loop {
             let relays = self.relay_client.relays().await;
@@ -68,64 +111,48 @@ impl RelayManager {
             if relay_urls.is_empty() {
                 break;
             }
-            self.relay_client
-                .remove_relay(relay_urls[0].to_string())
-                .await?;
+            for relay_url in &relay_urls {
+                debug!("removing relay_url:{}", relay_url.to_string());
+            }
+            //self.relay_client
+            //    .remove_relay(relay_urls[0].to_string())
+            //    .await?;
         }
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
 
-        let args = CliArgs::parse();
 
-        let path = args.flag_git_dir.as_ref().map(|s| &s[..]).unwrap_or(".");
-        let repo = Repository::discover(path)?;
-        let revwalk = repo.revwalk()?;
-        for commit in revwalk {
-            println!("\n\n\n\n\n{:?}\n\n\n\n", commit);
-        }
 
         //async {
         let opts = Options::new(); //.wait_for_send(true);
-        let app_keys = Keys::from_str(APP_SECRET_KEY).unwrap();
-        let relay_client = Client::with_opts(&app_keys, opts);
-        //let _ = relay_client.publish_text_note(path, []).await;
-        //let _ = relay_client
-        //    .publish_text_note("relay_manager:1<--------------------------<<<<<", [])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("2<--------------------------<<<<<", [])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("3<--------------------------<<<<<", [])
-        //    .await;
-        //let _ = relay_client
-        //    .publish_text_note("4<--------------------------<<<<<", [])
-        //    .await;
-        let _ = relay_client.publish_text_note("#gnostr", []).await;
+        let app_keys = Keys::from_sk_str(APP_SECRET_KEY).unwrap();
+        let _relay_client = Client::new_with_opts(&app_keys, opts);
         //};
 
         for r in some_relays {
+            debug!("r={}", &r);
             //self.relay_client.add_relay(r, None).await?;
-            self.relay_client.add_relay(r.clone()).await?;
+            self.relay_client.add_relay(r.clone(), None).await?;
             //self.relay_client
-            //    .publish_text_note("relay_manager:5<--------<<<<<<<<<", [])
+            //    .publish_text_note("relay_manager:5<--------<<<<<<<<<", &[])
             //    .await?;
             //self.relay_client
-            //    .publish_text_note("6<--------<<<<<<<<<", [])
+            //    .publish_text_note("6<--------<<<<<<<<<", &[])
             //    .await?;
             //self.relay_client
-            //    .publish_text_note("7<--------<<<<<<<<<", [])
+            //    .publish_text_note("7<--------<<<<<<<<<", &[])
             //    .await?;
             //self.relay_client
-            //    .publish_text_note("888888<--------<<<<<<<<<", [])
+            //    .publish_text_note("888888<--------<<<<<<<<<", &[])
             //    .await?;
             self.relay_client
-                .publish_text_note(format!("{}", r), [])
+                .publish_text_note(format!("{}", r), &[])
                 .await?;
         }
         Ok(())
     }
 
     pub async fn run(&mut self, bootstrap_relays: Vec<&str>) -> Result<()> {
+        debug!("relay_manager::run");
         self.add_bootstrap_relays_if_needed(bootstrap_relays);
         self.add_some_relays().await?;
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
@@ -135,27 +162,73 @@ impl RelayManager {
                 || !url.as_str().contains("")
                 || !url.as_str().contains("")
             {
-                self.relay_client.add_relay(url.to_string()).await?;
+                self.relay_client.add_relay(url.to_string(), None).await?;
             }
         }
         self.connect().await?;
         self.wait_and_handle_messages().await?;
-        ////self.relays.dump_list();
-        self.relays.print();
+        debug!("relay_manager::run::self.relays.dump_list()");
+        self.relays.dump_list(); //TODO convert relays.dump_list to relays.yaml write operation
+        //self.relays.print();
+        //let get_some = self.relays.get_some(50);
+        //for url in get_some { println!("url={}", url.to_string());}
+        let get_all = self.relays.get_all();
+        for relay in get_all {
+            debug!("relay_manager::run::184 relay={} ", relay);
+        }
         Ok(())
     }
 
     async fn connect(&mut self) -> Result<()> {
+        debug!("relay_manager::connect");
         let relays = self.relay_client.relays().await;
-        debug!("Connecting to {} relays ...", relays.len());
+        info!("Connecting to {} relays ...", relays.len());
         for u in relays.keys() {
-            trace!("{:?} ", u.to_string())
+            debug!("u={:?} ", u.to_string())
         }
         debug!("\n");
-        // Warning: error is not handled here, should check back status
+
+        // Initiate connection
         self.relay_client.connect().await;
-        debug!("Connected");
-        Ok(())
+
+        // Wait for all relays to be connected
+        let mut all_connected = false;
+        let mut attempts = 0;
+        let max_attempts = 2; // Try for 10 seconds (10 * 1 second sleep)
+
+        while !all_connected && attempts < max_attempts {
+            all_connected = true;
+            let relays = self.relay_client.relays().await;
+            for relay in relays.values() {
+                match relay.status().await {
+                    RelayStatus::Connected => {
+                        info!("Relay {} is connected.", relay.url().to_string());
+                    },
+                    RelayStatus::Disconnected | RelayStatus::Terminated | RelayStatus::Connecting => {
+                        warn!("Relay {} is not yet connected. Status: {:?}", relay.url().to_string(), relay.status().await);
+                        all_connected = false;
+                    }
+                    _ => {
+                        warn!("Relay {} has unknown status: {:?}", relay.url().to_string(), relay.status().await);
+                        all_connected = false;
+                    }
+                }
+            }
+
+            if !all_connected {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                attempts += 1;
+            }
+        }
+
+        if all_connected {
+            debug!("All relays connected.");
+            Ok(())
+        } else {
+            warn!("Failed to connect to all relays after {} attempts.", max_attempts);
+            //TODO append to shitlist.yaml in user space
+            Ok(())
+        }
     }
 
     async fn disconnect(&mut self) -> Result<()> {
@@ -166,28 +239,25 @@ impl RelayManager {
 
     async fn subscribe(&mut self, time_start: Timestamp, time_end: Timestamp) -> Result<()> {
         self.relay_client
-            .subscribe(
-                vec![Filter::new()
-                    // .pubkey(keys.public_key())
-                    // .kind(Kind::RecommendRelay)
-                    .kinds(vec![Kind::ContactList, Kind::RecommendRelay])
-                    .since(time_start)
-                    .until(time_end)],
-                None,
-            )
-            .await?;
+            .subscribe(vec![Filter::new()
+                // .pubkey(keys.public_key())
+                // .kind(Kind::RecommendRelay)
+                .kinds(vec![Kind::ContactList, Kind::RecommendRelay])
+                .since(time_start)
+                .until(time_end)])
+            .await;
         debug!("Subscribed to relay events",);
         self.relay_client
-            .publish_text_note(format!("{}", time_start), [])
+            .publish_text_note(format!("{}", time_start), &[])
             .await?;
         self.relay_client
-            .publish_text_note(format!("{}", time_end), [])
+            .publish_text_note(format!("{}", time_end), &[])
             .await?;
         Ok(())
     }
 
     async fn unsubscribe(&mut self) -> Result<()> {
-        self.relay_client.unsubscribe_all().await;
+        self.relay_client.unsubscribe().await;
         debug!("Unsubscribed from relay events ...");
         Ok(())
     }
@@ -204,10 +274,10 @@ impl RelayManager {
             self.add_some_relays().await?;
             self.connect().await?;
             self.relay_client
-                .publish_text_note(format!("{}", connected_relays), [])
+                .publish_text_note(format!("{}", connected_relays), &[])
                 .await?;
             self.relay_client
-                .publish_text_note(format!("{}", available_relays), [])
+                .publish_text_note(format!("{}", available_relays), &[])
                 .await?;
         }
         Ok(())
@@ -224,21 +294,14 @@ impl RelayManager {
 
         let mut notifications = self.relay_client.notifications();
         while let Ok(notification) = notifications.recv().await {
-            debug!("relaynotif {:?}", notification);
+            trace!("relay_manager::wait_and_handle_messages::relaynotif {:?}", notification);
             match notification {
-                RelayPoolNotification::Event {
-                    relay_url: _,
-                    subscription_id: _,
-                    event,
-                } => {
-                    self.handle_event(&event);
+                RelayPoolNotification::Event(_url, event) => {
+                    self.handle_event(&event); //self.handle_event
                     // invoke callback
-                    self.processor.handle_event(&event);
+                    self.processor.handle_event(&event); //self.processor.handle_event
                 }
-                RelayPoolNotification::Message {
-                    relay_url: url,
-                    message: relaymsg,
-                } => match relaymsg {
+                RelayPoolNotification::Message(url, relaymsg) => match relaymsg {
                     RelayMessage::EndOfStoredEvents(_sub_id) => {
                         eose_relays.insert(url.clone());
                         let n1 = eose_relays.len();
@@ -264,14 +327,15 @@ impl RelayManager {
                     RelayMessage::Event {
                         subscription_id: _,
                         event: _,
-                    } => {}
+                    } => {},
+                    RelayMessage::Empty => {
+                        trace!("Received empty message from {url}");
+                    }
                     _ => {
-                        debug!("{{\"{:?}\":\"{url}\"}}", relaymsg);
+                        debug!("Received unhandled relay message from {url}: {{\"{:?}\":\"{url}\"}}", relaymsg);
                     }
                 },
                 RelayPoolNotification::Shutdown => break,
-                RelayPoolNotification::RelayStatus { .. } => (),
-                RelayPoolNotification::Authenticated { .. } => (),
             }
             // Check for stop: There was no event in the last few seconds, and there were some EOSE already
             let last_age = self.get_last_event_ago();
@@ -301,7 +365,7 @@ impl RelayManager {
                 debug!("{:?}", event.kind);
             }
             Kind::EncryptedDirectMessage => {
-                info!("{:?}", event.kind);
+                debug!("{:?}", event.kind);
             }
             Kind::EventDeletion => {
                 debug!("{:?}", event.kind);
@@ -348,6 +412,9 @@ impl RelayManager {
             Kind::ZapRequest => {
                 debug!("{:?}", event.kind);
             }
+            Kind::Zap => {
+                debug!("{:?}", event.kind);
+            }
             Kind::Authentication => {
                 debug!("{:?}", event.kind);
             }
@@ -371,7 +438,23 @@ impl RelayManager {
                 }
             }
             Kind::RelayList => {
-                debug!("{:?}", event.kind);
+                self.update_event_time();
+                debug!("relay_manager::Kind::RelayList={:?}", event.kind);
+
+                match serde_json::from_str::<serde_json::Value>(&event.content) {
+                    Ok(json_value) => {
+                        if let Some(relays_map) = json_value.as_object() {
+                            for (url_str, _read_write) in relays_map {
+                                if self.relays.add(url_str) {
+                                    trace!("Added relay from Kind::RelayList: {}", url_str);
+                                }
+                            }
+                        }
+                    },
+                    Err(e) => {
+                        warn!("Failed to parse Kind::RelayList event content as JSON: {}. Content: {}", e, event.content);
+                    }
+                }
             }
             Kind::Replaceable(_u16) => {
                 debug!("{:?}", event.kind);
@@ -390,30 +473,23 @@ impl RelayManager {
                 // count p tags
                 let mut count = 0;
                 for _t in &event.tags {
-                    if let Some(TagStandard::PublicKey {
-                        public_key: _,
-                        relay_url: Some(ss),
-                        ..
-                    }) = _t.as_standardized()
-                    {
-                        //state.pubkeys.add(pk);
+                    if let Tag::PubKey(_pk, Some(ss)) = _t {
+                        //state.pubkeys.add(pk); //TODO neccesary?
                         //if let Some(ss) = s {
-                        debug!("    {ss}");
-                        let ss_str: &str = &ss.to_string();
-                        let _ = self.relays.add(ss_str);
-                        let _pub_future = self.relay_client.publish_text_note(ss.to_string(), []);
+                        trace!("    {ss}");
+                        let _ = self.relays.add(ss);
+                        let _pub_future = self.relay_client.publish_text_note(ss.to_string(), &[]);
                         //}
-                        debug!("    {}", count);
+                        trace!("    {}", count);
                         count += 1;
                     }
                 }
             }
             Kind::RecommendRelay => {
                 self.update_event_time();
-                debug!("\n393:Relay(s): {}\n", event.content);
+                debug!("\n490:Relay(s): {}\n", event.content);
                 let _ = self.relays.add(&event.content);
             }
-            _ => {}
         }
     }
 
