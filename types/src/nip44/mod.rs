@@ -142,16 +142,44 @@ fn encrypt_inner(
 
 /// Decrypt the base64 encrypted contents with a conversation key
 pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
-    if base64_ciphertext.as_bytes()[0] == b'#' {
+    let debug_enabled = std::env::var("NIP44_DEBUG").is_ok();
+
+    if debug_enabled {
+        eprintln!("DEBUG: decrypt - Input base64_ciphertext: {}", base64_ciphertext);
+    }
+
+    if base64_ciphertext.as_bytes().get(0).map_or(false, |&b| b == b'#') {
         return Err(Error::UnsupportedFutureVersion);
     }
     let binary_ciphertext: Vec<u8> =
         base64::engine::general_purpose::STANDARD.decode(base64_ciphertext)?;
+
+    if debug_enabled {
+        eprintln!("DEBUG: decrypt - binary_ciphertext: {:?}", binary_ciphertext);
+    }
+
+    if binary_ciphertext.is_empty() {
+        if debug_enabled {
+            eprintln!("DEBUG: decrypt - Returning MessageIsEmpty due to empty binary_ciphertext.");
+        }
+        return Err(Error::MessageIsEmpty);
+    }
+
     let version = binary_ciphertext[0];
     if version != 2 {
         return Err(Error::UnknownVersion);
     }
     let dlen = binary_ciphertext.len();
+    // Minimum expected length: 1 byte version + 32 bytes nonce + 2 bytes unpadded_len + (min 30 bytes padding) + 32 bytes mac
+    // Minimum padded message length is 34 bytes (2 for length prefix + 1 for actual byte + 31 for padding if message length is 1)
+    // So, 1 (version) + 32 (nonce) + 34 (min padded message) + 32 (mac) = 99
+    if dlen < 99 {
+        if debug_enabled {
+            eprintln!("DEBUG: decrypt - Returning InvalidPadding due to dlen ({}) < 99.", dlen);
+        }
+        return Err(Error::InvalidPadding);
+    }
+
     let nonce = &binary_ciphertext[1..33];
     let mut buffer = binary_ciphertext[33..dlen - 32].to_owned();
     let mac = &binary_ciphertext[dlen - 32..dlen];
