@@ -3,7 +3,7 @@
 
 use std::fmt;
 
-use crate::types::{Error, PrivateKey, PublicKey};
+use crate::{Error, PrivateKey, PublicKey};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Keys {
@@ -49,7 +49,7 @@ impl Keys {
 
     /// Parse from nsec or bech32 string (for compatibility with nostr_sdk)
     pub fn parse(s: String) -> Option<Self> {
-        use crate::types::PrivateKey;
+        use crate::PrivateKey;
 
         // Try to parse as private key first (nsec)
         if let Ok(private_key) = PrivateKey::try_from_bech32_string(&s) {

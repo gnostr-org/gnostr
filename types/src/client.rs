@@ -10,11 +10,9 @@ use tokio_tungstenite::{
     connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
 };
 
-use crate::types::{
-    private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
+use crate::{ClientMessage, ContentEncryptionAlgorithm, Error, Event,
     EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayUrl, SubscriptionId, Tag,
-    UncheckedUrl, Unixtime,
-};
+    UncheckedUrl, Unixtime};
 use tracing::{debug, info, warn};
 
 // NIP-44 related imports

@@ -1,4 +1,4 @@
-use crate::types::UncheckedUrl;
+use crate::UncheckedUrl;
 use serde::de::{Deserializer, MapAccess, Visitor};
 use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};

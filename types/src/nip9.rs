@@ -3,7 +3,7 @@
 
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
-use crate::types::event::{Event, EventId, UnsignedEvent};
+use crate::event::{Event, EventId, UnsignedEvent};
 
 /// Create a deletion event
 pub fn delete(

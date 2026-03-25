@@ -7,7 +7,7 @@
 
 use anyhow::Result;
 
-use crate::types::{Event, Tag};
+use crate::{Event, Tag};
 
 /// The name of the subject tag.
 pub const SUBJECT_TAG_NAME: &str = "subject";
@@ -52,7 +52,7 @@ impl NIP14Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EventKind, Id, PublicKey, Signature, Unixtime};
+    use crate::{EventKind, Id, PublicKey, Signature, Unixtime};
 
     #[test]
     fn test_create_subject_tag() {

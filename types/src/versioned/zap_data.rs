@@ -1,4 +1,4 @@
-use crate::types::{EventReference, Id, MilliSatoshi, PublicKey};
+use crate::{EventReference, Id, MilliSatoshi, PublicKey};
 
 /// Data about a Zap
 #[derive(Clone, Debug)]

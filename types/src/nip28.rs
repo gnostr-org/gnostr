@@ -9,7 +9,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
-use crate::types::{
+use crate::{
     event_kind::{EventKind, EventKindOrRange},
     versioned::event3::{EventV3, PreEventV3},
     Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
@@ -706,12 +706,10 @@ mod test {
     use super::*;
     use crate::{
         test_serde,
-        types::{
-            Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
-            UncheckedUrl, Unixtime,
-        },
-        KeySigner,
-    };
+        Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
+        UncheckedUrl, Unixtime,
+    },
+    KeySigner;
 
     #[test]
     fn test_nip28_event_kinds() {

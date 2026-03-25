@@ -1,4 +1,4 @@
-use crate::types::{
+use crate::{
     DelegationConditions, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
 };
 use crate::Error;

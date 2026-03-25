@@ -3,7 +3,7 @@
 
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
-use crate::types::event::{Event, EventId, UnsignedEvent};
+use crate::event::{Event, EventId, UnsignedEvent};
 
 /// Create an OpenTimestamps attestation event for another event.
 ///

@@ -46,19 +46,100 @@ macro_rules! test_serde {
 /// NIP-44 related functionality.
 pub mod nip44;
 
-mod types;
-pub use types::{
-    find_nostr_bech32_pos, find_nostr_url_pos, ClientMessage, ContentEncryptionAlgorithm,
-    ContentSegment, DelegationConditions, EncryptedPrivateKey, Event, EventDelegation, EventKind,
-    EventKindIterator, EventKindOrRange, EventReference, Fee, Filter, Id, IdHex, Identity,
-    KeySecurity, KeySigner, Metadata, MilliSatoshi, NAddr, NEvent, Nip05, NostrBech32, NostrUrl,
-    PayRequestData, PreEvent, PrivateKey, Profile, PublicKey, PublicKeyHex, RelayFees,
-    RelayInformationDocument, RelayLimitation, RelayList, RelayListUsage, RelayMessage,
-    RelayOrigin, RelayRetention, RelayUrl, RelayUsage, RelayUsageSet, Rumor, ShatteredContent,
-    Signature, SignatureHex, Signer, SimpleRelayList, SimpleRelayUsage, Span, SubscriptionId, Tag,
-    UncheckedUrl, Unixtime, Url, XOnlyPublicKey, ZapData,
+mod client_message;
+pub use client_message::ClientMessage;
 
+mod content;
+pub use content::{ContentSegment, ShatteredContent, Span};
+
+mod delegation;
+pub use delegation::{DelegationConditions, EventDelegation};
+
+mod event;
+pub use event::{Event, PreEvent, Rumor, ZapData};
+
+mod event_kind;
+pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
+
+mod event_reference;
+pub use event_reference::EventReference;
+
+mod filter;
+pub use filter::Filter;
+
+mod id;
+pub use id::{Id, IdHex};
+
+mod identity;
+pub use identity::Identity;
+
+mod key_signer;
+pub use key_signer::KeySigner;
+
+mod metadata;
+pub use metadata::Metadata;
+
+mod naddr;
+pub use naddr::NAddr;
+
+mod nevent;
+pub use nevent::NEvent;
+
+mod nip05;
+pub use nip05::Nip05;
+
+mod nostr_url;
+pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};
+
+mod pay_request_data;
+pub use pay_request_data::PayRequestData;
+
+mod private_key;
+pub use private_key::{ContentEncryptionAlgorithm, EncryptedPrivateKey, KeySecurity, PrivateKey};
+
+mod profile;
+pub use profile::Profile;
+
+mod public_key;
+pub use public_key::{PublicKey, PublicKeyHex, XOnlyPublicKey};
+
+mod relay_information_document;
+pub use relay_information_document::{
+    Fee, RelayFees, RelayInformationDocument, RelayLimitation, RelayRetention,
 };
+
+mod relay_list;
+pub use relay_list::{RelayList, RelayListUsage};
+
+mod relay_message;
+pub use relay_message::RelayMessage;
+
+mod relay_usage;
+pub use relay_usage::{RelayUsage, RelayUsageSet};
+
+mod satoshi;
+pub use satoshi::MilliSatoshi;
+
+mod signature;
+pub use signature::{Signature, SignatureHex};
+
+mod signer;
+pub use signer::Signer;
+
+mod simple_relay_list;
+pub use simple_relay_list::{SimpleRelayList, SimpleRelayUsage};
+
+mod subscription_id;
+pub use subscription_id::SubscriptionId;
+
+mod tag;
+pub use tag::Tag;
+
+mod unixtime;
+pub use unixtime::Unixtime;
+
+mod url;
+pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
 mod versioned;
 pub use versioned::{

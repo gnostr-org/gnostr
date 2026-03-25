@@ -10,13 +10,11 @@ use tokio::{net::TcpStream, sync::mpsc};
 use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
 use tracing::{debug, info, warn};
 
-use crate::types::{
-    ClientMessage, EventKind, Filter, PublicKey, RelayMessage, SubscriptionId, UncheckedUrl,
-    Unixtime,
-}; // Added PublicKey
+use crate::{ClientMessage, EventKind, Filter, PublicKey, RelayMessage, SubscriptionId, UncheckedUrl,
+    Unixtime};
 use crate::{
     queue::{InternalEvent, Queue},
-    types::versioned::{client_message3::ClientMessageV3, event3::EventV3},
+    versioned::{client_message3::ClientMessageV3, event3::EventV3},
 };
 
 type WsSink =

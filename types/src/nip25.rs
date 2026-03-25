@@ -8,7 +8,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
+use crate::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-25 Reaction Event Kind
 pub const REACTION_KIND: u32 = 7;
@@ -114,7 +114,7 @@ impl NIP25Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Id, PublicKey, Signature};
+    use crate::{Id, PublicKey, Signature};
 
     #[test]
     fn test_create_reaction_event() {

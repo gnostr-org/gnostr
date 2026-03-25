@@ -1,5 +1,5 @@
 use super::{TagV2, ZapDataV1};
-use crate::types::{
+use crate::{
     EventDelegation, EventKind, EventReference, Id, KeySigner, MilliSatoshi, NAddr, NostrBech32,
     NostrUrl, PrivateKey, PublicKey, PublicKeyHex, RelayUrl, Signature, Signer, Unixtime,
 };
@@ -1179,7 +1179,7 @@ impl TryFrom<PreEventV2> for RumorV2 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{DelegationConditions, Signer, UncheckedUrl};
+    use crate::{DelegationConditions, Signer, UncheckedUrl};
 
     test_serde! {EventV2, test_event_serde}
 

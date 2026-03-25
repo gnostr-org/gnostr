@@ -3,7 +3,7 @@
 
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
-use crate::types::{
+use crate::{
     event::{Event, Rumor, UnsignedEvent},
     ContentEncryptionAlgorithm, PrivateKey, PublicKey, Signer,
 };
@@ -13,7 +13,7 @@ pub fn create_seal(
     rumor: Rumor,
     private_key: &PrivateKey,
     recipient_pubkey: &PublicKey,
-) -> Result<Event, crate::types::Error> {
+) -> Result<Event, crate::Error> {
     let rumor_json = serde_json::to_string(&rumor)?;
     let encrypted_content = private_key.encrypt(
         recipient_pubkey,
@@ -34,7 +34,7 @@ pub fn create_gift_wrap(
     seal: Event,
     private_key: &PrivateKey,
     recipient_pubkey: &PublicKey,
-) -> Result<Event, crate::types::Error> {
+) -> Result<Event, crate::Error> {
     let seal_json = serde_json::to_string(&seal)?;
     let encrypted_content = private_key.encrypt(
         recipient_pubkey,

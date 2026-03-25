@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 use bech32::{self, Bech32, Bech32m, Hrp};
 
-use crate::types::{Error, EventKind, Id, PublicKey, RelayUrl};
+use crate::{Error, EventKind, Id, PublicKey, RelayUrl};
 
 /// Different NIP-19 bech32 encoded entity types
 #[derive(Debug, Clone, PartialEq, Eq)]

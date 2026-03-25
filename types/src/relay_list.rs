@@ -1,4 +1,4 @@
-use crate::types::{Event, RelayUrl, Tag};
+use crate::{Event, RelayUrl, Tag};
 use std::collections::HashMap;
 
 /// Relay Usage

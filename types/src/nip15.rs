@@ -3,7 +3,7 @@
 
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
-use crate::types::event::{Event, UnsignedEvent};
+use crate::event::{Event, UnsignedEvent};
 
 /// Create an End of Stored Events (EOSE) event
 pub fn end_of_stored_events(public_key: &XOnlyPublicKey, private_key: &SecretKey) -> Event {

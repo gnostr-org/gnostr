@@ -1,9 +1,7 @@
 use super::TagV3;
-use crate::types::{
-    EventDelegation, EventKind, EventReference, Id, KeySigner, MilliSatoshi, NostrBech32, NostrUrl,
-    PrivateKey, PublicKey, RelayUrl, Signature, Signer, Unixtime, ZapData,
-};
-use crate::{Error, IntoVec};
+use crate::{Error, EventDelegation, EventKind, EventReference, Id, IntoVec, MilliSatoshi, NostrBech32, NostrUrl,
+    PrivateKey, PublicKey, RelayUrl, Signature, Signer, Unixtime, ZapData};
+use crate::KeySigner;
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
@@ -1164,7 +1162,8 @@ impl TryFrom<PreEventV3> for RumorV3 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{DelegationConditions, Signer, UncheckedUrl};
+    use crate::{DelegationConditions, PrivateKey, UncheckedUrl};
+    use crate::KeySigner;
 
     test_serde! {EventV3, test_event_serde}
 

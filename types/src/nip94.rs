@@ -8,7 +8,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
+use crate::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-94 File Metadata Event Kind (Regular Event)
 pub const FILE_METADATA_KIND: u32 = 1063;
@@ -179,7 +179,7 @@ impl NIP94Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Id, PublicKey, Signature};
+    use crate::{Id, PublicKey, Signature};
 
     // Helper to create a dummy event for testing
     fn create_dummy_event(

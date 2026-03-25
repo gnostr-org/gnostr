@@ -13,7 +13,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Event, Id, PublicKey, Tag, Unixtime}; // Re-using existing types
+use crate::{Event, Id, PublicKey, Tag, Unixtime};
 
 /// NIP-53 Live Activity Kinds
 pub const LIVE_STREAMING_EVENT_KIND: u32 = 30311;

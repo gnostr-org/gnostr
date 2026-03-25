@@ -3,7 +3,7 @@
 
 use secp256k1::XOnlyPublicKey;
 
-use crate::types::event::{Event, UnsignedEvent};
+use crate::event::{Event, UnsignedEvent};
 
 /// A contact
 #[derive(Debug, Clone)]

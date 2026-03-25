@@ -1,4 +1,4 @@
-use crate::types::{EventKind, EventKindOrRange, PublicKeyHex, Url};
+use crate::{EventKind, EventKindOrRange, PublicKeyHex, Url};
 //use serde::de::Error as DeError;
 use serde::de::{Deserializer, MapAccess, Visitor};
 use serde::ser::{SerializeMap, Serializer};

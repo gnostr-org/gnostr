@@ -9,7 +9,7 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
+use crate::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-32 Label Event Kind
 pub const LABEL_EVENT_KIND: u32 = 1985;
@@ -171,7 +171,7 @@ impl NIP32Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Id, PublicKey, Signature};
+    use crate::{Id, PublicKey, Signature};
 
     #[test]
     fn test_create_label_tag() {

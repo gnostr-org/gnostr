@@ -1,4 +1,4 @@
-use crate::types::{PublicKeyHex, UncheckedUrl};
+use crate::{PublicKeyHex, UncheckedUrl};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};

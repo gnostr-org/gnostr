@@ -8,7 +8,7 @@
 
 use anyhow::Result;
 
-use crate::types::{Event, Tag, Unixtime};
+use crate::{Event, Tag, Unixtime};
 
 /// The name of the expiration tag.
 pub const EXPIRATION_TAG_NAME: &str = "expiration";
@@ -53,7 +53,7 @@ impl NIP40Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EventKind, Id, PublicKey, Signature};
+    use crate::{EventKind, Id, PublicKey, Signature};
 
     #[test]
     fn test_create_expiration_tag() {

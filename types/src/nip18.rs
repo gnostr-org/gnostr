@@ -3,7 +3,7 @@
 
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
-use crate::types::{
+use crate::{
     event::{Event, EventId, UnsignedEvent},
     PublicKey, RelayUrl, Tag,
 };
@@ -13,7 +13,7 @@ pub fn create_repost_text_note(
     reposted_event: &Event,
     public_key: &XOnlyPublicKey,
     private_key: &SecretKey,
-) -> Result<Event, crate::types::Error> {
+) -> Result<Event, crate::Error> {
     let content = serde_json::to_string(reposted_event)?;
     let tags = vec![
         Tag::new_event(reposted_event.id, None, None).0,
@@ -28,7 +28,7 @@ pub fn create_generic_repost(
     reposted_event: &Event,
     public_key: &XOnlyPublicKey,
     private_key: &SecretKey,
-) -> Result<Event, crate::types::Error> {
+) -> Result<Event, crate::Error> {
     let content = serde_json::to_string(reposted_event)?;
     let tags = vec![
         Tag::new_event(reposted_event.id, None, None).0,
