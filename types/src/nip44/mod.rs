@@ -16,8 +16,10 @@ pub(crate) use error::Error;
 #[cfg(test)]
 mod tests;
 
+#[allow(dead_code)]
 struct MessageKeys([u8; 76]);
 
+#[allow(dead_code)]
 impl MessageKeys {
     #[inline]
     pub(crate) fn zero() -> MessageKeys {
@@ -61,6 +63,7 @@ pub(crate) fn get_conversation_key(
     convo_key.into()
 }
 
+#[allow(dead_code)]
 fn get_message_keys(conversation_key: &[u8; 32], nonce: &[u8; 32]) -> Result<MessageKeys, Error> {
     let hk: Hkdf<Sha256> = match Hkdf::from_prk(conversation_key) {
         Ok(hk) => hk,
@@ -73,6 +76,7 @@ fn get_message_keys(conversation_key: &[u8; 32], nonce: &[u8; 32]) -> Result<Mes
     Ok(message_keys)
 }
 
+#[allow(dead_code)]
 fn calc_padding(len: usize) -> usize {
     if len < 32 {
         return 32;
@@ -86,6 +90,7 @@ fn calc_padding(len: usize) -> usize {
     }
 }
 
+#[allow(dead_code)]
 fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     let len: usize = unpadded.len();
     if len < 1 {
@@ -106,10 +111,12 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
 /// The output is a base64 encoded string that can be placed into message
 /// contents.
 #[inline]
+#[allow(dead_code)]
 pub(crate) fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
     encrypt_inner(conversation_key, plaintext, None)
 }
 
+#[allow(dead_code)]
 fn encrypt_inner(
     conversation_key: &[u8; 32],
     plaintext: &str,
@@ -142,6 +149,7 @@ fn encrypt_inner(
 }
 
 /// Decrypt the base64 encrypted contents with a conversation key
+#[allow(dead_code)]
 pub(crate) fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
     if base64_ciphertext.is_empty() {
         return Err(Error::InvalidLength);

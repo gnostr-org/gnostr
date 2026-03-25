@@ -1195,8 +1195,10 @@ impl EventV3 {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) struct UnsignedEventV3(pub PreEventV3);
 
+#[allow(dead_code)]
 impl UnsignedEventV3 {
     pub(crate) fn new(
         pubkey: &XOnlyPublicKey,
