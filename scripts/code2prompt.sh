@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Default configuration
 INCLUDE_EXTENSIONS=("rs" "md" "toml" "yaml" "yml" "json" "sh" "conf" "ron" "txt")
-EXCLUDE_DIRS=("target" "vendor" "node_modules" ".git" "coverage_tmp" "tmpgit" "coverage")
+EXCLUDE_DIRS=("target" "vendor" "node_modules" ".git" "coverage_tmp" "tmpgit" "coverage" "*/target/**" "**/target/**")
 MAX_FILE_SIZE=1048576  # 1MB
 RECURSIVE=true
 DRY_RUN=false
