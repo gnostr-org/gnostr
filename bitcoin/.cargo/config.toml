@@ -1,0 +1,2 @@
+# export RUSTFLAGS="-Awarnings"
+# cargo build
