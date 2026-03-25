@@ -13,6 +13,8 @@ async fn main() -> gnostr_relay::Result<()> {
         None,
     )?;
 
+    //TODO #[cfg(feature = "search")] {}
+
     #[cfg(feature = "metrics")]
     {
         app_data = app_data.add_extension(gnostr_extensions::Metrics::new());
