@@ -43,6 +43,7 @@ macro_rules! test_serde {
     };
 }
 
+mod nip44;
 mod types;
 pub use types::{
     find_nostr_bech32_pos, find_nostr_url_pos, ClientMessage, ContentEncryptionAlgorithm,

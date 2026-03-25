@@ -1,4 +1,5 @@
 use crate::{Error, Id, PublicKey, Signature, Signer};
+use crate::nip44;
 use rand_core::OsRng;
 use std::convert::TryFrom;
 use std::fmt;

@@ -2,6 +2,7 @@ use crate::{
     ContentEncryptionAlgorithm, EncryptedPrivateKey, Error, Id, KeySecurity, PrivateKey, PublicKey,
     Signature, Signer,
 };
+use crate::nip44;
 use std::fmt;
 
 /// Signer with a local private key (and public key)

@@ -1,5 +1,6 @@
 use super::PrivateKey;
 use crate::{Error, PublicKey};
+use crate::nip44;
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use base64::Engine;
 use rand_core::{OsRng, RngCore};

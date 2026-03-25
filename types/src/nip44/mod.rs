@@ -11,7 +11,7 @@ use rand_core::{OsRng, RngCore};
 use secp256k1::{ecdh::shared_secret_point, Parity, PublicKey, SecretKey, XOnlyPublicKey};
 use sha2::Sha256;
 mod error;
-pub use error::Error;
+pub(crate) use error::Error;
 
 #[cfg(test)]
 mod tests;
@@ -51,7 +51,7 @@ fn get_shared_point(private_key_a: SecretKey, x_only_public_key_b: XOnlyPublicKe
 }
 
 /// Derives a NIP-44 conversation key from a private key and an XOnlyPublicKey.
-pub fn get_conversation_key(
+pub(crate) fn get_conversation_key(
     private_key_a: SecretKey,
     x_only_public_key_b: XOnlyPublicKey,
 ) -> [u8; 32] {
@@ -106,7 +106,7 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
 /// The output is a base64 encoded string that can be placed into message
 /// contents.
 #[inline]
-pub fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
+pub(crate) fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
     encrypt_inner(conversation_key, plaintext, None)
 }
 
@@ -142,7 +142,7 @@ fn encrypt_inner(
 }
 
 /// Decrypt the base64 encrypted contents with a conversation key
-pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
+pub(crate) fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
     if base64_ciphertext.is_empty() {
         return Err(Error::InvalidLength);
     }

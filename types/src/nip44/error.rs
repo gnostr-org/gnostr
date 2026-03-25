@@ -2,7 +2,7 @@ use thiserror::Error;
 
 /// Errors that can occur in NIP-44 operations.
 #[derive(Clone, Error, Debug, PartialEq)]
-pub enum Error {
+pub(crate) enum Error {
     /// Base64 Decode
     #[error("Base64 decode: {0}")]
     Base64Decode(#[from] base64::DecodeError),
