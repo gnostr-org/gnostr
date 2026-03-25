@@ -1,16 +1,18 @@
-use super::{TagV1, ZapDataV1};
-use crate::types::{
-    EventDelegation, EventKind, EventReference, Id, MilliSatoshi, NAddr, NostrBech32, NostrUrl,
-    PublicKey, PublicKeyHex, RelayUrl, Signature, Unixtime,
-};
-use crate::{Error, IntoVec};
+use std::str::FromStr;
+
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::str::FromStr;
+
+use crate::{
+    Error, EventDelegation, EventKind, EventReference, IntoVec, MilliSatoshi, NAddr, NostrBech32,
+    NostrUrl, PublicKey, PublicKeyHex, RelayUrl, Signature, Unixtime,
+};
+use crate::types::Id;
+use crate::versioned::{TagV1, ZapDataV1};
 
 /// The main event type
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -28,13 +30,14 @@ pub struct EventV1 {
     /// The kind of event
     pub kind: EventKind,
 
-    /// The signature of the event, which cryptographically verifies that the holder of
-    /// the PrivateKey matching the event's PublicKey generated (or authorized) this event.
-    /// The signature is taken over the id field only, but the id field is taken over
-    /// the rest of the event data.
+    /// The signature of the event, which cryptographically verifies that the
+    /// holder of the PrivateKey matching the event's PublicKey generated
+    /// (or authorized) this event. The signature is taken over the id field
+    /// only, but the id field is taken over the rest of the event data.
     pub sig: Signature,
 
-    /// DEPRECATED (please set to Null): An optional verified time for the event (using OpenTimestamp)
+    /// DEPRECATED (please set to Null): An optional verified time for the event
+    /// (using OpenTimestamp)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub ots: Option<String>,
@@ -151,9 +154,9 @@ impl RumorV1 {
 }
 
 impl EventV1 {
-    /// Check the validity of an event. This is useful if you deserialize an event
-    /// from the network. If you create an event using new() it should already be
-    /// trustworthy.
+    /// Check the validity of an event. This is useful if you deserialize an
+    /// event from the network. If you create an event using new() it should
+    /// already be trustworthy.
     pub fn verify(&self, maxtime: Option<Unixtime>) -> Result<(), Error> {
         use secp256k1::hashes::Hash;
 
@@ -198,8 +201,8 @@ impl EventV1 {
         None
     }
 
-    /// If the event refers to people by tag, get all the PublicKeys it refers to
-    /// along with recommended relay URL and petname for each
+    /// If the event refers to people by tag, get all the PublicKeys it refers
+    /// to along with recommended relay URL and petname for each
     pub fn people(&self) -> Vec<(PublicKeyHex, Option<RelayUrl>, Option<String>)> {
         let mut output: Vec<(PublicKeyHex, Option<RelayUrl>, Option<String>)> = Vec::new();
         // All 'p' tags
@@ -239,8 +242,8 @@ impl EventV1 {
         false
     }
 
-    /// If the event refers to people within the contents, get all the PublicKeys it refers
-    /// to within the contents.
+    /// If the event refers to people within the contents, get all the
+    /// PublicKeys it refers to within the contents.
     pub fn people_referenced_in_content(&self) -> Vec<PublicKey> {
         let mut output = Vec::new();
         for nurl in NostrUrl::find_all_in_string(&self.content).drain(..) {
@@ -254,8 +257,8 @@ impl EventV1 {
         output
     }
 
-    /// All events IDs that this event refers to, whether root, reply, mention, or otherwise
-    /// along with optional recommended relay URLs
+    /// All events IDs that this event refers to, whether root, reply, mention,
+    /// or otherwise along with optional recommended relay URLs
     pub fn referred_events(&self) -> Vec<EventReference> {
         let mut output: Vec<EventReference> = Vec::new();
 
@@ -300,8 +303,8 @@ impl EventV1 {
     }
 
     /// Get a reference to another event that this event replies to.
-    /// An event can only reply to one other event via 'e' or 'a' tag from a feed-displayable
-    /// event that is not a Repost.
+    /// An event can only reply to one other event via 'e' or 'a' tag from a
+    /// feed-displayable event that is not a Repost.
     pub fn replies_to(&self) -> Option<EventReference> {
         if !self.kind.is_feed_displayable() {
             return None;
@@ -441,7 +444,8 @@ impl EventV1 {
         }
 
         // otherwise use the first unmarked 'e' tag or first 'a' tag
-        // (even if there is only 1 'e' or 'a' tag which means it is both root and reply)
+        // (even if there is only 1 'e' or 'a' tag which means it is both root and
+        // reply)
         if let Some(tag) = self.tags.iter().find(|t| {
             matches!(t, TagV1::Event { marker: None, .. }) || matches!(t, TagV1::Address { .. })
         }) {
@@ -558,7 +562,8 @@ impl EventV1 {
             }
         }
 
-        // Collect every unmarked 'e' or 'a' tag that is not the first (root) or the last (reply)
+        // Collect every unmarked 'e' or 'a' tag that is not the first (root) or the
+        // last (reply)
         let e_tags: Vec<&TagV1> = self
             .tags
             .iter()
@@ -638,8 +643,8 @@ impl EventV1 {
         None
     }
 
-    /// If this event deletes others, get all the Ids of the events that it deletes
-    /// along with the reason for the deletion
+    /// If this event deletes others, get all the Ids of the events that it
+    /// deletes along with the reason for the deletion
     pub fn deletes(&self) -> Option<(Vec<Id>, String)> {
         if self.kind != EventKind::EventDeletion {
             return None;
@@ -712,7 +717,7 @@ impl EventV1 {
                 let pubkey = match PublicKey::from_bytes(&pubkeybytes, false) {
                     Ok(pubkey) => pubkey,
                     Err(e) => {
-                        return Err(Error::ZapReceipt(format!("payee public key error: {}", e)))
+                        return Err(Error::ZapReceipt(format!("payee public key error: {}", e)));
                     }
                 };
                 zapped_pubkey = Some(pubkey);
@@ -749,7 +754,8 @@ impl EventV1 {
         }))
     }
 
-    /// If this event specifies the client that created it, return that client string
+    /// If this event specifies the client that created it, return that client
+    /// string
     pub fn client(&self) -> Option<String> {
         for tag in self.tags.iter() {
             if let TagV1::Other { tag, data } = tag {
@@ -877,8 +883,8 @@ impl EventV1 {
         zeroes.min(target_zeroes)
     }
 
-    /// Was this event delegated, was that valid, and if so what is the pubkey of
-    /// the delegator?
+    /// Was this event delegated, was that valid, and if so what is the pubkey
+    /// of the delegator?
     pub fn delegation(&self) -> EventDelegation {
         for tag in self.tags.iter() {
             if let TagV1::Delegation {
@@ -948,8 +954,8 @@ impl EventV1 {
     }
 }
 
-// Direct access into speedy-serialized bytes, to avoid alloc-deserialize just to peek
-// at one of these fields
+// Direct access into speedy-serialized bytes, to avoid alloc-deserialize just
+// to peek at one of these fields
 #[cfg(feature = "speedy")]
 impl EventV1 {
     /// Read the ID of the event from a speedy encoding without decoding
@@ -961,7 +967,9 @@ impl EventV1 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-            Some(unsafe { std::mem::transmute(arr) })
+            use crate::types::id;
+
+            Some(unsafe { std::mem::transmute::<[u8; 32], id::Id>(arr) })
         } else {
             None
         }
@@ -1062,8 +1070,8 @@ impl EventV1 {
     }
 
     /// Check if any human-readable tag matches the Regex in the speedy encoding
-    /// without decoding the whole thing (because our Tag representation is so complicated,
-    /// we do deserialize the tags for now)
+    /// without decoding the whole thing (because our Tag representation is so
+    /// complicated, we do deserialize the tags for now)
     ///
     /// Note this function is fragile, if the Event structure is reordered,
     /// or if speedy code changes, this will break.  Neither should happen.

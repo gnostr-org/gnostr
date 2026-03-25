@@ -59,11 +59,12 @@ impl TryFrom<u8> for KeySecurity {
 
 /// This is a private key which is to be kept secret and is used to prove identity
 #[allow(missing_debug_implementations)]
+#[derive(Clone)]
 pub struct PrivateKey(secp256k1::SecretKey, KeySecurity);
 
 impl Default for PrivateKey {
     fn default() -> Self {
-        Self::new()
+        Self::generate()
     }
 }
 
@@ -74,10 +75,9 @@ impl fmt::Debug for PrivateKey {
 }
 
 impl PrivateKey {
-    /// Generate a new `PrivateKey` (which can be used to get the `PublicKey`)
-    #[inline]
-    pub fn new() -> PrivateKey {
-        Self::generate()
+    /// Create a new `PrivateKey` from a `secp256k1::SecretKey` and `KeySecurity`.
+    pub fn from_secret_key(secret_key: secp256k1::SecretKey, security: KeySecurity) -> PrivateKey {
+        PrivateKey(secret_key, security)
     }
 
     /// Generate a new `PrivateKey` (which can be used to get the `PublicKey`)

@@ -76,7 +76,7 @@ impl PrivateKey {
     /// Decrypt NIP-44 only, version is detected
     pub fn decrypt_nip44(&self, other: &PublicKey, ciphertext: &str) -> Result<String, Error> {
         if ciphertext.as_bytes().first() == Some(&b'#') {
-            return Err(nip44::Error::UnsupportedFutureVersion.into());
+            return Err(Error::Nip44Crypto(crate::types::nip44::Error::UnsupportedFutureVersion));
         };
 
         let algo = {
@@ -90,7 +90,7 @@ impl PrivateKey {
                 1 => ContentEncryptionAlgorithm::Nip44v1Unpadded,
                 // Note: Nip44v1Padded cannot be detected, and there may be no events out there using it.
                 2 => ContentEncryptionAlgorithm::Nip44v2,
-                _ => return Err(nip44::Error::UnknownVersion.into()),
+                _ => return Err(Error::Nip44Crypto(crate::types::nip44::Error::UnknownVersion)),
             }
         };
 
@@ -291,7 +291,7 @@ impl PrivateKey {
     /// Encrypt content via a shared secret according to NIP-44 v1
     fn nip44_v2_encrypt(&self, counterparty: &PublicKey, plaintext: &str) -> Result<String, Error> {
         let conversation_key = self.shared_secret_nip44_v2(counterparty);
-        let ciphertext = nip44::encrypt(&conversation_key, plaintext)?;
+        let ciphertext = crate::types::nip44::encrypt(&conversation_key, plaintext).map_err(Error::Nip44Crypto)?;
         Ok(ciphertext)
     }
 
@@ -302,7 +302,7 @@ impl PrivateKey {
         ciphertext: &str,
     ) -> Result<String, Error> {
         let conversation_key = self.shared_secret_nip44_v2(counterparty);
-        let plaintext = nip44::decrypt(&conversation_key, ciphertext)?;
+        let plaintext = crate::types::nip44::decrypt(&conversation_key, ciphertext).map_err(Error::Nip44Crypto)?;
         Ok(plaintext)
     }
 }

@@ -1,17 +1,20 @@
-use super::TagV3;
-use crate::types::{
-    EventDelegation, EventKind, EventReference, Id, KeySigner, MilliSatoshi, NostrBech32, NostrUrl,
-    PrivateKey, PublicKey, RelayUrl, Signature, Signer, Unixtime, ZapData,
-};
-use crate::{Error, IntoVec};
+use std::{cmp::Ordering, fmt, str::FromStr};
+
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
+use secp256k1::XOnlyPublicKey;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::cmp::Ordering;
-use std::str::FromStr;
+
+use crate::{
+    Error, EventDelegation, EventKind, EventReference, IntoVec, KeySecurity, KeySigner,
+    MilliSatoshi, NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer,
+    Unixtime, ZapData,
+};
+use crate::types::Id;
+use crate::versioned::TagV3;
 
 /// The main event type
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -29,10 +32,10 @@ pub struct EventV3 {
     /// The kind of event
     pub kind: EventKind,
 
-    /// The signature of the event, which cryptographically verifies that the holder of
-    /// the PrivateKey matching the event's PublicKey generated (or authorized) this event.
-    /// The signature is taken over the id field only, but the id field is taken over
-    /// the rest of the event data.
+    /// The signature of the event, which cryptographically verifies that the
+    /// holder of the PrivateKey matching the event's PublicKey generated
+    /// (or authorized) this event. The signature is taken over the id field
+    /// only, but the id field is taken over the rest of the event data.
     pub sig: Signature,
 
     /// The content of the event
@@ -145,10 +148,66 @@ impl RumorV3 {
     }
 }
 
+impl fmt::Display for EventV3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Event {{ id: {}, pubkey: {}, kind: {}, created_at: {}, content: {}... }}",
+            self.id.as_hex_string(),
+            self.pubkey.as_hex_string(),
+            u32::from(self.kind),
+            self.created_at.0,
+            &self.content[..self.content.len().min(50)] // Truncate content for display
+        )
+    }
+}
+
 impl EventV3 {
-    /// Check the validity of an event. This is useful if you deserialize an event
-    /// from the network. If you create an event using new() it should already be
-    /// trustworthy.
+    /// Create a dummy event for testing or placeholder purposes.
+    #[allow(dead_code)]
+    pub fn new_dummy() -> Self {
+        Self {
+            id: Id::try_from_hex_string(
+                "0000000000000000000000000000000000000000000000000000000000000000",
+            )
+            .unwrap(),
+            pubkey: PublicKey::try_from_hex_string(
+                "0000000000000000000000000000000000000000000000000000000000000000",
+                false,
+            )
+            .unwrap(), // pubkey of all zeroes
+            created_at: Unixtime(0),
+            kind: EventKind::TextNote,
+            sig: Signature::zeroes(),
+            content: "Dummy event content".to_string(),
+            tags: Vec::new(),
+        }
+    }
+
+    /// Sign a `PreEventV3` with the provided `PrivateKey` and return an
+    /// `EventV3`.
+    pub fn sign_with_private_key(
+        preevent: PreEventV3,
+        private_key: &PrivateKey,
+    ) -> Result<Self, Error> {
+        let id = preevent.hash()?;
+        let signer = KeySigner::from_private_key(private_key.clone(), "", 1)?;
+        let sig = signer.sign_id(id)?;
+
+        Ok(EventV3 {
+            id,
+            pubkey: preevent.pubkey,
+            created_at: preevent.created_at,
+            kind: preevent.kind,
+            tags: preevent.tags,
+            content: preevent.content,
+            sig,
+        })
+    }
+
+    /// Check the validity of an event. This is useful if you deserialize an
+    /// event from the network. If you create an event using new() it should
+    /// already be trustworthy.
     pub fn verify(&self, maxtime: Option<Unixtime>) -> Result<(), Error> {
         use secp256k1::hashes::Hash;
 
@@ -162,7 +221,6 @@ impl EventV3 {
 
         // Verify the signature
         self.pubkey.verify(serialized.as_bytes(), &self.sig)?;
-
         // Also verify the ID is the SHA256
         // (the above verify function also does it internally,
         //  so there is room for improvement here)
@@ -221,8 +279,8 @@ impl EventV3 {
         None
     }
 
-    /// If the event refers to people by tag, get all the PublicKeys it refers to
-    /// along with recommended relay URL and petname for each
+    /// If the event refers to people by tag, get all the PublicKeys it refers
+    /// to along with recommended relay URL and petname for each
     pub fn people(&self) -> Vec<(PublicKey, Option<RelayUrl>, Option<String>)> {
         let mut output: Vec<(PublicKey, Option<RelayUrl>, Option<String>)> = Vec::new();
         // All 'p' tags
@@ -254,8 +312,8 @@ impl EventV3 {
         false
     }
 
-    /// If the event refers to people within the contents, get all the PublicKeys it refers
-    /// to within the contents.
+    /// If the event refers to people within the contents, get all the
+    /// PublicKeys it refers to within the contents.
     pub fn people_referenced_in_content(&self) -> Vec<PublicKey> {
         let mut output = Vec::new();
         for nurl in NostrUrl::find_all_in_string(&self.content).drain(..) {
@@ -269,8 +327,8 @@ impl EventV3 {
         output
     }
 
-    /// All events IDs that this event refers to, whether root, reply, mention, or otherwise
-    /// along with optional recommended relay URLs
+    /// All events IDs that this event refers to, whether root, reply, mention,
+    /// or otherwise along with optional recommended relay URLs
     pub fn referred_events(&self) -> Vec<EventReference> {
         let mut output: Vec<EventReference> = Vec::new();
 
@@ -295,8 +353,8 @@ impl EventV3 {
     }
 
     /// Get a reference to another event that this event replies to.
-    /// An event can only reply to one other event via 'e' or 'a' tag from a feed-displayable
-    /// event that is not a Repost.
+    /// An event can only reply to one other event via 'e' or 'a' tag from a
+    /// feed-displayable event that is not a Repost.
     pub fn replies_to(&self) -> Option<EventReference> {
         if !self.kind.is_feed_displayable() {
             return None;
@@ -518,7 +576,8 @@ impl EventV3 {
             }
         }
 
-        // Collect every unmarked 'e' or 'a' tag that is not the first (root) or the last (reply)
+        // Collect every unmarked 'e' or 'a' tag that is not the first (root) or the
+        // last (reply)
         let e_tags: Vec<&TagV3> = self
             .tags
             .iter()
@@ -568,8 +627,8 @@ impl EventV3 {
         None
     }
 
-    /// If this event deletes others, get all the EventReferences of the events that it
-    /// deletes along with the reason for the deletion
+    /// If this event deletes others, get all the EventReferences of the events
+    /// that it deletes along with the reason for the deletion
     pub fn deletes(&self) -> Option<(Vec<EventReference>, String)> {
         if self.kind != EventKind::EventDeletion {
             return None;
@@ -639,11 +698,12 @@ impl EventV3 {
             for tag in self.tags.iter() {
                 if tag.tagname() == "description" {
                     let request_string = tag.value();
-                    if let Ok(e) = serde_json::from_str::<EventV3>(&request_string) {
+                    if let Ok(e) = serde_json::from_str::<EventV3>(request_string) {
                         zap_request = Some(e);
                     }
                 }
-                // we ignore the "p" tag, we have that data from two other places (invoice and request)
+                // we ignore the "p" tag, we have that data from two other places (invoice and
+                // request)
                 else if tag.tagname() == "P" {
                     if let Ok((pk, _, _)) = tag.parse_pubkey() {
                         payer_p_tag = Some(pk);
@@ -657,7 +717,10 @@ impl EventV3 {
                     let invoice = match Bolt11Invoice::from_str(tag.value()) {
                         Ok(inv) => inv,
                         Err(e) => {
-                            return Err(Error::ZapReceipt(format!("bolt11 failed to parse: {}", e)))
+                            return Err(Error::ZapReceipt(format!(
+                                "bolt11 failed to parse: {}",
+                                e
+                            )));
                         }
                     };
 
@@ -678,13 +741,15 @@ impl EventV3 {
                 target_event_from_tags = Some(re[0].clone());
             }
 
-            // "The zap receipt MUST contain a description tag which is the JSON-encoded zap request."
+            // "The zap receipt MUST contain a description tag which is the JSON-encoded zap
+            // request."
             if zap_request.is_none() {
                 return Ok(None);
             }
             let zap_request = zap_request.unwrap();
 
-            // "The zap receipt MUST have a bolt11 tag containing the description hash bolt11 invoice."
+            // "The zap receipt MUST have a bolt11 tag containing the description hash
+            // bolt11 invoice."
             if bolt11invoice.is_none() {
                 return Ok(None);
             }
@@ -790,7 +855,8 @@ impl EventV3 {
         }))
     }
 
-    /// If this event specifies the client that created it, return that client string
+    /// If this event specifies the client that created it, return that client
+    /// string
     pub fn client(&self) -> Option<String> {
         for tag in self.tags.iter() {
             if tag.tagname() == "client" && !tag.value().is_empty() {
@@ -921,8 +987,8 @@ impl EventV3 {
         0
     }
 
-    /// Was this event delegated, was that valid, and if so what is the pubkey of
-    /// the delegator?
+    /// Was this event delegated, was that valid, and if so what is the pubkey
+    /// of the delegator?
     pub fn delegation(&self) -> EventDelegation {
         for tag in self.tags.iter() {
             if let Ok((pk, conditions, sig)) = tag.parse_delegation() {
@@ -988,8 +1054,8 @@ impl PartialOrd for EventV3 {
     }
 }
 
-// Direct access into speedy-serialized bytes, to avoid alloc-deserialize just to peek
-// at one of these fields
+// Direct access into speedy-serialized bytes, to avoid alloc-deserialize just
+// to peek at one of these fields
 #[cfg(feature = "speedy")]
 impl EventV3 {
     /// Read the ID of the event from a speedy encoding without decoding
@@ -1001,7 +1067,7 @@ impl EventV3 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-            Some(unsafe { std::mem::transmute(arr) })
+            Some(unsafe { std::mem::transmute::<[u8; 32], id::Id>(arr) })
         } else {
             None
         }
@@ -1069,8 +1135,8 @@ impl EventV3 {
     }
 
     /// Check if any human-readable tag matches the Regex in the speedy encoding
-    /// without decoding the whole thing (because our TagV3 representation is so complicated,
-    /// we do deserialize the tags for now)
+    /// without decoding the whole thing (because our TagV3 representation is so
+    /// complicated, we do deserialize the tags for now)
     ///
     /// Note this function is fragile, if the Event structure is reordered,
     /// or if speedy code changes, this will break.  Neither should happen.
@@ -1126,6 +1192,47 @@ impl EventV3 {
         }
 
         Ok(false)
+    }
+}
+
+pub(crate) struct UnsignedEventV3(pub PreEventV3);
+
+impl UnsignedEventV3 {
+    pub(crate) fn new(
+        pubkey: &XOnlyPublicKey,
+        kind: u16,
+        tags: Vec<Vec<String>>,
+        content: String,
+    ) -> UnsignedEventV3 {
+        let tags = tags.into_iter().map(TagV3).collect();
+
+        UnsignedEventV3(PreEventV3 {
+            pubkey: PublicKey::from_bytes(
+                &pubkey.public_key(secp256k1::Parity::Even).serialize(),
+                false,
+            )
+            .unwrap(),
+            created_at: Unixtime::now(),
+            kind: EventKind::from(kind as u32),
+            tags,
+            content,
+        })
+    }
+
+    pub(crate) fn sign(self, private_key: &secp256k1::SecretKey) -> Result<EventV3, Error> {
+        let id = self.0.hash()?;
+        let signer =
+            KeySigner::from_private_key(PrivateKey::from_secret_key(*private_key, KeySecurity::Medium), "", 1)?;
+        let sig = signer.sign_id(id)?;
+        Ok(EventV3 {
+            id,
+            pubkey: self.0.pubkey,
+            created_at: self.0.created_at,
+            kind: self.0.kind,
+            tags: self.0.tags,
+            content: self.0.content,
+            sig,
+        })
     }
 }
 
@@ -1373,7 +1480,8 @@ mod test {
 
         // Print to work out encoding
         //   test like this to see printed data:
-        //   cargo test --features=speedy test_speedy_encoded_direct_field_access -- --nocapture
+        //   cargo test --features=speedy test_speedy_encoded_direct_field_access --
+        // --nocapture
         println!("EVENT BYTES: {:?}", bytes);
         println!("ID: {:?}", event.id.0);
         println!("PUBKEY: {:?}", event.pubkey.as_slice());

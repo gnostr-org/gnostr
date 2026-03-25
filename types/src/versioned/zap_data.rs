@@ -3,7 +3,8 @@ use crate::types::{EventReference, Id, MilliSatoshi, PublicKey};
 /// Data about a Zap
 #[derive(Clone, Debug)]
 pub struct ZapDataV2 {
-    /// The event that was zapped. If missing we can't use the zap receipt event.
+    /// The event that was zapped. If missing we can't use the zap receipt
+    /// event.
     pub zapped_event: EventReference,
 
     /// The amount that the event was zapped
