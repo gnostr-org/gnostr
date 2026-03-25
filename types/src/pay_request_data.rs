@@ -1,12 +1,9 @@
-use std::fmt;
-
-use serde::{
-    de::{Deserialize, Deserializer, Error as DeError, MapAccess, Visitor},
-    ser::{Serialize, SerializeMap, Serializer},
-};
-use serde_json::{json, Map, Value};
-
 use super::{PublicKeyHex, UncheckedUrl};
+use serde::de::Error as DeError;
+use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
+use serde::ser::{Serialize, SerializeMap, Serializer};
+use serde_json::{json, Map, Value};
+use std::fmt;
 
 /// This is a response from a zapper lnurl
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -162,7 +159,6 @@ impl<'de> Visitor<'de> for PayRequestDataVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
     test_serde! {PayRequestData, test_pay_request_data_serde}
 }

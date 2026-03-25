@@ -1,43 +1,39 @@
-use std::convert::TryInto;
-
 use base64::Engine;
-use chacha20::{
-    cipher::{KeyIvInit, StreamCipher},
-    ChaCha20,
-};
+use chacha20::cipher::{KeyIvInit, StreamCipher};
+use chacha20::ChaCha20;
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use rand_core::{OsRng, RngCore};
-use secp256k1::{ecdh::shared_secret_point, Parity, PublicKey, SecretKey, XOnlyPublicKey};
+use secp256k1::ecdh::shared_secret_point;
+use secp256k1::{Parity, PublicKey, SecretKey, XOnlyPublicKey};
 use sha2::Sha256;
+
 mod error;
-pub(crate) use error::Error;
+pub use error::Error;
 
 #[cfg(test)]
 mod tests;
 
-#[allow(dead_code)]
 struct MessageKeys([u8; 76]);
 
-#[allow(dead_code)]
 impl MessageKeys {
     #[inline]
-    pub(crate) fn zero() -> MessageKeys {
+    fn zero() -> MessageKeys {
         MessageKeys([0; 76])
     }
 
     #[inline]
-    pub(crate) fn encryption(&self) -> [u8; 32] {
+    fn encryption(&self) -> [u8; 32] {
         self.0[0..32].try_into().unwrap()
     }
 
     #[inline]
-    pub(crate) fn nonce(&self) -> [u8; 12] {
+    fn nonce(&self) -> [u8; 12] {
         self.0[32..44].try_into().unwrap()
     }
 
     #[inline]
-    pub(crate) fn auth(&self) -> [u8; 32] {
+    fn auth(&self) -> [u8; 32] {
         self.0[44..76].try_into().unwrap()
     }
 }
@@ -52,8 +48,10 @@ fn get_shared_point(private_key_a: SecretKey, x_only_public_key_b: XOnlyPublicKe
     ssp.try_into().unwrap()
 }
 
-/// Derives a NIP-44 conversation key from a private key and an XOnlyPublicKey.
-pub(crate) fn get_conversation_key(
+/// Get the NIP-44 conversation key.
+///
+/// A conversation key is the long-term secret that two nostr identities share.
+pub fn get_conversation_key(
     private_key_a: SecretKey,
     x_only_public_key_b: XOnlyPublicKey,
 ) -> [u8; 32] {
@@ -63,7 +61,6 @@ pub(crate) fn get_conversation_key(
     convo_key.into()
 }
 
-#[allow(dead_code)]
 fn get_message_keys(conversation_key: &[u8; 32], nonce: &[u8; 32]) -> Result<MessageKeys, Error> {
     let hk: Hkdf<Sha256> = match Hkdf::from_prk(conversation_key) {
         Ok(hk) => hk,
@@ -76,7 +73,6 @@ fn get_message_keys(conversation_key: &[u8; 32], nonce: &[u8; 32]) -> Result<Mes
     Ok(message_keys)
 }
 
-#[allow(dead_code)]
 fn calc_padding(len: usize) -> usize {
     if len < 32 {
         return 32;
@@ -90,7 +86,6 @@ fn calc_padding(len: usize) -> usize {
     }
 }
 
-#[allow(dead_code)]
 fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     let len: usize = unpadded.len();
     if len < 1 {
@@ -103,20 +98,17 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     let mut padded: Vec<u8> = Vec::new();
     padded.extend_from_slice(&(len as u16).to_be_bytes());
     padded.extend_from_slice(unpadded.as_bytes());
-    padded.extend(std::iter::repeat_n(0, calc_padding(len) - len));
+    padded.extend(std::iter::repeat(0).take(calc_padding(len) - len));
     Ok(padded)
 }
 
 /// Encrypt a plaintext message with a conversation key.
-/// The output is a base64 encoded string that can be placed into message
-/// contents.
+/// The output is a base64 encoded string that can be placed into message contents.
 #[inline]
-#[allow(dead_code)]
-pub(crate) fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
+pub fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
     encrypt_inner(conversation_key, plaintext, None)
 }
 
-#[allow(dead_code)]
 fn encrypt_inner(
     conversation_key: &[u8; 32],
     plaintext: &str,
@@ -149,19 +141,12 @@ fn encrypt_inner(
 }
 
 /// Decrypt the base64 encrypted contents with a conversation key
-#[allow(dead_code)]
-pub(crate) fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
-    if base64_ciphertext.is_empty() {
-        return Err(Error::InvalidLength);
-    }
+pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
     if base64_ciphertext.as_bytes()[0] == b'#' {
         return Err(Error::UnsupportedFutureVersion);
     }
     let binary_ciphertext: Vec<u8> =
         base64::engine::general_purpose::STANDARD.decode(base64_ciphertext)?;
-    if binary_ciphertext.len() < 65 {
-        return Err(Error::InvalidLength);
-    }
     let version = binary_ciphertext[0];
     if version != 2 {
         return Err(Error::UnknownVersion);

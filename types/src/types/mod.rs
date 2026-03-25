@@ -40,8 +40,7 @@ pub use nevent::NEvent;
 mod nip05;
 pub use nip05::Nip05;
 
-mod nip44;
-pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
+
 
 mod nostr_url;
 pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};

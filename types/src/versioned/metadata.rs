@@ -1,11 +1,7 @@
-use crate::HRP_LNURL;
-use std::fmt;
-
-use serde::{
-    de::{Deserialize, Deserializer, MapAccess, Visitor},
-    ser::{Serialize, SerializeMap, Serializer},
-};
+use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
+use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde_json::{json, Map, Value};
+use std::fmt;
 
 /// Metadata about a user
 ///
@@ -69,7 +65,7 @@ impl MetadataV1 {
     pub fn lnurl(&self) -> Option<String> {
         if let Some(Value::String(lud06)) = self.other.get("lud06") {
             if let Ok(data) = bech32::decode(lud06) {
-                if data.0 == *HRP_LNURL {
+                if data.0 == *crate::HRP_LNURL {
                     return Some(String::from_utf8_lossy(&data.1).to_string());
                 }
             }

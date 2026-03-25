@@ -1,13 +1,10 @@
+use super::{EventKind, Id, PublicKey, UncheckedUrl};
+use crate::Error;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use super::{Error, EventKind, Id, PublicKey, UncheckedUrl};
-#[cfg(test)]
-use crate::test_serde;
-
-/// An 'nevent': event id along with some relays in which that event may be
-/// found.
+/// An 'nevent': event id along with some relays in which that event may be found.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct NEvent {
@@ -44,7 +41,7 @@ impl NEvent {
             tlv.push(1); // type 'relay'
             let len = relay.0.len() as u8;
             tlv.push(len); // the length of the string
-            tlv.extend(relay.0.as_bytes().iter().take(len as usize));
+            tlv.extend(&relay.0.as_bytes()[..len as usize]);
         }
 
         // Maybe Push kind
@@ -63,15 +60,15 @@ impl NEvent {
             tlv.extend(pubkey.as_bytes());
         }
 
-        bech32::encode::<bech32::Bech32>(*super::HRP_NEVENT, &tlv).unwrap()
+        bech32::encode::<bech32::Bech32>(*crate::HRP_NEVENT, &tlv).unwrap()
     }
 
     /// Import from a bech32 encoded string ("nevent")
     pub fn try_from_bech32_string(s: &str) -> Result<NEvent, Error> {
         let data = bech32::decode(s)?;
-        if data.0 != *super::HRP_NEVENT {
+        if data.0 != *crate::HRP_NEVENT {
             Err(Error::WrongBech32(
-                super::HRP_NEVENT.to_lowercase(),
+                crate::HRP_NEVENT.to_lowercase(),
                 data.0.to_lowercase(),
             ))
         } else {

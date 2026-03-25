@@ -1,16 +1,12 @@
-use std::fmt;
-
+use crate::types::{EventKind, EventKindOrRange, PublicKeyHex, Url};
 //use serde::de::Error as DeError;
 use serde::de::{Deserializer, MapAccess, Visitor};
-use serde::{
-    ser::{SerializeMap, Serializer},
-    Deserialize, Serialize,
-};
+use serde::ser::{SerializeMap, Serializer};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-
-use crate::types::{EventKind, EventKindOrRange, PublicKeyHex, Url};
+use std::fmt;
 
 /// Relay limitations
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -548,7 +544,10 @@ impl<'de> Visitor<'de> for RidVisitor {
             rid.description = Some(s);
         }
         if let Some(Value::String(s)) = map.remove("pubkey") {
-            rid.pubkey = PublicKeyHex::try_from_string(s).ok();
+            rid.pubkey = match PublicKeyHex::try_from_string(s) {
+                Ok(pkh) => Some(pkh),
+                Err(_) => None,
+            };
         }
         if let Some(Value::String(s)) = map.remove("contact") {
             rid.contact = Some(s);
@@ -569,29 +568,52 @@ impl<'de> Visitor<'de> for RidVisitor {
             rid.version = Some(s);
         }
         if let Some(v) = map.remove("limitation") {
-            rid.limitation =
-                serde_json::from_value::<Option<RelayLimitationV1>>(v).unwrap_or_default()
+            rid.limitation = match serde_json::from_value::<Option<RelayLimitationV1>>(v) {
+                Ok(x) => x,
+                Err(_) => None,
+            }
         }
         if let Some(v) = map.remove("retention") {
-            rid.retention = serde_json::from_value::<Vec<RelayRetentionV1>>(v).unwrap_or_default();
+            rid.retention = match serde_json::from_value::<Vec<RelayRetentionV1>>(v) {
+                Ok(x) => x,
+                Err(_) => vec![],
+            };
         }
         if let Some(v) = map.remove("relay_countries") {
-            rid.relay_countries = serde_json::from_value::<Vec<String>>(v).unwrap_or_default()
+            rid.relay_countries = match serde_json::from_value::<Vec<String>>(v) {
+                Ok(x) => x,
+                Err(_) => vec![],
+            }
         }
         if let Some(v) = map.remove("language_tags") {
-            rid.language_tags = serde_json::from_value::<Vec<String>>(v).unwrap_or_default()
+            rid.language_tags = match serde_json::from_value::<Vec<String>>(v) {
+                Ok(x) => x,
+                Err(_) => vec![],
+            }
         }
         if let Some(v) = map.remove("tags") {
-            rid.tags = serde_json::from_value::<Vec<String>>(v).unwrap_or_default()
+            rid.tags = match serde_json::from_value::<Vec<String>>(v) {
+                Ok(x) => x,
+                Err(_) => vec![],
+            }
         }
         if let Some(v) = map.remove("posting_policy") {
-            rid.posting_policy = serde_json::from_value::<Option<Url>>(v).unwrap_or_default()
+            rid.posting_policy = match serde_json::from_value::<Option<Url>>(v) {
+                Ok(x) => x,
+                Err(_) => None,
+            }
         }
         if let Some(v) = map.remove("payments_url") {
-            rid.payments_url = serde_json::from_value::<Option<Url>>(v).unwrap_or_default()
+            rid.payments_url = match serde_json::from_value::<Option<Url>>(v) {
+                Ok(x) => x,
+                Err(_) => None,
+            }
         }
         if let Some(v) = map.remove("fees") {
-            rid.fees = serde_json::from_value::<Option<RelayFeesV1>>(v).unwrap_or_default()
+            rid.fees = match serde_json::from_value::<Option<RelayFeesV1>>(v) {
+                Ok(x) => x,
+                Err(_) => None,
+            }
         }
 
         rid.other = map;
@@ -624,8 +646,8 @@ mod test {
     { "time": 3600, "count": 10000 }
   ] }"##;
         let rid: RelayInformationDocumentV1 = serde_json::from_str(json).unwrap();
-        let json2 = serde_json::to_value(&rid).unwrap();
-        let expected_json2: Value = serde_json::from_str(r##"{"name":"A Relay","supported_nips":[11,12],"retention":[{"kinds":[0,1,[5,7],[40,49]],"time":3600},{"kinds":[[40000,49999]],"time":100},{"kinds":[[30000,39999]],"count":1000},{"time":3600,"count":10000}],"myfield":[1,2]}"##).unwrap();
+        let json2 = serde_json::to_string(&rid).unwrap();
+        let expected_json2 = r##"{"name":"A Relay","supported_nips":[11,12],"retention":[{"kinds":[0,1,[5,7],[40,49]],"time":3600},{"kinds":[[40000,49999]],"time":100},{"count":1000,"kinds":[[30000,39999]]},{"count":10000,"time":3600}],"myfield":[1,2]}"##;
         assert_eq!(json2, expected_json2);
     }
 }

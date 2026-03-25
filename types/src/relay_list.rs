@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use crate::types::{Event, RelayUrl, Tag};
+use std::collections::HashMap;
 
 /// Relay Usage
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

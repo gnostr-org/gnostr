@@ -1,9 +1,8 @@
-use std::ops::Add;
-
 use derive_more::{AsMut, AsRef, Deref, Display, From, Into};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
+use std::ops::Add;
 
 /// Bitcoin amount measured in millisatoshi
 #[derive(
@@ -45,7 +44,6 @@ impl Add<MilliSatoshi> for MilliSatoshi {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
     test_serde! {MilliSatoshi, test_millisatoshi_serde}
 

@@ -1,22 +1,16 @@
-use std::{
-    fmt,
-    sync::{
-        atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering},
-        mpsc::Sender,
-        Arc,
-    },
-    thread,
-    thread::JoinHandle,
-};
-
-use rand::Rng;
-use rand_core::OsRng;
-
-use super::{
+use crate::{
     ContentEncryptionAlgorithm, DelegationConditions, EncryptedPrivateKey, Error, Event, EventKind,
     EventV1, EventV2, Id, KeySecurity, KeySigner, Metadata, PreEvent, PreEventV2, PrivateKey,
     PublicKey, PublicKeyHex, Rumor, RumorV1, RumorV2, Signature, Tag, TagV1, TagV2, Unixtime,
 };
+use rand::Rng;
+use rand_core::OsRng;
+use std::fmt;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
+use std::sync::mpsc::Sender;
+use std::sync::Arc;
+use std::thread;
+use std::thread::JoinHandle;
 
 /// Signer operations
 pub trait Signer: fmt::Debug {
@@ -63,8 +57,8 @@ pub trait Signer: fmt::Debug {
 
     /// Export the private key in hex.
     ///
-    /// This returns a boolean indicating if the key security was downgraded. If
-    /// it was, the caller should save the new self.encrypted_private_key()
+    /// This returns a boolean indicating if the key security was downgraded. If it was,
+    /// the caller should save the new self.encrypted_private_key()
     ///
     /// We need the password and log_n parameters to possibly rebuild
     /// the EncryptedPrivateKey when downgrading key security
@@ -73,8 +67,8 @@ pub trait Signer: fmt::Debug {
 
     /// Export the private key in bech32.
     ///
-    /// This returns a boolean indicating if the key security was downgraded. If
-    /// it was, the caller should save the new self.encrypted_private_key()
+    /// This returns a boolean indicating if the key security was downgraded. If it was,
+    /// the caller should save the new self.encrypted_private_key()
     ///
     /// We need the password and log_n parameters to possibly rebuild
     /// the EncryptedPrivateKey when downgrading key security
@@ -217,7 +211,7 @@ pub trait Signer: fmt::Debug {
 
                     let Id(id) = input.hash().unwrap();
 
-                    let leading_zeroes = super::get_leading_zero_bits(&id);
+                    let leading_zeroes = crate::get_leading_zero_bits(&id);
                     if leading_zeroes >= zero_bits {
                         nonce.store(attempt, Ordering::Relaxed);
                         quitting.store(true, Ordering::Relaxed);
@@ -234,8 +228,7 @@ pub trait Signer: fmt::Debug {
 
                     attempt += 1;
 
-                    // We don't update created_at, which is a bit tricky to
-                    // synchronize.
+                    // We don't update created_at, which is a bit tricky to synchronize.
                 }
             });
             join_handles.push(join_handle);

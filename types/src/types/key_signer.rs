@@ -2,7 +2,6 @@ use crate::{
     ContentEncryptionAlgorithm, EncryptedPrivateKey, Error, Id, KeySecurity, PrivateKey, PublicKey,
     Signature, Signer,
 };
-use crate::nip44;
 use std::fmt;
 
 /// Signer with a local private key (and public key)
@@ -141,7 +140,7 @@ impl Signer for KeySigner {
     fn nip44_conversation_key(&self, other: &PublicKey) -> Result<[u8; 32], Error> {
         let xpub = other.as_xonly_public_key();
         match &self.private_key {
-            Some(pk) => Ok(nip44::get_conversation_key(pk.as_secret_key(), xpub)),
+            Some(pk) => Ok(crate::nip44::get_conversation_key(pk.as_secret_key(), xpub)),
             None => Err(Error::SignerIsLocked),
         }
     }

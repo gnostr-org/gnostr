@@ -1,14 +1,11 @@
-use std::fmt;
-
-use serde::{
-    de::{Deserialize, Deserializer, Error as DeError, IgnoredAny, SeqAccess, Visitor},
-    ser::{Serialize, SerializeSeq, Serializer},
-};
-#[cfg(feature = "speedy")]
-use speedy::{Readable, Writable};
-
 use super::EventV2;
 use crate::types::{Filter, SubscriptionId};
+use serde::de::Error as DeError;
+use serde::de::{Deserialize, Deserializer, IgnoredAny, SeqAccess, Visitor};
+use serde::ser::{Serialize, SerializeSeq, Serializer};
+#[cfg(feature = "speedy")]
+use speedy::{Readable, Writable};
+use std::fmt;
 
 /// A message from a client to a relay
 #[derive(Clone, Debug, Eq, PartialEq)]

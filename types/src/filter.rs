@@ -1,14 +1,11 @@
-use std::{collections::BTreeMap, fmt};
-
-use serde::{
-    de::{Deserializer, MapAccess, Visitor},
-    ser::{SerializeMap, Serializer},
-    Deserialize, Serialize,
-};
+use super::{Event, EventKind, IdHex, PublicKeyHex, Tag, Unixtime};
+use serde::de::{Deserializer, MapAccess, Visitor};
+use serde::ser::{SerializeMap, Serializer};
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-
-use super::{Event, EventKind, IdHex, PublicKeyHex, Tag, Unixtime};
+use std::collections::BTreeMap;
+use std::fmt;
 
 /// Filter which specify what events a client is looking for
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -74,11 +71,10 @@ impl Filter {
     }
 
     /// Add a PublicKey to the filter
-    pub fn add_author(&mut self, public_key_hex: &PublicKeyHex) -> &mut Self {
+    pub fn add_author(&mut self, public_key_hex: &PublicKeyHex) {
         if !self.authors.contains(public_key_hex) {
             self.authors.push(public_key_hex.to_owned());
         }
-        self
     }
 
     /// Delete a PublicKey from the filter
@@ -89,12 +85,11 @@ impl Filter {
     }
 
     /// Add an EventKind to the filter
-    pub fn add_event_kind(&mut self, event_kind: EventKind) -> &mut Self {
+    pub fn add_event_kind(&mut self, event_kind: EventKind) {
         if self.kinds.contains(&event_kind) {
-            return self;
+            return;
         }
         self.kinds.push(event_kind);
-        self
     }
 
     /// Delete an EventKind from the filter
@@ -105,13 +100,12 @@ impl Filter {
     }
 
     /// Add a Tag value to a filter
-    pub fn add_tag_value(&mut self, letter: char, value: String) -> &mut Self {
+    pub fn add_tag_value(&mut self, letter: char, value: String) {
         let _ = self
             .tags
             .entry(letter)
             .and_modify(|values| values.push(value.clone()))
             .or_insert(vec![value]);
-        self
     }
 
     /// Add a Tag value from a filter
@@ -222,34 +216,6 @@ impl Filter {
     }
 }
 
-impl fmt::Display for Filter {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut parts = Vec::new();
-        if !self.ids.is_empty() {
-            parts.push(format!("ids: {:?}", self.ids));
-        }
-        if !self.authors.is_empty() {
-            parts.push(format!("authors: {:?}", self.authors));
-        }
-        if !self.kinds.is_empty() {
-            parts.push(format!("kinds: {:?}", self.kinds));
-        }
-        if !self.tags.is_empty() {
-            parts.push(format!("tags: {:?}", self.tags));
-        }
-        if let Some(since) = self.since {
-            parts.push(format!("since: {}", since));
-        }
-        if let Some(until) = self.until {
-            parts.push(format!("until: {}", until));
-        }
-        if let Some(limit) = self.limit {
-            parts.push(format!("limit: {}", limit));
-        }
-        write!(f, "Filter {{ {} }}", parts.join(", "))
-    }
-}
-
 fn serialize_tags<S>(tags: &BTreeMap<char, Vec<String>>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -295,7 +261,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
     test_serde! {Filter, test_filters_serde}
 
@@ -346,18 +311,15 @@ mod test {
         filter.del_tag_value('e', IdHex::mock().to_string());
         assert_eq!(filter.tags.get(&'e'), None);
 
-        let _ = filter.add_tag_value('t', "footstr".to_string());
-        let _ = filter.add_tag_value('t', "bitcoin".to_string());
+        filter.add_tag_value('t', "footstr".to_string());
+        filter.add_tag_value('t', "bitcoin".to_string());
         filter.del_tag_value('t', "bitcoin".to_string());
         assert!(filter.tags.get(&'t').is_some());
     }
 
     #[test]
     fn test_event_matches() {
-        use crate::{
-            types::{PrivateKey, UncheckedUrl},
-            Id, KeySigner, PreEvent, Signer, Tag,
-        };
+        use crate::{Id, KeySigner, PreEvent, PrivateKey, Signer, Tag, UncheckedUrl};
 
         let signer = {
             let privkey = PrivateKey::mock();
@@ -379,7 +341,7 @@ mod test {
             authors: vec![signer.public_key().into()],
             ..Default::default()
         };
-        let _ = filter.add_tag_value('e', Id::mock().as_hex_string());
+        filter.add_tag_value('e', Id::mock().as_hex_string());
         assert_eq!(filter.event_matches(&event), true);
 
         let filter = Filter {

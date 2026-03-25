@@ -43,7 +43,9 @@ macro_rules! test_serde {
     };
 }
 
-mod nip44;
+/// NIP-44 related functionality.
+pub mod nip44;
+
 mod types;
 pub use types::{
     find_nostr_bech32_pos, find_nostr_url_pos, ClientMessage, ContentEncryptionAlgorithm,
@@ -55,7 +57,7 @@ pub use types::{
     RelayOrigin, RelayRetention, RelayUrl, RelayUsage, RelayUsageSet, Rumor, ShatteredContent,
     Signature, SignatureHex, Signer, SimpleRelayList, SimpleRelayUsage, Span, SubscriptionId, Tag,
     UncheckedUrl, Unixtime, Url, XOnlyPublicKey, ZapData,
-    Nip44Error, decrypt, encrypt, get_conversation_key,
+
 };
 
 mod versioned;

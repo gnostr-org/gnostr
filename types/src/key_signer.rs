@@ -1,25 +1,15 @@
-use std::fmt;
-
-use super::{
+use crate::{
     ContentEncryptionAlgorithm, EncryptedPrivateKey, Error, Id, KeySecurity, PrivateKey, PublicKey,
     Signature, Signer,
 };
+use crate::nip44;
+use std::fmt;
 
 /// Signer with a local private key (and public key)
 pub struct KeySigner {
     encrypted_private_key: EncryptedPrivateKey,
     public_key: PublicKey,
     private_key: Option<PrivateKey>,
-}
-
-impl Clone for KeySigner {
-    fn clone(&self) -> Self {
-        Self {
-            encrypted_private_key: self.encrypted_private_key.clone(),
-            public_key: self.public_key,
-            private_key: self.private_key.clone(),
-        }
-    }
 }
 
 impl fmt::Debug for KeySigner {
@@ -51,8 +41,7 @@ impl KeySigner {
         })
     }
 
-    /// Create a Signer from an `EncryptedPrivateKey` and a password to unlock
-    /// it
+    /// Create a Signer from an `EncryptedPrivateKey` and a password to unlock it
     pub fn from_encrypted_private_key(epk: EncryptedPrivateKey, pass: &str) -> Result<Self, Error> {
         let priv_key = epk.decrypt(pass)?;
         let pub_key = priv_key.public_key();
@@ -81,7 +70,10 @@ impl Signer for KeySigner {
             return Ok(());
         }
 
-        let private_key = self.encrypted_private_key.decrypt(password)?;
+        let private_key = match self.encrypted_private_key.decrypt(password) {
+            Ok(pk) => pk,
+            Err(e) => return Err(e),
+        };
 
         self.private_key = Some(private_key);
 
@@ -149,7 +141,7 @@ impl Signer for KeySigner {
     fn nip44_conversation_key(&self, other: &PublicKey) -> Result<[u8; 32], Error> {
         let xpub = other.as_xonly_public_key();
         match &self.private_key {
-            Some(pk) => Ok(super::nip44::get_conversation_key(pk.as_secret_key(), xpub)),
+            Some(pk) => Ok(nip44::get_conversation_key(pk.as_secret_key(), xpub)),
             None => Err(Error::SignerIsLocked),
         }
     }

@@ -1,9 +1,8 @@
+use crate::{Error, Event};
 use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
-
-use super::{Error, Event};
 
 /// A Schnorr signature that signs an Event, taken on the Event Id field
 #[derive(
@@ -67,8 +66,7 @@ impl<C: Context> Writable<C> for Signature {
     }
 }
 
-/// A Schnorr signature that signs an Event, taken on the Event Id field, as a
-/// hex string
+/// A Schnorr signature that signs an Event, taken on the Event Id field, as a hex string
 #[derive(
     AsMut,
     AsRef,
@@ -113,7 +111,6 @@ impl TryFrom<SignatureHex> for Signature {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
     test_serde! {Signature, test_signature_serde}
 

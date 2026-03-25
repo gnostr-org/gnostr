@@ -1,9 +1,8 @@
 use thiserror::Error;
 
-/// Errors that can occur in NIP-44 operations.
+/// NIP-44 error
 #[derive(Clone, Error, Debug, PartialEq)]
-#[allow(dead_code)]
-pub(crate) enum Error {
+pub enum Error {
     /// Base64 Decode
     #[error("Base64 decode: {0}")]
     Base64Decode(#[from] base64::DecodeError),
@@ -39,10 +38,6 @@ pub(crate) enum Error {
     /// Unknown version
     #[error("Encryption format is unknown")]
     UnknownVersion,
-
-    /// Invalid length
-    #[error("Invalid Length")]
-    InvalidLength,
 
     /// UTF8 Decode
     #[error("UTF8 Decode: {0}")]
