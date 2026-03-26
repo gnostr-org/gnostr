@@ -22,7 +22,7 @@ use nostr_sqlite_0_34_0::SQLiteDatabase;
 use once_cell::sync::Lazy;
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
-
+use gnostr_types::Unixtime;
 pub use crate::test_utils::git::GitTestRepo;
 
 pub mod error;
@@ -154,7 +154,7 @@ pub fn make_event_old_or_change_user(
             .to_unsigned_event(keys.public_key());
 
     unsigned.created_at =
-        gnostr_types::Unixtime::from(gnostr_types::Unixtime::now().as_u64() - how_old_in_secs);
+        nostr::Timestamp::from_secs((gnostr_types::Unixtime::now().0 - how_old_in_secs as i64) as u64);
     unsigned.id = Some(nostr::EventId::new(
         &keys.public_key(),
         &unsigned.created_at,

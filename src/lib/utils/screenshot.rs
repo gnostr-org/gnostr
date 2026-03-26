@@ -7,7 +7,7 @@ use std::{
 
 use clap::{Parser, Subcommand, ValueEnum};
 
-use crate::{blockheight, weeble, wobble};
+use gnostr_types::{blockheight, weeble, wobble};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -271,8 +271,8 @@ pub fn make_screenshot(context: &str) -> io::Result<PathBuf> {
     let mut screenshot_path = std::env::current_dir()?;
     screenshot_path.push("test_screenshots");
     let weeble = weeble::weeble().unwrap_or(0.0) as u64;
-    let wobble = wobble::wobble().unwrap_or(0.0) as u64;
-    let blockheight = blockheight::blockheight().unwrap_or(0.0) as u64;
+    let wobble = wobble().unwrap_or(0.0) as u64;
+    let blockheight = blockheight().unwrap_or(0.0) as u64;
     screenshot_path.push(weeble.to_string());
     screenshot_path.push(blockheight.to_string());
     screenshot_path.push(wobble.to_string());
@@ -335,8 +335,8 @@ pub fn make_screenshot_cross_platform(context: &str) -> io::Result<PathBuf> {
     // These values are specific to the gnostr project's test environment setup.
     // They provide unique subdirectories for organizing screenshots.
     let weeble = weeble::weeble().unwrap_or(0.0) as u64;
-    let wobble = wobble::wobble().unwrap_or(0.0) as u64;
-    let blockheight = blockheight::blockheight().unwrap_or(0.0) as u64;
+    let wobble = wobble().unwrap_or(0.0) as u64;
+    let blockheight = blockheight().unwrap_or(0.0) as u64;
     screenshot_path.push(weeble.to_string());
     screenshot_path.push(blockheight.to_string());
     screenshot_path.push(wobble.to_string());

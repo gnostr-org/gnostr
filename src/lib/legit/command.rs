@@ -23,6 +23,7 @@ use gnostr_types::{
         UncheckedUrl, Unixtime,
     };
 use crate::{
+    queue::InternalEvent,
     utils::{parse_json, split_json_string},
 };
 
@@ -212,13 +213,11 @@ pub async fn create_event(
 
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
-    let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-    let mut client = gnostr_types::Client::new(&padded_keys.keys, gnostr_types::Options::new());    for relay in BOOTSTRAP_RELAYS.iter().cloned() {
-        debug!("{}", relay);
-        client
-            .connect_relay(UncheckedUrl(relay.to_string()))
-            .await?;
-    }
+    let (queue_tx, _queue_rx) = mpsc::channel::<InternalEvent>(100); // Create a channel for internal events
+    let client_keys = gnostr_types::Keys::new(keys.get_private_key()?.clone());
+    let mut client = gnostr_types::Client::new(&client_keys, gnostr_types::Options::new());    let relays_to_add: Vec<String> = BOOTSTRAP_RELAYS.iter().map(|s| s.to_string()).collect();
+    client.add_relays(relays_to_add).await?;
+    client.connect().await;
 
     // Connect to the relays.
     // client.send_event - signed_event
@@ -538,15 +537,13 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             let padded_keys = KeySigner::from_private_key(padded_private_key, "", 1).unwrap();
             //create nostr client with commit based keys
             //let client = Client::new(keys);
-            let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-            let mut client = gnostr_types::Client::new(&padded_keys.keys, gnostr_types::Options::new());
+            let (queue_tx, _queue_rx) = mpsc::channel::<InternalEvent>(100); // Create a channel for internal events
+            let client_keys = gnostr_types::Keys::new(padded_keys.get_private_key()?.clone());
+            let mut client = gnostr_types::Client::new(&client_keys, gnostr_types::Options::new());
 
-            for relay in BOOTSTRAP_RELAYS.iter().cloned() {
-                debug!("{}", relay);
-                client
-                    .connect_relay(UncheckedUrl(relay.to_string()))
-                    .await?;
-            }
+            let relays_to_add: Vec<String> = BOOTSTRAP_RELAYS.iter().map(|s| s.to_string()).collect();
+            client.add_relays(relays_to_add).await?;
+            client.connect().await;
 
             //build git gnostr event
             let pre_event = PreEvent {

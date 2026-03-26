@@ -13,8 +13,8 @@ use crate::{
         InspectCommitOpen,
     },
     tabs::StashingOptions,
-    gnostr_types::{versioned::event3::EventV3, Id, UncheckedUrl},
 };
+use gnostr_types::{versioned::event3::EventV3, Id, UncheckedUrl};
 
 bitflags! {
     /// flags defining what part of the app need to update

@@ -5,7 +5,7 @@ use clap::Args;
 
 use gnostr_types::{
     Client, Event, EventBuilder, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19,
-    Options, PrivateKey, PublicKey, Tag,
+    nip19::Nip19Profile, Options, PrivateKey, PublicKey, Tag,
 };
 use crate::utils::{create_client, parse_private_key};
 

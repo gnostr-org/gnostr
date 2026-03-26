@@ -1,3 +1,4 @@
+use crate::queue::Queue;
 use std::{borrow::Cow, cell::Cell, cmp, path::Path};
 
 use anyhow::Result;
@@ -29,14 +30,14 @@ use crate::{
     components::{CommandInfo, Component, EventState},
     keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
-    queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
+    queue::{Action, InternalEvent, NeedsUpdate, ResetItem},
     string_utils::{tabs_to_spaces, trim_offset},
     strings,
     try_or_popup,
-    gnostr_types::Keys,
     //utils::parse_private_key,
     ui::style::SharedTheme,
 };
+use gnostr_types::Keys;
 
 #[derive(Default)]
 struct Current {

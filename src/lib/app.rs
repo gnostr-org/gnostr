@@ -53,9 +53,9 @@ use crate::{
     tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
     try_or_popup,
     ui::style::{SharedTheme, Theme},
-    weeble::weeble_sync,
-    wobble::wobble_sync,
 };
+use gnostr_types::weeble::weeble_sync;
+use gnostr_types::wobble::wobble_sync;
 
 #[derive(Clone)]
 pub enum QuitState {
@@ -386,8 +386,8 @@ impl App {
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
 
-        env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
-        env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
+        env::set_var("WEEBLE", gnostr_types::weeble::weeble_sync().unwrap().to_string());
+        env::set_var("WOBBLE", gnostr_types::wobble::wobble_sync().unwrap().to_string());
         log::debug!("WEEBLE: {:?}", env::var("WEEBLE"));
 
         if let AsyncNotification::Git(ev) = ev {

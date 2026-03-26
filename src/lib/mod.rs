@@ -274,8 +274,8 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = gnostr_types::internal::event_to_wire(event);
-    gnostr_types::internal::post(host, uri, wire)
+    let wire = gnostr_types::event_to_wire(event);
+    gnostr_types::post(host, uri, wire)
 }
 // /// use gnostr_types::EventV2;
 // use gnostr_types::EventV2;
@@ -290,8 +290,8 @@ use gnostr_types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = gnostr_types::internal::event_to_wire(event);
-    gnostr_types::internal::post(host, uri, wire)
+    let wire = gnostr_types::event_to_wire(event);
+    gnostr_types::post(host, uri, wire)
 }
 
 /// pub fn print_event(event: &Event)
@@ -304,21 +304,9 @@ pub fn print_event(event: &Event) {
 
 use gnostr_types::*;
 
-/// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
-pub mod weeble;
-pub use weeble::{weeble, weeble_async, weeble_millis_async, weeble_sync};
 
-/// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
-pub mod wobble;
-pub use wobble::{wobble, wobble_async, wobble_millis_async, wobble_sync};
 
-/// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
-pub mod blockhash;
-pub use blockhash::blockhash;
 
-/// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
-pub mod blockheight;
-pub use blockheight::{blockheight, blockheight_async};
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
@@ -343,8 +331,8 @@ pub mod relays;
 /// pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec\<Event\>
 pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec<Event> {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = gnostr_types::internal::filters_to_wire(vec![filter]);
-    gnostr_types::internal::fetch(host, uri, wire)
+    let wire = gnostr_types::filters_to_wire(vec![filter]);
+    gnostr_types::fetch(host, uri, wire)
 }
 
 /// pub fn fetch_by_id(url: &str, id: IdHex) -> Option\<Event\>

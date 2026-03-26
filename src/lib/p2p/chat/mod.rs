@@ -8,7 +8,7 @@ use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use proctitle::set_title;
 use serde_json; // Explicitly added for clarity
-use textwrap::{fill, Options};
+use textwrap::{fill, Options as TextWrapOptions};
 //use async_std::path::PathBuf;
 use tokio::{io, io::AsyncBufReadExt};
 use tracing::{debug, info};
@@ -20,7 +20,7 @@ use self::msg::{Msg, MsgKind};
 use crate::queue::InternalEvent;
 use gnostr_types::{
     metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
-    nip28::CREATE_CHANNEL_MESSAGE,
+    CREATE_CHANNEL_MESSAGE,
     Error, EventV3, Id, Metadata, Options, TagV3, UncheckedUrl, Signer,
 };
 
@@ -180,7 +180,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     // Initialize NostrClient and channels
     let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let client = gnostr_types::Client::new(&keys.keys, gnostr_types::Options::new());
+    let client_keys = gnostr_types::Keys::new(keys.get_private_key()?.clone());
+    let client = gnostr_types::Client::new(&client_keys, gnostr_types::Options::new());
 
     // Send NIP-01 metadata event
     let name = args
