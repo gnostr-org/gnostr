@@ -1,15 +1,18 @@
-use super::{EventKind, PublicKey, UncheckedUrl};
-use crate::Error;
+use std::hash::{Hash, Hasher};
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::hash::{Hash, Hasher};
 
-/// An 'naddr': data to address a possibly parameterized replaceable event (d-tag, kind, author, and relays)
+use super::Error;
+use crate::{EventKind, PublicKey, UncheckedUrl};
+/// An 'naddr': data to address a possibly parameterized replaceable event
+/// (d-tag, kind, author, and relays)
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
 pub struct NAddr {
-    /// the 'd' tag of the Event, or an empty string if the kind is not parameterized
+    /// the 'd' tag of the Event, or an empty string if the kind is not
+    /// parameterized
     pub d: String,
 
     /// Some of the relays where this could be found
@@ -32,14 +35,14 @@ impl NAddr {
         tlv.push(0); // the special value, in this case the 'd' tag
         let len = self.d.len() as u8;
         tlv.push(len); // the length of the d tag
-        tlv.extend(&self.d.as_bytes()[..len as usize]);
+        tlv.extend(self.d.as_bytes().iter().take(len as usize));
 
         // Push relays
         for relay in &self.relays {
             tlv.push(1); // type 'relay'
             let len = relay.0.len() as u8;
             tlv.push(len); // the length of the string
-            tlv.extend(&relay.0.as_bytes()[..len as usize]);
+            tlv.extend(relay.0.as_bytes().iter().take(len as usize));
         }
 
         // Push kind
@@ -54,15 +57,15 @@ impl NAddr {
         tlv.push(32); // the length of the value (always 32 for public key)
         tlv.extend(self.author.as_bytes());
 
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NADDR, &tlv).unwrap()
+        bech32::encode::<bech32::Bech32>(*super::HRP_NADDR, &tlv).unwrap()
     }
 
     /// Import from a bech32 encoded string ("naddr")
     pub fn try_from_bech32_string(s: &str) -> Result<NAddr, Error> {
         let data = bech32::decode(s)?;
-        if data.0 != *crate::HRP_NADDR {
+        if data.0 != *super::HRP_NADDR {
             Err(Error::WrongBech32(
-                crate::HRP_NADDR.to_lowercase(),
+                super::HRP_NADDR.to_lowercase(),
                 data.0.to_lowercase(),
             ))
         } else {
@@ -174,6 +177,7 @@ impl Hash for NAddr {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {NAddr, test_naddr_serde}
 

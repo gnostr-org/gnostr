@@ -1,15 +1,17 @@
-use crate::{
-    DelegationConditions, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
-};
-use crate::Error;
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
+use crate::{
+    DelegationConditions, Error, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
+};
+
 /// A tag on an Event
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
-pub struct TagV3(Vec<String>);
+pub struct TagV3(pub Vec<String>);
 
 impl TagV3 {
     const EMPTY_STRING: &'static str = "";
@@ -324,12 +326,12 @@ impl TagV3 {
         Ok((relay, marker))
     }
 
-    /// Create a "d" tag
+    /// Create a new 'd' identifier tag
     pub fn new_identifier(identifier: String) -> TagV3 {
         TagV3(vec!["d".to_string(), identifier])
     }
 
-    /// Parse a "d" tag
+    /// Parse a 'd' tag
     pub fn parse_identifier(&self) -> Result<String, Error> {
         if self.0.len() < 2 {
             return Err(Error::TagMismatch);
@@ -340,7 +342,36 @@ impl TagV3 {
         Ok(self.0[1].to_string())
     }
 
-    /// Create a "subject" tag
+    /// Create a new 'name' tag
+    pub fn new_name(name: String) -> TagV3 {
+        TagV3(vec!["name".to_string(), name])
+    }
+
+    /// Create a new 'image' tag
+    pub fn new_image(url: UncheckedUrl, width: Option<u64>, height: Option<u64>) -> TagV3 {
+        let mut v = vec!["image".to_owned(), url.0];
+        if let Some(w) = width {
+            v.push(format!("{}", w));
+        }
+        if let Some(h) = height {
+            v.push(format!("{}", h));
+        }
+        TagV3(v)
+    }
+
+    /// Create a new 'thumb' tag
+    pub fn new_thumb(url: UncheckedUrl, width: Option<u64>, height: Option<u64>) -> TagV3 {
+        let mut v = vec!["thumb".to_owned(), url.0];
+        if let Some(w) = width {
+            v.push(format!("{}", w));
+        }
+        if let Some(h) = height {
+            v.push(format!("{}", h));
+        }
+        TagV3(v)
+    }
+
+    /// Create a new 'subject' tag
     pub fn new_subject(subject: String) -> TagV3 {
         TagV3(vec!["subject".to_string(), subject])
     }
@@ -464,6 +495,11 @@ impl TagV3 {
         TagV3(vec!["proxy".to_owned(), protocol, id])
     }
 
+    /// Create a generic tag with a name and value
+    pub fn new_tag(tagname: &str, value: &str) -> TagV3 {
+        TagV3(vec![tagname.to_owned(), value.to_owned()])
+    }
+
     /// parse proxy tag
     pub fn parse_proxy(&self) -> Result<(String, String), Error> {
         if self.0.len() < 3 {
@@ -478,9 +514,199 @@ impl TagV3 {
     }
 }
 
+impl fmt::Display for TagV3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[({})]", self.0.join(", "))
+    }
+}
+
+impl From<crate::versioned::tag2::TagV2> for TagV3 {
+    fn from(tag_v2: crate::versioned::tag2::TagV2) -> Self {
+        match tag_v2 {
+            crate::versioned::tag2::TagV2::Address {
+                kind,
+                pubkey,
+                d,
+                relay_url,
+                marker,
+                trailing,
+            } => {
+                let mut vec = vec![
+                    "a".to_owned(),
+                    format!("{}:{}:{}", Into::<u32>::into(kind), pubkey, d),
+                ];
+                if let Some(ru) = relay_url {
+                    vec.push(ru.0);
+                } else if marker.is_some() || !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                if let Some(m) = marker {
+                    vec.push(m);
+                } else if !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::ContentWarning {
+                warning,
+                trailing,
+            } => {
+                let mut vec = vec!["content-warning".to_owned(), warning];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Delegation {
+                pubkey,
+                conditions,
+                sig,
+                trailing,
+            } => {
+                let mut vec = vec![
+                    "delegation".to_owned(),
+                    pubkey.to_string(),
+                    conditions.as_string(),
+                    sig.to_string(),
+                ];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Event {
+                id,
+                recommended_relay_url,
+                marker,
+                trailing,
+            } => {
+                let mut vec = vec!["e".to_owned(), id.as_hex_string()];
+                if let Some(rru) = recommended_relay_url {
+                    vec.push(rru.0);
+                } else if marker.is_some() || !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                if let Some(m) = marker {
+                    vec.push(m);
+                } else if !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Expiration { time, trailing } => {
+                let mut vec = vec!["expiration".to_owned(), time.to_string()];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Pubkey {
+                pubkey,
+                recommended_relay_url,
+                petname,
+                trailing,
+            } => {
+                let mut vec = vec!["p".to_owned(), pubkey.to_string()];
+                if let Some(rru) = recommended_relay_url {
+                    vec.push(rru.0);
+                } else if petname.is_some() || !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                if let Some(pn) = petname {
+                    vec.push(pn);
+                } else if !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Hashtag { hashtag, trailing } => {
+                let mut vec = vec!["t".to_owned(), hashtag];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Reference {
+                url,
+                marker,
+                trailing,
+            } => {
+                let mut vec = vec!["r".to_owned(), url.0];
+                if let Some(m) = marker {
+                    vec.push(m);
+                } else if !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Geohash { geohash, trailing } => {
+                let mut vec = vec!["g".to_owned(), geohash];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Identifier { d, trailing } => {
+                let mut vec = vec!["d".to_owned(), d];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Subject { subject, trailing } => {
+                let mut vec = vec!["subject".to_owned(), subject];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Nonce {
+                nonce,
+                target,
+                trailing,
+            } => {
+                let mut vec = vec!["nonce".to_owned(), nonce];
+                if let Some(t) = target {
+                    vec.push(t);
+                } else if !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Parameter { param, trailing } => {
+                let mut vec = vec!["parameter".to_owned(), param];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Title { title, trailing } => {
+                let mut vec = vec!["title".to_owned(), title];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Other { tag, data } => {
+                let mut vec = vec![tag];
+                vec.extend(data);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Empty => TagV3(vec![]),
+            crate::versioned::tag2::TagV2::EventParent {
+                id,
+                recommended_relay_url,
+                trailing,
+            } => {
+                let mut vec = vec!["E".to_owned(), id.as_hex_string()];
+                if let Some(rru) = recommended_relay_url {
+                    vec.push(rru.0);
+                } else if !trailing.is_empty() {
+                    vec.push("".to_owned());
+                }
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+            crate::versioned::tag2::TagV2::Kind { kind, trailing } => {
+                let mut vec = vec!["k".to_owned(), format!("{}", Into::<u32>::into(kind))];
+                vec.extend(trailing);
+                TagV3(vec)
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {TagV3, test_tag_serde}
 

@@ -499,6 +499,7 @@ pub enum EventKindOrRange {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {EventKind, test_event_kind_serde}
 

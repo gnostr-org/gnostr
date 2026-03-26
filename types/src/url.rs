@@ -1,8 +1,14 @@
-use crate::error::Error;
+use std::fmt;
+
+use std::net::Ipv4Addr;
+use std::net::Ipv6Addr;
+
+use anyhow;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::fmt;
+
+use crate::error::Error;
 
 /// A string that is supposed to represent a URL but which might be invalid
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, PartialOrd, Serialize, Ord)]
@@ -36,15 +42,15 @@ impl UncheckedUrl {
 
     /// As nrelay
     pub fn as_bech32_string(&self) -> String {
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NRELAY, self.0.as_bytes()).unwrap()
+        bech32::encode::<bech32::Bech32>(*super::HRP_NRELAY, self.0.as_bytes()).unwrap()
     }
 
     /// Import from a bech32 encoded string ("nrelay")
     pub fn try_from_bech32_string(s: &str) -> Result<UncheckedUrl, Error> {
         let data = bech32::decode(s)?;
-        if data.0 != *crate::HRP_NRELAY {
+        if data.0 != *super::HRP_NRELAY {
             Err(Error::WrongBech32(
-                crate::HRP_NRELAY.to_lowercase(),
+                super::HRP_NRELAY.to_lowercase(),
                 data.0.to_lowercase(),
             ))
         } else {
@@ -102,16 +108,16 @@ impl Url {
                     }
                 }
                 url::Host::Ipv4(addr) => {
-                    let addrx = core_net::Ipv4Addr::from(addr.octets());
-                    if !addrx.is_global() {
-                        return Err(Error::InvalidUrlHost(format!("{host}")));
-                    }
+                    let _addrx = Ipv4Addr::from(addr.octets());
+                    // if !addrx.is_global() {
+                    //    return Err(Error::InvalidUrlHost(format!("{host}")));
+                    // }
                 }
                 url::Host::Ipv6(addr) => {
-                    let addrx = core_net::Ipv6Addr::from(addr.octets());
-                    if !addrx.is_global() {
-                        return Err(Error::InvalidUrlHost(format!("{host}")));
-                    }
+                    let _addrx = Ipv6Addr::from(addr.octets());
+                    // if !addrx.is_global() {
+                    //    return Err(Error::InvalidUrlHost(format!("{host}")));
+                    // }
                 }
             }
         } else {
@@ -214,7 +220,7 @@ impl RelayUrl {
 
     /// As nrelay
     pub fn as_bech32_string(&self) -> String {
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NRELAY, self.0.as_bytes()).unwrap()
+        bech32::encode::<bech32::Bech32>(*super::HRP_NRELAY, self.0.as_bytes()).unwrap()
     }
 
     /// Convert into a UncheckedUrl
@@ -343,6 +349,7 @@ impl From<RelayOrigin> for RelayUrl {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {UncheckedUrl, test_unchecked_url_serde}
 

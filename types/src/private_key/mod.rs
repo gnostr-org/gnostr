@@ -1,41 +1,43 @@
-use crate::{Error, Id, PublicKey, Signature, Signer};
-use crate::nip44;
-use rand_core::OsRng;
-use std::convert::TryFrom;
-use std::fmt;
+use std::{convert::TryFrom, fmt};
 
-mod encrypted_private_key;
+use rand_core::OsRng;
+
+use super::{Error, Id, PublicKey, Signature, Signer};
+
+pub(super) mod encrypted_private_key;
 pub use encrypted_private_key::*;
 
-mod content_encryption;
+pub(super) mod content_encryption;
 pub use content_encryption::*;
 
 /// This indicates the security of the key by keeping track of whether the
 /// secret key material was handled carefully. If the secret is exposed in any
 /// way, or leaked and the memory not zeroed, the key security drops to Weak.
 ///
-/// This is a Best Effort tag. There are ways to leak the key and still have this
-/// tag claim the key is Medium security. So Medium really means it might not
-/// have leaked, whereas Weak means we know that it definately did leak.
+/// This is a Best Effort tag. There are ways to leak the key and still have
+/// this tag claim the key is Medium security. So Medium really means it might
+/// not have leaked, whereas Weak means we know that it definately did leak.
 ///
 /// We offer no Strong security via the PrivateKey structure. If we support
-/// hardware tokens in the future, it will probably be via a different structure.
+/// hardware tokens in the future, it will probably be via a different
+/// structure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum KeySecurity {
     /// This means that the key was exposed in a way such that this library
-    /// cannot ensure it's secrecy, usually either by being exported as a hex string,
-    /// or by being imported from the same. Often in these cases it is displayed
-    /// on the screen or left in the cut buffer or in freed memory that was not
-    /// subsequently zeroed.
+    /// cannot ensure it's secrecy, usually either by being exported as a hex
+    /// string, or by being imported from the same. Often in these cases it
+    /// is displayed on the screen or left in the cut buffer or in freed
+    /// memory that was not subsequently zeroed.
     Weak = 0,
 
-    /// This means that the key might not have been directly exposed. But it still
-    /// might have as there are numerous ways you can leak it such as exporting it
-    /// and then decrypting the exported key, using unsafe rust, transmuting it into
-    /// a different type that doesn't protect it, or using a privileged process to
-    /// scan memory. Additionally, more advanced techniques can get at your key such
-    /// as hardware attacks like spectre, rowhammer, and power analysis.
+    /// This means that the key might not have been directly exposed. But it
+    /// still might have as there are numerous ways you can leak it such as
+    /// exporting it and then decrypting the exported key, using unsafe
+    /// rust, transmuting it into a different type that doesn't protect it,
+    /// or using a privileged process to scan memory. Additionally, more
+    /// advanced techniques can get at your key such as hardware attacks
+    /// like spectre, rowhammer, and power analysis.
     Medium = 1,
 
     /// Not tracked
@@ -58,9 +60,11 @@ impl TryFrom<u8> for KeySecurity {
     }
 }
 
-/// This is a private key which is to be kept secret and is used to prove identity
+/// This is a private key which is to be kept secret and is used to prove
+/// identity
 #[allow(missing_debug_implementations)]
-pub struct PrivateKey(secp256k1::SecretKey, KeySecurity);
+#[derive(Clone, PartialEq, Eq)]
+pub struct PrivateKey(pub secp256k1::SecretKey, pub KeySecurity);
 
 impl Default for PrivateKey {
     fn default() -> Self {
@@ -133,7 +137,7 @@ impl PrivateKey {
     /// with `KeySecurity::Weak` if you execute this.
     pub fn as_bech32_string(&mut self) -> String {
         self.1 = KeySecurity::Weak;
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NSEC, self.0.secret_bytes().as_slice())
+        bech32::encode::<bech32::Bech32>(*super::HRP_NSEC, self.0.secret_bytes().as_slice())
             .unwrap()
     }
 
@@ -143,9 +147,9 @@ impl PrivateKey {
     /// `import_encrypted()` for `KeySecurity::Medium`
     pub fn try_from_bech32_string(s: &str) -> Result<PrivateKey, Error> {
         let data = bech32::decode(s)?;
-        if data.0 != *crate::HRP_NSEC {
+        if data.0 != *super::HRP_NSEC {
             Err(Error::WrongBech32(
-                crate::HRP_NSEC.to_lowercase(),
+                super::HRP_NSEC.to_lowercase(),
                 data.0.to_lowercase(),
             ))
         } else {
@@ -170,7 +174,7 @@ impl PrivateKey {
 
     /// Sign a message (this hashes with SHA-256 first internally)
     pub fn sign(&self, message: &[u8]) -> Result<Signature, Error> {
-        use secp256k1::hashes::{sha256, Hash};
+        use secp256k1::hashes::{Hash, sha256};
         let keypair = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &self.0);
         let hash = sha256::Hash::hash(message).to_byte_array();
         let message = secp256k1::Message::from_digest(hash);
@@ -257,7 +261,7 @@ impl Signer for PrivateKey {
 
     /// Get NIP-44 conversation key
     fn nip44_conversation_key(&self, other: &PublicKey) -> Result<[u8; 32], Error> {
-        Ok(nip44::get_conversation_key(
+        Ok(super::nip44::get_conversation_key(
             self.0,
             other.as_xonly_public_key(),
         ))

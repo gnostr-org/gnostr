@@ -1,7 +1,10 @@
-use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
-use serde::ser::{Serialize, SerializeMap, Serializer};
-use serde_json::{json, Map, Value};
 use std::fmt;
+
+use serde::{
+    de::{Deserialize, Deserializer, MapAccess, Visitor},
+    ser::{Serialize, SerializeMap, Serializer},
+};
+use serde_json::{Map, Value, json};
 
 /// Metadata about a user
 ///
@@ -152,6 +155,7 @@ impl<'de> Visitor<'de> for MetadataV1Visitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {MetadataV1, test_metadata_serde}
 

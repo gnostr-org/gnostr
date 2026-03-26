@@ -71,7 +71,7 @@ Developers can import and utilize these types to:
 **Example: Creating a simple text note event**
 
 ```rust
-use crate::types::{Event, EventKind, PrivateKey, Unixtime, Signer, KeySigner, Tag};
+use crate::{Event, EventKind, PrivateKey, Unixtime, Signer, KeySigner, Tag};
 
 fn create_text_note(signer: &KeySigner, content: &str) -> Result<Event, Error> {
     let tags = vec![]; // No specific tags for a simple text note

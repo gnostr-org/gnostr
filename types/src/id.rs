@@ -1,23 +1,30 @@
-use crate::Error;
-use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
-use serde::de::{Deserializer, Visitor};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "speedy")]
-use speedy::{Readable, Writable};
 use std::fmt;
 
-/// An event identifier, constructed as a SHA256 hash of the event fields according to NIP-01
+use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, Visitor},
+    ser::Serializer,
+};
+#[cfg(feature = "speedy")]
+use speedy::{Readable, Writable};
+
+use super::Error;
+
+/// An event identifier, constructed as a SHA256 hash of the event fields
+/// according to NIP-01
 #[derive(
     AsMut, AsRef, Clone, Copy, Debug, Deref, Eq, From, Hash, Into, Ord, PartialEq, PartialOrd,
 )]
 #[cfg_attr(feature = "speedy", derive(Readable, Writable))]
+#[derive(Default)]
 pub struct Id(pub [u8; 32]);
 
 impl Id {
     /// Render into a hexadecimal string
     ///
-    /// Consider converting `.into()` an `IdHex` which is a wrapped type rather than a naked `String`
+    /// Consider converting `.into()` an `IdHex` which is a wrapped type rather
+    /// than a naked `String`
     pub fn as_hex_string(&self) -> String {
         hex::encode(self.0)
     }
@@ -30,17 +37,27 @@ impl Id {
             .map_err(|_| Error::WrongLengthHexString)?))
     }
 
+    /// Create from a byte slice.
+    pub fn try_from_bytes(v: &[u8]) -> Result<Id, Error> {
+        if v.len() != 32 {
+            return Err(Error::InvalidId);
+        }
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(v);
+        Ok(Id(bytes))
+    }
+
     /// Export as a bech32 encoded string ("note")
     pub fn as_bech32_string(&self) -> String {
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NOTE, &self.0).unwrap()
+        bech32::encode::<bech32::Bech32>(*super::HRP_NOTE, &self.0).unwrap()
     }
 
     /// Import from a bech32 encoded string ("note")
     pub fn try_from_bech32_string(s: &str) -> Result<Id, Error> {
         let data = bech32::decode(s)?;
-        if data.0 != *crate::HRP_NOTE {
+        if data.0 != *super::HRP_NOTE {
             Err(Error::WrongBech32(
-                crate::HRP_NOTE.to_lowercase(),
+                super::HRP_NOTE.to_lowercase(),
                 data.0.to_lowercase(),
             ))
         } else if data.1.len() != 32 {
@@ -58,6 +75,12 @@ impl Id {
     pub(crate) fn mock() -> Id {
         Id::try_from_hex_string("5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6")
             .unwrap()
+    }
+}
+
+impl fmt::Display for Id {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_hex_string())
     }
 }
 
@@ -103,9 +126,11 @@ impl Visitor<'_> for IdVisitor {
     }
 }
 
-/// An event identifier, constructed as a SHA256 hash of the event fields according to NIP-01, as a hex string
+/// An event identifier, constructed as a SHA256 hash of the event fields
+/// according to NIP-01, as a hex string
 ///
-/// You can convert from an `Id` into this with `From`/`Into`.  You can convert this back to an `Id` with `TryFrom`/`TryInto`.
+/// You can convert from an `Id` into this with `From`/`Into`.  You can convert
+/// this back to an `Id` with `TryFrom`/`TryInto`.
 #[derive(
     AsMut,
     AsRef,
@@ -228,6 +253,7 @@ impl Visitor<'_> for IdHexVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {Id, test_id_serde}
     test_serde! {IdHex, test_id_hex_serde}

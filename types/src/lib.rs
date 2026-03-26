@@ -20,7 +20,7 @@
     unstable_features,
     single_use_lifetimes,
     //unsafe_code,
-    unreachable_pub,
+    // unreachable_pub,
     missing_docs,
     missing_copy_implementations
 )]
@@ -30,116 +30,301 @@ mod error;
 pub use error::Error;
 
 #[cfg(test)]
-macro_rules! test_serde {
-    ($t:ty, $fnname:ident) => {
-        #[test]
-        fn $fnname() {
-            let a = <$t>::mock();
-            let x = serde_json::to_string(&a).unwrap();
-            println!("{}", x);
-            let b = serde_json::from_str(&x).unwrap();
-            assert_eq!(a, b);
-        }
-    };
-}
+mod test_utils;
 
 /// NIP-44 related functionality.
 pub mod nip44;
 
 mod client_message;
-pub use client_message::ClientMessage;
 
 mod content;
-pub use content::{ContentSegment, ShatteredContent, Span};
+pub use content::*;
 
 mod delegation;
-pub use delegation::{DelegationConditions, EventDelegation};
-
+pub use delegation::*;
 mod event;
-pub use event::{Event, PreEvent, Rumor, ZapData};
-
+pub use event::*;
 mod event_kind;
-pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
-
+pub use event_kind::*;
 mod event_reference;
-pub use event_reference::EventReference;
-
+pub use event_reference::*;
 mod filter;
-pub use filter::Filter;
-
+pub use filter::*;
 mod id;
-pub use id::{Id, IdHex};
-
+pub use id::*;
 mod identity;
-pub use identity::Identity;
-
+pub use identity::*;
 mod key_signer;
-pub use key_signer::KeySigner;
-
+pub use key_signer::*;
 mod metadata;
-pub use metadata::Metadata;
-
+pub use metadata::*;
 mod naddr;
-pub use naddr::NAddr;
-
+pub use naddr::*;
 mod nevent;
-pub use nevent::NEvent;
-
+pub use nevent::*;
 mod nip05;
-pub use nip05::Nip05;
-
+pub use nip05::*;
 mod nostr_url;
-pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};
-
+pub use nostr_url::*;
 mod pay_request_data;
-pub use pay_request_data::PayRequestData;
-
+pub use pay_request_data::*;
 mod private_key;
-pub use private_key::{ContentEncryptionAlgorithm, EncryptedPrivateKey, KeySecurity, PrivateKey};
-
+pub use private_key::*;
 mod profile;
-pub use profile::Profile;
-
+pub use profile::*;
 mod public_key;
-pub use public_key::{PublicKey, PublicKeyHex, XOnlyPublicKey};
-
+pub use public_key::*;
 mod relay_information_document;
-pub use relay_information_document::{
-    Fee, RelayFees, RelayInformationDocument, RelayLimitation, RelayRetention,
-};
-
+pub use relay_information_document::*;
 mod relay_list;
-pub use relay_list::{RelayList, RelayListUsage};
-
+pub use relay_list::*;
+/// Relay information document as described in NIP-11, supplied by a relay.
+pub mod relay_info;
+pub use relay_info::*;
 mod relay_message;
-pub use relay_message::RelayMessage;
-
+pub use relay_message::*;
 mod relay_usage;
-pub use relay_usage::{RelayUsage, RelayUsageSet};
-
+pub use relay_usage::*;
 mod satoshi;
-pub use satoshi::MilliSatoshi;
-
+pub use satoshi::*;
 mod signature;
-pub use signature::{Signature, SignatureHex};
-
+pub use signature::*;
 mod signer;
-pub use signer::Signer;
-
+pub use signer::*;
 mod simple_relay_list;
-pub use simple_relay_list::{SimpleRelayList, SimpleRelayUsage};
-
+pub use simple_relay_list::*;
 mod subscription_id;
-pub use subscription_id::SubscriptionId;
-
+pub use subscription_id::*;
 mod tag;
-pub use tag::Tag;
-
+pub use tag::*;
 mod unixtime;
-pub use unixtime::Unixtime;
+pub use unixtime::*;mod url;
+pub use url::*;
+mod weeble;
+pub use weeble::*;
+mod blockheight;
+pub use blockheight::*;
+mod blockhash;
+pub use blockhash::*;
+mod wobble;
+pub use wobble::*;
+// Internal utility functions for event conversion and relay communication.
+// These are not publicly re-exported from the `gnostr_types` crate.
+mod internal {
+    #![allow(clippy::print_with_newline)]
+    use base64::Engine;
+    use http::Uri;
+    use tokio_tungstenite::{tungstenite, tungstenite::Message};
 
-mod url;
-pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
+    use crate::client_message::ClientMessage;
+    use crate::event::Event;
+    use crate::versioned::event2::EventV2;
+    use crate::versioned::event3::EventV3;
+    use crate::filter::Filter;
+    use crate::relay_message::RelayMessage;
+    use crate::versioned::relay_message5::RelayMessageV5;
+    use crate::subscription_id::SubscriptionId;
+
+    pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
+        let message = ClientMessage::Req(
+            SubscriptionId(format!(
+                "{:?}/{:?}/{:?}",
+                crate::weeble::weeble_sync(),
+                crate::blockheight::blockheight_sync(),
+                crate::weeble::weeble_sync(),
+            )),
+            filters,
+        );
+        serde_json::to_string(&message).expect("Could not serialize message")
+    }
+
+    pub(crate) fn event_to_wire(event: Event) -> String {
+        let message = ClientMessage::Event(Box::new(event));
+        serde_json::to_string(&message).expect("Could not serialize message")
+    }
+
+    // pub(crate) fn event_to_wire_v2(event: EventV2) -> String {
+    //    let message = ClientMessage::Event_V2(Box::new(event));
+    //    serde_json::to_string(&message).expect("Could not serialize message")
+    //}
+
+    pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
+        let mut events: Vec<Event> = Vec::new();
+
+        let key: [u8; 16] = rand::random();
+        let request = http::request::Request::builder()
+            .method("GET")
+            .header("Host", host)
+            .header("Connection", "Upgrade")
+            .header("Upgrade", "websocket")
+            .header("Sec-WebSocket-Version", "13")
+            .header(
+                "Sec-WebSocket-Key",
+                base64::engine::general_purpose::STANDARD.encode(key),
+            )
+            .uri(uri)
+            .body(())
+            .expect("Could not build request");
+
+        let (mut websocket, _response) =
+            tungstenite::connect(request).expect("Could not connect to relay");
+
+        websocket
+            .send(Message::Text(wire.into()))
+            .expect("Could not send message to relay");
+
+        loop {
+            let message = match websocket.read() {
+                Ok(m) => m,
+                Err(e) => {
+                    //handle differently
+                    println!("Problem reading from websocket: {}", e);
+                    return events;
+                }
+            };
+
+            match message {
+                Message::Text(s) => {
+                    let relay_message: RelayMessageV5 = serde_json::from_str(&s).expect(&s);
+                    match relay_message {
+                        RelayMessageV5::Closed(_, _) => todo!(),
+                        RelayMessageV5::Event(_, e) => events.push(*e),
+                        RelayMessageV5::Notice(s) => println!("NOTICE: {}", s),
+                        RelayMessageV5::Eose(_) => {
+                            let message = ClientMessage::Close(SubscriptionId(format!(
+                                "{:?}/{:?}/{:?}",
+                                crate::weeble::weeble_sync(),
+                                crate::blockheight::blockheight_sync(),
+                                crate::weeble::weeble_sync(),
+                            )));
+                            let wire = match serde_json::to_string(&message) {
+                                Ok(w) => w,
+                                Err(e) => {
+                                    println!("Could not serialize message: {}", e);
+                                    return events;
+                                }
+                            };
+                            if let Err(e) = websocket.send(Message::Text(wire.into())) {
+                                println!("Could not write close subscription message: {}", e);
+                                return events;
+                            }
+                            if let Err(e) = websocket.send(Message::Close(None)) {
+                                println!("Could not write websocket close message: {}", e);
+                                return events;
+                            }
+                        }
+                        RelayMessageV5::Ok(_id, ok, reason) => {
+                            println!("OK: ok={} reason={}", ok, reason)
+                        }
+                        RelayMessageV5::Auth(challenge) => {
+                            // NIP-0042 ["AUTH", "<challenge-string>"]
+                            print!(r#"["AUTH", "{}"]"#, challenge)
+                        }
+                        RelayMessageV5::Notify(_) => todo!(),
+                    }
+                }
+                Message::Binary(_) => {
+                    println!("IGNORING BINARY MESSAGE")
+                }
+                Message::Ping(vec) => {
+                    if let Err(e) = websocket.send(Message::Pong(vec)) {
+                        println!("Unable to pong: {}", e);
+                    }
+                }
+                Message::Pong(_) => {
+                    println!("IGNORING PONG")
+                }
+                Message::Close(_) => {
+                    //println!("Closing");
+                    break;
+                }
+                Message::Frame(_) => {
+                    println!("UNEXPECTED RAW WEBSOCKET FRAME")
+                }
+            }
+        }
+
+        events
+    }
+
+    pub(crate) fn post(host: String, uri: Uri, wire: String) {
+        //gnostr key here
+        let key: [u8; 16] = rand::random();
+        let request = http::request::Request::builder()
+            .method("GET")
+            .header("Host", host.clone())
+            .header("Connection", "Upgrade")
+            .header("Upgrade", "websocket")
+            .header("Sec-WebSocket-Version", "13")
+            .header(
+                "Sec-WebSocket-Key",
+                base64::engine::general_purpose::STANDARD.encode(key),
+            )
+            .uri(uri)
+            .body(())
+            .expect("Could not build request");
+
+        let (mut websocket, _response) =
+            tungstenite::connect(request).expect("Could not connect to relay");
+
+        print!("{}
+", wire);
+        websocket
+            .send(Message::Text(wire.into()))
+            .expect("Could not send message to relay");
+
+        // Get and print one response message
+
+        let message = match websocket.read() {
+            Ok(m) => m,
+            Err(e) => {
+                //handle differently
+                println!("Problem reading from websocket: {}", e);
+                return;
+            }
+        };
+
+        match message {
+            Message::Text(s) => {
+                let relay_message: RelayMessage = serde_json::from_str(&s).expect(&s);
+                match relay_message {
+                    RelayMessage::Event(_, e) => {
+                        println!(r#"["EVENT", {}]"#, serde_json::to_string(&e).unwrap())
+                    }
+                    RelayMessage::Notice(s) => println!("NOTICE: {}", s),
+                    RelayMessage::Eose(_) => println!("EOSE"),
+                    //nostr uses json extensively
+                    //yet relays dont return json formatted messages?
+                    RelayMessage::Ok(_id, ok, reason) => println!(
+                        r#"["{}",{{"ok":"{}","reason":"{}"}}]"#,
+                        host, ok, reason
+                    ),
+                    RelayMessage::Auth(challenge) => print!(r#"["AUTH":"{}"]"#, challenge),
+                    RelayMessage::Notify(_) => todo!(),
+                    RelayMessage::Closed(_, _) => todo!(),
+                }
+            }
+            Message::Binary(_) => {
+                println!("IGNORING BINARY MESSAGE")
+            }
+            Message::Ping(vec) => {
+                if let Err(e) = websocket.send(Message::Pong(vec)) {
+                    println!("Unable to pong: {}", e);
+                }
+            }
+            Message::Pong(_) => {
+                println!("IGNORING PONG")
+            }
+            Message::Close(_) => {
+                println!("Closing");
+            }
+            Message::Frame(_) => {
+                println!("UNEXPECTED RAW WEBSOCKET FRAME")
+            }
+        }
+    }
+}
+
 
 mod versioned;
 pub use versioned::{

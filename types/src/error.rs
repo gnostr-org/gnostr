@@ -33,7 +33,7 @@ pub enum Error {
 
     /// Crypto error
     #[error("Crypto Error: {0}")]
-    Crypto(#[from] crate::nip44::Error),
+    Crypto(#[from] super::nip44::Error),
 
     /// Encryption/Decryption Error
     #[error("Private Key Encryption/Decryption Error")]
@@ -227,4 +227,20 @@ pub enum Error {
     /// Zap Receipt issue
     #[error("Invalid Zap Receipt: {0}")]
     ZapReceipt(String),
+
+    /// Invalid NIP-19 data
+    #[error("Invalid NIP-19 data")]
+    InvalidNip19Data,
+
+    /// Invalid NIP-19 prefix
+    #[error("Invalid NIP-19 prefix")]
+    InvalidNip19Prefix,
+
+    /// Boxed standard error
+    #[error(transparent)]
+    Custom(#[from] Box<dyn std::error::Error + Send + Sync + 'static>),
+
+    /// Anyhow error
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
 }

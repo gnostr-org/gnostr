@@ -1,13 +1,15 @@
+use std::convert::TryInto;
+
 use base64::Engine;
-use chacha20::cipher::{KeyIvInit, StreamCipher};
-use chacha20::ChaCha20;
+use chacha20::{
+    ChaCha20,
+    cipher::{KeyIvInit, StreamCipher},
+};
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use rand_core::{OsRng, RngCore};
-use secp256k1::ecdh::shared_secret_point;
-use secp256k1::{Parity, PublicKey, SecretKey, XOnlyPublicKey};
+use secp256k1::{Parity, PublicKey, SecretKey, XOnlyPublicKey, ecdh::shared_secret_point};
 use sha2::Sha256;
-
 mod error;
 pub use error::Error;
 
@@ -18,22 +20,22 @@ struct MessageKeys([u8; 76]);
 
 impl MessageKeys {
     #[inline]
-    fn zero() -> MessageKeys {
+    pub(crate) fn zero() -> MessageKeys {
         MessageKeys([0; 76])
     }
 
     #[inline]
-    fn encryption(&self) -> [u8; 32] {
+    pub(crate) fn encryption(&self) -> [u8; 32] {
         self.0[0..32].try_into().unwrap()
     }
 
     #[inline]
-    fn nonce(&self) -> [u8; 12] {
+    pub(crate) fn nonce(&self) -> [u8; 12] {
         self.0[32..44].try_into().unwrap()
     }
 
     #[inline]
-    fn auth(&self) -> [u8; 32] {
+    pub(crate) fn auth(&self) -> [u8; 32] {
         self.0[44..76].try_into().unwrap()
     }
 }
@@ -48,9 +50,7 @@ fn get_shared_point(private_key_a: SecretKey, x_only_public_key_b: XOnlyPublicKe
     ssp.try_into().unwrap()
 }
 
-/// Get the NIP-44 conversation key.
-///
-/// A conversation key is the long-term secret that two nostr identities share.
+/// Derives a NIP-44 conversation key from a private key and an XOnlyPublicKey.
 pub fn get_conversation_key(
     private_key_a: SecretKey,
     x_only_public_key_b: XOnlyPublicKey,
@@ -98,12 +98,13 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     let mut padded: Vec<u8> = Vec::new();
     padded.extend_from_slice(&(len as u16).to_be_bytes());
     padded.extend_from_slice(unpadded.as_bytes());
-    padded.extend(std::iter::repeat(0).take(calc_padding(len) - len));
+    padded.extend(std::iter::repeat_n(0, calc_padding(len) - len));
     Ok(padded)
 }
 
 /// Encrypt a plaintext message with a conversation key.
-/// The output is a base64 encoded string that can be placed into message contents.
+/// The output is a base64 encoded string that can be placed into message
+/// contents.
 #[inline]
 pub fn encrypt(conversation_key: &[u8; 32], plaintext: &str) -> Result<String, Error> {
     encrypt_inner(conversation_key, plaintext, None)
@@ -142,44 +143,22 @@ fn encrypt_inner(
 
 /// Decrypt the base64 encrypted contents with a conversation key
 pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
-    let debug_enabled = std::env::var("NIP44_DEBUG").is_ok();
-
-    if debug_enabled {
-        eprintln!("DEBUG: decrypt - Input base64_ciphertext: {}", base64_ciphertext);
+    if base64_ciphertext.is_empty() {
+        return Err(Error::InvalidLength);
     }
-
-    if base64_ciphertext.as_bytes().get(0).map_or(false, |&b| b == b'#') {
+    if base64_ciphertext.as_bytes()[0] == b'#' {
         return Err(Error::UnsupportedFutureVersion);
     }
     let binary_ciphertext: Vec<u8> =
         base64::engine::general_purpose::STANDARD.decode(base64_ciphertext)?;
-
-    if debug_enabled {
-        eprintln!("DEBUG: decrypt - binary_ciphertext: {:?}", binary_ciphertext);
+    if binary_ciphertext.len() < 65 {
+        return Err(Error::InvalidLength);
     }
-
-    if binary_ciphertext.is_empty() {
-        if debug_enabled {
-            eprintln!("DEBUG: decrypt - Returning MessageIsEmpty due to empty binary_ciphertext.");
-        }
-        return Err(Error::MessageIsEmpty);
-    }
-
     let version = binary_ciphertext[0];
     if version != 2 {
         return Err(Error::UnknownVersion);
     }
     let dlen = binary_ciphertext.len();
-    // Minimum expected length: 1 byte version + 32 bytes nonce + 2 bytes unpadded_len + (min 30 bytes padding) + 32 bytes mac
-    // Minimum padded message length is 34 bytes (2 for length prefix + 1 for actual byte + 31 for padding if message length is 1)
-    // So, 1 (version) + 32 (nonce) + 34 (min padded message) + 32 (mac) = 99
-    if dlen < 99 {
-        if debug_enabled {
-            eprintln!("DEBUG: decrypt - Returning InvalidPadding due to dlen ({}) < 99.", dlen);
-        }
-        return Err(Error::InvalidPadding);
-    }
-
     let nonce = &binary_ciphertext[1..33];
     let mut buffer = binary_ciphertext[33..dlen - 32].to_owned();
     let mac = &binary_ciphertext[dlen - 32..dlen];

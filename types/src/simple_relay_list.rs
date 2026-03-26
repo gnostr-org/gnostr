@@ -1,11 +1,14 @@
-use crate::UncheckedUrl;
-use serde::de::{Deserializer, MapAccess, Visitor};
-use serde::ser::{SerializeMap, Serializer};
-use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, fmt};
+
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, MapAccess, Visitor},
+    ser::{SerializeMap, Serializer},
+};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
-use std::collections::HashMap;
-use std::fmt;
+
+use crate::UncheckedUrl;
 
 /// When and how to use a Relay
 ///
@@ -105,6 +108,7 @@ impl<'de> Visitor<'de> for SimpleRelayListVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {SimpleRelayList, test_simple_relay_list_serde}
 

@@ -1,22 +1,27 @@
-use crate::{Error, PrivateKey, Signature};
-use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
-pub use secp256k1::XOnlyPublicKey;
-use secp256k1::SECP256K1;
-use serde::de::{Deserializer, Visitor};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "speedy")]
-use speedy::{Context, Readable, Reader, Writable, Writer};
 use std::fmt;
 
-/// This is a public key, which identifies an actor (usually a person) and is shared.
+use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
+use secp256k1::{SECP256K1, XOnlyPublicKey};
+use serde::{
+    Deserialize, Serialize,
+    de::{Deserializer, Visitor},
+    ser::Serializer,
+};
+#[cfg(feature = "speedy")]
+use speedy::{Context, Readable, Reader, Writable, Writer};
+
+use super::{Error, PrivateKey, Signature};
+
+/// This is a public key, which identifies an actor (usually a person) and is
+/// shared.
 #[derive(AsMut, AsRef, Copy, Clone, Debug, Deref, Eq, From, Into, PartialEq, PartialOrd, Ord)]
 pub struct PublicKey([u8; 32]);
 
 impl PublicKey {
     /// Render into a hexadecimal string
     ///
-    /// Consider converting `.into()` a `PublicKeyHex` which is a wrapped type rather than a naked `String`
+    /// Consider converting `.into()` a `PublicKeyHex` which is a wrapped type
+    /// rather than a naked `String`
     pub fn as_hex_string(&self) -> String {
         hex::encode(self.0)
     }
@@ -40,7 +45,7 @@ impl PublicKey {
 
     /// Export as a bech32 encoded string
     pub fn as_bech32_string(&self) -> String {
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NPUB, self.0.as_slice()).unwrap()
+        bech32::encode::<bech32::Bech32>(*super::HRP_NPUB, self.0.as_slice()).unwrap()
     }
 
     /// Export as XOnlyPublicKey
@@ -54,9 +59,9 @@ impl PublicKey {
     /// has a performance cost.
     pub fn try_from_bech32_string(s: &str, verify: bool) -> Result<PublicKey, Error> {
         let data = bech32::decode(s)?;
-        if data.0 != *crate::HRP_NPUB {
+        if data.0 != *super::HRP_NPUB {
             Err(Error::WrongBech32(
-                crate::HRP_NPUB.to_lowercase(),
+                super::HRP_NPUB.to_lowercase(),
                 data.0.to_lowercase(),
             ))
         } else if data.1.len() != 32 {
@@ -93,9 +98,22 @@ impl PublicKey {
         self.0.as_slice().to_vec()
     }
 
+    /// Parse from bech32 or hex string (for compatibility with nostr_sdk)
+    pub fn parse(s: String) -> Option<Self> {
+        // Try bech32 first
+        if let Ok(pk) = Self::try_from_bech32_string(&s, false) {
+            return Some(pk);
+        }
+        // Try hex
+        if let Ok(pk) = Self::try_from_hex_string(&s, false) {
+            return Some(pk);
+        }
+        None
+    }
+
     /// Verify a signed message
     pub fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), Error> {
-        use secp256k1::hashes::{sha256, Hash};
+        use secp256k1::hashes::{Hash, sha256};
         let pk = XOnlyPublicKey::from_slice(self.0.as_slice())?;
         let hash = sha256::Hash::hash(message).to_byte_array();
         let message = secp256k1::Message::from_digest(hash);
@@ -115,6 +133,12 @@ impl PublicKey {
             true,
         )
         .unwrap()
+    }
+}
+
+impl fmt::Display for PublicKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_hex_string())
     }
 }
 
@@ -192,9 +216,11 @@ impl<C: Context> Writable<C> for PublicKey {
     }
 }
 
-/// This is a public key, which identifies an actor (usually a person) and is shared, as a hex string
+/// This is a public key, which identifies an actor (usually a person) and is
+/// shared, as a hex string
 ///
-/// You can convert from a `PublicKey` into this with `From`/`Into`.  You can convert this back to a `PublicKey` with `TryFrom`/`TryInto`.
+/// You can convert from a `PublicKey` into this with `From`/`Into`.  You can
+/// convert this back to a `PublicKey` with `TryFrom`/`TryInto`.
 #[derive(
     AsMut,
     AsRef,
@@ -230,7 +256,7 @@ impl PublicKeyHex {
     /// Export as a bech32 encoded string
     pub fn as_bech32_string(&self) -> String {
         let vec: Vec<u8> = hex::decode(&self.0).unwrap();
-        bech32::encode::<bech32::Bech32>(*crate::HRP_NPUB, &vec).unwrap()
+        bech32::encode::<bech32::Bech32>(*super::HRP_NPUB, &vec).unwrap()
     }
 
     /// Try from &str
@@ -261,13 +287,6 @@ impl PublicKeyHex {
     }
 }
 
-impl TryFrom<&str> for PublicKeyHex {
-    type Error = Error;
-
-    fn try_from(s: &str) -> Result<PublicKeyHex, Error> {
-        PublicKeyHex::try_from_str(s)
-    }
-}
 
 impl From<&PublicKey> for PublicKeyHex {
     fn from(pk: &PublicKey) -> PublicKeyHex {
@@ -346,6 +365,7 @@ impl Visitor<'_> for PublicKeyHexVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {PublicKey, test_public_key_serde}
     test_serde! {PublicKeyHex, test_public_key_hex_serde}
