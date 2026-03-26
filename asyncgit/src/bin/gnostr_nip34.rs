@@ -132,7 +132,7 @@ async fn ping_nostr_relay(relay_url: &str) {
         }
     };
 
-    let (mut ws_stream, _response) = if let Ok((stream, response)) = connect_async(url).await {
+    let (mut ws_stream, _response) = if let Ok((stream, response)) = connect_async(url.to_string()).await {
         info!(
             "Connected to relay {} in {:?}",
             relay_url,
@@ -150,7 +150,7 @@ async fn ping_nostr_relay(relay_url: &str) {
         r#"["REQ", "{}", {{"limit": 1}}]"#,
         req_id
     );
-    match ws_stream.send(WsMessage::Text(req_message)).await {
+    match ws_stream.send(WsMessage::Text(req_message.into())).await {
         Ok(_) => info!("Sent REQ to {}", relay_url),
         Err(e) => {
             info!("Failed to send REQ to {}: {}", relay_url, e);
