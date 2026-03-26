@@ -1,3 +1,4 @@
+#[workspace]
 [package]
 name = "gnostr-query"
 version = "1895.933117.678085"
@@ -31,7 +32,7 @@ tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.13.0", features = ["tls"] }
 url = "2.2"
 
-# The profile that 'dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
+## # The profile that 'dist' will build with
+## [profile.dist]
+## inherits = "release"
+## lto = "thin"
