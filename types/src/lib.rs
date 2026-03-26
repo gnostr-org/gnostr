@@ -26,11 +26,13 @@
 )]
 #![deny(clippy::string_slice)]
 
-mod error;
+/// Module for handling errors.
+pub mod error;
 pub use error::Error;
 
 #[cfg(test)]
-mod test_utils;
+/// Module for test utilities.
+pub mod test_utils;
 
 /// NIP-44 related functionality.
 pub mod nip44;
@@ -39,90 +41,166 @@ pub mod nip44;
 pub mod client;
 pub use client::*;
 
-mod client_message;
+/// Module for client messages.
+pub mod client_message;
+pub use client_message::*;
 
-mod content;
+/// Module for content.
+pub mod content;
 pub use content::*;
 
-mod delegation;
+/// Module for delegation.
+pub mod delegation;
 pub use delegation::*;
-mod event;
+
+/// Module for events.
+pub mod event;
 pub use event::*;
-mod event_builder;
+
+/// Module for event builders.
+pub mod event_builder;
 pub use event_builder::*;
-mod event_kind;
+
+/// Module for event kinds.
+pub mod event_kind;
 pub use event_kind::*;
-mod event_reference;
+
+/// Module for event references.
+pub mod event_reference;
 pub use event_reference::*;
-mod filter;
+
+/// Module for filters.
+pub mod filter;
 pub use filter::*;
-mod id;
+
+/// Module for IDs.
+pub mod id;
 pub use id::*;
-mod image_dimensions;
+
+/// Module for image dimensions.
+pub mod image_dimensions;
 pub use image_dimensions::*;
-mod identity;
+
+/// Module for identities.
+pub mod identity;
 pub use identity::*;
-mod keys;
+
+/// Module for keys.
+pub mod keys;
 pub use keys::*;
-mod key_signer;
+
+/// Module for key signers.
+pub mod key_signer;
 pub use key_signer::*;
+
 /// Module for handling Nostr event metadata.
 pub mod metadata;
 pub use metadata::*;
-mod naddr;
+
+/// Module for NAddr.
+pub mod naddr;
 pub use naddr::*;
-mod nevent;
+
+/// Module for NEvent.
+pub mod nevent;
 pub use nevent::*;
+
 /// NIP-19 related functionality for Nostr entity bech32 encoding.
 pub mod nip19;
 pub use nip19::*;
-mod nostr_url;
+
+/// Module for Nostr URLs.
+pub mod nostr_url;
 pub use nostr_url::*;
-mod pay_request_data;
+
+/// Module for pay request data.
+pub mod pay_request_data;
 pub use pay_request_data::*;
-mod private_key;
+
+/// NIP-28 related functionality for public chat channels.
+pub mod nip28;
+pub use nip28::*;
+
+/// Module for private keys.
+pub mod private_key;
 pub use private_key::*;
-mod profile;
+
+/// Module for profiles.
+pub mod profile;
 pub use profile::*;
-mod public_key;
+
+/// Module for public keys.
+pub mod public_key;
 pub use public_key::*;
-mod relay_information_document;
+
+/// Module for relay information documents.
+pub mod relay_information_document;
 pub use relay_information_document::*;
-mod relay_list;
+
+/// Module for relay lists.
+pub mod relay_list;
 pub use relay_list::*;
+
 /// Relay information document as described in NIP-11, supplied by a relay.
 pub mod relay_info;
 pub use relay_info::*;
-mod relay_message;
+
+/// Module for relay messages.
+pub mod relay_message;
 pub use relay_message::*;
-mod relay_usage;
+
+/// Module for relay usage.
+pub mod relay_usage;
 pub use relay_usage::*;
-mod satoshi;
+
+/// Module for satoshi.
+pub mod satoshi;
 pub use satoshi::*;
-mod signature;
+
+/// Module for signatures.
+pub mod signature;
 pub use signature::*;
-mod signer;
+
+/// Module for signers.
+pub mod signer;
 pub use signer::*;
-mod simple_relay_list;
+
+/// Module for simple relay lists.
+pub mod simple_relay_list;
 pub use simple_relay_list::*;
-mod subscription_id;
+
+/// Module for subscription IDs.
+pub mod subscription_id;
 pub use subscription_id::*;
-mod tag;
+
+/// Module for tags.
+pub mod tag;
 pub use tag::*;
-mod unixtime;
-pub use unixtime::*;mod url;
+
+/// Module for Unix timestamps.
+pub mod unixtime;
+pub use unixtime::*;
+
+/// Module for URLs.
+pub mod url;
 pub use url::*;
+
 /// Module for weeble calculations.
 pub mod weeble;
 pub use weeble::*;
+
 /// Module for blockheight calculations.
 pub mod blockheight;
 pub use blockheight::*;
-mod blockhash;
+
+/// Module for blockhash calculations.
+pub mod blockhash;
 pub use blockhash::*;
+
 /// Module for wobble calculations.
 pub mod wobble;
 pub use wobble::*;
+
 pub use internal::fetch;
 pub use internal::event_to_wire;
 pub use internal::post;

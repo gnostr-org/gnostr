@@ -69,6 +69,11 @@ impl KeySigner {
             private_key: Some(privk),
         })
     }
+
+    /// Get the private key if available (i.e., if the signer is not locked).
+    pub fn get_private_key(&self) -> Result<PrivateKey, Error> {
+        self.private_key.clone().ok_or(Error::SignerIsLocked)
+    }
 }
 
 impl Signer for KeySigner {
