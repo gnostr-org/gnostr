@@ -29,6 +29,8 @@ static BLACKLISTED_MODULES: &[&str] = &[
     "wren",
     // doesn't compile on macos
     "gemini",
+    "gotmpl",
+    "helm",
 ];
 
 fn main() -> anyhow::Result<()> {
