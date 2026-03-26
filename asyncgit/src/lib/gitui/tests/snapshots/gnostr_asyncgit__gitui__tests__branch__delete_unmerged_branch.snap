@@ -1,5 +1,5 @@
 ---
-source: src/gitui/tests/branch.rs
+source: asyncgit/src/lib/gitui/tests/branch.rs
 expression: ctx.redact_buffer()
 ---
 ▌On branch main                                                                 |
@@ -19,7 +19,7 @@ expression: ctx.redact_buffer()
                                                                                 |
                                                                                 |
                                                                                 |
-────────────────────────────────────────────────────────────────────────────────|
-$ git branch -d -f unmerged                                                     |
-Deleted branch unmerged (was c84f226).                                          |
-styles_hash: 7de97cab1939df6c
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: b741b40319bb4fef

@@ -1,5 +1,5 @@
 ---
-source: src/gitui/tests/editor.rs
+source: asyncgit/src/lib/gitui/tests/editor.rs
 expression: ctx.redact_buffer()
 ---
 ▌No branch                                                                      |
@@ -21,5 +21,5 @@ Branch                                                                          
 b Checkout branch/revision                                                      |
 c Checkout new branch                                                           |
 K Delete branch                                                                 |
-q/<esc> Quit/Close                                                              |
-styles_hash: 9ae8f56b30eeec76
+q Quit/Close                                                                    |
+styles_hash: f6149784e0bf81dd
