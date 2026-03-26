@@ -19,7 +19,7 @@ use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 
 use gnostr_types::{
-        nostr_client, Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag,
+        Client, Event, EventKind, KeySigner, Options, PreEvent, PrivateKey, PublicKey, Signer, Tag,
         UncheckedUrl, Unixtime,
     };
 use crate::{
@@ -213,9 +213,7 @@ pub async fn create_event(
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
     let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-    let mut client = gnostr_types::nostr_client::NostrClient::new(queue_tx.clone());
-
-    for relay in BOOTSTRAP_RELAYS.iter().cloned() {
+    let mut client = gnostr_types::Client::new(&padded_keys.keys, gnostr_types::Options::new());    for relay in BOOTSTRAP_RELAYS.iter().cloned() {
         debug!("{}", relay);
         client
             .connect_relay(UncheckedUrl(relay.to_string()))
@@ -541,7 +539,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             //create nostr client with commit based keys
             //let client = Client::new(keys);
             let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-            let mut client = gnostr_types::nostr_client::NostrClient::new(queue_tx.clone());
+            let mut client = gnostr_types::Client::new(&padded_keys.keys, gnostr_types::Options::new());
 
             for relay in BOOTSTRAP_RELAYS.iter().cloned() {
                 debug!("{}", relay);
