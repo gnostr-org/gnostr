@@ -4,13 +4,11 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 use serde::Deserialize;
 
-use crate::{
-    gnostr_types::{
-        Client, Event, EventKind, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag,
-        UncheckedUrl, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
+use gnostr_types::{
+    Client, Event, EventKind, Keys, PreEventV3, PublicKey, Signer,
+    Tag, UncheckedUrl, Unixtime, KeySigner,
 };
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct PublishContactListCsvSubCommand {

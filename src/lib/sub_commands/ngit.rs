@@ -3,10 +3,10 @@
 use clap::Args;
 use serde::ser::StdError;
 
+use gnostr_types::{Event, EventKind, Keys, Tag};
 use crate::{
     cli::NgitCommands,
     sub_commands::{fetch, init, list, login, pull, push, query, send},
-    gnostr_types::{Event, EventKind, Keys, Tag},
 };
 
 #[derive(Args, Debug)]

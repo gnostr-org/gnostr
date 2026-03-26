@@ -3,10 +3,8 @@ use std::str::FromStr;
 use anyhow::Result;
 use clap::Args;
 
-use crate::{
-    gnostr_types::{Id, PublicKey},
-    utils::{parse_key_or_id_to_hex_string, Prefix},
-};
+use gnostr_types::{Id, PrivateKey, PublicKey};
+use crate::utils::{parse_key_or_id_to_hex_string, Prefix};
 
 #[derive(Args, Debug)]
 pub struct ConvertKeySubCommand {

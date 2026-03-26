@@ -1,12 +1,8 @@
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
-use crate::{
-    get_weeble,
-    gnostr_types::{Filter, Id, IdHex, RelayMessage, SubscriptionId},
-    Command, Probe,
-};
-
+use gnostr_types::{Filter, Id, IdHex, RelayMessage, SubscriptionId};
+use crate::{get_weeble, Command, Probe};
 #[derive(clap::Args, Debug, Clone)]
 pub struct FetchByIdSubCommand {
     /// Event ID (hex) to fetch

@@ -38,15 +38,14 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 
 use crate::{
     app::{App, QuitState},
-    blockheight,
     core::GnostrSubCommands,
     input::{Input, InputEvent, InputState},
     keys::KeyConfig,
     spinner::Spinner,
     ui::style::Theme,
     watcher::RepoWatcher,
-    weeble, wobble,
 };
+use gnostr_types::{blockheight, weeble, wobble};
 
 //use crate::{app::App, cli::process_cmdline};
 pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;

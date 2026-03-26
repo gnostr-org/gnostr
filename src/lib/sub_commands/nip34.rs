@@ -3,13 +3,11 @@ use std::borrow::Cow;
 use anyhow::{Error as AnyhowError, Result};
 use clap::{Args, Subcommand};
 
-use crate::{
-    gnostr_types::{
-        Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PrivateKey, Signer,
-        TagV3 as Tag, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
+use gnostr_types::{
+    Client, Event, EventKind, Id, Keys, PreEventV3, PrivateKey, Signer,
+    TagV3 as Tag, Unixtime, KeySigner,
 };
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct Nip34Command {

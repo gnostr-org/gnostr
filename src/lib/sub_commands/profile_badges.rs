@@ -3,12 +3,10 @@ use std::{str::FromStr, time::Duration};
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    gnostr_types::{
-        Client, Event, EventKind, Filter, Id, KeySigner, Keys, PreEventV3, Signer, Tag, Unixtime,
-    },
-    utils::{create_client, parse_private_key},
+use gnostr_types::{
+    Client, Event, EventKind, Filter, Id, Keys, PreEventV3, Signer, Tag, Unixtime, KeySigner,
 };
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct ProfileBadgesSubCommand {

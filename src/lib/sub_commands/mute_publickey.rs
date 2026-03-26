@@ -3,10 +3,8 @@ use std::str::FromStr;
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    gnostr_types::{Client, Keys, PublicKey},
-    utils::{create_client, parse_private_key},
-};
+use gnostr_types::{Client, Keys, PublicKey};
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct MutePublickeySubCommand {

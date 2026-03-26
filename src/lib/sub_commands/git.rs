@@ -10,7 +10,9 @@ use crossterm::{
 use env_logger::Env;
 use which::which;
 
-use crate::{blockheight, weeble, wobble};
+use gnostr_types::weeble::weeble;
+use gnostr_types::blockheight::blockheight;
+use gnostr_types::wobble::wobble;
 
 struct TerminalCleanup;
 
@@ -200,11 +202,11 @@ fn get_git_info() -> String {
 }
 
 fn get_git_tag_version(suffix: String) -> Result<String> {
-    let weeble = weeble::weeble().unwrap_or(0.0).to_string();
+    let weeble = weeble().unwrap_or(0.0).to_string();
 
-    let blockheight = blockheight::blockheight().unwrap_or(0.0).to_string();
+    let blockheight = blockheight().unwrap_or(0.0).to_string();
 
-    let wobble = wobble::wobble().unwrap_or(0.0).to_string();
+    let wobble = wobble().unwrap_or(0.0).to_string();
 
     let mut tag_name = format!(
         "v{}.{}.{}",
@@ -246,9 +248,9 @@ fn run_git_tag(suffix: String, repo_path: &Path) -> Result<String> {
 }
 
 fn get_git_tag_pr_version(suffix: String) -> Result<String> {
-    let weeble = weeble::weeble().unwrap_or(0.0).to_string();
-    let blockheight = blockheight::blockheight().unwrap_or(0.0).to_string();
-    let wobble = wobble::wobble().unwrap_or(0.0).to_string();
+    let weeble = weeble().unwrap_or(0.0).to_string();
+    let blockheight = blockheight().unwrap_or(0.0).to_string();
+    let wobble = wobble().unwrap_or(0.0).to_string();
 
     let mut tag_name = format!(
         "pr/{}.{}.{}",
@@ -288,9 +290,9 @@ fn run_git_tag_pr(suffix: String, repo_path: &Path) -> Result<String> {
 }
 
 fn run_git_checkout_b(suffix: String, repo_path: &Path) -> Result<String> {
-    let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
-    let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
-    let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+    let weeble = weeble().unwrap_or(0.0).to_string();
+    let blockheight = blockheight().unwrap_or(0.0).to_string();
+    let wobble = wobble().unwrap_or(0.0).to_string();
 
     let head_parent_output = Command::new("git")
         .arg("rev-parse")
@@ -346,9 +348,9 @@ fn run_git_checkout_b(suffix: String, repo_path: &Path) -> Result<String> {
     Ok(branch_name)
 }
 fn run_git_checkout_pr(suffix: String, repo_path: &Path) -> Result<String> {
-    let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
-    let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
-    let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+    let weeble = weeble().unwrap_or(0.0).to_string();
+    let blockheight = blockheight().unwrap_or(0.0).to_string();
+    let wobble = wobble().unwrap_or(0.0).to_string();
 
     let head_parent_output = Command::new("git")
         .arg("rev-parse")
@@ -570,9 +572,9 @@ mod tests {
             .trim()
             .to_string();
 
-        let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
-        let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+        let weeble = weeble().unwrap_or(0.0).to_string();
+        let blockheight = blockheight().unwrap_or(0.0).to_string();
+        let wobble = wobble().unwrap_or(0.0).to_string();
         let suffix = "feature";
         let _expected_branch_name = format!(
             "{}/{}/{}/{}/{}-{}",
@@ -627,9 +629,9 @@ mod tests {
             .trim()
             .to_string();
 
-        let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
-        let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+        let weeble = weeble().unwrap_or(0.0).to_string();
+        let blockheight = blockheight().unwrap_or(0.0).to_string();
+        let wobble = wobble().unwrap_or(0.0).to_string();
         let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}",
             weeble, blockheight, wobble, parent_head, current_head
@@ -683,9 +685,9 @@ mod tests {
             .trim()
             .to_string();
 
-        let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
-        let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
+        let weeble = weeble().unwrap_or(0.0).to_string();
+        let blockheight = blockheight().unwrap_or(0.0).to_string();
+        let wobble = wobble().unwrap_or(0.0).to_string();
         let suffix = "fix";
         let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}-{}",

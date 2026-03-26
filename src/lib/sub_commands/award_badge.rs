@@ -3,13 +3,11 @@ use std::{process::exit, str::FromStr, time::Duration};
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
-use crate::{
-    gnostr_types::{
-        Client, Event, EventBuilder, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19,
-        Options, PrivateKey, PublicKey, Tag,
-    },
-    utils::{create_client, parse_private_key},
+use gnostr_types::{
+    Client, Event, EventBuilder, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19,
+    Options, PrivateKey, PublicKey, Tag,
 };
+use crate::utils::{create_client, parse_private_key};
 
 #[derive(Args, Debug)]
 pub struct AwardBadgeSubCommand {

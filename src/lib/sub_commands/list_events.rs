@@ -4,12 +4,10 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 use tracing::debug;
 
-use crate::{
-    gnostr_types::{
-        Client, Event, EventKind, Filter, Id, IdHex, Keys, PublicKey, PublicKeyHex, Tag, Unixtime,
-    },
-    utils::create_client,
+use gnostr_types::{
+    Client, Event, EventKind, Filter, Id, IdHex, Keys, PublicKey, PublicKeyHex, Tag, Unixtime,
 };
+use crate::utils::create_client;
 
 #[derive(Args, Debug)]
 pub struct ListEventsSubCommand {
