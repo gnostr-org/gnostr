@@ -10,7 +10,7 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::ChatSubCommands;
-use crate::types::PrivateKey;
+use gnostr_types::PrivateKey;
 
 /// chat
 ///

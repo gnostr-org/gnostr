@@ -5,7 +5,7 @@ use clap::Args;
 use tracing::trace;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventKind, Id, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag, Unixtime,
     },
     utils::{create_client, parse_private_key},

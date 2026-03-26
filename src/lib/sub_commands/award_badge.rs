@@ -4,7 +4,7 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventBuilder, EventKind, Filter, FilterOptions, Id, IdHex, Keys, Nip19,
         Options, PrivateKey, PublicKey, Tag,
     },
@@ -78,7 +78,7 @@ pub async fn award_badge(
         .map(|pubkey_string| {
             // TODO: Ensure PublicKey::try_from_hex_string is robust enough
             Tag::new_pubkey(
-                crate::types::PublicKey::try_from_hex_string(pubkey_string, true)
+                gnostr_types::PublicKey::try_from_hex_string(pubkey_string, true)
                     .expect("Unable to parse public key"),
                 None, // No recommended relay URL
                 None, // No petname

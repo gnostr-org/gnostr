@@ -2,7 +2,7 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
 use crate::{
-    types::{Client, Id, Keys},
+    gnostr_types::{Client, Id, Keys},
     utils::{create_client, parse_private_key},
 };
 

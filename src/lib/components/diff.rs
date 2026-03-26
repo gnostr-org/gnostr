@@ -33,7 +33,7 @@ use crate::{
     string_utils::{tabs_to_spaces, trim_offset},
     strings,
     try_or_popup,
-    types::Keys,
+    gnostr_types::Keys,
     //utils::parse_private_key,
     ui::style::SharedTheme,
 };

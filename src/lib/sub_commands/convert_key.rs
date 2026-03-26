@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Args;
 
 use crate::{
-    types::{Id, PublicKey},
+    gnostr_types::{Id, PublicKey},
     utils::{parse_key_or_id_to_hex_string, Prefix},
 };
 
@@ -37,7 +37,7 @@ pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> anyhow::Res
             Prefix::Npub => PublicKey::try_from_hex_string(sub_command_args.key.as_str(), true)?
                 .as_bech32_string(),
             Prefix::Nsec => {
-                crate::types::PrivateKey::try_from_hex_string(sub_command_args.key.as_str())?
+                gnostr_types::PrivateKey::try_from_hex_string(sub_command_args.key.as_str())?
                     .as_bech32_string()
             }
             Prefix::Note => {

@@ -9,7 +9,7 @@ use crate::{
     cli::LegitCommands,
     legit::command,
     sub_commands::{fetch, init, list, login, pull, push, send},
-    types::{Event, EventKind, Keys, Tag},
+    gnostr_types::{Event, EventKind, Keys, Tag},
 };
 
 #[derive(Args, Debug)]

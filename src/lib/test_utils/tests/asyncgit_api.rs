@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::legit::command as legit_command;
-use crate::types::{Event, KeySigner, Keys, PreEvent, Signer, Tag};
+use gnostr_types::{Event, KeySigner, Keys, PreEvent, Signer, Tag};
 use git2::{Repository, Signature};
 use gnostr_asyncgit::sync::{
     self, checkout_branch, create_branch, get_commit_details, get_head, get_head_tuple,

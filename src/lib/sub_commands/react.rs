@@ -5,7 +5,7 @@ use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use tracing::debug;
 
 use crate::{
-    types::{Error, Event, Filter, Id, PublicKey},
+    gnostr_types::{Error, Event, Filter, Id, PublicKey},
     utils::{create_client, parse_private_key},
 };
 

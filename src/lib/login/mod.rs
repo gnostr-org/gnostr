@@ -25,7 +25,7 @@ use crate::{
 
 mod key_encryption;
 use key_encryption::{decrypt_key, encrypt_key};
-mod user;
+pub mod user;
 use user::{UserMetadata, UserRef, UserRelayRef, UserRelays};
 
 /// handles the encrpytion and storage of key material

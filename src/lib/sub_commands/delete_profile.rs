@@ -5,7 +5,7 @@ use clap::Args;
 use serde_json::Value;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventKind, Filter, Id, KeySigner, Keys, Metadata, PreEventV3, PublicKey,
         Signer, Tag, Unixtime,
     },

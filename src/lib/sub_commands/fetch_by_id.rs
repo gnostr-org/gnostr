@@ -3,7 +3,7 @@ use log::debug;
 
 use crate::{
     get_weeble,
-    types::{Filter, Id, IdHex, RelayMessage, SubscriptionId},
+    gnostr_types::{Filter, Id, IdHex, RelayMessage, SubscriptionId},
     Command, Probe,
 };
 

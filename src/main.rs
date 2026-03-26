@@ -6,7 +6,7 @@ use gnostr::{
     blockhash, blockheight,
     cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands,
-    types::{Keys, PrivateKey, PublicKey},
+    gnostr_types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
 };
 use gnostr_asyncgit::sync::RepoPath;
@@ -486,13 +486,13 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let mut client = gnostr::types::client::Client::new(
+            let mut client = gnostr_types::client::Client::new(
                 &Keys::new(PrivateKey::try_from_hex_string(
                     &gnostr_cli_args
                         .nsec
                         .ok_or_else(|| anyhow!("nsec not provided"))?,
                 )?),
-                gnostr::types::client::Options::new(),
+                gnostr_types::client::Options::new(),
             );
             // Try to parse the recipient string as a PublicKey
             let recipient_pubkey =

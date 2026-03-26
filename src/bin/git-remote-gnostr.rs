@@ -4,7 +4,7 @@ use std::{
     process,
 };
 
-use gnostr::types::{
+use gnostr::gnostr_types::{
     Client, Event, EventKind, Filter, Id, Keys, Options, PublicKey, RelayUrl, Tag, Unixtime,
 };
 
@@ -33,7 +33,7 @@ mod test_helpers {
     pub fn create_test_event() -> Event {
         let keys = Keys::generate();
         let private_key = keys.secret_key().unwrap();
-        let preevent = gnostr::types::PreEvent {
+        let preevent = gnostr::gnostr_types::PreEvent {
             pubkey: keys.public_key(),
             created_at: Unixtime::now(),
             kind: EventKind::TextNote,
@@ -485,7 +485,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         // Test with event that has malformed ref tags
                                         let keys = Keys::generate();
                                         let private_key = keys.secret_key()?;
-                                        let preevent = gnostr::types::PreEvent {
+                                        let preevent = gnostr::gnostr_types::PreEvent {
                                             pubkey: keys.public_key(),
                                             created_at: Unixtime::now(),
                                             kind: EventKind::TextNote,
@@ -611,7 +611,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                                         for i in 0..100 {
                                             let keys = Keys::generate();
                                             let private_key = keys.secret_key()?;
-                                            let preevent = gnostr::types::PreEvent {
+                                            let preevent = gnostr::gnostr_types::PreEvent {
                                                 pubkey: keys.public_key(),
                                                 created_at: Unixtime::now(),
                                                 kind: EventKind::TextNote,
@@ -973,7 +973,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             // Test with event that has malformed ref tags
                             let keys = Keys::generate();
                             let private_key = keys.secret_key().unwrap();
-                            let preevent = gnostr::types::PreEvent {
+                            let preevent = gnostr::gnostr_types::PreEvent {
                                 pubkey: keys.public_key(),
                                 created_at: Unixtime::now(),
                                 kind: EventKind::TextNote,
@@ -1092,7 +1092,7 @@ async fn handle_list(_remote_name: &str, url: &str, client: &Client) -> io::Resu
                             for i in 0..100 {
                                 let keys = Keys::generate();
                                 let private_key = keys.secret_key().unwrap();
-                                let preevent = gnostr::types::PreEvent {
+                                let preevent = gnostr::gnostr_types::PreEvent {
                                     pubkey: keys.public_key(),
                                     created_at: Unixtime::now(),
                                     kind: EventKind::TextNote,
@@ -1345,7 +1345,7 @@ async fn query_git_refs(
 
     // Query events from relays
     match client
-        .get_events_of_with_opts(vec![filter], None, gnostr::types::FilterOptions::ExitOnEOSE)
+        .get_events_of_with_opts(vec![filter], None, gnostr::gnostr_types::FilterOptions::ExitOnEOSE)
         .await
     {
         Ok(events) => {
@@ -1445,7 +1445,7 @@ async fn fetch_git_data(
 
     // Query events
     match client
-        .get_events_of_with_opts(vec![filter], None, gnostr::types::FilterOptions::ExitOnEOSE)
+        .get_events_of_with_opts(vec![filter], None, gnostr::gnostr_types::FilterOptions::ExitOnEOSE)
         .await
     {
         Ok(events) => {
@@ -1637,7 +1637,7 @@ mod tests {
         // Create event without git-ref tag
         let keys = Keys::generate();
         let private_key = keys.secret_key().unwrap();
-        let preevent = gnostr::types::PreEvent {
+        let preevent = gnostr::gnostr_types::PreEvent {
             pubkey: keys.public_key(),
             created_at: Unixtime::now(),
             kind: EventKind::TextNote,
@@ -1658,7 +1658,7 @@ mod tests {
         // Create event with multiple git-ref tags (first one should be returned)
         let keys = Keys::generate();
         let private_key = keys.secret_key().unwrap();
-        let preevent = gnostr::types::PreEvent {
+        let preevent = gnostr::gnostr_types::PreEvent {
             pubkey: keys.public_key(),
             created_at: Unixtime::now(),
             kind: EventKind::TextNote,
@@ -1681,7 +1681,7 @@ mod tests {
         // Create event with empty tags
         let keys = Keys::generate();
         let private_key = keys.secret_key().unwrap();
-        let preevent = gnostr::types::PreEvent {
+        let preevent = gnostr::gnostr_types::PreEvent {
             pubkey: keys.public_key(),
             created_at: Unixtime::now(),
             kind: EventKind::TextNote,
@@ -1815,7 +1815,7 @@ mod tests {
         let long_ref_name = "a".repeat(1000);
         let keys = Keys::generate();
         let private_key = keys.secret_key().unwrap();
-        let preevent = gnostr::types::PreEvent {
+        let preevent = gnostr::gnostr_types::PreEvent {
             pubkey: keys.public_key(),
             created_at: Unixtime::now(),
             kind: EventKind::TextNote,

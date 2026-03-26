@@ -18,11 +18,11 @@ use serde_json::{self, Value};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 
-use crate::{
-    types::{
+use gnostr_types::{
         nostr_client, Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag,
         UncheckedUrl, Unixtime,
-    },
+    };
+use crate::{
     utils::{parse_json, split_json_string},
 };
 
@@ -213,7 +213,7 @@ pub async fn create_event(
     info!("{}", serde_json::to_string_pretty(&signed_event)?);
 
     let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-    let mut client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
+    let mut client = gnostr_types::nostr_client::NostrClient::new(queue_tx.clone());
 
     for relay in BOOTSTRAP_RELAYS.iter().cloned() {
         debug!("{}", relay);
@@ -284,10 +284,10 @@ pub async fn create_event(
     let output_send_event = client.send_event(text_note_event.clone()).await?;
     info!("{:?}", output_send_event);
 
-    let mut filter_one = crate::types::Filter::new();
+    let mut filter_one = gnostr_types::Filter::new();
     filter_one
         .add_author(&pubkey_keys.into())
-        .add_event_kind(crate::types::EventKind::TextNote);
+        .add_event_kind(gnostr_types::EventKind::TextNote);
     filter_one.limit = Some(10);
 
     // let events = client
@@ -300,7 +300,7 @@ pub async fn create_event(
 
     // another filter
 
-    let test_author_pubkey = crate::types::PublicKey::try_from_bech32_string(
+    let test_author_pubkey = gnostr_types::PublicKey::try_from_bech32_string(
         "npub1drvpzev3syqt0kjrls50050uzf25gehpz9vgdw08hvex7e0vgfeq0eseet",
         true,
     )
@@ -311,10 +311,10 @@ pub async fn create_event(
         test_author_pubkey.as_bech32_string()
     );
 
-    let mut filter_test_author = crate::types::Filter::new();
+    let mut filter_test_author = gnostr_types::Filter::new();
     filter_test_author
         .add_author(&test_author_pubkey.into())
-        .add_event_kind(crate::types::EventKind::TextNote);
+        .add_event_kind(gnostr_types::EventKind::TextNote);
     filter_test_author.limit = Some(10);
 
     // let events = client
@@ -541,7 +541,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             //create nostr client with commit based keys
             //let client = Client::new(keys);
             let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-            let mut client = crate::types::nostr_client::NostrClient::new(queue_tx.clone());
+            let mut client = gnostr_types::nostr_client::NostrClient::new(queue_tx.clone());
 
             for relay in BOOTSTRAP_RELAYS.iter().cloned() {
                 debug!("{}", relay);

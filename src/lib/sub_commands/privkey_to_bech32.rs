@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use zeroize::Zeroize;
 
-use crate::types::PrivateKey;
+use gnostr_types::PrivateKey;
 
 #[derive(Parser, Debug, Clone)]
 pub struct PrivkeyToBech32SubCommand {

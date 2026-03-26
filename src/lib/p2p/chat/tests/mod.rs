@@ -19,7 +19,7 @@ mod tests {
     use super::super::*; // Import items from the parent module (chat)
     use crate::{
         legit::command::{create_event, create_event_with_custom_tags},
-        types::{KeySecurity, PrivateKey, Signer},
+        gnostr_types::{KeySecurity, PrivateKey, Signer},
         utils::{
             byte_array_to_hex_string, generate_nostr_keys_from_commit_hash, parse_json,
             split_json_string, split_value_by_newline, value_to_string,
@@ -414,9 +414,9 @@ More details here."
     fn test_create_event_with_custom_tags() {
         // Use a well-known private key for deterministic testing
         let sk_hex = "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Example private key
-        let private_key = crate::types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
+        let private_key = gnostr_types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
         let keys =
-            crate::types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
+            gnostr_types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
         let pubkey = keys.public_key();
 
         let content = "Test event content";
@@ -437,7 +437,7 @@ More details here."
 
         assert_eq!(event.content, content);
         assert_eq!(event.pubkey, pubkey);
-        assert_eq!(event.kind, crate::types::EventKind::TextNote); // Default kind used by EventBuilder::new
+        assert_eq!(event.kind, gnostr_types::EventKind::TextNote); // Default kind used by EventBuilder::new
 
         // Check tags. Note: EventBuilder might format tags differently or only take the
         // first value. We expect tags to be present and have the correct names.
@@ -479,9 +479,9 @@ More details here."
     async fn test_create_event_defaults() {
         // Test create_event without custom tags, using default values
         let sk_hex = "2a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Another example key
-        let private_key = crate::types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
+        let private_key = gnostr_types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
         let keys =
-            crate::types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
+            gnostr_types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
         let pubkey = keys.public_key();
         let content = "Default event test";
         let custom_tags = HashMap::new(); // Empty tags
@@ -492,24 +492,24 @@ More details here."
         let (event, _) = event_result.unwrap();
         assert_eq!(event.content, content);
         assert_eq!(event.pubkey, pubkey);
-        assert_eq!(event.kind, crate::types::EventKind::TextNote); // Default kind used by EventBuilder::new
+        assert_eq!(event.kind, gnostr_types::EventKind::TextNote); // Default kind used by EventBuilder::new
     }
 
     #[test]
     fn test_msg_set_nostr_event() {
         // Create a dummy Nostr event
-        let keys = crate::types::key_signer::KeySigner::generate("", 1).unwrap();
+        let keys = gnostr_types::key_signer::KeySigner::generate("", 1).unwrap();
         let pubkey = keys.public_key();
-        let pre_event = crate::types::PreEvent {
+        let pre_event = gnostr_types::PreEvent {
             pubkey,
-            created_at: crate::types::Unixtime::now(),
-            kind: crate::types::EventKind::TextNote,
+            created_at: gnostr_types::Unixtime::now(),
+            kind: gnostr_types::EventKind::TextNote,
             tags: vec![],
             content: "Hello Nostr".to_string(),
         };
         let id = pre_event.hash().unwrap();
         let sig = keys.sign_id(id).unwrap();
-        let event = crate::types::Event {
+        let event = gnostr_types::Event {
             id,
             pubkey: pre_event.pubkey,
             created_at: pre_event.created_at,

@@ -5,7 +5,7 @@ use clap::Args;
 use serde::Deserialize;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventKind, KeySigner, Keys, PreEventV3, PublicKey, Signer, Tag,
         UncheckedUrl, Unixtime,
     },

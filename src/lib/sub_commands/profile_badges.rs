@@ -4,7 +4,7 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventKind, Filter, Id, KeySigner, Keys, PreEventV3, Signer, Tag, Unixtime,
     },
     utils::{create_client, parse_private_key},

@@ -5,7 +5,7 @@ use clap::Args;
 use tracing::debug;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventKind, Filter, Id, IdHex, Keys, PublicKey, PublicKeyHex, Tag, Unixtime,
     },
     utils::create_client,

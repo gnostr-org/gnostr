@@ -13,7 +13,7 @@ use crate::{
         InspectCommitOpen,
     },
     tabs::StashingOptions,
-    types::{versioned::event3::EventV3, Id, UncheckedUrl},
+    gnostr_types::{versioned::event3::EventV3, Id, UncheckedUrl},
 };
 
 bitflags! {
@@ -93,9 +93,9 @@ pub enum NostrCommand {
     SendChannelMessage {
         channel_id: String,
         message: String,
-        reply_to_id: Option<crate::types::Id>,
-        root_message_id: Option<crate::types::Id>,
-        relay_url: Option<crate::types::UncheckedUrl>,
+        reply_to_id: Option<gnostr_types::Id>,
+        root_message_id: Option<gnostr_types::Id>,
+        relay_url: Option<gnostr_types::UncheckedUrl>,
     },
     /// Create a NIP-28 channel
     CreateChannel {
@@ -103,7 +103,7 @@ pub enum NostrCommand {
         channel_name: String,
         channel_description: String,
         channel_picture: Option<String>,
-        relay_url: Option<crate::types::UncheckedUrl>,
+        relay_url: Option<gnostr_types::UncheckedUrl>,
     },
 }
 

@@ -1,4 +1,4 @@
-use crate::types::{Client, Error, Id, Keys, PublicKey};
+use gnostr_types::{Client, Error, Id, Keys, PublicKey};
 use anyhow::Result;
 use async_trait::async_trait;
 use tracing::{error, info};
@@ -53,9 +53,9 @@ pub async fn dm_command(
 #[cfg(test)]
 mod dm_tests {
     use super::*;
-    use crate::types::client::{Client, Options};
-    use crate::types::ContentEncryptionAlgorithm;
-    use crate::types::{Keys, PrivateKey};
+    use gnostr_types::client::{Client, Options};
+    use gnostr_types::ContentEncryptionAlgorithm;
+    use gnostr_types::{Keys, PrivateKey};
     use base64::Engine;
     use serial_test::serial;
     use tokio;

@@ -6,7 +6,7 @@ use serde::ser::StdError;
 use crate::{
     cli::NgitCommands,
     sub_commands::{fetch, init, list, login, pull, push, query, send},
-    types::{Event, EventKind, Keys, Tag},
+    gnostr_types::{Event, EventKind, Keys, Tag},
 };
 
 #[derive(Args, Debug)]

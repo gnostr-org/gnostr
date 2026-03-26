@@ -3,7 +3,7 @@
 use anyhow::{Context, Result};
 use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
 
-use crate::types::Tag;
+use gnostr_types::Tag;
 
 /// Convert nostr_0_34_1::Tag to local Tag type
 fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {

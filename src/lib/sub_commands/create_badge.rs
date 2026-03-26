@@ -2,7 +2,7 @@ use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
 
 use crate::{
-    types::{
+    gnostr_types::{
         Client, Event, EventBuilder, EventKind, Filter, Id, ImageDimensions, Keys, Metadata,
         PrivateKey, PublicKey, Tag, UncheckedUrl, Unixtime,
     },

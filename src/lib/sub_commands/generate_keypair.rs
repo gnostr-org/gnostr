@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Args;
 
-use crate::types::Keys;
+use gnostr_types::Keys;
 
 #[derive(Args, Debug)]
 pub struct GenerateKeypairSubCommand {

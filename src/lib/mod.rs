@@ -68,8 +68,6 @@ pub mod sub_commands;
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
 pub mod test_utils;
-///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
-pub mod types;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -91,14 +89,14 @@ pub use futures_util::{stream::FusedStream, SinkExt, StreamExt};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
-// pub //use nostr_types::RelayMessageV5;
+// pub //use gnostr_types::RelayMessageV5;
 pub use nostr_sdk_0_32_0::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
 pub use tokio_tungstenite::{connect_async, tungstenite::Message, WebSocketStream};
 //use tokio_tungstenite::WebSocketStream;
-pub use types::nip44;
+pub use gnostr_types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
-pub use types::{
+pub use gnostr_types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
@@ -276,24 +274,24 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = event_to_wire(event);
-    post(host, uri, wire)
+    let wire = gnostr_types::internal::event_to_wire(event);
+    gnostr_types::internal::post(host, uri, wire)
 }
-// /// use nostr_types::EventV2;
-// use nostr_types::EventV2;
+// /// use gnostr_types::EventV2;
+// use gnostr_types::EventV2;
 // /// pub fn post_event_v2(url: &str, event_v2: EventV2)
 // pub fn post_event_v2(url: &str, event_v2: EventV2) {
 //     let (host, uri) = url_to_host_and_uri(url);
 //     let wire = event_to_wire_v2(event_v2);
 //     post(host, uri, wire)
 // }
-/// use nostr_types::EventV3;
-use types::EventV3;
+/// use gnostr_types::EventV3;
+use gnostr_types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = event_to_wire(event);
-    post(host, uri, wire)
+    let wire = gnostr_types::internal::event_to_wire(event);
+    gnostr_types::internal::post(host, uri, wire)
 }
 
 /// pub fn print_event(event: &Event)
@@ -304,7 +302,7 @@ pub fn print_event(event: &Event) {
     );
 }
 
-use crate::types::internal::*;
+use gnostr_types::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
 pub mod weeble;
@@ -345,8 +343,8 @@ pub mod relays;
 /// pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec\<Event\>
 pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec<Event> {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = filters_to_wire(vec![filter]);
-    fetch(host, uri, wire)
+    let wire = gnostr_types::internal::filters_to_wire(vec![filter]);
+    gnostr_types::internal::fetch(host, uri, wire)
 }
 
 /// pub fn fetch_by_id(url: &str, id: IdHex) -> Option\<Event\>
@@ -551,7 +549,7 @@ impl Probe {
                             reason
                         );
                     }
-                    //use nostr_types::RelayMessageV5;
+                    //use gnostr_types::RelayMessageV5;
                     RelayMessage::Notify(_) => todo!(),
                 }
             }
@@ -745,7 +743,7 @@ pub async fn req(
                     }
                 }
             }
-            //use nostr_types::RelayMessageV5;
+            //use gnostr_types::RelayMessageV5;
             RelayMessage::Notify(_) => todo!(),
         }
     }
