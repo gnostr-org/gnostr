@@ -65,9 +65,6 @@ pub mod js;
 /// pub mod theme
 pub mod theme;
 
-/// pub mod types
-pub mod types;
-
 /// pub mod web
 pub mod web;
 
