@@ -1,5 +1,5 @@
 ---
-source: src/gitui/tests/branch.rs
+source: asyncgit/src/lib/gitui/tests/branch.rs
 expression: ctx.redact_buffer()
 ---
 ▌On branch main                                                                 |
@@ -19,7 +19,7 @@ Branch                                                                          
 b Checkout branch/revision                                                      |
 c Checkout new branch                                                           |
 K Delete branch                                                                 |
-q/<esc> Quit/Close                                                              |
+q Quit/Close                                                                    |
 ────────────────────────────────────────────────────────────────────────────────|
 ! Branch name required                                                          |
-styles_hash: 343b1fffa75cf86c
+styles_hash: b40ebd3f92b59cd7

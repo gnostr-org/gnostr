@@ -1,5 +1,5 @@
 ---
-source: src/gitui/tests/mod.rs
+source: asyncgit/src/lib/gitui/tests/mod.rs
 expression: ctx.redact_buffer()
 ---
 ▌No branch                                                                      |
@@ -21,5 +21,5 @@ j/<down> Down                       h/? Help                                    
 <ctrl+d> Half page down             z Stash                                     |
 <tab> Switch tab                                                                |
 g Refresh                                                                       |
-q/<esc> Quit/Close                                                              |
-styles_hash: 93c572a338829506
+q Quit/Close                                                                    |
+styles_hash: 1afde23d448f884e

@@ -1,5 +1,5 @@
 ---
-source: src/gitui/tests/reset.rs
+source: asyncgit/src/lib/gitui/tests/reset.rs
 expression: ctx.redact_buffer()
 ---
  ba1a85d main add unwanted-file                                                 |
@@ -21,5 +21,5 @@ Reset                                                                           
 s soft                                                                          |
 m mixed                                                                         |
 h hard                                                                          |
-q/<esc> Quit/Close                                                              |
-styles_hash: 887f50ccce685158
+q Quit/Close                                                                    |
+styles_hash: 21d1c5cfa1fc991a

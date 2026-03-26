@@ -1,5 +1,5 @@
 ---
-source: src/gitui/tests/log.rs
+source: asyncgit/src/lib/gitui/tests/log.rs
 expression: ctx.redact_buffer()
 ---
 ▌On branch main                                                                 |
@@ -18,8 +18,8 @@ expression: ctx.redact_buffer()
                                                                                 |
                                                                                 |
 ────────────────────────────────────────────────────────────────────────────────|
-Log                     Arguments                                               |
-l current               -F Search messages (--grep)                             |
-o other                 -n Limit number of commits (-n=10)                      |
-q/<esc> Quit/Close                                                              |
-styles_hash: 45acb12558b99a70
+Log               Arguments                                                     |
+l current         -F Search messages (--grep)                                   |
+o other           -n Limit number of commits (-n=10)                            |
+q Quit/Close                                                                    |
+styles_hash: b6c57d2436c4362b
