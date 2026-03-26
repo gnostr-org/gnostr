@@ -19,12 +19,12 @@ mod tests {
     use super::super::*; // Import items from the parent module (chat)
     use crate::{
         legit::command::{create_event, create_event_with_custom_tags},
-        gnostr_types::{KeySecurity, PrivateKey, Signer},
         utils::{
-            byte_array_to_hex_string, generate_nostr_keys_from_commit_hash, parse_json,
-            split_json_string, split_value_by_newline, value_to_string,
+            byte_array_to_hex_string, generate_nostr_keys_from_commit_hash,
+            parse_json, split_json_string, split_value_by_newline, value_to_string,
         },
     };
+    use gnostr_types::{KeySecurity, PrivateKey, Signer};
 
     // Helper function to create a dummy git repository for testing
     fn create_dummy_repo(path: &Path) -> Repository {
@@ -416,7 +416,7 @@ More details here."
         let sk_hex = "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Example private key
         let private_key = gnostr_types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
         let keys =
-            gnostr_types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
+            gnostr_types::KeySigner::from_private_key(private_key, "", 1).unwrap();
         let pubkey = keys.public_key();
 
         let content = "Test event content";
@@ -481,7 +481,7 @@ More details here."
         let sk_hex = "2a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"; // Another example key
         let private_key = gnostr_types::PrivateKey::try_from_hex_string(sk_hex).unwrap();
         let keys =
-            gnostr_types::key_signer::KeySigner::from_private_key(private_key, "", 1).unwrap();
+            gnostr_types::KeySigner::from_private_key(private_key, "", 1).unwrap();
         let pubkey = keys.public_key();
         let content = "Default event test";
         let custom_tags = HashMap::new(); // Empty tags
@@ -498,7 +498,7 @@ More details here."
     #[test]
     fn test_msg_set_nostr_event() {
         // Create a dummy Nostr event
-        let keys = gnostr_types::key_signer::KeySigner::generate("", 1).unwrap();
+        let keys = gnostr_types::KeySigner::generate("", 1).unwrap();
         let pubkey = keys.public_key();
         let pre_event = gnostr_types::PreEvent {
             pubkey,

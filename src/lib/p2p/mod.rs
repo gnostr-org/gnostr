@@ -37,15 +37,9 @@ use tokio::{io, select, time::Duration};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
 
-use crate::{
-    blockhash::blockhash_async,
-    blockheight::blockheight_async,
-    p2p::chat::{
-        msg::{Msg, MsgKind},
-        ChatSubCommands,
-    },
-    gnostr_types::Event,
-};
+use crate::p2p::chat::{msg::{Msg, MsgKind}, ChatSubCommands};
+use gnostr_types::{blockhash_async, blockheight_async};
+use gnostr_types::Event;
 
 //const TOPIC: &str = "gnostr";
 
@@ -235,8 +229,8 @@ pub async fn evt_loop(
 
             if !current_second.is_multiple_of(2) {
                 debug!("Current second ({}) is odd!", current_second);
-                env::set_var("BLOCKHEIGHT", &blockheight_async().await);
-                env::set_var("BLOCKHASH", &blockhash_async().await);
+                env::set_var("BLOCKHEIGHT", blockheight_async().await);
+                env::set_var("BLOCKHASH", blockhash_async().await);
             } else {
                 debug!(
                     "Current second ({}) is even. Skipping this iteration.",

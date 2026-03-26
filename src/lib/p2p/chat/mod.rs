@@ -17,13 +17,11 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 use uuid::Uuid;
 
 use self::msg::{Msg, MsgKind};
-use crate::{
-    queue::InternalEvent,
-    gnostr_types::{
-        metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
-        nip28::CREATE_CHANNEL_MESSAGE,
-        Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
-    },
+use crate::queue::InternalEvent;
+use gnostr_types::{
+    metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
+    nip28::CREATE_CHANNEL_MESSAGE,
+    Error, EventV3, Id, Metadata, Options, TagV3, UncheckedUrl, Signer,
 };
 
 pub mod msg;
@@ -182,7 +180,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     // Initialize NostrClient and channels
     let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let client = gnostr_types::nostr_client::NostrClient::new(peer_tx.clone());
+    let client = gnostr_types::Client::new(&keys.keys, gnostr_types::Options::new());
 
     // Send NIP-01 metadata event
     let name = args
