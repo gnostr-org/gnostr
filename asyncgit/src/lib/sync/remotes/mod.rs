@@ -279,6 +279,7 @@ pub(crate) fn fetch(
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::*;
     use crate::sync::tests::{debug_cmd_print, repo_clone, repo_init};
