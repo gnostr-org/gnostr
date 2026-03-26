@@ -5,6 +5,11 @@ use std::fmt;
 
 use crate::{Error, PrivateKey, PublicKey};
 
+/// Nostr Keys.
+///
+/// This struct represents a Nostr keypair, consisting of an optional private key and a public key.
+/// It provides methods for generating new keypairs, creating keys from a private key,
+/// and accessing the public and private keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Keys {
     private_key: Option<PrivateKey>,
@@ -22,6 +27,7 @@ impl fmt::Display for Keys {
 }
 
 impl Keys {
+    /// Generate new random `Keys`.
     pub fn generate() -> Self {
         let private_key = PrivateKey::generate();
         let public_key = private_key.public_key();
@@ -31,6 +37,7 @@ impl Keys {
         }
     }
 
+    /// Create new `Keys` from a `PrivateKey`.
     pub fn new(private_key: PrivateKey) -> Self {
         let public_key = private_key.public_key();
         Keys {
@@ -39,10 +46,12 @@ impl Keys {
         }
     }
 
+    /// Get the public key.
     pub fn public_key(&self) -> PublicKey {
         self.public_key
     }
 
+    /// Get the secret key.
     pub fn secret_key(&self) -> Result<PrivateKey, Error> {
         self.private_key.clone().ok_or(Error::NoPrivateKey)
     }
@@ -64,7 +73,10 @@ impl Keys {
         None
     }
 
-    // Generate vanity key with specified prefixes
+    /// Generate vanity key with specified prefixes.
+    ///
+    /// For now, this returns a random key.
+    /// TODO: Implement actual vanity generation.
     pub fn vanity(prefixes: Vec<String>, bech32: bool, _num_cores: usize) -> Result<Self, Error> {
         println!("Generating vanity key with prefixes: {:?}", prefixes);
 

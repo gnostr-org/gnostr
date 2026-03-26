@@ -13,7 +13,8 @@ pub use event1::{EventV1, PreEventV1, RumorV1};
 pub(crate) mod event2;
 pub use event2::{EventV2, PreEventV2, RumorV2};
 
-pub(crate) mod event3;
+/// Module for event version 3 structures.
+pub mod event3;
 pub use event3::{EventV3, PreEventV3, RumorV3};
 
 pub(crate) mod metadata;

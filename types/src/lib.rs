@@ -35,6 +35,10 @@ mod test_utils;
 /// NIP-44 related functionality.
 pub mod nip44;
 
+/// Client for interacting with Nostr relays.
+pub mod client;
+pub use client::*;
+
 mod client_message;
 
 mod content;
@@ -44,6 +48,8 @@ mod delegation;
 pub use delegation::*;
 mod event;
 pub use event::*;
+mod event_builder;
+pub use event_builder::*;
 mod event_kind;
 pub use event_kind::*;
 mod event_reference;
@@ -52,18 +58,24 @@ mod filter;
 pub use filter::*;
 mod id;
 pub use id::*;
+mod image_dimensions;
+pub use image_dimensions::*;
 mod identity;
 pub use identity::*;
+mod keys;
+pub use keys::*;
 mod key_signer;
 pub use key_signer::*;
-mod metadata;
+/// Module for handling Nostr event metadata.
+pub mod metadata;
 pub use metadata::*;
 mod naddr;
 pub use naddr::*;
 mod nevent;
 pub use nevent::*;
-mod nip05;
-pub use nip05::*;
+/// NIP-19 related functionality for Nostr entity bech32 encoding.
+pub mod nip19;
+pub use nip19::*;
 mod nostr_url;
 pub use nostr_url::*;
 mod pay_request_data;
@@ -100,17 +112,23 @@ pub use tag::*;
 mod unixtime;
 pub use unixtime::*;mod url;
 pub use url::*;
-mod weeble;
+/// Module for weeble calculations.
+pub mod weeble;
 pub use weeble::*;
-mod blockheight;
+/// Module for blockheight calculations.
+pub mod blockheight;
 pub use blockheight::*;
 mod blockhash;
 pub use blockhash::*;
-mod wobble;
+/// Module for wobble calculations.
+pub mod wobble;
 pub use wobble::*;
-// Internal utility functions for event conversion and relay communication.
-// These are not publicly re-exported from the `gnostr_types` crate.
-mod internal {
+pub use internal::fetch;
+pub use internal::event_to_wire;
+pub use internal::post;
+pub use internal::filters_to_wire;
+/// Internal utility functions for event conversion and relay communication.
+pub mod internal {
     #![allow(clippy::print_with_newline)]
     use base64::Engine;
     use http::Uri;
@@ -125,7 +143,8 @@ mod internal {
     use crate::versioned::relay_message5::RelayMessageV5;
     use crate::subscription_id::SubscriptionId;
 
-    pub(crate) fn filters_to_wire(filters: Vec<Filter>) -> String {
+    /// Convert a list of `Filter`s to a WebSocket wire message string.
+    pub fn filters_to_wire(filters: Vec<Filter>) -> String {
         let message = ClientMessage::Req(
             SubscriptionId(format!(
                 "{:?}/{:?}/{:?}",
@@ -138,7 +157,8 @@ mod internal {
         serde_json::to_string(&message).expect("Could not serialize message")
     }
 
-    pub(crate) fn event_to_wire(event: Event) -> String {
+    /// Convert an `Event` to a WebSocket wire message string.
+    pub fn event_to_wire(event: Event) -> String {
         let message = ClientMessage::Event(Box::new(event));
         serde_json::to_string(&message).expect("Could not serialize message")
     }
@@ -148,7 +168,8 @@ mod internal {
     //    serde_json::to_string(&message).expect("Could not serialize message")
     //}
 
-    pub(crate) fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
+    /// Fetches events from a relay by sending a wire message.
+    pub fn fetch(host: String, uri: Uri, wire: String) -> Vec<Event> {
         let mut events: Vec<Event> = Vec::new();
 
         let key: [u8; 16] = rand::random();
@@ -247,7 +268,8 @@ mod internal {
         events
     }
 
-    pub(crate) fn post(host: String, uri: Uri, wire: String) {
+    /// Posts a wire message to a relay.
+    pub fn post(host: String, uri: Uri, wire: String) {
         //gnostr key here
         let key: [u8; 16] = rand::random();
         let request = http::request::Request::builder()
@@ -326,7 +348,8 @@ mod internal {
 }
 
 
-mod versioned;
+/// Module containing versioned Nostr event and message structures.
+pub mod versioned;
 pub use versioned::{
     ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
     MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,

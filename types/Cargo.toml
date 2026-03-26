@@ -58,6 +58,9 @@ serial_test = "3.4.0"
 http = "1.0"
 ascii = "1.1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+k256 = { version = "0.13", features = ["ecdsa", "sha256", "arithmetic"] }
+futures-util = "0.3"
+tracing = "0.1"
 
 ##from gnip44
 ##[dependencies.base64]
