@@ -207,7 +207,8 @@ async fn main() -> anyhow::Result<()> {
             if let Some(pk_str) = pubkey {
                 let pk = PublicKey::try_from_hex_string(&pk_str, true)?;
                 println!("Subscribing to pubkey: {}", pk.as_hex_string());
-                client.subscribe(Some(pk)).await;
+                // client.subscribe(Some(pk)).await;
+                println!("Subscription by pubkey not implemented in new client API.");
             } else {
                 println!("Subscribing to all text notes");
                 client.subscribe(None).await;
