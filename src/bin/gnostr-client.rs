@@ -8,6 +8,7 @@ use gnostr_types::{ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner
         PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime, Client, Keys, Options,
 };
 use nostr::nips::{nip02::{self, Contact}, nip09, nip18, nip26, nip59};
+use nostr::{EventBuilder, Event as NostrEvent, UnsignedEvent, Timestamp, Kind, Keys as NostrKeys, Options as NostrOptions};
 
 use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;
