@@ -15,7 +15,7 @@ use tracing::{debug, info, warn};
 
 use crate::{
     Error, Event, EventKind, Filter, Id, Keys, Metadata, PublicKey,
-    RelayUrl, SubscriptionId, Tag, UncheckedUrl, Unixtime,
+    RelayUrl, Tag,
     client_message::ClientMessage,
     EventBuilder,
     private_key::ContentEncryptionAlgorithm,
