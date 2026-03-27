@@ -1,6 +1,6 @@
 use std::{env, fs, io::Read};
 
-use gnostr::gnostr_types::{Event, RelayMessage};
+use gnostr_types::{Event, RelayMessage};
 use gnostr::{Command, Probe};
 
 #[tokio::main]
