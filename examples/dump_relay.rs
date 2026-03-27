@@ -17,6 +17,6 @@ fn main() {
     let filter = Filter::new();
     let events = fetch_by_filter(&relay_url, filter);
     for event in events {
-        crate::print_event(&event);
+        print_event(&event);
     }
 }
