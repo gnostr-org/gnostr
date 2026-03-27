@@ -23,7 +23,7 @@ fn main() {
     filter.add_event_kind(EventKind::RelayList);
     let events = fetch_by_filter(&relay_url, filter);
     if !events.is_empty() {
-        crate::print_event(&events[0]);
+        print_event(&events[0]);
     } else {
         println!("Not found");
     }
