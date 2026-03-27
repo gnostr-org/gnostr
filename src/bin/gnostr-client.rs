@@ -4,13 +4,10 @@ use clap::{Parser, Subcommand};
 use gnostr::{
     queue::InternalEvent,
 };
-use gnostr_types::{
-        ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05,
-        PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime,
-        nip2::{self, Contact},
-        nip9, nip18, nip26, nip59,
+use gnostr_types::{ContentEncryptionAlgorithm, EventKind, EventV3, Id, KeySigner, Nip05V1,
+        PreEventV3, PrivateKey, PublicKey, Rumor, Signature, Signer, TagV3, UncheckedUrl, Unixtime, Contact, Client,
 };
-use gnostr_types::Client;
+use nostr_0_37_0::nips::{nip02, nip09, nip18, nip26, nip59};
 
 use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;
