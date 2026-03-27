@@ -418,33 +418,35 @@ async fn main() -> anyhow::Result<()> {
             since,
         } => {
             let pk = PrivateKey::try_from_hex_string(&private_key)?;
-            let signer = KeySigner::from_private_key(pk.clone(), "", 1).unwrap();
-            let public_key = signer.public_key();
-            let secret_key = pk.as_secret_key();
+            let delegator_keys = NostrKeys::new(pk.to_secp_private_key()); // Convert gnostr_types::PrivateKey to nostr::Keys
+            let delegatee_pk_xonly = XOnlyPublicKey::from_str(&delegatee)?;
 
-            let delegatee_pk = XOnlyPublicKey::from_str(&delegatee)?;
+            let mut conditions = nip26::Conditions::new();
+            conditions = conditions.kind(Kind::from(event_kind));
+            if let Some(s) = since {
+                conditions = conditions.created_at_after(Timestamp::from(s as i64));
+            }
+            if let Some(u) = until {
+                conditions = conditions.created_at_before(Timestamp::from(u as i64));
+            }
 
-            let delegation = nip26::DelegationTag {
-                delegator: public_key.as_xonly_public_key(),
-                delegatee: delegatee_pk,
-                event_kind: Some(event_kind.into()),
-                until: until.map(Unixtime::from),
-                since: since.map(Unixtime::from),
-            };
-
-            let tag = delegation.create_tag(&secret_key)?;
+            let delegation_tag = nip26::create_delegation_tag(
+                &delegator_keys,
+                &delegatee_pk_xonly,
+                conditions,
+            )?;
 
             let preevent = PreEventV3 {
-                pubkey: public_key,
+                pubkey: pk.public_key(),
                 created_at: Unixtime::now(),
                 kind: EventKind::TextNote, /* NIP-26 is a tag, not a kind. Using TextNote as
                                             * placeholder. */
-                tags: vec![TagV3(tag.split(' ').map(|s| s.to_string()).collect())],
+                tags: vec![TagV3(delegation_tag.to_string().split(' ').map(|s| s.to_string()).collect())], // Convert DelegationTag to TagV3
                 content: "Delegation proof".to_string(),
             };
 
             let id = preevent.hash()?;
-            let sig = signer.sign_id(id)?;
+            let sig = KeySigner::from_private_key(pk, "", 1).unwrap().sign_id(id)?;
             let event = EventV3 {
                 id,
                 pubkey: preevent.pubkey,
