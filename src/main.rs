@@ -2,10 +2,7 @@ use std::env;
 
 use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
-use crate::{
-    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
-    sub_commands,
-};
+use gnostr::{cli::{get_app_cache_path, GnostrCli, GnostrCommands}, sub_commands};
 use gnostr_types::{
     blockhash, blockheight, Keys, PrivateKey, PublicKey, weeble, wobble,
 };
