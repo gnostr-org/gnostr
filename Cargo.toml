@@ -82,6 +82,7 @@ exclude = [
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
 	bytes = "1.11.0"
+    #urlencoding = "2.1.3"    cbc = { version = "0.1", features = [ "std" ] }S
     cbc = { version = "0.1", features = [ "std" ] }
 chacha20 = "0.9"
     chacha20poly1305 = "0.10.1"
@@ -102,12 +103,14 @@ derive_more = "0.99"
 	futures-util = "0.3.31"
     git-version = "0.3.9"
     git2 = "0.20.1"
-    #gh = { path = "gh", package = "gh-rs" }    git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks" }
+    #gh = { path = "gh", package = "gh-rs" }
+    git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks" }
     git2-testing = { path = "git2-testing", package = "gnostr-git2-testing" }
     gnostr-asyncgit = { path = "asyncgit", default-features = false }
     gnostr-extensions = { path = "relay/extensions" }
     gnostr-grammar = { path = "grammar" }
-    #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }    gnostr-legit = { path = "legit" }
+    #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
+    gnostr-legit = { path = "legit" }
     gnostr-relay = { path = "relay", default-features = false }
     gnostr_qr = { path = "qr" }
 	handlebars = { version = "6.3.2" }
@@ -158,7 +161,8 @@ num_cpus = "1.16.0"
         'serde',
     ] }
 	regex = "1.11"
-    #reqwest = { version = "0.11.14", features = ["blocking", "json"] }	reqwest = { version = "0.12.28", features = ["blocking", "json"] }
+    #reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+	reqwest = { version = "0.12.28", features = ["blocking", "json"] }
 	rkyv = "0.8.14"
 	rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 	ron = "0.8.1"
@@ -198,7 +202,13 @@ speedy = { version = "0.8.7" }
 	timeago = { version = "0.4.2", default-features = false }
     tiny-hderive = "0.3.0"
 	tiny_http = { version = "0.12" }
-    ##tokio = { version = "1.19", features = ["full", "tracing"] }    ## asyncgit     ##tokio-stream = "0.1.17"    ##tokio-tungstenite = "0.21.0"    ##tokio-util = { version = "0.7.10", features = ["io"] }	tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
+    ##tokio = { version = "1.19", features = ["full", "tracing"] }
+
+    ## asyncgit 
+    ##tokio-stream = "0.1.17"
+    ##tokio-tungstenite = "0.21.0"
+    ##tokio-util = { version = "0.7.10", features = ["io"] }
+	tokio = { version = "1.49.0", features = ["full", "tracing", "sync", "macros", "rt-multi-thread"] }
 	tokio-stream = "0.1.18"
 	tokio-tungstenite = { version = "0.28.0", features = ["connect", "handshake", "rustls-tls-webpki-roots", "native-tls"] }
 	tokio-util = { version = "0.7.18", features = ["io"] }
@@ -211,7 +221,8 @@ speedy = { version = "0.8.7" }
 	tracing-core = "0.1.36"
 	tracing-subscriber = { version = "0.3.22", default-features = false, features = ["env-filter", "smallvec", "parking_lot", "fmt"] }
 	tree-sitter = "0.23.2"
-    #gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }    tree-sitter-grammar-repository = { path = "grammar" }
+    #gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
+    tree-sitter-grammar-repository = { path = "grammar" }
 	tree-sitter-highlight = "0.23.2"
 	tree-sitter-language = "0.1.6"
 	trust-dns-resolver = "0.23.2"
@@ -223,7 +234,8 @@ speedy = { version = "0.8.7" }
 	unicode-truncate = "1.1.0"
 	unicode-width = "0.1.14"
 	unix_mode = "0.1.4"
-	#vt100 = "0.15.0"    ureq = { version = "2.12.1", features = ["json", "charset"] }
+	#vt100 = "0.15.0"
+    ureq = { version = "2.12.1", features = ["json", "charset"] }
 	url = "2.5.8" ## 2.2.2?
     urlencoding = "2.1.3"
 	uuid = { version = "1.20.0", features = ["v4"] }
@@ -304,9 +316,11 @@ trace-libgit = ["gnostr-asyncgit/trace-libgit"]
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "openssl/vendored"]
 nightly = []
 coverage = []
-relay-search = ["dep:nostr-db", "nostr-db/search", "gnostr-relay/search"]
+relay-search = ["nostr-db/search", "gnostr-relay/search"]
 
 [dependencies]
+
+## relay
 actix-cors = { version = "0.7.0", optional = true }
 actix-http = { version = "3.9.0", optional = true }
 actix-web = { version = "4.9.0", optional = true }
@@ -490,7 +504,35 @@ log = "0.4.24"
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
-nostr-db = { version = "0.4.5", optional = true } # Moved to top
+nostr = "0.29"
+
+nostr-connect = "0.37.0"
+nostr-database = "0.37.0"
+
+## nostr deps
+## primary 0.34.0/1
+nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
+
+## relay
+nostr-db = { version = "0.4.5" }
+nostr-lmdb = "0.37.0"
+
+nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
+
+## TODO remove and upgrade
+nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
+
+## aligned with ./crawler
+nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
+
+## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
+nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
+nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
+nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
+## TODO remove and upgrade
+nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
+nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
+nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
 
 notify = "6.1.1"
 notify-debouncer-mini = "0.4"
