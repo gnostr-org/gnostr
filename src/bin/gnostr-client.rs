@@ -293,7 +293,7 @@ async fn main() -> anyhow::Result<()> {
             });
 
             let event =
-                nip2::set_contact_list(contacts, &public_key.as_xonly_public_key(), &secret_key);
+                nip02::set_contact_list(contacts, &public_key.as_xonly_public_key(), &secret_key);
             client.send_event(event).await?;
         }
         SubCommand::RemoveContact {
@@ -311,7 +311,7 @@ async fn main() -> anyhow::Result<()> {
             contacts.retain(|c| c.public_key != remove_pk);
 
             let event =
-                nip2::set_contact_list(contacts, &public_key.as_xonly_public_key(), &secret_key);
+                nip02::set_contact_list(contacts, &public_key.as_xonly_public_key(), &secret_key);
             client.send_event(event).await?;
         }
         SubCommand::GetContacts { private_key } => {
