@@ -41,8 +41,8 @@ async fn main() -> anyhow::Result<()> {
     
     // Combine commands: prioritizes manual parsing, fallbacks to clap-parsed if any missed
     let mut final_commands = commands;
-    if final_commands.is_empty() && !args.commands.is_empty() {
-        final_commands = args.commands;
+    if final_commands.is_empty() && !args.command.is_empty() {
+        final_commands = args.command;
     }
 
     gnostr::dashboard::run_dashboard(final_commands).await
