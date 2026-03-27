@@ -217,7 +217,7 @@ async fn main() -> anyhow::Result<()> {
             let user = parts[0];
             let domain = parts[1];
             let url = format!("https://{}/.well-known/nostr.json?name={}", domain, user);
-            let nip05: Nip05 = reqwest::get(&url).await?.json().await?;
+            let nip05: Nip05V1 = reqwest::get(&url).await?.json().await?;
             if let Some(pubkey) = nip05.names.get(user) {
                 println!("Public key for {}: {}", identifier, pubkey);
             } else {
