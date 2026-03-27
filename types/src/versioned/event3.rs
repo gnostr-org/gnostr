@@ -1194,46 +1194,46 @@ impl EventV3 {
     }
 }
 
-pub(crate) struct UnsignedEventV3(pub PreEventV3);
+// pub(crate) struct UnsignedEventV3(pub PreEventV3);
 
-impl UnsignedEventV3 {
-    pub(crate) fn new(
-        pubkey: &XOnlyPublicKey,
-        kind: u16,
-        tags: Vec<Vec<String>>,
-        content: String,
-    ) -> UnsignedEventV3 {
-        let tags = tags.into_iter().map(TagV3).collect();
+// impl UnsignedEventV3 {
+//     pub(crate) fn new(
+//         pubkey: &XOnlyPublicKey,
+//         kind: u16,
+//         tags: Vec<Vec<String>>,
+//         content: String,
+//     ) -> UnsignedEventV3 {
+//         let tags = tags.into_iter().map(TagV3).collect();
 
-        UnsignedEventV3(PreEventV3 {
-            pubkey: PublicKey::from_bytes(
-                &pubkey.public_key(secp256k1::Parity::Even).serialize(),
-                false,
-            )
-            .unwrap(),
-            created_at: Unixtime::now(),
-            kind: EventKind::from(kind as u32),
-            tags,
-            content,
-        })
-    }
+//         UnsignedEventV3(PreEventV3 {
+//             pubkey: PublicKey::from_bytes(
+//                 &pubkey.public_key(secp256k1::Parity::Even).serialize(),
+//                 false,
+//             )
+//             .unwrap(),
+//             created_at: Unixtime::now(),
+//             kind: EventKind::from(kind as u32),
+//             tags,
+//             content,
+//         })
+//     }
 
-    pub(crate) fn sign(self, private_key: &secp256k1::SecretKey) -> Result<EventV3, Error> {
-        let id = self.0.hash()?;
-        let signer =
-            KeySigner::from_private_key(PrivateKey(*private_key, KeySecurity::Medium), "", 1)?;
-        let sig = signer.sign_id(id)?;
-        Ok(EventV3 {
-            id,
-            pubkey: self.0.pubkey,
-            created_at: self.0.created_at,
-            kind: self.0.kind,
-            tags: self.0.tags,
-            content: self.0.content,
-            sig,
-        })
-    }
-}
+//     pub(crate) fn sign(self, private_key: &secp256k1::SecretKey) -> Result<EventV3, Error> {
+//         let id = self.0.hash()?;
+//         let signer =
+//             KeySigner::from_private_key(PrivateKey(*private_key, KeySecurity::Medium), "", 1)?;
+//         let sig = signer.sign_id(id)?;
+//         Ok(EventV3 {
+//             id,
+//             pubkey: self.0.pubkey,
+//             created_at: self.0.created_at,
+//             kind: self.0.kind,
+//             tags: self.0.tags,
+//             content: self.0.content,
+//             sig,
+//         })
+//     }
+// }
 
 impl From<EventV3> for RumorV3 {
     fn from(e: EventV3) -> RumorV3 {
