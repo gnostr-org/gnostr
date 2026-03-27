@@ -211,7 +211,8 @@ async fn main() -> anyhow::Result<()> {
                 println!("Subscription by pubkey not implemented in new client API.");
             } else {
                 println!("Subscribing to all text notes");
-                client.subscribe(None).await;
+                // client.subscribe(None).await;
+                println!("General subscription not implemented in new client API.");
             }
         }
         SubCommand::Nip05 { identifier } => {
