@@ -144,6 +144,7 @@ mod tests {
     use crate::sync::{submodules::submodule_parent_info, tests::repo_init, RepoPath};
 
     #[test]
+    #[allow(deprecated)]
     fn test_smoke() {
         let (dir, _r) = repo_init().unwrap();
 
