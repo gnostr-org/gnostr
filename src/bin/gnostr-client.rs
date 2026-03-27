@@ -461,8 +461,8 @@ async fn main() -> anyhow::Result<()> {
             };
             client.send_event(event).await?;
         }
-        SubCommand::SendNip17Dm { recipient, content } => {
-            let sender_private_key_gnostr = PrivateKey::try_from_hex_string(&private_key_str)?; // Assuming private_key is now passed as string
+        SubCommand::SendNip17Dm { private_key, recipient, content } => {
+            let sender_private_key_gnostr = PrivateKey::try_from_hex_string(&private_key)?;
             let sender_private_key = NostrKeys::new(sender_private_key_gnostr.to_secp_private_key());
             let recipient_pk = PublicKey::try_from_hex_string(&recipient, true)?;
             let recipient_pk_xonly = recipient_pk.as_xonly_public_key();
