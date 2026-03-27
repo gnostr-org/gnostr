@@ -200,7 +200,8 @@ async fn main() -> anyhow::Result<()> {
             client.send_event(event).await?;
         }
         SubCommand::Channel { id } => {
-            client.subscribe_to_channel(id).await;
+            // client.subscribe_to_channel(id).await;
+            println!("Channel subscription not implemented in new client API.");
         }
         SubCommand::Subscribe { pubkey } => {
             if let Some(pk_str) = pubkey {
