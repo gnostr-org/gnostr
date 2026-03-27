@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => panic!("Usage: fetch_by_kind_and_author <RelayURL>"),
     };
 
-    let signer = gnostr_types::load_signer()?;
+    let signer = gnostr::load_signer()?;
     let pubkey = signer.public_key();
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
