@@ -424,12 +424,12 @@ async fn main() -> anyhow::Result<()> {
 
             let delegatee_pk = XOnlyPublicKey::from_str(&delegatee)?;
 
-            let delegation = nip26::Delegation {
+            let delegation = nip26::DelegationTag {
                 delegator: public_key.as_xonly_public_key(),
                 delegatee: delegatee_pk,
-                event_kind,
-                until,
-                since,
+                event_kind: Some(event_kind.into()),
+                until: until.map(Unixtime::from),
+                since: since.map(Unixtime::from),
             };
 
             let tag = delegation.create_tag(&secret_key)?;
