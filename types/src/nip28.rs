@@ -3,16 +3,16 @@
 // NIP-28: Public Chat Channels
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
-use std::{collections::HashSet, str::FromStr};
 
-use secp256k1::{SecretKey, XOnlyPublicKey};
-use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value, json};
+
+
+
+
 
 use crate::{
-    Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
+    Error, Id, PublicKey,
     Signer, TagV3, UncheckedUrl, Unixtime,
-    event_kind::{EventKind, EventKindOrRange},
+    event_kind::EventKind,
     versioned::event3::{EventV3, PreEventV3},
 };
 
@@ -698,16 +698,14 @@ pub fn mute_user(
 
 #[cfg(test)]
 mod test {
-    use std::time::{SystemTime, UNIX_EPOCH};
 
-    use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey};
-    use sha2::{Digest, Sha256};
+
+
+
 
     use super::*;
     use crate::{
-        KeySigner, test_serde,
-        Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
-        UncheckedUrl, Unixtime,
+        KeySigner, PrivateKey, PublicKey, Signer, Id, EventKind, UncheckedUrl,
     };
 
     #[test]
