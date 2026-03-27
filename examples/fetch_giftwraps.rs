@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer};
-use crate::{Command, Probe};
+use gnostr::{Command, Probe};
 
 
 
