@@ -257,9 +257,9 @@ path = "src/lib/mod.rs"
 name = "gnostr-crawler-service"
 path = "src/bin/gnostr-crawler-service.rs"
 
-[[bin]]
-name = "git-remote-nostr"
-path = "src/bin/git-remote-nostr/main.rs"
+## [[bin]]
+## name = "git-remote-nostr"
+## path = "src/bin/git-remote-nostr/main.rs"
 
 [[bin]]
 name = "gnostr-gnit"
