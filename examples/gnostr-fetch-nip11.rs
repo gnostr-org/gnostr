@@ -5,6 +5,7 @@ use std::{env, time::Duration};
 
 use gnostr_types::RelayInformationDocument;
 use reqwest::{blocking::Client, redirect::Policy};
+use gnostr::url_to_host_and_uri;
 
 fn main() {
     let mut args = env::args();
