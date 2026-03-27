@@ -127,6 +127,8 @@ enum SubCommand {
     /// Send a NIP-17 private direct message
     SendNip17Dm {
         #[arg(short, long)]
+        private_key: String,
+        #[arg(short, long)]
         recipient: String,
         #[arg(short, long)]
         content: String,
@@ -459,26 +461,31 @@ async fn main() -> anyhow::Result<()> {
             client.send_event(event).await?;
         }
         SubCommand::SendNip17Dm { recipient, content } => {
-            let sender_private_key = PrivateKey::generate();
+            let sender_private_key_gnostr = PrivateKey::try_from_hex_string(&private_key_str)?; // Assuming private_key is now passed as string
+            let sender_private_key = NostrKeys::new(sender_private_key_gnostr.to_secp_private_key());
             let recipient_pk = PublicKey::try_from_hex_string(&recipient, true)?;
+            let recipient_pk_xonly = recipient_pk.as_xonly_public_key();
 
-            let rumor = Rumor {
-                id: Id::default(), // This will be replaced by the create_seal function
-                pubkey: sender_private_key.public_key(),
-                created_at: Unixtime::now(),
-                kind: EventKind::TextNote, /* NIP-17 says Kind 14 for chat messages, but NIP-59
-                                            * wraps generic rumors. Use TextNote for the inner
-                                            * rumor. */
-                tags: vec![],
+            let rumor_unsigned_event = EventBuilder::new(
+                Kind::TextNote,
                 content,
-            };
+                &[], // No tags for rumor
+            )
+            .to_unsigned_event(sender_private_key.public_key());
 
-            let seal_event = nip59::create_seal(rumor, &sender_private_key, &recipient_pk)?;
+            let seal_event = nip59::create_seal(
+                &sender_private_key,
+                &recipient_pk_xonly,
+                rumor_unsigned_event,
+            )?;
 
-            let gift_wrap_event =
-                nip59::create_gift_wrap(seal_event, &sender_private_key, &recipient_pk)?;
+            let gift_wrap_event = nip59::create_gift_wrap(
+                &sender_private_key,
+                &recipient_pk_xonly,
+                &seal_event,
+            )?;
 
-            client.send_event(gift_wrap_event).await?;
+            client.send_event(gift_wrap_event.into()).await?; // Convert nostr::Event to gnostr_types::EventV3
         }
         SubCommand::RepostTextNote {
             private_key,
