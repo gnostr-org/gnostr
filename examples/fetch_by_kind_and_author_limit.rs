@@ -1,9 +1,7 @@
 use std::env;
 
 use gnostr_types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage, SubscriptionId};
-use crate::get_weeble;
-use crate::Command;
-use crate::Probe;
+use gnostr::{get_weeble, Command, Probe};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
