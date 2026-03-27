@@ -4,9 +4,7 @@ use std::{
     process,
 };
 
-use gnostr::gnostr_types::{
-    Client, Event, EventKind, Filter, Id, Keys, Options, PublicKey, RelayUrl, Tag, Unixtime,
-};
+use gnostr_types::{Client, Event, EventKind, Filter, Id, Keys, Options, PublicKey, RelayUrl, Tag, Unixtime, FilterOptions};
 
 // Re-export test helpers for all modules to use
 #[cfg(test)]
