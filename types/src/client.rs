@@ -9,6 +9,7 @@ use anyhow::Result;
 // NIP-44 related imports
 use futures_util::SinkExt;
 use futures_util::StreamExt;
+use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage};
 use tracing::{debug, info, warn};
 
 
