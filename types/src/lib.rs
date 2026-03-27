@@ -218,8 +218,7 @@ pub mod internal {
 
     use crate::client_message::ClientMessage;
     use crate::event::Event;
-    use crate::versioned::event2::EventV2;
-    use crate::versioned::event3::EventV3;
+
     use crate::filter::Filter;
     use crate::relay_message::RelayMessage;
     use crate::versioned::relay_message5::RelayMessageV5;
