@@ -263,7 +263,8 @@ async fn main() -> anyhow::Result<()> {
             let signer = KeySigner::from_private_key(pk, "", 1).unwrap();
             let pubkey = signer.public_key();
             println!("Subscribing to DMs for {}", pubkey.as_hex_string());
-            client.subscribe_to_dms(pubkey).await;
+            // client.subscribe_to_dms(pubkey).await;
+            println!("DM subscription not implemented in new client API.");
             signer_for_decryption = Some(signer);
         }
         SubCommand::Delete { event_id, reason } => {
