@@ -1418,7 +1418,7 @@ fn create_and_publish_push_event(
     tags.push(Tag::new_pubkey(repo_info.author, None, None));
 
     // Create event with push metadata
-    let preevent = gnostr::types::PreEvent {
+    let preevent = gnostr_types::PreEvent {
         pubkey: keys.public_key(),
         created_at: Unixtime::now(),
         kind: EventKind::TextNote,
