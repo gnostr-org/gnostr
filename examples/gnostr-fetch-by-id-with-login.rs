@@ -1,9 +1,7 @@
 use std::env;
 
-use gnostr::{
-    types::{Filter, IdHex, RelayMessage},
-    Command, Probe,
-};
+use gnostr_types::{Filter, IdHex, RelayMessage};
+use crate::{Command, Probe};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => "wss://relay.damus.io".to_string(),
     };
 
-    let signer = gnostr::load_signer()?;
+    let signer = crate::load_signer()?;
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
     let (to_main, from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
@@ -35,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    gnostr::req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
+    crate::req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
 
     println!("{:?}", ());
     Ok(join_handle.await?)

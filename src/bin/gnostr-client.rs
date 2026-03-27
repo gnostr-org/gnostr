@@ -10,7 +10,7 @@ use gnostr_types::{
         nip2::{self, Contact},
         nip9, nip18, nip26, nip59,
 };
-use gnostr::nostr_client::NostrClient;
+use gnostr_types::Client;
 
 use secp256k1::XOnlyPublicKey;
 use tokio::sync::mpsc;

@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_types::{Filter, IdHex, RelayMessage};
-use crate::{Command, Probe};
+use gnostr::{load_signer, req, Command, Probe};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => panic!("Usage: fetch_by_id_with_login <RelayURL> <IdHex>"),
     };
 
-    let signer = crate::load_signer()?;
+    let signer = load_signer()?;
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
     let (to_main, from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    crate::req(&relay_url, signer, filter, to_probe, from_probe).await?;
+    req(&relay_url, signer, filter, to_probe, from_probe).await?;
 
     Ok(join_handle.await?)
 }

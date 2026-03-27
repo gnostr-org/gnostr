@@ -1,6 +1,7 @@
 use std::{env, io::Read};
 
 use gnostr_types::{PreEvent, PublicKey, Signer, Unixtime};
+use gnostr::load_signer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Update creation stamp
     pre_event.created_at = Unixtime::now();
 
-    let signer = crate::load_signer()?;
+    let signer = load_signer()?;
 
     let event = signer.giftwrap(pre_event, pubkey)?;
 

@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_types::{NostrBech32, PrivateKey};
-use gnostr_types::bech32;
+use bitcoin::bech32;
 
 fn main() {
     let mut args = env::args();

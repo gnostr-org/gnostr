@@ -30,6 +30,10 @@
 pub mod error;
 pub use error::Error;
 
+/// NIP-34 related functionality.
+pub mod nip34;
+
+
 #[cfg(test)]
 /// Module for test utilities.
 pub mod test_utils;

@@ -5,7 +5,7 @@ use gnostr_types::{
     ContentEncryptionAlgorithm, Event, EventKind, Filter, KeySigner, PreEvent, PrivateKey,
     PublicKey, RelayMessage, RelayUrl, Signer, SubscriptionId, Tag, Unixtime,
 };
-use crate::{get_weeble, Command, Probe};
+use gnostr::{get_weeble, Command, Probe};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_types::{EventKind, Filter, PublicKeyHex};
-use crate::{fetch_by_filter, print_event};
+use gnostr::{fetch_by_filter, print_event};
 
 fn main() {
     let mut args = env::args();
@@ -20,9 +20,9 @@ fn main() {
     let mut filter = Filter::new();
     filter.add_author(&pkh);
     filter.add_event_kind(EventKind::RelayList);
-    let events = crate::fetch_by_filter(&relay_url, filter);
+    let events = fetch_by_filter(&relay_url, filter);
     if !events.is_empty() {
-        crate::print_event(&events[0]);
+        print_event(&events[0]);
     } else {
         println!("Not found");
     }
