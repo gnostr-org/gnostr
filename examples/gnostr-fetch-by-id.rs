@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    let our_sub_id = SubscriptionId(crate::get_weeble().unwrap().to_string());
+    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
     to_probe
         .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
         .await?;
