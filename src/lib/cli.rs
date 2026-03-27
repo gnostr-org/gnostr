@@ -262,7 +262,7 @@ impl Default for GnostrCli {
 }
 
 /// GnostrCommands
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 pub enum GnostrCommands {
     /// Gnostr sub commands
     Tui(crate::core::GnostrSubCommands),
