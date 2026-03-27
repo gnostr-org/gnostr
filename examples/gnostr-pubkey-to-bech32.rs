@@ -1,7 +1,7 @@
 // TEMPORARILY
 #![allow(clippy::uninlined_format_args)]
 
-use gnostr::types::PublicKey;
+use gnostr_types::PublicKey;
 
 fn main() {
     let hex = rpassword::prompt_password("Public key hex: ").unwrap();

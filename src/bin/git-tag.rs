@@ -128,11 +128,11 @@ mod tests {
         let repo_path = dir.path();
         std::env::set_current_dir(repo_path)?;
 
-        let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = gnostr::blockheight::blockheight()
+        let weeble = gnostr_types::weeble().unwrap_or(0.0).to_string();
+        let blockheight = gnostr_types::blockheight()
             .unwrap_or(0.0)
             .to_string();
-        let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
+        let wobble = gnostr_types::wobble().unwrap_or(0.0).to_string();
         let expected_tag_name = format!(
             "{}.{}.{}",
             weeble.clone(),
@@ -175,11 +175,11 @@ mod tests {
         let repo_path = dir.path();
         std::env::set_current_dir(repo_path)?;
 
-        let weeble = gnostr::weeble::weeble().unwrap_or(0.0).to_string();
-        let blockheight = gnostr::blockheight::blockheight()
+        let weeble = gnostr_types::weeble().unwrap_or(0.0).to_string();
+        let blockheight = gnostr_types::blockheight()
             .unwrap_or(0.0)
             .to_string();
-        let wobble = gnostr::wobble::wobble().unwrap_or(0.0).to_string();
+        let wobble = gnostr_types::wobble().unwrap_or(0.0).to_string();
 
         let suffix = "test_suffix";
         let expected_tag_name = format!("{}.{}.{}-{}", weeble, blockheight, wobble, suffix);

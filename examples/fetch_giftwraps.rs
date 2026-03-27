@@ -1,11 +1,9 @@
 use std::env;
 
-use gnostr::{
-    types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer},
-    Command, Probe,
-};
+use gnostr_types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer};
+use crate::{Command, Probe};
 
-//use gnostr::Signer;
+use gnostr_types::Signer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => panic!("Usage: fetch_by_kind_and_author <RelayURL>"),
     };
 
-    let signer = gnostr::load_signer()?;
+    let signer = gnostr_types::load_signer()?;
     let pubkey = signer.public_key();
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);

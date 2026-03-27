@@ -2,12 +2,12 @@ use std::env;
 
 use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
-use gnostr::{
-    blockhash, blockheight,
+use crate::{
     cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands,
-    gnostr_types::{Keys, PrivateKey, PublicKey},
-    weeble, wobble,
+};
+use gnostr_types::{
+    blockhash, blockheight, Keys, PrivateKey, PublicKey, weeble, wobble,
 };
 use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};

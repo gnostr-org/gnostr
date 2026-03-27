@@ -3,7 +3,7 @@ pub mod pubkeys;
 pub mod relay_manager;
 pub mod relays;
 pub mod stats;
-pub mod types;
+// use gnostr_types // not pub mod types;
 
 use crate::crawler::processor::Processor;
 use crate::crawler::processor::APP_SECRET_KEY;

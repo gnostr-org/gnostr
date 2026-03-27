@@ -1,6 +1,6 @@
 use std::env;
 
-use gnostr::types::Filter;
+use gnostr_types::Filter;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 
 //fetch_by_filter "{\"REQ\":[\"kind\",\"1\"]}" wss://relay.damus.io | gnostr-xq
@@ -21,7 +21,7 @@ fn main() {
         None => BOOTSTRAP_RELAYS[2].clone(), /* panic!("Usage: fetch_by_kind_and_author
                                               * <FilterJSON> <RelayURL>"), */
     };
-    for event in gnostr::fetch_by_filter(&relay_url, filter) {
-        gnostr::print_event(&event);
+    for event in crate::fetch_by_filter(&relay_url, filter) {
+        crate::print_event(&event);
     }
 }

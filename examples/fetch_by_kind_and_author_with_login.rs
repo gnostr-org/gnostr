@@ -1,9 +1,7 @@
 use std::env;
 
-use gnostr::{
-    types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage},
-    Command, Probe,
-};
+use gnostr_types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage};
+use crate::{Command, Probe};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -30,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let key: PublicKeyHex = author_key.into();
 
-    let signer = gnostr::load_signer()?;
+    let signer = crate::load_signer()?;
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
     let (to_main, from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
@@ -48,7 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    gnostr::req(&relay_url, signer, filter, to_probe, from_probe).await?;
+    crate::req(&relay_url, signer, filter, to_probe, from_probe).await?;
 
     Ok(join_handle.await?)
 }

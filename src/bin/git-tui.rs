@@ -30,9 +30,9 @@ pub fn main() -> Res<()> {
     }));
 
     if args.unwrap().print {
-        setup_term_and_run(&args)?;
+        setup_term_and_run(&args?)?;
     } else {
-        term::alternate_screen(|| term::raw_mode(|| setup_term_and_run(&args)))?
+        term::alternate_screen(|| term::raw_mode(|| setup_term_and_run(&args?)))?
     }
 
     Ok(())

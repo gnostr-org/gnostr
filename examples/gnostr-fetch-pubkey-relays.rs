@@ -1,9 +1,9 @@
 use std::env;
 
-use gnostr::types::{EventKind, Filter, PublicKeyHex};
+use gnostr_types::{EventKind, Filter, PublicKeyHex};
 
 fn main() {
-    println!("{:#}", gnostr::get_relays_public().unwrap());
+    println!("{:#}", crate::get_relays_public().unwrap());
     let mut args = env::args();
     let _ = args.next(); // program name
     let relay_url = match args.next() {
@@ -20,9 +20,9 @@ fn main() {
     let mut filter = Filter::new();
     filter.add_author(&pkh);
     filter.add_event_kind(EventKind::RelayList);
-    let events = gnostr::fetch_by_filter(&relay_url, filter);
+    let events = crate::fetch_by_filter(&relay_url, filter);
     if !events.is_empty() {
-        gnostr::print_event(&events[0]);
+        crate::print_event(&events[0]);
     } else {
         println!("Not found");
     }

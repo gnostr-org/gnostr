@@ -1,6 +1,6 @@
 use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
-use gnostr::query::cli::cli;
-use gnostr::query::ConfigBuilder;
+use gnostr_query::cli::cli;
+use gnostr_query::ConfigBuilder;
 use serde_json::{json, to_string};
 use url::Url;
 
@@ -125,7 +125,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect()
     };
 
-    let vec_result = gnostr::query::send(query_string.clone(), relays, Some(limit_check)).await?;
+    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check)).await?;
 
     //trace
     //debug!("vec_result:\n{:?}", vec_result.clone());

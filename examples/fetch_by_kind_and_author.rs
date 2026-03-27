@@ -1,10 +1,7 @@
 use std::env;
 
-use gnostr::{
-    get_weeble,
-    types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage, SubscriptionId},
-    Command, Probe,
-};
+use gnostr_types::{EventKind, Filter, PublicKey, PublicKeyHex, RelayMessage, SubscriptionId};
+use crate::{get_weeble, Command, Probe};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -46,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
+    let our_sub_id = SubscriptionId(crate::get_weeble().unwrap().to_string());
     to_probe
         .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
         .await?;

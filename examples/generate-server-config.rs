@@ -8,7 +8,9 @@ use std::{
     process::{exit, Command},
 };
 
-use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
+use gnostr_types::blockheight::blockheight_sync;
+use gnostr_types::weeble::weeble_sync;
+use gnostr_types::wobble::wobble_sync;
 use log::debug;
 use serde::{Deserialize, Serialize};
 

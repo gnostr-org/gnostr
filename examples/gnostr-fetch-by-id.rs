@@ -1,10 +1,7 @@
 use std::env;
 
-use gnostr::{
-    get_weeble,
-    types::{Filter, IdHex, RelayMessage, SubscriptionId},
-    Command, Probe,
-};
+use gnostr_types::{Filter, IdHex, RelayMessage, SubscriptionId};
+use crate::{get_weeble, Command, Probe};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
@@ -35,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    let our_sub_id = SubscriptionId(get_weeble().unwrap().to_string());
+    let our_sub_id = SubscriptionId(crate::get_weeble().unwrap().to_string());
     to_probe
         .send(Command::FetchEvents(our_sub_id.clone(), vec![filter]))
         .await?;

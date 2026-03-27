@@ -1,6 +1,6 @@
 use std::{env, io::Read};
 
-use gnostr::types::Event;
+use gnostr_types::Event;
 
 fn main() {
     let mut args = env::args();
@@ -15,5 +15,5 @@ fn main() {
 
     let event: Event = serde_json::from_str(&s).unwrap();
 
-    gnostr::post_event(&relay_url, event);
+    crate::post_event(&relay_url, event);
 }

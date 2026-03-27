@@ -1,4 +1,4 @@
-use gnostr::types::PrivateKey;
+use gnostr_types::PrivateKey;
 
 fn main() {
     let private_key = PrivateKey::generate();

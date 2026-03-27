@@ -3,7 +3,7 @@
 
 use std::{env, time::Duration};
 
-use gnostr::types::RelayInformationDocument;
+use gnostr_types::RelayInformationDocument;
 use reqwest::{blocking::Client, redirect::Policy};
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
         None => panic!("Usage: fetch_nip11 <RelayURL>"),
     };
 
-    let (host, uri) = gnostr::url_to_host_and_uri(&url);
+    let (host, uri) = crate::url_to_host_and_uri(&url);
 
     let scheme = match uri.scheme() {
         Some(refscheme) => match refscheme.as_str() {

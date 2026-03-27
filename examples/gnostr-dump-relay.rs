@@ -3,7 +3,7 @@
 
 use std::env;
 
-use gnostr::types::Filter;
+use gnostr_types::Filter;
 
 fn main() {
     let mut args = env::args();
@@ -14,8 +14,8 @@ fn main() {
     };
 
     let filter = Filter::new();
-    let events = gnostr::fetch_by_filter(&relay_url, filter);
+    let events = crate::fetch_by_filter(&relay_url, filter);
     for event in events {
-        gnostr::print_event(&event);
+        crate::print_event(&event);
     }
 }
