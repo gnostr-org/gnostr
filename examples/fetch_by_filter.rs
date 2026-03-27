@@ -23,6 +23,6 @@ fn main() {
                                               * <FilterJSON> <RelayURL>"), */
     };
     for event in fetch_by_filter(&relay_url, filter) {
-        crate::print_event(&event);
+        print_event(&event);
     }
 }
