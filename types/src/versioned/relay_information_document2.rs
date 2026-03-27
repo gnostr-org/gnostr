@@ -2,10 +2,7 @@ use std::fmt;
 
 //use serde::de::Error as DeError;
 
-use serde::{
-    Deserialize, Serialize,
-    ser::{},
-};
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
