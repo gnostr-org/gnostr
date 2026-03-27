@@ -1,6 +1,7 @@
 use std::{env, io::Read};
 
 use gnostr_types::Event;
+use gnostr::post_event;
 
 fn main() {
     let mut args = env::args();
