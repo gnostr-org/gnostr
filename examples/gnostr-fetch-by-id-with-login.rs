@@ -1,7 +1,7 @@
 use std::env;
 
 use gnostr_types::{Filter, IdHex, RelayMessage};
-use crate::{Command, Probe};
+use gnostr::{load_signer, req, Command, Probe};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
