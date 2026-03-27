@@ -2,6 +2,7 @@ use std::env;
 
 use gnostr_types::Filter;
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::{fetch_by_filter, print_event};
 
 //fetch_by_filter "{\"REQ\":[\"kind\",\"1\"]}" wss://relay.damus.io | gnostr-xq
 fn main() {
