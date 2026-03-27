@@ -1,4 +1,5 @@
 use clap::Parser;
+use anyhow::Error as AnyhowError;
 use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res, state, config};
 use log::LevelFilter;
 use ratatui::Terminal;
