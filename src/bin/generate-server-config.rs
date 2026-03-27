@@ -5,7 +5,7 @@ use std::{
     process::{Command, exit},
 };
 
-use gnostr::{blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
+use gnostr_types::{blockheight, weeble, wobble};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
