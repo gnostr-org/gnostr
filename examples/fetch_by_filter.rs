@@ -22,7 +22,7 @@ fn main() {
         None => BOOTSTRAP_RELAYS[2].clone(), /* panic!("Usage: fetch_by_kind_and_author
                                               * <FilterJSON> <RelayURL>"), */
     };
-    for event in crate::fetch_by_filter(&relay_url, filter) {
+    for event in fetch_by_filter(&relay_url, filter) {
         crate::print_event(&event);
     }
 }
