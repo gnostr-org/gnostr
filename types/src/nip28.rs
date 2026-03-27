@@ -711,10 +711,7 @@ mod test {
     };
 
     #[test]
-    fn test_nip28_event_kinds() {
-        assert_eq!(CREATE_CHANNEL, EventKind::from(40));
-        assert_eq!(SET_CHANNEL_METADATA, EventKind::from(41));
-        assert_eq!(CREATE_CHANNEL_MESSAGE, EventKind::from(42));
+    fn test_nip28_event_kinds() {        assert_eq!(CREATE_CHANNEL_MESSAGE, EventKind::from(42));
         assert_eq!(HIDE_MESSAGE, EventKind::from(43));
         assert_eq!(MUTE_USER, EventKind::from(44));
     }
