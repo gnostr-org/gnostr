@@ -48,9 +48,9 @@ fn move_gnostr_gnit_key() -> io::Result<()> {
     let gnostr_gnit_key_path_weeble_blockheight_wobble =
         PathBuf::from(&home_dir).join(".ssh").join(format!(
             "gnostr-gnit-key-{}-{}-{}",
-            &weeble_sync().unwrap().to_string(),
-            blockheight_sync(),
-            &wobble_sync().unwrap().to_string()
+            &weeble::weeble().unwrap().to_string(),
+            blockheight::blockheight().unwrap().to_string(),
+            &wobble::wobble().unwrap().to_string()
         ));
 
     println!(
