@@ -3,7 +3,7 @@ use std::env;
 use gnostr_types::{EventKind, Filter, PublicKeyHex, RelayMessage, Signer};
 use crate::{Command, Probe};
 
-use gnostr_types::Signer;
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
