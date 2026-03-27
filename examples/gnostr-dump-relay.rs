@@ -4,6 +4,7 @@
 use std::env;
 
 use gnostr_types::Filter;
+use gnostr::{fetch_by_filter, print_event};
 
 fn main() {
     let mut args = env::args();
