@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => "wss://relay.damus.io".to_string(),
     };
 
-    let signer = crate::load_signer()?;
+    let signer = load_signer()?;
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
     let (to_main, from_probe) = tokio::sync::mpsc::channel::<RelayMessage>(100);
