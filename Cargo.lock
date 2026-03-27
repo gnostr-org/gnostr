@@ -5840,6 +5840,7 @@ dependencies = [
  "config",
  "duration-str",
  "futures-util",
+ "gnostr-types",
  "hex",
  "metrics",
  "nostr-db",

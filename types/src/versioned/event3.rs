@@ -3,13 +3,13 @@ use std::{cmp::Ordering, fmt, str::FromStr};
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
-use secp256k1::XOnlyPublicKey;
+
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
 use crate::{
-    Error, EventDelegation, EventKind, EventReference, IntoVec, KeySecurity, KeySigner,
+    Error, EventDelegation, EventKind, EventReference, IntoVec, KeySigner,
     MilliSatoshi, NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3,
     Unixtime, ZapData,
     id::{self, Id},

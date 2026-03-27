@@ -30,6 +30,7 @@ config = { version = "0.14.0", features = [
   "json",
 ], default-features = false }
 duration-str = { version = "0.11.2", default-features = false }
+gnostr-types = { version = "1905.926180.332424", path = "../types", features = ["speedy"] }
 hex = "0.4.3"
 metrics = "0.23.0"
 nostr-db = { version = "0.4.5" }
