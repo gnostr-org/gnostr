@@ -6,9 +6,9 @@ use std::{backtrace::Backtrace, panic, rc::Rc, time::{Duration, Instant}};
 use crossterm::event::{self, Event, KeyCode};
 
 pub fn main() -> Res<()> {
-    let args = Args::try_parse();
+    let args = Args::try_parse().map_err(Error::Clap)?;
 
-    if args.unwrap().version {
+    if args.version {
         println!(
             "gnostr-asyncgit {}",
             git_version::git_version!(cargo_suffix = "")
@@ -16,7 +16,7 @@ pub fn main() -> Res<()> {
         return Ok(());
     }
 
-    if args.unwrap().log {
+    if args.log {
         simple_logging::log_to_file(gnostr_asyncgit::gitui::LOG_FILE_NAME, LevelFilter::Debug)
             .map_err(Error::OpenLogFile)?;
     }
@@ -29,10 +29,10 @@ pub fn main() -> Res<()> {
         eprintln!("trace: \n{}", Backtrace::force_capture());
     }));
 
-    if args.unwrap().print {
-        setup_term_and_run(&args?)?;
+    if args.print {
+        setup_term_and_run(&args)?;
     } else {
-        term::alternate_screen(|| term::raw_mode(|| setup_term_and_run(&args?)))?
+        term::alternate_screen(|| term::raw_mode(|| setup_term_and_run(&args)))?
     }
 
     Ok(())
