@@ -264,7 +264,7 @@ async fn main() -> anyhow::Result<()> {
             let secret_key = private_key.as_secret_key();
 
             let id = Id::try_from_hex_string(&event_id)?;
-            let event = nip9::delete(
+            let event = nip09::delete(
                 vec![id],
                 reason.as_deref(),
                 &public_key.as_xonly_public_key(),
