@@ -4,7 +4,7 @@ use gnostr_types::{EventKind, Filter, PublicKeyHex};
 use gnostr::{get_relays_public, fetch_by_filter, print_event};
 
 fn main() {
-    println!("{:#}", crate::get_relays_public().unwrap());
+    println!("{:#}", get_relays_public().unwrap());
     let mut args = env::args();
     let _ = args.next(); // program name
     let relay_url = match args.next() {
