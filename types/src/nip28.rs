@@ -706,10 +706,8 @@ mod test {
     use super::*;
     use crate::{
         KeySigner, test_serde,
-        types::{
-            Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
-            UncheckedUrl, Unixtime,
-        },
+        Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
+        UncheckedUrl, Unixtime,
     };
 
     #[test]
