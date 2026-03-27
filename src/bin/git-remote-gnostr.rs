@@ -1343,7 +1343,7 @@ async fn query_git_refs(
 
     // Query events from relays
     match client
-        .get_events_of_with_opts(vec![filter], None, gnostr::gnostr_types::FilterOptions::ExitOnEOSE)
+        .get_events_of_with_opts(vec![filter], None, FilterOptions::ExitOnEOSE)
         .await
     {
         Ok(events) => {
@@ -1443,7 +1443,7 @@ async fn fetch_git_data(
 
     // Query events
     match client
-        .get_events_of_with_opts(vec![filter], None, gnostr::gnostr_types::FilterOptions::ExitOnEOSE)
+        .get_events_of_with_opts(vec![filter], None, FilterOptions::ExitOnEOSE)
         .await
     {
         Ok(events) => {
