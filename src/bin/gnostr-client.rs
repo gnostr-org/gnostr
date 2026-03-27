@@ -158,7 +158,7 @@ async fn main() -> anyhow::Result<()> {
 
     let (tx, mut rx) = mpsc::channel(100);
 
-    let mut client = NostrClient::new(tx);
+    let mut client = Client::new(tx);
 
     let relay_url = UncheckedUrl(args.relay_url);
     client.connect_relay(relay_url).await?;
