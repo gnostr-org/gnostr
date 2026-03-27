@@ -2,6 +2,7 @@ use std::env;
 
 use gnostr_types::{EventKind, Filter, PublicKeyHex};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::{fetch_by_filter, print_event};
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // program name
