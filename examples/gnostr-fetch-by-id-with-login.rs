@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Filter::new();
     filter.add_id(&id);
 
-    crate::req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
+    req(&relay_url2.expect(""), signer, filter, to_probe, from_probe).await?;
 
     println!("{:?}", ());
     Ok(join_handle.await?)
