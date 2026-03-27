@@ -407,7 +407,8 @@ async fn main() -> anyhow::Result<()> {
             client.send_event(event).await?;
         }
         SubCommand::MarketSubscribe => {
-            client.subscribe_to_marketplace().await;
+            // client.subscribe_to_marketplace().await;
+            println!("Marketplace subscription not implemented in new client API.");
         }
         SubCommand::Delegate {
             private_key,
