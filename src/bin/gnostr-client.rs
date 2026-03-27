@@ -155,10 +155,15 @@ async fn main() -> anyhow::Result<()> {
 
     let (tx, mut rx) = mpsc::channel(100);
 
-    let mut client = Client::new(tx);
+    // Generate a new keypair for the client
+    let keys = Keys::generate();
+    // Create default client options
+    let options = Options::new();
+    let mut client = Client::new(&keys, options);
 
     let relay_url = UncheckedUrl(args.relay_url);
-    client.connect_relay(relay_url).await?;
+    client.add_relays(vec![relay_url.to_string()]).await?;
+    client.connect().await;
 
     let mut should_listen = true;
     let mut signer_for_decryption: Option<KeySigner> = None;
