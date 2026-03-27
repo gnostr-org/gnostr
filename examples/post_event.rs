@@ -16,5 +16,5 @@ fn main() {
 
     let event: Event = serde_json::from_str(&s).unwrap();
 
-    crate::post_event(&relay_url, event);
+    post_event(&relay_url, event);
 }
