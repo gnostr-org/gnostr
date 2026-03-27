@@ -7,9 +7,9 @@
 
 #![allow(missing_docs)]
 
-use std::str::FromStr;
 
-use bech32::{self, Bech32, Bech32m, Hrp};
+
+use bech32::{self, Bech32, Hrp};
 
 use crate::{Error, EventKind, Id, PublicKey, RelayUrl};
 
