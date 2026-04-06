@@ -267,10 +267,10 @@ jobs:
         run: |
           cargo clean && echo "✅" || echo "❌"
 
-      - name: 🚀 cargo check -j8
+      - name: 🚀 cargo fmt --check -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
-          cargo check -j8 && echo "✅" ## || echo "❌"
+          cargo fmt --check -j8 && echo "✅" || echo "❌"
 
       - name: 🚀 cargo install -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
