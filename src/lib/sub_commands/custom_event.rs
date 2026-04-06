@@ -174,11 +174,12 @@ pub async fn create_custom_event(
                 continue;
             }
             let parts: Vec<String> = tag.split('|').map(String::from).collect();
-            let tag_kind = parts.first().unwrap().clone();
-            tags.push(Tag::custom(
-                TagKind::Custom(Cow::from(tag_kind)),
-                parts[1..].to_vec(),
-            ));
+            if let Some(tag_kind) = parts.first() {
+                tags.push(Tag::custom(
+                    TagKind::Custom(Cow::from(tag_kind.clone())),
+                    parts[1..].to_vec(),
+                ));
+            }
         }
     }
 
