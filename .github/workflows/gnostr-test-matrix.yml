@@ -267,10 +267,10 @@ jobs:
       - name: Install OpenSSL for macOS
         run: |
           brew install openssl@3
-          echo "export PATH="/opt/homebrew/opt/openssl@3/bin:$PATH"" >> $GITHUB_ENV
-          echo "export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"" >> $GITHUB_ENV
-          echo "export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"" >> $GITHUB_ENV
-          echo "export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@3/lib/pkgconfig"" >> $GITHUB_ENV
+          echo "/opt/homebrew/opt/openssl@3/bin" >> $GITHUB_PATH
+          echo "LDFLAGS=-L/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I/opt/homebrew/opt/openssl@3/include" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
