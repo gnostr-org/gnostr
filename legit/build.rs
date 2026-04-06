@@ -145,11 +145,11 @@ fn install_sccache() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install sccache: {}", stderr);
-                panic!("Failed to install required Linux dependencies.");
+                println!("cargo:warning=Continuing build without sccache acceleration.");
             }
             Err(e) => {
                 println!("cargo:warning=Failed to run installation command: {}", e);
-                panic!("Failed to run dependency installation command.");
+                println!("cargo:warning=Continuing build without sccache acceleration.");
             }
         }
     } else if target_os == "macos" {
@@ -168,16 +168,16 @@ fn install_sccache() {
                         "cargo:warning=Failed to install sccache with brew: {}",
                         stderr
                     );
-                    panic!("Failed to install required macOS dependencies.");
+                    println!("cargo:warning=Continuing build without sccache acceleration.");
                 }
                 Err(e) => {
                     println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                    panic!("Failed to run Homebrew command.");
+                    println!("cargo:warning=Continuing build without sccache acceleration.");
                 }
             }
         } else {
             println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
-            panic!("Homebrew not found.");
+            println!("cargo:warning=Continuing build without sccache acceleration.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
@@ -480,8 +480,10 @@ fn main() {
 
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
-    } else {
+    } else if env::var("CARGO_FEATURE_SCCACHE").is_ok() {
         check_sscache();
+    } else {
+        println!("cargo:warning=sccache feature not enabled, skipping sccache check. Enable with --features sccache.");
     }
     // Tell Cargo to rerun this build script only if the Git HEAD or index changes
     println!("cargo:rerun-if-changed=.git/HEAD");

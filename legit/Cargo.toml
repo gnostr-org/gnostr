@@ -14,6 +14,9 @@ keywords = ["git", "pow", "proof-of-work"]
 categories = ["command-line-utilities"]
 
 
+[features]
+sccache = []
+
 [dependencies]
 argparse = "0.2.2"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
