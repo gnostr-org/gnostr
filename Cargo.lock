@@ -3851,6 +3851,7 @@ dependencies = [
  "num_cpus",
  "once_cell",
  "openssl",
+ "openssl-sys",
  "pad",
  "parking_lot",
  "parking_lot_core",
