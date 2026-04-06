@@ -8,6 +8,8 @@ on:
     branches:
       - '**'
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-gnostr-relay-workflow]
 permissions:
   actions: read
   contents: read
