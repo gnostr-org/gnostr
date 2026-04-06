@@ -86,13 +86,13 @@ fn command_exists(command: &str) -> bool {
 // try:
 // cargo build --features memory_profiling -j8
 
-fn check_sscache() {
+fn check_sccache() {
     if Command::new("sccache").arg("--version").output().is_ok() {
-        println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
-        env::set_var("RUSTC_WRAPPER", "sscache");
+        println!("cargo:warning=sccache detected, setting RUSTC_WRAPPER.");
+        env::set_var("RUSTC_WRAPPER", "sccache");
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
     } else {
-        println!("cargo:warning=sscache not found - trying to install.");
+        println!("cargo:warning=sccache not found - trying to install.");
         install_sccache();
     }
 }
@@ -145,11 +145,11 @@ fn install_sccache() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install sccache: {}", stderr);
-                panic!("Failed to install required Linux dependencies.");
+                println!("cargo:warning=Continuing build without sccache acceleration.");
             }
             Err(e) => {
                 println!("cargo:warning=Failed to run installation command: {}", e);
-                panic!("Failed to run dependency installation command.");
+                println!("cargo:warning=Continuing build without sccache acceleration.");
             }
         }
     } else if target_os == "macos" {
@@ -168,16 +168,16 @@ fn install_sccache() {
                         "cargo:warning=Failed to install sccache with brew: {}",
                         stderr
                     );
-                    panic!("Failed to install required macOS dependencies.");
+                    println!("cargo:warning=Continuing build without sccache acceleration.");
                 }
                 Err(e) => {
                     println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                    panic!("Failed to run Homebrew command.");
+                    println!("cargo:warning=Continuing build without sccache acceleration.");
                 }
             }
         } else {
             println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
-            panic!("Homebrew not found.");
+            println!("cargo:warning=Continuing build without sccache acceleration.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
@@ -480,8 +480,10 @@ fn main() {
 
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
+    } else if env::var("CARGO_FEATURE_SCCACHE").is_ok() {
+        check_sccache();
     } else {
-        check_sscache();
+        println!("cargo:warning=sccache feature not enabled, skipping sccache check. Enable with --features sccache.");
     }
     // Tell Cargo to rerun this build script only if the Git HEAD or index changes
     println!("cargo:rerun-if-changed=.git/HEAD");
