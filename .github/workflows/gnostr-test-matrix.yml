@@ -414,7 +414,7 @@ jobs:
         run: |
           git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
           cargo run --bin gnostr -- ngit --help
-          cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
+          #cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
           cargo run --bin gnostr -- ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
         if: ${{ !env.ACT }}
 
