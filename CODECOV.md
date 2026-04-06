@@ -49,7 +49,7 @@ llvm-cov report --instr-profile=default.profdata target/debug/<your-binary-name>
 This will generate a detailed, file-by-file HTML report in a directory named `coverage/`.
 
 ```bash
-llvm-cov show --instr-profile=default.profdata target/debug/<your-binary-name> --format=html -output-dir=coverage
+llvm-cov show --instr-profile=default.profdata target/debug/<your-binary-name> --format=html --output-dir=coverage
 ```
 
 ## Alternative: Using grcov

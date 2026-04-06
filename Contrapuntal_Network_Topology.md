@@ -40,7 +40,7 @@ This equation, or a more refined successor, would allow the network to dynamical
 
 The ultimate goal is to create a unified value that encapsulates both time and location. A theoretical timestamp could be derived from the principles of fractal time and distance-based trust, creating a single, verifiable data point. While the exact formula requires further research, it would integrate spatial coordinates (`x`, `y`, z) and the fractal time unit (`r` or `p`) into a cohesive whole.
 
-_(Note: The original paper presented a formula `p=r^((πxyz + π/xyz) / (πxyz + π/xyz))` which simplifies to `p=r`. We interpret the author's intent as a placeholder for a more complex relationship that integrates these variables.)_
+_(Note: The original paper presented a formula `p=r^((πxyz + π/xyz) / (πxyz + π/xyz))` which simplifies to `p=r^1 = r`, since any non-zero expression divided by itself equals 1, making the exponent reduce to 1. We interpret the author's intent as a placeholder for a more complex relationship that integrates these variables.)_
 
 ## 4. The Contrapuntal Network: A Crypto-Logical Structure
 
