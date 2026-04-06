@@ -17,12 +17,20 @@ rustflags = [
     "-C", "link-arg=/STACK:4000000", "-Adead_code", "-Aunused_variable", "-Awarnings", "-Ctarget-cpu=native"
 ]
 
-# Settings for Unix-like systems (Linux, macOS) would go here:
-[target.'cfg(any(target_os = "linux", target_os = "macos"))']
+# Settings for Linux:
+[target.'cfg(target_os = "linux")']
 rustflags = [
     "-Adead_code", "-Awarnings", "-Ctarget-cpu=native"
 ]
 
+# Settings for macOS: omit -Ctarget-cpu=native to avoid ring compilation
+# failures on aarch64-apple-darwin (ring 0.17.9 static assertions fail with
+# target-cpu=native on Apple Silicon).
+[target.'cfg(target_os = "macos")']
+rustflags = [
+    "-Adead_code", "-Awarnings"
+]
+
 [build]
 #rustc-wrapper = "sccache"
-rustflags = ["-Adead_code", "-Awarnings", "-Ctarget-cpu=native"]
+rustflags = ["-Adead_code", "-Awarnings"]
