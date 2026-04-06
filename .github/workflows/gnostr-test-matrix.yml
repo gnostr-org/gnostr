@@ -74,7 +74,7 @@ jobs:
           fetch-tags: false
 
       - name: Cache Cargo registry and Git dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -85,7 +85,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
       - name: Cache Cargo build target
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
@@ -266,11 +266,11 @@ jobs:
 
       - name: Install OpenSSL for macOS
         run: |
-          brew install openssl@1.1
-          echo "export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"" >> $GITHUB_ENV
-          echo "export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"" >> $GITHUB_ENV
-          echo "export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"" >> $GITHUB_ENV
-          echo "export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@1.1/lib/pkgconfig"" >> $GITHUB_ENV
+          brew install openssl@3
+          echo "export PATH="/opt/homebrew/opt/openssl@3/bin:$PATH"" >> $GITHUB_ENV
+          echo "export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"" >> $GITHUB_ENV
+          echo "export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"" >> $GITHUB_ENV
+          echo "export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@3/lib/pkgconfig"" >> $GITHUB_ENV
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
@@ -585,7 +585,7 @@ jobs:
 
       - name: Save cargo
         id: cache-cargo-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ !env.ACT }}
         with:
           path: |
@@ -594,7 +594,7 @@ jobs:
 
       - name: Save target
         id: cache-target-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: ${{ !env.ACT }}
         with:
           path: |
