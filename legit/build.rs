@@ -86,7 +86,7 @@ fn command_exists(command: &str) -> bool {
 // try:
 // cargo build --features memory_profiling -j8
 
-fn check_sscache() {
+fn check_sccache() {
     if Command::new("sccache").arg("--version").output().is_ok() {
         println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
         env::set_var("RUSTC_WRAPPER", "sscache");
@@ -481,7 +481,7 @@ fn main() {
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
     } else if env::var("CARGO_FEATURE_SCCACHE").is_ok() {
-        check_sscache();
+        check_sccache();
     } else {
         println!("cargo:warning=sccache feature not enabled, skipping sccache check. Enable with --features sccache.");
     }
