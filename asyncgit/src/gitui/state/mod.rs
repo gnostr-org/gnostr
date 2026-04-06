@@ -72,6 +72,7 @@ pub struct State {
 }
 
 impl State {
+    /// Creates a new `State` instance, initializing screens, bindings, clipboard, and file watcher.
     pub fn create(
         repo: Rc<Repository>,
         size: Size,
@@ -154,6 +155,7 @@ impl State {
         )
     }
 
+    /// Runs the main event loop until the `quit` flag is set.
     pub fn run(&mut self, term: &mut Term, max_tick_delay: Duration) -> Res<()> {
         while !self.quit {
             term.backend_mut().poll_event(max_tick_delay)?;
@@ -163,6 +165,7 @@ impl State {
         Ok(())
     }
 
+    /// Processes a single tick: handles events, file watcher updates, pending commands, and redraws.
     pub fn update(&mut self, term: &mut Term) -> Res<()> {
         if term.backend_mut().poll_event(Duration::ZERO)? {
             let event = term.backend_mut().read_event()?;
@@ -186,6 +189,7 @@ impl State {
         Ok(())
     }
 
+    /// Dispatches an incoming terminal event (resize, key press, etc.) to the appropriate handler.
     pub fn handle_event(&mut self, term: &mut Term, event: Event) -> Res<()> {
         log::debug!("{:?}", event);
 
@@ -218,6 +222,7 @@ impl State {
         }
     }
 
+    /// Forces an immediate redraw of the current screen to the terminal.
     pub fn redraw_now(&mut self, term: &mut Term) -> Res<()> {
         if self.screens.last_mut().is_some() {
             term.draw(|frame| ui::ui(frame, self))
@@ -229,6 +234,7 @@ impl State {
         Ok(())
     }
 
+    /// Marks the UI as needing a redraw on the next update cycle.
     pub fn stage_redraw(&mut self) {
         self.needs_redraw = true;
     }
@@ -290,14 +296,17 @@ impl State {
         }
     }
 
+    /// Resets the pending menu to the root menu (or `None` if the root menu is not configured).
     pub fn close_menu(&mut self) {
         self.pending_menu = root_menu(&self.config).map(PendingMenu::init)
     }
 
+    /// Returns a mutable reference to the topmost screen on the screen stack.
     pub fn screen_mut(&mut self) -> &mut Screen {
         self.screens.last_mut().expect("No screen")
     }
 
+    /// Returns a shared reference to the topmost screen on the screen stack.
     pub fn screen(&self) -> &Screen {
         self.screens.last().expect("No screen")
     }
@@ -389,6 +398,7 @@ impl State {
         Ok(())
     }
 
+    /// Runs a `Command` interactively, suspending raw mode so the child process can use the terminal.
     pub fn run_cmd_interactive(&mut self, term: &mut Term, mut cmd: Command) -> Res<()> {
         cmd.env("CLICOLOR_FORCE", "1"); // No guarantee, but modern tools seem to implement this
 
@@ -465,18 +475,21 @@ impl State {
         Ok(())
     }
 
+    /// Hides the pending menu from the UI without closing it.
     pub fn hide_menu(&mut self) {
         if let Some(ref mut menu) = self.pending_menu {
             menu.is_hidden = true;
         }
     }
 
+    /// Makes the previously hidden pending menu visible again.
     pub fn unhide_menu(&mut self) {
         if let Some(ref mut menu) = self.pending_menu {
             menu.is_hidden = false;
         }
     }
 
+    /// Returns the git revision (branch name or commit hash) of the currently selected item, if any.
     pub fn selected_rev(&self) -> Option<String> {
         match &self.screen().get_selected_item().target_data {
             Some(TargetData::Branch(branch)) => Some(branch.to_owned()),
@@ -485,6 +498,7 @@ impl State {
         }
     }
 
+    /// Displays an inline prompt to the user and returns the entered string value.
     pub fn prompt(&mut self, term: &mut Term, params: &PromptParams) -> Res<String> {
         let prompt_text = if let Some(default) = (params.create_default_value)(self) {
             format!("{} (default {}):", params.prompt, default).into()
@@ -521,6 +535,7 @@ impl State {
         }
     }
 
+    /// Displays a yes/no confirmation prompt; returns `Ok(())` if confirmed or `Err(PromptAborted)` otherwise.
     pub fn confirm(&mut self, term: &mut Term, prompt: &'static str) -> Res<()> {
         self.hide_menu();
         self.prompt.set(PromptData {
@@ -634,9 +649,13 @@ fn write_child_output_to_log(
 
 type DefaultFn = Box<dyn Fn(&State) -> Option<String>>;
 
+/// Parameters used to configure a user prompt displayed by [`State::prompt`].
 pub struct PromptParams {
+    /// The text displayed to the user before the input field.
     pub prompt: &'static str,
+    /// A function that produces an optional default value pre-filled in the prompt.
     pub create_default_value: DefaultFn,
+    /// When `true`, the pending menu is hidden while the prompt is active.
     pub hide_menu: bool,
 }
 
