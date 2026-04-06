@@ -1,4 +1,7 @@
-on: push
+on:
+  push:
+  repository_dispatch:
+    types: [run-ci-workflow]
 
 name: build test
 

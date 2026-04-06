@@ -145,39 +145,16 @@ fn install_sccache() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install sccache: {}", stderr);
-                println!("cargo:warning=Continuing build without sccache acceleration.");
-            }
-            Err(e) => {
-                println!("cargo:warning=Failed to run installation command: {}", e);
-                println!("cargo:warning=Continuing build without sccache acceleration.");
-            }
-        }
-    } else if target_os == "macos" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
-
-        if check_brew() {
-            let output = Command::new("brew").arg("install").arg("sccache").output();
-            match output {
-                Ok(output) if output.status.success() => {
-                    println!("cargo:warning=Successfully installed sccache dependency.");
-                }
-                Ok(output) => {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!(
-                        "cargo:warning=Failed to install sccache with brew: {}",
-                        stderr
-                    );
-                    println!("cargo:warning=Continuing build without sccache acceleration.");
+                    println!("cargo:warning=sccache is optional; continuing build without it.");
                 }
                 Err(e) => {
                     println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                    println!("cargo:warning=Continuing build without sccache acceleration.");
+                    println!("cargo:warning=sccache is optional; continuing build without it.");
                 }
             }
         } else {
             println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
-            println!("cargo:warning=Continuing build without sccache acceleration.");
+            println!("cargo:warning=sccache is optional; continuing build without it.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
