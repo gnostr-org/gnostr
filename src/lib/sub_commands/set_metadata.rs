@@ -33,6 +33,10 @@ pub struct SetMetadataSubCommand {
     /// Arbitrary fields not in the protocol. Use this syntax: "key:value"
     #[arg(short, long, action = clap::ArgAction::Append, default_values_t = ["gnostr:gnostr".to_string()])]
     extra_field: Vec<String>,
+    /// Hashtag tags to attach to the event. Accepts comma-separated values or
+    /// multiple -t flags. Example: -t "nostr,gnostr" or -t "nostr" -t "gnostr"
+    #[arg(short, long, action = clap::ArgAction::Append)]
+    tags: Vec<String>,
     /// Print keys as hex
     #[arg(long, default_value = "false")]
     hex: bool,
@@ -110,6 +114,16 @@ pub async fn set_metadata(
             identity_tags.push(tag);
         } else {
             eprintln!("Invalid identity format: {}", identity);
+        }
+    }
+
+    // Hashtag tags: support comma-separated values and multiple -t flags
+    for tag_entry in &sub_command_args.tags {
+        for tag_value in tag_entry.split(',') {
+            let trimmed = tag_value.trim();
+            if !trimmed.is_empty() {
+                identity_tags.push(Tag::hashtag(trimmed));
+            }
         }
     }
 

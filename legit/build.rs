@@ -86,13 +86,13 @@ fn command_exists(command: &str) -> bool {
 // try:
 // cargo build --features memory_profiling -j8
 
-fn check_sscache() {
+fn check_sccache() {
     if Command::new("sccache").arg("--version").output().is_ok() {
-        println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
-        env::set_var("RUSTC_WRAPPER", "sscache");
+        println!("cargo:warning=sccache detected, setting RUSTC_WRAPPER.");
+        env::set_var("RUSTC_WRAPPER", "sccache");
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
     } else {
-        println!("cargo:warning=sscache not found - trying to install.");
+        println!("cargo:warning=sccache not found - trying to install.");
         install_sccache();
     }
 }
@@ -145,29 +145,6 @@ fn install_sccache() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install sccache: {}", stderr);
-                println!("cargo:warning=sccache is optional; continuing build without it.");
-            }
-            Err(e) => {
-                println!("cargo:warning=Failed to run installation command: {}", e);
-                println!("cargo:warning=sccache is optional; continuing build without it.");
-            }
-        }
-    } else if target_os == "macos" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
-
-        if check_brew() {
-            let output = Command::new("brew").arg("install").arg("sccache").output();
-            match output {
-                Ok(output) if output.status.success() => {
-                    println!("cargo:warning=Successfully installed sccache dependency.");
-                }
-                Ok(output) => {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!(
-                        "cargo:warning=Failed to install sccache with brew: {}",
-                        stderr
-                    );
                     println!("cargo:warning=sccache is optional; continuing build without it.");
                 }
                 Err(e) => {
@@ -480,8 +457,10 @@ fn main() {
 
     if env::var("RUSTC_WRAPPER").is_ok() {
         println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
+    } else if env::var("CARGO_FEATURE_SCCACHE").is_ok() {
+        check_sccache();
     } else {
-        check_sscache();
+        println!("cargo:warning=sccache feature not enabled, skipping sccache check. Enable with --features sccache.");
     }
     // Tell Cargo to rerun this build script only if the Git HEAD or index changes
     println!("cargo:rerun-if-changed=.git/HEAD");

@@ -1,0 +1,28 @@
+asyncgit/vhs/rec.Dockerfile
+asyncgit/vhs/rec.gif
+asyncgit/vhs/rec.tape
+
+plan-dist-manifest.json
+# Ignore non-source files that cause parsing errors
+*.wxs
+*.xml
+*.html
+*.htm
+*.md
+
+# Ignore vendor/external directories
+vendor/
+xcode/
+node_modules/
+target/
+.git/
+coverage/
+dist/
+
+# Ignore generated files
+*.min.js
+*.min.css
+
+# Ignore specific problematic directories
+qr/wix/
+wix/
