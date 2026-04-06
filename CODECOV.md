@@ -28,10 +28,10 @@ cargo test
 
 ## 3. Process Raw Data
 
-Use the `llvm-profdata` tool, which is part of the LLVM toolchain included with Rust, to merge and process the raw data file.
+Use the `llvm-profdata` tool, which is part of the LLVM toolchain included with Rust, to merge and process the raw data file into `.profdata` format.
 
 ```bash
-grcov . --binary-path ./target/debug/ -s . -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+llvm-profdata merge -sparse default.profraw -o default.profdata
 ```
 
 ## 4. Generate Reports
@@ -50,4 +50,12 @@ This will generate a detailed, file-by-file HTML report in a directory named `co
 
 ```bash
 llvm-cov show --instr-profile=default.profdata target/debug/<your-binary-name> -format=html -output-dir=coverage
+```
+
+## Alternative: Using grcov
+
+You can also use `grcov` to generate HTML coverage reports directly from the raw `.profraw` data:
+
+```bash
+grcov . --binary-path ./target/debug/ -s . -t html --branch --ignore-not-existing -o ./target/debug/coverage/
 ```
