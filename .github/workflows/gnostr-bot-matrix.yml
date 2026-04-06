@@ -278,7 +278,7 @@ jobs:
         run: |
           cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
 
-      - name: 🚀 cargo test
+      - name: 🚀 if command apt-get
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
