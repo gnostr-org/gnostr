@@ -293,10 +293,7 @@ impl EventLoop {
             SwarmEvent::NewListenAddr { address, .. } => {
                 let local_peer_id = *self.swarm.local_peer_id();
                 let addr_with_peer_id = address.with(Protocol::P2p(local_peer_id));
-                eprintln!(
-                    "Local node is listening on {:?}",
-                    addr_with_peer_id.clone()
-                );
+                eprintln!("Local node is listening on {:?}", addr_with_peer_id.clone());
                 self.event_sender
                     .send(Event::NewListenAddr(addr_with_peer_id))
                     .await

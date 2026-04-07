@@ -97,7 +97,8 @@ key = "value"
         server_config.users.insert(username.clone(), new_user);
 
         // 4. Save the updated config to file
-        let toml_string = toml::to_string_pretty(&server_config).context("Failed to serialize server config")?;
+        let toml_string =
+            toml::to_string_pretty(&server_config).context("Failed to serialize server config")?;
         fs::write(&config_path, toml_string).context("Failed to write updated server config")?;
 
         // 5. Reload the config from file

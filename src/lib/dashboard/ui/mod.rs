@@ -1,9 +1,5 @@
 use super::app::*;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-use std::{
-    error::Error,
-    time::Duration,
-};
 use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -16,9 +12,7 @@ use ratatui::{
     },
     Frame, Terminal,
 };
-
-
-
+use std::{error::Error, time::Duration};
 
 use crate::dashboard::handlers::event::{Config, Event as AppEvent, Events, Key};
 
@@ -124,7 +118,6 @@ fn render_peers<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
 
 //fn render_help<B: Backend>(f: &mut Frame<B>) {
 
-
 fn render_tools<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     let border_style = app.get_border_style_from_id(ActiveBlock::Tools);
     let selected_style = app.get_highlight_style_from_id(ActiveBlock::Tools);
@@ -145,8 +138,6 @@ fn render_tools<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
 
     f.render_stateful_widget(list, layout_chunk, &mut app.tools_state);
 }
-
-
 
 fn render_main<B: Backend>(f: &mut Frame, app: &mut App, layout_chunk: Rect) {
     match app.active_tool {

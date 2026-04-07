@@ -138,7 +138,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     debug!("Sending query to relays: {:?}", relays);
-    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check)).await
+    let vec_result = gnostr_query::send(query_string.clone(), relays, Some(limit_check))
+        .await
         .map_err(|e| {
             error!("Failed to send query: {}", e);
             e
@@ -147,7 +148,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //trace
     debug!("vec_result:\n{:?}", vec_result.clone());
-	//for s in vec_result {println!("s={}", s)};
+    //for s in vec_result {println!("s={}", s)};
     //println!("vec_result:\n{:?}", vec_result);
 
     let mut json_result: Vec<String> = vec![];

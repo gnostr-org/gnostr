@@ -1,17 +1,17 @@
 use crate::types::{
-    Error, EventDelegation, EventKind, EventReference, Id, IntoVec, KeySigner, MilliSatoshi,
-    NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3, Unixtime,
-    ZapData, KeySecurity
+    Error, EventDelegation, EventKind, EventReference, Id, IntoVec, KeySecurity, KeySigner,
+    MilliSatoshi, NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3,
+    Unixtime, ZapData,
 };
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]
 use regex::Regex;
+use secp256k1::XOnlyPublicKey;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 use std::cmp::Ordering;
 use std::str::FromStr;
-use secp256k1::XOnlyPublicKey;
 
 /// The main event type
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -1138,13 +1138,14 @@ impl UnsignedEventV3 {
         tags: Vec<Vec<String>>,
         content: String,
     ) -> UnsignedEventV3 {
-        let tags = tags
-            .into_iter()
-            .map(|tag_vec| TagV3(tag_vec))
-            .collect();
+        let tags = tags.into_iter().map(|tag_vec| TagV3(tag_vec)).collect();
 
         UnsignedEventV3(PreEventV3 {
-            pubkey: PublicKey::from_bytes(&pubkey.public_key(secp256k1::Parity::Even).serialize(), false).unwrap(),
+            pubkey: PublicKey::from_bytes(
+                &pubkey.public_key(secp256k1::Parity::Even).serialize(),
+                false,
+            )
+            .unwrap(),
             created_at: Unixtime::now(),
             kind: EventKind::from(kind as u32),
             tags,
@@ -1154,7 +1155,11 @@ impl UnsignedEventV3 {
 
     pub(crate) fn sign(self, private_key: &secp256k1::SecretKey) -> Result<EventV3, Error> {
         let id = self.0.hash()?;
-        let signer = KeySigner::from_private_key(PrivateKey(private_key.clone(), KeySecurity::Medium), "", 1)?;
+        let signer = KeySigner::from_private_key(
+            PrivateKey(private_key.clone(), KeySecurity::Medium),
+            "",
+            1,
+        )?;
         let sig = signer.sign_id(id)?;
         Ok(EventV3 {
             id,

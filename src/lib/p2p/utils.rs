@@ -1,7 +1,7 @@
-use std::error::Error;
 use libp2p::identity;
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use std::error::Error;
 use tracing::{debug, trace};
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 pub const GNOSTR_SHA256: [u8; 32] = [
     0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,
@@ -41,7 +41,7 @@ pub fn generate_ed25519(secret_key_seed: Option<u8>) -> identity::Keypair {
         trace!("\n");
     }
 
-    let keypair = 
+    let keypair =
         identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length");
     keypair
 }

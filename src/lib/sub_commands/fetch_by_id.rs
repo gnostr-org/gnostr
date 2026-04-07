@@ -1,7 +1,7 @@
 use crate::get_weeble;
+use crate::types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use crate::{Command, Probe};
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
-use crate::types::{Filter, IdHex, RelayMessage, SubscriptionId};
 use log::debug;
 
 #[derive(clap::Args, Debug, Clone)]
@@ -14,9 +14,7 @@ pub struct FetchByIdSubCommand {
     pub relay_url: Option<String>,
 }
 
-pub async fn run_fetch_by_id(
-    args: &FetchByIdSubCommand,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn std::error::Error>> {
     let id: IdHex = match args.id.clone() {
         Some(id_val) => IdHex::try_from_str(&id_val)?,
         None => "fbf73a17a4e0fe390aba1808a8d55f1b50717d5dd765b2904bf39eba18c51f7c"

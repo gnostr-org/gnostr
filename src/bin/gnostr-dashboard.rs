@@ -9,15 +9,15 @@
     clippy::future_not_send
 )]
 
-use gnostr::dashboard::ui;
-use std::error::Error;
-use std::io;
-use ratatui::{backend::CrosstermBackend, Terminal};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use gnostr::dashboard::ui;
+use ratatui::{backend::CrosstermBackend, Terminal};
+use std::error::Error;
+use std::io;
 
 use gnostr::dashboard::app::{App, P2pEvent};
 use gnostr::dashboard::p2p::evt_loop;
@@ -61,5 +61,3 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
-

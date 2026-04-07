@@ -96,23 +96,23 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
             GitCommands::Tag { command } => match command {
                 TagCommands::Version { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
-                    let tag_name = 
+                    let tag_name =
                         tokio::task::spawn_blocking(move || get_git_tag_version(suffix)).await??;
                     println!("{}", tag_name);
                 }
                 TagCommands::PrVersion { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
-                    let tag_name = 
-                        tokio::task::spawn_blocking(move || get_git_tag_pr_version(suffix)).await??;
+                    let tag_name =
+                        tokio::task::spawn_blocking(move || get_git_tag_pr_version(suffix))
+                            .await??;
                     println!("{}", tag_name);
                 }
                 TagCommands::Create { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
                     let cloned_repo_path = current_dir.clone();
-                    let tag_name = tokio::task::spawn_blocking(move || {
-                        run_git_tag(suffix, &cloned_repo_path)
-                    })
-                    .await??;
+                    let tag_name =
+                        tokio::task::spawn_blocking(move || run_git_tag(suffix, &cloned_repo_path))
+                            .await??;
                     println!("{}", tag_name);
                 }
                 TagCommands::Pr { suffix } => {
@@ -164,9 +164,9 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
 
     if !sub_command_args.git_args.is_empty() {
         let git_args = sub_command_args.git_args.clone();
-        let status = 
+        let status =
             tokio::task::spawn_blocking(move || Command::new("git").args(&git_args).status())
-            .await??;
+                .await??;
         std::process::exit(status.code().unwrap_or(1));
     }
 

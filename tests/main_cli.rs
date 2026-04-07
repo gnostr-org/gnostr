@@ -19,28 +19,28 @@
 /// For an example, see `test_run_gnostr_and_capture_screenshot`.
 #[cfg(test)]
 mod tests {
-    use std::process::Command;
+    use anyhow::Result;
+    use assert_cmd::assert::OutputAssertExt;
     use assert_cmd::cargo::cargo_bin;
+    use gnostr::cli::get_app_cache_path;
+    use gnostr::utils::screenshot;
     use predicates::prelude::PredicateBooleanExt;
     use predicates::str;
-    use assert_cmd::assert::OutputAssertExt;
-    use anyhow::Result;
+    use serial_test::serial;
+    use std::env;
     use std::error::Error;
     use std::fs::{self, File};
     use std::io::Write;
     use std::path::{Path, PathBuf};
-    use std::env;
-    use gnostr::cli::get_app_cache_path;
+    use std::process::Command;
     use std::thread;
     use std::time::Duration;
-    use gnostr::utils::screenshot;
-    use serial_test::serial;
 
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
-    use gnostr_asyncgit::sync::RepoPath;
     use git2::{Repository, Signature};
+    use gnostr_asyncgit::sync::RepoPath;
     use tempfile::TempDir;
 
     // Helper function to set up a temporary git repository for testing.
@@ -53,7 +53,9 @@ mod tests {
         let mut config = repo.config().unwrap();
         config.set_str("user.name", "Test User").unwrap();
         config.set_str("user.email", "test@example.com").unwrap();
-        config.set_str("gnostr.relays", "wss://relay.example.com").unwrap();
+        config
+            .set_str("gnostr.relays", "wss://relay.example.com")
+            .unwrap();
 
         // Create an initial commit
         {
@@ -82,7 +84,12 @@ mod tests {
             .unwrap();
 
             // Ensure the working directory is clean after the initial commit
-            repo.reset(repo.head().unwrap().peel_to_commit().unwrap().as_object(), git2::ResetType::Hard, None).unwrap();
+            repo.reset(
+                repo.head().unwrap().peel_to_commit().unwrap().as_object(),
+                git2::ResetType::Hard,
+                None,
+            )
+            .unwrap();
         }
 
         (tmp_dir, repo)
@@ -90,8 +97,14 @@ mod tests {
 
     // Helper to get clap error message for conflicting flags
     fn get_clap_conflict_error(flag1: &str, flag2: &str) -> impl predicates::Predicate<str> {
-        let error_msg1 = format!("error: the argument '{}' cannot be used with '{}'", flag1, flag2);
-        let error_msg2 = format!("error: the argument '{}' cannot be used with '{}'", flag2, flag1);
+        let error_msg1 = format!(
+            "error: the argument '{}' cannot be used with '{}'",
+            flag1, flag2
+        );
+        let error_msg2 = format!(
+            "error: the argument '{}' cannot be used with '{}'",
+            flag2, flag1
+        );
         str::contains(error_msg1.clone()).or(str::contains(error_msg2.clone()))
     }
 
@@ -99,29 +112,49 @@ mod tests {
     fn test_logging_flags_conflict() {
         // Test invalid combination: --debug and --logging
         let mut cmd_debug_logging = Command::new(cargo_bin("gnostr"));
-        cmd_debug_logging.arg("--debug").arg("--logging").arg("--hash").arg("test");
-        cmd_debug_logging.assert()
+        cmd_debug_logging
+            .arg("--debug")
+            .arg("--logging")
+            .arg("--hash")
+            .arg("test");
+        cmd_debug_logging
+            .assert()
             .failure()
             .stderr(get_clap_conflict_error("--debug", "--logging"));
 
         // Test invalid combination: --trace and --logging
         let mut cmd_trace_logging = Command::new(cargo_bin("gnostr"));
-        cmd_trace_logging.arg("--trace").arg("--logging").arg("--hash").arg("test");
-        cmd_trace_logging.assert()
+        cmd_trace_logging
+            .arg("--trace")
+            .arg("--logging")
+            .arg("--hash")
+            .arg("test");
+        cmd_trace_logging
+            .assert()
             .failure()
             .stderr(get_clap_conflict_error("--trace", "--logging"));
 
         // Test invalid combination: --info and --logging
         let mut cmd_info_logging = Command::new(cargo_bin("gnostr"));
-        cmd_info_logging.arg("--info").arg("--logging").arg("--hash").arg("test");
-        cmd_info_logging.assert()
+        cmd_info_logging
+            .arg("--info")
+            .arg("--logging")
+            .arg("--hash")
+            .arg("test");
+        cmd_info_logging
+            .assert()
             .failure()
             .stderr(get_clap_conflict_error("--info", "--logging"));
 
         // Test invalid combination: --warn and --logging
         let mut cmd_warn_logging = Command::new(cargo_bin("gnostr"));
-        cmd_warn_logging.arg("--warn").arg("--logging").arg("--hash").arg("test");
-        cmd_warn_logging.assert()
+        cmd_warn_logging
+            .arg("--warn")
+            .arg("--logging")
+            .arg("--hash")
+            .arg("test");
+        cmd_warn_logging
+            .assert()
             .failure()
             .stderr(get_clap_conflict_error("--warn", "--logging"));
     }
@@ -134,26 +167,22 @@ mod tests {
         // Test valid: --debug only
         let mut cmd_debug_only = Command::new(cargo_bin("gnostr"));
         cmd_debug_only.arg("--debug").arg("--hash").arg("test");
-        cmd_debug_only.assert()
-            .success();
+        cmd_debug_only.assert().success();
 
         // Test valid: --trace only
         let mut cmd_trace_only = Command::new(cargo_bin("gnostr"));
         cmd_trace_only.arg("--trace").arg("--hash").arg("test");
-        cmd_trace_only.assert()
-            .success();
+        cmd_trace_only.assert().success();
 
         // Test valid: --info only
         let mut cmd_info_only = Command::new(cargo_bin("gnostr"));
         cmd_info_only.arg("--info").arg("--hash").arg("test");
-        cmd_info_only.assert()
-            .success();
+        cmd_info_only.assert().success();
 
         // Test valid: --warn only
         let mut cmd_warn_only = Command::new(cargo_bin("gnostr"));
         cmd_warn_only.arg("--warn").arg("--hash").arg("test");
-        cmd_warn_only.assert()
-            .success();
+        cmd_warn_only.assert().success();
 
         Ok(())
     }
@@ -163,7 +192,8 @@ mod tests {
         // Test valid: --logging only
         let mut cmd_logging_only = Command::new(cargo_bin("gnostr"));
         cmd_logging_only.arg("--logging").arg("--hash").arg("test");
-        cmd_logging_only.assert()
+        cmd_logging_only
+            .assert()
             .success()
             .stdout(str::contains("Logging enabled.")); // Check stdout for file logging message
 
@@ -175,7 +205,8 @@ mod tests {
         // Test valid: No logging flags
         let mut cmd_no_logging = Command::new(cargo_bin("gnostr"));
         cmd_no_logging.arg("--hash").arg("test");
-        cmd_no_logging.assert()
+        cmd_no_logging
+            .assert()
             .success()
             // Ensure stderr does NOT contain specific log level indicators or the file logging message.
             // It might contain other debug output like "40:arg=..."
@@ -265,7 +296,13 @@ mod tests {
         fs::create_dir_all(&reflog_path).unwrap();
 
         let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("legit").arg("--repo").arg(&repo_path).arg("--message").arg("Test mine commit").arg("--pow").arg("0");
+        cmd.arg("legit")
+            .arg("--repo")
+            .arg(&repo_path)
+            .arg("--message")
+            .arg("Test mine commit")
+            .arg("--pow")
+            .arg("0");
 
         cmd.assert()
             .success()
@@ -298,7 +335,10 @@ mod tests {
 
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
-            .stderr(str::contains(format!("333:The GNOSTR_GITDIR environment variable is set to: {}", repo_path.clone())));
+            .stderr(str::contains(format!(
+                "333:The GNOSTR_GITDIR environment variable is set to: {}",
+                repo_path.clone()
+            )));
 
         // Unset the environment variable to avoid affecting other tests
         env::remove_var("GNOSTR_GITDIR");
@@ -319,7 +359,10 @@ mod tests {
 
         cmd.assert()
             .code(0) // Expect a successful exit from the TUI
-            .stderr(str::contains(format!("339:OVERRIDE!! The git directory is: \"{}\"", repo_path)));
+            .stderr(str::contains(format!(
+                "339:OVERRIDE!! The git directory is: \"{}\"",
+                repo_path
+            )));
 
         Ok(())
     }
@@ -352,10 +395,13 @@ mod tests {
         // during the test run for manual inspection.
         let screenshot_path_result = screenshot::make_screenshot("main_cli_help");
 
-        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
-        
+        assert!(
+            screenshot_path_result.is_ok(),
+            "Failed to capture screenshot."
+        );
+
         let screenshot_path = screenshot_path_result.unwrap();
-        
+
         // Verify the screenshot file was created
         let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
         assert!(metadata.is_file(), "Screenshot is not a file");
@@ -387,7 +433,10 @@ mod tests {
         child.wait().expect("Failed to wait for gnostr process");
 
         // Assert that the screenshot was created
-        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        assert!(
+            screenshot_path_result.is_ok(),
+            "Failed to capture screenshot."
+        );
         let screenshot_path = screenshot_path_result.unwrap();
         let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
         assert!(metadata.is_file(), "Screenshot is not a file");
@@ -415,10 +464,15 @@ mod tests {
 
         // Terminate the child process
         child.kill().expect("Failed to kill gnostr chat process");
-        child.wait().expect("Failed to wait for gnostr chat process");
+        child
+            .wait()
+            .expect("Failed to wait for gnostr chat process");
 
         // Assert that the screenshot was created
-        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        assert!(
+            screenshot_path_result.is_ok(),
+            "Failed to capture screenshot."
+        );
         let screenshot_path = screenshot_path_result.unwrap();
         let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
         assert!(metadata.is_file(), "Screenshot is not a file");
@@ -446,10 +500,15 @@ mod tests {
 
         // Terminate the child process
         child.kill().expect("Failed to kill gnostr ngit process");
-        child.wait().expect("Failed to wait for gnostr ngit process");
+        child
+            .wait()
+            .expect("Failed to wait for gnostr ngit process");
 
         // Assert that the screenshot was created
-        assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+        assert!(
+            screenshot_path_result.is_ok(),
+            "Failed to capture screenshot."
+        );
         let screenshot_path = screenshot_path_result.unwrap();
         let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
         assert!(metadata.is_file(), "Screenshot is not a file");

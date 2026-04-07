@@ -1,7 +1,7 @@
 #![allow(clippy::all)]
 #[rustfmt::skip]
 use crate::*;
-use super::{get_conversation_key, calc_padding, encrypt_inner, encrypt, decrypt, Error};
+use super::{calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key, Error};
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 
 // We use the test vectors from Paul Miller's javascript so we don't accidently
@@ -46,7 +46,10 @@ fn test_valid_get_conversation_key() {
             let ckeyhex = vector.get("conversation_key").unwrap().as_str().unwrap();
             hex::decode(ckeyhex).unwrap().try_into().unwrap()
         };
-        let note = vector.get("note").map(|v| v.as_str().unwrap()).unwrap_or("");
+        let note = vector
+            .get("note")
+            .map(|v| v.as_str().unwrap())
+            .unwrap_or("");
 
         let computed_conversation_key = get_conversation_key(sec1, pub2);
 
@@ -119,24 +122,20 @@ fn test_valid_encrypt_decrypt() {
         let vector = vectorobj.as_object().unwrap();
         println!("vector (as_object): {:#?}", vector);
 
-
         println!("vector.get(\"sec1\"): {:#?}", vector.get("sec1"));
-
 
         println!("vector.get(\"sec2\"): {:#?}", vector.get("sec2"));
 
-
-        println!("vector.get(\"conversation_key\"): {:#?}", vector.get("conversation_key"));
-
+        println!(
+            "vector.get(\"conversation_key\"): {:#?}",
+            vector.get("conversation_key")
+        );
 
         println!("vector.get(\"nonce\"): {:#?}", vector.get("nonce"));
 
-
         println!("vector.get(\"plaintext\"): {:#?}", vector.get("plaintext"));
 
-
         println!("vector.get(\"payload\"): {:#?}", vector.get("payload"));
-
 
         println!("--- End vectorobj for iteration {} ---", i);
 
@@ -166,92 +165,59 @@ fn test_valid_encrypt_decrypt() {
         let plaintext = vector.get("plaintext").unwrap().as_str().unwrap();
         println!("getting ciphertext");
         // 'ciphertext' is an Option<&str>
-		println!("vector.len()={}", vector.len());
+        println!("vector.len()={}", vector.len());
 
+        if vector.len() > 0 {
+            if vector.get("payload").is_some() {
+                let ciphertext = vector.get("payload").unwrap().as_str();
 
-		if vector.len() > 0 {
+                // 1. Test conversation key
+                let computed_conversation_key =
+                    get_conversation_key(sec1, sec2.x_only_public_key(&SECP256K1).0);
+                println!("computed_converstion_key={:?}", computed_conversation_key);
+                assert_eq!(
+                    computed_conversation_key, conversation_key,
+                    "Conversation key failure on ValidSec #{}",
+                    i
+                );
 
+                // 2. Test encryption with an overridden nonce
+                // 'computed_ciphertext' is an owned String
+                let computed_ciphertext =
+                    encrypt_inner(&conversation_key, &plaintext, Some(&nonce))
+                        .expect(&format!("encrypt_inner failed for vector #{}", i));
+                println!("computed_ciphertext: {}", computed_ciphertext);
+                println!("expected_ciphertext: {}", ciphertext.unwrap());
 
-		if vector.get("payload").is_some() {
+                // 3. Test ciphertext matches expected value (Option<String> vs Option<&str> fix)
+                assert_eq!(
+                    computed_ciphertext, // This is Option<&str>
+                    ciphertext.unwrap(), // This is Option<&str>
+                    "Encryption does not match on ValidSec #{}",
+                    i
+                );
 
+                //// 4. Test decryption (safely handling null/None expected ciphertext)
+                //if let Some(ct) = ciphertext {
+                //    let computed_plaintext = decrypt(&conversation_key, ct)
+                //        .expect(&format!("Decryption failed for vector #{}", i));
 
-        let ciphertext = vector.get("payload").unwrap().as_str();
-
-
-        // 1. Test conversation key
-        let computed_conversation_key =
-            get_conversation_key(sec1, sec2.x_only_public_key(&SECP256K1).0);
-		println!("computed_converstion_key={:?}", computed_conversation_key);
-        assert_eq!(
-            computed_conversation_key, conversation_key,
-            "Conversation key failure on ValidSec #{}",
-            i
-        );
-
-        // 2. Test encryption with an overridden nonce
-        // 'computed_ciphertext' is an owned String
-        let computed_ciphertext =
-            encrypt_inner(&conversation_key, &plaintext, Some(&nonce))
-                .expect(&format!("encrypt_inner failed for vector #{}", i));
-        println!("computed_ciphertext: {}", computed_ciphertext);
-        println!("expected_ciphertext: {}", ciphertext.unwrap());
-
-
-        // 3. Test ciphertext matches expected value (Option<String> vs Option<&str> fix)
-        assert_eq!(
-            computed_ciphertext, // This is Option<&str>
-            ciphertext.unwrap(), // This is Option<&str>
-            "Encryption does not match on ValidSec #{}",
-            i
-        );
-
-
-        //// 4. Test decryption (safely handling null/None expected ciphertext)
-        //if let Some(ct) = ciphertext {
-        //    let computed_plaintext = decrypt(&conversation_key, ct)
-        //        .expect(&format!("Decryption failed for vector #{}", i));
-
-		//	println!("{} == {}", computed_plaintext.clone(), plaintext.clone());
-        //    // 5. Assert plaintext matches expected value
-        //    assert_eq!(
-        //        computed_plaintext, plaintext,
-        //        "Decryption does not match on ValidSec #{}",
-        //        i
-        //    );
-        //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-		} else {
-			//std::process::exit(1);
-		}
-		
-
-
-
-
-
-
-
-
-
-
-		} else {
-			std::process::exit(1);
-		}
+                //	println!("{} == {}", computed_plaintext.clone(), plaintext.clone());
+                //    // 5. Assert plaintext matches expected value
+                //    assert_eq!(
+                //        computed_plaintext, plaintext,
+                //        "Decryption does not match on ValidSec #{}",
+                //        i
+                //    );
+                //}
+            } else {
+                //std::process::exit(1);
+            }
+        } else {
+            std::process::exit(1);
+        }
     }
 }
-
 
 //TBD?
 //#[test]
@@ -353,19 +319,27 @@ fn test_invalid_decrypt() {
             hex::decode(ckeyhex).unwrap().try_into().unwrap()
         };
 
-		//TODO handle nonce and println! for verbose output
+        //TODO handle nonce and println! for verbose output
         //let nonce: [u8; 32] = {
         //    let noncehex = vector.get("nonce").unwrap().as_str().unwrap();
         //    hex::decode(noncehex).unwrap().try_into().unwrap()
         //};
         // let plaintext = vector.get("plaintext").unwrap().as_str().unwrap();
         let ciphertext = vector.get("payload").unwrap().as_str().unwrap();
-        let note = vector.get("note").map(|v| v.as_str().unwrap()).unwrap_or("");
+        let note = vector
+            .get("note")
+            .map(|v| v.as_str().unwrap())
+            .unwrap_or("");
 
         let result = decrypt(&conversation_key, &ciphertext);
 
-		//TODO why would this always be an error? 
-        assert!(result.is_err(), "Should not have decrypted: {} (decrypted to {:?})", note, result.ok());
+        //TODO why would this always be an error?
+        assert!(
+            result.is_err(),
+            "Should not have decrypted: {} (decrypted to {:?})",
+            note,
+            result.ok()
+        );
 
         let err = result.unwrap_err();
         println!("note: {}", note);

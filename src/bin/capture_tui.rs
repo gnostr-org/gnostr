@@ -1,8 +1,8 @@
+use std::io;
+use std::path::PathBuf;
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
-use std::path::PathBuf;
-use std::io;
 
 fn main() {
     // --- Path setup ---
@@ -30,7 +30,11 @@ fn main() {
     //}
 
     // --- 2. Launch TUI in a new Terminal window and get its ID ---
-    let project_dir = std::env::current_dir().unwrap().to_str().unwrap().to_string();
+    let project_dir = std::env::current_dir()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
     let start_and_get_id_script = format!(
         r#"
         tell application "Terminal"
@@ -51,7 +55,10 @@ fn main() {
         .expect("Failed to execute osascript to start TUI");
 
     if !osascript_output.status.success() {
-        eprintln!("osascript error: {}", String::from_utf8_lossy(&osascript_output.stderr));
+        eprintln!(
+            "osascript error: {}",
+            String::from_utf8_lossy(&osascript_output.stderr)
+        );
         panic!("Failed to get window ID from AppleScript.");
     }
 
@@ -102,7 +109,10 @@ fn main() {
     }
 
     if !capture_successful {
-        eprintln!("Failed to capture screenshot after {} attempts.", MAX_ATTEMPTS);
+        eprintln!(
+            "Failed to capture screenshot after {} attempts.",
+            MAX_ATTEMPTS
+        );
     }
 
     // --- 4. Clean up ---
@@ -138,4 +148,3 @@ fn close_window(window_id: String) -> io::Result<()> {
 
     Ok(())
 }
-

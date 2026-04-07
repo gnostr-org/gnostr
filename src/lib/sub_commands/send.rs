@@ -1,6 +1,9 @@
 use std::path::Path;
 //use crate::client::Client;
-use crate::{client::{send_events, Client}, git_events::generate_cover_letter_and_patch_events};
+use crate::{
+    client::{send_events, Client},
+    git_events::generate_cover_letter_and_patch_events,
+};
 use anyhow::{bail, Context, Result};
 use console::Style;
 use nostr_0_34_1::{
@@ -14,9 +17,7 @@ use crate::{
     cli_interactor::{
         Interactor, InteractorPrompt, PromptConfirmParms, PromptInputParms, PromptMultiChoiceParms,
     },
-    client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect,
-    },
+    client::{fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect},
     git::{identify_ahead_behind, Repo, RepoActions},
     git_events::{event_is_patch_set_root, event_tag_from_nip19_or_hex},
     login,

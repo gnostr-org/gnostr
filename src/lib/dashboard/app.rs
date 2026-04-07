@@ -1,11 +1,9 @@
-
 //use super::global_rt::global_rt;
 
 use ratatui::{
     style::{Color, Modifier, Style},
     widgets::{ListState, TableState},
 };
-use tokio::sync::mpsc::Receiver;
 use std::{
     error::Error,
     fmt::{self, Formatter},
@@ -13,6 +11,7 @@ use std::{
     path::Path,
     time::{Duration, Instant},
 };
+use tokio::sync::mpsc::Receiver;
 
 pub struct Route {
     pub screen: Screen,
@@ -49,8 +48,6 @@ pub enum ActiveBlock {
     Home,
     Main,
 }
-
-
 
 #[derive(Copy, Clone)]
 pub enum Tool {
@@ -120,7 +117,6 @@ impl App {
             peers: Vec::new(),
         })
     }
-
 
     pub fn help(&mut self) {
         self.route.screen = Screen::Help;

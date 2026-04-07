@@ -6,11 +6,11 @@
 #[cfg(test)]
 #[ignore]
 mod tests {
+    use gnostr::utils::screenshot::make_screenshot;
     use std::thread;
     use std::time::Duration;
     use test_utils::git::GitTestRepo;
     use test_utils::CliTester;
-    use gnostr::utils::screenshot::make_screenshot;
 
     #[test]
     #[ignore]

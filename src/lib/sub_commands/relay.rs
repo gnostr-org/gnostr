@@ -55,7 +55,9 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
         .context("Failed to run `which gnostr-relay`")?;
 
     let gnostr_relay_path = if which_output.status.success() && !which_output.stdout.is_empty() {
-        String::from_utf8_lossy(&which_output.stdout).trim().to_string()
+        String::from_utf8_lossy(&which_output.stdout)
+            .trim()
+            .to_string()
     } else {
         info!("gnostr-relay not found. Attempting to install...");
         let install_status = Command::new("cargo")
@@ -70,11 +72,12 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
             return Err(anyhow!("Failed to install gnostr-relay"));
         }
         info!("gnostr-relay installed successfully. Checking path again...");
-        let which_output_after_install = Command::new("which")
-            .arg("gnostr-relay")
-            .output()
-            .await
-            .context("Failed to run `which gnostr-relay` after install")?;
+        let which_output_after_install =
+            Command::new("which")
+                .arg("gnostr-relay")
+                .output()
+                .await
+                .context("Failed to run `which gnostr-relay` after install")?;
 
         if which_output_after_install.status.success()
             && !which_output_after_install.stdout.is_empty()

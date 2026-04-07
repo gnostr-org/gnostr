@@ -18,6 +18,8 @@ pub mod clipboard;
 pub mod cmdbar;
 ///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
 pub mod components;
+///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
+pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/dashboard/index.html>
 pub mod dashboard;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
@@ -28,8 +30,6 @@ pub mod git;
 pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
-///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
-pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
@@ -110,9 +110,9 @@ pub use nostr_sdk_0_19_1::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
 ///
 pub use tungstenite::Message;
+pub use types::nip44;
 ///
 pub use zeroize::Zeroize;
-pub use types::nip44;
 //avoid?//upgrade?
 //pub use lightning;
 

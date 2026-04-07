@@ -7,8 +7,8 @@ use crate::sub_commands::list;
 use crate::sub_commands::login;
 use crate::sub_commands::pull;
 use crate::sub_commands::push;
-use crate::sub_commands::send;
 use crate::sub_commands::query;
+use crate::sub_commands::send;
 use clap::Args;
 use nostr_sdk_0_34_0::prelude::*;
 
@@ -43,4 +43,3 @@ pub async fn ngit(sub_command_args: &NgitSubCommand) -> Result<(), Box<dyn StdEr
     }
     Ok(())
 }
-

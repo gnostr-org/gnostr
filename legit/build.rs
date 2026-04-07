@@ -145,6 +145,25 @@ fn install_sccache() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install sccache: {}", stderr);
+                println!("cargo:warning=sccache is optional; continuing build without it.");
+            }
+            Err(e) => {
+                println!("cargo:warning=Failed to run package manager command: {}", e);
+                println!("cargo:warning=sccache is optional; continuing build without it.");
+            }
+        }
+    } else if target_os == "macos" {
+        println!("cargo:rerun-if-changed=build.rs");
+        println!("cargo:warning=Detected macOS. Attempting to install sccache via Homebrew.");
+        if check_brew() {
+            let output = Command::new("brew").arg("install").arg("sccache").output();
+            match output {
+                Ok(output) if output.status.success() => {
+                    println!("cargo:warning=Successfully installed sccache via Homebrew.");
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    println!("cargo:warning=Failed to install sccache via Homebrew: {}", stderr);
                     println!("cargo:warning=sccache is optional; continuing build without it.");
                 }
                 Err(e) => {
@@ -174,6 +193,7 @@ fn install_sccache() {
         }
     }
 }
+
 fn install_windows_dependency(name: &str, install_command: &str) {
     // Check if the dependency is already installed using the Windows 'where'
     // command.

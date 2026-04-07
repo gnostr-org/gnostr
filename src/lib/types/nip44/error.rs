@@ -43,7 +43,7 @@ pub enum Error {
     #[error("Invalid Length")]
     InvalidLength,
 
-        /// UTF8 Decode
+    /// UTF8 Decode
     #[error("UTF8 Decode: {0}")]
     Utf8Decode(#[from] std::string::FromUtf8Error),
 }

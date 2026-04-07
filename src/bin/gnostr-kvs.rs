@@ -14,7 +14,7 @@ use gnostr::p2p::args::Args;
 use gnostr::p2p::command_handler::handle_input_line;
 use gnostr::p2p::event_handler::handle_swarm_event;
 use gnostr::p2p::git_publisher::run_git_publisher;
-use gnostr::p2p::network_config::{IPFS_BOOTNODES};
+use gnostr::p2p::network_config::IPFS_BOOTNODES;
 use gnostr::p2p::swarm_builder;
 use gnostr::p2p::utils::{generate_ed25519, init_subscriber};
 
@@ -70,7 +70,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .kademlia
         .set_mode(Some(kad::Mode::Server));
 
-    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)
+    swarm
+        .listen_on("/ip4/0.0.0.0/tcp/0".parse()?)
         .expect("Failed to listen on address");
     info!("Starting initial git repository scan and data publishing...");
     if let Err(e) = run_git_publisher(&args, &mut swarm).await {
