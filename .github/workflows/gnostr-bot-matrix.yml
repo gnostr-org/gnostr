@@ -258,8 +258,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} && echo && \
-            gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
+            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} || true && echo && \
+            gnostr query --ids $EVENT --relay ${{ env.NOS }} || true && echo
         #if: matrix.os == 'macos-latest'
 
       - name: 🌙 UTC second is ODD

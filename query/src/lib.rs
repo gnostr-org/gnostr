@@ -1,6 +1,8 @@
 use futures::{SinkExt, StreamExt};
 use log::info;
 use serde_json::{json, Map};
+use std::time::Duration;
+use tokio::time::timeout;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
@@ -141,21 +143,34 @@ pub async fn send(
     //log::info!("query_string=\n{query_string}\n");
     //log::debug!("relay_url:\n{relay_url:?}\n");
     //log::info!("\n{}\n", limit.unwrap());
-    let (ws_stream, _) = connect_async(relay_url[0].clone()).await?;
+    let connect_timeout = Duration::from_secs(30);
+    let (ws_stream, _) = timeout(connect_timeout, connect_async(relay_url[0].clone()))
+        .await
+        .map_err(|e| format!("WebSocket connection timed out: {e}"))??;
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string)).await?;
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
-    while let Some(message) = read.next().await {
-        let data = message?;
-        if count >= limit.unwrap() {
-            //std::process::exit(0);
-            return Ok(vec_result);
-        }
-        if let Message::Text(text) = data {
-            //print!("{text}");
-            vec_result.push(text);
-            count += 1;
+    let read_timeout = Duration::from_secs(30);
+    loop {
+        match timeout(read_timeout, read.next()).await {
+            Ok(Some(message)) => {
+                let data = message?;
+                if count >= limit.unwrap() {
+                    //std::process::exit(0);
+                    return Ok(vec_result);
+                }
+                if let Message::Text(text) = data {
+                    //print!("{text}");
+                    vec_result.push(text);
+                    count += 1;
+                }
+            }
+            Ok(None) => break,
+            Err(_) => {
+                log::debug!("WebSocket read timed out after 30 seconds");
+                break;
+            }
         }
     }
     Ok(vec_result)
