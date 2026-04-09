@@ -54,6 +54,8 @@ use asyncgit::{
 	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
 };
+#[cfg(feature = "nostr")]
+use asyncgit::nostr::AsyncNostrNotification;
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
@@ -106,12 +108,15 @@ pub enum AsyncAppNotification {
 	SyntaxHighlighting(SyntaxHighlightProgress),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub enum AsyncNotification {
 	///
 	App(AsyncAppNotification),
 	///
 	Git(AsyncGitNotification),
+	#[cfg(feature = "nostr")]
+	///
+	Nostr(AsyncNostrNotification),
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -190,6 +195,8 @@ fn run_app(
 ) -> Result<QuitState, anyhow::Error> {
 	let (tx_git, rx_git) = unbounded();
 	let (tx_app, rx_app) = unbounded();
+	#[cfg(feature = "nostr")]
+	let (tx_nostr, rx_nostr) = unbounded::<AsyncNostrNotification>();
 
 	let rx_input = input.receiver();
 
@@ -209,6 +216,8 @@ fn run_app(
 		RefCell::new(repo),
 		&tx_git,
 		&tx_app,
+		#[cfg(feature = "nostr")]
+		tx_nostr,
 		input.clone(),
 		theme,
 		key_config,
@@ -228,6 +237,8 @@ fn run_app(
 				&rx_input,
 				&rx_git,
 				&rx_app,
+				#[cfg(feature = "nostr")]
+				&rx_nostr,
 				&rx_ticker,
 				&rx_watcher,
 				&spinner_ticker,

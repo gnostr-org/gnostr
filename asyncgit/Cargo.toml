@@ -23,11 +23,14 @@ log = "0.4"
 # git2 = { git="https://github.com/extrawurst/git2-rs.git", rev="fc13dcc", features = ["vendored-openssl"]}
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
 openssl-sys = { version = '0.9', features = ["vendored"], optional = true }
+nostr-sdk = { version = "0.44", default-features = false, features = ["nip04", "nip44"], optional = true }
 rayon = "1.8"
 rayon-core = "1.11"
 scopetime = { path = "../scopetime", version = "0.1" }
+secrecy = { version = "0.8", features = ["serde"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "time", "macros"], optional = true }
 unicode-truncate = "0.2.0"
 url = "2.5"
 
@@ -42,3 +45,4 @@ tempfile = "3.4"
 default = ["trace-libgit"]
 trace-libgit = []
 vendor-openssl = ["openssl-sys"]
+nostr = ["dep:nostr-sdk", "dep:tokio", "dep:secrecy"]

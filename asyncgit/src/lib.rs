@@ -39,6 +39,8 @@ mod diff;
 mod error;
 mod fetch_job;
 mod filter_commits;
+#[cfg(feature = "nostr")]
+pub mod nostr;
 mod progress;
 mod pull;
 mod push;
