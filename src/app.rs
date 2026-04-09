@@ -498,6 +498,9 @@ impl App {
 				) || key_match(
 					k,
 					self.key_config.keys.tab_stashes,
+				) || key_match(
+					k,
+					self.key_config.keys.tab_nostr,
 				) {
 					self.switch_tab(k)?;
 					NeedsUpdate::COMMANDS
