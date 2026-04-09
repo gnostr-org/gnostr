@@ -16,6 +16,12 @@ pub struct CliArgs {
 	pub theme: PathBuf,
 	pub repo_path: RepoPath,
 	pub notify_watcher: bool,
+	/// Nostr key: nsec / npub / 64-char hex (overrides git-config and env).
+	pub nostr_key: Option<String>,
+	/// Relay URLs supplied via --relay (may be empty; falls back to defaults).
+	pub nostr_relays: Vec<String>,
+	/// When true: generate a new keypair, print nsec+npub, then exit.
+	pub nostr_generate: bool,
 }
 
 pub fn process_cmdline() -> Result<CliArgs> {
@@ -57,10 +63,27 @@ pub fn process_cmdline() -> Result<CliArgs> {
 	let notify_watcher: bool =
 		*arg_matches.get_one("watcher").unwrap_or(&false);
 
+	let nostr_generate = arg_matches.get_flag("nostr-generate");
+
+	// --key / -k / NOSTR_KEY env (already handled by clap env())
+	let nostr_key = arg_matches
+		.get_one::<String>("nostr-key")
+		.cloned();
+
+	// --relay / -r (repeatable)
+	let nostr_relays: Vec<String> = arg_matches
+		.get_many::<String>("nostr-relay")
+		.unwrap_or_default()
+		.cloned()
+		.collect();
+
 	Ok(CliArgs {
 		theme,
 		repo_path,
 		notify_watcher,
+		nostr_key,
+		nostr_relays,
+		nostr_generate,
 	})
 }
 
@@ -122,6 +145,30 @@ fn app() -> ClapApp {
 				.long("workdir")
 				.env("GIT_WORK_TREE")
 				.num_args(1),
+		)
+		.arg(
+			Arg::new("nostr-key")
+				.help("Nostr identity key: nsec / npub / 64-char hex private key")
+				.short('k')
+				.long("key")
+				.value_name("KEY")
+				.env("NOSTR_KEY")
+				.num_args(1),
+		)
+		.arg(
+			Arg::new("nostr-relay")
+				.help("Nostr relay URL (may be repeated, e.g. -r wss://relay.damus.io)")
+				.short('r')
+				.long("relay")
+				.value_name("URL")
+				.action(clap::ArgAction::Append)
+				.num_args(1),
+		)
+		.arg(
+			Arg::new("nostr-generate")
+				.help("Generate a new nostr keypair, print nsec and npub, then exit")
+				.long("generate-nostr-key")
+				.action(clap::ArgAction::SetTrue),
 		)
 }
 
