@@ -129,15 +129,27 @@ fn main() -> Result<()> {
 
 	let cliargs = process_cmdline()?;
 
+	// --generate-nostr-key: print a fresh keypair and exit immediately.
+	#[cfg(feature = "nostr")]
+	if cliargs.nostr_generate {
+		use asyncgit::nostr::generate_keypair_strings;
+		let (nsec, npub) = generate_keypair_strings();
+		println!("nsec: {nsec}");
+		println!("npub: {npub}");
+		println!();
+		println!("Save the nsec somewhere safe.  Set it with:");
+		println!("  git config nostr.key <nsec>");
+		println!("  export NOSTR_KEY=<nsec>");
+		println!("  gnostr-tui --key <nsec>");
+		return Ok(());
+	}
+
 	asyncgit::register_tracing_logging();
 
 	if !valid_path(&cliargs.repo_path) {
     //TODO: gnostr-cli init
 		bail!("invalid path\nplease run gnostr-tui inside of a non-bare git repository");
 	}
-
-  //TODO: prompt to generate nostr privkey
-  //TODO: and add to git config
 
 	let key_config = KeyConfig::init()
 		.map_err(|e| eprintln!("KeyConfig loading error: {e}"))
@@ -170,6 +182,10 @@ fn main() -> Result<()> {
 			&input,
 			updater,
 			&mut terminal,
+			#[cfg(feature = "nostr")]
+			cliargs.nostr_key.clone(),
+			#[cfg(feature = "nostr")]
+			cliargs.nostr_relays.clone(),
 		)?;
 
 		match quit_state {
@@ -191,6 +207,8 @@ fn run_app(
 	input: &Input,
 	updater: Updater,
 	terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+	#[cfg(feature = "nostr")] nostr_key: Option<String>,
+	#[cfg(feature = "nostr")] nostr_relays: Vec<String>,
 ) -> Result<QuitState, anyhow::Error> {
 	let (tx_git, rx_git) = unbounded();
 	let (tx_app, rx_app) = unbounded();
@@ -220,6 +238,10 @@ fn run_app(
 		input.clone(),
 		theme,
 		key_config,
+		#[cfg(feature = "nostr")]
+		nostr_key,
+		#[cfg(feature = "nostr")]
+		nostr_relays,
 	)?;
 
 	let mut spinner = Spinner::default();
