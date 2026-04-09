@@ -25,7 +25,7 @@ use crate::{
 	},
 	setup_popups,
 	strings::{self, ellipsis_trim_start, order},
-	tabs::{FilesTab, Revlog, StashList, Stashing, Status},
+	tabs::{FilesTab, NostrTab, Revlog, StashList, Stashing, Status},
 	try_or_popup,
 	ui::style::{SharedTheme, Theme},
 	AsyncAppNotification, AsyncNotification,
@@ -102,6 +102,7 @@ pub struct App {
 	stashing_tab: Stashing,
 	stashlist_tab: StashList,
 	files_tab: FilesTab,
+	nostr_tab: NostrTab,
 	queue: Queue,
 	theme: SharedTheme,
 	key_config: SharedKeyConfig,
@@ -346,6 +347,7 @@ impl App {
 				theme.clone(),
 				key_config.clone(),
 			),
+			nostr_tab: NostrTab::new(theme.clone(), key_config.clone()),
 			tab: 0,
 			queue,
 			theme,
@@ -418,6 +420,7 @@ impl App {
 				2 => self.files_tab.draw(f, chunks_main[1])?,
 				3 => self.stashing_tab.draw(f, chunks_main[1])?,
 				4 => self.stashlist_tab.draw(f, chunks_main[1])?,
+				5 => self.nostr_tab.draw(f, chunks_main[1])?,
 				_ => bail!("unknown tab"),
 			};
 		}
@@ -580,6 +583,57 @@ impl App {
 			|| self.input.is_aborted()
 	}
 
+	/// Handle an incoming nostr notification (called from the main event loop).
+	#[cfg(feature = "nostr")]
+	pub fn update_nostr(
+		&mut self,
+		ev: asyncgit::nostr::AsyncNostrNotification,
+	) {
+		use asyncgit::nostr::AsyncNostrNotification;
+		match ev {
+			AsyncNostrNotification::Connected => {
+				self.nostr_tab.status_msg =
+					"connected".to_owned();
+			}
+			AsyncNostrNotification::Disconnected => {
+				self.nostr_tab.status_msg =
+					"disconnected".to_owned();
+			}
+			AsyncNostrNotification::RepoPatch(patch) => {
+				self.nostr_tab.push_patch(*patch);
+			}
+			AsyncNostrNotification::RepoIssue(issue) => {
+				self.nostr_tab.push_issue(*issue);
+			}
+			AsyncNostrNotification::RepoStatus {
+				target_id,
+				status,
+			} => {
+				self.nostr_tab.apply_status(&target_id, status);
+			}
+			AsyncNostrNotification::RepoAnnounced(id) => {
+				log::info!("nostr: repo announced id={id}");
+				self.nostr_tab.status_msg =
+					format!("announced {}", &id[..8.min(id.len())]);
+			}
+			AsyncNostrNotification::PatchSubmitted(id) => {
+				log::info!("nostr: patch submitted id={id}");
+				self.nostr_tab.status_msg =
+					format!("patch sent {}", &id[..8.min(id.len())]);
+			}
+			AsyncNostrNotification::IssueSubmitted(id) => {
+				log::info!("nostr: issue submitted id={id}");
+				self.nostr_tab.status_msg =
+					format!("issue sent {}", &id[..8.min(id.len())]);
+			}
+			AsyncNostrNotification::Error(e) => {
+				log::warn!("nostr error: {e}");
+				self.nostr_tab.status_msg = format!("error: {e}");
+			}
+			_ => {}
+		}
+	}
+
 	///
 	pub fn quit_state(&self) -> QuitState {
 		self.do_quit.clone()
@@ -714,6 +768,7 @@ impl App {
 			&mut self.files_tab,
 			&mut self.stashing_tab,
 			&mut self.stashlist_tab,
+			&mut self.nostr_tab,
 		]
 	}
 
@@ -739,6 +794,8 @@ impl App {
 			self.switch_to_tab(&AppTabs::Stashing)?;
 		} else if key_match(k, self.key_config.keys.tab_stashes) {
 			self.switch_to_tab(&AppTabs::Stashlist)?;
+		} else if key_match(k, self.key_config.keys.tab_nostr) {
+			self.set_tab(5)?;
 		}
 
 		Ok(())
@@ -1239,6 +1296,7 @@ impl App {
 			Span::raw(strings::tab_files(&self.key_config)),
 			Span::raw(strings::tab_stashing(&self.key_config)),
 			Span::raw(strings::tab_stashes(&self.key_config)),
+			Span::raw(strings::tab_nostr(&self.key_config)),
 		];
 		let divider = strings::tab_divider(&self.key_config);
 
