@@ -65,6 +65,8 @@ pub enum AsyncNostrNotification {
 		/// New status.
 		status: super::nip34::PatchStatus,
 	},
+	/// A NIP-34 repository announcement (kind 30617) received from a relay.
+	RepoAnnouncement(Box<super::nip34::GitRepoAnnouncement>),
 	/// Repository was announced successfully; carries the event id.
 	RepoAnnounced(String),
 	/// Patch was submitted; carries the event id.
@@ -159,6 +161,8 @@ pub(super) enum NostrCmd {
 		/// Full `a`-tag string: `30617:<maintainer-pubkey>:<repo-id>`.
 		repo_a_tag: String,
 	},
+	/// Subscribe to all NIP-34 event kinds (broad query, no repo filter).
+	FetchAllNip34,
 	/// Announce the current repository (kind 30617).
 	AnnounceRepo {
 		/// Short repo id (kebab-case).
@@ -327,6 +331,11 @@ impl AsyncNostr {
 		self.send_cmd(NostrCmd::FetchRepoItems { repo_a_tag })
 	}
 
+	/// Subscribe to all NIP-34 event kinds (broad query).
+	pub fn fetch_all_nip34(&self) -> Result<()> {
+		self.send_cmd(NostrCmd::FetchAllNip34)
+	}
+
 	/// Announce the current repository as a NIP-34 kind 30617 event.
 	pub fn announce_repo(
 		&self,
@@ -472,6 +481,17 @@ async fn run(
 		}
 	}
 
+	// Immediately subscribe to all NIP-34 event kinds so the Nostr tab
+	// populates on connect without any manual trigger.
+	let nip34_msg =
+		json!(["REQ", "gnostr-nip34-all", super::nip34::all_nip34_filter()])
+			.to_string();
+	for (url, sink) in &mut sinks {
+		if let Err(e) = sink.send(WsMessage::Text(nip34_msg.clone().into())).await {
+			log::warn!("nostr: NIP-34 REQ to {url}: {e}");
+		}
+	}
+
 	// Fuse all relay streams into one via tokio::select polling.
 	loop {
 		// Drain commands first (non-blocking).
@@ -533,6 +553,18 @@ async fn run(
 							sink.send(WsMessage::Text(msg.clone().into())).await
 						{
 							log::warn!("nostr: NIP-34 REQ to {url}: {e}");
+						}
+					}
+				}
+				Ok(NostrCmd::FetchAllNip34) => {
+					let filter = super::nip34::all_nip34_filter();
+					let msg =
+						json!(["REQ", "gnostr-nip34-all", filter]).to_string();
+					for (url, sink) in &mut sinks {
+						if let Err(e) =
+							sink.send(WsMessage::Text(msg.clone().into())).await
+						{
+							log::warn!("nostr: NIP-34 all REQ to {url}: {e}");
 						}
 					}
 				}
@@ -807,6 +839,15 @@ fn handle_relay_message(
 					send(
 						notif_tx,
 						AsyncNostrNotification::RepoIssue(Box::new(issue)),
+					);
+				}
+			}
+			// NIP-34 repository announcement
+			super::nip34::KIND_REPO_ANNOUNCEMENT => {
+				if let Some(ann) = super::nip34::parse_repo_announcement(&event) {
+					send(
+						notif_tx,
+						AsyncNostrNotification::RepoAnnouncement(Box::new(ann)),
 					);
 				}
 			}
