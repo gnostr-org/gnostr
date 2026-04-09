@@ -247,12 +247,7 @@ fn install_windows_dependency(name: &str, install_command: &str) {
 
                 println!("cargo:warning=Failed to install {}: {}", name, stderr);
                 println!("cargo:warning=Stdout: {}", stdout);
-
-                // Exit the build process with a panick, since the build cannot continue.
-                panic!(
-                    "Failed to install required Windows dependency: {}. Ensure Scoop or Winget is installed and on your PATH.",
-                    name
-                );
+                println!("cargo:warning=Continuing build without {} - install it manually if needed.", name);
             } else {
                 println!("cargo:warning=Successfully installed {} dependency.", name);
             }
@@ -262,8 +257,7 @@ fn install_windows_dependency(name: &str, install_command: &str) {
                 "cargo:warning=Failed to run installation command for {}: {}",
                 name, e
             );
-            // Exit the build process with a panick.
-            panic!("Failed to run installation command for {}.", name);
+            println!("cargo:warning=Continuing build without {} - install it manually if needed.", name);
         }
     }
 }
@@ -358,19 +352,16 @@ fn install_xcb_deps() {
                 }
                 Ok(output) => {
                     let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                    panic!("Failed to install required macOS dependencies.");
+                    println!("cargo:warning=Failed to install xcb dependencies with brew: {}\nContinuing build without xcb dependencies.", stderr);
                 }
                 Err(e) => {
-                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                    panic!("Failed to run Homebrew command.");
+                    println!("cargo:warning=Failed to run Homebrew command for xcb: {}\nContinuing build without xcb dependencies.", e);
                 }
             }
         } else {
             println!(
-                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+                "cargo:warning=Homebrew is not installed. Continuing build without xcb dependencies."
             );
-            panic!("Failed to install required macOS dependencies.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
