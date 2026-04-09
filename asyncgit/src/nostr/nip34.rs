@@ -313,6 +313,28 @@ pub fn announcement_filter(pubkey_hex: &str) -> serde_json::Value {
 	})
 }
 
+/// Build a broad subscription filter for ALL NIP-34 event kinds.
+///
+/// Used to populate the Nostr tab on first connect without knowing which
+/// specific repository the user wants to watch.
+pub fn all_nip34_filter() -> serde_json::Value {
+	json!({
+		"kinds": [
+			KIND_REPO_ANNOUNCEMENT,
+			KIND_REPO_STATE,
+			KIND_PATCH,
+			KIND_PULL_REQUEST,
+			KIND_ISSUE,
+			KIND_REPLY,
+			KIND_STATUS_OPEN,
+			KIND_STATUS_APPLIED,
+			KIND_STATUS_CLOSED,
+			KIND_STATUS_DRAFT,
+		],
+		"limit": 200
+	})
+}
+
 // ── parsers ───────────────────────────────────────────────────────────────────
 
 /// Try to parse a [`NostrEvent`] as a [`GitPatch`].
