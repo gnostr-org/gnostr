@@ -1,4 +1,4 @@
-/// NIP-34 Git patches and issues timeline tab.
+use std::cell::RefCell;
 ///
 /// Displays patches (kind 1617) and issues (kind 1621) received from
 /// nostr relays for the current repository.  Navigation mirrors the
@@ -22,7 +22,6 @@ use crate::{
 		EventState,
 	},
 	keys::{key_match, SharedKeyConfig},
-	strings,
 	ui::style::SharedTheme,
 };
 
@@ -98,7 +97,7 @@ pub struct NostrTab {
 	#[cfg(feature = "nostr")]
 	items: Vec<NostrItem>,
 	selected: usize,
-	list_state: ListState,
+	list_state: RefCell<ListState>,
 	visible: bool,
 	theme: SharedTheme,
 	key_config: SharedKeyConfig,
@@ -116,7 +115,7 @@ impl NostrTab {
 			#[cfg(feature = "nostr")]
 			items: Vec::new(),
 			selected: 0,
-			list_state: ListState::default(),
+			list_state: RefCell::new(ListState::default()),
 			visible: false,
 			theme,
 			key_config,
@@ -153,6 +152,7 @@ impl NostrTab {
 
 	/// Return the currently selected item, if any.
 	#[cfg(feature = "nostr")]
+	#[allow(dead_code)]
 	pub fn selected_item(&self) -> Option<&NostrItem> {
 		self.items.get(self.selected)
 	}
@@ -172,7 +172,7 @@ impl NostrTab {
 	fn move_selection_up(&mut self) {
 		if self.selected > 0 {
 			self.selected -= 1;
-			self.list_state.select(Some(self.selected));
+			self.list_state.borrow_mut().select(Some(self.selected));
 		}
 	}
 
@@ -181,11 +181,11 @@ impl NostrTab {
 			&& self.selected < self.item_count() - 1
 		{
 			self.selected += 1;
-			self.list_state.select(Some(self.selected));
+			self.list_state.borrow_mut().select(Some(self.selected));
 		}
 	}
 
-	fn draw_list<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
+	fn draw_list<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
 		#[cfg(feature = "nostr")]
 		{
 			let items: Vec<ListItem> = self
@@ -228,7 +228,7 @@ impl NostrTab {
 					Style::default().add_modifier(Modifier::REVERSED),
 				);
 
-			f.render_stateful_widget(list, area, &mut self.list_state);
+			f.render_stateful_widget(list, area, &mut *self.list_state.borrow_mut());
 		}
 		#[cfg(not(feature = "nostr"))]
 		{
@@ -273,22 +273,6 @@ impl NostrTab {
 impl DrawableComponent for NostrTab {
 	fn draw<B: Backend>(
 		&self,
-		f: &mut Frame<B>,
-		rect: Rect,
-	) -> Result<()> {
-		// We need &mut self for list state; cast carefully via interior mut
-		// by splitting draw into a helper that takes &mut self.
-		// SAFETY: ratatui stateful widgets require &mut ListState.
-		// We replicate the pattern used in StashList/Revlog.
-		#[allow(clippy::cast_ref_to_mut)]
-		let this = unsafe { &mut *(self as *const Self as *mut Self) };
-		this.draw_mut(f, rect)
-	}
-}
-
-impl NostrTab {
-	fn draw_mut<B: Backend>(
-		&mut self,
 		f: &mut Frame<B>,
 		rect: Rect,
 	) -> Result<()> {
@@ -350,7 +334,7 @@ impl Component for NostrTab {
 	fn show(&mut self) -> Result<()> {
 		self.visible = true;
 		if self.item_count() > 0 {
-			self.list_state.select(Some(self.selected));
+			self.list_state.borrow_mut().select(Some(self.selected));
 		}
 		Ok(())
 	}
