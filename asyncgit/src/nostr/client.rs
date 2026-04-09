@@ -46,7 +46,12 @@ pub enum AsyncNostrNotification {
 	/// A kind-1 text note arrived.
 	TextNote(Box<NostrEvent>),
 	/// Profile metadata (kind 0) arrived.
-	Profile { pubkey: String, display: String },
+	Profile {
+		/// Hex-encoded public key of the profile owner.
+		pubkey: String,
+		/// Display name or name from the metadata.
+		display: String,
+	},
 	/// A note was published; carries the hex event id.
 	NotePublished(String),
 	/// An error in the background thread.
@@ -58,12 +63,19 @@ pub enum AsyncNostrNotification {
 /// A nostr event (NIP-01).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct NostrEvent {
+	/// Hex-encoded SHA-256 event id.
 	pub id: String,
+	/// Hex-encoded x-only public key of the author.
 	pub pubkey: String,
+	/// Unix timestamp (seconds).
 	pub created_at: u64,
+	/// Event kind number.
 	pub kind: u64,
+	/// Tags array.
 	pub tags: Vec<Vec<String>>,
+	/// Event content.
 	pub content: String,
+	/// Hex-encoded Schnorr signature.
 	pub sig: String,
 }
 
@@ -139,6 +151,7 @@ pub struct AsyncNostr {
 }
 
 impl AsyncNostr {
+	/// Create a new `AsyncNostr` that forwards events on `sender`.
 	pub fn new(sender: Sender<AsyncNostrNotification>) -> Self {
 		let (cmd_tx, _) = unbounded();
 		Self {
@@ -183,18 +196,22 @@ impl AsyncNostr {
 		Ok(())
 	}
 
+	/// Returns `true` while the background thread is running.
 	pub fn is_pending(&self) -> bool {
 		self.pending.lock().map_or(false, |g| *g)
 	}
 
+	/// Publish a kind-1 text note to all connected relays.
 	pub fn publish_note(&self, content: String) -> Result<()> {
 		self.send_cmd(NostrCmd::PublishNote { content })
 	}
 
+	/// Subscribe to the global feed (last N kind-1 notes from any author).
 	pub fn subscribe_global(&self) -> Result<()> {
 		self.send_cmd(NostrCmd::SubscribeGlobal)
 	}
 
+	/// Gracefully shut down relay connections and the background thread.
 	pub fn shutdown(&self) -> Result<()> {
 		self.send_cmd(NostrCmd::Shutdown)
 	}
@@ -209,7 +226,6 @@ impl AsyncNostr {
 // ── background async loop ─────────────────────────────────────────────────────
 
 const TIMELINE_LIMIT: usize = 50;
-const RECONNECT_DELAY: Duration = Duration::from_secs(5);
 
 async fn run(
 	identity: NostrIdentity,

@@ -9,7 +9,6 @@ use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey, SECP256K1};
 
 use crate::error::{Error, Result};
 
-const HRP_SECRET_KEY: Hrp = Hrp::parse_unchecked("nsec");
 const HRP_PUBLIC_KEY: Hrp = Hrp::parse_unchecked("npub");
 
 // ── public types ─────────────────────────────────────────────────────────────
@@ -32,6 +31,7 @@ impl NostrIdentity {
 		}
 	}
 
+	/// Returns `true` if this identity holds a private key and can sign events.
 	pub fn can_sign(&self) -> bool {
 		matches!(self, Self::Keypair(_))
 	}

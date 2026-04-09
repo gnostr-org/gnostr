@@ -39,6 +39,8 @@ use asyncgit::{
 	},
 	AsyncGitNotification, PushType,
 };
+#[cfg(feature = "nostr")]
+use asyncgit::nostr::{AsyncNostr, AsyncNostrNotification, load_identity};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use ratatui::{
@@ -111,6 +113,10 @@ pub struct App {
 	// "Flags"
 	requires_redraw: Cell<bool>,
 	file_to_open: Option<String>,
+
+	#[cfg(feature = "nostr")]
+	#[allow(dead_code)]
+	nostr_client: AsyncNostr,
 }
 
 // public interface
@@ -121,6 +127,8 @@ impl App {
 		repo: RepoPathRef,
 		sender: &Sender<AsyncGitNotification>,
 		sender_app: &Sender<AsyncAppNotification>,
+		#[cfg(feature = "nostr")]
+		sender_nostr: Sender<AsyncNostrNotification>,
 		input: Input,
 		theme: Theme,
 		key_config: KeyConfig,
@@ -129,6 +137,9 @@ impl App {
 
 		let repo_path_text =
 			repo_work_dir(&repo.borrow()).unwrap_or_default();
+
+		#[cfg(feature = "nostr")]
+		let nostr_repo_path = repo_path_text.clone();
 
 		let queue = Queue::new();
 		let theme = Rc::new(theme);
@@ -345,6 +356,22 @@ impl App {
 			repo,
 			repo_path_text,
 			popup_stack: PopupStack::default(),
+			#[cfg(feature = "nostr")]
+			nostr_client: {
+				let mut client = AsyncNostr::new(sender_nostr);
+				if let Some(identity) =
+					load_identity(std::path::Path::new(&nostr_repo_path))
+				{
+					let relays = vec![
+						"wss://relay.damus.io".to_owned(),
+						"wss://nos.lol".to_owned(),
+					];
+					if let Err(e) = client.connect(identity, relays) {
+						log::warn!("nostr connect: {e}");
+					}
+				}
+				client
+			},
 		};
 
 		app.set_tab(tab)?;

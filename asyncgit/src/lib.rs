@@ -40,6 +40,7 @@ mod error;
 mod fetch_job;
 mod filter_commits;
 #[cfg(feature = "nostr")]
+/// Nostr protocol integration — key management and async relay client.
 pub mod nostr;
 mod progress;
 mod pull;

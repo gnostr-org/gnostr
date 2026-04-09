@@ -6,10 +6,16 @@
 /// secp256k1, bech32, and tokio-tungstenite directly.
 
 pub mod client;
+/// Nostr key management: parse, generate, load/save via git config.
 pub mod keys;
+/// NIP-34 Git Stuff — types, builders and parsers.
+pub mod nip34;
 
 pub use client::{AsyncNostr, AsyncNostrNotification, NostrEvent};
 pub use keys::{
 	generate_keys, load_identity, load_key_from_git_config,
 	parse_key, save_key_to_git_config, NostrIdentity,
+};
+pub use nip34::{
+	GitIssue, GitPatch, GitRepoAnnouncement, PatchStatus,
 };
