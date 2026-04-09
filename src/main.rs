@@ -246,6 +246,8 @@ fn run_app(
 
 	let mut spinner = Spinner::default();
 	let mut first_update = true;
+	#[cfg(feature = "nostr")]
+	let mut nostr_started = false;
 
 	log::trace!("app start: {} ms", app_start.elapsed().as_millis());
 
@@ -308,6 +310,15 @@ fn run_app(
 			}
 
 			draw(terminal, &app)?;
+
+			// Start the nostr background thread AFTER the first frame is
+			// drawn so the terminal is fully initialised before any
+			// background activity begins.
+			#[cfg(feature = "nostr")]
+			if !nostr_started {
+				nostr_started = true;
+				app.start_nostr();
+			}
 
 			spinner.set_state(app.any_work_pending());
 			spinner.draw(terminal)?;
@@ -446,10 +457,18 @@ macro_rules! log_eprintln {
 
 fn set_panic_handlers() -> Result<()> {
 	// regular panic handler
+	// Only restore the terminal from the main thread.  Background threads
+	// (asyncnostr, asyncgit, rayon) must NOT call shutdown_terminal() — doing
+	// so from a non-main thread corrupts the terminal state while the TUI is
+	// still running on the main thread.
 	panic::set_hook(Box::new(|e| {
 		let backtrace = Backtrace::new();
 		log_eprintln!("panic: {:?}\ntrace:\n{:?}", e, backtrace);
-		shutdown_terminal();
+		let is_main_thread =
+			matches!(std::thread::current().name(), None | Some("main"));
+		if is_main_thread {
+			shutdown_terminal();
+		}
 	}));
 
 	// global threadpool

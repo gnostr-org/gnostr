@@ -260,10 +260,24 @@ impl AsyncNostr {
 		thread::Builder::new()
 			.name("asyncnostr".into())
 			.spawn(move || {
-				let rt = tokio::runtime::Builder::new_current_thread()
+				let rt = match tokio::runtime::Builder::new_current_thread()
 					.enable_all()
 					.build()
-					.expect("tokio runtime");
+				{
+					Ok(rt) => rt,
+					Err(e) => {
+						log::error!("nostr: tokio runtime build failed: {e}");
+						let _ = notification_tx.send(
+							AsyncNostrNotification::Error(
+								format!("runtime: {e}"),
+							),
+						);
+						if let Ok(mut p) = pending.lock() {
+							*p = false;
+						}
+						return;
+					}
+				};
 				rt.block_on(run(identity, relay_urls, cmd_rx, notification_tx));
 				if let Ok(mut p) = pending.lock() {
 					*p = false;

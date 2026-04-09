@@ -118,6 +118,11 @@ pub struct App {
 	#[cfg(feature = "nostr")]
 	#[allow(dead_code)]
 	nostr_client: AsyncNostr,
+
+	/// Deferred nostr connection parameters — consumed by `start_nostr()` on
+	/// the first event-loop iteration after the TUI renders its first frame.
+	#[cfg(feature = "nostr")]
+	pending_nostr_connect: Option<(asyncgit::nostr::NostrIdentity, Vec<String>)>,
 }
 
 // public interface
@@ -363,9 +368,14 @@ impl App {
 			repo_path_text,
 			popup_stack: PopupStack::default(),
 			#[cfg(feature = "nostr")]
-			nostr_client: {
-				let mut client = AsyncNostr::new(sender_nostr);
-				// Key resolution: CLI arg > NOSTR_KEY env > git config.
+			nostr_client: AsyncNostr::new(sender_nostr),
+
+			// Resolve the identity now but defer the actual relay connection
+			// until start_nostr() is called after the first TUI frame renders.
+			// This prevents the background thread from touching terminal state
+			// before the TUI is fully displayed.
+			#[cfg(feature = "nostr")]
+			pending_nostr_connect: {
 				let identity = if let Some(ref key_str) = nostr_key_override {
 					match parse_key(key_str) {
 						Ok(id) => Some(id),
@@ -377,7 +387,7 @@ impl App {
 				} else {
 					load_identity(std::path::Path::new(&nostr_repo_path))
 				};
-				if let Some(identity) = identity {
+				identity.map(|id| {
 					let relays = if nostr_relay_override.is_empty() {
 						vec![
 							"wss://relay.damus.io".to_owned(),
@@ -386,11 +396,8 @@ impl App {
 					} else {
 						nostr_relay_override
 					};
-					if let Err(e) = client.connect(identity, relays) {
-						log::warn!("nostr connect: {e}");
-					}
-				}
-				client
+					(id, relays)
+				})
 			},
 		};
 
@@ -649,6 +656,20 @@ impl App {
 				self.nostr_tab.status_msg = format!("error: {e}");
 			}
 			_ => {}
+		}
+	}
+
+	/// Initiate the nostr relay connection.  Call this once, after the first
+	/// TUI frame has been rendered, so the background thread starts in a clean
+	/// terminal state.
+	#[cfg(feature = "nostr")]
+	pub fn start_nostr(&mut self) {
+		if let Some((identity, relays)) =
+			self.pending_nostr_connect.take()
+		{
+			if let Err(e) = self.nostr_client.connect(identity, relays) {
+				log::warn!("nostr connect: {e}");
+			}
 		}
 	}
 
