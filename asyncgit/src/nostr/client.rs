@@ -260,25 +260,42 @@ impl AsyncNostr {
 		thread::Builder::new()
 			.name("asyncnostr".into())
 			.spawn(move || {
-				let rt = match tokio::runtime::Builder::new_current_thread()
-					.enable_all()
-					.build()
-				{
-					Ok(rt) => rt,
-					Err(e) => {
-						log::error!("nostr: tokio runtime build failed: {e}");
-						let _ = notification_tx.send(
-							AsyncNostrNotification::Error(
-								format!("runtime: {e}"),
-							),
-						);
-						if let Ok(mut p) = pending.lock() {
-							*p = false;
-						}
-						return;
-					}
-				};
-				rt.block_on(run(identity, relay_urls, cmd_rx, notification_tx));
+				// Catch any panics so the global hook (which would eprintln!
+				// and corrupt the TUI) is never reached from this thread.
+				let result =
+					std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+						|| {
+							let rt = match tokio::runtime::Builder::new_current_thread()
+								.enable_all()
+								.build()
+							{
+								Ok(rt) => rt,
+								Err(e) => {
+									log::error!(
+										"nostr: tokio runtime build failed: {e}"
+									);
+									let _ = notification_tx.send(
+										AsyncNostrNotification::Error(
+											format!("runtime: {e}"),
+										),
+									);
+									return;
+								}
+							};
+							rt.block_on(run(
+								identity,
+								relay_urls,
+								cmd_rx,
+								notification_tx,
+							));
+						},
+					));
+				if let Err(e) = result {
+					log::error!(
+						"nostr: asyncnostr thread panicked: {:?}",
+						e
+					);
+				}
 				if let Ok(mut p) = pending.lock() {
 					*p = false;
 				}
