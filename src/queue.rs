@@ -35,6 +35,7 @@ pub struct ResetItem {
 	/// path to the item (folder/file)
 	pub path: String,
 	/// are talking about a folder here? otherwise it's a single file
+	#[allow(dead_code)]
 	pub is_folder: bool,
 }
 

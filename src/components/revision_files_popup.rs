@@ -26,6 +26,7 @@ use ratatui::{
 #[derive(Clone, Debug)]
 pub struct FileTreeOpen {
 	pub commit_id: CommitId,
+	#[allow(dead_code)]
 	pub selection: Option<usize>,
 }
 
