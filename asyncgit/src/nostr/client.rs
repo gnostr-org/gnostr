@@ -230,6 +230,8 @@ pub struct AsyncNostr {
 	cmd_tx: Sender<NostrCmd>,
 	pending: Arc<Mutex<bool>>,
 	notification_tx: Sender<AsyncNostrNotification>,
+	/// Hex-encoded x-only public key of the connected identity.
+	own_pubkey: Option<String>,
 }
 
 impl AsyncNostr {
@@ -240,7 +242,13 @@ impl AsyncNostr {
 			cmd_tx,
 			pending: Arc::new(Mutex::new(false)),
 			notification_tx: sender,
+			own_pubkey: None,
 		}
+	}
+
+	/// Return the hex-encoded public key of the connected identity, if known.
+	pub fn own_pubkey_hex(&self) -> Option<String> {
+		self.own_pubkey.clone()
 	}
 
 	/// Connect to the given relay URLs and start the background event loop.
@@ -252,6 +260,12 @@ impl AsyncNostr {
 		if self.is_pending() {
 			return Ok(());
 		}
+
+		// Cache the public key for use from the main thread.
+		self.own_pubkey = {
+			let xonly = identity.public_key();
+			Some(hex::encode(xonly.serialize()))
+		};
 
 		let (cmd_tx, cmd_rx) = unbounded::<NostrCmd>();
 		self.cmd_tx = cmd_tx;
