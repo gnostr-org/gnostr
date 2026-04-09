@@ -4,7 +4,7 @@ use std::cell::RefCell;
 /// nostr relays for the current repository.  Navigation mirrors the
 /// existing `StashList` / `Revlog` tab style.
 #[cfg(feature = "nostr")]
-use asyncgit::nostr::{GitIssue, GitPatch, PatchStatus};
+use asyncgit::nostr::{GitIssue, GitPatch, GitRepoAnnouncement, PatchStatus};
 use anyhow::Result;
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::{
@@ -33,6 +33,8 @@ pub enum NostrItem {
 	Patch(GitPatch),
 	/// A NIP-34 issue (kind 1621).
 	Issue(GitIssue),
+	/// A NIP-34 repository announcement (kind 30617).
+	Announcement(GitRepoAnnouncement),
 }
 
 #[cfg(feature = "nostr")]
@@ -41,6 +43,7 @@ impl NostrItem {
 		match self {
 			Self::Patch(p) => &p.subject,
 			Self::Issue(i) => &i.subject,
+			Self::Announcement(a) => &a.name,
 		}
 	}
 
@@ -48,6 +51,7 @@ impl NostrItem {
 		let pk = match self {
 			Self::Patch(p) => &p.pubkey,
 			Self::Issue(i) => &i.pubkey,
+			Self::Announcement(a) => &a.pubkey,
 		};
 		if pk.len() >= 8 {
 			format!("{}…{}", &pk[..4], &pk[pk.len() - 4..])
@@ -60,6 +64,7 @@ impl NostrItem {
 		match self {
 			Self::Patch(_) => "patch",
 			Self::Issue(_) => "issue",
+			Self::Announcement(_) => "repo",
 		}
 	}
 
@@ -67,6 +72,7 @@ impl NostrItem {
 		match self {
 			Self::Patch(p) => p.status.label(),
 			Self::Issue(i) => i.status.label(),
+			Self::Announcement(_) => "",
 		}
 	}
 
@@ -74,6 +80,7 @@ impl NostrItem {
 		match self {
 			Self::Patch(p) => &p.id,
 			Self::Issue(i) => &i.id,
+			Self::Announcement(a) => &a.id,
 		}
 	}
 
@@ -81,6 +88,7 @@ impl NostrItem {
 		match self {
 			Self::Patch(p) => &p.content,
 			Self::Issue(i) => &i.content,
+			Self::Announcement(a) => &a.description,
 		}
 	}
 
@@ -88,6 +96,7 @@ impl NostrItem {
 		match self {
 			Self::Patch(p) => p.created_at,
 			Self::Issue(i) => i.created_at,
+			Self::Announcement(_) => 0,
 		}
 	}
 }
@@ -137,6 +146,23 @@ impl NostrTab {
 		self.sort_items();
 	}
 
+	/// Add a received repository announcement to the timeline.
+	#[cfg(feature = "nostr")]
+	pub fn push_announcement(&mut self, ann: GitRepoAnnouncement) {
+		// Deduplicate by repo_id + pubkey
+		let exists = self.items.iter().any(|item| {
+			if let NostrItem::Announcement(a) = item {
+				a.pubkey == ann.pubkey && a.repo_id == ann.repo_id
+			} else {
+				false
+			}
+		});
+		if !exists {
+			self.items.push(NostrItem::Announcement(ann));
+			self.sort_items();
+		}
+	}
+
 	/// Apply a status update to an existing item by event id.
 	#[cfg(feature = "nostr")]
 	pub fn apply_status(&mut self, target_id: &str, status: PatchStatus) {
@@ -145,6 +171,7 @@ impl NostrTab {
 				match item {
 					NostrItem::Patch(p) => p.status = status.clone(),
 					NostrItem::Issue(i) => i.status = status.clone(),
+					NostrItem::Announcement(_) => {}
 				}
 			}
 		}
