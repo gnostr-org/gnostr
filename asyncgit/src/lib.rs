@@ -70,6 +70,7 @@ pub use crate::{
 	revlog::{AsyncLog, FetchStatus},
 	status::{AsyncStatus, StatusParams},
 	sync::{
+		commit_to_format_patch,
 		diff::{DiffLine, DiffLineType, FileDiff},
 		remotes::push::PushType,
 		status::{StatusItem, StatusItemType},

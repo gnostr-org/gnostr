@@ -14,6 +14,7 @@ mod commits_info;
 mod config;
 pub mod cred;
 pub mod diff;
+mod format_patch;
 mod hooks;
 mod hunks;
 mod ignore;
@@ -84,6 +85,7 @@ pub(crate) use repository::repo;
 pub use repository::{RepoPath, RepoPathRef};
 pub use reset::{reset_repo, reset_stage, reset_workdir};
 pub use reword::reword;
+pub use format_patch::commit_to_format_patch;
 pub use staging::{discard_lines, stage_lines};
 pub use stash::{
 	get_stashes, stash_apply, stash_drop, stash_pop, stash_save,

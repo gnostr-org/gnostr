@@ -569,6 +569,19 @@ impl Component for Revlog {
 						));
 						return Ok(EventState::Consumed);
 					}
+				} else if key_match(
+					k,
+					self.key_config.keys.nostr_submit_patch,
+				) && self.list.marked_count() > 0
+				{
+					#[cfg(feature = "nostr")]
+					{
+						let ids: Vec<_> =
+							self.list.marked().iter().map(|(_, id)| *id).collect();
+						self.queue
+							.push(InternalEvent::NostrSubmitPatches(ids));
+					}
+					return Ok(EventState::Consumed);
 				}
 			}
 		}
@@ -686,6 +699,13 @@ impl Component for Revlog {
 			strings::commands::log_find_commit(&self.key_config),
 			self.can_start_search(),
 			self.visible || force_all,
+		));
+
+		#[cfg(feature = "nostr")]
+		out.push(CommandInfo::new(
+			strings::commands::nostr_submit_patch(&self.key_config),
+			self.list.marked_count() > 0,
+			(self.visible && self.list.marked_count() > 0) || force_all,
 		));
 
 		visibility_blocking(self)

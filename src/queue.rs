@@ -148,6 +148,9 @@ pub enum InternalEvent {
 	RewordCommit(CommitId),
 	///
 	CommitSearch(LogFilterSearchOptions),
+	/// Submit the listed commits as NIP-34 patches to nostr relays.
+	#[cfg(feature = "nostr")]
+	NostrSubmitPatches(Vec<CommitId>),
 }
 
 /// single threaded simple queue for components to communicate with each other
