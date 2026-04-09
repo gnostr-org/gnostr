@@ -280,7 +280,8 @@ fn run_app(
 				QueueEvent::SpinnerUpdate => unreachable!(),
 			#[cfg(feature = "nostr")]
 			QueueEvent::NostrEvent(ev) => {
-				log::debug!("nostr event: {ev:?}");
+				#[cfg(feature = "nostr")]
+				app.update_nostr(ev);
 			}
 			}
 
