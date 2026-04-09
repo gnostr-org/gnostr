@@ -40,7 +40,7 @@ use asyncgit::{
 	AsyncGitNotification, PushType,
 };
 #[cfg(feature = "nostr")]
-use asyncgit::nostr::{AsyncNostr, AsyncNostrNotification, load_identity};
+use asyncgit::nostr::{AsyncNostr, AsyncNostrNotification, load_identity, parse_key};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use ratatui::{
@@ -133,6 +133,10 @@ impl App {
 		input: Input,
 		theme: Theme,
 		key_config: KeyConfig,
+		#[cfg(feature = "nostr")]
+		nostr_key_override: Option<String>,
+		#[cfg(feature = "nostr")]
+		nostr_relay_override: Vec<String>,
 	) -> Result<Self> {
 		log::trace!("open repo at: {:?}", &repo);
 
@@ -361,13 +365,27 @@ impl App {
 			#[cfg(feature = "nostr")]
 			nostr_client: {
 				let mut client = AsyncNostr::new(sender_nostr);
-				if let Some(identity) =
+				// Key resolution: CLI arg > NOSTR_KEY env > git config.
+				let identity = if let Some(ref key_str) = nostr_key_override {
+					match parse_key(key_str) {
+						Ok(id) => Some(id),
+						Err(e) => {
+							log::warn!("nostr --key parse error: {e}");
+							None
+						}
+					}
+				} else {
 					load_identity(std::path::Path::new(&nostr_repo_path))
-				{
-					let relays = vec![
-						"wss://relay.damus.io".to_owned(),
-						"wss://nos.lol".to_owned(),
-					];
+				};
+				if let Some(identity) = identity {
+					let relays = if nostr_relay_override.is_empty() {
+						vec![
+							"wss://relay.damus.io".to_owned(),
+							"wss://nos.lol".to_owned(),
+						]
+					} else {
+						nostr_relay_override
+					};
 					if let Err(e) = client.connect(identity, relays) {
 						log::warn!("nostr connect: {e}");
 					}
