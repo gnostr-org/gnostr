@@ -54,6 +54,23 @@ pub enum AsyncNostrNotification {
 	},
 	/// A note was published; carries the hex event id.
 	NotePublished(String),
+	/// NIP-34 patch (kind 1617) received.
+	RepoPatch(Box<super::nip34::GitPatch>),
+	/// NIP-34 issue (kind 1621) received.
+	RepoIssue(Box<super::nip34::GitIssue>),
+	/// NIP-34 status update (kind 1630–1633) received.
+	RepoStatus {
+		/// Target event id (patch or issue).
+		target_id: String,
+		/// New status.
+		status: super::nip34::PatchStatus,
+	},
+	/// Repository was announced successfully; carries the event id.
+	RepoAnnounced(String),
+	/// Patch was submitted; carries the event id.
+	PatchSubmitted(String),
+	/// Issue was submitted; carries the event id.
+	IssueSubmitted(String),
 	/// An error in the background thread.
 	Error(String),
 }
@@ -137,6 +154,67 @@ pub(super) enum NostrCmd {
 	PublishNote { content: String },
 	/// Subscribe to a basic global feed.
 	SubscribeGlobal,
+	/// Subscribe to NIP-34 patches and issues for a repository.
+	FetchRepoItems {
+		/// Full `a`-tag string: `30617:<maintainer-pubkey>:<repo-id>`.
+		repo_a_tag: String,
+	},
+	/// Announce the current repository (kind 30617).
+	AnnounceRepo {
+		/// Short repo id (kebab-case).
+		repo_id: String,
+		/// Human-readable name.
+		name: String,
+		/// Brief description.
+		description: String,
+		/// Git clone URLs.
+		clone_urls: Vec<String>,
+		/// Web URLs.
+		web_urls: Vec<String>,
+		/// Relay URLs this repo will monitor.
+		relay_urls: Vec<String>,
+		/// Earliest unique commit id.
+		earliest_commit: Option<String>,
+	},
+	/// Submit a NIP-34 patch (kind 1617).
+	SubmitPatch {
+		/// Raw `git format-patch` output.
+		patch_content: String,
+		/// Full `a`-tag for the target repo.
+		repo_a_tag: String,
+		/// Maintainer pubkey (hex) for the `p` tag.
+		maintainer_pubkey: String,
+		/// Commit id being proposed.
+		commit_id: Option<String>,
+		/// Parent commit id.
+		parent_commit_id: Option<String>,
+	},
+	/// Submit a NIP-34 issue (kind 1621).
+	SubmitIssue {
+		/// Issue subject / title.
+		subject: String,
+		/// Markdown body.
+		body: String,
+		/// Full `a`-tag for the target repo.
+		repo_a_tag: String,
+		/// Maintainer pubkey (hex).
+		maintainer_pubkey: String,
+		/// Optional labels.
+		labels: Vec<String>,
+	},
+	/// Set status on a patch or issue (kind 1630–1633).
+	SetStatus {
+		/// Target event id (hex).
+		target_event_id: String,
+		/// Target author pubkey (hex).
+		target_author_pubkey: String,
+		/// Full `a`-tag for the repo.
+		repo_a_tag: String,
+		/// New status.
+		status: super::nip34::PatchStatus,
+		/// Optional comment.
+		comment: String,
+	},
 	/// Gracefully shut down.
 	Shutdown,
 }
@@ -209,6 +287,89 @@ impl AsyncNostr {
 	/// Subscribe to the global feed (last N kind-1 notes from any author).
 	pub fn subscribe_global(&self) -> Result<()> {
 		self.send_cmd(NostrCmd::SubscribeGlobal)
+	}
+
+	/// Subscribe to NIP-34 patches and issues for a repository.
+	///
+	/// `repo_a_tag` is `30617:<maintainer-pubkey>:<repo-id>`.
+	pub fn fetch_repo_items(&self, repo_a_tag: String) -> Result<()> {
+		self.send_cmd(NostrCmd::FetchRepoItems { repo_a_tag })
+	}
+
+	/// Announce the current repository as a NIP-34 kind 30617 event.
+	pub fn announce_repo(
+		&self,
+		repo_id: String,
+		name: String,
+		description: String,
+		clone_urls: Vec<String>,
+		web_urls: Vec<String>,
+		relay_urls: Vec<String>,
+		earliest_commit: Option<String>,
+	) -> Result<()> {
+		self.send_cmd(NostrCmd::AnnounceRepo {
+			repo_id,
+			name,
+			description,
+			clone_urls,
+			web_urls,
+			relay_urls,
+			earliest_commit,
+		})
+	}
+
+	/// Submit a NIP-34 patch (kind 1617).
+	pub fn submit_patch(
+		&self,
+		patch_content: String,
+		repo_a_tag: String,
+		maintainer_pubkey: String,
+		commit_id: Option<String>,
+		parent_commit_id: Option<String>,
+	) -> Result<()> {
+		self.send_cmd(NostrCmd::SubmitPatch {
+			patch_content,
+			repo_a_tag,
+			maintainer_pubkey,
+			commit_id,
+			parent_commit_id,
+		})
+	}
+
+	/// Submit a NIP-34 issue (kind 1621).
+	pub fn submit_issue(
+		&self,
+		subject: String,
+		body: String,
+		repo_a_tag: String,
+		maintainer_pubkey: String,
+		labels: Vec<String>,
+	) -> Result<()> {
+		self.send_cmd(NostrCmd::SubmitIssue {
+			subject,
+			body,
+			repo_a_tag,
+			maintainer_pubkey,
+			labels,
+		})
+	}
+
+	/// Set the status of a patch or issue (kind 1630–1633).
+	pub fn set_status(
+		&self,
+		target_event_id: String,
+		target_author_pubkey: String,
+		repo_a_tag: String,
+		status: super::nip34::PatchStatus,
+		comment: String,
+	) -> Result<()> {
+		self.send_cmd(NostrCmd::SetStatus {
+			target_event_id,
+			target_author_pubkey,
+			repo_a_tag,
+			status,
+			comment,
+		})
 	}
 
 	/// Gracefully shut down relay connections and the background thread.
@@ -332,6 +493,199 @@ async fn run(
 						let _ = sink.send(WsMessage::Text(msg.clone().into())).await;
 					}
 				}
+				Ok(NostrCmd::FetchRepoItems { repo_a_tag }) => {
+					let filter = super::nip34::repo_filter(&repo_a_tag);
+					let msg =
+						json!(["REQ", "gnostr-nip34", filter]).to_string();
+					for (url, sink) in &mut sinks {
+						if let Err(e) =
+							sink.send(WsMessage::Text(msg.clone().into())).await
+						{
+							log::warn!("nostr: NIP-34 REQ to {url}: {e}");
+						}
+					}
+				}
+				Ok(NostrCmd::AnnounceRepo {
+					repo_id,
+					name,
+					description,
+					clone_urls,
+					web_urls,
+					relay_urls,
+					earliest_commit,
+				}) => {
+					if let NostrIdentity::Keypair(kp) = &identity {
+						match super::nip34::build_repo_announcement(
+							&repo_id,
+							&name,
+							&description,
+							&clone_urls,
+							&web_urls,
+							&relay_urls,
+							earliest_commit.as_deref(),
+							kp,
+						) {
+							Ok(event) => {
+								let id = event.id.clone();
+								let msg = json!(["EVENT", event]).to_string();
+								for (url, sink) in &mut sinks {
+									if let Err(e) =
+										sink.send(WsMessage::Text(msg.clone().into())).await
+									{
+										log::warn!("nostr: announce to {url}: {e}");
+									}
+								}
+								send(
+									&notif_tx,
+									AsyncNostrNotification::RepoAnnounced(id),
+								);
+							}
+							Err(e) => send(
+								&notif_tx,
+								AsyncNostrNotification::Error(format!(
+									"announce build: {e}"
+								)),
+							),
+						}
+					} else {
+						send(
+							&notif_tx,
+							AsyncNostrNotification::Error(
+								"read-only mode: cannot announce".to_owned(),
+							),
+						);
+					}
+				}
+				Ok(NostrCmd::SubmitPatch {
+					patch_content,
+					repo_a_tag,
+					maintainer_pubkey,
+					commit_id,
+					parent_commit_id,
+				}) => {
+					if let NostrIdentity::Keypair(kp) = &identity {
+						match super::nip34::build_patch(
+							&patch_content,
+							&repo_a_tag,
+							&maintainer_pubkey,
+							commit_id.as_deref(),
+							parent_commit_id.as_deref(),
+							true,
+							kp,
+						) {
+							Ok(event) => {
+								let id = event.id.clone();
+								let msg = json!(["EVENT", event]).to_string();
+								for (url, sink) in &mut sinks {
+									if let Err(e) =
+										sink.send(WsMessage::Text(msg.clone().into())).await
+									{
+										log::warn!("nostr: patch to {url}: {e}");
+									}
+								}
+								send(
+									&notif_tx,
+									AsyncNostrNotification::PatchSubmitted(id),
+								);
+							}
+							Err(e) => send(
+								&notif_tx,
+								AsyncNostrNotification::Error(format!(
+									"patch build: {e}"
+								)),
+							),
+						}
+					} else {
+						send(
+							&notif_tx,
+							AsyncNostrNotification::Error(
+								"read-only mode: cannot submit patch".to_owned(),
+							),
+						);
+					}
+				}
+				Ok(NostrCmd::SubmitIssue {
+					subject,
+					body,
+					repo_a_tag,
+					maintainer_pubkey,
+					labels,
+				}) => {
+					if let NostrIdentity::Keypair(kp) = &identity {
+						match super::nip34::build_issue(
+							&subject,
+							&body,
+							&repo_a_tag,
+							&maintainer_pubkey,
+							&labels,
+							kp,
+						) {
+							Ok(event) => {
+								let id = event.id.clone();
+								let msg = json!(["EVENT", event]).to_string();
+								for (url, sink) in &mut sinks {
+									if let Err(e) =
+										sink.send(WsMessage::Text(msg.clone().into())).await
+									{
+										log::warn!("nostr: issue to {url}: {e}");
+									}
+								}
+								send(
+									&notif_tx,
+									AsyncNostrNotification::IssueSubmitted(id),
+								);
+							}
+							Err(e) => send(
+								&notif_tx,
+								AsyncNostrNotification::Error(format!(
+									"issue build: {e}"
+								)),
+							),
+						}
+					} else {
+						send(
+							&notif_tx,
+							AsyncNostrNotification::Error(
+								"read-only mode: cannot submit issue".to_owned(),
+							),
+						);
+					}
+				}
+				Ok(NostrCmd::SetStatus {
+					target_event_id,
+					target_author_pubkey,
+					repo_a_tag,
+					status,
+					comment,
+				}) => {
+					if let NostrIdentity::Keypair(kp) = &identity {
+						match super::nip34::build_status(
+							status,
+							&target_event_id,
+							&target_author_pubkey,
+							&repo_a_tag,
+							&comment,
+							kp,
+						) {
+							Ok(event) => {
+								let msg = json!(["EVENT", event]).to_string();
+								for (url, sink) in &mut sinks {
+									if let Err(e) =
+										sink.send(WsMessage::Text(msg.clone().into())).await
+									{
+										log::warn!("nostr: status to {url}: {e}");
+									}
+								}
+							}
+							Err(e) => send(
+								&notif_tx,
+								AsyncNostrNotification::Error(format!(
+									"status build: {e}"
+								)),
+							),
+						}
+					}
+				}
 				Err(crossbeam_channel::TryRecvError::Empty) => break,
 				Err(crossbeam_channel::TryRecvError::Disconnected) => {
 					send(&notif_tx, AsyncNostrNotification::Disconnected);
@@ -405,6 +759,50 @@ fn handle_relay_message(
 							display,
 						},
 					);
+				}
+			}
+			// NIP-34 patch
+			super::nip34::KIND_PATCH => {
+				if let Some(patch) = super::nip34::parse_patch(&event) {
+					send(
+						notif_tx,
+						AsyncNostrNotification::RepoPatch(Box::new(patch)),
+					);
+				}
+			}
+			// NIP-34 issue
+			super::nip34::KIND_ISSUE => {
+				if let Some(issue) = super::nip34::parse_issue(&event) {
+					send(
+						notif_tx,
+						AsyncNostrNotification::RepoIssue(Box::new(issue)),
+					);
+				}
+			}
+			// NIP-34 status events
+			k @ (super::nip34::KIND_STATUS_OPEN
+			| super::nip34::KIND_STATUS_APPLIED
+			| super::nip34::KIND_STATUS_CLOSED
+			| super::nip34::KIND_STATUS_DRAFT) => {
+				if let Some(status) = super::nip34::PatchStatus::from_kind(k) {
+					// Target event id is in the first `e` tag.
+					let target_id = event
+						.tags
+						.iter()
+						.find(|t| {
+							t.first().map(|s| s == "e").unwrap_or(false)
+						})
+						.and_then(|t| t.get(1).cloned())
+						.unwrap_or_default();
+					if !target_id.is_empty() {
+						send(
+							notif_tx,
+							AsyncNostrNotification::RepoStatus {
+								target_id,
+								status,
+							},
+						);
+					}
 				}
 			}
 			_ => {}
