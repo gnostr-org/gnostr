@@ -345,22 +345,45 @@ fn select_event(
 	rx_input: &Receiver<InputEvent>,
 	rx_git: &Receiver<AsyncGitNotification>,
 	rx_app: &Receiver<AsyncAppNotification>,
+	#[cfg(feature = "nostr")]
+	rx_nostr: &Receiver<AsyncNostrNotification>,
 	rx_ticker: &Receiver<Instant>,
 	rx_notify: &Receiver<()>,
 	rx_spinner: &Receiver<Instant>,
 ) -> Result<QueueEvent> {
 	let mut sel = Select::new();
 
-	sel.recv(rx_input);
-	sel.recv(rx_git);
-	sel.recv(rx_app);
-	sel.recv(rx_ticker);
-	sel.recv(rx_notify);
-	sel.recv(rx_spinner);
+	sel.recv(rx_input);   // 0
+	sel.recv(rx_git);     // 1
+	sel.recv(rx_app);     // 2
+	#[cfg(feature = "nostr")]
+	sel.recv(rx_nostr);   // 3  (only present with nostr feature)
+	sel.recv(rx_ticker);  // 3 / 4
+	sel.recv(rx_notify);  // 4 / 5
+	sel.recv(rx_spinner); // 5 / 6
 
 	let oper = sel.select();
 	let index = oper.index();
 
+	#[cfg(feature = "nostr")]
+	let ev = match index {
+		0 => oper.recv(rx_input).map(QueueEvent::InputEvent),
+		1 => oper.recv(rx_git).map(|e| {
+			QueueEvent::AsyncEvent(AsyncNotification::Git(e))
+		}),
+		2 => oper.recv(rx_app).map(|e| {
+			QueueEvent::AsyncEvent(AsyncNotification::App(e))
+		}),
+		3 => oper.recv(rx_nostr).map(|e| {
+			QueueEvent::AsyncEvent(AsyncNotification::Nostr(e))
+		}),
+		4 => oper.recv(rx_ticker).map(|_| QueueEvent::Notify),
+		5 => oper.recv(rx_notify).map(|()| QueueEvent::Notify),
+		6 => oper.recv(rx_spinner).map(|_| QueueEvent::SpinnerUpdate),
+		_ => bail!("unknown select source"),
+	}?;
+
+	#[cfg(not(feature = "nostr"))]
 	let ev = match index {
 		0 => oper.recv(rx_input).map(QueueEvent::InputEvent),
 		1 => oper.recv(rx_git).map(|e| {
