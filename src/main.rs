@@ -463,11 +463,23 @@ fn set_panic_handlers() -> Result<()> {
 	// still running on the main thread.
 	panic::set_hook(Box::new(|e| {
 		let backtrace = Backtrace::new();
-		log_eprintln!("panic: {:?}\ntrace:\n{:?}", e, backtrace);
 		let is_main_thread =
 			matches!(std::thread::current().name(), None | Some("main"));
 		if is_main_thread {
+			// On the main thread we restore the terminal first so the
+			// panic message is readable, then print to stderr.
 			shutdown_terminal();
+			log_eprintln!("panic: {:?}\ntrace:\n{:?}", e, backtrace);
+		} else {
+			// On background threads (asyncnostr, asyncgit, rayon) writing
+			// to stderr would corrupt the TUI still running on the main
+			// thread.  Log only.
+			log::error!(
+				"panic in thread '{}': {:?}\ntrace:\n{:?}",
+				std::thread::current().name().unwrap_or("unnamed"),
+				e,
+				backtrace
+			);
 		}
 	}));
 
