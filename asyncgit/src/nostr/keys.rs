@@ -116,6 +116,20 @@ pub fn generate_keys() -> Keypair {
 	Keypair::from_secret_key(&secp, &sk)
 }
 
+/// Generate a fresh keypair and return `(nsec, npub)` bech32-encoded strings.
+pub fn generate_keypair_strings() -> (String, String) {
+	const HRP_SECRET_KEY: Hrp = Hrp::parse_unchecked("nsec");
+	let kp = generate_keys();
+	let id = NostrIdentity::Keypair(kp.clone());
+	let nsec = {
+		let bytes = kp.secret_bytes();
+		to_bech32(HRP_SECRET_KEY, &bytes)
+			.unwrap_or_else(|_| hex::encode(bytes))
+	};
+	let npub = id.npub();
+	(nsec, npub)
+}
+
 // ── git config I/O ───────────────────────────────────────────────────────────
 
 /// Load the raw key string from git config (`nostr.key`) or `NOSTR_KEY` env.
