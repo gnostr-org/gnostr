@@ -40,7 +40,7 @@ use asyncgit::{
 	AsyncGitNotification, PushType,
 };
 #[cfg(feature = "nostr")]
-use asyncgit::nostr::{AsyncNostr, AsyncNostrNotification, load_identity, parse_key};
+use asyncgit::{commit_to_format_patch, nostr::{AsyncNostr, AsyncNostrNotification, load_identity, parse_key}};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use ratatui::{
@@ -1127,6 +1127,40 @@ impl App {
 			}
 			InternalEvent::CommitSearch(options) => {
 				self.revlog.search(options);
+			}
+			#[cfg(feature = "nostr")]
+			InternalEvent::NostrSubmitPatches(commit_ids) => {
+				let repo_path = self.repo.borrow().clone();
+				for commit_id in commit_ids {
+					match commit_to_format_patch(&repo_path, commit_id) {
+						Ok(patch_content) => {
+							// Use our own pubkey as the maintainer pubkey.
+							// The `a` tag is left empty here — a future enhancement
+							// can resolve the repo's 30617 announcement a-tag.
+							let maintainer_pubkey = self
+								.nostr_client
+								.own_pubkey_hex()
+								.unwrap_or_default();
+							if let Err(e) = self.nostr_client.submit_patch(
+								patch_content,
+								String::new(), // repo_a_tag — empty until announcement lookup
+								maintainer_pubkey,
+								Some(commit_id.to_string()),
+								None,
+							) {
+								self.queue.push(InternalEvent::ShowErrorMsg(
+									format!("nostr patch send: {e}"),
+								));
+							}
+						}
+						Err(e) => {
+							self.queue.push(InternalEvent::ShowErrorMsg(
+								format!("format-patch: {e}"),
+							));
+						}
+					}
+				}
+				flags.insert(NeedsUpdate::COMMANDS);
 			}
 		};
 
