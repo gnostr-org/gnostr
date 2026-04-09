@@ -644,6 +644,9 @@ impl App {
 				self.nostr_tab.status_msg =
 					format!("announced {}", &id[..8.min(id.len())]);
 			}
+			AsyncNostrNotification::RepoAnnouncement(ann) => {
+				self.nostr_tab.push_announcement(*ann);
+			}
 			AsyncNostrNotification::PatchSubmitted(id) => {
 				log::info!("nostr: patch submitted id={id}");
 				self.nostr_tab.status_msg =
