@@ -11,6 +11,11 @@ use crate::error::{Error, Result};
 
 const HRP_PUBLIC_KEY: Hrp = Hrp::parse_unchecked("npub");
 
+/// Default nostr private key (SHA-256 of empty string).
+/// Used when no key is configured via CLI, environment, or git config.
+pub const DEFAULT_NOSTR_KEY: &str =
+	"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
 // ── public types ─────────────────────────────────────────────────────────────
 
 /// Nostr identity: a full keypair or a read-only public key (npub).
@@ -193,11 +198,17 @@ pub fn save_key_to_git_config(
 	Ok(())
 }
 
-/// Attempt to load and parse a `NostrIdentity` from git config.
-/// Returns `None` if no key is configured.
+/// Attempt to load and parse a `NostrIdentity` from git config or env.
+/// Falls back to `DEFAULT_NOSTR_KEY` (SHA-256 of empty string) so there
+/// is always an identity available even without explicit configuration.
 pub fn load_identity(repo_path: &Path) -> Option<NostrIdentity> {
-	let raw = load_key_from_git_config(repo_path).ok()?;
-	parse_key(&raw).ok()
+	if let Ok(raw) = load_key_from_git_config(repo_path) {
+		if let Ok(id) = parse_key(&raw) {
+			return Some(id);
+		}
+	}
+	// No configured key — use the well-known default.
+	parse_key(DEFAULT_NOSTR_KEY).ok()
 }
 
 // ── bech32 helpers ────────────────────────────────────────────────────────────
