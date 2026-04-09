@@ -94,6 +94,8 @@ pub enum QueueEvent {
 	SpinnerUpdate,
 	AsyncEvent(AsyncNotification),
 	InputEvent(InputEvent),
+	#[cfg(feature = "nostr")]
+	NostrEvent(AsyncNostrNotification),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -108,15 +110,12 @@ pub enum AsyncAppNotification {
 	SyntaxHighlighting(SyntaxHighlightProgress),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncNotification {
 	///
 	App(AsyncAppNotification),
 	///
 	Git(AsyncGitNotification),
-	#[cfg(feature = "nostr")]
-	///
-	Nostr(AsyncNostrNotification),
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -279,6 +278,10 @@ fn run_app(
 					}
 				}
 				QueueEvent::SpinnerUpdate => unreachable!(),
+			#[cfg(feature = "nostr")]
+			QueueEvent::NostrEvent(ev) => {
+				log::debug!("nostr event: {ev:?}");
+			}
 			}
 
 			draw(terminal, &app)?;
@@ -357,7 +360,7 @@ fn select_event(
 	sel.recv(rx_git);     // 1
 	sel.recv(rx_app);     // 2
 	#[cfg(feature = "nostr")]
-	sel.recv(rx_nostr);   // 3  (only present with nostr feature)
+	sel.recv(rx_nostr);   // 3  (nostr feature only)
 	sel.recv(rx_ticker);  // 3 / 4
 	sel.recv(rx_notify);  // 4 / 5
 	sel.recv(rx_spinner); // 5 / 6
@@ -374,9 +377,7 @@ fn select_event(
 		2 => oper.recv(rx_app).map(|e| {
 			QueueEvent::AsyncEvent(AsyncNotification::App(e))
 		}),
-		3 => oper.recv(rx_nostr).map(|e| {
-			QueueEvent::AsyncEvent(AsyncNotification::Nostr(e))
-		}),
+		3 => oper.recv(rx_nostr).map(QueueEvent::NostrEvent),
 		4 => oper.recv(rx_ticker).map(|_| QueueEvent::Notify),
 		5 => oper.recv(rx_notify).map(|()| QueueEvent::Notify),
 		6 => oper.recv(rx_spinner).map(|_| QueueEvent::SpinnerUpdate),
