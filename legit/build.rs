@@ -352,16 +352,16 @@ fn install_xcb_deps() {
                 }
                 Ok(output) => {
                     let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install xcb dependencies with brew: {}\nContinuing build without xcb dependencies.", stderr);
+                    println!("cargo:warning=Failed to install xcb dependencies with brew: {}", stderr);
+                    println!("cargo:warning=Continuing build without xcb dependencies.");
                 }
                 Err(e) => {
-                    println!("cargo:warning=Failed to run Homebrew command for xcb: {}\nContinuing build without xcb dependencies.", e);
+                    println!("cargo:warning=Failed to run Homebrew command for xcb: {}", e);
+                    println!("cargo:warning=Continuing build without xcb dependencies.");
                 }
             }
         } else {
-            println!(
-                "cargo:warning=Homebrew is not installed. Continuing build without xcb dependencies."
-            );
+            println!("cargo:warning=Homebrew is not installed. Continuing build without xcb dependencies.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");

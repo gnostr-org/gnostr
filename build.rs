@@ -151,10 +151,12 @@ fn install_sccache() {
             }
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                println!("cargo:warning=Failed to install sccache: {}\nContinuing build without sccache.", stderr);
+                println!("cargo:warning=Failed to install sccache: {}", stderr);
+                println!("cargo:warning=Continuing build without sccache.");
             }
             Err(e) => {
-                println!("cargo:warning=Failed to run installation command for sccache: {}\nContinuing build without sccache.", e);
+                println!("cargo:warning=Failed to run installation command for sccache: {}", e);
+                println!("cargo:warning=Continuing build without sccache.");
             }
         }
     } else if target_os == "macos" {
@@ -170,18 +172,21 @@ fn install_sccache() {
                 Ok(output) => {
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     println!(
-                        "cargo:warning=Failed to install sccache with brew: {}\nContinuing build without sccache.",
+                        "cargo:warning=Failed to install sccache with brew: {}",
                         stderr
                     );
+                    println!("cargo:warning=Continuing build without sccache.");
                 }
                 Err(e) => {
-                    println!("cargo:warning=Failed to run Homebrew command for sccache: {}\nContinuing build without sccache.", e);
+                    println!("cargo:warning=Failed to run Homebrew command for sccache: {}", e);
+                    println!("cargo:warning=Continuing build without sccache.");
                 }
             }
         } else {
             println!(
-                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.\nContinuing build without sccache."
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
             );
+            println!("cargo:warning=Continuing build without sccache.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
@@ -355,16 +360,16 @@ fn install_xcb_deps() {
                 }
                 Ok(output) => {
                     let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!("cargo:warning=Failed to install xcb dependencies with brew: {}\nContinuing build without xcb dependencies.", stderr);
+                    println!("cargo:warning=Failed to install xcb dependencies with brew: {}", stderr);
+                    println!("cargo:warning=Continuing build without xcb dependencies.");
                 }
                 Err(e) => {
-                    println!("cargo:warning=Failed to run Homebrew command for xcb: {}\nContinuing build without xcb dependencies.", e);
+                    println!("cargo:warning=Failed to run Homebrew command for xcb: {}", e);
+                    println!("cargo:warning=Continuing build without xcb dependencies.");
                 }
             }
         } else {
-            println!(
-                "cargo:warning=Homebrew is not installed. Continuing build without xcb dependencies."
-            );
+            println!("cargo:warning=Homebrew is not installed. Continuing build without xcb dependencies.");
         }
     } else if target_os == "windows" {
         println!("cargo:rerun-if-changed=build.rs");
