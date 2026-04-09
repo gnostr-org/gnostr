@@ -90,6 +90,12 @@ pub fn tab_stashes(key_config: &SharedKeyConfig) -> String {
 		key_config.get_hint(key_config.keys.tab_stashes)
 	)
 }
+pub fn tab_nostr(key_config: &SharedKeyConfig) -> String {
+	format!(
+		"Nostr [{}]",
+		key_config.get_hint(key_config.keys.tab_nostr)
+	)
+}
 pub fn tab_divider(_key_config: &SharedKeyConfig) -> String {
 	" | ".to_string()
 }
