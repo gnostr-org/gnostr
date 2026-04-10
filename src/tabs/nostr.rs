@@ -87,19 +87,22 @@ impl Nostr {
 		&mut self,
 		patch: crate::components::nostr_types::NostrItem,
 	) {
-		self.nostr_items.push(patch);
+		let idx = self.nostr_items.len();
+self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: patch });
 	}
 	pub fn push_issue(
 		&mut self,
 		issue: crate::components::nostr_types::NostrItem,
 	) {
-		self.nostr_items.push(issue);
+		let idx = self.nostr_items.len();
+self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: issue });
 	}
 	pub fn push_announcement(
 		&mut self,
 		ann: crate::components::nostr_types::NostrItem,
 	) {
-		self.nostr_items.push(ann);
+		let idx = self.nostr_items.len();
+self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: ann });
 	}
 	pub fn apply_status(
 		&mut self,
