@@ -477,6 +477,7 @@ impl DrawableComponent for Nostr {
     let item = &indexed_item.item;
     ListItem::new(format!("{:?}", item))
 }).collect();
+use ratatui::widgets::ListState;
 let mut state = ListState::default();
 if !self.nostr_items.is_empty() { // IndexedNostrItem list
     let idx = self.selected_idx.min(self.nostr_items.len().saturating_sub(1));
