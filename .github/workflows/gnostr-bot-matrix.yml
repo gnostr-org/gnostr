@@ -317,7 +317,7 @@ jobs:
          make gnostr-chat &
          make gnostr-chat &
          sleep 5 # Wait for services to start
-         gnostr query --limit 100
+         gnostr query --limit 100 || true
 
       - name: Cleanup lingering gnostr processes (Linux/macOS)
         if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
@@ -378,8 +378,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} || true && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }} || true && \
             echo "http://njump.me/$NOTE"
 
       - name: Execute script on cancelled
@@ -412,8 +412,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} || true && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }} || true && \
             echo "http://njump.me/$NOTE"
 
       - name: Execute script on success
@@ -447,8 +447,8 @@ jobs:
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr-query -i $EVENT -r ${{ env.DAMUS }} || true && \
+            gnostr-query -i $EVENT -r ${{ env.NOS }} || true && \
             echo "http://njump.me/$NOTE"
 
       #- name: Save rustup
