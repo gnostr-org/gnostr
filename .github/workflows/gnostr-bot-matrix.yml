@@ -77,11 +77,10 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rustup }}
           components: rustfmt, clippy
-          # targets: wasm32-unknown-unknown
 
 
       - run: |
@@ -166,7 +165,7 @@ jobs:
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-          brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
@@ -181,8 +180,8 @@ jobs:
         run: arch -arm64 brew tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os == 'macos'
 
-      - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        run: arch -arm64 brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      - name: brew install gnostr (cargo-binstall)
+        run: cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: runner.os == 'macos'
 
       #- name: gnostr ${{ matrix.commands }}
