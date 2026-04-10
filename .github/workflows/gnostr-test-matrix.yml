@@ -100,10 +100,6 @@ jobs:
           # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && matrix.os != 'macos-15-intel'
 
-      - name: Calculate Odd/Even Status
-        id: time_check_hour
-        uses: ./.github/actions/calculate-odd-even
-
       - name: Use Bash for all subsequent steps
         shell: bash
         run: |
@@ -174,6 +170,10 @@ jobs:
 
           # Optional: Uncomment if you want to explicitly disable tag fetching
           # fetch-tags: 'false'
+
+      - name: Calculate Odd/Even Status
+        id: time_check_hour
+        uses: ./.github/actions/calculate-odd-even
 
       - name: printenv
         shell: bash
@@ -246,11 +246,15 @@ jobs:
 
       - name: Install OpenSSL for macOS
         run: |
-          brew install openssl@3
-          echo "/opt/homebrew/opt/openssl@3/bin" >> $GITHUB_PATH
-          echo "LDFLAGS=-L/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I/opt/homebrew/opt/openssl@3/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
+          if [ "$(uname -m)" = "arm64" ]; then
+            arch -arm64 brew install openssl@3
+          else
+            brew install openssl@3
+          fi
+          echo "$(brew --prefix openssl@3)/bin" >> $GITHUB_PATH
+          echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
@@ -269,23 +273,33 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
-        run: brew tap gnostr-org/homebrew-gnostr-org || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD tap gnostr-org/homebrew-gnostr-org || true
         if: runner.os != 'windows'
 
       - name: brew tap nostorg/nostr
-        run: brew tap nostorg/nostr || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD tap nostorg/nostr || true
         if: runner.os != 'windows'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
-        run: brew tap randymcmillan/homebrew-randymcmillan || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os != 'windows'
 
       - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD install gnostr-org/gnostr-org/gnostr && gnostr --help || true
         if: runner.os != 'windows'
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines
-        run: brew install cargo-llvm-cov cargo-llvm-lines || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
 
       #- name: powershell install gnostr
