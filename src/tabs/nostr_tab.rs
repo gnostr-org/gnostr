@@ -110,8 +110,35 @@ impl Component for NostrTab {
         if let Event::Key(key) = ev {
             use crossterm::event::{KeyCode, KeyModifiers};
             if key.code == KeyCode::Char('N') && key.modifiers.contains(KeyModifiers::SHIFT) {
-                self.status_msg = "Help: Up/Down to navigate, Enter to select".to_string();
+                use crate::keys::GituiKeyEvent;
+                let nav_up = &self.key_config.keys.move_up;
+                let nav_down = &self.key_config.keys.move_down;
+                let enter = &self.key_config.keys.enter;
+                self.status_msg = format!(
+                    "Help: {} to move up, {} to move down, {} to select",
+                    format_key(nav_up),
+                    format_key(nav_down),
+                    format_key(enter)
+                );
                 return Ok(EventState::Consumed);
+
+// Helper to format key bindings for display
+fn format_key(key: &GituiKeyEvent) -> String {
+    use crossterm::event::KeyModifiers;
+    let mut s = String::new();
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        s.push_str("Ctrl+");
+    }
+    if key.modifiers.contains(KeyModifiers::SHIFT) {
+        s.push_str("Shift+");
+    }
+    if key.modifiers.contains(KeyModifiers::ALT) {
+        s.push_str("Alt+");
+    }
+    s.push_str(&format!("{:?}", key.code));
+    s
+}
+
             }
         }
         let list_result = self.list.event(ev)?;
