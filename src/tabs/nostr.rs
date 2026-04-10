@@ -36,11 +36,14 @@ use std::{rc::Rc, time::Duration};
 use sync::CommitTags;
 
 struct LogSearchResult {
+	#[allow(dead_code)]
 	options: LogFilterSearchOptions,
+	#[allow(dead_code)]
 	duration: Duration,
 }
 
 //TODO: deserves its own component
+#[allow(dead_code)]
 enum LogSearch {
 	Off,
 	Searching(
@@ -68,11 +71,13 @@ pub struct Nostr {
 	git_local_branches: AsyncSingleJob<AsyncBranchesJob>,
 	git_remote_branches: AsyncSingleJob<AsyncBranchesJob>,
 	// Nostr async client integration
+	#[allow(dead_code)]
 	nostr_client: Option<asyncgit::nostr::AsyncNostr>,
 	nostr_rx: Option<crossbeam_channel::Receiver<asyncgit::nostr::AsyncNostrNotification>>,
 	queue: Queue,
 	visible: bool,
 	key_config: SharedKeyConfig,
+	#[allow(dead_code)]
 	sender: Sender<AsyncGitNotification>,
 	theme: SharedTheme,
 }
@@ -279,6 +284,7 @@ Self {
 	}
 
 	///
+	#[allow(dead_code)]
 	pub fn any_work_pending(&self) -> bool {
 		self.git_log.is_pending()
 			|| self.is_search_pending()
@@ -344,6 +350,7 @@ Self {
 	}
 
 	///
+	#[allow(dead_code)]
 	pub fn update_git(
 		&mut self,
 		ev: AsyncGitNotification,
@@ -409,6 +416,7 @@ Self {
 	}
 
 	///
+	#[allow(dead_code)]
 	pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
 		self.list.select_commit(id)
 	}
@@ -433,6 +441,7 @@ Self {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn search(&mut self, options: LogFilterSearchOptions) {
 		if !self.can_start_search() {
 			return;
@@ -461,6 +470,7 @@ Self {
 		}
 	}
 
+	#[allow(dead_code)]
 	fn update_search_state(&mut self) {
 		match &mut self.search {
 			LogSearch::Off | LogSearch::Results(_) => (),
@@ -508,6 +518,7 @@ Self {
 		!matches!(self.search, LogSearch::Off)
 	}
 
+	#[allow(dead_code)]
 	fn draw_search<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
 		let (text, title) = match &self.search {
 			LogSearch::Searching(_, options, progress) => (
