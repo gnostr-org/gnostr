@@ -19,7 +19,8 @@ use asyncgit::{
 		LogFilterSearchOptions, RepoPathRef,
 	},
 	AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification,
-	AsyncLog, AsyncTags, ProgressPercent,
+	AsyncLog, AsyncTags, ProgressPercent, CommitFilesParams, FetchStatus,
+	//nostr::AsyncNostrNotification,
 };
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
@@ -34,7 +35,7 @@ use ratatui::{
 use std::{rc::Rc, time::Duration};
 use sync::CommitTags;
 
-struct LogSearchResult {
+struct NostrLogSearchResult {
 	#[allow(dead_code)]
 	options: LogFilterSearchOptions,
 	#[allow(dead_code)]
@@ -43,14 +44,14 @@ struct LogSearchResult {
 
 //TODO: deserves its own component
 #[allow(dead_code)]
-enum LogSearch {
+enum NostrLogSearch {
 	Off,
 	Searching(
 		AsyncSingleJob<AsyncCommitFilterJob>,
 		LogFilterSearchOptions,
 		Option<ProgressPercent>,
 	),
-	Results(LogSearchResult),
+	Results(NostrLogSearchResult),
 }
 
 ///
@@ -59,24 +60,24 @@ pub struct Nostr {
     selected_idx: usize,
 	/// List of Nostr items (patches, issues, announcements)
 	 nostr_items: Vec<crate::components::nostr_types::IndexedNostrItem>,
-    
+
 	pub status_msg: String,
 	repo: RepoPathRef,
 	commit_details: CommitDetailsComponent,
-	list: CommitList,
+	pub list: CommitList,
 	git_log: AsyncLog,
-	search: LogSearch,
+	search: NostrLogSearch,
 	git_tags: AsyncTags,
 	git_local_branches: AsyncSingleJob<AsyncBranchesJob>,
 	git_remote_branches: AsyncSingleJob<AsyncBranchesJob>,
 	// Nostr async client integration
 	#[allow(dead_code)]
 	nostr_client: Option<asyncgit::nostr::AsyncNostr>,
+	//nostr_tx: Option<crossbeam_channel::Sender<asyncgit::nostr::AsyncNostrNotification>>,
 	nostr_rx: Option<crossbeam_channel::Receiver<asyncgit::nostr::AsyncNostrNotification>>,
 	queue: Queue,
 	visible: bool,
 	key_config: SharedKeyConfig,
-	#[allow(dead_code)]
 	sender: Sender<AsyncGitNotification>,
 	theme: SharedTheme,
 }
@@ -92,31 +93,31 @@ impl Nostr {
 		relay_urls: Vec<String>,
 	) -> Result<()> {
 		if let Some(client) = &mut self.nostr_client {
-			client.connect(identity, relay_urls)?;
+		        client.connect(identity, relay_urls)?;
 		}
-		Ok(())
+	Ok(())
 	}
-
+	
 	pub fn set_items(
 		&mut self,
 		_items: Vec<crate::components::nostr_types::NostrItem>,
 	) {
 	}
-
+	
 	pub fn push_patch(
 		&mut self,
 		patch: crate::components::nostr_types::NostrItem,
 	) {
-		let idx = self.nostr_items.len();
-self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: patch });
-		self.sort_items();
+	let idx = self.nostr_items.len();
+	self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: patch });
+	self.sort_items();
 	}
 	pub fn push_issue(
 		&mut self,
 		issue: crate::components::nostr_types::NostrItem,
 	) {
 		let idx = self.nostr_items.len();
-self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: issue });
+		self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: issue });
 		self.sort_items();
 	}
 	pub fn push_announcement(
@@ -124,7 +125,7 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 		ann: crate::components::nostr_types::NostrItem,
 	) {
 		let idx = self.nostr_items.len();
-self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: ann });
+	self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: ann });
 		self.sort_items();
 	}
 	pub fn apply_status(
@@ -157,7 +158,7 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 	fn move_selection_down(&mut self) {
 		if self.item_count() > 0 && self.selected_idx < self.item_count() - 1 {
 			self.selected_idx += 1;
-		}
+	}
 	}
 
 	fn draw_list<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
@@ -169,152 +170,150 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 			.nostr_items
 			.iter()
 			.map(|indexed_item| {
-				let item = &indexed_item.item;
-				
-				let kind_span = Span::styled(
-					format!("[{}] ", item.kind_label()),
-					self.theme.commit_hash(false),
-				);
-				let status_span = Span::styled(
-					format!("[{}] ", item.status_label()),
-					self.theme.commit_time(false),
-				);
-				let subject_span = Span::styled(
-					item.subject().to_owned(),
-					self.theme.text(true, false),
-				);
-				let author_span = Span::styled(
-					format!("  <{}>", item.pubkey_short()),
-					self.theme.commit_author(false),
-				);
-				ListItem::new(Line::from(vec![
-					kind_span,
-					status_span,
-					subject_span,
-					author_span,
-				]))
+			        let item = &indexed_item.item;
+			        
+			        let kind_span = Span::styled(
+			                format!("[{}] ", item.kind_label()),
+			                self.theme.commit_hash(false),
+			        );
+			        let status_span = Span::styled(
+			                format!("[{}] ", item.status_label()),
+			                self.theme.commit_time(false),
+			        );
+			        let subject_span = Span::styled(
+			                item.subject().to_owned(),
+			                self.theme.text(true, false),
+			        );
+			        let author_span = Span::styled(
+			                format!("  <{}>", item.pubkey_short()),
+			                self.theme.commit_author(false),
+			        );
+			        ListItem::new(Line::from(vec![
+			                kind_span,
+			                status_span,
+			                subject_span,
+			                author_span,
+			        ]))
 			})
 			.collect();
 
 		let list = List::new(items)
-			.block(
-				Block::default()
-					.title(" NIP-34: Patches & Issues ")
-					.borders(Borders::ALL),
-			)
-			.highlight_style(
-				Style::default().add_modifier(Modifier::REVERSED),
-			);
+		        .block(
+		                Block::default()
+		                        .title(" NIP-34: Patches & Issues ")
+		                        .borders(Borders::ALL),
+		        )
+		        .highlight_style(
+		                Style::default().add_modifier(Modifier::REVERSED),
+		        );
 
 		let mut state = ListState::default();
 		if !self.nostr_items.is_empty() {
-			let idx = self.selected_idx.min(self.nostr_items.len().saturating_sub(1));
-			state.select(Some(idx));
+		        let idx = self.selected_idx.min(self.nostr_items.len().saturating_sub(1));
+		        state.select(Some(idx));
 		}
 		f.render_stateful_widget(list, area, &mut state.clone());
-	}
+		}
 
-	fn draw_detail<B: Backend>(&self, f: &mut Frame<B>, area: Rect) -> Result<()> {
+		fn draw_detail<B: Backend>(&self, f: &mut Frame<B>, area: Rect) -> Result<()> {
 		use ratatui::widgets::{Paragraph, Wrap};
 
 		let detail_text = if let Some(indexed_item) = self.nostr_items.get(self.selected_idx) {
-			let item = &indexed_item.item;
-			let mut lines = Vec::new();
+		let item = &indexed_item.item;
+		let mut lines = Vec::new();
 
-			match item {
-				crate::components::nostr_types::NostrItem::Patch(patch) => {
-					lines.push(format!("Kind: 1617 (Patch)"));
-					lines.push(format!("ID: {}", patch.id));
-					lines.push(format!("Author: {}", patch.pubkey));
-					lines.push(format!("Created: {}", patch.created_at));
-					lines.push(format!("Status: {}", patch.status.label()));
-					lines.push(format!("Repository: {}", patch.repo_a_tag));
-					if let Some(commit) = &patch.commit {
-						lines.push(format!("Commit: {}", commit));
-					}
-					lines.push("".to_string());
-					lines.push(format!("Subject: {}", patch.subject));
-					lines.push("".to_string());
-					lines.push("Content:".to_string());
-					lines.push(patch.content.clone());
-				}
-				crate::components::nostr_types::NostrItem::Issue(issue) => {
-					lines.push(format!("Kind: 1621 (Issue)"));
-					lines.push(format!("ID: {}", issue.id));
-					lines.push(format!("Author: {}", issue.pubkey));
-					lines.push(format!("Created: {}", issue.created_at));
-					lines.push(format!("Status: {}", issue.status.label()));
-					lines.push(format!("Repository: {}", issue.repo_a_tag));
-					if !issue.labels.is_empty() {
-						lines.push(format!("Labels: {}", issue.labels.join(", ")));
-					}
-					lines.push("".to_string());
-					lines.push(format!("Subject: {}", issue.subject));
-					lines.push("".to_string());
-					lines.push("Content:".to_string());
-					lines.push(issue.content.clone());
-				}
-				crate::components::nostr_types::NostrItem::Announcement(ann) => {
-					lines.push(format!("Kind: 30617 (Repository Announcement)"));
-					lines.push(format!("ID: {}", ann.id));
-					lines.push(format!("Author: {}", ann.pubkey));
-					lines.push(format!("Repository: {}", ann.repo_id));
-					lines.push("".to_string());
-					lines.push(format!("Name: {}", ann.name));
-					lines.push("".to_string());
-					lines.push("Description:".to_string());
-					lines.push(ann.description.clone());
-					if !ann.clone_urls.is_empty() {
-						lines.push("".to_string());
-						lines.push("Clone URLs:".to_string());
-						for url in &ann.clone_urls {
-							lines.push(format!("  {}", url));
-						}
-					}
-					if !ann.web_urls.is_empty() {
-						lines.push("".to_string());
-						lines.push("Web URLs:".to_string());
-						for url in &ann.web_urls {
-							lines.push(format!("  {}", url));
-						}
-					}
-				}
-			}
+		match item {
+		        crate::components::nostr_types::NostrItem::Patch(patch) => {
+		                lines.push(format!("Kind: 1617 (Patch)"));
+		                lines.push(format!("ID: {}", patch.id));
+		                lines.push(format!("Author: {}", patch.pubkey));
+		                lines.push(format!("Created: {}", patch.created_at));
+		                lines.push(format!("Status: {}", patch.status.label()));
+		                lines.push(format!("Repository: {}", patch.repo_a_tag));
+		                if let Some(commit) = &patch.commit {
+		                        lines.push(format!("Commit: {}", commit));
+		                }
+		                lines.push("".to_string());
+		                lines.push(format!("Subject: {}", patch.subject));
+		                lines.push("".to_string());
+		                lines.push("Content:".to_string());
+		                lines.push(patch.content.clone());
+		        }
+		        crate::components::nostr_types::NostrItem::Issue(issue) => {
+		                lines.push(format!("Kind: 1621 (Issue)"));
+		                lines.push(format!("ID: {}", issue.id));
+		                lines.push(format!("Author: {}", issue.pubkey));
+		                lines.push(format!("Created: {}", issue.created_at));
+		                lines.push(format!("Status: {}", issue.status.label()));
+		                lines.push(format!("Repository: {}", issue.repo_a_tag));
+		                if !issue.labels.is_empty() {
+		                        lines.push(format!("Labels: {}", issue.labels.join(", ")));
+		                }
+		                lines.push("".to_string());
+		                lines.push(format!("Subject: {}", issue.subject));
+		                lines.push("".to_string());
+		                lines.push("Content:".to_string());
+		                lines.push(issue.content.clone());
+		        }
+		        crate::components::nostr_types::NostrItem::Announcement(ann) => {
+		                lines.push(format!("Kind: 30617 (Repository Announcement)"));
+		                lines.push(format!("ID: {}", ann.id));
+		                lines.push(format!("Author: {}", ann.pubkey));
+		                lines.push(format!("Repository: {}", ann.repo_id));
+		                lines.push("".to_string());
+		                lines.push(format!("Name: {}", ann.name));
+		                lines.push("".to_string());
+		                lines.push("Description:".to_string());
+		                lines.push(ann.description.clone());
+		                if !ann.clone_urls.is_empty() {
+		                        lines.push("".to_string());
+		                        lines.push("Clone URLs:".to_string());
+		                        for url in &ann.clone_urls {
+		                                lines.push(format!("  {}", url));
+		                        }
+		                }
+		                if !ann.web_urls.is_empty() {
+		                        lines.push("".to_string());
+		                        lines.push("Web URLs:".to_string());
+		                        for url in &ann.web_urls {
+		                                lines.push(format!("  {}", url));
+		                        }
+		                }
+		        }
+		}
 
-			lines.join("\n")
+		lines.join("\n")
 		} else {
-			"No event selected".to_string()
+		        "No event selected".to_string()
 		};
 
 		let p = Paragraph::new(detail_text)
-			.block(
-				Block::default()
-					.borders(Borders::ALL)
-					.title(" Event Details "),
-			)
-			.wrap(Wrap { trim: false });
+		        .block(
+		                Block::default()
+		                        .borders(Borders::ALL)
+		                        .title(" Event Details "),
+		        )
+		        .wrap(Wrap { trim: false });
 		f.render_widget(p, area);
 		Ok(())
-	}
+		}
 
 	#[allow(dead_code)]
 	fn draw_footer<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
-		use ratatui::widgets::Paragraph;
+	        use ratatui::widgets::Paragraph;
 
-		let count = self.item_count();
-		let msg = format!(
-			" {} │ {} items ",
-			self.status_msg, count
-		);
-		let p = Paragraph::new(msg)
-			.style(self.theme.text(false, false));
-		f.render_widget(p, area);
+	        let count = self.item_count();
+	        let msg = format!(
+	                " {} │ {} items ",
+	                self.status_msg, count
+	        );
+	        let p = Paragraph::new(msg)
+	                .style(self.theme.text(false, false));
+	        f.render_widget(p, area);
 	}
 
-	///
+
 	pub fn new(
-		// status_msg is new for Nostr compatibility
-		// with app.rs usage
 		repo: &RepoPathRef,
 		queue: &Queue,
 		sender: &Sender<AsyncGitNotification>,
@@ -323,46 +322,46 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 	) -> Self {
 		let (nostr_tx, nostr_rx) = crossbeam_channel::unbounded();
 let nostr_client = Some(asyncgit::nostr::AsyncNostr::new(nostr_tx));
+			let selected_idx = 0;
 Self {
-			repo: repo.clone(),
-			queue: queue.clone(),
-			commit_details: CommitDetailsComponent::new(
-				repo,
-				queue,
-				sender,
-				theme.clone(),
-				key_config.clone(),
-			),
-			list: CommitList::new(
-				repo.clone(),
-				&strings::log_title(&key_config),
-				theme.clone(),
-				queue.clone(),
-				key_config.clone(),
-			),
-			git_log: AsyncLog::new(
-				repo.borrow().clone(),
-				sender,
-				None,
-			),
-			search: LogSearch::Off,
-			git_tags: AsyncTags::new(repo.borrow().clone(), sender),
-			git_local_branches: AsyncSingleJob::new(sender.clone()),
-			git_remote_branches: AsyncSingleJob::new(sender.clone()),
-			nostr_client,
-			nostr_rx: Some(nostr_rx),
-			nostr_items: Vec::new(),
-            selected_idx: 0, // Start with first item selected
-			visible: false,
-			key_config,
-			sender: sender.clone(),
-			theme,
-			status_msg: String::new(),
-		}
+                        status_msg: String::from(""),
+                        nostr_rx: Some(nostr_rx),
+                        nostr_client,
+                        nostr_items: Vec::new(),
+                        sender: sender.clone(),
+                        selected_idx: 0,
+                        repo: repo.clone(),
+                        queue: queue.clone(),
+                        commit_details: CommitDetailsComponent::new(
+                                repo,
+                                queue,
+                                sender,
+                                theme.clone(),
+                                key_config.clone(),
+                        ),
+                        list: CommitList::new(
+                                repo.clone(),
+                                &strings::log_title(&key_config),
+                                theme.clone(),
+                                queue.clone(),
+                                key_config.clone(),
+                        ),
+                        git_log: AsyncLog::new(
+                                repo.borrow().clone(),
+                                sender,
+                                None,
+                        ),
+                        search: NostrLogSearch::Off,
+                        git_tags: AsyncTags::new(repo.borrow().clone(), sender),
+                        git_local_branches: AsyncSingleJob::new(sender.clone()),
+                        git_remote_branches: AsyncSingleJob::new(sender.clone()),
+                        visible: false,
+                        key_config,
+                        theme,
+                }
 	}
 
 	///
-	#[allow(dead_code)]
 	pub fn any_work_pending(&self) -> bool {
 		self.git_log.is_pending()
 			|| self.is_search_pending()
@@ -373,35 +372,33 @@ Self {
 	}
 
 	const fn is_search_pending(&self) -> bool {
-		matches!(self.search, LogSearch::Searching(_, _, _))
+		matches!(self.search, NostrLogSearch::Searching(_, _, _))
 	}
 
 	///
 	pub fn update(&mut self) -> Result<()> {
-		use asyncgit::nostr::AsyncNostrNotification;
-		
-		// Poll Nostr relay for new events
-		if let Some(rx) = &self.nostr_rx {
-			let mut notifications = Vec::new();
-			while let Ok(notification) = rx.try_recv() {
-				notifications.push(notification);
+
+		//if self.commit_details.is_visible() {
+		if self.list.is_visible() {
+	
+		//if self.nostr_event.is_visible() {
+			if self.git_log.fetch()? == FetchStatus::Started {
+				self.list.clear();
 			}
-			for notification in notifications {
-				match notification {
-					AsyncNostrNotification::RepoPatch(patch) => {
-						self.push_patch(crate::components::nostr_types::NostrItem::Patch(*patch));
-					}
-					AsyncNostrNotification::RepoIssue(issue) => {
-						self.push_issue(crate::components::nostr_types::NostrItem::Issue(*issue));
-					}
-					AsyncNostrNotification::RepoAnnouncement(ann) => {
-						self.push_announcement(crate::components::nostr_types::NostrItem::Announcement(*ann));
-					}
-					AsyncNostrNotification::RepoStatus { target_id, status } => {
-						self.apply_status(&target_id, status);
-					}
-					_ => {}
-				}
+
+			self.list
+				.refresh_extend_data(self.git_log.extract_items()?);
+
+			self.git_tags.request(Duration::from_secs(3), false)?;
+
+			if self.commit_details.is_visible() {
+				let commit = self.selected_commit();
+				let tags = self.selected_commit_tags(&commit);
+
+				self.commit_details.set_commits(
+					commit.map(CommitFilesParams::from),
+					&tags,
+				)?;
 			}
 		}
 
@@ -409,7 +406,6 @@ Self {
 	}
 
 	///
-	#[allow(dead_code)]
 	pub fn update_git(
 		&mut self,
 		ev: AsyncGitNotification,
@@ -459,13 +455,11 @@ Self {
 		Ok(())
 	}
 
-	#[allow(dead_code)]
-	fn selected_commit(&self) -> Option<CommitId> {
+	pub fn selected_commit(&self) -> Option<CommitId> {
 		self.list.selected_entry().map(|e| e.id)
 	}
 
-	#[allow(dead_code)]
-	fn selected_commit_tags(
+	pub fn selected_commit_tags(
 		&self,
 		commit: &Option<CommitId>,
 	) -> Option<CommitTags> {
@@ -477,12 +471,10 @@ Self {
 	}
 
 	///
-	#[allow(dead_code)]
 	pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
 		self.list.select_commit(id)
 	}
 
-	#[allow(dead_code)]
 	fn revert_commit(&self) -> Result<()> {
 		if let Some(c) = self.selected_commit() {
 			sync::revert_commit(&self.repo.borrow(), c)?;
@@ -492,7 +484,6 @@ Self {
 		Ok(())
 	}
 
-	#[allow(dead_code)]
 	fn inspect_commit(&self) {
 		if let Some(commit_id) = self.selected_commit() {
 			let tags = self.selected_commit_tags(&Some(commit_id));
@@ -504,7 +495,6 @@ Self {
 		}
 	}
 
-	#[allow(dead_code)]
 	pub fn search(&mut self, options: LogFilterSearchOptions) {
 		if !self.can_start_search() {
 			return;
@@ -512,7 +502,7 @@ Self {
 
 		if matches!(
 			self.search,
-			LogSearch::Off | LogSearch::Results(_)
+			NostrLogSearch::Off | NostrLogSearch::Results(_)
 		) {
 			log::info!("start search: {:?}", options);
 
@@ -527,17 +517,16 @@ Self {
 				filter,
 			));
 
-			self.search = LogSearch::Searching(job, options, None);
+			self.search = NostrLogSearch::Searching(job, options, None);
 
 			self.list.set_highlighting(None);
 		}
 	}
 
-	#[allow(dead_code)]
 	fn update_search_state(&mut self) {
 		match &mut self.search {
-			LogSearch::Off | LogSearch::Results(_) => (),
-			LogSearch::Searching(search, options, progress) => {
+			NostrLogSearch::Off | NostrLogSearch::Results(_) => (),
+			NostrLogSearch::Searching(search, options, progress) => {
 				if search.is_pending() {
 					//update progress
 					*progress = search.progress();
@@ -557,7 +546,7 @@ Self {
 							));
 
 							self.search =
-								LogSearch::Results(LogSearchResult {
+								NostrLogSearch::Results(NostrLogSearchResult {
 									options: options.clone(),
 									duration: search.duration,
 								});
@@ -569,7 +558,7 @@ Self {
 								)),
 							);
 
-							self.search = LogSearch::Off;
+							self.search = NostrLogSearch::Off;
 						}
 					}
 				}
@@ -577,15 +566,13 @@ Self {
 		}
 	}
 
-	#[allow(dead_code)]
 	fn is_in_search_mode(&self) -> bool {
-		!matches!(self.search, LogSearch::Off)
+		!matches!(self.search, NostrLogSearch::Off)
 	}
 
-	#[allow(dead_code)]
-	fn draw_search<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+	pub fn draw_search<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
 		let (text, title) = match &self.search {
-			LogSearch::Searching(_, options, progress) => (
+			NostrLogSearch::Searching(_, options, progress) => (
 				format!("'{}'", options.search_pattern.clone()),
 				format!(
 					"({}%)",
@@ -594,7 +581,7 @@ Self {
 						.unwrap_or_default()
 				),
 			),
-			LogSearch::Results(results) => {
+			NostrLogSearch::Results(results) => {
 				let info = self.list.highlighted_selection_info();
 
 				(
@@ -610,7 +597,7 @@ Self {
 					),
 				)
 			}
-			LogSearch::Off => (String::new(), String::new()),
+			NostrLogSearch::Off => (String::new(), String::new()),
 		};
 
 		f.render_widget(
@@ -633,12 +620,10 @@ Self {
 		);
 	}
 
-	#[allow(dead_code)]
 	fn can_leave_search(&self) -> bool {
 		self.is_in_search_mode() && !self.is_search_pending()
 	}
 
-	#[allow(dead_code)]
 	fn can_start_search(&self) -> bool {
 		!self.git_log.is_pending()
 	}
@@ -650,6 +635,18 @@ impl DrawableComponent for Nostr {
 		f: &mut Frame<B>,
 		area: Rect,
 	) -> Result<()> {
+		let area = if self.is_in_search_mode() {
+			Layout::default()
+				.direction(Direction::Vertical)
+				.constraints(
+					[Constraint::Min(1), Constraint::Length(3)]
+						.as_ref(),
+				)
+				.split(area)
+		} else {
+			Rc::new([area])
+		};
+
 		let chunks = Layout::default()
 			.direction(Direction::Horizontal)
 			.constraints(
@@ -659,13 +656,17 @@ impl DrawableComponent for Nostr {
 				]
 				.as_ref(),
 			)
-			.split(area);
+			.split(area[0]);
 
 		if self.commit_details.is_visible() {
-			self.draw_list(f, chunks[0]);
-			self.draw_detail(f, chunks[1])?;
+			self.list.draw(f, chunks[0])?;
+			self.commit_details.draw(f, chunks[1])?;
 		} else {
-			self.draw_list(f, area);
+			self.list.draw(f, area[0])?;
+		}
+
+		if self.is_in_search_mode() {
+			self.draw_search(f, area[1]);
 		}
 
 		Ok(())
@@ -683,14 +684,7 @@ impl Component for Nostr {
 				self.update()?;
 				return Ok(EventState::Consumed);
 			} else if let Event::Key(k) = ev {
-				// Nostr item navigation
-				if key_match(k, self.key_config.keys.move_up) {
-					self.move_selection_up();
-					return Ok(EventState::Consumed);
-				} else if key_match(k, self.key_config.keys.move_down) {
-					self.move_selection_down();
-					return Ok(EventState::Consumed);
-				} else if key_match(k, self.key_config.keys.enter) {
+				if key_match(k, self.key_config.keys.enter) {
 					self.commit_details.toggle_visible()?;
 					self.update()?;
 					return Ok(EventState::Consumed);
@@ -699,7 +693,7 @@ impl Component for Nostr {
 					self.key_config.keys.exit_popup,
 				) {
 					if self.can_leave_search() {
-						self.search = LogSearch::Off;
+						self.search = NostrLogSearch::Off;
 						self.list.set_highlighting(None);
 						return Ok(EventState::Consumed);
 					}
