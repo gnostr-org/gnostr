@@ -149,6 +149,16 @@ jobs:
         run: |
           gnostr --help
 
+      - name: gnostr --version
+        shell: bash
+        run: |
+          gnostr --version
+
+      - name: gnostr generate-keypair
+        shell: bash
+        run: |
+          gnostr generate-keypair
+
       - name: gnostr
         shell: bash
         run: |
