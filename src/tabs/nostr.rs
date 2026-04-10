@@ -53,6 +53,8 @@ enum LogSearch {
 
 ///
 pub struct Nostr {
+	/// List of Nostr items (patches, issues, announcements)
+	 nostr_items: Vec<crate::components::nostr_types::NostrItem>,
 	pub status_msg: String,
 	repo: RepoPathRef,
 	commit_details: CommitDetailsComponent,
@@ -83,18 +85,21 @@ impl Nostr {
 
 	pub fn push_patch(
 		&mut self,
-		_patch: crate::components::nostr_types::NostrItem,
+		patch: crate::components::nostr_types::NostrItem,
 	) {
+		self.nostr_items.push(patch);
 	}
 	pub fn push_issue(
 		&mut self,
-		_issue: crate::components::nostr_types::NostrItem,
+		issue: crate::components::nostr_types::NostrItem,
 	) {
+		self.nostr_items.push(issue);
 	}
 	pub fn push_announcement(
 		&mut self,
-		_ann: crate::components::nostr_types::NostrItem,
+		ann: crate::components::nostr_types::NostrItem,
 	) {
+		self.nostr_items.push(ann);
 	}
 	pub fn apply_status(
 		&mut self,
