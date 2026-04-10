@@ -86,6 +86,7 @@ use asyncgit::nostr::PatchStatus;
 
 impl Nostr {
 	/// Connect to Nostr relays and start receiving NIP-34 events
+	#[allow(dead_code)]
 	pub fn connect(
 		&mut self,
 		identity: asyncgit::nostr::NostrIdentity,
