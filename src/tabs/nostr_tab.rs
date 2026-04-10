@@ -110,7 +110,7 @@ impl Component for NostrTab {
         if let Event::Key(key) = ev {
             use crossterm::event::{KeyCode, KeyModifiers};
             if key.code == KeyCode::Char('N') && key.modifiers.contains(KeyModifiers::SHIFT) {
-                use crate::keys::GituiKeyEvent;
+                use crate::keys::key_list::GituiKeyEvent;
                 let nav_up = &self.key_config.keys.move_up;
                 let nav_down = &self.key_config.keys.move_down;
                 let enter = &self.key_config.keys.enter;
