@@ -53,6 +53,7 @@ enum LogSearch {
 
 ///
 pub struct Nostr {
+    pub status_msg: String,
 	repo: RepoPathRef,
 	commit_details: CommitDetailsComponent,
 	list: CommitList,
@@ -71,6 +72,8 @@ pub struct Nostr {
 impl Nostr {
 	///
 	pub fn new(
+        // status_msg is new for Nostr compatibility
+        // with app.rs usage
 		repo: &RepoPathRef,
 		queue: &Queue,
 		sender: &Sender<AsyncGitNotification>,
