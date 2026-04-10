@@ -58,6 +58,13 @@ impl NostrTab {
     }
 }
 
+impl NostrTab {
+    /// Set the entire list of Nostr items (patches, issues, announcements)
+    pub fn set_items(&mut self, items: Vec<NostrItem>) {
+        self.list.set_items(items);
+    }
+}
+
 impl DrawableComponent for NostrTab {
     fn draw<B: Backend>(&self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
         let chunks = Layout::default()
@@ -65,7 +72,18 @@ impl DrawableComponent for NostrTab {
             .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
             .split(rect);
         self.list.draw(f, chunks[0])?;
-        // Optionally, draw detail in chunks[1] if needed
+        // Draw details of the selected item in chunks[1]
+        if let Some(item) = self.selected_item() {
+            let detail = format!(
+                "Type: {}\nStatus: {}\nPubkey: {}\n\n{}",
+                item.kind_label(),
+                item.status_label(),
+                item.pubkey_short(),
+                item.content()
+            );
+            let p = Paragraph::new(detail).style(self.theme.text(false, false));
+            f.render_widget(p, chunks[1]);
+        }
         let footer_area = Rect {
             x: rect.x,
             y: rect.y + rect.height.saturating_sub(1),
