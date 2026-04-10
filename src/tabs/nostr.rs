@@ -69,6 +69,8 @@ pub struct Nostr {
 	theme: SharedTheme,
 }
 
+use asyncgit::nostr::PatchStatus;
+
 impl Nostr {
     pub fn push_patch(&mut self, _patch: crate::components::nostr_types::NostrItem) {}
     pub fn push_issue(&mut self, _issue: crate::components::nostr_types::NostrItem) {}
