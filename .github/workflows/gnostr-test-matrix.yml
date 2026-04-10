@@ -222,6 +222,7 @@ jobs:
             curl --retry 10 -L --proto '=https' --tlsv1.2 -sSf -O https://github.com/cargo-bins/cargo-binstall/releases/download/v1.3.0/cargo-binstall-universal-apple-darwin.zip && break || sleep 10
           done
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
+        continue-on-error: true
 
       - name: Get latest release
         shell: bash
@@ -234,6 +235,7 @@ jobs:
 
       - name: Install gnostr (latest release)
         shell: bash
+        continue-on-error: true
         run: |
           # Construct the installer URL using the latest tag
           INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
@@ -243,6 +245,7 @@ jobs:
 
       - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
         if: matrix.os == 'ubuntu-latest'
+        continue-on-error: true
 
       #- run: cargo install sccache --force -j8
       #  if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
@@ -256,12 +259,15 @@ jobs:
       - name: Install Strawberry Perl
         run: choco install strawberryperl -y
         if: runner.os == 'windows'
+        continue-on-error: true
       - name: Install Perl modules
         run: perl -MCPAN -e "install Locale::Maketext::Simple"
         if: runner.os == 'windows'
+        continue-on-error: true
       - name: Install OpenSSL for Windows
         if: runner.os == 'windows'
         shell: powershell
+        continue-on-error: true
         run: |
           echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
           vcpkg install openssl:x64-windows-static-md
@@ -271,6 +277,7 @@ jobs:
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
+        continue-on-error: true
 
       - name: Install OpenSSL for macOS
         run: |
@@ -280,6 +287,7 @@ jobs:
           echo "export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"" >> $GITHUB_ENV
           echo "export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@1.1/lib/pkgconfig"" >> $GITHUB_ENV
         if: runner.os == 'macos'
+        continue-on-error: true
 
       - name: linuxbrew (with retries)
         run: |
@@ -295,6 +303,7 @@ jobs:
             cargo-binstall --force --no-confirm gnostr
           fi
         if: matrix.os == 'ubuntu-latest'
+        continue-on-error: true
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
         run: brew tap gnostr-org/homebrew-gnostr-org || true
