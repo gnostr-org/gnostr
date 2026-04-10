@@ -10,7 +10,8 @@ use ratatui::{
     Frame,
 };
 use std::cell::RefCell;
-use crate::components::nostr_types::{NostrItem, PatchStatus};
+use crate::components::nostr_types::NostrItem;
+use asyncgit::nostr::PatchStatus;
 use crate::components::CommandText;
 
 #[derive(Clone, Debug)]
@@ -114,7 +115,7 @@ impl DrawableComponent for NostrListComponent {
         let items: Vec<ListItem> = self
             .items
             .iter()
-            .map(|item: &NostrItem| ListItem::new(item.clone()))
+            .map(|item: &NostrItem| ListItem::new(item.subject()))
             .collect();
         let list = List::new(items)
             .block(Block::default().borders(Borders::ALL).title("Nostr Events"));

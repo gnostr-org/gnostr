@@ -14,6 +14,7 @@ const KEY_LIST_FILENAME: &str = "key_bindings.ron";
 const KEY_SYMBOLS_FILENAME: &str = "key_symbols.ron";
 
 #[derive(Default, Clone)]
+#[derive(Debug)]
 pub struct KeyConfig {
 	pub keys: KeysList,
 	symbols: KeySymbols,

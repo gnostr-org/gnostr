@@ -1,8 +1,7 @@
 //! Shared types for Nostr tab and components
 
 #[cfg(feature = "nostr")]
-use asyncgit::nostr::{GitIssue, GitPatch, GitRepoAnnouncement, PatchStatus};
-
+use asyncgit::nostr::{GitIssue, GitPatch, GitRepoAnnouncement};
 #[cfg(feature = "nostr")]
 #[derive(Clone, Debug)]
 pub enum NostrItem {
@@ -69,5 +68,3 @@ impl NostrItem {
     }
 }
 
-#[cfg(feature = "nostr")]
-pub use asyncgit::nostr::PatchStatus;

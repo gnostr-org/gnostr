@@ -628,10 +628,12 @@ impl App {
 					"disconnected".to_owned();
 			}
 			AsyncNostrNotification::RepoPatch(patch) => {
-				self.nostr_tab.push_patch(*patch);
+				use crate::components::nostr_types::NostrItem;
+self.nostr_tab.push_patch(NostrItem::Patch(*patch));
 			}
 			AsyncNostrNotification::RepoIssue(issue) => {
-				self.nostr_tab.push_issue(*issue);
+				use crate::components::nostr_types::NostrItem;
+self.nostr_tab.push_issue(NostrItem::Issue(*issue));
 			}
 			AsyncNostrNotification::RepoStatus {
 				target_id,
@@ -645,7 +647,8 @@ impl App {
 					format!("announced {}", &id[..8.min(id.len())]);
 			}
 			AsyncNostrNotification::RepoAnnouncement(ann) => {
-				self.nostr_tab.push_announcement(*ann);
+				use crate::components::nostr_types::NostrItem;
+self.nostr_tab.push_announcement(NostrItem::Announcement(*ann));
 			}
 			AsyncNostrNotification::PatchSubmitted(id) => {
 				log::info!("nostr: patch submitted id={id}");

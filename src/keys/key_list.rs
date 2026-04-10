@@ -36,6 +36,7 @@ impl From<&GituiKeyEvent> for KeyEvent {
 
 #[derive(Clone, Patch)]
 #[patch_derive(Deserialize)]
+#[derive(Debug)]
 pub struct KeysList {
 	pub tab_status: GituiKeyEvent,
 	pub tab_log: GituiKeyEvent,

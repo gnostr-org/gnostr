@@ -1,5 +1,6 @@
 use crate::components::{CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, nostrlist::NostrListComponent};
-use crate::components::nostr_types::{NostrItem, PatchStatus};
+use crate::components::nostr_types::NostrItem;
+use asyncgit::nostr::PatchStatus;
 use crate::keys::SharedKeyConfig;
 use crate::ui::style::SharedTheme;
 use anyhow::Result;
@@ -7,7 +8,7 @@ use crossterm::event::Event;
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Paragraph},
     Frame,
 };
 

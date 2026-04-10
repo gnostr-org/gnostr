@@ -35,6 +35,7 @@ mod taglist;
 mod textinput;
 mod utils;
 pub mod nostrlist;
+pub mod nostr_types;
 
 pub use self::status_tree::StatusTreeComponent;
 pub use blame_file::{BlameFileComponent, BlameFileOpen};
