@@ -10,10 +10,12 @@ use ratatui::{
     Frame,
 };
 use std::cell::RefCell;
+use crate::components::nostr_types::{NostrItem, PatchStatus};
+use crate::components::CommandText;
 
 #[derive(Clone, Debug)]
 pub struct NostrListComponent {
-    items: Vec<crate::tabs::nostr_tab::NostrItem>,
+    items: Vec<NostrItem>,
     selected: usize,
     list_state: RefCell<ratatui::widgets::ListState>,
     theme: SharedTheme,
@@ -33,7 +35,7 @@ impl NostrListComponent {
         }
     }
 
-    pub fn set_items(&mut self, items: Vec<crate::tabs::nostr_tab::NostrItem>) {
+    pub fn set_items(&mut self, items: Vec<NostrItem>) {
         self.items = items;
         self.selected = 0;
         self.list_state.borrow_mut().select(Some(self.selected));
@@ -53,21 +55,21 @@ impl NostrListComponent {
         }
     }
 
-    pub fn push_patch(&mut self, patch: crate::tabs::nostr_tab::NostrItem) {
+    pub fn push_patch(&mut self, patch: NostrItem) {
         self.items.push(patch);
         self.sort_items();
     }
 
-    pub fn push_issue(&mut self, issue: crate::tabs::nostr_tab::NostrItem) {
+    pub fn push_issue(&mut self, issue: NostrItem) {
         self.items.push(issue);
         self.sort_items();
     }
 
-    pub fn push_announcement(&mut self, ann: crate::tabs::nostr_tab::NostrItem) {
+    pub fn push_announcement(&mut self, ann: NostrItem) {
         // Deduplicate by repo_id + pubkey
         let exists = self.items.iter().any(|item| {
-            if let crate::tabs::nostr_tab::NostrItem::Announcement(a) = item {
-                if let crate::tabs::nostr_tab::NostrItem::Announcement(new_a) = &ann {
+            if let NostrItem::Announcement(a) = item {
+                if let NostrItem::Announcement(new_a) = &ann {
                     a.pubkey == new_a.pubkey && a.repo_id == new_a.repo_id
                 } else {
                     false
@@ -82,24 +84,24 @@ impl NostrListComponent {
         }
     }
 
-    pub fn apply_status(&mut self, target_id: &str, status: crate::tabs::nostr_tab::PatchStatus) {
+    pub fn apply_status(&mut self, target_id: &str, status: PatchStatus) {
         for item in &mut self.items {
-            if item.id() == target_id {
+            if NostrItem::id(item) == target_id {
                 match item {
-                    crate::tabs::nostr_tab::NostrItem::Patch(p) => p.status = status.clone(),
-                    crate::tabs::nostr_tab::NostrItem::Issue(i) => i.status = status.clone(),
-                    crate::tabs::nostr_tab::NostrItem::Announcement(_) => {}
+                    NostrItem::Patch(p) => p.status = status.clone(),
+                    NostrItem::Issue(i) => i.status = status.clone(),
+                    NostrItem::Announcement(_) => {}
                 }
             }
         }
     }
 
-    pub fn selected_item(&self) -> Option<&crate::tabs::nostr_tab::NostrItem> {
+    pub fn selected_item(&self) -> Option<&NostrItem> {
         self.items.get(self.selected)
     }
 
     pub fn sort_items(&mut self) {
-        self.items.sort_by(|a, b| b.created_at().cmp(&a.created_at()));
+        self.items.sort_by(|a: &NostrItem, b: &NostrItem| b.created_at().cmp(&a.created_at()));
     }
 
     pub fn item_count(&self) -> usize {
@@ -112,7 +114,7 @@ impl DrawableComponent for NostrListComponent {
         let items: Vec<ListItem> = self
             .items
             .iter()
-            .map(|item| ListItem::new(item.clone()))
+            .map(|item: &NostrItem| ListItem::new(item.clone()))
             .collect();
         let list = List::new(items)
             .block(Block::default().borders(Borders::ALL).title("Nostr Events"));
@@ -124,8 +126,8 @@ impl DrawableComponent for NostrListComponent {
 impl Component for NostrListComponent {
     fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking {
         if self.visible || force_all {
-            out.push(CommandInfo::new("Navigate up", true, self.visible || force_all));
-            out.push(CommandInfo::new("Navigate down", true, self.visible || force_all));
+            out.push(CommandInfo::new(CommandText::new("Navigate up".to_owned(), "Move selection up", "navigation"), true, self.visible || force_all));
+            out.push(CommandInfo::new(CommandText::new("Navigate down".to_owned(), "Move selection down", "navigation"), true, self.visible || force_all));
         }
         CommandBlocking::PassingOn
     }
