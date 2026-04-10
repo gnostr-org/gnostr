@@ -19,8 +19,7 @@ use asyncgit::{
 		LogFilterSearchOptions, RepoPathRef,
 	},
 	AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification,
-	AsyncLog, AsyncTags, CommitFilesParams, FetchStatus,
-	ProgressPercent,
+	AsyncLog, AsyncTags, ProgressPercent,
 };
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
@@ -215,7 +214,7 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 		f.render_stateful_widget(list, area, &mut state.clone());
 	}
 
-	fn draw_detail<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+	fn draw_detail<B: Backend>(&self, f: &mut Frame<B>, area: Rect) -> Result<()> {
 		use ratatui::widgets::{Paragraph, Wrap};
 
 		let body = self
@@ -232,8 +231,10 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 			)
 			.wrap(Wrap { trim: false });
 		f.render_widget(p, area);
+		Ok(())
 	}
 
+	#[allow(dead_code)]
 	fn draw_footer<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
 		use ratatui::widgets::Paragraph;
 
@@ -315,6 +316,8 @@ Self {
 	///
 	pub fn update(&mut self) -> Result<()> {
 		use asyncgit::nostr::AsyncNostrNotification;
+		
+		// Poll Nostr relay for new events
 		if let Some(rx) = &self.nostr_rx {
 			let mut notifications = Vec::new();
 			while let Ok(notification) = rx.try_recv() {
@@ -336,27 +339,6 @@ Self {
 					}
 					_ => {}
 				}
-			}
-		}
-
-		if self.is_visible() {
-			if self.git_log.fetch()? == FetchStatus::Started {
-				self.list.clear();
-			}
-
-			self.list
-				.refresh_extend_data(self.git_log.extract_items()?);
-
-			self.git_tags.request(Duration::from_secs(3), false)?;
-
-			if self.commit_details.is_visible() {
-				let commit = self.selected_commit();
-				let tags = self.selected_commit_tags(&commit);
-
-				self.commit_details.set_commits(
-					commit.map(CommitFilesParams::from),
-					&tags,
-				)?;
 			}
 		}
 
@@ -414,10 +396,12 @@ Self {
 		Ok(())
 	}
 
+	#[allow(dead_code)]
 	fn selected_commit(&self) -> Option<CommitId> {
 		self.list.selected_entry().map(|e| e.id)
 	}
 
+	#[allow(dead_code)]
 	fn selected_commit_tags(
 		&self,
 		commit: &Option<CommitId>,
@@ -435,6 +419,7 @@ Self {
 		self.list.select_commit(id)
 	}
 
+	#[allow(dead_code)]
 	fn revert_commit(&self) -> Result<()> {
 		if let Some(c) = self.selected_commit() {
 			sync::revert_commit(&self.repo.borrow(), c)?;
@@ -444,6 +429,7 @@ Self {
 		Ok(())
 	}
 
+	#[allow(dead_code)]
 	fn inspect_commit(&self) {
 		if let Some(commit_id) = self.selected_commit() {
 			let tags = self.selected_commit_tags(&Some(commit_id));
@@ -528,6 +514,7 @@ Self {
 		}
 	}
 
+	#[allow(dead_code)]
 	fn is_in_search_mode(&self) -> bool {
 		!matches!(self.search, LogSearch::Off)
 	}
@@ -583,10 +570,12 @@ Self {
 		);
 	}
 
+	#[allow(dead_code)]
 	fn can_leave_search(&self) -> bool {
 		self.is_in_search_mode() && !self.is_search_pending()
 	}
 
+	#[allow(dead_code)]
 	fn can_start_search(&self) -> bool {
 		!self.git_log.is_pending()
 	}
@@ -599,17 +588,23 @@ impl DrawableComponent for Nostr {
 		area: Rect,
 	) -> Result<()> {
 		let chunks = Layout::default()
-			.direction(Direction::Vertical)
-			.constraints([
-				Constraint::Min(5),
-				Constraint::Ratio(1, 3),
-				Constraint::Length(1),
-			])
+			.direction(Direction::Horizontal)
+			.constraints(
+				[
+					Constraint::Percentage(60),
+					Constraint::Percentage(40),
+				]
+				.as_ref(),
+			)
 			.split(area);
 
-		self.draw_list(f, chunks[0]);
-		self.draw_detail(f, chunks[1]);
-		self.draw_footer(f, chunks[2]);
+		if self.commit_details.is_visible() {
+			self.draw_list(f, chunks[0]);
+			self.draw_detail(f, chunks[1])?;
+		} else {
+			self.draw_list(f, area);
+		}
+
 		Ok(())
 	}
 }
