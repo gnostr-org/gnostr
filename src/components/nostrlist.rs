@@ -17,6 +17,7 @@ use ratatui::{
 };
 use std::cell::RefCell;
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct NostrListComponent {
 	items: Vec<NostrItem>,
@@ -28,6 +29,7 @@ pub struct NostrListComponent {
 }
 
 impl NostrListComponent {
+	#[allow(dead_code)]
 	pub fn new(
 		theme: SharedTheme,
 		key_config: SharedKeyConfig,
@@ -44,12 +46,14 @@ impl NostrListComponent {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn set_items(&mut self, items: Vec<NostrItem>) {
 		self.items = items;
 		self.selected = 0;
 		self.list_state.borrow_mut().select(Some(self.selected));
 	}
 
+	#[allow(dead_code)]
 	pub fn move_selection_up(&mut self) {
 		if self.selected > 0 {
 			self.selected -= 1;
@@ -66,16 +70,19 @@ impl NostrListComponent {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn push_patch(&mut self, patch: NostrItem) {
 		self.items.push(patch);
 		self.sort_items();
 	}
 
+	#[allow(dead_code)]
 	pub fn push_issue(&mut self, issue: NostrItem) {
 		self.items.push(issue);
 		self.sort_items();
 	}
 
+	#[allow(dead_code)]
 	pub fn push_announcement(&mut self, ann: NostrItem) {
 		// Deduplicate by repo_id + pubkey
 		let exists = self.items.iter().any(|item| {
