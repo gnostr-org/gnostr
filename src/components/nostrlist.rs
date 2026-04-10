@@ -103,6 +103,7 @@ impl NostrListComponent {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn apply_status(
 		&mut self,
 		target_id: &str,
@@ -119,6 +120,7 @@ impl NostrListComponent {
 		}
 	}
 
+	#[allow(dead_code)]
 	pub fn selected_item(&self) -> Option<&NostrItem> {
 		self.items.get(self.selected)
 	}
@@ -129,6 +131,7 @@ impl NostrListComponent {
 		});
 	}
 
+	#[allow(dead_code)]
 	pub fn item_count(&self) -> usize {
 		self.items.len()
 	}
