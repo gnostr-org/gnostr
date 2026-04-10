@@ -480,7 +480,8 @@ let items: Vec<ListItem> = self.nostr_items.iter().map(|indexed_item| {
 }).collect();
 let mut state = ListState::default();
 if !self.nostr_items.is_empty() { // IndexedNostrItem list
-    state.select(Some(self.list.selected_entry().map_or(0, |e| e.idx)));
+    let idx = self.selected_idx.min(self.nostr_items.len().saturating_sub(1));
+    state.select(Some(idx));
 }
 let list = List::new(items)
     .block(Block::default().title("Nostr Timeline").borders(Borders::ALL));
