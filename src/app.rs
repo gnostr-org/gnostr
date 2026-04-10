@@ -357,7 +357,7 @@ impl App {
 				key_config.clone(),
 			),
 			nostr: {
-    let mut tab = Nostr::new(theme.clone(), key_config.clone());
+    let mut tab = Nostr::new(&repo, &queue, sender, theme.clone(), key_config.clone());
     // Example: set initial items to use set_items
     tab.set_items(Vec::new());
     tab
