@@ -17,6 +17,7 @@ pub fn commit_to_format_patch(
 	let mut opts = EmailCreateOptions::new();
 	let email = Email::from_commit(&commit, &mut opts)
 		.map_err(|e| Error::Generic(format!("format-patch: {e}")))?;
-	String::from_utf8(email.as_slice().to_vec())
-		.map_err(|e| Error::Generic(format!("format-patch utf8: {e}")))
+	String::from_utf8(email.as_slice().to_vec()).map_err(|e| {
+		Error::Generic(format!("format-patch utf8: {e}"))
+	})
 }

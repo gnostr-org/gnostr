@@ -21,14 +21,14 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use tokio::net::TcpStream;
 use tokio_tungstenite::{
-	connect_async,
-	tungstenite::Message as WsMessage,
-	MaybeTlsStream, WebSocketStream,
+	connect_async, tungstenite::Message as WsMessage, MaybeTlsStream,
+	WebSocketStream,
 };
 
 type WsSink =
 	SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, WsMessage>;
-type WsStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
+type WsStream =
+	SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
 use crate::error::{Error, Result};
 
@@ -107,10 +107,9 @@ impl NostrEvent {
 		tags: &[Vec<String>],
 		content: &str,
 	) -> String {
-		let serialised = json!([
-			0, pubkey, created_at, kind, tags, content
-		])
-		.to_string();
+		let serialised =
+			json!([0, pubkey, created_at, kind, tags, content])
+				.to_string();
 		let mut h = Sha256::new();
 		h.update(serialised.as_bytes());
 		hex::encode(h.finalize())
@@ -120,11 +119,15 @@ impl NostrEvent {
 	pub fn new_text_note(content: &str, kp: &Keypair) -> Self {
 		let (xonly, _) = XOnlyPublicKey::from_keypair(kp);
 		let pubkey = hex::encode(xonly.serialize());
-		let created_at =
-			SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+		let created_at = SystemTime::now()
+			.duration_since(UNIX_EPOCH)
+			.unwrap_or_default()
+			.as_secs();
 		let kind = 1u64;
 		let tags: Vec<Vec<String>> = vec![];
-		let id = Self::compute_id(&pubkey, created_at, kind, &tags, content);
+		let id = Self::compute_id(
+			&pubkey, created_at, kind, &tags, content,
+		);
 
 		let msg_bytes: [u8; 32] = {
 			let mut a = [0u8; 32];
@@ -272,18 +275,18 @@ impl AsyncNostr {
 
 		let notification_tx = self.notification_tx.clone();
 		let pending = Arc::clone(&self.pending);
-		*pending.lock().map_err(|_| Error::Generic("mutex poisoned".to_owned()))? =
-			true;
+		*pending.lock().map_err(|_| {
+			Error::Generic("mutex poisoned".to_owned())
+		})? = true;
 
 		thread::Builder::new()
 			.name("asyncnostr".into())
 			.spawn(move || {
 				// Catch any panics so the global hook (which would eprintln!
 				// and corrupt the TUI) is never reached from this thread.
-				let result =
-					std::panic::catch_unwind(std::panic::AssertUnwindSafe(
-						|| {
-							let rt = match tokio::runtime::Builder::new_current_thread()
+				let result = std::panic::catch_unwind(
+					std::panic::AssertUnwindSafe(|| {
+						let rt = match tokio::runtime::Builder::new_current_thread()
 								.enable_all()
 								.build()
 							{
@@ -300,14 +303,14 @@ impl AsyncNostr {
 									return;
 								}
 							};
-							rt.block_on(run(
-								identity,
-								relay_urls,
-								cmd_rx,
-								notification_tx,
-							));
-						},
-					));
+						rt.block_on(run(
+							identity,
+							relay_urls,
+							cmd_rx,
+							notification_tx,
+						));
+					}),
+				);
 				if let Err(e) = result {
 					log::error!(
 						"nostr: asyncnostr thread panicked: {:?}",
@@ -318,7 +321,9 @@ impl AsyncNostr {
 					*p = false;
 				}
 			})
-			.map_err(|e| Error::Generic(format!("thread spawn: {e}")))?;
+			.map_err(|e| {
+				Error::Generic(format!("thread spawn: {e}"))
+			})?;
 
 		Ok(())
 	}
@@ -432,9 +437,9 @@ impl AsyncNostr {
 	}
 
 	fn send_cmd(&self, cmd: NostrCmd) -> Result<()> {
-		self.cmd_tx
-			.send(cmd)
-			.map_err(|e| Error::Generic(format!("nostr cmd send: {e}")))
+		self.cmd_tx.send(cmd).map_err(|e| {
+			Error::Generic(format!("nostr cmd send: {e}"))
+		})
 	}
 }
 
@@ -464,7 +469,9 @@ async fn run(
 				log::warn!("nostr: connect {url}: {e}");
 				send(
 					&notif_tx,
-					AsyncNostrNotification::Error(format!("connect {url}: {e}")),
+					AsyncNostrNotification::Error(format!(
+						"connect {url}: {e}"
+					)),
 				);
 			}
 		}
@@ -473,7 +480,9 @@ async fn run(
 	if sinks.is_empty() {
 		send(
 			&notif_tx,
-			AsyncNostrNotification::Error("no relays connected".to_owned()),
+			AsyncNostrNotification::Error(
+				"no relays connected".to_owned(),
+			),
 		);
 		return;
 	}
@@ -490,18 +499,25 @@ async fn run(
 
 	// Send REQ to all sinks.
 	for (url, sink) in &mut sinks {
-		if let Err(e) = sink.send(WsMessage::Text(sub_msg.clone().into())).await {
+		if let Err(e) =
+			sink.send(WsMessage::Text(sub_msg.clone().into())).await
+		{
 			log::warn!("nostr: REQ to {url}: {e}");
 		}
 	}
 
 	// Immediately subscribe to all NIP-34 event kinds so the Nostr tab
 	// populates on connect without any manual trigger.
-	let nip34_msg =
-		json!(["REQ", "gnostr-nip34-all", super::nip34::all_nip34_filter()])
-			.to_string();
+	let nip34_msg = json!([
+		"REQ",
+		"gnostr-nip34-all",
+		super::nip34::all_nip34_filter()
+	])
+	.to_string();
 	for (url, sink) in &mut sinks {
-		if let Err(e) = sink.send(WsMessage::Text(nip34_msg.clone().into())).await {
+		if let Err(e) =
+			sink.send(WsMessage::Text(nip34_msg.clone().into())).await
+		{
 			log::warn!("nostr: NIP-34 REQ to {url}: {e}");
 		}
 	}
@@ -513,26 +529,38 @@ async fn run(
 			match cmd_rx.try_recv() {
 				Ok(NostrCmd::Shutdown) => {
 					// Send CLOSE to all relays.
-					let close_msg = json!(["CLOSE", sub_id]).to_string();
+					let close_msg =
+						json!(["CLOSE", sub_id]).to_string();
 					for (_, sink) in &mut sinks {
-						let _ =
-							sink.send(WsMessage::Text(close_msg.clone().into())).await;
+						let _ = sink
+							.send(WsMessage::Text(
+								close_msg.clone().into(),
+							))
+							.await;
 						let _ = sink.close().await;
 					}
-					send(&notif_tx, AsyncNostrNotification::Disconnected);
+					send(
+						&notif_tx,
+						AsyncNostrNotification::Disconnected,
+					);
 					return;
 				}
 				Ok(NostrCmd::PublishNote { content }) => {
 					if let NostrIdentity::Keypair(kp) = &identity {
-						let event = NostrEvent::new_text_note(&content, kp);
+						let event =
+							NostrEvent::new_text_note(&content, kp);
 						let id = event.id.clone();
-						let msg =
-							json!(["EVENT", event]).to_string();
+						let msg = json!(["EVENT", event]).to_string();
 						for (url, sink) in &mut sinks {
-							if let Err(e) =
-								sink.send(WsMessage::Text(msg.clone().into())).await
+							if let Err(e) = sink
+								.send(WsMessage::Text(
+									msg.clone().into(),
+								))
+								.await
 							{
-								log::warn!("nostr: EVENT to {url}: {e}");
+								log::warn!(
+									"nostr: EVENT to {url}: {e}"
+								);
 							}
 						}
 						send(
@@ -543,7 +571,8 @@ async fn run(
 						send(
 							&notif_tx,
 							AsyncNostrNotification::Error(
-								"read-only mode: cannot publish".to_owned(),
+								"read-only mode: cannot publish"
+									.to_owned(),
 							),
 						);
 					}
@@ -555,30 +584,40 @@ async fn run(
 					}])
 					.to_string();
 					for (_, sink) in &mut sinks {
-						let _ = sink.send(WsMessage::Text(msg.clone().into())).await;
+						let _ = sink
+							.send(WsMessage::Text(msg.clone().into()))
+							.await;
 					}
 				}
 				Ok(NostrCmd::FetchRepoItems { repo_a_tag }) => {
-					let filter = super::nip34::repo_filter(&repo_a_tag);
-					let msg =
-						json!(["REQ", "gnostr-nip34", filter]).to_string();
+					let filter =
+						super::nip34::repo_filter(&repo_a_tag);
+					let msg = json!(["REQ", "gnostr-nip34", filter])
+						.to_string();
 					for (url, sink) in &mut sinks {
-						if let Err(e) =
-							sink.send(WsMessage::Text(msg.clone().into())).await
+						if let Err(e) = sink
+							.send(WsMessage::Text(msg.clone().into()))
+							.await
 						{
-							log::warn!("nostr: NIP-34 REQ to {url}: {e}");
+							log::warn!(
+								"nostr: NIP-34 REQ to {url}: {e}"
+							);
 						}
 					}
 				}
 				Ok(NostrCmd::FetchAllNip34) => {
 					let filter = super::nip34::all_nip34_filter();
 					let msg =
-						json!(["REQ", "gnostr-nip34-all", filter]).to_string();
+						json!(["REQ", "gnostr-nip34-all", filter])
+							.to_string();
 					for (url, sink) in &mut sinks {
-						if let Err(e) =
-							sink.send(WsMessage::Text(msg.clone().into())).await
+						if let Err(e) = sink
+							.send(WsMessage::Text(msg.clone().into()))
+							.await
 						{
-							log::warn!("nostr: NIP-34 all REQ to {url}: {e}");
+							log::warn!(
+								"nostr: NIP-34 all REQ to {url}: {e}"
+							);
 						}
 					}
 				}
@@ -604,10 +643,14 @@ async fn run(
 						) {
 							Ok(event) => {
 								let id = event.id.clone();
-								let msg = json!(["EVENT", event]).to_string();
+								let msg = json!(["EVENT", event])
+									.to_string();
 								for (url, sink) in &mut sinks {
-									if let Err(e) =
-										sink.send(WsMessage::Text(msg.clone().into())).await
+									if let Err(e) = sink
+										.send(WsMessage::Text(
+											msg.clone().into(),
+										))
+										.await
 									{
 										log::warn!("nostr: announce to {url}: {e}");
 									}
@@ -619,16 +662,17 @@ async fn run(
 							}
 							Err(e) => send(
 								&notif_tx,
-								AsyncNostrNotification::Error(format!(
-									"announce build: {e}"
-								)),
+								AsyncNostrNotification::Error(
+									format!("announce build: {e}"),
+								),
 							),
 						}
 					} else {
 						send(
 							&notif_tx,
 							AsyncNostrNotification::Error(
-								"read-only mode: cannot announce".to_owned(),
+								"read-only mode: cannot announce"
+									.to_owned(),
 							),
 						);
 					}
@@ -652,10 +696,14 @@ async fn run(
 						) {
 							Ok(event) => {
 								let id = event.id.clone();
-								let msg = json!(["EVENT", event]).to_string();
+								let msg = json!(["EVENT", event])
+									.to_string();
 								for (url, sink) in &mut sinks {
-									if let Err(e) =
-										sink.send(WsMessage::Text(msg.clone().into())).await
+									if let Err(e) = sink
+										.send(WsMessage::Text(
+											msg.clone().into(),
+										))
+										.await
 									{
 										log::warn!("nostr: patch to {url}: {e}");
 									}
@@ -667,16 +715,17 @@ async fn run(
 							}
 							Err(e) => send(
 								&notif_tx,
-								AsyncNostrNotification::Error(format!(
-									"patch build: {e}"
-								)),
+								AsyncNostrNotification::Error(
+									format!("patch build: {e}"),
+								),
 							),
 						}
 					} else {
 						send(
 							&notif_tx,
 							AsyncNostrNotification::Error(
-								"read-only mode: cannot submit patch".to_owned(),
+								"read-only mode: cannot submit patch"
+									.to_owned(),
 							),
 						);
 					}
@@ -699,10 +748,14 @@ async fn run(
 						) {
 							Ok(event) => {
 								let id = event.id.clone();
-								let msg = json!(["EVENT", event]).to_string();
+								let msg = json!(["EVENT", event])
+									.to_string();
 								for (url, sink) in &mut sinks {
-									if let Err(e) =
-										sink.send(WsMessage::Text(msg.clone().into())).await
+									if let Err(e) = sink
+										.send(WsMessage::Text(
+											msg.clone().into(),
+										))
+										.await
 									{
 										log::warn!("nostr: issue to {url}: {e}");
 									}
@@ -714,16 +767,17 @@ async fn run(
 							}
 							Err(e) => send(
 								&notif_tx,
-								AsyncNostrNotification::Error(format!(
-									"issue build: {e}"
-								)),
+								AsyncNostrNotification::Error(
+									format!("issue build: {e}"),
+								),
 							),
 						}
 					} else {
 						send(
 							&notif_tx,
 							AsyncNostrNotification::Error(
-								"read-only mode: cannot submit issue".to_owned(),
+								"read-only mode: cannot submit issue"
+									.to_owned(),
 							),
 						);
 					}
@@ -745,10 +799,14 @@ async fn run(
 							kp,
 						) {
 							Ok(event) => {
-								let msg = json!(["EVENT", event]).to_string();
+								let msg = json!(["EVENT", event])
+									.to_string();
 								for (url, sink) in &mut sinks {
-									if let Err(e) =
-										sink.send(WsMessage::Text(msg.clone().into())).await
+									if let Err(e) = sink
+										.send(WsMessage::Text(
+											msg.clone().into(),
+										))
+										.await
 									{
 										log::warn!("nostr: status to {url}: {e}");
 									}
@@ -756,16 +814,21 @@ async fn run(
 							}
 							Err(e) => send(
 								&notif_tx,
-								AsyncNostrNotification::Error(format!(
-									"status build: {e}"
-								)),
+								AsyncNostrNotification::Error(
+									format!("status build: {e}"),
+								),
 							),
 						}
 					}
 				}
 				Err(crossbeam_channel::TryRecvError::Empty) => break,
-				Err(crossbeam_channel::TryRecvError::Disconnected) => {
-					send(&notif_tx, AsyncNostrNotification::Disconnected);
+				Err(
+					crossbeam_channel::TryRecvError::Disconnected,
+				) => {
+					send(
+						&notif_tx,
+						AsyncNostrNotification::Disconnected,
+					);
 					return;
 				}
 			}
@@ -809,14 +872,18 @@ fn handle_relay_message(
 	let msg_type = arr[0].as_str().unwrap_or("");
 
 	if msg_type == "EVENT" && arr.len() >= 3 {
-		let event: NostrEvent = match serde_json::from_value(arr[2].clone()) {
-			Ok(e) => e,
-			Err(_) => return,
-		};
+		let event: NostrEvent =
+			match serde_json::from_value(arr[2].clone()) {
+				Ok(e) => e,
+				Err(_) => return,
+			};
 
 		match event.kind {
 			1 => {
-				send(notif_tx, AsyncNostrNotification::TextNote(Box::new(event)));
+				send(
+					notif_tx,
+					AsyncNostrNotification::TextNote(Box::new(event)),
+				);
 			}
 			0 => {
 				// Parse metadata content (nested JSON string).
@@ -826,7 +893,9 @@ fn handle_relay_message(
 					let display = meta
 						.get("display_name")
 						.and_then(Value::as_str)
-						.or_else(|| meta.get("name").and_then(Value::as_str))
+						.or_else(|| {
+							meta.get("name").and_then(Value::as_str)
+						})
 						.unwrap_or("<unknown>")
 						.to_owned();
 					send(
@@ -840,28 +909,38 @@ fn handle_relay_message(
 			}
 			// NIP-34 patch
 			super::nip34::KIND_PATCH => {
-				if let Some(patch) = super::nip34::parse_patch(&event) {
+				if let Some(patch) = super::nip34::parse_patch(&event)
+				{
 					send(
 						notif_tx,
-						AsyncNostrNotification::RepoPatch(Box::new(patch)),
+						AsyncNostrNotification::RepoPatch(Box::new(
+							patch,
+						)),
 					);
 				}
 			}
 			// NIP-34 issue
 			super::nip34::KIND_ISSUE => {
-				if let Some(issue) = super::nip34::parse_issue(&event) {
+				if let Some(issue) = super::nip34::parse_issue(&event)
+				{
 					send(
 						notif_tx,
-						AsyncNostrNotification::RepoIssue(Box::new(issue)),
+						AsyncNostrNotification::RepoIssue(Box::new(
+							issue,
+						)),
 					);
 				}
 			}
 			// NIP-34 repository announcement
 			super::nip34::KIND_REPO_ANNOUNCEMENT => {
-				if let Some(ann) = super::nip34::parse_repo_announcement(&event) {
+				if let Some(ann) =
+					super::nip34::parse_repo_announcement(&event)
+				{
 					send(
 						notif_tx,
-						AsyncNostrNotification::RepoAnnouncement(Box::new(ann)),
+						AsyncNostrNotification::RepoAnnouncement(
+							Box::new(ann),
+						),
 					);
 				}
 			}
@@ -870,13 +949,17 @@ fn handle_relay_message(
 			| super::nip34::KIND_STATUS_APPLIED
 			| super::nip34::KIND_STATUS_CLOSED
 			| super::nip34::KIND_STATUS_DRAFT) => {
-				if let Some(status) = super::nip34::PatchStatus::from_kind(k) {
+				if let Some(status) =
+					super::nip34::PatchStatus::from_kind(k)
+				{
 					// Target event id is in the first `e` tag.
 					let target_id = event
 						.tags
 						.iter()
 						.find(|t| {
-							t.first().map(|s| s == "e").unwrap_or(false)
+							t.first()
+								.map(|s| s == "e")
+								.unwrap_or(false)
 						})
 						.and_then(|t| t.get(1).cloned())
 						.unwrap_or_default();

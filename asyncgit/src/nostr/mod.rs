@@ -4,7 +4,6 @@
 /// `std::thread` + crossbeam-channel pattern as the rest of asyncgit
 /// (e.g. `AsyncPush`, `AsyncPull`).  No nostr-sdk dependency — uses
 /// secp256k1, bech32, and tokio-tungstenite directly.
-
 pub mod client;
 /// Nostr key management: parse, generate, load/save via git config.
 pub mod keys;

@@ -64,6 +64,7 @@ pub use config::{
 	ShowUntrackedFilesConfig,
 };
 pub use diff::get_diff_commit;
+pub use format_patch::commit_to_format_patch;
 pub use git2::BranchType;
 pub use hooks::{
 	hooks_commit_msg, hooks_post_commit, hooks_pre_commit, HookResult,
@@ -85,7 +86,6 @@ pub(crate) use repository::repo;
 pub use repository::{RepoPath, RepoPathRef};
 pub use reset::{reset_repo, reset_stage, reset_workdir};
 pub use reword::reword;
-pub use format_patch::commit_to_format_patch;
 pub use staging::{discard_lines, stage_lines};
 pub use stash::{
 	get_stashes, stash_apply, stash_drop, stash_pop, stash_save,

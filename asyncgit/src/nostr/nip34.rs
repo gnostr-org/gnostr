@@ -387,13 +387,15 @@ pub fn parse_issue(ev: &NostrEvent) -> Option<GitIssue> {
 }
 
 /// Try to parse a [`NostrEvent`] as a [`GitRepoAnnouncement`].
-pub fn parse_repo_announcement(ev: &NostrEvent) -> Option<GitRepoAnnouncement> {
+pub fn parse_repo_announcement(
+	ev: &NostrEvent,
+) -> Option<GitRepoAnnouncement> {
 	if ev.kind != KIND_REPO_ANNOUNCEMENT {
 		return None;
 	}
 	let repo_id = first_tag_value(&ev.tags, "d")?;
-	let name =
-		first_tag_value(&ev.tags, "name").unwrap_or_else(|| repo_id.clone());
+	let name = first_tag_value(&ev.tags, "name")
+		.unwrap_or_else(|| repo_id.clone());
 	let description =
 		first_tag_value(&ev.tags, "description").unwrap_or_default();
 	let clone_urls = multi_tag_values(&ev.tags, "clone");
@@ -424,7 +426,10 @@ pub fn parse_repo_announcement(ev: &NostrEvent) -> Option<GitRepoAnnouncement> {
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 /// Return the first value of a tag with the given name.
-fn first_tag_value(tags: &[Vec<String>], name: &str) -> Option<String> {
+fn first_tag_value(
+	tags: &[Vec<String>],
+	name: &str,
+) -> Option<String> {
 	tags.iter()
 		.find(|t| t.first().map(|s| s == name).unwrap_or(false))
 		.and_then(|t| t.get(1).cloned())
@@ -472,8 +477,9 @@ fn sign_event(
 
 	let msg_bytes: [u8; 32] = {
 		let mut a = [0u8; 32];
-		let decoded = hex::decode(&id)
-			.map_err(|e| Error::Generic(format!("hex decode id: {e}")))?;
+		let decoded = hex::decode(&id).map_err(|e| {
+			Error::Generic(format!("hex decode id: {e}"))
+		})?;
 		let len = decoded.len().min(32);
 		a[..len].copy_from_slice(&decoded[..len]);
 		a
@@ -500,7 +506,8 @@ fn compute_id(
 	content: &str,
 ) -> String {
 	let serialised =
-		json!([0, pubkey, created_at, kind, tags, content]).to_string();
+		json!([0, pubkey, created_at, kind, tags, content])
+			.to_string();
 	let mut h = Sha256::new();
 	h.update(serialised.as_bytes());
 	hex::encode(h.finalize())

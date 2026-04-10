@@ -5,7 +5,9 @@
 use std::path::Path;
 
 use bech32::{Bech32, Hrp};
-use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey, SECP256K1};
+use secp256k1::{
+	Keypair, Secp256k1, SecretKey, XOnlyPublicKey, SECP256K1,
+};
 
 use crate::error::{Error, Result};
 
@@ -59,13 +61,20 @@ impl NostrIdentity {
 }
 
 impl std::fmt::Debug for NostrIdentity {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(
+		&self,
+		f: &mut std::fmt::Formatter<'_>,
+	) -> std::fmt::Result {
 		match self {
 			Self::Keypair(_) => {
 				write!(f, "NostrIdentity::Keypair(<redacted>)")
 			}
 			Self::ReadOnly(pk) => {
-				write!(f, "NostrIdentity::ReadOnly({})", hex::encode(pk.serialize()))
+				write!(
+					f,
+					"NostrIdentity::ReadOnly({})",
+					hex::encode(pk.serialize())
+				)
 			}
 		}
 	}
@@ -80,16 +89,18 @@ pub fn parse_key(key_str: &str) -> Result<NostrIdentity> {
 
 	if s.starts_with("nsec") {
 		let bytes = from_bech32(s)?;
-		let sk = SecretKey::from_slice(&bytes)
-			.map_err(|e| Error::Generic(format!("invalid nsec: {e}")))?;
+		let sk = SecretKey::from_slice(&bytes).map_err(|e| {
+			Error::Generic(format!("invalid nsec: {e}"))
+		})?;
 		let kp = Keypair::from_secret_key(SECP256K1, &sk);
 		return Ok(NostrIdentity::Keypair(kp));
 	}
 
 	if s.starts_with("npub") {
 		let bytes = from_bech32(s)?;
-		let pk = XOnlyPublicKey::from_slice(&bytes)
-			.map_err(|e| Error::Generic(format!("invalid npub: {e}")))?;
+		let pk = XOnlyPublicKey::from_slice(&bytes).map_err(|e| {
+			Error::Generic(format!("invalid npub: {e}"))
+		})?;
 		return Ok(NostrIdentity::ReadOnly(pk));
 	}
 
@@ -117,7 +128,8 @@ pub fn parse_key(key_str: &str) -> Result<NostrIdentity> {
 /// Generate a fresh nostr keypair.
 pub fn generate_keys() -> Keypair {
 	let secp = Secp256k1::new();
-	let (sk, _) = secp.generate_keypair(&mut secp256k1::rand::thread_rng());
+	let (sk, _) =
+		secp.generate_keypair(&mut secp256k1::rand::thread_rng());
 	Keypair::from_secret_key(&secp, &sk)
 }
 
@@ -153,8 +165,9 @@ pub fn load_key_from_git_config(repo_path: &Path) -> Result<String> {
 			})?;
 
 		if out.status.success() {
-			let s =
-				String::from_utf8_lossy(&out.stdout).trim().to_string();
+			let s = String::from_utf8_lossy(&out.stdout)
+				.trim()
+				.to_string();
 			if !s.is_empty() {
 				return Ok(s);
 			}
@@ -188,7 +201,9 @@ pub fn save_key_to_git_config(
 			key,
 		])
 		.status()
-		.map_err(|e| Error::Generic(format!("git config failed: {e}")))?;
+		.map_err(|e| {
+			Error::Generic(format!("git config failed: {e}"))
+		})?;
 
 	if !status.success() {
 		return Err(Error::Generic(
