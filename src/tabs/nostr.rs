@@ -170,13 +170,13 @@ impl Nostr {
 			while let Ok(notification) = rx.try_recv() {
 				match notification {
 					AsyncNostrNotification::RepoPatch(patch) => {
-						self.push_patch(crate::components::nostr_types::NostrItem::from(*patch));
+						self.push_patch(crate::components::nostr_types::NostrItem::Patch(*patch));
 					}
 					AsyncNostrNotification::RepoIssue(issue) => {
-						self.push_issue(crate::components::nostr_types::NostrItem::from(*issue));
+						self.push_issue(crate::components::nostr_types::NostrItem::Issue(*issue));
 					}
 					AsyncNostrNotification::RepoAnnouncement(ann) => {
-						self.push_announcement(crate::components::nostr_types::NostrItem::from(*ann));
+						self.push_announcement(crate::components::nostr_types::NostrItem::Announcement(*ann));
 					}
 					AsyncNostrNotification::RepoStatus { target_id, status } => {
 						self.apply_status(&target_id, status);
