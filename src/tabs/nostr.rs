@@ -92,6 +92,7 @@ impl Nostr {
 	) {
 		let idx = self.nostr_items.len();
 self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: patch });
+		self.sort_items();
 	}
 	pub fn push_issue(
 		&mut self,
@@ -99,6 +100,7 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 	) {
 		let idx = self.nostr_items.len();
 self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: issue });
+		self.sort_items();
 	}
 	pub fn push_announcement(
 		&mut self,
@@ -106,12 +108,123 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 	) {
 		let idx = self.nostr_items.len();
 self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, item: ann });
+		self.sort_items();
 	}
 	pub fn apply_status(
 		&mut self,
 		_target_id: &str,
 		_status: PatchStatus,
 	) {
+	}
+
+	fn sort_items(&mut self) {
+		self.nostr_items.sort_by(|a, b| {
+			b.item.created_at().cmp(&a.item.created_at())
+		});
+		// Update indices after sort
+		for (idx, item) in self.nostr_items.iter_mut().enumerate() {
+			item.idx = idx;
+		}
+	}
+
+	fn item_count(&self) -> usize {
+		self.nostr_items.len()
+	}
+
+	fn move_selection_up(&mut self) {
+		if self.selected_idx > 0 {
+			self.selected_idx -= 1;
+		}
+	}
+
+	fn move_selection_down(&mut self) {
+		if self.item_count() > 0 && self.selected_idx < self.item_count() - 1 {
+			self.selected_idx += 1;
+		}
+	}
+
+	fn draw_list<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+		use ratatui::text::Line;
+		use ratatui::style::{Modifier, Style};
+
+		let items: Vec<ListItem> = self
+			.nostr_items
+			.iter()
+			.map(|indexed_item| {
+				let item = &indexed_item.item;
+				let kind_span = Span::styled(
+					format!("[{}] ", item.kind_label()),
+					self.theme.text(true, false),
+				);
+				let status_span = Span::styled(
+					format!("[{}] ", item.status_label()),
+					self.theme.text(false, false),
+				);
+				let subject_span = Span::styled(
+					item.subject().to_owned(),
+					self.theme.text(true, false),
+				);
+				let author_span = Span::styled(
+					format!("  <{}>", item.pubkey_short()),
+					self.theme.text(false, false),
+				);
+				ListItem::new(Line::from(vec![
+					kind_span,
+					status_span,
+					subject_span,
+					author_span,
+				]))
+			})
+			.collect();
+
+		let list = List::new(items)
+			.block(
+				Block::default()
+					.title(" NIP-34: Patches & Issues ")
+					.borders(Borders::ALL),
+			)
+			.highlight_style(
+				Style::default().add_modifier(Modifier::REVERSED),
+			);
+
+		let mut state = ListState::default();
+		if !self.nostr_items.is_empty() {
+			let idx = self.selected_idx.min(self.nostr_items.len().saturating_sub(1));
+			state.select(Some(idx));
+		}
+		f.render_stateful_widget(list, area, &mut state.clone());
+	}
+
+	fn draw_detail<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+		use ratatui::widgets::{Paragraph, Wrap};
+
+		let body = self
+			.nostr_items
+			.get(self.selected_idx)
+			.map(|indexed_item| indexed_item.item.content().to_owned())
+			.unwrap_or_default();
+
+		let p = Paragraph::new(body)
+			.block(
+				Block::default()
+					.borders(Borders::ALL)
+					.title(" Detail "),
+			)
+			.wrap(Wrap { trim: false });
+		f.render_widget(p, area);
+	}
+
+	fn draw_footer<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+		use ratatui::widgets::Paragraph;
+
+		let count = self.item_count();
+		let msg = format!(
+			" {} │ {} items ",
+			self.status_msg, count
+		);
+		let p = Paragraph::new(msg)
+			.style(self.theme.text(false, false));
+		f.render_widget(p, area);
 	}
 
 	///
@@ -459,38 +572,18 @@ impl DrawableComponent for Nostr {
 		f: &mut Frame<B>,
 		area: Rect,
 	) -> Result<()> {
-		use ratatui::widgets::{List, ListItem};
-		let area = if self.is_in_search_mode() {
-			Layout::default()
-				.direction(Direction::Vertical)
-				.constraints(
-					[Constraint::Min(1), Constraint::Length(3)]
-						.as_ref(),
-				)
-				.split(area)
-		} else {
-			Rc::new([area])
-		};
+		let chunks = Layout::default()
+			.direction(Direction::Vertical)
+			.constraints([
+				Constraint::Min(5),
+				Constraint::Ratio(1, 3),
+				Constraint::Length(1),
+			])
+			.split(area);
 
-		// Draw Nostr items as a simple list
-		let items: Vec<ListItem> = self.nostr_items.iter().map(|indexed_item| {
-    let item = &indexed_item.item;
-    ListItem::new(format!("{:?}", item))
-}).collect();
-use ratatui::widgets::ListState;
-let mut state = ListState::default();
-if !self.nostr_items.is_empty() { // IndexedNostrItem list
-    let idx = self.selected_idx.min(self.nostr_items.len().saturating_sub(1));
-    state.select(Some(idx));
-}
-let list = List::new(items)
-    .block(Block::default().title("Nostr Timeline").borders(Borders::ALL));
-f.render_stateful_widget(list, area[0], &mut state);
-
-		if self.is_in_search_mode() && area.len() > 1 {
-			self.draw_search(f, area[1]);
-		}
-
+		self.draw_list(f, chunks[0]);
+		self.draw_detail(f, chunks[1]);
+		self.draw_footer(f, chunks[2]);
 		Ok(())
 	}
 }
