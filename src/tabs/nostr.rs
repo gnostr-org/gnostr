@@ -155,6 +155,7 @@ Self {
 			nostr_client,
 			nostr_rx: Some(nostr_rx),
 			nostr_items: Vec::new(),
+            selected_idx: 0, // Start with first item selected
 			visible: false,
 			key_config,
 			sender: sender.clone(),
