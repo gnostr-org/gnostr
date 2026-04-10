@@ -77,7 +77,7 @@ impl Nostr {
     pub fn push_patch(&mut self, _patch: crate::components::nostr_types::NostrItem) {}
     pub fn push_issue(&mut self, _issue: crate::components::nostr_types::NostrItem) {}
     pub fn push_announcement(&mut self, _ann: crate::components::nostr_types::NostrItem) {}
-    pub fn apply_status(&mut self, _target_id: &str, _status: crate::components::nostr_types::PatchStatus) {}
+    pub fn apply_status(&mut self, _target_id: &str, _status: PatchStatus) {}
 
 	///
 	pub fn new(
