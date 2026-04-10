@@ -88,3 +88,4 @@ web/
 workspace/
 xq/bash_profile.log
 xq/template
+query/Cargo.lock
