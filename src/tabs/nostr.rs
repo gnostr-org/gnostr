@@ -148,6 +148,7 @@ Self {
 			git_remote_branches: AsyncSingleJob::new(sender.clone()),
 			nostr_client,
 			nostr_rx: Some(nostr_rx),
+			nostr_items: Vec::new(),
 			visible: false,
 			key_config,
 			sender: sender.clone(),
