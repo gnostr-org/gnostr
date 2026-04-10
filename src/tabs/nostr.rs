@@ -139,6 +139,8 @@ impl Nostr {
 			git_tags: AsyncTags::new(repo.borrow().clone(), sender),
 			git_local_branches: AsyncSingleJob::new(sender.clone()),
 			git_remote_branches: AsyncSingleJob::new(sender.clone()),
+			nostr_client: None,
+			nostr_rx: None,
 			visible: false,
 			key_config,
 			sender: sender.clone(),
