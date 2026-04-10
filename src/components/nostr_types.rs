@@ -59,6 +59,7 @@ impl NostrItem {
 			Self::Announcement(a) => &a.id,
 		}
 	}
+	#[allow(dead_code)]
 	pub fn content(&self) -> &str {
 		match self {
 			Self::Patch(p) => &p.content,

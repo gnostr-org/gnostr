@@ -217,17 +217,80 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 	fn draw_detail<B: Backend>(&self, f: &mut Frame<B>, area: Rect) -> Result<()> {
 		use ratatui::widgets::{Paragraph, Wrap};
 
-		let body = self
-			.nostr_items
-			.get(self.selected_idx)
-			.map(|indexed_item| indexed_item.item.content().to_owned())
-			.unwrap_or_default();
+		let detail_text = if let Some(indexed_item) = self.nostr_items.get(self.selected_idx) {
+			let item = &indexed_item.item;
+			let mut lines = Vec::new();
 
-		let p = Paragraph::new(body)
+			match item {
+				crate::components::nostr_types::NostrItem::Patch(patch) => {
+					lines.push(format!("Kind: 1617 (Patch)"));
+					lines.push(format!("ID: {}", patch.id));
+					lines.push(format!("Author: {}", patch.pubkey));
+					lines.push(format!("Created: {}", patch.created_at));
+					lines.push(format!("Status: {}", patch.status.label()));
+					lines.push(format!("Repository: {}", patch.repo_a_tag));
+					if let Some(commit) = &patch.commit {
+						lines.push(format!("Commit: {}", commit));
+					}
+					lines.push("".to_string());
+					lines.push(format!("Subject: {}", patch.subject));
+					lines.push("".to_string());
+					lines.push("Content:".to_string());
+					lines.push(patch.content.clone());
+				}
+				crate::components::nostr_types::NostrItem::Issue(issue) => {
+					lines.push(format!("Kind: 1621 (Issue)"));
+					lines.push(format!("ID: {}", issue.id));
+					lines.push(format!("Author: {}", issue.pubkey));
+					lines.push(format!("Created: {}", issue.created_at));
+					lines.push(format!("Status: {}", issue.status.label()));
+					lines.push(format!("Repository: {}", issue.repo_a_tag));
+					if !issue.labels.is_empty() {
+						lines.push(format!("Labels: {}", issue.labels.join(", ")));
+					}
+					lines.push("".to_string());
+					lines.push(format!("Subject: {}", issue.subject));
+					lines.push("".to_string());
+					lines.push("Content:".to_string());
+					lines.push(issue.content.clone());
+				}
+				crate::components::nostr_types::NostrItem::Announcement(ann) => {
+					lines.push(format!("Kind: 30617 (Repository Announcement)"));
+					lines.push(format!("ID: {}", ann.id));
+					lines.push(format!("Author: {}", ann.pubkey));
+					lines.push(format!("Repository: {}", ann.repo_id));
+					lines.push("".to_string());
+					lines.push(format!("Name: {}", ann.name));
+					lines.push("".to_string());
+					lines.push("Description:".to_string());
+					lines.push(ann.description.clone());
+					if !ann.clone_urls.is_empty() {
+						lines.push("".to_string());
+						lines.push("Clone URLs:".to_string());
+						for url in &ann.clone_urls {
+							lines.push(format!("  {}", url));
+						}
+					}
+					if !ann.web_urls.is_empty() {
+						lines.push("".to_string());
+						lines.push("Web URLs:".to_string());
+						for url in &ann.web_urls {
+							lines.push(format!("  {}", url));
+						}
+					}
+				}
+			}
+
+			lines.join("\n")
+		} else {
+			"No event selected".to_string()
+		};
+
+		let p = Paragraph::new(detail_text)
 			.block(
 				Block::default()
 					.borders(Borders::ALL)
-					.title(" Detail "),
+					.title(" Event Details "),
 			)
 			.wrap(Wrap { trim: false });
 		f.render_widget(p, area);
