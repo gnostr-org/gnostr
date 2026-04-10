@@ -106,9 +106,10 @@ impl Component for NostrTab {
         if !self.visible {
             return Ok(EventState::NotConsumed);
         }
-        // Use key_config for a custom key (example: show help)
+        // Show help on SHIFT+N
         if let Event::Key(key) = ev {
-            if crate::keys::key_match(key, self.key_config.keys.help) {
+            use crossterm::event::{KeyCode, KeyModifiers};
+            if key.code == KeyCode::Char('N') && key.modifiers.contains(KeyModifiers::SHIFT) {
                 self.status_msg = "Help: Up/Down to navigate, Enter to select".to_string();
                 return Ok(EventState::Consumed);
             }
