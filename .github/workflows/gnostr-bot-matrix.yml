@@ -144,6 +144,16 @@ jobs:
       - run: |
           cargo-binstall --force --no-confirm gnostr
 
+      - name: gnostr --help
+        shell: bash
+        run: |
+          gnostr --help
+
+      - name: gnostr
+        shell: bash
+        run: |
+          gnostr || true
+
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
 
