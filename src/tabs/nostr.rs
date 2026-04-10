@@ -62,6 +62,9 @@ pub struct Nostr {
 	git_tags: AsyncTags,
 	git_local_branches: AsyncSingleJob<AsyncBranchesJob>,
 	git_remote_branches: AsyncSingleJob<AsyncBranchesJob>,
+	// Nostr async client integration
+	nostr_client: Option<asyncgit::nostr::AsyncNostr>,
+	nostr_rx: Option<crossbeam_channel::Receiver<asyncgit::nostr::AsyncNostrNotification>>,
 	queue: Queue,
 	visible: bool,
 	key_config: SharedKeyConfig,
