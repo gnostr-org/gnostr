@@ -167,7 +167,11 @@ impl Nostr {
 	pub fn update(&mut self) -> Result<()> {
 		use asyncgit::nostr::AsyncNostrNotification;
 		if let Some(rx) = &self.nostr_rx {
+			let mut notifications = Vec::new();
 			while let Ok(notification) = rx.try_recv() {
+				notifications.push(notification);
+			}
+			for notification in notifications {
 				match notification {
 					AsyncNostrNotification::RepoPatch(patch) => {
 						self.push_patch(crate::components::nostr_types::NostrItem::Patch(*patch));
