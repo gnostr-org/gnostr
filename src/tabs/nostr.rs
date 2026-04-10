@@ -1,6 +1,6 @@
 use crate::{
 	components::{
-		visibility_blocking, CommandBlocking, CommandInfo,
+		visibility_blocking, CommandBlocking, CommandInfo, CommandText,
 		CommitDetailsComponent, CommitList, Component,
 		DrawableComponent, EventState, FileTreeOpen,
 		InspectCommitOpen,
@@ -790,6 +790,24 @@ impl Component for Nostr {
 	) -> CommandBlocking {
 		if self.visible || force_all {
 			self.list.commands(out, force_all);
+		}
+
+		// Nostr navigation: show index when items are available
+		if self.visible && self.item_count() > 0 {
+			let nav_text = format!("↑↓ Navigate ({}/{})",
+				self.selected_idx + 1,
+				self.item_count()
+			);
+			out.push(CommandInfo::new(
+				CommandText {
+					name: nav_text,
+					desc: "Navigate Nostr items",
+					group: "Navigation",
+					hide_help: false,
+				},
+				true,
+				true,
+			));
 		}
 
 		out.push(
