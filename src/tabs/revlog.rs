@@ -576,10 +576,15 @@ impl Component for Revlog {
 				{
 					#[cfg(feature = "nostr")]
 					{
-						let ids: Vec<_> =
-							self.list.marked().iter().map(|(_, id)| *id).collect();
-						self.queue
-							.push(InternalEvent::NostrSubmitPatches(ids));
+						let ids: Vec<_> = self
+							.list
+							.marked()
+							.iter()
+							.map(|(_, id)| *id)
+							.collect();
+						self.queue.push(
+							InternalEvent::NostrSubmitPatches(ids),
+						);
 					}
 					return Ok(EventState::Consumed);
 				}
@@ -705,7 +710,8 @@ impl Component for Revlog {
 		out.push(CommandInfo::new(
 			strings::commands::nostr_submit_patch(&self.key_config),
 			self.list.marked_count() > 0,
-			(self.visible && self.list.marked_count() > 0) || force_all,
+			(self.visible && self.list.marked_count() > 0)
+				|| force_all,
 		));
 
 		visibility_blocking(self)

@@ -50,12 +50,12 @@ mod watcher;
 use crate::{app::App, args::process_cmdline};
 use anyhow::{bail, Result};
 use app::QuitState;
+#[cfg(feature = "nostr")]
+use asyncgit::nostr::AsyncNostrNotification;
 use asyncgit::{
 	sync::{utils::repo_work_dir, RepoPath},
 	AsyncGitNotification,
 };
-#[cfg(feature = "nostr")]
-use asyncgit::nostr::AsyncNostrNotification;
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
@@ -147,7 +147,7 @@ fn main() -> Result<()> {
 	asyncgit::register_tracing_logging();
 
 	if !valid_path(&cliargs.repo_path) {
-    //TODO: gnostr-cli init
+		//TODO: gnostr-cli init
 		bail!("invalid path\nplease run gnostr-tui inside of a non-bare git repository");
 	}
 
@@ -302,11 +302,11 @@ fn run_app(
 					}
 				}
 				QueueEvent::SpinnerUpdate => unreachable!(),
-			#[cfg(feature = "nostr")]
-			QueueEvent::NostrEvent(ev) => {
 				#[cfg(feature = "nostr")]
-				app.update_nostr(ev);
-			}
+				QueueEvent::NostrEvent(ev) => {
+					#[cfg(feature = "nostr")]
+					app.update_nostr(ev);
+				}
 			}
 
 			draw(terminal, &app)?;
@@ -382,21 +382,22 @@ fn select_event(
 	rx_input: &Receiver<InputEvent>,
 	rx_git: &Receiver<AsyncGitNotification>,
 	rx_app: &Receiver<AsyncAppNotification>,
-	#[cfg(feature = "nostr")]
-	rx_nostr: &Receiver<AsyncNostrNotification>,
+	#[cfg(feature = "nostr")] rx_nostr: &Receiver<
+		AsyncNostrNotification,
+	>,
 	rx_ticker: &Receiver<Instant>,
 	rx_notify: &Receiver<()>,
 	rx_spinner: &Receiver<Instant>,
 ) -> Result<QueueEvent> {
 	let mut sel = Select::new();
 
-	sel.recv(rx_input);   // 0
-	sel.recv(rx_git);     // 1
-	sel.recv(rx_app);     // 2
+	sel.recv(rx_input); // 0
+	sel.recv(rx_git); // 1
+	sel.recv(rx_app); // 2
 	#[cfg(feature = "nostr")]
-	sel.recv(rx_nostr);   // 3  (nostr feature only)
-	sel.recv(rx_ticker);  // 3 / 4
-	sel.recv(rx_notify);  // 4 / 5
+	sel.recv(rx_nostr); // 3  (nostr feature only)
+	sel.recv(rx_ticker); // 3 / 4
+	sel.recv(rx_notify); // 4 / 5
 	sel.recv(rx_spinner); // 5 / 6
 
 	let oper = sel.select();
@@ -463,8 +464,10 @@ fn set_panic_handlers() -> Result<()> {
 	// still running on the main thread.
 	panic::set_hook(Box::new(|e| {
 		let backtrace = Backtrace::new();
-		let is_main_thread =
-			matches!(std::thread::current().name(), None | Some("main"));
+		let is_main_thread = matches!(
+			std::thread::current().name(),
+			None | Some("main")
+		);
 		if is_main_thread {
 			// On the main thread we restore the terminal first so the
 			// panic message is readable, then print to stderr.

@@ -31,6 +31,13 @@ use crate::{
 	AsyncAppNotification, AsyncNotification,
 };
 use anyhow::{bail, Result};
+#[cfg(feature = "nostr")]
+use asyncgit::{
+	commit_to_format_patch,
+	nostr::{
+		load_identity, parse_key, AsyncNostr, AsyncNostrNotification,
+	},
+};
 use asyncgit::{
 	sync::{
 		self,
@@ -39,8 +46,6 @@ use asyncgit::{
 	},
 	AsyncGitNotification, PushType,
 };
-#[cfg(feature = "nostr")]
-use asyncgit::{commit_to_format_patch, nostr::{AsyncNostr, AsyncNostrNotification, load_identity, parse_key}};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
 use ratatui::{
@@ -122,7 +127,8 @@ pub struct App {
 	/// Deferred nostr connection parameters — consumed by `start_nostr()` on
 	/// the first event-loop iteration after the TUI renders its first frame.
 	#[cfg(feature = "nostr")]
-	pending_nostr_connect: Option<(asyncgit::nostr::NostrIdentity, Vec<String>)>,
+	pending_nostr_connect:
+		Option<(asyncgit::nostr::NostrIdentity, Vec<String>)>,
 }
 
 // public interface
@@ -133,15 +139,14 @@ impl App {
 		repo: RepoPathRef,
 		sender: &Sender<AsyncGitNotification>,
 		sender_app: &Sender<AsyncAppNotification>,
-		#[cfg(feature = "nostr")]
-		sender_nostr: Sender<AsyncNostrNotification>,
+		#[cfg(feature = "nostr")] sender_nostr: Sender<
+			AsyncNostrNotification,
+		>,
 		input: Input,
 		theme: Theme,
 		key_config: KeyConfig,
-		#[cfg(feature = "nostr")]
-		nostr_key_override: Option<String>,
-		#[cfg(feature = "nostr")]
-		nostr_relay_override: Vec<String>,
+		#[cfg(feature = "nostr")] nostr_key_override: Option<String>,
+		#[cfg(feature = "nostr")] nostr_relay_override: Vec<String>,
 	) -> Result<Self> {
 		log::trace!("open repo at: {:?}", &repo);
 
@@ -357,11 +362,17 @@ impl App {
 				key_config.clone(),
 			),
 			nostr: {
-    let mut tab = Nostr::new(&repo, &queue, sender, theme.clone(), key_config.clone());
-    // Example: set initial items to use set_items
-    tab.set_items(Vec::new());
-    tab
-},
+				let mut tab = Nostr::new(
+					&repo,
+					&queue,
+					sender,
+					theme.clone(),
+					key_config.clone(),
+				);
+				// Example: set initial items to use set_items
+				tab.set_items(Vec::new());
+				tab
+			},
 			tab: 0,
 			queue,
 			theme,
@@ -381,17 +392,22 @@ impl App {
 			// before the TUI is fully displayed.
 			#[cfg(feature = "nostr")]
 			pending_nostr_connect: {
-				let identity = if let Some(ref key_str) = nostr_key_override {
-					match parse_key(key_str) {
-						Ok(id) => Some(id),
-						Err(e) => {
-							log::warn!("nostr --key parse error: {e}");
-							None
+				let identity =
+					if let Some(ref key_str) = nostr_key_override {
+						match parse_key(key_str) {
+							Ok(id) => Some(id),
+							Err(e) => {
+								log::warn!(
+									"nostr --key parse error: {e}"
+								);
+								None
+							}
 						}
-					}
-				} else {
-					load_identity(std::path::Path::new(&nostr_repo_path))
-				};
+					} else {
+						load_identity(std::path::Path::new(
+							&nostr_repo_path,
+						))
+					};
 				identity.map(|id| {
 					let relays = if nostr_relay_override.is_empty() {
 						vec![
@@ -625,20 +641,18 @@ impl App {
 		use asyncgit::nostr::AsyncNostrNotification;
 		match ev {
 			AsyncNostrNotification::Connected => {
-				self.nostr.status_msg =
-					"connected".to_owned();
+				self.nostr.status_msg = "connected".to_owned();
 			}
 			AsyncNostrNotification::Disconnected => {
-				self.nostr.status_msg =
-					"disconnected".to_owned();
+				self.nostr.status_msg = "disconnected".to_owned();
 			}
 			AsyncNostrNotification::RepoPatch(patch) => {
 				use crate::components::nostr_types::NostrItem;
-self.nostr.push_patch(NostrItem::Patch(*patch));
+				self.nostr.push_patch(NostrItem::Patch(*patch));
 			}
 			AsyncNostrNotification::RepoIssue(issue) => {
 				use crate::components::nostr_types::NostrItem;
-self.nostr.push_issue(NostrItem::Issue(*issue));
+				self.nostr.push_issue(NostrItem::Issue(*issue));
 			}
 			AsyncNostrNotification::RepoStatus {
 				target_id,
@@ -653,7 +667,8 @@ self.nostr.push_issue(NostrItem::Issue(*issue));
 			}
 			AsyncNostrNotification::RepoAnnouncement(ann) => {
 				use crate::components::nostr_types::NostrItem;
-self.nostr.push_announcement(NostrItem::Announcement(*ann));
+				self.nostr
+					.push_announcement(NostrItem::Announcement(*ann));
 			}
 			AsyncNostrNotification::PatchSubmitted(id) => {
 				log::info!("nostr: patch submitted id={id}");
@@ -681,7 +696,9 @@ self.nostr.push_announcement(NostrItem::Announcement(*ann));
 		if let Some((identity, relays)) =
 			self.pending_nostr_connect.take()
 		{
-			if let Err(e) = self.nostr_client.connect(identity, relays) {
+			if let Err(e) =
+				self.nostr_client.connect(identity, relays)
+			{
 				log::warn!("nostr connect: {e}");
 			}
 		}
@@ -1140,7 +1157,9 @@ impl App {
 			InternalEvent::NostrSubmitPatches(commit_ids) => {
 				let repo_path = self.repo.borrow().clone();
 				for commit_id in commit_ids {
-					match commit_to_format_patch(&repo_path, commit_id) {
+					match commit_to_format_patch(
+						&repo_path, commit_id,
+					) {
 						Ok(patch_content) => {
 							// Use our own pubkey as the maintainer pubkey.
 							// The `a` tag is left empty here — a future enhancement
@@ -1149,22 +1168,29 @@ impl App {
 								.nostr_client
 								.own_pubkey_hex()
 								.unwrap_or_default();
-							if let Err(e) = self.nostr_client.submit_patch(
-								patch_content,
-								String::new(), // repo_a_tag — empty until announcement lookup
-								maintainer_pubkey,
-								Some(commit_id.to_string()),
-								None,
-							) {
-								self.queue.push(InternalEvent::ShowErrorMsg(
-									format!("nostr patch send: {e}"),
-								));
+							if let Err(e) =
+								self.nostr_client.submit_patch(
+									patch_content,
+									String::new(), // repo_a_tag — empty until announcement lookup
+									maintainer_pubkey,
+									Some(commit_id.to_string()),
+									None,
+								) {
+								self.queue.push(
+									InternalEvent::ShowErrorMsg(
+										format!(
+											"nostr patch send: {e}"
+										),
+									),
+								);
 							}
 						}
 						Err(e) => {
-							self.queue.push(InternalEvent::ShowErrorMsg(
-								format!("format-patch: {e}"),
-							));
+							self.queue.push(
+								InternalEvent::ShowErrorMsg(format!(
+									"format-patch: {e}"
+								)),
+							);
 						}
 					}
 				}

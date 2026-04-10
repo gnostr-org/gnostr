@@ -17,6 +17,8 @@ mod help;
 mod inspect_commit;
 mod log_search_popup;
 mod msg;
+pub mod nostr_types;
+pub mod nostrlist;
 mod options_popup;
 mod pull;
 mod push;
@@ -34,8 +36,6 @@ mod tag_commit;
 mod taglist;
 mod textinput;
 mod utils;
-pub mod nostrlist;
-pub mod nostr_types;
 
 pub use self::status_tree::StatusTreeComponent;
 pub use blame_file::{BlameFileComponent, BlameFileOpen};

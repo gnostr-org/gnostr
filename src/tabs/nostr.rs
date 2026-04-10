@@ -53,7 +53,7 @@ enum LogSearch {
 
 ///
 pub struct Nostr {
-    pub status_msg: String,
+	pub status_msg: String,
 	repo: RepoPathRef,
 	commit_details: CommitDetailsComponent,
 	list: CommitList,
@@ -72,17 +72,38 @@ pub struct Nostr {
 use asyncgit::nostr::PatchStatus;
 
 impl Nostr {
-    pub fn set_items(&mut self, _items: Vec<crate::components::nostr_types::NostrItem>) {}
+	pub fn set_items(
+		&mut self,
+		_items: Vec<crate::components::nostr_types::NostrItem>,
+	) {
+	}
 
-    pub fn push_patch(&mut self, _patch: crate::components::nostr_types::NostrItem) {}
-    pub fn push_issue(&mut self, _issue: crate::components::nostr_types::NostrItem) {}
-    pub fn push_announcement(&mut self, _ann: crate::components::nostr_types::NostrItem) {}
-    pub fn apply_status(&mut self, _target_id: &str, _status: PatchStatus) {}
+	pub fn push_patch(
+		&mut self,
+		_patch: crate::components::nostr_types::NostrItem,
+	) {
+	}
+	pub fn push_issue(
+		&mut self,
+		_issue: crate::components::nostr_types::NostrItem,
+	) {
+	}
+	pub fn push_announcement(
+		&mut self,
+		_ann: crate::components::nostr_types::NostrItem,
+	) {
+	}
+	pub fn apply_status(
+		&mut self,
+		_target_id: &str,
+		_status: PatchStatus,
+	) {
+	}
 
 	///
 	pub fn new(
-        // status_msg is new for Nostr compatibility
-        // with app.rs usage
+		// status_msg is new for Nostr compatibility
+		// with app.rs usage
 		repo: &RepoPathRef,
 		queue: &Queue,
 		sender: &Sender<AsyncGitNotification>,
@@ -119,7 +140,7 @@ impl Nostr {
 			key_config,
 			sender: sender.clone(),
 			theme,
-            status_msg: String::new(),
+			status_msg: String::new(),
 		}
 	}
 
@@ -589,10 +610,15 @@ impl Component for Nostr {
 				{
 					#[cfg(feature = "nostr")]
 					{
-						let ids: Vec<_> =
-							self.list.marked().iter().map(|(_, id)| *id).collect();
-						self.queue
-							.push(InternalEvent::NostrSubmitPatches(ids));
+						let ids: Vec<_> = self
+							.list
+							.marked()
+							.iter()
+							.map(|(_, id)| *id)
+							.collect();
+						self.queue.push(
+							InternalEvent::NostrSubmitPatches(ids),
+						);
 					}
 					return Ok(EventState::Consumed);
 				}
@@ -718,7 +744,8 @@ impl Component for Nostr {
 		out.push(CommandInfo::new(
 			strings::commands::nostr_submit_patch(&self.key_config),
 			self.list.marked_count() > 0,
-			(self.visible && self.list.marked_count() > 0) || force_all,
+			(self.visible && self.list.marked_count() > 0)
+				|| force_all,
 		));
 
 		visibility_blocking(self)

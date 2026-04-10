@@ -66,9 +66,8 @@ pub fn process_cmdline() -> Result<CliArgs> {
 	let nostr_generate = arg_matches.get_flag("nostr-generate");
 
 	// --key / -k / NOSTR_KEY env (already handled by clap env())
-	let nostr_key = arg_matches
-		.get_one::<String>("nostr-key")
-		.cloned();
+	let nostr_key =
+		arg_matches.get_one::<String>("nostr-key").cloned();
 
 	// --relay / -r (repeatable)
 	let nostr_relays: Vec<String> = arg_matches

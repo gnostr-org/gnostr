@@ -1704,7 +1704,8 @@ pub mod commands {
 		CommandText::new(
 			format!(
 				"Nostr Patch [{}]",
-				key_config.get_hint(key_config.keys.nostr_submit_patch),
+				key_config
+					.get_hint(key_config.keys.nostr_submit_patch),
 			),
 			"submit marked commits as NIP-34 patches to nostr",
 			CMD_GROUP_LOG,
