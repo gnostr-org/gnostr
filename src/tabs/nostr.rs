@@ -146,6 +146,7 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 	fn draw_list<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
 		use ratatui::text::Line;
 		use ratatui::style::{Modifier, Style};
+		use ratatui::widgets::{List, ListItem, ListState};
 
 		let items: Vec<ListItem> = self
 			.nostr_items
@@ -599,23 +600,14 @@ impl Component for Nostr {
 				self.update()?;
 				return Ok(EventState::Consumed);
 			} else if let Event::Key(k) = ev {
-                use crossterm::event::KeyCode;
-                match k.code {
-                    KeyCode::Up => {
-                        if self.selected_idx > 0 {
-                            self.selected_idx -= 1;
-                        }
-                        return Ok(EventState::Consumed);
-                    }
-                    KeyCode::Down => {
-                        if self.selected_idx + 1 < self.nostr_items.len() {
-                            self.selected_idx += 1;
-                        }
-                        return Ok(EventState::Consumed);
-                    }
-                    _ => {}
-                }
-				if key_match(k, self.key_config.keys.enter) {
+				// Nostr item navigation
+				if key_match(k, self.key_config.keys.move_up) {
+					self.move_selection_up();
+					return Ok(EventState::Consumed);
+				} else if key_match(k, self.key_config.keys.move_down) {
+					self.move_selection_down();
+					return Ok(EventState::Consumed);
+				} else if key_match(k, self.key_config.keys.enter) {
 					self.commit_details.toggle_visible()?;
 					self.update()?;
 					return Ok(EventState::Consumed);
