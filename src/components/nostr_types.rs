@@ -4,6 +4,12 @@
 use asyncgit::nostr::{GitIssue, GitPatch, GitRepoAnnouncement};
 #[cfg(feature = "nostr")]
 #[derive(Clone, Debug)]
+pub struct IndexedNostrItem {
+    pub idx: usize,
+    pub item: NostrItem,
+}
+
+#[derive(Clone, Debug)]
 pub enum NostrItem {
 	Patch(GitPatch),
 	Issue(GitIssue),

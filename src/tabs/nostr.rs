@@ -54,7 +54,7 @@ enum LogSearch {
 ///
 pub struct Nostr {
 	/// List of Nostr items (patches, issues, announcements)
-	 nostr_items: Vec<crate::components::nostr_types::NostrItem>,
+	 nostr_items: Vec<crate::components::nostr_types::IndexedNostrItem>,
 	pub status_msg: String,
 	repo: RepoPathRef,
 	commit_details: CommitDetailsComponent,
