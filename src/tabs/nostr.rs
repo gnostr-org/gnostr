@@ -466,12 +466,17 @@ impl DrawableComponent for Nostr {
 		};
 
 		// Draw Nostr items as a simple list
-		let items: Vec<ListItem> = self.nostr_items.iter().map(|item| {
-			ListItem::new(format!("{:?}", item))
-		}).collect();
-		let list = List::new(items)
-			.block(Block::default().title("Nostr Timeline").borders(Borders::ALL));
-		f.render_widget(list, area[0]);
+		use ratatui::widgets::{List, ListItem, ListState};
+let items: Vec<ListItem> = self.nostr_items.iter().map(|item| {
+    ListItem::new(format!("{:?}", item))
+}).collect();
+let mut state = ListState::default();
+if !self.nostr_items.is_empty() {
+    state.select(Some(self.list.selected_entry().map_or(0, |e| e.idx)));
+}
+let list = List::new(items)
+    .block(Block::default().title("Nostr Timeline").borders(Borders::ALL));
+f.render_stateful_widget(list, area[0], &mut state);
 
 		if self.is_in_search_mode() && area.len() > 1 {
 			self.draw_search(f, area[1]);
