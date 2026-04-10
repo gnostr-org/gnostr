@@ -506,6 +506,22 @@ impl Component for Nostr {
 				self.update()?;
 				return Ok(EventState::Consumed);
 			} else if let Event::Key(k) = ev {
+                use crossterm::event::KeyCode;
+                match k.code {
+                    KeyCode::Up => {
+                        if self.selected_idx > 0 {
+                            self.selected_idx -= 1;
+                        }
+                        return Ok(EventState::Consumed);
+                    }
+                    KeyCode::Down => {
+                        if self.selected_idx + 1 < self.nostr_items.len() {
+                            self.selected_idx += 1;
+                        }
+                        return Ok(EventState::Consumed);
+                    }
+                    _ => {}
+                }
 				if key_match(k, self.key_config.keys.enter) {
 					self.commit_details.toggle_visible()?;
 					self.update()?;
