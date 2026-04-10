@@ -451,6 +451,7 @@ impl DrawableComponent for Nostr {
 		f: &mut Frame<B>,
 		area: Rect,
 	) -> Result<()> {
+		use ratatui::widgets::{List, ListItem};
 		let area = if self.is_in_search_mode() {
 			Layout::default()
 				.direction(Direction::Vertical)
@@ -463,25 +464,15 @@ impl DrawableComponent for Nostr {
 			Rc::new([area])
 		};
 
-		let chunks = Layout::default()
-			.direction(Direction::Horizontal)
-			.constraints(
-				[
-					Constraint::Percentage(60),
-					Constraint::Percentage(40),
-				]
-				.as_ref(),
-			)
-			.split(area[0]);
+		// Draw Nostr items as a simple list
+		let items: Vec<ListItem> = self.nostr_items.iter().map(|item| {
+			ListItem::new(format!("{:?}", item))
+		}).collect();
+		let list = List::new(items)
+			.block(Block::default().title("Nostr Timeline").borders(Borders::ALL));
+		f.render_widget(list, area[0]);
 
-		if self.commit_details.is_visible() {
-			self.list.draw(f, chunks[0])?;
-			self.commit_details.draw(f, chunks[1])?;
-		} else {
-			self.list.draw(f, area[0])?;
-		}
-
-		if self.is_in_search_mode() {
+		if self.is_in_search_mode() && area.len() > 1 {
 			self.draw_search(f, area[1]);
 		}
 
