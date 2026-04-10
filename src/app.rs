@@ -356,7 +356,12 @@ impl App {
 				theme.clone(),
 				key_config.clone(),
 			),
-			nostr_tab: NostrTab::new(theme.clone(), key_config.clone()),
+			nostr_tab: {
+    let mut tab = NostrTab::new(theme.clone(), key_config.clone());
+    // Example: set initial items to use set_items
+    tab.set_items(Vec::new());
+    tab
+},
 			tab: 0,
 			queue,
 			theme,
