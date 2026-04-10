@@ -100,30 +100,6 @@ jobs:
           # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && matrix.os != 'macos-15-intel'
 
-      - name: Calculate Odd/Even Status
-        shell: bash
-        id: time_check_hour
-        run: |
-          # Alternate tasks on cron runs to balance testing depth and speed.
-          # Get the current hour (0-23) in UTC
-          CURRENT_HOUR=$(date -u +%H)
-          echo "Current UTC Hour is $CURRENT_HOUR"
-
-          # Use a shell arithmetic expression to check for evenness (remainder of division by 2 is 0)
-          # '0' is even, '1' is odd.
-          if (( CURRENT_HOUR % 2 == 0 )); then
-            IS_EVEN="true"
-            STATUS="EVEN"
-          else
-            IS_EVEN="false"
-            STATUS="ODD"
-          fi
-
-          echo "The hour is $STATUS"
-
-          # Set a boolean output for the subsequent steps to consume
-          echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
-
       - name: Use Bash for all subsequent steps
         shell: bash
         run: |
@@ -195,6 +171,10 @@ jobs:
           # Optional: Uncomment if you want to explicitly disable tag fetching
           # fetch-tags: 'false'
 
+      - name: Calculate Odd/Even Status
+        id: time_check_hour
+        uses: ./.github/actions/calculate-odd-even
+
       - name: printenv
         shell: bash
         run: |
@@ -215,31 +195,10 @@ jobs:
         run: |
           cargo search gnostr --limit 100
 
-      - name: Install cargo-binstall
+      - name: Install gnostr via cargo-binstall
         shell: bash
         run: |
-          for i in {1..5}; do
-            curl --retry 10 -L --proto '=https' --tlsv1.2 -sSf -O https://github.com/cargo-bins/cargo-binstall/releases/download/v1.3.0/cargo-binstall-universal-apple-darwin.zip && break || sleep 10
-          done
-        if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
-
-      - name: Get latest release
-        shell: bash
-        id: get_latest_release
-        run: |
-          # Use GitHub API to get the latest release tag
-          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
-          echo "Latest release tag: $LATEST_TAG"
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-
-      - name: Install gnostr (latest release)
-        shell: bash
-        run: |
-          # Construct the installer URL using the latest tag
-          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
-          echo "Installer URL: $INSTALLER_URL"
-          curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
-          cargo-binstall --force --no-confirm gnostr
+          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
 
       - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
         if: matrix.os == 'ubuntu-latest'
@@ -266,46 +225,52 @@ jobs:
 
       - name: Install OpenSSL for macOS
         run: |
-          brew install openssl@3
-          echo "/opt/homebrew/opt/openssl@3/bin" >> $GITHUB_PATH
-          echo "LDFLAGS=-L/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I/opt/homebrew/opt/openssl@3/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/openssl@3/lib/pkgconfig" >> $GITHUB_ENV
+          if [ "$(uname -m)" = "arm64" ]; then
+            arch -arm64 brew install openssl@3
+          else
+            brew install openssl@3
+          fi
+          echo "$(brew --prefix openssl@3)/bin" >> $GITHUB_PATH
+          echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
         run: |
-          set -e
-          for i in {1..5}; do
-            test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-            test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-            brew install gnostr-org/gnostr-org/gnostr && gnostr --help && break || { echo "brew install failed, retry $i..."; sleep 10; }
-          done
-          if ! command -v gnostr > /dev/null; then
-            echo "brew install failed after retries, attempting install via cargo-binstall"
-            cargo-binstall --force --no-confirm gnostr
-          fi
+          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
-        run: brew tap gnostr-org/homebrew-gnostr-org || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD tap gnostr-org/homebrew-gnostr-org || true
         if: runner.os != 'windows'
 
       - name: brew tap nostorg/nostr
-        run: brew tap nostorg/nostr || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD tap nostorg/nostr || true
         if: runner.os != 'windows'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
-        run: brew tap randymcmillan/homebrew-randymcmillan || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os != 'windows'
 
-      - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
+      - name: brew install gnostr (cargo-binstall)
+        run: |
+          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: runner.os != 'windows'
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines
-        run: brew install cargo-llvm-cov cargo-llvm-lines || true
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
 
       #- name: powershell install gnostr
@@ -428,23 +393,8 @@ jobs:
           sleep 5 # Wait for services to start
           gnostr query --limit 100
 
-      - name: Cleanup lingering gnostr processes (Linux/macOS)
-        if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
-        run: |
-          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
-          pkill -f "gnostr" || true
-          pkill -f "git-remote-nostr" || true
-          echo "Cleanup attempt finished."
-        continue-on-error: true
-
-      - name: Cleanup lingering gnostr processes (Windows)
-        if: success() && (matrix.os == 'windows-latest')
-        shell: pwsh
-        run: |
-          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
-          Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue || true
-          Stop-Process -Name "git-remote-nostr" -ErrorAction SilentlyContinue || true
-          echo "Cleanup attempt finished."
+      - name: Cleanup lingering gnostr processes
+        uses: ./.github/actions/gnostr-cleanup
         continue-on-error: true
 
       - name: Debug GITHUB_API_URL
@@ -478,110 +428,40 @@ jobs:
         run: echo ${{ steps.jobs.outputs.html_url }}
 
       - name: Execute script on failure
-        shell: bash
         if: failure()
-        run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Failed!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Failed!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.toolchain }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://nostr.band'
 
       - name: Execute script on cancelled
-        shell: bash
         if: cancelled()
-        run: |
-          echo "A previous step cancelled! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Cancelled!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Cancelled!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.toolchain }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://nostr.band'
 
       - name: Execute script on success
-        shell: bash
         if: success()
-        run: |
-          echo "A previous step succeeded! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Success!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            echo EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Success!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.toolchain }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://nostr.band'
 
       ## NOTE: The cache restore steps (cache-cargo-restore, cache-target-restore) above are
       ## commented out since actions/cache@v4 at lines 76-91 already handles both restore and save.

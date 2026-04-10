@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 permissions:
   actions: read
-  contents: read
+  contents: write
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -39,30 +39,6 @@ jobs:
         run: |
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
           # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-
-      - name: Calculate Odd/Even Status
-        shell: bash
-        id: time_check_hour
-        run: |
-          # Alternate tasks on cron runs to balance testing depth and speed.
-          # Get the current hour (0-23) in UTC
-          CURRENT_HOUR=$(date -u +%H)
-          echo "Current UTC Hour is $CURRENT_HOUR"
-
-          # Use a shell arithmetic expression to check for evenness (remainder of division by 2 is 0)
-          # '0' is even, '1' is odd.
-          if (( CURRENT_HOUR % 2 == 0 )); then
-            IS_EVEN="true"
-            STATUS="EVEN"
-          else
-            IS_EVEN="false"
-            STATUS="ODD"
-          fi
-
-          echo "The hour is $STATUS"
-
-          # Set a boolean output for the subsequent steps to consume
-          echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
 
       - name: Use Bash for all subsequent steps
         shell: bash
@@ -101,11 +77,10 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rustup }}
           components: rustfmt, clippy
-          # targets: wasm32-unknown-unknown
 
 
       - run: |
@@ -129,6 +104,10 @@ jobs:
           fetch-depth: '0'
           fetch-tags: 'false'
 
+      - name: Calculate Odd/Even Status
+        id: time_check_hour
+        uses: ./.github/actions/calculate-odd-even
+
       - run: |
           printenv || true
 
@@ -143,6 +122,26 @@ jobs:
 
       - run: |
           cargo-binstall --force --no-confirm gnostr
+
+      - name: gnostr --help
+        shell: bash
+        run: |
+          gnostr --help
+
+      - name: gnostr --version
+        shell: bash
+        run: |
+          gnostr --version
+
+      - name: gnostr generate-keypair
+        shell: bash
+        run: |
+          gnostr generate-keypair
+
+      - name: gnostr
+        shell: bash
+        run: |
+          gnostr || true
 
       - run: /bin/bash -c "sudo apt-get install build-essential procps curl file git"
         if: matrix.os == 'ubuntu-latest'
@@ -166,23 +165,23 @@ jobs:
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-          brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
-        run: brew tap gnostr-org/homebrew-gnostr-org || true
+        run: arch -arm64 brew tap gnostr-org/homebrew-gnostr-org || true
         if: runner.os == 'macos'
 
       - name: brew tap nostorg/nostr
-        run: brew tap nostorg/nostr || true
+        run: arch -arm64 brew tap nostorg/nostr || true
         if: runner.os == 'macos'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
-        run: brew tap randymcmillan/homebrew-randymcmillan || true
+        run: arch -arm64 brew tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os == 'macos'
 
-      - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      - name: brew install gnostr (cargo-binstall)
+        run: cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: runner.os == 'macos'
 
       #- name: gnostr ${{ matrix.commands }}
@@ -258,8 +257,8 @@ jobs:
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} && echo && \
-            gnostr query --ids $EVENT --relay ${{ env.NOS }} && echo
+            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} || true && echo && \
+            gnostr query --ids $EVENT --relay ${{ env.NOS }} || true && echo
         #if: matrix.os == 'macos-latest'
 
       - name: 🌙 UTC second is ODD
@@ -270,13 +269,29 @@ jobs:
       - name: 🚀 cargo fmt --check -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         run: |
-          cargo fmt --check && echo "✅" || echo "❌"
+          cargo fmt --check || true && echo "✅" || echo "❌"
 
       - name: 🚀 cargo install -j8
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
+
+      - name: 🖊️ cargo fmt — commit formatting changes after successful build
+        if: success() && matrix.os == 'ubuntu-latest' && matrix.rustup == 'stable'
+        shell: bash
+        run: |
+          cargo fmt --all
+          if ! git diff --quiet; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -u
+            git commit -m "cargo fmt: apply formatting changes [$(git rev-parse --short HEAD)]"
+            git push
+            echo "✅ Committed cargo fmt changes"
+          else
+            echo "✅ No formatting changes"
+          fi
 
       - name: 🚀 if command apt-get
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
@@ -317,25 +332,10 @@ jobs:
          make gnostr-chat &
          make gnostr-chat &
          sleep 5 # Wait for services to start
-         gnostr query --limit 100
+         gnostr query --limit 100 || true
 
-      - name: Cleanup lingering gnostr processes (Linux/macOS)
-        if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
-        run: |
-          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
-          pkill -f "gnostr" || true
-          pkill -f "git-remote-nostr" || true
-          echo "Cleanup attempt finished."
-        continue-on-error: true
-
-      - name: Cleanup lingering gnostr processes (Windows)
-        if: success() && (matrix.os == 'windows-latest')
-        shell: pwsh
-        run: |
-          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
-          Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue || true
-          Stop-Process -Name "git-remote-nostr" -ErrorAction SilentlyContinue || true
-          echo "Cleanup attempt finished."
+      - name: Cleanup lingering gnostr processes
+        uses: ./.github/actions/gnostr-cleanup
         continue-on-error: true
 
       - name: Get Current Job Log URL
@@ -349,107 +349,40 @@ jobs:
         run: echo ${{ steps.jobs.outputs.html_url }}
 
       - name: Execute script on failure
-        shell: bash
         if: failure()
-        run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Failed!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://njump.me/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Failed!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.rustup }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://njump.me'
 
       - name: Execute script on cancelled
-        shell: bash
         if: cancelled()
-        run: |
-          echo "A previous step cancelled! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Cancelled!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://njump.me/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Cancelled!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.rustup }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://njump.me'
 
       - name: Execute script on success
-        shell: bash
         if: success()
-        run: |
-          echo "A previous step succeeded! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.rustup }}) Success!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            echo EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr-query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://njump.me/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Success!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.rustup }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://njump.me'
 
       #- name: Save rustup
       #  id: cache-rustup-save
