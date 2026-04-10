@@ -5,14 +5,15 @@ description: >
 
 outputs:
   is_even:
-    description: '"true" if the current UTC hour is even, "false" if odd'
-    value: ${{ steps.time_check_hour.outputs.is_even }}
+    description: '"true" if the current UTC hour is even, "false" if odd (always "true" on Windows)'
+    value: ${{ steps.time_check_hour.outputs.is_even || steps.time_check_hour_windows.outputs.is_even }}
 
 runs:
   using: composite
   steps:
-    - name: Calculate Odd/Even Status
+    - name: Calculate Odd/Even Status (Linux/macOS)
       id: time_check_hour
+      if: runner.os != 'Windows'
       shell: bash
       run: |
         CURRENT_HOUR=$(date -u +%H)
@@ -26,3 +27,11 @@ runs:
         fi
         echo "The hour is $STATUS"
         echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
+
+    - name: Calculate Odd/Even Status (Windows — disabled, always even)
+      id: time_check_hour_windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Write-Host "Odd/Even UTC hour calculation is disabled on Windows; defaulting to EVEN"
+        echo "is_even=true" >> $env:GITHUB_OUTPUT
