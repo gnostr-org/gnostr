@@ -53,6 +53,8 @@ enum LogSearch {
 
 ///
 pub struct Nostr {
+    /// Currently selected index in the Nostr item list
+    selected_idx: usize,
 	/// List of Nostr items (patches, issues, announcements)
 	 nostr_items: Vec<crate::components::nostr_types::IndexedNostrItem>,
 	pub status_msg: String,
