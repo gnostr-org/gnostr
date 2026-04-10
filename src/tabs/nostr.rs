@@ -171,13 +171,14 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 			.iter()
 			.map(|indexed_item| {
 				let item = &indexed_item.item;
+				
 				let kind_span = Span::styled(
 					format!("[{}] ", item.kind_label()),
-					self.theme.text(true, false),
+					self.theme.commit_hash(false),
 				);
 				let status_span = Span::styled(
 					format!("[{}] ", item.status_label()),
-					self.theme.text(false, false),
+					self.theme.commit_time(false),
 				);
 				let subject_span = Span::styled(
 					item.subject().to_owned(),
@@ -185,7 +186,7 @@ self.nostr_items.push(crate::components::nostr_types::IndexedNostrItem { idx, it
 				);
 				let author_span = Span::styled(
 					format!("  <{}>", item.pubkey_short()),
-					self.theme.text(false, false),
+					self.theme.commit_author(false),
 				);
 				ListItem::new(Line::from(vec![
 					kind_span,
