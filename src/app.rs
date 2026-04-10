@@ -2,7 +2,7 @@ use crate::{
 	accessors,
 	cmdbar::CommandBar,
 	components::{
-		command_pump, event_pump, AppOption, BlameFileComponent,
+		command_pump, AppOption, BlameFileComponent,
 		BranchListComponent, CommandInfo, CommitComponent,
 		CompareCommitsComponent, Component, ConfirmComponent,
 		CreateBranchComponent, DrawableComponent,
@@ -487,10 +487,10 @@ impl App {
 
 			let mut flags = NeedsUpdate::empty();
 
-			if event_pump(&ev, self.components_mut().as_mut_slice())?
-				.is_consumed()
-			{
-				flags.insert(NeedsUpdate::COMMANDS);
+			let tab_idx = self.tab;
+let mut tabs = self.get_tabs();
+if tabs[tab_idx].event(&ev)?.is_consumed() {
+	flags.insert(NeedsUpdate::COMMANDS);
 			} else if let Event::Key(k) = &ev {
 				let new_flags = if key_match(
 					k,
