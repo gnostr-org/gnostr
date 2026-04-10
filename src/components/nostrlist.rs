@@ -117,8 +117,10 @@ impl DrawableComponent for NostrListComponent {
             .iter()
             .map(|item: &NostrItem| ListItem::new(item.subject()))
             .collect();
+        // Use theme for styling
         let list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("Nostr Events"));
+            .block(Block::default().borders(Borders::ALL).title("Nostr Events"))
+            .style(self.theme.text(false, false));
         f.render_stateful_widget(list, area, &mut *self.list_state.borrow_mut());
         Ok(())
     }

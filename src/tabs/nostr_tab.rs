@@ -106,6 +106,13 @@ impl Component for NostrTab {
         if !self.visible {
             return Ok(EventState::NotConsumed);
         }
+        // Use key_config for a custom key (example: show help)
+        if let Event::Key(key) = ev {
+            if crate::keys::key_match(key, self.key_config.keys.help) {
+                self.status_msg = "Help: Up/Down to navigate, Enter to select".to_string();
+                return Ok(EventState::Consumed);
+            }
+        }
         let list_result = self.list.event(ev)?;
         if list_result.is_consumed() {
             return Ok(EventState::Consumed);
