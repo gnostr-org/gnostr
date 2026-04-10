@@ -34,6 +34,7 @@ mod tag_commit;
 mod taglist;
 mod textinput;
 mod utils;
+pub mod nostrlist;
 
 pub use self::status_tree::StatusTreeComponent;
 pub use blame_file::{BlameFileComponent, BlameFileOpen};
