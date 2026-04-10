@@ -165,6 +165,27 @@ impl Nostr {
 
 	///
 	pub fn update(&mut self) -> Result<()> {
+		use asyncgit::nostr::AsyncNostrNotification;
+		if let Some(rx) = &self.nostr_rx {
+			while let Ok(notification) = rx.try_recv() {
+				match notification {
+					AsyncNostrNotification::RepoPatch(patch) => {
+						self.push_patch(crate::components::nostr_types::NostrItem::from(*patch));
+					}
+					AsyncNostrNotification::RepoIssue(issue) => {
+						self.push_issue(crate::components::nostr_types::NostrItem::from(*issue));
+					}
+					AsyncNostrNotification::RepoAnnouncement(ann) => {
+						self.push_announcement(crate::components::nostr_types::NostrItem::from(*ann));
+					}
+					AsyncNostrNotification::RepoStatus { target_id, status } => {
+						self.apply_status(&target_id, status);
+					}
+					_ => {}
+				}
+			}
+		}
+
 		if self.is_visible() {
 			if self.git_log.fetch()? == FetchStatus::Started {
 				self.list.clear();
