@@ -1,0 +1,28 @@
+name: Calculate Odd/Even UTC Hour
+description: >
+  Checks whether the current UTC hour is even or odd.
+  Useful for alternating CI task depth and speed on cron-triggered runs.
+
+outputs:
+  is_even:
+    description: '"true" if the current UTC hour is even, "false" if odd'
+    value: ${{ steps.time_check_hour.outputs.is_even }}
+
+runs:
+  using: composite
+  steps:
+    - name: Calculate Odd/Even Status
+      id: time_check_hour
+      shell: bash
+      run: |
+        CURRENT_HOUR=$(date -u +%H)
+        echo "Current UTC Hour is $CURRENT_HOUR"
+        if (( CURRENT_HOUR % 2 == 0 )); then
+          IS_EVEN="true"
+          STATUS="EVEN"
+        else
+          IS_EVEN="false"
+          STATUS="ODD"
+        fi
+        echo "The hour is $STATUS"
+        echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
