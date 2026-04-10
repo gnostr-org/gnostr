@@ -57,7 +57,7 @@ pub struct Nostr {
     selected_idx: usize,
 	/// List of Nostr items (patches, issues, announcements)
 	 nostr_items: Vec<crate::components::nostr_types::IndexedNostrItem>,
-    selected_idx: usize, // Currently selected index in the Nostr item list
+    
 	pub status_msg: String,
 	repo: RepoPathRef,
 	commit_details: CommitDetailsComponent,
@@ -473,8 +473,7 @@ impl DrawableComponent for Nostr {
 		};
 
 		// Draw Nostr items as a simple list
-		use ratatui::widgets::{List, ListItem, ListState};
-let items: Vec<ListItem> = self.nostr_items.iter().map(|indexed_item| {
+		let items: Vec<ListItem> = self.nostr_items.iter().map(|indexed_item| {
     let item = &indexed_item.item;
     ListItem::new(format!("{:?}", item))
 }).collect();
