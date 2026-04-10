@@ -110,6 +110,7 @@ impl Nostr {
 			key_config,
 			sender: sender.clone(),
 			theme,
+            status_msg: String::new(),
 		}
 	}
 
