@@ -470,11 +470,12 @@ impl DrawableComponent for Nostr {
 
 		// Draw Nostr items as a simple list
 		use ratatui::widgets::{List, ListItem, ListState};
-let items: Vec<ListItem> = self.nostr_items.iter().map(|item| {
+let items: Vec<ListItem> = self.nostr_items.iter().map(|indexed_item| {
+    let item = &indexed_item.item;
     ListItem::new(format!("{:?}", item))
 }).collect();
 let mut state = ListState::default();
-if !self.nostr_items.is_empty() {
+if !self.nostr_items.is_empty() { // IndexedNostrItem list
     state.select(Some(self.list.selected_entry().map_or(0, |e| e.idx)));
 }
 let list = List::new(items)
