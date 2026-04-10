@@ -36,7 +36,7 @@ which = { version = "5.0", optional = true }
 gnostr = { path = "../" }
 strip-ansi-escapes = "0.2.0"
 tokio = "1.33.0"
-tungstenite = "0.20.1"
+tungstenite = { version = "0.20.1", features = ["rustls-tls-webpki-roots"] }
 expectrl = "0.8.0"
-tokio-tungstenite = "0.28.0"
+tokio-tungstenite = { version = "0.28.0", features = ["rustls-tls-webpki-roots"] }
 futures-util = "0.3.31"

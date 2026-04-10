@@ -143,37 +143,91 @@ pub async fn send(
     //log::info!("query_string=\n{query_string}\n");
     //log::debug!("relay_url:\n{relay_url:?}\n");
     //log::info!("\n{}\n", limit.unwrap());
+    const MAX_RETRIES: u32 = 3;
     let connect_timeout = Duration::from_secs(30);
-    let (ws_stream, _) = timeout(connect_timeout, connect_async(relay_url[0].clone()))
-        .await
-        .map_err(|e| format!("WebSocket connection timed out: {e}"))??;
-    let (mut write, mut read) = ws_stream.split();
-    write.send(Message::Text(query_string)).await?;
-    let mut count: i32 = 0;
-    let mut vec_result: Vec<String> = vec![];
     let read_timeout = Duration::from_secs(30);
-    loop {
-        match timeout(read_timeout, read.next()).await {
-            Ok(Some(message)) => {
-                let data = message?;
-                if count >= limit.unwrap() {
-                    //std::process::exit(0);
-                    return Ok(vec_result);
-                }
-                if let Message::Text(text) = data {
-                    //print!("{text}");
-                    vec_result.push(text);
-                    count += 1;
-                }
-            }
-            Ok(None) => break,
+
+    if relay_url.is_empty() {
+        return Err("No relay URLs provided".into());
+    }
+
+    let mut last_err: String = "Unknown error".to_string();
+
+    for attempt in 0..=MAX_RETRIES {
+        if attempt > 0 {
+            let delay = Duration::from_secs((1u64 << (attempt - 1)).min(30)); // 1s, 2s, 4s (capped at 30s)
+            log::debug!(
+                "Retrying WebSocket connection (attempt {}/{MAX_RETRIES}), waiting {}s...",
+                attempt,
+                delay.as_secs()
+            );
+            tokio::time::sleep(delay).await;
+        }
+
+        let connect_result = timeout(connect_timeout, connect_async(relay_url[0].clone())).await;
+        match connect_result {
             Err(_) => {
-                log::debug!("WebSocket read timed out after 30 seconds");
-                break;
+                last_err = format!(
+                    "WebSocket connection timed out on attempt {}/{}",
+                    attempt, MAX_RETRIES
+                );
+                log::debug!("{}", last_err);
+                continue;
+            }
+            Ok(Err(e)) => {
+                last_err = format!("WebSocket connection failed: {e}");
+                log::debug!("{}", last_err);
+                continue;
+            }
+            Ok(Ok((ws_stream, _))) => {
+                let (mut write, mut read) = ws_stream.split();
+                if let Err(e) = write.send(Message::Text(query_string.clone())).await {
+                    last_err = format!("Failed to send query: {e}");
+                    log::debug!("{}", last_err);
+                    continue;
+                }
+
+                let mut count: i32 = 0;
+                let mut vec_result: Vec<String> = vec![];
+                let mut read_error: Option<String> = None;
+
+                loop {
+                    match timeout(read_timeout, read.next()).await {
+                        Ok(Some(Ok(data))) => {
+                            if count >= limit.unwrap() {
+                                //std::process::exit(0);
+                                return Ok(vec_result);
+                            }
+                            if let Message::Text(text) = data {
+                                //print!("{text}");
+                                vec_result.push(text);
+                                count += 1;
+                            }
+                        }
+                        Ok(Some(Err(e))) => {
+                            read_error = Some(format!("WebSocket read error: {e}"));
+                            log::debug!("{}", read_error.as_ref().unwrap());
+                            break;
+                        }
+                        Ok(None) => return Ok(vec_result),
+                        Err(_) => {
+                            log::debug!("WebSocket read timed out after 30 seconds");
+                            return Ok(vec_result);
+                        }
+                    }
+                }
+
+                if let Some(e) = read_error {
+                    last_err = e;
+                    continue;
+                }
+
+                return Ok(vec_result);
             }
         }
     }
-    Ok(vec_result)
+
+    Err(last_err.into())
 }
 
 #[allow(clippy::too_many_arguments)]
