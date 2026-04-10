@@ -299,24 +299,31 @@ impl NostrTab {
 
 impl DrawableComponent for NostrTab {
 	fn draw<B: Backend>(
-		&self,
-		f: &mut Frame<B>,
-		rect: Rect,
-	) -> Result<()> {
-		let chunks = Layout::default()
-			.direction(Direction::Vertical)
-			.constraints([
-				Constraint::Min(5),
-				Constraint::Ratio(1, 3),
-				Constraint::Length(1),
-			])
-			.split(rect);
+        &self,
+        f: &mut Frame<B>,
+        rect: Rect,
+    ) -> Result<()> {
+        // Horizontal split: list left, detail right
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage(60),
+                Constraint::Percentage(40),
+            ])
+            .split(rect);
 
-		self.draw_list(f, chunks[0]);
-		self.draw_detail(f, chunks[1]);
-		self.draw_footer(f, chunks[2]);
-		Ok(())
-	}
+        self.draw_list(f, chunks[0]);
+        self.draw_detail(f, chunks[1]);
+        // Draw footer at the bottom of the whole rect
+        let footer_area = Rect {
+            x: rect.x,
+            y: rect.y + rect.height.saturating_sub(1),
+            width: rect.width,
+            height: 1,
+        };
+        self.draw_footer(f, footer_area);
+        Ok(())
+    }
 }
 
 impl Component for NostrTab {
