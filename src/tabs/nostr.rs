@@ -113,7 +113,9 @@ impl Nostr {
 		theme: SharedTheme,
 		key_config: SharedKeyConfig,
 	) -> Self {
-		Self {
+		let (nostr_tx, nostr_rx) = crossbeam_channel::unbounded();
+let nostr_client = Some(asyncgit::nostr::AsyncNostr::new(nostr_tx));
+Self {
 			repo: repo.clone(),
 			queue: queue.clone(),
 			commit_details: CommitDetailsComponent::new(
@@ -139,8 +141,8 @@ impl Nostr {
 			git_tags: AsyncTags::new(repo.borrow().clone(), sender),
 			git_local_branches: AsyncSingleJob::new(sender.clone()),
 			git_remote_branches: AsyncSingleJob::new(sender.clone()),
-			nostr_client: None,
-			nostr_rx: None,
+			nostr_client,
+			nostr_rx: Some(nostr_rx),
 			visible: false,
 			key_config,
 			sender: sender.clone(),
