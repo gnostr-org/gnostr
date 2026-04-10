@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 permissions:
   actions: read
-  contents: read
+  contents: write
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -277,6 +277,22 @@ jobs:
         shell: bash
         run: |
           cargo install -j8 -f --path . && echo "✅" ## || echo "❌"
+
+      - name: 🖊️ cargo fmt — commit formatting changes after successful build
+        if: success() && matrix.os == 'ubuntu-latest' && matrix.rustup == 'stable'
+        shell: bash
+        run: |
+          cargo fmt --all
+          if ! git diff --quiet; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -u
+            git commit -m "cargo fmt: apply formatting changes [$(git rev-parse --short HEAD)]"
+            git push
+            echo "✅ Committed cargo fmt changes"
+          else
+            echo "✅ No formatting changes"
+          fi
 
       - name: 🚀 if command apt-get
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
