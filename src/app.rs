@@ -466,7 +466,7 @@ impl App {
 				2 => self.files_tab.draw(f, chunks_main[1])?,
 				3 => self.stashing_tab.draw(f, chunks_main[1])?,
 				4 => self.stashlist_tab.draw(f, chunks_main[1])?,
-				5 => self.nostr.list.draw(f, chunks_main[1])?,
+				5 => self.nostr.draw(f, chunks_main[1])?,
 				_ => bail!("unknown tab"),
 			};
 		}

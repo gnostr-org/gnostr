@@ -659,10 +659,10 @@ impl DrawableComponent for Nostr {
 			.split(area[0]);
 
 		if self.commit_details.is_visible() {
-			self.list.draw(f, chunks[0])?;
+			self.draw_list(f, chunks[0]);
 			self.commit_details.draw(f, chunks[1])?;
 		} else {
-			self.list.draw(f, area[0])?;
+			self.draw_list(f, area[0]);
 		}
 
 		if self.is_in_search_mode() {
@@ -684,7 +684,14 @@ impl Component for Nostr {
 				self.update()?;
 				return Ok(EventState::Consumed);
 			} else if let Event::Key(k) = ev {
-				if key_match(k, self.key_config.keys.enter) {
+				// Nostr item navigation
+				if key_match(k, self.key_config.keys.move_up) {
+					self.move_selection_up();
+					return Ok(EventState::Consumed);
+				} else if key_match(k, self.key_config.keys.move_down) {
+					self.move_selection_down();
+					return Ok(EventState::Consumed);
+				} else if key_match(k, self.key_config.keys.enter) {
 					self.commit_details.toggle_visible()?;
 					self.update()?;
 					return Ok(EventState::Consumed);
