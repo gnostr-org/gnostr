@@ -85,6 +85,18 @@ pub struct Nostr {
 use asyncgit::nostr::PatchStatus;
 
 impl Nostr {
+	/// Connect to Nostr relays and start receiving NIP-34 events
+	pub fn connect(
+		&mut self,
+		identity: asyncgit::nostr::NostrIdentity,
+		relay_urls: Vec<String>,
+	) -> Result<()> {
+		if let Some(client) = &mut self.nostr_client {
+			client.connect(identity, relay_urls)?;
+		}
+		Ok(())
+	}
+
 	pub fn set_items(
 		&mut self,
 		_items: Vec<crate::components::nostr_types::NostrItem>,
