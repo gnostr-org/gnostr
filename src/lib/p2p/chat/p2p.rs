@@ -394,6 +394,33 @@ pub async fn evt_loop(
                     message_id: id,
                     message,
                 })) => { // Gossipsub event
+                    debug!(
+                        "Got message: '{}' with id: {id} from peer: {peer_id}",
+                        String::from_utf8_lossy(&message.data),
+                    );
+                    match serde_json::from_slice::<Msg>(&message.data) {
+                        Ok(msg) => {
+                            if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
+                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                    let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                    apply_text_wrapping(&mut reassembled_msg, terminal_width);
+                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
+                                }
+                            } else {
+                                // It's a single-part message, send directly
+                                let mut processed_msg = msg;
+                                let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                apply_text_wrapping(&mut processed_msg, terminal_width);
+                                recv.send(crate::queue::InternalEvent::ChatMessage(processed_msg)).await?;
+                            }
+                        },
+                        Err(e) => {
+                            debug!("Error deserializing message: {e:?}");
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(MsgKind::System);
+                            recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
+                        }
+                    }
+                },
                 SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Relay(ev)) => {
                     debug!("Relay event: {:?}", ev);
                     let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Relay event: {:?}", ev), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
