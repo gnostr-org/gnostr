@@ -106,7 +106,8 @@ jobs:
         if: matrix.os == 'macos-latest'
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: matrix.os == 'macos-latest'
-      - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      - name: Install gnostr via Homebrew
+  uses: ./.github/actions/brew-install-gnostr/
         if: matrix.os == 'macos-latest'
       - run: gnostr --help
       - run: |

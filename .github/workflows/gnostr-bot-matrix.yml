@@ -184,7 +184,8 @@ jobs:
         run: arch -arm64 brew tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os == 'macos'
 
-      - name: brew install gnostr (cargo-binstall)
+      - name: Install gnostr via Homebrew
+        uses: ./.github/actions/brew-install-gnostr/
         uses: ./.github/actions/cargo-binstall-gnostr
         if: runner.os == 'macos'
 

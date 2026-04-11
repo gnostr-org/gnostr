@@ -265,7 +265,8 @@ jobs:
           $BREW_CMD tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os != 'windows'
 
-      - name: brew install gnostr (cargo-binstall)
+      - name: Install gnostr via Homebrew
+        uses: ./.github/actions/brew-install-gnostr/
         uses: ./.github/actions/cargo-binstall-gnostr
         if: runner.os != 'windows'
 
