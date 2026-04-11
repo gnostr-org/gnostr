@@ -232,7 +232,7 @@ jobs:
       - name: Create custom-event kind 1
         shell: bash
         run: |
-          gnostr -V
+          gnostr --version
           EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \

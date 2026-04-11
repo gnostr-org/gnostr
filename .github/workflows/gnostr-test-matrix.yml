@@ -305,7 +305,7 @@ jobs:
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr -- -V
+          cargo run --bin gnostr -- --version
           cargo run --bin gnostr -- nip34 --help
           cargo run --bin gnostr -- nip34 repo-announcement --help
           cargo run --bin gnostr -- nip34 repo-state --help

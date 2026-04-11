@@ -204,7 +204,7 @@ speedy = { version = "0.8.7" }
 	tiny_http = { version = "0.12" }
     ##tokio = { version = "1.19", features = ["full", "tracing"] }
 
-    ## asyncgit 
+    ## asyncgit
     ##tokio-stream = "0.1.17"
     ##tokio-tungstenite = "0.21.0"
     ##tokio-util = { version = "0.7.10", features = ["io"] }
@@ -372,7 +372,7 @@ bwrap = { version = "1.3", features = ["use_std"] }
 bytes = "1.7.1"
 bytesize = { version = "1.3", default-features = false }
 bytestring = "1.3.1"
-cbc = { workspace = true } 
+cbc = { workspace = true }
 #cc = "1.0.106"
 chacha20 = { workspace = true }
 chacha20poly1305 = { workspace = true }
@@ -775,7 +775,7 @@ lto = "thin"
 # Optimized for development speed
 [profile.dev]
 # 0 = no optimizations (fastest build), 1 = basic (good balance)
-opt-level = 0 
+opt-level = 0
 
 # Reduce debug info: 0 = none, 1 = line tables only, 2 = full
 # Setting this to 1 significantly speeds up the linking stage.
@@ -789,6 +789,6 @@ incremental = true
 
 # --- Optimized for faster Check/Build across dependencies ---
 [profile.dev.package."*"]
-# Keeping dependencies slightly optimized can actually speed up 
+# Keeping dependencies slightly optimized can actually speed up
 # overall build times if your code calls them heavily.
 opt-level = 0
