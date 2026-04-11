@@ -1,5 +1,9 @@
 name: gnostr-test-matrix
 
+concurrency:
+  group: gnostr-test-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
 # Controls when the action will run.
 on:
   schedule:

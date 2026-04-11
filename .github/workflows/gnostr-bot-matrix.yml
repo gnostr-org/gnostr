@@ -1,5 +1,9 @@
 name: gnostr-bot-matrix
 
+concurrency:
+  group: gnostr-bot-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
 # Controls when the action will run.
 on:
   #schedule:
