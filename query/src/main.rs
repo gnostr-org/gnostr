@@ -1,6 +1,7 @@
 use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr_query::cli::cli;
 use gnostr_query::ConfigBuilder;
+use log::debug;
 use serde_json::{json, to_string};
 use url::Url;
 
@@ -89,7 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         //}
     }
 
-    let _config = ConfigBuilder::new()
+    let config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
         .use_tls(true)
