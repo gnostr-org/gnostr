@@ -37,6 +37,7 @@ jobs:
       - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
       - run: vcpkg install openssl:${{ matrix.os.arch }}-windows-static-md
       - name: Setup OpenSSL and Perl for Windows
+        if: runner.os == 'windows'
         uses: ./.github/actions/setup-openssl-perl-windows/
       - uses: actions/cache@v4
         with:

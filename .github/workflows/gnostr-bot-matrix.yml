@@ -57,6 +57,7 @@ jobs:
           MEMPOOL_SPACE: "mempool-space"
 
       - name: Setup OpenSSL and Perl for Windows
+        if: runner.os == 'windows'
         uses: ./.github/actions/setup-openssl-perl-windows/
       - uses: cargo-bins/cargo-binstall@main
       - uses: styfle/cancel-workflow-action@0.11.0
