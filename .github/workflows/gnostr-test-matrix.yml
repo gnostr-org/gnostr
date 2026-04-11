@@ -36,6 +36,18 @@ jobs:
         id: rust-version
       - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
       - run: vcpkg install openssl:${{ matrix.os.arch }}-windows-static-md
+      - name: Set OpenSSL environment variables
+        if: runner.os == 'Windows'
+        run: |
+          echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
+          echo "OPENSSL_DIR=C:/path/to/vcpkg/installed/x64-windows-static-md" >> $GITHUB_ENV
+      - name: Install Perl modules
+        if: runner.os == 'Windows'
+        run: |
+          choco install strawberryperl
+          perl -MCPAN -e "install Locale::Maketext::Simple"
+          perl -MCPAN -e "install IPC::Cmd"
+          perl -MCPAN -e "install Params::Check"
       - uses: actions/cache@v4
         with:
           path: ~/.cargo/registry/index
