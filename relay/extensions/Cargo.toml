@@ -20,9 +20,9 @@ count = []
 
 [dependencies]
 actix = "0.13.5"
-actix-web = "4.9.0" ## part of gnostr tokio runtime conflict
-gnostr-relay = {workspace = true } #{ version = "1894.934224.276199", path = "..", features = [
-  #"search",
+actix-web = "4.9.0"                 ## part of gnostr tokio runtime conflict
+gnostr-relay = { workspace = true } #{ version = "1894.934224.276199", path = "..", features = [
+#"search",
 #] }
 governor = { version = "0.6.3", optional = true }
 
@@ -38,7 +38,7 @@ tracing = "0.1.40"
 uuid = { version = "1.10.0", features = ["v4", "fast-rng"] }
 
 [dev-dependencies]
-actix-rt = "2.10.0" ## part of gnostr tokio runtime conflict
+actix-rt = "2.10.0"           ## part of gnostr tokio runtime conflict
 actix-test = "0.1.5"
 actix-web-actors = "4.3.1"
 anyhow = "1.0.86"

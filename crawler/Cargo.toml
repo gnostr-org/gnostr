@@ -3,10 +3,7 @@
 edition = "2021"
 name = "gnostr-crawler"
 version = "1906.925289.572444"
-authors = [
-    "gnostr <admin@gnostr.org>",
-    "optout21",
-]
+authors = ["gnostr <admin@gnostr.org>", "optout21"]
 build = false
 autolib = false
 autobins = false
@@ -16,11 +13,7 @@ autobenches = false
 description = "gnostr:a git+nostr workflow utility"
 homepage = "https://github.com/gnostr-org/gnostr"
 readme = "README.md"
-keywords = [
-    "gnostr",
-    "tool",
-    "nostr",
-]
+keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr"
