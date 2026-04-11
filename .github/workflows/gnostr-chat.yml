@@ -4,12 +4,14 @@ name: Gnostr Chat
 # Controls when the action will run.
 on:
   schedule: # run 30th minute
-    - cron: "*/30 * * * *"
+    - cron: '*/30 * * * *'
   push:
     branches:
-      - "**"
+      - '**'
 
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-gnostr-chat-workflow]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -76,9 +78,9 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
-          # If not specified, it defaults to 'stable'.
+          # If not specified, it defaults to 'stable'. 
           # It can also read the version from a 'rust-toolchain.toml' file if present.
-          toolchain: stable
+          toolchain: stable 
           # Comma-separated list of additional components to install.
           components: clippy, rustfmt
           # Automatically configure smart caching (recommended for speed)
@@ -87,23 +89,15 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - uses: actions/checkout@v3
         with:
-          submodules: "true"
-          set-safe-directory: "true"
-          fetch-depth: "0"
-          fetch-tags: "false"
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
       - run: cargo install cargo-binstall || true
       - run: cargo-binstall --no-confirm gnostr
-      - name: Debug gnostr installation
-        run: |
-          echo "Verifying cargo-binstall:"
-          which cargo-binstall || echo "cargo-binstall not found or not in PATH."
-          echo "Current PATH: $PATH"
-          echo "Verifying gnostr:"
-          which gnostr || echo "gnostr not found or not in PATH."
-          gnostr --version || true # Run if found, otherwise continue
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
@@ -166,6 +160,12 @@ jobs:
           fi
           kill $LISTENER_PID || true # Clean up listener process
 
+
+
+
+
+
+
   tui:
     name: TUI Test
     runs-on: ubuntu-latest
@@ -199,7 +199,7 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: "true"
+          submodules: 'true'
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
@@ -238,3 +238,4 @@ jobs:
           path: |
             target
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
+

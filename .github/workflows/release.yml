@@ -42,7 +42,7 @@ on:
   pull_request:
   push:
     tags:
-      - "**[0-9]+.[0-9]+.[0-9]+*"
+      - '**[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -58,17 +58,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
-      - name: Install sccache
-        run: |
-          cargo install sccache --version 0.4.0 --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.30.3/cargo-dist-installer.sh | sh"
+        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.28.2/cargo-dist-installer.sh | sh"
       - name: Cache dist
         uses: actions/upload-artifact@v4
         with:
@@ -122,12 +117,7 @@ jobs:
           git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
-      - name: Install sccache
-        run: |
-          cargo install sccache --version 0.4.0 --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
         run: |
@@ -180,16 +170,12 @@ jobs:
       - build-local-artifacts
     runs-on: "ubuntu-22.04"
     env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
-      - name: Install sccache
-        run: |
-          cargo install sccache --version 0.4.0 --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install cached dist
         uses: actions/download-artifact@v4
         with:
@@ -228,8 +214,8 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-22.04"
@@ -238,12 +224,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
-      - name: Install sccache
-        run: |
-          cargo install sccache --version 0.4.0 --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install cached dist
         uses: actions/download-artifact@v4
         with:
@@ -307,8 +288,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
-          repository: "gnostr-org/homebrew-gnostr"
+          repository: "gnostr-org/homebrew-gnostr-org"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
       - name: Fetch homebrew formulae
@@ -354,5 +334,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
