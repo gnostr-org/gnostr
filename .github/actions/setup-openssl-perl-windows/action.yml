@@ -1,0 +1,19 @@
+name: 'Setup OpenSSL and Perl for Windows'
+description: 'Sets OPENSSL_NO_VENDOR, OPENSSL_DIR, and installs Strawberry Perl and required Perl modules on Windows.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set OpenSSL environment variables
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
+        echo "OPENSSL_DIR=C:/path/to/vcpkg/installed/x64-windows-static-md" >> $GITHUB_ENV
+    - name: Install Perl modules
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        choco install strawberryperl
+        perl -MCPAN -e "install Locale::Maketext::Simple"
+        perl -MCPAN -e "install IPC::Cmd"
+        perl -MCPAN -e "install Params::Check"
