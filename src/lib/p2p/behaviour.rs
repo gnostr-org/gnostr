@@ -1,4 +1,4 @@
-use libp2p::{gossipsub, identify, kad, mdns, ping, rendezvous, relay, swarm::NetworkBehaviour};
+use libp2p::{gossipsub, identify, kad, mdns, ping, rendezvous, relay};
 use libp2p_autonat as autonat;
 
 #[derive(NetworkBehaviour)]

@@ -148,7 +148,7 @@ impl MessageReassembler {
     }
 }
 
-use libp2p::{relay, swarm::NetworkBehaviour};
+use libp2p::{relay};
 use libp2p_autonat as autonat;
 
 #[derive(NetworkBehaviour)]
@@ -274,7 +274,7 @@ pub async fn evt_loop(
                 kademlia,
                 ping,
                 request_response,
-                relay: relay::Behaviour::new(key.public().to_peer_id()),
+                relay: relay::Behaviour::new(key.public().to_peer_id(), relay::Config::default()),
                 autonat: libp2p_autonat::Behaviour::new(key.public().to_peer_id(), Default::default()),
             })
         })?
