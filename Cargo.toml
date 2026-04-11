@@ -252,7 +252,7 @@ name = "gnostr-shell"
 path = "src/lib/node/git_shell.rs"
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit"]
+default = ["ghemoji", "regex-fancy", "trace-libgit", "vendor-openssl"]
 expensive_tests = [] #nostr
 ghemoji = ["dep:gh-emoji"]
 gnostr-web = [
