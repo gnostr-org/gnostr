@@ -9,11 +9,13 @@ runs:
       run: |
         echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
         echo "OPENSSL_DIR=C:/path/to/vcpkg/installed/x64-windows-static-md" >> $GITHUB_ENV
-    - name: Install Perl modules
-      if: runner.os == 'Windows'
-      shell: bash
+    - name: Install Strawberry Perl
       run: |
-        choco install strawberryperl
-        perl -MCPAN -e "install Locale::Maketext::Simple"
-        perl -MCPAN -e "install IPC::Cmd"
-        perl -MCPAN -e "install Params::Check"
+        choco install strawberryperl -y
+        echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      if: runner.os == 'windows'
+      shell: pwsh
+    - name: Install Perl modules
+      run: perl -MCPAN -e "install Locale::Maketext::Simple"
+      if: runner.os == 'windows'
