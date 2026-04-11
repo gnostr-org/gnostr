@@ -285,69 +285,10 @@ jobs:
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
       - name: create set-metadata kind 0
-        shell: bash
-        run: |
-          gnostr -V
-          gnostr \
-          -d ${{ env.POW }} \
-          -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-          set-metadata \
-          -n "#gnostr" \
-          -a "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" \
-          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
-          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" \
-          -e "$GITHUB_REPOSITORY" \
-          -e "$GITHUB_WORKFLOW" \
-          -e "$GITHUB_WORKFLOW_SHA" \
-          -e "$GITHUB_WORKFLOW_REF" \
-          -e "$GITHUB_REF" \
-          -e "$GITHUB_RUN_ID" \
-          -e "gnostr" \
-          -e "gnostr-bot" \
-          -e "$GITHUB_REPOSITORY_OWNER" \
-          -e "$(date +%s)" \
-          -e "$RUNNER_ENVIRONMENT" \
-          -e "$RUNNER_OS" \
-          -e "$(gnostr --weeble)" \
-          -e "$(gnostr --blockheight)" \
-          -e "$(gnostr --wobble)" || true
-        #if: matrix.os == 'macos-latest'
+      ## insert reusable here
 
       - name: Create custom-event kind 1
-        shell: bash
-        run: |
-          gnostr -V
-          EVENT=$(gnostr \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            --nsec "$(gnostr --hash '')" \
-            custom-event \
-            -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
-            -t "repo|$GITHUB_REPOSITORY" \
-             ,"workflow|$GITHUB_WORKFLOW" \
-             ,"workflow_sha|$GITHUB_WORKFLOW_SHA" \
-             ,"workflow_ref|$GITHUB_WORKFLOW_REF" \
-             ,"github_ref|$GITHUB_REF" \
-             ,"github_run_id|$GITHUB_RUN_ID" \
-             ,"gnostr|gnostr" \
-             ,"gnostr-bot|gnostr-bot" \
-             ,"github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
-             ,"date|$(date +%s)" \
-             ,"runner_env|$RUNNER_ENVIRONMENT" \
-             ,"runner_os|$RUNNER_OS" \
-             ,"weeble|$(gnostr --weeble)" \
-             ,"blockheight|$(gnostr --blockheight)" \
-             ,"wobble|$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE;
-            gnostr query -i $EVENT -r ${{ env.DAMUS }};
-            echo && echo "http://nostr.band/$NOTE"
-        #if: matrix.os == 'macos-latest'
+      ## insert reusable here
 
       #- name: 🌙 UTC second is ODD
       #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
