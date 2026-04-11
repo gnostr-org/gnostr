@@ -17,6 +17,11 @@ categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
 
+[lib]
+name = "gnostr"
+path = "src/lib/mod.rs"
+
+
 [workspace]
 members = [
     ".",
@@ -67,6 +72,9 @@ exclude = [
 ]
 
 [workspace.dependencies]
+gnostr-crawler = { version = "1895.933117.678085", path = "crawler" }
+gnostr-query = { version = "1895.933117.678085", path = "query" }
+gnostr-types = { version = "1905.926180.332424", path = "types", features = ["speedy"] }
     aes = "0.8"
     anyhow = "1.0.75"
 	arc-swap = "1.8.0"
@@ -248,10 +256,6 @@ speedy = { version = "0.8.7" }
 	xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
 	yoke = { version = "0.7.5", features = ["derive"] }
     zeroize = "1.6.0"
-
-[lib]
-name = "gnostr"
-path = "src/lib/mod.rs"
 
 [[bin]]
 name = "gnostr-crawler-service"
@@ -436,20 +440,15 @@ gix = { version = "0.66", default-features = false, features = [
 ] }
 globset = "0.4"
 
-##gitui
-#anyhow = "1.0"
 gnostr-asyncgit = { workspace = true }
-gnostr-crawler = { version = "1895.933117.678085", path = "crawler" }
+gnostr-crawler = { workspace = true }
 gnostr-extensions = { workspace = true }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
-gnostr-query = { version = "1895.933117.678085", path = "query" }
+gnostr-query = { workspace = true }
 gnostr-relay = { workspace = true }
-gnostr-types = { version = "1905.926180.332424", path = "types", features = ["speedy"] }
+gnostr-types = { workspace = true }
 gnostr_qr = { workspace = true }
-#gnostr-crawler = { workspace = true } ##version = "1906.925289.572444", path = "crawler" }
-#gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
-#gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
 handlebars = { workspace = true, optional = true }
 hex = { workspace = true }
 hkdf = { workspace = true }
