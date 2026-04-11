@@ -384,7 +384,7 @@ jobs:
           pow: ${{ env.POW }}
           damus: ${{ env.DAMUS }}
           nos: ${{ env.NOS }}
-          njump_base: 'http://nostr.band'
+          njump_base: 'http://njump.me'
 
       - name: Execute script on cancelled
         if: cancelled()
@@ -396,7 +396,7 @@ jobs:
           pow: ${{ env.POW }}
           damus: ${{ env.DAMUS }}
           nos: ${{ env.NOS }}
-          njump_base: 'http://nostr.band'
+          njump_base: 'http://njump.me'
 
       - name: Execute script on success
         if: success()
@@ -408,7 +408,7 @@ jobs:
           pow: ${{ env.POW }}
           damus: ${{ env.DAMUS }}
           nos: ${{ env.NOS }}
-          njump_base: 'http://nostr.band'
+          njump_base: 'http://njump.me'
 
       ## NOTE: The cache restore steps (cache-cargo-restore, cache-target-restore) above are
       ## commented out since actions/cache@v4 at lines 76-91 already handles both restore and save.
