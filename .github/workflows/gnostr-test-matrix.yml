@@ -200,9 +200,7 @@ jobs:
           cargo search gnostr --limit 100
 
       - name: Install gnostr via cargo-binstall
-        shell: bash
-        run: |
-          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
+        uses: ./.github/actions/cargo-binstall-gnostr
 
       - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
         if: matrix.os == 'ubuntu-latest'
@@ -245,8 +243,9 @@ jobs:
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
         if: matrix.os == 'ubuntu-latest'
+      - name: Install gnostr via cargo-binstall
+        uses: ./.github/actions/cargo-binstall-gnostr
 
       - name: brew tap gnostr-org/homebrew-gnostr-org
         run: |
@@ -267,8 +266,7 @@ jobs:
         if: runner.os != 'windows'
 
       - name: brew install gnostr (cargo-binstall)
-        run: |
-          cargo-binstall --force --no-confirm gnostr && gnostr --help || true
+        uses: ./.github/actions/cargo-binstall-gnostr
         if: runner.os != 'windows'
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines

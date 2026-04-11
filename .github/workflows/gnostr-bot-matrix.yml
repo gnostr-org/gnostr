@@ -27,7 +27,7 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
         rustup: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: true
@@ -185,7 +185,7 @@ jobs:
         if: runner.os == 'macos'
 
       - name: brew install gnostr (cargo-binstall)
-        run: cargo-binstall --force --no-confirm gnostr && gnostr --help || true
+        uses: ./.github/actions/cargo-binstall-gnostr
         if: runner.os == 'macos'
 
       #- name: gnostr ${{ matrix.commands }}
