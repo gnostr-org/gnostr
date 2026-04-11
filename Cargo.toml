@@ -40,6 +40,7 @@ exclude = [
     "*target/",
     "*vendor/",
     #"config/",##for app
+    "git2-hooks",
     "git2-testing",
     #"tests/",
     "org",
