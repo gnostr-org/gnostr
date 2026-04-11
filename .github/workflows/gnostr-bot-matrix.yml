@@ -33,6 +33,12 @@ jobs:
       fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'false'
 
       - name: Run sccache-cache only on non-release runs
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
@@ -89,11 +95,8 @@ jobs:
           toolchain: ${{ matrix.rustup }}
           components: rustfmt, clippy
 
-
       - run: |
           rustup default ${{ matrix.rustup }}
-
-
 
       - name: Restore target
         if: ${{ !env.ACT }}
@@ -103,13 +106,6 @@ jobs:
           path: |
             target
           key: ${{ runner.os }}-target-${{ matrix.rustup }}
-
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: 'false'
 
       - name: Calculate Odd/Even Status
         id: time_check_hour
