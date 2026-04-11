@@ -1,0 +1,25 @@
+name: gnostr Process Cleanup
+description: >
+  Terminates any lingering gnostr and git-remote-nostr processes left behind by
+  the job, using the appropriate shell for the current runner OS.
+
+runs:
+  using: composite
+  steps:
+    - name: Cleanup lingering gnostr processes (Linux/macOS)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
+        pkill -f "gnostr" || true
+        pkill -f "git-remote-nostr" || true
+        echo "Cleanup attempt finished."
+
+    - name: Cleanup lingering gnostr processes (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
+        Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue
+        Stop-Process -Name "git-remote-nostr" -ErrorAction SilentlyContinue
+        echo "Cleanup attempt finished."

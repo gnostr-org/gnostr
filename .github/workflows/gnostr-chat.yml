@@ -4,12 +4,14 @@ name: Gnostr Chat
 # Controls when the action will run.
 on:
   schedule: # run 30th minute
-    - cron: "*/30 * * * *"
+    - cron: '*/30 * * * *'
   push:
     branches:
-      - "**"
+      - '**'
 
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-gnostr-chat-workflow]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -21,15 +23,10 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
-      ACT: "false"
     strategy:
       matrix:
         os: [ubuntu-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
-        force: ["", "--force"]
-        path: ["."] #, "relay", "asyncgit", "app"]
-        pow: ["0", "16"]
-        relay: ["wss://relay.damus.io", "wss://nos.lol"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -50,14 +47,14 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      #- name: Restore rustup
-      #  id: cache-rustup-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
       - name: Restore cargo
         id: cache-cargo-restore
@@ -68,51 +65,39 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
 
-      #- name: Restore target
-      #  id: cache-target-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ matrix.rustup }}
 
       - name: Setup Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
-          # If not specified, it defaults to 'stable'.
+          # If not specified, it defaults to 'stable'. 
           # It can also read the version from a 'rust-toolchain.toml' file if present.
-          toolchain: ${{ matrix.rustup }}
+          toolchain: stable 
           # Comma-separated list of additional components to install.
           components: clippy, rustfmt
           # Automatically configure smart caching (recommended for speed)
           cache: true
 
       - uses: cargo-bins/cargo-binstall@main
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
-          persist-credentials: true
-          submodules: recursive
-          set-safe-directory: true
-          fetch-depth: 0
-          fetch-tags: false
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'false'
 
       - run: rustup default ${{ matrix.rustup }}
       - run: cargo search gnostr --limit 100
-      - run: cargo-binstall --no-confirm sccache --force
-      - run: cargo-binstall --no-confirm gnostr --force
-      - run: cargo install --path ${{ matrix.path }} ${{ matrix.force }}
-      - name: Debug gnostr installation
-        run: |
-          echo "Verifying cargo-binstall:"
-          which cargo-binstall || echo "cargo-binstall not found or not in PATH."
-          echo "Current PATH: $PATH"
-          echo "Verifying gnostr:"
-          which gnostr || echo "gnostr not found or not in PATH." && true
-          echo "CARGO_HOME: ${CARGO_HOME}"
-          ls -l ~/.cargo/bin
-          gnostr --version # Run if found, otherwise continue
+      - run: cargo install cargo-binstall || true
+      - run: cargo-binstall --no-confirm gnostr
       - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: matrix.os == 'macos-latest'
       - run: brew tap gnostr-org/homebrew-gnostr-org || true
@@ -125,29 +110,29 @@ jobs:
         if: matrix.os == 'macos-latest'
       - run: gnostr --help
       - run: |
-          gnostr -d ${{ matrix.pow }} \
+          gnostr -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
-            --nsec "$(gnostr --hash '')" \
+            --nsec "$(gnostr-sha256)" \
             set-metadata \
             -n gnostr \
-            -a gnostr://$(gnostr --weeble)/$(gnostr --blockheight) \
+            -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
             -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
             -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
-          gnostr ngit --nsec $(gnostr --hash '') fetch
+          gnostr ngit --nsec $(gnostr-sha256) fetch
       - run: |
-          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+          EVENT=$(gnostr --nsec $(gnostr-sha256) \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             -k 1 \
-            -c "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" \
+            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
             -t "a|blah" \
             -t "a|$(date +%s)" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
+            -t "$(gnostr-weeble)" \
+            -t "$(gnostr-blockheight)" \
+            -t "$(gnostr-wobble)" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
@@ -158,10 +143,12 @@ jobs:
           LISTENER_PID=$!
           echo "Listener PID: $LISTENER_PID"
           sleep 5 # Give listener time to start
-          MESSAGE="Hello from gnostr-chat.yml at $(date +%s)"
-      - run: |
-          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$MESSAGE"
+
+          MESSAGE="Hello from github-ci-sender at $(date +%s)"
+          gnostr chat --name sender --topic gnostr-test-topic --message "$MESSAGE"
+
           sleep 5 # Give message time to propagate
+
           echo "Checking listener output..."
           cat listener_output.log
           grep -q "$MESSAGE" listener_output.log
@@ -173,20 +160,24 @@ jobs:
           fi
           kill $LISTENER_PID || true # Clean up listener process
 
+
+
+
+
+
+
   tui:
     name: TUI Test
     runs-on: ubuntu-latest
-    env:
-      ACT: "false"
     steps:
-      #- name: Restore rustup
-      #  id: cache-rustup-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ runner.os }}-rustup-stable
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-stable
 
       - name: Restore cargo
         id: cache-cargo-restore
@@ -197,55 +188,38 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-stable
 
-      #- name: Restore target
-      #  id: cache-target-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ runner.os }}-target-stable
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v3
+        if: ${{ !env.ACT }}
         with:
-          # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
-          # If not specified, it defaults to 'stable'.
-          # It can also read the version from a 'rust-toolchain.toml' file if present.
-          toolchain: ${{ matrix.rustup }}
-          # Comma-separated list of additional components to install.
+          path: |
+            target
+          key: ${{ runner.os }}-target-stable
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
           components: clippy, rustfmt
-          # Automatically configure smart caching (recommended for speed)
           cache: true
-
-      - uses: cargo-bins/cargo-binstall@main
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-          submodules: recursive
-          set-safe-directory: true
-          fetch-depth: 0
-          fetch-tags: false
-
-      - run: rustup default ${{ matrix.rustup }}
-      - run: cargo search gnostr --limit 100
-      - run: cargo-binstall --no-confirm sccache --force
-      #- run: cargo-binstall --no-confirm gnostr --force
-      - run: cargo install --path . --force
+      - run: cargo build --bin gnostr
       - name: Run gnostr tui
         run: |
-          gnostr tui &
+          ./target/debug/gnostr tui &
           sleep 10
           pkill -f gnostr
 
-      #- name: Save rustup
-      #  id: cache-rustup-save
-      #  uses: actions/cache/save@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key || format('{0}-rustup-{1}', runner.os, 'stable') }}
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key || format('{0}-rustup-{1}', runner.os, 'stable') }}
 
       - name: Save cargo
         id: cache-cargo-save
@@ -256,11 +230,12 @@ jobs:
             ~/.cargo
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key || format('{0}-cargo-{1}', runner.os, 'stable') }}
 
-      #- name: Save target
-      #  id: cache-target-save
-      #  uses: actions/cache/save@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v3
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
+
