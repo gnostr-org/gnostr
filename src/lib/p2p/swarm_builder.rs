@@ -99,6 +99,8 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                     mdns::Config::default(),
                     key.public().to_peer_id(),
                 )?,
+                relay: relay::Behaviour::new(peer_id),
+                autonat: libp2p_autonat::Behaviour::new(peer_id, Default::default()),
             })
         })?
         .build();

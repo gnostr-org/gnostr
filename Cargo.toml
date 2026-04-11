@@ -134,7 +134,8 @@ http = "1.1"
 	itertools = "0.14.0"
 	kanal = "0.1.1"
 	lazy_static = "1.5.0"
-	libp2p = { version = "0.54.1", features = ["async-std", "cbor", "dns", "gossipsub", "identify", "kad", "macros", "mdns", "noise", "ping", "quic", "relay", "rendezvous", "request-response", "tcp", "tokio", "yamux", "websocket"] }
+	libp2p = { version = "0.54.1", features = ["async-std", "cbor", "dns", "gossipsub", "identify", "kad", "macros", "mdns", "noise", "ping", "quic", "relay", "relay-v2", "rendezvous", "request-response", "tcp", "tokio", "yamux", "websocket", "autonat"] }
+libp2p-autonat = "0.54.1"
 	log = "0.4.29"
 	md5 = "0.7.0"
 	moka = { version = "0.12.13", features = ["future"] }
