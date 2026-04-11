@@ -201,20 +201,21 @@ jobs:
           set-metadata \
           -n gnostr-bot \
           -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
-          -t "$GITHUB_REPOSITORY" \
-          -t "$GITHUB_WORKFLOW" \
-          -t "$GITHUB_WORKFLOW_SHA" \
-          -t "$GITHUB_WORKFLOW_REF" \
-          -t "$GITHUB_REF" \
-          -t "$GITHUB_RUN_ID" \
-          -t "gnostr-bot" \
-          -t "$GITHUB_REPOSITORY_OWNER" \
-          -t "$(date +%s)" \
-          -t "$RUNNER_ENVIRONMENT" \
-          -t "$RUNNER_OS" \
-          -t "$(gnostr-weeble)" \
-          -t "$(gnostr-blockheight)" \
-          -t "$(gnostr-wobble)" \
+          -t "repo|$GITHUB_REPOSITORY" \
+           ,"workflow|$GITHUB_WORKFLOW" \
+           ,"workflow_sha|$GITHUB_WORKFLOW_SHA" \
+           ,"workflow_ref|$GITHUB_WORKFLOW_REF" \
+           ,"github_ref|$GITHUB_REF" \
+           ,"github_run_id|$GITHUB_RUN_ID" \
+           ,"gnostr|gnostr" \
+           ,"gnostr-bot|gnostr-bot" \
+           ,"github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
+           ,"date|$(date +%s)" \
+           ,"runner_env|$RUNNER_ENVIRONMENT" \
+           ,"runner_os|$RUNNER_OS" \
+           ,"weeble|$(gnostr --weeble)" \
+           ,"blockheight|$(gnostr --blockheight)" \
+           ,"wobble|$(gnostr --wobble)" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
         #if: matrix.os == 'macos-latest'
