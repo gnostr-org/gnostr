@@ -267,6 +267,13 @@ jobs:
 
       - name: Install gnostr via Homebrew
         uses: ./.github/actions/brew-install-gnostr/
+        if: runner.os == 'macOS'
+
+      - name: Install gnostr via cargo-binstall
+        uses: ./.github/actions/cargo-binstall-gnostr
+        if: runner.os != 'macOS'
+
+      - name: Install gnostr via cargo-binstall
         uses: ./.github/actions/cargo-binstall-gnostr
         if: runner.os != 'windows'
 
