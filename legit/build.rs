@@ -378,6 +378,12 @@ fn install_xcb_deps() {
     }
 }
 
+fn print_openssl_env_vars() {
+    for var in ["OPENSSL_DIR", "OPENSSL_CONFIG_DIR", "OPENSSL_INCLUDE_DIR", "OPENSSL_LIB_DIR", "OPENSSL_STATIC"] {
+        println!("cargo:warning={}={:?}", var, std::env::var(var));
+    }
+}
+
 fn install_openssl_brew() {
     println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
     let install_result = Command::new("brew").args(["install", "openssl"]).status();
@@ -492,6 +498,7 @@ fn get_git_hash() -> String {
 }
 
 fn main() {
+    print_openssl_env_vars();
     println!("cargo:rerun-if-changed=src/empty");
     //_make_empty();
     //_sync_nip44_vectors();

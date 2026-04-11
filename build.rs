@@ -7,6 +7,12 @@ use std::{
 
 use sha2::{Digest, Sha256};
 
+fn print_openssl_env_vars() {
+    for var in ["OPENSSL_DIR", "OPENSSL_CONFIG_DIR", "OPENSSL_INCLUDE_DIR", "OPENSSL_LIB_DIR", "OPENSSL_STATIC"] {
+        println!("cargo:warning={}={:?}", var, std::env::var(var));
+    }
+}
+
 fn _sync_nip44_vectors() {
     const NIP44_VECTORS_URL: &str =
         "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
