@@ -83,7 +83,12 @@ jobs:
       with:
         tool: cross
 
+    - name: Install sccache
+      uses: mozilla-actions/sccache-action@v0.0.9
+
     - name: Build release binary
+      env:
+        RUSTC_WRAPPER: sccache
       run: cross build --verbose --release --locked --target ${{ matrix.target }}
 
     - name: Bundle release (Unix)
