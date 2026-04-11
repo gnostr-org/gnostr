@@ -192,6 +192,14 @@ jobs:
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
 
+      - name: gnostr --weeble/blockheight/blockhash/wobble
+        shell: bash
+        run: |
+          gnostr --weeble
+          gnostr --blockheight
+          gnostr --blockhash
+          gnostr --wobble
+
       - name: create set-metadata kind 0
         shell: bash
         run: |
