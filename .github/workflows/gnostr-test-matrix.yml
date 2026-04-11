@@ -285,10 +285,16 @@ jobs:
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
       - name: create set-metadata kind 0
-      ## insert reusable here
+        uses: ./.github/actions/gnostr-custom-event
+        with:
+          kind: 0
+          content: 'Set metadata event triggered by CI'
 
       - name: Create custom-event kind 1
-      ## insert reusable here
+        uses: ./.github/actions/gnostr-custom-event
+        with:
+          kind: 1
+          content: 'Custom event kind 1 triggered by CI'
 
       #- name: 🌙 UTC second is ODD
       #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
