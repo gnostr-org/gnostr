@@ -10,12 +10,12 @@ pub mod solarized_light;
 
 use filetreelist::MoveSelection;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-pub use scrollbar::{Orientation, draw_scrollbar};
+pub use scrollbar::{draw_scrollbar, Orientation};
 pub use scrolllist::{draw_list, draw_list_block};
 pub use stateful_paragraph::{ParagraphState, ScrollPos, StatefulParagraph};
 pub use syntax_text::{AsyncSyntaxJob, SyntaxText};
 
-use crate::keys::{SharedKeyConfig, key_match};
+use crate::keys::{key_match, SharedKeyConfig};
 
 /// return the scroll position (line) necessary to have the
 /// `selection` in view if it is not already
@@ -149,7 +149,7 @@ mod test {
     use pretty_assertions::assert_eq;
     use ratatui::layout::Rect;
 
-    use super::{Size, rect_inside};
+    use super::{rect_inside, Size};
 
     #[test]
     fn test_small_rect_in_rect() {

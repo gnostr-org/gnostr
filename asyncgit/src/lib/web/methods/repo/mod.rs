@@ -126,9 +126,11 @@ pub async fn service(mut request: Request<Body>) -> Response {
             && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
             let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
             let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
-            let exists_in_db =
-                crate::web::database::schema::repository::Repository::exists(db, &potential_repo_name)
-                    .unwrap_or_default();
+            let exists_in_db = crate::web::database::schema::repository::Repository::exists(
+                db,
+                &potential_repo_name,
+            )
+            .unwrap_or_default();
             debug!(
                 "  Is Bare: {}, Is Working Tree: {}, Is Working Tree Repo:{}, Exists in DB: {}",
                 is_bare_repo, is_working_tree, is_working_tree_repo, exists_in_db

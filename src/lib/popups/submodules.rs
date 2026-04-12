@@ -3,14 +3,14 @@ use std::cell::Cell;
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{
-    RepoPathRef, SubmoduleInfo, SubmoduleParentInfo, get_submodules, repo_dir,
-    submodule_parent_info, update_submodule,
+    get_submodules, repo_dir, submodule_parent_info, update_submodule, RepoPathRef, SubmoduleInfo,
+    SubmoduleParentInfo,
 };
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 use ui::style::SharedTheme;
 use unicode_truncate::UnicodeTruncateStr;
@@ -18,10 +18,10 @@ use unicode_truncate::UnicodeTruncateStr;
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
-        VerticalScroll, visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
+        EventState, ScrollType, VerticalScroll,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, NeedsUpdate, Queue},
     strings, try_or_popup,
     ui::{self, Size},

@@ -4,32 +4,33 @@ use anyhow::Result;
 use chrono::{DateTime, Local};
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{
-    self, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags, checkout_commit,
+    self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
 };
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     style::Style,
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
-        utils::string_width_align,
+        utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
+        EventState, ScrollType,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, Queue},
     strings::{self, symbol},
     try_or_popup,
     ui::{
-        Orientation, calc_scroll_top, draw_scrollbar,
+        calc_scroll_top, draw_scrollbar,
         style::{SharedTheme, Theme},
+        Orientation,
     },
 };
 

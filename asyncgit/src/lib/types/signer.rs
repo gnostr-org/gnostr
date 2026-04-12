@@ -1,9 +1,9 @@
 use std::{
     fmt,
     sync::{
-        Arc,
-        atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering},
         mpsc::Sender,
+        Arc,
     },
     thread,
     thread::JoinHandle,
@@ -69,7 +69,7 @@ pub trait Signer: fmt::Debug {
     /// We need the password and log_n parameters to possibly rebuild
     /// the EncryptedPrivateKey when downgrading key security
     fn export_private_key_in_hex(&mut self, pass: &str, log_n: u8)
-    -> Result<(String, bool), Error>;
+        -> Result<(String, bool), Error>;
 
     /// Export the private key in bech32.
     ///

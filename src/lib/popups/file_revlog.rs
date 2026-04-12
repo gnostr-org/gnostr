@@ -3,28 +3,28 @@ use chrono::{DateTime, Local};
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
+    sync::{diff_contains_file, get_commits_info, CommitId, RepoPathRef},
     AsyncDiff, AsyncGitNotification, AsyncLog, DiffParams, DiffType,
-    sync::{CommitId, RepoPathRef, diff_contains_file, get_commits_info},
 };
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span, Text},
     widgets::{Block, Borders, Cell, Clear, Row, Table, TableState},
+    Frame,
 };
 
 use super::{BlameFileOpen, InspectCommitOpen};
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DiffComponent, DrawableComponent, EventState,
-        ItemBatch, ScrollType, event_pump, visibility_blocking,
+        event_pump, visibility_blocking, CommandBlocking, CommandInfo, Component, DiffComponent,
+        DrawableComponent, EventState, ItemBatch, ScrollType,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
     queue::{InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     strings,
-    ui::{Orientation, draw_scrollbar, style::SharedTheme},
+    ui::{draw_scrollbar, style::SharedTheme, Orientation},
 };
 
 const SLICE_SIZE: usize = 1200;
