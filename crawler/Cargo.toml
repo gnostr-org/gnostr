@@ -1,4 +1,3 @@
-[workspace]
 [package]
 edition = "2021"
 name = "gnostr-crawler"
@@ -17,22 +16,11 @@ keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr"
+[workspace]
 
 [lib]
 name = "gnostr_crawler"
 path = "src/lib.rs"
-
-[[example]]
-name = "gnostr_crawler"
-path = "examples/gnostr_crawler.rs"
-
-[[example]]
-name = "gnostr_test"
-path = "examples/gnostr_test.rs"
-
-[[example]]
-name = "string_pop"
-path = "examples/string_pop.rs"
 
 [dependencies]
 anyhow = "1.0.100"
@@ -66,9 +54,21 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2.5.0"
 
 [build-dependencies]
-reqwest = { version = "0.11.14", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
 anyhow = "1.0.100"
-url = "2.5.0"
-sha2 = "0.10"
 pulldown-cmark = "0.10"
+reqwest = { version = "0.11.14", features = ["json"] }
+sha2 = "0.10"
+tokio = { version = "1", features = ["full"] }
+url = "2.5.0"
+
+[[example]]
+name = "gnostr_crawler"
+path = "examples/gnostr_crawler.rs"
+
+[[example]]
+name = "gnostr_test"
+path = "examples/gnostr_test.rs"
+
+[[example]]
+name = "string_pop"
+path = "examples/string_pop.rs"

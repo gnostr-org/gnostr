@@ -2,9 +2,9 @@
 name = "gnostr-asyncgit"
 version.workspace = true
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "extrawurst <mail@rusticorn.com>",
-  "altsem <altem@unknown.com>",
+    "gnostr <admin@gnostr.org>",
+    "extrawurst <mail@rusticorn.com>",
+    "altsem <altem@unknown.com>",
 ]
 edition = "2021"
 description = "gnostr:fork of asyncgit"
@@ -43,14 +43,13 @@ speedy = []
 vendor-openssl = ["openssl-sys"]
 
 [dependencies]
-url = { workspace = true }
-cbc = { workspace = true }
 aes = { workspace = true }
 anyhow = "1.0.100"
 arboard = { version = "3.4.0", default-features = false, features = [
   "windows-sys",
 ] }
 arc-swap = "1.7"
+ascii = { workspace = true }
 
 askama = { version = "0.12.0", default-features = false }
 async-trait = "0.1.68"
@@ -61,6 +60,7 @@ bip39 = { workspace = true }
 bitcoin_hashes = { workspace = true }
 bitflags = "2"
 bytes = "1.5"
+cbc = { workspace = true }
 chacha20 = { workspace = true }
 chacha20poly1305 = { workspace = true }
 chrono = "0.4.40"
@@ -99,18 +99,25 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
+##tree-sitter-language = "0.1" ##check version
+gnostr-grammar = { workspace = true }
 handlebars = { workspace = true }
 #anyhow = "1.0"
 hex = { workspace = true }
+hkdf = { workspace = true }
 hmac = { workspace = true }
 http = { workspace = true }
 httparse = "1.7"
 
 humantime = "2.1"
 itertools = "0.14.0"
+k256 = { workspace = true }
 kanal = "0.1.0-pre8"
 lazy_static = "1.5.0"
 libc = "0.2.180"
+lightning-invoice = { workspace = true }
+#url = "2.2.2"
+linkify = { workspace = true }
 log = "0.4"
 md5 = "0.7"
 moka = { version = "0.12.0", features = ["future"] }
@@ -127,8 +134,10 @@ num_cpus = { workspace = true }
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
 openssl-sys = { version = '^0', optional = true }
 path-clean = "1.0.1"
+pbkdf2 = { workspace = true }
 pretty_env_logger = { workspace = true }
 rand = "0.8.5"
+rand_core = { workspace = true }
 ratatui = { version = "0.29.0", features = ["serde"] }
 rayon = "1.10"
 rayon-core = "1.12"
@@ -160,6 +169,7 @@ thiserror = "1.0"
 thread-priority = { workspace = true }
 time = { version = "0.3", features = ["serde", "formatting"] }
 timeago = { version = "0.4.2", default-features = false }
+tiny-hderive = { workspace = true }
 tiny_http = { workspace = true }
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"
@@ -178,8 +188,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "fmt",
 ] }
 tree-sitter = "0.23.2" # check version
-##tree-sitter-language = "0.1" ##check version
-gnostr-grammar = { workspace = true }
 tree-sitter-highlight = "0.23"        ##check version
 tui-prompts = "0.5.0"
 
@@ -190,8 +198,8 @@ unicode-width = { workspace = true }
 #unicode-segmentation = "1.12.0"
 #unicode-truncate = "1.0"
 unix_mode = "0.1"
-#url = "2.2.2"
-linkify = { workspace = true }
+ureq = { workspace = true }
+url = { workspace = true }
 uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
 warp = { workspace = true }
@@ -199,14 +207,6 @@ webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
-k256 = { workspace = true }
-hkdf = { workspace = true }
-rand_core = { workspace = true }
-ureq = { workspace = true }
-tiny-hderive = { workspace = true }
-pbkdf2 = { workspace = true }
-lightning-invoice = { workspace = true }
-ascii = { workspace = true }
 
 [build-dependencies]
 anyhow = "1.0.100"

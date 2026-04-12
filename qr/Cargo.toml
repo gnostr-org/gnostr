@@ -14,14 +14,14 @@ path-guid = "112568BC-3A65-41EB-84F4-210F26CBAAEB"
 license = false
 eula = false
 
+[lib]
+name = "gnostr_qr"
+path = "src/lib.rs"
+
 [[bin]]
 name = "gnostr-qr"
 path = "src/bin/gnostr-qr.rs"
 doc = true
-
-[lib]
-name = "gnostr_qr"
-path = "src/lib.rs"
 
 [dependencies]
 hex = "0.4.3"
