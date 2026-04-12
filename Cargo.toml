@@ -1,6 +1,6 @@
 [package]
 name = "gnostr"
-version = "1879.944767.799004"
+version = "1879.944769.796770"
 edition = "2021"
 description = "gnostr:a git+nostr workflow utility"
 authors = [
@@ -56,7 +56,6 @@ members = [
     # Root crate
     "asyncgit",
     "filetreelist",
-    "gh",
     "git2-hooks",
     "git2-testing",
     "grammar",
