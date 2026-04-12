@@ -1,9 +1,9 @@
 #![allow(clippy::all)]
 #[rustfmt::skip]
 use crate::*;
-use secp256k1::{SECP256K1, SecretKey, XOnlyPublicKey};
+use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 
-use super::{Error, calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key};
+use super::{calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key, Error};
 
 // We use the test vectors from Paul Miller's javascript so we don't accidently
 // mistype anything

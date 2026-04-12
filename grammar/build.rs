@@ -8,7 +8,7 @@ use std::{
     sync::LazyLock,
 };
 
-use anyhow::{Context, bail};
+use anyhow::{bail, Context};
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use quote::{format_ident, quote};
 use serde::Deserialize;

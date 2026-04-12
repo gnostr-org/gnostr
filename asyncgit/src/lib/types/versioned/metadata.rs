@@ -4,7 +4,7 @@ use serde::{
     de::{Deserialize, Deserializer, MapAccess, Visitor},
     ser::{Serialize, SerializeMap, Serializer},
 };
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 
 /// Metadata about a user
 ///

@@ -3,7 +3,7 @@ use std::env;
 use anyhow::Result;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
-    cli::{GnostrCli, GnostrCommands, get_app_cache_path},
+    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands,
 };
 use gnostr_asyncgit::sync::RepoPath;
@@ -11,7 +11,7 @@ use serde::ser::StdError;
 use tracing::debug;
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::prelude::*; // Import SubscriberExt
-use tracing_subscriber::{EnvFilter, Registry, fmt, util::SubscriberInitExt};
+use tracing_subscriber::{fmt, util::SubscriberInitExt, EnvFilter, Registry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {

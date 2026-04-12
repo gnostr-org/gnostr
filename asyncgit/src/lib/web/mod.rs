@@ -1,18 +1,16 @@
 #![deny(clippy::pedantic)]
-use std::collections::HashMap;
-use handlebars::Handlebars;
 use clap::Args;
-use clap::Subcommand;
 use clap::Parser;
+use clap::Subcommand;
+use handlebars::Handlebars;
 use rkyv::Serialize as rkyvSerialize;
-use std::env::Args as stdEnvArgs;
 use serde::Serialize as serdeSerialize;
+use std::collections::HashMap;
+use std::env::Args as stdEnvArgs;
 
 use warp::body::json as warpBodyJson;
 
 use warp::reply::json as warpReplayJson;
-
-
 
 pub mod chat;
 //pub mod css;
@@ -21,10 +19,10 @@ pub mod git;
 //pub mod js;
 pub mod kill_process;
 pub mod layers;
+pub mod layout_html;
 pub mod methods;
 pub mod syntax_highlight;
 pub mod template_html;
-pub mod layout_html;
 pub mod unified_diff_builder;
 pub mod websock_index_html;
 pub use crate::web::{
@@ -173,8 +171,10 @@ pub const HOME_ACTIVE_SVG: &[u8] = include_bytes!(concat!(
 ));
 pub static HOME_ACTIVE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const HOME_SVG: &[u8] =
-    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib/images/home.svg"));
+pub const HOME_SVG: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/images/home.svg"
+));
 pub static HOME_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const ICON_MASKABLE_SVG: &[u8] = include_bytes!(concat!(
@@ -183,16 +183,22 @@ pub const ICON_MASKABLE_SVG: &[u8] = include_bytes!(concat!(
 ));
 pub static ICON_MASKABLE_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const ICON_ICNS: &[u8] =
-    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib/images/icon.icns"));
+pub const ICON_ICNS: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/images/icon.icns"
+));
 pub static ICON_ICNS_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const ICON_SVG: &[u8] =
-    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib/images/icon.svg"));
+pub const ICON_SVG: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/images/icon.svg"
+));
 pub static ICON_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const KEY_SVG: &[u8] =
-    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib/images/key.svg"));
+pub const KEY_SVG: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/images/key.svg"
+));
 pub static KEY_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const LOADER_FRAGMENT_SVG: &[u8] = include_bytes!(concat!(
@@ -207,8 +213,10 @@ pub const LOGO_INVERTED_SVG: &[u8] = include_bytes!(concat!(
 ));
 pub static LOGO_INVERTED_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
-pub const LOGO_SVG: &[u8] =
-    include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib/images/logo.svg"));
+pub const LOGO_SVG: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/images/logo.svg"
+));
 pub static LOGO_SVG_HASH: OnceLock<&'static str> = OnceLock::new();
 
 pub const MESSAGE_USER_SVG: &[u8] = include_bytes!(concat!(
@@ -511,10 +519,11 @@ pub fn init_static_asset_hashes() {
     // These values are computed at runtime, not compile-time like GLOBAL_CSS_HASH
     // for now we set the css for dark and light here.
     let css = {
-        let theme =
-            toml::from_str::<crate::theme::Theme>(include_str!("../../themes/solarized_light.toml"))
-                .unwrap()
-                .build_css();
+        let theme = toml::from_str::<crate::theme::Theme>(include_str!(
+            "../../themes/solarized_light.toml"
+        ))
+        .unwrap()
+        .build_css();
         Box::leak(
             format!(r#"@media (prefers-color-scheme: light){{{theme}}}"#)
                 .into_boxed_str()
@@ -615,7 +624,9 @@ pub fn init_static_asset_hashes() {
     ICON_SVG_HASH
         .set(crate::web::build_asset_hash(ICON_SVG))
         .unwrap();
-    KEY_SVG_HASH.set(crate::web::build_asset_hash(KEY_SVG)).unwrap();
+    KEY_SVG_HASH
+        .set(crate::web::build_asset_hash(KEY_SVG))
+        .unwrap();
     LOADER_FRAGMENT_SVG_HASH
         .set(crate::web::build_asset_hash(LOADER_FRAGMENT_SVG))
         .unwrap();
@@ -741,17 +752,16 @@ pub async fn find_available_port() -> u16 {
 use webbrowser;
 
 pub fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+    let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 
-let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
+    println!("Attempting to open: {}", url);
 
-println!("Attempting to open: {}", url);
+    match webbrowser::open(&url) {
+        Ok(_) => println!("Successfully opened the browser to {}", url),
+        Err(e) => eprintln!("Failed to open browser: {}", e),
+    }
 
-match webbrowser::open(&url) {
-    Ok(_) => println!("Successfully opened the browser to {}", url),
-    Err(e) => eprintln!("Failed to open browser: {}", e),
-}
-
-Ok(())
+    Ok(())
 }
 
 #[derive(Args)]
@@ -777,7 +787,6 @@ where
     warp::reply::html(render)
 }
 
-
 // Define a simple structure for our response
 #[derive(serdeSerialize)]
 struct Message {
@@ -786,10 +795,7 @@ struct Message {
 
 // 1. Define the handler function for the new path
 fn get_messages() -> impl warp::Reply {
-    let response = HashMap::from([
-        ("status", "ok"),
-        ("data", "This is the messages endpoint!")
-    ]);
+    let response = HashMap::from([("status", "ok"), ("data", "This is the messages endpoint!")]);
     warpReplayJson(&response)
 }
 

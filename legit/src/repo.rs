@@ -7,8 +7,8 @@ pub fn state() -> RepositoryState {
     let repo = Repository::discover(repo_root.as_str()).expect("Couldn't open repository");
     //println!("{} state={:?}", repo.path().display(), repo.state());
     //println!("state={:?}", repo.state());
-	if repo.state() == RepositoryState::Clean {
-		//println!("clean {:?}", repo.state());
-	}
-	return repo.state()
+    if repo.state() == RepositoryState::Clean {
+        //println!("clean {:?}", repo.state());
+    }
+    return repo.state();
 }

@@ -1,11 +1,11 @@
 use std::fmt;
 
 use derive_more::{AsMut, AsRef, Deref, Display, From, FromStr, Into};
-use secp256k1::{SECP256K1, XOnlyPublicKey};
+use secp256k1::{XOnlyPublicKey, SECP256K1};
 use serde::{
-    Deserialize, Serialize,
     de::{Deserializer, Visitor},
     ser::Serializer,
+    Deserialize, Serialize,
 };
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
@@ -115,7 +115,7 @@ impl PublicKey {
 
     /// Verify a signed message
     pub fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), Error> {
-        use secp256k1::hashes::{Hash, sha256};
+        use secp256k1::hashes::{sha256, Hash};
         let pk = XOnlyPublicKey::from_slice(self.0.as_slice())?;
         let hash = sha256::Hash::hash(message).to_byte_array();
         let message = secp256k1::Message::from_digest(hash);

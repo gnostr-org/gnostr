@@ -548,10 +548,7 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::ContentWarning {
-                warning,
-                trailing,
-            } => {
+            crate::types::versioned::tag2::TagV2::ContentWarning { warning, trailing } => {
                 let mut vec = vec!["content-warning".to_owned(), warning];
                 vec.extend(trailing);
                 TagV3(vec)
