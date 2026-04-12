@@ -1,0 +1,1 @@
+// gnostr-async integration module

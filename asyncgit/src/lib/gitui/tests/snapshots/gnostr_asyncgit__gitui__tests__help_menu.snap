@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/mod.rs
+expression: ctx.redact_buffer()
+---
+▌No branch                                                                      |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+Help                                Submenu                                     |
+Y Show Refs                         b Branch                                    |
+t Toggle section                    c Commit                                    |
+k/<up> Up                           f Fetch                                     |
+j/<down> Down                       h/? Help                                    |
+<ctrl+k>/<ctrl+up> Up line          l Log                                       |
+<ctrl+j>/<ctrl+down> Down line      F Pull                                      |
+<alt+k>/<alt+up> Prev section       P Push                                      |
+<alt+j>/<alt+down> Next section     r Rebase                                    |
+<alt+h>/<alt+left> Parent section   X Reset                                     |
+<ctrl+u> Half page up               V Revert                                    |
+<ctrl+d> Half page down             z Stash                                     |
+<tab> Switch tab                                                                |
+g Refresh                                                                       |
+q/<esc> Quit/Close                                                              |
+styles_hash: 93c572a338829506

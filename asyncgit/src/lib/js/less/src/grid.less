@@ -1,0 +1,1057 @@
+/*************************************************
+* ---- Grid ----
+*/
+
+.w2ui-grid {
+    position: relative;
+    border: @grid-border;
+    border-radius: 2px;
+    overflow: hidden !important;
+
+    > .w2ui-grid-box {
+        position: absolute;
+        overflow: hidden;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    // ===== Grid Header =====
+
+    .w2ui-grid-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 36px;
+        padding: 10px;
+        overflow: hidden;
+        font-size: 16px;
+        color: @grid-header-color;
+        .linear-gradient-vertical(@grid-header-linear-gradient-start, @grid-header-linear-gradient-end);
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+        border-bottom: @grid-header-border-bottom !important;
+    }
+
+    // ===== Grid Toolbar =====
+
+    .w2ui-grid-toolbar {
+        position: absolute;
+        border-bottom: @grid-toolbar-border;
+        background-color: @grid-toolbar-background-color;
+        height: 52px;
+        padding: 9px 3px 0px 3px ;
+        margin: 0px;
+        box-shadow: @grid-toolbar-shadow;
+
+        .w2ui-tb-button .w2ui-tb-icon {
+            margin: 3px 0px 0px 0px!important;
+        }
+
+        .w2ui-grid-search-input {
+            position: relative;
+            width: 300px;
+            left: 0px;
+            top: -3px;
+
+            .w2ui-search-down {
+                position: absolute;
+                top: 5px;
+                left: 4px;
+                color: #8c99a7;
+                font-size: 13px;
+            }
+
+            .w2ui-grid-search-name {
+                position: absolute;
+                margin: 3px 0px 0px 3px;
+                padding: 5px 27px 6px 10px;
+                background-color: #fbfbfb;
+                border: 1px solid #b9b9b9;
+                border-radius: 15px;
+                pointer-events: none;
+                .name-icon {
+                    position: absolute;
+                    margin-left: -6px;
+                    margin-top: -1px;
+                    color: #8c99a7;
+                }
+                .name-text {
+                    padding-left: 14px;
+                }
+                .name-cross {
+                    position: absolute;
+                    margin-top: -5px;
+                    margin-left: 7px;
+                    padding: 4px 5px;
+                    pointer-events: all;
+                    &:hover {
+                        color: red;
+                    }
+                }
+            }
+
+            .w2ui-search-all {
+                outline: none !important;
+                border-radius: 4px !important;
+                line-height: normal !important;
+                height: 30px !important;
+                width: 300px !important;
+                border: @grid-search-all-border !important;
+                color: @grid-search-all-color !important;
+                background-color: @grid-search-all-background-color;
+                padding: 1px 28px 0px 24px !important;
+                margin: 0px !important;
+                font-size: 13px !important;
+                &:focus {
+                    border: 1px solid #007cff !important;
+                    background-color: white !important;
+                }
+            }
+
+            .w2ui-search-drop {
+                position: absolute;
+                right: 2px;
+                top: 2px;
+                height: 26px;
+                width: 26px;
+                font-size: 16px;
+                cursor: pointer;
+                padding: 7px 2px 7px 2px;
+                border-radius: 4px;
+                background-color: transparent;
+
+                span.w2ui-icon-drop {
+                    position: relative;
+                    top: -3px;
+                    color: #8d99a7;
+                }
+
+                &:hover,
+                &.checked {
+                    background-color: #56a1e2;
+                    span.w2ui-icon-drop {
+                        color: #fff;
+                    }
+                }
+            }
+        }
+
+        .w2ui-grid-searches {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            border-top: 1px solid #ececec;
+            border-bottom: 1px solid #ececec;
+            background-color: #fcfdff;
+            margin: 7px -20px 0px -20px;
+            padding: 6px 50px 6px 20px;
+            height: 36px;
+
+            > div {
+                white-space: nowrap;
+            }
+            > span {
+                min-width: 48px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                border: 1px solid #88c3f7;
+                border-radius: 15px;
+                padding: 4px 12px;
+                margin: 0px 4px;
+                color: #4c9ad6;
+                font-size: 12px;
+                font-weight: bold;
+                background-color: #F5F9FE;
+
+                > span {
+                    font-size: 9px;
+                    position: relative;
+                    top: -1px;
+                    left: 2px;
+                }
+            }
+
+            .grid-search-line {
+                border-left: 1px solid #ececec;
+                width: 11px;
+                height: 22px;
+                margin-left: 7px;
+                margin-top: 1px;
+            }
+
+            .w2ui-grid-search-logic {
+                border: 1px solid #c8c9ca !important;
+                color: #676767 !important;
+            }
+
+            button.grid-search-btn {
+                margin: 0px 3px;
+                padding: 0px;
+                height: 24px;
+                font-size: 11px;
+                &.btn-remove {
+                    min-width: 26px;
+                    position: absolute;
+                    left: calc(100% - 35px);
+                }
+            }
+
+            .grid-search-count {
+                background-color: #4cb1fd;
+                border-radius: 10px;
+                color: white;
+                padding: 0px 6px 1px 6px;
+                font-size: 11px !important;
+                position: relative !important;
+                top: 0px !important;
+            }
+
+            .grid-search-list {
+                li {
+                    padding: 5px;
+                }
+                input {
+                    position: relative;
+                    top: 2px;
+                    left: -3px;
+                }
+            }
+
+        }
+    }
+
+    .w2ui-grid-save-search {
+        padding-top: 30px;
+        text-align: center;
+        span {
+            width: 280px;
+            display: inline-block;
+            text-align: left;
+            padding-bottom: 4px;
+        }
+        .search-name {
+            width: 280px !important;
+        }
+    }
+
+    // ===== Grid Body =====
+
+    .w2ui-grid-body {
+        position: absolute;
+        overflow: hidden;
+        padding: 0px;
+        background-color: @grid-background-color;
+        .user-select;
+
+        input, select, textarea {
+            .user-select(text);
+        }
+
+        .w2ui-grid-columns, .w2ui-grid-fcolumns {
+            overflow: hidden;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            right: 0px;
+            box-shadow: @grid-headers-shadow;
+            height: auto;
+
+            table {
+                height: auto;
+            }
+
+            .w2ui-resizer {
+                position: absolute;
+                z-index: 1000;
+                display: block;
+                background-image: none;
+                background-color: rgba(0,0,0,0); /* needed for IE */
+                padding: 0px;
+                margin: 0px;
+                width: 6px;
+                height: 12px;
+                cursor: ew-resize;
+            }
+        }
+
+        .w2ui-grid-records, .w2ui-grid-frecords {
+            position: absolute;
+            left: 0px;
+            right: 0px;
+            top: 0px;
+            bottom: 0px;
+
+            table {
+                tr {
+                    &.w2ui-odd {
+                        color: @grid-row-color;
+                        background-color: @grid-row-odd-background-color;
+                        border-bottom: 1px solid #f5f5f5;
+                        &:hover, &.w2ui-record-hover {
+                            color: @grid-row-hover-color;
+                            background-color: @grid-row-hover-background-color;
+                        }
+                        &.w2ui-empty-record:hover {
+                            background-color: @grid-row-odd-background-color;
+                        }
+                    }
+                    &.w2ui-even {
+                        color: @grid-row-color;
+                        background-color: @grid-row-even-background-color;
+                        border-bottom: 1px dotted #f5f5f5;
+                        &:hover, &.w2ui-record-hover {
+                            color: @grid-row-hover-color;
+                            background-color: @grid-row-hover-background-color;
+                        }
+                        &.w2ui-empty-record:hover {
+                            background-color: @grid-row-even-background-color;
+                        }
+                    }
+                    &.w2ui-selected, td.w2ui-selected {
+                        color: @grid-row-selected-color !important;
+                        background-color: @grid-row-selected-background-color !important;
+                        border-bottom: 1px solid transparent;
+                    }
+                    &.w2ui-inactive, td.w2ui-inactive {
+                        background-color: @grid-row-inactive-background-color !important;
+                    }
+                }
+            }
+
+            .w2ui-expanded {
+            }
+
+            .w2ui-expanded1 {
+                height: 0px;
+                border-bottom: 1px solid rgb(178, 186, 192);
+                & > div {
+                    height: 0px;
+                    border: 0px;
+                    transition: height .3s, opacity .3s;
+                }
+            }
+
+            .w2ui-expanded2 {
+                height: 0px;
+                border-radius: 0px;
+                border-bottom: 1px solid rgb(178, 186, 192);
+                & > div {
+                    height: 0px;
+                    border: 0px;
+                    transition: height .3s, opacity .3s;
+                }
+            }
+
+            .w2ui-load-more {
+                cursor: pointer;
+                background-color: @grid-row-number-background-color;
+                border-right: @grid-row-border-right;
+                height: 43px;
+                > div {
+                    text-align: center;
+                    color: @grid-row-number-color;
+                    background-color: @grid-row-number-background-color;
+                    padding: 10px 0px 15px 0px;
+                    height: 43px;
+                    border-top: 1px dashed #D6D5D7;
+                    border-bottom: 1px dashed #D6D5D7;
+                    font-size: 12px;
+                    &:hover {
+                        color: #438ba2;
+                        background-color: @grid-row-hover-background-color;
+                    }
+                }
+            }
+            .w2ui-reoder-empty {
+                background-color: #eee;
+                border-bottom: 1px dashed #aaa;
+                border-top: 1px dashed #aaa;
+            }
+        }
+
+        // this table CSS for both columns and records
+        table {
+            border-spacing: 0px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 1px; // otherwise auto and does not work
+
+            .w2ui-head {
+                // border-right: 1px solid #dcdcdc;
+                // border-bottom: 1px solid #dadada;
+                // color: #656164;
+                // background-image: linear-gradient(#ffffff, #f9f9f9);
+                // box-shadow: none;
+
+                margin: 0px;
+                padding: 0px;
+                border-right: @grid-headers-border;
+                border-bottom: @grid-headers-border;
+                color: @grid-headers-color;
+                .linear-gradient-vertical(@grid-headers-linear-gradient-start, @grid-headers-linear-gradient-end);
+
+                > div {
+                    padding: 7px 6px;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    position: relative;
+                }
+            }
+
+            td {
+                border-right: @grid-row-border-right;
+                border-bottom: @grid-row-border-bottom;
+                cursor: default;
+                overflow: hidden;
+
+                &.w2ui-soft-span, &.w2ui-soft-hidden {
+                    border-right-color: transparent;
+                }
+
+                &.w2ui-grid-data {
+                    margin: 0px;
+                    padding: 0px;
+
+                    .w2ui-info {
+                        position: relative;
+                        top: 0px;
+                        left: -1px;
+                        font-size: 13px;
+                        color: #8D99A7;
+                        cursor: pointer;
+                        width: 18px;
+                        display: inline-block;
+                        margin-right: 3px;
+                        text-align: center;
+                    }
+
+                    .w2ui-clipboard-copy {
+                        float: right;
+                        margin-top: -15px;
+                        width: 20px;
+                        height: 16px;
+                        padding: 0px;
+                        text-align: center;
+                        cursor: pointer;
+                        font-size: 13px;
+                        color: #8d98a7;
+                        &:hover {
+                            color: #545961;
+                        }
+                    }
+
+                    & > div {
+                        padding: 5px;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+
+                    & > div.flexible-record {
+                        height: auto;
+                        overflow: visible;
+                        white-space: normal;
+                    }
+
+                    .w2ui-show-children {
+                        width: 16px;
+                        height: 10px;
+                        display: inline-block;
+                        position: relative;
+                        top: -1px;
+                        cursor: pointer;
+                    }
+                }
+                &:last-child {
+                    border-right: 0px;
+                    div {
+                        text-overflow: clip;
+                    }
+                }
+            }
+
+            .w2ui-col-number {
+                width: 34px;
+                color: @grid-row-number-color;
+                background-color: @grid-row-number-background-color;
+                div {
+                    padding: 0px 7px 0px 3px;
+                    text-align: right;
+                }
+                &.w2ui-head {
+                    cursor: pointer;
+                }
+            }
+
+            .w2ui-col-select {
+                width: 26px;
+                div {
+                    padding: 0px 0px;
+                    text-align: center;
+                    overflow: hidden;
+                    input[type=checkbox] {
+                        //margin: 3px 1px; //* needed for Opera on Mac */
+                        margin-top: 3px;
+                        margin-bottom: 0px;
+                        position: relative;
+                    }
+                }
+            }
+
+            .w2ui-col-expand {
+                width: 26px;
+                div {
+                    padding: 0px 0px;
+                    text-align: center;
+                    font-weight: bold;
+                }
+            }
+
+            .w2ui-col-order {
+                width: 26px;
+                &.w2ui-grid-data div {
+                    cursor: move;
+                    height: 18px;
+                    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHN0eWxlPSJmaWxsOiAjYWFhOyIgeD0iMCIgeT0iNCIgaGVpZ2h0PSIzIiB3aWR0aD0iMTYiPjwvcmVjdD4KICA8cmVjdCBzdHlsZT0iZmlsbDogI2FhYTsiIHg9IjAiIHk9IjkiIGhlaWdodD0iMyIgd2lkdGg9IjE2Ij48L3JlY3Q+Cjwvc3ZnPg==");
+                    background-position: 5px 2px;
+                    background-size: 14px 12px;
+                    background-repeat: no-repeat;
+                }
+            }
+
+            .w2ui-col-selected {
+                background-color: #d1d1d1 !important;
+            }
+
+            .w2ui-row-selected {
+                background-color: #e2e2e2 !important;
+            }
+        }
+
+        .w2ui-intersection-marker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin-left: -5px;
+            height: 26px;
+            width: 10px;
+
+            &.left {
+                left: 0;
+                margin-left: -5px;
+            }
+
+            &.right {
+                right: 0;
+                margin-right: 5px;
+            }
+
+            .top-marker {
+                position: absolute;
+                top: 0;
+                height: 0;
+                width: 0;
+                border-top: 5px solid @input-focus-outline-color;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+            }
+
+            .bottom-marker {
+                position: absolute;
+                bottom: 0;
+                height: 0;
+                width: 0;
+                border-bottom: 5px solid @input-focus-outline-color;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+            }
+        }
+
+        div.w2ui-col-header { // div needed
+            height: auto !important;
+            width: 100%;
+            overflow: hidden;
+            padding-right: 10px !important;
+        }
+
+        div.w2ui-col-header > div.w2ui-sort-up {
+            border: 4px solid transparent;
+            border-bottom: 5px solid #8D99A7;
+            margin-top: -2px;
+            margin-right: -7px;
+            float: right;
+        }
+
+        div.w2ui-col-header > div.w2ui-sort-down {
+            border: 4px solid transparent;
+            border-top: 5px solid #8D99A7;
+            margin-top: 2px;
+            margin-right: -7px;
+            float: right;
+        }
+
+        & .w2ui-col-group {
+            text-align: center;
+        }
+
+        .w2ui-grid-scroll1 {
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            border-top: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            background-color: #FAFAFA;
+        }
+    }
+
+    .w2ui-grid-empty-msg {
+        position: absolute;
+        top: 27px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.65);
+        > div {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 45%;
+            transform: translateY(-45%);
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+    }
+
+    .w2ui-changed {
+        .background-image(@image-changed, no-repeat, top, right);
+    }
+
+    // only in spreadsheet mode
+    .w2ui-edit-box {
+        position: absolute;
+        z-index: 1001;
+        border: 1.5px solid #6299DA;
+        pointer-events: auto;
+        padding: 2px !important;
+        margin: 0px !important;
+        background-color: white;
+        .w2ui-editable div.w2ui-input {
+            outline: none;
+            padding: 0.5px 1.5px !important;
+        }
+        .w2ui-editable input {
+            top: -2px !important;
+            padding: 1.5px !important;
+        }
+    }
+
+    .w2ui-editable {
+        overflow: hidden;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 3.5px 2px 2px 2px !important;
+
+        input {
+            top: -1px;
+            border: 0 !important;
+            border-radius: 0 !important;
+            border-color: transparent !important;
+            padding: 3px !important;
+            display: inline-block;
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: auto !important;
+        }
+
+        div.w2ui-input {
+            position: relative;
+            top: -0.5px;
+            border: 0 transparent;
+            border-radius: 0 !important;
+            margin: 0px !important;
+            padding: 5px 3px !important;
+            display: inline-block;
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: auto !important;
+            background-color: white;
+            white-space: pre;
+            overflow: hidden;
+            .user-select(text);
+        }
+    }
+
+    .w2ui-grid-summary {
+        position: absolute;
+        border-top: 1px solid gainsboro;
+        box-shadow: 0px -1px 4px #f0eeee;
+
+        table {
+            color: @grid-summary-color;
+            .w2ui-odd {
+                background-color: #fff;
+            }
+            .w2ui-even {
+                background-color: #fbfbfb;
+            }
+        }
+    }
+
+    // ===== Grid Footer =====
+
+    .w2ui-grid-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0px;
+        padding: 0px;
+        text-align: center;
+        font-size: 11px;
+        height: 24px;
+        overflow: hidden;
+        .user-select(text);
+        box-shadow: @grid-footer-shadow;
+        color: @grid-footer-color;
+        background-color: @grid-footer-background-color;
+        border-top: @grid-footer-border-top;
+        border-bottom-left-radius: 2px;
+        border-bottom-right-radius: 2px;
+
+        .w2ui-footer-left {
+            float: left;
+            padding-top: 5px;
+            padding-left: 5px;
+        }
+
+        .w2ui-footer-right {
+            float: right;
+            padding-top: 5px;
+            padding-right: 5px;
+        }
+
+        .w2ui-footer-center {
+            padding: 2px;
+            text-align: center;
+
+            .w2ui-footer-nav {
+                width: 110px;
+                margin: 0 auto;
+                padding: 0px;
+                text-align: center;
+
+                input[type=text] {
+                    padding: 1px 2px 2px 2px;
+                    border-radius: 3px;
+                    width: 40px;
+                    text-align: center;
+                }
+
+                a.w2ui-footer-btn {
+                    display: inline-block;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    line-height: 16px;
+                    padding: 1px 5px;
+                    width: 30px;
+                    height: 18px;
+                    margin-top: -1px;
+                    color: @grid-footer-btn-color;
+                    background-color: @grid-footer-btn-background-color;
+
+                    &:hover {
+                        color: @grid-footer-btn-hover-color;
+                        background-color: @grid-footer-btn-hover-background-color;
+                    }
+                }
+            }
+        }
+    }
+
+    .w2ui-grid-focus-input {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: -1;
+        opacity: 0;
+        overflow: hidden; // needed for Safari 10
+        // needed for IE11
+        padding: 0px;
+        margin: 0px;
+        width: 1px;
+        height: 1px;
+        resize: none;
+        border: 0px;
+        // --
+    }
+}
+
+// SpeadSheet
+.w2ui-ss .w2ui-grid-body {
+
+    .w2ui-grid-records {
+        table tr td.w2ui-selected {
+            background-color: #EEF4FE !important;
+        }
+        table tr td.w2ui-inactive {
+            background-color: #F4F6F9 !important;
+        }
+        // line border
+        table td {
+            border-right-width: 1px;
+            border-bottom: 1px solid #efefef;
+        }
+        // no alternating rows
+        table tr.w2ui-odd,
+        table tr.w2ui-even,
+        table tr.w2ui-odd:hover,
+        table tr.w2ui-even:hover {
+            background-color: inherit;
+        }
+        table tr:first-child td {
+            border-top: 0px;
+            border-bottom: 0px;
+        }
+    }
+
+    .w2ui-grid-frecords {
+        table tr td.w2ui-selected {
+            background-color: #EEF4FE !important;
+        }
+        table tr td.w2ui-inactive {
+            background-color: #F4F6F9 !important;
+        }
+        // line border
+        table td {
+            border-right-width: 1px;
+            border-bottom: 1px solid #efefef;
+        }
+        // no alternating rows
+        table tr.w2ui-odd,
+        table tr.w2ui-even,
+        table tr.w2ui-odd:hover,
+        table tr.w2ui-even:hover {
+            background-color: inherit;
+        }
+        table tr:first-child td {
+            border-bottom: 0px;
+        }
+    }
+
+    .w2ui-selection {
+        position: absolute;
+        z-index: 1000;
+        border: 1.5px solid #6299DA; /* #457FC2; */
+        border-radius: 2px;
+        pointer-events: none;
+
+        &.w2ui-selection-preview {
+            background-color: #5a91ea08;
+            border: 1px dashed silver;
+        }
+
+        &.w2ui-selection-expand {
+            background-color: #e7f2e844;
+            border: 1px dotted silver;
+        }
+
+        .w2ui-selection-resizer {
+            cursor: crosshair;
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            width: 6px;
+            height: 6px;
+            margin-right: -3px;
+            margin-bottom: -3px;
+            background-color: #457FC2;
+            border: 0.5px solid #fff;
+            outline: 1px solid white;
+            pointer-events: auto;
+        }
+
+        &.w2ui-inactive {
+            border: 1.5px solid #C0C2C5;
+            .w2ui-selection-resizer {
+                 background-color: #B0B0B0;
+            }
+        }
+    }
+
+    .w2ui-soft-range  {
+        position: absolute;
+        pointer-events: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .w2ui-changed {
+        background: inherit; /* do not show changed for spreadsheet */
+    }
+
+    .w2ui-editable input {
+        outline: none !important;
+    }
+}
+
+// info bubble in the grid
+.w2ui-info-bubble {
+    table {
+        font-family: @main-font-family;
+        font-size: 12px;
+        color: white;
+        text-shadow: 1px 1px solid #999;
+
+        tr td:first-child {
+            white-space: nowrap;
+            padding: 2px;
+            padding-right: 10px;
+            color: #ddd;
+            vertical-align: top;
+        }
+
+        tr td:last-child {
+            white-space: pre;
+            padding: 2px;
+        }
+    }
+}
+
+// global Search slide down
+.w2ui-overlay {
+
+    .w2ui-grid-search-suggest {
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        padding: 10px;
+        background-color: white;
+        border-bottom: 1px solid #e6e6e6;
+        color: #444444;
+    }
+
+    .w2ui-grid-search-single {
+        font-size: 12px;
+        padding-top: 10px;
+        .field {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            border: 1px solid #a9b6c2;
+            border-radius: 4px;
+            padding: 4px 12px;
+            margin: 0 2px;
+            color: #4295d4;
+            background-color: #F5F9FE;
+        }
+        .operator {
+            display: inline-block;
+            color: black;
+            background-color: #e6e6e6;
+            border-radius: 4px;
+            margin: 0 4px;
+            padding: 6px 10px;
+        }
+        .value {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            border: 1px solid #a9b6c2;
+            border-radius: 4px;
+            margin: 0 2px;
+            padding: 4px 12px;
+        }
+        .buttons {
+            text-align: left;
+            padding: 15px 10px 10px 0px;
+        }
+    }
+
+    .w2ui-grid-search-advanced {
+        text-align: left;
+        padding: 0px;
+        background-color: #fff;
+        text-shadow: none;
+        border: 1px solid #cdcdd8;
+        box-shadow: 0px 3px 14px 1px #e8e8e8;
+
+        .search-title {
+            padding: 20px 0px 9px 20px;
+            font-size: 17px;
+            font-weight: bold;
+            color: #555;
+            .search-logic {
+                float: right;
+                padding-right: 10px;
+            }
+        }
+        .search-body {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+        .search-bottom {
+            padding: 20px 10px;
+        }
+        table {
+            color: #5f5f5f;
+            font-size: 13px;
+            padding: 12px 4px 0 4px;
+
+            td {
+                padding: 4px;
+                min-height: 40px;
+                &.caption {
+                    text-align: right;
+                    padding-right: 5px;
+                    padding-left: 20px;
+                }
+                &.operator {
+                    text-align: left;
+                    padding: 5px;
+                    select {
+                        width: 100%;
+                        color: black;
+                    }
+                }
+                &.value {
+                    padding-right: 5px;
+                    padding-left: 5px;
+                    input[type=text] {
+                        border-radius: 3px;
+                        padding: 5px;
+                        margin-right: 3px;
+                        height: 28px;
+                    }
+                    select {
+                        padding: 0px 20px 5px 5px;
+                        margin-right: 3px;
+                        height: 28px;
+                    }
+                }
+                &.actions:nth-child(1) {
+                    padding: 25px 10px 10px 10px;
+                    text-align: left;
+                }
+                &.actions:nth-child(2) {
+                    padding: 25px 10px 10px 10px;
+                    text-align: right;
+                    background-color: @grid-searches-buttons-background-color;
+                }
+            }
+        }
+    }
+}
+
+.w2ui-grid-skip {
+    width: 50px;
+    margin: -6px 3px;
+    padding: 3px !important;
+}

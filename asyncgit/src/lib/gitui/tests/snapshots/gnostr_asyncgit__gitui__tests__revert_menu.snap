@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/mod.rs
+expression: ctx.redact_buffer()
+---
+▌b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+Revert                  Arguments                                               |
+a Abort                 -e Edit commit message (--edit)                         |
+c Continue              -E Don't edit commit message (--no-edit)                |
+V Revert commit(s)      -s Add Signed-off-by lines (--signoff)                  |
+q/<esc> Quit/Close                                                              |
+styles_hash: f7fbb78008d07bf9

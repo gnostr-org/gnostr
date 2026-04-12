@@ -1,0 +1,10 @@
+use nostr_database_0_34_0;
+use nostr_db;
+use nostr_sdk_0_32_0;
+use nostr_sdk_0_34_0;
+use nostr_sdk_0_37_0;
+use nostr_signer_0_34_0;
+use nostr_sqlite_0_34_0;
+use nostr_0_32_0;
+use nostr_0_34_1;
+use nostr_0_37_0;
