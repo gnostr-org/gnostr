@@ -1,26 +1,51 @@
+## - name: Setup and Test
+##   uses: ./.github/actions/windows-vcpkg-action
+##   with:
+##     arch: 'x64'
+##     run-tests: 'true'
+
 name: 'windows-vcpkg-action'
-description: 'Setup vcpkg, OpenSSL, and Perl for Windows builds'
+description: 'Setup vcpkg, OpenSSL, and Perl for Windows builds and run tests'
+inputs:
+  arch:
+    description: 'Target architecture (e.g., x64)'
+    required: true
+  run-tests:
+    description: 'Whether to run cargo test'
+    required: false
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
     - name: Set VCPKG_ROOT env
       shell: pwsh
-      run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+      run: |
+        echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+        # Also set OPENSSL_NO_VENDOR if you want to force use of the vcpkg version
+        echo "OPENSSL_NO_VENDOR=1" | Out-File -FilePath $env:GITHUB_ENV -Append
+
     - name: Install OpenSSL with vcpkg
       shell: pwsh
       run: vcpkg install openssl:${{ inputs.arch }}-windows-static-md
+
     - name: Install Strawberry Perl
       shell: pwsh
       run: |
         choco install strawberryperl -y
         echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      if: runner.os == 'windows'
+      if: runner.os == 'Windows'
+
     - name: Install Perl modules
       shell: pwsh
       run: perl -MCPAN -e "install Locale::Maketext::Simple"
-      if: runner.os == 'windows'
-inputs:
-  arch:
-    description: 'Target architecture (e.g., x64)'
-    required: true
+      if: runner.os == 'Windows'
+
+    - name: Run Cargo Test
+      shell: pwsh
+      run: |
+        # Pointing to the vcpkg installed headers/libs for the linker
+        $env:VCPKGRS_DYNAMIC = "1"
+        cargo test --verbose
+      if: ${{ inputs.run-tests == 'true' }}
