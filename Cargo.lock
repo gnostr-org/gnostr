@@ -1311,57 +1311,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitui"
-version = "0.28.1"
-dependencies = [
- "anyhow",
- "asyncgit",
- "backtrace",
- "base64",
- "bitflags 2.10.0",
- "bugreport",
- "bwrap",
- "bytesize",
- "chrono",
- "clap",
- "crossbeam-channel",
- "crossterm 0.29.0",
- "dirs",
- "easy-cast",
- "env_logger",
- "filetreelist",
- "fuzzy-matcher",
- "gh-emoji",
- "git2-testing",
- "indexmap",
- "insta",
- "itertools",
- "log",
- "notify",
- "notify-debouncer-mini",
- "once_cell",
- "parking_lot_core",
- "pretty_assertions",
- "ratatui",
- "ratatui-textarea",
- "rayon-core",
- "ron",
- "scopeguard",
- "scopetime",
- "serde",
- "shellexpand",
- "simplelog",
- "struct-patch",
- "syntect",
- "tempfile",
- "two-face",
- "unicode-segmentation",
- "unicode-truncate",
- "unicode-width 0.2.0",
- "which",
-]
-
-[[package]]
 name = "gix"
 version = "0.78.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2118,6 +2067,57 @@ dependencies = [
  "gix-object",
  "gix-path",
  "gix-validate",
+]
+
+[[package]]
+name = "gnostr"
+version = "0.28.1"
+dependencies = [
+ "anyhow",
+ "asyncgit",
+ "backtrace",
+ "base64",
+ "bitflags 2.10.0",
+ "bugreport",
+ "bwrap",
+ "bytesize",
+ "chrono",
+ "clap",
+ "crossbeam-channel",
+ "crossterm 0.29.0",
+ "dirs",
+ "easy-cast",
+ "env_logger",
+ "filetreelist",
+ "fuzzy-matcher",
+ "gh-emoji",
+ "git2-testing",
+ "indexmap",
+ "insta",
+ "itertools",
+ "log",
+ "notify",
+ "notify-debouncer-mini",
+ "once_cell",
+ "parking_lot_core",
+ "pretty_assertions",
+ "ratatui",
+ "ratatui-textarea",
+ "rayon-core",
+ "ron",
+ "scopeguard",
+ "scopetime",
+ "serde",
+ "shellexpand",
+ "simplelog",
+ "struct-patch",
+ "syntect",
+ "tempfile",
+ "two-face",
+ "unicode-segmentation",
+ "unicode-truncate",
+ "unicode-width 0.2.0",
+ "which",
 ]
 
 [[package]]
