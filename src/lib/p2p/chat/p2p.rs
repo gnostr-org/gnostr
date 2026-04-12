@@ -148,11 +148,7 @@ impl MessageReassembler {
     }
 }
 
-use libp2p::{relay};
-use libp2p_autonat as autonat;
-
 #[derive(NetworkBehaviour)]
-#[behaviour(prelude = "libp2p_swarm::derive_prelude")]
 pub struct MyBehaviour {
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
@@ -160,8 +156,6 @@ pub struct MyBehaviour {
     pub kademlia: kad::Behaviour<kad::store::MemoryStore>,
     pub ping: ping::Behaviour,
     pub request_response: request_response::cbor::Behaviour<FileRequest, FileResponse>,
-    pub relay: relay::Behaviour,
-    pub autonat: autonat::Behaviour,
 }
 
 /// async_prompt
@@ -275,8 +269,6 @@ pub async fn evt_loop(
                 kademlia,
                 ping,
                 request_response,
-                relay: relay::Behaviour::new(key.public().to_peer_id(), relay::Config::default()),
-                autonat: libp2p_autonat::Behaviour::new(key.public().to_peer_id(), Default::default()),
             })
         })?
         .with_swarm_config(|c: libp2p::swarm::Config| {
@@ -394,7 +386,7 @@ pub async fn evt_loop(
                     propagation_source: peer_id,
                     message_id: id,
                     message,
-                })) => { // Gossipsub event
+                })) => {
                     debug!(
                         "Got message: '{}' with id: {id} from peer: {peer_id}",
                         String::from_utf8_lossy(&message.data),
@@ -402,11 +394,11 @@ pub async fn evt_loop(
                     match serde_json::from_slice::<Msg>(&message.data) {
                         Ok(msg) => {
                             if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
-                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
-                                    let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
-                                    apply_text_wrapping(&mut reassembled_msg, terminal_width);
-                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
-                                }
+                                                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                                                    let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                                                    apply_text_wrapping(&mut reassembled_msg, terminal_width);
+                                                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
+                                                                }
                             } else {
                                 // It's a single-part message, send directly
                                 let mut processed_msg = msg;
@@ -421,16 +413,6 @@ pub async fn evt_loop(
                             recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
                         }
                     }
-                },
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Relay(ev)) => {
-                    debug!("Relay event: {:?}", ev);
-                    let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Relay event: {:?}", ev), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                    recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
-                },
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Autonat(ev)) => {
-                    debug!("Autonat event: {:?}", ev);
-                    let m = crate::p2p::chat::msg::Msg::default().set_content(format!("NAT status: {:?}", ev), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                    recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
