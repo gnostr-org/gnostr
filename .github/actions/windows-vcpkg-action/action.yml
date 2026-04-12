@@ -102,5 +102,5 @@ runs:
       shell: pwsh
       run: |
         $env:VCPKGRS_DYNAMIC = "1"
-        cargo install --path . -vv --all-features
+        cargo install --path ${{ inputs.path }} -vv --all-features
       if: ${{ inputs.install == 'true' }}
