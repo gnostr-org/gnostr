@@ -3,6 +3,7 @@
 ##   with:
 ##     arch: 'x64'
 ##     run-tests: 'true'
+##     install: 'true'
 #
 name: 'windows-vcpkg-action'
 description: 'Setup vcpkg, OpenSSL, and Perl with caching and maximum verbosity'
@@ -14,6 +15,14 @@ inputs:
     description: 'Whether to run cargo test'
     required: false
     default: 'false'
+  install:
+    description: 'whether to run cargo install'
+    required: false
+    default: 'false'
+  path:
+    description: 'whether to run cargo install --path <path>'
+    required: false
+    default: '.'
 
 runs:
   using: 'composite'
@@ -82,9 +91,16 @@ runs:
         restore-keys: |
           ${{ runner.os }}-cargo-
 
+    - name: Run cargo test -j8 --all-features
+      shell: pwsh
+      run: |
+        $env:VCPKGRS_DYNAMIC = "1"
+        cargo test --path . -vv --all-features
+      if: ${{ inputs.run-tests == 'true' }}
+
     - name: Run cargo install --path .
       shell: pwsh
       run: |
         $env:VCPKGRS_DYNAMIC = "1"
         cargo install --path . -vv --all-features
-      if: ${{ inputs.run-tests == 'true' }}
+      if: ${{ inputs.install == 'true' }}
