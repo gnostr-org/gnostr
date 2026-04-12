@@ -21,19 +21,21 @@ runs:
     - name: Set Environment and Verbosity
       shell: pwsh
       run: |
+        # Use the standard vcpkg installation root provided by the runner
         echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "OPENSSL_NO_VENDOR=1" | Out-File -FilePath $env:GITHUB_ENV -Append
-        # Increase vcpkg logging level
-        echo "VCPKG_MAX_CONCURRENCY=1" | Out-File -FilePath $env:GITHUB_ENV -Append
-        # Force cargo-sys crates to print build script output
+
+        # This ensures inner build processes can see these vars
+        echo "VCPKG_KEEP_ENV_VARS=OPENSSL_NO_VENDOR;VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+        # VCVARSALL_DEBUG helps debug MSVC compiler detection
         echo "VCVARSALL_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: Install OpenSSL with vcpkg (Verbose)
       shell: pwsh
       run: |
-        # --debug provides detailed CMake and toolchain logic
-        # --printbuildtree prints the build output even on success
-        vcpkg install openssl:${{ inputs.arch }}-windows-static-md --debug --printbuildtree
+        # Using --verbose and --debug instead of --printbuildtree
+        vcpkg install openssl:${{ inputs.arch }}-windows-static-md --verbose --debug
 
     - name: Install Strawberry Perl
       shell: pwsh
@@ -51,7 +53,8 @@ runs:
     - name: Run Cargo Test (Very Verbose)
       shell: pwsh
       run: |
+        # Ensure we are looking for the vcpkg installation
         $env:VCPKGRS_DYNAMIC = "1"
-        # -vv displays build script output (stdout/stderr) from openssl-sys and git2-sys
+        # -vv displays the actual output of build.rs scripts (e.g., from openssl-sys)
         cargo test -vv --all-features
       if: ${{ inputs.run-tests == 'true' }}
