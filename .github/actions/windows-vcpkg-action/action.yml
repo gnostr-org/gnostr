@@ -3,7 +3,7 @@
 ##   with:
 ##     arch: 'x64'
 ##     run-tests: 'true'
-
+#
 name: 'windows-vcpkg-action'
 description: 'Setup vcpkg, OpenSSL, and Perl with caching and maximum verbosity'
 inputs:
@@ -26,7 +26,6 @@ runs:
         echo "VCPKG_KEEP_ENV_VARS=OPENSSL_NO_VENDOR;VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "VCVARSALL_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-    # --- Cache vcpkg artifacts ---
     - name: Cache vcpkg
       id: cache-vcpkg
       uses: actions/cache@v4
@@ -42,9 +41,8 @@ runs:
       if: steps.cache-vcpkg.outputs.cache-hit != 'true'
       shell: pwsh
       run: |
-        vcpkg install openssl:${{ inputs.arch }}-windows-static-md --verbose --debug
+        vcpkg install openssl:${{ inputs.arch }}-windows-static-md
 
-    # --- Cache Strawberry Perl ---
     - name: Cache Strawberry Perl
       id: cache-perl
       uses: actions/cache@v4
@@ -53,11 +51,11 @@ runs:
         key: ${{ runner.os }}-strawberry-perl-v1
 
     - name: Install Strawberry Perl
-      if: steps.cache-perl.outputs.cache-hit != 'true'
+      # Combined conditions into a single 'if' key
+      if: runner.os == 'Windows' && steps.cache-perl.outputs.cache-hit != 'true'
       shell: pwsh
       run: |
         choco install strawberryperl -y --verbose
-      if: runner.os == 'Windows'
 
     - name: Set Perl Path
       shell: pwsh
@@ -71,7 +69,6 @@ runs:
       run: perl -MCPAN -e "install Locale::Maketext::Simple"
       if: runner.os == 'Windows'
 
-    # --- Cache Cargo Registry & Build ---
     - name: Cache Cargo
       uses: actions/cache@v4
       with:
