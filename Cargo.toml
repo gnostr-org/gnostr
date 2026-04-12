@@ -645,7 +645,13 @@ scopeguard = "1.2.0"
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
 
+## [target.'cfg(windows)'.dependencies]
+## # Force a more recent sccache if it's a direct dependency
+## sccache = "0.13.0" 
+## windows-sys = { version = "0.52", features = ["Win32_System_Threading"] }
+
 [target.'cfg(windows)'.dependencies]
+sccache = "0.13.0" 
 winapi = { version = "0.3", features = ["winnt", "handleapi", "processthreadsapi", "errhandlingapi"] }
 # [target.'cfg(windows)'.dependencies.windows-sys]
 # version = "0.52" # or the version matching your error
