@@ -43,6 +43,7 @@ filetreelist = { path = "./filetreelist", version = ">=0.6" }
 fuzzy-matcher = "0.3"
 gh-emoji = { version = "1.0", optional = true }
 gnostr-git-helpers = { version = "0.1.0", path = "git-helpers" }
+gnostr-grammar = { version = "0.0.0", path = "grammar" }
 indexmap = "2"
 itertools = "0.14"
 log = "0.4"
