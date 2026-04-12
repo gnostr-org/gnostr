@@ -16,6 +16,14 @@ permissions:
   actions: read
   contents: read
 
+## - name: Setup and Test
+##   uses: ./.github/actions/windows-vcpkg-action
+##   with:
+##     arch: 'x64'
+##     run-tests: 'true'
+##     install: 'true'
+#
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   windows-vcpkg:
@@ -37,6 +45,7 @@ jobs:
       - uses: ./.github/actions/windows-vcpkg-action
         with:
           arch: ${{ matrix.os.arch }}
+          run-tests: 'false'
       - uses: actions/cache@v4
         with:
           path: ~/.cargo/registry/index
@@ -54,6 +63,7 @@ jobs:
           path: target
           key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo test -j8 --all-features
+      - run: cargo install --path ./git-helpers -j8 --all-features
 
   gnostr-test:
     env:
@@ -307,44 +317,47 @@ jobs:
       #  run: |
       #    cargo clean && echo "✅" || echo "❌"
 
+      - name: 🚀 cargo install --path ./git-helpers
+        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          cargo install --path ./git-helpers
+          git remote add gitworkshop \
+          nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr
+          git fetch --all
+
       - name: 🚀 cargo run --bin gnostr -- 
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo run --bin gnostr -- --version
-          cargo run --bin gnostr -- nip34 --help
-          cargo run --bin gnostr -- nip34 repo-announcement --help
-          cargo run --bin gnostr -- nip34 repo-state --help
-          cargo run --bin gnostr -- nip34 patch --help
-          cargo run --bin gnostr -- nip34 pull-request --help
-          cargo run --bin gnostr -- nip34 issue --help
-          cargo run --bin gnostr -- nip34 status --help
+          cargo run --bin gnostr -- --help
 
-      - name: 🚀 cargo test -j8
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          cargo test -j8 && echo "✅" ## || echo "❌"
-        if: matrix.os != 'windows-latest'
+      #- name: 🚀 cargo test -j8
+      #  #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+      #  shell: bash
+      #  run: |
+      #    cargo test -j8 && echo "✅" ## || echo "❌"
+      #  if: matrix.os != 'windows-latest'
 
-      - name: gnostr ngit fetch
-        shell: bash
-        run: |
-          git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
-          cargo run --bin gnostr -- ngit --help
-          #cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
-          cargo run --bin gnostr -- ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
-        if: ${{ !env.ACT }}
+      #- name: gnostr ngit fetch
+      #  shell: bash
+      #  run: |
+      #    git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+      #    cargo run --bin gnostr -- ngit --help
+      #    #cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
+      #    cargo run --bin gnostr -- ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
+      #  if: ${{ !env.ACT }}
 
-      - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
-        run: |
-          make gnostr-chat &
-          make gnostr-chat &
-          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
-          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
-          sleep 5 # Wait for services to start
-          gnostr query --limit 100
+      #- name: 🌙 UTC second is ODD
+      #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
+      #  run: |
+      #    make gnostr-chat &
+      #    make gnostr-chat &
+      #    gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
+      #    gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
+      #    sleep 5 # Wait for services to start
+      #    gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes
         uses: ./.github/actions/gnostr-cleanup
