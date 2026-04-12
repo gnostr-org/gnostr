@@ -253,18 +253,7 @@ jobs:
             custom-event \
             -k 1 \
             -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
-            -t "repo|$GITHUB_REPOSITORY" \
-             ,"workflow|$GITHUB_WORKFLOW" \
-             ,"workflow_sha|$GITHUB_WORKFLOW_SHA" \
-             ,"workflow_ref|$GITHUB_WORKFLOW_REF" \
-             ,"github_ref|$GITHUB_REF" \
-             ,"github_run_id|$GITHUB_RUN_ID" \
-             ,"gnostr|gnostr" \
-             ,"gnostr-bot|gnostr-bot" \
-             ,"github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
-             ,"date|$(date +%s)" \
-             ,"runner_env|$RUNNER_ENVIRONMENT" \
-             ,"runner_os|$RUNNER_OS" \
+            -t "repo|$GITHUB_REPOSITORY","workflow|$GITHUB_WORKFLOW","workflow_sha|$GITHUB_WORKFLOW_SHA","workflow_ref|$GITHUB_WORKFLOW_REF","github_ref|$GITHUB_REF","github_run_id|$GITHUB_RUN_ID","gnostr|gnostr","gnostr-bot|gnostr-bot","github_repo_owner|$GITHUB_REPOSITORY_OWNER","date|$(date +%s)","runner_env|$RUNNER_ENVIRONMENT","runner_os|$RUNNER_OS" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
