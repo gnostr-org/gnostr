@@ -1,8 +1,8 @@
+use gnostr_grammar::Language as GnostrLanguage;
 use gnostr_grammar::{Grammar, HighlightConfigurationParams};
 use std::{cell::RefCell, collections::HashMap, ops::Range, path::Path};
-use gnostr_grammar::Language as GnostrLanguage;
-use tree_sitter_highlight::{Highlight, HighlightConfiguration, HighlightEvent, Highlighter};
 use tree_sitter::Language;
+use tree_sitter_highlight::{Highlight, HighlightConfiguration, HighlightEvent, Highlighter};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SyntaxTag {
     Attribute,
@@ -58,7 +58,6 @@ impl AsRef<str> for SyntaxTag {
     }
 }
 
-
 fn tags_by_highlight_index() -> [SyntaxTag; 22] {
     [
         SyntaxTag::Attribute,
@@ -91,15 +90,27 @@ fn determine_lang(path: &Path) -> Option<(Grammar, tree_sitter::Language)> {
     let grammar_variant = file_language.grammar();
     let params = Grammar::highlight_configuration_params(grammar_variant);
 
-    Some((grammar_variant, unsafe { tree_sitter::Language::from_raw((params.language.into_raw())() as *const tree_sitter::ffi::TSLanguage) }))
+    Some((grammar_variant, unsafe {
+        tree_sitter::Language::from_raw(
+            (params.language.into_raw())() as *const tree_sitter::ffi::TSLanguage
+        )
+    }))
 }
 
-fn create_highlight_config(grammar_variant: Grammar, language: tree_sitter::Language) -> HighlightConfiguration {
+fn create_highlight_config(
+    grammar_variant: Grammar,
+    language: tree_sitter::Language,
+) -> HighlightConfiguration {
     let params = Grammar::highlight_configuration_params(grammar_variant);
 
-    let mut highlight_config =
-        HighlightConfiguration::new(language, params.highlights_query, params.injection_query, params.locals_query, "")
-            .unwrap();
+    let mut highlight_config = HighlightConfiguration::new(
+        language,
+        params.highlights_query,
+        params.injection_query,
+        params.locals_query,
+        "",
+    )
+    .unwrap();
 
     highlight_config.configure(&tags_by_highlight_index());
     highlight_config

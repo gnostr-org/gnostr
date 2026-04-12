@@ -59,8 +59,8 @@ mod dm_tests {
 
     use super::*;
     use crate::types::{
-        ContentEncryptionAlgorithm, Keys, PrivateKey,
         client::{Client, Options},
+        ContentEncryptionAlgorithm, Keys, PrivateKey,
     };
 
     #[tokio::test]
@@ -184,11 +184,9 @@ mod dm_tests {
         assert!(result.is_err());
         let actual_error = result.unwrap_err();
         eprintln!("Actual error: {}", actual_error);
-        assert!(
-            actual_error
-                .to_string()
-                .contains("Failed to send event to any configured relay.")
-        );
+        assert!(actual_error
+            .to_string()
+            .contains("Failed to send event to any configured relay."));
     }
 
     #[tokio::test]

@@ -1,15 +1,15 @@
-use std::net::SocketAddr;
-use warp::Filter;
-use std::collections::HashMap;
-use std::sync::Arc;
 use clap::Parser;
+use std::collections::HashMap;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use warp::Filter;
 
 // CONSTRUCTIONS
+use gnostr_asyncgit::css::css_bundle::get_css_assets;
 use gnostr_asyncgit::images::images_bundle::get_images_assets;
 use gnostr_asyncgit::js::js_bundle::get_js_assets;
-use gnostr_asyncgit::css::css_bundle::get_css_assets;
-use gnostr_asyncgit::web::template_html::get_template_assets;
 use gnostr_asyncgit::web::layout_html::get_layout_assets;
+use gnostr_asyncgit::web::template_html::get_template_assets;
 
 use gnostr_asyncgit::web::W2UiArgs;
 
@@ -51,23 +51,28 @@ async fn main() {
             "w2toolbar.js",
             "w2tooltip.js",
             "w2utils.js",
-        ].iter().cloned().collect();
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         let mut filenames: Vec<_> = js_assets_map.keys().cloned().collect();
         filenames.sort();
 
         for filename in filenames {
             // Skip db.js, model.js and ui/state.js as they're already added
-            if filename == "core.js" ||
-                filename == "db.js" ||
-                filename == "model.js" ||
-                filename == "ui/state.js" { //||
+            if filename == "core.js"
+                || filename == "db.js"
+                || filename == "model.js"
+                || filename == "ui/state.js"
+            {
+                //||
                 //filename == "jquery-4.0.0.js" ||
                 //filename == "w2ui-1.5.js" {
                 continue;
             }
             let script_tag = if module_filenames.contains(filename.as_str()) {
-                format!("")//format!("<script type=\"module\" src=\"/js/{}\"></script>\n", filename)
+                format!("") //format!("<script type=\"module\" src=\"/js/{}\"></script>\n", filename)
             } else {
                 format!("<script src=\"/js/{}\"></script>\n", filename)
             };
@@ -81,7 +86,10 @@ async fn main() {
         let mut filenames: Vec<_> = css_assets_map.keys().cloned().collect();
         filenames.sort();
         for filename in filenames {
-            tags.push_str(&format!("<link rel=\"stylesheet\" href=\"/css/{}\">\n", filename));
+            tags.push_str(&format!(
+                "<link rel=\"stylesheet\" href=\"/css/{}\">\n",
+                filename
+            ));
         }
         tags
     };
@@ -95,7 +103,10 @@ async fn main() {
             // Assuming images are SVG for simplicity, adjust Content-Type if other image types are needed
             // For SVG, we might embed them directly or link to them, linking is generally better.
             // Here, we'll link them as <img> tags
-            tags.push_str(&format!("<img src=\"/images/{}\" alt=\"{}\">\n", filename, filename));
+            tags.push_str(&format!(
+                "<img src=\"/images/{}\" alt=\"{}\">\n",
+                filename, filename
+            ));
         }
         tags
     };
@@ -469,58 +480,72 @@ layout.html('main', grid1)
 </body>
 
         </html>"#,
-        link_tags,
-        script_tags,
-        images_tags
+        link_tags, script_tags, images_tags
     );
 
-    let index_html_route = warp::path::end()
-        .map(move || {
-            warp::reply::html(index_html_content.clone())
-        });
+    let index_html_route =
+        warp::path::end().map(move || warp::reply::html(index_html_content.clone()));
 
     let js_route = warp::path("js")
         .and(warp::path::tail())
         .map(|tail: warp::path::Tail| tail.as_str().to_string())
         .and(warp::any().map(move || Arc::clone(&js_assets_map)))
-        .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
-            if let Some(&content) = assets.get(&filename) {
-                Ok(warp::reply::with_header(content, "Content-Type", "application/javascript"))
-            } else {
-                Err(warp::reject::not_found())
-            }
-        });
+        .and_then(
+            |filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
+                if let Some(&content) = assets.get(&filename) {
+                    Ok(warp::reply::with_header(
+                        content,
+                        "Content-Type",
+                        "application/javascript",
+                    ))
+                } else {
+                    Err(warp::reject::not_found())
+                }
+            },
+        );
 
     let css_route = warp::path!("css" / String)
         .and(warp::any().map(move || Arc::clone(&css_assets_map)))
-        .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
-            if let Some(&content) = assets.get(&filename) {
-                Ok(warp::reply::with_header(content, "Content-Type", "text/css"))
-            } else {
-                Err(warp::reject::not_found())
-            }
-        });
+        .and_then(
+            |filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
+                if let Some(&content) = assets.get(&filename) {
+                    Ok(warp::reply::with_header(
+                        content,
+                        "Content-Type",
+                        "text/css",
+                    ))
+                } else {
+                    Err(warp::reject::not_found())
+                }
+            },
+        );
 
     let images_route = warp::path!("images" / String)
         .and(warp::any().map(move || Arc::clone(&images_assets_map)))
-        .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
-            if let Some(&content) = assets.get(&filename) {
-                let content_type = if filename.ends_with(".svg") {
-                    "image/svg+xml"
-                } else if filename.ends_with(".png") {
-                    "image/png"
-                } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
-                    "image/jpeg"
-                } else if filename.ends_with(".ico") {
-                    "image/x-icon"
+        .and_then(
+            |filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
+                if let Some(&content) = assets.get(&filename) {
+                    let content_type = if filename.ends_with(".svg") {
+                        "image/svg+xml"
+                    } else if filename.ends_with(".png") {
+                        "image/png"
+                    } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
+                        "image/jpeg"
+                    } else if filename.ends_with(".ico") {
+                        "image/x-icon"
+                    } else {
+                        "application/octet-stream"
+                    };
+                    Ok(warp::reply::with_header(
+                        content,
+                        "Content-Type",
+                        content_type,
+                    ))
                 } else {
-                    "application/octet-stream"
-                };
-                Ok(warp::reply::with_header(content, "Content-Type", content_type))
-            } else {
-                Err(warp::reject::not_found())
-            }
-        });
+                    Err(warp::reject::not_found())
+                }
+            },
+        );
 
     let routes = index_html_route.or(js_route).or(css_route).or(images_route);
 

@@ -4,31 +4,31 @@ use anyhow::Result;
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    AsyncBlame, AsyncGitNotification, BlameParams,
     asyncjob::AsyncSingleJob,
     sync::{BlameHunk, CommitId, FileBlame, RepoPathRef},
+    AsyncBlame, AsyncGitNotification, BlameParams,
 };
 use ratatui::{
-    Frame,
     layout::{Constraint, Rect},
     symbols::line::VERTICAL,
     text::{Span, Text},
     widgets::{Block, Borders, Cell, Clear, Row, Table, TableState},
+    Frame,
 };
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
-        string_width_align, time_to_string, visibility_blocking,
+        string_width_align, time_to_string, visibility_blocking, CommandBlocking, CommandInfo,
+        Component, DrawableComponent, EventState, ScrollType,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     popups::{FileRevOpen, InspectCommitOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     string_utils::tabs_to_spaces,
     strings,
     sub_commands::tui::{AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress},
-    ui::{self, AsyncSyntaxJob, SyntaxText, style::SharedTheme},
+    ui::{self, style::SharedTheme, AsyncSyntaxJob, SyntaxText},
 };
 
 static NO_COMMIT_ID: &str = "0000000";

@@ -9,8 +9,8 @@ use url::Url;
 /// gnostr-query -k 1630,1632,1621,30618,1633,1631,1617,30617
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	//debug!("debug! main!");
-	//println!("println! main!");
+    //debug!("debug! main!");
+    //println!("println! main!");
     let matches = cli().await?;
 
     let mut filt = serde_json::Map::new();
@@ -129,7 +129,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //trace
     //debug!("vec_result:\n{:?}", vec_result.clone());
-	//for s in vec_result {println!("s={}", s)};
+    //for s in vec_result {println!("s={}", s)};
     //println!("vec_result:\n{:?}", vec_result);
 
     let mut json_result: Vec<String> = vec![];
