@@ -1,7 +1,7 @@
 use super::*;
 
-use crate::gitui::git;
 use super::*;
+use crate::gitui::git;
 
 fn setup_scroll() -> (TestContext, crate::gitui::state::State, String) {
     let mut ctx = TestContext::setup_init();

@@ -280,10 +280,7 @@ pub fn checkout_branch(repo_path: &RepoPath, branch_name: &str, force: bool) -> 
     }
 
     // modify state to match branch's state
-    repo.checkout_tree(
-        target_treeish_object,
-        Some(&mut checkout_builder),
-    )?;
+    repo.checkout_tree(target_treeish_object, Some(&mut checkout_builder))?;
 
     let branch_ref = branch_ref
         .name()

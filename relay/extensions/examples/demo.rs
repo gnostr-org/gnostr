@@ -6,12 +6,7 @@ use tracing::info;
 async fn main() -> gnostr_relay::Result<()> {
     tracing_subscriber::fmt::init();
     info!("Start relay server");
-    let mut app_data = App::create(
-        Some("demo.toml"),
-        true,
-        Some("NOSTR".to_owned()),
-        None,
-    )?;
+    let mut app_data = App::create(Some("demo.toml"), true, Some("NOSTR".to_owned()), None)?;
 
     //TODO #[cfg(feature = "search")] {}
 

@@ -4,9 +4,11 @@ use std::io::{self, BufRead};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 3 { return Ok(()); }
+    if args.len() < 3 {
+        return Ok(());
+    }
     let _remote_url = args[2].replace("gnostr://", "http://");
-      
+
     let stdin = io::stdin();
     let mut handle = stdin.lock();
     let mut line = String::new();
@@ -15,12 +17,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         line.clear();
         handle.read_line(&mut line)?;
         match line.trim() {
-            "capabilities" => println!("fetch
+            "capabilities" => println!(
+                "fetch
 push
-"),
-            "list" => println!("? refs/heads/main
+"
+            ),
+            "list" => println!(
+                "? refs/heads/main
 @refs/heads/main HEAD
-"),
+"
+            ),
             s if s.starts_with("push ") => {
                 // Here is where NIP-98 signing is injected into the git http-push call
                 println!("ok {}", s.strip_prefix("push ").unwrap());

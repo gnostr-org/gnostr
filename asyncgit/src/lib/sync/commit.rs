@@ -106,10 +106,7 @@ pub fn serialize_commit(commit: &Commit) -> Result<String> {
     let parents = commit.parent_ids().map(|oid| oid.to_string()).collect();
     let author = commit.author();
     let committer = commit.committer();
-    let message = commit
-        .message()
-        .unwrap_or_default()
-        .to_string();
+    let message = commit.message().unwrap_or_default().to_string();
     log::debug!("message:\n{:?}", message);
     let time = commit.time().seconds();
     debug!("time: {:?}", time);

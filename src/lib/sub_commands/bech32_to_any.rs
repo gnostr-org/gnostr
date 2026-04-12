@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use nostr_0_34_1::bech32;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 use crate::types::{NEvent, NostrBech32, PrivateKey};
 
@@ -191,12 +191,10 @@ mod tests {
 
         let result = bech32_to_any(&args);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("naddr doesn't have a specific event ID")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("naddr doesn't have a specific event ID"));
     }
 
     #[test]
@@ -210,12 +208,10 @@ mod tests {
 
         let result = bech32_to_any(&args);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Invalid bech32 string for --event-id")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid bech32 string for --event-id"));
     }
 
     #[test]

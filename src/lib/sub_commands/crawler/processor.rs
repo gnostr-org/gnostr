@@ -10,7 +10,8 @@ pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     let relays_yaml_bytes = include_bytes!("../../../../config/relays.yaml");
     let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
-    relays_yaml_content.lines()
+    relays_yaml_content
+        .lines()
         .filter(|line: &&str| !line.trim().is_empty())
         .map(|line: &str| String::from(line))
         .collect()
@@ -18,7 +19,8 @@ pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
 pub static SHITLIST_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     let relays_yaml_bytes = include_bytes!("../../../../config/shitlist.yaml");
     let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
-    relays_yaml_content.lines()
+    relays_yaml_content
+        .lines()
         .filter(|line: &&str| !line.trim().is_empty())
         .map(|line: &str| String::from(line))
         .collect()
@@ -54,7 +56,11 @@ impl Processor {
         //TODO: forward (proxy)
         debug!("{:?}", event.id);
         //println!("{:}", event.as_json());
-        debug!("age {:?}  created_at {:?}", Self::age(event.created_at), event.created_at);
+        debug!(
+            "age {:?}  created_at {:?}",
+            Self::age(event.created_at),
+            event.created_at
+        );
         match event.kind {
             Kind::Metadata => {
                 debug!("Kind::Metadata={:?}", event.kind);
@@ -145,7 +151,7 @@ impl Processor {
                     }
                 }
                 debug!("Contacts {} 	 ", cnt); // event.pubkey.to_bech32().unwrap(),
-                // self.print_summary();
+                                               // self.print_summary();
 
                 //println!("{:?}", event);
             }

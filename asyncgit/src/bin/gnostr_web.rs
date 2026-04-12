@@ -54,8 +54,8 @@ fn get_messages() -> impl warp::Reply {
     json(&response)
 }
 
-use webbrowser;
 use std::io;
+use webbrowser;
 
 fn open(host: &str, port: i32) -> io::Result<()> {
     let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
@@ -142,7 +142,8 @@ async fn main() {
         .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
     let pwa_route = warp::path("pwa").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/pwa")));
-    let images_route = warp::path("images").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/images")));
+    let images_route =
+        warp::path("images").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/images")));
     let js_files = warp::path("js").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/js")));
     let css_files = warp::path("css").and(warp::fs::dir(cargo_manifest_dir.join("src/lib/css")));
 

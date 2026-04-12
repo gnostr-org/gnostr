@@ -4,26 +4,26 @@ use anyhow::Result;
 use crossterm::event::Event;
 use filetreelist::{FileTree, FileTreeItem};
 use gnostr_asyncgit::{
-    AsyncGitNotification, AsyncTreeFilesJob,
     asyncjob::AsyncSingleJob,
-    sync::{CommitId, CommitInfo, RepoPathRef, TreeFile, get_commit_info},
+    sync::{get_commit_info, CommitId, CommitInfo, RepoPathRef, TreeFile},
+    AsyncGitNotification, AsyncTreeFilesJob,
 };
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::Span,
     widgets::{Block, Borders},
+    Frame,
 };
 use unicode_truncate::UnicodeTruncateStr;
 use unicode_width::UnicodeWidthStr;
 
 use super::{
-    CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, FuzzyFinderTarget,
-    SyntaxTextComponent, utils::scroll_vertical::VerticalScroll,
+    utils::scroll_vertical::VerticalScroll, CommandBlocking, CommandInfo, Component,
+    DrawableComponent, EventState, FuzzyFinderTarget, SyntaxTextComponent,
 };
 use crate::{
     app::Environment,
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     popups::{BlameFileOpen, FileRevOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order, symbol},

@@ -4,8 +4,8 @@
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::types::{
-    ContentEncryptionAlgorithm, PrivateKey, PublicKey, Signer,
     event::{Event, Rumor, UnsignedEvent},
+    ContentEncryptionAlgorithm, PrivateKey, PublicKey, Signer,
 };
 
 /// Create a Seal event (kind 13) which wraps a Rumor

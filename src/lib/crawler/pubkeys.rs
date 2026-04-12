@@ -1,4 +1,4 @@
-use nostr_sdk_0_34_0::prelude::{FromBech32, ToBech32, PublicKey};
+use nostr_sdk_0_34_0::prelude::{FromBech32, PublicKey, ToBech32};
 use std::collections::HashMap;
 
 pub struct PubKeys {

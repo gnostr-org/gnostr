@@ -36,10 +36,10 @@
 )]
 
 // use crate::nostr_client;
-use tracing::error;
-use tracing::debug;
-use ureq::Agent;
 use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use ureq::Agent;
 
 /// pub mod weeble
 pub mod weeble;
@@ -130,9 +130,18 @@ pub use crate::{
 };
 
 // Re-export web-related constants and modules for Askama templates
-pub use crate::web::{CRATE_VERSION, GLOBAL_CSS_HASH, GNOSTR_SVG_HASH, LOADER_FRAGMENT_SVG_HASH, LOGO_INVERTED_SVG_HASH, LOGO_SVG_HASH, HOME_SVG_HASH, HOME_ACTIVE_SVG_HASH, MESSAGES_SVG_HASH, MESSAGES_ACTIVE_SVG_HASH, NOTIFICATIONS_SVG_HASH, NOTIFICATIONS_ACTIVE_SVG_HASH, SETTINGS_SVG_HASH, SETTINGS_ACTIVE_SVG_HASH, NEW_NOTE_SVG_HASH, NO_USER_SVG_HASH, PROFILE_WEBSITE_SVG_HASH, PROFILE_ZAP_SVG_HASH, MESSAGE_USER_SVG_HASH, PUBKEY_SVG_HASH, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG_HASH, EVENT_LIKE_SVG_HASH, EVENT_LIKED_SVG_HASH, EVENT_DELETE_SVG_HASH, EVENT_REPLY_SVG_HASH, EVENT_SHARE_SVG_HASH, EVENT_OPTIONS_SVG_HASH, GNOSTR_NOTIF_SVG_HASH, JS_BUNDLE_HASH, HIGHLIGHT_CSS_HASH, DARK_HIGHLIGHT_CSS_HASH};
+pub use crate::web::git;
 pub use crate::web::layers;
-pub use crate::web::git as git;
+pub use crate::web::{
+    ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG_HASH, CRATE_VERSION, DARK_HIGHLIGHT_CSS_HASH,
+    EVENT_DELETE_SVG_HASH, EVENT_LIKED_SVG_HASH, EVENT_LIKE_SVG_HASH, EVENT_OPTIONS_SVG_HASH,
+    EVENT_REPLY_SVG_HASH, EVENT_SHARE_SVG_HASH, GLOBAL_CSS_HASH, GNOSTR_NOTIF_SVG_HASH,
+    GNOSTR_SVG_HASH, HIGHLIGHT_CSS_HASH, HOME_ACTIVE_SVG_HASH, HOME_SVG_HASH, JS_BUNDLE_HASH,
+    LOADER_FRAGMENT_SVG_HASH, LOGO_INVERTED_SVG_HASH, LOGO_SVG_HASH, MESSAGES_ACTIVE_SVG_HASH,
+    MESSAGES_SVG_HASH, MESSAGE_USER_SVG_HASH, NEW_NOTE_SVG_HASH, NOTIFICATIONS_ACTIVE_SVG_HASH,
+    NOTIFICATIONS_SVG_HASH, NO_USER_SVG_HASH, PROFILE_WEBSITE_SVG_HASH, PROFILE_ZAP_SVG_HASH,
+    PUBKEY_SVG_HASH, SETTINGS_ACTIVE_SVG_HASH, SETTINGS_SVG_HASH,
+};
 
 /// this type is used to communicate events back through the channel
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -223,7 +232,10 @@ pub fn ureq_sync(url: String) -> Result<String> {
                         "Failed to convert ureq_sync response to string for URL {}: {}",
                         url, e
                     );
-                    Err(Error::Generic(format!("Failed to convert response to string: {}", e)))
+                    Err(Error::Generic(format!(
+                        "Failed to convert response to string: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -262,7 +274,10 @@ pub async fn ureq_async(url: String) -> Result<String> {
                             "Failed to convert ureq_async response to string for URL {}: {}",
                             url, e
                         );
-                        Err(Error::Generic(format!("Failed to convert response to string: {}", e)))
+                        Err(Error::Generic(format!(
+                            "Failed to convert response to string: {}",
+                            e
+                        )))
                     }
                 }
             }
@@ -279,4 +294,3 @@ pub async fn ureq_async(url: String) -> Result<String> {
     s.await
         .map_err(|e| Error::Generic(format!("Asynchronous task failed: {}", e)))?
 }
-

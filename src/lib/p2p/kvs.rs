@@ -1,23 +1,22 @@
 use std::{
-    collections::{HashMap, HashSet, hash_map},
+    collections::{hash_map, HashMap, HashSet},
     error::Error,
     time::Duration,
 };
 
 use futures::{
-    StreamExt,
     channel::{mpsc, oneshot},
     prelude::*,
+    StreamExt,
 };
 use libp2p::{
-    PeerId, StreamProtocol,
     core::Multiaddr,
     identity, kad,
     multiaddr::Protocol,
     noise,
     request_response::{self, OutboundRequestId, ProtocolSupport, ResponseChannel},
     swarm::{NetworkBehaviour, Swarm, SwarmEvent},
-    tcp, yamux,
+    tcp, yamux, PeerId, StreamProtocol,
 };
 use serde::{Deserialize, Serialize};
 

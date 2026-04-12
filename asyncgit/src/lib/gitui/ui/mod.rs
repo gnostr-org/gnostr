@@ -69,7 +69,13 @@ pub(crate) fn ui(frame: &mut Frame, state: &mut State) {
     )
     .split(frame.area());
 
-    frame.render_widget(state.screens.last().expect("There should always be at least one screen."), layout[0]);
+    frame.render_widget(
+        state
+            .screens
+            .last()
+            .expect("There should always be at least one screen."),
+        layout[0],
+    );
 
     maybe_render(maybe_menu, frame, layout[2]);
     maybe_render(maybe_log, frame, layout[3]);
@@ -80,7 +86,11 @@ pub(crate) fn ui(frame: &mut Frame, state: &mut State) {
         frame.set_cursor_position((cx, cy));
     }
 
-    state.screens.last_mut().expect("There should always be at least one screen.").size = layout[0].as_size();
+    state
+        .screens
+        .last_mut()
+        .expect("There should always be at least one screen.")
+        .size = layout[0].as_size();
 }
 
 fn popup_block() -> Block<'static> {

@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use expectrl::{Expect, Regex, session::Session};
+use expectrl::{session::Session, Expect, Regex};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut command_builder = Command::new("ftp");

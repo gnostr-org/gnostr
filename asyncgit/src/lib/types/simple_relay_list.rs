@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fmt};
 
 use serde::{
-    Deserialize, Serialize,
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
+    Deserialize, Serialize,
 };
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
