@@ -5,7 +5,7 @@
 ##     run-tests: 'true'
 
 name: 'windows-vcpkg-action'
-description: 'Setup vcpkg, OpenSSL, and Perl for Windows builds and run tests'
+description: 'Setup vcpkg, OpenSSL, and Perl with maximum verbosity'
 inputs:
   arch:
     description: 'Target architecture (e.g., x64)'
@@ -18,21 +18,27 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set VCPKG_ROOT env
+    - name: Set Environment and Verbosity
       shell: pwsh
       run: |
         echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-        # Also set OPENSSL_NO_VENDOR if you want to force use of the vcpkg version
         echo "OPENSSL_NO_VENDOR=1" | Out-File -FilePath $env:GITHUB_ENV -Append
+        # Increase vcpkg logging level
+        echo "VCPKG_MAX_CONCURRENCY=1" | Out-File -FilePath $env:GITHUB_ENV -Append
+        # Force cargo-sys crates to print build script output
+        echo "VCVARSALL_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-    - name: Install OpenSSL with vcpkg
+    - name: Install OpenSSL with vcpkg (Verbose)
       shell: pwsh
-      run: vcpkg install openssl:${{ inputs.arch }}-windows-static-md
+      run: |
+        # --debug provides detailed CMake and toolchain logic
+        # --printbuildtree prints the build output even on success
+        vcpkg install openssl:${{ inputs.arch }}-windows-static-md --debug --printbuildtree
 
     - name: Install Strawberry Perl
       shell: pwsh
       run: |
-        choco install strawberryperl -y
+        choco install strawberryperl -y --verbose
         echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       if: runner.os == 'Windows'
@@ -42,10 +48,10 @@ runs:
       run: perl -MCPAN -e "install Locale::Maketext::Simple"
       if: runner.os == 'Windows'
 
-    - name: Run Cargo Test
+    - name: Run Cargo Test (Very Verbose)
       shell: pwsh
       run: |
-        # Pointing to the vcpkg installed headers/libs for the linker
         $env:VCPKGRS_DYNAMIC = "1"
-        cargo test --verbose
+        # -vv displays build script output (stdout/stderr) from openssl-sys and git2-sys
+        cargo test -vv --all-features
       if: ${{ inputs.run-tests == 'true' }}
