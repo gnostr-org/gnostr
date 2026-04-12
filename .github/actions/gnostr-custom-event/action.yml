@@ -37,6 +37,7 @@ runs:
     - name: Post Nostr notification
       shell: bash
       run: |
+        gnostr custom-event -h
         EVENT=$(gnostr \
           --nsec "$(gnostr --hash "$GITHUB_REPOSITORY_ID")" \
           -d ${{ inputs.pow }} \
