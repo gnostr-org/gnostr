@@ -1,4 +1,4 @@
-use bitcoin_hashes::{Hash, sha256};
+use bitcoin_hashes::{sha256, Hash};
 pub fn hash(input_string: &str) -> Result<String, String> {
     // Convert the input string slice into a byte slice.
     // Hashing algorithms operate on raw bytes.

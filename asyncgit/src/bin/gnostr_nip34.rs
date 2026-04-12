@@ -1,4 +1,3 @@
-
 use std::{
     future::IntoFuture,
     net::SocketAddr,
@@ -22,32 +21,30 @@ use clap::Parser;
 use const_format::formatcp;
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use gnostr_asyncgit::web::{
-    git::Git,
-    layers::logger::LoggingMiddleware,
-    methods,
-    syntax_highlight::prime_highlighters,
-    init_static_asset_hashes, /* build_asset_hash, */ open_database, run_indexer, Config,
-    ADD_RELAY_SVG, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG, CLOSE_MODAL_SVG_HASH, CONTENT_WARNING_SVG,
-    CONTENT_WARNING_SVG_HASH, DARK_HIGHLIGHT_CSS_BYTES, DARK_HIGHLIGHT_CSS_HASH, EDIT_PROFILE_SVG,
-    EDIT_PROFILE_SVG_HASH, EVENT_DELETE_SVG, EVENT_DELETE_SVG_HASH, EVENT_DETAILS_SVG,
-    EVENT_DETAILS_SVG_HASH, EVENT_LIKED_SVG, EVENT_LIKED_SVG_HASH, EVENT_LIKE_SVG,
-    EVENT_LIKE_SVG_HASH, EVENT_OPTIONS_SVG, EVENT_OPTIONS_SVG_HASH, EVENT_REPLY_ALL_SVG,
-    EVENT_REPLY_ALL_SVG_HASH, EVENT_REPLY_SVG, EVENT_REPLY_SVG_HASH, EVENT_SHARE_SVG,
-    EVENT_SHARE_SVG_HASH, EXPLORE_ACTIVE_SVG, EXPLORE_ACTIVE_SVG_HASH, EXPLORE_SVG,
-    EXPLORE_SVG_HASH, FAVICON_ICO, FAVICON_ICO_HASH, FAVICON_NOTIF_ICO, FAVICON_NOTIF_ICO_HASH,
-    GLOBAL_CSS, GLOBAL_CSS_HASH, GNOSTR_NOBG_SVG, GNOSTR_NOBG_SVG_HASH, GNOSTR_NOTIF_SVG,
-    GNOSTR_NOTIF_SVG_HASH, GNOSTR_SVG, GNOSTR_SVG_HASH, HIGHLIGHT_CSS_BYTES, HIGHLIGHT_CSS_HASH,
-    HOME_ACTIVE_SVG, HOME_ACTIVE_SVG_HASH, HOME_SVG, HOME_SVG_HASH, ICON_ICNS, ICON_ICNS_HASH,
-    ICON_MASKABLE_SVG, ICON_MASKABLE_SVG_HASH, ICON_SVG, ICON_SVG_HASH, JS_BUNDLE, JS_BUNDLE_HASH,
-    KEY_SVG, KEY_SVG_HASH, LOADER_FRAGMENT_SVG, LOADER_FRAGMENT_SVG_HASH, LOGO_INVERTED_SVG,
-    LOGO_INVERTED_SVG_HASH, LOGO_SVG, LOGO_SVG_HASH, MESSAGES_ACTIVE_SVG, MESSAGES_ACTIVE_SVG_HASH,
-    MESSAGES_SVG, MESSAGES_SVG_HASH, MESSAGE_USER_SVG, MESSAGE_USER_SVG_HASH, NEW_NOTE_SVG,
-    NEW_NOTE_SVG_HASH, NOTIFICATIONS_ACTIVE_SVG, NOTIFICATIONS_ACTIVE_SVG_HASH, NOTIFICATIONS_SVG,
+    git::Git, init_static_asset_hashes, layers::logger::LoggingMiddleware, methods,
+    /* build_asset_hash, */ open_database, run_indexer, syntax_highlight::prime_highlighters,
+    Config, GnitArgs, ADD_RELAY_SVG, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG, CLOSE_MODAL_SVG_HASH,
+    CONTENT_WARNING_SVG, CONTENT_WARNING_SVG_HASH, DARK_HIGHLIGHT_CSS_BYTES,
+    DARK_HIGHLIGHT_CSS_HASH, EDIT_PROFILE_SVG, EDIT_PROFILE_SVG_HASH, EVENT_DELETE_SVG,
+    EVENT_DELETE_SVG_HASH, EVENT_DETAILS_SVG, EVENT_DETAILS_SVG_HASH, EVENT_LIKED_SVG,
+    EVENT_LIKED_SVG_HASH, EVENT_LIKE_SVG, EVENT_LIKE_SVG_HASH, EVENT_OPTIONS_SVG,
+    EVENT_OPTIONS_SVG_HASH, EVENT_REPLY_ALL_SVG, EVENT_REPLY_ALL_SVG_HASH, EVENT_REPLY_SVG,
+    EVENT_REPLY_SVG_HASH, EVENT_SHARE_SVG, EVENT_SHARE_SVG_HASH, EXPLORE_ACTIVE_SVG,
+    EXPLORE_ACTIVE_SVG_HASH, EXPLORE_SVG, EXPLORE_SVG_HASH, FAVICON_ICO, FAVICON_ICO_HASH,
+    FAVICON_NOTIF_ICO, FAVICON_NOTIF_ICO_HASH, GLOBAL_CSS, GLOBAL_CSS_HASH, GNOSTR_NOBG_SVG,
+    GNOSTR_NOBG_SVG_HASH, GNOSTR_NOTIF_SVG, GNOSTR_NOTIF_SVG_HASH, GNOSTR_SVG, GNOSTR_SVG_HASH,
+    HIGHLIGHT_CSS_BYTES, HIGHLIGHT_CSS_HASH, HOME_ACTIVE_SVG, HOME_ACTIVE_SVG_HASH, HOME_SVG,
+    HOME_SVG_HASH, ICON_ICNS, ICON_ICNS_HASH, ICON_MASKABLE_SVG, ICON_MASKABLE_SVG_HASH, ICON_SVG,
+    ICON_SVG_HASH, JS_BUNDLE, JS_BUNDLE_HASH, KEY_SVG, KEY_SVG_HASH, LOADER_FRAGMENT_SVG,
+    LOADER_FRAGMENT_SVG_HASH, LOGO_INVERTED_SVG, LOGO_INVERTED_SVG_HASH, LOGO_SVG, LOGO_SVG_HASH,
+    MESSAGES_ACTIVE_SVG, MESSAGES_ACTIVE_SVG_HASH, MESSAGES_SVG, MESSAGES_SVG_HASH,
+    MESSAGE_USER_SVG, MESSAGE_USER_SVG_HASH, NEW_NOTE_SVG, NEW_NOTE_SVG_HASH,
+    NOTIFICATIONS_ACTIVE_SVG, NOTIFICATIONS_ACTIVE_SVG_HASH, NOTIFICATIONS_SVG,
     NOTIFICATIONS_SVG_HASH, NO_USER_SVG, NO_USER_SVG_HASH, OPEN_THREAD_HERE_SVG,
     OPEN_THREAD_HERE_SVG_HASH, OPEN_THREAD_SVG, OPEN_THREAD_SVG_HASH, PROFILE_WEBSITE_SVG,
     PROFILE_WEBSITE_SVG_HASH, PROFILE_ZAP_SVG, PROFILE_ZAP_SVG_HASH, PUBKEY_SVG, PUBKEY_SVG_HASH,
     READ_MORE_SVG, READ_MORE_SVG_HASH, SETTINGS_ACTIVE_SVG, SETTINGS_ACTIVE_SVG_HASH, SETTINGS_SVG,
-    SETTINGS_SVG_HASH, SIGN_OUT_SVG, SIGN_OUT_SVG_HASH, GnitArgs,
+    SETTINGS_SVG_HASH, SIGN_OUT_SVG, SIGN_OUT_SVG_HASH,
 };
 use tokio::net::TcpListener;
 use tokio::sync::broadcast;
@@ -146,10 +143,7 @@ async fn ping_nostr_relay(relay_url: &str) {
 
     // Send a REQ for a single event to test responsiveness
     let req_id = "test_ping";
-    let req_message = format!(
-        r#"["REQ", "{}", {{"limit": 1}}]"#,
-        req_id
-    );
+    let req_message = format!(r#"["REQ", "{}", {{"limit": 1}}]"#, req_id);
     match ws_stream.send(WsMessage::Text(req_message)).await {
         Ok(_) => info!("Sent REQ to {}", relay_url),
         Err(e) => {
@@ -184,7 +178,10 @@ async fn ping_nostr_relay(relay_url: &str) {
     }
 
     if !received_response {
-        info!("Relay {} did not send a valid Nostr event/EOSE within {:?}", relay_url, ping_timeout);
+        info!(
+            "Relay {} did not send a valid Nostr event/EOSE within {:?}",
+            relay_url, ping_timeout
+        );
     }
 
     // Close the connection gracefully
@@ -306,7 +303,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let db = open_database(&config)?;
 
-    let indexer_wakeup_task = run_indexer(db.clone(), canonical_scan_path.clone(), args.refresh_interval);
+    let indexer_wakeup_task = run_indexer(
+        db.clone(),
+        canonical_scan_path.clone(),
+        args.refresh_interval,
+    );
 
     let static_ico = |content: &'static [u8]| {
         move || async move {

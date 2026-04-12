@@ -56,7 +56,7 @@ pub struct State {
     /// The currently pending menu, if any.
     pub pending_menu: Option<PendingMenu>,
     /// A command that is currently running asynchronously.
-    pub pending_cmd: Option<(Child, Arc<RwLock<CmdLogEntry>>)>, 
+    pub pending_cmd: Option<(Child, Arc<RwLock<CmdLogEntry>>)>,
     /// Flag to enable or disable asynchronous command execution.
     pub enable_async_cmds: bool,
     /// Log of commands executed.
@@ -90,11 +90,7 @@ impl State {
             }
             None => vec![
                 screen::gnostr::create(Rc::clone(&config), size)?,
-                screen::status::create(
-                    Rc::clone(&config),
-                    Rc::clone(&repo),
-                    size,
-                )?,
+                screen::status::create(Rc::clone(&config), Rc::clone(&repo), size)?,
             ],
         };
 
@@ -205,7 +201,8 @@ impl State {
 
                 if self.prompt.state.is_focused() {
                     self.prompt.state.handle_key_event(key);
-                } else if key.code == KeyCode::Esc && self.screen().screen_type == ScreenType::Show {
+                } else if key.code == KeyCode::Esc && self.screen().screen_type == ScreenType::Show
+                {
                     self.screens.pop();
                 } else {
                     self.handle_key_input(term, key)?;

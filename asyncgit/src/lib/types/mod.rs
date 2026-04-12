@@ -119,7 +119,7 @@ pub mod nip9;
 pub use nip05::Nip05;
 
 mod nostr_url;
-pub use nostr_url::{NostrBech32, NostrUrl, find_nostr_bech32_pos, find_nostr_url_pos};
+pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};
 
 mod pay_request_data;
 pub use pay_request_data::PayRequestData;
@@ -183,7 +183,7 @@ pub mod nip40;
 pub mod nip44;
 pub mod nip53;
 pub mod nip94;
-pub use nip44::{Error as Nip44Error, decrypt, encrypt, get_conversation_key};
+pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
 //pub use crate::nostr_client::*;
 pub mod nip19;
 pub use nip19::*;

@@ -1,11 +1,11 @@
-use std::net::SocketAddr;
-use warp::Filter;
-use std::collections::HashMap;
-use std::sync::Arc;
 use clap::Parser;
+use gnostr_asyncgit::css::css_bundle::get_css_assets;
 use gnostr_asyncgit::images::images_bundle::get_images_assets;
 use gnostr_asyncgit::js::js_bundle::get_js_assets;
-use gnostr_asyncgit::css::css_bundle::get_css_assets;
+use std::collections::HashMap;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use warp::Filter;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -39,7 +39,11 @@ async fn welcome() {
         filenames.sort();
         for filename in filenames {
             // Skip db.js, model.js and ui/state.js as they're already added
-            if filename == "db.js" || filename == "model.js" || filename == "ui/state.js" || filename == "main.js"{
+            if filename == "db.js"
+                || filename == "model.js"
+                || filename == "ui/state.js"
+                || filename == "main.js"
+            {
                 continue;
             }
             tags.push_str(&format!("<script src=\"/js/{}\"></script>\n", filename));
@@ -52,7 +56,10 @@ async fn welcome() {
         let mut filenames: Vec<_> = css_assets_map.keys().cloned().collect();
         filenames.sort();
         for filename in filenames {
-            tags.push_str(&format!("<link rel=\"stylesheet\" href=\"/css/{}\">\n", filename));
+            tags.push_str(&format!(
+                "<link rel=\"stylesheet\" href=\"/css/{}\">\n",
+                filename
+            ));
         }
         tags
     };
@@ -60,7 +67,10 @@ async fn welcome() {
     //add let images_tags
     let images_tags = {
         let mut tags = String::new();
-            tags.push_str(&format!("<img src=\"/images/{}\" alt=\"{}\">\n", "gnostr.svg", "gnostr.svg"));
+        tags.push_str(&format!(
+            "<img src=\"/images/{}\" alt=\"{}\">\n",
+            "gnostr.svg", "gnostr.svg"
+        ));
         //let mut filenames: Vec<_> = images_assets_map.keys().cloned().collect();
         //filenames.sort();
         //for filename in filenames {
@@ -92,53 +102,69 @@ async fn welcome() {
         images_tags // Insert image tags here
     );
 
-    let index_html_route = warp::path::end()
-        .map(move || {
-            warp::reply::html(index_html_content.clone())
-        });
+    let index_html_route =
+        warp::path::end().map(move || warp::reply::html(index_html_content.clone()));
 
     let js_route = warp::path("js")
         .and(warp::path::tail())
         .map(|tail: warp::path::Tail| tail.as_str().to_string())
         .and(warp::any().map(move || Arc::clone(&js_assets_map)))
-        .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
-            if let Some(&content) = assets.get(&filename) {
-                Ok(warp::reply::with_header(content, "Content-Type", "application/javascript"))
-            } else {
-                Err(warp::reject::not_found())
-            }
-        });
+        .and_then(
+            |filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
+                if let Some(&content) = assets.get(&filename) {
+                    Ok(warp::reply::with_header(
+                        content,
+                        "Content-Type",
+                        "application/javascript",
+                    ))
+                } else {
+                    Err(warp::reject::not_found())
+                }
+            },
+        );
 
     let css_route = warp::path!("css" / String)
         .and(warp::any().map(move || Arc::clone(&css_assets_map)))
-        .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
-            if let Some(&content) = assets.get(&filename) {
-                Ok(warp::reply::with_header(content, "Content-Type", "text/css"))
-            } else {
-                Err(warp::reject::not_found())
-            }
-        });
+        .and_then(
+            |filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
+                if let Some(&content) = assets.get(&filename) {
+                    Ok(warp::reply::with_header(
+                        content,
+                        "Content-Type",
+                        "text/css",
+                    ))
+                } else {
+                    Err(warp::reject::not_found())
+                }
+            },
+        );
 
     let images_route = warp::path!("images" / String)
         .and(warp::any().map(move || Arc::clone(&images_assets_map)))
-        .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
-            if let Some(&content) = assets.get(&filename) {
-                let content_type = if filename.ends_with(".svg") {
-                    "image/svg+xml"
-                } else if filename.ends_with(".png") {
-                    "image/png"
-                } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
-                    "image/jpeg"
-                } else if filename.ends_with(".ico") {
-                    "image/x-icon"
+        .and_then(
+            |filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
+                if let Some(&content) = assets.get(&filename) {
+                    let content_type = if filename.ends_with(".svg") {
+                        "image/svg+xml"
+                    } else if filename.ends_with(".png") {
+                        "image/png"
+                    } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
+                        "image/jpeg"
+                    } else if filename.ends_with(".ico") {
+                        "image/x-icon"
+                    } else {
+                        "application/octet-stream"
+                    };
+                    Ok(warp::reply::with_header(
+                        content,
+                        "Content-Type",
+                        content_type,
+                    ))
                 } else {
-                    "application/octet-stream"
-                };
-                Ok(warp::reply::with_header(content, "Content-Type", content_type))
-            } else {
-                Err(warp::reject::not_found())
-            }
-        });
+                    Err(warp::reject::not_found())
+                }
+            },
+        );
 
     let routes = index_html_route.or(js_route).or(css_route).or(images_route);
 

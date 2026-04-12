@@ -5,8 +5,8 @@ use crate::crawler::CliArgs;
 use crate::crawler::APP_SECRET_KEY;
 use nostr_sdk_0_34_0::{
     prelude::{
-        Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, /*Tag, */Timestamp,
-        Url, TagStandard
+        Client, Event, Filter, Keys, Kind, Options, RelayPoolNotification, Result, TagStandard,
+        /*Tag, */ Timestamp, Url,
     },
     RelayMessage, RelayStatus,
 };
@@ -157,7 +157,8 @@ impl RelayManager {
                 active_relay_list_clone,
                 relay_client_clone,
                 update_sender_clone,
-            ).await;
+            )
+            .await;
         });
 
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
@@ -197,7 +198,7 @@ impl RelayManager {
                         debug!("Relay {} is connected.", url);
                         active_relay_list.add_relay(url.clone());
                         current_active_relays.push(url);
-                    },
+                    }
                     RelayStatus::Connecting => {
                         debug!("Relay {} is connecting.", url);
                         // Consider connecting relays as active for now, or add a separate state.
@@ -210,7 +211,7 @@ impl RelayManager {
                     }
                 }
             }
-            
+
             // Send update if there are changes (simplified check for now)
             if !current_active_relays.is_empty() {
                 let _ = update_sender.send(current_active_relays).await;

@@ -49,11 +49,14 @@ fn main() -> Result<()> {
         let path = entry.path();
 
         if path.is_file() {
-            let rel = path.strip_prefix(&repo_path)?
+            let rel = path
+                .strip_prefix(&repo_path)?
                 .to_string_lossy()
                 .replace('\\', "/");
 
-            if rel.starts_with(".git/") { continue; }
+            if rel.starts_with(".git/") {
+                continue;
+            }
 
             let size = entry.metadata()?.len();
             let mut content = None;
@@ -69,21 +72,23 @@ fn main() -> Result<()> {
     let html = build_html(&args.repo_url, files)?;
     let out = args.out.unwrap_or_else(|| PathBuf::from("repo_flat.html"));
     fs::write(&out, html)?;
-    
+
     println!("✓ Flattened HTML generated at: {:?}", out);
     Ok(())
 }
 
 fn is_binary(path: &Path) -> bool {
-    fs::read(path).map(|b| b.iter().take(4096).any(|&x| x == 0)).unwrap_or(true)
+    fs::read(path)
+        .map(|b| b.iter().take(4096).any(|&x| x == 0))
+        .unwrap_or(true)
 }
 
 fn escape_html(s: &str) -> String {
     s.replace('&', "&amp;")
-     .replace('<', "&lt;")
-     .replace('>', "&gt;")
-     .replace('"', "&quot;")
-     .replace('\'', "&#39;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
 }
 
 /// A basic regex-based highlighter using approved Regex 1.12.2
@@ -94,10 +99,17 @@ fn highlight_code(code: &str) -> String {
     let re_str = Regex::new(r#"(&quot;.*?&quot;|&#39;.*?&#39;)"#).unwrap();
     let re_comment = Regex::new(r"((//|#).*?(\n|$))").unwrap();
 
-    let first_pass = re_kw.replace_all(&escaped, r#"<span style=\"color: #d73a49; font-weight: bold;\">$1</span>"#);
-    let second_pass = re_str.replace_all(&first_pass, r#"<span style=\"color: #032f62;\">$1</span>"#);
-    let third_pass = re_comment.replace_all(&second_pass, r#"<span style=\"color: #6a737d; font-style: italic;\">$1</span>"#);
-    
+    let first_pass = re_kw.replace_all(
+        &escaped,
+        r#"<span style=\"color: #d73a49; font-weight: bold;\">$1</span>"#,
+    );
+    let second_pass =
+        re_str.replace_all(&first_pass, r#"<span style=\"color: #032f62;\">$1</span>"#);
+    let third_pass = re_comment.replace_all(
+        &second_pass,
+        r#"<span style=\"color: #6a737d; font-style: italic;\">$1</span>"#,
+    );
+
     third_pass.to_string()
 }
 
@@ -115,8 +127,11 @@ fn build_html(url: &str, files: Vec<FileInfo>) -> Result<String> {
                 cxml.push_str(&format!("&lt;document index='{}'&gt;\n&lt;source&gt;{}&lt;/source&gt;\n&lt;document_content&gt;\n{}\n&lt;/document_content&gt;\n&lt;/document&gt;\n", 
                     idx+1, f.rel, escape_html(c)));
                 format!("<pre style='background:#f6f8fa; padding:10px; border-radius:5px;'><code>{}</code></pre>", highlight_code(c))
-            },
-            None => format!("<p style=\"color:red;\">Skipped: Binary or too large (Size: {} bytes).</p>", f.size),
+            }
+            None => format!(
+                "<p style=\"color:red;\">Skipped: Binary or too large (Size: {} bytes).</p>",
+                f.size
+            ),
         };
 
         sections.push_str(&format!(
@@ -163,6 +178,9 @@ document.getElementById('llm').style.display = id === 'l' ? 'block' : 'none';
 </main>
 </body></html>
 "#,
-        url = url, toc = toc, sections = sections, cxml = cxml
+        url = url,
+        toc = toc,
+        sections = sections,
+        cxml = cxml
     ))
 }

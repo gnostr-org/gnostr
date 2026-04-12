@@ -8,15 +8,15 @@ use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use gnostr_asyncgit::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
 use ratatui::{
-    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
+    Frame, Terminal,
 };
 use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
@@ -984,7 +984,10 @@ fn render_branches_view(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 "  "
             };
-            let content = format!("{}{} - {} ({}) - {}\n", prefix, b.name, b.commit_message, b.author, b.commit_hash); // Added commit_hash and author
+            let content = format!(
+                "{}{} - {} ({}) - {}\n",
+                prefix, b.name, b.commit_message, b.author, b.commit_hash
+            ); // Added commit_hash and author
             let style = if b.is_current {
                 Style::default().fg(Color::Green)
             } else if b.is_remote {

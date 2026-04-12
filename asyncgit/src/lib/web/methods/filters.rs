@@ -2,7 +2,6 @@ use unix_mode;
 
 // sorry clippy, we don't have a choice. askama forces this on us
 #[allow(clippy::unnecessary_wraps, clippy::trivially_copy_pass_by_ref)]
-
 use std::{
     borrow::Borrow,
     collections::HashMap,

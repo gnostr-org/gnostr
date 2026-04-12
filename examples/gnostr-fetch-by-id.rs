@@ -1,10 +1,11 @@
 use std::env;
 
-use gnostr::{
-    Command, Probe, get_weeble,
-    types::{Filter, IdHex, RelayMessage, SubscriptionId},
-};
 use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::{
+    get_weeble,
+    types::{Filter, IdHex, RelayMessage, SubscriptionId},
+    Command, Probe,
+};
 use log::debug;
 
 #[tokio::main]
