@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, macos-15-intel]
-        rustup: [stable]
+        rustup: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: true
     runs-on: ${{ matrix.os }}
