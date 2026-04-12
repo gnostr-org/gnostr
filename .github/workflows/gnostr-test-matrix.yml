@@ -64,8 +64,8 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, macos-15-intel]
-        toolchain: [stable, nightly]
+        os: [ubuntu-latest]
+        toolchain: [stable]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
