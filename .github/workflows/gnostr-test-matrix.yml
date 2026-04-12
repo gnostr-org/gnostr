@@ -326,12 +326,12 @@ jobs:
           nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr
           git fetch --all
 
-      - name: 🚀 cargo run --bin gnostr -- 
+      - name: 🚀 cargo run --bin gnostr-tui --
         #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr -- --version
-          cargo run --bin gnostr -- --help
+          cargo run --bin gnostr-tui -- --version
+          cargo run --bin gnostr-tui -- --help
 
       #- name: 🚀 cargo test -j8
       #  #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
