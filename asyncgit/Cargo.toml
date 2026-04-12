@@ -125,7 +125,7 @@ num_cpus = { workspace = true }
 # git2 = { path = "../../extern/git2-rs", features = ["vendored-openssl"]}
 # git2 = { git="https://github.com/extrawurst/git2-rs.git", rev="fc13dcc", features = ["vendored-openssl"]}
 # pinning to vendored openssl, using the git2 feature this gets lost with new resolver
-openssl-sys = { version = '0.9', optional = true }
+openssl-sys = { version = '^0', optional = true }
 path-clean = "1.0.1"
 pretty_env_logger = { workspace = true }
 rand = "0.8.5"
