@@ -1,15 +1,17 @@
-use crate::error::Result;
 use std::path::{Path, PathBuf};
 
-/// holds the information shared among all `FileTreeItem` in a `FileTree`
+use crate::error::Result;
+
+/// holds the information shared among all `FileTreeItem` in a
+/// `FileTree`
 #[derive(Debug, Clone)]
 pub struct TreeItemInfo {
 	/// indent level
 	indent: u8,
 	/// currently visible depending on the folder collapse states
 	visible: bool,
-	/// contains this paths last component and folded up paths added to it
-	/// if this is `None` nothing was folding into here
+	/// contains this paths last component and folded up paths added
+	/// to it if this is `None` nothing was folding into here
 	folded: Option<PathBuf>,
 	/// the full path
 	full_path: PathBuf,
@@ -53,12 +55,11 @@ impl TreeItemInfo {
 		self.folded.as_ref().map_or_else(
 			|| {
 				Path::new(
-					self.full_path
-						.components()
-						.next_back()
-						.and_then(|c| c.as_os_str().to_str())
-						.unwrap_or_default(),
-				)
+					                			self.full_path
+											.components()
+											.next_back()
+											.and_then(|c| c.as_os_str().to_str())
+											.unwrap_or_default(),				)
 			},
 			PathBuf::as_path,
 		)
@@ -70,16 +71,15 @@ impl TreeItemInfo {
 	}
 
 	///
-	pub const fn unindent(&mut self) {
-		self.indent = self.indent.saturating_sub(1);
+	    pub const fn unindent(&mut self) {		self.indent = self.indent.saturating_sub(1);
 	}
 
-	pub const fn set_visible(&mut self, visible: bool) {
-		self.visible = visible;
+	    pub const fn set_visible(&mut self, visible: bool) {		self.visible = visible;
 	}
 }
 
-/// attribute used to indicate the collapse/expand state of a path item
+/// attribute used to indicate the collapse/expand state of a path
+/// item
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub struct PathCollapsed(pub bool);
 
@@ -103,7 +103,8 @@ impl FileTreeItemKind {
 	}
 }
 
-/// `FileTreeItem` can be of two kinds: see `FileTreeItem` but shares an info
+/// `FileTreeItem` can be of two kinds: see `FileTreeItem` but shares
+/// an info
 #[derive(Debug, Clone)]
 pub struct FileTreeItem {
 	info: TreeItemInfo,
@@ -152,8 +153,7 @@ impl FileTreeItem {
 	}
 
 	///
-	pub const fn info_mut(&mut self) -> &mut TreeItemInfo {
-		&mut self.info
+	    pub const fn info_mut(&mut self) -> &mut TreeItemInfo {		&mut self.info
 	}
 
 	///
@@ -176,13 +176,11 @@ impl FileTreeItem {
 	}
 
 	///
-	pub const fn hide(&mut self) {
-		self.info.visible = false;
+	    pub const fn hide(&mut self) {		self.info.visible = false;
 	}
 
 	///
-	pub const fn show(&mut self) {
-		self.info.visible = true;
+	    pub const fn show(&mut self) {		self.info.visible = true;
 	}
 }
 
@@ -211,8 +209,9 @@ impl Ord for FileTreeItem {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use pretty_assertions::assert_eq;
+
+	use super::*;
 
 	#[test]
 	fn test_smoke() {
