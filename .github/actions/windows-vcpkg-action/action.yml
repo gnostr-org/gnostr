@@ -5,7 +5,7 @@
 ##     run-tests: 'true'
 
 name: 'windows-vcpkg-action'
-description: 'Setup vcpkg, OpenSSL, and Perl with maximum verbosity'
+description: 'Setup vcpkg, OpenSSL, and Perl with caching and maximum verbosity'
 inputs:
   arch:
     description: 'Target architecture (e.g., x64)'
@@ -21,25 +21,47 @@ runs:
     - name: Set Environment and Verbosity
       shell: pwsh
       run: |
-        # Use the standard vcpkg installation root provided by the runner
         echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "OPENSSL_NO_VENDOR=1" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-        # This ensures inner build processes can see these vars
         echo "VCPKG_KEEP_ENV_VARS=OPENSSL_NO_VENDOR;VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-        # VCVARSALL_DEBUG helps debug MSVC compiler detection
         echo "VCVARSALL_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-    - name: Install OpenSSL with vcpkg (Verbose)
+    # --- Cache vcpkg artifacts ---
+    - name: Cache vcpkg
+      id: cache-vcpkg
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.VCPKG_INSTALLATION_ROOT }}/installed
+          ${{ env.VCPKG_INSTALLATION_ROOT }}/packages
+        key: ${{ runner.os }}-vcpkg-${{ inputs.arch }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-${{ inputs.arch }}-
+
+    - name: Install OpenSSL with vcpkg
+      if: steps.cache-vcpkg.outputs.cache-hit != 'true'
       shell: pwsh
       run: |
-        vcpkg install openssl:${{ inputs.arch }}-windows-static-md
+        vcpkg install openssl:${{ inputs.arch }}-windows-static-md --verbose --debug
+
+    # --- Cache Strawberry Perl ---
+    - name: Cache Strawberry Perl
+      id: cache-perl
+      uses: actions/cache@v4
+      with:
+        path: C:\Strawberry
+        key: ${{ runner.os }}-strawberry-perl-v1
 
     - name: Install Strawberry Perl
+      if: steps.cache-perl.outputs.cache-hit != 'true'
       shell: pwsh
       run: |
         choco install strawberryperl -y --verbose
+      if: runner.os == 'Windows'
+
+    - name: Set Perl Path
+      shell: pwsh
+      run: |
         echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       if: runner.os == 'Windows'
@@ -49,11 +71,23 @@ runs:
       run: perl -MCPAN -e "install Locale::Maketext::Simple"
       if: runner.os == 'Windows'
 
-    - name: Run Cargo Test (Very Verbose)
+    # --- Cache Cargo Registry & Build ---
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Run Cargo Test
       shell: pwsh
       run: |
-        # Ensure we are looking for the vcpkg installation
         $env:VCPKGRS_DYNAMIC = "1"
-        # -vv displays the actual output of build.rs scripts (e.g., from openssl-sys)
         cargo test -vv --all-features
       if: ${{ inputs.run-tests == 'true' }}
