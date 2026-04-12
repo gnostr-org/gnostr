@@ -32,7 +32,7 @@ pub struct Gitui {
 }
 
 impl Gitui {
-	pub(crate) fn new(
+	pub fn new(
 		cliargs: CliArgs,
 		theme: Theme,
 		key_config: &KeyConfig,
@@ -73,7 +73,7 @@ impl Gitui {
 		})
 	}
 
-	pub(crate) fn run_main_loop<B: ratatui::backend::Backend>(
+	pub fn run_main_loop<B: ratatui::backend::Backend>(
 		&mut self,
 		terminal: &mut ratatui::Terminal<B>,
 	) -> Result<QuitState, anyhow::Error>

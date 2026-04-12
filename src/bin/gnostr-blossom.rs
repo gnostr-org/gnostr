@@ -1,8 +1,8 @@
-//! gnostr-blossom-tui binary entry point.
+//! gnostr blossom-tui binary entry point.
 
 use std::io;
 
-use gnostr_blossom_tui::{App, AppMsg, load_state, run_loop, save_state};
+use blossom_tui::{App, AppMsg, load_state, run_loop, save_state};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Persist state before tearing down the terminal so any I/O errors are
     // visible in the restored terminal output.
     if let Err(e) = save_state(&app.to_state()) {
-        eprintln!("gnostr-blossom-tui: failed to save state: {e}");
+        eprintln!("gnostr blossom-tui: failed to save state: {e}");
     }
 
     disable_raw_mode()?;
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn parse_args(
-    saved: &gnostr_blossom_tui::TuiState,
+    saved: &blossom_tui::TuiState,
 ) -> Result<(String, Option<String>), Box<dyn std::error::Error>> {
     // Priority: CLI arg > env var > saved state > compiled default.
     let mut server = saved
@@ -82,7 +82,7 @@ fn parse_args(
             "-k" | "--key" => {
                 i += 1;
                 if let Some(v) = args.get(i) {
-                    secret_key = Some(gnostr_blossom_tui::decode_secret_key(v)?);
+                    secret_key = Some(blossom_tui::decode_secret_key(v)?);
                 }
             }
             "-h" | "--help" => {
@@ -90,7 +90,7 @@ fn parse_args(
                 std::process::exit(0);
             }
             "-V" | "--version" => {
-                println!("gnostr-blossom-tui {}", env!("CARGO_PKG_VERSION"));
+                println!("gnostr blossom-tui {}", env!("CARGO_PKG_VERSION"));
                 std::process::exit(0);
             }
             _ => {}
@@ -101,9 +101,9 @@ fn parse_args(
 }
 
 fn print_usage() {
-    println!("gnostr-blossom-tui — Terminal UI for Blossom blob storage\n");
+    println!("gnostr blossom-tui — Terminal UI for Blossom blob storage\n");
     println!("USAGE:");
-    println!("  gnostr-blossom-tui [OPTIONS]\n");
+    println!("  gnostr blossom-tui [OPTIONS]\n");
     println!("OPTIONS:");
     println!("  -s, --server <URL>   Blossom server URL [default: http://localhost:3000]");
     println!("  -k, --key <KEY>      Secret key (hex or nsec1 bech32)");

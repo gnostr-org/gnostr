@@ -1,42 +1,9 @@
-//!
-//! The gitui program is a text-based UI for working with a Git repository.
-//! The main navigation occurs between a number of tabs.
-//! When you execute commands, the program may use popups to communicate
-//! with the user. It is possible to customize the keybindings.
-//!
-//!
-//! ## Internal Modules
-//! The top-level modules of gitui can be grouped as follows:
-//!
-//! - User Interface
-//!   - [tabs] for main navigation
-//!   - [components] for visual elements used on tabs
-//!   - [popups] for temporary dialogs
-//!   - [ui] for tooling like scrollbars
-//! - Git Interface
-//!   - [asyncgit] (crate) for async operations on repository
-//! - Distribution and Documentation
-//!   - Project files
-//!   - Github CI
-//!   - Installation files
-//!   - Usage guides
-//!
-//! ## Included Crates
-//! Some crates are part of the gitui repository:
-//! - [asyncgit] for Git operations in the background.
-//!   - git2-hooks (used by asyncgit).
-//!     - git2-testing (used by git2-hooks).
-//!   - invalidstring used by asyncgit for testing with invalid strings.
-//! - [filetreelist] for a tree view of files.
-//! - [scopetime] for measuring execution time.
-//!
-
 #![forbid(unsafe_code)]
 #![deny(
 	mismatched_lifetime_syntaxes,
-	unused_imports,
+	//unused_imports,
 	unused_must_use,
-	dead_code,
+	//dead_code,
 	unstable_name_collisions,
 	unused_assignments
 )]
@@ -59,33 +26,17 @@
 //TODO:
 // #![deny(clippy::expect_used)]
 
-mod app;
-mod args;
-mod bug_report;
-mod clipboard;
-mod cmdbar;
-mod components;
-mod gitui;
-mod input;
-mod keys;
-mod notify_mutex;
-mod options;
-mod popup_stack;
-mod popups;
-mod queue;
-mod spinner;
-mod string_utils;
-mod strings;
-mod tabs;
-mod ui;
-mod watcher;
+type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
 
-use crate::{
-	app::App,
-	args::{process_cmdline, CliArgs},
+use gnostr::AsyncNotification;
+use gnostr::QueueEvent;
+use gnostr::{AsyncAppNotification, Updater};
+use gnostr::{
+	process_cmdline, App, CliArgs, Gitui, InputEvent, KeyConfig,
+	QuitState, Theme,
 };
-use anyhow::{anyhow, bail, Result};
-use app::QuitState;
+use anyhow::anyhow;
+use anyhow::{bail, Result};
 use asyncgit::{sync::RepoPath, AsyncGitNotification};
 use backtrace::Backtrace;
 use crossbeam_channel::{Receiver, Select};
@@ -96,9 +47,6 @@ use crossterm::{
 	},
 	ExecutableCommand,
 };
-use gitui::Gitui;
-use input::InputEvent;
-use keys::KeyConfig;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use std::{
@@ -107,50 +55,8 @@ use std::{
 	path::Path,
 	time::{Duration, Instant},
 };
-use ui::style::Theme;
 
-type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
-
-static TICK_INTERVAL: Duration = Duration::from_secs(5);
-static SPINNER_INTERVAL: Duration = Duration::from_millis(80);
-
-///
-#[derive(Clone)]
-pub enum QueueEvent {
-	Tick,
-	Notify,
-	SpinnerUpdate,
-	AsyncEvent(AsyncNotification),
-	InputEvent(InputEvent),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SyntaxHighlightProgress {
-	Progress,
-	Done,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AsyncAppNotification {
-	///
-	SyntaxHighlighting(SyntaxHighlightProgress),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AsyncNotification {
-	///
-	App(AsyncAppNotification),
-	///
-	Git(AsyncGitNotification),
-}
-
-#[derive(Clone, Copy, PartialEq)]
-enum Updater {
-	Ticker,
-	NotifyWatcher,
-}
-
-/// Do `log::error!` and `eprintln!` in one line.
+/// Do `log::error!` and `eprintln!` in one line.¬                                                                   
 macro_rules! log_eprintln {
 	( $($arg:tt)* ) => {{
 		log::error!($($arg)*);

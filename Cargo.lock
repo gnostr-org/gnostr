@@ -3128,6 +3128,7 @@ dependencies = [
  "struct-patch",
  "syntect",
  "tempfile",
+ "tokio",
  "two-face",
  "unicode-segmentation",
  "unicode-truncate",
