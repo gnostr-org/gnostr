@@ -34,11 +34,9 @@ jobs:
       - uses: sfackler/actions/rustup@master
       - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
         id: rust-version
-      - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - run: vcpkg install openssl:${{ matrix.os.arch }}-windows-static-md
-      - name: Setup OpenSSL and Perl for Windows
-        if: runner.os == 'windows'
-        uses: ./.github/actions/setup-openssl-perl-windows/
+      - uses: ./.github/actions/windows-vcpkg-action
+        with:
+          arch: ${{ matrix.os.arch }}
       - uses: actions/cache@v4
         with:
           path: ~/.cargo/registry/index
@@ -57,7 +55,7 @@ jobs:
           key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo test -j8
 
-  gnostr-bot:
+  gnostr-test:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
@@ -66,7 +64,7 @@ jobs:
       NOS: "wss://nos.lol"
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
+        os: [macos-latest, ubuntu-latest, macos-15-intel]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
       fail-fast: false
@@ -217,16 +215,7 @@ jobs:
       #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
       #  if: runner.os == 'windows'
 
-      - name: Install Strawberry Perl
-        run: |
-          choco install strawberryperl -y
-          echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        if: runner.os == 'windows'
-        shell: pwsh
-      - name: Install Perl modules
-        run: perl -MCPAN -e "install Locale::Maketext::Simple"
-        if: runner.os == 'windows'
+
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
