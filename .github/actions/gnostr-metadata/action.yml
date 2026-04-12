@@ -36,13 +36,14 @@ runs:
     - name: Post Nostr notification
       shell: bash
       run: |
+        gnostr set-metadata -h
         EVENT=$(gnostr -d ${{ env.POW }} \
          -r ${{ env.DAMUS }} \
          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
          set-metadata \
          -n gnostr-bot \
          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
-         -t "repo|$GITHUB_REPOSITORY" \
+         -e "repo|$GITHUB_REPOSITORY" \
           ,"workflow|$GITHUB_WORKFLOW" \
           ,"workflow_sha|$GITHUB_WORKFLOW_SHA" \
           ,"workflow_ref|$GITHUB_WORKFLOW_REF" \
