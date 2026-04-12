@@ -640,6 +640,7 @@ xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
 scopeguard = "1.2.0"
+gnostr-git-helpers = { version = "0.1.0", path = "git-helpers" }
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
