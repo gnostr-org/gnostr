@@ -1,6 +1,8 @@
-use gnostr::crawler::relay_manager::{ActiveRelayList, RelayManager};
 use gnostr::crawler::processor::Processor;
-use gnostr::crawler::processor::{BOOTSTRAP_RELAY0, BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3};
+use gnostr::crawler::processor::{
+    BOOTSTRAP_RELAY0, BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2, BOOTSTRAP_RELAY3,
+};
+use gnostr::crawler::relay_manager::{ActiveRelayList, RelayManager};
 use nostr_0_34_1::Keys;
 use std::str::FromStr;
 use tokio::sync::mpsc;
@@ -11,7 +13,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    let app_keys = Keys::from_str("nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36").unwrap();
+    let app_keys =
+        Keys::from_str("nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36").unwrap();
     let processor = Processor::new();
     let active_relay_list = ActiveRelayList::new();
     let (update_sender, mut update_receiver) = mpsc::channel(100);

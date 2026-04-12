@@ -5,7 +5,7 @@ use std::{
 };
 
 use clap::Parser;
-use futures::{StreamExt, stream};
+use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error};

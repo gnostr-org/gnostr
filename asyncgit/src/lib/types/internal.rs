@@ -3,7 +3,9 @@ use base64::Engine;
 use http::Uri;
 use tokio_tungstenite::{tungstenite, tungstenite::Message};
 
-use super::{ClientMessage, Event, EventV2, EventV3, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
+use super::{
+    ClientMessage, Event, EventV2, EventV3, Filter, RelayMessage, RelayMessageV5, SubscriptionId,
+};
 use crate::{blockheight::blockheight_sync, weeble::weeble_sync};
 
 pub fn filters_to_wire(filters: Vec<Filter>) -> String {

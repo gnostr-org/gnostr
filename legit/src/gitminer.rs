@@ -1,5 +1,5 @@
-use std::io::Write;
 use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc::channel;
@@ -10,18 +10,18 @@ use time_0_3::OffsetDateTime;
 //TODO use gnostr_asyncgit::types for event creation and injection during the mining loop
 #[derive(Clone, Debug)]
 pub struct Options {
-    pub threads:   u32,
-    pub target:    String,
-    pub message:   Vec<String>,
-    pub repo:      String,
+    pub threads: u32,
+    pub target: String,
+    pub message: Vec<String>,
+    pub repo: String,
     pub timestamp: OffsetDateTime,
-    pub kind:      Option<u16>,
+    pub kind: Option<u16>,
 }
 
 pub struct Gitminer {
-    opts:   Options,
-    repo:   git2::Repository,
-    author: String
+    opts: Options,
+    repo: git2::Repository,
+    author: String,
 }
 
 impl std::fmt::Debug for Gitminer {
@@ -46,12 +46,10 @@ impl Clone for Gitminer {
     }
 }
 
-
 impl Gitminer {
     pub fn new(opts: Options) -> Result<Gitminer, &'static str> {
-
         let repo = match git2::Repository::open(&opts.repo) {
-            Ok(r)  => r,
+            Ok(r) => r,
             Err(e) => {
                 error!("Failed to open repository: {}", e);
                 return Err("Failed to open repository");
@@ -62,9 +60,9 @@ impl Gitminer {
         debug!("Gitminer initialized with author: {}", author);
 
         Ok(Gitminer {
-            opts:   opts,
-            repo:   repo,
-            author: author
+            opts: opts,
+            repo: repo,
+            author: author,
         })
     }
 
@@ -72,13 +70,12 @@ impl Gitminer {
         debug!("Starting mining process with options: {:?}", self.opts);
         let (tree, parent) = match Gitminer::prepare_tree(&mut self.repo) {
             Ok((t, p)) => (t, p),
-            Err(e)   => {
+            Err(e) => {
                 error!("Failed to prepare tree: {}", e);
                 return Err(e);
             }
         };
         debug!("Tree: {}, Parent: {}", tree, parent);
-
 
         let (tx, rx) = channel();
 
@@ -86,14 +83,18 @@ impl Gitminer {
             let target = self.opts.target.clone();
             let author = self.author.clone();
             let msg = if self.opts.message.len() > 1 {
-                format!("{}
+                format!(
+                    "{}
 
-{}", self.opts.message[0], self.opts.message[1..].join("\n"))
+{}",
+                    self.opts.message[0],
+                    self.opts.message[1..].join("\n")
+                )
             } else {
                 self.opts.message[0].clone()
             };
-            let wtx    = tx.clone();
-            let ts     = self.opts.timestamp.clone();
+            let wtx = tx.clone();
+            let ts = self.opts.timestamp.clone();
             let (wtree, wparent) = (tree.clone(), parent.clone());
 
             debug!("Spawning worker {}", i);
@@ -106,10 +107,10 @@ impl Gitminer {
         info!("Received hash {} from a worker.", hash);
 
         match self.write_commit(&hash, &blob) {
-            Ok(_)  => {
+            Ok(_) => {
                 print!("Mined commit hash: {}", hash);
                 Ok(hash)
-            },
+            }
             Err(e) => {
                 error!("Failed to write commit: {}", e);
                 Err(e)
@@ -122,7 +123,7 @@ impl Gitminer {
         debug!("Writing commit for hash: {}", hash);
         /* repo.blob() generates a blob, not a commit.
          * don't know if there's a way to do this with libgit2. */
-        let tmpfile  = format!("/tmp/{}.tmp", hash);
+        let tmpfile = format!("/tmp/{}.tmp", hash);
         debug!("Creating temporary file: {}", tmpfile);
         let mut file = match File::create(&Path::new(&tmpfile)) {
             Ok(f) => f,
@@ -148,7 +149,10 @@ impl Gitminer {
 
         // Write the blob to .gnostr/reflog/<commit_hash>
         let gnostr_reflog_path = Path::new(&self.opts.repo).join(".gnostr/reflog").join(hash);
-        debug!("Creating .gnostr reflog file: {}", gnostr_reflog_path.display());
+        debug!(
+            "Creating .gnostr reflog file: {}",
+            gnostr_reflog_path.display()
+        );
         let mut gnostr_reflog_file = match File::create(&gnostr_reflog_path) {
             Ok(f) => f,
             Err(_) => return Err("Failed to create .gnostr reflog file"),
@@ -156,9 +160,15 @@ impl Gitminer {
         if let Err(_) = gnostr_reflog_file.write_all(blob.as_bytes()) {
             return Err("Failed to write to .gnostr reflog file");
         }
-        debug!(".gnostr reflog file {} written.", gnostr_reflog_path.display());
+        debug!(
+            ".gnostr reflog file {} written.",
+            gnostr_reflog_path.display()
+        );
 
-        let command_str = format!("cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}", self.opts.repo, tmpfile, hash);
+        let command_str = format!(
+            "cd {} && git hash-object -t commit -w --stdin < {} && git reset --hard {}",
+            self.opts.repo, tmpfile, hash
+        );
         debug!("Executing git command: {}", command_str);
         let output = Command::new("sh")
             .arg("-c")
@@ -175,19 +185,18 @@ impl Gitminer {
         Ok(())
     }
 
-
     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
         debug!("Loading author from git config.");
         let cfg = match repo.config() {
-            Ok(c)  => c,
+            Ok(c) => c,
             Err(e) => {
                 error!("Failed to load git config: {}", e);
                 return Err("Failed to load git config");
             }
         };
 
-        let name  = match cfg.get_string("user.name") {
-            Ok(s)  => s,
+        let name = match cfg.get_string("user.name") {
+            Ok(s) => s,
             Err(e) => {
                 error!("Failed to find git user name: {}", e);
                 return Err("Failed to find git user name");
@@ -196,7 +205,7 @@ impl Gitminer {
         debug!("Found git user name: {}", name);
 
         let email = match cfg.get_string("user.email") {
-            Ok(s)  => s,
+            Ok(s) => s,
             Err(e) => {
                 error!("Failed to find git email address: {}", e);
                 return Err("Failed to find git email address");
@@ -208,14 +217,19 @@ impl Gitminer {
     }
 
     fn ensure_gnostr_dirs_exist(repo_root_path: &Path) -> Result<(), &'static str> {
-        debug!("Ensuring .gnostr directories exist in: {}", repo_root_path.display());
+        debug!(
+            "Ensuring .gnostr directories exist in: {}",
+            repo_root_path.display()
+        );
         let gnostr_path = repo_root_path.join(".gnostr");
         let blobs_path = gnostr_path.join("blobs");
         let reflog_path = gnostr_path.join("reflog");
 
         std::fs::create_dir_all(&gnostr_path).map_err(|_| "Failed to create .gnostr directory")?;
-        std::fs::create_dir_all(&blobs_path).map_err(|_| "Failed to create .gnostr/blobs directory")?;
-        std::fs::create_dir_all(&reflog_path).map_err(|_| "Failed to create .gnostr/reflog directory")?;
+        std::fs::create_dir_all(&blobs_path)
+            .map_err(|_| "Failed to create .gnostr/blobs directory")?;
+        std::fs::create_dir_all(&reflog_path)
+            .map_err(|_| "Failed to create .gnostr/reflog directory")?;
 
         Ok(())
     }
@@ -247,7 +261,7 @@ impl Gitminer {
     fn ensure_no_unstaged_changes(repo: &mut git2::Repository) -> Result<(), &'static str> {
         debug!("Ensuring no unstaged changes.");
         let mut opts = git2::StatusOptions::new();
-        let mut m    = git2::Status::empty();
+        let mut m = git2::Status::empty();
         let statuses = match repo.statuses(Some(&mut opts)) {
             Ok(s) => s,
             Err(_) => return Err("Failed to get statuses"),
@@ -272,5 +286,4 @@ impl Gitminer {
         debug!("No unstaged changes found.");
         Ok(())
     }
-
 }

@@ -2,8 +2,9 @@ use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use crate::{
-    Command, Probe, get_weeble,
+    get_weeble,
     types::{Filter, Id, IdHex, RelayMessage, SubscriptionId},
+    Command, Probe,
 };
 
 #[derive(clap::Args, Debug, Clone)]

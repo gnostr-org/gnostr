@@ -7,14 +7,15 @@ pub mod types;
 
 use crate::crawler::processor::Processor;
 use crate::crawler::processor::APP_SECRET_KEY;
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use crate::crawler::processor::BOOTSTRAP_RELAY0;
 use crate::crawler::processor::BOOTSTRAP_RELAY1;
 use crate::crawler::processor::BOOTSTRAP_RELAY2;
-use crate::crawler::relay_manager::RelayManager;
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use crate::crawler::relay_manager::ActiveRelayList;
+use crate::crawler::relay_manager::RelayManager;
 use crate::crawler::types::RelayInfo as Relay;
 
+use ::time::macros::format_description;
 use clap::{Parser, Subcommand};
 use futures::{stream, StreamExt};
 use git2::Error;
@@ -26,15 +27,13 @@ use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::str::{self, FromStr};
-use ::time::macros::format_description;
-use tracing::{debug, error};
 use tokio::sync::mpsc;
+use tracing::{debug, error};
 
-use nostr_sdk_0_34_0::prelude::*;
-use nostr_0_34_1::SecretKey;
-use nostr_sdk_0_34_0::{Client, Options};
 use nostr_0_34_1::Keys;
-
+use nostr_0_34_1::SecretKey;
+use nostr_sdk_0_34_0::prelude::*;
+use nostr_sdk_0_34_0::{Client, Options};
 
 const CONCURRENT_REQUESTS: usize = 16;
 
@@ -128,7 +127,10 @@ pub struct CliArgs {
     #[arg(value_name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[arg(value_name = "nsec", default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
+    #[arg(
+        value_name = "nsec",
+        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    )]
     arg_nsec: Option<String>,
     #[arg(value_name = "commit")]
     arg_commit: Vec<String>,
@@ -144,7 +146,8 @@ pub async fn run(args: &CliArgs) -> Result<(), Box<dyn std::error::Error>> {
     //println!("{:?}", args.arg_nsec.clone());
     let _run_async = async {
         let opts = Options::new(); //.wait_for_send(true);
-        let secret_key = SecretKey::from_bech32(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+        let secret_key =
+            SecretKey::from_bech32(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
         let app_keys = Keys::new(secret_key);
         let relay_client = Client::with_opts(&app_keys, opts);
         let _ = relay_client
@@ -297,12 +300,11 @@ pub async fn run(args: &CliArgs) -> Result<(), Box<dyn std::error::Error>> {
     let processor = Processor::new();
     let active_relay_list = ActiveRelayList::new();
     let (update_sender, _update_receiver) = mpsc::channel(100);
-    let mut relay_manager = RelayManager::new(app_keys, processor, active_relay_list, update_sender);
-    relay_manager.run(vec![
-        BOOTSTRAP_RELAY0,
-        BOOTSTRAP_RELAY1,
-        BOOTSTRAP_RELAY2,
-    ]).await?;
+    let mut relay_manager =
+        RelayManager::new(app_keys, processor, active_relay_list, update_sender);
+    relay_manager
+        .run(vec![BOOTSTRAP_RELAY0, BOOTSTRAP_RELAY1, BOOTSTRAP_RELAY2])
+        .await?;
     relay_manager.processor.dump();
 
     Ok(())
@@ -348,7 +350,7 @@ pub fn print_commit(commit: &Commit) {
     println!();
 }
 
-use ::time::{OffsetDateTime, format_description};
+use ::time::{format_description, OffsetDateTime};
 
 pub fn print_time(time: &Time, prefix: &str) {
     let (offset, sign) = match time.offset_minutes() {
@@ -360,7 +362,9 @@ pub fn print_time(time: &Time, prefix: &str) {
     let offset_seconds = (time.offset_minutes() as i64) * 60;
     let datetime = OffsetDateTime::from_unix_timestamp(time.seconds() + offset_seconds).unwrap();
 
-    let format = format_description!("[weekday repr:short] [month repr:short] [day] [hour]:[minute]:[second] [year]");
+    let format = format_description!(
+        "[weekday repr:short] [month repr:short] [day] [hour]:[minute]:[second] [year]"
+    );
 
     println!(
         "{}{} {}{:02}{:02}",
@@ -491,10 +495,7 @@ pub async fn run_sniper(
                                 + ".json";
                             let file_path = path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!(
-                                "\n\n{}\n\n",
-                                file_path_str
-                            );
+                            debug!("\n\n{}\n\n", file_path_str);
 
                             match File::create(&file_path) {
                                 Ok(mut file) => {
@@ -532,7 +533,8 @@ pub async fn run_watch(shitlist_path: Option<String>) -> Result<(), Box<dyn std:
     let processor = Processor::new();
     let active_relay_list = ActiveRelayList::new();
     let (update_sender, _update_receiver) = mpsc::channel(100);
-    let mut relay_manager = RelayManager::new(app_keys, processor, active_relay_list, update_sender);
+    let mut relay_manager =
+        RelayManager::new(app_keys, processor, active_relay_list, update_sender);
 
     let bootstrap_relays = vec![
         BOOTSTRAP_RELAY0,
