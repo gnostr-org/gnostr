@@ -14,9 +14,6 @@ pub enum HooksError {
 
 	#[error("shellexpand error:{0}")]
 	ShellExpand(#[from] shellexpand::LookupError<std::env::VarError>),
-
-	#[error("hook process terminated by signal without exit code")]
-	NoExitCode,
 }
 
 /// crate specific `Result` type
