@@ -82,9 +82,9 @@ runs:
         restore-keys: |
           ${{ runner.os }}-cargo-
 
-    - name: Run Cargo Test
+    - name: Run cargo install --path .
       shell: pwsh
       run: |
         $env:VCPKGRS_DYNAMIC = "1"
-        cargo test -vv --all-features
+        cargo install --path . -vv --all-features
       if: ${{ inputs.run-tests == 'true' }}
