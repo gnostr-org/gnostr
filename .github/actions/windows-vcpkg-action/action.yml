@@ -34,8 +34,7 @@ runs:
     - name: Install OpenSSL with vcpkg (Verbose)
       shell: pwsh
       run: |
-        # Using --verbose and --debug instead of --printbuildtree
-        vcpkg install openssl:${{ inputs.arch }}-windows-static-md --verbose --debug
+        vcpkg install openssl:${{ inputs.arch }}-windows-static-md
 
     - name: Install Strawberry Perl
       shell: pwsh
