@@ -153,9 +153,7 @@ jobs:
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
         else
           # Pass clang variables through to the cross container
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr \
-            -e LIBCLANG_PATH="${LIBCLANG_PATH}" \
-            -e BINDGEN_EXTRA_CLANG_ARGS="${BINDGEN_EXTRA_CLANG_ARGS}"
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
         fi
 
     - name: Save Cache
