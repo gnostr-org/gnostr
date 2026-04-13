@@ -154,6 +154,8 @@ jobs:
       run: |
         mkdir -p "$BUILD_NAME"
         cp README.md LICENSE "$BUILD_NAME/"
+        ls "target/
+        ls "target/${{ matrix.target }}
         cp "target/${{ matrix.target }}/release/gnostr" "$BUILD_NAME/"
 
     - name: Bundle release (Windows)
