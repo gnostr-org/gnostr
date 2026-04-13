@@ -82,14 +82,16 @@ jobs:
     - name: Fetch tags
       run: git fetch --tags --force
 
-    - name: Cache
-      uses: actions/cache@v4
+    - name: Restore Cache
+      uses: actions/cache/restore@v4
       with:
         path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-
 
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
@@ -193,3 +195,14 @@ jobs:
       with:
         name: ${{ env.BUILD_NAME }}
         path: ${{ env.BUILD_NAME }}
+
+    - name: Save Cache
+      if: always() # This ensures cache is saved on failure, success, or cancel
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        # We use a unique key (adding run_id) so we don't collide with existing immutable keys
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
