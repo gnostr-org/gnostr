@@ -3,10 +3,8 @@ use futures::join;
 use test_utils::{git::GitTestRepo, relay::Relay, *};
 
 mod when_main_is_checked_out {
-    
 
     mod cli_prompts {
-        
 
         #[tokio::test]
         #[serial]
@@ -60,10 +58,8 @@ mod when_main_is_checked_out {
 }
 
 mod when_branch_doesnt_exist {
-    
 
     mod cli_prompts {
-        
 
         #[tokio::test]
         #[serial]
@@ -125,10 +121,9 @@ mod when_branch_is_checked_out {
     use super::*;
 
     mod when_branch_is_up_to_date {
-        
 
         mod cli_prompts {
-            
+
             #[tokio::test]
             #[serial]
             #[cfg(feature = "expensive_tests")]
@@ -234,7 +229,6 @@ mod when_branch_is_checked_out {
         }
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]
@@ -258,15 +252,15 @@ mod when_branch_is_checked_out {
                 r55.events.push(generate_test_key_1_relay_list_event());
 
                 let cli_tester_handle =
-                                    std::thread::spawn(move || -> Result<(GitTestRepo, GitTestRepo)> {
-                                        let (originating_repo, mut test_repo) =
-                                            create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
-                    
-                                        let branch_name =
-                                            remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
-                                                &mut test_repo,
-                                            )?;
-                                        test_repo.checkout(&branch_name)?;
+                    std::thread::spawn(move || -> Result<(GitTestRepo, GitTestRepo)> {
+                        let (originating_repo, mut test_repo) =
+                            create_proposals_and_repo_with_proposal_pulled_and_checkedout(1)?;
+
+                        let branch_name =
+                            remove_latest_commit_so_proposal_branch_is_behind_and_checkout_main(
+                                &mut test_repo,
+                            )?;
+                        test_repo.checkout(&branch_name)?;
                         let mut p = CliTester::new_from_dir(&test_repo.dir, ["pull"]);
                         p.expect("fetching updates...\r\n")?;
                         p.expect_eventually("\r\n")?; // some updates listed here
@@ -309,10 +303,8 @@ mod when_branch_is_checked_out {
     }
 
     mod when_latest_proposal_amended_locally {
-        
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]
@@ -433,7 +425,6 @@ mod when_branch_is_checked_out {
         }
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]
@@ -556,7 +547,6 @@ mod when_branch_is_checked_out {
         }
 
         mod cli_prompts {
-            
 
             #[tokio::test]
             #[serial]

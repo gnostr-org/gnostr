@@ -1,4 +1,3 @@
-
 #[tokio::test]
 #[serial]
 #[cfg(feature = "expensive_tests")]
@@ -7,8 +6,6 @@ async fn new_branch_when_no_state_event_exists() -> Result<()> {
     Ok(())
 }
 mod two_branches_in_batch_one_added_one_updated {
-
-    
 
     #[tokio::test]
     #[serial]
@@ -460,8 +457,6 @@ mod two_branches_in_batch_one_added_one_updated {
 }
 mod delete_one_branch {
 
-    
-
     #[tokio::test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
@@ -676,7 +671,6 @@ mod delete_one_branch {
     }
 
     mod when_existing_state_event {
-        
 
         #[tokio::test]
         #[serial]
@@ -759,7 +753,6 @@ mod delete_one_branch {
         }
 
         mod already_deleted_on_git_server {
-            
 
             #[tokio::test]
             #[serial]

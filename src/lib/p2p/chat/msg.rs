@@ -313,34 +313,74 @@ impl Display for Msg {
             MsgKind::Raw => write!(f, "{}", self.content[0]),
             MsgKind::Command => write!(f, "[Command] {}:{}", self.from, self.content[0]),
             MsgKind::GitCommitId => {
-                write!(f, "{{\"commit\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"commit\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitTree => {
-                write!(f, "{{\"tree\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"tree\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitParent => {
-                write!(f, "{{\"parent\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"parent\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitHeader => {
-                write!(f, "{{\"header\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"header\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitAuthor => {
-                write!(f, "{{\"Author\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"Author\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitEmail => {
-                write!(f, "{{\"email\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"email\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitName => {
-                write!(f, "{{\"name\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"name\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitBody => {
-                write!(f, "{{\"body\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"body\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitMessagePart => {
-                write!(f, "{{\"msg\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"msg\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
             MsgKind::GitCommitTime => {
-                write!(f, "{{\"time\": \"{}\"}} {}", self.content[0], self.content[1])
+                write!(
+                    f,
+                    "{{\"time\": \"{}\"}} {}",
+                    self.content[0], self.content[1]
+                )
             }
         }
     }

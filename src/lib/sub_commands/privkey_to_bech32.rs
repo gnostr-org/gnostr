@@ -1,6 +1,6 @@
+use crate::types::PrivateKey;
 use anyhow::Result;
 use clap::Parser;
-use crate::types::PrivateKey;
 use zeroize::Zeroize;
 
 #[derive(Parser, Debug, Clone)]

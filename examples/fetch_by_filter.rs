@@ -1,5 +1,5 @@
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr::types::Filter;
+use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
 use std::env;
 
 //fetch_by_filter "{\"REQ\":[\"kind\",\"1\"]}" wss://relay.damus.io | gnostr-xq

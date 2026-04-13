@@ -371,7 +371,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
     }
 
     mod cover_letter_tags {
-        
 
         #[tokio::test]
         #[serial]
@@ -761,7 +760,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         }
     }
     mod cli_ouput {
-        
 
         #[tokio::test]
         #[serial]
@@ -839,10 +837,8 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
     }
 
     mod first_event_rejected_by_1_relay {
-        
 
         mod only_first_rejected_event_sent_to_relay {
-            
 
             #[tokio::test]
             #[serial]
@@ -917,7 +913,6 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
         }
 
         mod cli_show_rejection_with_comment {
-            
 
             #[tokio::test]
             #[serial]
@@ -1009,10 +1004,8 @@ mod when_cover_letter_details_specified_with_range_of_head_2_sends_cover_letter_
 }
 
 mod when_no_cover_letter_flag_set_with_range_of_head_2_sends_2_patches_without_cover_letter {
-    
 
     mod cli_ouput {
-        
 
         #[tokio::test]
         #[serial]
@@ -1299,7 +1292,6 @@ mod when_range_ommited_prompts_for_selection_defaulting_ahead_of_main {
         Ok((r51, r52, r53, r55, r56))
     }
     mod cli_ouput {
-        
 
         #[tokio::test]
         #[serial]
@@ -1501,7 +1493,6 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
         Ok((r51, r52, r53, r55, r56))
     }
     mod cli_ouput {
-        
 
         #[tokio::test]
         #[serial]
@@ -1579,7 +1570,6 @@ mod root_proposal_specified_using_in_reply_to_with_range_of_head_2_and_cover_let
     }
 
     mod cover_letter_tags {
-        
 
         #[tokio::test]
         #[serial]

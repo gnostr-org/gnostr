@@ -123,7 +123,7 @@
 //    in a decentrailized version control proposal known as 0x20bf.
 
 //! gnostr-weeble
-//! 
+//!
 //! async reqwest to <https://mempool.space/api/blocks/tip/height>
 use futures::executor::block_on;
 ///
@@ -137,7 +137,6 @@ use futures::executor::block_on;
 /// let blockheight = gnostr::get_blockheight_sync();
 ///
 /// print!("{}",blockheight.unwrap());
-
 use log::debug;
 
 async fn print_blockheight() {

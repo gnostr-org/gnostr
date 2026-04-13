@@ -20,8 +20,8 @@ impl State {
         Repo::clone(repo_path, &clone_dir).await?;
 
         let config: RepoConfig = {
-            let text =
-                read_to_string(clone_dir.join(&config_name)).context("Couldn't read gnostr-repo.toml")?;
+            let text = read_to_string(clone_dir.join(&config_name))
+                .context("Couldn't read gnostr-repo.toml")?;
             toml::from_str(&text)?
         };
 

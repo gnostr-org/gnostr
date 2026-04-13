@@ -8,7 +8,6 @@ use std::env;
 use std::fs;
 use std::io;
 
-
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
@@ -313,9 +312,8 @@ fn main() -> io::Result<()> {
             match output {
                 Ok(output) => {
                     if output.status.success() {
-                        gnostr_gnit_pubkey = String::from_utf8_lossy(&output.stdout)
-                            .trim()
-                            .to_string();
+                        gnostr_gnit_pubkey =
+                            String::from_utf8_lossy(&output.stdout).trim().to_string();
                         println!("gnostr-gnit-key.pub:\n{}", gnostr_gnit_pubkey);
                     } else {
                         eprintln!("Error: Failed to read public key.");

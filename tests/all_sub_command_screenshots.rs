@@ -8,17 +8,17 @@
 ///
 #[cfg(test)]
 mod tests {
-    use std::process::Command;
     use assert_cmd::cargo::cargo_bin;
-    use std::error::Error;
+    use git2::{Repository, Signature};
     use gnostr::utils::screenshot;
+    use std::error::Error;
     use std::fs;
+    use std::io::Write;
+    use std::path::Path;
+    use std::process::Command;
     use std::thread;
     use std::time::Duration;
     use tempfile::TempDir;
-    use git2::{Repository, Signature};
-    use std::io::Write;
-    use std::path::Path;
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
@@ -30,7 +30,9 @@ mod tests {
         let mut config = repo.config().unwrap();
         config.set_str("user.name", "Test User").unwrap();
         config.set_str("user.email", "test@example.com").unwrap();
-        config.set_str("gnostr.relays", "wss://relay.example.com").unwrap();
+        config
+            .set_str("gnostr.relays", "wss://relay.example.com")
+            .unwrap();
 
         // Create an initial commit
         {
@@ -59,7 +61,12 @@ mod tests {
             .unwrap();
 
             // Ensure the working directory is clean after the initial commit
-            repo.reset(repo.head().unwrap().peel_to_commit().unwrap().as_object(), git2::ResetType::Hard, None).unwrap();
+            repo.reset(
+                repo.head().unwrap().peel_to_commit().unwrap().as_object(),
+                git2::ResetType::Hard,
+                None,
+            )
+            .unwrap();
         }
 
         (tmp_dir, repo)
@@ -83,16 +90,21 @@ mod tests {
                 thread::sleep(Duration::from_secs(2));
 
                 // Capture the screenshot
-                let screenshot_path_result = screenshot::make_screenshot(concat!("gnostr_", $subcommand, "_run"));
+                let screenshot_path_result =
+                    screenshot::make_screenshot(concat!("gnostr_", $subcommand, "_run"));
 
                 // Terminate the child process
                 child.kill().expect("Failed to kill gnostr process");
                 child.wait().expect("Failed to wait for gnostr process");
 
                 // Assert that the screenshot was created
-                assert!(screenshot_path_result.is_ok(), "Failed to capture screenshot.");
+                assert!(
+                    screenshot_path_result.is_ok(),
+                    "Failed to capture screenshot."
+                );
                 let screenshot_path = screenshot_path_result.unwrap();
-                let metadata = fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
+                let metadata =
+                    fs::metadata(&screenshot_path).expect("Failed to get screenshot metadata");
                 assert!(metadata.is_file(), "Screenshot is not a file");
                 assert!(metadata.len() > 0, "Screenshot file is empty");
 
@@ -106,25 +118,40 @@ mod tests {
     screenshot_test!(test_broadcast_events_run_screenshot, "broadcast-events");
     screenshot_test!(test_convert_key_run_screenshot, "convert-key");
     screenshot_test!(test_create_badge_run_screenshot, "create-badge");
-    screenshot_test!(test_create_public_channel_run_screenshot, "create-public-channel");
+    screenshot_test!(
+        test_create_public_channel_run_screenshot,
+        "create-public-channel"
+    );
     screenshot_test!(test_custom_event_run_screenshot, "custom-event");
     screenshot_test!(test_delete_event_run_screenshot, "delete-event");
     screenshot_test!(test_delete_profile_run_screenshot, "delete-profile");
     screenshot_test!(test_fetch_run_screenshot, "fetch");
     screenshot_test!(test_generate_keypair_run_screenshot, "generate-keypair");
     screenshot_test!(test_git_run_screenshot, "git");
-    screenshot_test!(test_hide_public_channel_message_run_screenshot, "hide-public-channel-message");
+    screenshot_test!(
+        test_hide_public_channel_message_run_screenshot,
+        "hide-public-channel-message"
+    );
     screenshot_test!(test_list_events_run_screenshot, "list-events");
     screenshot_test!(test_login_run_screenshot, "login");
     screenshot_test!(test_mute_publickey_run_screenshot, "mute-publickey");
     screenshot_test!(test_note_run_screenshot, "note");
     screenshot_test!(test_profile_badges_run_screenshot, "profile-badges");
-    screenshot_test!(test_publish_contactlist_csv_run_screenshot, "publish-contactlist-csv");
+    screenshot_test!(
+        test_publish_contactlist_csv_run_screenshot,
+        "publish-contactlist-csv"
+    );
     screenshot_test!(test_query_run_screenshot, "query");
     screenshot_test!(test_react_run_screenshot, "react");
     screenshot_test!(test_relay_run_screenshot, "relay");
-    screenshot_test!(test_send_channel_message_run_screenshot, "send-channel-message");
-    screenshot_test!(test_set_channel_metadata_run_screenshot, "set-channel-metadata");
+    screenshot_test!(
+        test_send_channel_message_run_screenshot,
+        "send-channel-message"
+    );
+    screenshot_test!(
+        test_set_channel_metadata_run_screenshot,
+        "set-channel-metadata"
+    );
     screenshot_test!(test_set_metadata_run_screenshot, "set-metadata");
     screenshot_test!(test_sniper_run_screenshot, "sniper");
     screenshot_test!(test_user_status_run_screenshot, "user-status");

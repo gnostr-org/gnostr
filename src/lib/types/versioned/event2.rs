@@ -1,7 +1,7 @@
 use crate::types::{
-    Error, EventDelegation, EventKind, EventReference, Id, IntoVec, KeySigner, MilliSatoshi,
-    NAddr, NostrBech32, NostrUrl, PrivateKey, PublicKey, PublicKeyHex, RelayUrl, Signature,
-    Signer, TagV2, Unixtime, ZapDataV1,
+    Error, EventDelegation, EventKind, EventReference, Id, IntoVec, KeySigner, MilliSatoshi, NAddr,
+    NostrBech32, NostrUrl, PrivateKey, PublicKey, PublicKeyHex, RelayUrl, Signature, Signer, TagV2,
+    Unixtime, ZapDataV1,
 };
 use lightning_invoice::Bolt11Invoice;
 #[cfg(feature = "speedy")]

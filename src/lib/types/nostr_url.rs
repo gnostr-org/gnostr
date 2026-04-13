@@ -1,5 +1,5 @@
-use super::{EncryptedPrivateKey, Id, NAddr, NEvent, Profile, PublicKey, RelayUrl, UncheckedUrl};
 use super::Error;
+use super::{EncryptedPrivateKey, Id, NAddr, NEvent, Profile, PublicKey, RelayUrl, UncheckedUrl};
 use lazy_static::lazy_static;
 
 /// A bech32 sequence representing a nostr object (or set of objects)

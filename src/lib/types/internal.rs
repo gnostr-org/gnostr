@@ -1,7 +1,7 @@
+use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use crate::blockheight::blockheight_sync;
 use crate::weeble::weeble_sync;
 use base64::Engine;
-use super::{ClientMessage, Event, Filter, RelayMessage, RelayMessageV5, SubscriptionId};
 use http::Uri;
 use tungstenite::protocol::Message;
 

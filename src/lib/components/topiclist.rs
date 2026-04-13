@@ -26,8 +26,8 @@ pub enum InputMode {
 
 use super::utils::logitems::{ItemBatch, LogEntry};
 use super::CommandText;
-use crate::utils::truncate_chars;
 use crate::p2p::chat::msg::Msg;
+use crate::utils::truncate_chars;
 use crate::{
     app::Environment,
     components::{
@@ -1003,7 +1003,8 @@ impl TopicList {
             if let Some(history) = self.chat_histories.get_mut(&msg.commit_id) {
                 history.push(msg.to_string());
             } else {
-                self.chat_histories.insert(msg.commit_id, vec![msg.to_string()]);
+                self.chat_histories
+                    .insert(msg.commit_id, vec![msg.to_string()]);
             }
         }
     }
@@ -1093,10 +1094,7 @@ impl DrawableComponent for TopicList {
                 Block::default()
                     .borders(Borders::BOTTOM | Borders::LEFT | Borders::RIGHT)
                     .title(Span::styled(
-                        format!(
-                            "1032:more_detail--->{:>}<---",
-                            title.as_str().to_owned(),
-                        ),
+                        format!("1032:more_detail--->{:>}<---", title.as_str().to_owned(),),
                         self.theme.title(true),
                     ))
                     .border_style(self.theme.block(false)),
@@ -1132,12 +1130,10 @@ impl DrawableComponent for TopicList {
 
         match self.input_mode {
             InputMode::Normal => {}
-            InputMode::Editing => {
-                f.set_cursor_position((
-                    left_chunks[3].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                    left_chunks[3].y + 1,
-                ))
-            }
+            InputMode::Editing => f.set_cursor_position((
+                left_chunks[3].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+                left_chunks[3].y + 1,
+            )),
         }
         Ok(())
     }
@@ -1147,7 +1143,8 @@ impl Component for TopicList {
     fn event(&mut self, ev: &crossterm::event::Event) -> Result<EventState> {
         if let crossterm::event::Event::Key(k) = ev {
             if k.code == crossterm::event::KeyCode::Char('c')
-                && k.modifiers.contains(crossterm::event::KeyModifiers::CONTROL)
+                && k.modifiers
+                    .contains(crossterm::event::KeyModifiers::CONTROL)
             {
                 return Ok(EventState::Consumed);
             }

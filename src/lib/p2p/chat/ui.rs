@@ -179,17 +179,20 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 fn ui(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3), // Header height
-            Constraint::Fill(5),   // Messages height
-            Constraint::Length(3), // Input height
-        ].as_ref())
+        .constraints(
+            [
+                Constraint::Length(3), // Header height
+                Constraint::Fill(5),   // Messages height
+                Constraint::Length(3), // Input height
+            ]
+            .as_ref(),
+        )
         .split(f.area());
 
     // Header Widget
     let header_text = vec![Line::from(app.topic.as_str())];
-    let header = Paragraph::new(header_text)
-        .block(Block::default().borders(Borders::ALL).title("Topic"));
+    let header =
+        Paragraph::new(header_text).block(Block::default().borders(Borders::ALL).title("Topic"));
     f.render_widget(header, chunks[0]);
 
     // Messages Widget
@@ -220,11 +223,9 @@ fn ui(f: &mut Frame, app: &App) {
 
     match app.input_mode {
         InputMode::Normal => {}
-        InputMode::Editing => {
-            f.set_cursor_position((
-                chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                chunks[2].y + 1,
-            ))
-        }
+        InputMode::Editing => f.set_cursor_position((
+            chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+            chunks[2].y + 1,
+        )),
     }
 }

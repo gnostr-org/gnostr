@@ -1,7 +1,9 @@
 use std::{io::Write, ops::Add};
 
 use crate::{
-    client::{get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache, Client},
+    client::{
+        get_all_proposal_patch_events_from_cache, get_proposals_and_revisions_from_cache, Client,
+    },
     git_events::{
         get_commit_id_from_patch, get_most_recent_patch_with_ancestors, status_kinds, tag_value,
     },
@@ -11,9 +13,7 @@ use nostr_sdk_0_34_0::Kind;
 
 use crate::{
     cli_interactor::{Interactor, InteractorPrompt, PromptChoiceParms, PromptConfirmParms},
-    client::{
-        fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect,
-    },
+    client::{fetching_with_report, get_events_from_cache, get_repo_ref_from_cache, Connect},
     git::{str_to_sha1, Repo, RepoActions},
     git_events::{
         commit_msg_from_patch_oneliner, event_is_revision_root, event_to_cover_letter,

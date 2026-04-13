@@ -320,8 +320,8 @@ mod test {
 
     #[test]
     fn test_event_matches() {
-    use crate::{Id, KeySigner, PreEvent, Signer, Tag};
-    use crate::types::{PrivateKey, UncheckedUrl};
+        use crate::types::{PrivateKey, UncheckedUrl};
+        use crate::{Id, KeySigner, PreEvent, Signer, Tag};
 
         let signer = {
             let privkey = PrivateKey::mock();
