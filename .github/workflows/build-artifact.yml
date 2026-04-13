@@ -135,28 +135,15 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          clang \
           libssl-dev \
           pkg-config \
           musl-tools \
           build-essential \
           llvm-dev \
           libclang-dev \
-          musl-tools \
           g++ \
           musl-dev
-          clang-5.0 \
-          libclang-5.0-dev || sudo apt-get install -y \
-          libclang-dev \
-          libssl-dev \
-          pkg-config \
-          musl-tools \
-          build-essential \
-          llvm-dev \
-          libclang-dev \
-          musl-tools \
-          g++ \
-          musl-dev
-          clang || echo "failed fall back "
 
     - name: Install macOS system dependencies
       if: runner.os == 'macOS'
@@ -185,9 +172,11 @@ jobs:
           SO_PATH=$(find /usr/lib -name "libclang.so*" | head -n 1)
           if [ -n "$SO_PATH" ]; then
             LIB_DIR=$(dirname "$SO_PATH")
+            CLANG_RESOURCE_DIR=$(clang -print-resource-dir)
+            GCC_INCLUDE_DIR=$(gcc -print-file-name=include)
             echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
             # This helps bindgen find stdarg.h and other built-ins
-            echo "BINDGEN_EXTRA_CLANG_ARGS=-I$(clang -print-resource-dir)/include" >> $GITHUB_ENV
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${CLANG_RESOURCE_DIR}/include -isystem ${GCC_INCLUDE_DIR}" >> $GITHUB_ENV
           fi
         fi
         echo $GITHUB_ENV && printenv
