@@ -158,6 +158,16 @@ jobs:
             -e BINDGEN_EXTRA_CLANG_ARGS="${BINDGEN_EXTRA_CLANG_ARGS}"
         fi
 
+    - name: Save Cache
+      if: always() # This ensures cache is saved on failure, success, or cancel
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        # We use a unique key (adding run_id) so we don't collide with existing immutable keys
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
 
     - name: Bundle release (Unix)
       if: matrix.build != 'windows-x64'
@@ -176,33 +186,25 @@ jobs:
       run: |
         mkdir -p "$BUILD_NAME"
         cp README.md LICENSE "$BUILD_NAME/"
-        cp "target/${{ matrix.target }}/release/gnostr.exe" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-tui.exe" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-blossom.exe" "$BUILD_NAME/"
 
     - name: Run smoke test (Unix)
       if: matrix.native && matrix.build != 'windows-x64'
       shell: bash
       run: |
-        "$BUILD_NAME/gnostr" --version
+        "$BUILD_NAME/gnostr-tui" --version
+        "$BUILD_NAME/gnostr-blossom" --version
 
     - name: Run smoke test (Windows)
       if: matrix.native && matrix.build == 'windows-x64'
       shell: bash
       run: |
-        "$BUILD_NAME/gnostr.exe" --version
+        "$BUILD_NAME/gnostr-tui.exe" --version
+        "$BUILD_NAME/gnostr-blossom.exe" --version
 
     - name: Upload asset
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.BUILD_NAME }}
         path: ${{ env.BUILD_NAME }}
-
-    - name: Save Cache
-      if: always() # This ensures cache is saved on failure, success, or cancel
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        # We use a unique key (adding run_id) so we don't collide with existing immutable keys
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
