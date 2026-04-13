@@ -209,7 +209,6 @@ jobs:
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         else
           rustup target add ${{ matrix.target }} || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl || \
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         fi
 
