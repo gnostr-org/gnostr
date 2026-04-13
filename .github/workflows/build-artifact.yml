@@ -129,14 +129,18 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Linux" ]]; then
-          # Find the actual path of libclang.so to avoid 3.8.x fallbacks
-          SO_PATH=$(find /usr/lib -name "libclang.so*" | head -n 1)
+          # Prefer the latest libclang available to avoid 3.8 panic
+          SO_PATH=$(find /usr/lib -name "libclang.so.1*" | sort -V | tail -n 1)
           if [ -n "$SO_PATH" ]; then
             LIB_DIR=$(dirname "$SO_PATH")
             echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
-            # This helps bindgen find stdarg.h and other built-ins
-            echo "BINDGEN_EXTRA_CLANG_ARGS=-I$(clang -print-resource-dir)/include" >> $GITHUB_ENV
+            echo "Using LIBCLANG_PATH: $LIB_DIR"
           fi
+          
+          # Force Clang resource directory for internal headers (stdarg.h)
+          CLANG_RES_DIR=$(clang -print-resource-dir)
+          echo "BINDGEN_EXTRA_CLANG_ARGS=-I${CLANG_RES_DIR}/include" >> $GITHUB_ENV
+          echo "Using BINDGEN_EXTRA_CLANG_ARGS: -I${CLANG_RES_DIR}/include"
         fi
         echo $GITHUB_ENV && printenv
 
@@ -146,8 +150,12 @@ jobs:
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
         else
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
+          # Pass clang variables through to the cross container
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr \
+            -e LIBCLANG_PATH="${LIBCLANG_PATH}" \
+            -e BINDGEN_EXTRA_CLANG_ARGS="${BINDGEN_EXTRA_CLANG_ARGS}"
         fi
+
 
     - name: Bundle release (Unix)
       if: matrix.build != 'windows-x64'
