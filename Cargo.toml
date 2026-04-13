@@ -30,7 +30,7 @@ asyncgit = { path = "./asyncgit", version = "0.28.1", default-features = false }
 backtrace = "0.3"
 base64 = "0.22"
 bitflags = "2.10"
-blossom-rs = "0.5.6"
+blossom-rs = { git = "https://github.com/gnostr-org/blossom-rs.git", rev = "553abe7d9e0c583a80378f1ad839fea28f4d1971", version = "0.5.6" }
 bugreport = "0.5.1"
 bwrap = { version = "1.3", features = ["use_std"] }
 bytesize = { version = "2.3", default-features = false }
@@ -79,6 +79,10 @@ unicode-segmentation = "1.12"
 unicode-truncate = "2.0"
 unicode-width = "0.2"
 which = "8.0"
+##blossom-cli = { git = "https://github.com/gnostr-org/blossom-rs.git", rev = "553abe7d9e0c583a80378f1ad839fea28f4d1971", version = "0.5.6" }
+blossom-nip34 = { git = "https://github.com/gnostr-org/blossom-rs.git", rev = "553abe7d9e0c583a80378f1ad839fea28f4d1971", version = "0.5.6" }
+##blossom-server = { git = "https://github.com/gnostr-org/blossom-rs.git", rev = "553abe7d9e0c583a80378f1ad839fea28f4d1971", version = "0.5.6" }
+##xtask = { git = "https://github.com/gnostr-org/blossom-rs.git", rev = "553abe7d9e0c583a80378f1ad839fea28f4d1971", version = "0.1.0" }
 
 [dev-dependencies]
 env_logger = "0.11"
