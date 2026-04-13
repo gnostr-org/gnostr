@@ -86,9 +86,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
+           ~/.cargo/registry
+           ~/.cargo/git
+           target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-
@@ -104,14 +104,21 @@ jobs:
           build-essential \
           llvm-dev \
           libclang-dev \
-          clang \
           clang-5.0 \
-          libclang-5.0-dev || sudo apt-get install -y libclang-dev
+          libclang-5.0-dev || sudo apt-get install -y \
+          libclang-dev \
+          libssl-dev \
+          pkg-config \
+          musl-tools \
+          build-essential \
+          llvm-dev \
+          libclang-dev \
+          clang || echo "failed fall back "
 
     - name: Install macOS system dependencies
       if: runner.os == 'macOS'
       run: |
-        brew update
+        brew update && brew search llvm && brew search libclang
 
     - name: Install Windows system dependencies
       if: runner.os == 'Windows'
@@ -131,8 +138,8 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Linux" ]]; then
-          # Prefer the latest libclang available to avoid 3.8 panic
-          SO_PATH=$(find /usr/lib -name "libclang.so.1*" | sort -V | tail -n 1)
+          # Find the actual path of libclang.so to avoid 3.8.x fallbacks
+          SO_PATH=$(find /usr/lib -name "libclang.so*" | head -n 1)
           if [ -n "$SO_PATH" ]; then
             LIB_DIR=$(dirname "$SO_PATH")
             echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
@@ -149,9 +156,6 @@ jobs:
     - name: Build release binary
       shell: bash
       run: |
-        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
-        fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
         else
@@ -176,8 +180,6 @@ jobs:
       run: |
         mkdir -p "$BUILD_NAME"
         cp README.md LICENSE "$BUILD_NAME/"
-        ls "target/
-        ls "target/${{ matrix.target }}
         cp "target/${{ matrix.target }}/release/gnostr-tui" "$BUILD_NAME/"
         cp "target/${{ matrix.target }}/release/gnostr-blossom" "$BUILD_NAME/"
 
