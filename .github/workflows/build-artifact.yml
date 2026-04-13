@@ -58,6 +58,45 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             f.write(f"matrix={json.dumps(matrix)}\n")
 
+  windows-vcpkg:
+    strategy:
+      matrix:
+        os:
+          - runner: windows-latest
+            arch: x64
+          #- runner: windows-11-arm
+          #  arch: arm64
+      fail-fast: true
+    name: windows-vcpkg-${{ matrix.os.arch }}
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sfackler/actions/rustup@master
+      - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
+        id: rust-version
+      - uses: ./.github/actions/windows-vcpkg-action
+        with:
+          arch: ${{ matrix.os.arch }}
+          run-tests: 'false'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/index
+          key: index-${{ runner.os }}-${{ github.run_number }}
+          restore-keys: |
+            index-${{ runner.os }}-
+      - run: cargo generate-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/cache
+          key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo fetch
+      - uses: actions/cache@v4
+        with:
+          path: target
+          key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo test -j8 --all-features
+      - run: cargo install --path ./git-helpers -j8 --all-features --force
+
   build-artifacts:
     needs: setup
     runs-on: ${{ matrix.os }}
