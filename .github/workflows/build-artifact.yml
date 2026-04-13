@@ -82,16 +82,14 @@ jobs:
     - name: Fetch tags
       run: git fetch --tags --force
 
-    - name: Restore Cache
-      uses: actions/cache/restore@v4
+    - name: Cache
+      uses: actions/cache@v4
       with:
         path: |
            ~/.cargo/registry
            ~/.cargo/git
            target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-
 
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
@@ -143,36 +141,25 @@ jobs:
           if [ -n "$SO_PATH" ]; then
             LIB_DIR=$(dirname "$SO_PATH")
             echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
-            echo "Using LIBCLANG_PATH: $LIB_DIR"
+            # This helps bindgen find stdarg.h and other built-ins
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I$(clang -print-resource-dir)/include" >> $GITHUB_ENV
           fi
-          
-          # Force Clang resource directory for internal headers (stdarg.h)
-          CLANG_RES_DIR=$(clang -print-resource-dir)
-          echo "BINDGEN_EXTRA_CLANG_ARGS=-I${CLANG_RES_DIR}/include" >> $GITHUB_ENV
-          echo "Using BINDGEN_EXTRA_CLANG_ARGS: -I${CLANG_RES_DIR}/include"
         fi
         echo $GITHUB_ENV && printenv
 
     - name: Build release binary
       shell: bash
       run: |
-        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
-        else
-          # Pass clang variables through to the cross container
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
         fi
-
-    - name: Save Cache
-      if: always() # This ensures cache is saved on failure, success, or cancel
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        # We use a unique key (adding run_id) so we don't collide with existing immutable keys
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr-blossom -p gnostr-tui
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr-blossom -p gnostr-tui
+        else
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr-blossom -p gnostr-tui
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr-blossom -p gnostr-tui
+        fi
 
     - name: Bundle release (Unix)
       if: matrix.build != 'windows-x64'
