@@ -168,8 +168,8 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Linux" ]]; then
-          # Find the actual path of libclang.so to avoid 3.8.x fallbacks
-          SO_PATH=$(find /usr/lib -name "libclang.so*" | head -n 1)
+          # Pick the newest installed libclang to avoid 3.8.x fallbacks.
+          SO_PATH=$(find /usr /usr/local -name "libclang.so*" 2>/dev/null | sort -V | tail -n 1)
           if [ -n "$SO_PATH" ]; then
             LIB_DIR=$(dirname "$SO_PATH")
             CLANG_RESOURCE_DIR=$(clang -print-resource-dir)
