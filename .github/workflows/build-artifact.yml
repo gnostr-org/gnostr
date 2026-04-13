@@ -1,6 +1,12 @@
 name: build-artifact
 on:
   workflow_call:
+    inputs:
+      os:
+        description: 'OS / target to build (select "all" to build every target)'
+        required: false
+        default: 'all'
+        type: string
   workflow_dispatch:
     inputs:
       os:
@@ -55,7 +61,7 @@ jobs:
     needs: setup
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: write
+      contents: read
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
@@ -84,76 +90,63 @@ jobs:
             target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-
-    - name: Install Dependencies (Cross-Platform)
-      shell: pwsh
-      run: |
-        if ($IsWindows) {
-          Write-Host "Detected Windows Runner. Ensuring LLVM/Clang availability..."
-          # GitHub Windows runners usually have LLVM/Clang pre-installed.
-          # If not found, we install it via Chocolatey.
-          if (!(Get-Command clang -ErrorAction SilentlyContinue)) {
-            choco install llvm -y
-          }
-          # Add GCC/MinGW if specifically required for the BIP-64MOD context
-          if (!(Get-Command gcc -ErrorAction SilentlyContinue)) {
-            choco install mingw -y
-          }
-        } else {
-          Write-Host "Detected Linux Runner. Using apk..."
-          # This only runs if you switch the 'runs-on' to an Alpine-based container
-          if (Get-Command apk -ErrorAction SilentlyContinue) {
-            apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
-          }
-        }
-
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update || true
-        sudo apt-get install -y libssl-dev pkg-config musl-tools build-essential clang libclang-dev || true
+        sudo apt-get update
+        sudo apt-get install -y \
+          libssl-dev \
+          pkg-config \
+          musl-tools \
+          build-essential \
+          llvm-dev \
+          libclang-dev \
+          clang \
+          clang-5.0 \
+          libclang-5.0-dev || sudo apt-get install -y libclang-dev
 
-    - name: Install Dependencies
-      shell: pwsh
+    - name: Install macOS system dependencies
+      if: runner.os == 'macOS'
       run: |
-        if ($IsWindows) {
-          # Windows runners usually have LLVM pre-installed, 
-          # but this ensures it's available via Chocolatey if needed.
-          if (!(Get-Command clang -ErrorAction SilentlyContinue)) {
-            choco install llvm -y
-          }
-          Write-Host "Running on Windows: LLVM/Clang is ready."
-        } else {
-          # This part will only execute if the shell is running on Linux/Alpine
-          # apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
-        }
+        brew update
 
-    - name: Build Project
-      shell: pwsh
+    - name: Install Windows system dependencies
+      if: runner.os == 'Windows'
       run: |
-        # Your build command here
-        echo "Building $env:BUILD_NAME"
-      env:
-        BUILD_NAME: gnostr-1879-944781-779852-ae92259bee-90c5183493-x86_64-pc-windows-msvc
+        echo "TODO: install Windows specific deps if neccesary"
 
-    - name: Install build dependencies
-      run: apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
-
-    - name: Install Xcode Command Line Tools
-      run: xcode-select --install || true
+    - name: Verify Xcode Command Line Tools
+      if: runner.os == 'macOS'
+      run: xcode-select -p
 
     - name: Install cross
       uses: taiki-e/install-action@v2
       with:
         tool: cross
 
-    - name: Install sccache
-      uses: mozilla-actions/sccache-action@v0.0.9
+    - name: Set Clang Environment Variables
+      shell: bash
+      run: |
+        if [[ "${{ runner.os }}" == "Linux" ]]; then
+          # Find the actual path of libclang.so to avoid 3.8.x fallbacks
+          SO_PATH=$(find /usr/lib -name "libclang.so*" | head -n 1)
+          if [ -n "$SO_PATH" ]; then
+            LIB_DIR=$(dirname "$SO_PATH")
+            echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
+            # This helps bindgen find stdarg.h and other built-ins
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I$(clang -print-resource-dir)/include" >> $GITHUB_ENV
+          fi
+        fi
+        echo $GITHUB_ENV && printenv
 
     - name: Build release binary
-      env:
-        RUSTC_WRAPPER: sccache
-      run: cross build --verbose --release --locked --target ${{ matrix.target }}
+      shell: bash
+      run: |
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
+        else
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
+        fi
 
     - name: Bundle release (Unix)
       if: matrix.build != 'windows-x64'
