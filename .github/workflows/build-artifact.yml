@@ -165,7 +165,8 @@ jobs:
         cp README.md LICENSE "$BUILD_NAME/"
         ls "target/
         ls "target/${{ matrix.target }}
-        cp "target/${{ matrix.target }}/release/gnostr" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-tui" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-blossom" "$BUILD_NAME/"
 
     - name: Bundle release (Windows)
       if: matrix.build == 'windows-x64'
