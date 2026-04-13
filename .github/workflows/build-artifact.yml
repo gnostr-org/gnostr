@@ -150,13 +150,13 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p blossom-server -p blossom-cli
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
         else
           # Pass clang variables through to the cross container
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
         fi
 
     - name: Save Cache
