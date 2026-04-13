@@ -84,11 +84,57 @@ jobs:
             target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+
+    - name: Install Dependencies (Cross-Platform)
+      shell: pwsh
+      run: |
+        if ($IsWindows) {
+          Write-Host "Detected Windows Runner. Ensuring LLVM/Clang availability..."
+          # GitHub Windows runners usually have LLVM/Clang pre-installed.
+          # If not found, we install it via Chocolatey.
+          if (!(Get-Command clang -ErrorAction SilentlyContinue)) {
+            choco install llvm -y
+          }
+          # Add GCC/MinGW if specifically required for the BIP-64MOD context
+          if (!(Get-Command gcc -ErrorAction SilentlyContinue)) {
+            choco install mingw -y
+          }
+        } else {
+          Write-Host "Detected Linux Runner. Using apk..."
+          # This only runs if you switch the 'runs-on' to an Alpine-based container
+          if (Get-Command apk -ErrorAction SilentlyContinue) {
+            apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
+          }
+        }
+
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update || true
         sudo apt-get install -y libssl-dev pkg-config musl-tools build-essential clang libclang-dev || true
+
+    - name: Install Dependencies
+      shell: pwsh
+      run: |
+        if ($IsWindows) {
+          # Windows runners usually have LLVM pre-installed, 
+          # but this ensures it's available via Chocolatey if needed.
+          if (!(Get-Command clang -ErrorAction SilentlyContinue)) {
+            choco install llvm -y
+          }
+          Write-Host "Running on Windows: LLVM/Clang is ready."
+        } else {
+          # This part will only execute if the shell is running on Linux/Alpine
+          apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
+        }
+
+    - name: Build Project
+      shell: pwsh
+      run: |
+        # Your build command here
+        echo "Building $env:BUILD_NAME"
+      env:
+        BUILD_NAME: gnostr-1879-944781-779852-ae92259bee-90c5183493-x86_64-pc-windows-msvc
 
     - name: Install build dependencies
       run: apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
