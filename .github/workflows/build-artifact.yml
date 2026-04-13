@@ -155,23 +155,23 @@ jobs:
       run: |
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins || \
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl || \
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         fi
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
           rustup target add ${{ matrix.target }} || true
           rustup target add aarch64-linux-musl-gcc || true
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins || \
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl || \
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         else
           rustup target add ${{ matrix.target }} || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         fi
 
     - name: Bundle release (Unix)
