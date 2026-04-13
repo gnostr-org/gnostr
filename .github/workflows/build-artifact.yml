@@ -87,8 +87,14 @@ jobs:
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libssl-dev pkg-config musl-tools
+        sudo apt-get update || true
+        sudo apt-get install -y libssl-dev pkg-config musl-tools build-essential clang libclang-dev || true
+
+    - name: Install build dependencies
+      run: apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
+
+    - name: Install Xcode Command Line Tools
+      run: xcode-select --install || true
 
     - name: Install cross
       uses: taiki-e/install-action@v2
