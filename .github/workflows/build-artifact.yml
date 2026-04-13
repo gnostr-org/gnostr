@@ -160,7 +160,7 @@ jobs:
           llvm-dev \
           musl-tools \
           g++ \
-          musl-dev
+          musl-dev \
           clang-5.0 \
           libclang-5.0-dev || sudo apt-get install -y \
           libclang-dev \
@@ -171,7 +171,7 @@ jobs:
           llvm-dev \
           musl-tools \
           g++ \
-          musl-dev
+          musl-dev \
           clang || echo "failed fall back "
 
     - name: Install macOS system dependencies
