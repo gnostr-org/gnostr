@@ -53,7 +53,7 @@ use std::{
 	io::{self, Stdout},
 	panic,
 	path::Path,
-	time::{Duration, Instant},
+	time::Instant,
 };
 
 /// Do `log::error!` and `eprintln!` in one line.¬                                                                   
@@ -162,23 +162,6 @@ fn shutdown_terminal() {
 	}
 }
 
-fn draw<B: ratatui::backend::Backend>(
-	terminal: &mut ratatui::Terminal<B>,
-	app: &App,
-) -> Result<(), B::Error> {
-	if app.requires_redraw() {
-		terminal.clear()?;
-	}
-
-	terminal.draw(|f| {
-		if let Err(e) = app.draw(f) {
-			log::error!("failed to draw: {e:?}");
-		}
-	})?;
-
-	Ok(())
-}
-
 fn ensure_valid_path(repo_path: &RepoPath) -> Result<()> {
 	match asyncgit::sync::repo_open_error(repo_path) {
 		Some(e) => {
@@ -187,43 +170,6 @@ fn ensure_valid_path(repo_path: &RepoPath) -> Result<()> {
 		}
 		None => Ok(()),
 	}
-}
-
-fn select_event(
-	rx_input: &Receiver<InputEvent>,
-	rx_git: &Receiver<AsyncGitNotification>,
-	rx_app: &Receiver<AsyncAppNotification>,
-	rx_ticker: &Receiver<Instant>,
-	rx_notify: &Receiver<()>,
-	rx_spinner: &Receiver<Instant>,
-) -> Result<QueueEvent> {
-	let mut sel = Select::new();
-
-	sel.recv(rx_input);
-	sel.recv(rx_git);
-	sel.recv(rx_app);
-	sel.recv(rx_ticker);
-	sel.recv(rx_notify);
-	sel.recv(rx_spinner);
-
-	let oper = sel.select();
-	let index = oper.index();
-
-	let ev = match index {
-		0 => oper.recv(rx_input).map(QueueEvent::InputEvent),
-		1 => oper.recv(rx_git).map(|e| {
-			QueueEvent::AsyncEvent(AsyncNotification::Git(e))
-		}),
-		2 => oper.recv(rx_app).map(|e| {
-			QueueEvent::AsyncEvent(AsyncNotification::App(e))
-		}),
-		3 => oper.recv(rx_ticker).map(|_| QueueEvent::Notify),
-		4 => oper.recv(rx_notify).map(|()| QueueEvent::Notify),
-		5 => oper.recv(rx_spinner).map(|_| QueueEvent::SpinnerUpdate),
-		_ => bail!("unknown select source"),
-	}?;
-
-	Ok(ev)
 }
 
 fn start_terminal(
