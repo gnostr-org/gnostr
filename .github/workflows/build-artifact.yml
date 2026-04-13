@@ -150,7 +150,12 @@ jobs:
     - name: Build release binary
       shell: bash
       run: |
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }}
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
+        fi
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }}
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
