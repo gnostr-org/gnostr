@@ -158,9 +158,21 @@ jobs:
           musl-tools \
           build-essential \
           llvm-dev \
-          libclang-dev \
+          musl-tools \
           g++ \
           musl-dev
+          clang-5.0 \
+          libclang-5.0-dev || sudo apt-get install -y \
+          libclang-dev \
+          libssl-dev \
+          pkg-config \
+          musl-tools \
+          build-essential \
+          llvm-dev \
+          musl-tools \
+          g++ \
+          musl-dev
+          clang || echo "failed fall back "
 
     - name: Install macOS system dependencies
       if: runner.os == 'macOS'
