@@ -13,6 +13,7 @@ license = "MIT"
 categories = ["command-line-utilities"]
 keywords = ["cli", "git", "gui", "terminal", "ui"]
 build = "build.rs"
+default-run = "gnostr-tui"
 
 [workspace]
 members = [
