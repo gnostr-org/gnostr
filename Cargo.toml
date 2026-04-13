@@ -15,6 +15,14 @@ keywords = ["cli", "git", "gui", "terminal", "ui"]
 build = "build.rs"
 default-run = "gnostr-tui"
 
+[[bin]]
+name = "gnostr-tui"
+path = "src/bin/gnostr-tui.rs"
+
+[[bin]]
+name = "gnostr-blossom"
+path = "src/bin/gnostr-blossom.rs"
+
 [workspace]
 members = [
   "asyncgit",
