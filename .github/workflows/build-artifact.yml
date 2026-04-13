@@ -125,7 +125,7 @@ jobs:
           Write-Host "Running on Windows: LLVM/Clang is ready."
         } else {
           # This part will only execute if the shell is running on Linux/Alpine
-          apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
+          # apk add build-base clang llvm-dev libclang clang-dev libc-dev || true
         }
 
     - name: Build Project
