@@ -58,15 +58,15 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             f.write(f"matrix={json.dumps(matrix)}\n")
 
-  windows-vcpkg:
+  win-vcpkg-test:
     strategy:
       matrix:
         os:
           - runner: windows-latest
             arch: x64
-          #- runner: windows-11-arm
-          #  arch: arm64
-      fail-fast: true
+          - runner: windows-11-arm
+            arch: arm64
+      fail-fast: false
     name: windows-vcpkg-${{ matrix.os.arch }}
     runs-on: ${{ matrix.os.runner }}
     steps:
