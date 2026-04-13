@@ -122,7 +122,7 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         # Install the missing Perl module required by OpenSSL Configure
-        # cpan Locale::Maketext::Simple
+        cpan Locale::Maketext::Simple
         # Alternatively, ensure Strawberry Perl is used
         echo "C:\Strawberry\perl\bin" >> $GITHUB_PATH
 
