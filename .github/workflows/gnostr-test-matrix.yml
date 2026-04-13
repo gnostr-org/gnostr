@@ -63,7 +63,7 @@ jobs:
           path: target
           key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo test -j8 --all-features
-      - run: cargo install --path ./git-helpers -j8 --all-features
+      - run: cargo install --path ./git-helpers -j8 --all-features --force
 
   gnostr-test:
     env:
