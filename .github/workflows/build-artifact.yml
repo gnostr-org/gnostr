@@ -238,6 +238,18 @@ jobs:
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         fi
 
+
+    - name: Save Cache
+      if: always() # This ensures cache is saved on failure, success, or cancel
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        # We use a unique key (adding run_id) so we don't collide with existing immutable keys
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+
     - name: Bundle release (Unix)
       if: matrix.build != 'windows-x64'
       shell: bash
