@@ -190,10 +190,14 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Linux" ]]; then
-          # Pick the newest installed libclang to avoid 3.8.x fallbacks.
-          SO_PATH=$(find /usr /usr/local -name "libclang.so*" 2>/dev/null | sort -V | tail -n 1)
-          if [ -n "$SO_PATH" ]; then
-            LIB_DIR=$(dirname "$SO_PATH")
+          if command -v llvm-config >/dev/null 2>&1; then
+            LIB_DIR="$(llvm-config --libdir)"
+          else
+            # Pick the newest installed libclang to avoid 3.8.x fallbacks.
+            SO_PATH=$(find /usr /usr/local -name "libclang.so*" 2>/dev/null | sort -V | tail -n 1)
+            LIB_DIR="$(dirname "$SO_PATH")"
+          fi
+          if [ -n "${LIB_DIR:-}" ] && [ -d "$LIB_DIR" ]; then
             CLANG_RESOURCE_DIR=$(clang -print-resource-dir)
             GCC_INCLUDE_DIR=$(gcc -print-file-name=include)
             echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
