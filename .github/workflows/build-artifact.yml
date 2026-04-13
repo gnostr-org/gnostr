@@ -133,7 +133,7 @@ jobs:
       shell: bash
       run: |
         SAFE_REF="${GITHUB_REF_NAME//\//-}"
-        echo "BUILD_NAME=gnostr-${SAFE_REF}-${{ matrix.target }}" >> "$GITHUB_ENV"
+        echo "BUILD_NAME=gnostr-${SAFE_REF}-${{ matrix.toolchain }}-${{ matrix.target }}" >> "$GITHUB_ENV"
 
     - name: Fetch tags
       run: git fetch --tags --force
@@ -142,10 +142,10 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: |
-           ~/.cargo/registry
-           ~/.cargo/git
-           target
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
