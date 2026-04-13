@@ -12,6 +12,11 @@ on:
         required: false
         default: 'all'
         type: string
+      toolchain:
+        description: 'Rust toolchain to use'
+        required: false
+        default: 'stable'
+        type: string
   workflow_dispatch:
     inputs:
       os:
@@ -28,6 +33,14 @@ on:
           - windows-x64
           - macos-x64
           - macos-arm64
+      toolchain:
+        description: 'Rust toolchain to use'
+        required: false
+        default: stable
+        type: choice
+        options:
+          - stable
+          - nightly
 
 jobs:
   setup:
@@ -53,7 +66,11 @@ jobs:
 
           selected = "${{ inputs.os }}" or "all"
           targets = ALL_TARGETS if selected == "all" else [t for t in ALL_TARGETS if t["build"] == selected]
-          matrix = {"build": [t["build"] for t in targets], "include": targets}
+          selected_toolchain = "${{ inputs.toolchain }}" or "stable"
+          matrix = {
+            "build": [t["build"] for t in targets],
+            "include": [{**t, "toolchain": selected_toolchain} for t in targets],
+          }
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             f.write(f"matrix={json.dumps(matrix)}\n")
@@ -163,6 +180,11 @@ jobs:
       uses: taiki-e/install-action@v2
       with:
         tool: cross
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ matrix.toolchain }}
 
     - name: Set Clang Environment Variables
       shell: bash
