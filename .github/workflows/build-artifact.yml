@@ -162,12 +162,12 @@ jobs:
           g++ \
           musl-dev \
           clang-5.0 \
-          aarch64-linux-gnu-gcc \
+          gcc-aarch64-linux-gnu \
           libclang-5.0-dev || sudo apt-get install -y \
           libclang-dev \
           libssl-dev \
           pkg-config \
-          aarch64-linux-gnu-gcc \
+          gcc-aarch64-linux-gnu \
           musl-tools \
           build-essential \
           llvm-dev \
