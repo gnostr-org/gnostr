@@ -1,3 +1,15 @@
+[target.x86_64-unknown-linux-gnu]
+pre-build = [
+  "apt-get update",
+  "apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config build-essential",
+]
+
+[target.x86_64-unknown-linux-musl]
+pre-build = [
+  "apt-get update",
+  "apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config build-essential musl-tools",
+]
+
 [target.aarch64-unknown-linux-gnu]
 pre-build = [
   "apt-get update",
