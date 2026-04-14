@@ -18,15 +18,7 @@ pre-build = [
 # otherwise the default cross-rs images work well.
 pre-build = [
   "dpkg --add-architecture arm64",
-  "apt-get update && apt-get install --assume-yes \
-    gcc-aarch64-linux-gnu \
-    g++-aarch64-linux-gnu \
-    clang \
-    libclang-dev:arm64 \
-    llvm-dev:arm64 \
-    pkg-config \
-    build-essential \
-    libssl-dev:arm64"
+  "apt-get update && apt-get install --assume-yes gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang libclang-dev:arm64 llvm-dev:arm64 pkg-config build-essential libssl-dev:arm64"
 ]
 
 [target.aarch64-unknown-linux-gnu.env]
