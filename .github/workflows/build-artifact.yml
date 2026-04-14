@@ -226,9 +226,6 @@ jobs:
 
     - name: Build release binary
       shell: bash
-      env: # disable perl when building openssl
-        OPENSSL: ""
-        OPENSSL_NO_VENDOR: ${{ runner.os == 'Windows' && '1' || '' }}
       run: |
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
