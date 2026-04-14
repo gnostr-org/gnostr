@@ -1,5 +1,5 @@
 [target.aarch64-unknown-linux-gnu]
 pre-build = [
   "apt-get update",
-  "apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config build-essential",
+  "apt-get install --assume-yes gcc-aarch64-linux-gnu clang libclang-dev llvm-dev pkg-config build-essential",
 ]
