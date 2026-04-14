@@ -8,10 +8,36 @@ pre-build = [
 ##   "apt-get update && apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config build-essential musl-tools",
 ## ]
 
+## [target.aarch64-unknown-linux-gnu]
+## pre-build = [
+##   "apt-get update && apt-get install --assume-yes gcc-aarch64-linux-gnu clang libclang-dev llvm-dev pkg-config build-essential",
+## ]
+
 [target.aarch64-unknown-linux-gnu]
+# Use a custom Docker image if you need specific LLVM versions, 
+# otherwise the default cross-rs images work well.
 pre-build = [
-  "apt-get update && apt-get install --assume-yes gcc-aarch64-linux-gnu clang libclang-dev llvm-dev pkg-config build-essential",
+  "dpkg --add-architecture arm64",
+  "apt-get update && apt-get install --assume-yes \
+    gcc-aarch64-linux-gnu \
+    g++-aarch64-linux-gnu \
+    clang \
+    libclang-dev:arm64 \
+    llvm-dev:arm64 \
+    pkg-config \
+    build-essential \
+    libssl-dev:arm64"
 ]
+
+[target.aarch64-unknown-linux-gnu.env]
+# Required for crates that use bindgen (like those in BIP-64MOD contexts)
+LIBCLANG_PATH = "/usr/lib/llvm-14/lib"
+BINDGEN_EXTRA_CLANG_ARGS = "--sysroot=/usr/aarch64-linux-gnu"
+PKG_CONFIG_ALLOW_CROSS = "1"
+PKG_CONFIG_PATH_aarch64_unknown_linux_gnu = "/usr/lib/aarch64-linux-gnu/pkgconfig"
+
+
+
 
 [target.aarch64-unknown-linux-musl]
 pre-build = [
