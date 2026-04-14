@@ -156,6 +156,67 @@ macro_rules! log_eprintln {
 	}};
 }
 
+pub fn run() -> Result<()> {
+	let app_start = Instant::now();
+
+	let cliargs = process_cmdline()?;
+
+	asyncgit::register_tracing_logging();
+	ensure_valid_path(&cliargs.repo_path)?;
+
+	let key_config = KeyConfig::init(
+		cliargs.key_bindings_path.as_ref(),
+		cliargs.key_symbols_path.as_ref(),
+	)
+	.map_err(|e| log_eprintln!("KeyConfig loading error: {e}"))
+	.unwrap_or_default();
+	let theme = Theme::init(&cliargs.theme);
+
+	setup_terminal()?;
+	defer! {
+		shutdown_terminal();
+	}
+
+	set_panic_handler()?;
+
+	let mut terminal = start_terminal(io::stdout(), &cliargs.repo_path)?;
+
+	let updater = if cliargs.notify_watcher {
+		Updater::NotifyWatcher
+	} else {
+		Updater::Ticker
+	};
+
+	let mut args = cliargs;
+
+	loop {
+		let quit_state = run_app(
+			app_start,
+			args.clone(),
+			theme.clone(),
+			&key_config,
+			updater,
+			&mut terminal,
+		)?;
+
+		match quit_state {
+			QuitState::OpenSubmodule(p) => {
+				args = CliArgs {
+					repo_path: p,
+					select_file: None,
+					theme: args.theme,
+					notify_watcher: args.notify_watcher,
+					key_bindings_path: args.key_bindings_path,
+					key_symbols_path: args.key_symbols_path,
+				}
+			}
+			_ => break,
+		}
+	}
+
+	Ok(())
+}
+
 //fn main() -> Result<()> {
 //	let app_start = Instant::now();
 //
