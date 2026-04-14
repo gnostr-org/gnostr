@@ -252,7 +252,6 @@ jobs:
       env:
         CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
         CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
-        CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
       run: |
         cargo generate-lockfile && git diff
         case "${{ matrix.target }}" in
