@@ -252,33 +252,36 @@ jobs:
       env:
         CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
         CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+        CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
       run: |
         cargo generate-lockfile && git diff
-        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
-          rustup target add ${{ matrix.target }} || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-        fi
-        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
-          rustup target add ${{ matrix.target }} || true
-          rustup target add aarch64-linux-musl-gcc || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-        fi
-        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
-          rustup target add ${{ matrix.target }} || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-        fi
-        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
-          rustup target add ${{ matrix.target }} || true
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-        else
-          rustup target add ${{ matrix.target }} || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-        fi
+        case "${{ matrix.target }}" in
+          aarch64-unknown-linux-gnu)
+            rustup target add ${{ matrix.target }} || true
+            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+            ;;
+          aarch64-unknown-linux-musl)
+            rustup target add ${{ matrix.target }} || true
+            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+            ;;
+          x86_64-unknown-linux-musl)
+            rustup target add ${{ matrix.target }} || true
+            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+            ;;
+          x86_64-unknown-linux-gnu)
+            rustup target add ${{ matrix.target }} || true
+            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+            ;;
+          *)
+            rustup target add ${{ matrix.target }} || true
+            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+            ;;
+        esac
 
     - name: Save Cache
       if: always() # This ensures cache is saved on failure, success, or cancel
