@@ -227,6 +227,7 @@ jobs:
     - name: Build release binary
       shell: bash
       run: |
+        cargo generate-lockfile && git diff
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
