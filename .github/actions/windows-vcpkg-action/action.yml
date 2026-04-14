@@ -35,9 +35,9 @@ runs:
         echo "VCPKG_KEEP_ENV_VARS=OPENSSL_NO_VENDOR;VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "VCVARSALL_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-    - name: Cache vcpkg
+    - name: Restore vcpkg Cache
       id: cache-vcpkg
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: |
           ${{ env.VCPKG_INSTALLATION_ROOT }}/installed
@@ -51,6 +51,15 @@ runs:
       shell: pwsh
       run: |
         vcpkg install openssl:${{ inputs.arch }}-windows-static-md
+
+    - name: Save vcpkg Cache
+      if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ${{ env.VCPKG_INSTALLATION_ROOT }}/installed
+          ${{ env.VCPKG_INSTALLATION_ROOT }}/packages
+        key: ${{ runner.os }}-vcpkg-${{ inputs.arch }}-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Cache Strawberry Perl
       id: cache-perl
