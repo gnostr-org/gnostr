@@ -167,6 +167,7 @@ jobs:
           libclang-dev \
           libssl-dev \
           pkg-config \
+          aarch64-linux-gnu-gcc \
           musl-tools \
           build-essential \
           llvm-dev \
