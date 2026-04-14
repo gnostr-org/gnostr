@@ -25,15 +25,7 @@ pre-build = [
   "echo 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-14 main' > /etc/apt/sources.list.d/llvm14.list",
 
   # 3. Final update and installation of cross-toolchain and dependencies
-  "apt-get update && apt-get install --assume-yes \
-    gcc-aarch64-linux-gnu \
-    g++-aarch64-linux-gnu \
-    clang-14 \
-    libclang-14-dev \
-    llvm-14-dev \
-    pkg-config \
-    build-essential \
-    libssl-dev:arm64"
+  "apt-get update && apt-get install --assume-yes gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang-14 libclang-14-dev llvm-14-dev pkg-config build-essential libssl-dev:arm64"
 ]
 
 
