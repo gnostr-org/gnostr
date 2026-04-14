@@ -267,9 +267,8 @@ jobs:
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
           rustup target add ${{ matrix.target }} || true
-          rustup target add x86_64-unknown-linux-musl || true
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
