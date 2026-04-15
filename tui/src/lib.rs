@@ -1176,7 +1176,8 @@ impl App {
         let Some(idx) = self.blobs_table.selected() else {
             return;
         };
-        let Some(blob) = self.blobs.get(idx) else {
+        let visible = self.visible_blobs();
+        let Some(blob) = visible.get(idx) else {
             return;
         };
         let sha256 = blob.sha256.clone();
@@ -1619,6 +1620,40 @@ impl App {
                 let _ = h.await;
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn prompt_download_uses_visible_sorted_blob() {
+        let (tx, _rx) = mpsc::unbounded_channel();
+        let mut app = App::new("http://localhost".into(), None, tx);
+        app.blobs = vec![
+            BlobDescriptor {
+                sha256: "small".into(),
+                size: 10,
+                content_type: None,
+                uploaded: Some(1),
+                url: None,
+            },
+            BlobDescriptor {
+                sha256: "large".into(),
+                size: 20,
+                content_type: None,
+                uploaded: Some(2),
+                url: None,
+            },
+        ];
+        app.sort_field = SortField::Size;
+        app.blobs_table.select(Some(0));
+
+        app.prompt_download();
+
+        assert_eq!(app.modal_input, "large");
+        assert!(matches!(app.modal, Some(Modal::Download { sha256 }) if sha256 == "large"));
     }
 }
 
