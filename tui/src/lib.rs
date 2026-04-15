@@ -5207,21 +5207,23 @@ pub fn draw_docs_fullscreen(
 	nip_tab: usize,
 	scroll: u16,
 ) {
+	let doc_bg = Color::Rgb(10, 10, 20);
 	let bold = Style::default()
 		.fg(COLOR_ACCENT)
+		.bg(doc_bg)
 		.add_modifier(Modifier::BOLD);
 	let heading2 = Style::default()
 		.fg(Color::Rgb(140, 200, 140))
+		.bg(doc_bg)
 		.add_modifier(Modifier::BOLD);
-	let key = Style::default().fg(Color::Yellow);
-	let dim = Style::default().fg(COLOR_DIM);
-	let note = Style::default().fg(Color::Rgb(140, 140, 180));
-	let url_style = Style::default().fg(Color::Rgb(100, 180, 255));
+	let key = Style::default().fg(Color::Yellow).bg(doc_bg);
+	let dim = Style::default().fg(COLOR_DIM).bg(doc_bg);
+	let note = Style::default().fg(Color::Rgb(140, 140, 180)).bg(doc_bg);
 
 	let kv = |k: &'static str, v: &'static str| -> Line<'static> {
 		Line::from(vec![
 			Span::styled(format!("  {k:<22}", k = k), key),
-			Span::styled(v, Style::default()),
+			Span::styled(v, Style::default().bg(doc_bg)),
 		])
 	};
 	let h1 = |s: &'static str| -> Line<'static> {
@@ -5235,10 +5237,7 @@ pub fn draw_docs_fullscreen(
 		Line::from(Span::styled(s, note))
 	};
 	let url_ln = |s: &'static str| -> Line<'static> {
-		Line::from(vec![
-			Span::styled("  → ", dim),
-			Span::styled(s, url_style),
-		])
+		Line::from(Span::styled(format!("  → {s}"), dim))
 	};
 
 	// ── Global section (always shown at top) ──────────────────
@@ -5675,16 +5674,15 @@ pub fn draw_docs_fullscreen(
 			.unwrap_or("?")
 		),
 	};
-	let bg = Color::Rgb(10, 10, 20);
 	let doc = Paragraph::new(lines)
 		.block(
 			Block::default()
 				.borders(Borders::ALL)
 				.title(title)
 				.border_style(Style::default().fg(COLOR_ACCENT))
-				.style(Style::default().bg(bg)),
+				.style(Style::default().bg(doc_bg)),
 		)
-		.style(Style::default().bg(bg).fg(Color::White))
+		.style(Style::default().bg(doc_bg).fg(Color::White))
 		.scroll((scroll, 0));
 	f.render_widget(doc, area);
 }
