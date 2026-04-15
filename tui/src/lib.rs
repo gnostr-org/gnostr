@@ -1513,6 +1513,9 @@ impl App {
 			0 if self.blobs.is_empty() && !self.blobs_loading => {
 				self.refresh_blobs()
 			}
+			1 => {
+				self.filebrowser_activate();
+			}
 			2 if self.status_data.is_none()
 				&& !self.status_loading =>
 			{
