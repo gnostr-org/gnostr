@@ -4583,6 +4583,9 @@ pub async fn run_loop(
                                 app.download_filebrowser_active =
                                     !app.download_filebrowser_active;
                             }
+                            KeyCode::Char('o') => {
+                                app.confirm_download();
+                            }
                             KeyCode::Esc | KeyCode::Char('q') => {
                                 app.download_filebrowser_active = false;
                                 app.modal = None;
