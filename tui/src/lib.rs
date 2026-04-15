@@ -2700,11 +2700,11 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 			} else {
 				"[ ]"
 			};
-			let sha = if b.sha256.len() > 20 {
+			let sha = if b.sha256.len() > 64 { //detect width of parent widget
 				format!(
 					"{}…{}",
-					&b.sha256[..16],
-					&b.sha256[b.sha256.len() - 4..]
+					&b.sha256[..32],
+					&b.sha256[b.sha256.len() - 28..]
 				)
 			} else {
 				b.sha256.clone()
@@ -2728,11 +2728,11 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 		.collect();
 
 	let widths = [
-		Constraint::Length(5),
-		Constraint::Min(24),
-		Constraint::Length(10),
-		Constraint::Min(20),
-		Constraint::Length(19),
+		Constraint::Max(5),
+		Constraint::Min(32),
+		Constraint::Max(10),
+		Constraint::Max(30),
+		Constraint::Min(11),
 	];
 
 	let table = Table::new(rows, widths)
