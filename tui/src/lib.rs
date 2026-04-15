@@ -899,6 +899,105 @@ impl App {
         }
     }
 
+    // ── Download file browser methods ─────────────────────────────────────────
+
+    pub fn download_filebrowser_load(&mut self) {
+        let mut dirs: Vec<FileBrowserEntry> = Vec::new();
+        let mut files: Vec<FileBrowserEntry> = Vec::new();
+
+        if let Ok(rd) = std::fs::read_dir(&self.download_filebrowser_cwd) {
+            for entry in rd.flatten() {
+                let e = FileBrowserEntry::new(entry.path());
+                if e.is_dir {
+                    dirs.push(e);
+                } else {
+                    files.push(e);
+                }
+            }
+        }
+
+        dirs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        files.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+        self.download_filebrowser_entries = dirs.into_iter().chain(files).collect();
+
+        let sel = self
+            .download_filebrowser_list
+            .selected()
+            .unwrap_or(0)
+            .min(self.download_filebrowser_entries.len().saturating_sub(1));
+        self.download_filebrowser_list.select(if self
+            .download_filebrowser_entries
+            .is_empty()
+        {
+            None
+        } else {
+            Some(sel)
+        });
+        self.download_filebrowser_sync_path();
+    }
+
+    fn download_filebrowser_sync_path(&mut self) {
+        if let Some(idx) = self.download_filebrowser_list.selected() {
+            if let Some(entry) = self.download_filebrowser_entries.get(idx) {
+                self.modal_input = entry.path.to_string_lossy().into_owned();
+            }
+        }
+    }
+
+    pub fn download_filebrowser_scroll_up(&mut self) {
+        let i = self.download_filebrowser_list.selected().unwrap_or(0);
+        if i > 0 {
+            self.download_filebrowser_list.select(Some(i - 1));
+            self.download_filebrowser_sync_path();
+        }
+    }
+
+    pub fn download_filebrowser_scroll_down(&mut self) {
+        let max = self.download_filebrowser_entries.len().saturating_sub(1);
+        let i = self.download_filebrowser_list.selected().unwrap_or(0);
+        self.download_filebrowser_list.select(Some((i + 1).min(max)));
+        self.download_filebrowser_sync_path();
+    }
+
+    pub fn download_filebrowser_enter(&mut self) {
+        let Some(idx) = self.download_filebrowser_list.selected() else {
+            return;
+        };
+        let Some(entry) = self.download_filebrowser_entries.get(idx) else {
+            return;
+        };
+        if entry.is_dir {
+            self.download_filebrowser_cwd = entry.path.clone();
+            self.download_filebrowser_list.select(Some(0));
+            self.download_filebrowser_load();
+        } else {
+            self.modal_input = entry.path.to_string_lossy().into_owned();
+            self.confirm_download();
+        }
+    }
+
+    pub fn download_filebrowser_parent(&mut self) {
+        if let Some(parent) = self
+            .download_filebrowser_cwd
+            .parent()
+            .map(|p| p.to_path_buf())
+        {
+            self.download_filebrowser_cwd = parent;
+            self.download_filebrowser_list.select(Some(0));
+            self.download_filebrowser_load();
+        }
+    }
+
+    pub fn download_filebrowser_activate(&mut self) {
+        self.download_filebrowser_active = true;
+        if self.download_filebrowser_entries.is_empty() {
+            self.download_filebrowser_load();
+        } else {
+            self.download_filebrowser_sync_path();
+        }
+    }
+
     pub fn delete_selected(&mut self) {
         if self.secret_key.is_none() {
             self.notification = Some((
