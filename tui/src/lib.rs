@@ -795,6 +795,31 @@ impl App {
         }
     }
 
+    fn upload_filebrowser_from_current_path(&mut self) {
+        let path = PathBuf::from(self.upload_path.trim());
+        let cwd = if path.is_dir() {
+            path
+        } else if let Some(parent) = path.parent() {
+            parent.to_path_buf()
+        } else {
+            std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/"))
+        };
+        self.filebrowser_cwd = cwd;
+        self.filebrowser_list.select(Some(0));
+        self.filebrowser_load();
+    }
+
+    pub fn upload_focus_browser(&mut self) {
+        self.input_mode = false;
+        self.filebrowser_active = true;
+        self.upload_filebrowser_from_current_path();
+    }
+
+    pub fn upload_focus_input(&mut self) {
+        self.filebrowser_active = false;
+        self.input_mode = true;
+    }
+
     // ── Batch file browser methods ────────────────────────────────────────────
 
     pub fn batch_filebrowser_load(&mut self) {
@@ -2121,11 +2146,15 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
         Style::default()
             .fg(COLOR_ACCENT)
             .add_modifier(Modifier::BOLD)
+    } else if app.filebrowser_active {
+        Style::default().fg(Color::White)
     } else {
         Style::default().fg(Color::White)
     };
     let input_title = if app.input_mode {
         " File Path [editing] "
+    } else if app.filebrowser_active {
+        " File Path [browse] "
     } else {
         " File Path "
     };
@@ -2215,12 +2244,43 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
             ),
             Span::raw(": upload    "),
             Span::styled(
+                "Tab",
+                Style::default()
+                    .fg(COLOR_ACCENT)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(": browse    "),
+            Span::styled(
                 "Esc",
                 Style::default()
                     .fg(COLOR_ACCENT)
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw(": stop editing"),
+        ])
+    } else if app.filebrowser_active {
+        Line::from(vec![
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(COLOR_ACCENT)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(": select/open    "),
+            Span::styled(
+                "Tab",
+                Style::default()
+                    .fg(COLOR_ACCENT)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(": edit path    "),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(COLOR_ACCENT)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(": up/close"),
         ])
     } else {
         Line::from(vec![
@@ -2229,19 +2289,26 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
                 Style::default()
                     .fg(COLOR_ACCENT)
                     .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(": browse    "),
-            Span::styled(
-                "i",
-                Style::default()
-                    .fg(COLOR_ACCENT)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(": edit path    "),
-            Span::styled(
-                "Enter",
-                Style::default()
-                    .fg(COLOR_ACCENT)
+                ),
+                Span::raw(": browse    "),
+                Span::styled(
+                    "i",
+                    Style::default()
+                        .fg(COLOR_ACCENT)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(": edit path    "),
+                Span::styled(
+                    "Tab",
+                    Style::default()
+                        .fg(COLOR_ACCENT)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(": toggle browse/edit    "),
+                Span::styled(
+                    "Enter",
+                    Style::default()
+                        .fg(COLOR_ACCENT)
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw(": upload    "),
@@ -3555,7 +3622,15 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
         let hints = match app.tab {
             0 => " r:refresh  d:delete  o:download  m:mirror  s:sort  /:filter  y:copy-sha  u:copy-url  Enter:open  ↑↓/jk  Tab  ?  q",
             1 => {
-                " i:edit-path  p:toggle-nip94  R:relay-url  Enter:upload  Esc:clear  Tab:next  ?:help  q:quit"
+                if app.publish_relay_edit {
+                    " Enter/Esc:done  Tab:next  ?:help  q:quit"
+                } else if app.input_mode {
+                    " Enter:upload  Tab:browse  Esc:stop  ?:help  q:quit"
+                } else if app.filebrowser_active {
+                    " Enter:select/open  Tab:edit  Esc:up/close  ?:help  q:quit"
+                } else {
+                    " f:browse  i:edit-path  Tab:toggle  p:toggle-nip94  R:relay-url  Enter:upload  Esc:clear  ?:help  q:quit"
+                }
             }
             2 => " i:edit  Enter:add/start  x:remove-last  Tab:next  ?:help  q:quit",
             3 => " r:refresh  Tab:next  ?:help  q:quit",
@@ -3953,21 +4028,23 @@ pub fn draw_help_popup(f: &mut Frame, area: Rect, tab: usize, nip_tab: usize) {
         1 => (
             " Upload ",
             vec![
-                kv("  f                ", "Browse file tree"),
-                kv("  i                ", "Enter file-path edit mode"),
+                kv("  f                ", "Open browser at the current path"),
+                kv("  i                ", "Edit file path manually"),
+                kv("  Tab              ", "Toggle browser / edit focus"),
                 kv("  p                ", "Toggle NIP-94 publish"),
                 kv("  R                ", "Edit relay URL"),
-                kv("  Enter            ", "Start upload"),
-                kv("  Esc              ", "Exit edit mode / clear path"),
+                kv("  Enter            ", "Upload from path / accept browser selection"),
+                kv("  Esc              ", "Cancel editing / go up or close browser"),
                 Line::from(""),
                 Line::from(Span::styled(
-                    "  File browser (f to open)",
+                    "  File browser",
                     Style::default().fg(COLOR_DIM),
                 )),
                 kv("  ↑ / k            ", "Navigate up"),
                 kv("  ↓ / j            ", "Navigate down"),
-                kv("  Enter            ", "Enter dir / accept file"),
+                kv("  Enter            ", "Open dir / choose file"),
                 kv("  Backspace / h / -", "Go to parent directory"),
+                kv("  Tab              ", "Switch to path editing"),
                 kv("  Esc              ", "Go up (close at root)"),
                 kv("  g                ", "Open git panel (on git repos)"),
                 kv("  f                ", "Close file browser"),
@@ -4247,12 +4324,14 @@ pub fn draw_docs_fullscreen(
             note_ln("  Upload individual files to the Blossom server."),
             note_ln("  Files are hashed with SHA-256 before upload."),
             note_ln("  Duplicate blobs are deduplicated server-side."),
+            note_ln("  Tab switches between the path field and file browser."),
             blank(),
             h2("  File input"),
-            kv("i", "Enter file-path edit mode (type path manually)"),
-            kv("f", "Open file browser tree"),
-            kv("Enter", "Start upload"),
-            kv("Esc", "Exit edit mode / clear path"),
+            kv("i", "Edit the file path manually"),
+            kv("f", "Open file browser at the current path"),
+            kv("Tab", "Toggle browser / edit focus"),
+            kv("Enter", "Upload from the path field"),
+            kv("Esc", "Exit edit mode / clear path / close browser"),
             blank(),
             h2("  Options"),
             kv("p", "Toggle NIP-94 metadata publish after upload"),
@@ -4263,8 +4342,9 @@ pub fn draw_docs_fullscreen(
             note_ln("  Git repos show a  icon; bare repos show a  icon."),
             kv("↑ / k", "Move up"),
             kv("↓ / j", "Move down"),
-            kv("Enter", "Enter directory / select file"),
+            kv("Enter", "Open directory / choose file"),
             kv("Backspace / h / -", "Go to parent directory"),
+            kv("Tab", "Switch back to path editing"),
             kv("Esc", "Go up one level (closes at root)"),
             kv("/", "Fuzzy search entries in current directory"),
             kv("Esc (in search)", "Clear search / exit search mode"),
@@ -4828,7 +4908,11 @@ pub async fn run_loop(
 
                 if app.input_mode {
                     match key.code {
-                        KeyCode::Esc => app.input_mode = false,
+                        KeyCode::Tab => app.upload_focus_browser(),
+                        KeyCode::Esc => {
+                            app.input_mode = false;
+                            app.upload_path.clear();
+                        }
                         KeyCode::Enter => {
                             app.input_mode = false;
                             app.start_upload();
@@ -4957,6 +5041,9 @@ pub async fn run_loop(
                         // File browser takes next priority when active.
                         } else if app.filebrowser_active {
                             match key.code {
+                                KeyCode::Tab | KeyCode::Char('i') => {
+                                    app.upload_focus_input()
+                                }
                                 KeyCode::Up | KeyCode::Char('k') => {
                                     app.filebrowser_scroll_up()
                                 }
@@ -4995,7 +5082,7 @@ pub async fn run_loop(
                         } else {
                             match key.code {
                                 KeyCode::Char('f') => {
-                                    app.filebrowser_activate()
+                                    app.upload_focus_browser()
                                 }
                                 KeyCode::Char('i') => app.input_mode = true,
                                 KeyCode::Char('p') => {
