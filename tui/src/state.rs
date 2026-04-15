@@ -250,5 +250,8 @@ impl App {
 		if let Some(v) = &state.profile_nostr_relay {
 			self.profile_nostr_relay = v.clone();
 		}
+		if self.tab == 1 {
+			self.upload_focus_browser();
+		}
 	}
 }
