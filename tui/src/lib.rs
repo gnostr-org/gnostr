@@ -4574,31 +4574,45 @@ pub async fn run_loop(
                 if app.modal.is_some() {
                     match app.modal.clone() {
                         Some(Modal::Download { .. }) => match key.code {
-                            KeyCode::Up | KeyCode::Char('k') => {
-                                app.download_filebrowser_scroll_up()
+                            KeyCode::Tab => {
+                                app.download_filebrowser_active =
+                                    !app.download_filebrowser_active;
                             }
-                            KeyCode::Down | KeyCode::Char('j') => {
-                                app.download_filebrowser_scroll_down()
-                            }
-                            KeyCode::Enter => app.download_filebrowser_enter(),
-                            KeyCode::Backspace
-                            | KeyCode::Char('h')
-                            | KeyCode::Char('-')
-                            | KeyCode::Esc => {
-                                if app.download_filebrowser_cwd.parent().is_some() {
-                                    app.download_filebrowser_parent();
-                                } else {
-                                    app.download_filebrowser_active = false;
-                                    app.modal = None;
-                                    app.modal_input.clear();
-                                }
-                            }
-                            KeyCode::Char('f') | KeyCode::Char('q') => {
+                            KeyCode::Esc | KeyCode::Char('q') => {
                                 app.download_filebrowser_active = false;
                                 app.modal = None;
                                 app.modal_input.clear();
                             }
-                            _ => {}
+                            KeyCode::Enter => {
+                                if app.download_filebrowser_active {
+                                    app.download_filebrowser_enter();
+                                } else {
+                                    app.confirm_download();
+                                }
+                            }
+                            _ if app.download_filebrowser_active => match key.code {
+                                KeyCode::Up | KeyCode::Char('k') => {
+                                    app.download_filebrowser_scroll_up()
+                                }
+                                KeyCode::Down | KeyCode::Char('j') => {
+                                    app.download_filebrowser_scroll_down()
+                                }
+                                KeyCode::Backspace
+                                | KeyCode::Char('h')
+                                | KeyCode::Char('-') => {
+                                    if app.download_filebrowser_cwd.parent().is_some() {
+                                        app.download_filebrowser_parent();
+                                    }
+                                }
+                                _ => {}
+                            },
+                            _ => match key.code {
+                                KeyCode::Backspace => {
+                                    app.modal_input.pop();
+                                }
+                                KeyCode::Char(c) => app.modal_input.push(c),
+                                _ => {}
+                            },
                         },
                         Some(Modal::Mirror) => match key.code {
                             KeyCode::Esc => {
