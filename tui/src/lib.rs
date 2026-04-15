@@ -1198,7 +1198,14 @@ impl App {
         let server = self.server.clone();
         let secret_key = self.secret_key.clone();
         let tx = self.tx.clone();
-        let path = PathBuf::from(&path_str);
+        let path = {
+            let path = PathBuf::from(&path_str);
+            if path.is_absolute() {
+                path
+            } else {
+                self.filebrowser_cwd.join(path)
+            }
+        };
 
         tokio::spawn(async move {
             let signer = secret_key
@@ -3387,8 +3394,8 @@ pub fn draw_modal_input(f: &mut Frame, app: &App, area: Rect) {
         Some(Modal::Download { sha256 }) => (
             " Download Blob ",
             format!(
-                "Save path for {}…{}:",
-                &sha256[..8.min(sha256.len())],
+                "Save path in CWD for {}…{}:",
+                &sha256[..64.min(sha256.len())],
                 &sha256[sha256.len().saturating_sub(4)..]
             ),
         ),
