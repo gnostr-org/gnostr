@@ -1030,6 +1030,25 @@ impl App {
         }
     }
 
+    pub fn prompt_delete_selected(&mut self) {
+        if self.secret_key.is_none() {
+            self.notification = Some((
+                "A secret key (--key / BLOSSOM_SECRET_KEY) is required for delete.".into(),
+                true,
+            ));
+            return;
+        }
+        let Some(idx) = self.blobs_table.selected() else {
+            return;
+        };
+        let visible = self.visible_blobs();
+        let Some(blob) = visible.get(idx) else {
+            return;
+        };
+        let sha256 = blob.sha256.clone();
+        self.modal = Some(Modal::Delete { sha256 });
+    }
+
     pub fn delete_selected(&mut self) {
         if self.secret_key.is_none() {
             self.notification = Some((
@@ -1041,7 +1060,8 @@ impl App {
         let Some(idx) = self.blobs_table.selected() else {
             return;
         };
-        let Some(blob) = self.blobs.get(idx) else {
+        let visible = self.visible_blobs();
+        let Some(blob) = visible.get(idx) else {
             return;
         };
         let server = self.server.clone();
@@ -3564,6 +3584,38 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 
 pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
     match app.modal.clone() {
+        Some(Modal::Delete { sha256 }) => {
+            let popup_w = 64u16.min(area.width.saturating_sub(4));
+            let popup_h = 8u16;
+            let popup_x = (area.width.saturating_sub(popup_w)) / 2;
+            let popup_y = (area.height.saturating_sub(popup_h)) / 2;
+            let popup_area = Rect::new(popup_x, popup_y, popup_w, popup_h);
+
+            f.render_widget(Clear, popup_area);
+
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .title(" Delete Blob ")
+                .border_style(Style::default().fg(COLOR_ERR).add_modifier(Modifier::BOLD));
+            let inner = block.inner(popup_area);
+            f.render_widget(block, popup_area);
+
+            let lines = vec![
+                Line::from(Span::styled(
+                    format!(
+                        "Delete {}…{}?",
+                        &sha256[..64.min(sha256.len())],
+                        &sha256[sha256.len().saturating_sub(4)..]
+                    ),
+                    Style::default().fg(COLOR_DIM),
+                )),
+                Line::from(Span::styled(
+                    "Press d to delete, c or Esc to cancel.",
+                    Style::default().fg(COLOR_DIM),
+                )),
+            ];
+            f.render_widget(Paragraph::new(lines), inner);
+        }
         Some(Modal::Download { sha256 }) => {
             let popup_w = area.width.saturating_sub(8);
             let popup_h = area.height.saturating_sub(6);
@@ -4603,6 +4655,16 @@ pub async fn run_loop(
                 // Modal input intercepts all keys when active
                 if app.modal.is_some() {
                     match app.modal.clone() {
+                        Some(Modal::Delete { .. }) => match key.code {
+                            KeyCode::Char('d') => {
+                                app.modal = None;
+                                app.delete_selected();
+                            }
+                            KeyCode::Char('c') | KeyCode::Esc => {
+                                app.modal = None;
+                            }
+                            _ => {}
+                        },
                         Some(Modal::Download { .. }) => match key.code {
                             KeyCode::Tab => {
                                 app.download_filebrowser_active =
@@ -4843,7 +4905,7 @@ pub async fn run_loop(
                         KeyCode::Up | KeyCode::Char('k') => app.scroll_up(),
                         KeyCode::Down | KeyCode::Char('j') => app.scroll_down(),
                         KeyCode::Char('r') => app.refresh_blobs(),
-                        KeyCode::Char('d') => app.delete_selected(),
+                        KeyCode::Char('d') => app.prompt_delete_selected(),
                         KeyCode::Char('o') => app.prompt_download(),
                         KeyCode::Char('m') => app.prompt_mirror(),
                         KeyCode::Char('s') => app.cycle_sort(),
