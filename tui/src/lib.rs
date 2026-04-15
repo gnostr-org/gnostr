@@ -29,6 +29,7 @@ use std::{cmp::Reverse, io::Stdout, path::PathBuf, time::Duration};
 
 use blossom_rs::{BlobDescriptor, BlossomClient, BlossomSigner, Signer};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
+use sha2::{Digest, Sha256};
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
@@ -396,8 +397,13 @@ impl App {
             AppMsg::DeleteError(e) => {
                 self.notification = Some((format!("Delete failed: {e}"), true));
             }
-            AppMsg::DownloadDone(path) => {
-                self.notification = Some((format!("Downloaded → {}", path.display()), false));
+            AppMsg::DownloadDone(path, verified) => {
+                let msg = if verified {
+                    format!("Downloaded → {} verified!", path.display())
+                } else {
+                    format!("Downloaded → {}", path.display())
+                };
+                self.notification = Some((msg, false));
             }
             AppMsg::DownloadError(e) => {
                 self.notification = Some((format!("Download failed: {e}"), true));
@@ -1363,10 +1369,29 @@ impl App {
             let client = BlossomClient::new(vec![server], signer);
             match client.download(&sha256).await {
                 Ok(data) => match tokio::fs::write(&path, &data).await {
-                    Ok(()) => tx.send(AppMsg::DownloadDone(path)).ok(),
-                    Err(e) => tx.send(AppMsg::DownloadError(format!("write: {e}"))).ok(),
+                    Ok(()) => match tokio::fs::read(&path).await {
+                        Ok(written) => {
+                            let written_sha = hex::encode(Sha256::digest(&written));
+                            if written_sha.eq_ignore_ascii_case(&sha256) {
+                                tx.send(AppMsg::DownloadDone(path, true)).ok();
+                            } else {
+                                tx.send(AppMsg::DownloadError(format!(
+                                    "hash mismatch: expected {sha256}, got {written_sha}"
+                                )))
+                                .ok();
+                            }
+                        }
+                        Err(e) => {
+                            tx.send(AppMsg::DownloadError(format!("read: {e}"))).ok();
+                        }
+                    },
+                    Err(e) => {
+                        tx.send(AppMsg::DownloadError(format!("write: {e}"))).ok();
+                    }
                 },
-                Err(e) => tx.send(AppMsg::DownloadError(e)).ok(),
+                Err(e) => {
+                    tx.send(AppMsg::DownloadError(e)).ok();
+                }
             };
         });
     }
