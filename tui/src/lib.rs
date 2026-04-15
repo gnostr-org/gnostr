@@ -354,7 +354,7 @@ impl App {
                 self.blobs_loading = false;
                 self.blobs_error = Some(e);
             }
-            AppMsg::UploadDone(desc) => {
+            AppMsg::UploadDone(path, desc) => {
                 self.upload_loading = false;
                 self.upload_ok = true;
                 self.upload_msg = Some(format!(
@@ -363,6 +363,7 @@ impl App {
                     desc.size
                 ));
                 self.notification = Some(("Upload successful!".into(), false));
+                self.upload_filebrowser_select_next_after(&path);
                 self.refresh_blobs();
             }
             AppMsg::UploadError(e) => {
@@ -680,7 +681,7 @@ impl App {
                             Err(e) => tx.send(AppMsg::Nip94PublishError(e)).ok(),
                         };
                     }
-                    tx.send(AppMsg::UploadDone(desc)).ok();
+                    tx.send(AppMsg::UploadDone(path.clone(), desc)).ok();
                 }
                 Err(e) => {
                     tx.send(AppMsg::UploadError(e)).ok();
@@ -807,6 +808,25 @@ impl App {
         self.filebrowser_cwd = cwd;
         self.filebrowser_list.select(Some(0));
         self.filebrowser_load();
+    }
+
+    fn upload_filebrowser_select_next_after(&mut self, path: &std::path::Path) {
+        let cwd = path
+            .parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/")));
+        self.filebrowser_cwd = cwd;
+        self.filebrowser_list.select(Some(0));
+        self.filebrowser_load();
+
+        if let Some(idx) = self.filebrowser_entries.iter().position(|e| e.path == path) {
+            let next = (idx + 1).min(self.filebrowser_entries.len().saturating_sub(1));
+            self.filebrowser_list.select(Some(next));
+            self.filebrowser_sync_path();
+        }
+
+        self.filebrowser_active = true;
+        self.input_mode = false;
     }
 
     pub fn upload_focus_browser(&mut self) {

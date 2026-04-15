@@ -53,7 +53,7 @@ pub enum Modal {
 pub enum AppMsg {
     BlobsLoaded(Vec<BlobDescriptor>),
     BlobsError(String),
-    UploadDone(BlobDescriptor),
+    UploadDone(std::path::PathBuf, BlobDescriptor),
     UploadError(String),
     StatusLoaded(serde_json::Value),
     StatusError(String),
