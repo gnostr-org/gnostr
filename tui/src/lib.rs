@@ -3540,7 +3540,7 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     );
 }
 
-pub fn draw_modal_input(f: &mut Frame, app: &App, area: Rect) {
+pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
     match &app.modal {
         Some(Modal::Download { sha256 }) => {
             let popup_w = area.width.saturating_sub(8);
@@ -3623,10 +3623,8 @@ pub fn draw_modal_input(f: &mut Frame, app: &App, area: Rect) {
             f.render_stateful_widget(
                 list,
                 chunks[1],
-                &mut app.download_filebrowser_list.clone(),
+                &mut app.download_filebrowser_list,
             );
-            // Sync the browser title path with the current selection.
-            // The actual cursor isn't shown for the picker.
         }
         Some(Modal::Mirror) => {
             let title = " Mirror Blob ";
