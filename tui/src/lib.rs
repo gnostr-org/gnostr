@@ -4548,21 +4548,47 @@ pub async fn run_loop(
             Event::Key(key) if key.kind == KeyEventKind::Press => {
                 // Modal input intercepts all keys when active
                 if app.modal.is_some() {
-                    match key.code {
-                        KeyCode::Esc => {
-                            app.modal = None;
-                            app.modal_input.clear();
-                        }
-                        KeyCode::Enter => match &app.modal {
-                            Some(Modal::Download { .. }) => app.confirm_download(),
-                            Some(Modal::Mirror) => app.confirm_mirror(),
-                            None => {}
+                    match &app.modal {
+                        Some(Modal::Download { .. }) => match key.code {
+                            KeyCode::Up | KeyCode::Char('k') => {
+                                app.download_filebrowser_scroll_up()
+                            }
+                            KeyCode::Down | KeyCode::Char('j') => {
+                                app.download_filebrowser_scroll_down()
+                            }
+                            KeyCode::Enter => app.download_filebrowser_enter(),
+                            KeyCode::Backspace
+                            | KeyCode::Char('h')
+                            | KeyCode::Char('-')
+                            | KeyCode::Esc => {
+                                if app.download_filebrowser_cwd.parent().is_some() {
+                                    app.download_filebrowser_parent();
+                                } else {
+                                    app.download_filebrowser_active = false;
+                                    app.modal = None;
+                                    app.modal_input.clear();
+                                }
+                            }
+                            KeyCode::Char('f') | KeyCode::Char('q') => {
+                                app.download_filebrowser_active = false;
+                                app.modal = None;
+                                app.modal_input.clear();
+                            }
+                            _ => {}
                         },
-                        KeyCode::Backspace => {
-                            app.modal_input.pop();
-                        }
-                        KeyCode::Char(c) => app.modal_input.push(c),
-                        _ => {}
+                        Some(Modal::Mirror) => match key.code {
+                            KeyCode::Esc => {
+                                app.modal = None;
+                                app.modal_input.clear();
+                            }
+                            KeyCode::Enter => app.confirm_mirror(),
+                            KeyCode::Backspace => {
+                                app.modal_input.pop();
+                            }
+                            KeyCode::Char(c) => app.modal_input.push(c),
+                            _ => {}
+                        },
+                        None => {}
                     }
                     continue;
                 }
