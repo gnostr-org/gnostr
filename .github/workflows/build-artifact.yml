@@ -85,10 +85,8 @@ jobs:
             cargo_test_args: '--all-features'
           - runner: windows-11-arm
             arch: arm64
-            # Exclude the `labels` feature: its candle-* deps pull in
-            # gemm-f16 which emits `fullfp16` ARM SIMD instructions not
-            # available on the windows-11-arm runner.
-            cargo_test_args: '--features server,client,filesystem,s3,s3-compat,db-sqlite,db-postgres,media,iroh-transport,pkarr-discovery,otel'
+            # --features <feature1>,<feature2>,... for arch: arm64
+            cargo_test_args: '--features default'
           - runner: ubuntu-latest
             arch: x64
             # All features supported on x64 Windows.
