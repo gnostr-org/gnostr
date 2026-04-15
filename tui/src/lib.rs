@@ -1291,6 +1291,10 @@ impl App {
             return;
         };
         let sha256 = blob.sha256.clone();
+        self.download_filebrowser_cwd =
+            std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
+        self.download_filebrowser_entries.clear();
+        self.download_filebrowser_list.select(Some(0));
         self.download_filebrowser_active = true;
         if self.download_filebrowser_entries.is_empty() {
             self.download_filebrowser_load();
