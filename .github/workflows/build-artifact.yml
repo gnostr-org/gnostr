@@ -75,23 +75,53 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             f.write(f"matrix={json.dumps(matrix)}\n")
 
-  win-vcpkg-test:
+  vcpkg-test:
     strategy:
       matrix:
         os:
           - runner: windows-latest
             arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
           - runner: windows-11-arm
             arch: arm64
+            # Exclude the `labels` feature: its candle-* deps pull in
+            # gemm-f16 which emits `fullfp16` ARM SIMD instructions not
+            # available on the windows-11-arm runner.
+            cargo_test_args: '--features server,client,filesystem,s3,s3-compat,db-sqlite,db-postgres,media,iroh-transport,pkarr-discovery,otel'
+          - runner: ubuntu-latest
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: ubuntu-latest
+            arch: arm64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-latest
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-latest
+            arch: arm64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-15-intel
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-15-intel
+            arch: arm64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
       fail-fast: false
-    name: windows-vcpkg-${{ matrix.os.arch }}
+    name: vcpkg-${{ matrix.os.runner }}-${{ matrix.os.arch }}
     runs-on: ${{ matrix.os.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: sfackler/actions/rustup@master
       - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
         id: rust-version
-      - uses: ./.github/actions/windows-vcpkg-action
+      - uses: ./.github/actions/vcpkg-action
         with:
           arch: ${{ matrix.os.arch }}
           run-tests: 'false'
@@ -111,8 +141,7 @@ jobs:
         with:
           path: target
           key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-      - run: cargo test -j8 --all-features
-      - run: cargo install --path ./git-helpers -j8 --all-features --force
+      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
     needs: setup
@@ -185,7 +214,7 @@ jobs:
 
     - name: Install Windows system dependencies
       if: runner.os == 'Windows'
-      uses: ./.github/actions/windows-vcpkg-action
+      uses: ./.github/actions/vcpkg-action
       with:
         arch: x64
         run-tests: 'false'
