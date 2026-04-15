@@ -32,6 +32,18 @@ pub struct TuiState {
 	/// Active blob filter string.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub filter_str: Option<String>,
+	/// Current upload path field value.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub upload_path: Option<String>,
+	/// Upload file browser directory.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub upload_filebrowser_cwd: Option<String>,
+	/// Batch file browser directory.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub batch_filebrowser_cwd: Option<String>,
+	/// Download file browser directory.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub download_filebrowser_cwd: Option<String>,
 	/// Whether to publish a NIP-94 event after upload.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub publish_nip94: Option<bool>,
@@ -140,6 +152,18 @@ impl App {
 			nip_tab: Some(self.nip_tab),
 			sort_field: Some(self.sort_field),
 			filter_str: opt_str(&self.filter_str),
+			upload_path: opt_str(&self.upload_path),
+			upload_filebrowser_cwd: Some(
+				self.filebrowser_cwd.to_string_lossy().into_owned(),
+			),
+			batch_filebrowser_cwd: Some(
+				self.batch_filebrowser_cwd.to_string_lossy().into_owned(),
+			),
+			download_filebrowser_cwd: Some(
+				self.download_filebrowser_cwd
+					.to_string_lossy()
+					.into_owned(),
+			),
 			publish_nip94: Some(self.publish_nip94),
 			publish_relay: opt_str(&self.publish_relay),
 			nip34_relay: opt_str(&self.nip34_relay),
@@ -171,6 +195,18 @@ impl App {
 		}
 		if let Some(f) = &state.filter_str {
 			self.filter_str = f.clone();
+		}
+		if let Some(p) = &state.upload_path {
+			self.upload_path = p.clone();
+		}
+		if let Some(cwd) = &state.upload_filebrowser_cwd {
+			self.filebrowser_cwd = PathBuf::from(cwd);
+		}
+		if let Some(cwd) = &state.batch_filebrowser_cwd {
+			self.batch_filebrowser_cwd = PathBuf::from(cwd);
+		}
+		if let Some(cwd) = &state.download_filebrowser_cwd {
+			self.download_filebrowser_cwd = PathBuf::from(cwd);
 		}
 		if let Some(v) = state.publish_nip94 {
 			self.publish_nip94 = v;
