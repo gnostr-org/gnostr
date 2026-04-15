@@ -1009,6 +1009,11 @@ impl App {
             self.download_filebrowser_cwd = parent;
             self.download_filebrowser_list.select(Some(0));
             self.download_filebrowser_load();
+            self.modal_input = self
+                .download_filebrowser_cwd
+                .join(self.download_default_name())
+                .to_string_lossy()
+                .into_owned();
         }
     }
 
