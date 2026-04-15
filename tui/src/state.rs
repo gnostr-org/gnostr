@@ -1,4 +1,4 @@
-//! Persistent TUI state — serialised to `~/.config/blossom-tui/state.json`.
+//! Persistent TUI state — serialised to `~/.config/gnostr/blossom/state.json`.
 
 use std::path::PathBuf;
 
@@ -84,7 +84,7 @@ pub fn state_path() -> Option<PathBuf> {
         .map(PathBuf::from)
         .or_else(|_| std::env::var("HOME").map(|h| PathBuf::from(h).join(".config")))
         .ok()?;
-    Some(config_dir.join("blossom-tui").join("state.json"))
+    Some(config_dir.join("gnostr/blossom").join("state.json"))
 }
 
 /// Load [`TuiState`] from disk. Returns a default (empty) state on any error.
