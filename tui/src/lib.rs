@@ -3545,7 +3545,7 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 }
 
 pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
-    match &app.modal {
+    match app.modal.clone() {
         Some(Modal::Download { sha256 }) => {
             let popup_w = area.width.saturating_sub(8);
             let popup_h = area.height.saturating_sub(6);
@@ -4552,7 +4552,7 @@ pub async fn run_loop(
             Event::Key(key) if key.kind == KeyEventKind::Press => {
                 // Modal input intercepts all keys when active
                 if app.modal.is_some() {
-                    match &app.modal {
+                    match app.modal.clone() {
                         Some(Modal::Download { .. }) => match key.code {
                             KeyCode::Up | KeyCode::Char('k') => {
                                 app.download_filebrowser_scroll_up()
