@@ -902,7 +902,6 @@ impl App {
             return;
         };
         if entry.is_dir {
-            self.filebrowser_enter();
             return;
         }
 
