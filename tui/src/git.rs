@@ -1,6 +1,19 @@
 //! Git repository detection and operation primitives.
 
-use std::path::PathBuf;
+use std::{
+	fmt::Write as _,
+	path::PathBuf,
+};
+
+use asyncgit::{
+	sync::{
+		commit::commit as commit_repo,
+		remotes::{fetch_all, get_default_remote_for_fetch},
+		stage_add_all,
+		status::{get_status, StatusItemType, StatusType},
+		merge_upstream_commit, CommitId, RepoPath,
+	},
+};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -235,29 +248,146 @@ pub async fn run_git_command(
 	action: GitAction,
 	commit_msg: &str,
 ) -> Result<String, String> {
-	let args: &[&str] = match action {
-		GitAction::Status => &["status"],
-		GitAction::Pull => &["pull"],
-		GitAction::Push => &["push"],
-		GitAction::Fetch => &["fetch", "--all"],
-		GitAction::Log => {
-			&["log", "--oneline", "--graph", "--decorate", "-20"]
+	let repo_dir = repo_dir.to_path_buf();
+	let action = action;
+	let commit_msg = commit_msg.to_owned();
+
+	tokio::task::spawn_blocking(move || {
+		run_git_command_blocking(&repo_dir, action, &commit_msg)
+	})
+	.await
+	.map_err(|e| format!("join git task: {e}"))?
+}
+
+fn run_git_command_blocking(
+	repo_dir: &std::path::Path,
+	action: GitAction,
+	commit_msg: &str,
+) -> Result<String, String> {
+	let repo_path = RepoPath::from(repo_dir.to_path_buf());
+
+	match action {
+		GitAction::Status => status_output(&repo_path),
+		GitAction::Fetch => {
+			let no_credential: Option<
+				asyncgit::sync::cred::BasicAuthCredential,
+			> = None;
+			let no_progress: Option<
+				crossbeam_channel::Sender<asyncgit::ProgressPercent>,
+			> = None;
+			fetch_all(&repo_path, &no_credential, &no_progress)
+				.map_err(|e| e.to_string())?;
+			Ok(String::from("fetched all remotes"))
 		}
-		GitAction::Diff => &["diff"],
-		GitAction::Add => &["add", "-A"],
-		GitAction::Commit => &["commit", "-m", commit_msg],
-	};
+		GitAction::Pull => pull_output(repo_dir, &repo_path),
+		GitAction::Add => {
+			stage_add_all(&repo_path, ".", None)
+				.map_err(|e| e.to_string())?;
+			Ok(String::from("staged all changes"))
+		}
+		GitAction::Commit => {
+			let id =
+				commit_repo(&repo_path, commit_msg).map_err(|e| e.to_string())?;
+			Ok(format!("committed {}", short_commit_id(id)))
+		}
+		GitAction::Push => {
+			let out = std::process::Command::new("git")
+				.args(["push"])
+				.current_dir(repo_dir)
+				.output()
+				.map_err(|e| format!("spawn git: {e}"))?;
+			format_command_output(out.stdout, out.stderr)
+		}
+		GitAction::Log => {
+			let out = std::process::Command::new("git")
+				.args(["log", "--oneline", "--graph", "--decorate", "-20"])
+				.current_dir(repo_dir)
+				.output()
+				.map_err(|e| format!("spawn git: {e}"))?;
+			format_command_output(out.stdout, out.stderr)
+		}
+		GitAction::Diff => {
+			let out = std::process::Command::new("git")
+				.args(["diff"])
+				.current_dir(repo_dir)
+				.output()
+				.map_err(|e| format!("spawn git: {e}"))?;
+			format_command_output(out.stdout, out.stderr)
+		}
+	}
+}
 
-	let out = tokio::process::Command::new("git")
-		.args(args)
-		.current_dir(repo_dir)
-		.output()
-		.await
-		.map_err(|e| format!("spawn git: {e}"))?;
+fn pull_output(
+	repo_dir: &std::path::Path,
+	repo_path: &RepoPath,
+) -> Result<String, String> {
+	let branch = detect_git_info(repo_dir)
+		.and_then(|info| info.branch)
+		.ok_or_else(|| String::from("not on a branch"))?;
 
-	let mut combined =
-		String::from_utf8_lossy(&out.stdout).into_owned();
-	let stderr = String::from_utf8_lossy(&out.stderr);
+	if branch.starts_with("detached:") {
+		return Err(String::from("cannot pull from detached HEAD"));
+	}
+
+	let remote = get_default_remote_for_fetch(repo_path)
+		.map_err(|e| e.to_string())?;
+	let no_credential: Option<asyncgit::sync::cred::BasicAuthCredential> =
+		None;
+	let no_progress: Option<
+		crossbeam_channel::Sender<asyncgit::ProgressPercent>,
+	> = None;
+	fetch_all(repo_path, &no_credential, &no_progress)
+		.map_err(|e| e.to_string())?;
+
+	let merge = merge_upstream_commit(repo_path, &branch)
+		.map_err(|e| e.to_string())?;
+	match merge {
+		Some(commit_id) => Ok(format!(
+			"fetched {remote}\nmerged {}",
+			short_commit_id(commit_id)
+		)),
+		None => Ok(format!("fetched {remote}\nup to date")),
+	}
+}
+
+fn status_output(repo_path: &RepoPath) -> Result<String, String> {
+	let items = get_status(repo_path, StatusType::Both, None)
+		.map_err(|e| e.to_string())?;
+	if items.is_empty() {
+		return Ok(String::from("working tree clean"));
+	}
+
+	let mut out = String::new();
+	for item in items {
+		let _ = writeln!(
+			&mut out,
+			"{} {}",
+			status_symbol(item.status),
+			item.path
+		);
+	}
+	Ok(out.trim_end().to_string())
+}
+
+fn status_symbol(status: StatusItemType) -> &'static str {
+	match status {
+		StatusItemType::New => "A",
+		StatusItemType::Modified => "M",
+		StatusItemType::Deleted => "D",
+		StatusItemType::Renamed => "R",
+		StatusItemType::Typechange => "T",
+		StatusItemType::Conflicted => "U",
+	}
+}
+
+fn short_commit_id(id: CommitId) -> String {
+	let text = id.to_string();
+	text.chars().take(7).collect()
+}
+
+fn format_command_output(stdout: Vec<u8>, stderr: Vec<u8>) -> Result<String, String> {
+	let mut combined = String::from_utf8_lossy(&stdout).into_owned();
+	let stderr = String::from_utf8_lossy(&stderr);
 	if !stderr.is_empty() {
 		if !combined.is_empty() {
 			combined.push('\n');
@@ -265,7 +395,7 @@ pub async fn run_git_command(
 		combined.push_str(&stderr);
 	}
 	if combined.is_empty() {
-		combined = "(no output)".into();
+		combined = String::from("(no output)");
 	}
 	Ok(combined)
 }
