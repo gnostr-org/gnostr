@@ -118,7 +118,7 @@ impl App {
         let opt_str = |s: &str| if s.is_empty() { None } else { Some(s.to_owned()) };
         TuiState {
             server: Some(self.server.clone()),
-            secret_key: self.secret_key.clone(),
+            secret_key: Some(String::from("•••••••••••••••••••••••••••••••")),
             tab: Some(self.tab),
             nip_tab: Some(self.nip_tab),
             sort_field: Some(self.sort_field),
