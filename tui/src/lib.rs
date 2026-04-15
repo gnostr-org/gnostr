@@ -84,11 +84,12 @@ pub struct App {
 	// Blobs tab
 	pub blobs: Vec<BlobDescriptor>,
 	pub blobs_table: TableState,
-	pub blobs_loading: bool,
-	pub blobs_error: Option<String>,
-	pub sort_field: SortField,
-	pub filter_str: String,
-	pub filter_mode: bool,
+    pub blobs_loading: bool,
+    pub blobs_error: Option<String>,
+    pub sort_field: SortField,
+    pub filter_str: String,
+    pub filter_mode: bool,
+    pub selected_blobs: Vec<String>,
 
 	// Upload tab
 	pub upload_path: String,
@@ -242,11 +243,12 @@ impl App {
 			nip_tab: 0,
 			blobs: Vec::new(),
 			blobs_table,
-			blobs_loading: false,
-			blobs_error: None,
-			sort_field: SortField::default(),
-			filter_str: String::new(),
-			filter_mode: false,
+            blobs_loading: false,
+            blobs_error: None,
+            sort_field: SortField::default(),
+            filter_str: String::new(),
+            filter_mode: false,
+            selected_blobs: Vec::new(),
 			upload_path: String::new(),
 			upload_loading: false,
 			upload_msg: None,
@@ -364,6 +366,8 @@ impl App {
 					)
 				};
 				self.blobs = blobs;
+				self.selected_blobs
+					.retain(|sha| self.blobs.iter().any(|b| &b.sha256 == sha));
 				self.blobs_table.select(sel);
 			}
 			AppMsg::BlobsError(e) => {
@@ -447,6 +451,7 @@ impl App {
 			}
 			AppMsg::DeleteDone(sha256) => {
 				self.blobs.retain(|b| b.sha256 != sha256);
+				self.selected_blobs.retain(|sha| sha != &sha256);
 				let sel = if self.blobs.is_empty() {
 					None
 				} else {
@@ -1361,15 +1366,15 @@ impl App {
             ));
 			return;
 		}
-		let Some(idx) = self.blobs_table.selected() else {
-			return;
+		let shas = if self.selected_blobs.is_empty() {
+			let Some(sha) = self.selected_blob_sha() else {
+				return;
+			};
+			vec![sha]
+		} else {
+			self.selected_blobs.clone()
 		};
-		let visible = self.visible_blobs();
-		let Some(blob) = visible.get(idx) else {
-			return;
-		};
-		let sha256 = blob.sha256.clone();
-		self.modal = Some(Modal::Delete { sha256 });
+		self.modal = Some(Modal::Delete { shas });
 	}
 
 	pub fn delete_selected(&mut self) {
@@ -1380,40 +1385,40 @@ impl App {
             ));
 			return;
 		}
-		let Some(idx) = self.blobs_table.selected() else {
-			return;
-		};
-		let visible = self.visible_blobs();
-		let Some(blob) = visible.get(idx) else {
-			return;
+		let shas = if self.selected_blobs.is_empty() {
+			let Some(sha) = self.selected_blob_sha() else {
+				return;
+			};
+			vec![sha]
+		} else {
+			self.selected_blobs.clone()
 		};
 		let server = self.server.clone();
 		let key = self.secret_key.clone().unwrap();
-		let sha256 = blob.sha256.clone();
 		let tx = self.tx.clone();
 
 		tokio::spawn(async move {
 			let signer = match Signer::from_secret_hex(&key) {
 				Ok(s) => s,
 				Err(e) => {
-					tx.send(AppMsg::DeleteError(format!(
-						"invalid key: {e}"
-					)))
-					.ok();
+					tx.send(AppMsg::DeleteError(format!("invalid key: {e}")))
+						.ok();
 					return;
 				}
 			};
 			let client = BlossomClient::new(vec![server], signer);
-			match client.delete(&sha256).await {
-				Ok(true) => {
-					tx.send(AppMsg::DeleteDone(sha256)).ok();
-				}
-				Ok(false) => {
-					tx.send(AppMsg::DeleteError("not found".into()))
-						.ok();
-				}
-				Err(e) => {
-					tx.send(AppMsg::DeleteError(e)).ok();
+			for sha256 in shas {
+				match client.delete(&sha256).await {
+					Ok(true) => {
+						tx.send(AppMsg::DeleteDone(sha256)).ok();
+					}
+					Ok(false) => {
+						tx.send(AppMsg::DeleteError("not found".into()))
+							.ok();
+					}
+					Err(e) => {
+						tx.send(AppMsg::DeleteError(e)).ok();
+					}
 				}
 			}
 		});
@@ -1530,6 +1535,30 @@ impl App {
 				.unwrap_or(0);
 			self.blobs_table.select(Some(i));
 		}
+	}
+
+	fn selected_blob_sha(&self) -> Option<String> {
+		let idx = self.blobs_table.selected()?;
+		self.visible_blobs().get(idx).map(|b| b.sha256.clone())
+	}
+
+	fn blob_is_selected(&self, sha: &str) -> bool {
+		self.selected_blobs.iter().any(|s| s == sha)
+	}
+
+	fn toggle_selected_blob(&mut self) {
+		let Some(sha) = self.selected_blob_sha() else {
+			return;
+		};
+		if let Some(pos) = self.selected_blobs.iter().position(|s| s == &sha) {
+			self.selected_blobs.remove(pos);
+		} else {
+			self.selected_blobs.push(sha);
+		}
+	}
+
+	fn clear_selected_blobs(&mut self) {
+		self.selected_blobs.clear();
 	}
 
 	/// Cycle sort field.
@@ -2593,6 +2622,7 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	}
 
 	let sha_header_label = format!("SHA256");
+	let select_header_label = "Sel".to_string();
 	let size_header_label = if app.sort_field == SortField::Size {
 		"Size ▲".to_string()
 	} else {
@@ -2611,6 +2641,11 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	};
 
 	let header = Row::new(vec![
+		Cell::from(select_header_label).style(
+			Style::default()
+				.add_modifier(Modifier::BOLD)
+				.fg(COLOR_ACCENT),
+		),
 		Cell::from(sha_header_label).style(
 			Style::default()
 				.add_modifier(Modifier::BOLD)
@@ -2637,6 +2672,11 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	let rows: Vec<Row> = visible
 		.iter()
 		.map(|b| {
+			let selected = if app.blob_is_selected(&b.sha256) {
+				"[x]"
+			} else {
+				"[ ]"
+			};
 			let sha = if b.sha256.len() > 20 {
 				format!(
 					"{}…{}",
@@ -2655,6 +2695,7 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 				.unwrap_or_else(|| "—".into());
 
 			Row::new(vec![
+				Cell::from(selected),
 				Cell::from(sha),
 				Cell::from(size),
 				Cell::from(ctype),
@@ -2664,6 +2705,7 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 		.collect();
 
 	let widths = [
+		Constraint::Length(5),
 		Constraint::Min(24),
 		Constraint::Length(10),
 		Constraint::Min(20),
@@ -4399,7 +4441,7 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 		))
 	} else {
 		let hints = match app.tab {
-            0 => " r:refresh  d:delete  o:download  m:mirror  s:sort  /:filter  y:copy-sha  u:copy-url  Enter:open  ↑↓/jk  Tab  ?  q",
+            0 => " Space:select  d:delete  o:download  m:mirror  s:sort  /:filter  y:copy-sha  u:copy-url  Enter:open  ↑↓/jk  Tab  ?  q",
             1 => {
                 if app.publish_relay_edit {
                     " Enter/Esc:done  Tab:next  ?:help  q:quit"
@@ -4439,7 +4481,7 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 
 pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
 	match app.modal.clone() {
-		Some(Modal::Delete { sha256 }) => {
+		Some(Modal::Delete { shas }) => {
 			let popup_w = 64u16.min(area.width.saturating_sub(4));
 			let popup_h = 8u16;
 			let popup_x = (area.width.saturating_sub(popup_w)) / 2;
@@ -4451,7 +4493,7 @@ pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
 
 			let block = Block::default()
 				.borders(Borders::ALL)
-				.title(" Delete Blob ")
+				.title(" Delete Blobs ")
 				.border_style(
 					Style::default()
 						.fg(COLOR_ERR)
@@ -4463,9 +4505,8 @@ pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
 			let lines = vec![
 				Line::from(Span::styled(
 					format!(
-						"Delete {}…{}?",
-						&sha256[..64.min(sha256.len())],
-						&sha256[sha256.len().saturating_sub(4)..]
+						"Delete {} item(s)?",
+						shas.len()
 					),
 					Style::default().fg(COLOR_DIM),
 				)),

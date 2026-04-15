@@ -48,10 +48,10 @@ impl SortField {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Modal {
-	/// Prompt for local save path to download selected blob.
-	Download { sha256: String },
-	/// Confirm deletion of the selected blob.
-	Delete { sha256: String },
+    /// Prompt for local save path to download selected blob.
+    Download { sha256: String },
+    /// Confirm deletion of the selected blob.
+    Delete { shas: Vec<String> },
 	/// Prompt for remote URL to mirror onto the server.
 	Mirror,
 }
