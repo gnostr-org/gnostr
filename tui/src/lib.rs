@@ -3541,66 +3541,147 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 }
 
 pub fn draw_modal_input(f: &mut Frame, app: &App, area: Rect) {
-    let (title, label) = match &app.modal {
-        Some(Modal::Download { sha256 }) => (
-            " Download Blob ",
-            format!(
-                "Save path in CWD for {}…{}:",
-                &sha256[..64.min(sha256.len())],
-                &sha256[sha256.len().saturating_sub(4)..]
-            ),
-        ),
-        Some(Modal::Mirror) => (" Mirror Blob ", "Remote URL to mirror:".to_string()),
-        None => return,
-    };
+    match &app.modal {
+        Some(Modal::Download { sha256 }) => {
+            let popup_w = area.width.saturating_sub(8);
+            let popup_h = area.height.saturating_sub(6);
+            let popup_x = (area.width.saturating_sub(popup_w)) / 2;
+            let popup_y = (area.height.saturating_sub(popup_h)) / 2;
+            let popup_area = Rect::new(popup_x, popup_y, popup_w, popup_h);
 
-    let popup_w = 60u16.min(area.width.saturating_sub(4));
-    let popup_h = 7u16;
-    let popup_x = (area.width.saturating_sub(popup_w)) / 2;
-    let popup_y = (area.height.saturating_sub(popup_h)) / 2;
-    let popup_area = Rect::new(popup_x, popup_y, popup_w, popup_h);
+            f.render_widget(Clear, popup_area);
 
-    f.render_widget(Clear, popup_area);
+            let cwd_label = app.download_filebrowser_cwd.to_string_lossy().into_owned();
+            let max_cwd = popup_area.width.saturating_sub(20) as usize;
+            let cwd_display = if cwd_label.len() > max_cwd {
+                format!(
+                    "…{}",
+                    &cwd_label[cwd_label.len().saturating_sub(max_cwd)..]
+                )
+            } else {
+                cwd_label
+            };
 
-    let inner_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),
-            Constraint::Length(3),
-            Constraint::Length(1),
-        ])
-        .margin(1)
-        .split(popup_area);
-
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(title)
-        .border_style(Style::default().fg(COLOR_ACCENT));
-    f.render_widget(block, popup_area);
-
-    f.render_widget(
-        Paragraph::new(label.as_str()).style(Style::default().fg(COLOR_DIM)),
-        inner_chunks[0],
-    );
-
-    let input = Paragraph::new(app.modal_input.as_str())
-        .block(
-            Block::default()
+            let block = Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(COLOR_ACCENT)),
-        )
-        .style(Style::default().fg(Color::White));
-    f.render_widget(input, inner_chunks[1]);
+                .title(format!(" Download Blob — {cwd_display} "))
+                .border_style(
+                    if app.download_filebrowser_active {
+                        Style::default()
+                            .fg(COLOR_ACCENT)
+                            .add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(COLOR_DIM)
+                    },
+                );
+            let inner = block.inner(popup_area);
+            f.render_widget(block, popup_area);
 
-    f.set_cursor_position((
-        inner_chunks[1].x + app.modal_input.len() as u16 + 1,
-        inner_chunks[1].y + 1,
-    ));
+            let title_lines = vec![
+                Line::from(Span::styled(
+                    format!(
+                        "Choose a path for {}…{}",
+                        &sha256[..64.min(sha256.len())],
+                        &sha256[sha256.len().saturating_sub(4)..]
+                    ),
+                    Style::default().fg(COLOR_DIM),
+                )),
+                Line::from(Span::styled(
+                    "Enter: choose file / open directory   Esc: close",
+                    Style::default().fg(COLOR_DIM),
+                )),
+            ];
 
-    f.render_widget(
-        Paragraph::new("Enter: confirm   Esc: cancel").style(Style::default().fg(COLOR_DIM)),
-        inner_chunks[2],
-    );
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(2), Constraint::Min(1)])
+                .split(inner);
+            f.render_widget(Paragraph::new(title_lines), chunks[0]);
+
+            if app.download_filebrowser_entries.is_empty() && app.download_filebrowser_active
+            {
+                f.render_widget(
+                    Paragraph::new("  No files found in this directory.")
+                        .style(Style::default().fg(COLOR_DIM)),
+                    chunks[1],
+                );
+                return;
+            }
+
+            let items: Vec<ListItem> = app
+                .download_filebrowser_entries
+                .iter()
+                .map(filebrowser_list_item)
+                .collect();
+            let list = List::new(items)
+                .highlight_style(
+                    Style::default()
+                        .bg(COLOR_SELECTED_BG)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .highlight_symbol("› ");
+            f.render_stateful_widget(
+                list,
+                chunks[1],
+                &mut app.download_filebrowser_list.clone(),
+            );
+            // Sync the browser title path with the current selection.
+            // The actual cursor isn't shown for the picker.
+        }
+        Some(Modal::Mirror) => {
+            let title = " Mirror Blob ";
+            let label = "Remote URL to mirror:";
+            let popup_w = 60u16.min(area.width.saturating_sub(4));
+            let popup_h = 7u16;
+            let popup_x = (area.width.saturating_sub(popup_w)) / 2;
+            let popup_y = (area.height.saturating_sub(popup_h)) / 2;
+            let popup_area = Rect::new(popup_x, popup_y, popup_w, popup_h);
+
+            f.render_widget(Clear, popup_area);
+
+            let inner_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(1),
+                    Constraint::Length(3),
+                    Constraint::Length(1),
+                ])
+                .margin(1)
+                .split(popup_area);
+
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .title(title)
+                .border_style(Style::default().fg(COLOR_ACCENT));
+            f.render_widget(block, popup_area);
+
+            f.render_widget(
+                Paragraph::new(label).style(Style::default().fg(COLOR_DIM)),
+                inner_chunks[0],
+            );
+
+            let input = Paragraph::new(app.modal_input.as_str())
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(COLOR_ACCENT)),
+                )
+                .style(Style::default().fg(Color::White));
+            f.render_widget(input, inner_chunks[1]);
+
+            f.set_cursor_position((
+                inner_chunks[1].x + app.modal_input.len() as u16 + 1,
+                inner_chunks[1].y + 1,
+            ));
+
+            f.render_widget(
+                Paragraph::new("Enter: confirm   Esc: cancel")
+                    .style(Style::default().fg(COLOR_DIM)),
+                inner_chunks[2],
+            );
+        }
+        None => return,
+    }
 }
 
 pub fn draw_profile_tab(f: &mut Frame, app: &mut App, area: Rect) {
