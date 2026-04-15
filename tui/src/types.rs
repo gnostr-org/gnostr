@@ -55,6 +55,8 @@ pub enum AppMsg {
     BlobsError(String),
     UploadDone(std::path::PathBuf, BlobDescriptor),
     UploadError(String),
+    UploadBatchItemDone(usize, std::path::PathBuf, BlobDescriptor),
+    UploadBatchItemError(usize, std::path::PathBuf, String),
     StatusLoaded(serde_json::Value),
     StatusError(String),
     DeleteDone(String),

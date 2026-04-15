@@ -91,6 +91,8 @@ pub struct App {
     pub publish_nip94: bool,      // toggle: publish NIP-94 after upload
     pub publish_relay: String,    // relay URL for NIP-94 publishing
     pub publish_relay_edit: bool, // editing relay URL field
+    pub upload_items: Vec<BatchItem>,
+    pub upload_running: bool,
 
     // File browser (upload tab)
     pub filebrowser_cwd: PathBuf,
@@ -243,6 +245,8 @@ impl App {
             publish_nip94: false,
             publish_relay: String::new(),
             publish_relay_edit: false,
+            upload_items: Vec::new(),
+            upload_running: false,
             filebrowser_cwd: std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/")),
             filebrowser_entries: Vec::new(),
             filebrowser_list: ListState::default(),
@@ -370,6 +374,47 @@ impl App {
                 self.upload_loading = false;
                 self.upload_ok = false;
                 self.upload_msg = Some(format!("✗  {e}"));
+            }
+            AppMsg::UploadBatchItemDone(idx, path, desc) => {
+                if let Some(item) = self.upload_items.get_mut(idx) {
+                    item.status = BatchStatus::Done(desc.clone());
+                }
+                self.upload_filebrowser_select_next_after(&path);
+                let all_done = self
+                    .upload_items
+                    .iter()
+                    .all(|i| matches!(i.status, BatchStatus::Done(_) | BatchStatus::Failed(_)));
+                if all_done {
+                    self.upload_running = false;
+                    self.upload_loading = false;
+                    self.upload_ok = self
+                        .upload_items
+                        .iter()
+                        .all(|i| matches!(i.status, BatchStatus::Done(_)));
+                    self.upload_msg = Some(format!(
+                        "{} queued uploads finished",
+                        self.upload_items.len()
+                    ));
+                    self.refresh_blobs();
+                }
+            }
+            AppMsg::UploadBatchItemError(idx, path, e) => {
+                if let Some(item) = self.upload_items.get_mut(idx) {
+                    item.status = BatchStatus::Failed(e.clone());
+                }
+                self.upload_filebrowser_select_next_after(&path);
+                let all_done = self
+                    .upload_items
+                    .iter()
+                    .all(|i| matches!(i.status, BatchStatus::Done(_) | BatchStatus::Failed(_)));
+                if all_done {
+                    self.upload_running = false;
+                    self.upload_loading = false;
+                    self.upload_ok = false;
+                    self.upload_msg = Some("Queued uploads finished with errors".into());
+                    self.notification = Some((format!("Upload failed: {e}"), true));
+                    self.refresh_blobs();
+                }
             }
             AppMsg::StatusLoaded(data) => {
                 self.status_loading = false;
@@ -632,6 +677,10 @@ impl App {
     }
 
     pub fn start_upload(&mut self) {
+        if !self.upload_items.is_empty() {
+            self.start_upload_queue();
+            return;
+        }
         let path_str = self.upload_path.trim().to_string();
         if path_str.is_empty() {
             self.upload_msg = Some("Enter a file path first (press i to edit).".into());
@@ -838,6 +887,114 @@ impl App {
     pub fn upload_focus_input(&mut self) {
         self.filebrowser_active = false;
         self.input_mode = true;
+    }
+
+    fn upload_queue_contains(&self, path: &std::path::Path) -> bool {
+        self.upload_items.iter().any(|item| item.path == path.to_string_lossy())
+    }
+
+    fn upload_queue_toggle_selected(&mut self) {
+        let Some(idx) = self.filebrowser_list.selected() else {
+            return;
+        };
+        let Some(entry) = self.filebrowser_entries.get(idx) else {
+            return;
+        };
+        if entry.is_dir {
+            self.filebrowser_enter();
+            return;
+        }
+
+        let path = entry.path.to_string_lossy().into_owned();
+        if let Some(pos) = self.upload_items.iter().position(|item| item.path == path) {
+            if !self.upload_running {
+                self.upload_items.remove(pos);
+            }
+        } else if !self.upload_running {
+            self.upload_items.push(BatchItem {
+                path,
+                status: BatchStatus::Pending,
+            });
+        }
+    }
+
+    fn start_upload_queue(&mut self) {
+        if self.upload_running || self.upload_items.is_empty() {
+            return;
+        }
+        if self.secret_key.is_none() {
+            self.notification = Some(("A secret key is required to upload.".into(), true));
+            return;
+        }
+
+        self.upload_running = true;
+        for item in &mut self.upload_items {
+            if matches!(item.status, BatchStatus::Pending | BatchStatus::Failed(_)) {
+                item.status = BatchStatus::Running;
+            }
+        }
+
+        let server = self.server.clone();
+        let secret_key = self.secret_key.clone().unwrap();
+        let tx = self.tx.clone();
+        let paths: Vec<(usize, String)> = self
+            .upload_items
+            .iter()
+            .enumerate()
+            .map(|(i, item)| (i, item.path.clone()))
+            .collect();
+
+        tokio::spawn(async move {
+            let sem = std::sync::Arc::new(tokio::sync::Semaphore::new(4));
+            let mut handles = Vec::new();
+
+            for (idx, path) in paths {
+                let permit = sem.clone().acquire_owned().await.ok();
+                let server = server.clone();
+                let secret_key = secret_key.clone();
+                let tx = tx.clone();
+                let path = path.clone();
+
+                handles.push(tokio::spawn(async move {
+                    let _permit = permit;
+                    let signer = match Signer::from_secret_hex(&secret_key) {
+                        Ok(s) => s,
+                        Err(e) => {
+                            tx.send(AppMsg::UploadBatchItemError(
+                                idx,
+                                std::path::PathBuf::from(path),
+                                e,
+                            ))
+                            .ok();
+                            return;
+                        }
+                    };
+                    let client = BlossomClient::new(vec![server], signer);
+                    let p = std::path::Path::new(&path);
+                    let mime = crate::mime_from_path(p);
+                    match client.upload_file(p, &mime).await {
+                        Ok(desc) => tx
+                            .send(AppMsg::UploadBatchItemDone(
+                                idx,
+                                std::path::PathBuf::from(path),
+                                desc,
+                            ))
+                            .ok(),
+                        Err(e) => tx
+                            .send(AppMsg::UploadBatchItemError(
+                                idx,
+                                std::path::PathBuf::from(path),
+                                e,
+                            ))
+                            .ok(),
+                    };
+                }));
+            }
+
+            for h in handles {
+                let _ = h.await;
+            }
+        });
     }
 
     // ── Batch file browser methods ────────────────────────────────────────────
@@ -2158,7 +2315,8 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
             Constraint::Length(3), // file path input
             Constraint::Length(3), // nip-94 publish row
             Constraint::Length(3), // controls hint
-            Constraint::Min(3),    // result
+            Constraint::Min(6),    // queue
+            Constraint::Length(4),  // result
         ])
         .split(h_split[1]);
 
@@ -2569,7 +2727,7 @@ fn draw_upload_filebrowser(f: &mut Frame, app: &mut App, area: Rect) {
     let items: Vec<ListItem> = app
         .filebrowser_entries
         .iter()
-        .map(|e| filebrowser_list_item(e))
+        .map(|e| upload_filebrowser_list_item(e, app.upload_queue_contains(&e.path)))
         .collect();
 
     let list = List::new(items)
@@ -2775,6 +2933,46 @@ fn filebrowser_list_item(e: &FileBrowserEntry) -> ListItem<'static> {
                 ));
             }
             // show in-progress state badge
+            if let Some(state) = &info.state {
+                spans.push(Span::styled(
+                    format!(" [{}]", state.label()),
+                    Style::default()
+                        .fg(Color::Red)
+                        .add_modifier(Modifier::BOLD),
+                ));
+            }
+        }
+        None => {}
+    }
+    ListItem::new(Line::from(spans))
+}
+
+fn upload_filebrowser_list_item(e: &FileBrowserEntry, queued: bool) -> ListItem<'static> {
+    let (icon, base_style) = if e.is_dir {
+        ("▶ ", Style::default().fg(Color::Cyan))
+    } else if queued {
+        ("[x] ", Style::default().fg(COLOR_OK))
+    } else {
+        ("    ", Style::default().fg(Color::White))
+    };
+    let mut spans = vec![Span::styled(format!("{icon}{}", e.name), base_style)];
+    match &e.git {
+        Some(info) => {
+            let (badge, color) = match info.kind {
+                GitRepoKind::Repo => (" git", Color::Yellow),
+                GitRepoKind::Bare => (" bare", Color::Magenta),
+            };
+            spans.push(Span::raw(" "));
+            spans.push(Span::styled(
+                badge,
+                Style::default().fg(color).add_modifier(Modifier::BOLD),
+            ));
+            if let Some(branch) = &info.branch {
+                spans.push(Span::styled(
+                    format!(":{branch}"),
+                    Style::default().fg(COLOR_DIM),
+                ));
+            }
             if let Some(state) = &info.state {
                 spans.push(Span::styled(
                     format!(" [{}]", state.label()),
