@@ -1291,7 +1291,12 @@ impl App {
             return;
         };
         let sha256 = blob.sha256.clone();
-        self.modal_input = sha256[..64.min(sha256.len())].to_string();
+        self.download_filebrowser_active = true;
+        if self.download_filebrowser_entries.is_empty() {
+            self.download_filebrowser_load();
+        } else {
+            self.download_filebrowser_sync_path();
+        }
         self.modal = Some(Modal::Download { sha256 });
     }
 
@@ -1302,6 +1307,7 @@ impl App {
         };
         let path_str = self.modal_input.trim().to_string();
         self.modal_input.clear();
+        self.download_filebrowser_active = false;
         if path_str.is_empty() {
             self.notification = Some(("Enter a file path.".into(), true));
             return;
