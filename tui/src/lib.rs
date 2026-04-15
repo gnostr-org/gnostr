@@ -1180,7 +1180,7 @@ impl App {
             return;
         };
         let sha256 = blob.sha256.clone();
-        self.modal_input = sha256[..16.min(sha256.len())].to_string();
+        self.modal_input = sha256[..64.min(sha256.len())].to_string();
         self.modal = Some(Modal::Download { sha256 });
     }
 
@@ -1669,7 +1669,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
 pub fn draw_title_bar(f: &mut Frame, app: &App, area: Rect) {
     let pubkey_info = match &app.pubkey {
-        Some(pk) => format!("  pubkey: {}…", &pk[..16]),
+        Some(pk) => format!("  pubkey: {}", &pk[..64]),
         None => "  no key set".into(),
     };
     let title = Paragraph::new(Line::from(vec![
@@ -3174,8 +3174,8 @@ pub fn draw_nip34_tab(f: &mut Frame, app: &mut App, area: Rect) {
             let ts = chrono_fmt_unix(ev.created_at);
             Row::new(vec![
                 Cell::from(ev.kind_name()),
-                Cell::from(format!("{:.8}", ev.id)),
-                Cell::from(format!("{:.8}", ev.pubkey)),
+                Cell::from(format!("{:.64}", ev.id)),
+                Cell::from(format!("{:.64}", ev.pubkey)),
                 Cell::from(ts),
                 Cell::from(ev.content_preview.as_str()),
             ])
@@ -4849,8 +4849,8 @@ pub async fn run_loop(
                                                         Ok(ev) => {
                                                             app.notification = Some((
                                                                 format!(
-                                                                    "Relay list: {}…",
-                                                                    &ev["id"].as_str().unwrap_or("")[..8]
+                                                                    "Relay list: {}",
+                                                                    &ev["id"].as_str().unwrap_or("")[..64]
                                                                 ),
                                                                 false,
                                                             ));
@@ -5007,8 +5007,8 @@ pub async fn run_loop(
                                                         Ok(ev) => {
                                                             app.notification = Some((
                                                                 format!(
-                                                                    "Server list: {}…",
-                                                                    &ev["id"].as_str().unwrap_or("")[..8]
+                                                                    "Server list: {}",
+                                                                    &ev["id"].as_str().unwrap_or("")[..64]
                                                                 ),
                                                                 false,
                                                             ));
@@ -5190,7 +5190,7 @@ pub async fn run_loop(
                                                             app.notification = Some((
                                                                 format!(
                                                                     "Profile event: {}…",
-                                                                    &ev["id"].as_str().unwrap_or("")[..8]
+                                                                    &ev["id"].as_str().unwrap_or("")[..64]
                                                                 ),
                                                                 false,
                                                             ));
