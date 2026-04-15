@@ -6047,49 +6047,9 @@ pub async fn run_loop(
 						_ => {}
 					},
 					1 => {
-						// Git panel takes highest priority.
-						if app.git_mode {
-							match key.code {
-								KeyCode::Char('s') => app
-									.run_git_action(
-										GitAction::Status,
-									),
-								KeyCode::Char('l') => {
-									app.run_git_action(GitAction::Log)
-								}
-								KeyCode::Char('d') => app
-									.run_git_action(GitAction::Diff),
-								KeyCode::Char('f') => app
-									.run_git_action(GitAction::Fetch),
-								KeyCode::Char('p') => app
-									.run_git_action(GitAction::Pull),
-								KeyCode::Char('P') => app
-									.run_git_action(GitAction::Push),
-								KeyCode::Char('a') => {
-									app.run_git_action(GitAction::Add)
-								}
-								KeyCode::Char('c') => {
-									app.git_commit_edit = true;
-								}
-								KeyCode::Up | KeyCode::Char('k') => {
-									app.git_scroll_up()
-								}
-								KeyCode::Down
-								| KeyCode::Char('j') => app.git_scroll_down(20),
-								KeyCode::Esc => {
-									if app.git_action_running {
-										app.cancel_git_action();
-									} else {
-										app.git_mode = false
-									}
-								}
-								KeyCode::Char('q') => {
-									app.git_mode = false
-								}
-								_ => {}
-							}
-						// File browser takes next priority when active.
-						} else if app.filebrowser_active {
+						// File browser takes priority so navigation stays usable
+						// even while the git sidebar is visible.
+						if app.filebrowser_active {
 							match key.code {
 								KeyCode::Tab | KeyCode::Char('i') => {
 									app.upload_focus_input()
@@ -6140,33 +6100,7 @@ pub async fn run_loop(
 								}
 								_ => {}
 							}
-						} else {
-							match key.code {
-								KeyCode::Char('f') => {
-									app.upload_focus_browser()
-								}
-								KeyCode::Char('i') => {
-									app.input_mode = true
-								}
-								KeyCode::Char('p') => {
-									app.publish_nip94 =
-										!app.publish_nip94
-								}
-								KeyCode::Char('R') => {
-									app.publish_relay_edit = true
-								}
-								KeyCode::Enter => app.start_upload(),
-								KeyCode::Esc => {
-									app.upload_path.clear();
-									app.upload_msg = None;
-								}
-								_ => {}
-							}
-						}
-					}
-					2 => {
-						// Git panel takes highest priority.
-						if app.git_mode {
+						} else if app.git_mode {
 							match key.code {
 								KeyCode::Char('s') => app
 									.run_git_action(
@@ -6206,7 +6140,34 @@ pub async fn run_loop(
 								}
 								_ => {}
 							}
-						} else if app.batch_filebrowser_active {
+						} else {
+							match key.code {
+								KeyCode::Char('f') => {
+									app.upload_focus_browser()
+								}
+								KeyCode::Char('i') => {
+									app.input_mode = true
+								}
+								KeyCode::Char('p') => {
+									app.publish_nip94 =
+										!app.publish_nip94
+								}
+								KeyCode::Char('R') => {
+									app.publish_relay_edit = true
+								}
+								KeyCode::Enter => app.start_upload(),
+								KeyCode::Esc => {
+									app.upload_path.clear();
+									app.upload_msg = None;
+								}
+								_ => {}
+							}
+						}
+					}
+					2 => {
+						// File browser takes priority so navigation stays usable
+						// even while the git sidebar is visible.
+						if app.batch_filebrowser_active {
 							match key.code {
 								KeyCode::Up | KeyCode::Char('k') => {
 									app.batch_filebrowser_scroll_up()
@@ -6229,7 +6190,7 @@ pub async fn run_loop(
 										app.batch_filebrowser_parent(
 										);
 									} else {
-										app.batch_filebrowser_active =
+									app.batch_filebrowser_active =
                                             false;
 									}
 								}
@@ -6251,6 +6212,46 @@ pub async fn run_loop(
 								KeyCode::Char('f') => {
 									app.batch_filebrowser_active =
 										false
+								}
+								_ => {}
+							}
+						} else if app.git_mode {
+							match key.code {
+								KeyCode::Char('s') => app
+									.run_git_action(
+										GitAction::Status,
+									),
+								KeyCode::Char('l') => {
+									app.run_git_action(GitAction::Log)
+								}
+								KeyCode::Char('d') => app
+									.run_git_action(GitAction::Diff),
+								KeyCode::Char('f') => app
+									.run_git_action(GitAction::Fetch),
+								KeyCode::Char('p') => app
+									.run_git_action(GitAction::Pull),
+								KeyCode::Char('P') => app
+									.run_git_action(GitAction::Push),
+								KeyCode::Char('a') => {
+									app.run_git_action(GitAction::Add)
+								}
+								KeyCode::Char('c') => {
+									app.git_commit_edit = true;
+								}
+								KeyCode::Up | KeyCode::Char('k') => {
+									app.git_scroll_up()
+								}
+								KeyCode::Down
+								| KeyCode::Char('j') => app.git_scroll_down(20),
+								KeyCode::Esc => {
+									if app.git_action_running {
+										app.cancel_git_action();
+									} else {
+										app.git_mode = false
+									}
+								}
+								KeyCode::Char('q') => {
+									app.git_mode = false
 								}
 								_ => {}
 							}
