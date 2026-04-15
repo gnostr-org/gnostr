@@ -118,6 +118,12 @@ pub struct App {
     pub batch_filebrowser_list: ListState,
     pub batch_filebrowser_active: bool,
 
+    // File browser (download popup)
+    pub download_filebrowser_cwd: PathBuf,
+    pub download_filebrowser_entries: Vec<FileBrowserEntry>,
+    pub download_filebrowser_list: ListState,
+    pub download_filebrowser_active: bool,
+
     // Git panel (shared across upload and batch file browsers)
     pub git_mode: bool,            // right pane shows git panel
     pub git_repo_path: PathBuf,    // repo the panel is operating on
@@ -254,6 +260,11 @@ impl App {
             batch_filebrowser_entries: Vec::new(),
             batch_filebrowser_list: ListState::default(),
             batch_filebrowser_active: false,
+            download_filebrowser_cwd: std::env::current_dir()
+                .unwrap_or_else(|_| PathBuf::from("/")),
+            download_filebrowser_entries: Vec::new(),
+            download_filebrowser_list: ListState::default(),
+            download_filebrowser_active: false,
             git_mode: false,
             git_repo_path: PathBuf::new(),
             git_repo_info: None,
