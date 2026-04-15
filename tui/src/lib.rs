@@ -54,8 +54,8 @@ use tokio_tungstenite::tungstenite::Message as WsMessage;
 
 pub const APP_TITLE: &str = "blossom-tui";
 pub const TAB_NAMES: &[&str] = &[
-	" Blobs ", " Upload ", " Batch ", " Admin ", " Relay ", " NIPs ",
-	" Status ", " Keygen ",
+	" Blobs ", " Upload ", " Admin ", " Relay ", " NIPs ", " Status ",
+	" Keygen ",
 ];
 
 pub const NIP_TAB_NAMES: &[&str] =
@@ -1530,7 +1530,7 @@ impl App {
 			1 => {
 				self.filebrowser_activate();
 			}
-			2 if self.status_data.is_none()
+		5 if self.status_data.is_none()
 				&& !self.status_loading =>
 			{
 				self.refresh_status()
@@ -2467,12 +2467,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 	match app.tab {
 		0 => draw_blobs_tab(f, app, chunks[2]),
 		1 => draw_upload_tab(f, app, chunks[2]),
-		2 => draw_batch_tab(f, app, chunks[2]),
-		3 => draw_admin_tab(f, app, chunks[2]),
-		4 => draw_relay_tab(f, app, chunks[2]),
-		5 => draw_nips_tab(f, app, chunks[2]),
-		6 => draw_status_tab(f, app, chunks[2]),
-		7 => draw_keygen_tab(f, app, chunks[2]),
+		2 => draw_admin_tab(f, app, chunks[2]),
+		3 => draw_relay_tab(f, app, chunks[2]),
+		4 => draw_nips_tab(f, app, chunks[2]),
+		5 => draw_status_tab(f, app, chunks[2]),
+		6 => draw_keygen_tab(f, app, chunks[2]),
 		_ => {}
 	}
 
@@ -4490,20 +4489,19 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
                     " f:browse  i:edit-path  Tab:toggle  p:toggle-nip94  R:relay-url  Enter:upload  Esc:clear  ?:help  q:quit"
                 }
             }
-            2 => " i:edit  Enter:add/start  x:remove-last  Tab:next  ?:help  q:quit",
-            3 => " r:refresh  Tab:next  ?:help  q:quit",
-            4 => " r:refresh  Tab:next  ?:help  q:quit",
-            5 => match app.nip_tab {
-                0 => " a:add  d:delete  m:marker  R:relay  P:publish  [ ]:switch-nip  Tab  ?  q",
-                1 => " r:refresh  [ ]:switch-nip  Tab  ?  q",
-                2 => " r:edit-relay  c:connect  ↑↓:scroll  [ ]:switch-nip  Tab  ?  q",
-                3 => " a:add  d:delete  R:relay  P:publish  [ ]:switch-nip  Tab  ?  q",
-                _ => " ↑↓:navigate  e:edit  r:relay  P:publish-kind0  [ ]:switch-nip  Tab  ?  q",
-            },
-            6 => " r:refresh  Tab:next  ?:help  q:quit",
-            7 => " g:generate  1:hex  2:nsec  3:pubkey  4:npub  Tab:next  ?:help  q:quit",
-            _ => " Tab:next  ?:help  q:quit",
-        };
+			2 => " r:refresh  Tab:next  ?:help  q:quit",
+			3 => " r:refresh  Tab:next  ?:help  q:quit",
+			4 => match app.nip_tab {
+				0 => " a:add  d:delete  m:marker  R:relay  P:publish  [ ]:switch-nip  Tab  ?  q",
+				1 => " r:refresh  [ ]:switch-nip  Tab  ?  q",
+				2 => " r:edit-relay  c:connect  ↑↓:scroll  [ ]:switch-nip  Tab  ?  q",
+				3 => " a:add  d:delete  R:relay  P:publish  [ ]:switch-nip  Tab  ?  q",
+				_ => " ↑↓:navigate  e:edit  r:relay  P:publish-kind0  [ ]:switch-nip  Tab  ?  q",
+			},
+			5 => " r:refresh  Tab:next  ?:help  q:quit",
+			6 => " g:generate  1:hex  2:nsec  3:pubkey  4:npub  Tab:next  ?:help  q:quit",
+			_ => " Tab:next  ?:help  q:quit",
+		};
 		Line::from(Span::styled(
 			hints,
 			Style::default().fg(Color::White).bg(COLOR_TITLE_BG),
@@ -6165,125 +6163,16 @@ pub async fn run_loop(
 						}
 					}
 					2 => {
-						// File browser takes priority so navigation stays usable
-						// even while the git sidebar is visible.
-						if app.batch_filebrowser_active {
-							match key.code {
-								KeyCode::Up | KeyCode::Char('k') => {
-									app.batch_filebrowser_scroll_up()
-								}
-								KeyCode::Down
-								| KeyCode::Char('j') => app
-									.batch_filebrowser_scroll_down(),
-								KeyCode::Enter => {
-									app.batch_filebrowser_enter()
-								}
-								KeyCode::Backspace
-								| KeyCode::Char('h')
-								| KeyCode::Char('-')
-								| KeyCode::Esc => {
-									if app
-										.batch_filebrowser_cwd
-										.parent()
-										.is_some()
-									{
-										app.batch_filebrowser_parent(
-										);
-									} else {
-									app.batch_filebrowser_active =
-                                            false;
-									}
-								}
-								KeyCode::Char('g') => {
-									let selected_path = app
-										.batch_filebrowser_list
-										.selected()
-										.and_then(|i| {
-											app.batch_filebrowser_entries
-                                                .get(i)
-										})
-										.filter(|e| e.git.is_some())
-										.map(|e| e.path.clone());
-									if let Some(path) = selected_path
-									{
-										app.git_open(path);
-									}
-								}
-								KeyCode::Char('f') => {
-									app.batch_filebrowser_active =
-										false
-								}
-								_ => {}
-							}
-						} else if app.git_mode {
-							match key.code {
-								KeyCode::Char('s') => app
-									.run_git_action(
-										GitAction::Status,
-									),
-								KeyCode::Char('l') => {
-									app.run_git_action(GitAction::Log)
-								}
-								KeyCode::Char('d') => app
-									.run_git_action(GitAction::Diff),
-								KeyCode::Char('f') => app
-									.run_git_action(GitAction::Fetch),
-								KeyCode::Char('p') => app
-									.run_git_action(GitAction::Pull),
-								KeyCode::Char('P') => app
-									.run_git_action(GitAction::Push),
-								KeyCode::Char('a') => {
-									app.run_git_action(GitAction::Add)
-								}
-								KeyCode::Char('c') => {
-									app.git_commit_edit = true;
-								}
-								KeyCode::Up | KeyCode::Char('k') => {
-									app.git_scroll_up()
-								}
-								KeyCode::Down
-								| KeyCode::Char('j') => app.git_scroll_down(20),
-								KeyCode::Esc => {
-									if app.git_action_running {
-										app.cancel_git_action();
-									} else {
-										app.git_mode = false
-									}
-								}
-								KeyCode::Char('q') => {
-									app.git_mode = false
-								}
-								_ => {}
-							}
-						} else {
-							match key.code {
-								KeyCode::Char('f') => {
-									app.batch_filebrowser_activate()
-								}
-								KeyCode::Char('i') => {
-									app.batch_input_mode = true
-								}
-								KeyCode::Enter => {
-									app.start_batch_upload()
-								}
-								KeyCode::Char('x') => {
-									app.remove_last_batch_item()
-								}
-								_ => {}
-							}
-						}
-					}
-					3 => {
 						if key.code == KeyCode::Char('r') {
 							app.refresh_admin();
 						}
 					}
-					4 => {
+					3 => {
 						if key.code == KeyCode::Char('r') {
 							app.refresh_relay();
 						}
 					}
-					5 => {
+					4 => {
 						// NIPs container — sub-tab navigation + dispatch
 						match key.code {
 							KeyCode::Char('[') => {
@@ -6820,12 +6709,12 @@ pub async fn run_loop(
 							},
 						}
 					}
-					6 => {
+					5 => {
 						if key.code == KeyCode::Char('r') {
 							app.refresh_status();
 						}
 					}
-					7 => match key.code {
+					6 => match key.code {
 						KeyCode::Char('g') => app.generate_keypair(),
 						KeyCode::Char('1') => {
 							app.copy_keygen_field(1)
