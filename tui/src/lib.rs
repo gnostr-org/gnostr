@@ -5,7 +5,7 @@
 //!
 //! # Tabs
 //! - **Blobs** — list, navigate, delete blobs
-//! - **Upload** — upload a local file
+//! - **Upload** — upload one or more local files
 //! - **Status** — fetch and display `/status` JSON
 //! - **Keygen** — generate a fresh BIP-340 keypair
 
@@ -890,7 +890,8 @@ impl App {
     }
 
     fn upload_queue_contains(&self, path: &std::path::Path) -> bool {
-        self.upload_items.iter().any(|item| item.path == path.to_string_lossy())
+        let path = path.to_string_lossy().into_owned();
+        self.upload_items.iter().any(|item| item.path == path)
     }
 
     fn upload_queue_toggle_selected(&mut self) {
@@ -915,6 +916,7 @@ impl App {
                 path,
                 status: BatchStatus::Pending,
             });
+            self.filebrowser_scroll_down();
         }
     }
 
@@ -928,6 +930,9 @@ impl App {
         }
 
         self.upload_running = true;
+        self.upload_loading = false;
+        self.upload_msg = None;
+        self.upload_ok = false;
         for item in &mut self.upload_items {
             if matches!(item.status, BatchStatus::Pending | BatchStatus::Failed(_)) {
                 item.status = BatchStatus::Running;
@@ -2446,6 +2451,13 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
             ),
             Span::raw(": select/open    "),
             Span::styled(
+                "Space",
+                Style::default()
+                    .fg(COLOR_ACCENT)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(": queue/remove    "),
+            Span::styled(
                 "Tab",
                 Style::default()
                     .fg(COLOR_ACCENT)
@@ -2483,13 +2495,13 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::raw(": toggle browse/edit    "),
-                Span::styled(
-                    "Enter",
-                    Style::default()
-                        .fg(COLOR_ACCENT)
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(COLOR_ACCENT)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw(": upload    "),
+            Span::raw(": upload queued files / current path    "),
             Span::styled(
                 "Esc",
                 Style::default()
@@ -2503,11 +2515,67 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
         Paragraph::new(hints).block(Block::default().borders(Borders::ALL).title(" Controls "));
     f.render_widget(hints_para, chunks[2]);
 
-    if app.upload_loading {
-        let loading = Paragraph::new("Uploading…")
-            .block(Block::default().borders(Borders::ALL).title(" Result "))
+    let queue_title = if app.upload_running {
+        format!(" Queue ({} items, running) ", app.upload_items.len())
+    } else {
+        format!(" Queue ({} items) ", app.upload_items.len())
+    };
+    let queue_block = Block::default().borders(Borders::ALL).title(queue_title);
+    let queue_inner = queue_block.inner(chunks[3]);
+    f.render_widget(queue_block, chunks[3]);
+
+    if app.upload_items.is_empty() {
+        let placeholder = Paragraph::new("Space queues files here.")
             .style(Style::default().fg(COLOR_DIM));
-        f.render_widget(loading, chunks[3]);
+        f.render_widget(placeholder, queue_inner);
+    } else {
+        let rows: Vec<Row> = app
+            .upload_items
+            .iter()
+            .map(|item| {
+                let (status_text, status_style) = match &item.status {
+                    BatchStatus::Pending => ("pending", Style::default().fg(COLOR_DIM)),
+                    BatchStatus::Running => ("running…", Style::default().fg(Color::Yellow)),
+                    BatchStatus::Done(_) => ("✓ done", Style::default().fg(COLOR_OK)),
+                    BatchStatus::Failed(_) => ("✗ failed", Style::default().fg(COLOR_ERR)),
+                };
+                let path_display = if item.path.len() > 60 {
+                    format!("…{}", &item.path[item.path.len() - 57..])
+                } else {
+                    item.path.clone()
+                };
+                Row::new(vec![
+                    Cell::from(path_display),
+                    Cell::from(status_text).style(status_style),
+                ])
+            })
+            .collect();
+        let table = Table::new(rows, [Constraint::Min(40), Constraint::Length(12)])
+            .header(
+                Row::new(vec![
+                    Cell::from("Path").style(
+                        Style::default()
+                            .fg(COLOR_ACCENT)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Cell::from("Status").style(
+                        Style::default()
+                            .fg(COLOR_ACCENT)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                ])
+                .bottom_margin(1),
+            );
+        f.render_widget(table, queue_inner);
+    }
+
+    let result_block = Block::default().borders(Borders::ALL).title(" Result ");
+    let result_inner = result_block.inner(chunks[4]);
+    f.render_widget(result_block, chunks[4]);
+    if app.upload_running {
+        let loading = Paragraph::new("Uploading queued files…")
+            .style(Style::default().fg(COLOR_DIM));
+        f.render_widget(loading, result_inner);
     } else if let Some(msg) = &app.upload_msg {
         let style = if app.upload_ok {
             Style::default().fg(COLOR_OK)
@@ -2515,15 +2583,13 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(COLOR_ERR)
         };
         let result_para = Paragraph::new(msg.as_str())
-            .block(Block::default().borders(Borders::ALL).title(" Result "))
             .style(style)
             .wrap(Wrap { trim: false });
-        f.render_widget(result_para, chunks[3]);
+        f.render_widget(result_para, result_inner);
     } else {
         let placeholder = Paragraph::new("No upload yet.")
-            .block(Block::default().borders(Borders::ALL).title(" Result "))
             .style(Style::default().fg(COLOR_DIM));
-        f.render_widget(placeholder, chunks[3]);
+        f.render_widget(placeholder, result_inner);
     }
 }
 
@@ -4251,7 +4317,7 @@ pub fn draw_help_popup(f: &mut Frame, area: Rect, tab: usize, nip_tab: usize) {
                 kv("  Tab              ", "Toggle browser / edit focus"),
                 kv("  p                ", "Toggle NIP-94 publish"),
                 kv("  R                ", "Edit relay URL"),
-                kv("  Enter            ", "Upload from path / accept browser selection"),
+                kv("  Enter            ", "Upload queued files / upload current path"),
                 kv("  Esc              ", "Cancel editing / go up or close browser"),
                 Line::from(""),
                 Line::from(Span::styled(
@@ -4260,6 +4326,7 @@ pub fn draw_help_popup(f: &mut Frame, area: Rect, tab: usize, nip_tab: usize) {
                 )),
                 kv("  ↑ / k            ", "Navigate up"),
                 kv("  ↓ / j            ", "Navigate down"),
+                kv("  Space            ", "Queue/remove file for batch upload"),
                 kv("  Enter            ", "Open dir / choose file"),
                 kv("  Backspace / h / -", "Go to parent directory"),
                 kv("  Tab              ", "Switch to path editing"),
@@ -5262,6 +5329,7 @@ pub async fn run_loop(
                                 KeyCode::Tab | KeyCode::Char('i') => {
                                     app.upload_focus_input()
                                 }
+                                KeyCode::Char(' ') => app.upload_queue_toggle_selected(),
                                 KeyCode::Up | KeyCode::Char('k') => {
                                     app.filebrowser_scroll_up()
                                 }
