@@ -934,14 +934,32 @@ impl App {
         } else {
             Some(sel)
         });
-        self.download_filebrowser_sync_path();
     }
 
     fn download_filebrowser_sync_path(&mut self) {
         if let Some(idx) = self.download_filebrowser_list.selected() {
             if let Some(entry) = self.download_filebrowser_entries.get(idx) {
-                self.modal_input = entry.path.to_string_lossy().into_owned();
+                self.modal_input = self.download_path_for_entry(entry);
             }
+        }
+    }
+
+    fn download_default_name(&self) -> String {
+        match &self.modal {
+            Some(Modal::Download { sha256 }) if !sha256.is_empty() => sha256.clone(),
+            _ => "blob".into(),
+        }
+    }
+
+    fn download_path_for_entry(&self, entry: &FileBrowserEntry) -> String {
+        if entry.is_dir {
+            entry
+                .path
+                .join(self.download_default_name())
+                .to_string_lossy()
+                .into_owned()
+        } else {
+            entry.path.to_string_lossy().into_owned()
         }
     }
 
@@ -971,8 +989,13 @@ impl App {
             self.download_filebrowser_cwd = entry.path.clone();
             self.download_filebrowser_list.select(Some(0));
             self.download_filebrowser_load();
+            self.modal_input = self
+                .download_filebrowser_cwd
+                .join(self.download_default_name())
+                .to_string_lossy()
+                .into_owned();
         } else {
-            self.modal_input = entry.path.to_string_lossy().into_owned();
+            self.modal_input = self.download_path_for_entry(entry);
             self.confirm_download();
         }
     }
@@ -993,8 +1016,6 @@ impl App {
         self.download_filebrowser_active = true;
         if self.download_filebrowser_entries.is_empty() {
             self.download_filebrowser_load();
-        } else {
-            self.download_filebrowser_sync_path();
         }
     }
 
@@ -1296,11 +1317,12 @@ impl App {
         self.download_filebrowser_entries.clear();
         self.download_filebrowser_list.select(Some(0));
         self.download_filebrowser_active = true;
-        if self.download_filebrowser_entries.is_empty() {
-            self.download_filebrowser_load();
-        } else {
-            self.download_filebrowser_sync_path();
-        }
+        self.modal_input = self
+            .download_filebrowser_cwd
+            .join(&sha256)
+            .to_string_lossy()
+            .into_owned();
+        self.download_filebrowser_load();
         self.modal = Some(Modal::Download { sha256 });
     }
 
@@ -1324,7 +1346,7 @@ impl App {
             if path.is_absolute() {
                 path
             } else {
-                self.filebrowser_cwd.join(path)
+                self.download_filebrowser_cwd.join(path)
             }
         };
 
@@ -3557,23 +3579,55 @@ pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
                     Style::default().fg(COLOR_DIM),
                 )),
                 Line::from(Span::styled(
-                    "Enter: choose file / open directory   Esc: close",
+                    "Tab: switch edit/browser   Enter: confirm/select   Esc: close",
                     Style::default().fg(COLOR_DIM),
                 )),
             ];
 
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Length(2), Constraint::Min(1)])
+                .constraints([
+                    Constraint::Length(2),
+                    Constraint::Length(3),
+                    Constraint::Min(1),
+                ])
                 .split(inner);
             f.render_widget(Paragraph::new(title_lines), chunks[0]);
+
+            let path_border_style = if app.download_filebrowser_active {
+                Style::default().fg(COLOR_DIM)
+            } else {
+                Style::default()
+                    .fg(COLOR_ACCENT)
+                    .add_modifier(Modifier::BOLD)
+            };
+            let path_title = if app.download_filebrowser_active {
+                " Path [edit] "
+            } else {
+                " Path "
+            };
+            let path_block = Block::default()
+                .borders(Borders::ALL)
+                .title(path_title)
+                .border_style(path_border_style);
+            let path_inner = path_block.inner(chunks[1]);
+            f.render_widget(path_block, chunks[1]);
+            let path = Paragraph::new(app.modal_input.as_str())
+                .style(Style::default().fg(Color::White));
+            f.render_widget(path, path_inner);
+            if !app.download_filebrowser_active {
+                f.set_cursor_position((
+                    path_inner.x + app.modal_input.len() as u16 + 1,
+                    path_inner.y + 1,
+                ));
+            }
 
             if app.download_filebrowser_entries.is_empty() && app.download_filebrowser_active
             {
                 f.render_widget(
                     Paragraph::new("  No files found in this directory.")
                         .style(Style::default().fg(COLOR_DIM)),
-                    chunks[1],
+                    chunks[2],
                 );
                 return;
             }
@@ -3592,7 +3646,7 @@ pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
                 .highlight_symbol("› ");
             f.render_stateful_widget(
                 list,
-                chunks[1],
+                chunks[2],
                 &mut app.download_filebrowser_list,
             );
         }
