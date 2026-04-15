@@ -1377,7 +1377,7 @@ impl App {
 		self.modal = Some(Modal::Delete { shas });
 	}
 
-	pub fn delete_selected(&mut self) {
+	pub fn delete_blobs(&mut self, shas: Vec<String>) {
 		if self.secret_key.is_none() {
 			self.notification = Some((
                 "A secret key (--key / BLOSSOM_SECRET_KEY) is required for delete.".into(),
@@ -1385,14 +1385,10 @@ impl App {
             ));
 			return;
 		}
-		let shas = if self.selected_blobs.is_empty() {
-			let Some(sha) = self.selected_blob_sha() else {
-				return;
-			};
-			vec![sha]
-		} else {
-			self.selected_blobs.clone()
-		};
+		if shas.is_empty() {
+			return;
+		}
+
 		let server = self.server.clone();
 		let key = self.secret_key.clone().unwrap();
 		let tx = self.tx.clone();
@@ -1422,6 +1418,18 @@ impl App {
 				}
 			}
 		});
+	}
+
+	pub fn delete_selected(&mut self) {
+		let shas = if self.selected_blobs.is_empty() {
+			let Some(sha) = self.selected_blob_sha() else {
+				return;
+			};
+			vec![sha]
+		} else {
+			self.selected_blobs.clone()
+		};
+		self.delete_blobs(shas);
 	}
 
 	pub fn refresh_status(&mut self) {
@@ -1516,18 +1524,23 @@ impl App {
 
 	pub fn scroll_up(&mut self) {
 		if self.tab == 0 {
+			let max = self.visible_blobs().len().saturating_sub(1);
 			let i = self
 				.blobs_table
 				.selected()
 				.map(|i| i.saturating_sub(1))
-				.unwrap_or(0);
+				.unwrap_or(0)
+				.min(max);
 			self.blobs_table.select(Some(i));
 		}
 	}
 
 	pub fn scroll_down(&mut self) {
-		if self.tab == 0 && !self.blobs.is_empty() {
-			let max = self.blobs.len() - 1;
+		if self.tab == 0 {
+			let max = self.visible_blobs().len().saturating_sub(1);
+			if self.visible_blobs().is_empty() {
+				return;
+			}
 			let i = self
 				.blobs_table
 				.selected()
@@ -2533,7 +2546,14 @@ pub fn draw_blobs_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	} else {
 		format!(" [filter: {}]", app.filter_str)
 	};
-	let title = format!(" Blobs{pubkey_label}{loading_suffix} │ sort:{sort_label}{filter_label} ");
+	let selection_label = if app.selected_blobs.is_empty() {
+		String::new()
+	} else {
+		format!(" [selected: {}]", app.selected_blobs.len())
+	};
+	let title = format!(
+		" Blobs{pubkey_label}{loading_suffix} │ sort:{sort_label}{filter_label}{selection_label} "
+	);
 
 	let block = Block::default()
 		.borders(Borders::ALL)
@@ -5703,8 +5723,12 @@ pub async fn run_loop(
 						Some(Modal::Delete { .. }) => {
 							match key.code {
 								KeyCode::Char('d') => {
-									app.modal = None;
-									app.delete_selected();
+									if let Some(Modal::Delete {
+										shas,
+									}) = app.modal.take()
+									{
+										app.delete_blobs(shas);
+									}
 								}
 								KeyCode::Char('c') | KeyCode::Esc => {
 									app.modal = None;
@@ -5990,6 +6014,7 @@ pub async fn run_loop(
 						KeyCode::Down | KeyCode::Char('j') => {
 							app.scroll_down()
 						}
+						KeyCode::Char(' ') => app.toggle_selected_blob(),
 						KeyCode::Char('r') => app.refresh_blobs(),
 						KeyCode::Char('d') => {
 							app.prompt_delete_selected()
@@ -6003,6 +6028,7 @@ pub async fn run_loop(
 						}
 						KeyCode::Char('u') => app.copy_selected_url(),
 						KeyCode::Enter => app.open_selected_blob(),
+						KeyCode::Esc => app.clear_selected_blobs(),
 						_ => {}
 					},
 					1 => {
