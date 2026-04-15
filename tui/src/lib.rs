@@ -141,6 +141,7 @@ pub struct App {
 	pub git_repo_path: PathBuf, // repo the panel is operating on
 	pub git_repo_info: Option<GitRepoInfo>, // metadata for title / hints
 	pub git_action_running: bool,
+	pub git_action_task: Option<tokio::task::JoinHandle<()>>,
 	pub git_output: Vec<String>, // lines from last git command
 	pub git_output_scroll: usize, // first visible line
 	pub git_commit_msg: String,  // staging area for commit message
@@ -287,6 +288,7 @@ impl App {
 			git_repo_path: PathBuf::new(),
 			git_repo_info: None,
 			git_action_running: false,
+			git_action_task: None,
 			git_output: Vec::new(),
 			git_output_scroll: 0,
 			git_commit_msg: String::new(),
@@ -602,12 +604,14 @@ impl App {
 			}
 			AppMsg::GitDone(output) => {
 				self.git_action_running = false;
+				self.git_action_task = None;
 				self.git_output =
 					output.lines().map(String::from).collect();
 				self.git_output_scroll = 0;
 			}
 			AppMsg::GitError(e) => {
 				self.git_action_running = false;
+				self.git_action_task = None;
 				self.git_output = format!("error: {e}")
 					.lines()
 					.map(String::from)
@@ -676,13 +680,13 @@ impl App {
 			return;
 		}
 		self.git_action_running = true;
-		self.git_output.clear();
+		self.git_output = vec![String::from("working… press Esc to cancel")];
+		self.git_output_scroll = 0;
 
 		let repo = self.git_repo_path.clone();
 		let commit_msg = self.git_commit_msg.clone();
 		let tx = self.tx.clone();
-
-		tokio::spawn(async move {
+		let handle = tokio::spawn(async move {
 			let result =
 				run_git_command(&repo, action, &commit_msg).await;
 			match result {
@@ -690,6 +694,16 @@ impl App {
 				Err(e) => tx.send(AppMsg::GitError(e)).ok(),
 			};
 		});
+		self.git_action_task = Some(handle);
+	}
+
+	pub fn cancel_git_action(&mut self) {
+		if let Some(handle) = self.git_action_task.take() {
+			handle.abort();
+			self.git_action_running = false;
+			self.git_output = vec![String::from("interrupted")];
+			self.git_output_scroll = 0;
+		}
 	}
 
 	pub fn refresh_blobs(&mut self) {
@@ -6062,7 +6076,14 @@ pub async fn run_loop(
 								}
 								KeyCode::Down
 								| KeyCode::Char('j') => app.git_scroll_down(20),
-								KeyCode::Esc | KeyCode::Char('q') => {
+								KeyCode::Esc => {
+									if app.git_action_running {
+										app.cancel_git_action();
+									} else {
+										app.git_mode = false
+									}
+								}
+								KeyCode::Char('q') => {
 									app.git_mode = false
 								}
 								_ => {}
@@ -6173,7 +6194,14 @@ pub async fn run_loop(
 								}
 								KeyCode::Down
 								| KeyCode::Char('j') => app.git_scroll_down(20),
-								KeyCode::Esc | KeyCode::Char('q') => {
+								KeyCode::Esc => {
+									if app.git_action_running {
+										app.cancel_git_action();
+									} else {
+										app.git_mode = false
+									}
+								}
+								KeyCode::Char('q') => {
 									app.git_mode = false
 								}
 								_ => {}
