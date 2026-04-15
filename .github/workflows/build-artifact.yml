@@ -130,10 +130,10 @@ jobs:
         fetch-depth: 50
 
     - name: Set build name
-      shell: bash
-      run: |
-        SAFE_REF="${GITHUB_REF_NAME//\//-}"
-        echo "BUILD_NAME=gnostr-${SAFE_REF}-${{ matrix.toolchain }}-${{ matrix.target }}" >> "$GITHUB_ENV"
+      uses: ./.github/actions/set-build-name
+      with:
+        toolchain: ${{ matrix.toolchain }}
+        target: ${{ matrix.target }}
 
     - name: Fetch tags
       run: git fetch --tags --force
