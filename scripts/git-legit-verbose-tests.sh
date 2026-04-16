@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 WEEBLE=$(gnostr --weeble)
+WOBBLE=$(gnostr --wobble)
 
 git add scripts/git-legit-verbose-tests.sh
 
@@ -12,7 +13,7 @@ NC='\033[0m'
 
 echo -e "${CYAN}=== git-legit Verbose Stress Test (Violation Check) ===${NC}"
 
-cargo run -q --bin git-legit -- -m "---New Test---" --pow $WEEBLE && echo
+cargo run -q --bin git-legit -- -m "---New Test---" --pow $WEEBLE -m $WOBBLE && echo
 
 make_weeble_blockheight_wobble() {
 mkdir -p ./weeble
