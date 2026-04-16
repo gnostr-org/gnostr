@@ -642,7 +642,7 @@ yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
 scopeguard = "1.2.0"
 gnostr-git-helpers = { version = "0.1.0", path = "git-helpers" }
-gnostr-blossom-tui = { version = "0.1.0", path = "tui" }
+blossom_tui = { workspace = true }
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"

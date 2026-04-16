@@ -16,11 +16,13 @@ pub mod nostr_relay;
 pub mod nostr_sign;
 pub mod state;
 pub mod types;
+pub use crossterm;
 pub use git::{
 	detect_git_info, /*, detect_git_repo*/
 	find_git_root, run_git_command, FileBrowserEntry, GitAction,
 	GitRepoInfo, GitRepoKind, GitRepoState,
 };
+pub use ratatui;
 pub use state::{load_state, save_state, state_path, TuiState};
 pub use types::{
 	AppMsg, BatchItem, BatchStatus, KeygenResult, Modal,

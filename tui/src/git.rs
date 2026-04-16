@@ -272,7 +272,7 @@ fn run_git_command_blocking(
 	action: GitAction,
 	commit_msg: &str,
 ) -> Result<String, String> {
-	let repo_path = RepoPath::from(repo_dir.to_path_buf());
+	let repo_path = RepoPath::Path(repo_dir.to_path_buf());
 
 	match action {
 		GitAction::Status => status_output(&repo_path),
