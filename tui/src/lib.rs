@@ -2930,6 +2930,13 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
 			),
 			Span::raw(": select/open    "),
 			Span::styled(
+				"r",
+				Style::default()
+					.fg(COLOR_ACCENT)
+					.add_modifier(Modifier::BOLD),
+			),
+			Span::raw(": refresh    "),
+			Span::styled(
 				"Space",
 				Style::default()
 					.fg(COLOR_ACCENT)
@@ -4490,9 +4497,9 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
                     " Enter/Esc:done  Tab:next  ?:help  q:quit"
                 } else if app.input_mode {
                     " Enter:upload  Tab:browse  Esc:stop  ?:help  q:quit"
-                } else if app.filebrowser_active {
-                    " Enter:select/open  Tab:edit  Esc:up/close  ?:help  q:quit"
-                } else {
+				} else if app.filebrowser_active {
+					" Enter:select/open  r:refresh  Tab:edit  Esc:up/close  ?:help  q:quit"
+				} else {
                     " f:browse  i:edit-path  Tab:toggle  p:toggle-nip94  R:relay-url  Enter:upload  Esc:clear  ?:help  q:quit"
                 }
             }
@@ -5329,6 +5336,7 @@ pub fn draw_docs_fullscreen(
             kv("Tab", "Toggle browser / edit focus"),
             kv("Enter", "Upload from the path field"),
             kv("Esc", "Exit edit mode / clear path / close browser"),
+            kv("r", "Refresh the file browser"),
             blank(),
             h2("  Options"),
             kv("p", "Toggle NIP-94 metadata publish after upload"),
@@ -6069,6 +6077,10 @@ pub async fn run_loop(
 								| KeyCode::Char('j') => app.filebrowser_scroll_down(),
 								KeyCode::Enter => {
 									app.filebrowser_enter()
+								}
+								KeyCode::Char('r') => {
+									// Refresh the file tree without leaving the browser.
+									app.filebrowser_load();
 								}
 								KeyCode::Backspace
 								| KeyCode::Char('h')
