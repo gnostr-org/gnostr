@@ -1,0 +1,68 @@
+name: gnostr Nostr Notification
+description: >
+  Posts a CI job-status notification as a kind-1 Nostr event to configured
+  relays via gnostr, then queries the event back and prints a njump.me link.
+
+inputs:
+  status:
+    description: 'Human-readable status label, e.g. "Failed!", "Cancelled!", "Success!"'
+    required: true
+  job_url:
+    description: 'URL to the current GitHub Actions job run'
+    required: true
+  matrix_label:
+    description: 'Human-readable matrix label, e.g. "ubuntu-latest, stable"'
+    required: true
+  pow:
+    description: 'Proof-of-work difficulty target'
+    required: false
+    default: '16'
+  damus:
+    description: 'Primary relay WebSocket URL'
+    required: false
+    default: 'wss://relay.damus.io'
+  nos:
+    description: 'Secondary relay WebSocket URL'
+    required: false
+    default: 'wss://nos.lol'
+  njump_base:
+    description: 'Base URL for the human-readable Nostr event link'
+    required: false
+    default: 'http://njump.me'
+
+runs:
+  using: composite
+  steps:
+    - name: Post Nostr notification
+      shell: bash
+      run: |
+        gnostr set-metadata -h
+        EVENT=$(gnostr -d ${{ env.POW }} \
+         -r ${{ env.DAMUS }} \
+         --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
+         set-metadata \
+         -n gnostr-bot \
+         -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
+         -e "repo|$GITHUB_REPOSITORY" \
+         -e "workflow|$GITHUB_WORKFLOW" \
+         -e "workflow_sha|$GITHUB_WORKFLOW_SHA" \
+         -e "workflow_ref|$GITHUB_WORKFLOW_REF" \
+         -e "github_ref|$GITHUB_REF" \
+         -e "github_run_id|$GITHUB_RUN_ID" \
+         -e "gnostr|gnostr" \
+         -e "gnostr-bot|gnostr-bot" \
+         -e "github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
+         -e "date|$(date +%s)" \
+         -e "runner_env|$RUNNER_ENVIRONMENT" \
+         -e "runner_os|$RUNNER_OS" \
+         -e "weeble|$(gnostr --weeble)" \
+         -e "blockheight|$(gnostr --blockheight)" \
+         -e "wobble|$(gnostr --wobble)" \
+         -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
+         -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" --hex || true) && \
+         export EVENT=$EVENT && \
+         NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+         export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+         gnostr query -i $EVENT -r ${{ inputs.damus }} || true && \
+         gnostr query -i $EVENT -r ${{ inputs.nos }} || true && \
+         echo "${{ inputs.njump_base }}/$NOTE"

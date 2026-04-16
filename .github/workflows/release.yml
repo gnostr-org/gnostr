@@ -58,7 +58,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
@@ -118,7 +117,6 @@ jobs:
           git config --global core.longpaths true
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
@@ -139,14 +137,6 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
-      - name: Install cross-compiler for aarch64-unknown-linux-gnu if needed
-        if: |
-          contains(matrix.targets, 'aarch64-unknown-linux-gnu') && runner.os == 'linux'
-        run: |
-          echo "Installing aarch64-elf-gcc for aarch64-unknown-linux-gnu target..."
-          # Install the GNU cross-compiler for AArch64 on Ubuntu.
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
@@ -185,7 +175,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
       - name: Install cached dist
         uses: actions/download-artifact@v4
@@ -225,8 +214,8 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
+    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-22.04"
@@ -235,7 +224,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
       - name: Install cached dist
         uses: actions/download-artifact@v4
@@ -300,7 +288,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
           repository: "gnostr-org/homebrew-gnostr-org"
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       # So we have access to the formula
@@ -347,5 +334,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive

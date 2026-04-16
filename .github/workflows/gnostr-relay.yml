@@ -3,11 +3,13 @@ name: gnostr-relay.yml
 # Controls when the action will run.
 on:
   schedule:
-    - cron: "*/30 * * * *" # run 30th minute
+    - cron: '*/30 * * * *' # run 30th minute
   push:
     branches:
-      - "**"
+      - '**'
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-gnostr-relay-workflow]
 permissions:
   actions: read
   contents: read
@@ -75,10 +77,10 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          submodules: "true"
-          set-safe-directory: "true"
-          fetch-depth: "0"
-          fetch-tags: "true"
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'true'
 
       - run: printenv || true
 
@@ -102,7 +104,13 @@ jobs:
       - run: brew tap randymcmillan/homebrew-randymcmillan || true
         if: matrix.os == 'macos-latest'
 
-      - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
+      - name: Install gnostr via Homebrew
+  uses: ./.github/actions/brew-install-gnostr/
+  if: runner.os == 'macOS'
+
+- name: Install gnostr via cargo-binstall
+  uses: ./.github/actions/cargo-binstall-gnostr
+  if: runner.os != 'macOS'
         if: matrix.os == 'macos-latest'
 
       - run: gnostr --help
@@ -222,7 +230,7 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr-query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+            echo "http://njump.me/$NOTE"
 
       - name: Execute script on cancelled
         shell: bash
@@ -256,7 +264,7 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr-query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+            echo "http://njump.me/$NOTE"
 
       - name: Execute script on success
         shell: bash
@@ -291,7 +299,7 @@ jobs:
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
             gnostr-query -i $EVENT -r ${{ env.DAMUS }} && \
             gnostr-query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+            echo "http://njump.me/$NOTE"
 
       - name: Save rustup
         id: cache-rustup-save

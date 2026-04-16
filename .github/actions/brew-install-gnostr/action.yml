@@ -1,0 +1,10 @@
+name: 'Brew Install Gnostr'
+description: 'Install gnostr using Homebrew and verify installation.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install gnostr via Homebrew
+      shell: bash
+      run: |
+        brew install gnostr-org/gnostr-org/gnostr
+        gnostr --help

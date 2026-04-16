@@ -1,0 +1,337 @@
+name: build-artifact
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: 'OS / target to build (select "all" to build every target)'
+        required: false
+        default: 'all'
+        type: string
+      toolchain:
+        description: 'Rust toolchain to use'
+        required: false
+        default: 'stable'
+        type: string
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'OS / target to build (select "all" to build every target)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - linux-x64
+          - linux-x64-musl
+          - linux-arm64
+          - linux-arm64-musl
+          - windows-x64
+          - macos-x64
+          - macos-arm64
+      toolchain:
+        description: 'Rust toolchain to use'
+        required: false
+        default: stable
+        type: choice
+        options:
+          - stable
+          - nightly
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        shell: python3 {0}
+        run: |
+          import json, os
+
+          ALL_TARGETS = [
+            {"build": "linux-x64",       "os": "ubuntu-latest",  "target": "x86_64-unknown-linux-gnu",    "native": True},
+            {"build": "linux-x64-musl",  "os": "ubuntu-latest",  "target": "x86_64-unknown-linux-musl",   "native": False},
+            {"build": "linux-arm64",     "os": "ubuntu-latest",  "target": "aarch64-unknown-linux-gnu",   "native": False},
+            {"build": "linux-arm64-musl","os": "ubuntu-latest",  "target": "aarch64-unknown-linux-musl",  "native": False},
+            {"build": "windows-x64",     "os": "windows-latest", "target": "x86_64-pc-windows-msvc",      "native": True},
+            {"build": "macos-x64",       "os": "macos-15-intel", "target": "x86_64-apple-darwin",         "native": True},
+            {"build": "macos-arm64",     "os": "macos-latest",   "target": "aarch64-apple-darwin",        "native": True},
+          ]
+
+          selected = "${{ inputs.os }}" or "all"
+          targets = ALL_TARGETS if selected == "all" else [t for t in ALL_TARGETS if t["build"] == selected]
+          selected_toolchain = "${{ inputs.toolchain }}" or "stable"
+          matrix = {
+            "build": [t["build"] for t in targets],
+            "include": [{**t, "toolchain": selected_toolchain} for t in targets],
+          }
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"matrix={json.dumps(matrix)}\n")
+
+  vcpkg-test:
+    strategy:
+      matrix:
+        os:
+          - runner: windows-latest
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: windows-11-arm
+            arch: arm64
+            # --features <feature1>,<feature2>,... for arch: arm64
+            cargo_test_args: '--features default'
+          - runner: ubuntu-latest
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: ubuntu-latest
+            arch: arm64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-latest
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-latest
+            arch: arm64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-15-intel
+            arch: x64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+          - runner: macos-15-intel
+            arch: arm64
+            # All features supported on x64 Windows.
+            cargo_test_args: '--all-features'
+      fail-fast: false
+    name: vcpkg-${{ matrix.os.runner }}-${{ matrix.os.arch }}
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sfackler/actions/rustup@master
+      - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
+        id: rust-version
+      - uses: ./.github/actions/vcpkg-action
+        with:
+          arch: ${{ matrix.os.arch }}
+          run-tests: 'false'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/index
+          key: index-${{ runner.os }}-${{ github.run_number }}
+          restore-keys: |
+            index-${{ runner.os }}-
+      - run: cargo generate-lockfile && git diff
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/cache
+          key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo fetch
+      - uses: actions/cache@v4
+        with:
+          path: target
+          key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+
+  build-artifacts:
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 50
+
+    - name: Set build name
+      uses: ./.github/actions/set-build-name
+      with:
+        toolchain: ${{ matrix.toolchain }}
+        target: ${{ matrix.target }}
+
+    - name: Fetch tags
+      run: git fetch --tags --force
+
+    - name: Restore Cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Linux system dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          clang \
+          libssl-dev \
+          pkg-config \
+          musl-tools \
+          build-essential \
+          llvm-dev \
+          musl-tools \
+          g++ \
+          musl-dev \
+          clang-5.0 \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu \
+          libclang-5.0-dev || sudo apt-get install -y \
+          libclang-dev \
+          libssl-dev \
+          pkg-config \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu \
+          musl-tools \
+          build-essential \
+          llvm-dev \
+          musl-tools \
+          g++ \
+          musl-dev \
+          clang || echo "failed fall back "
+
+    - name: Install macOS system dependencies
+      if: runner.os == 'macOS'
+      run: |
+        brew update && brew search llvm && brew search libclang
+
+    - name: Install Windows system dependencies
+      if: runner.os == 'Windows'
+      uses: ./.github/actions/vcpkg-action
+      with:
+        arch: x64
+        run-tests: 'false'
+        install: 'false'
+
+    - name: Verify Xcode Command Line Tools
+      if: runner.os == 'macOS'
+      run: xcode-select -p
+
+    - name: Install cross
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cross
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ matrix.toolchain }}
+
+    - name: Set Clang Environment Variables
+      shell: bash
+      run: |
+        if [[ "${{ runner.os }}" == "Linux" ]]; then
+          if command -v llvm-config >/dev/null 2>&1; then
+            LIB_DIR="$(llvm-config --libdir)"
+          else
+            # Pick the newest installed libclang to avoid 3.8.x fallbacks.
+            SO_PATH=$(find /usr /usr/local -name "libclang.so*" 2>/dev/null | sort -V | tail -n 1)
+            LIB_DIR="$(dirname "$SO_PATH")"
+          fi
+          if [ -n "${LIB_DIR:-}" ] && [ -d "$LIB_DIR" ]; then
+            CLANG_RESOURCE_DIR=$(clang -print-resource-dir)
+            GCC_INCLUDE_DIR=$(gcc -print-file-name=include)
+            echo "LIBCLANG_PATH=$LIB_DIR" >> $GITHUB_ENV
+            # This helps bindgen find stdarg.h and other built-ins
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${CLANG_RESOURCE_DIR}/include -isystem ${GCC_INCLUDE_DIR}" >> $GITHUB_ENV
+          fi
+        fi
+        echo $GITHUB_ENV && printenv
+
+    - name: Build release binary
+      shell: bash
+      env:
+        CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+        CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+      run: |
+        cargo generate-lockfile && git diff
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          rustup target add aarch64-linux-musl-gcc || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          rustup target add x86_64-unknown-linux-musl || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        else
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+
+    - name: Save Cache
+      if: always() # This ensures cache is saved on failure, success, or cancel
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        # We use a unique key (adding run_id) so we don't collide with existing immutable keys
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ github.run_id }}
+
+    - name: Bundle release (Unix)
+      if: matrix.build != 'windows-x64'
+      shell: bash
+      run: |
+        mkdir -p "$BUILD_NAME"
+        cp README.md LICENSE "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-tui" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-blossom" "$BUILD_NAME/"
+
+    - name: Bundle release (Windows)
+      if: matrix.build == 'windows-x64'
+      shell: bash
+      run: |
+        mkdir -p "$BUILD_NAME"
+        cp README.md LICENSE "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-tui.exe" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-blossom.exe" "$BUILD_NAME/"
+
+    - name: Run smoke test (Unix)
+      if: matrix.native && matrix.build != 'windows-x64'
+      shell: bash
+      run: |
+        "$BUILD_NAME/gnostr-tui" --version
+        "$BUILD_NAME/gnostr-blossom" --version
+
+    - name: Run smoke test (Windows)
+      if: matrix.native && matrix.build == 'windows-x64'
+      shell: bash
+      run: |
+        "$BUILD_NAME/gnostr-tui.exe" --version
+        "$BUILD_NAME/gnostr-blossom.exe" --version
+
+    - name: Upload asset
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.BUILD_NAME }}
+        path: ${{ env.BUILD_NAME }}

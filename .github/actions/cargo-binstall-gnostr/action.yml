@@ -1,0 +1,9 @@
+name: 'Cargo Binstall Gnostr'
+description: 'Reusable action to install gnostr using cargo-binstall --force --no-confirm'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install gnostr via cargo-binstall
+      shell: bash
+      run: |
+        cargo-binstall --force --no-confirm gnostr && gnostr --help || true

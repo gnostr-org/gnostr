@@ -1,0 +1,56 @@
+name: gnostr Nostr Notification
+description: >
+  Posts a CI job-status notification as a kind-1 Nostr event to configured
+  relays via gnostr, then queries the event back and prints a njump.me link.
+
+inputs:
+  kind:
+    description: 'Nostr event kind (integer, e.g. 1)'
+    required: true
+  content:
+    description: 'Event content string'
+    required: true
+  tags:
+    description: 'Comma-separated list of tags (e.g. tag1,tag2,tag3)'
+    required: false
+    default: ''
+  pow:
+    description: 'Proof-of-work difficulty target'
+    required: false
+    default: '16'
+  damus:
+    description: 'Primary relay WebSocket URL'
+    required: false
+    default: 'wss://relay.damus.io'
+  nos:
+    description: 'Secondary relay WebSocket URL'
+    required: false
+    default: 'wss://nos.lol'
+  njump_base:
+    description: 'Base URL for the human-readable Nostr event link'
+    required: false
+    default: 'http://njump.me'
+
+runs:
+  using: composite
+  steps:
+    - name: Post Nostr notification
+      shell: bash
+      run: |
+        gnostr custom-event -h
+        EVENT=$(gnostr \
+          --nsec "$(gnostr --hash "$GITHUB_REPOSITORY_ID")" \
+          -d ${{ inputs.pow }} \
+          -r ${{ inputs.damus }} \
+          -r ${{ inputs.nos }} \
+          custom-event \
+          -k 1 \
+          -c "[$GITHUB_REPOSITORY_ID](${{ inputs.job_url }}) (${{ inputs.matrix_label }}) ${{ inputs.status }}" \
+          -t "GITHUB_REPOSITORY_OWNER|$GITHUB_REPOSITORY_OWNER","GITHUB_REPOSITORY|$GITHUB_REPOSITORY","GITHUB_WORKFLOW|$GITHUB_WORKFLOW","GITHUB_WORKFLOW_SHA|$GITHUB_WORKFLOW_SHA","GITHUB_WORKFLOW_REF|$GITHUB_WORKFLOW_REF","GITHUB_REF|$GITHUB_REF","GITHUB_RUN_ID|$GITHUB_RUN_ID","RUNNER_ENVIRONMENT|$RUNNER_ENVIRONMENT","RUNNER_OS|$RUNNER_OS","|gnostr","|gnostr-bot","|$(date +%s)" \
+          --hex || true) && \
+          export EVENT=$EVENT && \
+          NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+          export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
+          gnostr query -i $EVENT -r ${{ inputs.damus }} || true && \
+          gnostr query -i $EVENT -r ${{ inputs.nos }} || true && \
+          echo "${{ inputs.njump_base }}/$NOTE"
