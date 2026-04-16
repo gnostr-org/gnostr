@@ -69,7 +69,7 @@ pub const COLOR_SELECTED_BG: Color = Color::Blue;
 pub const COLOR_TITLE_BG: Color = Color::Rgb(24, 24, 48); // deep navy
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum FileBrowserSort {
+pub enum FileBrowserSort {
 	Name,
 	Size,
 	Modified,
@@ -3204,8 +3204,9 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 /// Render the file-browser tree panel on the left side of the upload tab.
-/// Git operations panel — replaces the right-hand controls pane
-/// when `app.git_mode` is true.
+/// Git operations panel — intentionally disabled for now; kept in source as a
+/// commented-out implementation path for future re-enabling.
+#[allow(dead_code)]
 fn draw_git_panel(f: &mut Frame, app: &mut App, area: Rect) {
 	let repo_name = app
 		.git_repo_path
@@ -3691,6 +3692,7 @@ fn upload_filebrowser_list_item(
 }
 
 /// Render the bottom git-hint line inside a file browser panel.
+#[allow(dead_code)]
 fn render_git_hint(f: &mut Frame, area: Rect) {
 	f.render_widget(
 		Paragraph::new(Line::from(vec![
