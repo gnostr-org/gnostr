@@ -1,0 +1,63 @@
+[package]
+name = "gnostr-git-helpers"
+version = "0.1.0"
+edition = "2021"
+description = "git-remote helpers for Blossom, Nostr NIP-34, IPFS, PKARR, and Tor"
+license = "MIT"
+repository = "https://github.com/MonumentalSystems/blossom-rs"
+keywords = ["git", "nostr", "blossom", "ipfs", "remote-helper"]
+categories = ["development-tools", "command-line-utilities"]
+
+[[bin]]
+name = "git-remote-blossom"
+path = "src/bin/git-remote-blossom.rs"
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bin/git-remote-nostr.rs"
+
+[[bin]]
+name = "git-remote-ipfs"
+path = "src/bin/git-remote-ipfs.rs"
+
+[[bin]]
+name = "git-remote-pkarr"
+path = "src/bin/git-remote-pkarr.rs"
+
+[[bin]]
+name = "git-remote-tor"
+path = "src/bin/git-remote-tor.rs"
+
+[dependencies]
+# HTTP client (blocking for sync protocol loop)
+# socks: Tor SOCKS5 proxy support
+# multipart: IPFS Kubo MFS multipart write API
+reqwest = { version = "0.12", features = ["blocking", "json", "multipart", "socks"] }
+
+# Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+futures-util = "0.3"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Hex encoding / SHA256
+hex = "0.4"
+sha2 = { version = "0.10", features = ["std"] }
+
+# Nostr key handling (NIP-19 bech32)
+bech32 = "0.11"
+secp256k1 = { version = "0.29", features = ["rand"] }
+
+# PKARR DHT resolution (Ed25519 keys → blossom endpoints)
+pkarr = { version = "6.0.0-rc.0", default-features = false, features = ["relays", "signed_packet"] }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Logging to stderr (helpers must not pollute stdout)
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
