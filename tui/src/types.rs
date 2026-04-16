@@ -49,7 +49,7 @@ impl SortField {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Modal {
     /// Prompt for local save path to download selected blob.
-    Download { sha256: String },
+    Download { shas: Vec<String> },
     /// Confirm deletion of the selected blob.
     Delete { shas: Vec<String> },
 	/// Prompt for remote URL to mirror onto the server.
@@ -71,6 +71,7 @@ pub enum AppMsg {
 	DeleteDone(String),
 	DeleteError(String),
 	DownloadDone(PathBuf, bool),
+	DownloadBatchDone { downloaded: usize, failed: usize },
 	DownloadError(String),
 	MirrorDone(BlobDescriptor),
 	MirrorError(String),

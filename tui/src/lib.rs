@@ -506,6 +506,19 @@ impl App {
 				};
 				self.notification = Some((msg, false));
 			}
+			AppMsg::DownloadBatchDone {
+				downloaded,
+				failed,
+			} => {
+				let msg = if failed == 0 {
+					format!("Downloaded {downloaded} selected blobs.")
+				} else {
+					format!(
+						"Downloaded {downloaded} selected blobs; {failed} failed."
+					)
+				};
+				self.notification = Some((msg, failed > 0));
+			}
 			AppMsg::DownloadError(e) => {
 				self.notification =
 					Some((format!("Download failed: {e}"), true));
@@ -1378,12 +1391,19 @@ impl App {
 		}
 	}
 
+	fn download_is_batch(&self) -> bool {
+		matches!(
+			&self.modal,
+			Some(Modal::Download { shas }) if shas.len() > 1
+		)
+	}
+
 	fn download_default_name(&self) -> String {
 		match &self.modal {
-			Some(Modal::Download { sha256 })
-				if !sha256.is_empty() =>
+			Some(Modal::Download { shas })
+				if shas.len() == 1 && !shas[0].is_empty() =>
 			{
-				sha256.clone()
+				shas[0].clone()
 			}
 			_ => "blob".into(),
 		}
@@ -1394,11 +1414,15 @@ impl App {
 		entry: &FileBrowserEntry,
 	) -> String {
 		if entry.is_dir {
-			entry
-				.path
-				.join(self.download_default_name())
-				.to_string_lossy()
-				.into_owned()
+			if self.download_is_batch() {
+				entry.path.to_string_lossy().into_owned()
+			} else {
+				entry
+					.path
+					.join(self.download_default_name())
+					.to_string_lossy()
+					.into_owned()
+			}
 		} else {
 			entry.path.to_string_lossy().into_owned()
 		}
@@ -1443,11 +1467,18 @@ impl App {
 			self.download_filebrowser_cwd = entry.path.clone();
 			self.download_filebrowser_list.select(Some(0));
 			self.download_filebrowser_load();
-			self.modal_input = self
-				.download_filebrowser_cwd
-				.join(self.download_default_name())
-				.to_string_lossy()
-				.into_owned();
+			if self.download_is_batch() {
+				self.modal_input = self
+					.download_filebrowser_cwd
+					.to_string_lossy()
+					.into_owned();
+			} else {
+				self.modal_input = self
+					.download_filebrowser_cwd
+					.join(self.download_default_name())
+					.to_string_lossy()
+					.into_owned();
+			}
 		} else {
 			self.modal_input = self.download_path_for_entry(entry);
 			self.confirm_download();
@@ -1463,11 +1494,18 @@ impl App {
 			self.download_filebrowser_cwd = parent;
 			self.download_filebrowser_list.select(Some(1));
 			self.download_filebrowser_load();
-			self.modal_input = self
-				.download_filebrowser_cwd
-				.join(self.download_default_name())
-				.to_string_lossy()
-				.into_owned();
+			if self.download_is_batch() {
+				self.modal_input = self
+					.download_filebrowser_cwd
+					.to_string_lossy()
+					.into_owned();
+			} else {
+				self.modal_input = self
+					.download_filebrowser_cwd
+					.join(self.download_default_name())
+					.to_string_lossy()
+					.into_owned();
+			}
 		}
 	}
 
@@ -1678,6 +1716,19 @@ impl App {
 		self.visible_blobs().get(idx).map(|b| b.sha256.clone())
 	}
 
+	fn selected_or_queued_blob_shas(&self) -> Vec<String> {
+		if !self.selected_blobs.is_empty() {
+			let visible = self.visible_blobs();
+			visible
+				.iter()
+				.filter(|b| self.selected_blobs.iter().any(|sha| sha == &b.sha256))
+				.map(|b| b.sha256.clone())
+				.collect()
+		} else {
+			self.selected_blob_sha().into_iter().collect()
+		}
+	}
+
 	fn blob_is_selected(&self, sha: &str) -> bool {
 		self.selected_blobs.iter().any(|s| s == sha)
 	}
@@ -1883,31 +1934,32 @@ impl App {
 
 	/// Open the download path prompt for the selected blob.
 	pub fn prompt_download(&mut self) {
-		let Some(idx) = self.blobs_table.selected() else {
+		let shas = self.selected_or_queued_blob_shas();
+		let Some(first_sha) = shas.first().cloned() else {
 			return;
 		};
-		let visible = self.visible_blobs();
-		let Some(blob) = visible.get(idx) else {
-			return;
-		};
-		let sha256 = blob.sha256.clone();
 		self.download_filebrowser_cwd = std::env::current_dir()
 			.unwrap_or_else(|_| PathBuf::from("/"));
 		self.download_filebrowser_entries.clear();
 		self.download_filebrowser_list.select(Some(0));
 		self.download_filebrowser_active = true;
-		self.modal_input = self
-			.download_filebrowser_cwd
-			.join(&sha256)
-			.to_string_lossy()
-			.into_owned();
+		if shas.len() > 1 {
+			self.modal_input =
+				self.download_filebrowser_cwd.to_string_lossy().into_owned();
+		} else {
+			self.modal_input = self
+				.download_filebrowser_cwd
+				.join(&first_sha)
+				.to_string_lossy()
+				.into_owned();
+		}
 		self.download_filebrowser_load();
-		self.modal = Some(Modal::Download { sha256 });
+		self.modal = Some(Modal::Download { shas });
 	}
 
 	/// Execute the download using the path in `modal_input`.
 	pub fn confirm_download(&mut self) {
-		let Some(Modal::Download { sha256 }) = self.modal.take()
+		let Some(Modal::Download { shas }) = self.modal.take()
 		else {
 			return;
 		};
@@ -1915,14 +1967,20 @@ impl App {
 		self.modal_input.clear();
 		self.download_filebrowser_active = false;
 		if path_str.is_empty() {
-			self.notification =
-				Some(("Enter a file path.".into(), true));
+			self.notification = Some((
+				if shas.len() > 1 {
+					"Enter a destination directory.".into()
+				} else {
+					"Enter a file path.".into()
+				},
+				true,
+			));
 			return;
 		}
 		let server = self.server.clone();
 		let secret_key = self.secret_key.clone();
 		let tx = self.tx.clone();
-		let path = {
+		let base_path = {
 			let path = PathBuf::from(&path_str);
 			if path.is_absolute() {
 				path
@@ -1937,50 +1995,77 @@ impl App {
 				.and_then(|k| Signer::from_secret_hex(k).ok())
 				.unwrap_or_else(Signer::generate);
 			let client = BlossomClient::new(vec![server], signer);
-			match client.download(&sha256).await {
-				Ok(data) => {
-					match tokio::fs::write(&path, &data).await {
-						Ok(()) => {
-							match tokio::fs::read(&path).await {
-								Ok(written) => {
-									let written_sha = hex::encode(
-										Sha256::digest(&written),
-									);
-									if written_sha
-										.eq_ignore_ascii_case(&sha256)
-									{
-										tx.send(
-											AppMsg::DownloadDone(
-												path, true,
-											),
-										)
+			let mut downloaded = 0usize;
+			let mut failed = 0usize;
+			let batch_mode = shas.len() > 1;
+			let target_dir = if batch_mode {
+				base_path.clone()
+			} else {
+				base_path
+					.parent()
+					.map(|p| p.to_path_buf())
+					.unwrap_or_else(|| base_path.clone())
+			};
+			if batch_mode {
+				if let Err(e) = tokio::fs::create_dir_all(&target_dir).await {
+					tx.send(AppMsg::DownloadError(format!(
+						"create dir: {e}"
+					)))
+					.ok();
+					return;
+				}
+			}
+
+			for sha256 in shas {
+				let path = if batch_mode {
+					target_dir.join(&sha256)
+				} else {
+					base_path.clone()
+				};
+				match client.download(&sha256).await {
+					Ok(data) => match tokio::fs::write(&path, &data).await {
+						Ok(()) => match tokio::fs::read(&path).await {
+							Ok(written) => {
+								let written_sha = hex::encode(
+									Sha256::digest(&written),
+								);
+								if written_sha.eq_ignore_ascii_case(&sha256) {
+									downloaded += 1;
+									tx.send(AppMsg::DownloadDone(path, true))
 										.ok();
-									} else {
-										tx.send(AppMsg::DownloadError(format!(
-                                    "hash mismatch: expected {sha256}, got {written_sha}"
-                                )))
-                                .ok();
-									}
-								}
-								Err(e) => {
-									tx.send(AppMsg::DownloadError(
-										format!("read: {e}"),
-									))
+								} else {
+									failed += 1;
+									tx.send(AppMsg::DownloadError(format!(
+										"hash mismatch: expected {sha256}, got {written_sha}"
+									)))
 									.ok();
 								}
 							}
-						}
+							Err(e) => {
+								failed += 1;
+								tx.send(AppMsg::DownloadError(format!(
+									"read: {e}"
+								)))
+								.ok();
+							}
+						},
 						Err(e) => {
+							failed += 1;
 							tx.send(AppMsg::DownloadError(format!(
 								"write: {e}"
 							)))
 							.ok();
 						}
+					},
+					Err(e) => {
+						failed += 1;
+						tx.send(AppMsg::DownloadError(e)).ok();
 					}
 				}
-				Err(e) => {
-					tx.send(AppMsg::DownloadError(e)).ok();
-				}
+			}
+			if batch_mode {
+				tx.send(AppMsg::DownloadBatchDone { downloaded, failed })
+					.ok();
 			};
 		});
 	}
@@ -4644,7 +4729,7 @@ pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
 			];
 			f.render_widget(Paragraph::new(lines), inner);
 		}
-		Some(Modal::Download { sha256 }) => {
+		Some(Modal::Download { shas }) => {
 			let popup_w = area.width.saturating_sub(8);
 			let popup_h = area.height.saturating_sub(6);
 			let popup_x = (area.width.saturating_sub(popup_w)) / 2;
@@ -4684,19 +4769,23 @@ pub fn draw_modal_input(f: &mut Frame, app: &mut App, area: Rect) {
 			f.render_widget(block, popup_area);
 
 			let title_lines = vec![
-                Line::from(Span::styled(
-                    format!(
-                        "Choose a path for {}…{}",
-                        &sha256[..64.min(sha256.len())],
-                        &sha256[sha256.len().saturating_sub(4)..]
-                    ),
-                    Style::default().fg(COLOR_DIM),
-                )),
-                Line::from(Span::styled(
-                    "Tab: switch edit/browser   Enter: confirm/select   Esc: close",
-                    Style::default().fg(COLOR_DIM),
-                )),
-            ];
+				Line::from(Span::styled(
+					if shas.len() == 1 {
+						format!(
+							"Choose a path for {}…{}",
+							&shas[0][..64.min(shas[0].len())],
+							&shas[0][shas[0].len().saturating_sub(4)..]
+						)
+					} else {
+						format!("Choose a destination for {} selected blobs", shas.len())
+					},
+					Style::default().fg(COLOR_DIM),
+				)),
+				Line::from(Span::styled(
+					"Tab: switch edit/browser   Enter: confirm/select   Esc: close",
+					Style::default().fg(COLOR_DIM),
+				)),
+			];
 
 			let chunks = Layout::default()
 				.direction(Direction::Vertical)
