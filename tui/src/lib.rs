@@ -856,6 +856,28 @@ impl App {
 		}
 	}
 
+	fn filebrowser_special_entries(cwd: &PathBuf) -> Vec<FileBrowserEntry> {
+		let parent = cwd.parent().unwrap_or(cwd).to_path_buf();
+		vec![
+			FileBrowserEntry {
+				name: ".".into(),
+				path: cwd.clone(),
+				is_dir: true,
+				size: 0,
+				modified: None,
+				git: None,
+			},
+			FileBrowserEntry {
+				name: "..".into(),
+				path: parent,
+				is_dir: true,
+				size: 0,
+				modified: None,
+				git: None,
+			},
+		]
+	}
+
 	/// (Re)load `filebrowser_entries` from `filebrowser_cwd`.
 	/// Directories are listed first, then files, using the active sort order.
 	/// Also auto-opens the git panel when the CWD is inside a git repo.
@@ -877,8 +899,13 @@ impl App {
 		Self::sort_filebrowser_entries(&mut dirs, self.filebrowser_sort);
 		Self::sort_filebrowser_entries(&mut files, self.filebrowser_sort);
 
-		self.filebrowser_entries =
-			dirs.into_iter().chain(files).collect();
+		self.filebrowser_entries = Self::filebrowser_special_entries(
+			&self.filebrowser_cwd,
+		)
+		.into_iter()
+		.chain(dirs)
+		.chain(files)
+		.collect();
 		// Keep selection in bounds.
 		let sel =
 			self.filebrowser_list.selected().unwrap_or(0).min(
@@ -932,6 +959,13 @@ impl App {
 		let Some(entry) = self.filebrowser_entries.get(idx) else {
 			return;
 		};
+		if entry.name == "." {
+			return;
+		}
+		if entry.name == ".." {
+			self.filebrowser_parent();
+			return;
+		}
 		if entry.is_dir {
 			self.filebrowser_cwd = entry.path.clone();
 			self.filebrowser_list.select(Some(0));
@@ -949,7 +983,7 @@ impl App {
 			self.filebrowser_cwd.parent().map(|p| p.to_path_buf())
 		{
 			self.filebrowser_cwd = parent;
-			self.filebrowser_list.select(Some(0));
+			self.filebrowser_list.select(Some(1));
 			self.filebrowser_load(); // also calls sync_path
 		}
 	}
@@ -1176,8 +1210,13 @@ impl App {
 		Self::sort_filebrowser_entries(&mut dirs, self.batch_filebrowser_sort);
 		Self::sort_filebrowser_entries(&mut files, self.batch_filebrowser_sort);
 
-		self.batch_filebrowser_entries =
-			dirs.into_iter().chain(files).collect();
+		self.batch_filebrowser_entries = Self::filebrowser_special_entries(
+			&self.batch_filebrowser_cwd,
+		)
+		.into_iter()
+		.chain(dirs)
+		.chain(files)
+		.collect();
 
 		let sel =
 			self.batch_filebrowser_list.selected().unwrap_or(0).min(
@@ -1235,6 +1274,13 @@ impl App {
 		else {
 			return;
 		};
+		if entry.name == "." {
+			return;
+		}
+		if entry.name == ".." {
+			self.batch_filebrowser_parent();
+			return;
+		}
 		if entry.is_dir {
 			self.batch_filebrowser_cwd = entry.path.clone();
 			self.batch_filebrowser_list.select(Some(0));
@@ -1253,7 +1299,7 @@ impl App {
 			.map(|p| p.to_path_buf())
 		{
 			self.batch_filebrowser_cwd = parent;
-			self.batch_filebrowser_list.select(Some(0));
+			self.batch_filebrowser_list.select(Some(1));
 			self.batch_filebrowser_load();
 		}
 	}
@@ -1296,7 +1342,11 @@ impl App {
 		);
 
 		self.download_filebrowser_entries =
-			dirs.into_iter().chain(files).collect();
+			Self::filebrowser_special_entries(&self.download_filebrowser_cwd)
+				.into_iter()
+				.chain(dirs)
+				.chain(files)
+				.collect();
 
 		let sel = self
 			.download_filebrowser_list
@@ -1382,6 +1432,13 @@ impl App {
 		else {
 			return;
 		};
+		if entry.name == "." {
+			return;
+		}
+		if entry.name == ".." {
+			self.download_filebrowser_parent();
+			return;
+		}
 		if entry.is_dir {
 			self.download_filebrowser_cwd = entry.path.clone();
 			self.download_filebrowser_list.select(Some(0));
@@ -1404,7 +1461,7 @@ impl App {
 			.map(|p| p.to_path_buf())
 		{
 			self.download_filebrowser_cwd = parent;
-			self.download_filebrowser_list.select(Some(0));
+			self.download_filebrowser_list.select(Some(1));
 			self.download_filebrowser_load();
 			self.modal_input = self
 				.download_filebrowser_cwd
@@ -3344,26 +3401,7 @@ fn draw_upload_filebrowser(f: &mut Frame, app: &mut App, area: Rect) {
 		return;
 	}
 
-	// Check if selected entry is a git repo (to show g hint).
-	let selected_is_git = app
-		.filebrowser_list
-		.selected()
-		.and_then(|i| app.filebrowser_entries.get(i))
-		.and_then(|e| e.git.as_ref())
-		.is_some();
-
-	// Reserve bottom line for git hint when applicable.
-	let (list_area, hint_area) = if selected_is_git
-		&& app.filebrowser_active
-	{
-		let s = Layout::default()
-			.direction(Direction::Vertical)
-			.constraints([Constraint::Min(1), Constraint::Length(1)])
-			.split(inner);
-		(s[0], Some(s[1]))
-	} else {
-		(inner, None)
-	};
+	let list_area = inner;
 
 	let items: Vec<ListItem> = app
 		.filebrowser_entries
@@ -3389,24 +3427,6 @@ fn draw_upload_filebrowser(f: &mut Frame, app: &mut App, area: Rect) {
 		list_area,
 		&mut app.filebrowser_list,
 	);
-
-	if let Some(ha) = hint_area {
-		f.render_widget(
-			Paragraph::new(Line::from(vec![
-				Span::styled(
-					"  g",
-					Style::default()
-						.fg(Color::Yellow)
-						.add_modifier(Modifier::BOLD),
-				),
-				Span::styled(
-					": open git panel",
-					Style::default().fg(COLOR_DIM),
-				),
-			])),
-			ha,
-		);
-	}
 }
 
 pub fn draw_batch_tab(f: &mut Frame, app: &mut App, area: Rect) {
@@ -3558,6 +3578,18 @@ pub fn draw_batch_tab(f: &mut Frame, app: &mut App, area: Rect) {
 /// File browser panel for the batch tab.
 /// Shared helper: build a ListItem for a file browser entry.
 fn filebrowser_list_item(e: &FileBrowserEntry) -> ListItem<'static> {
+	if e.name == "." {
+		return ListItem::new(Line::from(Span::styled(
+			"· .  (current dir)",
+			Style::default().fg(COLOR_DIM),
+		)));
+	}
+	if e.name == ".." {
+		return ListItem::new(Line::from(Span::styled(
+			"↩ ..  (parent dir)",
+			Style::default().fg(COLOR_DIM),
+		)));
+	}
 	let (icon, base_style) = if e.is_dir {
 		("▶ ", Style::default().fg(Color::Cyan))
 	} else {
@@ -3604,6 +3636,18 @@ fn upload_filebrowser_list_item(
 	e: &FileBrowserEntry,
 	queued: bool,
 ) -> ListItem<'static> {
+	if e.name == "." {
+		return ListItem::new(Line::from(Span::styled(
+			"· .  (current dir)",
+			Style::default().fg(COLOR_DIM),
+		)));
+	}
+	if e.name == ".." {
+		return ListItem::new(Line::from(Span::styled(
+			"↩ ..  (parent dir)",
+			Style::default().fg(COLOR_DIM),
+		)));
+	}
 	let (icon, base_style) = if e.is_dir {
 		("▶ ", Style::default().fg(Color::Cyan))
 	} else if queued {
@@ -3705,24 +3749,7 @@ fn draw_batch_filebrowser(f: &mut Frame, app: &mut App, area: Rect) {
 		return;
 	}
 
-	let selected_is_git = app
-		.batch_filebrowser_list
-		.selected()
-		.and_then(|i| app.batch_filebrowser_entries.get(i))
-		.and_then(|e| e.git.as_ref())
-		.is_some();
-
-	let (list_area, hint_area) = if selected_is_git
-		&& app.batch_filebrowser_active
-	{
-		let s = Layout::default()
-			.direction(Direction::Vertical)
-			.constraints([Constraint::Min(1), Constraint::Length(1)])
-			.split(inner);
-		(s[0], Some(s[1]))
-	} else {
-		(inner, None)
-	};
+	let list_area = inner;
 
 	let items: Vec<ListItem> = app
 		.batch_filebrowser_entries
@@ -3743,10 +3770,6 @@ fn draw_batch_filebrowser(f: &mut Frame, app: &mut App, area: Rect) {
 		list_area,
 		&mut app.batch_filebrowser_list,
 	);
-
-	if let Some(ha) = hint_area {
-		render_git_hint(f, ha);
-	}
 }
 
 pub fn draw_admin_tab(f: &mut Frame, app: &App, area: Rect) {
