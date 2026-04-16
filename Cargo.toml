@@ -101,6 +101,7 @@ aes = "0.8"
 	bech32 = "0.11"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
+blossom_tui = { package = "gnostr-blossom-tui", version = "0.1.0", path = "tui" }
 	bytes = "1.11.0"
 chacha20 = "0.9"
 chacha20poly1305 = "0.10.1"
@@ -640,6 +641,8 @@ xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
 scopeguard = "1.2.0"
+gnostr-git-helpers = { version = "0.1.0", path = "git-helpers" }
+gnostr-blossom-tui = { version = "0.1.0", path = "tui" }
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
