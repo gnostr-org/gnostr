@@ -2773,13 +2773,21 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	let outer_inner = outer.inner(area);
 	f.render_widget(outer, area);
 
-	// Horizontal split: left = file browser (40%), right = controls (60%).
+	// Horizontal split: the active file browser gets the wider pane so it is
+	// easier to navigate; otherwise the controls pane gets more room.
+	let browser_width = if app.filebrowser_active {
+		Constraint::Percentage(67)
+	} else {
+		Constraint::Percentage(33)
+	};
+	let controls_width = if app.filebrowser_active {
+		Constraint::Percentage(33)
+	} else {
+		Constraint::Percentage(67)
+	};
 	let h_split = Layout::default()
 		.direction(Direction::Horizontal)
-		.constraints([
-			Constraint::Percentage(40),
-			Constraint::Percentage(60),
-		])
+		.constraints([browser_width, controls_width])
 		.split(outer_inner);
 
 	// ── Left: file browser panel ─────────────────────────────────────────────
