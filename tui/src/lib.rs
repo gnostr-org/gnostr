@@ -68,6 +68,23 @@ pub const COLOR_DIM: Color = Color::DarkGray;
 pub const COLOR_SELECTED_BG: Color = Color::Blue;
 pub const COLOR_TITLE_BG: Color = Color::Rgb(24, 24, 48); // deep navy
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FileBrowserSort {
+	Name,
+	Size,
+	Modified,
+}
+
+impl FileBrowserSort {
+	fn label(self) -> &'static str {
+		match self {
+			Self::Name => "A-Z",
+			Self::Size => "Size",
+			Self::Modified => "Modified",
+		}
+	}
+}
+
 // ── App state
 // ─────────────────────────────────────────────────────────────────
 
@@ -108,6 +125,7 @@ pub struct App {
 	pub filebrowser_entries: Vec<FileBrowserEntry>,
 	pub filebrowser_list: ListState,
 	pub filebrowser_active: bool, // true = tree pane has keyboard focus
+	pub filebrowser_sort: FileBrowserSort,
 
 	// Status tab
 	pub status_data: Option<serde_json::Value>,
@@ -129,12 +147,14 @@ pub struct App {
 	pub batch_filebrowser_entries: Vec<FileBrowserEntry>,
 	pub batch_filebrowser_list: ListState,
 	pub batch_filebrowser_active: bool,
+	pub batch_filebrowser_sort: FileBrowserSort,
 
 	// File browser (download popup)
 	pub download_filebrowser_cwd: PathBuf,
 	pub download_filebrowser_entries: Vec<FileBrowserEntry>,
 	pub download_filebrowser_list: ListState,
 	pub download_filebrowser_active: bool,
+	pub download_filebrowser_sort: FileBrowserSort,
 
 	// Git panel (shared across upload and batch file browsers)
 	pub git_mode: bool, // right pane shows git panel
@@ -265,6 +285,7 @@ impl App {
 			filebrowser_entries: Vec::new(),
 			filebrowser_list: ListState::default(),
 			filebrowser_active: false,
+			filebrowser_sort: FileBrowserSort::Name,
 			status_data: None,
 			status_loading: false,
 			status_error: None,
@@ -279,11 +300,13 @@ impl App {
 			batch_filebrowser_entries: Vec::new(),
 			batch_filebrowser_list: ListState::default(),
 			batch_filebrowser_active: false,
+			batch_filebrowser_sort: FileBrowserSort::Name,
 			download_filebrowser_cwd: std::env::current_dir()
 				.unwrap_or_else(|_| PathBuf::from("/")),
 			download_filebrowser_entries: Vec::new(),
 			download_filebrowser_list: ListState::default(),
 			download_filebrowser_active: false,
+			download_filebrowser_sort: FileBrowserSort::Name,
 			git_mode: false,
 			git_repo_path: PathBuf::new(),
 			git_repo_info: None,
@@ -812,8 +835,29 @@ impl App {
 
 	// ── File browser methods ──────────────────────────────────────────────────
 
+	fn sort_filebrowser_entries(
+		entries: &mut Vec<FileBrowserEntry>,
+		sort: FileBrowserSort,
+	) {
+		match sort {
+			FileBrowserSort::Name => entries.sort_by(|a, b| {
+				a.name.to_lowercase().cmp(&b.name.to_lowercase())
+			}),
+			FileBrowserSort::Size => entries.sort_by(|a, b| {
+				b.size
+					.cmp(&a.size)
+					.then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+			}),
+			FileBrowserSort::Modified => entries.sort_by(|a, b| {
+				b.modified
+					.cmp(&a.modified)
+					.then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+			}),
+		}
+	}
+
 	/// (Re)load `filebrowser_entries` from `filebrowser_cwd`.
-	/// Directories are listed first, then files, both sorted case-insensitively.
+	/// Directories are listed first, then files, using the active sort order.
 	/// Also auto-opens the git panel when the CWD is inside a git repo.
 	pub fn filebrowser_load(&mut self) {
 		let mut dirs: Vec<FileBrowserEntry> = Vec::new();
@@ -830,12 +874,8 @@ impl App {
 			}
 		}
 
-		dirs.sort_by(|a, b| {
-			a.name.to_lowercase().cmp(&b.name.to_lowercase())
-		});
-		files.sort_by(|a, b| {
-			a.name.to_lowercase().cmp(&b.name.to_lowercase())
-		});
+		Self::sort_filebrowser_entries(&mut dirs, self.filebrowser_sort);
+		Self::sort_filebrowser_entries(&mut files, self.filebrowser_sort);
 
 		self.filebrowser_entries =
 			dirs.into_iter().chain(files).collect();
@@ -974,6 +1014,11 @@ impl App {
 		self.input_mode = false;
 		self.filebrowser_active = true;
 		self.upload_filebrowser_from_current_path();
+	}
+
+	fn filebrowser_set_sort(&mut self, sort: FileBrowserSort) {
+		self.filebrowser_sort = sort;
+		self.filebrowser_load();
 	}
 
 	pub fn upload_focus_input(&mut self) {

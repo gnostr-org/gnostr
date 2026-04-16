@@ -3,6 +3,7 @@
 use std::{
 	fmt::Write as _,
 	path::PathBuf,
+	time::SystemTime,
 };
 
 use asyncgit::{
@@ -220,6 +221,8 @@ pub struct FileBrowserEntry {
 	pub name: String,
 	pub path: PathBuf,
 	pub is_dir: bool,
+	pub size: u64,
+	pub modified: Option<SystemTime>,
 	/// Set when the entry is a directory that is (or contains) a git repo.
 	pub git: Option<GitRepoInfo>,
 }
@@ -231,11 +234,16 @@ impl FileBrowserEntry {
 			.map(|n| n.to_string_lossy().into_owned())
 			.unwrap_or_else(|| path.to_string_lossy().into_owned());
 		let is_dir = path.is_dir();
+		let metadata = path.metadata().ok();
+		let size = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
+		let modified = metadata.and_then(|m| m.modified().ok());
 		let git = if is_dir { detect_git_info(&path) } else { None };
 		Self {
 			name,
 			path,
 			is_dir,
+			size,
+			modified,
 			git,
 		}
 	}
