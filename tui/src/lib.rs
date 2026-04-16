@@ -625,14 +625,16 @@ impl App {
 
 	/// Open the git panel for the given repo path.
 	pub fn git_open(&mut self, path: PathBuf) {
-		self.git_repo_path = path;
-		self.git_mode = true;
-		self.git_output.clear();
-		self.git_output_scroll = 0;
-		self.git_commit_msg.clear();
-		self.git_commit_edit = false;
-		// Show status immediately on open.
-		self.run_git_action(GitAction::Status);
+		// Git panel disabled: preserve the old implementation as comments so it
+		// can be restored later without rethinking the call sites.
+		// self.git_repo_path = path;
+		// self.git_mode = true;
+		// self.git_output.clear();
+		// self.git_output_scroll = 0;
+		// self.git_commit_msg.clear();
+		// self.git_commit_edit = false;
+		// self.run_git_action(GitAction::Status);
+		let _ = path;
 	}
 
 	pub fn git_scroll_up(&mut self) {
@@ -653,26 +655,28 @@ impl App {
 	///   refresh `git status`, store `GitRepoInfo`.
 	/// - Outside any repo → close the panel.
 	pub fn update_git_panel_for_cwd(&mut self, cwd: &PathBuf) {
-		match find_git_root(cwd) {
-			Some((root, info)) => {
-				// Only reset output / run status when the root changes.
-				let changed = self.git_repo_path != root;
-				self.git_repo_path = root;
-				self.git_repo_info = Some(info);
-				if !self.git_mode {
-					self.git_mode = true;
-					self.git_output.clear();
-					self.git_output_scroll = 0;
-				}
-				if changed || self.git_output.is_empty() {
-					self.run_git_action(GitAction::Status);
-				}
-			}
-			None => {
-				self.git_mode = false;
-				self.git_repo_info = None;
-			}
-		}
+		// Git panel disabled: keep the old repo detection logic in place but
+		// commented out so the Upload tab stays interactive.
+		// match find_git_root(cwd) {
+		// 	Some((root, info)) => {
+		// 		let changed = self.git_repo_path != root;
+		// 		self.git_repo_path = root;
+		// 		self.git_repo_info = Some(info);
+		// 		if !self.git_mode {
+		// 			self.git_mode = true;
+		// 			self.git_output.clear();
+		// 			self.git_output_scroll = 0;
+		// 		}
+		// 		if changed || self.git_output.is_empty() {
+		// 			self.run_git_action(GitAction::Status);
+		// 		}
+		// 	}
+		// 	None => {
+		// 		self.git_mode = false;
+		// 		self.git_repo_info = None;
+		// 	}
+		// }
+		let _ = cwd;
 	}
 
 	pub fn run_git_action(&mut self, action: GitAction) {
@@ -849,9 +853,10 @@ impl App {
 		);
 		self.filebrowser_sync_path();
 
-		// Auto-reveal the git panel when CWD is inside a git repo.
-		let cwd = self.filebrowser_cwd.clone();
-		self.update_git_panel_for_cwd(&cwd);
+		// Git panel disabled for now; keep the detection code in place but
+		// do not auto-open the side panel or block file-browser navigation.
+		// let cwd = self.filebrowser_cwd.clone();
+		// self.update_git_panel_for_cwd(&cwd);
 	}
 
 	/// Mirror the highlighted entry's path into the File Path field.
@@ -1148,9 +1153,9 @@ impl App {
 		);
 		self.batch_filebrowser_sync_path();
 
-		// Auto-reveal the git panel when CWD is inside a git repo.
-		let cwd = self.batch_filebrowser_cwd.clone();
-		self.update_git_panel_for_cwd(&cwd);
+		// Git panel disabled: keep the old auto-open hook commented out.
+		// let cwd = self.batch_filebrowser_cwd.clone();
+		// self.update_git_panel_for_cwd(&cwd);
 	}
 
 	fn batch_filebrowser_sync_path(&mut self) {
@@ -2780,11 +2785,13 @@ pub fn draw_upload_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	// ── Left: file browser panel ─────────────────────────────────────────────
 	draw_upload_filebrowser(f, app, h_split[0]);
 
-	// ── Right: git panel (when git_mode) or controls ──────────────────────
-	if app.git_mode {
-		draw_git_panel(f, app, h_split[1]);
-		return;
-	}
+	// ── Right: controls only ───────────────────────────────────────────────
+	// Git panel rendering is intentionally disabled; the code stays commented
+	// out so it can be re-enabled later without reintroducing the blocking UX.
+	// if app.git_mode {
+	// 	draw_git_panel(f, app, h_split[1]);
+	// 	return;
+	// }
 	let chunks = Layout::default()
 		.direction(Direction::Vertical)
 		.constraints([
@@ -3367,13 +3374,13 @@ pub fn draw_batch_tab(f: &mut Frame, app: &mut App, area: Rect) {
 	// ── Left: file browser ───────────────────────────────────────────────────
 	draw_batch_filebrowser(f, app, h_split[0]);
 
-	// ── Right: git panel (when git_mode) or controls ──────────────────────
-	if app.git_mode {
-		draw_git_panel(f, app, h_split[1]);
-		return;
-	}
-
 	// ── Right: controls ──────────────────────────────────────────────────────
+	// Git panel rendering is disabled here as well so Batch stays keyboard
+	// driven and never steals focus from the file browser.
+	// if app.git_mode {
+	// 	draw_git_panel(f, app, h_split[1]);
+	// 	return;
+	// }
 	let chunks = Layout::default()
 		.direction(Direction::Vertical)
 		.constraints([
@@ -6079,65 +6086,69 @@ pub async fn run_loop(
 									}
 								}
 								KeyCode::Char('g') => {
-									let selected_path = app
-										.filebrowser_list
-										.selected()
-										.and_then(|i| {
-											app.filebrowser_entries
-												.get(i)
-										})
-										.filter(|e| e.git.is_some())
-										.map(|e| e.path.clone());
-									if let Some(path) = selected_path
-									{
-										app.git_open(path);
-									}
+									// Git panel disabled: keep the old open-on-g
+									// logic commented out for later restore.
+									// let selected_path = app
+									// 	.filebrowser_list
+									// 	.selected()
+									// 	.and_then(|i| {
+									// 		app.filebrowser_entries
+									// 			.get(i)
+									// 	})
+									// 	.filter(|e| e.git.is_some())
+									// 	.map(|e| e.path.clone());
+									// if let Some(path) = selected_path {
+									// 	app.git_open(path);
+									// }
 								}
 								KeyCode::Char('f') => {
 									app.filebrowser_active = false
 								}
 								_ => {}
 							}
-						} else if app.git_mode {
-							match key.code {
-								KeyCode::Char('s') => app
-									.run_git_action(
-										GitAction::Status,
-									),
-								KeyCode::Char('l') => {
-									app.run_git_action(GitAction::Log)
-								}
-								KeyCode::Char('d') => app
-									.run_git_action(GitAction::Diff),
-								KeyCode::Char('f') => app
-									.run_git_action(GitAction::Fetch),
-								KeyCode::Char('p') => app
-									.run_git_action(GitAction::Pull),
-								KeyCode::Char('P') => app
-									.run_git_action(GitAction::Push),
-								KeyCode::Char('a') => {
-									app.run_git_action(GitAction::Add)
-								}
-								KeyCode::Char('c') => {
-									app.git_commit_edit = true;
-								}
-								KeyCode::Up | KeyCode::Char('k') => {
-									app.git_scroll_up()
-								}
-								KeyCode::Down
-								| KeyCode::Char('j') => app.git_scroll_down(20),
-								KeyCode::Esc => {
-									if app.git_action_running {
-										app.cancel_git_action();
-									} else {
-										app.git_mode = false
-									}
-								}
-								KeyCode::Char('q') => {
-									app.git_mode = false
-								}
-								_ => {}
-							}
+						// Git panel disabled: keep the old action routing in place
+						// as comments so it can be restored without reworking the
+						// Upload tab keyboard handling again.
+						// } else if app.git_mode {
+						// 	match key.code {
+						// 		KeyCode::Char('s') => app
+						// 			.run_git_action(
+						// 				GitAction::Status,
+						// 			),
+						// 		KeyCode::Char('l') => {
+						// 			app.run_git_action(GitAction::Log)
+						// 		}
+						// 		KeyCode::Char('d') => app
+						// 			.run_git_action(GitAction::Diff),
+						// 		KeyCode::Char('f') => app
+						// 			.run_git_action(GitAction::Fetch),
+						// 		KeyCode::Char('p') => app
+						// 			.run_git_action(GitAction::Pull),
+						// 		KeyCode::Char('P') => app
+						// 			.run_git_action(GitAction::Push),
+						// 		KeyCode::Char('a') => {
+						// 			app.run_git_action(GitAction::Add)
+						// 		}
+						// 		KeyCode::Char('c') => {
+						// 			app.git_commit_edit = true;
+						// 		}
+						// 		KeyCode::Up | KeyCode::Char('k') => {
+						// 			app.git_scroll_up()
+						// 		}
+						// 		KeyCode::Down
+						// 		| KeyCode::Char('j') => app.git_scroll_down(20),
+						// 		KeyCode::Esc => {
+						// 			if app.git_action_running {
+						// 				app.cancel_git_action();
+						// 			} else {
+						// 				app.git_mode = false
+						// 			}
+						// 		}
+						// 		KeyCode::Char('q') => {
+						// 			app.git_mode = false
+						// 		}
+						// 		_ => {}
+						// 	}
 						} else {
 							match key.code {
 								KeyCode::Char('f') => {
