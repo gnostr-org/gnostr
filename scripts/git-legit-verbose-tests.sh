@@ -13,7 +13,8 @@ NC='\033[0m'
 
 echo -e "${CYAN}=== git-legit Verbose Stress Test (Violation Check) ===${NC}"
 
-cargo run -q --bin git-legit -- -m "---New Test---" --pow $WEEBLE -m $WOBBLE && echo
+cargo run -q --bin git-legit -- -m "---New Test---" --pow $WEEBLE -m $WEEBLE -m $WOBBLE && echo
+cargo run -q --bin git-legit -- -m "---New Test---" --pow $WOBBLE -m $WEEBLE -m $WOBBLE && echo
 
 make_weeble_blockheight_wobble() {
 mkdir -p ./weeble
