@@ -1173,12 +1173,8 @@ impl App {
 			}
 		}
 
-		dirs.sort_by(|a, b| {
-			a.name.to_lowercase().cmp(&b.name.to_lowercase())
-		});
-		files.sort_by(|a, b| {
-			a.name.to_lowercase().cmp(&b.name.to_lowercase())
-		});
+		Self::sort_filebrowser_entries(&mut dirs, self.batch_filebrowser_sort);
+		Self::sort_filebrowser_entries(&mut files, self.batch_filebrowser_sort);
 
 		self.batch_filebrowser_entries =
 			dirs.into_iter().chain(files).collect();
@@ -1290,12 +1286,14 @@ impl App {
 			}
 		}
 
-		dirs.sort_by(|a, b| {
-			a.name.to_lowercase().cmp(&b.name.to_lowercase())
-		});
-		files.sort_by(|a, b| {
-			a.name.to_lowercase().cmp(&b.name.to_lowercase())
-		});
+		Self::sort_filebrowser_entries(
+			&mut dirs,
+			self.download_filebrowser_sort,
+		);
+		Self::sort_filebrowser_entries(
+			&mut files,
+			self.download_filebrowser_sort,
+		);
 
 		self.download_filebrowser_entries =
 			dirs.into_iter().chain(files).collect();
@@ -1316,6 +1314,7 @@ impl App {
 				Some(sel)
 			},
 		);
+		self.download_filebrowser_sync_path();
 	}
 
 	fn download_filebrowser_sync_path(&mut self) {
@@ -3328,10 +3327,11 @@ fn draw_upload_filebrowser(f: &mut Frame, app: &mut App, area: Rect) {
 	} else {
 		cwd_label
 	};
+	let title = format!(" {} [{}] ", cwd_display, app.filebrowser_sort.label());
 
 	let block = Block::default()
 		.borders(Borders::ALL)
-		.title(format!(" {} ", cwd_display))
+		.title(title)
 		.border_style(border_style);
 
 	let inner = block.inner(area);
@@ -4551,7 +4551,7 @@ pub fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
                 } else if app.input_mode {
                     " Enter:upload  Tab:browse  Esc:stop  ?:help  q:quit"
 				} else if app.filebrowser_active {
-					" Enter:select/open  r:refresh  Tab:edit  Esc:up/close  ?:help  q:quit"
+					" Enter:select/open  a/s/m:sort  r:refresh  Tab:edit  Esc:up/close  ?:help  q:quit"
 				} else {
                     " f:browse  i:edit-path  Tab:toggle  p:toggle-nip94  R:relay-url  Enter:upload  Esc:clear  ?:help  q:quit"
                 }
@@ -5389,6 +5389,7 @@ pub fn draw_docs_fullscreen(
             kv("Tab", "Toggle browser / edit focus"),
             kv("Enter", "Upload from the path field"),
             kv("Esc", "Exit edit mode / clear path / close browser"),
+            kv("a / s / m", "Sort by name / size / modified"),
             kv("r", "Refresh the file browser"),
             blank(),
             h2("  Options"),
@@ -5406,6 +5407,7 @@ pub fn draw_docs_fullscreen(
             kv("Esc", "Go up one level (closes at root)"),
             kv("/", "Fuzzy search entries in current directory"),
             kv("Esc (in search)", "Clear search / exit search mode"),
+            kv("a / s / m", "Sort by name / size / modified"),
             kv("f", "Close file browser"),
             blank(),
             h2("  Git Panel (auto-opens inside git repos)"),
@@ -6085,6 +6087,26 @@ pub async fn run_loop(
 						_ => {}
 					}
 					continue;
+				}
+
+				if app.tab == 1 && app.filebrowser_active {
+					match key.code {
+						KeyCode::Char('a') => {
+							app.filebrowser_set_sort(FileBrowserSort::Name);
+							continue;
+						}
+						KeyCode::Char('s') => {
+							app.filebrowser_set_sort(FileBrowserSort::Size);
+							continue;
+						}
+						KeyCode::Char('m') => {
+							app.filebrowser_set_sort(
+								FileBrowserSort::Modified,
+							);
+							continue;
+						}
+						_ => {}
+					}
 				}
 
 				match app.tab {
