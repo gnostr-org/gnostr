@@ -48,7 +48,7 @@ runs:
           -r ${{ inputs.damus }} \
           -r ${{ inputs.nos }} \
           custom-event \
-          -k 1 \
+          -k ${{ inputs.kind }} \
           -c "[$GITHUB_REPOSITORY_ID](${{ inputs.job_url }}) (${{ inputs.matrix_label }}) ${{ inputs.status }}" \
           -t "GITHUB_REPOSITORY_OWNER|$GITHUB_REPOSITORY_OWNER","GITHUB_REPOSITORY|$GITHUB_REPOSITORY","GITHUB_WORKFLOW|$GITHUB_WORKFLOW","GITHUB_WORKFLOW_SHA|$GITHUB_WORKFLOW_SHA","GITHUB_WORKFLOW_REF|$GITHUB_WORKFLOW_REF","GITHUB_REF|$GITHUB_REF","GITHUB_RUN_ID|$GITHUB_RUN_ID","RUNNER_ENVIRONMENT|$RUNNER_ENVIRONMENT","RUNNER_OS|$RUNNER_OS","|gnostr","|gnostr-bot","|$(date +%s)" \
           --hex || true) && \
