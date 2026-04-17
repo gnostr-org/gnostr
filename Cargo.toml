@@ -29,6 +29,7 @@ members = [
     "grammar",
     "invalidstring",
     "legit",
+    "ngit",
     "qr",
     "relay",
     "relay/extensions",
@@ -482,7 +483,7 @@ log = "0.4.24"
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
-ngit = { version = "2.2.3", features = ["vendored-openssl"] }
+ngit = { path = "ngit", features = ["vendored-openssl"] }
 nostr = { workspace = true }
 
 ## nostr deps

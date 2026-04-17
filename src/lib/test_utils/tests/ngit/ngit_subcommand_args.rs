@@ -62,5 +62,8 @@ fn test_ngit_subcommand_global_args() {
     assert_eq!(cli_args_only_spinners.nsec, None);
     assert_eq!(cli_args_only_spinners.password, None);
     assert_eq!(cli_args_only_spinners.disable_cli_spinners, true);
-    assert!(matches!(cli_args_only_spinners.command, NgitCommands::List));
+    assert!(matches!(
+        cli_args_only_spinners.command,
+        Some(NgitCommands::List { .. })
+    ));
 }

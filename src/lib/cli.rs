@@ -77,53 +77,11 @@ pub enum LegitCommands {
     Mine,
 }
 
-/// NgitCli
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct NgitCli {
-    /// command
-    #[command(subcommand)]
-    pub command: NgitCommands,
-    /// remote signer address
-    #[arg(long, global = true)]
-    pub bunker_uri: Option<String>,
-    /// remote signer app secret key
-    #[arg(long, global = true)]
-    pub bunker_app_key: Option<String>,
-    /// nsec or hex private key
-    #[arg(short, long, global = true)]
-    pub nsec: Option<String>,
-    /// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    pub password: Option<String>,
-    /// disable spinner animations
-    #[arg(long, action = clap::ArgAction::SetTrue)] //
-    pub disable_cli_spinners: bool,
-}
+/// Vendored ngit CLI.
+pub type NgitCli = ::ngit::cli::Cli;
 
-/// NgitCommands
-#[derive(Subcommand, Debug)]
-pub enum NgitCommands {
-    /// update cache with latest updates from nostr
-    Fetch(fetch::FetchArgs),
-    /// signal you are this repo's maintainer accepting proposals via
-    /// nostr
-    Init(init::InitArgs),
-    /// issue commits as a proposal
-    Send(send::SendArgs),
-    /// list proposals; checkout, apply or download selected
-    List,
-    /// send proposal revision
-    Push(push::PushArgs),
-    /// fetch and apply new proposal commits / revisions linked to
-    /// branch
-    Pull,
-    /// run with --nsec flag to change npub
-    Login(login::LoginArgs),
-    /// Query events from relays
-    Query(QuerySubCommand),
-}
+/// Vendored ngit command set.
+pub type NgitCommands = ::ngit::cli::Commands;
 
 /// GnostrCli
 #[derive(Parser)]
