@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 use ::time::at;
 use ::time::Timespec;
 use nostr_sdk::prelude::*;
-use url::Url;
+use ::url::Url;
 
 use crate::processor::Processor;
 use crate::processor::APP_SECRET_KEY;
@@ -269,13 +269,14 @@ pub struct CliArgs {
 pub async fn run(args: &CliArgs) -> Result<()> {
 
     let _run_async = async {
-        let opts = Options::new(); //.wait_for_send(true);
-        let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-        let relay_client = Client::new_with_opts(&app_keys, opts);
-        let _ = relay_client.publish_text_note("#gnostr", &[]).await;
+        let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+        let relay_client = Client::new(app_keys);
+        let _ = relay_client
+            .send_event_builder(EventBuilder::text_note("#gnostr"))
+            .await;
     };
 
-    let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+    let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor).await;
     let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();

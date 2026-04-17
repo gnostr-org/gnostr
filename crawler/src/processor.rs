@@ -2,7 +2,7 @@ use crate::pubkeys::PubKeys;
 use crate::stats::Stats;
 use log::debug;
 
-use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
+use nostr_sdk::prelude::{Event, Kind, TagStandard, Timestamp};
 use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
@@ -47,7 +47,7 @@ impl Processor {
 
     #[allow(dead_code)]
     fn age(t: Timestamp) -> i64 {
-        Timestamp::now().as_i64() - t.as_i64()
+        Timestamp::now().as_secs() as i64 - t.as_secs() as i64
     }
 
     pub fn handle_event(&mut self, event: &Event) {
@@ -110,7 +110,7 @@ impl Processor {
             Kind::ZapRequest => {
                 println!("{:?}", event.kind);
             }
-            Kind::Zap => {
+            Kind::ZapReceipt => {
                 println!("{:?}", event.kind);
             }
             Kind::Authentication => {
@@ -122,13 +122,13 @@ impl Processor {
             Kind::RelayList => {
                 println!("{:?}", event.kind);
             }
-            Kind::Replaceable(_u16) => {
+            kind if kind.is_replaceable() => {
                 println!("{:?}", event.kind);
             }
-            Kind::Ephemeral(_u16) => {
+            kind if kind.is_ephemeral() => {
                 println!("{:?}", event.kind);
             }
-            Kind::ParameterizedReplaceable(_u16) => {
+            kind if kind.is_addressable() => {
                 println!("{:?}", event.kind);
             }
             Kind::Custom(_u64) => {
@@ -138,8 +138,14 @@ impl Processor {
                 self.stats.add_contacts();
                 // count p tags
                 let mut cnt = 0;
-                for t in &event.tags {
-                    if let Tag::PubKey(pk, _s) = t {
+                for t in event.tags.iter() {
+                    if let Some(TagStandard::PublicKey {
+                        public_key: pk,
+                        relay_url: _,
+                        alias: _,
+                        uppercase: _,
+                    }) = t.as_standardized()
+                    {
                         self.pubkeys.add(pk);
                         cnt += 1;
                     }

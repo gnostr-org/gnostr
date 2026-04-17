@@ -1,8 +1,8 @@
-use nostr_sdk::prelude::{FromBech32, ToBech32, XOnlyPublicKey};
+use nostr_sdk::prelude::{FromBech32, PublicKey, ToBech32};
 use std::collections::HashMap;
 
 pub struct PubKeys {
-    p: HashMap<XOnlyPublicKey, u64>,
+    p: HashMap<PublicKey, u64>,
 }
 
 impl Default for PubKeys {
@@ -18,7 +18,7 @@ impl PubKeys {
         }
     }
 
-    pub fn add(&mut self, p: &XOnlyPublicKey) -> u64 {
+    pub fn add(&mut self, p: &PublicKey) -> u64 {
         if !self.p.contains_key(p) {
             let n = self.p.len() as u64;
             self.p.insert(*p, n);
@@ -31,7 +31,7 @@ impl PubKeys {
 
     #[allow(dead_code)]
     pub fn add_str(&mut self, p: &str) -> u64 {
-        let pp = match XOnlyPublicKey::from_bech32(p) {
+        let pp = match PublicKey::from_bech32(p) {
             Err(_) => return 0,
             Ok(pp) => pp,
         };
@@ -45,7 +45,7 @@ impl PubKeys {
     pub fn dump(&self) {
         println!("Found  {}  public keys:", self.p.len());
         for pk in self.p.keys() {
-            println!("  {}", pk.to_bech32().unwrap());
+            println!("  {}", pk.to_bech32().unwrap_or_else(|_| pk.to_string()));
         }
         println!();
     }
