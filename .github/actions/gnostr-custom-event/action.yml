@@ -50,7 +50,7 @@ runs:
           custom-event \
           -k ${{ inputs.kind }} \
           -c ${{ inputs.content }} \
-          -c ${{ inputs.tags }} \
+          -t ${{ inputs.tags }} \
           --hex || true) && \
           export EVENT=$EVENT && \
           NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
