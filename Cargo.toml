@@ -540,6 +540,7 @@ ron = "0.8"
 rpassword = "7.2"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 rust-crypto = "0.2.36"
 rust-ini = { version = "0.21.1", optional = true }
 scrypt = { workspace = true }

@@ -26,8 +26,14 @@ mod list;
 mod push;
 mod utils;
 
+fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    install_rustls_crypto_provider();
+
     let args = env::args();
     let args = args.skip(1).take(2).collect::<Vec<_>>();
 
