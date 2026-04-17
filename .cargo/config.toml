@@ -1,47 +1,8 @@
-[env]
-SCCACHE_CACHE_SIZE = "10G"
-
 [target.aarch64-unknown-linux-gnu]
-linker = "aarch64-elf-gcc"
+linker = "aarch64-linux-gnu-gcc"
 
-[target.'cfg(target_os = "windows")']
-rustflags = [
-    "-C", "link-arg=/STACK:4000000", "-Adead_code", "-Aunused_variable", "-Awarnings", "-Ctarget-cpu=native", "-Aclippy::all"
-]
+[target.arm-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
 
-# # Settings for Unix-like systems (Linux, macOS) would go here:
-# [target.'cfg(any(target_os = "linux", target_os = "macos"))']
-# rustflags = [
-#     "-Adead_code", "-Awarnings", "-Ctarget-cpu=native", "-Aclippy::all"
-# ]
-
-[build]
-rustflags = ["--cfg", "tokio_unstable"]
-#target-dir = ".build"
-# sccache is optional - set RUSTC_WRAPPER=sccache env var if available
-# rustc-wrapper = "sccache"
-# rustflags = [
-# "-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
-# ]
-
-[check]
-rustflags = ["--cfg", "tokio_unstable"]
-#target-dir = ".check"
-# sccache is optional - set RUSTC_WRAPPER=sccache env var if available
-# rustc-wrapper = "sccache"
-#rustflags = [
-#"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
-#]
-
-[release]
-rustflags = ["--cfg", "tokio_unstable"]
-#target-dir = ".release"
-# sccache is optional - set RUSTC_WRAPPER=sccache env var if available
-# rustc-wrapper = "sccache"
-#rustflags = [
-#"-Adead_code", "-Awarnings", "-Aunused_variable", "-Ctarget-cpu=native", "-Aclippy::all"
-#]
-
-[test]
-rustflags = ["--cfg", "tokio_unstable"]
-# rustc-wrapper = "sccache"
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
