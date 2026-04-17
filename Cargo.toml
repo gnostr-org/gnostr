@@ -17,6 +17,10 @@ categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
 
+[lib]
+name = "gnostr"
+path = "src/lib/mod.rs"
+
 [workspace.package]
 version = "1893.935010.246953"
 
@@ -217,10 +221,6 @@ speedy = { version = "0.8.7" }
 	xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
 	yoke = { version = "0.7.5", features = ["derive"] }
 	zeroize = "1.8.2"
-
-[lib]
-name = "gnostr"
-path = "src/lib/mod.rs"
 
 [[bin]]
 name = "gnostr-crawler-service"
