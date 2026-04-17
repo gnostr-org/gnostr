@@ -1,9 +1,57 @@
+# $ gnostr --help
+# gnostr:a git+nostr workflow utility
+#
+# Usage: gnostr [OPTIONS] [COMMAND]
+#
+# Commands:
+#   award-badge                  Publish award badge event
+#   bech32-to-any                Convert bech32 string to other formats
+#   broadcast-events             Broadcast events from file
+#   chat                         Chat sub commands
+#   convert-key                  Convert key from bech32 to hex or hex to bech32
+#   create-badge                 Create a new badge
+#   create-public-channel        Create a new public channel
+#   crawler                      Crawler sub commands
+#   custom-event                 Create custom event    more --help
+#   delete-event                 Delete an event
+#   delete-profile               Delete a profile
+#   dm                           Send a NIP-44 direct message
+#   fetch-by-id                  Fetch an event by ID
+#   generate-keypair             Generate a new keypair
+#   git                          Git sub commands
+#   hide-public-channel-message  Hide a message in a public chat room
+#   legit                        Legit sub commands
+#   list-events                  Get all events
+#   mute-public-key              Mute a public key
+#   ngit                         Ngit sub commands
+#   nip34                        Nip34 sub commands
+#   note                         Send text note
+#   privkey-to-bech32            Convert a private key to its bech32 representa
+#   profile-badges               Set profile badges
+#   publish-contact-list-csv     Publish contacts from a CSV file
+#   query                        Add the query subcommand here, using the new Q
+#   react                        React to an event
+#   relay                        Relay sub commands
+#   send-channel-message         Send a message to a public channel
+#   set-channel-metadata         Update channel metadata
+#   set-metadata                 Set metadata. CAUTION! This will replace your
+#   set-user-status              Create a user status event
+#   sniper                       Perform actions related to sniping relays
+#   tui                          Gnostr sub commands
+#   vanity                       Vanity public key mining
+#   xor                          XOR utility subcommand
+#   help                         Print this message or the help of the given su
+
+---
 name: 'Cargo Binstall Gnostr'
-description: 'Reusable action to install gnostr using cargo-binstall --force --no-confirm'
+description: 'Reusable action to install gnostr using cargo-binstall'
 runs:
   using: 'composite'
   steps:
     - name: Install gnostr via cargo-binstall
       shell: bash
       run: |
-        cargo-binstall --force --no-confirm gnostr && gnostr --help || true
+        cargo-binstall --force --no-confirm gnostr && \
+        gnostr --version && echo \
+        gnostr --help && echo \
+        || true
