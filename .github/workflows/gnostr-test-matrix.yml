@@ -274,7 +274,7 @@ jobs:
         uses: ./.github/actions/gnostr-custom-event
         with:
           kind: 0
-          content": '{\"name\":\"RandyMcMillan\",\"display_name\":\"Randy\",\"about\":\"Systems Developer | Bitcoin & Nostr Protocol Research\",\"picture\":\"https://avatars.githubusercontent.com/u/1521?v=4\",\"website\":\"https://github.com/RandyMcMillan\",\"nip05\":\"randy@example.com\",\"lud16\":\"randy@getalby.com\"}'
+          content: '{\"name\":\"RandyMcMillan\",\"display_name\":\"Randy\",\"about\":\"Systems Developer | Bitcoin & Nostr Protocol Research\",\"picture\":\"https://avatars.githubusercontent.com/u/1521?v=4\",\"website\":\"https://github.com/RandyMcMillan\",\"nip05\":\"randy@example.com\",\"lud16\":\"randy@getalby.com\"}'
           tags: '"p|p-tag","t|nostr","relay|wss://blossom.gnostr.cloud"'
 
       - name: Create custom-event kind 1
