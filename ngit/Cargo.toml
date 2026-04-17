@@ -10,8 +10,8 @@
 # See Cargo.toml.orig for the original contents.
 [package]
 edition = "2021"
-name = "ngit"
-version = "2.2.3"
+name = "gnostr-ngit"
+version = "0.0.1"
 authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
 build = false
 autolib = false
