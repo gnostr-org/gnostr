@@ -18,7 +18,7 @@ pub struct SubCommandArgs {
 
     /// Relay URLs for the new account's relay list (can be specified multiple
     /// times). Defaults to the relay-default-set if not provided.
-    #[arg(long = "relay", value_parser, num_args = 1)]
+    #[arg(long = "relay", num_args = 1)]
     pub relays: Vec<String>,
 
     /// Don't publish metadata to relays (offline mode)

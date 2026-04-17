@@ -28,7 +28,7 @@ pub struct Cli {
     #[arg(short, long, global = true, hide = true)]
     pub password: Option<String>,
     /// disable spinner animations
-    #[arg(long, action, hide = true)]
+    #[arg(long, hide = true)]
     pub disable_cli_spinners: bool,
     /// show customization options via git config
     #[arg(short, long, global = true)]

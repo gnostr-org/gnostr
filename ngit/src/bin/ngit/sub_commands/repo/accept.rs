@@ -23,7 +23,7 @@ use crate::{
 
 #[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, num_args = 1..)]
     /// where your git+nostr data is hosted (optional; uses your saved grasp
     /// server list or the trusted maintainer's servers if not specified)
     grasp_server: Vec<String>,

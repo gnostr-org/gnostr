@@ -400,34 +400,34 @@ fn validate_fresh(cli: &Cli, args: &SubCommandArgs, user_has_grasp_list: bool) -
 
 #[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
-    #[clap(long)]
+    #[arg(long)]
     /// name of repository (preferred over --identifier)
     name: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// shortname with no spaces or special characters
     identifier: Option<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// optional description
     description: Option<String>,
-    #[clap(short, long, value_parser, num_args = 1..)]
+    #[arg(short, long, num_args = 1..)]
     /// where your git+nostr data is hosted
     grasp_server: Vec<String>,
-    #[clap(long, value_parser, num_args = 1..)]
+    #[arg(long, num_args = 1..)]
     /// additional relays beyond grasp servers
     relay: Vec<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// additional git server URLs beyond grasp servers
     clone: Vec<String>,
-    #[clap(long, value_parser, num_args = 1..)]
+    #[arg(long, num_args = 1..)]
     /// homepage
     web: Vec<String>,
-    #[clap(long, value_parser, num_args = 1..)]
+    #[arg(long, num_args = 1..)]
     /// npubs of other maintainers
     other_maintainers: Vec<String>,
-    #[clap(long, value_parser, num_args = 1..)]
+    #[arg(long, num_args = 1..)]
     /// hashtags for repository discovery
     hashtag: Vec<String>,
-    #[clap(long)]
+    #[arg(long)]
     /// usually root commit but will be more recent commit for forks
     earliest_unique_commit: Option<String>,
 }

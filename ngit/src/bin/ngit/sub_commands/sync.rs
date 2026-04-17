@@ -25,10 +25,10 @@ use nostr_sdk::RelayUrl;
 #[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
     /// optionally just sync a specific reference. eg main or v1.5.2
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub(crate) ref_name: Option<String>,
     /// force push updates and delete refs from non-grasp git servers
-    #[arg(long, action)]
+    #[arg(long)]
     force: bool,
 }
 

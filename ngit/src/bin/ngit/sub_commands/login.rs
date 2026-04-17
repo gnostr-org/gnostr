@@ -17,11 +17,11 @@ use crate::{
 #[derive(Clone, clap::Args)]
 pub struct SubCommandArgs {
     /// login to the local git repository only
-    #[arg(long, action)]
+    #[arg(long)]
     local: bool,
 
     /// don't fetch user metadata and relay list from relays
-    #[arg(long, action)]
+    #[arg(long)]
     offline: bool,
 
     /// signer relay for nostrconnect (can be used multiple times)
