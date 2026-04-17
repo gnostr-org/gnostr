@@ -3,6 +3,10 @@ name = "gnostr-blossom-tui"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "gnostr_blossom_tui"
+path = "./src/lib.rs"
+
 [dependencies]
 #blossom-rs = { path = "..", features = ["client"] }
 ratatui = "0.30"
