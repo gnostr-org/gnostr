@@ -121,42 +121,42 @@ fn parse_args_internal() -> Result<Config, anyhow::Error> {
 
 /// Command-line argument definitions
 #[derive(Debug, clap::Parser)]
-#[clap(author, version = env!("CARGO_PKG_VERSION"), about = "gnostr:git server")]
+#[command(author, version = env!("CARGO_PKG_VERSION"), about = "gnostr:git server")]
 pub struct Args {
     /// Path to a directory where the RocksDB database should be stored.
     ///
     /// This directory will be created if it doesn't exist. The RocksDB database is
     /// quick to generate, so it can be pointed to temporary storage.
-    #[clap(short, long, default_value = ".gnostr/web")]
+    #[arg(short, long, default_value = ".gnostr/web")]
     pub db_store: PathBuf,
 
     /// The IP address to bind to (e.g., 127.0.0.1, 0.0.0.0).
-    #[clap(long, default_value = "127.0.0.1")]
+    #[arg(long, default_value = "127.0.0.1")]
     pub bind_address: std::net::IpAddr,
 
     /// The socket port to bind to (e.g., 3333).
-    #[clap(short, long, default_value = "3333", env = "GNOSTR_GNIT_BIND_PORT")]
+    #[arg(short, long, default_value = "3333", env = "GNOSTR_GNIT_BIND_PORT")]
     pub bind_port: u16,
 
     /// The path in which your bare Git repositories reside.
     ///
     /// This directory will be scanned recursively for Git repositories.
-    #[clap(short, long, default_value = ".")]
+    #[arg(short, long, default_value = ".")]
     pub scan_path: PathBuf,
 
     /// Configures the metadata refresh interval for Git repositories (e.g., "never" or "60s").
-    #[clap(long, default_value_t = RefreshInterval::Duration(std::time::Duration::from_secs(30)), env = "GNOSTR_GNIT_REFRESH_INTERVAL")]
+    #[arg(long, default_value_t = RefreshInterval::Duration(std::time::Duration::from_secs(30)), env = "GNOSTR_GNIT_REFRESH_INTERVAL")]
     pub refresh_interval: RefreshInterval,
 
     /// Configures the request timeout for incoming HTTP requests (e.g., "10s").
-    #[clap(long, default_value_t = humantime::Duration(std::time::Duration::from_secs(10)).into(), env = "GNOSTR_GNIT_REQUEST_TIMEOUT")]
+    #[arg(long, default_value_t = humantime::Duration(std::time::Duration::from_secs(10)).into(), env = "GNOSTR_GNIT_REQUEST_TIMEOUT")]
     pub request_timeout: humantime::Duration,
 
     /// Enable debug logging
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value_t = false)]
     pub debug: bool,
 
     /// Enable info logging
-    #[clap(long, default_value = "false")]
+    #[arg(long, default_value_t = false)]
     pub info: bool,
 }
