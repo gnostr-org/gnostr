@@ -67,19 +67,19 @@ pub enum InnerCrawlerCommand {
         /// The NIP number to search for (e.g., 1)
         nip: i32,
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Runs the watch mode to monitor relays and print their metadata
     Watch {
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Lists relays that are likely to support NIP-34 (Git collaboration)
     Nip34 {
         /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
+        #[arg(long, short)]
         shitlist: Option<String>,
     },
     /// Runs the main gnostr-crawler logic
@@ -87,7 +87,7 @@ pub enum InnerCrawlerCommand {
     /// Starts a web server to serve relay information
     Serve {
         /// The port to listen on for the API server
-        #[clap(long, short, default_value = "3000")]
+        #[arg(long, short, default_value = "3000")]
         port: u16,
     },
 }
@@ -95,7 +95,7 @@ pub enum InnerCrawlerCommand {
 #[derive(clap::Args, Debug, Clone)]
 #[command(author, version, about = "Gnostr Crawler Subcommand", long_about = None)]
 pub struct CrawlerSubCommand {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: InnerCrawlerCommand,
 }
 
@@ -218,22 +218,22 @@ pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> 
 #[allow(clippy::manual_strip)]
 #[derive(clap::Args, Debug, Clone)]
 pub struct CliArgs {
-    #[clap(name = "dir", long = "git-dir")]
+    #[arg(name = "dir", long = "git-dir")]
     /// alternative git directory to use
     flag_git_dir: Option<String>,
-    #[clap(name = "patch", long, short)]
+    #[arg(name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[clap(
+    #[arg(
         name = "nsec",
         default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     )]
     arg_nsec: Option<String>,
-    #[clap(name = "commit")]
+    #[arg(name = "commit")]
     arg_commit: Vec<String>,
-    #[clap(name = "spec", last = true)]
+    #[arg(name = "spec", last = true)]
     arg_spec: Vec<String>,
-    #[clap(long)]
+    #[arg(long)]
     arg_dump: bool,
 }
 
