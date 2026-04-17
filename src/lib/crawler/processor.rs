@@ -11,6 +11,13 @@ pub const BOOTSTRAP_RELAY0: &str = "wss://relay.damus.io";
 pub const BOOTSTRAP_RELAY1: &str = "wss://relay.snort.social";
 pub const BOOTSTRAP_RELAY2: &str = "wss://nos.lol";
 pub const BOOTSTRAP_RELAY3: &str = "wss://nostr.mutinywallet.com";
+pub const BOOTSTRAP_RELAY4: &str = "wss://lightning.red/";
+pub const BOOTSTRAP_RELAY5: &str = "wss://relay.sharegap.net/";
+pub const BOOTSTRAP_RELAY6: &str = "wss://herbstmeister.com/";
+pub const BOOTSTRAP_RELAY7: &str = "wss://ngit.danconwaydev.com/";
+pub const BOOTSTRAP_RELAY8: &str = "wss://blossom.gnostr.cloud/";
+pub const BOOTSTRAP_RELAY9: &str = "wss://relay.ngit.dev/";
+pub const BOOTSTRAP_RELAY10: &str = "wss://inner.sebastix.social/";
 
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     // The vec! macro and String::from calls are now inside a closure,
@@ -20,6 +27,13 @@ pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
         String::from(BOOTSTRAP_RELAY1),
         String::from(BOOTSTRAP_RELAY2),
         String::from(BOOTSTRAP_RELAY3),
+        String::from(BOOTSTRAP_RELAY4),
+        String::from(BOOTSTRAP_RELAY5),
+        String::from(BOOTSTRAP_RELAY6),
+        String::from(BOOTSTRAP_RELAY7),
+        String::from(BOOTSTRAP_RELAY8),
+        String::from(BOOTSTRAP_RELAY9),
+        String::from(BOOTSTRAP_RELAY10),
     ]
 });
 
