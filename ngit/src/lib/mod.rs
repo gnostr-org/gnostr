@@ -53,7 +53,13 @@ impl UrlWithoutSlash for Url {
     }
 }
 
+pub fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 pub async fn run_cli(cli: &Cli) -> Result<()> {
+    install_rustls_crypto_provider();
+
     if cli.interactive {
         std::env::set_var("NGIT_INTERACTIVE_MODE", "1");
     }
