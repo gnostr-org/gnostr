@@ -270,6 +270,17 @@ jobs:
       #   run: |
       #     cargo clean && echo "✅" || echo "❌"
 
+      - name: 🚀 cargo install --path .
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          cargo install --path . --force
+          git remote add gitworkshop \
+          nostr://npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k/blossom.gnostr.cloud/gnostr
+          git remote add git-tui-upstream-https \
+          https://github.com/gnostr-org/gnostr-tui-upstream.git
+          git fetch --all
+
       - name: 🚀 cargo install --path ./git-helpers
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
@@ -277,11 +288,18 @@ jobs:
           cargo install --path ./git-helpers --force
           git remote add gitworkshop \
           nostr://npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k/blossom.gnostr.cloud/gnostr
-          git remote add git-tui-upstream-ssh \
-          git@github.com:gnostr-org/gnostr-tui-upstream.git
           git remote add git-tui-upstream-https \
           https://github.com/gnostr-org/gnostr-tui-upstream.git
           git fetch --all
+
+      - name: 🚀 gnostr query test
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          gnostr query \
+          --authors \
+          $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k | jq .[] | sed  "s/\"//g") \
+          --limit 100 | jq
 
       - name: 🚀 cargo run --bin gnostr-tui --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
