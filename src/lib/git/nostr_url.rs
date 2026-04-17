@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{collections::HashSet, str::FromStr};
 
-use anyhow::{Context, Error, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use nostr_0_34_1::nips::nip01::Coordinate;
 use nostr_sdk_0_34_0::{PublicKey, Url};
 

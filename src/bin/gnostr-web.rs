@@ -54,8 +54,8 @@ fn get_messages() -> impl warp::Reply {
     json(&response)
 }
 
-use webbrowser;
 use std::io;
+use webbrowser;
 
 fn open(host: &str, port: i32) -> io::Result<()> {
     let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
@@ -141,10 +141,18 @@ async fn main() {
         .map(handlebars.clone())
         .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
-    let pwa_route = warp::path("pwa").and(warp::fs::dir(cargo_manifest_dir.join("../../asyncgit/src/lib/pwa")));
-    let images_route = warp::path("images").and(warp::fs::dir(cargo_manifest_dir.join("../../asyncgit/src/lib/images")));
-    let js_files = warp::path("js").and(warp::fs::dir(cargo_manifest_dir.join("../../asyncgit/src/lib/js")));
-    let css_files = warp::path("css").and(warp::fs::dir(cargo_manifest_dir.join("../../asyncgit/src/lib/css")));
+    let pwa_route = warp::path("pwa").and(warp::fs::dir(
+        cargo_manifest_dir.join("../../asyncgit/src/lib/pwa"),
+    ));
+    let images_route = warp::path("images").and(warp::fs::dir(
+        cargo_manifest_dir.join("../../asyncgit/src/lib/images"),
+    ));
+    let js_files = warp::path("js").and(warp::fs::dir(
+        cargo_manifest_dir.join("../../asyncgit/src/lib/js"),
+    ));
+    let css_files = warp::path("css").and(warp::fs::dir(
+        cargo_manifest_dir.join("../../asyncgit/src/lib/css"),
+    ));
 
     // New NIP-34 Detail Route
     let nip34_detail_route = warp::path!("repository-details" / String)

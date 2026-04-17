@@ -46,7 +46,7 @@
 use std::collections::HashMap;
 use std::process::Command;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::auth::build_upload_auth;
@@ -147,9 +147,7 @@ impl BlossomRemote {
             return Ok(None);
         }
 
-        let blobs: Vec<BlobDescriptor> = resp
-            .json()
-            .context("parse BUD-02 blob list")?;
+        let blobs: Vec<BlobDescriptor> = resp.json().context("parse BUD-02 blob list")?;
 
         // Filter manifest blobs for this repo
         let ct_manifest = "application/x-git-refs+json";
@@ -159,9 +157,7 @@ impl BlossomRemote {
             .collect();
 
         // Sort newest-first by `created` timestamp
-        candidates.sort_by(|a, b| {
-            b.created.unwrap_or(0).cmp(&a.created.unwrap_or(0))
-        });
+        candidates.sort_by(|a, b| b.created.unwrap_or(0).cmp(&a.created.unwrap_or(0)));
 
         for blob in candidates {
             let manifest: RefsManifest = self
@@ -227,7 +223,11 @@ impl BlossomRemote {
             .context("missing sha256 in upload response")?
             .to_string();
 
-        eprintln!("[blossom] uploaded {} bytes → {}", resp["size"].as_u64().unwrap_or(0), &sha[..8]);
+        eprintln!(
+            "[blossom] uploaded {} bytes → {}",
+            resp["size"].as_u64().unwrap_or(0),
+            &sha[..8]
+        );
         Ok(sha)
     }
 
@@ -360,7 +360,10 @@ impl RemoteHelper for BlossomRemote {
                 bail!("git bundle create failed: {err}");
             }
 
-            eprintln!("[blossom] uploading bundle ({} bytes)…", bundle.stdout.len());
+            eprintln!(
+                "[blossom] uploading bundle ({} bytes)…",
+                bundle.stdout.len()
+            );
             let sha = self.upload_blob(bundle.stdout, "application/x-git-bundle")?;
             Some(sha)
         } else {
@@ -379,13 +382,19 @@ impl RemoteHelper for BlossomRemote {
             if spec.src.is_empty() {
                 // Deletion
                 new_refs.remove(&spec.dst);
-                results.push(PushResult { dst: spec.dst.clone(), result: Ok(()) });
+                results.push(PushResult {
+                    dst: spec.dst.clone(),
+                    result: Ok(()),
+                });
                 continue;
             }
             match self.rev_parse(&spec.src) {
                 Ok(oid) => {
                     new_refs.insert(spec.dst.clone(), oid);
-                    results.push(PushResult { dst: spec.dst.clone(), result: Ok(()) });
+                    results.push(PushResult {
+                        dst: spec.dst.clone(),
+                        result: Ok(()),
+                    });
                 }
                 Err(e) => {
                     results.push(PushResult {
@@ -450,9 +459,7 @@ pub fn parse_blossom_url(url: &str) -> Result<(String, String, String)> {
     // rest = "<host>/<pubkey>/<repo>"
     let parts: Vec<&str> = rest.splitn(3, '/').collect();
     if parts.len() != 3 {
-        bail!(
-            "blossom URL must be blossom://<host>/<pubkey>/<repo>, got: {url}"
-        );
+        bail!("blossom URL must be blossom://<host>/<pubkey>/<repo>, got: {url}");
     }
 
     let server = format!("{scheme_hint}://{}", parts[0]);

@@ -1,9 +1,10 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
+    cached,
+    sync::{self, status::StatusType, BranchCompare, CommitId, RepoPath, RepoPathRef, RepoState},
     AsyncDiff, AsyncGitNotification, AsyncStatus, DiffParams, DiffType, PushType, StatusItem,
-    StatusParams, cached,
-    sync::{self, BranchCompare, CommitId, RepoPath, RepoPathRef, RepoState, status::StatusType},
+    StatusParams,
 };
 use itertools::Itertools;
 use ratatui::{
@@ -16,11 +17,10 @@ use crate::{
     accessors,
     app::Environment,
     components::{
-        ChangesComponent, CommandBlocking, CommandInfo, Component, DiffComponent,
-        DrawableComponent, EventState, FileTreeItemKind, command_pump, event_pump,
-        visibility_blocking,
+        command_pump, event_pump, visibility_blocking, ChangesComponent, CommandBlocking,
+        CommandInfo, Component, DiffComponent, DrawableComponent, EventState, FileTreeItemKind,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
     queue::{Action, InternalEvent, NeedsUpdate, Queue, ResetItem},
     strings, try_or_popup,

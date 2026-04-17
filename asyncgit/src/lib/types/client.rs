@@ -5,20 +5,20 @@ use std::time::Duration;
 use anyhow::Result;
 // NIP-44 related imports
 use base64::{
-    Engine,
     engine::general_purpose::{GeneralPurpose, STANDARD},
+    Engine,
 };
 use chacha20poly1305::{
-    XChaCha20Poly1305,
     aead::{Aead, KeyInit, OsRng},
+    XChaCha20Poly1305,
 };
 use futures_util::{SinkExt, StreamExt};
 use hkdf::Hkdf;
 use k256::{
     ecdsa::SigningKey,
     elliptic_curve::{
-        FieldBytes, SecretKey,
         sec1::{FromEncodedPoint, ToEncodedPoint},
+        FieldBytes, SecretKey,
     },
     schnorr::Signature,
 };
@@ -31,14 +31,14 @@ use serde_json::json;
 use sha2::Sha256;
 use tokio::{net::TcpStream, sync::mpsc};
 use tokio_tungstenite::{
-    MaybeTlsStream, WebSocketStream, connect_async, tungstenite::Message as WsMessage,
+    connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
 };
 use tracing::{debug, info, warn};
 
 use crate::types::{
-    ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
-    RelayUrl, SubscriptionId, Tag, UncheckedUrl, Unixtime,
-    private_key::content_encryption::ContentEncryptionAlgorithm,
+    private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
+    EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayUrl, SubscriptionId, Tag,
+    UncheckedUrl, Unixtime,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]

@@ -83,7 +83,10 @@ impl TestContext {
         let mut state = State::create(
             Rc::new(Repository::open(path).unwrap()),
             self.size,
-            &Args { command, ..Args::default() },
+            &Args {
+                command,
+                ..Args::default()
+            },
             Rc::clone(&self.config),
             false,
         )

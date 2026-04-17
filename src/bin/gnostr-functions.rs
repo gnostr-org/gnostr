@@ -1,9 +1,4 @@
-use std::{
-    env,
-    path::PathBuf,
-    process::Command,
-    fs,
-};
+use std::{env, fs, path::PathBuf, process::Command};
 
 fn pathappend(args: &[String]) {
     let mut current_path = env::var("PATH").unwrap_or_default();
@@ -19,7 +14,10 @@ fn pathappend(args: &[String]) {
     }
 
     if changed {
-        current_path = env::join_paths(path_components).unwrap().to_string_lossy().into_owned();
+        current_path = env::join_paths(path_components)
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
         env::set_var("PATH", &current_path);
         println!("New PATH: {}", current_path);
     } else {
@@ -42,7 +40,10 @@ fn pathprepend(args: &[String]) {
     }
 
     if changed {
-        current_path = env::join_paths(path_components).unwrap().to_string_lossy().into_owned();
+        current_path = env::join_paths(path_components)
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
         env::set_var("PATH", &current_path);
         println!("New PATH: {}", current_path);
     } else {
@@ -53,10 +54,7 @@ fn pathprepend(args: &[String]) {
 fn rustup_clean() {
     println!("Running rustup-clean...");
 
-    let output = Command::new("rustup")
-        .arg("toolchain")
-        .arg("list")
-        .output();
+    let output = Command::new("rustup").arg("toolchain").arg("list").output();
 
     match output {
         Ok(output) => {
@@ -65,7 +63,11 @@ fn rustup_clean() {
                 let toolchains: Vec<String> = stdout
                     .lines()
                     .filter_map(|line| {
-                        let trimmed_line = line.replace("(active,", "").replace("default", "").trim().to_string();
+                        let trimmed_line = line
+                            .replace("(active,", "")
+                            .replace("default", "")
+                            .trim()
+                            .to_string();
                         if !trimmed_line.is_empty() {
                             Some(trimmed_line)
                         } else {
@@ -94,15 +96,25 @@ fn rustup_clean() {
                             if uninstall_output.status.success() {
                                 println!("Successfully uninstalled {}", toolchain);
                             } else {
-                                eprintln!("Failed to uninstall {}: {}", toolchain, String::from_utf8_lossy(&uninstall_output.stderr));
+                                eprintln!(
+                                    "Failed to uninstall {}: {}",
+                                    toolchain,
+                                    String::from_utf8_lossy(&uninstall_output.stderr)
+                                );
                             }
                         }
-                        Err(e) => eprintln!("Failed to execute rustup uninstall for {}: {}", toolchain, e),
+                        Err(e) => eprintln!(
+                            "Failed to execute rustup uninstall for {}: {}",
+                            toolchain, e
+                        ),
                     }
                 }
                 println!("rustup-clean completed.");
             } else {
-                eprintln!("Failed to list rustup toolchains: {}", String::from_utf8_lossy(&output.stderr));
+                eprintln!(
+                    "Failed to list rustup toolchains: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
             }
         }
         Err(e) => eprintln!("Failed to execute rustup toolchain list: {}", e),
@@ -110,9 +122,7 @@ fn rustup_clean() {
 }
 
 fn get_ip_address(interface: &str) -> Option<String> {
-    let output = Command::new("ifconfig")
-        .arg(interface)
-        .output();
+    let output = Command::new("ifconfig").arg(interface).output();
 
     match output {
         Ok(output) => {
@@ -128,7 +138,11 @@ fn get_ip_address(interface: &str) -> Option<String> {
                 }
                 None
             } else {
-                eprintln!("Failed to get info for {}: {}", interface, String::from_utf8_lossy(&output.stderr));
+                eprintln!(
+                    "Failed to get info for {}: {}",
+                    interface,
+                    String::from_utf8_lossy(&output.stderr)
+                );
                 None
             }
         }
@@ -195,9 +209,11 @@ fn execute_bash_script(script_content: &str) -> Result<(), String> {
         println!("Script executed successfully.");
         Ok(())
     } else {
-        Err(format!("Script exited with error:\nStdout: {}\nStderr: {}",
-                    String::from_utf8_lossy(&output.stdout),
-                    String::from_utf8_lossy(&output.stderr)))
+        Err(format!(
+            "Script exited with error:\nStdout: {}\nStderr: {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        ))
     }
 }
 
@@ -215,21 +231,18 @@ fn bitcoin_make_appbundle() {
 
     for cmd_str in commands {
         println!("Executing: {}", cmd_str);
-        let status = Command::new("sh")
-            .arg("-c")
-            .arg(cmd_str)
-            .status();
+        let status = Command::new("sh").arg("-c").arg(cmd_str).status();
 
         match status {
             Ok(s) if s.success() => println!("Command '{}' executed successfully.", cmd_str),
             Ok(s) => {
                 eprintln!("Command '{}' exited with status: {}. Aborting.", cmd_str, s);
                 return;
-            },
+            }
             Err(e) => {
                 eprintln!("Failed to execute command '{}': {}. Aborting.", cmd_str, e);
                 return;
-            },
+            }
         }
     }
     println!("bitcoin-make-appbundle completed.");
@@ -237,10 +250,7 @@ fn bitcoin_make_appbundle() {
 
 fn bitcoin_make_depends() {
     println!("Running make -C depends...");
-    let status = Command::new("make")
-        .arg("-C")
-        .arg("depends")
-        .status();
+    let status = Command::new("make").arg("-C").arg("depends").status();
 
     match status {
         Ok(s) if s.success() => println!("make -C depends executed successfully."),
@@ -304,23 +314,34 @@ fn cargo_clean_r() {
                         if dir_name != "." && dir_name != ".." && dir_name != "target" {
                             println!("Entering directory: {}", path.display());
                             if let Err(e) = env::set_current_dir(&path) {
-                                eprintln!("Failed to change directory to {}: {}", path.display(), e);
+                                eprintln!(
+                                    "Failed to change directory to {}: {}",
+                                    path.display(),
+                                    e
+                                );
                                 continue;
                             }
 
-                            let status = Command::new("cargo")
-                                .arg("clean")
-                                .output();
+                            let status = Command::new("cargo").arg("clean").output();
 
                             match status {
                                 Ok(output) => {
                                     if !output.status.success() {
-                                        eprintln!("cargo clean failed in {}: {}\n{}", path.display(), String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+                                        eprintln!(
+                                            "cargo clean failed in {}: {}\n{}",
+                                            path.display(),
+                                            String::from_utf8_lossy(&output.stdout),
+                                            String::from_utf8_lossy(&output.stderr)
+                                        );
                                     } else {
                                         println!("cargo clean successful in {}.", path.display());
                                     }
                                 }
-                                Err(e) => eprintln!("Failed to execute cargo clean in {}: {}", path.display(), e),
+                                Err(e) => eprintln!(
+                                    "Failed to execute cargo clean in {}: {}",
+                                    path.display(),
+                                    e
+                                ),
                             }
 
                             // Change back to the original directory
@@ -355,7 +376,11 @@ fn cargo_sweep_r(args: &[String]) {
                         if dir_name != "." && dir_name != ".." && dir_name != "target" {
                             println!("Entering directory: {}", path.display());
                             if let Err(e) = env::set_current_dir(&path) {
-                                eprintln!("Failed to change directory to {}: {}", path.display(), e);
+                                eprintln!(
+                                    "Failed to change directory to {}: {}",
+                                    path.display(),
+                                    e
+                                );
                                 continue;
                             }
 
@@ -366,19 +391,26 @@ fn cargo_sweep_r(args: &[String]) {
                             // Remove rust-toolchain.toml
                             let _ = fs::remove_file("rust-toolchain.toml");
 
-                            let status_clean = Command::new("cargo")
-                                .arg("clean")
-                                .output();
+                            let status_clean = Command::new("cargo").arg("clean").output();
 
                             match status_clean {
                                 Ok(output) => {
                                     if !output.status.success() {
-                                        eprintln!("cargo clean failed in {}: {}\n{}", path.display(), String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+                                        eprintln!(
+                                            "cargo clean failed in {}: {}\n{}",
+                                            path.display(),
+                                            String::from_utf8_lossy(&output.stdout),
+                                            String::from_utf8_lossy(&output.stderr)
+                                        );
                                     } else {
                                         println!("cargo clean successful in {}.", path.display());
                                     }
                                 }
-                                Err(e) => eprintln!("Failed to execute cargo clean in {}: {}", path.display(), e),
+                                Err(e) => eprintln!(
+                                    "Failed to execute cargo clean in {}: {}",
+                                    path.display(),
+                                    e
+                                ),
                             }
 
                             let status_sweep = Command::new("cargo")
@@ -391,12 +423,21 @@ fn cargo_sweep_r(args: &[String]) {
                             match status_sweep {
                                 Ok(output) => {
                                     if !output.status.success() {
-                                        eprintln!("cargo sweep failed in {}: {}\n{}", path.display(), String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+                                        eprintln!(
+                                            "cargo sweep failed in {}: {}\n{}",
+                                            path.display(),
+                                            String::from_utf8_lossy(&output.stdout),
+                                            String::from_utf8_lossy(&output.stderr)
+                                        );
                                     } else {
                                         println!("cargo sweep successful in {}.", path.display());
                                     }
                                 }
-                                Err(e) => eprintln!("Failed to execute cargo sweep in {}: {}", path.display(), e),
+                                Err(e) => eprintln!(
+                                    "Failed to execute cargo sweep in {}: {}",
+                                    path.display(),
+                                    e
+                                ),
                             }
 
                             // Change back to the original directory
@@ -433,7 +474,11 @@ fn rm_rf_node_modules() {
                             if node_modules_path.is_dir() {
                                 println!("Removing {}", node_modules_path.display());
                                 if let Err(e) = fs::remove_dir_all(&node_modules_path) {
-                                    eprintln!("Failed to remove {}: {}", node_modules_path.display(), e);
+                                    eprintln!(
+                                        "Failed to remove {}: {}",
+                                        node_modules_path.display(),
+                                        e
+                                    );
                                 }
                             }
                         }
@@ -448,19 +493,18 @@ fn rm_rf_node_modules() {
 
 fn git_fetch_all() {
     println!("Running git-fetch-all (git fetch --all)...");
-    let status = Command::new("git")
-        .arg("fetch")
-        .arg("--all")
-        .output(); // Use output to capture stderr and stdout
+    let status = Command::new("git").arg("fetch").arg("--all").output(); // Use output to capture stderr and stdout
 
     match status {
         Ok(output) => {
             if output.status.success() {
                 println!("git fetch --all executed successfully.");
             } else {
-                eprintln!("git fetch --all exited with error:\nStdout: {}\nStderr: {}",
-                            String::from_utf8_lossy(&output.stdout),
-                            String::from_utf8_lossy(&output.stderr));
+                eprintln!(
+                    "git fetch --all exited with error:\nStdout: {}\nStderr: {}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                );
             }
         }
         Err(e) => eprintln!("Failed to execute git fetch --all: {}", e),
@@ -470,13 +514,15 @@ fn git_fetch_all() {
 
 fn iftop() {
     println!("Running iftop. Press Ctrl+C to exit.");
-    let status = Command::new("iftop")
-        .status();
+    let status = Command::new("iftop").status();
 
     match status {
         Ok(s) if s.success() => println!("iftop executed successfully."),
         Ok(s) => eprintln!("iftop exited with status: {}", s),
-        Err(e) => eprintln!("Failed to execute iftop: {}. Please ensure iftop is installed and in your PATH.", e),
+        Err(e) => eprintln!(
+            "Failed to execute iftop: {}. Please ensure iftop is installed and in your PATH.",
+            e
+        ),
     }
     println!("iftop completed.");
 }
@@ -488,7 +534,10 @@ fn install_gnumakefile() {
     match output {
         Ok(output) => {
             if output.status.success() {
-                println!("GNU Make (gmake) is already installed: {}", String::from_utf8_lossy(&output.stdout).trim());
+                println!(
+                    "GNU Make (gmake) is already installed: {}",
+                    String::from_utf8_lossy(&output.stdout).trim()
+                );
                 println!("install-gnumakefile completed.");
                 return;
             }
@@ -500,7 +549,10 @@ fn install_gnumakefile() {
     match output {
         Ok(output) => {
             if output.status.success() {
-                println!("Make is installed: {}", String::from_utf8_lossy(&output.stdout).trim());
+                println!(
+                    "Make is installed: {}",
+                    String::from_utf8_lossy(&output.stdout).trim()
+                );
             }
         }
         Err(e) => eprintln!("Failed to execute 'which make': {}", e),
@@ -512,10 +564,7 @@ fn install_gnumakefile() {
 
 fn bitcoin_autogen() {
     println!("Running bitcoin-autogen (./autogen.sh)...");
-    let status = Command::new("sh")
-        .arg("-c")
-        .arg("./autogen.sh")
-        .status();
+    let status = Command::new("sh").arg("-c").arg("./autogen.sh").status();
 
     match status {
         Ok(s) if s.success() => println!("./autogen.sh executed successfully."),
@@ -538,8 +587,12 @@ fn main() {
             "install-gnumakefile" => install_gnumakefile(),
             "bitcoin-autogen" => bitcoin_autogen(),
             "bitcoin-configure-disable-tests-bench-fuzz" => bitcoin_configure_disable_tests_bench(),
-            "bitcoin-configure-disable-wallet-tests-bench-fuzz" => bitcoin_configure_disable_wallet_tests_bench(),
-            "bitcoin-configure-disable-wallet-tests-bench" => bitcoin_configure_disable_wallet_tests_bench(),
+            "bitcoin-configure-disable-wallet-tests-bench-fuzz" => {
+                bitcoin_configure_disable_wallet_tests_bench()
+            }
+            "bitcoin-configure-disable-wallet-tests-bench" => {
+                bitcoin_configure_disable_wallet_tests_bench()
+            }
             "bitcoin-configure-disable-tests-bench" => bitcoin_configure_disable_tests_bench(),
             "bitcoin-make-appbundle" => bitcoin_make_appbundle(),
             "bitcoin-make-depends" => bitcoin_make_depends(),
@@ -549,7 +602,9 @@ fn main() {
             "rm-rf-node_modules" => rm_rf_node_modules(),
             "git-fetch-all" => git_fetch_all(),
             _ => {
-                println!("gnostr-functions binary will contain Rust equivalents of bash functions.");
+                println!(
+                    "gnostr-functions binary will contain Rust equivalents of bash functions."
+                );
                 println!("Usage:");
                 println!("  gnostr-functions pathappend <paths...>");
                 println!("  gnostr-functions pathprepend <paths...>");

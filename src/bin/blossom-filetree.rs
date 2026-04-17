@@ -2,15 +2,13 @@
 
 use std::io;
 
-use blossom_tui::{
-    App, AppMsg, crossterm, load_state, ratatui, run_loop, save_state,
-};
+use blossom_tui::{crossterm, load_state, ratatui, run_loop, save_state, App, AppMsg};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::{backend::CrosstermBackend, Terminal};
 use tokio::sync::mpsc;
 
 #[tokio::main]

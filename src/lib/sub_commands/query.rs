@@ -1,7 +1,7 @@
-use anyhow::{anyhow, bail};
-use clap::Args;
 use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use crate::query::ConfigBuilder;
+use anyhow::{anyhow, bail};
+use clap::Args;
 use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
@@ -222,8 +222,8 @@ fn build_filter_map(
 
 #[cfg(test)]
 mod tests {
-    use clap::{Parser, Subcommand};
     use crate::crawler::processor::BOOTSTRAP_RELAYS;
+    use clap::{Parser, Subcommand};
     use serde_json::json;
 
     use super::*;

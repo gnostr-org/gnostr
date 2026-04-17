@@ -23,9 +23,9 @@
 //!   `sudo systemctl start tor`).
 //! - The Blossom server must be reachable as a Tor hidden service (`.onion`).
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 
-use crate::blossom_backend::{BlossomRemote, parse_blossom_url};
+use crate::blossom_backend::{parse_blossom_url, BlossomRemote};
 use crate::protocol::{FetchCmd, GitRef, PushResult, PushSpec, RemoteHelper};
 
 // ── Backend ────────────────────────────────────────────────────────────────
@@ -38,8 +38,8 @@ impl TorRemote {
     /// Build a Tor-proxied blossom remote from a `blossom+onion://` or `tor://` URL.
     pub fn new(url: &str) -> Result<Self> {
         let (server, pubkey, repo) = parse_tor_url(url)?;
-        let proxy_url = std::env::var("SOCKS5_PROXY")
-            .unwrap_or_else(|_| "socks5h://127.0.0.1:9050".into());
+        let proxy_url =
+            std::env::var("SOCKS5_PROXY").unwrap_or_else(|_| "socks5h://127.0.0.1:9050".into());
 
         eprintln!("[tor] routing via {proxy_url}");
 

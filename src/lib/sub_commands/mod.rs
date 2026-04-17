@@ -10,6 +10,7 @@ pub mod delete_event;
 pub mod delete_profile;
 pub mod dm;
 
+pub mod crawler;
 pub mod fetch;
 pub mod fetch_by_id;
 pub mod generate_keypair;
@@ -41,4 +42,3 @@ pub mod tui;
 pub mod user_status;
 pub mod vanity;
 pub mod xor;
-pub mod crawler;

@@ -129,12 +129,7 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
     fn check_for_job(&self) -> bool {
         if self
             .pending
-            .compare_exchange(
-                false,
-                true,
-                Ordering::SeqCst,
-                Ordering::Relaxed,
-            )
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::Relaxed)
             .is_err()
         {
             return false;

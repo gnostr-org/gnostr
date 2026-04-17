@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use dialoguer::{Confirm, Input, Password, theme::ColorfulTheme};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Password};
 #[cfg(test)]
 use mockall::*;
 

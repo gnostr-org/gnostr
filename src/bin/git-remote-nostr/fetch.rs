@@ -4,16 +4,16 @@ use std::{
     io::Stdin,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use ngit::{
     fetch::fetch_from_git_server,
     git::{Repo, RepoActions},
     git_events::{
-        KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE,
-        identify_clone_urls_for_oids_from_pr_pr_update_events,
+        identify_clone_urls_for_oids_from_pr_pr_update_events, KIND_PULL_REQUEST,
+        KIND_PULL_REQUEST_UPDATE,
     },
     login::get_curent_user,
-    repo_ref::{RepoRef, is_grasp_server_in_list},
+    repo_ref::{is_grasp_server_in_list, RepoRef},
     utils::{
         find_proposal_and_patches_by_branch_name, get_oids_from_fetch_batch,
         get_open_or_draft_proposals,

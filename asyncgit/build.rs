@@ -34,14 +34,11 @@ fn run() -> anyhow::Result<()> {
     build_scss(paths).context("Failed to build CSS stylesheets")?;
     build_js(paths).context("Failed to build JS bundle")?;
 
-
-
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
 }
 
 fn build_scss(paths: Paths) -> anyhow::Result<()> {
-
     //gnostr-gnit
     let in_dir = paths.statics_in_dir.join("src/lib/sass");
     let out_dir = paths.statics_out_dir.join("src/lib/css");

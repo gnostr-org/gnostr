@@ -74,10 +74,14 @@ pub mod sub_commands;
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
 pub mod test_utils;
-///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/internal/index.html>
-pub use gnostr_asyncgit::types::internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/index.html>
 pub use gnostr_asyncgit::types;
+///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/internal/index.html>
+pub use gnostr_asyncgit::types::internal;
+/// <https://docs.rs/gnostr/latest/gnostr/node/index.html>
+pub mod node;
+/// <https://docs.rs/gnostr/latest/gnostr/nostr_client/index.html>
+pub mod nostr_client;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -88,27 +92,23 @@ pub mod verify_keypair;
 pub mod watcher;
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
-/// <https://docs.rs/gnostr/latest/gnostr/node/index.html>
-pub mod node;
-/// <https://docs.rs/gnostr/latest/gnostr/nostr_client/index.html>
-pub mod nostr_client;
 
 use gnostr_asyncgit::types::TagV3;
 
 //avoid?//upgrade?
 //pub use lightning;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 pub use base64::Engine;
 pub use colorful::{Color, Colorful};
 use directories::ProjectDirs;
-pub use futures_util::{SinkExt, StreamExt, stream::FusedStream};
+pub use futures_util::{stream::FusedStream, SinkExt, StreamExt};
 pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use gnostr_asyncgit::types::RelayMessageV5;
 pub use nostr_sdk_0_32_0::prelude::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
-pub use tokio_tungstenite::{WebSocketStream, connect_async, tungstenite::Message};
+pub use tokio_tungstenite::{connect_async, tungstenite::Message, WebSocketStream};
 //use tokio_tungstenite::WebSocketStream;
 pub use gnostr_asyncgit::types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
@@ -290,7 +290,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire =  gnostr_asyncgit::types::internal::event_to_wire(event);
+    let wire = gnostr_asyncgit::types::internal::event_to_wire(event);
     gnostr_asyncgit::types::internal::post(host, uri, wire)
 }
 // /// use nostr_types::EventV2;
@@ -335,19 +335,27 @@ pub fn print_event(event: &Event) {
 use gnostr_asyncgit::types::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
-pub mod weeble { pub use gnostr_asyncgit::weeble::*; }
+pub mod weeble {
+    pub use gnostr_asyncgit::weeble::*;
+}
 pub use gnostr_asyncgit::weeble::{weeble_async, weeble_millis_async, weeble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/wobble/index.html>
-pub mod wobble { pub use gnostr_asyncgit::wobble::*; }
+pub mod wobble {
+    pub use gnostr_asyncgit::wobble::*;
+}
 pub use gnostr_asyncgit::wobble::{wobble_async, wobble_millis_async, wobble_sync};
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockhash/index.html>
-pub mod blockhash { pub use gnostr_asyncgit::blockhash::*; }
+pub mod blockhash {
+    pub use gnostr_asyncgit::blockhash::*;
+}
 pub use gnostr_asyncgit::blockhash::blockhash_async;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockheight/index.html>
-pub mod blockheight { pub use gnostr_asyncgit::blockheight::*; }
+pub mod blockheight {
+    pub use gnostr_asyncgit::blockheight::*;
+}
 pub use gnostr_asyncgit::blockheight::blockheight_async;
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>

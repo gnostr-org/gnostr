@@ -2,12 +2,12 @@
 
 use std::io;
 
-use gnostr_blossom_tui::{App, AppMsg, load_state, run_loop, save_state};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
+use gnostr_blossom_tui::{App, AppMsg, load_state, run_loop, save_state};
 use ratatui::{Terminal, backend::CrosstermBackend};
 use tokio::sync::mpsc;
 
