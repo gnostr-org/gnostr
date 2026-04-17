@@ -286,11 +286,24 @@ jobs:
           cargo run --bin gnostr-tui -- --version
           cargo run --bin gnostr-tui -- --help
 
+      - name: 🚀 gnostr query nested command test
+        shell: bash
+        run: |
+          gnostr query \
+          -i $(gnostr --nsec $(gnostr --hash "") \
+          custom-event \
+          --kind $(gnostr --weeble) \
+          --hex \
+          -c "query command test" \
+          -t "gnostr|gnostr","gnostr-query|gnostr-query") \
+          && echo "✅" ## || echo "❌"
+
       #- name: 🚀 cargo test -j8
       #  #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
       #  shell: bash
       #  run: |
       #    cargo test -j8 && echo "✅" ## || echo "❌"
+			#    gnostr query -i $(gnostr --nsec $(gnostr --hash "") custom-event --kind $(gnostr --weeble) --hex -c "gnostr query nested command test" -t "gnostr|gnostr","gnostr-query|gnostr-query")
       #  if: matrix.os != 'windows-latest'
 
       #- name: gnostr ngit fetch
