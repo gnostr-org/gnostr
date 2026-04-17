@@ -40,20 +40,35 @@ runs:
   steps:
     - name: Post Nostr notification
       shell: bash
+      env:
+        INPUT_NSEC: ${{ inputs.nsec }}
+        INPUT_KIND: ${{ inputs.kind }}
+        INPUT_CONTENT: ${{ inputs.content }}
+        INPUT_TAGS: ${{ inputs.tags }}
+        INPUT_POW: ${{ inputs.pow }}
+        INPUT_DAMUS: ${{ inputs.damus }}
+        INPUT_NOS: ${{ inputs.nos }}
+        INPUT_NJUMP_BASE: ${{ inputs.njump_base }}
       run: |
         gnostr custom-event -h
+
+        nsec="$INPUT_NSEC"
+        if [ -z "$nsec" ] || [ "$nsec" = '$(gnostr --hash "$GITHUB_REPOSITORY_ID")' ]; then
+          nsec="$(gnostr --hash "$GITHUB_REPOSITORY_ID")"
+        fi
+
         args=(
-          --nsec "${{ inputs.nsec }}"
-          -d "${{ inputs.pow }}"
-          -r "${{ inputs.damus }}"
-          -r "${{ inputs.nos }}"
+          --nsec "$nsec"
+          -d "$INPUT_POW"
+          -r "$INPUT_DAMUS"
+          -r "$INPUT_NOS"
           custom-event
-          -k "${{ inputs.kind }}"
-          -c "${{ inputs.content }}"
+          -k "$INPUT_KIND"
+          -c "$INPUT_CONTENT"
         )
 
-        if [ -n "${{ inputs.tags }}" ]; then
-          args+=(-t "${{ inputs.tags }}")
+        if [ -n "$INPUT_TAGS" ]; then
+          args+=(-t "$INPUT_TAGS")
         fi
 
         EVENT="$(gnostr "${args[@]}" --hex || true)"
@@ -64,4 +79,4 @@ runs:
 
         echo "$NOTE"
         echo "$EVENT"
-        echo "${{ inputs.njump_base }}/$NOTE"
+        echo "$INPUT_NJUMP_BASE/$NOTE"
