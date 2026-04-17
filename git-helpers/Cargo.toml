@@ -32,7 +32,12 @@ path = "src/bin/git-remote-tor.rs"
 # HTTP client (blocking for sync protocol loop)
 # socks: Tor SOCKS5 proxy support
 # multipart: IPFS Kubo MFS multipart write API
-reqwest = { version = "0.12", features = ["blocking", "json", "multipart", "socks"] }
+reqwest = { version = "0.12", features = [
+  "blocking",
+  "json",
+  "multipart",
+  "socks",
+] }
 
 # Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
 tokio = { version = "1", features = ["full"] }
@@ -52,7 +57,10 @@ bech32 = "0.11"
 secp256k1 = { version = "0.29", features = ["rand"] }
 
 # PKARR DHT resolution (Ed25519 keys → blossom endpoints)
-pkarr = { version = "6.0.0-rc.0", default-features = false, features = ["relays", "signed_packet"] }
+pkarr = { version = "6.0.0-rc.0", default-features = false, features = [
+  "relays",
+  "signed_packet",
+] }
 
 # Error handling
 thiserror = "1"

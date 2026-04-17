@@ -113,7 +113,6 @@ sha256.o
 sha256/
 src/libcjson/
 src/nostril/
-tui/
 vostro
 workspace/
 xq/bash_profile.log
