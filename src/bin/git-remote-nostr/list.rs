@@ -1,119 +1,123 @@
-use core::str;
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result};
-use auth_git2::GitAuthenticator;
+use anyhow::{Context, Result};
 use client::get_state_from_cache;
 use git::RepoActions;
-use git_events::{event_to_cover_letter, get_commit_id_from_patch};
-use gnostr::{
-    client,
-    git::{
-        self,
-        nostr_url::{CloneUrl, NostrUrlDecoded, ServerProtocol},
-    },
-    git_events,
+use ngit::{
+    client::{self, FetchReport, is_verbose},
+    fetch::fetch_from_git_server,
+    git::{self},
+    git_events::{KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE, event_to_cover_letter, tag_value},
+    list::list_from_remotes,
     login::get_curent_user,
-    repo_ref,
+    repo_ref::{self},
+    repo_state::RepoState,
+    utils::{get_all_proposals, get_open_or_draft_proposals},
 };
-use nostr_0_34_1::hashes::sha1::Hash as Sha1Hash;
 use repo_ref::RepoRef;
 
-use crate::{
-    git::Repo,
-    utils::{
-        fetch_or_list_error_is_not_authentication_failure, get_open_proposals,
-        get_read_protocols_to_try, get_short_git_server_name, join_with_and,
-        set_protocol_preference, Direction,
-    },
-};
+use crate::{fetch::make_commits_for_proposal, git::Repo};
 
+#[allow(clippy::too_many_lines)]
 pub async fn run_list(
     git_repo: &Repo,
     repo_ref: &RepoRef,
-    decoded_nostr_url: &NostrUrlDecoded,
     for_push: bool,
-) -> Result<HashMap<String, HashMap<String, String>>> {
-    let nostr_state =
-        (get_state_from_cache(git_repo.get_path()?, repo_ref).await).ok();
+    fetch_report: &FetchReport,
+) -> Result<HashMap<String, (HashMap<String, String>, bool)>> {
+    let nostr_state = (get_state_from_cache(Some(git_repo.get_path()?), repo_ref).await).ok();
 
     let term = console::Term::stderr();
 
-    let remote_states = list_from_remotes(&term, git_repo, &repo_ref.git_server, decoded_nostr_url);
+    if is_verbose() {
+        term.write_line("git servers: listing refs...")?;
+    }
+    // nostr_state is passed to list_from_remotes only for the sync-status
+    // display; the actual ref state we advertise is determined below.
+    let remote_states = list_from_remotes(
+        &term,
+        git_repo,
+        &repo_ref.git_server,
+        &repo_ref.to_nostr_git_url(&None),
+        nostr_state.as_ref(),
+    )
+    .await;
 
-    let mut state = if let Some(nostr_state) = nostr_state {
-        for (name, value) in &nostr_state.state {
-            for (url, remote_state) in &remote_states {
-                let remote_name = get_short_git_server_name(git_repo, url);
-                if let Some(remote_value) = remote_state.get(name) {
-                    if value.ne(remote_value) {
-                        term.write_line(
-                            format!(
-                                "WARNING: {remote_name} {name} is {} nostr ",
-                                if let Ok((ahead, behind)) =
-                                    get_ahead_behind(git_repo, value, remote_value)
-                                {
-                                    format!("{} ahead {} behind", ahead.len(), behind.len())
-                                } else {
-                                    "out of sync with".to_string()
-                                }
-                            )
-                            .as_str(),
-                        )?;
-                    }
-                } else {
-                    term.write_line(
-                        format!("WARNING: {remote_name} {name} is missing but tracked on nostr")
-                            .as_str(),
-                    )?;
-                }
-            }
+    // Collect all OIDs confirmed present on at least one git server.
+    let git_server_oids: std::collections::HashSet<String> = remote_states
+        .values()
+        .flat_map(|(state, _)| state.values())
+        .filter(|v| !v.starts_with("ref: "))
+        .cloned()
+        .collect();
+
+    // From the per-relay state events captured during the nostr fetch, find
+    // the newest state event whose every OID is either:
+    //   (a) confirmed present on at least one git server, or
+    //   (b) already available locally.
+    // This prevents advertising refs whose git objects haven't been pushed to
+    // any server yet, which would cause `git clone` / `git fetch` to fail.
+    let mut candidates: Vec<&nostr::Event> = fetch_report
+        .state_per_relay
+        .values()
+        .filter_map(|maybe| maybe.as_ref())
+        .collect();
+    // Sort newest-first (by created_at, then by id for tie-breaking).
+    candidates.sort_by(|a, b| {
+        b.created_at
+            .cmp(&a.created_at)
+            .then_with(|| b.id.cmp(&a.id))
+    });
+    // Deduplicate by event id so we don't check the same event twice.
+    candidates.dedup_by_key(|e| e.id);
+
+    let best_state: Option<HashMap<String, String>> = candidates.into_iter().find_map(|event| {
+        if let Ok(rs) = RepoState::try_from(vec![event.clone()]) {
+            let all_resolvable = rs.state.values().all(|v| {
+                v.starts_with("ref: ")
+                    || git_server_oids.contains(v)
+                    || git_repo.does_commit_exist(v).is_ok_and(|exists| exists)
+            });
+            if all_resolvable { Some(rs.state) } else { None }
+        } else {
+            None
         }
-        nostr_state.state
+    });
+
+    let mut state = if let Some(state) = best_state {
+        state
     } else {
-        repo_ref
+        // No relay returned a state event whose OIDs are all resolvable
+        // (either no state events were seen on any relay, or every candidate
+        // references git objects not yet on any server).  Fall back to
+        // whatever the git servers actually report so we never advertise OIDs
+        // that cannot be fetched.
+        let (state, _is_grasp_server) = repo_ref
             .git_server
             .iter()
             .filter_map(|server| remote_states.get(server))
             .cloned()
-            .collect::<Vec<HashMap<String, String>>>()
+            .collect::<Vec<(HashMap<String, String>, bool)>>()
             .first()
             .context("failed to get refs from git server")?
-            .clone()
+            .clone();
+        state
     };
 
     state.retain(|k, _| !k.starts_with("refs/heads/pr/"));
 
-    let open_proposals = get_open_proposals(git_repo, repo_ref).await?;
-    let current_user = get_curent_user(git_repo)?;
-    for (_, (proposal, patches)) in open_proposals {
-        if let Ok(cl) = event_to_cover_letter(&proposal) {
-            if let Ok(mut branch_name) = cl.get_branch_name() {
-                branch_name = if let Some(public_key) = current_user {
-                    if proposal.author().eq(&public_key) {
-                        cl.branch_name.to_string()
-                    } else {
-                        branch_name
-                    }
-                } else {
-                    branch_name
-                };
-                if let Some(patch) = patches.first() {
-                    // TODO this isn't resilient because the commit id
-                    // stated may not be correct we will need to
-                    // check whether the commit id exists in the repo
-                    // or apply the proposal and each patch to
-                    // check
-                    if let Ok(commit_id) = get_commit_id_from_patch(patch) {
-                        state.insert(format!("refs/heads/{branch_name}"), commit_id);
-                    }
-                }
-            }
-        }
-    }
+    state.extend(
+        // get as refs/heads/pr/<branch-name>(<shorthand-event-id>)
+        get_open_and_draft_proposals_state(&term, git_repo, repo_ref, &remote_states).await?,
+    );
 
-    // TODO 'for push' should we check with the git servers to see if
-    // any of them allow push from the user?
+    state.extend(
+        // get as refs/pr/<branch-name>(<shorthand-event-id>) and refs/pr/<event-id>/head
+        get_all_proposals_state(git_repo, repo_ref).await?,
+    );
+
+    // TODO 'for push' should we check with the git servers to see if any of them
+    // allow push from the user?
     for (name, value) in state {
         if value.starts_with("ref: ") {
             if !for_push {
@@ -128,148 +132,156 @@ pub async fn run_list(
     Ok(remote_states)
 }
 
-pub fn list_from_remotes(
+/// fetches branches and tags from git servers so patch parent commits can be
+/// used to build patches with correct commit ids
+async fn get_open_and_draft_proposals_state(
     term: &console::Term,
     git_repo: &Repo,
-    git_servers: &Vec<String>,
-    decoded_nostr_url: &NostrUrlDecoded, // Add this parameter
-) -> HashMap<String, HashMap<String, String>> {
-    let mut remote_states = HashMap::new();
-    let mut errors = HashMap::new();
-    for url in git_servers {
-        match list_from_remote(term, git_repo, url, decoded_nostr_url) {
-            Err(error) => {
-                errors.insert(url, error);
-            }
-            Ok(state) => {
-                remote_states.insert(url.to_string(), state);
-            }
-        }
-    }
-    remote_states
-}
-
-pub fn list_from_remote(
-    term: &console::Term,
-    git_repo: &Repo,
-    git_server_url: &str,
-    decoded_nostr_url: &NostrUrlDecoded, // Add this parameter
+    repo_ref: &RepoRef,
+    remote_states: &HashMap<String, (HashMap<String, String>, bool)>,
 ) -> Result<HashMap<String, String>> {
-    let server_url = git_server_url.parse::<CloneUrl>()?;
-    let protocols_to_attempt = get_read_protocols_to_try(git_repo, &server_url, decoded_nostr_url);
+    // we cannot use commit_id in the latest patch in a proposal because:
+    // 1) the `commit` tag is optional
+    // 2) if the commit tag is wrong, it will cause errors which stop clone from
+    //    working
 
-    let mut failed_protocols = vec![];
-    let mut remote_state: Option<HashMap<String, String>> = None;
+    // without trusting commit_id we must apply each patch which requires the oid of
+    // the parent so we much do a fetch
 
-    for protocol in &protocols_to_attempt {
-        term.write_line(
-            format!(
-                "fetching {} ref list over {protocol}...",
-                server_url.short_name(),
-            )
-            .as_str(),
-        )?;
-
-        let formatted_url = server_url.format_as(protocol, &decoded_nostr_url.user)?;
-        let res = list_from_remote_url(
+    for (git_server_url, (oids_from_git_servers, is_grasp_server)) in remote_states {
+        if fetch_from_git_server(
             git_repo,
-            &formatted_url,
-            [ServerProtocol::UnauthHttps, ServerProtocol::UnauthHttp].contains(protocol),
+            &oids_from_git_servers
+                .values()
+                .filter(|v| !v.starts_with("ref: "))
+                .cloned()
+                .collect::<Vec<String>>(),
+            // TODO we could fetch the oids of Pull Requests and Pull Request Updates to prevent
+            // having repeat fetching during the git remote helper fetch phase
+            git_server_url,
+            &repo_ref.to_nostr_git_url(&None),
             term,
-        );
-
-        match res {
-            Ok(state) => {
-                remote_state = Some(state);
-                term.clear_last_lines(1)?;
-                if !failed_protocols.is_empty() {
-                    term.write_line(
-                        format!(
-                            "list: succeeded over {protocol} from {}",
-                            server_url.short_name(),
-                        )
-                        .as_str(),
-                    )?;
-                    let _ =
-                        set_protocol_preference(git_repo, protocol, &server_url, &Direction::Fetch);
-                }
-                break;
-            }
-            Err(error) => {
-                term.clear_last_lines(1)?;
-                term.write_line(
-                    format!("list: {formatted_url} failed over {protocol}: {error}").as_str(),
-                )?;
-                failed_protocols.push(protocol);
-                if protocol == &ServerProtocol::Ssh
-                    && fetch_or_list_error_is_not_authentication_failure(&error)
-                {
-                    // authenticated by failed to complete request
-                    break;
-                }
-            }
+            *is_grasp_server,
+        )
+        .is_ok()
+        {
+            break;
         }
     }
-    if let Some(remote_state) = remote_state {
-        if failed_protocols.is_empty() {
-            term.clear_last_lines(1)?;
-        }
-        Ok(remote_state)
-    } else {
-        let error = anyhow!(
-            "{} failed over {}{}",
-            server_url.short_name(),
-            join_with_and(&failed_protocols),
-            if decoded_nostr_url.protocol.is_some() {
-                " and nostr url contains protocol override so no other protocols were attempted"
-            } else {
-                ""
-            },
-        );
-        term.write_line(format!("list: {error}").as_str())?;
-        Err(error)
-    }
-}
 
-fn list_from_remote_url(
-    git_repo: &Repo,
-    git_server_remote_url: &str,
-    dont_authenticate: bool,
-    term: &console::Term,
-) -> Result<HashMap<String, String>> {
-    let git_config = git_repo.git_repo.config()?;
-
-    let mut git_server_remote = git_repo.git_repo.remote_anonymous(git_server_remote_url)?;
-    // authentication may be required
-    let auth = GitAuthenticator::default();
-    let mut remote_callbacks = git2::RemoteCallbacks::new();
-    if !dont_authenticate {
-        remote_callbacks.credentials(auth.credentials(&git_config));
-    }
-    term.write_line("list: connecting...")?;
-    git_server_remote.connect_auth(git2::Direction::Fetch, Some(remote_callbacks), None)?;
-    term.clear_last_lines(1)?;
     let mut state = HashMap::new();
-    for head in git_server_remote.list()? {
-        if let Some(symbolic_reference) = head.symref_target() {
-            state.insert(
-                head.name().to_string(),
-                format!("ref: {symbolic_reference}"),
-            );
-        } else {
-            state.insert(head.name().to_string(), head.oid().to_string());
+    let open_and_draft_proposals = get_open_or_draft_proposals(git_repo, repo_ref).await?;
+    let current_user = get_curent_user(git_repo)?;
+    for (_, (proposal, events_to_apply)) in open_and_draft_proposals {
+        if let Ok(cl) = event_to_cover_letter(&proposal) {
+            if let Ok(mut branch_name) = cl.get_branch_name_with_pr_prefix_and_shorthand_id() {
+                branch_name = if let Some(public_key) = current_user {
+                    if proposal.pubkey.eq(&public_key) {
+                        format!("pr/{}", cl.branch_name_without_id_or_prefix)
+                    } else {
+                        branch_name
+                    }
+                } else {
+                    branch_name
+                };
+                // if events_to_apply contains a PR or PR Update event it should be the only
+                // event in the Vec
+                if let Some(pr_or_pr_update) = events_to_apply
+                    .iter()
+                    .find(|e| e.kind.eq(&KIND_PULL_REQUEST) || e.kind.eq(&KIND_PULL_REQUEST_UPDATE))
+                {
+                    match tag_value(pr_or_pr_update, "c") {
+                        Ok(tip) => {
+                            // only list Pull Requests as refs/heads/pr/* if data is commit is
+                            // advertised as tip of a ref on a repo git server or
+                            // available locally. Otherwise the standard cmd:
+                            // `git clone nostr://` will fail as it assumes all /refs/heads
+                            // returned by list are accessable
+                            let tip_oid_is_on_a_repo_git_server =
+                                remote_states.iter().any(|(_url, (state, _is_grasp))| {
+                                    state.iter().any(|(_, oid)| tip == *oid)
+                                }) || git_repo.does_commit_exist(&tip).is_ok_and(|r| r);
+
+                            if tip_oid_is_on_a_repo_git_server {
+                                state.insert(format!("refs/heads/{branch_name}"), tip);
+                            }
+                        }
+                        Err(_) => {
+                            let _ = term.write_line(
+                                format!(
+                                    "WARNING: failed to fetch branch {branch_name} error: {} event poorly formatted",
+                                    if pr_or_pr_update.kind.eq(&KIND_PULL_REQUEST) {
+                                        "PR"
+                                    } else {
+                                        "PR update"
+                                    }
+                                )
+                                .as_str(),
+                            );
+                        }
+                    }
+                } else {
+                    match make_commits_for_proposal(git_repo, repo_ref, &events_to_apply) {
+                        Ok(tip) => {
+                            state.insert(format!("refs/heads/{branch_name}"), tip);
+                        }
+                        Err(error) => {
+                            if let Ok(Some(public_key)) = get_curent_user(git_repo) {
+                                if repo_ref.maintainers.contains(&public_key)
+                                    || events_to_apply.iter().any(|e| e.pubkey.eq(&public_key))
+                                {
+                                    term.write_line(
+                                        format!("WARNING (only shown to maintainers or author): failed to fetch branch {branch_name}, error: {error}",)
+                                            .as_str(),
+                                    )?;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    git_server_remote.disconnect()?;
     Ok(state)
 }
 
-fn get_ahead_behind(
+/// we assume latest default branch oid has been fetched so patch parent commits
+/// are present. doesnt report on proposals failed to recreate
+async fn get_all_proposals_state(
     git_repo: &Repo,
-    base_ref_or_oid: &str,
-    latest_ref_or_oid: &str,
-) -> Result<(Vec<Sha1Hash>, Vec<Sha1Hash>)> {
-    let base = git_repo.get_commit_or_tip_of_reference(base_ref_or_oid)?;
-    let latest = git_repo.get_commit_or_tip_of_reference(latest_ref_or_oid)?;
-    git_repo.get_commits_ahead_behind(&base, &latest)
+    repo_ref: &RepoRef,
+) -> Result<HashMap<String, String>> {
+    let mut state = HashMap::new();
+    let all_proposals = get_all_proposals(git_repo, repo_ref).await?;
+    let current_user = get_curent_user(git_repo)?;
+    for (_, (proposal, events_to_apply)) in all_proposals {
+        if let Ok(cl) = event_to_cover_letter(&proposal) {
+            if let Ok(mut branch_name) = cl.get_branch_name_with_pr_prefix_and_shorthand_id() {
+                branch_name = if let Some(public_key) = current_user {
+                    if proposal.pubkey.eq(&public_key) {
+                        format!("pr/{}", cl.branch_name_without_id_or_prefix)
+                    } else {
+                        branch_name
+                    }
+                } else {
+                    branch_name
+                };
+                if let Some(pr_or_pr_update) = events_to_apply
+                    .iter()
+                    .find(|e| e.kind.eq(&KIND_PULL_REQUEST) || e.kind.eq(&KIND_PULL_REQUEST_UPDATE))
+                {
+                    if let Ok(tip) = tag_value(pr_or_pr_update, "c") {
+                        state.insert(format!("refs/{branch_name}"), tip.clone());
+                        state.insert(format!("refs/pr/{}/head", proposal.id), tip);
+                    }
+                } else if let Ok(tip) =
+                    make_commits_for_proposal(git_repo, repo_ref, &events_to_apply)
+                {
+                    state.insert(format!("refs/{branch_name}"), tip.clone());
+                    state.insert(format!("refs/pr/{}/head", proposal.id), tip);
+                }
+            }
+        }
+    }
+    Ok(state)
 }
