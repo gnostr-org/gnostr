@@ -1,18 +1,13 @@
-name: gnostr Nostr Notification
+name: gnostr Metadata
 description: >
-  Posts a CI job-status notification as a kind-1 Nostr event to configured
-  relays via gnostr, then queries the event back and prints a njump.me link.
+  Publishes a gnostr metadata event derived from the current GitHub Actions
+  environment, then queries the event back and prints a njump.me link.
 
 inputs:
-  status:
-    description: 'Human-readable status label, e.g. "Failed!", "Cancelled!", "Success!"'
-    required: true
-  job_url:
-    description: 'URL to the current GitHub Actions job run'
-    required: true
-  matrix_label:
-    description: 'Human-readable matrix label, e.g. "ubuntu-latest, stable"'
-    required: true
+  nsec:
+    description: 'Optional nsec; defaults to the repository-id hash'
+    required: false
+    default: '$(gnostr --hash "$GITHUB_REPOSITORY_ID")'
   pow:
     description: 'Proof-of-work difficulty target'
     required: false
@@ -41,36 +36,68 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Post Nostr notification
+    - id: build-args
+      name: Build metadata args
       shell: bash
       run: |
-        gnostr set-metadata -h
-        EVENT=$(gnostr -d ${{ env.POW }} \
-         -r ${{ env.DAMUS }} \
-         --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-         set-metadata \
-         -n gnostr-bot \
-         -a "$GITHUB_REPOSITORY_OWNER #$GITHUB_REPOSITORY_ID" \
-         -e "repo|$GITHUB_REPOSITORY" \
-         -e "workflow|$GITHUB_WORKFLOW" \
-         -e "workflow_sha|$GITHUB_WORKFLOW_SHA" \
-         -e "workflow_ref|$GITHUB_WORKFLOW_REF" \
-         -e "github_ref|$GITHUB_REF" \
-         -e "github_run_id|$GITHUB_RUN_ID" \
-         -e "gnostr|gnostr" \
-         -e "gnostr-bot|gnostr-bot" \
-         -e "github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
-         -e "date|$(date +%s)" \
-         -e "runner_env|$RUNNER_ENVIRONMENT" \
-         -e "runner_os|$RUNNER_OS" \
-         -e "weeble|$(gnostr --weeble)" \
-         -e "blockheight|$(gnostr --blockheight)" \
-         -e "wobble|$(gnostr --wobble)" \
-         -p ${{ inputs.p_tag }} \
-         -b ${{ inputs.b_tag }} --hex || true ) && \
-         export EVENT=$EVENT && \
-         NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-         export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-         gnostr query -i $EVENT -r ${{ inputs.damus }} || true && \
-         gnostr query -i $EVENT -r ${{ inputs.nos }} || true && \
-         echo "${{ inputs.njump_base }}/$NOTE"
+        {
+          echo 'args<<EOF'
+          printf '%s\n' \
+            -n \
+            gnostr-bot \
+            -a \
+            "$GITHUB_REPOSITORY_OWNER #$GITHUB_REPOSITORY_ID" \
+            -e \
+            "repo|$GITHUB_REPOSITORY" \
+            -e \
+            "workflow|$GITHUB_WORKFLOW" \
+            -e \
+            "workflow_sha|$GITHUB_WORKFLOW_SHA" \
+            -e \
+            "workflow_ref|$GITHUB_WORKFLOW_REF" \
+            -e \
+            "github_ref|$GITHUB_REF" \
+            -e \
+            "github_run_id|$GITHUB_RUN_ID" \
+            -e \
+            "gnostr|gnostr" \
+            -e \
+            "gnostr-bot|gnostr-bot" \
+            -e \
+            "github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
+            -e \
+            "date|$(date +%s)" \
+            -e \
+            "runner_env|$RUNNER_ENVIRONMENT" \
+            -e \
+            "runner_os|$RUNNER_OS" \
+            -e \
+            "weeble|$(gnostr --weeble)" \
+            -e \
+            "blockheight|$(gnostr --blockheight)" \
+            -e \
+            "wobble|$(gnostr --wobble)" \
+            -p \
+            "${{ inputs.p_tag }}" \
+            -b \
+            "${{ inputs.b_tag }}"
+          echo EOF
+          echo 'query_relays<<EOF'
+          printf '%s\n' "${{ inputs.damus }}" "${{ inputs.nos }}"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Post Nostr notification
+      uses: ./.github/actions/gnostr-command
+      with:
+        command: set-metadata
+        help_command: set-metadata
+        nsec: ${{ inputs.nsec }}
+        pow: ${{ inputs.pow }}
+        relays: |
+          ${{ inputs.damus }}
+        args: ${{ steps.build-args.outputs.args }}
+        hex: 'true'
+        convert_note: 'true'
+        query_relays: ${{ steps.build-args.outputs.query_relays }}
+        njump_base: ${{ inputs.njump_base }}
