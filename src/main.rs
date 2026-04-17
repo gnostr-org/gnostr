@@ -15,8 +15,13 @@ use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt}; // Import the anyhow macro
 
+fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    install_rustls_crypto_provider();
     env::set_var("GNOSTR_GITDIR", "");
     env::set_var("WEEBLE", "0");
     env::set_var("BLOCKHEIGHT", "0");
