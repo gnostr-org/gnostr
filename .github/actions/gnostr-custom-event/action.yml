@@ -42,17 +42,26 @@ runs:
       shell: bash
       run: |
         gnostr custom-event -h
-        EVENT=$(gnostr \
-          --nsec ${{ inputs.nsec }} \
-          -d ${{ inputs.pow }} \
-          -r ${{ inputs.damus }} \
-          -r ${{ inputs.nos }} \
-          custom-event \
-          -k ${{ inputs.kind }} \
-          -c ${{ inputs.content }} \
-          -t ${{ inputs.tags }} \
-          --hex || true) && \
-          export EVENT=$EVENT && \
-          NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-          export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-          echo "${{ inputs.njump_base }}/$NOTE"
+        args=(
+          --nsec "${{ inputs.nsec }}"
+          -d "${{ inputs.pow }}"
+          -r "${{ inputs.damus }}"
+          -r "${{ inputs.nos }}"
+          custom-event
+          -k "${{ inputs.kind }}"
+          -c "${{ inputs.content }}"
+        )
+
+        if [ -n "${{ inputs.tags }}" ]; then
+          args+=(-t "${{ inputs.tags }}")
+        fi
+
+        EVENT="$(gnostr "${args[@]}" --hex || true)"
+        export EVENT
+
+        NOTE="$(gnostr convert-key -p note -k "$EVENT" || true)"
+        export NOTE
+
+        echo "$NOTE"
+        echo "$EVENT"
+        echo "${{ inputs.njump_base }}/$NOTE"
