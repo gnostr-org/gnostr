@@ -22,7 +22,7 @@ use ngit::{
 };
 use nostr_sdk::RelayUrl;
 
-#[derive(Debug, clap::Args)]
+#[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
     /// optionally just sync a specific reference. eg main or v1.5.2
     #[clap(short, long)]

@@ -88,8 +88,7 @@ version = "0.10.1"
 version = "0.4"
 
 [dependencies.clap]
-version = "4.5.41"
-features = ["derive"]
+workspace = true
 
 [dependencies.console]
 version = "0.16.0"

@@ -398,7 +398,7 @@ fn validate_fresh(cli: &Cli, args: &SubCommandArgs, user_has_grasp_list: bool) -
     Err(cli_error(&message, &details, &[&suggestion]))
 }
 
-#[derive(Debug, clap::Args)]
+#[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
     #[clap(long)]
     /// name of repository (preferred over --identifier)

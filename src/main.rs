@@ -175,7 +175,7 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Ngit(sub_command_args)) => {
             debug!("running ngit subcommand");
-            sub_commands::ngit::ngit(sub_command_args)
+            sub_commands::ngit::ngit(sub_command_args.clone())
                 .await
                 .map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
         }

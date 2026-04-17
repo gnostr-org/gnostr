@@ -10,7 +10,7 @@ use crate::{
     login::fresh::signup_non_interactive,
 };
 
-#[derive(Parser)]
+#[derive(Clone, Parser)]
 pub struct SubCommandArgs {
     /// Display name for the new account
     #[arg(long, required = true)]

@@ -21,7 +21,7 @@ use crate::{
     repo_ref::try_and_get_repo_coordinates_when_remote_unknown,
 };
 
-#[derive(Debug, clap::Args)]
+#[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
     #[clap(short, long, value_parser, num_args = 1..)]
     /// where your git+nostr data is hosted (optional; uses your saved grasp

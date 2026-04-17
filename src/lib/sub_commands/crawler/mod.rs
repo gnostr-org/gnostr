@@ -218,20 +218,20 @@ pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> 
 #[allow(clippy::manual_strip)]
 #[derive(clap::Args, Debug, Clone)]
 pub struct CliArgs {
-    #[arg(name = "dir", long = "git-dir")]
+    #[arg(long = "git-dir", value_name = "dir")]
     /// alternative git directory to use
     flag_git_dir: Option<String>,
-    #[arg(name = "patch", long, short)]
+    #[arg(long, short)]
     /// show commit diff
     flag_patch: bool,
     #[arg(
-        name = "nsec",
+        value_name = "nsec",
         default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     )]
     arg_nsec: Option<String>,
-    #[arg(name = "commit")]
+    #[arg(value_name = "commit")]
     arg_commit: Vec<String>,
-    #[arg(name = "spec", last = true)]
+    #[arg(value_name = "spec", last = true)]
     arg_spec: Vec<String>,
     #[arg(long)]
     arg_dump: bool,

@@ -26,7 +26,7 @@ use crate::{
     repo_ref::get_repo_coordinates_when_remote_unknown,
 };
 
-#[derive(Debug, clap::Args)]
+#[derive(Clone, Debug, clap::Args)]
 pub struct SubCommandArgs {
     #[arg(default_value = "")]
     /// commits to send as proposal; like in `git format-patch` eg. HEAD~2

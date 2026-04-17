@@ -5,7 +5,7 @@ use serde::ser::StdError;
 
 use crate::cli::NgitCommands;
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitSubCommand {

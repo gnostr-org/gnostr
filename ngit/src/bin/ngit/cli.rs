@@ -4,7 +4,7 @@ use ngit::login::SignerInfo;
 
 use crate::sub_commands;
 
-#[derive(Parser)]
+#[derive(Clone, Parser)]
 #[command(
     author,
     version,
@@ -101,7 +101,7 @@ pub fn extract_signer_cli_arguments(args: &Cli) -> Result<Option<SignerInfo>> {
     }
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Subcommand)]
 pub enum Commands {
     /// publish a repository to nostr; signal you are its maintainer accepting
     /// PRs and issues
@@ -165,7 +165,7 @@ pub enum Commands {
     Account(AccountSubCommandArgs),
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Subcommand)]
 pub enum AccountCommands {
     /// login with nsec or nostr connect
     Login(sub_commands::login::SubCommandArgs),
@@ -177,13 +177,13 @@ pub enum AccountCommands {
     Create(sub_commands::create::SubCommandArgs),
 }
 
-#[derive(clap::Parser)]
+#[derive(Clone, clap::Parser)]
 pub struct AccountSubCommandArgs {
     #[command(subcommand)]
     pub account_command: AccountCommands,
 }
 
-#[derive(clap::Parser)]
+#[derive(Clone, clap::Parser)]
 pub struct RepoSubCommandArgs {
     #[command(subcommand)]
     pub repo_command: Option<RepoCommands>,
@@ -192,7 +192,7 @@ pub struct RepoSubCommandArgs {
     pub offline: bool,
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Subcommand)]
 pub enum RepoCommands {
     /// publish a repository to nostr (alias for `ngit init`)
     Init(sub_commands::init::SubCommandArgs),

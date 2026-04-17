@@ -14,7 +14,7 @@ use crate::{
     login::fresh::{fresh_login_or_signup, login_with_bunker_url},
 };
 
-#[derive(clap::Args)]
+#[derive(Clone, clap::Args)]
 pub struct SubCommandArgs {
     /// login to the local git repository only
     #[arg(long, action)]
