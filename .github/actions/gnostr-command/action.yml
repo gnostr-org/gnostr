@@ -1,0 +1,187 @@
+name: gnostr Command
+description: >
+  Runs a configurable gnostr command with safe argument handling, optional event-id
+  extraction, note conversion, relay queries, and outputs for downstream steps.
+
+inputs:
+  command:
+    description: 'The gnostr subcommand to run, e.g. custom-event or set-metadata'
+    required: true
+  help_command:
+    description: 'Optional command path to show help for before execution'
+    required: false
+    default: ''
+  nsec:
+    description: 'Optional nsec; the default gnostr repository hash placeholder is resolved at runtime'
+    required: false
+    default: ''
+  pow:
+    description: 'Optional proof-of-work difficulty target'
+    required: false
+    default: ''
+  relays:
+    description: 'Optional newline-delimited relay URLs; each line is passed as -r <relay>'
+    required: false
+    default: ''
+  args:
+    description: 'Optional newline-delimited command arguments; each line becomes one argv item'
+    required: false
+    default: ''
+  hex:
+    description: 'Append --hex to the command invocation'
+    required: false
+    default: 'false'
+  convert_note:
+    description: 'Convert the extracted event id to a note id'
+    required: false
+    default: 'false'
+  query_relays:
+    description: 'Optional newline-delimited relay URLs to query after command execution'
+    required: false
+    default: ''
+  njump_base:
+    description: 'Optional base URL used to print a human-readable note link'
+    required: false
+    default: ''
+  ignore_failure:
+    description: 'If true, do not fail the step when gnostr returns a non-zero exit code'
+    required: false
+    default: 'true'
+
+outputs:
+  raw_output:
+    description: 'Raw stdout produced by the gnostr command'
+    value: ${{ steps.run-command.outputs.raw_output }}
+  event_id:
+    description: 'Extracted event id, either parsed from JSON output or taken from the last non-empty output line'
+    value: ${{ steps.run-command.outputs.event_id }}
+  note:
+    description: 'Converted note id when convert_note is true'
+    value: ${{ steps.run-command.outputs.note }}
+  njump_url:
+    description: 'Rendered njump URL when both note and njump_base are available'
+    value: ${{ steps.run-command.outputs.njump_url }}
+
+runs:
+  using: composite
+  steps:
+    - id: run-command
+      shell: bash
+      env:
+        INPUT_COMMAND: ${{ inputs.command }}
+        INPUT_HELP_COMMAND: ${{ inputs.help_command }}
+        INPUT_NSEC: ${{ inputs.nsec }}
+        INPUT_POW: ${{ inputs.pow }}
+        INPUT_RELAYS: ${{ inputs.relays }}
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_HEX: ${{ inputs.hex }}
+        INPUT_CONVERT_NOTE: ${{ inputs.convert_note }}
+        INPUT_QUERY_RELAYS: ${{ inputs.query_relays }}
+        INPUT_NJUMP_BASE: ${{ inputs.njump_base }}
+        INPUT_IGNORE_FAILURE: ${{ inputs.ignore_failure }}
+      run: |
+        if [ -n "$INPUT_HELP_COMMAND" ]; then
+          gnostr "$INPUT_HELP_COMMAND" -h
+        fi
+
+        nsec="$INPUT_NSEC"
+        if [ "$nsec" = '$(gnostr --hash "$GITHUB_REPOSITORY_ID")' ]; then
+          nsec="$(gnostr --hash "$GITHUB_REPOSITORY_ID")"
+        fi
+
+        cmd=(gnostr)
+
+        if [ -n "$nsec" ]; then
+          cmd+=(--nsec "$nsec")
+        fi
+
+        if [ -n "$INPUT_POW" ]; then
+          cmd+=(-d "$INPUT_POW")
+        fi
+
+        while IFS= read -r relay; do
+          if [ -n "$relay" ]; then
+            cmd+=(-r "$relay")
+          fi
+        done <<< "$INPUT_RELAYS"
+
+        cmd+=("$INPUT_COMMAND")
+
+        while IFS= read -r arg; do
+          if [ -n "$arg" ]; then
+            cmd+=("$arg")
+          fi
+        done <<< "$INPUT_ARGS"
+
+        if [ "$INPUT_HEX" = 'true' ]; then
+          cmd+=(--hex)
+        fi
+
+        if [ "$INPUT_IGNORE_FAILURE" = 'true' ]; then
+          RAW_OUTPUT="$("${cmd[@]}" || true)"
+        else
+          RAW_OUTPUT="$("${cmd[@]}")"
+        fi
+
+        EVENT_ID="$(printf '%s\n' "$RAW_OUTPUT" | awk 'NF { line = $0 } END { print line }')"
+
+        if [ -n "$RAW_OUTPUT" ]; then
+          JSON_EVENT_ID="$(
+            RAW_OUTPUT="$RAW_OUTPUT" python3 - <<'PY'
+import json
+import os
+
+raw = os.environ.get("RAW_OUTPUT", "").strip()
+try:
+    value = json.loads(raw)
+except Exception:
+    value = None
+
+if isinstance(value, dict):
+    event_id = value.get("id", "")
+    if isinstance(event_id, str):
+        print(event_id)
+PY
+          )"
+          if [ -n "$JSON_EVENT_ID" ]; then
+            EVENT_ID="$JSON_EVENT_ID"
+          fi
+        fi
+
+        NOTE=''
+        if [ "$INPUT_CONVERT_NOTE" = 'true' ] && [ -n "$EVENT_ID" ]; then
+          NOTE="$(gnostr convert-key -p note -k "$EVENT_ID" || true)"
+        fi
+
+        NJUMP_URL=''
+        if [ -n "$NOTE" ] && [ -n "$INPUT_NJUMP_BASE" ]; then
+          NJUMP_URL="$INPUT_NJUMP_BASE/$NOTE"
+        fi
+
+        if [ -n "$NOTE" ]; then
+          echo "$NOTE"
+        fi
+        if [ -n "$RAW_OUTPUT" ]; then
+          echo "$RAW_OUTPUT"
+        fi
+
+        if [ -n "$EVENT_ID" ]; then
+          while IFS= read -r relay; do
+            if [ -n "$relay" ]; then
+              gnostr query -i "$EVENT_ID" -r "$relay" || true
+            fi
+          done <<< "$INPUT_QUERY_RELAYS"
+        fi
+
+        if [ -n "$NJUMP_URL" ]; then
+          echo "$NJUMP_URL"
+        fi
+
+        {
+          echo 'raw_output<<EOF'
+          printf '%s\n' "$RAW_OUTPUT"
+          echo EOF
+          echo "event_id=$EVENT_ID"
+          echo "note=$NOTE"
+          echo "njump_url=$NJUMP_URL"
+        } >> "$GITHUB_OUTPUT"
