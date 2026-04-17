@@ -208,29 +208,13 @@ jobs:
           gnostr --wobble || echo "gnostr --wobble"
 
       - name: create set-metadata kind 0
-        shell: bash
-        run: |
-          gnostr set-metadata --help
-          gnostr -d ${{ env.POW }} \
-          -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-          set-metadata \
-          -n gnostr-bot \
-          -a "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
-          -e "repo|$GITHUB_REPOSITORY" \
-          -e "workflow|$GITHUB_WORKFLOW" \
-          -e "workflow_sha|$GITHUB_WORKFLOW_SHA" \
-          -e "workflow_ref|$GITHUB_WORKFLOW_REF" \
-          -e "github_ref|$GITHUB_REF" \
-          -e "github_run_id|$GITHUB_RUN_ID" \
-          -e "gnostr|gnostr" \
-          -e "gnostr-bot|gnostr-bot" \
-          -e "github_repo_owner|$GITHUB_REPOSITORY_OWNER" \
-          -e "date|$(date +%s)" \
-          -e "runner_env|$RUNNER_ENVIRONMENT" \
-          -e "runner_os|$RUNNER_OS" \
-          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
-          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
+        uses: ./.github/actions/gnostr-metadata
+        with:
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          p_tag: 'https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4'
+          b_tag: 'https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png'
         #if: matrix.os == 'macos-latest'
 
       - name: gnostr ngit fetch
@@ -243,23 +227,27 @@ jobs:
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
-        shell: bash
-        run: |
-          gnostr --version
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr-weeble)/$(gnostr-blockheight) #$GITHUB_REPOSITORY_ID" \
-            -t "repo|$GITHUB_REPOSITORY","workflow|$GITHUB_WORKFLOW","workflow_sha|$GITHUB_WORKFLOW_SHA","workflow_ref|$GITHUB_WORKFLOW_REF","github_ref|$GITHUB_REF","github_run_id|$GITHUB_RUN_ID","gnostr|gnostr","gnostr-bot|gnostr-bot","github_repo_owner|$GITHUB_REPOSITORY_OWNER","date|$(date +%s)","runner_env|$RUNNER_ENVIRONMENT","runner_os|$RUNNER_OS" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT) && echo && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query --ids $EVENT --relay ${{ env.DAMUS }} || true && echo && \
-            gnostr query --ids $EVENT --relay ${{ env.NOS }} || true && echo
+        uses: ./.github/actions/gnostr-custom-event
+        with:
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          kind: 1
+          content: |
+            gnostr bot matrix CI run
+            run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            repository: ${{ github.repository }}
+            repository_owner: ${{ github.repository_owner }}
+            workflow: ${{ github.workflow }}
+            workflow_ref: ${{ github.workflow_ref }}
+            run_id: ${{ github.run_id }}
+            run_attempt: ${{ github.run_attempt }}
+            ref: ${{ github.ref }}
+            sha: ${{ github.sha }}
+            actor: ${{ github.actor }}
+            runner_os: ${{ runner.os }}
+            matrix: os=${{ matrix.os }}, rustup=${{ matrix.rustup }}
+          tags: 'repo|${{ github.repository }},workflow|${{ github.workflow }},workflow_sha|${{ github.workflow_sha }},workflow_ref|${{ github.workflow_ref }},github_ref|${{ github.ref }},github_run_id|${{ github.run_id }},gnostr|gnostr,gnostr-bot|gnostr-bot,github_repo_owner|${{ github.repository_owner }},runner_env|${{ runner.environment }},runner_os|${{ runner.os }}'
         #if: matrix.os == 'macos-latest'
 
       - name: 🌙 UTC second is ODD
