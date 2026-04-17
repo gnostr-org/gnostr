@@ -61,7 +61,7 @@ pub struct QuerySubCommand {
     #[arg(long)]
     pub references: Option<String>,
     /// Filter by event kinds (comma-separated integers).
-    #[arg(long)]
+    #[arg(long, default_value = "1,30617,30618,1617,1618,1621,1630,1631,1632,1633")]
     pub kinds: Option<String>,
     /// Search for text within event content. Can take multiple values, but only
     /// the first is used. Example: --search "keyword1,keyword2"
