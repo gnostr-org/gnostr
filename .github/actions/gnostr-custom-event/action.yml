@@ -51,6 +51,4 @@ runs:
           export EVENT=$EVENT && \
           NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
           export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-          gnostr query -i $EVENT -r ${{ inputs.damus }} || true && \
-          gnostr query -i $EVENT -r ${{ inputs.nos }} || true && \
           echo "${{ inputs.njump_base }}/$NOTE"
