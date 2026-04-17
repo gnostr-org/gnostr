@@ -35,6 +35,7 @@ nostr-sdk = "0.44.1"
 passwords = "3.1.16"
 qrcode = { version = "0.14.1", default-features = false }
 reqwest = { version = "0.12.22", features = ["json"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 scrypt = "0.11.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -120,9 +120,15 @@ mod fetch;
 mod list;
 mod push;
 
+fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() -> Result<()> {
+    install_rustls_crypto_provider();
+
     if std::env::var("NGITTEST").is_ok() {
         std::env::set_var("NGIT_VERBOSE", "1");
     }
