@@ -62,7 +62,7 @@ jobs:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
 
-      - name: Setup OpenSSL and Perl for Windows
+      - name: Setup OpenSSL for Windows
         if: runner.os == 'windows'
         uses: ./.github/actions/setup-openssl-perl-windows/
       - uses: cargo-bins/cargo-binstall@main

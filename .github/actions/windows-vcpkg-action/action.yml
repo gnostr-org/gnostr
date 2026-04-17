@@ -68,32 +68,6 @@ runs:
           ${{ env.VCPKG_INSTALLATION_ROOT }}/packages
         key: ${{ runner.os }}-vcpkg-${{ inputs.arch }}-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Cache Strawberry Perl
-      id: cache-perl
-      uses: actions/cache@v4
-      with:
-        path: C:\Strawberry
-        key: ${{ runner.os }}-strawberry-perl-v1
-
-    - name: Install Strawberry Perl
-      # Combined conditions into a single 'if' key
-      if: runner.os == 'Windows' && steps.cache-perl.outputs.cache-hit != 'true'
-      shell: pwsh
-      run: |
-        choco install strawberryperl -y --verbose
-
-    - name: Set Perl Path
-      shell: pwsh
-      run: |
-        echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      if: runner.os == 'Windows'
-
-    - name: Install Perl modules
-      shell: pwsh
-      run: perl -MCPAN -e "install Locale::Maketext::Simple"
-      if: runner.os == 'Windows'
-
     - name: Cache Cargo
       uses: actions/cache@v4
       with:
