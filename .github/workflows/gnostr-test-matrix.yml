@@ -255,22 +255,22 @@ jobs:
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
       - name: create set-metadata kind 0
-              uses: ./.github/actions/gnostr-custom-event
-              with:
-                kind: 0
-                # Using '|' allows you to write clean JSON without escaping every quote
-                content: |
-                  {
-                    "name": "gnostr",
-                    "display_name": "gnostr",
-                    "about": "a git+nostr workflow utility",
-                    "picture": "https://avatars.githubusercontent.com/u/135379339?s=400&v=4",
-                    "website": "https://github.com/gnostr-org/gnostr",
-                    "nip05": "gnostr@example.com",
-                    "lud16": "gnostr@getalby.com"
-                  }
-                # Formatting tags as a standard JSON array string for the action to parse
-                tags: '[["p", "p-tag"], ["t", "nostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
+        uses: ./.github/actions/gnostr-custom-event
+        with:
+          kind: 0
+          # Using '|' allows you to write clean JSON without escaping every quote
+          content: |
+            {
+              "name": "gnostr",
+              "display_name": "gnostr",
+              "about": "a git+nostr workflow utility",
+              "picture": "https://avatars.githubusercontent.com/u/135379339?s=400&v=4",
+              "website": "https://github.com/gnostr-org/gnostr",
+              "nip05": "gnostr@example.com",
+              "lud16": "gnostr@getalby.com"
+            }
+          # Formatting tags as a standard JSON array string for the action to parse
+          tags: '[["p", "p-tag"], ["t", "nostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
 
       - name: Create custom-event kind 1
         uses: ./.github/actions/gnostr-custom-event
