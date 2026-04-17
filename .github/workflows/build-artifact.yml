@@ -85,8 +85,9 @@ jobs:
             cargo_test_args: '--all-features'
           - runner: windows-11-arm
             arch: arm64
-            # --features <feature1>,<feature2>,... for arch: arm64
-            cargo_test_args: '--features default'
+            # Root gnostr still pulls ring 0.16 via legacy TLS deps, which fails
+            # on Windows ARM64 MSVC. asyncgit still exercises the vcpkg/OpenSSL path.
+            cargo_test_args: '-p gnostr-asyncgit --all-features'
           - runner: ubuntu-latest
             arch: x64
             # All features supported on x64 Windows.
