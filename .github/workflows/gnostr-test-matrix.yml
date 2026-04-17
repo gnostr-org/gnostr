@@ -265,22 +265,26 @@ jobs:
           kind: 1
           content: 'Custom event kind 1 triggered by CI'
 
-      #- name: 🌙 UTC second is ODD
-      #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
-      #  run: |
-      #    cargo clean && echo "✅" || echo "❌"
+      # - name: 🌙 UTC second is ODD
+      #   if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
+      #   run: |
+      #     cargo clean && echo "✅" || echo "❌"
 
       - name: 🚀 cargo install --path ./git-helpers
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path ./git-helpers
+          cargo install --path ./git-helpers --force
           git remote add gitworkshop \
           nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr
+          git remote add git-tui-upstream-ssh \
+          git@github.com:gnostr-org/gnostr-tui-upstream.git
+          git remote add git-tui-upstream-https \
+          https://github.com/gnostr-org/gnostr-tui-upstream.git
           git fetch --all
 
       - name: 🚀 cargo run --bin gnostr-tui --
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo run --bin gnostr-tui -- --version
@@ -298,32 +302,47 @@ jobs:
           -t "gnostr|gnostr","gnostr-query|gnostr-query") \
           && echo "✅" ## || echo "❌"
 
-      #- name: 🚀 cargo test -j8
-      #  #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-      #  shell: bash
-      #  run: |
-      #    cargo test -j8 && echo "✅" ## || echo "❌"
-			#    gnostr query -i $(gnostr --nsec $(gnostr --hash "") custom-event --kind $(gnostr --weeble) --hex -c "gnostr query nested command test" -t "gnostr|gnostr","gnostr-query|gnostr-query")
-      #  if: matrix.os != 'windows-latest'
+      # - name: 🚀 cargo test -j8
+      #   #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+      #   shell: bash
+      #   run: |
+      #     cargo test -j8 && echo "✅" ## || echo "❌"
+      #     gnostr query \
+      #     -i $(gnostr --nsec $(gnostr --hash "") \
+      #     custom-event \
+      #     --kind $(gnostr --weeble) \
+      #     --hex \
+      #     -c "gnostr query nested command test" \
+      #     -t "gnostr|gnostr","gnostr-query|gnostr-query")
+      #   if: matrix.os != 'windows-latest'
 
-      #- name: gnostr ngit fetch
-      #  shell: bash
-      #  run: |
-      #    git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
-      #    cargo run --bin gnostr -- ngit --help
-      #    #cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
-      #    cargo run --bin gnostr -- ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
-      #  if: ${{ !env.ACT }}
+      # - name: gnostr ngit fetch
+      #   shell: bash
+      #   run: |
+      #     git \
+      #     remote \
+      #     add \
+      #     gitworkshop \
+      #     nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+      #     cargo run --bin gnostr -- ngit --help
+      #     #cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
+      #     cargo \
+      #     run \
+      #     --bin \
+      #     gnostr \
+      #     -- \
+      #     ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
+      #   if: ${{ !env.ACT }}
 
-      #- name: 🌙 UTC second is ODD
-      #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
-      #  run: |
-      #    make gnostr-chat &
-      #    make gnostr-chat &
-      #    gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
-      #    gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
-      #    sleep 5 # Wait for services to start
-      #    gnostr query --limit 100
+      # - name: 🌙 UTC second is ODD
+      #   if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
+      #   run: |
+      #     make gnostr-chat &
+      #     make gnostr-chat &
+      #     gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
+      #     gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
+      #     sleep 5 # Wait for services to start
+      #     gnostr query --limit 100
 
       - name: Cleanup lingering gnostr processes
         uses: ./.github/actions/gnostr-cleanup
