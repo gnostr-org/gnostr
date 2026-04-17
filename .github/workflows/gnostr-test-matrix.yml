@@ -210,19 +210,19 @@ jobs:
         run: |
           BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")" && \
           $BREW_CMD tap gnostr-org/homebrew-gnostr-org || true
-        if: runner.os != 'windows'
+        if: runner.os == 'macOS'
 
       - name: brew tap nostorg/nostr
         run: |
           BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")" && \
           $BREW_CMD tap nostorg/nostr || true
-        if: runner.os != 'windows'
+        if: runner.os == 'macOS'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
         run: |
           BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")" && \
           $BREW_CMD tap randymcmillan/homebrew-randymcmillan || true
-        if: runner.os != 'windows'
+        if: runner.os == 'macOS'
 
       - name: Install gnostr via Homebrew
         uses: ./.github/actions/brew-install-gnostr/
@@ -240,7 +240,7 @@ jobs:
         run: |
           BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
           $BREW_CMD install cargo-llvm-cov cargo-llvm-lines || true
-        if: runner.os != 'windows'
+        if: runner.os == 'macOS'
 
       #- name: powershell install gnostr
       #  shell: powershell
