@@ -1,0 +1,78 @@
+[package]
+name = "ngit"
+version = "2.2.3"
+edition = "2021"
+description = "nostr plugin for git"
+authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
+readme = "README.md"
+homepage = "https://gitworkshop.dev/dan@gitworkshop.dev/ngit"
+repository = "https://codeberg.org/DanConwayDev/ngit-cli"
+license = "MIT"
+keywords = ["nostr", "git"]
+categories = ["command-line-utilities","development-tools"]
+
+[dependencies]
+anyhow = "1.0.98"
+async-trait = "0.1.88"
+async-wsocket = "0.13.1" # TEMPORARY: remove when transport.rs is deleted. See transport.rs header.
+auth-git2 = "0.5.8"
+chacha20poly1305 = "0.10.1"
+chrono = "0.4"
+clap = { version = "4.5.41", features = ["derive"] }
+console = "0.16.0"
+dialoguer = "0.12.0"
+directories = "6.0.0"
+futures = "0.3.31"
+git2 = "0.20.4"
+indicatif = "0.18.0"
+mailparse = "0.16.1"
+nostr = { version = "0.44.1", features = ["nip49"] }
+nostr-connect = "0.44.0"
+nostr-database = "0.44.0"
+nostr-lmdb = "0.44.0"
+nostr-relay-pool = "0.44.0"
+nostr-sdk = "0.44.1"
+passwords = "3.1.16"
+qrcode = { version = "0.14.1", default-features = false }
+reqwest = { version = "0.12.22", features = ["json"] }
+scrypt = "0.11.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serde_yaml = "0.9.34"
+tokio = { version = "1.46.1", features = ["full"] }
+tokio-tungstenite = "0.26.2" # TEMPORARY: remove when transport.rs is deleted. See transport.rs header.
+urlencoding = "2.1.3"
+zeroize = "1.8.1"
+
+[dev-dependencies]
+assert_cmd = "2.0.17"
+mockall = "0.13.1"
+once_cell = "1.21.3"
+rstest = "0.23"
+serial_test = "3.2.0"
+test_utils = { path = "test_utils" }
+
+[workspace]
+members = [
+    "test_utils",
+]
+
+[lib]
+name = "ngit"
+path = "src/lib/mod.rs"
+
+[features]
+default = []
+vendored-openssl = ["git2/vendored-openssl"]
+
+[[bin]]
+name = "ngit"
+path = "src/bin/ngit/main.rs"
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bin/git_remote_nostr/main.rs"
+
+[profile.release]
+lto = true
+strip = "symbols"
