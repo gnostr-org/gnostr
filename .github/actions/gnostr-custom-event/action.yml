@@ -4,6 +4,10 @@ description: >
   relays via gnostr, then queries the event back and prints a njump.me link.
 
 inputs:
+  nsec:
+    description: 'a nostr nsec of sha256 hash'
+    required: false
+    default: '$(gnostr --hash "$GITHUB_REPOSITORY_ID")'
   kind:
     description: 'Nostr event kind (integer, e.g. 1)'
     required: true
@@ -39,7 +43,7 @@ runs:
       run: |
         gnostr custom-event -h
         EVENT=$(gnostr \
-          --nsec "$(gnostr --hash "$GITHUB_REPOSITORY_ID")" \
+          --nsec ${{ inputs.nsec }} \
           -d ${{ inputs.pow }} \
           -r ${{ inputs.damus }} \
           -r ${{ inputs.nos }} \
