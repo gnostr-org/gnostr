@@ -266,7 +266,7 @@ jobs:
       #     ["t", "sovereign-developer"],
       #     ["relay", "wss://relay.damus.io"]
       #   ],
-      #   "content": "{\"name\":\"RandyMcMillan\",\"display_name\":\"Randy\",\"about\":\"Systems Developer | Bitcoin & Nostr Protocol Research\",\"picture\":\"https://avatars.githubusercontent.com/u/1521?v=4\",\"website\":\"https://github.com/RandyMcMillan\",\"nip05\":\"randy@example.com\",\"lud16\":\"randy@getalby.com\"}",
+      #   "content": "{\"name\":\"gnostr\",\"display_name\":\"gnostr\",\"about\":\"a git+nostr workflow utility\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4\",\"website\":\"https://github.com/gnostr-org/gnostr\",\"nip05\":\"gnostr@example.com\",\"lud16\":\"gnostr@getalby.com\"}",
       #   "sig": "987593259e44f8f4a13e8b4e138a7d7d5a5288544a4e5912389a4231451234987593259e44f8f4a13e8b4e138a7d7d5a5288544a4e5912389a423145123498"
       # }
 
@@ -274,7 +274,7 @@ jobs:
         uses: ./.github/actions/gnostr-custom-event
         with:
           kind: 0
-          content: '{\"name\":\"RandyMcMillan\",\"display_name\":\"Randy\",\"about\":\"Systems Developer | Bitcoin & Nostr Protocol Research\",\"picture\":\"https://avatars.githubusercontent.com/u/1521?v=4\",\"website\":\"https://github.com/RandyMcMillan\",\"nip05\":\"randy@example.com\",\"lud16\":\"randy@getalby.com\"}'
+          content: '{\"name\":\"gnostr\",\"display_name\":\"gnostr\",\"about\":\"a git+nostr workflow utility\",\"picture\":\"https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4\",\"website\":\"https://github.com/gnostr-org/gnostr\",\"nip05\":\"gnostr@example.com\",\"lud16\":\"gnostr@getalby.com\"}'
           tags: '"p|p-tag","t|nostr","relay|wss://blossom.gnostr.cloud"'
 
       - name: Create custom-event kind 1
