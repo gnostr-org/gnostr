@@ -144,32 +144,6 @@ runs:
           /var/lib/apt/lists
         key: ${{ runner.os }}-${{ runner.arch }}-apt-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Cache Strawberry Perl
-      if: runner.os == 'Windows'
-      id: cache-perl
-      uses: actions/cache@v4
-      with:
-        path: C:\Strawberry
-        key: ${{ runner.os }}-strawberry-perl-v1
-
-    - name: Install Strawberry Perl
-      if: runner.os == 'Windows' && steps.cache-perl.outputs.cache-hit != 'true'
-      shell: pwsh
-      run: |
-        choco install strawberryperl -y --verbose
-
-    - name: Set Perl Path
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-    - name: Install Perl modules
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: perl -MCPAN -e "install Locale::Maketext::Simple"
-
     - name: Cache Cargo
       uses: actions/cache@v4
       with:

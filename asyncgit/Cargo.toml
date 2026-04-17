@@ -40,7 +40,8 @@ default = ["trace-libgit"]
 trace-libgit = []
 gnostr_web = []
 speedy = []
-vendor-openssl = ["openssl-sys"]
+vendored-openssl = ["openssl-sys"]
+vendor-openssl = ["vendored-openssl"]
 
 [dependencies]
 url = { workspace = true }
