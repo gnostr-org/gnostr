@@ -40,7 +40,7 @@ default = ["trace-libgit"]
 trace-libgit = []
 gnostr_web = []
 speedy = []
-vendored-openssl = ["openssl-sys"]
+vendored-openssl = ["openssl-sys/vendored"]
 vendor-openssl = ["vendored-openssl"]
 
 [dependencies]

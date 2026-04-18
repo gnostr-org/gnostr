@@ -11,7 +11,7 @@ mod tests {
 
     use crate::{
         test_utils::{CliTester, git::GitTestRepo},
-        utils::screenshot::make_screenshot,
+        utils::screenshot::make_screenshot_cross_platform,
     };
 
     #[test]
@@ -79,7 +79,7 @@ mod tests {
 
         // --- 6. Capture screenshots to show oneshot completion ---
         info!("Capturing screenshot");
-        make_screenshot("chat_simulation_after_oneshot_messages")?;
+        make_screenshot_cross_platform("chat_simulation_after_oneshot_messages")?;
 
         // The CliTester's Drop implementation will automatically kill the child
         // processes and restore the terminal.
