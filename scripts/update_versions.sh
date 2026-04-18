@@ -131,7 +131,6 @@ SORT_CRATES=(
     scopetime
     tui
     crawler
-    query
     invalidstring
     asyncgit
     legit
@@ -152,7 +151,6 @@ PUBLISH_CRATES=(
     tui
     asyncgit
     crawler
-    query
     legit
     qr
     relay
