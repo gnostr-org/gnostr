@@ -203,9 +203,13 @@ jobs:
         shell: bash
         run: |
           gnostr --weeble || echo "gnostr --weeble"
+          echo
           gnostr --blockheight || echo "gnostr --blockheight"
+          echo
           gnostr --blockhash || echo "gnostr --blockhash"
+          echo
           gnostr --wobble || echo "gnostr --wobble"
+          echo
 
       - name: create set-metadata kind 0
         uses: ./.github/actions/gnostr-metadata
@@ -215,7 +219,7 @@ jobs:
           nos: ${{ env.NOS }}
           p_tag: 'https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4'
           b_tag: 'https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png'
-        #if: matrix.os == 'macos-latest'
+        # if: matrix.os == 'macos-latest'
 
       - name: gnostr ngit fetch
         shell: bash
