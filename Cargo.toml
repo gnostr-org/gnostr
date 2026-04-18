@@ -16,7 +16,28 @@ keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
-exclude = ["GEMINI.md"]
+exclude = [
+  "GEMINI.md",
+  "Cargo.toml.orig",
+  ".devcontainer/**",
+  ".gemini/**",
+  ".github/**",
+  "assets/**",
+  "coverage/**",
+  "dist-build/**",
+  "docker/**",
+  "docs/**",
+  "examples/**",
+  "helix/**",
+  "test_screenshots/**",
+  "wix/**",
+  "xcode/**",
+  "CHANGELOG.md",
+  "CODECOV.md",
+  "Contrapuntal_Network_Topology.md",
+  "NOSTR-TOOL.md",
+  "build-artifact.uml",
+]
 
 [workspace]
 members = [
