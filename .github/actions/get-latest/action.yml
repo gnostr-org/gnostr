@@ -1,0 +1,72 @@
+name: Get Latest Gnostr Release
+description: Resolve the latest GitHub release tag and optionally install gnostr from its installer artifact.
+
+inputs:
+  repository:
+    description: GitHub repository in owner/name format
+    required: false
+    default: gnostr-org/gnostr
+  asset_name:
+    description: Installer asset name within the selected release
+    required: false
+    default: gnostr-installer.sh
+  install:
+    description: Install gnostr from the resolved release
+    required: false
+    default: 'true'
+  fallback_to_binstall:
+    description: Install with cargo-binstall if the release installer download fails
+    required: false
+    default: 'true'
+
+outputs:
+  latest_tag:
+    description: Latest GitHub release tag
+    value: ${{ steps.get_latest_release.outputs.latest_tag }}
+  installer_url:
+    description: Installer URL constructed from the latest release tag
+    value: ${{ steps.get_latest_release.outputs.installer_url }}
+
+runs:
+  using: composite
+  steps:
+    - id: get_latest_release
+      name: Get latest release
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        latest_tag="$(
+          curl -fsSL "https://api.github.com/repos/${{ inputs.repository }}/releases/latest" |
+          jq -r '.tag_name'
+        )"
+
+        if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
+          echo "Failed to resolve latest release tag for ${{ inputs.repository }}" >&2
+          exit 1
+        fi
+
+        installer_url="https://github.com/${{ inputs.repository }}/releases/download/${latest_tag}/${{ inputs.asset_name }}"
+
+        echo "Latest release tag: $latest_tag"
+        echo "Installer URL: $installer_url"
+        echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
+        echo "installer_url=$installer_url" >> "$GITHUB_OUTPUT"
+
+    - name: Install gnostr from latest release
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        installer_url="${{ steps.get_latest_release.outputs.installer_url }}"
+
+        if curl --proto '=https' --tlsv1.2 -LsSf "$installer_url" | sh; then
+          :
+        elif [ "${{ inputs.fallback_to_binstall }}" = "true" ]; then
+          cargo-binstall --force --no-confirm gnostr
+        else
+          exit 1
+        fi
+
+        gnostr --version
