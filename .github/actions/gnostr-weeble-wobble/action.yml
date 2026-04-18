@@ -18,6 +18,20 @@ outputs:
 runs:
   using: composite
   steps:
+    - id: check-gnostr
+      name: Check gnostr availability
+      shell: bash
+      run: |
+        if command -v gnostr >/dev/null 2>&1; then
+          echo "available=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "available=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Install gnostr via cargo-binstall
+      if: steps.check-gnostr.outputs.available != 'true'
+      uses: ./.github/actions/cargo-binstall-gnostr
+
     - id: resolve
       name: Resolve gnostr values
       shell: bash
