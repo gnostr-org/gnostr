@@ -5,6 +5,7 @@ version.workspace = true
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
+homepage = "https://github.com/gnostr-org/gnostr"
 
 [dependencies]
 globset = "0.4"

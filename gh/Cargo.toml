@@ -2,6 +2,8 @@
 name = "gh-rs"
 version.workspace = true
 edition = "2021"
+description = "GitHub helpers for gnostr workflows"
+homepage = "https://github.com/gnostr-org/gnostr"
 
 [lib]
 name = "gh_rs"
