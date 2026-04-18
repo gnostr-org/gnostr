@@ -198,7 +198,7 @@ jobs:
           echo "WEEBLE=$(gnostr-weeble ||  gnostr --weeble)" >> $GITHUB_ENV
           echo "WOBBLE=$(gnostr-wobble ||  gnostr --wobble)" >> $GITHUB_ENV
           echo "BLOCKHEIGHT=$(gnostr-blockheight ||  gnostr --blockheight)" >> $GITHUB_ENV
-          echo "BLOCKHEIGHT=$(gnostr-blockhash ||  gnostr --blockhash)" >> $GITHUB_ENV
+          echo "BLOCKHASH=$(gnostr-blockhash ||  gnostr --blockhash)" >> $GITHUB_ENV
 
       - name: create set-metadata kind 0
         uses: ./.github/actions/gnostr-custom-event
