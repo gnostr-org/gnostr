@@ -4,6 +4,8 @@ version = "1878.945649.607219"
 edition = "2024"
 description = "Gitui-inspired terminal UI for Blossom blob storage"
 homepage = "https://github.com/gnostr-org/gnostr"
+license = "MIT"
+repository = "https://github.com/gnostr-org/gnostr.git"
 
 [lib]
 name = "gnostr_blossom_tui"
