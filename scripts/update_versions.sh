@@ -162,6 +162,14 @@ git add */Cargo.toml
 git add */*/Cargo.toml
 git add */*/*/Cargo.toml
 
+git add Cargo.toml
+git add crawler/Cargo.toml
+git add git-helpers/Cargo.toml
+git add ngit/Cargo.toml
+git add src/lib/test_utils/Cargo.toml
+git add tui/Cargo.toml
+
+
 TAG=$(gnostr git tag create)
 git reset --soft HEAD~1
 gnostr legit -m $TAG
