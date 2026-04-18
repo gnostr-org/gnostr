@@ -299,8 +299,9 @@ jobs:
             actor: ${{ github.actor }}
             runner_os: ${{ runner.os }}
             matrix: os=${{ matrix.os }}, toolchain=${{ matrix.toolchain }}
-            [![gnostr-test-matrix](https://github.com/gnostr-org/gnostr/actions/workflows/gnostr-test-matrix.yml/badge.svg)](https://github.com/gnostr-org/gnostr/actions/workflows/gnostr-test-matrix.yml)
 
+          # Formatting tags as a standard JSON array string for the action to parse
+          tags: '[["weeble", "${{ env.WEEBLE }}"], ["blockheight", "${{ env.BLOCKHEIGHT }}"], ["wobble", "${{ env.WOBBLE }}"], ["t", "gnostr"]]'
 
 
       # - name: 🌙 UTC second is ODD

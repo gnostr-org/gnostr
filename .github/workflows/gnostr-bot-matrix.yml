@@ -239,9 +239,6 @@ jobs:
             actor: ${{ github.actor }}
             runner_os: ${{ runner.os }}
             matrix: os=${{ matrix.os }}, toolchain=${{ matrix.toolchain }}
-            ## TODO nip34 equivalents for example pull_request etc
-            ## [![gnostr-bot-matrix](https://github.com/gnostr-org/gnostr/actions/workflows/gnostr-bot-matrix.yml/badge.svg?branch=1941%2F901103%2F790311%2F8d8b8d67%2F68309c53&event=pull_request)](https://github.com/gnostr-org/gnostr/actions/workflows/gnostr-bot-matrix.yml)
-
 
           # Formatting tags as a standard JSON array string for the action to parse
           tags: '[["weeble", "${{ env.WEEBLE }}"], ["blockheight", "${{ env.BLOCKHEIGHT }}"], ["wobble", "${{ env.WOBBLE }}"], ["t", "gnostr"]]'
