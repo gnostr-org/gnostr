@@ -25,7 +25,7 @@ readme = "README.md"
 keywords = ["nostr", "git"]
 categories = ["command-line-utilities", "development-tools"]
 license = "MIT"
-repository = "https://codeberg.org/DanConwayDev/ngit-cli"
+repository = "https://github.com/gnostr-org/gnostr.git"
 
 [features]
 default = []
