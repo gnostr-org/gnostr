@@ -207,8 +207,8 @@ jobs:
           # Using '|' allows you to write clean JSON without escaping every quote
           content: |
             {
-              "name": "gnostr",
-              "display_name": "gnostr",
+              "name": "gnostr-${{ env.WEEBLE }}/${{ env.BLOCKHEIGHT }}/${{ env.WOBBLE }}",
+              "display_name": "gnostr-${{ env.WEEBLE }}/${{ env.BLOCKHEIGHT }}/${{ env.WOBBLE }}",
               "about": "a git+nostr workflow utility",
               "picture": "https://avatars.githubusercontent.com/u/135379339?s=400&v=4",
               "website": "https://github.com/gnostr-org/gnostr",
