@@ -181,6 +181,6 @@ version = "0.23"
 [dev-dependencies.serial_test]
 version = "3.2.0"
 
-[profile.release]
-lto = true
-strip = "symbols"
+## [profile.release]
+## lto = true
+## strip = "symbols"
