@@ -30,7 +30,7 @@ runs:
           fi
 
           if ! command -v gnostr >/dev/null 2>&1; then
-            echo "Neither '$modern_cmd' nor 'gnostr' is available." >&2
+            echo "Neither '$modern_cmd' nor 'gnostr' is available. Install gnostr and ensure it is in PATH." >&2
             return 1
           fi
 
