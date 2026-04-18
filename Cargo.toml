@@ -60,6 +60,7 @@ exclude = [
   "proxy",
   "xcode",
   "xq",
+  "GEMINI.md",
 ]
 
 [workspace.dependencies]
