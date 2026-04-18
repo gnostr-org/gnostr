@@ -237,6 +237,9 @@ jobs:
         uses: ./.github/actions/cargo-binstall-gnostr
         if: runner.os != 'windows'
 
+      - name: gnostr-weeble/blockheight/blockhash/wobble
+        uses: ./.github/actions/gnostr-weeble-wobble
+
       - name: brew install cargo-llvm-cov cargo-llvm-lines
         run: |
           BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
@@ -348,7 +351,7 @@ jobs:
           gnostr query \
           -i $(gnostr --nsec $(gnostr --hash "") \
           custom-event \
-          --kind $(gnostr-weeble || gnostr --weeble) \
+          --kind "$WEEBLE" \
           --hex \
           -c "query command test" \
           -t "gnostr|gnostr","gnostr-query|gnostr-query") \
