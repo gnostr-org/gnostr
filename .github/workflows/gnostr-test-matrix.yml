@@ -348,7 +348,7 @@ jobs:
           gnostr query \
           -i $(gnostr --nsec $(gnostr --hash "") \
           custom-event \
-          --kind $(gnostr --weeble) \
+          --kind $(gnostr-weeble) \
           --hex \
           -c "query command test" \
           -t "gnostr|gnostr","gnostr-query|gnostr-query") \
