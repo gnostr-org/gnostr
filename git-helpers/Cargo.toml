@@ -4,7 +4,7 @@ version = "1878.945541.745565"
 edition = "2021"
 description = "git-remote helpers for Blossom, Nostr NIP-34, IPFS, PKARR, and Tor"
 license = "MIT"
-repository = "https://github.com/MonumentalSystems/blossom-rs"
+repository = "https://github.com/gnostr-org/gnostr.git"
 keywords = ["git", "nostr", "blossom", "ipfs", "remote-helper"]
 categories = ["development-tools", "command-line-utilities"]
 
