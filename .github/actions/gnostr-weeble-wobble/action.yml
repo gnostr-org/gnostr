@@ -29,12 +29,21 @@ runs:
             return 0
           fi
 
+          if ! command -v gnostr >/dev/null 2>&1; then
+            echo "Neither '$modern_cmd' nor 'gnostr' is available." >&2
+            return 1
+          fi
+
           gnostr "$legacy_arg"
         }
 
         weeble="$(get_value gnostr-weeble --weeble | tr -d '\r\n')"
         blockheight="$(get_value gnostr-blockheight --blockheight | tr -d '\r\n')"
         wobble="$(get_value gnostr-wobble --wobble | tr -d '\r\n')"
+
+        [ -n "$weeble" ] || { echo "Resolved weeble value is empty." >&2; exit 1; }
+        [ -n "$blockheight" ] || { echo "Resolved blockheight value is empty." >&2; exit 1; }
+        [ -n "$wobble" ] || { echo "Resolved wobble value is empty." >&2; exit 1; }
 
         {
           echo "weeble=$weeble"
