@@ -1,1 +1,0 @@
-/Users/git/.gemini/GEMINI.md
