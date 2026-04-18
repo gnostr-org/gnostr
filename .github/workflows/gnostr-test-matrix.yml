@@ -278,14 +278,14 @@ jobs:
               "lud16": "gnostr@getalby.com"
             }
           # Formatting tags as a standard JSON array string for the action to parse
-          tags: '[["p", "p-tag"], ["t", "nostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
+          tags: '[["p", "p-tag"], ["t", "gnostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
 
       - name: Create custom-event kind 1
         uses: ./.github/actions/gnostr-custom-event
         with:
           kind: 1
           content: |
-            gnostr CI run event
+            #gnostr CI run event
             run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             repository: ${{ github.repository }}
             repository_owner: ${{ github.repository_owner }}
