@@ -362,7 +362,7 @@ jobs:
           gnostr query \
           -i $(gnostr --nsec $(gnostr --hash "") \
           custom-event \
-          --kind "$WEEBLE" \
+          --kind "${{ env.WEEBLE }}" \
           --hex \
           -c "query command test" \
           -t "gnostr|gnostr","gnostr-query|gnostr-query") \
