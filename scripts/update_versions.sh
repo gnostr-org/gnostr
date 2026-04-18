@@ -159,16 +159,18 @@ PUBLISH_CRATES=(
     relay
 )
 
-git add */Cargo.toml
-git add */*/Cargo.toml
-git add */*/*/Cargo.toml
+manifest_paths=()
+while IFS= read -r -d '' manifest_path; do
+    manifest_paths+=("$manifest_path")
+done < <(
+    find . -type f -name "Cargo.toml" \
+        ! -path "./target/*" \
+        ! -path "*/target/*" \
+        ! -path "*/vendor/*" \
+        -print0 | sort -z
+)
 
-git add Cargo.toml
-git add crawler/Cargo.toml
-git add git-helpers/Cargo.toml
-git add ngit/Cargo.toml
-git add src/lib/test_utils/Cargo.toml
-git add tui/Cargo.toml
+git add -- "${manifest_paths[@]}"
 
 
 #TAG=$(gnostr git tag create)
