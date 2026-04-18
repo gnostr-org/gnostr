@@ -195,10 +195,10 @@ jobs:
       ## TODO create an action gnostr-wweble-wobble
       - name: gnostr-weeble/blockheight/blockhash/wobble
         run: |
-          echo "WEEBLE=$(gnostr-weeble ||  gnostr --weeble)" >> $GITHUB_PATH
-          echo "WOBBLE=$(gnostr-wobble ||  gnostr --wobble)" >> $GITHUB_PATH
-          echo "BLOCKHEIGHT=$(gnostr-blockheight ||  gnostr --blockheight)" >> $GITHUB_PATH
-          echo "BLOCKHEIGHT=$(gnostr-blockhash ||  gnostr --blockhash)" >> $GITHUB_PATH
+          echo "WEEBLE=$(gnostr-weeble ||  gnostr --weeble)" >> $GITHUB_ENV
+          echo "WOBBLE=$(gnostr-wobble ||  gnostr --wobble)" >> $GITHUB_ENV
+          echo "BLOCKHEIGHT=$(gnostr-blockheight ||  gnostr --blockheight)" >> $GITHUB_ENV
+          echo "BLOCKHEIGHT=$(gnostr-blockhash ||  gnostr --blockhash)" >> $GITHUB_ENV
 
       - name: create set-metadata kind 0
         uses: ./.github/actions/gnostr-custom-event
@@ -223,7 +223,7 @@ jobs:
         with:
           kind: 1
           content: |
-            gnostr-$WEEBLE/$BLOCKHEIGHT/$WOBBLE
+            gnostr-${{ env.WEEBLE }}/${{ env.BLOCKHEIGHT }}/${{ env.WOBBLE }}
             run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             repository: ${{ github.repository }}
             repository_owner: ${{ github.repository_owner }}
