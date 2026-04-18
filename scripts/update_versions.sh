@@ -26,7 +26,7 @@ manifest_version() {
 
 sync_root_package_to_workspace() {
     perl -0pi -e '
-        s/(\[package\]\n(?:[^\[]*\n)*?)version\s*=\s*"[^"]+"/${1}version.workspace = true/s
+        s/(\[package\]\n(?:[^\[]*\n)*?)version\s*=\s*"[^"]+"/$1 . "version.workspace = true"/se
     ' Cargo.toml
 }
 
@@ -40,7 +40,7 @@ sync_package_version() {
 
     perl -0pi -e '
         my $v = $ENV{SYNC_VERSION};
-        s/(\[package\]\n(?:[^\[]*\n)*?)version\s*=\s*"[^"]+"/${1}version = "$v"/se
+        s/(\[package\]\n(?:[^\[]*\n)*?)version\s*=\s*"[^"]+"/$1 . qq(version = "$v")/se
     ' "$manifest"
 }
 

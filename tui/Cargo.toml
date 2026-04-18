@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-blossom-tui"
-version = "0.1.0"
+version = "1878.945541.745565"
 edition = "2024"
 
 [lib]
@@ -31,6 +31,6 @@ futures-util = { version = "0.3", default-features = false, features = [
 arboard = "3"
 open = "5"
 blossom-rs = "0.5.6"
-filetreelist = { package = "gnostr-filetreelist", version = " 1893.935010.246953", path = "../filetreelist" }
+filetreelist = { package = "gnostr-filetreelist", version = "1878.945541.745565", path = "../filetreelist" }
 crossbeam-channel = "0.5"
-asyncgit = { package = "gnostr-asyncgit", version = "1893.935010.246953", path = "../asyncgit" }
+asyncgit = { package = "gnostr-asyncgit", version = "1878.945541.745565", path = "../asyncgit" }

@@ -5095,7 +5095,7 @@ dependencies = [
 
 [[package]]
 name = "gh-rs"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "anstream",
  "async-std",
@@ -5888,7 +5888,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -6146,7 +6146,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "aes",
  "anyhow",
@@ -6290,7 +6290,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-blossom-tui"
-version = "0.1.0"
+version = "1878.945541.745565"
 dependencies = [
  "arboard",
  "bech32 0.11.1",
@@ -6314,7 +6314,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6341,7 +6341,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -6349,7 +6349,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git-helpers"
-version = "0.1.0"
+version = "1878.945541.745565"
 dependencies = [
  "anyhow",
  "bech32 0.11.1",
@@ -6370,7 +6370,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "git2",
  "gnostr-git2-testing",
@@ -6383,7 +6383,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "env_logger 0.11.8",
  "git2",
@@ -6393,7 +6393,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "anyhow",
  "cc",
@@ -6412,11 +6412,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 
 [[package]]
 name = "gnostr-legit"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "argparse",
  "chrono",
@@ -6433,7 +6433,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-ngit"
-version = "0.0.1"
+version = "1878.945541.745565"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6476,7 +6476,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "actix",
  "actix-cors",
@@ -6510,14 +6510,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "log",
 ]
 
 [[package]]
 name = "gnostr_qr"
-version = "1893.935010.246953"
+version = "1878.945541.745565"
 dependencies = [
  "hex",
  "image",
