@@ -81,7 +81,18 @@ jobs:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
 
-      - uses: cargo-bins/cargo-binstall@main
+      - name: Install cargo-binstall
+        id: binstall
+        continue-on-error: true
+        uses: cargo-bins/cargo-binstall@v1.18.1
+
+      - name: Fallback install cargo-binstall (from crates.io)
+        if: steps.binstall.outcome != 'success'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cargo install cargo-binstall --locked
+
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
@@ -267,14 +278,14 @@ jobs:
               "lud16": "gnostr@getalby.com"
             }
           # Formatting tags as a standard JSON array string for the action to parse
-          tags: '[["p", "p-tag"], ["t", "nostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
+          tags: '[["p", "p-tag"], ["t", "gnostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
 
       - name: Create custom-event kind 1
         uses: ./.github/actions/gnostr-custom-event
         with:
           kind: 1
           content: |
-            gnostr CI run event
+            #gnostr CI run event
             run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             repository: ${{ github.repository }}
             repository_owner: ${{ github.repository_owner }}
@@ -288,6 +299,10 @@ jobs:
             actor: ${{ github.actor }}
             runner_os: ${{ runner.os }}
             matrix: os=${{ matrix.os }}, toolchain=${{ matrix.toolchain }}
+
+          # Formatting tags as a standard JSON array string for the action to parse
+          tags: '[["weeble", "${{ env.WEEBLE }}"], ["blockheight", "${{ env.BLOCKHEIGHT }}"], ["wobble", "${{ env.WOBBLE }}"], ["t", "gnostr"]]'
+
 
       # - name: 🌙 UTC second is ODD
       #   if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
