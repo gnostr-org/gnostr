@@ -80,7 +80,7 @@ base64 = "0.22.1"
 bech32 = "0.11"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
-blossom_tui = { package = "gnostr-blossom-tui", version = "1878.945541.745565", path = "tui" }
+blossom_tui = { package = "gnostr-blossom-tui", version = "1878.945649.607219", path = "tui" }
 bytes = "1.11.0"
 #urlencoding = "2.1.3"
 cbc = { version = "0.1", features = ["std"] }
@@ -486,7 +486,7 @@ globset = "0.4"
 ##gitui
 gnostr-asyncgit = { workspace = true }
 gnostr-extensions = { workspace = true }
-gnostr-git-helpers = { version = "1878.945541.745565", path = "git-helpers" }
+gnostr-git-helpers = { version = "1878.945649.607219", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }

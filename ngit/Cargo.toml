@@ -11,7 +11,7 @@
 [package]
 edition = "2021"
 name = "gnostr-ngit"
-version = "1878.945541.745565"
+version = "1878.945649.607219"
 authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
 build = false
 autolib = false
