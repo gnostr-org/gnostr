@@ -1,0 +1,44 @@
+name: gnostr Weeble Wobble
+description: Resolve gnostr weeble, wobble, blockheight, and blockhash values.
+
+outputs:
+  weeble:
+    description: Resolved gnostr weeble value
+    value: ${{ steps.resolve.outputs.weeble }}
+  wobble:
+    description: Resolved gnostr wobble value
+    value: ${{ steps.resolve.outputs.wobble }}
+  blockheight:
+    description: Resolved gnostr blockheight value
+    value: ${{ steps.resolve.outputs.blockheight }}
+  blockhash:
+    description: Resolved gnostr blockhash value
+    value: ${{ steps.resolve.outputs.blockhash }}
+
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      name: Resolve gnostr values
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        weeble="$(gnostr-weeble 2>/dev/null || gnostr --weeble)"
+        wobble="$(gnostr-wobble 2>/dev/null || gnostr --wobble)"
+        blockheight="$(gnostr-blockheight 2>/dev/null || gnostr --blockheight)"
+        blockhash="$(gnostr-blockhash 2>/dev/null || gnostr --blockhash)"
+
+        {
+          echo "weeble=$weeble"
+          echo "wobble=$wobble"
+          echo "blockheight=$blockheight"
+          echo "blockhash=$blockhash"
+        } >> "$GITHUB_OUTPUT"
+
+        {
+          echo "WEEBLE=$weeble"
+          echo "WOBBLE=$wobble"
+          echo "BLOCKHEIGHT=$blockheight"
+          echo "BLOCKHASH=$blockhash"
+        } >> "$GITHUB_ENV"

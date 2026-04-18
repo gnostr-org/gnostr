@@ -192,13 +192,8 @@ jobs:
           $BREW_CMD install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os == 'macOS'
 
-      ## TODO create an action gnostr-wweble-wobble
       - name: gnostr-weeble/blockheight/blockhash/wobble
-        run: |
-          echo "WEEBLE=$(gnostr-weeble ||  gnostr --weeble)" >> $GITHUB_ENV
-          echo "WOBBLE=$(gnostr-wobble ||  gnostr --wobble)" >> $GITHUB_ENV
-          echo "BLOCKHEIGHT=$(gnostr-blockheight ||  gnostr --blockheight)" >> $GITHUB_ENV
-          echo "BLOCKHASH=$(gnostr-blockhash ||  gnostr --blockhash)" >> $GITHUB_ENV
+        uses: ./.github/actions/gnostr-weeble-wobble
 
       - name: create set-metadata kind 0
         uses: ./.github/actions/gnostr-custom-event
