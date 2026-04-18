@@ -546,7 +546,7 @@ log = "0.4.24"
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
-ngit = { package = "gnostr-ngit", version = "1878.945541.745565", path = "ngit", features = [
+ngit = { package = "gnostr-ngit", version = "1878.945649.607219", path = "ngit", features = [
   "vendored-openssl",
 ] }
 nostr = { workspace = true }
