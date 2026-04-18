@@ -107,7 +107,7 @@ filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version
 flate2 = "1.1.8"
 futures = { version = "0.3.31" }
 futures-util = "0.3.31"
-git2 = { version = "0.20.4" }
+git2 = { version = "^0.20" }
 #gh = { path = "gh", package = "gh-rs" }
 git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "1878.945649.607219" }
 git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = "1878.945649.607219" }
