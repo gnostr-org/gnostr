@@ -158,6 +158,14 @@ PUBLISH_CRATES=(
     relay
 )
 
+git add */Cargo.toml
+git add */*/Cargo.toml
+git add */*/*/Cargo.toml
+
+TAG=$(gnostr git tag create)
+git reset --soft HEAD~1
+gnostr legit -m $TAG
+
 for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
 done
