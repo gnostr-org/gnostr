@@ -75,9 +75,6 @@ async fn main() {
     warn!("This is a WARN message");
     error!("This is an ERROR message (Highest level)");
 
-    let _ = pretty_env_logger::try_init();
-
-
     // Keep track of all connected users, key is usize, value
     // is a websocket sender.
     let users = Users::default();
