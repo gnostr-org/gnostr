@@ -782,7 +782,6 @@ quote = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true, features = ["blocking"] }
 rsass = "0.28.10"
-sccache = "0.13.0"
 serde = { workspace = true, features = ["derive"] }
 sha2 = { workspace = true }
 syn = { workspace = true }

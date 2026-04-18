@@ -546,7 +546,7 @@ mod tests {
 
         // Capture the screenshot
         let screenshot_path_result =
-            screenshot::make_screenshot("test_run_tui_and_sleep_screenshot");
+            screenshot::make_screenshot_cross_platform("test_run_tui_and_sleep_screenshot");
 
         // Terminate the child process gracefully
         child
