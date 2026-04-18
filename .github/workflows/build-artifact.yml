@@ -254,6 +254,9 @@ jobs:
         fi
         echo $GITHUB_ENV && printenv
 
+    - name: Generate Cargo.lock
+      run: cargo generate-lockfile
+
     - name: Build release binary
       shell: bash
       env:
