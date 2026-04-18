@@ -83,7 +83,7 @@ jobs:
       - name: Install cargo-binstall
         id: binstall
         continue-on-error: true
-        uses: cargo-bins/cargo-binstall@v1.10.24
+        uses: cargo-bins/cargo-binstall@v1.18.1
 
       - name: Fallback install cargo-binstall (from crates.io)
         if: steps.binstall.outcome != 'success'
