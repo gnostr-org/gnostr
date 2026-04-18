@@ -24,7 +24,8 @@ pub struct ServerConfig {
     pub port: u16,
     pub users: HashMap<String, ServerUser>,
     pub welcome_message: Option<String>,
-    pub exta: Option<Table>,
+    #[serde(alias = "exta")]
+    pub extra: Option<Table>,
 }
 
 // The default for ServerUser is used for guest access.
