@@ -267,7 +267,6 @@ SORT_CRATES=(
     qr
     relay
     relay/extensions
-    src/lib/test_utils
 )
 
 for crate in "${SORT_CRATES[@]}"; do
