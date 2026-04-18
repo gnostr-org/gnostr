@@ -81,7 +81,18 @@ jobs:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
 
-      - uses: cargo-bins/cargo-binstall@main
+      - name: Install cargo-binstall
+        id: binstall
+        continue-on-error: true
+        uses: cargo-bins/cargo-binstall@v1.10.24
+
+      - name: Fallback install cargo-binstall (from crates.io)
+        if: steps.binstall.outcome != 'success'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cargo install cargo-binstall --locked
+
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
