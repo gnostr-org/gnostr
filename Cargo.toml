@@ -60,7 +60,6 @@ exclude = [
   "proxy",
   "xcode",
   "xq",
-  "src/lib/test_utils",
 ]
 
 [workspace.dependencies]
