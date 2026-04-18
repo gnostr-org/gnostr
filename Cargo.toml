@@ -23,7 +23,6 @@ members = [
   # Root crate
   "asyncgit",
   "filetreelist",
-  "gh",
   "git2-hooks",
   "git2-testing",
   "grammar",
