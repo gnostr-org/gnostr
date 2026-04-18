@@ -223,7 +223,7 @@ jobs:
         with:
           kind: 1
           content: |
-            gnostr-${{ env.WEEBLE }}/${{ env.BLOCKHEIGHT }}/${{ env.WOBBLE }}
+            #gnostr-${{ env.WEEBLE }}/${{ env.BLOCKHEIGHT }}/${{ env.WOBBLE }}
             run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             repository: ${{ github.repository }}
             repository_owner: ${{ github.repository_owner }}
@@ -237,8 +237,12 @@ jobs:
             actor: ${{ github.actor }}
             runner_os: ${{ runner.os }}
             matrix: os=${{ matrix.os }}, toolchain=${{ matrix.toolchain }}
+            ## TODO nip34 equivalents for example pull_request etc
+            ## [![gnostr-bot-matrix](https://github.com/gnostr-org/gnostr/actions/workflows/gnostr-bot-matrix.yml/badge.svg?branch=1941%2F901103%2F790311%2F8d8b8d67%2F68309c53&event=pull_request)](https://github.com/gnostr-org/gnostr/actions/workflows/gnostr-bot-matrix.yml)
+
+
           # Formatting tags as a standard JSON array string for the action to parse
-          tags: '[["weeble", "$WEEBLE"], ["blockheight", "$BLOCKHEIGHT"], ["wobble", "$WOBBLE"]'
+          tags: '[["weeble", "${{ env.WEEBLE }}"], ["blockheight", "${{ env.BLOCKHEIGHT }}"], ["wobble", "${{ env.WOBBLE }}"], ["t", "gnostr"]]'
 
       # - name: 🌙 UTC second is ODD
       #   if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
