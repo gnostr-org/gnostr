@@ -132,13 +132,15 @@ SORT_CRATES=(
     grammar
     filetreelist
     scopetime
+    asyncgit
     tui
     crawler
+    git-helpers
     invalidstring
-    asyncgit
     legit
     qr
     relay
+    relay/extensions
 )
 
 for crate in "${SORT_CRATES[@]}"; do
@@ -154,9 +156,11 @@ PUBLISH_CRATES=(
     asyncgit
     tui
     crawler
+    git-helpers
     legit
     qr
     relay
+    relay/extensions
 )
 
 manifest_paths=()
