@@ -52,7 +52,7 @@ sync_dependency_version() {
     DEP_NAME="$dep_name" DEP_VERSION="$version" perl -0pi -e '
         my $dep = quotemeta($ENV{DEP_NAME});
         my $ver = $ENV{DEP_VERSION};
-        s/^($dep\s*=\s*\{[^}]*version\s*=\s*")[^"]*(".*path\s*=\s*"[^"]+"[^}]*\})/${1}${ver}${2}/mg;
+        s/^(\Q$ENV{DEP_NAME}\E\s*=\s*\{[^}\n]*\bversion\s*=\s*")[^"]*(".*)$/${1}${ver}${2}/mg;
     ' "$manifest"
 }
 
@@ -104,8 +104,11 @@ while read -r manifest; do
         echo "    Synchronized $dep_name in $manifest to $dep_version"
     done < <(
         perl -ne '
-            while (/^([A-Za-z0-9_-]+)\s*=\s*\{[^}]*version\s*=\s*"[^"]*"[^}]*path\s*=\s*"([^"]+)"[^}]*\}/mg) {
-                print "$1\t$2\n";
+            if (/^([A-Za-z0-9_-]+)\s*=\s*\{(.*)\}\s*$/) {
+                my ($name, $body) = ($1, $2);
+                if ($body =~ /\bpath\s*=\s*"([^"]+)"/) {
+                    print "$name\t$1\n";
+                }
             }
         ' "$manifest"
     )
@@ -148,8 +151,8 @@ PUBLISH_CRATES=(
     grammar
     filetreelist
     scopetime
-    tui
     asyncgit
+    tui
     crawler
     legit
     qr
