@@ -308,6 +308,10 @@ jobs:
         run: brew install cargo-llvm-cov cargo-llvm-lines || true
         if: runner.os != 'windows'
 
+      - name: Resolve weeble-wobble values
+        id: gnostr_weeble_wobble
+        uses: ./.github/actions/gnostr-weeble-wobble
+
       #- name: powershell install gnostr
       #  shell: powershell
       #  run: powershell -ExecutionPolicy Bypass -c "irm https://github.com/gnostr-org/gnostr/releases/download/v1905.926180.332424/gnostr-installer.ps1 | iex"
@@ -329,7 +333,7 @@ jobs:
           --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
           set-metadata \
           -n "#gnostr" \
-          -a "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" \
+          -a "${{ steps.gnostr_weeble_wobble.outputs.weeble }}/${{ steps.gnostr_weeble_wobble.outputs.blockheight }}/${{ steps.gnostr_weeble_wobble.outputs.wobble }}" \
           -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
           -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" \
           -e "$GITHUB_REPOSITORY" \
@@ -344,9 +348,9 @@ jobs:
           -e "$(date +%s)" \
           -e "$RUNNER_ENVIRONMENT" \
           -e "$RUNNER_OS" \
-          -e "$(gnostr --weeble)" \
-          -e "$(gnostr --blockheight)" \
-          -e "$(gnostr --wobble)" || true
+          -e "${{ steps.gnostr_weeble_wobble.outputs.weeble }}" \
+          -e "${{ steps.gnostr_weeble_wobble.outputs.blockheight }}" \
+          -e "${{ steps.gnostr_weeble_wobble.outputs.wobble }}" || true
         #if: matrix.os == 'macos-latest'
 
       - name: Create custom-event kind 1
@@ -360,7 +364,7 @@ jobs:
             --nsec "$(gnostr --hash '')" \
             custom-event \
             -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
+            -c "$GITHUB_REPOSITORY_OWNER ${{ steps.gnostr_weeble_wobble.outputs.weeble }}/${{ steps.gnostr_weeble_wobble.outputs.blockheight }} #$GITHUB_REPOSITORY_ID" \
             -t "$GITHUB_REPOSITORY" \
             -t "$GITHUB_WORKFLOW" \
             -t "$GITHUB_WORKFLOW_SHA" \
@@ -373,14 +377,14 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.weeble }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.blockheight }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.wobble }}" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE;
-            gnostr query -i $EVENT -r ${{ env.DAMUS }};
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }};
             echo && echo "http://nostr.band/$NOTE"
         #if: matrix.os == 'macos-latest'
 
@@ -501,15 +505,15 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.weeble }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.blockheight }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.wobble }}" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query --ids $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on cancelled
@@ -536,15 +540,15 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.weeble }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.blockheight }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.wobble }}" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query --ids $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       - name: Execute script on success
@@ -571,16 +575,16 @@ jobs:
             -t "$(date +%s)" \
             -t "$RUNNER_ENVIRONMENT" \
             -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.weeble }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.blockheight }}" \
+            -t "${{ steps.gnostr_weeble_wobble.outputs.wobble }}" \
             --hex || true) && \
             export EVENT=$EVENT && \
             echo EVENT=$EVENT && \
             NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
+            gnostr query --ids $EVENT -r ${{ env.DAMUS }} && \
+            gnostr query --ids $EVENT -r ${{ env.NOS }} && \
             echo "http://nostr.band/$NOTE"
 
       ## NOTE: The cache restore steps (cache-cargo-restore, cache-target-restore) above are

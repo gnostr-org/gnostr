@@ -1,0 +1,43 @@
+name: gnostr-weeble-wobble
+description: Resolve weeble, blockheight, and wobble values for workflows
+
+outputs:
+  weeble:
+    description: Current weeble value
+    value: ${{ steps.resolve.outputs.weeble }}
+  blockheight:
+    description: Current blockheight value
+    value: ${{ steps.resolve.outputs.blockheight }}
+  wobble:
+    description: Current wobble value
+    value: ${{ steps.resolve.outputs.wobble }}
+
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        get_value() {
+          local modern_cmd="$1"
+          local legacy_arg="$2"
+
+          if command -v "$modern_cmd" >/dev/null 2>&1; then
+            "$modern_cmd"
+            return 0
+          fi
+
+          gnostr "$legacy_arg"
+        }
+
+        weeble="$(get_value gnostr-weeble --weeble | tr -d '\r\n')"
+        blockheight="$(get_value gnostr-blockheight --blockheight | tr -d '\r\n')"
+        wobble="$(get_value gnostr-wobble --wobble | tr -d '\r\n')"
+
+        {
+          echo "weeble=$weeble"
+          echo "blockheight=$blockheight"
+          echo "wobble=$wobble"
+        } >> "$GITHUB_OUTPUT"
