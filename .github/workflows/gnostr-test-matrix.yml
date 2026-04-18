@@ -164,8 +164,8 @@ jobs:
         run: |
           cargo search gnostr --limit 100
 
-      - name: Install gnostr via cargo-binstall
-        uses: ./.github/actions/cargo-binstall-gnostr
+      #- name: Install gnostr via cargo-binstall
+      #  uses: ./.github/actions/cargo-binstall-gnostr
 
       - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
         if: matrix.os == 'ubuntu-latest'
@@ -178,8 +178,6 @@ jobs:
       #  run: |
       #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
       #  if: runner.os == 'windows'
-
-
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -225,9 +223,9 @@ jobs:
           $BREW_CMD tap randymcmillan/homebrew-randymcmillan || true
         if: runner.os == 'macOS'
 
-      - name: Install gnostr via Homebrew
-        uses: ./.github/actions/brew-install-gnostr/
-        if: runner.os == 'macOS'
+      #- name: Install gnostr via Homebrew
+      #  uses: ./.github/actions/brew-install-gnostr/
+      #  if: runner.os == 'macOS'
 
       - name: Install gnostr (latest release)
         uses: ./.github/actions/get-latest
