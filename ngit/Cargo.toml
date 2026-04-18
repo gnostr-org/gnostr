@@ -26,10 +26,7 @@ keywords = ["nostr", "git"]
 categories = ["command-line-utilities", "development-tools"]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
-
-[features]
-default = []
-vendored-openssl = ["git2/vendored-openssl"]
+exclude = ["Cargo.toml.orig"]
 
 [lib]
 name = "ngit"
@@ -43,25 +40,9 @@ path = "src/bin/git_remote_nostr/main.rs"
 name = "ngit"
 path = "src/bin/ngit/main.rs"
 
-[[test]]
-name = "git_remote_nostr"
-path = "tests/git_remote_nostr/main.rs"
-
-[[test]]
-name = "ngit_init"
-path = "tests/ngit_init.rs"
-
-[[test]]
-name = "ngit_list"
-path = "tests/ngit_list.rs"
-
-[[test]]
-name = "ngit_login"
-path = "tests/ngit_login.rs"
-
-[[test]]
-name = "ngit_send"
-path = "tests/ngit_send.rs"
+[features]
+default = []
+vendored-openssl = ["git2/vendored-openssl"]
 
 [dependencies.anyhow]
 version = "1.0.98"
@@ -180,6 +161,26 @@ version = "0.23"
 
 [dev-dependencies.serial_test]
 version = "3.2.0"
+
+[[test]]
+name = "git_remote_nostr"
+path = "tests/git_remote_nostr/main.rs"
+
+[[test]]
+name = "ngit_init"
+path = "tests/ngit_init.rs"
+
+[[test]]
+name = "ngit_list"
+path = "tests/ngit_list.rs"
+
+[[test]]
+name = "ngit_login"
+path = "tests/ngit_login.rs"
+
+[[test]]
+name = "ngit_send"
+path = "tests/ngit_send.rs"
 
 ## [profile.release]
 ## lto = true

@@ -21,7 +21,7 @@ count = []
 [dependencies]
 actix = "0.13.5"
 actix-web = "4.9.0"                 ## part of gnostr tokio runtime conflict
-gnostr-relay = { workspace = true } #{ version = "1894.934224.276199", path = "..", features = [
+gnostr-relay = { workspace = true } #{ version = "1878.945649.607219", path = "..", features = [
 #"search",
 #] }
 governor = { version = "0.6.3", optional = true }
