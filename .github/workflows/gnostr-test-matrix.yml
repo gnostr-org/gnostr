@@ -359,8 +359,9 @@ jobs:
       - name: 🚀 gnostr query nested command test
         shell: bash
         run: |
+          gnostr query --help 
           gnostr query \
-          -i $(gnostr --nsec $(gnostr --hash "") \
+          -ids $(gnostr --nsec $(gnostr --hash "") \
           custom-event \
           --kind "${{ env.WEEBLE }}" \
           --hex \
