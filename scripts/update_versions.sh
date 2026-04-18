@@ -50,9 +50,8 @@ sync_dependency_version() {
     local version="$3"
 
     DEP_NAME="$dep_name" DEP_VERSION="$version" perl -0pi -e '
-        my $dep = quotemeta($ENV{DEP_NAME});
         my $ver = $ENV{DEP_VERSION};
-        s/^(\Q$ENV{DEP_NAME}\E\s*=\s*\{[^}\n]*\bversion\s*=\s*")[^"]*(".*)$/${1}${ver}${2}/mg;
+        s/^(\Q$ENV{DEP_NAME}\E\s*=\s*\{.*?\bversion\s*=\s*")[^"]*(".*?\})/${1}${ver}${2}/msg;
     ' "$manifest"
 }
 
@@ -103,8 +102,8 @@ while read -r manifest; do
         sync_dependency_version "$manifest" "$dep_name" "$dep_version"
         echo "    Synchronized $dep_name in $manifest to $dep_version"
     done < <(
-        perl -ne '
-            if (/^([A-Za-z0-9_-]+)\s*=\s*\{(.*)\}\s*$/) {
+        perl -0ne '
+            while (/^([A-Za-z0-9_-]+)\s*=\s*\{(.*?)\}\s*$/msg) {
                 my ($name, $body) = ($1, $2);
                 if ($body =~ /\bpath\s*=\s*"([^"]+)"/) {
                     print "$name\t$1\n";
@@ -138,6 +137,7 @@ SORT_CRATES=(
     git-helpers
     invalidstring
     legit
+    ngit
     qr
     relay
     relay/extensions
@@ -158,6 +158,7 @@ PUBLISH_CRATES=(
     crawler
     git-helpers
     legit
+    ngit
     qr
     relay
     relay/extensions
