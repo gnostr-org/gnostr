@@ -5934,7 +5934,6 @@ dependencies = [
  "gnostr-filetreelist",
  "gnostr-git-helpers",
  "gnostr-git2-hooks",
- "gnostr-git2-testing",
  "gnostr-grammar",
  "gnostr-invalidstring",
  "gnostr-legit",
