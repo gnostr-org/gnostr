@@ -1,58 +1,52 @@
-name: gnostr Weeble Wobble
-description: Resolve gnostr weeble, wobble, blockheight, and blockhash values.
+name: gnostr-weeble-wobble
+description: Resolve weeble, blockheight, and wobble values for workflows
 
 outputs:
   weeble:
-    description: Resolved gnostr weeble value
+    description: Current weeble value
     value: ${{ steps.resolve.outputs.weeble }}
-  wobble:
-    description: Resolved gnostr wobble value
-    value: ${{ steps.resolve.outputs.wobble }}
   blockheight:
-    description: Resolved gnostr blockheight value
+    description: Current blockheight value
     value: ${{ steps.resolve.outputs.blockheight }}
-  blockhash:
-    description: Resolved gnostr blockhash value
-    value: ${{ steps.resolve.outputs.blockhash }}
+  wobble:
+    description: Current wobble value
+    value: ${{ steps.resolve.outputs.wobble }}
 
 runs:
   using: composite
   steps:
-    - id: check-gnostr
-      name: Check gnostr availability
-      shell: bash
-      run: |
-        if command -v gnostr >/dev/null 2>&1; then
-          echo "available=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "available=false" >> "$GITHUB_OUTPUT"
-        fi
-
-    - name: Install gnostr via cargo-binstall
-      if: steps.check-gnostr.outputs.available != 'true'
-      uses: ./.github/actions/cargo-binstall-gnostr
-
     - id: resolve
-      name: Resolve gnostr values
       shell: bash
       run: |
         set -euo pipefail
 
-        weeble="$(gnostr-weeble 2>/dev/null || gnostr --weeble)"
-        wobble="$(gnostr-wobble 2>/dev/null || gnostr --wobble)"
-        blockheight="$(gnostr-blockheight 2>/dev/null || gnostr --blockheight)"
-        blockhash="$(gnostr-blockhash 2>/dev/null || gnostr --blockhash)"
+        get_value() {
+          local modern_cmd="$1"
+          local legacy_arg="$2"
+
+          if command -v "$modern_cmd" >/dev/null 2>&1; then
+            "$modern_cmd"
+            return 0
+          fi
+
+          if ! command -v gnostr >/dev/null 2>&1; then
+            echo "Unable to resolve value: neither modern command '$modern_cmd' nor legacy 'gnostr' CLI is available. Install gnostr and ensure it is in PATH." >&2
+            return 1
+          fi
+
+          gnostr "$legacy_arg"
+        }
+
+        weeble="$(get_value gnostr-weeble --weeble | tr -d '\r\n')"
+        blockheight="$(get_value gnostr-blockheight --blockheight | tr -d '\r\n')"
+        wobble="$(get_value gnostr-wobble --wobble | tr -d '\r\n')"
+
+        [ -n "$weeble" ] || { echo "Resolved weeble value is empty." >&2; exit 1; }
+        [ -n "$blockheight" ] || { echo "Resolved blockheight value is empty." >&2; exit 1; }
+        [ -n "$wobble" ] || { echo "Resolved wobble value is empty." >&2; exit 1; }
 
         {
           echo "weeble=$weeble"
-          echo "wobble=$wobble"
           echo "blockheight=$blockheight"
-          echo "blockhash=$blockhash"
+          echo "wobble=$wobble"
         } >> "$GITHUB_OUTPUT"
-
-        {
-          echo "WEEBLE=$weeble"
-          echo "WOBBLE=$wobble"
-          echo "BLOCKHEIGHT=$blockheight"
-          echo "BLOCKHASH=$blockhash"
-        } >> "$GITHUB_ENV"
