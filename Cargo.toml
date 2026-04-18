@@ -16,6 +16,7 @@ keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 build = "build.rs"
 default-run = "gnostr"
+exclude = ["GEMINI.md"]
 
 [workspace]
 members = [
