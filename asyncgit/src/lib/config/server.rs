@@ -69,11 +69,13 @@ pub async fn load_server_config() -> anyhow::Result<ServerConfig> {
 
 impl ServerConfig {
     pub fn get_user(&self, key: &str) -> Option<(String, ServerUser)> {
-        for user in self.users.keys() {
-            let key_data = self.users[user].public_key.split(' ').nth(1).unwrap();
+        let key = key.trim();
 
-            if key == key_data && self.users[user].is_admin.unwrap_or(false) {
-                return Some((user.to_string(), self.users[user].clone()));
+        for (username, user) in &self.users {
+            if let Some(key_data) = user.public_key.trim().split_whitespace().nth(1) {
+                if key == key_data {
+                    return Some((username.to_string(), user.clone()));
+                }
             }
         }
 
