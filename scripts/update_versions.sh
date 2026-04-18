@@ -24,6 +24,28 @@ manifest_version() {
     grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}'
 }
 
+resolve_dep_manifest() {
+    local manifest="$1"
+    local dep_path="$2"
+    local manifest_dir
+    local candidate
+
+    manifest_dir="$(cd "$(dirname "$manifest")" && pwd)"
+    candidate="$manifest_dir/$dep_path/Cargo.toml"
+    if [ -f "$candidate" ]; then
+        printf '%s\n' "$candidate"
+        return 0
+    fi
+
+    candidate="$(pwd)/$dep_path/Cargo.toml"
+    if [ -f "$candidate" ]; then
+        printf '%s\n' "$candidate"
+        return 0
+    fi
+
+    return 1
+}
+
 sync_root_package_to_workspace() {
     perl -0pi -e '
         s/(\[package\]\n(?:[^\[]*\n)*?)version\s*=\s*"[^"]+"/$1 . "version.workspace = true"/se
@@ -87,9 +109,8 @@ while read -r manifest; do
     while IFS=$'\t' read -r dep_name dep_path; do
         [ -z "$dep_name" ] && continue
 
-        dep_manifest="$(cd "$(dirname "$manifest")" && cd "$dep_path" && pwd)/Cargo.toml"
-        if [ ! -f "$dep_manifest" ]; then
-            echo "    Warning: Dependency Cargo.toml not found at $dep_manifest for $dep_name."
+        if ! dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
+            echo "    Warning: Dependency Cargo.toml not found for $dep_name (path: $dep_path)."
             continue
         fi
 
@@ -105,7 +126,7 @@ while read -r manifest; do
         perl -0ne '
             while (/^([A-Za-z0-9_-]+)\s*=\s*\{(.*?)\}\s*$/msg) {
                 my ($name, $body) = ($1, $2);
-                if ($body =~ /\bpath\s*=\s*"([^"]+)"/) {
+                if ($body =~ /\bpath\s*=\s*"([^"]+)"/ && $body =~ /\bversion\s*=\s*"[^"]+"/) {
                     print "$name\t$1\n";
                 }
             }
@@ -141,6 +162,7 @@ SORT_CRATES=(
     qr
     relay
     relay/extensions
+    src/lib/test_utils
 )
 
 for crate in "${SORT_CRATES[@]}"; do
