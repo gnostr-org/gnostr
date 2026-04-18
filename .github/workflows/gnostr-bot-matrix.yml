@@ -261,7 +261,7 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path . --force --bin git-remote-nostr
+          cargo install --path ./ngit --force --bin git-remote-nostr
           git fetch --all
 
       - name: 🚀 git-helpers-test
