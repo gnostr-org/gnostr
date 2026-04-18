@@ -24,6 +24,61 @@ manifest_version() {
     grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}'
 }
 
+managed_manifests() {
+    cargo metadata --no-deps --format-version 1 | python3 -c '
+import json
+import os
+import sys
+
+root = os.path.abspath(".")
+data = json.load(sys.stdin)
+paths = sorted({
+    pkg["manifest_path"]
+    for pkg in data["packages"]
+    if os.path.abspath(pkg["manifest_path"]).startswith(root + os.sep) or os.path.abspath(pkg["manifest_path"]) == root
+})
+for path in paths:
+    print(path)
+'
+}
+
+versioned_path_dependencies() {
+    local manifest="$1"
+    perl -ne '
+        our ($name, $body, $capture);
+
+        sub emit_dep {
+            my ($dep_name, $dep_body) = @_;
+            return unless defined $dep_name && length $dep_name;
+            if ($dep_body =~ /\bpath\s*=\s*"([^"]+)"/ && $dep_body =~ /\bversion\s*=\s*"([^"]+)"/) {
+                print "$dep_name\t$1\n";
+            }
+        }
+
+        if (!$capture) {
+            if (/^([A-Za-z0-9_-]+)\s*=\s*\{/) {
+                $name = $1;
+                $body = $_;
+                if (/\}\s*$/) {
+                    emit_dep($name, $body);
+                    $name = undef;
+                    $body = q{};
+                } else {
+                    $capture = 1;
+                }
+            }
+        } else {
+            $body .= $_;
+            if (/\}\s*$/) {
+                emit_dep($name, $body);
+                $name = undef;
+                $body = q{};
+                $capture = 0;
+            }
+        }
+    ' "$manifest"
+}
+
 resolve_dep_manifest() {
     local manifest="$1"
     local dep_path="$2"
@@ -71,10 +126,69 @@ sync_dependency_version() {
     local dep_name="$2"
     local version="$3"
 
-    DEP_NAME="$dep_name" DEP_VERSION="$version" perl -0pi -e '
-        my $ver = $ENV{DEP_VERSION};
-        s/^(\Q$ENV{DEP_NAME}\E\s*=\s*\{.*?\bversion\s*=\s*")[^"]*(".*?\})/${1}${ver}${2}/msg;
-    ' "$manifest"
+    python3 - "$manifest" "$dep_name" "$version" <<'PY'
+import pathlib
+import re
+import sys
+
+manifest, dep_name, version = sys.argv[1:]
+path = pathlib.Path(manifest)
+text = path.read_text()
+pattern = re.compile(rf'(?m)^{re.escape(dep_name)}\s*=\s*\{{')
+
+def find_block_end(source: str, brace_start: int) -> int:
+    depth = 0
+    in_string = False
+    escape = False
+    for idx in range(brace_start, len(source)):
+        ch = source[idx]
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+            continue
+
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return idx + 1
+    return -1
+
+offset = 0
+changed = False
+while True:
+    match = pattern.search(text, offset)
+    if not match:
+        break
+
+    brace_start = text.find("{", match.start())
+    block_end = find_block_end(text, brace_start)
+    if block_end == -1:
+        break
+
+    block = text[match.start():block_end]
+    if "path" not in block or "version" not in block:
+        offset = block_end
+        continue
+
+    updated_block, count = re.subn(r'(\bversion\s*=\s*")[^"]*(")', rf'\1{version}\2', block, count=1)
+    if count:
+        text = text[:match.start()] + updated_block + text[block_end:]
+        offset = match.start() + len(updated_block)
+        changed = True
+    else:
+        offset = block_end
+
+if changed:
+    path.write_text(text)
+PY
 }
 
 ensure_taplo_installed
@@ -99,7 +213,7 @@ while read -r manifest; do
     if [ "$manifest" != "./Cargo.toml" ]; then
         SYNC_VERSION="$WORKSPACE_VERSION" sync_package_version "$manifest" "$WORKSPACE_VERSION"
     fi
-done < <(find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | sort)
+done < <(managed_manifests)
 
 echo "Package versions synchronized."
 
@@ -122,19 +236,10 @@ while read -r manifest; do
 
         sync_dependency_version "$manifest" "$dep_name" "$dep_version"
         echo "    Synchronized $dep_name in $manifest to $dep_version"
-    done < <(
-        perl -0ne '
-            while (/^([A-Za-z0-9_-]+)\s*=\s*\{(.*?)\}\s*$/msg) {
-                my ($name, $body) = ($1, $2);
-                if ($body =~ /\bpath\s*=\s*"([^"]+)"/ && $body =~ /\bversion\s*=\s*"[^"]+"/) {
-                    print "$name\t$1\n";
-                }
-            }
-        ' "$manifest"
-    )
+    done < <(versioned_path_dependencies "$manifest")
 
     taplo format "$manifest"
-done < <(find . -type f -name "Cargo.toml" ! -path "*/target/*" ! -path "*/vendor/*" | sort)
+done < <(managed_manifests)
 
 echo "Local path dependency versions synchronized."
 
@@ -190,11 +295,9 @@ manifest_paths=()
 while IFS= read -r -d '' manifest_path; do
     manifest_paths+=("$manifest_path")
 done < <(
-    find . -type f -name "Cargo.toml" \
-        ! -path "./target/*" \
-        ! -path "*/target/*" \
-        ! -path "*/vendor/*" \
-        -print0 | sort -z
+    while read -r manifest_path; do
+        printf '%s\0' "$manifest_path"
+    done < <(managed_manifests)
 )
 
 git add -- "${manifest_paths[@]}"
