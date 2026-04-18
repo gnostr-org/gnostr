@@ -2,10 +2,10 @@
 title build-artifact workflow
 
 start
-:Trigger workflow_call / workflow_dispatch;
+:Trigger workflow call / workflow dispatch;
 
 fork
-  :vcpkg-test (matrix across OS/arch);
+  :vcpkg-test (matrix tests across OS and architecture targets);
 fork again
   :setup (select target matrix);
   :build-artifacts (needs setup);
