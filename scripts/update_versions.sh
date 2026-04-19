@@ -50,8 +50,10 @@ versioned_path_dependencies() {
         sub emit_dep {
             my ($dep_name, $dep_body) = @_;
             return unless defined $dep_name && length $dep_name;
-            if ($dep_body =~ /\bpath\s*=\s*"([^"]+)"/ && $dep_body =~ /\bversion\s*=\s*"([^"]+)"/) {
-                print "$dep_name\t$1\n";
+            my ($path) = $dep_body =~ /\bpath\s*=\s*"([^"]+)"/;
+            my ($version) = $dep_body =~ /\bversion\s*=\s*"([^"]+)"/;
+            if (defined $path && defined $version) {
+                print "$dep_name\t$path\n";
             }
         }
 
