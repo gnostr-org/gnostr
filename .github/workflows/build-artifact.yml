@@ -191,8 +191,8 @@ jobs:
       shell: bash
       run: |
         # Remove ring-specific build output to prevent "File Already Exists" error
-        rm -rf *target/debug/build/ring-* || true
-        rm -rf *target/release/build/ring-* || true
+        rm -rf target/debug/build/ring-* || true
+        rm -rf target/release/build/ring-* || true
         echo "Purged stale ring build directories."
 
     - name: Install Linux system dependencies
