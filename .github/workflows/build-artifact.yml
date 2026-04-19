@@ -135,10 +135,10 @@ jobs:
       #    path: ~/.cargo/registry/cache
       #    key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo fetch
-      - uses: actions/cache@v4
-        with:
-          path: target
-          key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      #- uses: actions/cache@v4
+      #  with:
+      #    path: target
+      #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
