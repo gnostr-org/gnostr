@@ -309,6 +309,7 @@ zeroize = { version = "1.8.1" }
 [lib]
 name = "gnostr"
 path = "src/lib/mod.rs"
+doctest = false
 
 [[bin]]
 name = "gnostr-crawler-service"
