@@ -1,20 +1,19 @@
 // #![deny(warnings)]
 use std::collections::HashMap;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
 use clap::Parser;
 use futures_util::{SinkExt, StreamExt, TryFutureExt};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{mpsc, RwLock};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::Filter;
 use warp::ws::{Message, WebSocket};
+use warp::Filter;
 //use warp::filters::BoxedFilter; // for .boxed()
 
-
-use log::{trace, debug, info, warn, error};
+use log::{debug, error, info, trace, warn};
 use pretty_env_logger::env_logger::Env;
 
 use gnostr_asyncgit::web::websock_index_html::WEBSOCKET_INDEX_HTML;
@@ -39,17 +38,16 @@ type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
 use webbrowser;
 
 fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+    let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 
-let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
+    println!("Attempting to open: {}", url);
 
-println!("Attempting to open: {}", url);
+    match webbrowser::open(&url) {
+        Ok(_) => println!("Successfully opened the browser to {}", url),
+        Err(e) => eprintln!("Failed to open browser: {}", e),
+    }
 
-match webbrowser::open(&url) {
-    Ok(_) => println!("Successfully opened the browser to {}", url),
-    Err(e) => eprintln!("Failed to open browser: {}", e),
-}
-
-Ok(())
+    Ok(())
 }
 
 #[tokio::main]
@@ -88,25 +86,19 @@ async fn main() {
         .and(users)
         .map(|ws: warp::ws::Ws, users| {
             // This will call our function if the handshake succeeds.
-            ws.on_upgrade(move |socket|
-            //
-            user_connected(socket, users))
+            ws.on_upgrade(move |socket| user_connected(socket, users))
 
-
-
-
-
-           // end .map(|ws: warp::ws::Ws, users| {
-        });//
-           // end .map(|ws: warp::ws::Ws, users| {
+            // end .map(|ws: warp::ws::Ws, users| {
+        }); //
+            // end .map(|ws: warp::ws::Ws, users| {
 
     // GET / -> index html
     let index = warp::path::end().map(|| warp::reply::html(WEBSOCKET_INDEX_HTML));
     let js_files = warp::path("js").and(warp::fs::dir("src/js"));
     let routes = chat // First priority: /chat
-        .or(index)   // Second priority: /
+        .or(index) // Second priority: /
         .or(js_files) // Third priority: /js/ files
-        .boxed();    // Apply type erasure
+        .boxed(); // Apply type erasure
 
     let _ = open("127.0.0.1", args.port.try_into().unwrap());
     warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;

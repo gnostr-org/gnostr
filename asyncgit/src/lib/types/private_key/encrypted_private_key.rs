@@ -1,10 +1,10 @@
 use std::ops::Deref;
 
-use aes::cipher::{BlockDecryptMut, KeyIvInit, block_padding::Pkcs7};
+use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 use base64::Engine;
 use chacha20poly1305::{
-    XChaCha20Poly1305,
     aead::{Aead, AeadCore, KeyInit, Payload},
+    XChaCha20Poly1305,
 };
 use derive_more::Display;
 use hmac::Hmac;
@@ -169,7 +169,7 @@ impl PrivateKey {
         concatenation.extend(nonce); // 24 bytes of nonce
         concatenation.extend(associated_data); // 1 byte of key security
         concatenation.extend(ciphertext); // 48 bytes of ciphertext expected
-        // Total length is 91 = 1 + 1 + 16 + 24 + 1 + 48
+                                          // Total length is 91 = 1 + 1 + 16 + 24 + 1 + 48
 
         // bech32 encode
         Ok(EncryptedPrivateKey(bech32::encode::<bech32::Bech32>(

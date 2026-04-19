@@ -53,10 +53,7 @@ impl Bindings {
             .filter(move |keybind| keybind.menu == expected)
     }
 
-    pub fn arg_list<'a>(
-        &'a self,
-        pending: &'a PendingMenu,
-    ) -> impl Iterator<Item = &'a Binding> {
+    pub fn arg_list<'a>(&'a self, pending: &'a PendingMenu) -> impl Iterator<Item = &'a Binding> {
         let expected = if pending.menu == Menu::Help {
             Menu::Root
         } else {

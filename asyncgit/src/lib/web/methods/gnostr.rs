@@ -3,13 +3,13 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
 };
 
-use askama::Template;
-use tracing::debug;
-use crate::web::{GLOBAL_CSS_HASH, GNOSTR_SVG_HASH, CRATE_VERSION};
 use crate::web::layers::logger;
 use crate::web::methods::filters;
 #[allow(unused_imports)] //TODO If Error is truly not used, remove this line.
 use crate::web::methods::repo::Error;
+use crate::web::{CRATE_VERSION, GLOBAL_CSS_HASH, GNOSTR_SVG_HASH};
+use askama::Template;
+use tracing::debug;
 
 #[derive(Template)]
 #[template(path = "gnostr.html")]

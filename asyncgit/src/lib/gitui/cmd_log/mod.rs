@@ -72,10 +72,7 @@ pub fn command_args(cmd: &Command) -> Cow<'static, str> {
         .into()
 }
 
-pub fn format_log_entry<'a>(
-    config: &Config,
-    log: &Arc<RwLock<CmdLogEntry>>,
-) -> Vec<Line<'a>> {
+pub fn format_log_entry<'a>(config: &Config, log: &Arc<RwLock<CmdLogEntry>>) -> Vec<Line<'a>> {
     match &*log.read().unwrap() {
         CmdLogEntry::Cmd { args, out } => [Line::styled(
             format!("{}{}", if out.is_some() { "$ " } else { "Running: " }, args),
