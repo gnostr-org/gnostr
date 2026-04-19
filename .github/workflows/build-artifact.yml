@@ -127,6 +127,7 @@ jobs:
         with:
           arch: ${{ matrix.os.arch }}
           run-tests: 'false'
+      - run: which cargo || true
       #- uses: actions/cache@v4
       #  with:
       #    path: ~/.cargo/registry/index
@@ -137,12 +138,16 @@ jobs:
         with:
           path: ~/.cargo/bin
           key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: which cargo || true
       #- run: cargo generate-lockfile && git diff
+      - run: which cargo || true
       #- run: cargo fetch
+      - run: which cargo || true
       #- uses: actions/cache@v4
       #  with:
       #    path: target
       #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: which cargo || true
       - run: cargo clean
       #- run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
 
