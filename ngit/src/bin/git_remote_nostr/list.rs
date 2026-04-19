@@ -16,7 +16,8 @@ use ngit::{
 };
 use repo_ref::RepoRef;
 
-use crate::{fetch::make_commits_for_proposal, git::Repo};
+use crate::git::Repo;
+use super::fetch::make_commits_for_proposal;
 
 #[allow(clippy::too_many_lines)]
 pub async fn run_list(

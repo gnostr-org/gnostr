@@ -8,6 +8,7 @@ pub mod client;
 pub mod fetch;
 pub mod git;
 pub mod git_events;
+pub mod git_remote_nostr;
 pub mod list;
 pub mod login;
 pub mod mbox_parser;
