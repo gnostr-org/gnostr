@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-blossom-tui"
-version = "1878.945649.607219"
+version = "1878.945691.549040"
 edition = "2024"
 description = "Gitui-inspired terminal UI for Blossom blob storage"
 homepage = "https://github.com/gnostr-org/gnostr"

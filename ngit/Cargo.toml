@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-ngit"
-version = "1878.945649.607219"
+version = "1878.945691.549040"
 edition = "2021"
 description = "nostr plugin for git"
 authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
@@ -8,7 +8,6 @@ readme = "README.md"
 homepage = "https://gitworkshop.dev/dan@gitworkshop.dev/ngit"
 repository = "https://github.com/gnostr-org/gnostr.git"
 license = "MIT"
-exclude = ["Cargo.toml.orig"]
 keywords = ["nostr", "git"]
 categories = ["command-line-utilities", "development-tools"]
 
