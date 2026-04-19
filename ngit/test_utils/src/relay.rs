@@ -25,8 +25,25 @@ impl<'a> Relay<'a> {
         event_listener: Option<ListenerEventFunc<'a>>,
         req_listener: Option<ListenerReqFunc<'a>>,
     ) -> Self {
-        let event_hub = simple_websockets::launch(port)
-            .unwrap_or_else(|_| panic!("failed to listen on port {port}"));
+        let mut last_error = None;
+        let event_hub = (0..50)
+            .find_map(|_| match simple_websockets::launch(port) {
+                Ok(event_hub) => Some(event_hub),
+                Err(error) => {
+                    last_error = Some(error);
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    None
+                }
+            })
+            .unwrap_or_else(|| {
+                panic!(
+                    "failed to listen on port {port}: {}",
+                    last_error
+                        .as_ref()
+                        .map(|error| format!("{error:?}"))
+                        .unwrap_or_else(|| "unknown error".to_string())
+                )
+            });
         Self {
             port,
             events: vec![],
