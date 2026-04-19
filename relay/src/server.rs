@@ -5,7 +5,6 @@ use std::{collections::HashMap, sync::Arc};
 use tracing::info;
 
 /// Server
-#[derive(Debug)]
 pub struct Server {
     id: usize,
     writer: Addr<Writer>,
