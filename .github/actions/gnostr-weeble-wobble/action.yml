@@ -49,4 +49,4 @@ runs:
           echo "weeble=$weeble"
           echo "blockheight=$blockheight"
           echo "wobble=$wobble"
-        } >> "$GITHUB_OUTPUT"
+        } >> "$GITHUB_ENV"
