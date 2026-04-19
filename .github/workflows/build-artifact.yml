@@ -117,6 +117,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: sfackler/actions/rustup@master
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
       - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
         id: rust-version
       - run: which cargo || true
