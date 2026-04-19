@@ -311,6 +311,9 @@ name = "gnostr"
 path = "src/lib/mod.rs"
 doctest = false
 
+[patch.crates-io]
+asn1-rs = { path = "vendor/asn1-rs" }
+
 [[bin]]
 name = "gnostr-crawler-service"
 path = "src/bin/gnostr-crawler-service.rs"
