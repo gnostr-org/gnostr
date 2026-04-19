@@ -130,10 +130,10 @@ jobs:
       #    restore-keys: |
       #      index-${{ runner.os }}-
       - run: cargo generate-lockfile && git diff
-      #- uses: actions/cache@v4
-      #  with:
-      #    path: ~/.cargo/registry/cache
-      #    key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       #- run: cargo fetch
       #- uses: actions/cache@v4
       #  with:
@@ -171,6 +171,7 @@ jobs:
       with:
         path: |
           ~/.cargo/git
+          ~/.cargo/bin
           target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
