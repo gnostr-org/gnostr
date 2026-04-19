@@ -308,8 +308,11 @@ done < <(
 
 git add -- "${manifest_paths[@]}"
 
-if [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
-    gnostr legit -m "${VERSION_TAG:-v$WORKSPACE_VERSION}"
+if [ -n "${VERSION_TAG:-}" ]; then
+    git reset --soft HEAD~1
+    gnostr legit -m "$VERSION_TAG"
+elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
+    gnostr legit -m "v$WORKSPACE_VERSION"
 fi
 
 for crate in "${PUBLISH_CRATES[@]}"; do
