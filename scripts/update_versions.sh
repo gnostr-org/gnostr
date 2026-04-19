@@ -308,6 +308,7 @@ done < <(
 )
 
 git add -- "${manifest_paths[@]}"
+git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
 git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 
 if [ -n "${VERSION_TAG:-}" ]; then
@@ -331,8 +332,8 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
 done
 
-if [ -n "$(git status --porcelain -- Cargo.lock)" ]; then
-    git add Cargo.lock
+if [ -n "$(git status --porcelain -- Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null)" ]; then
+    git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
     git reset --soft HEAD~1
     if [ -n "${VERSION_TAG:-}" ]; then
         gnostr legit -m "$VERSION_TAG"
