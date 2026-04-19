@@ -149,7 +149,9 @@ jobs:
       #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: which cargo || true
       - run: cargo clean
-      #- run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - run: cargo generate-lockfile && git diff
+      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
     needs: setup
