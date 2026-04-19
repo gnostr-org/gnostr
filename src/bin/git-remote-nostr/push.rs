@@ -5,17 +5,17 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use client::{
     delete_event_from_local_cache, get_events_from_local_cache, get_state_from_cache, send_events,
     sign_event,
 };
 use console::Term;
-use git::{RepoActions, sha1_to_oid};
+use git::{sha1_to_oid, RepoActions};
+use git2::{Oid, Repository};
 use git_events::{
     generate_cover_letter_and_patch_events, generate_patch_event, get_commit_id_from_patch,
 };
-use git2::{Oid, Repository};
 use ngit::{
     accept_maintainership::accept_maintainership_with_defaults,
     client::{
@@ -23,7 +23,7 @@ use ngit::{
     },
     git::{self, nostr_url::NostrUrlDecoded},
     git_events::{
-        self, KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE, event_to_cover_letter, get_event_root,
+        self, event_to_cover_letter, get_event_root, KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE,
     },
     list::list_from_remotes,
     login::{existing::load_existing_login, user::UserRef},
@@ -41,11 +41,11 @@ use ngit::{
 use nostr::nips::{
     nip10::Marker,
     nip19::ToBech32,
-    nip22::{CommentTarget, extract_root},
+    nip22::{extract_root, CommentTarget},
 };
 use nostr_sdk::{
-    Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey, RelayUrl, Tag, TagStandard,
-    hashes::sha1::Hash as Sha1Hash,
+    hashes::sha1::Hash as Sha1Hash, Event, EventBuilder, EventId, Kind, NostrSigner, PublicKey,
+    RelayUrl, Tag, TagStandard,
 };
 use repo_ref::RepoRef;
 use repo_state::RepoState;

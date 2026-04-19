@@ -4,10 +4,10 @@ use anyhow::{Context, Result};
 use client::get_state_from_cache;
 use git::RepoActions;
 use ngit::{
-    client::{self, FetchReport, is_verbose},
+    client::{self, is_verbose, FetchReport},
     fetch::fetch_from_git_server,
     git::{self},
-    git_events::{KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE, event_to_cover_letter, tag_value},
+    git_events::{event_to_cover_letter, tag_value, KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE},
     list::list_from_remotes,
     login::get_curent_user,
     repo_ref::{self},
@@ -78,7 +78,11 @@ pub async fn run_list(
                     || git_server_oids.contains(v)
                     || git_repo.does_commit_exist(v).is_ok_and(|exists| exists)
             });
-            if all_resolvable { Some(rs.state) } else { None }
+            if all_resolvable {
+                Some(rs.state)
+            } else {
+                None
+            }
         } else {
             None
         }

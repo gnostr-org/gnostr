@@ -1,5 +1,5 @@
 use std::env;
-use std::process::{Command, exit};
+use std::process::{exit, Command};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Orchestrates unescaping in the established sequence
@@ -13,32 +13,53 @@ fn unescape_sequences(s: &str) -> String {
     result
 }
 
-fn unescape_backslashes(s: &str) -> String { s.replace("\\\\", "\\") }
-fn unescape_newlines(s: &str) -> String { s.replace("\\n", "\n") }
-fn unescape_tabs(s: &str) -> String { s.replace("\\t", "\t") }
-fn unescape_carriage_returns(s: &str) -> String { s.replace("\\r", "\n") }
-fn unescape_hex(s: &str) -> String { s.replace("\\x1b", "\x1b") }
+fn unescape_backslashes(s: &str) -> String {
+    s.replace("\\\\", "\\")
+}
+fn unescape_newlines(s: &str) -> String {
+    s.replace("\\n", "\n")
+}
+fn unescape_tabs(s: &str) -> String {
+    s.replace("\\t", "\t")
+}
+fn unescape_carriage_returns(s: &str) -> String {
+    s.replace("\\r", "\n")
+}
+fn unescape_hex(s: &str) -> String {
+    s.replace("\\x1b", "\x1b")
+}
 
 fn ensure_gnostr_exists() -> bool {
-    if Command::new("gnostr").arg("--version").output().is_ok() { return true; }
+    if Command::new("gnostr").arg("--version").output().is_ok() {
+        return true;
+    }
     println!("gnostr not found. Attempting: cargo install gnostr...");
     let install_status = Command::new("cargo").args(["install", "gnostr"]).status();
     matches!(install_status, Ok(s) if s.success())
 }
 
 fn get_gnostr_metadata(flag: &str) -> String {
-    if !ensure_gnostr_exists() { return fallback_metadata(flag); }
+    if !ensure_gnostr_exists() {
+        return fallback_metadata(flag);
+    }
     match Command::new("gnostr").arg(flag).output() {
         Ok(out) if out.status.success() => {
             let val = String::from_utf8_lossy(&out.stdout).trim().to_string();
-            if val.is_empty() || val == "unknown" { fallback_metadata(flag) } else { val }
+            if val.is_empty() || val == "unknown" {
+                fallback_metadata(flag)
+            } else {
+                val
+            }
         }
         _ => fallback_metadata(flag),
     }
 }
 
 fn fallback_metadata(flag: &str) -> String {
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
     match flag {
         "--blockheight" => "0000000".to_string(),
         _ => format!("{:x}", now),
@@ -111,7 +132,9 @@ fn main() {
         let status = command.status();
 
         if let Ok(s) = status {
-            if s.success() { return; }
+            if s.success() {
+                return;
+            }
         }
     }
     exit(1);

@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
-    cli::{GnostrCli, GnostrCommands, get_app_cache_path},
+    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands,
     types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
@@ -13,7 +13,7 @@ use gnostr_asyncgit::sync::RepoPath;
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt}; // Import the anyhow macro
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
 
 fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -533,9 +533,12 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Crawler(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             let client = reqwest::Client::new(); // Centralized client creation
-            sub_commands::crawler::dispatch_crawler_command(sub_command_args.command.clone(), &client)
-                .await
-                .map_err(|e| anyhow!("Error in crawler subcommand: {}", e))
+            sub_commands::crawler::dispatch_crawler_command(
+                sub_command_args.command.clone(),
+                &client,
+            )
+            .await
+            .map_err(|e| anyhow!("Error in crawler subcommand: {}", e))
         }
         None => {
             // TODO handle more scenarios

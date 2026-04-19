@@ -11,11 +11,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use client::{
-    Connect, FetchReport, consolidate_fetch_reports, get_repo_ref_from_cache, is_verbose,
+    consolidate_fetch_reports, get_repo_ref_from_cache, is_verbose, Connect, FetchReport,
 };
-use git::{RepoActions, nostr_url::NostrUrlDecoded};
+use git::{nostr_url::NostrUrlDecoded, RepoActions};
 use ngit::{
     client::{self, Params},
     git::{self, utils::set_git_timeout},
