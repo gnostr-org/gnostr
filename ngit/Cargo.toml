@@ -71,6 +71,28 @@ mockall = "0.13.1"
 once_cell = "1.21.3"
 rstest = "0.23"
 serial_test = "3.2.0"
+test_utils = { path = "test_utils" }
+
+## [workspace]
+## members = [
+##     "test_utils",
+## ]
+
+[lib]
+name = "ngit"
+path = "src/lib/mod.rs"
+
+[features]
+default = []
+vendored-openssl = ["git2/vendored-openssl"]
+
+[[bin]]
+name = "ngit"
+path = "src/bin/ngit/main.rs"
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bin/git_remote_nostr/main.rs"
 
 ## [profile.release]
 ## lto = true
