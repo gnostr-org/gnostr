@@ -1,4 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-exec "$(dirname "$0")/update_versions.sh" "$@"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_CARGO_TOML="$REPO_ROOT/Cargo.toml"
+
+set_workspace_version() {
+    local manifest="$1"
+    local version="$2"
+
+    SYNC_VERSION="$version" perl -0pi -e '
+        my $v = $ENV{SYNC_VERSION};
+        s/(\[workspace\.package\]\n(?:[^\[]*\n)*?)version\s*=\s*"[^"]+"/$1 . qq(version = "$v")/se
+    ' "$manifest"
+}
+
+cd "$REPO_ROOT"
+
+NEW_TAG="$(gnostr git tag create)"
+NEW_VERSION="${NEW_TAG#v}"
+
+if [ ! -f "$ROOT_CARGO_TOML" ]; then
+    echo "Error: $ROOT_CARGO_TOML not found."
+    exit 1
+fi
+
+set_workspace_version "$ROOT_CARGO_TOML" "$NEW_VERSION"
+taplo format "$ROOT_CARGO_TOML"
+
+git add "$ROOT_CARGO_TOML"
+gnostr legit -m "$NEW_TAG"
+
+SKIP_VERSION_COMMIT=1 VERSION_TAG="$NEW_TAG" exec "$SCRIPT_DIR/update_versions.sh" "$@"
