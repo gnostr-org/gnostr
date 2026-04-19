@@ -1,79 +1,74 @@
 //! Git repository detection and operation primitives.
 
-use std::{
-	fmt::Write as _,
-	path::PathBuf,
-	time::SystemTime,
-};
+use std::{fmt::Write as _, path::PathBuf, time::SystemTime};
 
-use asyncgit::{
-	sync::{
-		commit::commit as commit_repo,
-		remotes::{fetch_all, get_default_remote_for_fetch},
-		stage_add_all,
-		status::{get_status, StatusItemType, StatusType},
-		merge_upstream_commit, CommitId, RepoPath,
-	},
+use asyncgit::sync::{
+    CommitId, RepoPath,
+    commit::commit as commit_repo,
+    merge_upstream_commit,
+    remotes::{fetch_all, get_default_remote_for_fetch},
+    stage_add_all,
+    status::{StatusItemType, StatusType, get_status},
 };
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GitRepoKind {
-	/// Contains a `.git` file or directory.
-	Repo,
-	/// No `.git`, but has `HEAD` + `objects/` + `refs/` at root — a bare clone.
-	Bare,
+    /// Contains a `.git` file or directory.
+    Repo,
+    /// No `.git`, but has `HEAD` + `objects/` + `refs/` at root — a bare clone.
+    Bare,
 }
 
 /// In-progress git operation detected from sentinel files.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GitRepoState {
-	Merging,
-	Rebasing,
-	CherryPicking,
-	Reverting,
-	Bisecting,
+    Merging,
+    Rebasing,
+    CherryPicking,
+    Reverting,
+    Bisecting,
 }
 
 impl GitRepoState {
-	pub fn label(&self) -> &'static str {
-		match self {
-			Self::Merging => "MERGING",
-			Self::Rebasing => "REBASING",
-			Self::CherryPicking => "CHERRY-PICK",
-			Self::Reverting => "REVERTING",
-			Self::Bisecting => "BISECTING",
-		}
-	}
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::Merging => "MERGING",
+            Self::Rebasing => "REBASING",
+            Self::CherryPicking => "CHERRY-PICK",
+            Self::Reverting => "REVERTING",
+            Self::Bisecting => "BISECTING",
+        }
+    }
 }
 
 /// Rich git metadata read from `.git/HEAD`, `.git/config`, and sentinel files.
 /// Populated cheaply with pure `fs::read_to_string` — no subprocess.
 #[derive(Debug, Clone)]
 pub struct GitRepoInfo {
-	pub kind: GitRepoKind,
-	/// Current branch name, or `"detached:<sha7>"` for detached HEAD.
-	pub branch: Option<String>,
-	/// Name of the first remote found in `.git/config` (usually `"origin"`).
-	pub remote_name: Option<String>,
-	/// URL of `remote_name`.
-	pub remote_url: Option<String>,
-	/// Non-`None` when a merge / rebase / cherry-pick / etc. is in progress.
-	pub state: Option<GitRepoState>,
+    pub kind: GitRepoKind,
+    /// Current branch name, or `"detached:<sha7>"` for detached HEAD.
+    pub branch: Option<String>,
+    /// Name of the first remote found in `.git/config` (usually `"origin"`).
+    pub remote_name: Option<String>,
+    /// URL of `remote_name`.
+    pub remote_url: Option<String>,
+    /// Non-`None` when a merge / rebase / cherry-pick / etc. is in progress.
+    pub state: Option<GitRepoState>,
 }
 
 /// Git operations available from the file browser.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GitAction {
-	Status,
-	Pull,
-	Push,
-	Fetch,
-	Log,
-	Diff,
-	Add,
-	Commit,
+    Status,
+    Pull,
+    Push,
+    Fetch,
+    Log,
+    Diff,
+    Add,
+    Commit,
 }
 
 // ── Detection ──────────────────────────────────────────────────────────────
@@ -81,329 +76,298 @@ pub enum GitAction {
 /// Detect git repo kind and read metadata from the git directory.
 /// Uses only `fs::read_to_string` / `is_file` / `is_dir` — no subprocess.
 pub fn detect_git_info(dir: &std::path::Path) -> Option<GitRepoInfo> {
-	let git_dir = if dir.join(".git").is_dir() {
-		dir.join(".git")
-	} else if dir.join(".git").is_file() {
-		// worktree / submodule — parsing the gitfile is complex; mark as Repo
-		return Some(GitRepoInfo {
-			kind: GitRepoKind::Repo,
-			branch: None,
-			remote_name: None,
-			remote_url: None,
-			state: None,
-		});
-	} else if dir.join("HEAD").is_file()
-		&& dir.join("objects").is_dir()
-		&& dir.join("refs").is_dir()
-	{
-		dir.to_path_buf() // bare repo — config lives at root
-	} else {
-		return None;
-	};
+    let git_dir = if dir.join(".git").is_dir() {
+        dir.join(".git")
+    } else if dir.join(".git").is_file() {
+        // worktree / submodule — parsing the gitfile is complex; mark as Repo
+        return Some(GitRepoInfo {
+            kind: GitRepoKind::Repo,
+            branch: None,
+            remote_name: None,
+            remote_url: None,
+            state: None,
+        });
+    } else if dir.join("HEAD").is_file()
+        && dir.join("objects").is_dir()
+        && dir.join("refs").is_dir()
+    {
+        dir.to_path_buf() // bare repo — config lives at root
+    } else {
+        return None;
+    };
 
-	let kind = if git_dir == dir {
-		GitRepoKind::Bare
-	} else {
-		GitRepoKind::Repo
-	};
+    let kind = if git_dir == dir {
+        GitRepoKind::Bare
+    } else {
+        GitRepoKind::Repo
+    };
 
-	let branch = git_read_branch(&git_dir);
-	let (remote_name, remote_url) = git_read_first_remote(&git_dir);
-	let state = git_detect_state(&git_dir);
+    let branch = git_read_branch(&git_dir);
+    let (remote_name, remote_url) = git_read_first_remote(&git_dir);
+    let state = git_detect_state(&git_dir);
 
-	Some(GitRepoInfo {
-		kind,
-		branch,
-		remote_name,
-		remote_url,
-		state,
-	})
+    Some(GitRepoInfo {
+        kind,
+        branch,
+        remote_name,
+        remote_url,
+        state,
+    })
 }
 
 /// Read current branch from `<git_dir>/HEAD`.
 fn git_read_branch(git_dir: &PathBuf) -> Option<String> {
-	let raw = std::fs::read_to_string(git_dir.join("HEAD")).ok()?;
-	let raw = raw.trim();
-	if let Some(branch) = raw.strip_prefix("ref: refs/heads/") {
-		Some(branch.to_owned())
-	} else if raw.len() >= 7 {
-		Some(format!("detached:{}", &raw[..7]))
-	} else {
-		None
-	}
+    let raw = std::fs::read_to_string(git_dir.join("HEAD")).ok()?;
+    let raw = raw.trim();
+    if let Some(branch) = raw.strip_prefix("ref: refs/heads/") {
+        Some(branch.to_owned())
+    } else if raw.len() >= 7 {
+        Some(format!("detached:{}", &raw[..7]))
+    } else {
+        None
+    }
 }
 
 /// Parse the first `[remote "…"]` section from `<git_dir>/config`.
-fn git_read_first_remote(
-	git_dir: &PathBuf,
-) -> (Option<String>, Option<String>) {
-	let config = std::fs::read_to_string(git_dir.join("config"))
-		.unwrap_or_default();
-	let mut name: Option<String> = None;
-	let mut url: Option<String> = None;
-	let mut in_remote = false;
-	for line in config.lines() {
-		let line = line.trim();
-		if line.starts_with("[remote \"") {
-			if let Some(n) = line
-				.strip_prefix("[remote \"")
-				.and_then(|s| s.strip_suffix("\"]"))
-			{
-				name = Some(n.to_owned());
-				in_remote = true;
-			}
-		} else if line.starts_with('[') {
-			in_remote = false;
-		} else if in_remote {
-			if let Some(u) = line.strip_prefix("url = ") {
-				url = Some(u.to_owned());
-				break;
-			}
-		}
-	}
-	(name, url)
+fn git_read_first_remote(git_dir: &PathBuf) -> (Option<String>, Option<String>) {
+    let config = std::fs::read_to_string(git_dir.join("config")).unwrap_or_default();
+    let mut name: Option<String> = None;
+    let mut url: Option<String> = None;
+    let mut in_remote = false;
+    for line in config.lines() {
+        let line = line.trim();
+        if line.starts_with("[remote \"") {
+            if let Some(n) = line
+                .strip_prefix("[remote \"")
+                .and_then(|s| s.strip_suffix("\"]"))
+            {
+                name = Some(n.to_owned());
+                in_remote = true;
+            }
+        } else if line.starts_with('[') {
+            in_remote = false;
+        } else if in_remote {
+            if let Some(u) = line.strip_prefix("url = ") {
+                url = Some(u.to_owned());
+                break;
+            }
+        }
+    }
+    (name, url)
 }
 
 /// Check for sentinel files indicating an in-progress git operation.
 fn git_detect_state(git_dir: &PathBuf) -> Option<GitRepoState> {
-	if git_dir.join("MERGE_HEAD").is_file() {
-		return Some(GitRepoState::Merging);
-	}
-	if git_dir.join("CHERRY_PICK_HEAD").is_file() {
-		return Some(GitRepoState::CherryPicking);
-	}
-	if git_dir.join("REVERT_HEAD").is_file() {
-		return Some(GitRepoState::Reverting);
-	}
-	if git_dir.join("rebase-merge").is_dir()
-		|| git_dir.join("rebase-apply").is_dir()
-	{
-		return Some(GitRepoState::Rebasing);
-	}
-	if git_dir.join("BISECT_LOG").is_file() {
-		return Some(GitRepoState::Bisecting);
-	}
-	None
+    if git_dir.join("MERGE_HEAD").is_file() {
+        return Some(GitRepoState::Merging);
+    }
+    if git_dir.join("CHERRY_PICK_HEAD").is_file() {
+        return Some(GitRepoState::CherryPicking);
+    }
+    if git_dir.join("REVERT_HEAD").is_file() {
+        return Some(GitRepoState::Reverting);
+    }
+    if git_dir.join("rebase-merge").is_dir() || git_dir.join("rebase-apply").is_dir() {
+        return Some(GitRepoState::Rebasing);
+    }
+    if git_dir.join("BISECT_LOG").is_file() {
+        return Some(GitRepoState::Bisecting);
+    }
+    None
 }
 
 /// Compat shim — kept so any external callers still compile.
 #[deprecated(note = "use detect_git_info instead")]
 pub fn detect_git_repo(dir: &std::path::Path) -> Option<GitRepoKind> {
-	detect_git_info(dir).map(|i| i.kind)
+    detect_git_info(dir).map(|i| i.kind)
 }
 
 /// Walk `path` and its ancestors until a git root is found.
 /// Returns `(root_path, GitRepoInfo)` for the nearest enclosing repo, or
 /// `None` if `path` is not inside any git repository.
-pub fn find_git_root(
-	path: &std::path::Path,
-) -> Option<(PathBuf, GitRepoInfo)> {
-	let mut dir = if path.is_dir() {
-		path.to_path_buf()
-	} else {
-		path.parent()?.to_path_buf()
-	};
-	loop {
-		if let Some(info) = detect_git_info(&dir) {
-			return Some((dir, info));
-		}
-		match dir.parent() {
-			Some(p) => dir = p.to_path_buf(),
-			None => return None,
-		}
-	}
+pub fn find_git_root(path: &std::path::Path) -> Option<(PathBuf, GitRepoInfo)> {
+    let mut dir = if path.is_dir() {
+        path.to_path_buf()
+    } else {
+        path.parent()?.to_path_buf()
+    };
+    loop {
+        if let Some(info) = detect_git_info(&dir) {
+            return Some((dir, info));
+        }
+        match dir.parent() {
+            Some(p) => dir = p.to_path_buf(),
+            None => return None,
+        }
+    }
 }
 
 // ── FileBrowserEntry ───────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
 pub struct FileBrowserEntry {
-	pub name: String,
-	pub path: PathBuf,
-	pub is_dir: bool,
-	pub size: u64,
-	pub modified: Option<SystemTime>,
-	/// Set when the entry is a directory that is (or contains) a git repo.
-	pub git: Option<GitRepoInfo>,
+    pub name: String,
+    pub path: PathBuf,
+    pub is_dir: bool,
+    pub size: u64,
+    pub modified: Option<SystemTime>,
+    /// Set when the entry is a directory that is (or contains) a git repo.
+    pub git: Option<GitRepoInfo>,
 }
 
 impl FileBrowserEntry {
-	pub fn new(path: PathBuf) -> Self {
-		let name = path
-			.file_name()
-			.map(|n| n.to_string_lossy().into_owned())
-			.unwrap_or_else(|| path.to_string_lossy().into_owned());
-		let is_dir = path.is_dir();
-		let metadata = path.metadata().ok();
-		let size = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
-		let modified = metadata.and_then(|m| m.modified().ok());
-		let git = if is_dir { detect_git_info(&path) } else { None };
-		Self {
-			name,
-			path,
-			is_dir,
-			size,
-			modified,
-			git,
-		}
-	}
+    pub fn new(path: PathBuf) -> Self {
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| path.to_string_lossy().into_owned());
+        let is_dir = path.is_dir();
+        let metadata = path.metadata().ok();
+        let size = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
+        let modified = metadata.and_then(|m| m.modified().ok());
+        let git = if is_dir { detect_git_info(&path) } else { None };
+        Self {
+            name,
+            path,
+            is_dir,
+            size,
+            modified,
+            git,
+        }
+    }
 }
 
 // ── Runner ─────────────────────────────────────────────────────────────────
 /// Run a git sub-command inside `repo_dir` and return combined stdout+stderr.
 pub async fn run_git_command(
-	repo_dir: &std::path::Path,
-	action: GitAction,
-	commit_msg: &str,
+    repo_dir: &std::path::Path,
+    action: GitAction,
+    commit_msg: &str,
 ) -> Result<String, String> {
-	let repo_dir = repo_dir.to_path_buf();
-	let action = action;
-	let commit_msg = commit_msg.to_owned();
+    let repo_dir = repo_dir.to_path_buf();
+    let action = action;
+    let commit_msg = commit_msg.to_owned();
 
-	tokio::task::spawn_blocking(move || {
-		run_git_command_blocking(&repo_dir, action, &commit_msg)
-	})
-	.await
-	.map_err(|e| format!("join git task: {e}"))?
+    tokio::task::spawn_blocking(move || run_git_command_blocking(&repo_dir, action, &commit_msg))
+        .await
+        .map_err(|e| format!("join git task: {e}"))?
 }
 
 fn run_git_command_blocking(
-	repo_dir: &std::path::Path,
-	action: GitAction,
-	commit_msg: &str,
+    repo_dir: &std::path::Path,
+    action: GitAction,
+    commit_msg: &str,
 ) -> Result<String, String> {
-	let repo_path = RepoPath::Path(repo_dir.to_path_buf());
+    let repo_path = RepoPath::Path(repo_dir.to_path_buf());
 
-	match action {
-		GitAction::Status => status_output(&repo_path),
-		GitAction::Fetch => {
-			let no_credential: Option<
-				asyncgit::sync::cred::BasicAuthCredential,
-			> = None;
-			let no_progress: Option<
-				crossbeam_channel::Sender<asyncgit::ProgressPercent>,
-			> = None;
-			fetch_all(&repo_path, &no_credential, &no_progress)
-				.map_err(|e| e.to_string())?;
-			Ok(String::from("fetched all remotes"))
-		}
-		GitAction::Pull => pull_output(repo_dir, &repo_path),
-		GitAction::Add => {
-			stage_add_all(&repo_path, ".", None)
-				.map_err(|e| e.to_string())?;
-			Ok(String::from("staged all changes"))
-		}
-		GitAction::Commit => {
-			let id =
-				commit_repo(&repo_path, commit_msg).map_err(|e| e.to_string())?;
-			Ok(format!("committed {}", short_commit_id(id)))
-		}
-		GitAction::Push => {
-			let out = std::process::Command::new("git")
-				.args(["push"])
-				.current_dir(repo_dir)
-				.output()
-				.map_err(|e| format!("spawn git: {e}"))?;
-			format_command_output(out.stdout, out.stderr)
-		}
-		GitAction::Log => {
-			let out = std::process::Command::new("git")
-				.args(["log", "--oneline", "--graph", "--decorate", "-20"])
-				.current_dir(repo_dir)
-				.output()
-				.map_err(|e| format!("spawn git: {e}"))?;
-			format_command_output(out.stdout, out.stderr)
-		}
-		GitAction::Diff => {
-			let out = std::process::Command::new("git")
-				.args(["diff"])
-				.current_dir(repo_dir)
-				.output()
-				.map_err(|e| format!("spawn git: {e}"))?;
-			format_command_output(out.stdout, out.stderr)
-		}
-	}
+    match action {
+        GitAction::Status => status_output(&repo_path),
+        GitAction::Fetch => {
+            let no_credential: Option<asyncgit::sync::cred::BasicAuthCredential> = None;
+            let no_progress: Option<crossbeam_channel::Sender<asyncgit::ProgressPercent>> = None;
+            fetch_all(&repo_path, &no_credential, &no_progress).map_err(|e| e.to_string())?;
+            Ok(String::from("fetched all remotes"))
+        }
+        GitAction::Pull => pull_output(repo_dir, &repo_path),
+        GitAction::Add => {
+            stage_add_all(&repo_path, ".", None).map_err(|e| e.to_string())?;
+            Ok(String::from("staged all changes"))
+        }
+        GitAction::Commit => {
+            let id = commit_repo(&repo_path, commit_msg).map_err(|e| e.to_string())?;
+            Ok(format!("committed {}", short_commit_id(id)))
+        }
+        GitAction::Push => {
+            let out = std::process::Command::new("git")
+                .args(["push"])
+                .current_dir(repo_dir)
+                .output()
+                .map_err(|e| format!("spawn git: {e}"))?;
+            format_command_output(out.stdout, out.stderr)
+        }
+        GitAction::Log => {
+            let out = std::process::Command::new("git")
+                .args(["log", "--oneline", "--graph", "--decorate", "-20"])
+                .current_dir(repo_dir)
+                .output()
+                .map_err(|e| format!("spawn git: {e}"))?;
+            format_command_output(out.stdout, out.stderr)
+        }
+        GitAction::Diff => {
+            let out = std::process::Command::new("git")
+                .args(["diff"])
+                .current_dir(repo_dir)
+                .output()
+                .map_err(|e| format!("spawn git: {e}"))?;
+            format_command_output(out.stdout, out.stderr)
+        }
+    }
 }
 
-fn pull_output(
-	repo_dir: &std::path::Path,
-	repo_path: &RepoPath,
-) -> Result<String, String> {
-	let branch = detect_git_info(repo_dir)
-		.and_then(|info| info.branch)
-		.ok_or_else(|| String::from("not on a branch"))?;
+fn pull_output(repo_dir: &std::path::Path, repo_path: &RepoPath) -> Result<String, String> {
+    let branch = detect_git_info(repo_dir)
+        .and_then(|info| info.branch)
+        .ok_or_else(|| String::from("not on a branch"))?;
 
-	if branch.starts_with("detached:") {
-		return Err(String::from("cannot pull from detached HEAD"));
-	}
+    if branch.starts_with("detached:") {
+        return Err(String::from("cannot pull from detached HEAD"));
+    }
 
-	let remote = get_default_remote_for_fetch(repo_path)
-		.map_err(|e| e.to_string())?;
-	let no_credential: Option<asyncgit::sync::cred::BasicAuthCredential> =
-		None;
-	let no_progress: Option<
-		crossbeam_channel::Sender<asyncgit::ProgressPercent>,
-	> = None;
-	fetch_all(repo_path, &no_credential, &no_progress)
-		.map_err(|e| e.to_string())?;
+    let remote = get_default_remote_for_fetch(repo_path).map_err(|e| e.to_string())?;
+    let no_credential: Option<asyncgit::sync::cred::BasicAuthCredential> = None;
+    let no_progress: Option<crossbeam_channel::Sender<asyncgit::ProgressPercent>> = None;
+    fetch_all(repo_path, &no_credential, &no_progress).map_err(|e| e.to_string())?;
 
-	let merge = merge_upstream_commit(repo_path, &branch)
-		.map_err(|e| e.to_string())?;
-	match merge {
-		Some(commit_id) => Ok(format!(
-			"fetched {remote}\nmerged {}",
-			short_commit_id(commit_id)
-		)),
-		None => Ok(format!("fetched {remote}\nup to date")),
-	}
+    let merge = merge_upstream_commit(repo_path, &branch).map_err(|e| e.to_string())?;
+    match merge {
+        Some(commit_id) => Ok(format!(
+            "fetched {remote}\nmerged {}",
+            short_commit_id(commit_id)
+        )),
+        None => Ok(format!("fetched {remote}\nup to date")),
+    }
 }
 
 fn status_output(repo_path: &RepoPath) -> Result<String, String> {
-	let items = get_status(repo_path, StatusType::Both, None)
-		.map_err(|e| e.to_string())?;
-	if items.is_empty() {
-		return Ok(String::from("working tree clean"));
-	}
+    let items = get_status(repo_path, StatusType::Both, None).map_err(|e| e.to_string())?;
+    if items.is_empty() {
+        return Ok(String::from("working tree clean"));
+    }
 
-	let mut out = String::new();
-	for item in items {
-		let _ = writeln!(
-			&mut out,
-			"{} {}",
-			status_symbol(item.status),
-			item.path
-		);
-	}
-	Ok(out.trim_end().to_string())
+    let mut out = String::new();
+    for item in items {
+        let _ = writeln!(&mut out, "{} {}", status_symbol(item.status), item.path);
+    }
+    Ok(out.trim_end().to_string())
 }
 
 fn status_symbol(status: StatusItemType) -> &'static str {
-	match status {
-		StatusItemType::New => "A",
-		StatusItemType::Modified => "M",
-		StatusItemType::Deleted => "D",
-		StatusItemType::Renamed => "R",
-		StatusItemType::Typechange => "T",
-		StatusItemType::Conflicted => "U",
-	}
+    match status {
+        StatusItemType::New => "A",
+        StatusItemType::Modified => "M",
+        StatusItemType::Deleted => "D",
+        StatusItemType::Renamed => "R",
+        StatusItemType::Typechange => "T",
+        StatusItemType::Conflicted => "U",
+    }
 }
 
 fn short_commit_id(id: CommitId) -> String {
-	let text = id.to_string();
-	text.chars().take(7).collect()
+    let text = id.to_string();
+    text.chars().take(7).collect()
 }
 
 fn format_command_output(stdout: Vec<u8>, stderr: Vec<u8>) -> Result<String, String> {
-	let mut combined = String::from_utf8_lossy(&stdout).into_owned();
-	let stderr = String::from_utf8_lossy(&stderr);
-	if !stderr.is_empty() {
-		if !combined.is_empty() {
-			combined.push('\n');
-		}
-		combined.push_str(&stderr);
-	}
-	if combined.is_empty() {
-		combined = String::from("(no output)");
-	}
-	Ok(combined)
+    let mut combined = String::from_utf8_lossy(&stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&stderr);
+    if !stderr.is_empty() {
+        if !combined.is_empty() {
+            combined.push('\n');
+        }
+        combined.push_str(&stderr);
+    }
+    if combined.is_empty() {
+        combined = String::from("(no output)");
+    }
+    Ok(combined)
 }
