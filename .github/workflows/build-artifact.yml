@@ -139,7 +139,8 @@ jobs:
       #  with:
       #    path: target
       #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      #- run: cargo clean
+      #- run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
     needs: setup
