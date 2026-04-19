@@ -16,7 +16,6 @@ keywords = ["gnostr", "tool", "nostr"]
 categories = ["command-line-utilities"]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr"
-[workspace]
 
 [lib]
 name = "gnostr_crawler"
