@@ -1031,7 +1031,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "1878.945702.535048"
+version = "1878.945703.533663"
 dependencies = [
  "anyhow",
  "assert_cmd",
