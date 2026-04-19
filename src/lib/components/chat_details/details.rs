@@ -100,8 +100,8 @@ impl DetailsComponent {
     }
 
     fn get_wrapped_lines(data: &Option<CommitDetails>, width: usize) -> WrappedCommitMessage<'_> {
-        if let Some(ref data) = data {
-            if let Some(ref message) = data.message {
+        if let Some(data) = data {
+            if let Some(message) = &data.message {
                 return Self::wrap_commit_details(message, width);
             }
         }

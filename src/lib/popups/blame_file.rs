@@ -72,7 +72,7 @@ impl BlameProcess {
                 unstyled_file_blame,
                 ..
             } => Some(unstyled_file_blame),
-            Self::Result(ref file_blame) => Some(file_blame),
+            Self::Result(file_blame) => Some(file_blame),
         }
     }
 }

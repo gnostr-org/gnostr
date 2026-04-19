@@ -60,7 +60,7 @@ impl MessageReassembler {
 
         let mut buffer_guard = self.buffer.lock();
 
-        let (buffered_total_chunks, ref mut received_count, ref mut chunks) =
+        let (buffered_total_chunks, received_count, chunks) =
             buffer_guard.entry(message_id.clone()).or_insert_with(|| {
                 debug!(
                     "AddChunk: Initializing buffer for message_id: {} with total_chunks: {}",
