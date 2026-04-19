@@ -76,8 +76,9 @@ impl NIP32Event for Event {
                 let mark = tag.0.get(2).map(|s| s.clone());
 
                 let namespace = if let Some(m) = mark {
-                    // If a mark is present, check if it corresponds to a namespace
-                    namespace_map.get(&m).map(|s| s.clone())
+                    // An explicit mark names the namespace directly; when there is
+                    // also a matching `L` tag, keep that canonical value.
+                    namespace_map.get(&m).cloned().or(Some(m))
                 } else {
                     // If no mark, NIP-32 implies "ugc" if omitted.
                     Some("ugc".to_string()) // TODO: NIP-32 says "ugc" is implied if omitted, check for existing "L" tag
