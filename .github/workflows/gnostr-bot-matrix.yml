@@ -267,6 +267,12 @@ jobs:
           cargo install --path . --force --bin git-remote-nostr
           git fetch --all
 
+      - name: 🚀 cargo install --path . --force --bins
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          cargo install --path . --force --bins
+
       - name: 🚀 git-helpers-test
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
@@ -281,7 +287,14 @@ jobs:
           gnostr query \
           --authors \
           $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k | jq .[] | sed  "s/\"//g") \
-          --limit 100 | jq
+          --limit 100 | jq || \
+          cargo run \
+          --bin gnostr \
+          -- \
+          query \
+          --authors \
+          $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k | jq .[] | sed  "s/\"//g") \
+          --limit 100 | jq || true
 
       - name: 🚀 gnostr query nested command test
         shell: bash
