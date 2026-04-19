@@ -174,6 +174,15 @@ jobs:
           target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Clean stale ring build artifacts
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        # Remove ring-specific build output to prevent "File Already Exists" error
+        rm -rf target/debug/build/ring-* || true
+        rm -rf target/release/build/ring-* || true
+        echo "Purged stale ring build directories."
+
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
       run: |
