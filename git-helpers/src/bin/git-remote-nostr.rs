@@ -33,9 +33,9 @@ use gnostr_git_helpers::protocol::run_helper;
 fn main() {
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_env("GIT_REMOTE_NOSTR_LOG"),
-        )
+        .with_env_filter(tracing_subscriber::EnvFilter::from_env(
+            "GIT_REMOTE_NOSTR_LOG",
+        ))
         .init();
 
     let args: Vec<String> = std::env::args().collect();
@@ -52,7 +52,10 @@ fn main() {
         std::process::exit(1);
     });
 
-    eprintln!("[nostr] relay={relay}  pubkey={}…  repo={repo}", &pubkey_hex[..8]);
+    eprintln!(
+        "[nostr] relay={relay}  pubkey={}…  repo={repo}",
+        &pubkey_hex[..8]
+    );
 
     let helper = NostrRemote::new(&relay, &pubkey_hex, &repo);
     if let Err(e) = run_helper(helper) {
