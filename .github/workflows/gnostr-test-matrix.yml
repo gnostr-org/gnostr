@@ -299,9 +299,6 @@ jobs:
             actor: ${{ github.actor }}
             runner_os: ${{ runner.os }}
             matrix: os=${{ matrix.os }}, toolchain=${{ matrix.toolchain }}
-            <html>
-            <img class="block h-auto w-full" src="https://avatars.githubusercontent.com/u/135379339?s=400&amp;v=4" itemprop="image">
-            </html>
           # Formatting tags as a standard JSON array string for the action to parse
           tags: '[["weeble", "${{ env.WEEBLE }}"], ["blockheight", "${{ env.BLOCKHEIGHT }}"], ["wobble", "${{ env.WOBBLE }}"], ["t", "gnostr"]]'
 
