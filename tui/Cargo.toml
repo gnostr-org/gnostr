@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-blossom-tui"
-version = "1878.945705.530939"
+version = "1878.945708.526482"
 edition = "2024"
 description = "Gitui-inspired terminal UI for Blossom blob storage"
 homepage = "https://github.com/gnostr-org/gnostr"
@@ -13,12 +13,12 @@ path = "./src/lib.rs"
 
 [dependencies]
 arboard = "3"
-asyncgit = { package = "gnostr-asyncgit", version = "1878.945705.530939", path = "../asyncgit" }
+asyncgit = { package = "gnostr-asyncgit", version = "1878.945708.526482", path = "../asyncgit" }
 bech32 = "0.11"
 blossom-rs = "0.5.6"
 crossbeam-channel = "0.5"
 crossterm = "0.29"
-filetreelist = { package = "gnostr-filetreelist", version = "1878.945705.530939", path = "../filetreelist" }
+filetreelist = { package = "gnostr-filetreelist", version = "1878.945708.526482", path = "../filetreelist" }
 futures-util = { version = "0.3", default-features = false, features = [
   "sink",
   "std",
