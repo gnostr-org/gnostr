@@ -52,7 +52,7 @@ impl Writer {
                         if let CheckEventResult::Ok(_num) = result {
                             counter!("nostr_relay_new_event").increment(1);
                         }
-                        self.addr.do_send(WriteEventResult::Write {
+                        let _ = self.addr.do_send(WriteEventResult::Write {
                             id: event.id,
                             event: event.event,
                             result,
@@ -61,7 +61,7 @@ impl Writer {
                     Err(err) => {
                         error!(error = err.to_string(), "write event error");
                         let eid = event.event.id_str();
-                        self.addr.do_send(WriteEventResult::Message {
+                        let _ = self.addr.do_send(WriteEventResult::Message {
                             id: event.id,
                             event: event.event,
                             msg: OutgoingMessage::ok(&eid, false, "write event error"),

@@ -28,7 +28,7 @@ impl Reader {
             }
             for event in iter {
                 let event = event?;
-                self.addr.do_send(ReadEventResult {
+                let _ = self.addr.do_send(ReadEventResult {
                     id: msg.id,
                     sub_id: msg.subscription.id.clone(),
                     msg: OutgoingMessage::event(&msg.subscription.id, &event),
@@ -36,7 +36,7 @@ impl Reader {
             }
             histogram!("nostr_relay_db_get").record(start.elapsed());
         }
-        self.addr.do_send(ReadEventResult {
+        let _ = self.addr.do_send(ReadEventResult {
             id: msg.id,
             sub_id: msg.subscription.id.clone(),
             msg: OutgoingMessage::eose(&msg.subscription.id),
@@ -59,7 +59,7 @@ impl Handler<ReadEvent> for Reader {
                 msg.subscription.id.as_str(),
                 &format!("get event error: {}", err),
             );
-            self.addr.do_send(ReadEventResult {
+            let _ = self.addr.do_send(ReadEventResult {
                 id: msg.id,
                 sub_id: msg.subscription.id,
                 msg: m,

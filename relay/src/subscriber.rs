@@ -302,7 +302,7 @@ impl Handler<Dispatch> for Subscriber {
         let index = event.index();
         let event_str = event.to_string();
         self.index.lookup(index, |session_id, sub_id| {
-            self.addr.do_send(SubscribeResult {
+            let _ = self.addr.do_send(SubscribeResult {
                 id: *session_id,
                 msg: OutgoingMessage::event(sub_id, &event_str),
                 sub_id: sub_id.clone(),

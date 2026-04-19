@@ -44,7 +44,7 @@ impl Server {
 
     fn send_to_client(&self, id: usize, msg: OutgoingMessage) {
         if let Some(addr) = self.sessions.get(&id) {
-            addr.do_send(msg);
+            let _ = addr.do_send(msg);
         }
     }
 }

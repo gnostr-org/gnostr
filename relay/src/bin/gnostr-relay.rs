@@ -1,6 +1,5 @@
 use anyhow::Result;
 use clap::Parser;
-use gnostr_relay::App;
 use tracing::info;
 use tracing_subscriber::{fmt, EnvFilter};
 
