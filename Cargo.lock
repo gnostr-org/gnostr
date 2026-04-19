@@ -2011,7 +2011,7 @@ dependencies = [
  "arrayvec",
  "cc",
  "cfg-if 1.0.4",
- "constant_time_eq 0.4.3",
+ "constant_time_eq 0.4.2",
  "cpufeatures 0.3.0",
 ]
 
@@ -2978,9 +2978,9 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "constant_time_eq"
-version = "0.4.3"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dab3fe76c1571ecd5cfe878b61bce3fedf4adbde5d8a8653b2a7956ffd14628"
+checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 
 [[package]]
 name = "convert_case"
@@ -5903,7 +5903,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -6160,7 +6160,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "aes",
  "anyhow",
@@ -6303,7 +6303,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-blossom-tui"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "arboard",
  "bech32 0.11.1",
@@ -6327,7 +6327,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6364,7 +6364,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "actix 0.13.5",
  "actix-rt",
@@ -6391,7 +6391,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -6399,7 +6399,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git-helpers"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "anyhow",
  "bech32 0.11.1",
@@ -6420,7 +6420,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "git2",
  "gnostr-git2-testing",
@@ -6433,7 +6433,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "env_logger 0.11.10",
  "git2",
@@ -6443,7 +6443,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "anyhow",
  "cc",
@@ -6462,11 +6462,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 
 [[package]]
 name = "gnostr-legit"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "argparse",
  "chrono",
@@ -6483,7 +6483,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-ngit"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6527,7 +6527,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "actix 0.12.0",
  "actix-cors",
@@ -6561,14 +6561,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "log",
 ]
 
 [[package]]
 name = "gnostr_qr"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "hex",
  "image",
@@ -16217,7 +16217,7 @@ dependencies = [
 
 [[package]]
 name = "test_utils"
-version = "1878.945840.350425"
+version = "1878.945843.346028"
 dependencies = [
  "anyhow",
  "assert_cmd",
