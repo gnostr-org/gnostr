@@ -25,21 +25,31 @@ manifest_version() {
 }
 
 managed_manifests() {
-    cargo metadata --no-deps --format-version 1 | python3 -c '
+    python3 - <<'PY'
 import json
 import os
-import sys
+import subprocess
 
 root = os.path.abspath(".")
-data = json.load(sys.stdin)
-paths = sorted({
+data = json.loads(subprocess.check_output(
+    ["cargo", "metadata", "--no-deps", "--format-version", "1"],
+    text=True,
+))
+paths = {
     pkg["manifest_path"]
     for pkg in data["packages"]
-    if os.path.abspath(pkg["manifest_path"]).startswith(root + os.sep) or os.path.abspath(pkg["manifest_path"]) == root
-})
-for path in paths:
+    if os.path.abspath(pkg["manifest_path"]).startswith(root + os.sep)
+    or os.path.abspath(pkg["manifest_path"]) == root
+}
+
+for rel_path in ["crawler/Cargo.toml"]:
+    manifest_path = os.path.abspath(rel_path)
+    if os.path.isfile(manifest_path):
+        paths.add(manifest_path)
+
+for path in sorted(paths):
     print(path)
-'
+PY
 }
 
 versioned_path_dependencies() {
@@ -333,4 +343,3 @@ if [ -n "$(git status --porcelain -- Cargo.lock)" ]; then
 fi
 
 cargo publish -j8 --no-verify && git push origin $VERSION_TAG:$VERSION_TAG
-
