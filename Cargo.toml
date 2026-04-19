@@ -505,7 +505,6 @@ globset = "0.4"
 
 ##gitui
 gnostr-asyncgit = { workspace = true }
-gnostr-extensions = { workspace = true }
 gnostr-git-helpers = { version = "1878.945843.346028", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
