@@ -83,6 +83,14 @@ runs:
         restore-keys: |
           ${{ runner.os }}-vcpkg-${{ inputs.arch }}-
 
+    - name: Clean stale ring build artifacts
+            if: runner.os == 'Windows'
+            shell: bash
+            run: |
+              # Remove ring-specific build output to prevent "File Already Exists" error
+              rm -rf target/debug/build/ring-* rm -rf target/release/build/ring-*
+              echo "Purged stale ring build directories."
+
     - name: Install OpenSSL with vcpkg
       if: runner.os == 'Windows' && steps.cache-vcpkg.outputs.cache-hit != 'true'
       shell: pwsh
