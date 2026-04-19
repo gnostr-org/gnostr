@@ -305,10 +305,13 @@ jobs:
           rustup target add ${{ matrix.target }} || true
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-        else
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-pc-windows-msvc" ]]; then
           rustup target add ${{ matrix.target }} || true
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        else
+          ## handle other matrix.target
         fi
 
     - name: Save Cache
