@@ -385,8 +385,8 @@ impl App {
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
 
-        env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
-        env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
+        let _ = weeble_sync();
+        let _ = wobble_sync();
         log::debug!("WEEBLE: {:?}", env::var("WEEBLE"));
 
         if let AsyncNotification::Git(ev) = ev {
