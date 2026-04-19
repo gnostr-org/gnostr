@@ -3,12 +3,12 @@
 #![cfg_attr(not(test), warn(clippy::expect_used))]
 
 use clap::Parser;
-use ngit::{cli::Cli, cli_interactor::CliError};
+use gnostr_ngit::{cli::Cli, cli_interactor::CliError};
 
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
-    let result = ngit::run_cli(&cli).await;
+    let result = gnostr_ngit::run_cli(&cli).await;
 
     if let Err(err) = result {
         if err.downcast_ref::<CliError>().is_some() {

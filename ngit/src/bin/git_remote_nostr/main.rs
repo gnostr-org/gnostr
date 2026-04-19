@@ -7,5 +7,5 @@ use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    ngit::git_remote_nostr::run().await
+    gnostr_ngit::git_remote_nostr::run().await
 }

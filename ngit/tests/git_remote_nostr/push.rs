@@ -1,5 +1,5 @@
 use git2::Signature;
-use ngit::git_events::KIND_PULL_REQUEST;
+use gnostr_ngit::git_events::KIND_PULL_REQUEST;
 use rstest::*;
 
 use super::*;
