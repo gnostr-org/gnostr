@@ -85,9 +85,8 @@ jobs:
             cargo_test_args: '--all-features'
           - runner: windows-11-arm
             arch: arm64
-            # Root gnostr still pulls ring 0.16 via legacy TLS deps, which fails
-            # on Windows ARM64 MSVC. asyncgit still exercises the vcpkg/OpenSSL path.
-            cargo_test_args: '-p gnostr-asyncgit --all-features'
+            # --features <feature1>,<feature2>,... for arch: arm64
+            cargo_test_args: '--features default'
           - runner: ubuntu-latest
             arch: x64
             # All features supported on x64 Windows.
@@ -264,28 +263,32 @@ jobs:
         CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
       run: |
         cargo generate-lockfile && git diff
-        rustup target add ${{ matrix.target }} || true
-
-        case "${{ matrix.target }}" in
-          aarch64-unknown-linux-musl)
-            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-            ;;
-          aarch64-unknown-linux-gnu)
-            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-            ;;
-          x86_64-unknown-linux-musl)
-            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-            ;;
-          x86_64-unknown-linux-gnu)
-            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-            ;;
-          *)
-            cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-            cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
-            ;;
-        esac
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          rustup target add aarch64-linux-musl-gcc || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          rustup target add x86_64-unknown-linux-musl || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        else
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
 
     - name: Save Cache
       if: always() # This ensures cache is saved on failure, success, or cancel
