@@ -355,8 +355,7 @@ mod test {
     #[test]
     fn test_event_matches() {
         use crate::{
-            types::{PrivateKey, UncheckedUrl},
-            Id, KeySigner, PreEvent, Signer, Tag,
+            types::{Id, KeySigner, PreEvent, PrivateKey, Signer, Tag, UncheckedUrl},
         };
 
         let signer = {

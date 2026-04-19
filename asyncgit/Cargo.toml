@@ -232,4 +232,3 @@ serial_test = "3.1"
 temp-dir = "0.1.13"
 tempfile = "3"
 tokio = { version = "1", features = ["full"] }
-unicode-width = "0.2.0"

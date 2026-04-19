@@ -707,10 +707,9 @@ mod test {
     use crate::{
         test_serde,
         types::{
-            Error, EventKind, Id, KeySecurity, PrivateKey, PublicKey, PublicKeyHex, Signer, TagV3,
-            UncheckedUrl, Unixtime,
+            Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey, PublicKeyHex,
+            Signer, TagV3, UncheckedUrl, Unixtime,
         },
-        KeySigner,
     };
 
     #[test]

@@ -361,7 +361,7 @@ pub fn add_subject_to_tags_if_missing(existing_tags: &mut Vec<Tag>, subject: Str
 
 #[cfg(test)]
 mod test {
-    use crate::*;
+    use crate::types::RelayMessage;
 
     #[test]
     fn test_real_messages() {

@@ -6289,7 +6289,6 @@ dependencies = [
  "unicode-segmentation",
  "unicode-truncate 1.1.0",
  "unicode-width 0.1.14",
- "unicode-width 0.2.0",
  "unix_mode",
  "ureq",
  "url",
