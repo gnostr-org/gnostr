@@ -1,4 +1,4 @@
-use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr::types::{EventKind, Filter, PublicKey, PublicKeyHex};
 use log::debug;
 fn fetch_by_kind_and_commit(author_pubkey: &str, kind: &str, relay: &str) {
