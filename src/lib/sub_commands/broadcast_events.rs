@@ -1,6 +1,6 @@
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use crate::{

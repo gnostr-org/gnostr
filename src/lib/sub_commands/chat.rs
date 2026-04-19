@@ -6,7 +6,7 @@
 //migrate carefully
 use anyhow::Result;
 use tracing::Level;
-use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 //use crate::p2p::chat::p2p::evt_loop; //migrate carefully
 use crate::p2p::chat::ChatSubCommands;

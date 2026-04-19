@@ -2,7 +2,7 @@
 use crate::crawler::pubkeys::PubKeys;
 use crate::crawler::stats::Stats;
 
-use nostr_sdk_0_34_0::prelude::{Event, Kind, /*Tag, */Timestamp, TagStandard};
+use nostr_sdk_0_34_0::prelude::{Event, Kind, TagStandard, /*Tag, */ Timestamp};
 use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";

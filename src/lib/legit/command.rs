@@ -8,24 +8,22 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use crate::crawler::processor::BOOTSTRAP_RELAYS;
+use crate::nostr_client;
 use anyhow::anyhow;
 use git2::{ObjectType, Repository, RepositoryState};
 use gnostr_asyncgit::sync::commit::{deserialize_commit, serialize_commit};
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
-use crate::nostr_client;
 use gnostr_legit::gitminer::{self, Gitminer};
 use once_cell::sync::OnceCell;
 use serde_json::{self, Value};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 
-use gnostr_asyncgit::{
-    types::{
-        Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
-        Unixtime,
-    },
-};
 use crate::utils::{parse_json, split_json_string};
+use gnostr_asyncgit::types::{
+    Event, EventKind, KeySigner, PreEvent, PrivateKey, PublicKey, Signer, Tag, UncheckedUrl,
+    Unixtime,
+};
 
 pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let _start = SystemTime::now();
@@ -34,9 +32,9 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
     let kind = &opts.kind;
     debug!("gnostr legit:kind={:?}", &kind);
 
-	//for message in &opts.message {
-	//	println!("----------->>>\nopts.message={}\n", message);
-	//}
+    //for message in &opts.message {
+    //	println!("----------->>>\nopts.message={}\n", message);
+    //}
 
     let repo = Repository::discover(&opts.repo).expect("Couldn't open repository");
 
@@ -59,8 +57,6 @@ pub async fn run_legit_command(mut opts: gitminer::Options) -> io::Result<()> {
             .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
             .unwrap();
     }
-
-
 
     if opts.message.is_empty() {
         let output = if cfg!(target_os = "windows") {
@@ -221,12 +217,16 @@ pub async fn create_event(
     let (signed_event, _unsigned_event) =
         create_event_with_custom_tags(&keys, content, custom_tags).await?;
 
-    info!("gnostr/src/lib/legit/command.rs:224:signed_event={}", serde_json::to_string_pretty(&signed_event)?);
+    info!(
+        "gnostr/src/lib/legit/command.rs:224:signed_event={}",
+        serde_json::to_string_pretty(&signed_event)?
+    );
 
     let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
     let mut client = crate::nostr_client::NostrClient::new(queue_tx.clone());
 
-    for relay in BOOTSTRAP_RELAYS.iter().cloned() { //TODO get from crawler
+    for relay in BOOTSTRAP_RELAYS.iter().cloned() {
+        //TODO get from crawler
         debug!("gnostr/src/lib/legit/command.rs:230:relay={}", relay);
         client
             .connect_relay(UncheckedUrl(relay.to_string()))
@@ -256,7 +256,7 @@ pub async fn create_event(
 
     // Publish a text note
 
-	//TODO test tags
+    //TODO test tags
     let pubkey_keys = keys.public_key();
     info!("pubkey={}", pubkey_keys.as_hex_string());
 
@@ -277,7 +277,11 @@ pub async fn create_event(
         created_at: Unixtime::now(),
         kind: EventKind::TextNote,
         tags,
-        content: format!("gnostr/src/lib/legit/command.rs:280:\n{}", pubkey_keys.as_hex_string()).to_string(),
+        content: format!(
+            "gnostr/src/lib/legit/command.rs:280:\n{}",
+            pubkey_keys.as_hex_string()
+        )
+        .to_string(),
     };
 
     let id = pre_event.hash().unwrap();
@@ -362,7 +366,12 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     let custom_tags_clone = custom_tags.clone();
     global_rt().spawn(async move {
         //send to create_event function with &"custom content"
-        let signed_event = create_event(empty_hash_keys, custom_tags_clone, "gnostr/src/lib/legit/command.rs365:gnostr-legit:event").await;
+        let signed_event = create_event(
+            empty_hash_keys,
+            custom_tags_clone,
+            "gnostr/src/lib/legit/command.rs365:gnostr-legit:event",
+        )
+        .await;
         println!("signed_event:\n{:?}", signed_event);
         io::stdout().flush().unwrap(); // Flush stdout
     });
@@ -379,7 +388,10 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     let commit = obj.peel_to_commit()?;
     let serialized_commit = serialize_commit(&commit)?;
     debug!("Serialized commit:\n{}", serialized_commit.clone());
-    custom_tags.insert("serialized_commit".to_string(), vec![serialized_commit.clone()]);
+    custom_tags.insert(
+        "serialized_commit".to_string(),
+        vec![serialized_commit.clone()],
+    );
     let commit_id = commit.id().to_string();
     //some info wrangling
     debug!("commit_id:\n{}", commit_id);
@@ -398,7 +410,10 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
     //create a HashMap of custom_tags
     //used to insert commit tags
     let mut custom_tags = HashMap::new();
-    custom_tags.insert("serialized_commit".to_string(), vec![serialized_commit_for_kind_event.clone().to_string()]);
+    custom_tags.insert(
+        "serialized_commit".to_string(),
+        vec![serialized_commit_for_kind_event.clone().to_string()],
+    );
     custom_tags.insert("gnostr".to_string(), vec!["git".to_string()]);
     custom_tags.insert("GIT".to_string(), vec!["GNOSTR".to_string()]);
     custom_tags.insert(
@@ -410,8 +425,12 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
         let result: anyhow::Result<()> = async {
             //send to create_event function with &"custom content"
             //send to create_event function with &"custom content"
-            let create_event_result =
-                create_event(padded_keys.clone(), custom_tags, "gnostr/src/lib/legit/command.rs:412:gnostr-legit:event").await?;
+            let create_event_result = create_event(
+                padded_keys.clone(),
+                custom_tags,
+                "gnostr/src/lib/legit/command.rs:412:gnostr-legit:event",
+            )
+            .await?;
             println!(
                 "Commit-based create_event result:\n{:?}",
                 create_event_result
@@ -555,7 +574,7 @@ pub async fn gnostr_legit_event(kind: Option<u16>) -> Result<(), Box<dyn StdErro
             //create nostr client with commit based keys
             //let client = Client::new(keys);
             let (queue_tx, _queue_rx) = mpsc::channel(100); // Create a channel for internal events
-            //note nostr_client not in gnostr_asyncgit::types
+                                                            //note nostr_client not in gnostr_asyncgit::types
             let mut client = crate::nostr_client::NostrClient::new(queue_tx.clone());
 
             for relay in BOOTSTRAP_RELAYS.iter().cloned() {

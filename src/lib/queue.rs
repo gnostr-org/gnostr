@@ -2,8 +2,8 @@ use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
 
 use bitflags::bitflags;
 use gnostr_asyncgit::{
+    sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
-    sync::{CommitId, LogFilterSearchOptions, diff::DiffLinePosition},
 };
 
 use crate::{
@@ -14,7 +14,7 @@ use crate::{
     },
     tabs::StashingOptions,
 };
-use gnostr_asyncgit::types::{Id, UncheckedUrl, EventV3};
+use gnostr_asyncgit::types::{EventV3, Id, UncheckedUrl};
 
 bitflags! {
     /// flags defining what part of the app need to update
