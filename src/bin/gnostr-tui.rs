@@ -22,10 +22,10 @@ fn install_rustls_crypto_provider() {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     install_rustls_crypto_provider();
-    env::set_var("GNOSTR_GITDIR", "");
-    env::set_var("WEEBLE", "0");
-    env::set_var("BLOCKHEIGHT", "0");
-    env::set_var("WOBBLE", "0");
+    unsafe { env::set_var("GNOSTR_GITDIR", "") };
+    unsafe { env::set_var("WEEBLE", "0") };
+    unsafe { env::set_var("BLOCKHEIGHT", "0") };
+    unsafe { env::set_var("WOBBLE", "0") };
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
     // Setup tracing subscriber once and globally
@@ -114,7 +114,7 @@ async fn main() -> anyhow::Result<()> {
 
             // GNOSTR_GITDIR is used to enable "gnostr chat" or other cases
             // to start outside any GITDIR
-            env::set_var("GNOSTR_GITDIR", path_os_str);
+            unsafe { env::set_var("GNOSTR_GITDIR", path_os_str) };
         }
         None => {
             // OBJECTIVE to let sub services like "gnostr chat" to run outside of repos
@@ -159,7 +159,7 @@ async fn main() -> anyhow::Result<()> {
     }
     if gnostr_cli_args.blockhash {
         let result = blockhash::blockhash().unwrap();
-        env::set_var("BLOCKHASH", &result);
+        unsafe { env::set_var("BLOCKHASH", &result) };
         print!("{}", result);
         std::process::exit(0);
     }

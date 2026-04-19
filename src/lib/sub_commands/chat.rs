@@ -66,7 +66,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error
             // Ensure we don't set it to an empty string if derivation resulted in one
             // (though unlikely with hex)
             use std::env;
-            env::set_var("USER", &user_name);
+            unsafe { env::set_var("USER", &user_name) };
             tracing::debug!("USER environment variable set to: {}", user_name);
         }
     }

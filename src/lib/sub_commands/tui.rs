@@ -328,7 +328,7 @@ pub async fn tui(
     let sub_command_args = sub_command_args;
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
-        env::set_var("USER", &name);
+        unsafe { env::set_var("USER", &name) };
     }
 
     let level = if sub_command_args.debug {

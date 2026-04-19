@@ -18,7 +18,7 @@ fn pathappend(args: &[String]) {
             .unwrap()
             .to_string_lossy()
             .into_owned();
-        env::set_var("PATH", &current_path);
+        unsafe { env::set_var("PATH", &current_path) };
         println!("New PATH: {}", current_path);
     } else {
         println!("PATH not changed.");
@@ -44,7 +44,7 @@ fn pathprepend(args: &[String]) {
             .unwrap()
             .to_string_lossy()
             .into_owned();
-        env::set_var("PATH", &current_path);
+        unsafe { env::set_var("PATH", &current_path) };
         println!("New PATH: {}", current_path);
     } else {
         println!("PATH not changed.");

@@ -161,7 +161,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
     if let Some(name) = args.name.clone() {
         use std::env;
-        env::set_var("USER", &name);
+        unsafe { env::set_var("USER", &name) };
     };
     // Determine the KeySigner to use
     let nsec_hex = if let Some(nsec) = args.nsec.clone() {

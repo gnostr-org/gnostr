@@ -465,7 +465,7 @@ mod tests {
         let nostr_url = "nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/nostr.cro.social/gnostr";
 
         // Set environment to use gnostr binary for CliTester
-        std::env::set_var("CARGO_BIN_EXE_ngit", "gnostr");
+        unsafe { std::env::set_var("CARGO_BIN_EXE_ngit", "gnostr") };
 
         let bech32_output = Command::new("cargo")
             .args(&[
