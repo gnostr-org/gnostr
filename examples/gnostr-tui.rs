@@ -15,10 +15,10 @@ use tracing_subscriber::{fmt, util::SubscriberInitExt, EnvFilter, Registry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
-    env::set_var("GNOSTR_GITDIR", "");
-    env::set_var("WEEBLE", "0");
-    env::set_var("BLOCKHEIGHT", "0");
-    env::set_var("WOBBLE", "0");
+    unsafe { env::set_var("GNOSTR_GITDIR", "") };
+    unsafe { env::set_var("WEEBLE", "0") };
+    unsafe { env::set_var("BLOCKHEIGHT", "0") };
+    unsafe { env::set_var("WOBBLE", "0") };
     let args: GnostrCli = GnostrCli::parse();
 
     let app_cache = get_app_cache_path();
@@ -58,7 +58,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         let path_os_str = repo_path.as_path().as_os_str();
 
         // Now set the environment variable
-        env::set_var("GNOSTR_GITDIR", path_os_str);
+        unsafe { env::set_var("GNOSTR_GITDIR", path_os_str) };
 
         debug!("main:57:{:?}", args.gitdir.clone().expect(""));
         //env::set_var("GNOSTR_GITDIR", args.gitdir.clone().expect(""));
