@@ -28,17 +28,16 @@ async fn main() -> Result<()> {
                 info!("Load config from file: {}", config_file_path);
                 Some(config_file_path)
             } else {
-                info!("Config file not found: {}, loading default config.", config_file_path);
+                info!(
+                    "Config file not found: {}, loading default config.",
+                    config_file_path
+                );
                 None
             };
 
-            let app_data = gnostr_relay::App::create(
-                setting_path,
-                true,
-                Some("NOSTR".to_owned()),
-                None,
-            )
-            .map_err(anyhow::Error::from)?;
+            let app_data =
+                gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), None)
+                    .map_err(anyhow::Error::from)?;
             app_data.web_server()?.await.map_err(anyhow::Error::from)
         })
         .await?;
