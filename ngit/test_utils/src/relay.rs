@@ -26,7 +26,7 @@ impl<'a> Relay<'a> {
         req_listener: Option<ListenerReqFunc<'a>>,
     ) -> Self {
         let mut last_error = None;
-        let event_hub = (0..50)
+        let event_hub = (0..200)
             .find_map(|_| match simple_websockets::launch(port) {
                 Ok(event_hub) => Some(event_hub),
                 Err(error) => {
