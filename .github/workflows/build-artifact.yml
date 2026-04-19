@@ -263,8 +263,8 @@ jobs:
         fi
         echo $GITHUB_ENV && printenv
 
-    - name: Generate Cargo.lock
-      run: cargo generate-lockfile && git diff Cargo.lock
+    #- name: Generate Cargo.lock
+    #  run: cargo generate-lockfile && git diff Cargo.lock
 
     - name: Build release binary
       shell: bash
