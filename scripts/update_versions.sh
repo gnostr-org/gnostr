@@ -307,6 +307,7 @@ done < <(
 )
 
 git add -- "${manifest_paths[@]}"
+git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 
 if [ -n "${VERSION_TAG:-}" ]; then
     git reset --soft HEAD~1
