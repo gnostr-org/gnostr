@@ -332,4 +332,5 @@ if [ -n "$(git status --porcelain -- Cargo.lock)" ]; then
     fi
 fi
 
-cargo publish -j8 --no-verify
+cargo publish -j8 --no-verify && git push origin $VERSION_TAG:$VERSION_TAG
+
