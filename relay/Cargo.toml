@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version.workspace = true
+version = "1878.945840.350425"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -12,11 +12,10 @@ keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
 categories = ["network-programming", "web-programming"]
 
 [features]
-default = []
 search = ["nostr-db/search"]
 
 [dependencies]
-actix = "0.13.5"
+actix = "0.12.0"
 actix-cors = "0.7.0"
 actix-http = "3.9.0"
 actix-web = "4.9.0"
@@ -26,8 +25,8 @@ bytes = "1.7.1"
 bytestring = "1.3.1"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 config = { version = "0.14.0", features = [
-  "toml",
-  "json",
+    "toml",
+    "json",
 ], default-features = false }
 duration-str = { version = "0.11.2", default-features = false }
 hex = "0.4.3"
