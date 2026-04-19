@@ -25,6 +25,9 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
+      WEEBLE: "0"
+      WOBBLE: "0"
+      BLOCKHEIGHT: "0"
     strategy:
       matrix:
         os: [ubuntu-latest, macos-15-intel, macos-latest, windows-latest]
