@@ -18,7 +18,7 @@ set_workspace_version() {
 cd "$REPO_ROOT"
 
 git add scripts
-git add Cargo.lock 2>/dev/null || true
+git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
 git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 NEW_TAG="$(gnostr git tag create)"
 NEW_VERSION="${NEW_TAG#v}"
@@ -31,7 +31,7 @@ fi
 set_workspace_version "$ROOT_CARGO_TOML" "$NEW_VERSION"
 taplo format "$ROOT_CARGO_TOML"
 
-git add Cargo.lock 2>/dev/null || true
+git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
 git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 git add "$ROOT_CARGO_TOML"
 gnostr legit -m "$NEW_TAG"
