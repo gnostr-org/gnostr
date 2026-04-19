@@ -119,6 +119,7 @@ jobs:
       - uses: sfackler/actions/rustup@master
       - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
         id: rust-version
+      - run: which cargo || true
       - uses: ./.github/actions/vcpkg-action
         with:
           arch: ${{ matrix.os.arch }}
@@ -133,13 +134,13 @@ jobs:
         with:
           path: ~/.cargo/bin
           key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-      - run: cargo generate-lockfile && git diff
+      #- run: cargo generate-lockfile && git diff
       #- run: cargo fetch
       #- uses: actions/cache@v4
       #  with:
       #    path: target
       #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-      #- run: cargo clean
+      - run: cargo clean
       #- run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
