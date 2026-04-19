@@ -180,7 +180,12 @@ while True:
         offset = block_end
         continue
 
-    updated_block, count = re.subn(r'(\bversion\s*=\s*")[^"]*(")', rf'\1{version}\2', block, count=1)
+    updated_block, count = re.subn(
+        r'(\bversion\s*=\s*")[^"]*(")',
+        lambda m: f"{m.group(1)}{version}{m.group(2)}",
+        block,
+        count=1,
+    )
     if count:
         text = text[:match.start()] + updated_block + text[block_end:]
         offset = match.start() + len(updated_block)

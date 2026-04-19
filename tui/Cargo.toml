@@ -13,12 +13,12 @@ path = "./src/lib.rs"
 
 [dependencies]
 arboard = "3"
-asyncgit = { package = "gnostr-asyncgit", version = "1878.945649.607219", path = "../asyncgit" }
+asyncgit = { package = "gnostr-asyncgit", version = "1878.945691.549040", path = "../asyncgit" }
 bech32 = "0.11"
 blossom-rs = "0.5.6"
 crossbeam-channel = "0.5"
 crossterm = "0.29"
-filetreelist = { package = "gnostr-filetreelist", version = "1878.945649.607219", path = "../filetreelist" }
+filetreelist = { package = "gnostr-filetreelist", version = "1878.945691.549040", path = "../filetreelist" }
 futures-util = { version = "0.3", default-features = false, features = [
   "sink",
   "std",
