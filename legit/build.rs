@@ -95,7 +95,7 @@ fn command_exists(command: &str) -> bool {
 fn check_sccache() {
     if Command::new("sccache").arg("--version").output().is_ok() {
         println!("cargo:warning=sccache detected, setting RUSTC_WRAPPER.");
-        env::set_var("RUSTC_WRAPPER", "sccache");
+        unsafe { env::set_var("RUSTC_WRAPPER", "sccache") };
         println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
     } else {
         println!("cargo:warning=sccache not found - trying to install.");
