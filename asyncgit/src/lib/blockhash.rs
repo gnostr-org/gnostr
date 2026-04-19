@@ -7,7 +7,7 @@ pub fn blockhash() -> Result<String, ascii::AsciiChar> {
         Ok(val) => val,
         Err(_) => "0".to_string(),
     };
-    env::set_var("BLOCKHASH", blockhash.clone());
+    unsafe { env::set_var("BLOCKHASH", blockhash.clone()) };
     Ok(blockhash)
 }
 
@@ -17,7 +17,7 @@ pub async fn blockhash_async() -> String {
         Ok(val) => val.to_string(),
         Err(_) => "0".to_string(),
     };
-    env::set_var("BLOCKHASH", blockhash.clone());
+    unsafe { env::set_var("BLOCKHASH", blockhash.clone()) };
     blockhash
 }
 pub fn blockhash_sync() -> String {

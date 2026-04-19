@@ -267,11 +267,11 @@ async fn main() -> Result<(), anyhow::Error> {
     // Set logging level based on args, only if RUST_LOG is not already set
     if std::env::var_os("RUST_LOG").is_none() {
         if args.debug {
-            std::env::set_var("RUST_LOG", "debug");
+            unsafe { std::env::set_var("RUST_LOG", "debug") };
         } else if args.info {
-            std::env::set_var("RUST_LOG", "info");
+            unsafe { std::env::set_var("RUST_LOG", "info") };
         } else {
-            std::env::set_var("RUST_LOG", "warn");
+            unsafe { std::env::set_var("RUST_LOG", "warn") };
         }
     }
 

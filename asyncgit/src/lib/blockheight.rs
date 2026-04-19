@@ -13,7 +13,7 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
         Err(_) => 0.0,
     };
 
-    env::set_var("BLOCKHEIGHT", blockheight.to_string());
+    unsafe { env::set_var("BLOCKHEIGHT", blockheight.to_string()) };
     Ok(blockheight)
 }
 
@@ -23,7 +23,7 @@ pub async fn blockheight_async() -> String {
             Ok(val) => val.to_string(),
             Err(_) => "0".to_string(),
         };
-    env::set_var("BLOCKHEIGHT", blockheight.clone());
+    unsafe { env::set_var("BLOCKHEIGHT", blockheight.clone()) };
     blockheight
 }
 pub fn blockheight_sync() -> String {
@@ -31,6 +31,6 @@ pub fn blockheight_sync() -> String {
         Ok(val) => val.to_string(),
         Err(_) => "0".to_string(),
     };
-    env::set_var("BLOCKHEIGHT", blockheight.clone());
+    unsafe { env::set_var("BLOCKHEIGHT", blockheight.clone()) };
     blockheight
 }
