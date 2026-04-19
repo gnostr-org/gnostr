@@ -304,7 +304,7 @@ if [ -n "${VERSION_TAG:-}" ]; then
     git reset --soft HEAD~1
     gnostr legit -m "$VERSION_TAG"
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
-    gnostr legit -m "v$WORKSPACE_VERSION"
+    gnostr legit -m "v$WORKSPACE_VERSION" --pow 000000
 fi
 
 if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
