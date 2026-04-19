@@ -129,11 +129,11 @@ jobs:
       #    key: index-${{ runner.os }}-${{ github.run_number }}
       #    restore-keys: |
       #      index-${{ runner.os }}-
-      - run: cargo generate-lockfile && git diff
       - uses: actions/cache@v4
         with:
           path: ~/.cargo/bin
           key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo generate-lockfile && git diff
       #- run: cargo fetch
       #- uses: actions/cache@v4
       #  with:
