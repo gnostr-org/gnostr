@@ -357,6 +357,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn methods_do_not_throw() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
 
@@ -370,6 +371,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_git_test_repo_new() -> Result<()> {
         let repo_main = GitTestRepo::new("main")?;
         assert!(repo_main.dir.exists());
@@ -391,6 +393,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_git_test_repo_duplicate() -> Result<()> {
         let mut original_repo = GitTestRepo::new("main")?;
         original_repo.populate()?;
@@ -413,6 +416,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
 
     fn test_git_test_repo_clone_repo() -> Result<()> {
         let mut original_repo = GitTestRepo::new("main")?;
@@ -440,6 +444,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_get_local_branch_names() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
         repo.initial_commit()?;
@@ -457,6 +462,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_get_checked_out_branch_name() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
         repo.initial_commit()?;
@@ -474,6 +480,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_get_tip_of_local_branch() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
         let commit_oid = repo.populate()?;

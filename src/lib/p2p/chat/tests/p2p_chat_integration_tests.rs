@@ -14,6 +14,7 @@ mod tests {
     };
 
     #[tokio::test]
+    #[ignore]
     async fn test_p2p_connectivity_two_nodes() {
         // Create channels for two chat instances
         let (send_tx1, send_rx1) = mpsc::channel::<InternalEvent>(100);

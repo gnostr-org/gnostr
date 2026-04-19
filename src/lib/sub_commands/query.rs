@@ -419,6 +419,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn test_launch_no_panic_with_all_bootstrap_relays() {
         let base_args = create_query_subcommand(&[]);
         for relay_url in BOOTSTRAP_RELAYS

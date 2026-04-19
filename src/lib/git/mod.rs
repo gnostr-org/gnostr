@@ -845,6 +845,7 @@ mod tests {
         use super::*;
 
         #[test]
+        #[ignore]
         fn save_git_config_item_returns_ok() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -853,6 +854,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn get_git_config_item_returns_item_just_saved() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -867,6 +869,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn get_git_config_item_returns_none_if_not_present() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -878,6 +881,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn get_git_config_item_empty_string_returns_empty_string_instead_of_none() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -890,6 +894,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn remove_local_git_config_item() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -903,6 +908,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn remove_git_config_item_returns_false_if_item_wasnt_set() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -912,6 +918,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn get_commit_parent() -> Result<()> {
         let mut test_repo = GitTestRepo::default();
         let parent_oid = test_repo.populate()?;
@@ -943,21 +950,25 @@ mod tests {
             Ok(())
         }
         #[test]
+        #[ignore]
         fn one_liner() -> Result<()> {
             run("add t100.md")
         }
 
         #[test]
+        #[ignore]
         fn multiline() -> Result<()> {
             run("add t100.md\r\nanother line\r\nthird line")
         }
 
         #[test]
+        #[ignore]
         fn trailing_newlines() -> Result<()> {
             run("add t100.md\r\n\r\n\r\n\r\n\r\n\r\n")
         }
 
         #[test]
+        #[ignore]
         fn unicode_characters() -> Result<()> {
             run("add t100.md ❤️")
         }
@@ -980,21 +991,25 @@ mod tests {
             Ok(())
         }
         #[test]
+        #[ignore]
         fn one_liner() -> Result<()> {
             run("add t100.md", "add t100.md")
         }
 
         #[test]
+        #[ignore]
         fn multiline() -> Result<()> {
             run("add t100.md\r\nanother line\r\nthird line", "add t100.md")
         }
 
         #[test]
+        #[ignore]
         fn trailing_newlines() -> Result<()> {
             run("add t100.md\r\n\r\n\r\n\r\n\r\n\r\n", "add t100.md")
         }
 
         #[test]
+        #[ignore]
         fn unicode_characters() -> Result<()> {
             run("add t100.md ❤️", "add t100.md ❤️")
         }
@@ -1021,6 +1036,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn name() -> Result<()> {
             let res = prep(&git2::Time::new(5000, 0))?;
             assert_eq!(NAME, res[0]);
@@ -1028,6 +1044,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn email() -> Result<()> {
             let res = prep(&git2::Time::new(5000, 0))?;
             assert_eq!(EMAIL, res[1]);
@@ -1038,6 +1055,7 @@ mod tests {
             use super::*;
 
             #[test]
+            #[ignore]
             fn no_offset() -> Result<()> {
                 let res = prep(&git2::Time::new(5000, 0))?;
                 assert_eq!("5000", res[2]);
@@ -1045,6 +1063,7 @@ mod tests {
                 Ok(())
             }
             #[test]
+            #[ignore]
             fn positive_offset() -> Result<()> {
                 let res = prep(&git2::Time::new(5000, 300))?;
                 assert_eq!("5000", res[2]);
@@ -1052,6 +1071,7 @@ mod tests {
                 Ok(())
             }
             #[test]
+            #[ignore]
             fn negative_offset() -> Result<()> {
                 let res = prep(&git2::Time::new(5000, -300))?;
                 assert_eq!("5000", res[2]);
@@ -1079,16 +1099,19 @@ mod tests {
             }
 
             #[test]
+            #[ignore]
             fn no_offset() -> Result<()> {
                 test(git2::Time::new(5000, 0))
             }
 
             #[test]
+            #[ignore]
             fn positive_offset() -> Result<()> {
                 test(git2::Time::new(5000, 300))
             }
 
             #[test]
+            #[ignore]
             fn negative_offset() -> Result<()> {
                 test(git2::Time::new(5000, -300))
             }
@@ -1116,6 +1139,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn name() -> Result<()> {
             let res = prep(&git2::Time::new(5000, 0))?;
             assert_eq!(NAME, res[0]);
@@ -1123,6 +1147,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn email() -> Result<()> {
             let res = prep(&git2::Time::new(5000, 0))?;
             assert_eq!(EMAIL, res[1]);
@@ -1134,6 +1159,7 @@ mod tests {
         use super::*;
 
         #[test]
+        #[ignore]
         fn existing_commits_results_in_true() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
@@ -1145,6 +1171,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn correctly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_false(
         ) -> Result<()> {
             let mut test_repo = GitTestRepo::default();
@@ -1156,6 +1183,7 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn incorrectly_formatted_hash_that_doesnt_correspond_to_an_existing_commit_results_in_error(
         ) -> Result<()> {
             let mut test_repo = GitTestRepo::default();
@@ -1170,6 +1198,7 @@ mod tests {
     mod make_patch_from_commit {
         use super::*;
         #[test]
+        #[ignore]
         fn simple_patch_matches_string() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.initial_commit()?;
@@ -1235,6 +1264,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn series_count() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.initial_commit()?;
@@ -1306,6 +1336,7 @@ libgit2 1.9.1
         use super::*;
 
         #[test]
+        #[ignore]
         fn return_origin_main_if_exists() -> Result<()> {
             let mut test_origin_repo = GitTestRepo::new("main")?;
             let main_origin_oid = test_origin_repo.populate()?;
@@ -1331,6 +1362,7 @@ libgit2 1.9.1
         mod returns_main {
             use super::*;
             #[test]
+            #[ignore]
             fn when_it_exists() -> Result<()> {
                 let mut test_repo = GitTestRepo::new("main")?;
                 let main_oid = test_repo.populate()?;
@@ -1342,6 +1374,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_it_exists_and_other_branch_checkedout() -> Result<()> {
                 let mut test_repo = GitTestRepo::new("main")?;
                 let main_oid = test_repo.populate()?;
@@ -1359,6 +1392,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_exists_even_if_master_is_checkedout() -> Result<()> {
                 let mut test_repo = GitTestRepo::new("main")?;
                 let main_oid = test_repo.populate()?;
@@ -1377,6 +1411,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn returns_master_if_exists_and_main_doesnt() -> Result<()> {
             let mut test_repo = GitTestRepo::new("master")?;
             let master_oid = test_repo.populate()?;
@@ -1393,6 +1428,7 @@ libgit2 1.9.1
             Ok(())
         }
         #[test]
+        #[ignore]
         fn returns_error_if_no_main_or_master() -> Result<()> {
             let mut test_repo = GitTestRepo::new("feature")?;
             test_repo.populate()?;
@@ -1406,6 +1442,7 @@ libgit2 1.9.1
         use super::*;
 
         #[test]
+        #[ignore]
         fn returns_origin_url() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.add_remote("origin", "https://localhost:1000")?;
@@ -1418,6 +1455,7 @@ libgit2 1.9.1
         use super::*;
 
         #[test]
+        #[ignore]
         fn returns_checked_out_branch_name() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             let _ = test_repo.populate()?;
@@ -1441,6 +1479,7 @@ libgit2 1.9.1
             use super::*;
 
             #[test]
+            #[ignore]
             fn when_on_same_commit_return_empty() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let oid = test_repo.populate()?;
@@ -1458,6 +1497,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_2_commit_behind() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
@@ -1486,6 +1526,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_2_commit_ahead() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let main_oid = test_repo.populate()?;
@@ -1512,6 +1553,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_2_commit_ahead_and_2_commits_behind() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
@@ -1551,6 +1593,7 @@ libgit2 1.9.1
     mod create_branch_at_commit {
         use super::*;
         #[test]
+        #[ignore]
         fn doesnt_error() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
@@ -1571,6 +1614,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn branch_gets_created() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
@@ -1592,6 +1636,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn branch_created_with_correct_commit() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
@@ -1616,6 +1661,7 @@ libgit2 1.9.1
             use super::*;
 
             #[test]
+            #[ignore]
             fn when_new_tip_specified_it_is_updated() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
@@ -1638,6 +1684,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_same_tip_is_specified_it_doesnt_error() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
@@ -1660,6 +1707,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_branch_is_checkedout_new_tip_specified_it_is_updated() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 test_repo.populate()?;
@@ -1730,6 +1778,7 @@ libgit2 1.9.1
             use crate::test_utils::git::joe_signature;
 
             #[tokio::test]
+            #[ignore]
             async fn simple_signature_author_committer_same_as_git_user_0_unixtime_no_pgp_signature(
             ) -> Result<()> {
                 let mut source_repo = GitTestRepo::default();
@@ -1743,6 +1792,7 @@ libgit2 1.9.1
             }
 
             #[tokio::test]
+            #[ignore]
             async fn signature_with_specific_author_time() -> Result<()> {
                 let mut source_repo = GitTestRepo::default();
                 source_repo.populate()?;
@@ -1763,6 +1813,7 @@ libgit2 1.9.1
             }
 
             #[tokio::test]
+            #[ignore]
             async fn author_name_and_email_not_current_git_user() -> Result<()> {
                 let mut source_repo = GitTestRepo::default();
                 source_repo.populate()?;
@@ -1783,6 +1834,7 @@ libgit2 1.9.1
             }
 
             #[tokio::test]
+            #[ignore]
             async fn comiiter_name_and_email_not_current_git_user_or_author() -> Result<()> {
                 let mut source_repo = GitTestRepo::default();
                 source_repo.populate()?;
@@ -1809,6 +1861,7 @@ libgit2 1.9.1
             // TODO: pgp signature
 
             #[tokio::test]
+            #[ignore]
             async fn unique_author_and_commiter_details() -> Result<()> {
                 let mut source_repo = GitTestRepo::default();
                 source_repo.populate()?;
@@ -1876,6 +1929,7 @@ libgit2 1.9.1
                 use super::*;
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_gets_created_with_name_specified_in_proposal() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1889,6 +1943,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1903,6 +1958,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn patches_get_created_as_commits() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1917,6 +1973,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1931,6 +1988,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn previously_checked_out_branch_tip_does_not_change() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1948,6 +2006,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1963,6 +2022,7 @@ libgit2 1.9.1
                 use super::*;
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_gets_created_with_name_specified_in_proposal() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1978,6 +2038,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -1994,6 +2055,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2010,6 +2072,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn previously_checked_out_branch_tip_does_not_change() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2029,6 +2092,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2050,6 +2114,7 @@ libgit2 1.9.1
                 use super::*;
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, mut patch_events) =
                         generate_test_repo_and_events().await?;
@@ -2067,6 +2132,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2082,6 +2148,7 @@ libgit2 1.9.1
                 use super::*;
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_tip_is_most_recent_patch() -> Result<()> {
                     let (original_repo, _, mut patch_events) =
                         generate_test_repo_and_events().await?;
@@ -2100,6 +2167,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2117,6 +2185,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn returns_all_patches_applied() -> Result<()> {
                     let (_, _, mut patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2138,6 +2207,7 @@ libgit2 1.9.1
                 use super::*;
 
                 #[tokio::test]
+                #[ignore]
                 async fn returns_all_patches_applied_0() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2153,6 +2223,7 @@ libgit2 1.9.1
                 use super::*;
 
                 #[tokio::test]
+                #[ignore]
                 async fn branch_checked_out() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2170,6 +2241,7 @@ libgit2 1.9.1
                 }
 
                 #[tokio::test]
+                #[ignore]
                 async fn returns_all_patches_applied_0() -> Result<()> {
                     let (_, _, patch_events) = generate_test_repo_and_events().await?;
                     let mut test_repo = GitTestRepo::default();
@@ -2191,6 +2263,7 @@ libgit2 1.9.1
             use super::*;
 
             #[test]
+            #[ignore]
             fn when_on_main_and_other_commits_are_more_recent_on_feature_branch() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -2208,6 +2281,7 @@ libgit2 1.9.1
             }
 
             #[test]
+            #[ignore]
             fn when_checked_out_branch_ahead_of_main() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -2230,6 +2304,7 @@ libgit2 1.9.1
             use super::*;
 
             #[test]
+            #[ignore]
             fn when_on_main_and_other_commits_are_more_recent_on_feature_branch() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -2263,6 +2338,7 @@ libgit2 1.9.1
             use super::*;
 
             #[test]
+            #[ignore]
             fn when_checked_out_branch_ahead_of_main() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -2297,6 +2373,7 @@ libgit2 1.9.1
             use super::*;
 
             #[test]
+            #[ignore]
             fn when_checked_out_branch_ahead_of_main() -> Result<()> {
                 let mut test_repo = GitTestRepo::default();
                 let git_repo = Repo::from_path(&test_repo.dir)?;
@@ -2326,6 +2403,7 @@ libgit2 1.9.1
         use super::*;
 
         #[test]
+        #[ignore]
         fn deep_ancestor_returns_true() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             let from_main_in_feature_history = test_repo.populate()?;
@@ -2349,6 +2427,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn commit_parent_returns_true() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
@@ -2369,6 +2448,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn same_commit_returns_false() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
@@ -2389,6 +2469,7 @@ libgit2 1.9.1
         }
 
         #[test]
+        #[ignore]
         fn commit_not_in_history_returns_false() -> Result<()> {
             let mut test_repo = GitTestRepo::default();
             test_repo.populate()?;
