@@ -319,10 +319,6 @@ name = "git-remote-nostr"
 path = "src/bin/git-remote-nostr/main.rs"
 
 [[bin]]
-name = "git-remote-gnostr"
-path = "src/bin/git-remote-gnostr.rs"
-
-[[bin]]
 name = "gnostr-gnit"
 path = "src/bin/gnostr-gnit.rs"
 required-features = ["gnostr-web"]
