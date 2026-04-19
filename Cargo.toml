@@ -59,7 +59,7 @@ members = [
 ]
 
 [workspace.package]
-version = "1878.945705.530574"
+version = "1878.945705.530870"
 
 exclude = [
   ".git/",
