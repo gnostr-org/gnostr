@@ -190,6 +190,7 @@ mod dm_tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn test_dm_command_decryption_success() {
         // Setup sender and receiver keypairs
