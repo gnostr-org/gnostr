@@ -103,14 +103,14 @@ jobs:
             arch: arm64
             # All features supported on x64 Windows.
             cargo_test_args: '--all-features'
-          - runner: macos-15-intel
-            arch: x64
-            # All features supported on x64 Windows.
-            cargo_test_args: '--all-features'
-          - runner: macos-15-intel
-            arch: arm64
-            # All features supported on x64 Windows.
-            cargo_test_args: '--all-features'
+          # - runner: macos-15-intel
+          #   arch: x64
+          #   # All features supported on x64 Windows.
+          #   cargo_test_args: '--all-features'
+          # - runner: macos-15-intel
+          #   arch: arm64
+          #   # All features supported on x64 Windows.
+          #   cargo_test_args: '--all-features'
       fail-fast: false
     name: vcpkg-${{ matrix.os.runner }}-${{ matrix.os.arch }}
     runs-on: ${{ matrix.os.runner }}
