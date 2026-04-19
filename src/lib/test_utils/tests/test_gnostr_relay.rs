@@ -7,7 +7,7 @@ mod tests {
     use actix_test::start;
     use anyhow::Result;
     use futures_util::{SinkExt, StreamExt};
-    use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
+    use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
     use gnostr_relay::App as GnostrRelayApp;
     use nostr_0_34_1::{EventBuilder, Keys, Kind, Tag};
     use serde_json::json;
