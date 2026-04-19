@@ -321,4 +321,15 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
 done
 
+if [ -n "$(git status --porcelain -- Cargo.lock)" ]; then
+    git add Cargo.lock
+    git reset --soft HEAD~1
+    if [ -n "${VERSION_TAG:-}" ]; then
+        gnostr legit -m "$VERSION_TAG"
+        git tag -f "$VERSION_TAG" HEAD
+    else
+        gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
+    fi
+fi
+
 cargo publish -j8 --no-verify
