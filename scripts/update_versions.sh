@@ -303,6 +303,7 @@ git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || t
 if [ -n "${VERSION_TAG:-}" ]; then
     git reset --soft HEAD~1
     gnostr legit -m "$VERSION_TAG"
+    git tag -f "$VERSION_TAG" HEAD
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
 fi
