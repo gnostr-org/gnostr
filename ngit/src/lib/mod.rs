@@ -2,12 +2,14 @@ extern crate self as ngit;
 
 pub mod accept_maintainership;
 #[path = "../bin/ngit/cli.rs"]
+#[cfg(not(test))]
 pub mod cli;
 pub mod cli_interactor;
 pub mod client;
 pub mod fetch;
 pub mod git;
 pub mod git_events;
+#[cfg(not(test))]
 pub mod git_remote_nostr;
 pub mod list;
 pub mod login;
@@ -16,6 +18,7 @@ pub mod push;
 pub mod repo_ref;
 pub mod repo_state;
 #[path = "../bin/ngit/sub_commands/mod.rs"]
+#[cfg(not(test))]
 pub mod sub_commands;
 // TEMPORARY: Remove when async-wsocket includes Happy Eyeballs support.
 // See src/lib/transport.rs header for full removal instructions.
@@ -23,7 +26,9 @@ pub mod transport;
 pub mod utils;
 
 use anyhow::{Result, anyhow};
+#[cfg(not(test))]
 use clap::CommandFactory;
+#[cfg(not(test))]
 use cli::{AccountCommands, CUSTOMISE_TEMPLATE, Cli, Commands};
 use directories::ProjectDirs;
 use nostr_sdk::Url;
@@ -54,10 +59,12 @@ impl UrlWithoutSlash for Url {
     }
 }
 
+#[cfg(not(test))]
 pub fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
+#[cfg(not(test))]
 pub async fn run_cli(cli: &Cli) -> Result<()> {
     install_rustls_crypto_provider();
 
