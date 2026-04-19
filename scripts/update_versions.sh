@@ -250,15 +250,6 @@ done < <(managed_manifests)
 
 echo "Local path dependency versions synchronized."
 
-if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
-    echo "Error: CARGO_REGISTRY_TOKEN is not set."
-    echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
-    echo "You can get one from https://crates.io/settings/tokens"
-    exit 1
-fi
-
-export CARGO_REGISTRY_TOKEN
-
 SORT_CRATES=(
     git2-hooks
     grammar
@@ -315,6 +306,15 @@ if [ -n "${VERSION_TAG:-}" ]; then
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
     gnostr legit -m "v$WORKSPACE_VERSION"
 fi
+
+if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
+    echo "Error: CARGO_REGISTRY_TOKEN is not set."
+    echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
+    echo "You can get one from https://crates.io/settings/tokens"
+    exit 1
+fi
+
+export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null

@@ -2,8 +2,8 @@
 name = "gnostr-legit"
 version.workspace = true
 authors = [
-  "@RandyMcMillan <randy.lee.mcmillan@gmail.com>",
-  "John <john@throttle.io>",
+    "@RandyMcMillan <randy.lee.mcmillan@gmail.com>",
+    "John <john@throttle.io>",
 ]
 edition = "2021"
 rust-version = "1.61.0"

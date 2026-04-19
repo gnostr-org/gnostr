@@ -17,6 +17,7 @@ set_workspace_version() {
 
 cd "$REPO_ROOT"
 
+git add scripts
 git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 NEW_TAG="$(gnostr git tag create)"
 NEW_VERSION="${NEW_TAG#v}"
