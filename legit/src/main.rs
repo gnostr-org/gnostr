@@ -1,19 +1,20 @@
 #![allow(unused)]
 #![allow(dead_code)]
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate env_logger;
-use std::time::Instant;
 use std::convert::TryInto;
+use std::time::Instant;
 //use std::mem::size_of;
-use std::{io, thread};
-use argparse::{ArgumentParser,Store};
-use gitminer::Gitminer;
-use git2::*;
+use argparse::{ArgumentParser, Store};
 use crypto::sha2::Sha256;
+use git2::*;
+use gitminer::Gitminer;
+use std::{io, thread};
 
-mod worker;
 mod gitminer;
 mod repo;
+mod worker;
 
 //fn convert_to_u32(v: usize) -> Option<i8> {
 //    if v > (std::i8::MAX as i32).try_into().unwrap() {
@@ -39,13 +40,12 @@ fn main() -> io::Result<()> {
     //sha256.input_str(count);
     //let ip_address_hash: String = format!("{:X}", sha256.finalize());
 
-
-	//TODO kind 1617 patch default
-    let mut opts = gitminer::Options{
+    //TODO kind 1617 patch default
+    let mut opts = gitminer::Options {
         threads: count.try_into().unwrap(),
-        target:  "000".to_string(),
+        target: "000".to_string(),
         message: vec!["default commit message".to_string()],
-        repo:    ".".to_string(),
+        repo: ".".to_string(),
         timestamp: time_0_3::OffsetDateTime::now_utc(),
         kind: None,
     };
@@ -69,7 +69,11 @@ fn main() -> io::Result<()> {
     };
 
     let duration = start.elapsed();
-    println!("Success! Generated commit {} in {} seconds", hash, duration.as_secs());
+    println!(
+        "Success! Generated commit {} in {} seconds",
+        hash,
+        duration.as_secs()
+    );
     Ok(())
 }
 
@@ -80,18 +84,27 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     ap.refer(&mut opts.repo)
         //.add_argument("repository-path", Store, "Path to your git repository (required)");
         .add_argument("repository-path", Store, "Path to your git repository");
-        //.required();
+    //.required();
 
-    ap.refer(&mut opts.target)
-        .add_option(&["-p", "--prefix"], Store, "Desired commit prefix (required)");
-        //.required();
+    ap.refer(&mut opts.target).add_option(
+        &["-p", "--prefix"],
+        Store,
+        "Desired commit prefix (required)",
+    );
+    //.required();
 
-    ap.refer(&mut opts.threads)
-        .add_option(&["-t", "--threads"], Store, "Number of worker threads to use (default 8)");
+    ap.refer(&mut opts.threads).add_option(
+        &["-t", "--threads"],
+        Store,
+        "Number of worker threads to use (default 8)",
+    );
 
-    ap.refer(&mut opts.message)
-        .add_option(&["-m", "--message"], argparse::Collect, "Commit message to use (required)");
-        //.required();
+    ap.refer(&mut opts.message).add_option(
+        &["-m", "--message"],
+        argparse::Collect,
+        "Commit message to use (required)",
+    );
+    //.required();
 
     //ap.refer(&mut opts.timestamp)
     //    .add_option(&["--timestamp"], Store, "Commit timestamp to use (default now)");
