@@ -135,7 +135,7 @@ git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "18
 git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = "1878.945843.346028" }
 
 gnostr-asyncgit = { path = "asyncgit", version = "1878.945843.346028", default-features = false }
-gnostr-extensions = { path = "relay/extensions", version = "1878.945843.346028" }
+gnostr-extensions = { path = "relay/extensions", version = "1878.945843.346028", default-features = false }
 gnostr-grammar = { path = "grammar", version = "1878.945843.346028" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
 gnostr-legit = { path = "legit", version = "1878.945843.346028" }
