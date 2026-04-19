@@ -340,7 +340,10 @@ if [ -n "$(git status --porcelain -- Cargo.lock */Cargo.lock */*/Cargo.lock */*/
         git tag -f "$VERSION_TAG" HEAD
     else
         gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
+        cargo publish -j8 --no-verify
     fi
 fi
 
-cargo publish -j8 --no-verify && git push origin $VERSION_TAG:$VERSION_TAG
+if [ -n "${VERSION_TAG:-}" ]; then
+    git push origin "$VERSION_TAG:$VERSION_TAG"
+fi
