@@ -61,11 +61,11 @@ pub async fn run_cli(cli: &Cli) -> Result<()> {
     install_rustls_crypto_provider();
 
     if cli.interactive {
-        std::env::set_var("NGIT_INTERACTIVE_MODE", "1");
+        unsafe { std::env::set_var("NGIT_INTERACTIVE_MODE", "1") };
     }
 
     if cli.verbose || std::env::var("NGITTEST").is_ok() {
-        std::env::set_var("NGIT_VERBOSE", "1");
+        unsafe { std::env::set_var("NGIT_VERBOSE", "1") };
     }
 
     if cli.customize {

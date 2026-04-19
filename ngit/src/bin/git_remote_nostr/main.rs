@@ -130,7 +130,7 @@ async fn main() -> Result<()> {
     install_rustls_crypto_provider();
 
     if std::env::var("NGITTEST").is_ok() {
-        std::env::set_var("NGIT_VERBOSE", "1");
+        unsafe { std::env::set_var("NGIT_VERBOSE", "1") };
     }
 
     let Some((decoded_nostr_url, git_repo)) = process_args().await? else {
