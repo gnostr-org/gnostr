@@ -272,6 +272,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let git_tui_node = TuiNode::new(120, 24);
     let relay_node = TuiNode::new(120, 24);
     let chat_node = TuiNode::new(120, 24);
+    #[cfg(feature = "blossom-tui")]
+    let server_node = TuiNode::new(120, 24);
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
@@ -282,6 +284,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     git_tui_node.spawn(vec![], project_root.clone(), Some("cargo run --bin git-tui".to_string()))?;
     relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
     chat_node.spawn(vec![], project_root.clone(), Some("gnostr chat".to_string()))?;
+    #[cfg(feature = "blossom-tui")]
+    server_node.spawn(
+        vec![],
+        project_root.clone(),
+        Some("cargo run --bin gnostr-blossom".to_string()),
+    )?;
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
@@ -293,10 +301,24 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut layout_direction = Direction::Vertical;
     let mut visible_nodes = vec![true; nodes.len()];
     let mut active_tab: usize = 0;
-    let tab_titles = vec!["Nodes", "Relay", "Chat", "Help"];
+    let mut tab_titles = vec!["Nodes", "Relay", "Chat"];
+    #[cfg(feature = "blossom-tui")]
+    tab_titles.push("Server");
+    tab_titles.push("Help");
+    let git_tui_tab_index = tab_titles.len();
+    let help_tab_index = tab_titles.len() - 1;
+    #[cfg(feature = "blossom-tui")]
+    let server_tab_index = help_tab_index - 1;
     let mut is_git_tui_active = false;
     let mut is_relay_active = false;
     let mut is_chat_active = false;
+    #[cfg(feature = "blossom-tui")]
+    let mut is_server_active = false;
+    #[cfg(feature = "blossom-tui")]
+    let server_ready = server_node.byte_count.load(Ordering::SeqCst) > 0
+        || start_time.elapsed() > Duration::from_secs(3);
+    #[cfg(not(feature = "blossom-tui"))]
+    let server_ready = true;
 
     loop {
         if force_redraw {
@@ -310,7 +332,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 n.gnostr_presented.load(Ordering::SeqCst) || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
             }) && (git_tui_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
-               && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3));
+               && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
+               && server_ready;
             
             if currently_ready && ready_since.is_none() {
                 ready_since = Some(Instant::now());
@@ -395,14 +418,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
                 let tabs = Tabs::new(tab_titles.iter().map(|t| Line::from(*t)).collect::<Vec<_>>())
                     .block(Block::default().borders(Borders::NONE))
-                    .select(if active_tab == 4 { 999 } else { active_tab }) // Hack to clear selection if tab 4 is active
+                    .select(if active_tab == git_tui_tab_index { 999 } else { active_tab })
                     .style(Style::default().fg(Color::Gray))
                     .highlight_style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD))
                     .divider(Span::raw(" | "));
                 
                 f.render_widget(tabs, header_chunks[1]);
 
-                let git_tab_style = if active_tab == 4 {
+                let git_tab_style = if active_tab == git_tui_tab_index {
                     Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Color::Gray)
@@ -415,7 +438,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
                 let content_area = main_chunks[1];
 
-                if active_tab == 4 { // GitUI Tab
+                if active_tab == git_tui_tab_index {
+                    // GitUI Tab
                     git_tui_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
                     
                     let p = git_tui_node.parser.lock().unwrap();
@@ -593,8 +617,38 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     let title = if is_chat_active { " Chat [ACTIVE - Double ESC to unfocus] " } else { " Chat [SELECTED - Press Enter to focus] " };
                     let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
-                } else if active_tab == 3 { // Help Tab
-                    let help_text = vec![
+                } else if active_tab == server_tab_index {
+                    server_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+
+                    let p = server_node.parser.lock().unwrap();
+                    let screen = p.screen();
+                    let mut lines = Vec::new();
+                    for row in 0..screen.size().0 {
+                        let mut spans = Vec::new();
+                        for col in 0..screen.size().1 {
+                            if let Some(cell) = screen.cell(row, col) {
+                                spans.push(Span::styled(
+                                    cell.contents().to_string(),
+                                    Style::default()
+                                        .fg(map_vt_color(cell.fgcolor()))
+                                        .bg(map_vt_color(cell.bgcolor())),
+                                ));
+                            }
+                        }
+                        lines.push(Line::from(spans));
+                    }
+
+                    let block_style = if is_server_active {
+                        Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+
+                    let title = if is_server_active { " Server [ACTIVE - Double ESC to unfocus] " } else { " Server [SELECTED - Press Enter to focus] " };
+                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    f.render_widget(Paragraph::new(lines).block(block), content_area);
+                } else if active_tab == help_tab_index { // Help Tab
+                    let mut help_text = vec![
                         Line::from(vec![Span::styled(
                             "GNOSTR DASHBOARD HELP",
                             Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD),
@@ -607,6 +661,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         Line::from("  [Left/Right]: Select adjacent node (if not at edge)"),
                         Line::from("  [Enter]     : Focus the selected node"),
                         Line::from("  [1-9]       : Focus Node 1-9"),
+                        Line::from("  [\\]         : Toggle the GitUI tab"),
                         Line::from("  [q]         : Hide selected node (Quits if only 1 node visible)"),
                         Line::from("  [.]         : Toggle Help Screen"),
                         Line::from("  [Ctrl+C]    : Force Quit Dashboard"),
@@ -615,6 +670,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         Line::from("  [Double ESC]: Unfocus the current node"),
                         Line::from("  [All]       : All other keys are forwarded to the node's PTY"),
                     ];
+                    #[cfg(feature = "blossom-tui")]
+                    help_text.insert(10, Line::from("  Server tab  : Available when blossom-tui is compiled in"));
                     f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
                 }
             }
