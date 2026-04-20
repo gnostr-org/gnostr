@@ -143,6 +143,7 @@ pub async fn send(
     //log::debug!("relay_url:\n{relay_url:?}\n");
     //log::info!("\n{}\n", limit.unwrap());
     const MAX_RETRIES: u32 = 3;
+    let total_attempts = MAX_RETRIES + 1;
     let connect_timeout = Duration::from_secs(30);
     let read_timeout = Duration::from_secs(30);
 
@@ -156,8 +157,8 @@ pub async fn send(
         if attempt > 0 {
             let delay = Duration::from_secs((1u64 << (attempt - 1)).min(30));
             log::debug!(
-                "Retrying WebSocket connection (attempt {}/{MAX_RETRIES}), waiting {}s...",
-                attempt,
+                "Retrying WebSocket connection (attempt {}/{total_attempts}), waiting {}s...",
+                attempt + 1,
                 delay.as_secs()
             );
             sleep(delay).await;
@@ -168,7 +169,8 @@ pub async fn send(
             Err(_) => {
                 last_err = format!(
                     "WebSocket connection timed out on attempt {}/{}",
-                    attempt, MAX_RETRIES
+                    attempt + 1,
+                    total_attempts
                 );
                 log::debug!("{}", last_err);
                 continue;
@@ -207,7 +209,10 @@ pub async fn send(
                         }
                         Ok(None) => return Ok(vec_result),
                         Err(_) => {
-                            log::debug!("WebSocket read timed out after 30 seconds");
+                            log::debug!(
+                                "WebSocket read timed out after {} seconds",
+                                read_timeout.as_secs()
+                            );
                             return Ok(vec_result);
                         }
                     }
