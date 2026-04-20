@@ -764,6 +764,7 @@ nostr-relay = { version = "0.4.8", default-features = false }
 portable-pty = "0.8.1"
 ##
 vt100 = "^0.15"
+gnostr-crawler = { version = "1878.945873.303604", path = "crawler" }
 # = { workspace = true }
 # = { workspace = true }
 # = { workspace = true }

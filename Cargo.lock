@@ -5949,6 +5949,7 @@ dependencies = [
  "globset",
  "gnostr-asyncgit",
  "gnostr-blossom-tui",
+ "gnostr-crawler",
  "gnostr-filetreelist",
  "gnostr-git-helpers",
  "gnostr-git2-hooks",
