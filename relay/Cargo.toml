@@ -15,7 +15,7 @@ categories = ["network-programming", "web-programming"]
 search = ["nostr-db/search"]
 
 [dependencies]
-actix = "0.12.0"
+actix = "0.13.5"
 actix-cors = "0.7.0"
 actix-http = "3.9.0"
 actix-web = "4.9.0"

@@ -313,6 +313,7 @@ doctest = false
 
 [patch.crates-io]
 asn1-rs = { path = "vendor/asn1-rs" }
+actix-web-actors = { path = "vendor/actix-web-actors" }
 
 [[bin]]
 name = "gnostr-crawler-service"
