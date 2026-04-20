@@ -277,6 +277,9 @@ should_skip() {
   local name="$1"
   local triple="$2"
   local skip
+  if [[ -z "${SKIPPED_TARGETS[*]-}" ]]; then
+    return 1
+  fi
   for skip in "${SKIPPED_TARGETS[@]}"; do
     if [[ "$skip" == "$name" || "$skip" == "$triple" ]]; then
       return 0
@@ -289,7 +292,7 @@ collect_targets() {
   local entry normalized
   local -a selected=()
 
-  if [[ ${#REQUESTED_TARGETS[@]} -eq 0 ]]; then
+  if [[ -z "${REQUESTED_TARGETS[*]-}" ]]; then
     for entry in "${TARGET_MATRIX[@]}"; do
       selected+=("$entry")
     done
