@@ -22,7 +22,7 @@ use futures::{stream, StreamExt};
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use reqwest::header::ACCEPT;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs as sync_fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
@@ -734,6 +734,11 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         }
     });
 
+    let client_for_sniper = client.clone();
+    spawn(async move {
+        run_sniper_service(client_for_sniper).await;
+    });
+
     let app = Router::new()
         .route("/", get(get_index_html))
         .route("/relays.yaml", get(get_relays_yaml))
@@ -742,6 +747,7 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         .route("/:nip/relays.yaml", get(get_nip_relays_yaml))
         .route("/:nip/relays.json", get(get_nip_relays_json))
         .route("/:nip/relays.txt", get(get_nip_relays_txt))
+        .route("/:nip/:relay.json", get(get_nip_relay_json))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
@@ -911,6 +917,65 @@ async fn collect_supported_relays_for_nip(
     Ok(supported)
 }
 
+async fn prime_all_nip_relays_files(
+    client: &reqwest::Client,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let relays = load_relays_or_bootstrap();
+    let bodies = stream::iter(relays)
+        .map(|url| {
+            let client = client.clone();
+            async move {
+                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
+                let resp = client
+                    .get(&http_url)
+                    .header(ACCEPT, "application/nostr+json")
+                    .send()
+                    .await?;
+
+                if !resp.status().is_success() {
+                    return Ok((url, String::new()));
+                }
+
+                let text = resp.text().await?;
+                Ok((url, text))
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS);
+
+    let mut nip_relays: HashMap<i32, HashSet<String>> = HashMap::new();
+    let bodies = bodies.collect::<Vec<Result<(String, String), reqwest::Error>>>().await;
+    for item in bodies {
+        if let Ok((url, json_string)) = item {
+            if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
+                for nip in relay_info.supported_nips.unwrap_or_default() {
+                    nip_relays.entry(nip).or_default().insert(url.clone());
+                }
+            }
+        }
+    }
+
+    for (nip, relays) in nip_relays {
+        let relays: Vec<String> = relays.into_iter().collect();
+        if let Err(e) = crate::relays::write_nip_relays_serve_files(nip, &relays) {
+            warn!("Failed to prime nip {} relay files: {}", nip, e);
+        }
+    }
+
+    Ok(())
+}
+
+async fn run_sniper_service(client: reqwest::Client) {
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
+    interval.tick().await;
+
+    loop {
+        if let Err(e) = prime_all_nip_relays_files(&client).await {
+            warn!("Sniper service failed: {}", e);
+        }
+        interval.tick().await;
+    }
+}
+
 async fn refresh_nip_relays_files(
     nip_lower: i32,
     client: &reqwest::Client,
@@ -1000,6 +1065,31 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         Err(e) => {
             error!("Failed to read nip relays.txt: {}. Path: {}", e, file_path.display());
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.txt: {}", e))).into_response()
+        }
+    }
+}
+
+async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, String)>) -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let file_path = config_dir.join(&relay_file);
+    debug!("Attempting to serve nip relay file from: {}", file_path.display());
+
+    if !relay_file.ends_with(".json") {
+        return (StatusCode::BAD_REQUEST, Body::from("Expected a .json relay file")).into_response();
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build nip relay JSON response: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            }),
+        Err(e) => {
+            error!("Failed to read nip relay json: {}. Path: {}", e, file_path.display());
+            (StatusCode::NOT_FOUND, Body::from(format!("Failed to read nip relay json: {}", e))).into_response()
         }
     }
 }
