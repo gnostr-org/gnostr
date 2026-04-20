@@ -274,6 +274,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let chat_node = TuiNode::new(120, 24);
     #[cfg(feature = "blossom-tui")]
     let server_node = TuiNode::new(120, 24);
+    #[cfg(not(feature = "blossom-tui"))]
+    let server_node = TuiNode::new(1, 1);
     let project_root = std::env::current_dir()?;
 
     for (i, node) in nodes.iter().enumerate() {
@@ -314,11 +316,15 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut is_chat_active = false;
     #[cfg(feature = "blossom-tui")]
     let mut is_server_active = false;
+    #[cfg(not(feature = "blossom-tui"))]
+    let mut is_server_active = false;
     #[cfg(feature = "blossom-tui")]
     let server_ready = server_node.byte_count.load(Ordering::SeqCst) > 0
         || start_time.elapsed() > Duration::from_secs(3);
     #[cfg(not(feature = "blossom-tui"))]
     let server_ready = true;
+    #[cfg(not(feature = "blossom-tui"))]
+    let server_tab_index = usize::MAX;
 
     loop {
         if force_redraw {
@@ -764,6 +770,31 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 chat_node.write_input(&input)?;
                             }
                         }
+                    } else if is_server_active {
+                        let mut deactivated = false;
+                        if key.code == KeyCode::Esc {
+                            if let Some(time) = last_esc_time {
+                                if time.elapsed() < Duration::from_millis(500) {
+                                    is_server_active = false;
+                                    last_esc_time = None;
+                                    deactivated = true;
+                                    force_redraw = true;
+                                } else {
+                                    last_esc_time = Some(Instant::now());
+                                }
+                            } else {
+                                last_esc_time = Some(Instant::now());
+                            }
+                        } else {
+                            last_esc_time = None;
+                        }
+
+                        if !deactivated {
+                            let input = encode_key(key);
+                            if !input.is_empty() {
+                                server_node.write_input(&input)?;
+                            }
+                        }
                     } else if let Some(idx) = active_node {
                         let mut deactivated = false;
                         if key.code == KeyCode::Esc {
@@ -792,7 +823,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     } else {
                         match key.code {
                             KeyCode::Char('\\') => {
-                                active_tab = if active_tab == 4 { 0 } else { 4 };
+                                active_tab = if active_tab == git_tui_tab_index { 0 } else { git_tui_tab_index };
                                 force_redraw = true;
                             }
                             KeyCode::Tab => {
@@ -827,7 +858,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Char('.') => {
-                                active_tab = if active_tab == 3 { 0 } else { 3 };
+                                active_tab = if active_tab == help_tab_index { 0 } else { help_tab_index };
                                 force_redraw = true;
                             }
                             KeyCode::Up => {
@@ -891,15 +922,33 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Enter => {
-                                if active_tab == 4 {
-                                    is_git_tui_active = true;
-                                } else if active_tab == 2 {
-                                    is_chat_active = true;
-                                } else if active_tab == 1 {
-                                    is_relay_active = true;
-                                } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
-                                    active_node = Some(selected_node);
-                                    active_tab = 0;
+                                #[cfg(feature = "blossom-tui")]
+                                {
+                                    if active_tab == server_tab_index {
+                                        is_server_active = true;
+                                    } else if active_tab == git_tui_tab_index {
+                                        is_git_tui_active = true;
+                                    } else if active_tab == 2 {
+                                        is_chat_active = true;
+                                    } else if active_tab == 1 {
+                                        is_relay_active = true;
+                                    } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
+                                        active_node = Some(selected_node);
+                                        active_tab = 0;
+                                    }
+                                }
+                                #[cfg(not(feature = "blossom-tui"))]
+                                {
+                                    if active_tab == git_tui_tab_index {
+                                        is_git_tui_active = true;
+                                    } else if active_tab == 2 {
+                                        is_chat_active = true;
+                                    } else if active_tab == 1 {
+                                        is_relay_active = true;
+                                    } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
+                                        active_node = Some(selected_node);
+                                        active_tab = 0;
+                                    }
                                 }
                             }
                             KeyCode::Esc => {
