@@ -15,6 +15,7 @@ use ratatui::{
 use std::{
     io::{self, Read, Write},
     path::PathBuf,
+    process::{Command, Stdio},
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
         Arc, Mutex,
@@ -32,6 +33,25 @@ fn gnostr_purple() -> Color {
     }
     // Fallback for terminals that don't advertise truecolor support
     Color::Magenta
+}
+
+fn spawn_gnostr_server(project_root: PathBuf) -> io::Result<()> {
+    let mut command = if which::which("gnostr-server").is_ok() {
+        Command::new("gnostr-server")
+    } else {
+        let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string());
+        let mut cmd = Command::new(cargo);
+        cmd.args(["run", "--bin", "gnostr-server", "--quiet"]);
+        cmd
+    };
+
+    command
+        .current_dir(project_root)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+
+    command.spawn().map(|_| ())
 }
 
 const GNOSTR_ICON_TINY: [&str; 7] = [
@@ -277,6 +297,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     #[cfg(not(feature = "blossom-tui"))]
     let server_node = TuiNode::new(1, 1);
     let project_root = std::env::current_dir()?;
+    spawn_gnostr_server(project_root.clone())?;
 
     for (i, node) in nodes.iter().enumerate() {
         let cmd_override = commands.get(i).cloned();
