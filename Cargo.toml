@@ -320,6 +320,10 @@ name = "gnostr-crawler-service"
 path = "src/bin/gnostr-crawler-service.rs"
 
 [[bin]]
+name = "gnostr-server"
+path = "src/bin/gnostr-server.rs"
+
+[[bin]]
 name = "git-remote-nostr"
 path = "src/bin/git-remote-nostr/main.rs"
 
