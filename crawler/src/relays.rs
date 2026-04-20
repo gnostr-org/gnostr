@@ -10,11 +10,38 @@ use tracing::{debug, warn};
 use reqwest::Client;
 use anyhow::Result;
 use reqwest::header::ACCEPT;
+use std::sync::{LazyLock, Mutex};
 
 pub fn get_config_dir_path() -> PathBuf {
     ProjectDirs::from("org", "gnostr", "gnostr/crawler")
         .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
         .unwrap_or_else(|| Path::new(".").to_path_buf())
+}
+
+static LIVE_NIPS: LazyLock<Mutex<HashSet<i32>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
+static LIVE_KINDS: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
+
+pub fn record_live_nips(nips: impl IntoIterator<Item = i32>) {
+    let mut live = LIVE_NIPS.lock().unwrap();
+    for nip in nips {
+        live.insert(nip);
+    }
+}
+
+pub fn record_live_kind(kind: impl Into<String>) {
+    LIVE_KINDS.lock().unwrap().insert(kind.into());
+}
+
+pub fn live_nips() -> Vec<i32> {
+    let mut nips: Vec<i32> = LIVE_NIPS.lock().unwrap().iter().copied().collect();
+    nips.sort_unstable();
+    nips
+}
+
+pub fn live_kinds() -> Vec<String> {
+    let mut kinds: Vec<String> = LIVE_KINDS.lock().unwrap().iter().cloned().collect();
+    kinds.sort();
+    kinds
 }
 
 fn sanitize_relay_entry(line: &str) -> Option<String> {

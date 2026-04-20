@@ -957,6 +957,7 @@ async fn prime_all_nip_relays_files(
 
     for (nip, relays) in nip_relays {
         let relays: Vec<String> = relays.into_iter().collect();
+        crate::relays::record_live_nips(std::iter::once(nip));
         if let Err(e) = crate::relays::write_nip_relays_serve_files(nip, &relays) {
             warn!("Failed to prime nip {} relay files: {}", nip, e);
         }
@@ -1131,13 +1132,65 @@ async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, St
     }
 }
 
-// Serve index.html from the compiled-in asset
 async fn get_index_html() -> Response {
-    let html_content = include_bytes!("index.html");
+    let config_dir = crate::relays::get_config_dir_path();
+    let mut nips = crate::relays::live_nips();
+    if let Ok(mut dir) = fs::read_dir(&config_dir).await {
+        while let Ok(Some(entry)) = dir.next_entry().await {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if entry.file_type().await.map(|ft| ft.is_dir()).unwrap_or(false)
+                && name.chars().all(|c| c.is_ascii_digit())
+            {
+                if let Ok(nip) = name.parse::<i32>() {
+                    nips.push(nip);
+                }
+            }
+        }
+    }
+    nips.sort_unstable();
+    nips.dedup();
+
+    let kinds = crate::relays::live_kinds();
+
+    let nip_links = if nips.is_empty() {
+        "<li>No NIP buckets yet. Start serve and wait for the sniper service.</li>".to_string()
+    } else {
+        nips.iter()
+            .map(|nip| {
+                format!(
+                    "<li><a href=\"/{0}\">NIP {0}</a> - <a href=\"/{0}/relays.json\">json</a> <a href=\"/{0}/relays.yaml\">yaml</a> <a href=\"/{0}/relays.txt\">txt</a></li>",
+                    nip
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("")
+    };
+
+    let kind_links = if kinds.is_empty() {
+        "<li>No kinds seen yet.</li>".to_string()
+    } else {
+        kinds
+            .iter()
+            .map(|kind| format!("<li>{}</li>", kind))
+            .collect::<Vec<_>>()
+            .join("")
+    };
+
+    let html = format!(
+        "<html><body><h1>gnostr crawler</h1><h2>NIPs</h2><ul>\
+         <li><a href=\"/relays.json\">relays.json</a></li>\
+         <li><a href=\"/relays.yaml\">relays.yaml</a></li>\
+         <li><a href=\"/relays.txt\">relays.txt</a></li>\
+         {}\
+         </ul><h2>Kinds</h2><ul>{}</ul></body></html>",
+        nip_links,
+        kind_links
+    );
+
     Response::builder()
         .status(StatusCode::OK)
         .header(CONTENT_TYPE, "text/html")
-        .body(Body::from(html_content.as_ref() as &[u8]))
+        .body(Body::from(html))
         .unwrap_or_else(|e| {
             error!("Failed to build HTML response: {}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()

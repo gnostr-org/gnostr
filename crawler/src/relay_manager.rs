@@ -1,6 +1,7 @@
 use crate::processor::Processor;
 use crate::relays::{fetch_online_relays, Relays};
 use crate::load_file;
+use crate::relays::record_live_kind;
 
 use nostr_sdk::{
     prelude::{
@@ -390,6 +391,7 @@ impl RelayManager {
 
     //#[allow(unused_variables)]
     fn handle_event(&mut self, event: &Event) {
+        record_live_kind(format!("{:?}", event.kind));
         match event.kind {
             Kind::Metadata => {
                 debug!("{:?}", event.kind);

@@ -1,5 +1,6 @@
 use crate::pubkeys::PubKeys;
 use crate::relays::get_config_dir_path;
+use crate::relays::record_live_kind;
 use crate::stats::Stats;
 use log::debug;
 use std::fs;
@@ -64,6 +65,7 @@ impl Processor {
         debug!("{:?}", event.id);
         //println!("{:}", event.as_json());
         debug!("age {:?}  created_at {:?}", Self::age(event.created_at), event.created_at);
+        record_live_kind(format!("{:?}", event.kind));
         match event.kind {
             Kind::Metadata => {
                 debug!("Kind::Metadata={:?}", event.kind);
