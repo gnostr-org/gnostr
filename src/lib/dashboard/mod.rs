@@ -723,6 +723,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     ];
                     #[cfg(feature = "blossom-tui")]
                     help_text.insert(10, Line::from("  Server tab  : Available when blossom-tui is compiled in"));
+                    if !server_available {
+                        help_text.push(Line::from(""));
+                        help_text.push(Line::from("Server tab opens an install dialog until gnostr-server is available."));
+                    }
                     f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
                 }
             }
@@ -969,8 +973,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             KeyCode::Enter => {
                                 #[cfg(feature = "blossom-tui")]
                                 {
-                                    if active_tab == server_tab_index {
+                                    if active_tab == server_tab_index && server_available {
                                         is_server_active = true;
+                                    } else if active_tab == server_tab_index && !server_available {
+                                        force_redraw = true;
                                     } else if active_tab == git_tui_tab_index {
                                         is_git_tui_active = true;
                                     } else if active_tab == 2 {
