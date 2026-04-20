@@ -50,3 +50,16 @@
 ### [CHANGELOG](CHANGELOG.md)
 
 # Temp for CI
+# Docker
+
+Blossom server and Git tooling containers are available with:
+
+```bash
+docker compose -f docker-compose.blossom.yml up --build blossom-server
+docker compose -f docker-compose.blossom.yml run --rm blossom-git blossom-cli --help
+docker compose -f docker-compose.blossom.yml run --rm --service-ports blossom-git blossom-lfs daemon
+```
+
+The `blossom-git` tools image includes `git`, `git-lfs`, `blossom-cli`, and
+`blossom-lfs`. The `blossom-server` image wraps upstream `blossom-server`
+defaults and persists data under the `blossom_server_data` volume.

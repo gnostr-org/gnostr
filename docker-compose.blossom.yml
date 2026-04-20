@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  blossom-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.blossom-server
+    image: gnostr/blossom-server:local
+    environment:
+      BLOSSOM_BASE_URL: ${BLOSSOM_BASE_URL:-http://localhost:3000}
+      BLOSSOM_LOG_LEVEL: ${BLOSSOM_LOG_LEVEL:-info}
+      BLOSSOM_EXTRA_ARGS: ${BLOSSOM_SERVER_EXTRA_ARGS:-}
+    ports:
+      - "${BLOSSOM_PORT:-3000}:3000"
+    volumes:
+      - blossom_server_data:/var/lib/blossom
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  blossom-git:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.blossom-git
+    image: gnostr/blossom-git:local
+    profiles: ["tools"]
+    depends_on:
+      blossom-server:
+        condition: service_healthy
+    environment:
+      BLOSSOM_SERVER_URL: ${BLOSSOM_SERVER_URL:-http://blossom-server:3000}
+      NOSTR_PRIVATE_KEY: ${NOSTR_PRIVATE_KEY:-}
+      BLOSSOM_DAEMON_PORT: ${BLOSSOM_DAEMON_PORT:-31921}
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+
+volumes:
+  blossom_server_data:
