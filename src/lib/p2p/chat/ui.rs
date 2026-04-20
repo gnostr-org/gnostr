@@ -13,6 +13,7 @@ use std::{
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     crossterm::{
+        cursor::Show,
         event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -36,7 +37,7 @@ struct TerminalCleanup;
 impl Drop for TerminalCleanup {
     fn drop(&mut self) {
         let _ = disable_raw_mode();
-        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
+        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture, Show);
     }
 }
 
@@ -113,6 +114,7 @@ impl App {
 
         // run app
         run_app(&mut terminal, self)?;
+        terminal.show_cursor()?;
 
         Ok(())
     }
