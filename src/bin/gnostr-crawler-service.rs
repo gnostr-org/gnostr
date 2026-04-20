@@ -7,8 +7,14 @@ use nostr_0_34_1::Keys;
 use std::str::FromStr;
 use tokio::sync::mpsc;
 
+fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    install_rustls_crypto_provider();
+
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
