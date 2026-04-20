@@ -80,6 +80,22 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     Ok(())
 }
 
+pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(nip.to_string());
+    fs::create_dir_all(&config_dir)?;
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    fs::write(&json_path, serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?)?;
+    fs::write(&txt_path, relays.join(" "))?;
+
+    Ok(config_dir)
+}
+
 pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
     debug!("Fetching online relays from: {}", url);
     let client = Client::new();

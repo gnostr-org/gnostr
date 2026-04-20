@@ -46,6 +46,7 @@ use crate::processor::LOCALHOST_8080;
 use crate::processor::BOOTSTRAP_RELAYS;
 
 use axum::{
+    extract::Path as AxumPath,
     routing::get,
     response::{IntoResponse, Response},
     Router,
@@ -53,6 +54,7 @@ use axum::{
     http::{StatusCode, header::CONTENT_TYPE}, // Changed to axum::http
 };
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use tokio::fs; // For async file operations
 #[allow(unused_imports)] // Suppress false positive for tokio::task::spawn
 use tokio::task::spawn; // Added for spawning async tasks
@@ -737,6 +739,9 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
+        .route("/:nip/relays.yaml", get(get_nip_relays_yaml))
+        .route("/:nip/relays.json", get(get_nip_relays_json))
+        .route("/:nip/relays.txt", get(get_nip_relays_txt))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
@@ -847,6 +852,154 @@ async fn get_relays_txt() -> Response {
         Err(e) => {
             error!("Failed to read relays.txt: {}. Path: {}", e, file_path.display());
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.txt: {}", e))).into_response()
+        }
+    }
+}
+
+async fn collect_supported_relays_for_nip(
+    nip_lower: i32,
+    client: &reqwest::Client,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let relays = load_relays_or_bootstrap();
+
+    let bodies = stream::iter(relays)
+        .map(|url| {
+            let client = client.clone();
+            async move {
+                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
+                let resp = client
+                    .get(&http_url)
+                    .header(ACCEPT, "application/nostr+json")
+                    .send()
+                    .await?;
+
+                if !resp.status().is_success() {
+                    return Ok((url, String::new()));
+                }
+
+                let text = resp.text().await?;
+                Ok((url, text))
+            }
+        })
+        .buffer_unordered(CONCURRENT_REQUESTS)
+        .collect::<Vec<Result<(String, String), reqwest::Error>>>()
+        .await;
+
+    let mut supported = Vec::new();
+    for item in bodies {
+        let (url, json_string) = match item {
+            Ok(pair) => pair,
+            Err(e) => {
+                warn!("Failed to fetch relay metadata for nip {}: {}", nip_lower, e);
+                continue;
+            }
+        };
+
+        let data: Result<Relay, _> = serde_json::from_str(&json_string);
+        if let Ok(relay_info) = data {
+            if relay_info
+                .supported_nips
+                .unwrap_or_default()
+                .iter()
+                .any(|n| *n == nip_lower)
+            {
+                supported.push(url);
+            }
+        }
+    }
+
+    Ok(supported)
+}
+
+async fn refresh_nip_relays_files(
+    nip_lower: i32,
+    client: &reqwest::Client,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let relays = collect_supported_relays_for_nip(nip_lower, client).await?;
+    let dir = crate::relays::write_nip_relays_serve_files(nip_lower, &relays)?;
+    Ok(dir)
+}
+
+async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let file_path = config_dir.join("relays.yaml");
+    debug!("Attempting to serve nip relays.yaml from: {}", file_path.display());
+
+    if !file_path.exists() {
+        let client = reqwest::Client::new();
+        if let Err(e) = refresh_nip_relays_files(nip_lower, &client).await {
+            error!("Failed to create nip relays.yaml: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/x-yaml")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build nip YAML response: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            }),
+        Err(e) => {
+            error!("Failed to read nip relays.yaml: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.yaml: {}", e))).into_response()
+        }
+    }
+}
+
+async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let file_path = config_dir.join("relays.json");
+    debug!("Attempting to serve nip relays.json from: {}", file_path.display());
+
+    if !file_path.exists() {
+        let client = reqwest::Client::new();
+        if let Err(e) = refresh_nip_relays_files(nip_lower, &client).await {
+            error!("Failed to create nip relays.json: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build nip JSON response: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            }),
+        Err(e) => {
+            error!("Failed to read nip relays.json: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.json: {}", e))).into_response()
+        }
+    }
+}
+
+async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let file_path = config_dir.join("relays.txt");
+    debug!("Attempting to serve nip relays.txt from: {}", file_path.display());
+
+    if !file_path.exists() {
+        let client = reqwest::Client::new();
+        if let Err(e) = refresh_nip_relays_files(nip_lower, &client).await {
+            error!("Failed to create nip relays.txt: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/plain")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build nip TXT response: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            }),
+        Err(e) => {
+            error!("Failed to read nip relays.txt: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.txt: {}", e))).into_response()
         }
     }
 }
