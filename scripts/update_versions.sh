@@ -314,7 +314,7 @@ git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || t
 if [ -n "${VERSION_TAG:-}" ]; then
     git reset --soft HEAD~1
 
-
+cargo update --workspace
 git add -- "${manifest_paths[@]}"
 git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
 git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
@@ -324,7 +324,7 @@ git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || t
     git tag -f "$VERSION_TAG" HEAD
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 
-
+cargo update --workspace
 git add -- "${manifest_paths[@]}"
 git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
 git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true

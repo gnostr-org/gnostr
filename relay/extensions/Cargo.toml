@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-extensions"
-version = "1878.945872.305121"
+version = "1878.945873.303322"
 description = "gostr-relay extensions."
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
@@ -19,5 +19,5 @@ rate_limiter = ["nostr-extensions/rate_limiter"]
 count = ["nostr-extensions/count"]
 
 [dependencies]
-gnostr-relay = { version = "1878.945872.305121", path = "..", default-features = false }
+gnostr-relay = { version = "1878.945873.303322", path = "..", default-features = false }
 nostr-extensions = { version = "0.4.8", default-features = false }
