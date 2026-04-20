@@ -12,8 +12,13 @@ struct GnostrCrawlerArgs {
 }
 
 fn init_tracing(logging: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let hyper_directives = if matches!(logging, "debug" | "trace") {
+        "hyper::client::trace=trace,hyper::client::connect=trace"
+    } else {
+        "hyper::client::trace=off,hyper::client::connect=off"
+    };
     let filter = tracing_subscriber::EnvFilter::try_new(format!(
-        "{logging},hyper::client::trace=trace,hyper::proto=off,nostr_sdk::relay=off,nostr_relay_pool=off,nostr_relay_pool::relay::inner=off"
+        "{logging},{hyper_directives},hyper::client::connect::http=off,hyper::client::connect::dns=off,hyper::proto=off,nostr_sdk::relay=off,nostr_relay_pool=off,nostr_relay_pool::relay::inner=off"
     ))?;
 
     tracing_subscriber::fmt().with_env_filter(filter).init();
