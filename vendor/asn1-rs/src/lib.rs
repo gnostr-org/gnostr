@@ -163,7 +163,11 @@
 #![warn(
 /* missing_docs,
 rust_2018_idioms,*/
-missing_debug_implementations,
+    missing_debug_implementations,
+)]
+#![allow(
+    mismatched_lifetime_syntaxes,
+    unreachable_patterns,
 )]
 // pragmas for doc
 #![deny(rustdoc::broken_intra_doc_links)]
