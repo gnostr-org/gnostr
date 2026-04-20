@@ -108,6 +108,7 @@ pub mod nip26;
 /// NIP-03: OpenTimestamps Attestations for Events
 pub mod nip3;
 pub mod nip34;
+pub use nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent as Nip34UnsignedEvent};
 /// NIP-04: Encrypted Direct Message
 pub mod nip4;
 /// NIP-59: Gift Wrap
