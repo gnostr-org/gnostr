@@ -20,12 +20,16 @@ fn install_rustls_crypto_provider() {
 }
 
 pub async fn run() -> anyhow::Result<()> {
+    let gnostr_cli_args: GnostrCli = GnostrCli::parse();
+    run_with_cli(gnostr_cli_args).await
+}
+
+pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> {
     install_rustls_crypto_provider();
     unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
     unsafe { env::set_var("BLOCKHEIGHT", "0") };
     unsafe { env::set_var("WOBBLE", "0") };
-    let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
     // Setup tracing subscriber once and globally
     let base_level = if gnostr_cli_args.debug {

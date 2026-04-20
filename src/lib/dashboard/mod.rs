@@ -39,6 +39,10 @@ fn gnostr_server_available() -> bool {
     which::which("gnostr-server").is_ok()
 }
 
+fn git_tui_available() -> bool {
+    which::which("git-tui").is_ok()
+}
+
 fn spawn_gnostr_server(project_root: PathBuf) -> io::Result<bool> {
     if !gnostr_server_available() {
         return Ok(false);
@@ -53,6 +57,15 @@ fn spawn_gnostr_server(project_root: PathBuf) -> io::Result<bool> {
         .stderr(Stdio::null());
 
     command.spawn().map(|_| true)
+}
+
+fn ensure_git_tui_available() -> io::Result<bool> {
+    if git_tui_available() {
+        return Ok(true);
+    }
+
+    let status = Command::new("cargo").args(["install", "gnostr"]).status()?;
+    Ok(status.success() && git_tui_available())
 }
 
 fn server_install_dialog() -> Vec<Line<'static>> {
@@ -172,9 +185,9 @@ const GNOSTR_ICON_LARGE: [&str; 55] = [
 
 pub struct TuiNode {
     parser: Arc<Mutex<Parser>>,
-    master: Arc<Mutex<Box<dyn portable_pty::MasterPty + Send>>>,
-    writer: Arc<Mutex<Box<dyn std::io::Write + Send>>>,
-    slave: Box<dyn portable_pty::SlavePty + Send>,
+    master: Option<Arc<Mutex<Box<dyn portable_pty::MasterPty + Send>>>>,
+    writer: Option<Arc<Mutex<Box<dyn std::io::Write + Send>>>>,
+    slave: Option<Box<dyn portable_pty::SlavePty + Send>>,
     byte_count: Arc<AtomicUsize>,
     gnostr_presented: Arc<AtomicBool>,
     is_tui: Arc<AtomicBool>,
@@ -182,30 +195,68 @@ pub struct TuiNode {
 
 impl TuiNode {
     pub fn new(width: u16, height: u16) -> Self {
+        let width = width.max(1);
+        let height = height.max(1);
+        let parser = Arc::new(Mutex::new(Parser::new(height, width, 100)));
         let pty_system = native_pty_system();
-        let pty_pair = pty_system
-            .openpty(PtySize {
-                rows: height,
-                cols: width,
-                pixel_width: 0,
-                pixel_height: 0,
-            })
-            .expect("failed to open pty");
+        let pty_pair = match pty_system.openpty(PtySize {
+            rows: height,
+            cols: width,
+            pixel_width: 0,
+            pixel_height: 0,
+        }) {
+            Ok(pair) => pair,
+            Err(e) => {
+                eprintln!("dashboard: falling back to a no-op node because pty allocation failed: {e}");
+                return Self {
+                    parser,
+                    master: None,
+                    writer: None,
+                    slave: None,
+                    byte_count: Arc::new(AtomicUsize::new(0)),
+                    gnostr_presented: Arc::new(AtomicBool::new(false)),
+                    is_tui: Arc::new(AtomicBool::new(false)),
+                };
+            }
+        };
 
-        let writer = pty_pair.master.take_writer().expect("failed to take writer");
+        let writer = match pty_pair.master.take_writer() {
+            Ok(writer) => writer,
+            Err(e) => {
+                eprintln!(
+                    "dashboard: falling back to a no-op node because pty writer allocation failed: {e}"
+                );
+                return Self {
+                    parser,
+                    master: None,
+                    writer: None,
+                    slave: None,
+                    byte_count: Arc::new(AtomicUsize::new(0)),
+                    gnostr_presented: Arc::new(AtomicBool::new(false)),
+                    is_tui: Arc::new(AtomicBool::new(false)),
+                };
+            }
+        };
 
         Self {
-            parser: Arc::new(Mutex::new(Parser::new(height, width, 100))),
-            writer: Arc::new(Mutex::new(writer)),
-            master: Arc::new(Mutex::new(pty_pair.master)),
-            slave: pty_pair.slave,
+            parser,
+            writer: Some(Arc::new(Mutex::new(writer))),
+            master: Some(Arc::new(Mutex::new(pty_pair.master))),
+            slave: Some(pty_pair.slave),
             byte_count: Arc::new(AtomicUsize::new(0)),
             gnostr_presented: Arc::new(AtomicBool::new(false)),
             is_tui: Arc::new(AtomicBool::new(false)),
         }
     }
 
+///// the recusive loop must start here
     pub fn spawn(&self, args: Vec<String>, cwd: PathBuf, command_override: Option<String>) -> io::Result<()> {
+        let Some(slave) = &self.slave else {
+            return Ok(());
+        };
+        let Some(master) = &self.master else {
+            return Ok(());
+        };
         let mut cmd = if let Some(cmd_str) = command_override {
             let parts: Vec<&str> = cmd_str.split_whitespace().collect();
             if parts.is_empty() {
@@ -225,13 +276,13 @@ impl TuiNode {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
 
-        let mut _child = self
-            .slave
+        /// causing recursive? 
+        let mut _child = slave
             .spawn_command(cmd)
             .expect("failed to spawn command");
         
         let mut reader = {
-            let master = self.master.lock().unwrap();
+            let master = master.lock().unwrap();
             master.try_clone_reader().expect("failed to clone reader")
         };
         
@@ -275,27 +326,29 @@ impl TuiNode {
         let mut p = self.parser.lock().unwrap();
         if p.screen().size() != (h, w) || force {
             p.set_size(h, w);
-            let master = self.master.lock().unwrap();
-            let _ = master.resize(PtySize {
-                rows: h,
-                cols: w,
-                pixel_width: 0,
-                pixel_height: 0,
-            });
+            if let Some(master) = &self.master {
+                let master = master.lock().unwrap();
+                let _ = master.resize(PtySize {
+                    rows: h,
+                    cols: w,
+                    pixel_width: 0,
+                    pixel_height: 0,
+                });
+            }
         }
     }
 
     pub fn write_input(&self, input: &[u8]) -> io::Result<()> {
-        let mut writer = self.writer.lock().unwrap();
-        writer.write_all(input)
+        if let Some(writer) = &self.writer {
+            let mut writer = writer.lock().unwrap();
+            writer.write_all(input)
+        } else {
+            Ok(())
+        }
     }
 }
 
 pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
-    if commands.is_empty() {
-        commands.push("gnostr".to_string());
-    }
-
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
@@ -305,7 +358,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
         nodes.push(TuiNode::new(120, 24));
     }
     
-    // Initialize specific node for git-tui
     let git_tui_node = TuiNode::new(120, 24);
     let relay_node = TuiNode::new(120, 24);
     let chat_node = TuiNode::new(120, 24);
@@ -315,13 +367,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let server_node = TuiNode::new(1, 1);
     let project_root = std::env::current_dir()?;
     let server_available = spawn_gnostr_server(project_root.clone())?;
+    let mut git_tui_started = false;
+    let mut git_tui_error: Option<String> = None;
 
     for (i, node) in nodes.iter().enumerate() {
         let cmd_override = commands.get(i).cloned();
         node.spawn(vec![], project_root.clone(), cmd_override)?;
     }
     
-    git_tui_node.spawn(vec![], project_root.clone(), Some("cargo run --bin git-tui".to_string()))?;
     relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
     chat_node.spawn(vec![], project_root.clone(), Some("gnostr chat".to_string()))?;
     #[cfg(feature = "blossom-tui")]
@@ -367,6 +420,29 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let server_tab_index = usize::MAX;
 
     loop {
+        if active_tab == git_tui_tab_index && !git_tui_started && git_tui_error.is_none() {
+            match ensure_git_tui_available() {
+                Ok(true) => match git_tui_node.spawn(vec![], project_root.clone(), Some("git-tui".to_string())) {
+                    Ok(()) => {
+                        git_tui_started = true;
+                        force_redraw = true;
+                    }
+                    Err(err) => {
+                        git_tui_error = Some(format!("Failed to start git-tui: {err}"));
+                        force_redraw = true;
+                    }
+                },
+                Ok(false) => {
+                    git_tui_error = Some("git-tui is not on PATH. Run `cargo install gnostr` and try again.".to_string());
+                    force_redraw = true;
+                }
+                Err(err) => {
+                    git_tui_error = Some(format!("Failed to prepare git-tui: {err}"));
+                    force_redraw = true;
+                }
+            }
+        }
+
         if force_redraw {
             terminal.clear()?;
         }
@@ -375,9 +451,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
             let area = f.area();
 
             let currently_ready = nodes.iter().all(|n| {
-                n.gnostr_presented.load(Ordering::SeqCst) || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
-            }) && (git_tui_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
-               && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
+                n.gnostr_presented.load(Ordering::SeqCst)
+                    || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
+            }) && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && server_ready;
             
@@ -485,36 +561,63 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 let content_area = main_chunks[1];
 
                 if active_tab == git_tui_tab_index {
-                    // GitUI Tab
-                    git_tui_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
-                    
-                    let p = git_tui_node.parser.lock().unwrap();
-                    let screen = p.screen();
-                    let mut lines = Vec::new();
-                    for row in 0..screen.size().0 {
-                        let mut spans = Vec::new();
-                        for col in 0..screen.size().1 {
-                            if let Some(cell) = screen.cell(row, col) {
-                                spans.push(Span::styled(
-                                    cell.contents().to_string(),
-                                    Style::default()
-                                        .fg(map_vt_color(cell.fgcolor()))
-                                        .bg(map_vt_color(cell.bgcolor())),
-                                ));
+                    if let Some(error) = &git_tui_error {
+                        let block = Block::default()
+                            .borders(Borders::ALL)
+                            .title(" GitUI [UNAVAILABLE] ")
+                            .border_style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD));
+                        f.render_widget(
+                            Paragraph::new(error.clone()).alignment(Alignment::Center).block(block),
+                            content_area,
+                        );
+                    } else if git_tui_started {
+                        git_tui_node.resize(
+                            content_area.width.saturating_sub(2),
+                            content_area.height.saturating_sub(2),
+                            force_redraw,
+                        );
+
+                        let p = git_tui_node.parser.lock().unwrap();
+                        let screen = p.screen();
+                        let mut lines = Vec::new();
+                        for row in 0..screen.size().0 {
+                            let mut spans = Vec::new();
+                            for col in 0..screen.size().1 {
+                                if let Some(cell) = screen.cell(row, col) {
+                                    spans.push(Span::styled(
+                                        cell.contents().to_string(),
+                                        Style::default()
+                                            .fg(map_vt_color(cell.fgcolor()))
+                                            .bg(map_vt_color(cell.bgcolor())),
+                                    ));
+                                }
                             }
+                            lines.push(Line::from(spans));
                         }
-                        lines.push(Line::from(spans));
-                    }
-                    
-                    let block_style = if is_git_tui_active {
-                        Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+
+                        let block_style = if is_git_tui_active {
+                            Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                        } else {
+                            Style::default().fg(Color::Gray)
+                        };
+
+                        let title = if is_git_tui_active {
+                            " GitUI [ACTIVE - Double ESC to unfocus] "
+                        } else {
+                            " GitUI [SELECTED - Press Enter to focus] "
+                        };
+                        let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                        f.render_widget(Paragraph::new(lines).block(block), content_area);
                     } else {
-                        Style::default().fg(Color::Gray)
-                    };
-                    
-                    let title = if is_git_tui_active { " GitUI [ACTIVE - Double ESC to unfocus] " } else { " GitUI [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
-                    f.render_widget(Paragraph::new(lines).block(block), content_area);
+                        let block = Block::default()
+                            .borders(Borders::ALL)
+                            .title(" GitUI ")
+                            .border_style(Style::default().fg(Color::Gray));
+                        f.render_widget(
+                            Paragraph::new("Starting git-tui...").alignment(Alignment::Center).block(block),
+                            content_area,
+                        );
+                    }
                 } else if active_tab == 0 { // Nodes Tab
                     let visible_indices: Vec<usize> = nodes.iter().enumerate()
                         .filter(|&(i, _)| visible_nodes[i])
@@ -902,7 +1005,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             }
                             KeyCode::Char(c) if c.is_ascii_digit() && c != '0' => {
                                 let target_idx = (c as usize) - ('1' as usize);
-                                if visible_nodes.get(target_idx).copied().unwrap_or(false) {
+                                if nodes.get(target_idx).is_some()
+                                    && visible_nodes.get(target_idx).copied().unwrap_or(false)
+                                {
                                     active_node = Some(target_idx);
                                     active_tab = 0;
                                 }
@@ -912,6 +1017,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 force_redraw = true;
                             }
                             KeyCode::Up => {
+                                if nodes.is_empty() {
+                                    continue;
+                                }
                                 loop {
                                     if selected_node > 0 {
                                         selected_node -= 1;
@@ -923,6 +1031,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Down => {
+                                if nodes.is_empty() {
+                                    continue;
+                                }
                                 loop {
                                     if selected_node < nodes.len().saturating_sub(1) {
                                         selected_node += 1;
@@ -934,6 +1045,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Left => {
+                                if nodes.is_empty() {
+                                    continue;
+                                }
                                 let mut prev_idx = selected_node.checked_sub(1);
                                 let mut found = false;
                                 while let Some(idx) = prev_idx {
@@ -953,6 +1067,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Right => {
+                                if nodes.is_empty() {
+                                    continue;
+                                }
                                 let mut next_idx = selected_node + 1;
                                 let mut found = false;
                                 while next_idx < nodes.len() {
