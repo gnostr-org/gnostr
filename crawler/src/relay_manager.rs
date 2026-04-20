@@ -1,22 +1,17 @@
 use crate::processor::Processor;
-use crate::{load_file};
-use crate::relays::{Relays, fetch_online_relays};
+use crate::relays::{fetch_online_relays, Relays};
+use crate::load_file;
 
 use nostr_sdk::{
     prelude::{
-        Client, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, Result,
+        Client, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, RelayUrl, Result,
         TagStandard, Timestamp,
     },
     RelayMessage, RelayStatus,
 };
 use std::collections::HashSet;
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
-
-
-
-
-use std::str;
 
 use log::debug;
 use log::info;
@@ -26,6 +21,46 @@ use log::warn;
 const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 
+#[derive(Clone)]
+pub struct ActiveRelayList {
+    active_relays: Arc<Mutex<Vec<RelayUrl>>>,
+}
+
+impl ActiveRelayList {
+    pub fn new() -> Self {
+        Self {
+            active_relays: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    pub fn add_relay(&self, relay_url: RelayUrl) {
+        let mut active_relays = self.active_relays.lock().unwrap();
+        if !active_relays.contains(&relay_url) {
+            debug!("Adding relay to active list: {}", relay_url);
+            active_relays.push(relay_url);
+        }
+    }
+
+    pub fn remove_relay(&self, relay_url: &RelayUrl) {
+        let mut active_relays = self.active_relays.lock().unwrap();
+        let initial_len = active_relays.len();
+        active_relays.retain(|r| r != relay_url);
+        if active_relays.len() < initial_len {
+            debug!("Removed relay from active list: {}", relay_url);
+        }
+    }
+
+    pub fn get_active_relays(&self) -> Vec<RelayUrl> {
+        self.active_relays.lock().unwrap().clone()
+    }
+}
+
+impl Default for ActiveRelayList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Keeps a set of active connections to relays
 pub struct RelayManager {
     // app_keys: Keys,
@@ -34,13 +69,12 @@ pub struct RelayManager {
     pub processor: Processor,
     /// Time of last event seen (real time, Unix timestamp)
     time_last_event: u64,
+    active_relay_list: ActiveRelayList,
 }
 
 impl RelayManager {
     pub async fn new(app_keys: Keys, processor: Processor) -> Self {
         let relay_client = Client::new(app_keys);
-        let _proxy = Some(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9050)));
-
         let mut relays_instance = Relays::new();
 
         // Load relays from relays.yaml
@@ -85,6 +119,7 @@ impl RelayManager {
             relay_client,
             processor,
             time_last_event: Self::now(),
+            active_relay_list: ActiveRelayList::new(),
         }
     }
 
@@ -101,37 +136,10 @@ impl RelayManager {
 
     async fn add_some_relays(&mut self) -> Result<()> {
         debug!("relay_manager::add_some_relays");
-        // remove all
-        loop {
-            let relays = self.relay_client.relays().await;
-            let relay_urls: Vec<_> = relays.keys().cloned().collect();
-            if relay_urls.is_empty() {
-                break;
-            }
-            for relay_url in &relay_urls {
-                debug!("removing relay_url:{}", relay_url.to_string());
-            }
-            //self.relay_client
-            //    .remove_relay(relay_urls[0].to_string())
-            //    .await?;
-        }
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
         for r in some_relays {
             debug!("r={}", &r);
-            //self.relay_client.add_relay(r, None).await?;
             self.relay_client.add_relay(r.clone()).await?;
-            //self.relay_client
-            //    .publish_text_note("relay_manager:5<--------<<<<<<<<<", &[])
-            //    .await?;
-            //self.relay_client
-            //    .publish_text_note("6<--------<<<<<<<<<", &[])
-            //    .await?;
-            //self.relay_client
-            //    .publish_text_note("7<--------<<<<<<<<<", &[])
-            //    .await?;
-            //self.relay_client
-            //    .publish_text_note("888888<--------<<<<<<<<<", &[])
-            //    .await?;
             self.relay_client
                 .send_event_builder(EventBuilder::text_note(format!("{}", r)))
                 .await?;
@@ -143,6 +151,13 @@ impl RelayManager {
         debug!("relay_manager::run");
         self.add_bootstrap_relays_if_needed(bootstrap_relays);
         self.add_some_relays().await?;
+
+        let active_relay_list = self.active_relay_list.clone();
+        let relay_client = self.relay_client.clone();
+        tokio::spawn(async move {
+            Self::monitor_relays(active_relay_list, relay_client).await;
+        });
+
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
         for url in &some_relays {
             //if url NOT contain
@@ -165,6 +180,32 @@ impl RelayManager {
             debug!("relay_manager::run::184 relay={} ", relay);
         }
         Ok(())
+    }
+
+    async fn monitor_relays(active_relay_list: ActiveRelayList, relay_client: Client) {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        interval.tick().await;
+
+        loop {
+            interval.tick().await;
+            let mut active = Vec::new();
+            let relays = relay_client.relays().await;
+            for (url, relay_handle) in relays.into_iter() {
+                match relay_handle.status() {
+                    RelayStatus::Connected | RelayStatus::Connecting => {
+                        active_relay_list.add_relay(url.clone());
+                        active.push(url);
+                    }
+                    _ => {
+                        active_relay_list.remove_relay(&url);
+                    }
+                }
+            }
+            debug!(
+                "monitor_relays: {} active relays",
+                active.len()
+            );
+        }
     }
 
     async fn connect(&mut self) -> Result<()> {
@@ -476,12 +517,9 @@ impl RelayManager {
                         //if let Some(ss) = s {
                         trace!("    {ss}");
                         let _ = self.relays.add(ss.as_str());
-                        let _pub_future = self
-                            .relay_client
-                            .send_event_builder(EventBuilder::text_note(ss.to_string()));
-                        //}
-                        trace!("    {}", count);
-                        count += 1;
+                    //}
+                    trace!("    {}", count);
+                    count += 1;
                     }
                 }
             }

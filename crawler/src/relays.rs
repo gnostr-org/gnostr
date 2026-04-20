@@ -157,9 +157,6 @@ impl Relays {
         let mut res = false;
         if let Ok(u) = Url::parse(s1) {
             res = self.r.insert(u);
-            if res {
-                //self.print();
-            }
         }
         res
     }
