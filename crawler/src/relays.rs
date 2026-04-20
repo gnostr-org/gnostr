@@ -23,13 +23,21 @@ static LIVE_KINDS: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::ne
 
 pub fn record_live_nips(nips: impl IntoIterator<Item = i32>) {
     let mut live = LIVE_NIPS.lock().unwrap();
+    let mut changed = false;
     for nip in nips {
-        live.insert(nip);
+        changed |= live.insert(nip);
+    }
+    drop(live);
+    if changed {
+        let _ = write_index_html();
     }
 }
 
 pub fn record_live_kind(kind: impl Into<String>) {
-    LIVE_KINDS.lock().unwrap().insert(kind.into());
+    let changed = LIVE_KINDS.lock().unwrap().insert(kind.into());
+    if changed {
+        let _ = write_index_html();
+    }
 }
 
 pub fn live_nips() -> Vec<i32> {
@@ -121,6 +129,98 @@ pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Res
     fs::write(&txt_path, relays.join(" "))?;
 
     Ok(config_dir)
+}
+
+pub fn write_nip_relays_serve_files_from_dir(nip: i32) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(nip.to_string());
+    fs::create_dir_all(&config_dir)?;
+
+    let mut relays: Vec<String> = Vec::new();
+    for entry in fs::read_dir(&config_dir)? {
+        let entry = entry?;
+        let name = entry.file_name().to_string_lossy().to_string();
+        if !name.ends_with(".json") || name == "relays.json" {
+            continue;
+        }
+        if let Some(host) = name.strip_suffix(".json") {
+            if let Ok(url) = Url::parse(&format!("wss://{}", host)) {
+                relays.push(url.to_string());
+            }
+        }
+    }
+    relays.sort();
+    relays.dedup();
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    fs::write(&json_path, serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?)?;
+    fs::write(&txt_path, relays.join(" "))?;
+
+    Ok(config_dir)
+}
+
+pub fn write_index_html() -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path();
+    fs::create_dir_all(&config_dir)?;
+
+    let mut nips = live_nips();
+    if let Ok(entries) = fs::read_dir(&config_dir) {
+        for entry in entries.flatten() {
+            if entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+                if let Some(name) = entry.file_name().to_str() {
+                    if let Ok(nip) = name.parse::<i32>() {
+                        nips.push(nip);
+                    }
+                }
+            }
+        }
+    }
+    nips.sort_unstable();
+    nips.dedup();
+    let kinds = live_kinds();
+
+    let nip_links = if nips.is_empty() {
+        "<li>No NIP buckets yet. Start serve and wait for the sniper service.</li>".to_string()
+    } else {
+        nips.iter()
+            .map(|nip| {
+                format!(
+                    "<li><a href=\"/{0}\">NIP {0}</a> - <a href=\"/{0}/relays.json\">json</a> <a href=\"/{0}/relays.yaml\">yaml</a> <a href=\"/{0}/relays.txt\">txt</a></li>",
+                    nip
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("")
+    };
+
+    let kind_links = if kinds.is_empty() {
+        "<li>No kinds seen yet.</li>".to_string()
+    } else {
+        kinds
+            .iter()
+            .map(|kind| format!("<li>{}</li>", kind))
+            .collect::<Vec<_>>()
+            .join("")
+    };
+
+    let html = format!(
+        "<html><body><h1>gnostr crawler</h1><h2>NIPs</h2><ul>\
+         <li><a href=\"/relays.json\">relays.json</a></li>\
+         <li><a href=\"/relays.yaml\">relays.yaml</a></li>\
+         <li><a href=\"/relays.txt\">relays.txt</a></li>\
+         {}\
+         </ul><h2>Kinds</h2><ul>{}</ul></body></html>",
+        nip_links,
+        kind_links
+    );
+
+    let path = config_dir.join("index.html");
+    fs::write(&path, html)?;
+    Ok(path)
 }
 
 pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {

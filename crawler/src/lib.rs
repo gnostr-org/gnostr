@@ -725,6 +725,9 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     if let Err(e) = crate::relays::write_relays_serve_files() {
         warn!("Failed to prepare relay serve files: {}", e);
     }
+    if let Err(e) = crate::relays::write_index_html() {
+        warn!("Failed to prepare index.html: {}", e);
+    }
 
     // Start the watch process in a separate asynchronous task
     let client_for_watch = client.clone();
@@ -948,17 +951,35 @@ async fn prime_all_nip_relays_files(
     for item in bodies {
         if let Ok((url, json_string)) = item {
             if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
-                for nip in relay_info.supported_nips.unwrap_or_default() {
+                let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                for nip in &supported_nips {
+                    let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip));
+                    if let Err(e) = sync_fs::create_dir_all(&dir_path) {
+                        warn!("Failed to create nip dir {}: {}", dir_path.display(), e);
+                        continue;
+                    }
+                    if let Ok(parsed_url) = Url::parse(&url) {
+                        let host = parsed_url.host_str().unwrap_or("unknown");
+                        let file_path = dir_path.join(format!("{}.json", host));
+                        if let Err(e) = sync_fs::write(&file_path, &json_string) {
+                            warn!(
+                                "Failed to write individual relay file {}: {}",
+                                file_path.display(),
+                                e
+                            );
+                        }
+                    }
+                }
+                for nip in supported_nips {
                     nip_relays.entry(nip).or_default().insert(url.clone());
                 }
             }
         }
     }
 
-    for (nip, relays) in nip_relays {
-        let relays: Vec<String> = relays.into_iter().collect();
+    for (nip, _) in nip_relays {
         crate::relays::record_live_nips(std::iter::once(nip));
-        if let Err(e) = crate::relays::write_nip_relays_serve_files(nip, &relays) {
+        if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip) {
             warn!("Failed to prime nip {} relay files: {}", nip, e);
         }
     }
@@ -993,9 +1014,8 @@ async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     debug!("Attempting to serve nip relays.yaml from: {}", file_path.display());
 
     if !file_path.exists() {
-        let client = reqwest::Client::new();
-        if let Err(e) = refresh_nip_relays_files(nip_lower, &client).await {
-            error!("Failed to create nip relays.yaml: {}", e);
+        if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
+            error!("Failed to derive nip relays.yaml from disk: {}", e);
         }
     }
 
@@ -1021,9 +1041,8 @@ async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     debug!("Attempting to serve nip relays.json from: {}", file_path.display());
 
     if !file_path.exists() {
-        let client = reqwest::Client::new();
-        if let Err(e) = refresh_nip_relays_files(nip_lower, &client).await {
-            error!("Failed to create nip relays.json: {}", e);
+        if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
+            error!("Failed to derive nip relays.json from disk: {}", e);
         }
     }
 
@@ -1049,9 +1068,8 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     debug!("Attempting to serve nip relays.txt from: {}", file_path.display());
 
     if !file_path.exists() {
-        let client = reqwest::Client::new();
-        if let Err(e) = refresh_nip_relays_files(nip_lower, &client).await {
-            error!("Failed to create nip relays.txt: {}", e);
+        if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
+            error!("Failed to derive nip relays.txt from disk: {}", e);
         }
     }
 
@@ -1134,65 +1152,27 @@ async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, St
 
 async fn get_index_html() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
-    let mut nips = crate::relays::live_nips();
-    if let Ok(mut dir) = fs::read_dir(&config_dir).await {
-        while let Ok(Some(entry)) = dir.next_entry().await {
-            let name = entry.file_name().to_string_lossy().to_string();
-            if entry.file_type().await.map(|ft| ft.is_dir()).unwrap_or(false)
-                && name.chars().all(|c| c.is_ascii_digit())
-            {
-                if let Ok(nip) = name.parse::<i32>() {
-                    nips.push(nip);
-                }
-            }
+    let file_path = config_dir.join("index.html");
+    debug!("Attempting to serve index.html from: {}", file_path.display());
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_index_html() {
+            error!("Failed to create index.html: {}", e);
         }
     }
-    nips.sort_unstable();
-    nips.dedup();
 
-    let kinds = crate::relays::live_kinds();
-
-    let nip_links = if nips.is_empty() {
-        "<li>No NIP buckets yet. Start serve and wait for the sniper service.</li>".to_string()
-    } else {
-        nips.iter()
-            .map(|nip| {
-                format!(
-                    "<li><a href=\"/{0}\">NIP {0}</a> - <a href=\"/{0}/relays.json\">json</a> <a href=\"/{0}/relays.yaml\">yaml</a> <a href=\"/{0}/relays.txt\">txt</a></li>",
-                    nip
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("")
-    };
-
-    let kind_links = if kinds.is_empty() {
-        "<li>No kinds seen yet.</li>".to_string()
-    } else {
-        kinds
-            .iter()
-            .map(|kind| format!("<li>{}</li>", kind))
-            .collect::<Vec<_>>()
-            .join("")
-    };
-
-    let html = format!(
-        "<html><body><h1>gnostr crawler</h1><h2>NIPs</h2><ul>\
-         <li><a href=\"/relays.json\">relays.json</a></li>\
-         <li><a href=\"/relays.yaml\">relays.yaml</a></li>\
-         <li><a href=\"/relays.txt\">relays.txt</a></li>\
-         {}\
-         </ul><h2>Kinds</h2><ul>{}</ul></body></html>",
-        nip_links,
-        kind_links
-    );
-
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(CONTENT_TYPE, "text/html")
-        .body(Body::from(html))
-        .unwrap_or_else(|e| {
-            error!("Failed to build HTML response: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-        })
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/html")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build HTML response: {}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            }),
+        Err(e) => {
+            error!("Failed to read index.html: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read index.html: {}", e))).into_response()
+        }
+    }
 }
