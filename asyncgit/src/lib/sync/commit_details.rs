@@ -1,11 +1,10 @@
 use git2::ObjectType;
 use git2::Signature;
 
-//use nostr_sdk_0_37_0::prelude::*;
-use nostr_sdk::prelude::*;
 use scopetime::scope_time;
 
 use super::{commits_info::get_message, CommitId, RepoPath};
+use crate::types::Keys;
 use crate::{error::Result, sync::repository::repo};
 
 ///
