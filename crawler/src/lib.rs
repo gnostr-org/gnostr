@@ -412,7 +412,7 @@ pub async fn run_sniper(
     shitlist_path: Option<String>,
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    debug!("lib::run_sniper");
+    info!("lib::run_sniper");
 
     //TODO run_watcher populates relays.yaml
     // add async background thread here
@@ -422,10 +422,10 @@ pub async fn run_sniper(
 
     // Allow some time for the watcher to populate relays.yaml
     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-    debug!("run_sniper: Finished initial sleep.");
+    info!("run_sniper: Finished initial sleep.");
 
     let relays = load_relays_or_bootstrap();
-    debug!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
+    info!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
 
     let shitlist = if let Some(path) = shitlist_path {
         match load_shitlist(&path) {
@@ -438,7 +438,7 @@ pub async fn run_sniper(
     } else {
         std::collections::HashSet::new()
     };
-    debug!("run_sniper: Shitlist loaded. Contains {} entries.", shitlist.len());
+    info!("run_sniper: Shitlist loaded. Contains {} entries.", shitlist.len());
 
     let initial_relay_count = relays.len();
     let filtered_relays: Vec<String> = relays
@@ -451,21 +451,21 @@ pub async fn run_sniper(
                     .iter()
                     .any(|shitlisted_url| url.contains(shitlisted_url));
                 if is_shitlisted {
-                    debug!("run_sniper: Filtering out shitlisted relay: {}", url);
+                    info!("run_sniper: Filtering out shitlisted relay: {}", url);
                 }
                 !is_shitlisted
             }
         })
         .collect();
-    debug!("run_sniper: Filtered from {} to {} relays.", initial_relay_count, filtered_relays.len());
+    info!("run_sniper: Filtered from {} to {} relays.", initial_relay_count, filtered_relays.len());
 
     let bodies = stream::iter(filtered_relays)
         .map(|url| {
-            debug!("run_sniper: Processing URL: {}", url);
+            info!("run_sniper: Processing URL: {}", url);
             let client = client.clone();
             async move {
                 let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
-                debug!("run_sniper: Sending request to: {}", http_url);
+                info!("run_sniper: Sending request to: {}", http_url);
                 let resp = client
                     .get(&http_url)
                     .header(ACCEPT, "application/nostr+json")
@@ -477,9 +477,9 @@ pub async fn run_sniper(
                     return Ok((url, String::new())); // Return empty string to skip JSON parsing
                 }
 
-                debug!("run_sniper: Received response status: {:?}", resp.status());
+                info!("run_sniper: Received response status: {:?}", resp.status());
                 let text = resp.text().await?;
-                debug!("run_sniper: Raw response text from {}: {}", http_url, text); // Added debug log
+                info!("run_sniper: Raw response text from {}: {}", http_url, text); // Added info log
 
                 let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
                 r
@@ -493,15 +493,15 @@ pub async fn run_sniper(
                 let data: Result<Relay, _> = serde_json::from_str(&json_string);
                 match data {
                     Ok(relay_info) => {
-                        debug!("run_sniper: Successfully parsed relay info for {}", url);
+                        info!("run_sniper: Successfully parsed relay info for {}", url);
                         for n in &relay_info.supported_nips.unwrap_or_default() {
                             if n == &nip_lower {
-                                debug!("run_sniper: Found NIP-{} support on relay: {}", nip_lower, url);
-                                debug!("contact:{:?}", &relay_info.contact);
-                                debug!("description:{:?}", &relay_info.description);
-                                debug!("name:{:?}", &relay_info.name);
-                                debug!("software:{:?}", &relay_info.software);
-                                debug!("version:{:?}", &relay_info.version);
+                                info!("run_sniper: Found NIP-{} support on relay: {}", nip_lower, url);
+                                info!("contact:{:?}", &relay_info.contact);
+                                info!("description:{:?}", &relay_info.description);
+                                info!("name:{:?}", &relay_info.name);
+                                info!("software:{:?}", &relay_info.software);
+                                info!("version:{:?}", &relay_info.version);
 
                                 let parsed_url = match Url::parse(&url) {
                                     Ok(u) => u,
@@ -511,25 +511,25 @@ pub async fn run_sniper(
                                     }
                                 };
                                 let host = parsed_url.host_str().unwrap_or("unknown");
-                                debug!("run_sniper: Host for {} is {}", url, host);
+                                info!("run_sniper: Host for {} is {}", url, host);
 
                                 let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
                                 if let Err(e) = sync_fs::create_dir_all(&dir_path) {
                                     error!("Failed to create directory {}: {}", dir_path.display(), e);
                                     return;
                                 };
-                                debug!("run_sniper: Ensured directory exists: {}", dir_path.display());
+                                info!("run_sniper: Ensured directory exists: {}", dir_path.display());
 
                                 let file_name = format!("{}.json", host);
                             let file_path = dir_path.join(&file_name);
                             let file_path_str = file_path.display().to_string();
-                            debug!("run_sniper: Attempting to write to file: {}\n\n{}", file_path_str, file_path_str);
+                            info!("run_sniper: Attempting to write to file: {}\n\n{}", file_path_str, file_path_str);
 
                                 match sync_fs::File::create(&file_path) {
                                     Ok(mut file) => {
-                                        debug!("run_sniper: File created: {}", &file_path_str);
+                                        info!("run_sniper: File created: {}", &file_path_str);
                                         match file.write_all(json_string.as_bytes()) {
-                                            Ok(_) => debug!("run_sniper: Wrote relay metadata to: {}", &file_path_str),
+                                            Ok(_) => info!("run_sniper: Wrote relay metadata to: {}", &file_path_str),
                                             Err(e) => {
                                                 error!("Failed to write to {}: {}", &file_path_str, e)
                                             }
@@ -538,7 +538,7 @@ pub async fn run_sniper(
                                     Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
                                 }
 
-                                debug!(
+                                info!(
                                     "run_sniper: Processed NIP {} for relay: {}/{}",
                                     nip_lower,
                                     nip_lower,
@@ -892,6 +892,11 @@ async fn collect_supported_relays_for_nip(
                     .await?;
 
                 if !resp.status().is_success() {
+                    info!(
+                        "prime_all_nip_relays_files: skipping {} due to HTTP {}",
+                        url,
+                        resp.status()
+                    );
                     return Ok((url, String::new()));
                 }
 
@@ -964,8 +969,26 @@ async fn prime_all_nip_relays_files(
     let bodies = bodies.collect::<Vec<Result<(String, String), reqwest::Error>>>().await;
     for item in bodies {
         if let Ok((url, json_string)) = item {
+            if json_string.is_empty() {
+                info!(
+                    "prime_all_nip_relays_files: no metadata body for {}",
+                    url
+                );
+                continue;
+            }
+            info!(
+                "prime_all_nip_relays_files: read metadata for {} ({} bytes)",
+                url,
+                json_string.len()
+            );
             if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                if supported_nips.is_empty() {
+                    info!(
+                        "prime_all_nip_relays_files: {} reported no supported_nips",
+                        url
+                    );
+                }
                 info!(
                     "prime_all_nip_relays_files: {} supports {:?}",
                     url, supported_nips
@@ -979,6 +1002,10 @@ async fn prime_all_nip_relays_files(
                     if let Ok(parsed_url) = Url::parse(&url) {
                         let host = parsed_url.host_str().unwrap_or("unknown");
                         let file_path = dir_path.join(format!("{}.json", host));
+                        info!(
+                            "prime_all_nip_relays_files: writing relay metadata to {}",
+                            file_path.display()
+                        );
                         if let Err(e) = sync_fs::write(&file_path, &json_string) {
                             warn!(
                                 "Failed to write individual relay file {}: {}",
@@ -991,7 +1018,17 @@ async fn prime_all_nip_relays_files(
                 for nip in supported_nips {
                     nip_relays.entry(nip).or_default().insert(url.clone());
                 }
+            } else {
+                info!(
+                    "prime_all_nip_relays_files: failed to parse relay metadata for {}",
+                    url
+                );
             }
+        } else if let Err(e) = item {
+            info!(
+                "prime_all_nip_relays_files: request failed while fetching relay metadata: {}",
+                e
+            );
         }
     }
 
@@ -1008,7 +1045,7 @@ async fn prime_all_nip_relays_files(
 }
 
 async fn run_sniper_service(client: reqwest::Client) {
-    info!("run_sniper_service: starting background sniper");
+    info!("starting sniper service");
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
     interval.tick().await;
 
@@ -1041,6 +1078,7 @@ async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         }
     }
 
+    info!("get_nip_relays_yaml: reading {}", file_path.display());
     match fs::read_to_string(&file_path).await {
         Ok(content) => Response::builder()
             .status(StatusCode::OK)
@@ -1068,6 +1106,7 @@ async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         }
     }
 
+    info!("get_nip_relays_json: reading {}", file_path.display());
     match fs::read_to_string(&file_path).await {
         Ok(content) => Response::builder()
             .status(StatusCode::OK)
@@ -1095,6 +1134,7 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         }
     }
 
+    info!("get_nip_relays_txt: reading {}", file_path.display());
     match fs::read_to_string(&file_path).await {
         Ok(content) => Response::builder()
             .status(StatusCode::OK)
@@ -1156,6 +1196,7 @@ async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, St
         return (StatusCode::BAD_REQUEST, Body::from("Expected a .json relay file")).into_response();
     }
 
+    info!("get_nip_relay_json: reading {}", file_path.display());
     match fs::read_to_string(&file_path).await {
         Ok(content) => Response::builder()
             .status(StatusCode::OK)

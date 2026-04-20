@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 use reqwest::Client;
 use anyhow::Result;
 use reqwest::header::ACCEPT;
@@ -134,6 +134,7 @@ pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
         fs::create_dir_all(parent)?;
     }
 
+    debug!("write_relays_json_from_yaml: reading {}", yaml_path.display());
     let relays: Vec<String> = match fs::read_to_string(&yaml_path) {
         Ok(content) => content
             .lines()
@@ -144,6 +145,7 @@ pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
 
     let json_content = serde_json::to_string_pretty(&relays)
         .map_err(std::io::Error::other)?;
+    debug!("write_relays_json_from_yaml: writing {}", json_path.display());
     fs::write(&json_path, json_content)?;
     Ok(json_path)
 }
@@ -152,7 +154,9 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     let config_dir = get_config_dir_path();
     fs::create_dir_all(&config_dir)?;
 
-    let relays: Vec<String> = match fs::read_to_string(config_dir.join("relays.yaml")) {
+    let yaml_source = config_dir.join("relays.yaml");
+    debug!("write_relays_serve_files: reading {}", yaml_source.display());
+    let relays: Vec<String> = match fs::read_to_string(&yaml_source) {
         Ok(content) => content.lines().filter_map(sanitize_relay_entry).collect(),
         Err(_) => BOOTSTRAP_RELAYS.clone(),
     };
@@ -162,8 +166,11 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     let txt_path = config_dir.join("relays.txt");
 
     let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
+    debug!("write_relays_serve_files: writing {}", yaml_path.display());
     fs::write(&yaml_path, yaml_content)?;
+    debug!("write_relays_serve_files: writing {}", json_path.display());
     fs::write(&json_path, serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?)?;
+    debug!("write_relays_serve_files: writing {}", txt_path.display());
     fs::write(&txt_path, relays.join(" "))?;
     Ok(())
 }
@@ -176,9 +183,12 @@ pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Res
     let json_path = config_dir.join("relays.json");
     let txt_path = config_dir.join("relays.txt");
 
+    debug!("write_nip_relays_serve_files: writing {}", yaml_path.display());
     let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
     fs::write(&yaml_path, yaml_content)?;
+    debug!("write_nip_relays_serve_files: writing {}", json_path.display());
     fs::write(&json_path, serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?)?;
+    debug!("write_nip_relays_serve_files: writing {}", txt_path.display());
     fs::write(&txt_path, relays.join(" "))?;
 
     Ok(config_dir)
@@ -189,6 +199,7 @@ pub fn write_nip_relays_serve_files_from_dir(nip: i32) -> std::io::Result<PathBu
     fs::create_dir_all(&config_dir)?;
 
     let mut relays: Vec<String> = Vec::new();
+    debug!("write_nip_relays_serve_files_from_dir: reading {}", config_dir.display());
     for entry in fs::read_dir(&config_dir)? {
         let entry = entry?;
         let name = entry.file_name().to_string_lossy().to_string();
@@ -197,20 +208,38 @@ pub fn write_nip_relays_serve_files_from_dir(nip: i32) -> std::io::Result<PathBu
         }
         if let Some(host) = name.strip_suffix(".json") {
             if let Ok(url) = Url::parse(&format!("wss://{}", host)) {
+                info!(
+                    "write_nip_relays_serve_files_from_dir: including {} from {}",
+                    url,
+                    entry.path().display()
+                );
                 relays.push(url.to_string());
+            } else {
+                info!(
+                    "write_nip_relays_serve_files_from_dir: skipping invalid host file {}",
+                    entry.path().display()
+                );
             }
         }
     }
     relays.sort();
     relays.dedup();
+    info!(
+        "write_nip_relays_serve_files_from_dir: built {} relay entries for NIP {}",
+        relays.len(),
+        nip
+    );
 
     let yaml_path = config_dir.join("relays.yaml");
     let json_path = config_dir.join("relays.json");
     let txt_path = config_dir.join("relays.txt");
 
+    debug!("write_nip_relays_serve_files_from_dir: writing {}", yaml_path.display());
     let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
     fs::write(&yaml_path, yaml_content)?;
+    debug!("write_nip_relays_serve_files_from_dir: writing {}", json_path.display());
     fs::write(&json_path, serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?)?;
+    debug!("write_nip_relays_serve_files_from_dir: writing {}", txt_path.display());
     fs::write(&txt_path, relays.join(" "))?;
 
     Ok(config_dir)
