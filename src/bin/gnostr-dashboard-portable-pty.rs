@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
             gnostr::cli::GnostrCli::default()
         }
     };
-    
+
     // Combine commands: prioritizes manual parsing, fallbacks to clap-parsed if any missed
     let mut final_commands = commands;
     if final_commands.is_empty() && !args.commands.is_empty() {
