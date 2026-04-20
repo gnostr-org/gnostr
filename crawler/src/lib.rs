@@ -7,6 +7,8 @@ pub mod stats;
 pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
+        .add_directive("hyper::client::trace=trace".parse()?)
+        .add_directive("hyper::proto=off".parse()?)
         .add_directive("nostr_sdk::relay=off".parse()?)
         .add_directive("nostr_relay_pool=off".parse()?)
         .add_directive("nostr_relay_pool::relay::inner=off".parse()?)
@@ -725,6 +727,10 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     if let Err(e) = crate::relays::write_relays_serve_files() {
         warn!("Failed to prepare relay serve files: {}", e);
     }
+    crate::relays::prime_live_kinds_from_disk();
+    if let Err(e) = crate::relays::write_kinds_serve_files() {
+        warn!("Failed to prepare kinds serve files: {}", e);
+    }
     if let Err(e) = crate::relays::write_index_html() {
         warn!("Failed to prepare index.html: {}", e);
     }
@@ -924,11 +930,17 @@ async fn collect_supported_relays_for_nip(
 async fn prime_all_nip_relays_files(
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("prime_all_nip_relays_files: starting pass");
     let relays = load_relays_or_bootstrap();
+    debug!(
+        "prime_all_nip_relays_files: checking {} relays for NIP support",
+        relays.len()
+    );
     let bodies = stream::iter(relays)
         .map(|url| {
             let client = client.clone();
             async move {
+                debug!("prime_all_nip_relays_files: fetching relay metadata for {}", url);
                 let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
                 let resp = client
                     .get(&http_url)
@@ -952,6 +964,10 @@ async fn prime_all_nip_relays_files(
         if let Ok((url, json_string)) = item {
             if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                debug!(
+                    "prime_all_nip_relays_files: {} supports {:?}",
+                    url, supported_nips
+                );
                 for nip in &supported_nips {
                     let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip));
                     if let Err(e) = sync_fs::create_dir_all(&dir_path) {
@@ -979,19 +995,23 @@ async fn prime_all_nip_relays_files(
 
     for (nip, _) in nip_relays {
         crate::relays::record_live_nips(std::iter::once(nip));
+        debug!("prime_all_nip_relays_files: rebuilding NIP {} aggregate files", nip);
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip) {
             warn!("Failed to prime nip {} relay files: {}", nip, e);
         }
     }
 
+    debug!("prime_all_nip_relays_files: completed pass");
     Ok(())
 }
 
 async fn run_sniper_service(client: reqwest::Client) {
+    debug!("run_sniper_service: starting background sniper");
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
     interval.tick().await;
 
     loop {
+        debug!("run_sniper_service: triggering prime pass");
         if let Err(e) = prime_all_nip_relays_files(&client).await {
             warn!("Sniper service failed: {}", e);
         }

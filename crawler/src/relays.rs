@@ -36,6 +36,7 @@ pub fn record_live_nips(nips: impl IntoIterator<Item = i32>) {
 pub fn record_live_kind(kind: impl Into<String>) {
     let changed = LIVE_KINDS.lock().unwrap().insert(kind.into());
     if changed {
+        let _ = write_kinds_serve_files();
         let _ = write_index_html();
     }
 }
@@ -50,6 +51,58 @@ pub fn live_kinds() -> Vec<String> {
     let mut kinds: Vec<String> = LIVE_KINDS.lock().unwrap().iter().cloned().collect();
     kinds.sort();
     kinds
+}
+
+fn kinds_from_disk() -> Vec<String> {
+    let config_dir = get_config_dir_path();
+    let kinds_path = config_dir.join("kinds.txt");
+
+    match fs::read_to_string(&kinds_path) {
+        Ok(content) => content
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => Vec::new(),
+    }
+}
+
+pub fn prime_live_kinds_from_disk() {
+    let kinds = kinds_from_disk();
+    if kinds.is_empty() {
+        return;
+    }
+
+    let mut live = LIVE_KINDS.lock().unwrap();
+    for kind in kinds {
+        live.insert(kind);
+    }
+}
+
+pub fn write_kinds_serve_files() -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path();
+    fs::create_dir_all(&config_dir)?;
+
+    let mut kinds = live_kinds();
+    for kind in kinds_from_disk() {
+        if !kinds.contains(&kind) {
+            kinds.push(kind);
+        }
+    }
+    kinds.sort();
+    kinds.dedup();
+
+    let txt_path = config_dir.join("kinds.txt");
+    let json_path = config_dir.join("kinds.json");
+
+    fs::write(&txt_path, kinds.join("\n"))?;
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(&kinds).map_err(std::io::Error::other)?,
+    )?;
+
+    Ok(txt_path)
 }
 
 fn sanitize_relay_entry(line: &str) -> Option<String> {
@@ -181,7 +234,14 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
     }
     nips.sort_unstable();
     nips.dedup();
-    let kinds = live_kinds();
+    let mut kinds = live_kinds();
+    for kind in kinds_from_disk() {
+        if !kinds.contains(&kind) {
+            kinds.push(kind);
+        }
+    }
+    kinds.sort();
+    kinds.dedup();
 
     let nip_links = if nips.is_empty() {
         "<li>No NIP buckets yet. Start serve and wait for the sniper service.</li>".to_string()

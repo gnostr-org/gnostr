@@ -13,7 +13,7 @@ struct GnostrCrawlerArgs {
 
 fn init_tracing(logging: &str) -> Result<(), Box<dyn std::error::Error>> {
     let filter = tracing_subscriber::EnvFilter::try_new(format!(
-        "{logging},nostr_sdk::relay=off,nostr_relay_pool=off,nostr_relay_pool::relay::inner=off"
+        "{logging},hyper::client::trace=trace,hyper::proto=off,nostr_sdk::relay=off,nostr_relay_pool=off,nostr_relay_pool::relay::inner=off"
     ))?;
 
     tracing_subscriber::fmt().with_env_filter(filter).init();
