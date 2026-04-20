@@ -744,6 +744,7 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
+        .route("/:nip", get(get_nip_index))
         .route("/:nip/relays.yaml", get(get_nip_relays_yaml))
         .route("/:nip/relays.json", get(get_nip_relays_json))
         .route("/:nip/relays.txt", get(get_nip_relays_txt))
@@ -1067,6 +1068,42 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.txt: {}", e))).into_response()
         }
     }
+}
+
+async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let mut links = vec![
+        format!("<li><a href=\"/{}/relays.json\">relays.json</a></li>", nip_lower),
+        format!("<li><a href=\"/{}/relays.yaml\">relays.yaml</a></li>", nip_lower),
+        format!("<li><a href=\"/{}/relays.txt\">relays.txt</a></li>", nip_lower),
+    ];
+
+    if let Ok(mut dir) = fs::read_dir(&config_dir).await {
+        while let Ok(Some(entry)) = dir.next_entry().await {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.ends_with(".json") && name != "relays.json" {
+                links.push(format!(
+                    "<li><a href=\"/{}/{}\">{}</a></li>",
+                    nip_lower, name, name
+                ));
+            }
+        }
+    }
+
+    let html = format!(
+        "<html><body><h1>NIP {}</h1><ul>{}</ul></body></html>",
+        nip_lower,
+        links.join("")
+    );
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "text/html")
+        .body(Body::from(html))
+        .unwrap_or_else(|e| {
+            error!("Failed to build nip index response: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+        })
 }
 
 async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, String)>) -> Response {
