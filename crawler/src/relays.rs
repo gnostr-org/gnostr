@@ -1,6 +1,7 @@
 use nostr_sdk::prelude::Url;
 use directories::ProjectDirs;
 use crate::preprocess_line;
+use crate::processor::BOOTSTRAP_RELAYS;
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
@@ -14,6 +15,54 @@ pub fn get_config_dir_path() -> PathBuf {
     ProjectDirs::from("org", "gnostr", "gnostr/crawler")
         .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
         .unwrap_or_else(|| Path::new(".").to_path_buf())
+}
+
+pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path();
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+
+    if let Some(parent) = json_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let relays: Vec<String> = match fs::read_to_string(&yaml_path) {
+        Ok(content) => content
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+
+    let json_content = serde_json::to_string_pretty(&relays)
+        .map_err(std::io::Error::other)?;
+    fs::write(&json_path, json_content)?;
+    Ok(json_path)
+}
+
+pub fn write_relays_serve_files() -> std::io::Result<()> {
+    let config_dir = get_config_dir_path();
+    fs::create_dir_all(&config_dir)?;
+
+    let relays: Vec<String> = match fs::read_to_string(config_dir.join("relays.yaml")) {
+        Ok(content) => content
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => BOOTSTRAP_RELAYS.clone(),
+    };
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    fs::write(&json_path, serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?)?;
+    fs::write(&txt_path, relays.join(" "))?;
+    Ok(())
 }
 
 pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {

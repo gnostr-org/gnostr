@@ -1,8 +1,9 @@
 use std::collections::HashSet;
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::PathBuf;
 use anyhow::Result;
+use directories::ProjectDirs;
 use reqwest::Client;
 use tokio;
 use sha2::{Sha256, Digest};
@@ -66,16 +67,20 @@ async fn main() -> Result<()> {
         }
     }
 
-    // Write combined and deduplicated relays to relays.yaml in OUT_DIR
-    let generated_relays_path_in_out_dir = out_dir.join("relays.yaml");
-    let mut file = File::create(&generated_relays_path_in_out_dir)?;
+    let config_dir = ProjectDirs::from("org", "gnostr", "gnostr/crawler")
+        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
+        .unwrap_or_else(|| PathBuf::from("."));
+    fs::create_dir_all(&config_dir)?;
+
+    // Write combined and deduplicated relays to the user config directory.
+    let generated_relays_path = config_dir.join("relays.yaml");
+    let mut file = File::create(&generated_relays_path)?;
 
     for relay_url in &all_relays {
         writeln!(file, "{}", relay_url)?;
     }
 
     // Tell Cargo the path to the generated file
-    println!("cargo:rustc-env=RELAYS_YAML_PATH={}", generated_relays_path_in_out_dir.display());
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
 

@@ -1,20 +1,29 @@
 use crate::pubkeys::PubKeys;
+use crate::relays::get_config_dir_path;
 use crate::stats::Stats;
 use log::debug;
+use std::fs;
 
 use nostr_sdk::prelude::{Event, Kind, TagStandard, Timestamp};
 use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
 
-pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
-    let relays_yaml_bytes = include_bytes!("relays.yaml");
-    let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
-    relays_yaml_content.lines()
+fn load_bootstrap_relays() -> Vec<String> {
+    let relays_path = get_config_dir_path().join("relays.yaml");
+    let relays_yaml_content = fs::read_to_string(&relays_path).unwrap_or_else(|_| {
+        let relays_yaml_bytes = include_bytes!("relays.yaml");
+        String::from_utf8_lossy(relays_yaml_bytes).into_owned()
+    });
+
+    relays_yaml_content
+        .lines()
         .filter(|line: &&str| !line.trim().is_empty())
         .map(|line: &str| String::from(line))
         .collect()
-});
+}
+
+pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(load_bootstrap_relays);
 pub static SHITLIST_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     let relays_yaml_bytes = include_bytes!("shitlist.yaml");
     let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);

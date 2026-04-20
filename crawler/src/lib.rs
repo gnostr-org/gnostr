@@ -715,6 +715,9 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     debug!("run_api_server: Starting API server on port {}", port);
 
     let client = reqwest::Client::new();
+    if let Err(e) = crate::relays::write_relays_serve_files() {
+        warn!("Failed to prepare relay serve files: {}", e);
+    }
 
     // Start the watch process in a separate asynchronous task
     let client_for_watch = client.clone();
@@ -747,6 +750,12 @@ async fn get_relays_yaml() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.yaml");
     debug!("Attempting to serve relays.yaml from: {}", file_path.display());
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_relays_serve_files() {
+            error!("Failed to create relays.yaml: {}", e);
+        }
+    }
 
     match fs::read_to_string(&file_path).await {
         Ok(content) => {
@@ -784,6 +793,12 @@ async fn get_relays_json() -> Response {
     let file_path = config_dir.join("relays.json");
     debug!("Attempting to serve relays.json from: {}", file_path.display());
 
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_relays_serve_files() {
+            error!("Failed to create relays.json: {}", e);
+        }
+    }
+
     match fs::read_to_string(&file_path).await {
         Ok(content) => {
             Response::builder()
@@ -804,32 +819,29 @@ async fn get_relays_json() -> Response {
 
 async fn get_relays_txt() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.yaml"); // Use relays.yaml as source
-    debug!("Attempting to serve relays.txt (from relays.yaml) from: {}", file_path.display());
+    let file_path = config_dir.join("relays.txt");
+    debug!("Attempting to serve relays.txt from: {}", file_path.display());
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_relays_serve_files() {
+            error!("Failed to create relays.txt: {}", e);
+        }
+    }
 
     match fs::read_to_string(&file_path).await {
         Ok(content) => {
-            match serde_yaml::from_str::<Vec<String>>(&content) {
-                Ok(relays) => {
-                    let relays_output = relays.join(" ");
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .header(CONTENT_TYPE, "text/plain")
-                        .body(Body::from(relays_output))
-                        .unwrap_or_else(|e| {
-                            error!("Failed to build TXT response: {}", e);
-                            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                        })
-                },
-                Err(e) => {
-                    error!("Failed to parse relays.yaml for relays.txt: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to parse relays.yaml for relays.txt: {}", e))).into_response()
-                }
-            }
+            Response::builder()
+                .status(StatusCode::OK)
+                .header(CONTENT_TYPE, "text/plain")
+                .body(Body::from(content))
+                .unwrap_or_else(|e| {
+                    error!("Failed to build TXT response: {}", e);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                })
         },
         Err(e) => {
-            error!("Failed to read relays.yaml for relays.txt: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml for relays.txt: {}", e))).into_response()
+            error!("Failed to read relays.txt: {}. Path: {}", e, file_path.display());
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.txt: {}", e))).into_response()
         }
     }
 }
