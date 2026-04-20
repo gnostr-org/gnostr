@@ -36,7 +36,7 @@ reqwest = { version = "0.12", features = ["blocking", "json", "multipart", "sock
 
 # Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
 tokio = { version = "1", features = ["full"] }
-tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+tokio-tungstenite = { version = "0.21", features = ["rustls-tls-webpki-roots"] }
 futures-util = "0.3"
 
 # Serialization
