@@ -6,7 +6,7 @@ use nostr_sdk_0_34_0::prelude::{Event, Kind, TagStandard, /*Tag, */ Timestamp};
 use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080"; //gnostr relay
-pub const LOCALHOST_3000: &str = "ws://127.0.0.1:8080"; //gnostr-server // blossom-server
+pub const LOCALHOST_3000: &str = "ws://127.0.0.1:3000"; //gnostr-server // blossom-server
 
 pub const BOOTSTRAP_RELAY0: &str = "wss://relay.damus.io";
 pub const BOOTSTRAP_RELAY1: &str = "wss://herbstmeister.com/"; //nip34
