@@ -1,6 +1,7 @@
 use futures::{SinkExt, StreamExt};
 use log::info;
 use serde_json::{json, Map};
+use tokio::time::{sleep, timeout, Duration};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
@@ -141,24 +142,93 @@ pub async fn send(
     //log::info!("query_string=\n{query_string}\n");
     //log::debug!("relay_url:\n{relay_url:?}\n");
     //log::info!("\n{}\n", limit.unwrap());
-    let (ws_stream, _) = connect_async(relay_url[0].as_str()).await?;
-    let (mut write, mut read) = ws_stream.split();
-    write.send(Message::Text(query_string.into())).await?;
-    let mut count: i32 = 0;
-    let mut vec_result: Vec<String> = vec![];
-    while let Some(message) = read.next().await {
-        let data = message?;
-        if count >= limit.unwrap() {
-            //std::process::exit(0);
-            return Ok(vec_result);
+    const MAX_RETRIES: u32 = 3;
+    let total_attempts = MAX_RETRIES + 1;
+    let connect_timeout = Duration::from_secs(30);
+    let read_timeout = Duration::from_secs(30);
+
+    if relay_url.is_empty() {
+        return Err("No relay URLs provided".into());
+    }
+
+    let mut last_err: String = "Unknown error".to_string();
+
+    for attempt in 0..=MAX_RETRIES {
+        if attempt > 0 {
+            let delay = Duration::from_secs((1u64 << (attempt - 1)).min(30));
+            log::debug!(
+                "Retrying WebSocket connection (attempt {}/{total_attempts}), waiting {}s...",
+                attempt + 1,
+                delay.as_secs()
+            );
+            sleep(delay).await;
         }
-        if let Message::Text(text) = data {
-            //print!("{text}");
-            vec_result.push(text.to_string());
-            count += 1;
+
+        let connect_result = timeout(connect_timeout, connect_async(relay_url[0].as_str())).await;
+        match connect_result {
+            Err(_) => {
+                last_err = format!(
+                    "WebSocket connection timed out on attempt {}/{}",
+                    attempt + 1,
+                    total_attempts
+                );
+                log::debug!("{}", last_err);
+                continue;
+            }
+            Ok(Err(e)) => {
+                last_err = format!("WebSocket connection failed: {e}");
+                log::debug!("{}", last_err);
+                continue;
+            }
+            Ok(Ok((ws_stream, _))) => {
+                let (mut write, mut read) = ws_stream.split();
+                if let Err(e) = write.send(Message::Text(query_string.clone().into())).await {
+                    last_err = format!("Failed to send query: {e}");
+                    log::debug!("{}", last_err);
+                    continue;
+                }
+
+                let mut count: i32 = 0;
+                let mut vec_result: Vec<String> = vec![];
+
+                let read_error = loop {
+                    match timeout(read_timeout, read.next()).await {
+                        Ok(Some(Ok(data))) => {
+                            if count >= limit.unwrap() {
+                                return Ok(vec_result);
+                            }
+                            if let Message::Text(text) = data {
+                                vec_result.push(text.to_string());
+                                count += 1;
+                            }
+                        }
+                        Ok(Some(Err(e))) => {
+                            let err = format!("WebSocket read error: {e}");
+                            log::debug!("{}", err);
+                            break Some(err);
+                        }
+                        Ok(None) => return Ok(vec_result),
+                        Err(_) => {
+                            log::debug!(
+                                "WebSocket read timed out after {} seconds",
+                                read_timeout.as_secs()
+                            );
+                            return Ok(vec_result);
+                        }
+                    }
+                };
+
+                if let Some(e) = read_error {
+                    last_err = e;
+                    continue;
+                }
+
+                return Ok(vec_result);
+            }
         }
     }
-    Ok(vec_result)
+
+    Err(last_err.into())
 }
 
 #[allow(clippy::too_many_arguments)]
