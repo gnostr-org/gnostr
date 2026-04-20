@@ -76,6 +76,28 @@ Pass cargo feature/profile flags through:
 ./scripts/cross.sh --no-default-features --features blossom-tui
 ```
 
+## GitHub Actions workflow
+
+Use `.github/workflows/cross-docker.yml` when you want to run the Docker-backed
+Linux cross builds from GitHub Actions.
+
+The manual workflow exposes options for:
+
+- target selection (`all`, `linux-x64`, `linux-x64-musl`, `linux-arm64`,
+  `linux-arm64-musl`)
+- toolchain
+- profile
+- package vs workspace build
+- `--all-features`
+- `--no-default-features`
+- `--features`
+- `--unlocked`
+- `--verbose`
+- `--dry-run`
+
+The workflow calls `./scripts/cross.sh`, so local and CI cross-build behavior
+stay aligned.
+
 ## Docker-backed cross images
 
 `Cross.toml` points these targets at custom Dockerfiles:
