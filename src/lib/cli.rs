@@ -186,6 +186,9 @@ pub struct GnostrCli {
     /// Generate bugreport
     #[arg(long, default_value = "false")]
     pub bugreport: bool,
+    /// commands
+    #[arg(long = "command", action = clap::ArgAction::Append, help = "gnostr --command '<string>'")]
+    pub commands: Vec<String>,
 }
 
 impl Default for GnostrCli {
@@ -216,6 +219,7 @@ impl Default for GnostrCli {
             trace: false,
             warn: false,
             bugreport: false,
+            commands: vec![],
         }
     }
 }
