@@ -10,15 +10,19 @@ fn env_or_default(key: &str, default: &str) -> String {
 }
 
 fn default_blossom_data_dir() -> String {
-    dirs::home_dir()
-        .map(|home| home.join(".gnostr/blossom/blobs").to_string_lossy().into_owned())
+    app_dirs()
+        .map(|dirs| dirs.data_local_dir().join("blossom/blobs").to_string_lossy().into_owned())
         .unwrap_or_else(|| "/var/lib/blossom/blobs".to_string())
 }
 
 fn default_blossom_db_path() -> String {
-    dirs::home_dir()
-        .map(|home| home.join(".gnostr/blossom/blossom.db").to_string_lossy().into_owned())
+    app_dirs()
+        .map(|dirs| dirs.data_local_dir().join("blossom/blossom.db").to_string_lossy().into_owned())
         .unwrap_or_else(|| "/var/lib/blossom/blossom.db".to_string())
+}
+
+fn app_dirs() -> Option<directories::ProjectDirs> {
+    directories::ProjectDirs::from("org", "gnostr", "gnostr")
 }
 
 fn blossom_server_args() -> Result<Vec<String>, Box<dyn std::error::Error>> {
