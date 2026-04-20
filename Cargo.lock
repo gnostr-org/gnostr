@@ -596,7 +596,7 @@ dependencies = [
  "objc2-foundation",
  "parking_lot 0.12.3",
  "percent-encoding",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
  "x11rb",
 ]
 
@@ -3876,7 +3876,7 @@ dependencies = [
  "libc 0.2.185",
  "option-ext",
  "redox_users 0.5.2",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4352,7 +4352,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc 0.2.185",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6006,6 +6006,7 @@ dependencies = [
  "nostr-database 0.44.0",
  "nostr-db",
  "nostr-lmdb",
+ "nostr-relay",
  "nostr-relay-pool 0.44.0",
  "nostr-sdk 0.19.1",
  "nostr-sdk 0.32.0",
@@ -6339,27 +6340,8 @@ dependencies = [
 name = "gnostr-extensions"
 version = "1878.945843.346028"
 dependencies = [
- "actix",
- "actix-rt",
- "actix-test",
- "actix-web",
- "actix-web-actors",
- "anyhow",
- "bytes 1.11.1",
- "futures-util",
  "gnostr-relay",
- "governor",
- "metrics",
- "metrics-exporter-prometheus",
- "metrics-util",
- "parking_lot 0.12.3",
- "serde",
- "serde_json",
- "temp-env",
- "tempfile",
- "tracing",
- "tracing-subscriber",
- "uuid",
+ "nostr-extensions",
 ]
 
 [[package]]
@@ -6502,31 +6484,10 @@ dependencies = [
 name = "gnostr-relay"
 version = "1878.945843.346028"
 dependencies = [
- "actix",
- "actix-cors",
- "actix-http",
- "actix-rt",
- "actix-test",
  "actix-web",
- "actix-web-actors",
  "anyhow",
- "bytes 1.11.1",
- "bytestring 1.5.0",
  "clap 4.5.60",
- "config",
- "duration-str",
- "futures-util",
- "hex",
- "metrics",
- "nostr-db",
- "notify 6.1.1",
- "num_cpus",
- "parking_lot 0.12.3",
- "serde",
- "serde_json",
- "temp-env",
- "tempfile",
- "thiserror 1.0.69",
+ "nostr-relay",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -7924,7 +7885,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi 0.5.2",
  "libc 0.2.185",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -8024,7 +7985,7 @@ dependencies = [
  "portable-atomic",
  "portable-atomic-util",
  "serde_core",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -10609,6 +10570,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "nostr-extensions"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da159a18c58c1ca73cfd5ae8ab05a9c544bc715f6dd4586e1070269a095b11ad"
+dependencies = [
+ "actix",
+ "actix-web",
+ "governor",
+ "metrics",
+ "metrics-exporter-prometheus",
+ "metrics-util",
+ "nostr-relay",
+ "parking_lot 0.12.3",
+ "serde",
+ "serde_json",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "nostr-gossip"
 version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10655,6 +10636,33 @@ dependencies = [
  "opentimestamps",
  "thiserror 1.0.69",
  "ureq",
+]
+
+[[package]]
+name = "nostr-relay"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47f14e39173a840402b6dc4b6457718d628043d1e061ac87b8a91daea8f12056"
+dependencies = [
+ "actix",
+ "actix-cors",
+ "actix-http",
+ "actix-web",
+ "actix-web-actors",
+ "bytes 1.11.1",
+ "bytestring 1.5.0",
+ "config",
+ "duration-str",
+ "hex",
+ "metrics",
+ "nostr-db",
+ "notify 6.1.1",
+ "num_cpus",
+ "parking_lot 0.12.3",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
 ]
 
 [[package]]
@@ -10983,7 +10991,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -12795,7 +12803,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.3",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -14237,7 +14245,7 @@ dependencies = [
  "errno",
  "libc 0.2.185",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -14339,7 +14347,7 @@ dependencies = [
  "security-framework 3.7.0",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -14680,7 +14688,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b55fb86dfd3a2f5f76ea78310a88f96c4ea21a3031f8d212443d56123fd0521"
 dependencies = [
  "libc 0.2.185",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -16045,7 +16053,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -16116,7 +16124,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "230a1b821ccbd75b185820a1f1ff7b14d21da1e442e22c0863ea5f08771a8874"
 dependencies = [
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -18236,7 +18244,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

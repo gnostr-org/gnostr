@@ -753,6 +753,7 @@ nostr-relay-pool = { workspace = true }
 nostr-database = { workspace = true }
 mailparse = { workspace = true }
 async-wsocket = { workspace = true }
+nostr-relay = { version = "0.4.8", default-features = false }
 # = { workspace = true }
 # = { workspace = true }
 # = { workspace = true }
