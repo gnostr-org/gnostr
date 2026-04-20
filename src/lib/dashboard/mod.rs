@@ -35,15 +35,16 @@ fn gnostr_purple() -> Color {
     Color::Magenta
 }
 
-fn spawn_gnostr_server(project_root: PathBuf) -> io::Result<()> {
-    let mut command = if which::which("gnostr-server").is_ok() {
-        Command::new("gnostr-server")
-    } else {
-        let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string());
-        let mut cmd = Command::new(cargo);
-        cmd.args(["run", "--bin", "gnostr-server", "--quiet"]);
-        cmd
-    };
+fn gnostr_server_available() -> bool {
+    which::which("gnostr-server").is_ok()
+}
+
+fn spawn_gnostr_server(project_root: PathBuf) -> io::Result<bool> {
+    if !gnostr_server_available() {
+        return Ok(false);
+    }
+
+    let mut command = Command::new("gnostr-server");
 
     command
         .current_dir(project_root)
@@ -51,7 +52,22 @@ fn spawn_gnostr_server(project_root: PathBuf) -> io::Result<()> {
         .stdout(Stdio::null())
         .stderr(Stdio::null());
 
-    command.spawn().map(|_| ())
+    command.spawn().map(|_| true)
+}
+
+fn server_install_dialog() -> Vec<Line<'static>> {
+    vec![
+        Line::from(vec![Span::styled(
+            "GNOSTR SERVER NOT INSTALLED",
+            Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from("Install the server binary, then restart the dashboard:"),
+        Line::from("  cargo build --bin gnostr-server"),
+        Line::from("  cargo install --path . --bin gnostr-server"),
+        Line::from(""),
+        Line::from("Then make sure `gnostr-server` is on your PATH."),
+    ]
 }
 
 const GNOSTR_ICON_TINY: [&str; 7] = [
@@ -297,7 +313,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     #[cfg(not(feature = "blossom-tui"))]
     let server_node = TuiNode::new(1, 1);
     let project_root = std::env::current_dir()?;
-    spawn_gnostr_server(project_root.clone())?;
+    let server_available = spawn_gnostr_server(project_root.clone())?;
 
     for (i, node) in nodes.iter().enumerate() {
         let cmd_override = commands.get(i).cloned();
@@ -308,11 +324,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
     chat_node.spawn(vec![], project_root.clone(), Some("gnostr chat".to_string()))?;
     #[cfg(feature = "blossom-tui")]
-    server_node.spawn(
-        vec![],
-        project_root.clone(),
-        Some("cargo run --bin gnostr-blossom".to_string()),
-    )?;
+    if server_available {
+        server_node.spawn(
+            vec![],
+            project_root.clone(),
+            Some("gnostr-server".to_string()),
+        )?;
+    }
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
@@ -644,7 +662,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     let title = if is_chat_active { " Chat [ACTIVE - Double ESC to unfocus] " } else { " Chat [SELECTED - Press Enter to focus] " };
                     let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
-                } else if active_tab == server_tab_index {
+                } else if active_tab == server_tab_index && server_available {
                     server_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
 
                     let p = server_node.parser.lock().unwrap();
@@ -674,6 +692,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     let title = if is_server_active { " Server [ACTIVE - Double ESC to unfocus] " } else { " Server [SELECTED - Press Enter to focus] " };
                     let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
+                } else if active_tab == server_tab_index && !server_available {
+                    let install_lines = server_install_dialog();
+                    f.render_widget(
+                        Paragraph::new(install_lines).block(Block::default().borders(Borders::ALL).title(" Server ")),
+                        content_area,
+                    );
                 } else if active_tab == help_tab_index { // Help Tab
                     let mut help_text = vec![
                         Line::from(vec![Span::styled(
