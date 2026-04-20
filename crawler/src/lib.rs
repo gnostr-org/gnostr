@@ -112,6 +112,11 @@ pub struct Relay {
 
 pub fn preprocess_line(line: &str) -> String {
     let mut trimmed_line = line.trim().to_string();
+    if let Some(stripped) = trimmed_line.strip_prefix("- ") {
+        trimmed_line = stripped.trim().to_string();
+    } else if let Some(stripped) = trimmed_line.strip_prefix('-') {
+        trimmed_line = stripped.trim().to_string();
+    }
     // Truncate at the first comma, if any
     if let Some(comma_idx) = trimmed_line.find(',') {
         trimmed_line.truncate(comma_idx);

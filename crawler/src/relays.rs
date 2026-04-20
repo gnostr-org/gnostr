@@ -17,6 +17,26 @@ pub fn get_config_dir_path() -> PathBuf {
         .unwrap_or_else(|| Path::new(".").to_path_buf())
 }
 
+fn sanitize_relay_entry(line: &str) -> Option<String> {
+    let mut final_line = crate::preprocess_line(line);
+    if final_line.is_empty() {
+        return None;
+    }
+
+    if !final_line.contains("://") {
+        let potential_url = format!("wss://{}", final_line);
+        if let Ok(url) = Url::parse(&potential_url) {
+            final_line = url.to_string();
+        }
+    }
+
+    if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
+        Url::parse(&final_line).ok().map(|url| url.to_string())
+    } else {
+        None
+    }
+}
+
 pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
     let config_dir = get_config_dir_path();
     let yaml_path = config_dir.join("relays.yaml");
@@ -29,10 +49,9 @@ pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
     let relays: Vec<String> = match fs::read_to_string(&yaml_path) {
         Ok(content) => content
             .lines()
-            .filter(|line| !line.trim().is_empty())
-            .map(String::from)
+            .filter_map(sanitize_relay_entry)
             .collect(),
-        Err(_) => Vec::new(),
+        Err(_) => BOOTSTRAP_RELAYS.clone(),
     };
 
     let json_content = serde_json::to_string_pretty(&relays)
@@ -46,11 +65,7 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     fs::create_dir_all(&config_dir)?;
 
     let relays: Vec<String> = match fs::read_to_string(config_dir.join("relays.yaml")) {
-        Ok(content) => content
-            .lines()
-            .filter(|line| !line.trim().is_empty())
-            .map(String::from)
-            .collect(),
+        Ok(content) => content.lines().filter_map(sanitize_relay_entry).collect(),
         Err(_) => BOOTSTRAP_RELAYS.clone(),
     };
 

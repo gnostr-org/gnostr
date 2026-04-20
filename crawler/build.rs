@@ -9,12 +9,36 @@ use tokio;
 use sha2::{Sha256, Digest};
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use url::Url;
 
 // build.rs - This file will generate src/relays.yaml
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct CachedHashes {
     hashes: HashMap<String, String>,
+}
+
+fn sanitize_relay_entry(line: &str) -> Option<String> {
+    let mut trimmed = line.trim().to_string();
+    if let Some(stripped) = trimmed.strip_prefix("- ") {
+        trimmed = stripped.trim().to_string();
+    } else if let Some(stripped) = trimmed.strip_prefix('-') {
+        trimmed = stripped.trim().to_string();
+    }
+    if let Some(comma_idx) = trimmed.find(',') {
+        trimmed.truncate(comma_idx);
+        trimmed = trimmed.trim().to_string();
+    }
+    if trimmed.starts_with("wss://") || trimmed.starts_with("ws://") {
+        Url::parse(&trimmed).ok().map(|url| url.to_string())
+    } else if trimmed.contains("://") {
+        None
+    } else if trimmed.is_empty() {
+        None
+    } else {
+        let potential = format!("wss://{}", trimmed);
+        Url::parse(&potential).ok().map(|url| url.to_string())
+    }
 }
 
 #[tokio::main]
@@ -105,8 +129,7 @@ async fn fetch_online_relays_build(url: &str) -> Result<(Vec<String>, String)> {
     let current_hash = format!("{:x}", hasher.finalize());
 
     let relays: Vec<String> = text.lines()
-        .filter(|line| !line.trim().is_empty())
-        .map(String::from)
+        .filter_map(sanitize_relay_entry)
         .collect();
 
     eprintln!("Fetched {} online relays from {} (hash: {})", relays.len(), url, current_hash);
