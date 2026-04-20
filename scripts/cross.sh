@@ -51,7 +51,8 @@ usage() {
 Usage: $0 [OPTIONS]
 
 Build the repo across the targets this workspace already knows about from
-Cross.toml and .github/workflows/build-artifact.yml.
+Cross.toml and .github/workflows/build-artifact.yml. Linux cross targets use
+the Docker-backed images configured in Cross.toml.
 
 Options:
   --target NAME|TRIPLE   Build only the named CI target or Rust target triple.
@@ -91,7 +92,11 @@ normalize_target_name() {
 }
 
 cross_available() {
-  command -v cross >/dev/null 2>&1
+  command -v cross >/dev/null 2>&1 && container_runtime_available
+}
+
+container_runtime_available() {
+  command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1
 }
 
 host_can_attempt() {
@@ -325,7 +330,7 @@ main() {
     fi
 
     if ! host_can_attempt "$triple" "$tool"; then
-      warn "skipping $name ($triple): unsupported from this host or missing 'cross'"
+      warn "skipping $name ($triple): unsupported from this host or missing 'cross'/'docker'"
       continue
     fi
 

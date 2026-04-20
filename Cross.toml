@@ -19,17 +19,10 @@ passthrough = [
 ]
 
 [target.aarch64-unknown-linux-gnu]
-pre-build = [
-  "dpkg --add-architecture $CROSS_DEB_ARCH",
-  "apt-get update && apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libssl-dev:$CROSS_DEB_ARCH zlib1g-dev:$CROSS_DEB_ARCH",
-]
+dockerfile = "./docker/cross/aarch64-unknown-linux-gnu.Dockerfile"
 
 [target.aarch64-unknown-linux-musl]
-pre-build = [
-  "apt-get update && apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config musl-tools",
-]
+dockerfile = "./docker/cross/aarch64-unknown-linux-musl.Dockerfile"
 
 [target.x86_64-unknown-linux-musl]
-pre-build = [
-  "apt-get update && apt-get install --assume-yes clang libclang-dev llvm-dev pkg-config musl-tools",
-]
+dockerfile = "./docker/cross/x86_64-unknown-linux-musl.Dockerfile"
