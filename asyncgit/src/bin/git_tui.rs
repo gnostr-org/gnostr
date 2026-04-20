@@ -1,5 +1,6 @@
 use clap::Parser;
 use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
+use simple_logger::SimpleLogger;
 use log::LevelFilter;
 use ratatui::Terminal;
 use std::{backtrace::Backtrace, panic};
@@ -18,8 +19,10 @@ pub fn main() -> Res<()> {
     }
 
     if args.log {
-        simple_logging::log_to_file(gnostr_asyncgit::gitui::LOG_FILE_NAME, LevelFilter::Debug)
-            .map_err(Error::OpenLogFile)?;
+        SimpleLogger::new()
+            .with_level(LevelFilter::Debug)
+            .init()
+            .map_err(Error::LoggerInit)?;
     }
 
     panic::set_hook(Box::new(|panic_info| {
