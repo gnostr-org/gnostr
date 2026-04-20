@@ -355,16 +355,18 @@ if [ -n "$(git status --porcelain -- Cargo.lock */Cargo.lock */*/Cargo.lock */*/
     git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
     if [ -n "${VERSION_TAG:-}" ]; then
 
-git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+        cargo update --workspace
+        git add -- "${manifest_paths[@]}"
+        git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
+        git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 
         gnostr legit -m "$VERSION_TAG"
         git tag -f "$VERSION_TAG" HEAD
     else
-git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+        cargo update --workspace
+        git add -- "${manifest_paths[@]}"
+        git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
+        git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
 
         gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
         cargo publish -j8 --no-verify
