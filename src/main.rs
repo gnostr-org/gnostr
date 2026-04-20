@@ -1,5 +1,5 @@
-mod gnostr_dashboard_portable_pty {
-    include!("bin/gnostr-dashboard-portable-pty.rs");
+mod gnostr_dashboard {
+    include!("bin/gnostr-dashboard.rs");
 }
 
 mod gnostr_tui {
@@ -8,5 +8,5 @@ mod gnostr_tui {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    gnostr_dashboard_portable_pty::run().await
+    gnostr_dashboard::run().await
 }
