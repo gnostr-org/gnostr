@@ -21,6 +21,12 @@ use ureq::Agent;
 
 use crate::types::{Client, Filter, Id, Keys, Nip19Profile, Options, PrivateKey, PublicKey};
 
+/// install_rustls_crypto_provider
+pub fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
+
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
     serde_json::from_str(json_string)
