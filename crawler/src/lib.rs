@@ -8,6 +8,8 @@ pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
         .add_directive("nostr_sdk::relay=off".parse()?)
+        .add_directive("nostr_relay_pool=off".parse()?)
+        .add_directive("nostr_relay_pool::relay::inner=off".parse()?)
         //.add_directive("hyper=off".parse()?)
 
         /**/)/**/
