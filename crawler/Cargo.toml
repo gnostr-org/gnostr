@@ -21,6 +21,10 @@ repository = "https://github.com/gnostr-org/gnostr"
 name = "gnostr_crawler"
 path = "src/lib.rs"
 
+[[bin]]
+name = "gnostr_crawler"
+path = "src/bin/gnostr_crawler.rs"
+
 [dependencies]
 ## TODO align with workspace deps
 anyhow = "1.0.100"
