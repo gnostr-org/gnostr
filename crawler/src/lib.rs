@@ -202,6 +202,19 @@ pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> 
     BufReader::new(sync_fs::File::open(filename)?).lines().collect()
 }
 
+fn load_relays_or_bootstrap() -> Vec<String> {
+    match load_file("relays.yaml") {
+        Ok(relays) => relays,
+        Err(e) => {
+            warn!(
+                "Failed to load relays.yaml ({}); falling back to bootstrap relays",
+                e
+            );
+            BOOTSTRAP_RELAYS.iter().cloned().collect()
+        }
+    }
+}
+
 #[allow(clippy::manual_strip)]
 #[derive(Parser, Debug)]
 pub struct CliArgs {
@@ -398,7 +411,7 @@ pub async fn run_sniper(
     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     debug!("run_sniper: Finished initial sleep.");
 
-    let relays = load_file("relays.yaml").unwrap();
+    let relays = load_relays_or_bootstrap();
     debug!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
 
     let shitlist = if let Some(path) = shitlist_path {
@@ -627,7 +640,7 @@ pub async fn run_watch(shitlist_path: Option<String>, client: &reqwest::Client) 
 }
 
 pub async fn run_nip34(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("relays.yaml").unwrap();
+    let relays = load_relays_or_bootstrap();
 
     let shitlist = if let Some(path) = shitlist_path {
         match load_shitlist(&path) {
