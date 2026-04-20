@@ -1,7 +1,6 @@
 use clap::Parser;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+pub async fn run() -> anyhow::Result<()> {
     let raw_args: Vec<String> = std::env::args().collect();
     let mut commands = Vec::new();
     let mut filtered_args = vec![raw_args[0].clone()];
@@ -46,4 +45,9 @@ async fn main() -> anyhow::Result<()> {
     }
 
     gnostr::dashboard::run_dashboard(final_commands).await
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    run().await
 }

@@ -19,8 +19,7 @@ fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+pub async fn run() -> anyhow::Result<()> {
     install_rustls_crypto_provider();
     unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
@@ -548,6 +547,11 @@ async fn main() -> anyhow::Result<()> {
                 .map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
     }
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    run().await
 }
 
 #[cfg(test)]
