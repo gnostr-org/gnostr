@@ -108,57 +108,79 @@ async fn ws_query(relay_url: &str, pubkey_hex: &str, repo: &str) -> Result<Strin
     use futures_util::{SinkExt, StreamExt};
     use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-    let (mut ws, _) = connect_async(relay_url)
-        .await
-        .with_context(|| format!("connect to relay {relay_url}"))?;
+    const MAX_RETRIES: u32 = 3;
+    let mut last_err: Option<anyhow::Error> = None;
 
-    // REQ filter: kind:30617, authored by pubkey, d-tag = repo
-    let sub_id = "blossom-git-1";
-    let filter = serde_json::json!({
-        "kinds": [30617],
-        "authors": [pubkey_hex],
-        "#d": [repo]
-    });
-    let req_msg = serde_json::json!(["REQ", sub_id, filter]).to_string();
-    ws.send(Message::Text(req_msg.into())).await.context("send REQ")?;
+    for attempt in 0..=MAX_RETRIES {
+        if attempt > 0 {
+            let delay = std::time::Duration::from_secs((1u64 << (attempt - 1)).min(30));
+            tokio::time::sleep(delay).await;
+        }
 
-    // Read until we get an EVENT or EOSE
-    let timeout = tokio::time::Duration::from_secs(10);
-    let mut result: Option<String> = None;
+        let (mut ws, _) = match connect_async(relay_url).await {
+            Ok(pair) => pair,
+            Err(err) => {
+                last_err = Some(anyhow::anyhow!(err).context(format!("connect to relay {relay_url}")));
+                continue;
+            }
+        };
 
-    let _ = tokio::time::timeout(timeout, async {
-        while let Some(msg) = ws.next().await {
-            let Ok(Message::Text(text)) = msg else { continue };
-            let Ok(Value::Array(arr)) = serde_json::from_str::<Value>(&text) else { continue };
+        // REQ filter: kind:30617, authored by pubkey, d-tag = repo
+        let sub_id = "blossom-git-1";
+        let filter = serde_json::json!({
+            "kinds": [30617],
+            "authors": [pubkey_hex],
+            "#d": [repo]
+        });
+        let req_msg = serde_json::json!(["REQ", sub_id, filter]).to_string();
+        if let Err(err) = ws.send(Message::Text(req_msg.into())).await {
+            last_err = Some(anyhow::anyhow!(err).context("send REQ"));
+            let _ = ws.close(None).await;
+            continue;
+        }
 
-            match arr.first().and_then(|v| v.as_str()) {
-                Some("EVENT") => {
-                    if let Some(event) = arr.get(2) {
-                        if let Some(url) = extract_web_url(event) {
-                            result = Some(url);
-                            break;
+        // Read until we get an EVENT or EOSE
+        let timeout = tokio::time::Duration::from_secs(10);
+        let mut result: Option<String> = None;
+
+        let _ = tokio::time::timeout(timeout, async {
+            while let Some(msg) = ws.next().await {
+                let Ok(Message::Text(text)) = msg else { continue };
+                let Ok(Value::Array(arr)) = serde_json::from_str::<Value>(&text) else { continue };
+
+                match arr.first().and_then(|v| v.as_str()) {
+                    Some("EVENT") => {
+                        if let Some(event) = arr.get(2) {
+                            if let Some(url) = extract_web_url(event) {
+                                result = Some(url);
+                                break;
+                            }
                         }
                     }
-                }
-                Some("EOSE") => break,
-                Some("NOTICE") => {
-                    if let Some(msg) = arr.get(1).and_then(|v| v.as_str()) {
-                        eprintln!("[nostr] relay notice: {msg}");
+                    Some("EOSE") => break,
+                    Some("NOTICE") => {
+                        if let Some(msg) = arr.get(1).and_then(|v| v.as_str()) {
+                            eprintln!("[nostr] relay notice: {msg}");
+                        }
                     }
+                    _ => {}
                 }
-                _ => {}
             }
+        })
+        .await;
+
+        let _ = ws.close(None).await;
+
+        if let Some(found) = result {
+            return Ok(found);
         }
-    })
-    .await;
 
-    let _ = ws.close(None).await;
-
-    result.with_context(|| {
-        format!(
+        last_err = Some(anyhow::anyhow!(
             "no NIP-34 kind:30617 event found for {pubkey_hex:.8}…/{repo} on {relay_url}"
-        )
-    })
+        ));
+    }
+
+    Err(last_err.unwrap_or_else(|| anyhow::anyhow!("websocket query failed")))
 }
 
 /// Extract a GRASP clone/web URL from a NIP-34 kind:30617 event's tags.
