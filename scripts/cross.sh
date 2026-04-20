@@ -15,13 +15,16 @@ FEATURES=""
 DRY_RUN=false
 LIST_ONLY=false
 VERBOSE=false
+FORCE_BROKEN_CROSS=${GNOSTR_CROSS_FORCE:-false}
 
 HOST_TRIPLE=$(rustc -vV | awk '/^host: / { print $2 }')
 HOST_OS=$(uname -s)
 HOST_ARCH=$(uname -m)
+CROSS_VERSION=$(cross --version 2>/dev/null | awk 'NR==1 { print $2 }' || true)
 
 declare -a REQUESTED_TARGETS=()
 declare -a SKIPPED_TARGETS=()
+declare -a FAILED_TARGETS=()
 
 TARGET_MATRIX=(
   "linux-x64|x86_64-unknown-linux-gnu|cargo"
@@ -67,6 +70,7 @@ Options:
   --features LIST        Comma-separated cargo features to enable.
   --unlocked             Do not pass --locked.
   --verbose              Pass --verbose to cargo/cross.
+  --force-broken-cross   Attempt known-broken Apple Silicon cross targets anyway.
   --list                 List the targets this host can attempt, then exit.
   --dry-run              Print commands without executing them.
   --help                 Show this help.
@@ -97,6 +101,25 @@ cross_available() {
 
 container_runtime_available() {
   command -v docker >/dev/null 2>&1 || command -v podman >/dev/null 2>&1
+}
+
+cross_known_broken_for_host() {
+  local triple="$1"
+  local tool="$2"
+
+  [[ "$tool" == "cross" ]] || return 1
+  [[ "$FORCE_BROKEN_CROSS" == "true" || "$FORCE_BROKEN_CROSS" == "1" ]] && return 1
+
+  case "$HOST_TRIPLE:$CROSS_VERSION:$triple" in
+    aarch64-apple-darwin:0.2.5:aarch64-unknown-linux-gnu|\
+    aarch64-apple-darwin:0.2.5:aarch64-unknown-linux-musl|\
+    aarch64-apple-darwin:0.2.5:x86_64-unknown-linux-musl)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 host_can_attempt() {
@@ -259,6 +282,10 @@ parse_args() {
         VERBOSE=true
         shift
         ;;
+      --force-broken-cross)
+        FORCE_BROKEN_CROSS=true
+        shift
+        ;;
       --dry-run)
         DRY_RUN=true
         shift
@@ -316,6 +343,9 @@ main() {
   parse_args "$@"
 
   log "host: $HOST_TRIPLE ($HOST_OS/$HOST_ARCH)"
+  if [[ -n "$CROSS_VERSION" ]]; then
+    log "cross: $CROSS_VERSION"
+  fi
 
   local entry name triple tool
   local attempted=0
@@ -334,13 +364,22 @@ main() {
       continue
     fi
 
+    if cross_known_broken_for_host "$triple" "$tool"; then
+      warn "skipping $name ($triple): cross $CROSS_VERSION is known broken on $HOST_TRIPLE for this target; upgrade cross or rerun with GNOSTR_CROSS_FORCE=1 / --force-broken-cross"
+      continue
+    fi
+
     if [[ "$LIST_ONLY" == true ]]; then
       printf '%s\t%s\t%s\n' "$name" "$triple" "$tool"
       continue
     fi
 
-    run_build "$name" "$triple" "$tool"
-    attempted=$((attempted + 1))
+    if run_build "$name" "$triple" "$tool"; then
+      attempted=$((attempted + 1))
+    else
+      FAILED_TARGETS+=("$name|$triple")
+      warn "build failed for $name ($triple)"
+    fi
   done < <(collect_targets)
 
   if [[ "$LIST_ONLY" == true ]]; then
@@ -349,6 +388,11 @@ main() {
 
   if [[ $attempted -eq 0 ]]; then
     die "no buildable targets selected for this host"
+  fi
+
+  if [[ -n "${FAILED_TARGETS[*]-}" ]]; then
+    warn "failed target(s): ${FAILED_TARGETS[*]}"
+    exit 1
   fi
 
   log "completed $attempted target(s)"

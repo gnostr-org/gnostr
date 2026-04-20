@@ -1,0 +1,155 @@
+name: cross-docker
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target to build'
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - linux-x64
+          - linux-x64-musl
+          - linux-arm64
+          - linux-arm64-musl
+      toolchain:
+        description: 'Rust toolchain to use'
+        required: false
+        default: stable
+        type: choice
+        options:
+          - stable
+          - nightly
+      profile:
+        description: 'Cargo profile'
+        required: false
+        default: release
+        type: string
+      package:
+        description: 'Cargo package to build when workspace is false'
+        required: false
+        default: gnostr
+        type: string
+      workspace:
+        description: 'Build the entire workspace'
+        required: false
+        default: false
+        type: boolean
+      all_features:
+        description: 'Pass --all-features'
+        required: false
+        default: false
+        type: boolean
+      no_default_features:
+        description: 'Pass --no-default-features'
+        required: false
+        default: false
+        type: boolean
+      features:
+        description: 'Comma-separated features'
+        required: false
+        default: ''
+        type: string
+      unlocked:
+        description: 'Do not pass --locked'
+        required: false
+        default: false
+        type: boolean
+      verbose:
+        description: 'Pass --verbose'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Print commands without executing them'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  cross-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ inputs.toolchain }}
+
+      - name: Install cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Show tool versions
+        shell: bash
+        run: |
+          rustc -vV
+          cargo --version
+          cross --version
+          docker version
+
+      - name: Run cross build script
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=()
+
+          if [[ "${{ inputs.target }}" != "all" ]]; then
+            args+=(--target "${{ inputs.target }}")
+          fi
+
+          if [[ "${{ inputs.profile }}" != "" ]]; then
+            args+=(--profile "${{ inputs.profile }}")
+          fi
+
+          if [[ "${{ inputs.workspace }}" == "true" ]]; then
+            args+=(--workspace)
+          else
+            args+=(--package "${{ inputs.package }}")
+          fi
+
+          if [[ "${{ inputs.all_features }}" == "true" ]]; then
+            args+=(--all-features)
+          fi
+
+          if [[ "${{ inputs.no_default_features }}" == "true" ]]; then
+            args+=(--no-default-features)
+          fi
+
+          if [[ "${{ inputs.features }}" != "" ]]; then
+            args+=(--features "${{ inputs.features }}")
+          fi
+
+          if [[ "${{ inputs.unlocked }}" == "true" ]]; then
+            args+=(--unlocked)
+          fi
+
+          if [[ "${{ inputs.verbose }}" == "true" ]]; then
+            args+=(--verbose)
+          fi
+
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+
+          printf 'Running: ./scripts/cross.sh'
+          printf ' %q' "${args[@]}"
+          printf '\n'
+
+          ./scripts/cross.sh "${args[@]}"
