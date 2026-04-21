@@ -1289,7 +1289,7 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     }
 
     let nav = [
-        ("/", "Home"),
+        ("/", "gnostr crawler"),
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
