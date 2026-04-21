@@ -1,5 +1,9 @@
 use clap::Parser;
 
+mod gnostr_tui {
+    include!("gnostr-tui.rs");
+}
+
 pub async fn run() -> anyhow::Result<()> {
     let raw_args: Vec<String> = std::env::args().collect();
     let mut commands = Vec::new();
@@ -37,6 +41,10 @@ pub async fn run() -> anyhow::Result<()> {
             gnostr::cli::GnostrCli::default()
         }
     };
+
+    if args.command.is_some() {
+        return gnostr_tui::run_with_cli(args).await;
+    }
 
     // Combine commands: prioritizes manual parsing, fallbacks to clap-parsed if any missed
     let mut final_commands = commands;
