@@ -19,8 +19,8 @@ use gnostr_asyncgit::sync::RepoPath;
 use crate::sub_commands::award_badge;
 // Import the sniper subcommand module
 use crate::sub_commands::git;
-// Import the new QuerySubCommand struct
-use crate::sub_commands::query::QuerySubCommand;
+// Import the shared QuerySubCommand struct from the re-exported query module
+use crate::query::cli::QuerySubCommand;
 // Import the new relay subcommand module
 use crate::sub_commands::crawler;
 use crate::sub_commands::relay;
