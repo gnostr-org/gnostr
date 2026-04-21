@@ -474,14 +474,68 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
         terminal.draw(|f| {
             let area = f.area();
 
-            let _currently_ready = nodes.iter().all(|n| {
+            let currently_ready = nodes.iter().all(|n| {
                 n.gnostr_presented.load(Ordering::SeqCst)
                     || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
             }) && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && server_ready;
 
-            // DASHBOARD VIEW
+            if currently_ready && ready_since.is_none() {
+                ready_since = Some(Instant::now());
+            }
+
+            let all_ready = match ready_since {
+                Some(t) => {
+                    t.elapsed() > Duration::from_secs(1)
+                        || start_time.elapsed() > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 })
+                }
+                None => start_time.elapsed() > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 }),
+            };
+
+            if all_ready && !was_ready {
+                was_ready = true;
+                force_redraw = true;
+            }
+
+            if !all_ready {
+                f.render_widget(Clear, area);
+
+                let (icon_to_use, icon_height) = if area.height >= 65 && area.width >= 100 {
+                    (&GNOSTR_ICON_LARGE[..], 55)
+                } else if area.height >= 35 {
+                    (&GNOSTR_ICON[..], 28)
+                } else {
+                    (&GNOSTR_ICON_TINY[..], 7)
+                };
+
+                let vertical_chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Min(0),
+                        Constraint::Length(icon_height),
+                        Constraint::Length(2),
+                        Constraint::Length(1),
+                        Constraint::Min(0),
+                    ])
+                    .split(area);
+
+                let logo_lines: Vec<Line> = icon_to_use
+                    .iter()
+                    .map(|&l| Line::from(Span::styled(l, Style::default().fg(gnostr_purple()))))
+                    .collect();
+
+                f.render_widget(
+                    Paragraph::new(logo_lines).alignment(Alignment::Center),
+                    vertical_chunks[1],
+                );
+                f.render_widget(
+                    Paragraph::new("GNOSTR")
+                        .style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD))
+                        .alignment(Alignment::Center),
+                    vertical_chunks[3],
+                );
+            } else {
                 let main_chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([
@@ -797,6 +851,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
                     f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
                 }
+            }
         })?;
         force_redraw = false;
         initial_node_redraw = false;
