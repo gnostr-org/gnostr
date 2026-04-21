@@ -6223,6 +6223,7 @@ dependencies = [
  "simdutf8",
  "similar",
  "simple-logging",
+ "simple_logger",
  "speedy",
  "ssh-key",
  "strip-ansi-escapes",
