@@ -1,4 +1,4 @@
-use clap::{Args, Parser};
+use clap::Args;
 
 use super::ConfigBuilder;
 
@@ -6,37 +6,24 @@ use super::ConfigBuilder;
 pub struct QuerySubCommand {
     #[arg(short, long)]
     pub relay: Option<String>,
-
     #[arg(short, long)]
     pub authors: Option<String>,
-
     #[arg(short, long)]
     pub ids: Option<String>,
-
     #[arg(short, long)]
     pub limit: Option<i32>,
-
     #[arg(long)]
     pub generic: Option<Vec<String>>,
-
-    #[arg(short, long)]
+    #[arg(short = 't', long)]
     pub hashtag: Option<String>,
-
     #[arg(short, long)]
     pub mentions: Option<String>,
-
-    #[arg(short, long)]
+    #[arg(short = 'e', long)]
     pub references: Option<String>,
-
     #[arg(short, long)]
     pub kinds: Option<String>,
-
     #[arg(short, long)]
     pub search: Option<Vec<String>>,
-}
-
-pub fn cli() -> QuerySubCommand {
-    QuerySubCommand::parse()
 }
 
 impl QuerySubCommand {

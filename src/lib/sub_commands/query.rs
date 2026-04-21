@@ -73,7 +73,7 @@ fn build_filter_map(
     args: &QuerySubCommand,
 ) -> anyhow::Result<(serde_json::Map<String, serde_json::Value>, i32)> {
     let mut filt = serde_json::Map::new();
-    let mut limit_check: i32 = 0;
+    let mut limit_check: i32 = 1;
 
     if let Some(authors) = &args.authors {
         debug!("Applying authors filter: {}", authors);

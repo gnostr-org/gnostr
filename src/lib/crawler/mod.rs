@@ -37,14 +37,14 @@ use nostr_sdk_0_34_0::{Client, Options};
 
 const CONCURRENT_REQUESTS: usize = 16;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// Runs the sniper mode to find relays supporting a specific NIP
     Sniper {
