@@ -284,7 +284,7 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
     ];
     let body = format!(
         "{}<section><h2>NIPs</h2><ul>{}</ul></section>",
-        crate::query::forms::template_query_form(),
+        crate::query::forms::template_query_form("/query"),
         nip_links
     );
     let html = render_page_shell("gnostr crawler", &nav, &body);

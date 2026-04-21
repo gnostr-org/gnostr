@@ -25,12 +25,12 @@ fn query_form_html(title: &str, action: &str, relay_value: &str, kinds_value: &s
     )
 }
 
-pub fn generic_query_form(kinds_value: Option<&str>) -> String {
-    query_form_html("Generic query", "/query", "", kinds_value.unwrap_or(""))
+pub fn generic_query_form(action: &str, kinds_value: Option<&str>) -> String {
+    query_form_html("Generic query", action, "", kinds_value.unwrap_or(""))
 }
 
-pub fn template_query_form() -> String {
-    query_form_html("Template query", "/query", "", "1")
+pub fn template_query_form(action: &str) -> String {
+    query_form_html("Template query", action, "", "1")
 }
 
 pub fn nip_query_form(
