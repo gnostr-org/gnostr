@@ -5977,6 +5977,7 @@ dependencies = [
  "k256",
  "kanal",
  "lazy_static",
+ "libc",
  "libp2p",
  "libp2p-quic 0.12.0",
  "libp2p-tls 0.6.2",

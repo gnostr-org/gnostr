@@ -1,6 +1,7 @@
 pub mod pwd;
 pub mod retry;
 pub mod screenshot;
+pub mod detach;
 
 pub mod windows;
 
