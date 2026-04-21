@@ -183,6 +183,19 @@ pub fn build_gnostr_query(
             .map(String::from)
             .collect::<Vec<String>>()
     };
+    let strip_kind_prefix = |value: &str| {
+        let trimmed = value.trim();
+        let lowered = trimmed.to_ascii_lowercase();
+        for prefix in [
+            "nip:", "nip=", "nip/", "nip ", "nips:", "nips=", "nips/", "nips ",
+            "kind:", "kind=", "kind/", "kind ", "kinds:", "kinds=", "kinds/", "kinds ",
+        ] {
+            if lowered.starts_with(prefix) {
+                return trimmed[prefix.len()..].trim().to_string();
+            }
+        }
+        trimmed.to_string()
+    };
 
     if let Some(authors) = authors {
         let _ = authors.len(); // Use the field to avoid dead_code warning
@@ -219,7 +232,7 @@ pub fn build_gnostr_query(
             .split(',')
             .map(str::trim)
             .filter(|s| !s.is_empty())
-            .map(|s| s.parse::<i64>())
+            .map(|s| strip_kind_prefix(s).parse::<i64>())
             .collect();
         match kind_ints {
             Ok(kind_ints) => {
@@ -240,4 +253,29 @@ pub fn build_gnostr_query(
     info!("q={}", q);
     info!("{}", serde_json::to_string(&q)?);
     Ok(serde_json::to_string(&q)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::build_gnostr_query;
+
+    #[test]
+    fn build_gnostr_query_trims_kind_prefixes_and_whitespace() {
+        let query = build_gnostr_query(
+            None,
+            None,
+            Some(10),
+            None,
+            Some("gnostr "),
+            None,
+            None,
+            Some("kind:1,nip=2, 3"),
+            None,
+        )
+        .unwrap();
+
+        let parsed: serde_json::Value = serde_json::from_str(&query).unwrap();
+        assert_eq!(parsed[2]["#t"], serde_json::json!(["gnostr"]));
+        assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2, 3]));
+    }
 }

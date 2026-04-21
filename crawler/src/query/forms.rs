@@ -16,7 +16,7 @@ fn query_form_html(title: &str, action: &str, relay_value: &str, kinds_value: &s
          <label>Hashtag <input name=\"hashtag\" type=\"text\" placeholder=\"root,reply\"></label><br>\
          <label>Mentions <input name=\"mentions\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
          <label>References <input name=\"references\" type=\"text\" placeholder=\"event1,event2\"></label><br>\
-         <label>NIPs <input name=\"kinds\" type=\"text\" value=\"{}\"></label><br>\
+         <label>NIP/Kind <input name=\"kinds\" type=\"text\" value=\"{}\"></label><br>\
          <label>Limit <input name=\"limit\" type=\"number\" value=\"100\" min=\"1\"></label><br>\
          <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
          <button type=\"submit\">Search</button>\
