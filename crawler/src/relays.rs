@@ -282,10 +282,9 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
     ];
-    let kinds_value = live_kinds().join(",");
     let body = format!(
         "{}<section><h2>NIPs</h2><ul>{}</ul></section>",
-        crate::query::forms::generic_query_form(Some(kinds_value.as_str())),
+        crate::query::forms::template_query_form(),
         nip_links
     );
     let html = render_page_shell("gnostr crawler", &nav, &body);

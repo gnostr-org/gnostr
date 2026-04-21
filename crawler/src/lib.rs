@@ -1493,8 +1493,7 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
             .collect()
     };
 
-    let kinds_value = crate::relays::live_kinds().join(",");
-    let query_form = crate::query::forms::generic_query_form(Some(kinds_value.as_str()));
+    let query_form = crate::query::forms::template_query_form();
     let nav = [("/", "gnostr/crawler"), ("/query", "query")];
     execute_query_page(
         "gnostr crawler / query",
