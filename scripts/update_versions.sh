@@ -364,7 +364,7 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
 done
 
-if [ -n "$(git status --porcelain -- $(cargo_paths) 2>/dev/null)" ]; then
+if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     stage_cargo_files
     git reset --soft HEAD~1
     stage_cargo_files
