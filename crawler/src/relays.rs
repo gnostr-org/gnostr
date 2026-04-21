@@ -276,6 +276,20 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
             .collect::<Vec<_>>()
             .join("")
     };
+    let query_form = r#"
+        <section>
+          <h2>NIP-34 query</h2>
+          <form action="/34/query" method="get">
+            <label>Relay <input name="relay" type="text" placeholder="wss://relay.example.com"></label><br>
+            <label>Authors <input name="authors" type="text" placeholder="pubkey1,pubkey2"></label><br>
+            <label>IDs <input name="ids" type="text" placeholder="id1,id2"></label><br>
+            <label>Kinds <input name="kinds" type="text" value="1630,1632,1621,30618,1633,1631,1617,30617"></label><br>
+            <label>Limit <input name="limit" type="number" value="10" min="1"></label><br>
+            <label>Search <input name="search" type="text" placeholder="keyword"></label><br>
+            <button type="submit">Search NIP-34</button>
+          </form>
+        </section>
+    "#;
 
     let nav = [
         ("/", "gnostr/crawler"),
@@ -284,7 +298,8 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
         ("/relays.txt", "relays.txt"),
     ];
     let body = format!(
-        "<section><h2>NIPs</h2><ul>{}</ul></section>",
+        "{}<section><h2>NIPs</h2><ul>{}</ul></section>",
+        query_form,
         nip_links
     );
     let html = render_page_shell("gnostr crawler", &nav, &body);
