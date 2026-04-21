@@ -1542,18 +1542,43 @@ async fn get_nip_query(
         .get("search")
         .map(String::as_str)
         .filter(|value| !value.trim().is_empty());
+    let generic_tag = params
+        .get("generic_tag")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let generic_value = params
+        .get("generic_value")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let hashtag = params
+        .get("hashtag")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let mentions = params
+        .get("mentions")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let references = params
+        .get("references")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
     let default_kinds = nip_lower.to_string();
     let query_href = format!("/{}/query", nip_lower);
     let back_href = format!("/{}/", nip_lower);
+
+    let generic = match (generic_tag, generic_value) {
+        (Some(tag), Some(value)) => Some((tag, value)),
+        _ => None,
+    };
 
     let query_string = match crate::build_gnostr_query(
         authors,
         ids,
         limit,
-        None,
-        None,
-        None,
-        None,
+        generic,
+        hashtag,
+        mentions,
+        references,
         kinds.or(Some(default_kinds.as_str())),
         search.map(|s| ("search", s)),
     ) {
