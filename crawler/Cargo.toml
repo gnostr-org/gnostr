@@ -80,3 +80,7 @@ path = "examples/gnostr_test.rs"
 [[example]]
 name = "string_pop"
 path = "examples/string_pop.rs"
+
+[[test]]
+name = "crawler_helpers"
+path = "tests/crawler_helpers.rs"
