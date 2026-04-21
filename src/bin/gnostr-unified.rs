@@ -23,8 +23,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Crawl(args) => {
             gnostr_crawler::run(&args).await?;
         }
-        Commands::Serve { port } => {
-            gnostr_crawler::run_api_server(*port).await?;
+        Commands::Serve { port, detach } => {
+            if *detach {
+                gnostr_crawler::run_api_server_detached(&["serve"], *port)?;
+            } else {
+                gnostr_crawler::run_api_server(*port).await?;
+            }
         }
     }
 
