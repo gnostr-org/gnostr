@@ -74,7 +74,6 @@ exclude = [
   "*docs/",
   "*examples/",
   "*target/",
-  "*vendor/",
   #"config/",##for app
   "git2-testing",
   #"tests/",
