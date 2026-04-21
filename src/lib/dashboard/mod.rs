@@ -260,15 +260,24 @@ impl TuiNode {
         let mut cmd = if let Some(cmd_str) = command_override {
             let parts: Vec<&str> = cmd_str.split_whitespace().collect();
             if parts.is_empty() {
-                CommandBuilder::new("gnostr")
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "empty dashboard command override",
+                ));
             } else {
                 let mut cb = CommandBuilder::new(parts[0]);
                 cb.args(&parts[1..]);
                 cb
             }
         } else {
-            let mut cb = CommandBuilder::new("gnostr");
-            cb.args(args);
+            if args.is_empty() {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "dashboard spawn requires an explicit command",
+                ));
+            }
+            let mut cb = CommandBuilder::new(&args[0]);
+            cb.args(&args[1..]);
             cb
         };
         
@@ -276,7 +285,7 @@ impl TuiNode {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
 
-        /// causing recursive? 
+        // Avoid recursive dashboard relaunches; always spawn an explicit child command.
         let mut _child = slave
             .spawn_command(cmd)
             .expect("failed to spawn command");
@@ -353,8 +362,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
 
+    let node_commands: Vec<Option<String>> = if commands.is_empty() {
+        vec![Some("gnostr-tui".to_string())]
+    } else {
+        commands.drain(..).map(Some).collect()
+    };
+
     let mut nodes = Vec::new();
-    for _ in 0..commands.len() {
+    for _ in 0..node_commands.len() {
         nodes.push(TuiNode::new(120, 24));
     }
     
@@ -371,8 +386,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut git_tui_error: Option<String> = None;
 
     for (i, node) in nodes.iter().enumerate() {
-        let cmd_override = commands.get(i).cloned();
-        node.spawn(vec![], project_root.clone(), cmd_override)?;
+        if let Some(cmd_override) = node_commands.get(i).and_then(|cmd| cmd.clone()) {
+            node.spawn(vec![], project_root.clone(), Some(cmd_override))?;
+        }
     }
     
     relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
@@ -388,13 +404,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
-    let mut active_node: Option<usize> = None;
+    let mut active_node: Option<usize> = Some(0);
     let mut selected_node: usize = 0;
     let mut last_esc_time: Option<Instant> = None;
     let mut was_ready = false;
     let mut force_redraw = false;
     let mut layout_direction = Direction::Vertical;
     let mut visible_nodes = vec![true; nodes.len()];
+    let mut initial_node_redraw = true;
     let mut active_tab: usize = 0;
     let mut tab_titles = vec!["Nodes", "Relay", "Chat"];
     #[cfg(feature = "blossom-tui")]
@@ -450,70 +467,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
         terminal.draw(|f| {
             let area = f.area();
 
-            let currently_ready = nodes.iter().all(|n| {
+            let _currently_ready = nodes.iter().all(|n| {
                 n.gnostr_presented.load(Ordering::SeqCst)
                     || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
             }) && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
                && server_ready;
-            
-            if currently_ready && ready_since.is_none() {
-                ready_since = Some(Instant::now());
-            }
 
-            let all_ready = match ready_since {
-                Some(t) => {
-                    t.elapsed() > Duration::from_secs(1)
-                        || start_time.elapsed() > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 })
-                }
-                None => start_time.elapsed() > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 }), // Fallback
-            };
-
-            if all_ready && !was_ready {
-                was_ready = true;
-                force_redraw = true; // Force a redraw on transition
-            }
-
-            if !all_ready {
-                // SPLASH VIEW
-                f.render_widget(Clear, area);
-
-                let (icon_to_use, icon_height) = if area.height >= 65 && area.width >= 100 {
-                    (&GNOSTR_ICON_LARGE[..], 55)
-                } else if area.height >= 35 {
-                    (&GNOSTR_ICON[..], 28)
-                } else {
-                    (&GNOSTR_ICON_TINY[..], 7)
-                };
-
-                let vertical_chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Min(0),
-                        Constraint::Length(icon_height),
-                        Constraint::Length(2),
-                        Constraint::Length(1),
-                        Constraint::Min(0),
-                    ])
-                    .split(area);
-
-                let logo_lines: Vec<Line> = icon_to_use
-                    .iter()
-                    .map(|&l| Line::from(Span::styled(l, Style::default().fg(gnostr_purple()))))
-                    .collect();
-
-                f.render_widget(
-                    Paragraph::new(logo_lines).alignment(Alignment::Center),
-                    vertical_chunks[1],
-                );
-                f.render_widget(
-                    Paragraph::new("GNOSTR")
-                        .style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD))
-                        .alignment(Alignment::Center),
-                    vertical_chunks[3],
-                );
-            } else {
-                // DASHBOARD VIEW
+            // DASHBOARD VIEW
                 let main_chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([
@@ -563,7 +524,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 if active_tab == git_tui_tab_index {
                     if let Some(error) = &git_tui_error {
                         let block = Block::default()
-                            .borders(Borders::ALL)
+                            .borders(Borders::NONE)
                             .title(" GitUI [UNAVAILABLE] ")
                             .border_style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD));
                         f.render_widget(
@@ -572,8 +533,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         );
                     } else if git_tui_started {
                         git_tui_node.resize(
-                            content_area.width.saturating_sub(2),
-                            content_area.height.saturating_sub(2),
+                            content_area.width,
+                            content_area.height,
                             force_redraw,
                         );
 
@@ -606,11 +567,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         } else {
                             " GitUI [SELECTED - Press Enter to focus] "
                         };
-                        let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                        let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
                         f.render_widget(Paragraph::new(lines).block(block), content_area);
                     } else {
                         let block = Block::default()
-                            .borders(Borders::ALL)
+                            .borders(Borders::NONE)
                             .title(" GitUI ")
                             .border_style(Style::default().fg(Color::Gray));
                         f.render_widget(
@@ -647,10 +608,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             .direction(layout_direction)
                             .constraints(constraints)
                             .split(content_area);
+                        let node_force_redraw = force_redraw || initial_node_redraw;
 
                         for (chunk_idx, &idx) in visible_indices.iter().enumerate() {
                             let chunk = chunks[chunk_idx];
-                            nodes[idx].resize(chunk.width.saturating_sub(2), chunk.height.saturating_sub(2), force_redraw);
+                            nodes[idx].resize(chunk.width, chunk.height, node_force_redraw);
 
                             let p = nodes[idx].parser.lock().unwrap();
                             let screen = p.screen();
@@ -693,13 +655,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                     ""
                                 }
                             );
-                            let borders = match layout_direction {
-                                Direction::Vertical => Borders::TOP | Borders::BOTTOM,
-                                Direction::Horizontal => Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM,
-                            };
-
                             let block = Block::default()
-                                .borders(borders)
+                                .borders(Borders::NONE)
                                 .title(title)
                                 .border_style(block_style);
 
@@ -707,7 +664,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         }
                     }
                 } else if active_tab == 1 { // Relay Tab
-                    relay_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+                    relay_node.resize(content_area.width, content_area.height, force_redraw || initial_node_redraw);
                     
                     let p = relay_node.parser.lock().unwrap();
                     let screen = p.screen();
@@ -734,10 +691,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     };
                     
                     let title = if is_relay_active { " Relay [ACTIVE - Double ESC to unfocus] " } else { " Relay [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
                 } else if active_tab == 2 { // Chat Tab
-                    chat_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+                    chat_node.resize(content_area.width, content_area.height, force_redraw || initial_node_redraw);
                     
                     let p = chat_node.parser.lock().unwrap();
                     let screen = p.screen();
@@ -764,10 +721,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     };
                     
                     let title = if is_chat_active { " Chat [ACTIVE - Double ESC to unfocus] " } else { " Chat [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
                 } else if active_tab == server_tab_index && server_available {
-                    server_node.resize(content_area.width.saturating_sub(2), content_area.height.saturating_sub(2), force_redraw);
+                    server_node.resize(content_area.width, content_area.height, force_redraw || initial_node_redraw);
 
                     let p = server_node.parser.lock().unwrap();
                     let screen = p.screen();
@@ -794,12 +751,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     };
 
                     let title = if is_server_active { " Server [ACTIVE - Double ESC to unfocus] " } else { " Server [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::ALL).title(title).border_style(block_style);
+                    let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
                 } else if active_tab == server_tab_index && !server_available {
                     let install_lines = server_install_dialog();
                     f.render_widget(
-                        Paragraph::new(install_lines).block(Block::default().borders(Borders::ALL).title(" Server ")),
+                        Paragraph::new(install_lines).block(Block::default().borders(Borders::NONE).title(" Server ")),
                         content_area,
                     );
                 } else if active_tab == help_tab_index { // Help Tab
@@ -833,9 +790,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
                     f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
                 }
-            }
         })?;
         force_redraw = false;
+        initial_node_redraw = false;
 
         if event::poll(Duration::from_millis(33))? {
             match event::read()? {
