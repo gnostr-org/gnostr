@@ -1185,7 +1185,6 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         format!("<li><a href=\"/{}/relays.json\">relays.json</a></li>", nip_lower),
         format!("<li><a href=\"/{}/relays.yaml\">relays.yaml</a></li>", nip_lower),
         format!("<li><a href=\"/{}/relays.txt\">relays.txt</a></li>", nip_lower),
-        format!("<li><a href=\"/{}/query\">query</a></li>", nip_lower),
     ];
 
     if let Ok(mut dir) = fs::read_dir(&config_dir).await {
@@ -1301,7 +1300,6 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
-        (query_href.as_str(), "query"),
     ];
     let query_form = crate::query::forms::nip_query_form(
         nip_lower,
