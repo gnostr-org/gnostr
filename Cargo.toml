@@ -390,7 +390,7 @@ vendored-openssl = ["gnostr-asyncgit/vendored-openssl", "openssl/vendored"]
 vendor-openssl = ["vendored-openssl"]
 nightly = []
 coverage = []
-relay-search = ["nostr-db/search", "gnostr-relay/search"]
+relay-search = ["dep:nostr-db", "nostr-db/search", "gnostr-relay/search"]
 
 [dependencies]
 
@@ -579,7 +579,7 @@ nostr = { workspace = true }
 nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
 
 ## relay
-nostr-db = { version = "0.4.5" }
+nostr-db = { version = "0.4.5", optional = true }
 nostr-sdk = { workspace = true }
 
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
