@@ -4,6 +4,8 @@ pub mod relay_manager;
 pub mod relays;
 pub mod query;
 pub mod stats;
+pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
+pub use query::cli;
 
 pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
