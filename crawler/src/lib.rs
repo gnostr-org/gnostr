@@ -1190,14 +1190,27 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
                     Ok(content) => {
                         let pretty = serde_json::from_str::<serde_json::Value>(&content)
                             .ok()
-                            .and_then(|value| serde_json::to_string_pretty(&value).ok())
-                            .unwrap_or(content);
+                            .map(|value| {
+                                let icon_html = value
+                                    .get("icon")
+                                    .and_then(|v| v.as_str())
+                                    .map(|icon| {
+                                        format!(
+                                            "<div style=\"margin:0.5rem 0;\"><img src=\"{}\" alt=\"icon\" style=\"width:48px;height:48px;object-fit:contain;border-radius:0.35rem;background:rgba(255,255,255,0.06);padding:0.25rem;\"></div>",
+                                            escape_html(icon)
+                                        )
+                                    })
+                                    .unwrap_or_default();
+                                let pretty = serde_json::to_string_pretty(&value).ok().unwrap_or_default();
+                                format!("{}<pre>{}</pre>", icon_html, escape_html(&pretty))
+                            })
+                            .unwrap_or_else(|| format!("<pre>{}</pre>", escape_html(&content)));
                         relay_cards.push(format!(
-                            "<li><details><summary><a href=\"/{}/{}\">{}</a></summary><pre>{}</pre></details></li>",
+                            "<li><details><summary><a href=\"/{}/{}\">{}</a></summary>{}</details></li>",
                             nip_lower,
                             name,
                             escape_html(&name),
-                            escape_html(&pretty)
+                            pretty
                         ));
                     }
                     Err(e) => {
