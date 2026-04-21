@@ -4,10 +4,10 @@ use gnostr_crawler::{dispatch_cli_command, Cli};
 #[derive(Parser, Debug)]
 struct GnostrCrawlerArgs {
     /// Logging level (error, warn, info, debug, trace, off)
-    #[clap(long, default_value = "info")]
+    #[arg(long, default_value = "info")]
     logging: String,
 
-    #[clap(flatten)]
+    #[command(flatten)]
     cli: Cli,
 }
 

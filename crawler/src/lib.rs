@@ -71,9 +71,9 @@ use tower_http::trace::{self, TraceLayer}; // For logging requests
 const CONCURRENT_REQUESTS: usize = 16;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 pub struct Cli {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command: Commands,
     //nsec: Option<String>,
 }
@@ -284,19 +284,19 @@ pub struct CliArgs {
     //#[clap(name = "min-parents")]
     ///// specify a minimum number of parents for a commit
     //flag_min_parents: Option<usize>,
-    #[clap(name = "patch", long, short)]
+    #[arg(name = "patch", long, short)]
     /// show commit diff
     flag_patch: bool,
-    #[clap(
+    #[arg(
         name = "nsec",
         default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     )]
     arg_nsec: Option<String>,
-    #[clap(name = "commit")]
+    #[arg(name = "commit")]
     arg_commit: Vec<String>,
-    #[clap(name = "spec", last = true)]
+    #[arg(name = "spec", last = true)]
     arg_spec: Vec<String>,
-    #[clap(long)]
+    #[arg(long)]
     arg_dump: bool,
 }
 
