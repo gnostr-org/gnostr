@@ -17,9 +17,24 @@ set_workspace_version() {
 
 cd "$REPO_ROOT"
 
+stage_cargo_files() {
+    local paths=()
+    while IFS= read -r -d '' path; do
+        case "$path" in
+            ./vendor/*|vendor/*) continue ;;
+        esac
+        paths+=("$path")
+    done < <(
+        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+    )
+
+    if [ "${#paths[@]}" -gt 0 ]; then
+        git add -- "${paths[@]}"
+    fi
+}
+
 git add scripts
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+stage_cargo_files
 NEW_TAG="$(gnostr git tag create)"
 NEW_VERSION="${NEW_TAG#v}"
 
@@ -31,8 +46,7 @@ fi
 set_workspace_version "$ROOT_CARGO_TOML" "$NEW_VERSION"
 taplo format "$ROOT_CARGO_TOML"
 
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+stage_cargo_files
 git add "$ROOT_CARGO_TOML"
 gnostr legit -m "$NEW_TAG"
 
