@@ -39,6 +39,12 @@ exclude = [
   "build-artifact.uml",
 ]
 
+[package.metadata.wix]
+upgrade-guid = "6B5B281A-A1CD-403C-9722-22776599DF63"
+path-guid = "112568BC-3A65-41EB-84F4-210F26CBAAEB"
+license = false
+eula = false
+
 [workspace]
 members = [
   ".",
