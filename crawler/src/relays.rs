@@ -297,7 +297,7 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
     };
 
     let nav = [
-        ("/", "Home"),
+        ("/", "gnostr crawler"),
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
@@ -337,9 +337,9 @@ pub fn render_page_shell(title: &str, nav: &[(&str, &str)], body: &str) -> Strin
          ul{{padding-left:1.2rem;}}\
          code{{background:rgba(255,255,255,0.08);padding:0.1rem 0.25rem;border-radius:0.25rem;}}\
          </style></head><body>\
-         <header class=\"site-header\"><h1 class=\"site-title\">{}</h1><nav class=\"site-nav\">{}</nav></header>\
-         <main>{}</main></body></html>",
-        title, title, nav_html, body
+          <header class=\"site-header\"><nav class=\"site-nav\">{}</nav></header>\
+          <main>{}</main></body></html>",
+         title, nav_html, body
     )
 }
 
