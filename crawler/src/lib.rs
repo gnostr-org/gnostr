@@ -77,7 +77,7 @@ pub struct Cli {
     //nsec: Option<String>,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// Runs the sniper mode to find relays supporting a specific NIP
     Sniper {
@@ -233,7 +233,7 @@ fn load_relays_or_bootstrap() -> Vec<String> {
 }
 
 #[allow(clippy::manual_strip)]
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct CliArgs {
     //#[clap(name = "topo-order", long)]
     ///// sort commits in topological order
@@ -1586,6 +1586,7 @@ async fn get_nip_query(
         .get("search")
         .map(String::as_str)
         .filter(|value| !value.trim().is_empty());
+    let default_kinds = nip_lower.to_string();
     let query_href = format!("/{}/query", nip_lower);
     let back_href = format!("/{}/", nip_lower);
 
@@ -1597,7 +1598,7 @@ async fn get_nip_query(
         None,
         None,
         None,
-        kinds,
+        kinds.or(Some(default_kinds.as_str())),
         search.map(|s| ("search", s)),
     ) {
         Ok(query) => query,
@@ -1659,6 +1660,12 @@ async fn get_nip_query(
         }
     };
 
+    let query_form = build_query_form(
+        &query_href,
+        &format!("NIP {} query", nip_lower),
+        relay.unwrap_or(""),
+        Some(default_kinds.as_str()),
+    );
     let results_html = if results.is_empty() {
         "<p>No results.</p>".to_string()
     } else {
@@ -1674,7 +1681,8 @@ async fn get_nip_query(
         (back_href.as_str(), "back"),
     ];
     let body = format!(
-        "<section><h2>NIP {} query results</h2><p><code>{}</code></p>{}</section>",
+        "{}<section><h2>NIP {} query results</h2><p><code>{}</code></p>{}</section>",
+        query_form,
         nip_lower,
         escape_html(&query_string),
         results_html

@@ -8,16 +8,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //    .init();
 
     let cli = Cli::parse();
+    let client = reqwest::Client::new();
 
     match &cli.command {
         Commands::Sniper { nip, shitlist } => {
-            run_sniper(*nip, shitlist.clone()).await?;
+            run_sniper(*nip, shitlist.clone(), &client).await?;
         }
         Commands::Watch { shitlist } => {
-            run_watch(shitlist.clone()).await?;
+            run_watch(shitlist.clone(), &client).await?;
         }
         Commands::Nip34 { shitlist } => {
-            run_nip34(shitlist.clone()).await?;
+            run_nip34(shitlist.clone(), &client).await?;
         }
     }
 

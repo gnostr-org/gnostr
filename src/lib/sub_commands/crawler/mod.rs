@@ -7,17 +7,23 @@ pub type InnerCrawlerCommand = crate::crawler::Commands;
 /// Dispatches crawler subcommands through the shared crawler implementation.
 pub async fn dispatch_crawler_command(
     command: InnerCrawlerCommand,
-    _client: &reqwest::Client,
+    client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match command {
         crate::crawler::Commands::Sniper { nip, shitlist } => {
-            crate::crawler::run_sniper(nip, shitlist).await?
+            crate::crawler::run_sniper(nip, shitlist, client).await?
         }
         crate::crawler::Commands::Watch { shitlist } => {
-            crate::crawler::run_watch(shitlist).await?
+            crate::crawler::run_watch(shitlist, client).await?
         }
         crate::crawler::Commands::Nip34 { shitlist } => {
-            crate::crawler::run_nip34(shitlist).await?
+            crate::crawler::run_nip34(shitlist, client).await?
+        }
+        crate::crawler::Commands::Crawl(args) => {
+            gnostr_crawler::run(&args).await?;
+        }
+        crate::crawler::Commands::Serve { port } => {
+            crate::crawler::run_api_server(port).await?;
         }
     }
 
