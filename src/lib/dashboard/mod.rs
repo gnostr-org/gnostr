@@ -413,6 +413,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut visible_nodes = vec![true; nodes.len()];
     let mut initial_node_redraw = true;
     let mut active_tab: usize = 0;
+    let mut last_active_tab: usize = active_tab;
     let mut tab_titles = vec!["Nodes", "Relay", "Chat"];
     #[cfg(feature = "blossom-tui")]
     tab_titles.push("Server");
@@ -437,6 +438,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let server_tab_index = usize::MAX;
 
     loop {
+        if active_tab != last_active_tab {
+            force_redraw = true;
+            initial_node_redraw = true;
+            last_active_tab = active_tab;
+        }
+
         if active_tab == git_tui_tab_index && !git_tui_started && git_tui_error.is_none() {
             match ensure_git_tui_available() {
                 Ok(true) => match git_tui_node.spawn(vec![], project_root.clone(), Some("git-tui".to_string())) {
