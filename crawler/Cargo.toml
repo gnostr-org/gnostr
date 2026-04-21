@@ -1,9 +1,9 @@
 [package]
 edition = "2021"
 name = "gnostr-crawler"
-version = "1878.945873.303604"
+version = "1878.946096.39013"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
-build = true ##false
+build = true                                        ##false
 autolib = false
 autobins = false
 autoexamples = false
@@ -51,12 +51,12 @@ serde_json = "1"
 serde_yaml = "0.9"
 time = "0.1.39"
 tokio = { version = "1.0", features = ["full"] }
+tokio-tungstenite = { workspace = true }
 tower-http = { version = "0.5", features = ["full"] }
 tracing = "0.1.41"
 tracing-core = "0.1.33"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 url = "2.5.0"
-tokio-tungstenite = { workspace = true }
 
 [build-dependencies]
 anyhow = "1.0.100"
