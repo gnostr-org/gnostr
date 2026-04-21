@@ -34,6 +34,7 @@ use std::fs as sync_fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::str;
+use std::process::{Command, Stdio};
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 
@@ -106,6 +107,9 @@ pub enum Commands {
         /// The port to listen on for the API server
         #[clap(long, short, default_value = "3000")]
         port: u16,
+        /// Run the API server in the background.
+        #[clap(long, default_value_t = false)]
+        detach: bool,
     },
 }
 
@@ -333,8 +337,12 @@ pub async fn dispatch_cli_command(cli: Cli, client: &reqwest::Client) -> Result<
         Commands::Crawl(args) => {
             crate::run(args).await?;
         }
-        Commands::Serve { port } => {
-            run_api_server(*port).await?;
+        Commands::Serve { port, detach } => {
+            if *detach {
+                run_api_server_detached(&["serve"], *port)?;
+            } else {
+                run_api_server(*port).await?;
+            }
         }
     }
     Ok(())
@@ -777,6 +785,24 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app.into_make_service()).await?;
 
+    Ok(())
+}
+
+pub fn run_api_server_detached(
+    command_prefix: &[&str],
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let current_exe = std::env::current_exe()?;
+    let mut command = Command::new(current_exe);
+    command.args(command_prefix);
+    command.arg("--port");
+    command.arg(port.to_string());
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+
+    let child = command.spawn()?;
+    println!("run_api_server_detached: started background server (pid: {})", child.id());
     Ok(())
 }
 
