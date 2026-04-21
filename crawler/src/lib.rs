@@ -113,6 +113,7 @@ pub struct Relay {
     pub name: Option<String>,
     pub software: Option<String>,
     pub supported_nips: Option<Vec<i32>>,
+    pub supported_nip_extensions: Option<Vec<String>>,
     pub version: Option<String>,
 }
 
@@ -983,11 +984,14 @@ async fn prime_all_nip_relays_files(
             );
             if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                let supported_nip_extensions = relay_info.supported_nip_extensions.unwrap_or_default();
                 if supported_nips.is_empty() {
-                    info!(
-                        "prime_all_nip_relays_files: {} reported no supported_nips",
-                        url
-                    );
+                    if supported_nip_extensions.is_empty() {
+                        info!(
+                            "prime_all_nip_relays_files: {} reported no supported_nips",
+                            url
+                        );
+                    }
                 }
                 info!(
                     "prime_all_nip_relays_files: {} supports {:?}",
@@ -1015,8 +1019,32 @@ async fn prime_all_nip_relays_files(
                         }
                     }
                 }
+                if !supported_nip_extensions.is_empty() {
+                    let nip = 1617;
+                    let dir_path = crate::relays::get_config_dir_path().join(nip.to_string());
+                    if let Err(e) = sync_fs::create_dir_all(&dir_path) {
+                        warn!("Failed to create nip dir {}: {}", dir_path.display(), e);
+                    } else if let Ok(parsed_url) = Url::parse(&url) {
+                        let host = parsed_url.host_str().unwrap_or("unknown");
+                        let file_path = dir_path.join(format!("{}.json", host));
+                        info!(
+                            "prime_all_nip_relays_files: writing NIP 1617 metadata to {}",
+                            file_path.display()
+                        );
+                        if let Err(e) = sync_fs::write(&file_path, &json_string) {
+                            warn!(
+                                "Failed to write NIP 1617 relay file {}: {}",
+                                file_path.display(),
+                                e
+                            );
+                        }
+                    }
+                }
                 for nip in supported_nips {
                     nip_relays.entry(nip).or_default().insert(url.clone());
+                }
+                if !supported_nip_extensions.is_empty() {
+                    nip_relays.entry(1617).or_default().insert(url.clone());
                 }
             } else {
                 info!(
