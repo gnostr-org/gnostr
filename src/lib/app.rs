@@ -626,6 +626,7 @@ impl App {
 
         self.tab = tab;
         self.options.borrow_mut().set_current_tab(tab);
+        self.requires_redraw.set(true);
 
         Ok(())
     }
@@ -716,6 +717,7 @@ impl App {
             }
         }
 
+        self.requires_redraw.set(true);
         Ok(())
     }
 
