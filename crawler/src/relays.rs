@@ -278,7 +278,7 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
     };
 
     let nav = [
-        ("/", "gnostr crawler"),
+        ("/", "gnostr/crawler"),
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
