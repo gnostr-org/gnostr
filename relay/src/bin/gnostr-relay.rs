@@ -7,7 +7,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// The logging level
-    #[clap(short, long, default_value = "info")]
+    #[arg(short, long, default_value = "info")]
     logging: String,
 }
 
