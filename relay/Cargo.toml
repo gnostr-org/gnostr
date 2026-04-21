@@ -15,10 +15,10 @@ categories = ["network-programming", "web-programming"]
 ## search = ["nostr-relay/search"]
 
 [dependencies]
-actix-web = "4.9.0"
-anyhow = "1.0.75"
-clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
 nostr-relay = { version = "0.4.8", default-features = false }
-tokio = { version = "1.33.0", features = ["full"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
