@@ -1366,13 +1366,19 @@ fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option
         .filter(|value| !value.trim().is_empty())
 }
 
-fn build_query_form(action: &str, title: &str, relay_value: &str) -> String {
+fn build_query_form(
+    action: &str,
+    title: &str,
+    relay_value: &str,
+    kinds_value: Option<&str>,
+) -> String {
     let relay_value = relay_value
         .replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
         .replace('\'', "&#39;");
+    let kinds_value = kinds_value.unwrap_or("");
     format!(
         "<section><h2>{}</h2>\
          <form action=\"{}\" method=\"get\">\
@@ -1384,12 +1390,12 @@ fn build_query_form(action: &str, title: &str, relay_value: &str) -> String {
          <label>Hashtag <input name=\"hashtag\" type=\"text\" placeholder=\"root,reply\"></label><br>\
          <label>Mentions <input name=\"mentions\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
          <label>References <input name=\"references\" type=\"text\" placeholder=\"event1,event2\"></label><br>\
-         <label>Kinds <input name=\"kinds\" type=\"text\" value=\"1630,1632,1621,30618,1633,1631,1617,30617\"></label><br>\
+         <label>Kinds <input name=\"kinds\" type=\"text\" value=\"{}\"></label><br>\
          <label>Limit <input name=\"limit\" type=\"number\" value=\"10\" min=\"1\"></label><br>\
          <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
          <button type=\"submit\">Search</button>\
          </form></section>",
-        title, action, relay_value
+        title, action, relay_value, kinds_value
     )
 }
 
@@ -1458,7 +1464,7 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
     let authors = non_empty_param(&params, "authors");
     let ids = non_empty_param(&params, "ids");
     let limit = params.get("limit").and_then(|value| value.parse::<i32>().ok());
-    let kinds = non_empty_param(&params, "kinds").or(Some("1630,1632,1621,30618,1633,1631,1617,30617"));
+    let kinds = non_empty_param(&params, "kinds");
     let search = non_empty_param(&params, "search");
     let generic_tag = non_empty_param(&params, "generic_tag");
     let generic_value = non_empty_param(&params, "generic_value");
@@ -1530,6 +1536,7 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
         "/query",
         "Generic query",
         relay.unwrap_or(""),
+        None,
     );
     let nav = [("/", "gnostr/crawler"), ("/query", "query")];
     execute_query_page(
