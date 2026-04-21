@@ -6321,6 +6321,7 @@ dependencies = [
  "sha2 0.10.9",
  "time 0.1.45",
  "tokio",
+ "tokio-tungstenite 0.26.2",
  "tower-http 0.5.2",
  "tracing",
  "tracing-core",
