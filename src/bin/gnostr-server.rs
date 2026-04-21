@@ -25,12 +25,13 @@ fn app_dirs() -> Option<directories::ProjectDirs> {
     directories::ProjectDirs::from("org", "gnostr", "gnostr")
 }
 
-fn blossom_server_args() -> Result<Vec<String>, Box<dyn std::error::Error>> {
+fn blossom_server_args() -> Result<(Vec<String>, bool), Box<dyn std::error::Error>> {
     let bind = env_or_default("BLOSSOM_BIND", "0.0.0.0:3000");
     let base_url = env_or_default("BLOSSOM_BASE_URL", "http://localhost:3000");
     let data_dir = env::var("BLOSSOM_DATA_DIR").unwrap_or_else(|_| default_blossom_data_dir());
     let db_path = env::var("BLOSSOM_DB_PATH").unwrap_or_else(|_| default_blossom_db_path());
     let log_level = env_or_default("BLOSSOM_LOG_LEVEL", "info");
+    let mut detach = false;
 
     fs::create_dir_all(&data_dir)?;
     if let Some(parent) = PathBuf::from(&db_path).parent() {
@@ -50,15 +51,27 @@ fn blossom_server_args() -> Result<Vec<String>, Box<dyn std::error::Error>> {
         log_level,
     ];
 
-    args.extend(env::args().skip(1));
-
-    if let Ok(extra_args) = env::var("BLOSSOM_EXTRA_ARGS") {
-        if !extra_args.trim().is_empty() {
-            args.extend(shellwords::split(&extra_args)?);
+    for arg in env::args().skip(1) {
+        if arg == "--detach" {
+            detach = true;
+        } else {
+            args.push(arg);
         }
     }
 
-    Ok(args)
+    if let Ok(extra_args) = env::var("BLOSSOM_EXTRA_ARGS") {
+        if !extra_args.trim().is_empty() {
+            for arg in shellwords::split(&extra_args)? {
+                if arg == "--detach" {
+                    detach = true;
+                } else {
+                    args.push(arg);
+                }
+            }
+        }
+    }
+
+    Ok((args, detach))
 }
 
 fn exit_with_status(status: ExitStatus) -> ! {
@@ -69,11 +82,17 @@ fn exit_with_status(status: ExitStatus) -> ! {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = blossom_server_args()?;
-    let status = Command::new("blossom-server").args(args).status()?;
-    if status.success() {
+    let (args, detach) = blossom_server_args()?;
+    if detach {
+        let pid = gnostr::utils::detach::spawn_detached("blossom-server", args)?;
+        println!("gnostr-server: started background server (pid: {})", pid);
         Ok(())
     } else {
-        exit_with_status(status)
+        let status = Command::new("blossom-server").args(args).status()?;
+        if status.success() {
+            Ok(())
+        } else {
+            exit_with_status(status)
+        }
     }
 }
