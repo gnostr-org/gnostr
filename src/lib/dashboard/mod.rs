@@ -851,6 +851,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
                     f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
                 }
+
+                f.render_widget(
+                    Block::default()
+                        .borders(Borders::RIGHT)
+                        .border_style(Style::default().fg(Color::DarkGray)),
+                    content_area,
+                );
             }
         })?;
         force_redraw = false;
