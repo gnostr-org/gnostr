@@ -11,8 +11,8 @@ license = "MIT"
 keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
 categories = ["network-programming", "web-programming"]
 
-[features]
-search = ["nostr-relay/search"]
+## [features] ## dependency lindera-unidic v0.32.3 unavailable
+## search = ["nostr-relay/search"]
 
 [dependencies]
 actix-web = "4.9.0"
