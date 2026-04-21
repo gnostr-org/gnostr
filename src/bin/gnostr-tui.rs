@@ -47,7 +47,9 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
     let filter = EnvFilter::builder()
         .with_default_directive(base_level.into())
         .from_env() // This reads RUST_LOG and builds the filter
-        .expect("Failed to build EnvFilter from environment");
+        .expect("Failed to build EnvFilter from environment")
+        .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
