@@ -1171,11 +1171,19 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         }
     }
 
-    let html = format!(
-        "<html><body><h1>NIP {}</h1><ul>{}</ul></body></html>",
+    let nav = [
+        ("/", "Home"),
+        ("/relays.json", "relays.json"),
+        ("/relays.yaml", "relays.yaml"),
+        ("/relays.txt", "relays.txt"),
+    ];
+    let body = format!(
+        "<section><p><a href=\"/\">&larr; back to home</a></p>\
+         <h2>NIP {}</h2><ul>{}</ul></section>",
         nip_lower,
         links.join("")
     );
+    let html = crate::relays::render_page_shell(&format!("gnostr crawler / NIP {}", nip_lower), &nav, &body);
 
     Response::builder()
         .status(StatusCode::OK)

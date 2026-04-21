@@ -296,20 +296,51 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
             .join("")
     };
 
-    let html = format!(
-        "<html><body><h1>gnostr crawler</h1><h2>NIPs</h2><ul>\
-         <li><a href=\"/relays.json\">relays.json</a></li>\
-         <li><a href=\"/relays.yaml\">relays.yaml</a></li>\
-         <li><a href=\"/relays.txt\">relays.txt</a></li>\
-         {}\
-         </ul><h2>Kinds</h2><ul>{}</ul></body></html>",
-        nip_links,
-        kind_links
+    let nav = [
+        ("/", "Home"),
+        ("/relays.json", "relays.json"),
+        ("/relays.yaml", "relays.yaml"),
+        ("/relays.txt", "relays.txt"),
+    ];
+    let body = format!(
+        "<section><h2>NIPs</h2><ul>{}</ul></section><section><h2>Kinds</h2><ul>{}</ul></section>",
+        nip_links, kind_links
     );
+    let html = render_page_shell("gnostr crawler", &nav, &body);
 
     let path = config_dir.join("index.html");
     fs::write(&path, html)?;
     Ok(path)
+}
+
+pub fn render_page_shell(title: &str, nav: &[(&str, &str)], body: &str) -> String {
+    let nav_html = nav
+        .iter()
+        .map(|(href, label)| format!("<a href=\"{}\">{}</a>", href, label))
+        .collect::<Vec<_>>()
+        .join("<span class=\"nav-sep\">/</span>");
+
+    format!(
+        "<!doctype html><html><head><meta charset=\"utf-8\">\
+         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
+         <title>{}</title>\
+         <style>\
+         :root{{color-scheme:dark light;}}\
+         body{{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:0;line-height:1.5;}}\
+         .site-header{{position:sticky;top:0;z-index:10;background:#111;border-bottom:1px solid #333;padding:0.9rem 1rem;}}\
+         .site-title{{margin:0;font-size:1.1rem;}}\
+         .site-nav{{margin-top:0.35rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;}}\
+         .site-nav a{{color:inherit;text-decoration:none;padding:0.2rem 0.4rem;border-radius:0.35rem;background:rgba(255,255,255,0.06);}}\
+         .nav-sep{{opacity:0.4;}}\
+         main{{padding:1rem;max-width:1100px;}}\
+         section{{margin-bottom:1.5rem;}}\
+         ul{{padding-left:1.2rem;}}\
+         code{{background:rgba(255,255,255,0.08);padding:0.1rem 0.25rem;border-radius:0.25rem;}}\
+         </style></head><body>\
+         <header class=\"site-header\"><h1 class=\"site-title\">{}</h1><nav class=\"site-nav\">{}</nav></header>\
+         <main>{}</main></body></html>",
+        title, title, nav_html, body
+    )
 }
 
 pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
