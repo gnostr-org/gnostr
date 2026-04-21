@@ -984,14 +984,11 @@ async fn prime_all_nip_relays_files(
             );
             if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();
-                let supported_nip_extensions = relay_info.supported_nip_extensions.unwrap_or_default();
                 if supported_nips.is_empty() {
-                    if supported_nip_extensions.is_empty() {
-                        info!(
-                            "prime_all_nip_relays_files: {} reported no supported_nips",
-                            url
-                        );
-                    }
+                    info!(
+                        "prime_all_nip_relays_files: {} reported no supported_nips",
+                        url
+                    );
                 }
                 info!(
                     "prime_all_nip_relays_files: {} supports {:?}",
@@ -1019,32 +1016,8 @@ async fn prime_all_nip_relays_files(
                         }
                     }
                 }
-                if !supported_nip_extensions.is_empty() {
-                    let nip = 1617;
-                    let dir_path = crate::relays::get_config_dir_path().join(nip.to_string());
-                    if let Err(e) = sync_fs::create_dir_all(&dir_path) {
-                        warn!("Failed to create nip dir {}: {}", dir_path.display(), e);
-                    } else if let Ok(parsed_url) = Url::parse(&url) {
-                        let host = parsed_url.host_str().unwrap_or("unknown");
-                        let file_path = dir_path.join(format!("{}.json", host));
-                        info!(
-                            "prime_all_nip_relays_files: writing NIP 1617 metadata to {}",
-                            file_path.display()
-                        );
-                        if let Err(e) = sync_fs::write(&file_path, &json_string) {
-                            warn!(
-                                "Failed to write NIP 1617 relay file {}: {}",
-                                file_path.display(),
-                                e
-                            );
-                        }
-                    }
-                }
                 for nip in supported_nips {
                     nip_relays.entry(nip).or_default().insert(url.clone());
-                }
-                if !supported_nip_extensions.is_empty() {
-                    nip_relays.entry(1617).or_default().insert(url.clone());
                 }
             } else {
                 info!(
@@ -1219,6 +1192,10 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
                         let pretty = serde_json::from_str::<serde_json::Value>(&content)
                             .ok()
                             .map(|value| {
+                                let relay_name = value
+                                    .get("name")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or(&name);
                                 let nip_links = value
                                     .get("supported_nips")
                                     .and_then(|v| v.as_array())
@@ -1241,6 +1218,31 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
                                         }
                                     })
                                     .unwrap_or_default();
+                                let extension_links = value
+                                    .get("supported_nip_extensions")
+                                    .and_then(|v| v.as_array())
+                                    .map(|extensions| {
+                                        let links = extensions
+                                            .iter()
+                                            .filter_map(|extension| extension.as_str())
+                                            .map(|extension| {
+                                                format!(
+                                                    "<code style=\"margin-right:0.35rem;\">{}</code>",
+                                                    escape_html(extension)
+                                                )
+                                            })
+                                            .collect::<Vec<_>>()
+                                            .join("");
+                                        if links.is_empty() {
+                                            String::new()
+                                        } else {
+                                            format!(
+                                                "<div style=\"margin:0.25rem 0 0.5rem 0;\"><strong>supported_nip_extensions</strong>: {}</div>",
+                                                links
+                                            )
+                                        }
+                                    })
+                                    .unwrap_or_default();
                                 let icon_html = value
                                     .get("icon")
                                     .and_then(|v| v.as_str())
@@ -1252,7 +1254,14 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
                                     })
                                     .unwrap_or_default();
                                 let pretty = serde_json::to_string_pretty(&value).ok().unwrap_or_default();
-                                format!("{}{}<pre>{}</pre>", nip_links, icon_html, escape_html(&pretty))
+                                format!(
+                                    "<div><strong>{}</strong></div>{}{}{}<pre>{}</pre>",
+                                    escape_html(relay_name),
+                                    nip_links,
+                                    extension_links,
+                                    icon_html,
+                                    escape_html(&pretty)
+                                )
                             })
                             .unwrap_or_else(|| format!("<pre>{}</pre>", escape_html(&content)));
                         relay_cards.push(format!(
