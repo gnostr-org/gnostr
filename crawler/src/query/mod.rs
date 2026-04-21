@@ -175,20 +175,22 @@ pub fn build_gnostr_query(
     search: Option<(&str, &str)>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut filt = Map::new();
+    let split_csv = |value: &str| {
+        value
+            .split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from)
+            .collect::<Vec<String>>()
+    };
 
     if let Some(authors) = authors {
         let _ = authors.len(); // Use the field to avoid dead_code warning
-        filt.insert(
-            "authors".to_string(),
-            json!(authors.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("authors".to_string(), json!(split_csv(authors)));
     }
 
     if let Some(ids) = ids {
-        filt.insert(
-            "ids".to_string(),
-            json!(ids.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("ids".to_string(), json!(split_csv(ids)));
     }
 
     if let Some(limit) = limit {
@@ -196,33 +198,29 @@ pub fn build_gnostr_query(
     }
 
     if let Some((tag, val)) = generic {
-        let tag_with_hash = format!("#{tag}");
-        filt.insert(tag_with_hash, json!(val.split(',').collect::<Vec<&str>>()));
+        let tag_with_hash = format!("#{}", tag.trim());
+        filt.insert(tag_with_hash, json!(split_csv(val.trim())));
     }
 
     if let Some(hashtag) = hashtag {
-        filt.insert(
-            "#t".to_string(),
-            json!(hashtag.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("#t".to_string(), json!(split_csv(hashtag)));
     }
 
     if let Some(mentions) = mentions {
-        filt.insert(
-            "#p".to_string(),
-            json!(mentions.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("#p".to_string(), json!(split_csv(mentions)));
     }
 
     if let Some(references) = references {
-        filt.insert(
-            "#e".to_string(),
-            json!(references.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("#e".to_string(), json!(split_csv(references)));
     }
 
     if let Some(kinds) = kinds {
-        let kind_ints: Result<Vec<i64>, _> = kinds.split(',').map(|s| s.parse::<i64>()).collect();
+        let kind_ints: Result<Vec<i64>, _> = kinds
+            .split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(|s| s.parse::<i64>())
+            .collect();
         match kind_ints {
             Ok(kind_ints) => {
                 filt.insert("kinds".to_string(), json!(kind_ints));
@@ -233,7 +231,8 @@ pub fn build_gnostr_query(
         }
     }
     if search.is_some() {
-        filt.insert("search".to_string(), json!(search.expect("REASON")));
+        let (field, value) = search.expect("REASON");
+        filt.insert(field.trim().to_string(), json!(value.trim()));
     }
 
     println!("{:?}", filt);

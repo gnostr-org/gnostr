@@ -17,7 +17,7 @@ fn query_form_html(title: &str, action: &str, relay_value: &str, kinds_value: &s
          <label>Mentions <input name=\"mentions\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
          <label>References <input name=\"references\" type=\"text\" placeholder=\"event1,event2\"></label><br>\
          <label>NIPs <input name=\"kinds\" type=\"text\" value=\"{}\"></label><br>\
-         <label>Limit <input name=\"limit\" type=\"number\" value=\"10\" min=\"1\"></label><br>\
+         <label>Limit <input name=\"limit\" type=\"number\" value=\"100\" min=\"1\"></label><br>\
          <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
          <button type=\"submit\">Search</button>\
          </form></section>",
@@ -29,8 +29,16 @@ pub fn generic_query_form(action: &str, kinds_value: Option<&str>) -> String {
     query_form_html("Generic query", action, "", kinds_value.unwrap_or(""))
 }
 
-pub fn template_query_form(action: &str) -> String {
-    query_form_html("Template query", action, "", "1")
+pub fn landing_search_form(action: &str) -> String {
+    format!(
+        "<form class=\"header-search\" action=\"{}\" method=\"get\">\
+         <input type=\"hidden\" name=\"kinds\" value=\"1\">\
+         <input type=\"hidden\" name=\"limit\" value=\"100\">\
+         <input name=\"search\" type=\"search\" placeholder=\"Search\">\
+         <button type=\"submit\">Go</button>\
+         </form>",
+        action
+    )
 }
 
 pub fn nip_query_form(

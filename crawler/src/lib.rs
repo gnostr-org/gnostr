@@ -1366,7 +1366,7 @@ async fn execute_query_page(
     relays: Vec<Url>,
     limit: Option<i32>,
 ) -> Response {
-    let results = match crate::send(query_string.clone(), relays, limit.or(Some(10))).await {
+    let results = match crate::send(query_string.clone(), relays, limit.or(Some(100))).await {
         Ok(results) => results,
         Err(e) => {
             let html = crate::relays::render_page_shell(
@@ -1491,7 +1491,8 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
             .collect()
     };
 
-    let query_form = crate::query::forms::template_query_form("/query");
+    let kinds_value = crate::relays::live_kinds().join(",");
+    let query_form = crate::query::forms::generic_query_form("/query", Some(kinds_value.as_str()));
     let nav = [("/", "gnostr/crawler"), ("/query", "query")];
     execute_query_page(
         "gnostr crawler / query",
@@ -1619,7 +1620,7 @@ async fn get_nip_query(
         }
     };
 
-    let results = match crate::send(query_string.clone(), relays, limit.or(Some(10))).await {
+    let results = match crate::send(query_string.clone(), relays, limit.or(Some(100))).await {
         Ok(results) => results,
         Err(e) => {
             let nav = vec![("/", "gnostr/crawler"), (back_href.as_str(), "back")];

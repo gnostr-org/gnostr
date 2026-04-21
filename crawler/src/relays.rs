@@ -282,12 +282,13 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
     ];
-    let body = format!(
-        "{}<section><h2>NIPs</h2><ul>{}</ul></section>",
-        crate::query::forms::template_query_form("/query"),
-        nip_links
+    let body = format!("<section><h2>NIPs</h2><ul>{}</ul></section>", nip_links);
+    let html = render_page_shell_with_header_right(
+        "gnostr crawler",
+        &nav,
+        &body,
+        &crate::query::forms::landing_search_form("/query"),
     );
-    let html = render_page_shell("gnostr crawler", &nav, &body);
 
     let path = config_dir.join("index.html");
     fs::write(&path, html)?;
@@ -295,6 +296,15 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
 }
 
 pub fn render_page_shell(title: &str, nav: &[(&str, &str)], body: &str) -> String {
+    render_page_shell_with_header_right(title, nav, body, "")
+}
+
+pub fn render_page_shell_with_header_right(
+    title: &str,
+    nav: &[(&str, &str)],
+    body: &str,
+    header_right: &str,
+) -> String {
     let nav_html = nav
         .iter()
         .map(|(href, label)| format!("<a href=\"{}\">{}</a>", href, label))
@@ -308,19 +318,23 @@ pub fn render_page_shell(title: &str, nav: &[(&str, &str)], body: &str) -> Strin
          <style>\
          :root{{color-scheme:dark light;}}\
          body{{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;margin:0;line-height:1.5;}}\
-         .site-header{{position:sticky;top:0;z-index:10;background:#111;border-bottom:1px solid #333;padding:0.9rem 1rem;}}\
+         .site-header{{position:sticky;top:0;z-index:10;background:#111;border-bottom:1px solid #333;padding:0.9rem 1rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}}\
+         .site-header-main{{min-width:0;flex:1 1 auto;}}\
          .site-title{{margin:0;font-size:1.1rem;}}\
          .site-nav{{margin-top:0.35rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;}}\
          .site-nav a{{color:inherit;text-decoration:none;padding:0.2rem 0.4rem;border-radius:0.35rem;background:rgba(255,255,255,0.06);}}\
          .nav-sep{{opacity:0.4;}}\
+         .site-header-right{{display:flex;align-items:center;justify-content:flex-end;flex:0 0 auto;}}\
+         .header-search{{display:flex;align-items:center;gap:0.35rem;}}\
+         .header-search input{{min-width:12rem;max-width:18rem;}}\
          main{{padding:1rem;max-width:1100px;}}\
          section{{margin-bottom:1.5rem;}}\
          ul{{padding-left:1.2rem;}}\
          code{{background:rgba(255,255,255,0.08);padding:0.1rem 0.25rem;border-radius:0.25rem;}}\
          </style></head><body>\
-          <header class=\"site-header\"><nav class=\"site-nav\">{}</nav></header>\
-          <main>{}</main></body></html>",
-         title, nav_html, body
+           <header class=\"site-header\"><div class=\"site-header-main\"><nav class=\"site-nav\">{}</nav></div><div class=\"site-header-right\">{}</div></header>\
+           <main>{}</main></body></html>",
+          title, nav_html, header_right, body
     )
 }
 
