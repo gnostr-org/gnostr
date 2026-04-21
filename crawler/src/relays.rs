@@ -263,15 +263,6 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
     }
     nips.sort_unstable();
     nips.dedup();
-    let mut kinds = live_kinds();
-    for kind in kinds_from_disk() {
-        if !kinds.contains(&kind) {
-            kinds.push(kind);
-        }
-    }
-    kinds.sort();
-    kinds.dedup();
-
     let nip_links = if nips.is_empty() {
         "<li>No NIP buckets yet. Start serve and wait for the sniper service.</li>".to_string()
     } else {
@@ -286,16 +277,6 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
             .join("")
     };
 
-    let kind_links = if kinds.is_empty() {
-        "<li>No kinds seen yet.</li>".to_string()
-    } else {
-        kinds
-            .iter()
-            .map(|kind| format!("<li>{}</li>", kind))
-            .collect::<Vec<_>>()
-            .join("")
-    };
-
     let nav = [
         ("/", "gnostr crawler"),
         ("/relays.json", "relays.json"),
@@ -303,8 +284,8 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
         ("/relays.txt", "relays.txt"),
     ];
     let body = format!(
-        "<section><h2>NIPs</h2><ul>{}</ul></section><section><h2>Kinds</h2><ul>{}</ul></section>",
-        nip_links, kind_links
+        "<section><h2>NIPs</h2><ul>{}</ul></section>",
+        nip_links
     );
     let html = render_page_shell("gnostr crawler", &nav, &body);
 
