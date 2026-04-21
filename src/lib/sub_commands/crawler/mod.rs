@@ -22,8 +22,12 @@ pub async fn dispatch_crawler_command(
         crate::crawler::Commands::Crawl(args) => {
             gnostr_crawler::run(&args).await?;
         }
-        crate::crawler::Commands::Serve { port } => {
-            crate::crawler::run_api_server(port).await?;
+        crate::crawler::Commands::Serve { port, detach } => {
+            if detach {
+                crate::crawler::run_api_server_detached(&["crawler", "serve"], port)?;
+            } else {
+                crate::crawler::run_api_server(port).await?;
+            }
         }
     }
 
