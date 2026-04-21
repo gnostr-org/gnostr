@@ -1191,6 +1191,28 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
                         let pretty = serde_json::from_str::<serde_json::Value>(&content)
                             .ok()
                             .map(|value| {
+                                let nip_links = value
+                                    .get("supported_nips")
+                                    .and_then(|v| v.as_array())
+                                    .map(|nips| {
+                                        let links = nips
+                                            .iter()
+                                            .filter_map(|nip| nip.as_i64())
+                                            .map(|nip| {
+                                                format!(
+                                                    "<a href=\"/{0}\" style=\"margin-right:0.35rem;\">NIP {0}</a>",
+                                                    nip
+                                                )
+                                            })
+                                            .collect::<Vec<_>>()
+                                            .join("");
+                                        if links.is_empty() {
+                                            String::new()
+                                        } else {
+                                            format!("<div style=\"margin:0.25rem 0 0.5rem 0;\">{}</div>", links)
+                                        }
+                                    })
+                                    .unwrap_or_default();
                                 let icon_html = value
                                     .get("icon")
                                     .and_then(|v| v.as_str())
@@ -1202,7 +1224,7 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
                                     })
                                     .unwrap_or_default();
                                 let pretty = serde_json::to_string_pretty(&value).ok().unwrap_or_default();
-                                format!("{}<pre>{}</pre>", icon_html, escape_html(&pretty))
+                                format!("{}{}<pre>{}</pre>", nip_links, icon_html, escape_html(&pretty))
                             })
                             .unwrap_or_else(|| format!("<pre>{}</pre>", escape_html(&content)));
                         relay_cards.push(format!(
