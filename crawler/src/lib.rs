@@ -53,7 +53,7 @@ use crate::processor::LOCALHOST_8080;
 use crate::processor::BOOTSTRAP_RELAYS;
 
 use axum::{
-    extract::Path as AxumPath,
+    extract::{Path as AxumPath, Query},
     routing::get,
     response::{IntoResponse, Response},
     Router,
@@ -760,6 +760,7 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
         .route("/:nip", get(get_nip_index))
+        .route("/:nip/query", get(get_nip_query))
         .route("/:nip/relays.yaml", get(get_nip_relays_yaml))
         .route("/:nip/relays.json", get(get_nip_relays_json))
         .route("/:nip/relays.txt", get(get_nip_relays_txt))
@@ -1182,6 +1183,7 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         format!("<li><a href=\"/{}/relays.json\">relays.json</a></li>", nip_lower),
         format!("<li><a href=\"/{}/relays.yaml\">relays.yaml</a></li>", nip_lower),
         format!("<li><a href=\"/{}/relays.txt\">relays.txt</a></li>", nip_lower),
+        format!("<li><a href=\"/{}/query\">query</a></li>", nip_lower),
     ];
 
     if let Ok(mut dir) = fs::read_dir(&config_dir).await {
@@ -1291,15 +1293,32 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         entries.extend(relay_cards);
     }
 
-    let nav = [
+    let query_href = format!("/{}/query", nip_lower);
+    let nav = vec![
         ("/", "gnostr/crawler"),
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
+        (query_href.as_str(), "query"),
     ];
+    let query_form = format!(
+        "<section><h2>NIP {} query</h2>\
+         <form action=\"/{}/query\" method=\"get\">\
+         <label>Relay <input name=\"relay\" type=\"text\" placeholder=\"wss://relay.example.com\"></label><br>\
+         <label>Authors <input name=\"authors\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
+         <label>IDs <input name=\"ids\" type=\"text\" placeholder=\"id1,id2\"></label><br>\
+         <label>Kinds <input name=\"kinds\" type=\"text\" value=\"1630,1632,1621,30618,1633,1631,1617,30617\"></label><br>\
+         <label>Limit <input name=\"limit\" type=\"number\" value=\"10\" min=\"1\"></label><br>\
+         <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
+         <button type=\"submit\">Search</button>\
+         </form></section>",
+        nip_lower, nip_lower
+    );
     let body = format!(
-        "<section><p><a href=\"/\">&larr; back to home</a></p>\
-         <h2>NIP {}</h2><ul>{}</ul></section>",
+        "{}\
+         <section><p><a href=\"/\">&larr; back to home</a></p>\
+          <h2>NIP {}</h2><ul>{}</ul></section>",
+        query_form,
         nip_lower,
         entries.join("")
     );
@@ -1311,6 +1330,171 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         .body(Body::from(html))
         .unwrap_or_else(|e| {
             error!("Failed to build nip index response: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+        })
+}
+
+fn load_nip_query_relays(nip_lower: i32, relay_override: Option<&str>) -> Result<Vec<Url>, Box<dyn std::error::Error>> {
+    if let Some(relay) = relay_override {
+        return Ok(vec![Url::parse(relay)?]);
+    }
+
+    let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let relays_path = config_dir.join("relays.txt");
+    if !relays_path.exists() {
+        let _ = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower);
+    }
+
+    let content = std::fs::read_to_string(&relays_path)?;
+    let relays = content
+        .split_whitespace()
+        .filter_map(|relay| Url::parse(relay).ok())
+        .collect::<Vec<_>>();
+
+    if relays.is_empty() {
+        return Err(format!("no relays available for NIP {}", nip_lower).into());
+    }
+
+    Ok(relays)
+}
+
+async fn get_nip_query(
+    AxumPath(nip_lower): AxumPath<i32>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Response {
+    fn escape_html(input: &str) -> String {
+        input
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+            .replace('\'', "&#39;")
+    }
+
+    let relay = params
+        .get("relay")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let authors = params
+        .get("authors")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let ids = params
+        .get("ids")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let limit = params
+        .get("limit")
+        .and_then(|value| value.parse::<i32>().ok());
+    let kinds = params
+        .get("kinds")
+        .map(String::as_str)
+        .or(Some("1630,1632,1621,30618,1633,1631,1617,30617"));
+    let search = params
+        .get("search")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    let query_href = format!("/{}/query", nip_lower);
+    let back_href = format!("/{}/", nip_lower);
+
+    let query_string = match crate::build_gnostr_query(
+        authors,
+        ids,
+        limit,
+        None,
+        None,
+        None,
+        None,
+        kinds,
+        search.map(|s| ("search", s)),
+    ) {
+        Ok(query) => query,
+        Err(e) => {
+            let nav = vec![("/", "gnostr/crawler"), (back_href.as_str(), "back")];
+            let html = crate::relays::render_page_shell(
+                &format!("gnostr crawler / NIP {} query", nip_lower),
+                &nav,
+                &format!("<p>Failed to build query: {}</p>", escape_html(&e.to_string())),
+            );
+            return Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .header(CONTENT_TYPE, "text/html")
+                .body(Body::from(html))
+                .unwrap_or_else(|build_err| {
+                    error!("Failed to build query error response: {}", build_err);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                });
+        }
+    };
+
+    let relays = match load_nip_query_relays(nip_lower, relay) {
+        Ok(relays) => relays,
+        Err(e) => {
+            let nav = vec![("/", "gnostr/crawler"), (back_href.as_str(), "back")];
+            let html = crate::relays::render_page_shell(
+                &format!("gnostr crawler / NIP {} query", nip_lower),
+                &nav,
+                &format!("<p>Failed to load relays: {}</p>", escape_html(&e.to_string())),
+            );
+            return Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .header(CONTENT_TYPE, "text/html")
+                .body(Body::from(html))
+                .unwrap_or_else(|build_err| {
+                    error!("Failed to build relay error response: {}", build_err);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                });
+        }
+    };
+
+    let results = match crate::send(query_string.clone(), relays, limit.or(Some(10))).await {
+        Ok(results) => results,
+        Err(e) => {
+            let nav = vec![("/", "gnostr/crawler"), (back_href.as_str(), "back")];
+            let html = crate::relays::render_page_shell(
+                &format!("gnostr crawler / NIP {} query", nip_lower),
+                &nav,
+                &format!("<p>Query failed: {}</p>", escape_html(&e.to_string())),
+            );
+            return Response::builder()
+                .status(StatusCode::BAD_GATEWAY)
+                .header(CONTENT_TYPE, "text/html")
+                .body(Body::from(html))
+                .unwrap_or_else(|build_err| {
+                    error!("Failed to build query failure response: {}", build_err);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                });
+        }
+    };
+
+    let results_html = if results.is_empty() {
+        "<p>No results.</p>".to_string()
+    } else {
+        format!(
+            "<pre>{}</pre>",
+            escape_html(&results.join("\n"))
+        )
+    };
+
+    let nav = vec![
+        ("/", "gnostr/crawler"),
+        (query_href.as_str(), "query"),
+        (back_href.as_str(), "back"),
+    ];
+    let body = format!(
+        "<section><h2>NIP {} query results</h2><p><code>{}</code></p>{}</section>",
+        nip_lower,
+        escape_html(&query_string),
+        results_html
+    );
+    let html = crate::relays::render_page_shell(&format!("gnostr crawler / NIP {} query", nip_lower), &nav, &body);
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "text/html")
+        .body(Body::from(html))
+        .unwrap_or_else(|e| {
+            error!("Failed to build nip query response: {}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
         })
 }
