@@ -1075,6 +1075,10 @@ async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
             error!("Failed to derive nip relays.yaml from disk: {}", e);
+            let client = reqwest::Client::new();
+            if let Err(refresh_err) = refresh_nip_relays_files(nip_lower, &client).await {
+                error!("Failed to refresh nip {} relay cache: {}", nip_lower, refresh_err);
+            }
         }
     }
 
@@ -1103,6 +1107,10 @@ async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
             error!("Failed to derive nip relays.json from disk: {}", e);
+            let client = reqwest::Client::new();
+            if let Err(refresh_err) = refresh_nip_relays_files(nip_lower, &client).await {
+                error!("Failed to refresh nip {} relay cache: {}", nip_lower, refresh_err);
+            }
         }
     }
 
@@ -1131,6 +1139,10 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
             error!("Failed to derive nip relays.txt from disk: {}", e);
+            let client = reqwest::Client::new();
+            if let Err(refresh_err) = refresh_nip_relays_files(nip_lower, &client).await {
+                error!("Failed to refresh nip {} relay cache: {}", nip_lower, refresh_err);
+            }
         }
     }
 
