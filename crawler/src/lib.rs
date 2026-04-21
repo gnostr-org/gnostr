@@ -756,6 +756,7 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
 
     let app = Router::new()
         .route("/", get(get_index_html))
+        .route("/query", get(get_query))
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
@@ -1356,6 +1357,190 @@ fn load_nip_query_relays(nip_lower: i32, relay_override: Option<&str>) -> Result
     }
 
     Ok(relays)
+}
+
+fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
+    params
+        .get(key)
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty())
+}
+
+fn build_query_form(action: &str, title: &str, relay_value: &str) -> String {
+    let relay_value = relay_value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;");
+    format!(
+        "<section><h2>{}</h2>\
+         <form action=\"{}\" method=\"get\">\
+         <label>Relay <input name=\"relay\" type=\"text\" placeholder=\"wss://relay.example.com\" value=\"{}\"></label><br>\
+         <label>Authors <input name=\"authors\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
+         <label>IDs <input name=\"ids\" type=\"text\" placeholder=\"id1,id2\"></label><br>\
+         <label>Generic tag <input name=\"generic_tag\" type=\"text\" placeholder=\"e\"></label><br>\
+         <label>Generic value <input name=\"generic_value\" type=\"text\" placeholder=\"value\"></label><br>\
+         <label>Hashtag <input name=\"hashtag\" type=\"text\" placeholder=\"root,reply\"></label><br>\
+         <label>Mentions <input name=\"mentions\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
+         <label>References <input name=\"references\" type=\"text\" placeholder=\"event1,event2\"></label><br>\
+         <label>Kinds <input name=\"kinds\" type=\"text\" value=\"1630,1632,1621,30618,1633,1631,1617,30617\"></label><br>\
+         <label>Limit <input name=\"limit\" type=\"number\" value=\"10\" min=\"1\"></label><br>\
+         <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
+         <button type=\"submit\">Search</button>\
+         </form></section>",
+        title, action, relay_value
+    )
+}
+
+async fn execute_query_page(
+    title: &str,
+    nav: &[(&str, &str)],
+    form_html: &str,
+    query_string: String,
+    relays: Vec<Url>,
+    limit: Option<i32>,
+) -> Response {
+    let results = match crate::send(query_string.clone(), relays, limit.or(Some(10))).await {
+        Ok(results) => results,
+        Err(e) => {
+            let html = crate::relays::render_page_shell(
+                title,
+                nav,
+                &format!("{}<p>Query failed: {}</p>", form_html, e),
+            );
+            return Response::builder()
+                .status(StatusCode::BAD_GATEWAY)
+                .header(CONTENT_TYPE, "text/html")
+                .body(Body::from(html))
+                .unwrap_or_else(|build_err| {
+                    error!("Failed to build query failure response: {}", build_err);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                });
+        }
+    };
+
+    let results_html = if results.is_empty() {
+        "<p>No results.</p>".to_string()
+    } else {
+        format!("<pre>{}</pre>", results.join("\n"))
+    };
+
+    let body = format!(
+        "{}<section><h2>Query results</h2><p><code>{}</code></p>{}</section>",
+        form_html,
+        query_string,
+        results_html
+    );
+    let html = crate::relays::render_page_shell(title, nav, &body);
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "text/html")
+        .body(Body::from(html))
+        .unwrap_or_else(|e| {
+            error!("Failed to build query response: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+        })
+}
+
+async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
+    fn escape_html(input: &str) -> String {
+        input
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+            .replace('\'', "&#39;")
+    }
+
+    let relay = non_empty_param(&params, "relay");
+    let authors = non_empty_param(&params, "authors");
+    let ids = non_empty_param(&params, "ids");
+    let limit = params.get("limit").and_then(|value| value.parse::<i32>().ok());
+    let kinds = non_empty_param(&params, "kinds").or(Some("1630,1632,1621,30618,1633,1631,1617,30617"));
+    let search = non_empty_param(&params, "search");
+    let generic_tag = non_empty_param(&params, "generic_tag");
+    let generic_value = non_empty_param(&params, "generic_value");
+    let hashtag = non_empty_param(&params, "hashtag");
+    let mentions = non_empty_param(&params, "mentions");
+    let references = non_empty_param(&params, "references");
+
+    let generic = match (generic_tag, generic_value) {
+        (Some(tag), Some(value)) => Some((tag, value)),
+        _ => None,
+    };
+
+    let query_string = match crate::build_gnostr_query(
+        authors,
+        ids,
+        limit,
+        generic,
+        hashtag,
+        mentions,
+        references,
+        kinds,
+        search.map(|s| ("search", s)),
+    ) {
+        Ok(query) => query,
+        Err(e) => {
+            let html = crate::relays::render_page_shell(
+                "gnostr crawler / query",
+                &[("/", "gnostr/crawler")],
+                &format!("<p>Failed to build query: {}</p>", e),
+            );
+            return Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .header(CONTENT_TYPE, "text/html")
+                .body(Body::from(html))
+                .unwrap_or_else(|build_err| {
+                    error!("Failed to build query error response: {}", build_err);
+                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                });
+        }
+    };
+
+    let relays = if let Some(relay) = relay {
+        match Url::parse(relay) {
+            Ok(url) => vec![url],
+            Err(e) => {
+                let html = crate::relays::render_page_shell(
+                    "gnostr crawler / query",
+                    &[("/", "gnostr/crawler")],
+                    &format!("<p>Invalid relay URL: {}</p>", e),
+                );
+                return Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .header(CONTENT_TYPE, "text/html")
+                    .body(Body::from(html))
+                    .unwrap_or_else(|build_err| {
+                        error!("Failed to build relay error response: {}", build_err);
+                        (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                    });
+            }
+        }
+    } else {
+        load_relays_or_bootstrap()
+            .into_iter()
+            .filter_map(|relay| Url::parse(&relay).ok())
+            .collect()
+    };
+
+    let query_form = build_query_form(
+        "/query",
+        "Generic query",
+        relay.unwrap_or(""),
+    );
+    let nav = [("/", "gnostr/crawler"), ("/query", "query")];
+    execute_query_page(
+        "gnostr crawler / query",
+        &nav,
+        &query_form,
+        escape_html(&query_string),
+        relays,
+        limit,
+    )
+    .await
 }
 
 async fn get_nip_query(
