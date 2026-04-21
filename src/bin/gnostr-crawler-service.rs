@@ -16,7 +16,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     install_rustls_crypto_provider();
 
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive("nostr_relay_pool=off".parse().unwrap())
+                .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap()),
+        )
         .init();
 
     let app_keys =
