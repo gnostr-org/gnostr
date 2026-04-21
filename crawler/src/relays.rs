@@ -276,35 +276,16 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
             .collect::<Vec<_>>()
             .join("")
     };
-    let query_form = r#"
-        <section>
-          <h2>Generic query</h2>
-          <form action="/query" method="get">
-            <label>Relay <input name="relay" type="text" placeholder="wss://relay.example.com"></label><br>
-            <label>Authors <input name="authors" type="text" placeholder="pubkey1,pubkey2"></label><br>
-            <label>IDs <input name="ids" type="text" placeholder="id1,id2"></label><br>
-            <label>Generic tag <input name="generic_tag" type="text" placeholder="e"></label><br>
-            <label>Generic value <input name="generic_value" type="text" placeholder="value"></label><br>
-            <label>Hashtag <input name="hashtag" type="text" placeholder="root,reply"></label><br>
-            <label>Mentions <input name="mentions" type="text" placeholder="pubkey1,pubkey2"></label><br>
-            <label>References <input name="references" type="text" placeholder="event1,event2"></label><br>
-            <label>Kinds <input name="kinds" type="text" value=""></label><br>
-            <label>Limit <input name="limit" type="number" value="10" min="1"></label><br>
-            <label>Search <input name="search" type="text" placeholder="keyword"></label><br>
-            <button type="submit">Search</button>
-          </form>
-        </section>
-    "#;
-
     let nav = [
         ("/", "gnostr/crawler"),
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
     ];
+    let kinds_value = live_kinds().join(",");
     let body = format!(
         "{}<section><h2>NIPs</h2><ul>{}</ul></section>",
-        query_form,
+        crate::query::forms::generic_query_form(Some(kinds_value.as_str())),
         nip_links
     );
     let html = render_page_shell("gnostr crawler", &nav, &body);

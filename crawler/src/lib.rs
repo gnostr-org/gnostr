@@ -1171,6 +1171,7 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
 
 async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    let default_kinds = nip_lower.to_string();
     fn escape_html(input: &str) -> String {
         input
             .replace('&', "&amp;")
@@ -1302,23 +1303,16 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         ("/relays.txt", "relays.txt"),
         (query_href.as_str(), "query"),
     ];
-    let query_form = format!(
-        "<section><h2>NIP {} query</h2>\
-         <form action=\"/{}/query\" method=\"get\">\
-         <label>Relay <input name=\"relay\" type=\"text\" placeholder=\"wss://relay.example.com\"></label><br>\
-         <label>Authors <input name=\"authors\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
-         <label>IDs <input name=\"ids\" type=\"text\" placeholder=\"id1,id2\"></label><br>\
-         <label>Kinds <input name=\"kinds\" type=\"text\" value=\"1630,1632,1621,30618,1633,1631,1617,30617\"></label><br>\
-         <label>Limit <input name=\"limit\" type=\"number\" value=\"10\" min=\"1\"></label><br>\
-         <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
-         <button type=\"submit\">Search</button>\
-         </form></section>",
-        nip_lower, nip_lower
+    let query_form = crate::query::forms::nip_query_form(
+        nip_lower,
+        &query_href,
+        "",
+        Some(default_kinds.as_str()),
     );
     let body = format!(
         "{}\
-         <section><p><a href=\"/\">&larr; back to home</a></p>\
-          <h2>NIP {}</h2><ul>{}</ul></section>",
+          <section><p><a href=\"/\">&larr; back to home</a></p>\
+           <h2>NIP {}</h2><ul>{}</ul></section>",
         query_form,
         nip_lower,
         entries.join("")
@@ -1364,39 +1358,6 @@ fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option
         .get(key)
         .map(String::as_str)
         .filter(|value| !value.trim().is_empty())
-}
-
-fn build_query_form(
-    action: &str,
-    title: &str,
-    relay_value: &str,
-    kinds_value: Option<&str>,
-) -> String {
-    let relay_value = relay_value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&#39;");
-    let kinds_value = kinds_value.unwrap_or("");
-    format!(
-        "<section><h2>{}</h2>\
-         <form action=\"{}\" method=\"get\">\
-         <label>Relay <input name=\"relay\" type=\"text\" placeholder=\"wss://relay.example.com\" value=\"{}\"></label><br>\
-         <label>Authors <input name=\"authors\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
-         <label>IDs <input name=\"ids\" type=\"text\" placeholder=\"id1,id2\"></label><br>\
-         <label>Generic tag <input name=\"generic_tag\" type=\"text\" placeholder=\"e\"></label><br>\
-         <label>Generic value <input name=\"generic_value\" type=\"text\" placeholder=\"value\"></label><br>\
-         <label>Hashtag <input name=\"hashtag\" type=\"text\" placeholder=\"root,reply\"></label><br>\
-         <label>Mentions <input name=\"mentions\" type=\"text\" placeholder=\"pubkey1,pubkey2\"></label><br>\
-         <label>References <input name=\"references\" type=\"text\" placeholder=\"event1,event2\"></label><br>\
-         <label>Kinds <input name=\"kinds\" type=\"text\" value=\"{}\"></label><br>\
-         <label>Limit <input name=\"limit\" type=\"number\" value=\"10\" min=\"1\"></label><br>\
-         <label>Search <input name=\"search\" type=\"text\" placeholder=\"keyword\"></label><br>\
-         <button type=\"submit\">Search</button>\
-         </form></section>",
-        title, action, relay_value, kinds_value
-    )
 }
 
 async fn execute_query_page(
@@ -1532,12 +1493,8 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
             .collect()
     };
 
-    let query_form = build_query_form(
-        "/query",
-        "Generic query",
-        relay.unwrap_or(""),
-        None,
-    );
+    let kinds_value = crate::relays::live_kinds().join(",");
+    let query_form = crate::query::forms::generic_query_form(Some(kinds_value.as_str()));
     let nav = [("/", "gnostr/crawler"), ("/query", "query")];
     execute_query_page(
         "gnostr crawler / query",
@@ -1660,9 +1617,9 @@ async fn get_nip_query(
         }
     };
 
-    let query_form = build_query_form(
+    let query_form = crate::query::forms::nip_query_form(
+        nip_lower,
         &query_href,
-        &format!("NIP {} query", nip_lower),
         relay.unwrap_or(""),
         Some(default_kinds.as_str()),
     );

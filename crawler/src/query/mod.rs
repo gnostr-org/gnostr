@@ -5,6 +5,7 @@ use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
 pub mod cli;
+pub mod forms;
 
 #[allow(dead_code)]
 #[derive(Debug)]
