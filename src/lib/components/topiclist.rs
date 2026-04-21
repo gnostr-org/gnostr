@@ -40,8 +40,10 @@ use crate::{
     strings::{self, symbol},
     try_or_popup,
     ui::{
+        draw_scrollbar,
         calc_scroll_top,
         style::{SharedTheme, Theme},
+        Orientation,
     },
     utils::truncate_chars,
 };
@@ -1150,6 +1152,20 @@ impl DrawableComponent for TopicList {
                 .alignment(Alignment::Left),
             left_chunks[2],
         );
+
+        let commit_history_visible = left_chunks[2].height.saturating_sub(2) as usize;
+        let commit_history_len = self.items.iter().count();
+        let commit_history_max = commit_history_len.saturating_sub(commit_history_visible);
+        if commit_history_max > 0 {
+            draw_scrollbar(
+                f,
+                left_chunks[2],
+                &self.theme,
+                commit_history_max,
+                self.scroll_top.get().min(commit_history_max),
+                Orientation::Vertical,
+            );
+        }
 
         f.render_widget(
             Paragraph::new(self.get_chat_history_text(chat_history_height))

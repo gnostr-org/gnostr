@@ -26,10 +26,16 @@ use ratatui::{
     Terminal,
 };
 use ratatui::{prelude::Stylize, style::Style};
+use std::rc::Rc;
 use textwrap::{fill, Options};
 use tui_input::{backend::crossterm::EventHandler, Input};
 use uuid::Uuid;
 
+use crate::ui::{
+    draw_scrollbar,
+    style::{SharedTheme, Theme},
+    Orientation,
+};
 use crate::p2p::chat::msg::{self, MsgKind};
 
 struct TerminalCleanup;
@@ -306,6 +312,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 
 //as popup widget is constructed in chat_details/mos.rs
 fn ui(f: &mut Frame, app: &App) {
+    let theme: SharedTheme = Rc::new(Theme::default());
     let main_layout_constraints = if app.show_side_panel {
         vec![Constraint::Percentage(70), Constraint::Percentage(30)]
     } else {
@@ -339,8 +346,14 @@ fn ui(f: &mut Frame, app: &App) {
 
     // Messages Widget
     let height = chunks[1].height; // Re-introduce height variable
-    let message_area_width = chunks[1].width;
     let msgs = app.messages.lock().unwrap();
+    let scroll_pos = if app.msgs_scroll == usize::MAX {
+        msgs.len()
+    } else {
+        app.msgs_scroll.min(msgs.len())
+    };
+    let show_scrollbar = msgs.len() > height as usize;
+    let message_area_width = chunks[1].width.saturating_sub(if show_scrollbar { 1 } else { 0 });
 
     let mut messages: Vec<ListItem> = Vec::new();
 
@@ -405,6 +418,17 @@ fn ui(f: &mut Frame, app: &App) {
         .direction(ratatui::widgets::ListDirection::BottomToTop)
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(messages, chunks[1]);
+
+    if show_scrollbar {
+        draw_scrollbar(
+            f,
+            chunks[1],
+            &theme,
+            msgs.len(),
+            scroll_pos,
+            Orientation::Vertical,
+        );
+    }
 
     if let AppMode::SelectingDiff {
         diff_messages,

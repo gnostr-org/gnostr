@@ -6,7 +6,7 @@ use crossterm::{
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Tabs},
@@ -580,7 +580,21 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     header_chunks[2],
                 );
 
-                let content_area = main_chunks[1];
+                let content_area = main_chunks[1].inner(Margin {
+                    horizontal: 1,
+                    vertical: 1,
+                });
+                let git_tui_area = Rect {
+                    x: content_area.x,
+                    y: content_area.y,
+                    width: content_area.width.saturating_sub(20).max(1),
+                    height: content_area.height.saturating_sub(10).max(1),
+                };
+                let right_border_area = if active_tab == git_tui_tab_index {
+                    git_tui_area
+                } else {
+                    content_area
+                };
 
                 if active_tab == git_tui_tab_index {
                     if let Some(error) = &git_tui_error {
@@ -590,12 +604,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             .border_style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD));
                         f.render_widget(
                             Paragraph::new(error.clone()).alignment(Alignment::Center).block(block),
-                            content_area,
+                            git_tui_area,
                         );
                     } else if git_tui_started {
+                        let git_tui_width = git_tui_area.width;
                         git_tui_node.resize(
-                            content_area.width,
-                            content_area.height,
+                            git_tui_width,
+                            git_tui_area.height,
                             force_redraw,
                         );
 
@@ -629,7 +644,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             " GitUI [SELECTED - Press Enter to focus] "
                         };
                         let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
-                        f.render_widget(Paragraph::new(lines).block(block), content_area);
+                        f.render_widget(Paragraph::new(lines).block(block), git_tui_area);
                     } else {
                         let block = Block::default()
                             .borders(Borders::NONE)
@@ -637,7 +652,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             .border_style(Style::default().fg(Color::Gray));
                         f.render_widget(
                             Paragraph::new("Starting git-tui...").alignment(Alignment::Center).block(block),
-                            content_area,
+                            git_tui_area,
                         );
                     }
                 } else if active_tab == 0 { // Nodes Tab
@@ -856,7 +871,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     Block::default()
                         .borders(Borders::RIGHT)
                         .border_style(Style::default().fg(Color::DarkGray)),
-                    content_area,
+                    right_border_area,
                 );
             }
         })?;
