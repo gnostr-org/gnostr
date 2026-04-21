@@ -1,3 +1,6 @@
+!vendor/actix-web-actors
+!vendor/asn1-rs
+
 index.html
 repo_flat.html
 
@@ -14,7 +17,6 @@ graph.png
 bun.lock
 node_modules/
 
-vendor
 tmpgit-**
 coverage/
 default.profdata
