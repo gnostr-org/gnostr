@@ -813,6 +813,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
 
                     if is_git_tui_active {
+                        let input = encode_key(key);
+                        if !input.is_empty() {
+                            git_tui_node.write_input(&input)?;
+                        }
+
                         let mut deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
@@ -829,13 +834,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             }
                         } else {
                             last_esc_time = None;
-                        }
-
-                        if !deactivated {
-                            let input = encode_key(key);
-                            if !input.is_empty() {
-                                git_tui_node.write_input(&input)?;
-                            }
                         }
                     } else if is_relay_active {
                         let mut deactivated = false;
@@ -913,6 +911,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             }
                         }
                     } else if let Some(idx) = active_node {
+                        let input = encode_key(key);
+                        if !input.is_empty() {
+                            nodes[idx].write_input(&input)?;
+                        }
+
                         let mut deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
@@ -929,13 +932,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             }
                         } else {
                             last_esc_time = None;
-                        }
-
-                        if !deactivated {
-                            let input = encode_key(key);
-                            if !input.is_empty() {
-                                nodes[idx].write_input(&input)?;
-                            }
                         }
                     } else {
                         match key.code {

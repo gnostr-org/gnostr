@@ -255,6 +255,9 @@ pub trait Component {
             self.show()
         }
     }
+
+    /// invalidate_layout
+    fn invalidate_layout(&mut self) {}
 }
 
 fn dialog_paragraph<'a>(

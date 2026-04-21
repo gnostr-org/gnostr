@@ -624,6 +624,10 @@ impl App {
             }
         }
 
+        for component in self.get_tabs() {
+            component.invalidate_layout();
+        }
+
         self.tab = tab;
         self.options.borrow_mut().set_current_tab(tab);
         self.requires_redraw.set(true);

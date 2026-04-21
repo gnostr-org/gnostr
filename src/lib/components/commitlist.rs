@@ -290,6 +290,10 @@ impl CommitList {
         self.current_size.get()
     }
 
+    fn invalidate_layout(&mut self) {
+        self.current_size.set(None);
+    }
+
     fn selection_max(&self) -> usize {
         self.commits.len().saturating_sub(1)
     }

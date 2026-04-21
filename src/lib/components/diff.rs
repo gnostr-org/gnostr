@@ -856,6 +856,12 @@ impl Component for DiffComponent {
     fn focus(&mut self, focus: bool) {
         self.focused = focus;
     }
+
+    fn invalidate_layout(&mut self) {
+        self.current_size.set((0, 0));
+        self.vertical_scroll.reset();
+        self.horizontal_scroll.reset();
+    }
 }
 
 #[cfg(test)]
