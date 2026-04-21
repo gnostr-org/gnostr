@@ -1165,22 +1165,55 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
 
 async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
-    let mut links = vec![
+    fn escape_html(input: &str) -> String {
+        input
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+            .replace('\'', "&#39;")
+    }
+
+    let mut entries = vec![
         format!("<li><a href=\"/{}/relays.json\">relays.json</a></li>", nip_lower),
         format!("<li><a href=\"/{}/relays.yaml\">relays.yaml</a></li>", nip_lower),
         format!("<li><a href=\"/{}/relays.txt\">relays.txt</a></li>", nip_lower),
     ];
 
     if let Ok(mut dir) = fs::read_dir(&config_dir).await {
+        let mut relay_cards = Vec::new();
         while let Ok(Some(entry)) = dir.next_entry().await {
             let name = entry.file_name().to_string_lossy().to_string();
             if name.ends_with(".json") && name != "relays.json" {
-                links.push(format!(
-                    "<li><a href=\"/{}/{}\">{}</a></li>",
-                    nip_lower, name, name
-                ));
+                let file_path = entry.path();
+                match fs::read_to_string(&file_path).await {
+                    Ok(content) => {
+                        let pretty = serde_json::from_str::<serde_json::Value>(&content)
+                            .ok()
+                            .and_then(|value| serde_json::to_string_pretty(&value).ok())
+                            .unwrap_or(content);
+                        relay_cards.push(format!(
+                            "<li><details><summary><a href=\"/{}/{}\">{}</a></summary><pre>{}</pre></details></li>",
+                            nip_lower,
+                            name,
+                            escape_html(&name),
+                            escape_html(&pretty)
+                        ));
+                    }
+                    Err(e) => {
+                        relay_cards.push(format!(
+                            "<li><a href=\"/{}/{}\">{}</a> <em>(failed to read metadata: {})</em></li>",
+                            nip_lower,
+                            name,
+                            escape_html(&name),
+                            escape_html(&e.to_string())
+                        ));
+                    }
+                }
             }
         }
+        relay_cards.sort();
+        entries.extend(relay_cards);
     }
 
     let nav = [
@@ -1193,7 +1226,7 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         "<section><p><a href=\"/\">&larr; back to home</a></p>\
          <h2>NIP {}</h2><ul>{}</ul></section>",
         nip_lower,
-        links.join("")
+        entries.join("")
     );
     let html = crate::relays::render_page_shell(&format!("gnostr crawler / NIP {}", nip_lower), &nav, &body);
 
