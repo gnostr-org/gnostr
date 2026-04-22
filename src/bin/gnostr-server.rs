@@ -44,7 +44,7 @@ fn blossom_server_args() -> Result<(Vec<String>, bool, bool, String), Box<dyn st
         "--bind".to_string(),
         bind,
         "--base-url".to_string(),
-        base_url,
+        base_url.clone(),
         "--data-dir".to_string(),
         data_dir,
         "--db-path".to_string(),
