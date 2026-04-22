@@ -28,6 +28,7 @@ use ratatui::{
     Terminal,
 };
 use ratatui::{prelude::Stylize, style::Style};
+use regex::Regex;
 use std::rc::Rc;
 use textwrap::{fill, Options};
 use tui_input::{backend::crossterm::EventHandler, Input};
@@ -61,6 +62,12 @@ pub enum AppMode {
         selected_index: usize,        // Index of the currently selected diff
         scroll_state: usize,          // Scroll position for the diff list
     },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ShellBatchCommand {
+    label: String,
+    command: String,
 }
 
 /// App holds the state of the application
@@ -203,6 +210,72 @@ fn run_shell_command(command: &str) -> io::Result<Vec<String>> {
     Ok(lines)
 }
 
+fn parse_shell_batch_command(input: &str) -> io::Result<Option<Vec<ShellBatchCommand>>> {
+    let text = input.trim();
+    if text.is_empty() {
+        return Ok(None);
+    }
+
+    let re = Regex::new(r":(?P<label>[0-9]+|N)\s+").map_err(|e| io::Error::other(e.to_string()))?;
+    let mut markers = Vec::new();
+
+    for caps in re.captures_iter(text) {
+        let m = caps
+            .get(0)
+            .ok_or_else(|| io::Error::other("invalid batch marker"))?;
+        if m.start() == 0 || text[..m.start()].chars().last().is_some_and(char::is_whitespace) {
+            markers.push((
+                m.start(),
+                m.end(),
+                caps.name("label")
+                    .ok_or_else(|| io::Error::other("missing batch label"))?
+                    .as_str()
+                    .to_string(),
+            ));
+        }
+    }
+
+    if markers.is_empty() || markers[0].0 != 0 {
+        Ok(None)
+    } else {
+        let mut commands = Vec::new();
+        for (index, (_start, end, label)) in markers.iter().enumerate() {
+            let command_start = *end;
+            let command_end = markers
+                .get(index + 1)
+                .map(|(next_start, _, _)| *next_start)
+                .unwrap_or(text.len());
+            let command = text[command_start..command_end].trim();
+            if command.is_empty() {
+                return Ok(None);
+            }
+            commands.push(ShellBatchCommand {
+                label: label.clone(),
+                command: command.to_string(),
+            });
+        }
+        Ok(Some(commands))
+    }
+}
+
+fn run_shell_batch(commands: &[ShellBatchCommand]) -> io::Result<Vec<String>> {
+    let mut output = vec![format!("batch: {} command(s)", commands.len())];
+    for command in commands {
+        output.push(format!("[:{}] {}", command.label, command.command));
+        match run_shell_command(&command.command) {
+            Ok(lines) => {
+                output.extend(lines.into_iter().map(|line| format!("[:{}] {}", command.label, line)));
+            }
+            Err(err) => {
+                output.push(format!("[:{}] shell error: {}", command.label, err));
+                output.push(format!("batch stopped at :{}", command.label));
+                break;
+            }
+        }
+    }
+    Ok(output)
+}
+
 fn execute_colon_command(app: &mut App, command_text: &str) -> io::Result<Option<msg::Msg>> {
     let command_text = command_text.trim();
     if command_text.is_empty() {
@@ -242,7 +315,11 @@ fn execute_colon_command(app: &mut App, command_text: &str) -> io::Result<Option
             app.shell_output.clear();
         }
         app.mode = AppMode::Shell;
-        let lines = run_shell_command(shell_command.trim())?;
+        let lines = if let Some(batch) = parse_shell_batch_command(shell_command.trim())? {
+            run_shell_batch(&batch)?
+        } else {
+            run_shell_command(shell_command.trim())?
+        };
         push_shell_output(app, lines);
         return Ok(None);
     }
@@ -272,6 +349,7 @@ fn help_text() -> Vec<&'static str> {
         "  :help / :h show this help",
         "  :shell / :sh open shell mode",
         "  :!<cmd> run a shell command and stay in shell mode",
+        "  :1 cmd :2 cmd ... :N cmd batch shell commands in order",
         "  :exit / :x close shell mode",
         "  :q / :quit exit chat",
         "  /clone <blossom-url> [dest]",
@@ -346,6 +424,27 @@ mod tests {
         let result = execute_colon_command(&mut app, "shell").expect("command should parse");
         assert!(result.is_none());
         assert!(matches!(app.mode, AppMode::Shell));
+    }
+
+    #[test]
+    fn batch_shell_command_is_parsed() {
+        let batch = parse_shell_batch_command(":1 ls :2 cat README.md :3 git status :N echo done")
+            .expect("parse batch")
+            .expect("expected batch");
+        assert_eq!(batch.len(), 4);
+        assert_eq!(batch[0].label, "1");
+        assert_eq!(batch[0].command, "ls");
+        assert_eq!(batch[3].label, "N");
+        assert_eq!(batch[3].command, "echo done");
+    }
+
+    #[test]
+    fn batch_shell_command_preserves_quotes() {
+        let batch = parse_shell_batch_command(r#":1 echo "hello world" :2 git status"#)
+            .expect("parse batch")
+            .expect("expected batch");
+        assert_eq!(batch[0].command, r#"echo "hello world""#);
+        assert_eq!(batch[1].command, "git status");
     }
 }
 
@@ -517,8 +616,21 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             app.mode = AppMode::Normal;
                             app.shell_output.clear();
                         } else if !command_text.trim().is_empty() {
-                            match run_shell_command(&command_text) {
-                                Ok(lines) => push_shell_output(app, lines),
+                            match parse_shell_batch_command(&command_text) {
+                                Ok(Some(batch)) => match run_shell_batch(&batch) {
+                                    Ok(lines) => push_shell_output(app, lines),
+                                    Err(err) => push_shell_output(
+                                        app,
+                                        [format!("shell error: {}", err)],
+                                    ),
+                                },
+                                Ok(None) => match run_shell_command(&command_text) {
+                                    Ok(lines) => push_shell_output(app, lines),
+                                    Err(err) => push_shell_output(
+                                        app,
+                                        [format!("shell error: {}", err)],
+                                    ),
+                                },
                                 Err(err) => push_shell_output(
                                     app,
                                     [format!("shell error: {}", err)],
