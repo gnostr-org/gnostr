@@ -154,6 +154,7 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
 
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
+    const DETACHED_ENV: &str = "GNOSTR_CHAT_DETACHED";
 
     if let Some(hash) = args.hash.clone() {
         debug!("hash={}", hash);
@@ -184,6 +185,18 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
     let client = crate::nostr_client::NostrClient::new(peer_tx.clone());
+
+    if sub_command_args.headless && std::env::var_os(DETACHED_ENV).is_none() {
+        let topic_name = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
+        let process_title = format!("gnostr-chat-{}", topic_name);
+        let pid = crate::utils::detach::spawn_detached_current_exe_named_with_env(
+            Some(process_title.as_str()),
+            std::env::args_os().skip(1),
+            [(DETACHED_ENV, "1")],
+        )?;
+        tracing::info!("Spawned detached headless chat process (pid: {pid})");
+        return Ok(());
+    }
 
     // Send NIP-01 metadata event
     let name = args
@@ -294,17 +307,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         tracing::info!("running event loop in background.");
         tracing::info!("Process name set to: {}", process_title);
 
-        // Spawn the event loop to run in the background.
-        // This keeps the P2P network alive for the chat.
-        tokio::spawn(async move {
-            if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
-                eprintln!("Headless p2p event loop error: {}", e);
-            }
-        });
-
-        // Sleep briefly to allow background task to start, then return.
-        // The tokio runtime will keep the spawned task alive.
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        evt_loop(input_rx, peer_tx, topic.clone()).await?;
         return Ok(());
     }
 
