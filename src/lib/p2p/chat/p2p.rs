@@ -438,8 +438,8 @@ pub async fn evt_loop(
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
-                    let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                    recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                    // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                    // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                 }
                 _ => {}
             }
