@@ -16,13 +16,12 @@ use std::{
     env,
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
-    thread,
 };
 
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub, identify, identity,
+    autonat, dcutr, gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -165,7 +164,9 @@ pub async fn evt_loop(
         )?
         .with_quic()
         .with_dns()?
-        .with_behaviour(|key| {
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(|key, relay_client| {
+            let local_peer_id = key.public().to_peer_id();
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
                 max_providers_per_key: usize::MAX,
@@ -177,19 +178,22 @@ pub async fn evt_loop(
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
+            let kad_store = MemoryStore::with_config(local_peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
-            let ipfs_store = MemoryStore::new(key.public().to_peer_id());
+            let ipfs_store = MemoryStore::new(local_peer_id);
             Ok(crate::p2p::behaviour::Behaviour {
+                relay: relay_client,
+                autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
+                dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
                     gossipsub::MessageAuthenticity::Signed(key.clone()),
                     gossipsub_config,
                 )
                 .expect(""),
-                ipfs: kad::Behaviour::with_config(key.public().to_peer_id(), ipfs_store, ipfs_cfg),
+                ipfs: kad::Behaviour::with_config(local_peer_id, ipfs_store, ipfs_cfg),
                 kademlia: kad::Behaviour::with_config(
-                    key.public().to_peer_id(),
+                    local_peer_id,
                     kad_store,
                     kad_config,
                 ),
@@ -205,7 +209,7 @@ pub async fn evt_loop(
                 ),
                 mdns: mdns::tokio::Behaviour::new(
                     mdns::Config::default(),
-                    key.public().to_peer_id(),
+                    local_peer_id,
                 )?,
             })
         })?
@@ -250,7 +254,7 @@ pub async fn evt_loop(
         debug!("All done!");
 
         // Wait for a second before checking again to avoid rapid looping
-        thread::sleep(Duration::from_millis(250));
+        tokio::time::sleep(Duration::from_millis(250)).await;
 
         select! {
             Some(m) = send.recv() => {
@@ -271,17 +275,28 @@ pub async fn evt_loop(
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
-                    for (peer_id, _multiaddr) in list {
+                    for (peer_id, multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+                        swarm.behaviour_mut().autonat.add_server(peer_id, Some(multiaddr.clone()));
                     }
                 },
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
+                        swarm.behaviour_mut().autonat.remove_server(&peer_id);
                     }
                 },
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Autonat(event)) => {
+                    debug!("AutoNAT event: {event:?}");
+                }
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Dcutr(event)) => {
+                    debug!("DCUtR event: {event:?}");
+                }
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Relay(event)) => {
+                    debug!("Relay event: {event:?}");
+                }
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
