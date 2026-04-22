@@ -81,26 +81,32 @@ jobs:
         os:
           - runner: windows-latest
             arch: x64
+            cargo_jobs: 1
             # Use the vendored OpenSSL feature on Windows.
             cargo_test_args: '--features vendor-openssl'
           - runner: windows-11-arm
             arch: arm64
+            cargo_jobs: 1
             # Use the vendored OpenSSL feature on Windows.
             cargo_test_args: '--features vendor-openssl'
           - runner: ubuntu-latest
             arch: x64
+            cargo_jobs: 8
             # All features supported on x64 Windows.
             cargo_test_args: '--all-features'
           - runner: ubuntu-latest
             arch: arm64
+            cargo_jobs: 8
             # All features supported on x64 Windows.
             cargo_test_args: '--all-features'
           - runner: macos-latest
             arch: x64
+            cargo_jobs: 8
             # All features supported on x64 Windows.
             cargo_test_args: '--all-features'
           - runner: macos-latest
             arch: arm64
+            cargo_jobs: 8
             # All features supported on x64 Windows.
             cargo_test_args: '--all-features'
           # - runner: macos-15-intel
@@ -149,9 +155,9 @@ jobs:
       #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: which cargo || true
       - run: cargo clean
-      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - run: cargo test -j${{ matrix.os.cargo_jobs }} ${{ matrix.os.cargo_test_args }}
       - run: cargo generate-lockfile && git diff
-      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - run: cargo test -j${{ matrix.os.cargo_jobs }} ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
     needs: setup
