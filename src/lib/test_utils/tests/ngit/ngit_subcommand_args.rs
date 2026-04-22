@@ -1,5 +1,5 @@
-use gnostr::cli::{NgitCli, NgitCommands};
 use clap::Parser;
+use ngit::cli::{Cli as NgitCli, Commands as NgitCommands};
 
 #[test]
 fn test_ngit_subcommand_global_args() {
