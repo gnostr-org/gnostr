@@ -36,8 +36,8 @@ stage_cargo_files() {
 git add scripts
 stage_cargo_files
 NEW_TAG="$(gnostr git tag create)"
+echo $NEW_TAG
 NEW_VERSION="${NEW_TAG#v}"
-
 if [ ! -f "$ROOT_CARGO_TOML" ]; then
     echo "Error: $ROOT_CARGO_TOML not found."
     exit 1

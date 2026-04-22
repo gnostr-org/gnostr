@@ -139,7 +139,7 @@ pub struct GnostrCli {
     /// weeble
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub weeble: bool,
-    /// blockheigh
+    /// blockheight
     #[arg(long, action = clap::ArgAction::SetTrue)]
     pub blockheight: bool,
     /// wobble
