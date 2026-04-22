@@ -167,6 +167,13 @@ jobs:
           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
         if: matrix.os == 'ubuntu-latest'
+      - name: Install OpenSSL for Windows
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/windows-vcpkg-action
+        with:
+          arch: x64
+          run-tests: 'false'
+          install: 'false'
       - name: Install gnostr via cargo-binstall
         uses: ./.github/actions/cargo-binstall-gnostr
 

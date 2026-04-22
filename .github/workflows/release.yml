@@ -136,6 +136,13 @@ jobs:
           pattern: artifacts-*
           path: target/distrib/
           merge-multiple: true
+      - name: Install Windows OpenSSL dependencies
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/windows-vcpkg-action
+        with:
+          arch: ${{ contains(join(matrix.targets, ' '), 'aarch64-pc-windows-msvc') && 'arm64' || 'x64' }}
+          run-tests: 'false'
+          install: 'false'
       - name: Install dependencies
         run: |
           ${{ matrix.packages_install }}
