@@ -1,4 +1,6 @@
 use std::{
+    env,
+    path::PathBuf,
     rc::Rc,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -31,7 +33,7 @@ use sync::CommitTags;
 use crate::{
     app::Environment,
     components::{
-        visibility_blocking, ChatDetailsComponent, CommandBlocking, CommandInfo,
+        visibility_blocking, ChatDetailsComponent, CommandBlocking, CommandInfo, CommandText,
         /* CommitDetailsComponent, CommitList, */ Component, DrawableComponent, EventState,
         TopicList,
     },
@@ -41,6 +43,7 @@ use crate::{
     strings::{self, order},
     try_or_popup,
     ui::style::{SharedTheme, Theme},
+    utils::detach::{spawn_detached_current_exe_named, spawn_detached_named},
 };
 
 struct LogSearchResult {
@@ -59,6 +62,221 @@ enum LogSearch {
     ),
     Results(LogSearchResult),
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HomeLaunchTarget {
+    Chat,
+    Server,
+    Ngit,
+    Relay,
+    Crawler,
+    Dashboard,
+    Tui,
+    Query,
+    Web,
+    Blossom,
+    Legit,
+    Kvs,
+    Client,
+}
+
+impl HomeLaunchTarget {
+    const ALL: [Self; 13] = [
+        Self::Chat,
+        Self::Server,
+        Self::Ngit,
+        Self::Relay,
+        Self::Crawler,
+        Self::Dashboard,
+        Self::Tui,
+        Self::Query,
+        Self::Web,
+        Self::Blossom,
+        Self::Legit,
+        Self::Kvs,
+        Self::Client,
+    ];
+
+    const fn shortcut(self) -> &'static str {
+        match self {
+            Self::Chat => "1",
+            Self::Server => "2",
+            Self::Ngit => "3",
+            Self::Relay => "4",
+            Self::Crawler => "5",
+            Self::Dashboard => "6",
+            Self::Tui => "7",
+            Self::Query => "8",
+            Self::Web => "9",
+            Self::Blossom => "0",
+            Self::Legit => "a",
+            Self::Kvs => "b",
+            Self::Client => "c",
+        }
+    }
+
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Chat => "gnostr chat",
+            Self::Server => "gnostr server",
+            Self::Ngit => "gnostr ngit",
+            Self::Relay => "gnostr relay",
+            Self::Crawler => "gnostr crawler",
+            Self::Dashboard => "gnostr dashboard",
+            Self::Tui => "gnostr tui",
+            Self::Query => "gnostr query",
+            Self::Web => "gnostr web",
+            Self::Blossom => "gnostr blossom",
+            Self::Legit => "gnostr legit",
+            Self::Kvs => "gnostr kvs",
+            Self::Client => "gnostr client",
+        }
+    }
+
+    const fn description(self) -> &'static str {
+        match self {
+            Self::Chat => "join the p2p chat network",
+            Self::Server => "start the blossom server",
+            Self::Ngit => "open the nostr git client",
+            Self::Relay => "run the relay daemon",
+            Self::Crawler => "serve relay discovery and stats",
+            Self::Dashboard => "open the dashboard TUI",
+            Self::Tui => "open the main gnostr TUI",
+            Self::Query => "open the query client",
+            Self::Web => "start the web front-end",
+            Self::Blossom => "run blossom tooling",
+            Self::Legit => "open the legit workflow",
+            Self::Kvs => "open the kvs tool",
+            Self::Client => "open the nostr client",
+        }
+    }
+
+    const fn process_name(self) -> &'static str {
+        match self {
+            Self::Chat => "gnostr-chat",
+            Self::Server => "gnostr-server",
+            Self::Ngit => "gnostr-ngit",
+            Self::Relay => "gnostr-relay",
+            Self::Crawler => "gnostr-crawler",
+            Self::Dashboard => "gnostr-dashboard",
+            Self::Tui => "gnostr-tui",
+            Self::Query => "gnostr-query",
+            Self::Web => "gnostr-web",
+            Self::Blossom => "gnostr-blossom",
+            Self::Legit => "gnostr-legit",
+            Self::Kvs => "gnostr-kvs",
+            Self::Client => "gnostr-client",
+        }
+    }
+
+    const fn current_exe_args(self) -> Option<&'static [&'static str]> {
+        match self {
+            Self::Chat => Some(&["chat", "--headless", "--topic", "gnostr"]),
+            Self::Ngit => Some(&["ngit", "--defaults"]),
+            Self::Relay => Some(&["relay", "--detach"]),
+            Self::Crawler => Some(&["crawler", "serve", "--detach"]),
+            _ => None,
+        }
+    }
+
+    const fn sibling_binaries(self) -> &'static [&'static str] {
+        match self {
+            Self::Server => &["gnostr-server"],
+            Self::Dashboard => &["gnostr-dashboard"],
+            Self::Tui => &["gnostr-tui"],
+            Self::Query => &["gnostr-query"],
+            Self::Web => &["gnostr-web"],
+            Self::Blossom => &["gnostr-blossom"],
+            Self::Legit => &["gnostr-legit"],
+            Self::Kvs => &["gnostr-kvs"],
+            Self::Client => &["gnostr-client"],
+            _ => &[],
+        }
+    }
+
+    const fn sibling_args(self) -> &'static [&'static str] {
+        match self {
+            Self::Server => &["--advertise-service"],
+            _ => &[],
+        }
+    }
+}
+
+fn current_exe_candidate_paths(binary_name: &str) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Ok(exe) = env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            candidates.push(parent.join(binary_name));
+            if let Some(grandparent) = parent.parent() {
+                candidates.push(grandparent.join(binary_name));
+            }
+        }
+    }
+    candidates
+}
+
+fn launch_sibling_binary(binary_name: &str, args: &[&str]) -> anyhow::Result<u32> {
+    for candidate in current_exe_candidate_paths(binary_name) {
+        if candidate.is_file() {
+            return spawn_detached_named(candidate, Some(binary_name), args.iter().copied());
+        }
+    }
+
+    anyhow::bail!("could not find sibling binary: {binary_name}");
+}
+
+fn launch_current_exe_subcommand(target: HomeLaunchTarget, args: &[&str]) -> anyhow::Result<u32> {
+    spawn_detached_current_exe_named(Some(target.process_name()), args.iter().copied())
+}
+
+fn launch_home_target(target: HomeLaunchTarget) -> anyhow::Result<u32> {
+    if let Some(args) = target.current_exe_args() {
+        return launch_current_exe_subcommand(target, args);
+    }
+
+    let mut started = None;
+    for binary in target.sibling_binaries() {
+        started = Some(launch_sibling_binary(binary, target.sibling_args())?);
+        break;
+    }
+
+    started.ok_or_else(|| anyhow::anyhow!("no launcher configured for {}", target.label()))
+}
+
+fn launchpad_lines() -> Vec<String> {
+    let mut lines = vec![
+        "p2p launch pad".to_string(),
+        "1 chat  2 server  3 ngit  4 relay  5 crawler  6 dashboard  7 tui".to_string(),
+        "8 query 9 web  0 blossom  a legit  b kvs  c client".to_string(),
+    ];
+
+    lines.extend(HomeLaunchTarget::ALL.iter().map(|target| {
+        format!(
+            "[{}] {:<16} {}",
+            target.shortcut(),
+            target.label(),
+            target.description()
+        )
+    }));
+
+    lines
+}
+
+fn draw_launchpad(f: &mut Frame, area: Rect, theme: &SharedTheme) {
+    let lines: Vec<ratatui::text::Line<'static>> = launchpad_lines()
+        .into_iter()
+        .map(ratatui::text::Line::from)
+        .collect();
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Span::styled("Launch Pad", theme.title(true)))
+        .border_style(Theme::attention_block());
+
+    f.render_widget(Paragraph::new(lines).block(block), area);
+}
+
+const CMD_GROUP_LAUNCHERS: &str = "-- Launchers --";
 
 /// Chatlog
 pub struct Chatlog {
@@ -379,6 +597,13 @@ impl DrawableComponent for Chatlog {
             Rc::new([area])
         };
 
+        let main_area = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(9), Constraint::Min(1)].as_ref())
+            .split(area[0]);
+
+        draw_launchpad(f, main_area[0], &self.theme);
+
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(
@@ -390,7 +615,7 @@ impl DrawableComponent for Chatlog {
                 ]
                 .as_ref(),
             )
-            .split(area[0]);
+            .split(main_area[1]);
 
         //commit details
         if self.chat_details.is_visible() {
@@ -398,7 +623,7 @@ impl DrawableComponent for Chatlog {
             self.chat_details.draw(f, chunks[1])?;
             //self.list.draw(f, chunks[0])?;
         } else {
-            self.list.draw(f, area[0])?;
+            self.list.draw(f, main_area[1])?;
         }
 
         if self.is_in_search_mode() {
@@ -463,6 +688,34 @@ impl Component for Chatlog {
                     && !self.is_search_pending()
                 {
                     self.queue.push(InternalEvent::SelectBranch);
+                    return Ok(EventState::Consumed);
+                } else if let Some(target) = match k.code {
+                    KeyCode::Char('1') => Some(HomeLaunchTarget::Chat),
+                    KeyCode::Char('2') => Some(HomeLaunchTarget::Server),
+                    KeyCode::Char('3') => Some(HomeLaunchTarget::Ngit),
+                    KeyCode::Char('4') => Some(HomeLaunchTarget::Relay),
+                    KeyCode::Char('5') => Some(HomeLaunchTarget::Crawler),
+                    KeyCode::Char('6') => Some(HomeLaunchTarget::Dashboard),
+                    KeyCode::Char('7') => Some(HomeLaunchTarget::Tui),
+                    KeyCode::Char('8') => Some(HomeLaunchTarget::Query),
+                    KeyCode::Char('9') => Some(HomeLaunchTarget::Web),
+                    KeyCode::Char('0') => Some(HomeLaunchTarget::Blossom),
+                    KeyCode::Char('a') => Some(HomeLaunchTarget::Legit),
+                    KeyCode::Char('b') => Some(HomeLaunchTarget::Kvs),
+                    KeyCode::Char('c') => Some(HomeLaunchTarget::Client),
+                    _ => None,
+                } {
+                    match launch_home_target(target) {
+                        Ok(pid) => self.queue.push(InternalEvent::ShowInfoMsg(format!(
+                            "launched {} (pid {})",
+                            target.label(),
+                            pid
+                        ))),
+                        Err(err) => self.queue.push(InternalEvent::ShowErrorMsg(format!(
+                            "launch failed for {}: {err}",
+                            target.label()
+                        ))),
+                    }
                     return Ok(EventState::Consumed);
                 } else if key_match(k, self.key_config.keys.status_reset_item)
                     && !self.is_search_pending()
@@ -642,6 +895,21 @@ impl Component for Chatlog {
             self.visible || force_all,
         ));
 
+        for target in HomeLaunchTarget::ALL {
+            out.push(
+                CommandInfo::new(
+                    CommandText::new(
+                        format!("Launch {} [{}]", target.label(), target.shortcut()),
+                        target.description(),
+                        CMD_GROUP_LAUNCHERS,
+                    ),
+                    true,
+                    self.visible || force_all,
+                )
+                .order(order::RARE_ACTION),
+            );
+        }
+
         visibility_blocking(self)
     }
 
@@ -666,5 +934,27 @@ impl Component for Chatlog {
         self.update()?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{launchpad_lines, HomeLaunchTarget};
+
+    #[test]
+    fn launchpad_lists_core_tools() {
+        let text = launchpad_lines().join("\n");
+        assert!(text.contains("gnostr chat"));
+        assert!(text.contains("gnostr server"));
+        assert!(text.contains("gnostr ngit"));
+        assert!(text.contains("gnostr crawler"));
+    }
+
+    #[test]
+    fn chat_launcher_uses_headless_topic_mode() {
+        assert_eq!(
+            HomeLaunchTarget::Chat.current_exe_args(),
+            Some(&["chat", "--headless", "--topic", "gnostr"])
+        );
     }
 }
