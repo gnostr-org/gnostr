@@ -161,33 +161,37 @@ fn process_and_add_diff_message(app: &mut App, input_text: String) {
     }
 }
 
-fn help_lines() -> Vec<Line<'static>> {
+fn help_text() -> Vec<&'static str> {
     vec![
-        Line::from("GNOSTR CHAT HELP"),
-        Line::from(""),
-        Line::from("Keys"),
-        Line::from("  \\  open/close this help"),
-        Line::from("  e/i enter edit mode"),
-        Line::from("  Esc leave edit mode or close help"),
-        Line::from("  q quit"),
-        Line::from("  d open diff picker"),
-        Line::from("  arrows scroll messages"),
-        Line::from("  Ctrl-C quit immediately"),
-        Line::from(""),
-        Line::from("Commands"),
-        Line::from("  /clone <blossom-url> [dest]"),
-        Line::from("  /git clone <blossom-url> [dest]"),
-        Line::from("  /blossom clone <blossom-url> [dest]"),
-        Line::from(""),
-        Line::from("Blossom URLs"),
-        Line::from("  blossom://<host>/<pubkey-hex>/<repo>"),
-        Line::from("  blossom+https://<host>/<pubkey-hex>/<repo>"),
-        Line::from(""),
-        Line::from("Behavior"),
-        Line::from("  /clone runs locally and is not broadcast."),
-        Line::from("  Plain chat messages are fanned out to both p2p swarms."),
-        Line::from("  --diff <patch> creates a structured diff message."),
+        "GNOSTR CHAT HELP",
+        "",
+        "Keys",
+        "  \\  open/close this help",
+        "  e/i enter edit mode",
+        "  Esc leave edit mode or close help",
+        "  q quit",
+        "  d open diff picker",
+        "  arrows scroll messages",
+        "  Ctrl-C quit immediately",
+        "",
+        "Commands",
+        "  /clone <blossom-url> [dest]",
+        "  /git clone <blossom-url> [dest]",
+        "  /blossom clone <blossom-url> [dest]",
+        "",
+        "Blossom URLs",
+        "  blossom://<host>/<pubkey-hex>/<repo>",
+        "  blossom+https://<host>/<pubkey-hex>/<repo>",
+        "",
+        "Behavior",
+        "  /clone runs locally and is not broadcast.",
+        "  Plain chat messages are fanned out to both p2p swarms.",
+        "  --diff <patch> creates a structured diff message.",
     ]
+}
+
+fn help_lines() -> Vec<Line<'static>> {
+    help_text().into_iter().map(Line::from).collect()
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
@@ -214,6 +218,19 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::help_text;
+
+    #[test]
+    fn help_text_mentions_clone_and_help_keys() {
+        let text = help_text().join("\n");
+        assert!(text.contains("/clone <blossom-url> [dest]"));
+        assert!(text.contains("open/close this help"));
+        assert!(text.contains("Plain chat messages are fanned out to both p2p swarms."));
+    }
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
