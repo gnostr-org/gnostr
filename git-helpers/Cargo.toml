@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-git-helpers"
-version = "1877.946127.943299"
+version = "1877.946232.812505"
 edition = "2021"
 description = "git-remote helpers for Blossom, Nostr NIP-34, IPFS, PKARR, and Tor"
 license = "MIT"
@@ -44,15 +44,16 @@ pkarr = { version = "6.0.0-rc.0", default-features = false, features = [
   "relays",
   "signed_packet",
 ] }
+reqwest = { version = "0.12", features = [
+  "blocking",
+  "json",
+  "multipart",
+  "socks",
+] }
 # HTTP client (blocking for sync protocol loop)
 # socks: Tor SOCKS5 proxy support
 # multipart: IPFS Kubo MFS multipart write API
 secp256k1 = { version = "0.29", features = ["rand"] }
-reqwest = { version = "0.12", features = ["blocking", "json", "multipart", "socks"] }
-
-# Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
-tokio = { version = "1", features = ["full"] }
-tokio-tungstenite = { version = "0.21", features = ["rustls-tls-webpki-roots"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -61,6 +62,10 @@ sha2 = { version = "0.10", features = ["std"] }
 
 # Error handling
 thiserror = "1"
+
+# Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.21", features = ["rustls-tls-webpki-roots"] }
 
 # Logging to stderr (helpers must not pollute stdout)
 tracing = "0.1"
