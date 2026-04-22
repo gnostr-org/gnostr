@@ -435,14 +435,14 @@ exit 1
     fn test_pre_commit_py() {
         let (_td, repo) = repo_init();
 
-        // mirror how python pre-commmit sets itself up
+        // mirror how python pre-commit sets itself up
         #[cfg(not(windows))]
-        let hook = b"#!/usr/bin/env python
+        let hook = b"#!/usr/bin/env python3
 import sys
 sys.exit(0)
         ";
         #[cfg(windows)]
-        let hook = b"#!/bin/env python.exe
+        let hook = b"#!/bin/env python3.exe
 import sys
 sys.exit(0)
         ";
@@ -456,14 +456,14 @@ sys.exit(0)
     fn test_pre_commit_fail_py() {
         let (_td, repo) = repo_init();
 
-        // mirror how python pre-commmit sets itself up
+        // mirror how python pre-commit sets itself up
         #[cfg(not(windows))]
-        let hook = b"#!/usr/bin/env python
+        let hook = b"#!/usr/bin/env python3
 import sys
 sys.exit(1)
         ";
         #[cfg(windows)]
-        let hook = b"#!/bin/env python.exe
+        let hook = b"#!/bin/env python3.exe
 import sys
 sys.exit(1)
         ";
