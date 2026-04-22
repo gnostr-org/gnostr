@@ -4,8 +4,10 @@
 //use libp2p::{gossipsub, mdns, noise, swarm::NetworkBehaviour,
 // swarm::SwarmEvent, tcp, yamux}; use ratatui::prelude::*;
 use std::{
+    env,
     error::Error,
     io,
+    process::Command,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -52,6 +54,7 @@ pub enum AppMode {
     #[default]
     Normal,
     Editing,
+    Command,
     SelectingDiff {
         diff_messages: Vec<msg::Msg>, // Filtered list of diff messages
         selected_index: usize,        // Index of the currently selected diff
@@ -161,12 +164,101 @@ fn process_and_add_diff_message(app: &mut App, input_text: String) {
     }
 }
 
+fn run_shell(command: Option<&str>) -> io::Result<()> {
+    disable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, Show)?;
+
+    let status = if let Some(cmd) = command {
+        #[cfg(target_family = "unix")]
+        {
+            let shell = env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+            Command::new(shell).arg("-lc").arg(cmd).status()?
+        }
+        #[cfg(target_family = "windows")]
+        {
+            Command::new("cmd").args(["/C", cmd]).status()?
+        }
+    } else {
+        #[cfg(target_family = "unix")]
+        {
+            let shell = env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+            Command::new(shell).status()?
+        }
+        #[cfg(target_family = "windows")]
+        {
+            Command::new("cmd").status()?
+        }
+    };
+
+    execute!(
+        stdout,
+        EnterAlternateScreen,
+        EnableMouseCapture,
+    )?;
+    enable_raw_mode()?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!(
+            "shell exited with status {}",
+            status
+        )))
+    }
+}
+
+fn execute_colon_command(app: &mut App, command_text: &str) -> io::Result<Option<msg::Msg>> {
+    let command_text = command_text.trim();
+    if command_text.is_empty() {
+        return Ok(None);
+    }
+
+    if command_text == "help" || command_text == "h" {
+        app.show_help = true;
+        return Ok(None);
+    }
+
+    if command_text == "q" || command_text == "quit" {
+        return Ok(Some(
+            msg::Msg::default()
+                .set_content("quit".to_string(), 0)
+                .set_kind(MsgKind::System),
+        ));
+    }
+
+    if command_text == "shell" || command_text == "sh" {
+        run_shell(None)?;
+        return Ok(Some(
+            msg::Msg::default()
+                .set_content("returned from shell".to_string(), 0)
+                .set_kind(MsgKind::System),
+        ));
+    }
+
+    if let Some(shell_command) = command_text.strip_prefix('!') {
+        run_shell(Some(shell_command.trim()))?;
+        return Ok(Some(
+            msg::Msg::default()
+                .set_content(format!("ran shell command: {}", shell_command.trim()), 0)
+                .set_kind(MsgKind::System),
+        ));
+    }
+
+    Ok(Some(
+        msg::Msg::default()
+            .set_content(format!("unknown command: :{}", command_text), 0)
+            .set_kind(MsgKind::System),
+    ))
+}
+
 fn help_text() -> Vec<&'static str> {
     vec![
         "GNOSTR CHAT HELP",
         "",
         "Keys",
         "  \\  open/close this help",
+        "  :  enter command mode",
         "  e/i enter edit mode",
         "  Esc leave edit mode or close help",
         "  q quit",
@@ -175,6 +267,10 @@ fn help_text() -> Vec<&'static str> {
         "  Ctrl-C quit immediately",
         "",
         "Commands",
+        "  :help / :h show this help",
+        "  :shell / :sh open an interactive shell",
+        "  :!<cmd> run a shell command",
+        "  :q / :quit exit chat",
         "  /clone <blossom-url> [dest]",
         "  /git clone <blossom-url> [dest]",
         "  /blossom clone <blossom-url> [dest]",
@@ -222,14 +318,23 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 #[cfg(test)]
 mod tests {
-    use super::help_text;
+    use super::{execute_colon_command, help_text, App};
 
     #[test]
     fn help_text_mentions_clone_and_help_keys() {
         let text = help_text().join("\n");
         assert!(text.contains("/clone <blossom-url> [dest]"));
         assert!(text.contains("open/close this help"));
+        assert!(text.contains(":shell / :sh open an interactive shell"));
         assert!(text.contains("Plain chat messages are fanned out to both p2p swarms."));
+    }
+
+    #[test]
+    fn colon_help_enables_help_overlay() {
+        let mut app = App::default();
+        let result = execute_colon_command(&mut app, "help").expect("command should parse");
+        assert!(result.is_none());
+        assert!(app.show_help);
     }
 }
 
@@ -262,13 +367,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             match app.mode {
                 // Changed from app.input_mode
                 AppMode::Normal => match key.code {
-                    KeyCode::Char('e') | KeyCode::Char('i') => {
-                        app.mode = AppMode::Editing; // Changed from app.input_mode
-                        app.msgs_scroll = usize::MAX;
-                    }
-                    KeyCode::Char('q') => {
-                        return Ok(());
-                    }
+                KeyCode::Char('e') | KeyCode::Char('i') => {
+                    app.mode = AppMode::Editing; // Changed from app.input_mode
+                    app.msgs_scroll = usize::MAX;
+                }
+                KeyCode::Char(':') => {
+                    app.mode = AppMode::Command;
+                    app.input.reset();
+                }
+                KeyCode::Char('q') => {
+                    return Ok(());
+                }
                     KeyCode::Char('\\') => {
                         app.show_help = true;
                     }
@@ -349,6 +458,40 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     KeyCode::Esc => {
                         app.mode = AppMode::Normal; // Changed from app.input_mode
                         app.msgs_scroll = app.messages.lock().unwrap().len();
+                    }
+                    _ => {
+                        app.input.handle_event(&Event::Key(key));
+                    }
+                },
+                AppMode::Command => match key.code {
+                    KeyCode::Enter => {
+                        let command_text = app.input.value().to_owned();
+                        app.input.reset();
+                        app.mode = AppMode::Normal;
+
+                        match execute_colon_command(app, &command_text) {
+                            Ok(Some(msg)) => {
+                                if msg.content[0] == "quit" {
+                                    return Ok(());
+                                }
+                                app.add_message(msg.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(msg);
+                                }
+                            }
+                            Ok(None) => {}
+                            Err(err) => {
+                                app.add_message(
+                                    msg::Msg::default()
+                                        .set_content(err.to_string(), 0)
+                                        .set_kind(MsgKind::System),
+                                );
+                            }
+                        }
+                    }
+                    KeyCode::Esc => {
+                        app.input.reset();
+                        app.mode = AppMode::Normal;
                     }
                     _ => {
                         app.input.handle_event(&Event::Key(key));
@@ -587,6 +730,7 @@ fn ui(f: &mut Frame, app: &App) {
     let default_input_style = match app.mode {
         AppMode::Normal => Style::default(),
         AppMode::Editing => Style::default().fg(Color::Cyan),
+        AppMode::Command => Style::default().fg(Color::Yellow),
         AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), /* Indicate non-editable */
     };
 
@@ -610,12 +754,19 @@ fn ui(f: &mut Frame, app: &App) {
     let input = Paragraph::new(input_line)
         .style(default_input_style)
         .scroll((0, scroll as u16))
-        .block(Block::default().borders(Borders::ALL).title("Input"));
+        .block(Block::default().borders(Borders::ALL).title(match app.mode {
+            AppMode::Command => "Command",
+            _ => "Input",
+        }));
     f.render_widget(input, chunks[2]);
 
     match app.mode {
         AppMode::Normal => {}
         AppMode::Editing => f.set_cursor_position((
+            chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+            chunks[2].y + 1,
+        )),
+        AppMode::Command => f.set_cursor_position((
             chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
             chunks[2].y + 1,
         )),
