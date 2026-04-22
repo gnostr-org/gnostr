@@ -300,7 +300,7 @@ jobs:
         shell: bash
         run: |
           gnostr query \
-          -i $(gnostr --nsec $(gnostr --hash "") \
+          -i $(gnostr convert-key --key $(gnostr --hash "") -p nsec) \
           custom-event \
           --kind ${{ env.WEEBLE }} \
           --hex \
