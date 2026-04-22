@@ -24,12 +24,15 @@ pub async fn dispatch_crawler_command(
         }
         crate::crawler::Commands::Serve { port, detach } => {
             if detach {
-                crate::utils::detach::spawn_detached_current_exe(vec![
+                crate::utils::detach::spawn_detached_current_exe_named(
+                    Some("gnostr-crawler"),
+                    vec![
                     "crawler".to_string(),
                     "serve".to_string(),
                     "--port".to_string(),
                     port.to_string(),
-                ])?;
+                ],
+                )?;
             } else {
                 crate::crawler::run_api_server(port).await?;
             }
