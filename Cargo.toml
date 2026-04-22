@@ -814,7 +814,7 @@ quote = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true, features = ["blocking"] }
 rsass = "0.28.10"
-sccache = "0.13.0"
+sccache = "^0.12"
 serde = { workspace = true, features = ["derive"] }
 sha2 = { workspace = true }
 syn = { workspace = true }
@@ -826,6 +826,8 @@ actix-rt = "2.11.0"
 actix-test = "0.1.5"
 anyhow = { workspace = true }
 assert_cmd = { workspace = true }
+cargo-binstall = "1.15"
+cargo-dist = "0.31.0"
 comma = "1.0.0"
 crossterm = { workspace = true }
 ctor = "0.6.3"
