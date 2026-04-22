@@ -18,7 +18,7 @@ where
 
 pub fn spawn_detached_named<P, N, I, S>(
     program: P,
-    process_name: Option<N>,
+    _process_name: Option<N>,
     args: I,
 ) -> Result<u32, Box<dyn std::error::Error>>
 where
@@ -31,7 +31,7 @@ where
     command.args(args);
 
     #[cfg(unix)]
-    if let Some(process_name) = process_name.as_ref() {
+    if let Some(process_name) = _process_name.as_ref() {
         command.arg0(process_name.as_ref());
     }
 
