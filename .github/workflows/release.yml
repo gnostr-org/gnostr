@@ -140,7 +140,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ./.github/actions/windows-vcpkg-action
         with:
-          arch: ${{ contains(join(matrix.targets, ' '), 'aarch64-pc-windows-msvc') && 'arm64' || 'x64' }}
+          arch: ${{ contains(matrix.targets, 'aarch64-pc-windows-msvc') && 'arm64' || 'x64' }}
           run-tests: 'false'
           install: 'false'
       - name: Install dependencies
