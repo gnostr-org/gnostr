@@ -3,14 +3,12 @@
 use clap::Args;
 use serde::ser::StdError;
 
-use crate::cli::NgitCommands;
-
 #[derive(Args, Clone)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 pub struct NgitSubCommand {
     #[command(subcommand)]
-    pub command: Option<NgitCommands>,
+    pub command: Option<ngit::cli::Commands>,
     /// remote signer address
     #[arg(long, global = true, hide = true)]
     pub bunker_uri: Option<String>,
