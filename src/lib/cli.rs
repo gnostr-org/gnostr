@@ -78,12 +78,6 @@ pub enum LegitCommands {
     Mine,
 }
 
-/// Vendored ngit CLI.
-pub type NgitCli = ::ngit::cli::Cli;
-
-/// Vendored ngit command set.
-pub type NgitCommands = ::ngit::cli::Commands;
-
 /// GnostrCli
 #[derive(Parser)]
 #[command(name = "gnostr")]
