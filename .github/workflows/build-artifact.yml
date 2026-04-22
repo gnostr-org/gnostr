@@ -315,6 +315,7 @@ jobs:
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl || \
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --features vendor-openssl
         else
+          echo;
           ## handle other matrix.target
         fi
 
