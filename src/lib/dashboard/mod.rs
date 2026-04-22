@@ -895,13 +895,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             git_tui_node.write_input(&input)?;
                         }
 
-                        let mut deactivated = false;
+                        let mut _deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
                                 if time.elapsed() < Duration::from_millis(500) {
                                     is_git_tui_active = false;
                                     last_esc_time = None;
-                                    deactivated = true;
+                                    _deactivated = true;
                                     force_redraw = true;
                                 } else {
                                     last_esc_time = Some(Instant::now());
@@ -913,13 +913,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             last_esc_time = None;
                         }
                     } else if is_relay_active {
-                        let mut deactivated = false;
+                        let mut _deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
                                 if time.elapsed() < Duration::from_millis(500) {
                                     is_relay_active = false;
                                     last_esc_time = None;
-                                    deactivated = true;
+                                    _deactivated = true;
                                     force_redraw = true;
                                 } else {
                                     last_esc_time = Some(Instant::now());
@@ -931,20 +931,20 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             last_esc_time = None;
                         }
 
-                        if !deactivated {
+                        if !_deactivated {
                             let input = encode_key(key);
                             if !input.is_empty() {
                                 relay_node.write_input(&input)?;
                             }
                         }
                     } else if is_chat_active {
-                        let mut deactivated = false;
+                        let mut _deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
                                 if time.elapsed() < Duration::from_millis(500) {
                                     is_chat_active = false;
                                     last_esc_time = None;
-                                    deactivated = true;
+                                    _deactivated = true;
                                     force_redraw = true;
                                 } else {
                                     last_esc_time = Some(Instant::now());
@@ -956,20 +956,20 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             last_esc_time = None;
                         }
 
-                        if !deactivated {
+                        if !_deactivated {
                             let input = encode_key(key);
                             if !input.is_empty() {
                                 chat_node.write_input(&input)?;
                             }
                         }
                     } else if is_server_active {
-                        let mut deactivated = false;
+                        let mut _deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
                                 if time.elapsed() < Duration::from_millis(500) {
                                     is_server_active = false;
                                     last_esc_time = None;
-                                    deactivated = true;
+                                    _deactivated = true;
                                     force_redraw = true;
                                 } else {
                                     last_esc_time = Some(Instant::now());
@@ -981,7 +981,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             last_esc_time = None;
                         }
 
-                        if !deactivated {
+                        if !_deactivated {
                             let input = encode_key(key);
                             if !input.is_empty() {
                                 server_node.write_input(&input)?;
@@ -993,13 +993,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             nodes[idx].write_input(&input)?;
                         }
 
-                        let mut deactivated = false;
+                        let mut _deactivated = false;
                         if key.code == KeyCode::Esc {
                             if let Some(time) = last_esc_time {
                                 if time.elapsed() < Duration::from_millis(500) {
                                     active_node = None;
                                     last_esc_time = None;
-                                    deactivated = true;
+                                    _deactivated = true;
                                     force_redraw = true; // Trigger full redraw on exit
                                 } else {
                                     last_esc_time = Some(Instant::now());
