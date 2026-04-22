@@ -73,7 +73,8 @@ fn build_filter_map(
     args: &QuerySubCommand,
 ) -> anyhow::Result<(serde_json::Map<String, serde_json::Value>, i32)> {
     let mut filt = serde_json::Map::new();
-    let mut limit_check: i32 = 1;
+    let limit_check = args.limit.unwrap_or(1);
+    filt.insert("limit".to_string(), json!(limit_check));
 
     if let Some(authors) = &args.authors {
         debug!("Applying authors filter: {}", authors);
@@ -89,12 +90,6 @@ fn build_filter_map(
             "ids".to_string(),
             json!(ids.split(',').collect::<Vec<&str>>()),
         );
-    }
-
-    if let Some(limit) = args.limit {
-        debug!("Applying limit filter: {}", limit);
-        filt.insert("limit".to_string(), json!(limit));
-        limit_check = limit;
     }
 
     if let Some(generic_vec) = &args.generic {
