@@ -295,9 +295,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         return Ok(());
     }
 
-    // If headless mode is enabled and not in oneshot mode,
-    // run the event loop in the background
-    // and exit immediately without starting the TUI.
+    // In the detached child, run the event loop directly and keep the process alive.
 
     if sub_command_args.headless {
         let topic_name = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
