@@ -230,6 +230,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             let input_text = app.input.value().to_owned();
                             if input_text.starts_with("--diff ") {
                                 process_and_add_diff_message(app, input_text);
+                            } else if input_text.starts_with('/') {
+                                let m = msg::Msg::default()
+                                    .set_content(input_text, 0)
+                                    .set_kind(MsgKind::Command);
+                                app.add_message(m.clone());
+                                if let Some(ref mut hook) = app._on_input_enter {
+                                    hook(m);
+                                }
                             } else {
                                 let wrapped_lines: Vec<String> = fill(&input_text, 80)
                                     .split('\n')

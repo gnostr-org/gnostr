@@ -1,6 +1,6 @@
-use std::{error::Error as StdError, path::PathBuf, time::Duration};
+use std::{error::Error as StdError, path::PathBuf, process::Command, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
 use gnostr_asyncgit::sync::{commit::padded_commit_id, RepoPath};
@@ -152,6 +152,80 @@ pub fn global_rt() -> &'static tokio::runtime::Runtime {
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum LocalChatCommand {
+    GitClone {
+        url: String,
+        destination: Option<String>,
+    },
+}
+
+fn parse_local_chat_command(input: &str) -> Result<Option<LocalChatCommand>> {
+    if !input.starts_with('/') {
+        return Ok(None);
+    }
+
+    let parts = shellwords::split(input).context("parse chat command")?;
+    let Some(command) = parts.first().map(String::as_str) else {
+        return Ok(None);
+    };
+
+    let parsed = match (
+        command,
+        parts.get(1).map(String::as_str),
+        parts.get(2),
+        parts.get(3),
+    ) {
+        ("/clone", Some(url), dest, None) => Some(LocalChatCommand::GitClone {
+            url: url.to_string(),
+            destination: dest.cloned(),
+        }),
+        ("/git", Some("clone"), Some(url), dest) => Some(LocalChatCommand::GitClone {
+            url: url.to_string(),
+            destination: dest.cloned(),
+        }),
+        ("/blossom", Some("clone"), Some(url), dest) => Some(LocalChatCommand::GitClone {
+            url: url.to_string(),
+            destination: dest.cloned(),
+        }),
+        _ => None,
+    };
+
+    Ok(parsed)
+}
+
+fn run_local_chat_command(command: LocalChatCommand, cwd: PathBuf) -> Result<String> {
+    match command {
+        LocalChatCommand::GitClone { url, destination } => {
+            let mut cmd = Command::new("git");
+            cmd.arg("clone").arg(&url);
+            if let Some(destination) = destination.as_ref() {
+                cmd.arg(destination);
+            }
+            cmd.current_dir(&cwd);
+
+            let output = cmd.output().context("run git clone")?;
+            if output.status.success() {
+                Ok(format!(
+                    "git clone started from chat: {}{}",
+                    url,
+                    destination
+                        .as_ref()
+                        .map(|dest| format!(" -> {dest}"))
+                        .unwrap_or_default()
+                ))
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+                if stderr.is_empty() {
+                    Err(anyhow!("git clone failed with status {}", output.status))
+                } else {
+                    Err(anyhow!("git clone failed: {stderr}"))
+                }
+            }
+        }
+    }
+}
+
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
     const DETACHED_ENV: &str = "GNOSTR_CHAT_DETACHED";
@@ -249,22 +323,6 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
     );
 
-    let (_full_p2p_input_tx, full_p2p_input_rx) =
-        tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let (full_p2p_output_tx, mut full_p2p_output_rx) =
-        tokio::sync::mpsc::channel::<InternalEvent>(100);
-    let full_p2p_topic = topic.clone();
-    tokio::spawn(async move {
-        while full_p2p_output_rx.recv().await.is_some() {}
-    });
-    tokio::spawn(async move {
-        if let Err(e) =
-            crate::p2p::evt_loop(full_p2p_input_rx, full_p2p_output_tx, full_p2p_topic).await
-        {
-            tracing::error!("full-feature p2p event loop error: {e}");
-        }
-    });
-
     if let Some(message_input) = args.oneshot {
         if !args.headless {
             tracing::info!("Oneshot mode: sending message '{}'", message_input);
@@ -335,7 +393,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             None => PathBuf::from("."), //TODO $HOME/.gnostr
         };
 
-        let repo = Repository::discover(search_path)?;
+        let repo = Repository::discover(&search_path)?;
         let head = repo.head()?;
         let obj = head.resolve()?.peel(ObjectType::Commit)?;
         let commit = obj.peel_to_commit()?;
@@ -345,7 +403,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let _padded_commit_id = format!("{:0>64}", commit_id.clone());
 
         let mut app = ui::App {
-            topic: args.topic.unwrap_or_else(|| commit_id.to_string()),
+            topic: args.topic.clone().unwrap_or_else(|| commit_id.to_string()),
             ..Default::default()
         };
 
@@ -353,15 +411,86 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
 
         let value = input_tx.clone();
+        let topic_name = app.topic.clone();
+        let topic = gossipsub::IdentTopic::new(topic_name.clone());
+        let full_p2p_input_tx = {
+            let (tx, rx) = tokio::sync::mpsc::channel::<Msg>(100);
+            let (out_tx, mut out_rx) = tokio::sync::mpsc::channel::<Msg>(100);
+            let full_p2p_args = args.clone();
+            let full_p2p_topic = gossipsub::IdentTopic::new(topic_name.clone());
+
+            let peer_tx_for_full = peer_tx.clone();
+            global_rt().spawn(async move {
+                while let Some(msg) = out_rx.recv().await {
+                    let _ = peer_tx_for_full.send(InternalEvent::ChatMessage(msg)).await;
+                }
+            });
+
+            global_rt().spawn(async move {
+                if let Err(e) =
+                    crate::p2p::evt_loop(full_p2p_args, rx, out_tx, full_p2p_topic).await
+                {
+                    tracing::error!("full-feature p2p event loop error: {e}");
+                }
+            });
+
+            tx
+        };
+        let command_tx = peer_tx.clone();
+        let command_cwd = search_path.clone();
         app.on_submit(move |m| {
             let value = value.clone();
+            let full_p2p_input_tx = full_p2p_input_tx.clone();
+            let command_tx = command_tx.clone();
+            let command_cwd = command_cwd.clone();
             global_rt().spawn(async move {
                 debug!("sent: {:?}", m);
-                value.send(InternalEvent::ChatMessage(m)).await.unwrap();
+                if matches!(m.kind, MsgKind::Command) {
+                    match parse_local_chat_command(&m.content[0]) {
+                        Ok(Some(command)) => {
+                            match tokio::task::spawn_blocking(move || {
+                                run_local_chat_command(command, command_cwd)
+                            })
+                            .await
+                            {
+                                Ok(Ok(message)) => {
+                                    let _ = command_tx
+                                        .send(InternalEvent::ShowInfoMsg(message))
+                                        .await;
+                                }
+                                Ok(Err(err)) => {
+                                    let _ = command_tx
+                                        .send(InternalEvent::ShowErrorMsg(err.to_string()))
+                                        .await;
+                                }
+                                Err(err) => {
+                                    let _ = command_tx
+                                        .send(InternalEvent::ShowErrorMsg(err.to_string()))
+                                        .await;
+                                }
+                            }
+                        }
+                        Ok(None) => {
+                            let _ = command_tx
+                                .send(InternalEvent::ShowErrorMsg(format!(
+                                    "unknown chat command: {}",
+                                    m.content[0]
+                                )))
+                                .await;
+                        }
+                        Err(err) => {
+                            let _ = command_tx
+                                .send(InternalEvent::ShowErrorMsg(err.to_string()))
+                                .await;
+                        }
+                    }
+                } else {
+                    let full_msg = m.clone();
+                    value.send(InternalEvent::ChatMessage(m)).await.unwrap();
+                    let _ = full_p2p_input_tx.send(full_msg).await;
+                }
             });
         });
-
-        let topic = gossipsub::IdentTopic::new(app.topic.clone().to_string());
 
         global_rt().spawn(async move {
             evt_loop(input_rx, peer_tx, topic).await.unwrap();
@@ -371,10 +500,16 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         global_rt().spawn(async move {
             while let Some(event) = peer_rx.recv().await {
                 debug!("recv: {:?}", event);
-                if let InternalEvent::ChatMessage(m) = event {
-                    tui_msg_adder(m);
-                } else {
-                    debug!("Received non-chat message event: {:?}", event);
+                match event {
+                    InternalEvent::ChatMessage(m) => tui_msg_adder(m),
+                    InternalEvent::ShowInfoMsg(text) | InternalEvent::ShowErrorMsg(text) => {
+                        tui_msg_adder(
+                            Msg::default().set_content(text, 0).set_kind(MsgKind::System),
+                        );
+                    }
+                    other => {
+                        debug!("Received non-chat message event: {:?}", other);
+                    }
                 }
             }
         });
@@ -412,4 +547,39 @@ pub async fn input_loop(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod command_tests {
+    use super::*;
+
+    #[test]
+    fn parses_clone_command() {
+        let command = parse_local_chat_command("/clone blossom://example.com/abcd/repo dest")
+            .expect("parse command")
+            .expect("expected command");
+
+        assert_eq!(
+            command,
+            LocalChatCommand::GitClone {
+                url: "blossom://example.com/abcd/repo".to_string(),
+                destination: Some("dest".to_string()),
+            }
+        );
+    }
+
+    #[test]
+    fn parses_git_clone_alias() {
+        let command = parse_local_chat_command("/git clone blossom://example.com/abcd/repo")
+            .expect("parse command")
+            .expect("expected command");
+
+        assert_eq!(
+            command,
+            LocalChatCommand::GitClone {
+                url: "blossom://example.com/abcd/repo".to_string(),
+                destination: None,
+            }
+        );
+    }
 }
