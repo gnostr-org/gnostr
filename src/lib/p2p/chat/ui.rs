@@ -55,6 +55,7 @@ pub enum AppMode {
     Normal,
     Editing,
     Command,
+    Shell,
     SelectingDiff {
         diff_messages: Vec<msg::Msg>, // Filtered list of diff messages
         selected_index: usize,        // Index of the currently selected diff
@@ -75,6 +76,7 @@ pub struct App {
     pub topic: String,
     pub show_side_panel: bool,
     pub show_help: bool,
+    pub shell_output: Vec<String>,
 }
 
 impl Default for App {
@@ -88,6 +90,7 @@ impl Default for App {
             topic: String::from("gnostr"),
             show_side_panel: false,
             show_help: false,
+            shell_output: Vec::new(),
         }
     }
 }
@@ -164,48 +167,40 @@ fn process_and_add_diff_message(app: &mut App, input_text: String) {
     }
 }
 
-fn run_shell(command: Option<&str>) -> io::Result<()> {
-    disable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, Show)?;
-
-    let status = if let Some(cmd) = command {
-        #[cfg(target_family = "unix")]
-        {
-            let shell = env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
-            Command::new(shell).arg("-lc").arg(cmd).status()?
-        }
-        #[cfg(target_family = "windows")]
-        {
-            Command::new("cmd").args(["/C", cmd]).status()?
-        }
-    } else {
-        #[cfg(target_family = "unix")]
-        {
-            let shell = env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
-            Command::new(shell).status()?
-        }
-        #[cfg(target_family = "windows")]
-        {
-            Command::new("cmd").status()?
-        }
-    };
-
-    execute!(
-        stdout,
-        EnterAlternateScreen,
-        EnableMouseCapture,
-    )?;
-    enable_raw_mode()?;
-
-    if status.success() {
-        Ok(())
-    } else {
-        Err(io::Error::other(format!(
-            "shell exited with status {}",
-            status
-        )))
+fn push_shell_output(app: &mut App, lines: impl IntoIterator<Item = String>) {
+    for line in lines {
+        app.shell_output.push(line);
     }
+    let max_lines = 200usize;
+    if app.shell_output.len() > max_lines {
+        let drop_count = app.shell_output.len() - max_lines;
+        app.shell_output.drain(0..drop_count);
+    }
+}
+
+fn run_shell_command(command: &str) -> io::Result<Vec<String>> {
+    #[cfg(target_family = "unix")]
+    let output = {
+        let shell = env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+        Command::new(shell).arg("-lc").arg(command).output()?
+    };
+    #[cfg(target_family = "windows")]
+    let output = Command::new("cmd").args(["/C", command]).output()?;
+
+    let mut lines = vec![format!("$ {}", command)];
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    for line in stdout.lines() {
+        lines.push(line.to_string());
+    }
+    for line in stderr.lines() {
+        lines.push(format!("stderr: {}", line));
+    }
+    if !output.status.success() {
+        lines.push(format!("exit status: {}", output.status));
+    }
+    Ok(lines)
 }
 
 fn execute_colon_command(app: &mut App, command_text: &str) -> io::Result<Option<msg::Msg>> {
@@ -228,21 +223,28 @@ fn execute_colon_command(app: &mut App, command_text: &str) -> io::Result<Option
     }
 
     if command_text == "shell" || command_text == "sh" {
-        run_shell(None)?;
-        return Ok(Some(
-            msg::Msg::default()
-                .set_content("returned from shell".to_string(), 0)
-                .set_kind(MsgKind::System),
-        ));
+        if !matches!(app.mode, AppMode::Shell) {
+            app.shell_output.clear();
+        }
+        app.mode = AppMode::Shell;
+        push_shell_output(
+            app,
+            [
+                "shell mode ready".to_string(),
+                "use :exit or :x to return to chat".to_string(),
+            ],
+        );
+        return Ok(None);
     }
 
     if let Some(shell_command) = command_text.strip_prefix('!') {
-        run_shell(Some(shell_command.trim()))?;
-        return Ok(Some(
-            msg::Msg::default()
-                .set_content(format!("ran shell command: {}", shell_command.trim()), 0)
-                .set_kind(MsgKind::System),
-        ));
+        if !matches!(app.mode, AppMode::Shell) {
+            app.shell_output.clear();
+        }
+        app.mode = AppMode::Shell;
+        let lines = run_shell_command(shell_command.trim())?;
+        push_shell_output(app, lines);
+        return Ok(None);
     }
 
     Ok(Some(
@@ -268,8 +270,9 @@ fn help_text() -> Vec<&'static str> {
         "",
         "Commands",
         "  :help / :h show this help",
-        "  :shell / :sh open an interactive shell",
-        "  :!<cmd> run a shell command",
+        "  :shell / :sh open shell mode",
+        "  :!<cmd> run a shell command and stay in shell mode",
+        "  :exit / :x close shell mode",
         "  :q / :quit exit chat",
         "  /clone <blossom-url> [dest]",
         "  /git clone <blossom-url> [dest]",
@@ -335,6 +338,14 @@ mod tests {
         let result = execute_colon_command(&mut app, "help").expect("command should parse");
         assert!(result.is_none());
         assert!(app.show_help);
+    }
+
+    #[test]
+    fn colon_shell_enters_shell_mode() {
+        let mut app = App::default();
+        let result = execute_colon_command(&mut app, "shell").expect("command should parse");
+        assert!(result.is_none());
+        assert!(matches!(app.mode, AppMode::Shell));
     }
 }
 
@@ -486,6 +497,32 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                                         .set_content(err.to_string(), 0)
                                         .set_kind(MsgKind::System),
                                 );
+                            }
+                        }
+                    }
+                    KeyCode::Esc => {
+                        app.input.reset();
+                        app.mode = AppMode::Normal;
+                    }
+                    _ => {
+                        app.input.handle_event(&Event::Key(key));
+                    }
+                },
+                AppMode::Shell => match key.code {
+                    KeyCode::Enter => {
+                        let command_text = app.input.value().to_owned();
+                        app.input.reset();
+
+                        if matches!(command_text.trim(), ":exit" | ":x" | "exit" | "x") {
+                            app.mode = AppMode::Normal;
+                            app.shell_output.clear();
+                        } else if !command_text.trim().is_empty() {
+                            match run_shell_command(&command_text) {
+                                Ok(lines) => push_shell_output(app, lines),
+                                Err(err) => push_shell_output(
+                                    app,
+                                    [format!("shell error: {}", err)],
+                                ),
                             }
                         }
                     }
@@ -731,6 +768,7 @@ fn ui(f: &mut Frame, app: &App) {
         AppMode::Normal => Style::default(),
         AppMode::Editing => Style::default().fg(Color::Cyan),
         AppMode::Command => Style::default().fg(Color::Yellow),
+        AppMode::Shell => Style::default().fg(Color::Green),
         AppMode::SelectingDiff { .. } => Style::default().fg(Color::DarkGray), /* Indicate non-editable */
     };
 
@@ -756,6 +794,7 @@ fn ui(f: &mut Frame, app: &App) {
         .scroll((0, scroll as u16))
         .block(Block::default().borders(Borders::ALL).title(match app.mode {
             AppMode::Command => "Command",
+            AppMode::Shell => "Shell",
             _ => "Input",
         }));
     f.render_widget(input, chunks[2]);
@@ -767,6 +806,10 @@ fn ui(f: &mut Frame, app: &App) {
             chunks[2].y + 1,
         )),
         AppMode::Command => f.set_cursor_position((
+            chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
+            chunks[2].y + 1,
+        )),
+        AppMode::Shell => f.set_cursor_position((
             chunks[2].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
             chunks[2].y + 1,
         )),
@@ -795,5 +838,24 @@ fn ui(f: &mut Frame, app: &App) {
             .alignment(Alignment::Left)
             .wrap(Wrap { trim: false });
         f.render_widget(help, help_area);
+    }
+
+    if matches!(app.mode, AppMode::Shell) {
+        let shell_area = centered_rect(90, 70, f.area());
+        f.render_widget(Clear, shell_area);
+        let shell_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Shell")
+            .fg(Color::Green);
+        let transcript: Vec<Line<'static>> = app
+            .shell_output
+            .iter()
+            .map(|line| Line::from(line.clone()))
+            .collect();
+        let shell = Paragraph::new(transcript)
+            .block(shell_block)
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: false });
+        f.render_widget(shell, shell_area);
     }
 }
