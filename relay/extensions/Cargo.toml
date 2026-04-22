@@ -20,8 +20,6 @@ count = ["nostr-extensions/count"]
 
 [dependencies]
 actix-web = { workspace = true }
-anyhow = { workspace = true }
-clap = { workspace = true }
 gnostr-relay = { version = "1878.946098.37145", path = "..", default-features = false }
 nostr-extensions = { version = "0.4.8", default-features = false }
 tracing = { workspace = true }
