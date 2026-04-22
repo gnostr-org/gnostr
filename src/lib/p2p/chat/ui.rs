@@ -6,8 +6,10 @@
 use std::{
     env,
     error::Error,
+    fs,
     io,
     process::Command,
+    io::Write,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -68,6 +70,25 @@ pub enum AppMode {
 struct ShellBatchCommand {
     label: String,
     command: String,
+}
+
+struct SuspendedTerminal;
+
+impl SuspendedTerminal {
+    fn suspend() -> io::Result<Self> {
+        disable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, LeaveAlternateScreen, DisableMouseCapture, Show)?;
+        Ok(Self)
+    }
+}
+
+impl Drop for SuspendedTerminal {
+    fn drop(&mut self) {
+        let mut stdout = io::stdout();
+        let _ = execute!(stdout, EnterAlternateScreen, EnableMouseCapture, Show);
+        let _ = enable_raw_mode();
+    }
 }
 
 /// App holds the state of the application
@@ -210,6 +231,76 @@ fn run_shell_command(command: &str) -> io::Result<Vec<String>> {
     Ok(lines)
 }
 
+fn preferred_editor() -> String {
+    env::var("GIT_EDITOR")
+        .ok()
+        .or_else(|| env::var("VISUAL").ok())
+        .or_else(|| env::var("EDITOR").ok())
+        .unwrap_or_else(|| "vi".to_string())
+}
+
+fn open_editor_buffer(initial_contents: &str) -> io::Result<String> {
+    let _terminal = SuspendedTerminal::suspend()?;
+    let mut file = tempfile::NamedTempFile::new()?;
+    file.write_all(initial_contents.as_bytes())?;
+    file.flush()?;
+
+    let editor = preferred_editor();
+    let mut editor_parts =
+        shellwords::split(&editor).map_err(|e| io::Error::other(e.to_string()))?;
+    let command = editor_parts
+        .first()
+        .cloned()
+        .ok_or_else(|| io::Error::other("EDITOR is empty"))?;
+    let args = editor_parts.drain(1..).collect::<Vec<_>>();
+    let status = Command::new(command).args(args).arg(file.path()).status()?;
+    if !status.success() {
+        return Err(io::Error::other(format!("editor exited with status {}", status)));
+    }
+
+    fs::read_to_string(file.path())
+}
+
+fn parse_editor_buffer(buffer: &str) -> Vec<String> {
+    buffer
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(ToOwned::to_owned)
+        .collect()
+}
+
+fn run_editor_batch() -> io::Result<Vec<String>> {
+    let template = [
+        "# Enter one shell command per line.",
+        "# Blank lines and comments are ignored.",
+        "# Save and exit to run the batch.",
+        "",
+    ]
+    .join("\n");
+    let buffer = open_editor_buffer(&template)?;
+    let commands = parse_editor_buffer(&buffer);
+
+    if commands.is_empty() {
+        return Ok(vec!["batch editor: no commands to run".to_string()]);
+    }
+
+    let mut output = vec![format!("batch editor: {} command(s)", commands.len())];
+    for (idx, command) in commands.iter().enumerate() {
+        output.push(format!("[{}] {}", idx + 1, command));
+        match run_shell_command(command) {
+            Ok(lines) => output.extend(lines.into_iter().map(|line| format!("[{}] {}", idx + 1, line))),
+            Err(err) => {
+                output.push(format!("[{}] shell error: {}", idx + 1, err));
+                output.push(format!("batch stopped at line {}", idx + 1));
+                break;
+            }
+        }
+    }
+
+    Ok(output)
+}
+
 fn parse_shell_batch_command(input: &str) -> io::Result<Option<Vec<ShellBatchCommand>>> {
     let text = input.trim();
     if text.is_empty() {
@@ -310,6 +401,14 @@ fn execute_colon_command(app: &mut App, command_text: &str) -> io::Result<Option
         return Ok(None);
     }
 
+    if command_text == "B" {
+        app.mode = AppMode::Shell;
+        app.shell_output.clear();
+        let lines = run_editor_batch()?;
+        push_shell_output(app, lines);
+        return Ok(None);
+    }
+
     if let Some(shell_command) = command_text.strip_prefix('!') {
         if !matches!(app.mode, AppMode::Shell) {
             app.shell_output.clear();
@@ -348,6 +447,7 @@ fn help_text() -> Vec<&'static str> {
         "Commands",
         "  :help / :h show this help",
         "  :shell / :sh open shell mode",
+        "  :B open $EDITOR buffer; run one shell command per line",
         "  :!<cmd> run a shell command and stay in shell mode",
         "  :1 cmd :2 cmd ... :N cmd batch shell commands in order",
         "  :exit / :x close shell mode",
@@ -445,6 +545,14 @@ mod tests {
             .expect("expected batch");
         assert_eq!(batch[0].command, r#"echo "hello world""#);
         assert_eq!(batch[1].command, "git status");
+    }
+
+    #[test]
+    fn editor_buffer_ignores_comments_and_blanks() {
+        let commands = parse_editor_buffer(
+            "# comment\n\nls -la\n  # another comment\ncat README.md\n",
+        );
+        assert_eq!(commands, vec!["ls -la", "cat README.md"]);
     }
 }
 
