@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "1877.946233.812117"
+version = "1877.946233.812507"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "allow using git2 in a asynchronous context"
@@ -23,7 +23,7 @@ dirs = "6.0"
 easy-cast = "0.5"
 fuzzy-matcher = "0.3"
 git2 = "0.20"
-git2-hooks = { path = "../git2-hooks", version = "1877.946233.812117" }
+git2-hooks = { package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1877.946233.812507" }
 gix = { version = "0.74.1", default-features = false, features = [
   "max-performance",
   "revision",
@@ -37,7 +37,7 @@ log = "0.4"
 openssl-sys = { version = '0.9', features = ["vendored"], optional = true }
 rayon = "1.11"
 rayon-core = "1.13"
-scopetime = { path = "../scopetime", version = "1877.946233.812117" }
+scopetime = { package = "gnostr-scopetime", path = "../scopetime", version = "1877.946233.812507" }
 serde = { version = "1.0", features = ["derive"] }
 ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
 thiserror = "2.0"
@@ -46,7 +46,7 @@ url = "2.5"
 
 [dev-dependencies]
 env_logger = "0.11"
-invalidstring = { path = "../invalidstring", version = "1877.946233.812117" }
+invalidstring = { package = "gnostr-invalidstring", path = "../invalidstring", version = "1877.946233.812507" }
 pretty_assertions = "1.4"
 serial_test = "3.2"
 tempfile = "3"

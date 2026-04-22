@@ -1,6 +1,6 @@
 [package]
 name = "git2-testing"
-version = "1877.946233.812117"
+version = "1877.946233.812507"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "convenience functions to write unittests on top of git2-rs"
