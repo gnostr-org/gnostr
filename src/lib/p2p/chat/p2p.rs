@@ -382,8 +382,8 @@ pub async fn evt_loop(
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
                         swarm.behaviour_mut().autonat.add_server(peer_id, Some(multiaddr.clone()));
-                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                        // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                        // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
                 SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
@@ -391,8 +391,8 @@ pub async fn evt_loop(
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                         swarm.behaviour_mut().autonat.remove_server(&peer_id);
-                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                        // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                        // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
                 SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Autonat(event)) => {
