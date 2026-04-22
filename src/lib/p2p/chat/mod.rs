@@ -249,6 +249,22 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
     );
 
+    let (_full_p2p_input_tx, full_p2p_input_rx) =
+        tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let (full_p2p_output_tx, mut full_p2p_output_rx) =
+        tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let full_p2p_topic = topic.clone();
+    tokio::spawn(async move {
+        while full_p2p_output_rx.recv().await.is_some() {}
+    });
+    tokio::spawn(async move {
+        if let Err(e) =
+            crate::p2p::evt_loop(full_p2p_input_rx, full_p2p_output_tx, full_p2p_topic).await
+        {
+            tracing::error!("full-feature p2p event loop error: {e}");
+        }
+    });
+
     if let Some(message_input) = args.oneshot {
         if !args.headless {
             tracing::info!("Oneshot mode: sending message '{}'", message_input);
