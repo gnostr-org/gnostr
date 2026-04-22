@@ -18,10 +18,10 @@ use ratatui::{
         execute,
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
-    layout::{Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Color,
     text::{Line, Span}, // Added Span here
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame,
     Terminal,
 };
@@ -71,6 +71,7 @@ pub struct App {
     pub msgs_scroll: usize,
     pub topic: String,
     pub show_side_panel: bool,
+    pub show_help: bool,
 }
 
 impl Default for App {
@@ -83,6 +84,7 @@ impl Default for App {
             msgs_scroll: usize::MAX,
             topic: String::from("gnostr"),
             show_side_panel: false,
+            show_help: false,
         }
     }
 }
@@ -159,6 +161,61 @@ fn process_and_add_diff_message(app: &mut App, input_text: String) {
     }
 }
 
+fn help_lines() -> Vec<Line<'static>> {
+    vec![
+        Line::from("GNOSTR CHAT HELP"),
+        Line::from(""),
+        Line::from("Keys"),
+        Line::from("  \\  open/close this help"),
+        Line::from("  e/i enter edit mode"),
+        Line::from("  Esc leave edit mode or close help"),
+        Line::from("  q quit"),
+        Line::from("  d open diff picker"),
+        Line::from("  arrows scroll messages"),
+        Line::from("  Ctrl-C quit immediately"),
+        Line::from(""),
+        Line::from("Commands"),
+        Line::from("  /clone <blossom-url> [dest]"),
+        Line::from("  /git clone <blossom-url> [dest]"),
+        Line::from("  /blossom clone <blossom-url> [dest]"),
+        Line::from(""),
+        Line::from("Blossom URLs"),
+        Line::from("  blossom://<host>/<pubkey-hex>/<repo>"),
+        Line::from("  blossom+https://<host>/<pubkey-hex>/<repo>"),
+        Line::from(""),
+        Line::from("Behavior"),
+        Line::from("  /clone runs locally and is not broadcast."),
+        Line::from("  Plain chat messages are fanned out to both p2p swarms."),
+        Line::from("  --diff <patch> creates a structured diff message."),
+    ]
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
+}
+
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     let tick_rate = Duration::from_millis(100);
     loop {
@@ -175,6 +232,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 return Ok(());
             }
 
+            if app.show_help {
+                match key.code {
+                    KeyCode::Char('\\') | KeyCode::Esc | KeyCode::Char('q') => {
+                        app.show_help = false;
+                    }
+                    _ => {}
+                }
+                continue;
+            }
+
             match app.mode {
                 // Changed from app.input_mode
                 AppMode::Normal => match key.code {
@@ -186,8 +253,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         return Ok(());
                     }
                     KeyCode::Char('\\') => {
-                        // Toggle side panel
-                        app.show_side_panel = !app.show_side_panel;
+                        app.show_help = true;
                     }
                     KeyCode::Char('d') => {
                         // New keybinding for selecting diffs
@@ -547,5 +613,19 @@ fn ui(f: &mut Frame, app: &App) {
             .title("Side Panel")
             .fg(Color::White);
         f.render_widget(side_panel, side_panel_area);
+    }
+
+    if app.show_help {
+        let help_area = centered_rect(80, 80, f.area());
+        f.render_widget(Clear, help_area);
+        let help_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Help")
+            .fg(Color::White);
+        let help = Paragraph::new(help_lines())
+            .block(help_block)
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: false });
+        f.render_widget(help, help_area);
     }
 }
