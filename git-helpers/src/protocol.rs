@@ -110,7 +110,12 @@ fn parse_push_line(line: &str) -> Option<PushSpec> {
 
 /// Read lines from `stdin` until a blank line or EOF, collecting those that
 /// start with `prefix` via `parser`.
-fn read_batch<T, F>(stdin: &mut impl BufRead, first: &str, prefix: &str, parser: F) -> Vec<T>
+fn read_batch<T, F>(
+    stdin: &mut impl BufRead,
+    first: &str,
+    prefix: &str,
+    parser: F,
+) -> Vec<T>
 where
     F: Fn(&str) -> Option<T>,
 {

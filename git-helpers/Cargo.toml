@@ -47,13 +47,12 @@ pkarr = { version = "6.0.0-rc.0", default-features = false, features = [
 # HTTP client (blocking for sync protocol loop)
 # socks: Tor SOCKS5 proxy support
 # multipart: IPFS Kubo MFS multipart write API
-reqwest = { version = "0.12", features = [
-  "blocking",
-  "json",
-  "multipart",
-  "socks",
-] }
 secp256k1 = { version = "0.29", features = ["rand"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "multipart", "socks"] }
+
+# Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.21", features = ["rustls-tls-webpki-roots"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -62,10 +61,6 @@ sha2 = { version = "0.10", features = ["std"] }
 
 # Error handling
 thiserror = "1"
-
-# Async runtime (used for WebSocket Nostr relay queries + PKARR DHT)
-tokio = { version = "1", features = ["full"] }
-tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
 
 # Logging to stderr (helpers must not pollute stdout)
 tracing = "0.1"
