@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/stash.rs
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+▌Your branch is up to date with 'origin/main'.                                  |
+                                                                                |
+ Untracked files                                                                |
+ file-two                                                                       |
+                                                                                |
+ Staged changes (1)                                                             |
+ added      file-one…                                                           |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+Stash                   Arguments                                               |
+z both                  -a Also save untracked and ignored files (--all)        |
+a apply                 -u Also save untracked files (--include-untracked)      |
+i index                                                                         |
+w worktree                                                                      |
+x keeping index                                                                 |
+p pop                                                                           |
+k drop                                                                          |
+q Quit/Close                                                                    |
+<esc> Close screen                                                              |
+styles_hash: 64cfdd07722af940

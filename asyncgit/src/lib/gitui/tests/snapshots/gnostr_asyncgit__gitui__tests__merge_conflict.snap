@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/mod.rs
+expression: ctx.redact_buffer()
+---
+▌Merging other-branch                                                           |
+                                                                                |
+ Unstaged changes (2)                                                           |
+ unmerged   new-file…                                                           |
+ unmerged   new-file-2…                                                         |
+                                                                                |
+ Staged changes (2)                                                             |
+ unmerged   new-file…                                                           |
+ unmerged   new-file-2…                                                         |
+                                                                                |
+ Recent commits                                                                 |
+ 44bb4dc main modify new-file-2                                                 |
+ 174f1f4 modify new-file                                                        |
+ b57d72c add new-file-2                                                         |
+ 46c81ca add new-file                                                           |
+ b66a0bf origin/main add initial-file                                           |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 3dd0cab59ed8fc86

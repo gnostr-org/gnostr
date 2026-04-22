@@ -1,0 +1,207 @@
+use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
+
+use bitflags::bitflags;
+use gnostr_asyncgit::{
+    sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
+    PushType,
+};
+
+use crate::{
+    components::FuzzyFinderTarget,
+    popups::{
+        AppOption, BlameFileOpen, DisplayChatOpen, FileRevOpen, FileTreeOpen, InspectChatOpen,
+        InspectCommitOpen,
+    },
+    tabs::StashingOptions,
+};
+use gnostr_asyncgit::types::{EventV3, Id, UncheckedUrl};
+
+bitflags! {
+    /// flags defining what part of the app need to update
+    #[derive(Debug)]
+    pub struct NeedsUpdate: u32 {
+        /// app::update
+        const ALL = 0b001;
+        /// diff may have changed (app::update_diff)
+        const DIFF = 0b010;
+        /// commands might need updating (app::update_commands)
+        const COMMANDS = 0b100;
+        /// branches have changed
+        const BRANCHES = 0b1000;
+    }
+}
+
+/// data of item that is supposed to be reset
+#[derive(Debug)]
+pub struct ResetItem {
+    /// path to the item (folder/file)
+    pub path: String,
+}
+
+/// Action
+#[derive(Debug)]
+pub enum Action {
+    Reset(ResetItem),
+    ResetHunk(String, u64),
+    ResetLines(String, Vec<DiffLinePosition>),
+    StashDrop(Vec<CommitId>),
+    StashPop(CommitId),
+    DeleteLocalBranch(String),
+    DeleteRemoteBranch(String),
+    DeleteTag(String),
+    DeleteRemoteTag(String, String),
+    ForcePush(String, bool),
+    PullMerge { incoming: usize, rebase: bool },
+    AbortMerge,
+    AbortRebase,
+    AbortRevert,
+    UndoCommit,
+}
+
+#[derive(Debug)]
+pub enum StackablePopupOpen {
+    /// BlameFile
+    BlameFile(BlameFileOpen),
+    /// DisplayChat
+    DisplayChat(DisplayChatOpen),
+    /// FileRevLog
+    FileRevlog(FileRevOpen),
+    /// FileTree
+    FileTree(FileTreeOpen),
+    /// InspectChat
+    InspectChat(InspectChatOpen),
+    /// InspectCommit
+    InspectCommit(InspectCommitOpen),
+    /// CompareCommits
+    CompareCommits(InspectCommitOpen),
+}
+
+#[derive(Debug)]
+pub enum AppTabs {
+    Chat,
+    Status,
+    Log,
+    Files,
+    Stashing,
+    Stashlist,
+}
+
+/// Commands related to Nostr interactions
+#[derive(Debug)]
+pub enum NostrCommand {
+    /// Send a NIP-28 channel message
+    SendChannelMessage {
+        channel_id: String,
+        message: String,
+        reply_to_id: Option<crate::types::Id>,
+        root_message_id: Option<crate::types::Id>,
+        relay_url: Option<crate::types::UncheckedUrl>,
+    },
+    /// Create a NIP-28 channel
+    CreateChannel {
+        channel_id: String,
+        channel_name: String,
+        channel_description: String,
+        channel_picture: Option<String>,
+        relay_url: Option<crate::types::UncheckedUrl>,
+    },
+}
+
+/// InternalEvent
+#[derive(Debug)]
+pub enum InternalEvent {
+    /// Nostr event received from a relay
+    NostrEvent(EventV3),
+    /// Command to interact with Nostr
+    NostrCommand(NostrCommand),
+    /// ChatMessage
+    ChatMessage(crate::p2p::chat::msg::Msg),
+    /// ConfirmAction
+    ConfirmAction(Action),
+    /// ComfirmedAction
+    ConfirmedAction(Action),
+    /// ShowErrorMsg
+    ShowErrorMsg(String),
+    /// ShowInfoMsg
+    ShowInfoMsg(String),
+    /// Update
+    Update(NeedsUpdate),
+    /// StatusLastFileMoved
+    StatusLastFileMoved,
+    /// open commit msg input
+    /// OpenCommit,
+    OpenCommit,
+    /// OpenChat
+    OpenChat,
+    /// PopupStashing
+    PopupStashing(StashingOptions),
+    /// TabSwitchStatus
+    TabSwitchStatus,
+    /// TabSwitch
+    TabSwitch(AppTabs),
+    /// SelectCommitInRevlog
+    SelectCommitInRevlog(CommitId),
+    /// TagCommit
+    TagCommit(CommitId),
+    /// Tags
+    Tags,
+    /// CreateBranch
+    CreateBranch,
+    /// RenameBranch
+    RenameBranch(String, String),
+    /// SelectBranch
+    SelectBranch,
+    OpenExternalEditor(Option<String>),
+    OpenExternalChat(Option<String>),
+    Push(String, PushType, bool, bool),
+    Pull(String),
+    PushTags,
+    OptionSwitched(AppOption),
+    OpenFuzzyFinder(Vec<String>, FuzzyFinderTarget),
+    OpenLogSearchPopup,
+    FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
+    FetchRemotes,
+    OpenPopup(StackablePopupOpen),
+    PopupStackPop,
+    PopupStackPush(StackablePopupOpen),
+    ViewSubmodules,
+    OpenRepo {
+        path: PathBuf,
+    },
+    OpenResetPopup(CommitId),
+    RewordCommit(CommitId),
+    CommitSearch(LogFilterSearchOptions),
+}
+
+/// single threaded simple queue for components to communicate with
+/// each other
+#[derive(Clone)]
+pub struct Queue {
+    data: Rc<RefCell<VecDeque<InternalEvent>>>,
+}
+
+impl Default for Queue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Queue {
+    pub fn new() -> Self {
+        Self {
+            data: Rc::new(RefCell::new(VecDeque::new())),
+        }
+    }
+
+    pub fn push(&self, ev: InternalEvent) {
+        self.data.borrow_mut().push_back(ev);
+    }
+
+    pub fn pop(&self) -> Option<InternalEvent> {
+        self.data.borrow_mut().pop_front()
+    }
+
+    pub fn clear(&self) {
+        self.data.borrow_mut().clear();
+    }
+}

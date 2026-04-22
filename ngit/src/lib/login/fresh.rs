@@ -1,0 +1,1158 @@
+use std::{str::FromStr, sync::Arc, time::Duration};
+
+use anyhow::{Context, Result, bail};
+use console::Style;
+use dialoguer::theme::{ColorfulTheme, Theme};
+use indicatif::{ProgressBar, ProgressStyle};
+use nostr::nips::nip46::NostrConnectURI;
+use nostr_connect::client::NostrConnect;
+use nostr_sdk::{EventBuilder, Keys, Metadata, NostrSigner, PublicKey, RelayUrl, ToBech32};
+use qrcode::QrCode;
+use tokio::{signal, sync::Mutex};
+
+use super::{
+    SignerInfo, SignerInfoSource,
+    existing::load_existing_login,
+    key_encryption::decrypt_key,
+    print_logged_in_as,
+    user::{UserRef, get_user_details},
+};
+#[cfg(not(test))]
+use crate::client::Client;
+#[cfg(test)]
+use crate::client::MockConnect;
+use crate::{
+    cli_interactor::{
+        Interactor, InteractorPrompt, Printer, PromptChoiceParms, PromptConfirmParms,
+        PromptInputParms, PromptPasswordParms, multi_select_with_custom_value,
+        show_multi_input_prompt_success,
+    },
+    client::{Connect, nip05_query, save_event_in_global_cache, send_events},
+    git::{Repo, RepoActions, remove_git_config_item, save_git_config_item},
+};
+
+pub async fn fresh_login_or_signup(
+    git_repo: &Option<&Repo>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
+    signer_info: Option<SignerInfo>,
+    save_local: bool,
+    signer_relays: &[String],
+) -> Result<(Arc<dyn NostrSigner>, UserRef, SignerInfoSource)> {
+    let (signer, public_key, signer_info, source) = loop {
+        if let Some(signer_info) = signer_info {
+            let (signer, user_ref, source) = load_existing_login(
+                git_repo,
+                &Some(signer_info.clone()),
+                &None,
+                &Some(SignerInfoSource::CommandLineArguments),
+                client,
+                true,
+                true,
+                false,
+            )
+            .await?;
+            break (signer, user_ref.public_key, signer_info, source);
+        }
+        match Interactor::default().choice(
+            PromptChoiceParms::default()
+                .with_prompt("login to nostr")
+                .with_default(0)
+                .with_choices(vec![
+                    "secret key (nsec / ncryptsec)".to_string(),
+                    "nostr connect (remote signer)".to_string(),
+                    "create account".to_string(),
+                    "help".to_string(),
+                ])
+                .dont_report(),
+        )? {
+            0 => match get_fresh_nsec_signer().await {
+                Ok(Some(res)) => break res,
+                Ok(None) => continue,
+                Err(e) => {
+                    eprintln!("error getting fresh signer from nsec: {e}");
+                    continue;
+                }
+            },
+            1 => match get_fresh_nip46_signer(client, signer_relays).await {
+                Ok(Some(res)) => break res,
+                Ok(None) => continue,
+                Err(e) => {
+                    eprintln!("error getting fresh nip46 signer: {e}");
+                    continue;
+                }
+            },
+            2 => match signup(client).await {
+                Ok(Some(res)) => break res,
+                Ok(None) => continue,
+                Err(e) => {
+                    eprintln!("error getting fresh signer from signup: {e}");
+                    continue;
+                }
+            },
+            _ => {
+                display_login_help_content().await;
+                continue;
+            }
+        }
+    };
+    let _ = save_to_git_config(git_repo, &signer_info, !save_local).await;
+    let user_ref = get_user_details(
+        &public_key,
+        client,
+        if let Some(git_repo) = git_repo {
+            Some(git_repo.get_path()?)
+        } else {
+            None
+        },
+        false,
+        false,
+    )
+    .await?;
+    print_logged_in_as(&user_ref, client.is_none(), &source)?;
+    Ok((signer, user_ref, source))
+}
+
+/// Non-interactive login using a `bunker://` URL provided directly.
+///
+/// Parses the URL, generates a fresh app key, connects to the remote signer,
+/// and saves the resulting credentials to git config.
+pub async fn login_with_bunker_url(
+    git_repo: &Option<&Repo>,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
+    bunker_url: &str,
+    save_local: bool,
+    signer_relays: &[String],
+) -> Result<(Arc<dyn NostrSigner>, UserRef, SignerInfoSource)> {
+    let url = NostrConnectURI::parse(bunker_url)
+        .context("invalid bunker:// URL - must be a valid bunker:// URI")?;
+
+    let (app_key, _) = generate_nostr_connect_app(client, signer_relays)?;
+
+    let printer = Arc::new(Mutex::new(Printer::default()));
+    {
+        let mut p = printer.lock().await;
+        p.println("connecting to remote signer...".to_string());
+    }
+
+    let (signer, user_public_key, bunker_uri) =
+        listen_for_remote_signer(&app_key, &url, printer).await?;
+
+    let signer_info = SignerInfo::Bunker {
+        bunker_uri: bunker_uri.to_string(),
+        bunker_app_key: app_key.secret_key().to_secret_hex(),
+        npub: Some(user_public_key.to_bech32()?),
+    };
+
+    let _ = save_to_git_config(git_repo, &signer_info, !save_local).await;
+
+    let user_ref = get_user_details(
+        &user_public_key,
+        client,
+        if let Some(git_repo) = git_repo {
+            Some(git_repo.get_path()?)
+        } else {
+            None
+        },
+        false,
+        false,
+    )
+    .await?;
+
+    let source = if save_local {
+        SignerInfoSource::GitLocal
+    } else {
+        SignerInfoSource::GitGlobal
+    };
+    print_logged_in_as(&user_ref, client.is_none(), &source)?;
+    Ok((signer, user_ref, source))
+}
+
+pub async fn get_fresh_nsec_signer() -> Result<
+    Option<(
+        Arc<dyn NostrSigner>,
+        PublicKey,
+        SignerInfo,
+        SignerInfoSource,
+    )>,
+> {
+    loop {
+        let input = Interactor::default()
+            .input(
+                PromptInputParms::default()
+                    .with_prompt("nsec")
+                    .with_flag_name("--nsec")
+                    .dont_report(),
+            )
+            .context("failed to get nsec input from interactor")?;
+        let (keys, signer_info) = if input.contains("ncryptsec") {
+            let password = Interactor::default()
+                .password(
+                    PromptPasswordParms::default()
+                        .with_prompt("password")
+                        .dont_report(),
+                )
+                .context("failed to get password input from interactor.password")?;
+            let keys = if let Ok(keys) = decrypt_key(&input, password.clone().as_str())
+                .context("failed to decrypt ncryptsec with provided password")
+            {
+                keys
+            } else {
+                show_prompt_error(
+                    "invalid ncryptsec and password combination",
+                    &shorten_string(&input),
+                );
+                match Interactor::default().choice(
+                    PromptChoiceParms::default()
+                        .with_default(0)
+                        .with_prompt("login to nostr")
+                        .with_choices(vec!["try again with nsec".to_string(), "back".to_string()])
+                        .dont_report(),
+                )? {
+                    0 => continue,
+                    _ => break Ok(None),
+                }
+            };
+            let npub = Some(keys.public_key().to_bech32()?);
+            let signer_info = if Interactor::default()
+                .confirm(PromptConfirmParms::default().with_prompt("remember details?"))?
+                || !Interactor::default().confirm(PromptConfirmParms::default().with_prompt(
+                    "you will be prompted for password to decrypt your ncryptsec at every git push. are you sure?",
+                ))? {
+                SignerInfo::Nsec {
+                    nsec: keys.secret_key().to_bech32()?,
+                    password: None,
+                    npub,
+                }
+            } else {
+                show_prompt_success("nsec", &shorten_string(&input));
+                SignerInfo::Nsec {
+                    nsec: input,
+                    password: Some(password),
+                    npub,
+                }
+            };
+            (keys, signer_info)
+        } else if let Ok(keys) = nostr::Keys::from_str(&input) {
+            let nsec = keys.secret_key().to_bech32()?;
+            show_prompt_success("nsec", &shorten_string(&input));
+            let signer_info = SignerInfo::Nsec {
+                nsec,
+                password: None,
+                npub: Some(keys.public_key().to_bech32()?),
+            };
+            (keys, signer_info)
+        } else {
+            show_prompt_error("invalid nsec", &shorten_string(&input));
+            match Interactor::default().choice(
+                PromptChoiceParms::default()
+                    .with_default(0)
+                    .with_prompt("login to nostr")
+                    .with_choices(vec!["try again with nsec".to_string(), "back".to_string()])
+                    .dont_report(),
+            )? {
+                0 => continue,
+                _ => break Ok(None),
+            }
+        };
+
+        let public_key = keys.public_key();
+
+        break Ok(Some((
+            Arc::new(keys),
+            public_key,
+            signer_info,
+            // TODO factor in source
+            SignerInfoSource::GitGlobal,
+        )));
+    }
+}
+
+pub fn show_prompt_success(label: &str, value: &str) {
+    eprintln!("{}", {
+        let mut s = String::new();
+        let _ = ColorfulTheme::default().format_input_prompt_selection(&mut s, label, value);
+        s
+    });
+}
+
+fn show_prompt_error(label: &str, value: &str) {
+    eprintln!("{}", {
+        let mut s = String::new();
+        let _ = ColorfulTheme::default().format_error(
+            &mut s,
+            &format!(
+                "{label}: \"{}\"",
+                if value.is_empty() {
+                    "empty".to_string()
+                } else {
+                    shorten_string(value)
+                }
+            ),
+        );
+        s
+    });
+}
+
+fn shorten_string(s: &str) -> String {
+    if s.len() < 15 {
+        s.to_string()
+    } else {
+        format!("{}...", &s[..15])
+    }
+}
+
+pub async fn get_fresh_nip46_signer(
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
+    signer_relays: &[String],
+) -> Result<
+    Option<(
+        Arc<dyn NostrSigner>,
+        PublicKey,
+        SignerInfo,
+        SignerInfoSource,
+    )>,
+> {
+    let (app_key, nostr_connect_url) = generate_nostr_connect_app(client, signer_relays)?;
+    let printer = Arc::new(Mutex::new(Printer::default()));
+    let signer_choice = Interactor::default().choice(
+        PromptChoiceParms::default()
+            .with_prompt("login to nostr with remote signer")
+            .with_default(0)
+            .with_choices(vec![
+                "show QR code to scan in signer app".to_string(),
+                "show nostrconnect:// url to paste into signer".to_string(),
+                "use NIP-05 address to connect to signer".to_string(),
+                "paste in bunker:// url from signer app".to_string(),
+                "back".to_string(),
+            ])
+            .dont_report(),
+    )?;
+    let url = match signer_choice {
+        0 | 1 => {
+            // Loop so the user can change relays and see a refreshed QR/URL.
+            let mut current_url = nostr_connect_url;
+            loop {
+                // Display QR or URL with the current relay list.
+                display_nostr_connect(signer_choice, &current_url)?;
+
+                // Start listening for the signer immediately after displaying
+                // the QR/URL — don't wait for the user to press anything.
+                let nostr_connect = Arc::new(NostrConnect::new(
+                    current_url.clone(),
+                    app_key.clone(),
+                    Duration::from_secs(10 * 60),
+                    None,
+                )?);
+                let signer_arc: Arc<dyn NostrSigner> = nostr_connect.clone();
+                let pubkey_handle = tokio::spawn(async move { signer_arc.get_public_key().await });
+
+                // Show a spinner while waiting; Ctrl+C lets the user change
+                // relays or go back instead of waiting indefinitely.
+                eprintln!();
+                // TODO: remove the dim delay note once the rust-nostr
+                // NostrConnect handshake delay bug is fixed.
+                let spinner_msg = format!(
+                    "{} {}",
+                    console::style("waiting for signer app to connect...").bold(),
+                    console::style("(may take 10s+ to connect once added)").color256(247),
+                );
+                let spinner = ProgressBar::new_spinner()
+                    .with_style(
+                        ProgressStyle::with_template("{spinner} {msg}")
+                            .unwrap()
+                            .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ "),
+                    )
+                    .with_message(spinner_msg);
+                spinner.enable_steady_tick(Duration::from_millis(100));
+
+                let res = tokio::select! {
+                    result = pubkey_handle => {
+                        spinner.finish_and_clear();
+                        match result {
+                            Ok(Ok(pk)) => Some(pk),
+                            _ => None,
+                        }
+                    },
+                    _ = signal::ctrl_c() => {
+                        spinner.finish_and_clear();
+                        None
+                    }
+                };
+
+                if let Some(public_key) = res {
+                    // Connection succeeded — retrieve the canonical bunker URI
+                    // and return.
+                    let bunker_url = nostr_connect
+                        .bunker_uri()
+                        .await
+                        .context("failed to get bunker URI from NostrConnect client")?;
+                    let signer_info = SignerInfo::Bunker {
+                        bunker_uri: bunker_url.to_string(),
+                        bunker_app_key: app_key.secret_key().to_secret_hex(),
+                        npub: Some(public_key.to_bech32()?),
+                    };
+                    return Ok(Some((
+                        nostr_connect as Arc<dyn NostrSigner>,
+                        public_key,
+                        signer_info,
+                        SignerInfoSource::GitGlobal,
+                    )));
+                }
+
+                // Ctrl+C was pressed — offer the user a chance to change
+                // relays or go back to the top-level login menu.
+                let action = Interactor::default().choice(
+                    PromptChoiceParms::default()
+                        .with_prompt(format!(
+                            "signer relays: {}",
+                            current_url
+                                .relays()
+                                .iter()
+                                .map(std::string::ToString::to_string)
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ))
+                        .with_default(0)
+                        .with_choices(vec![
+                            "try again".to_string(),
+                            "change signer relays".to_string(),
+                            "back".to_string(),
+                        ])
+                        .dont_report(),
+                )?;
+
+                match action {
+                    0 => {
+                        // Redisplay QR/URL and start listening again.
+                        continue;
+                    }
+                    1 => {
+                        // Change relays and rebuild URL.
+                        let selected = select_signer_relays(&current_url)?;
+                        if !selected.is_empty() {
+                            let new_relays: Vec<RelayUrl> =
+                                selected.iter().flat_map(|s| RelayUrl::parse(s)).collect();
+                            current_url =
+                                NostrConnectURI::client(app_key.public_key(), new_relays, "ngit");
+                        }
+                    }
+                    _ => return Ok(None),
+                }
+            }
+        }
+        2 => {
+            let mut error = None;
+            loop {
+                let input = Interactor::default()
+                    .input(
+                        PromptInputParms::default().with_prompt(if let Some(error) = error {
+                            format!("error: {error}. try again with NIP-05 address")
+                        } else {
+                            "NIP-05 address".to_string()
+                        }),
+                    )
+                    .context("failed to get NIP-05 address input from interactor")?;
+                match fetch_nip46_uri_from_nip05(&input).await {
+                    Ok(url) => break url,
+                    Err(e) => error = Some(e),
+                }
+            }
+        }
+        3 => {
+            let mut error = None;
+            loop {
+                let input = Interactor::default()
+                    .input(
+                        PromptInputParms::default().with_prompt(if let Some(error) = error {
+                            format!("error: {error}. try again with bunker url")
+                        } else {
+                            "bunker url".to_string()
+                        }),
+                    )
+                    .context("failed to get bunker url input from interactor")?;
+                match NostrConnectURI::parse(&input) {
+                    Ok(url) => break url,
+                    Err(e) => error = Some(e),
+                }
+            }
+        }
+        _ => return Ok(None),
+    };
+
+    {
+        let printer_clone = Arc::clone(&printer);
+        let mut printer_locked = printer_clone.lock().await;
+        printer_locked.println(
+            "add / approve in your signer or use ctrl + c to go back to login menu...".to_string(),
+        );
+    }
+
+    let (signer, user_public_key, bunker_url) =
+        listen_for_remote_signer(&app_key, &url, printer).await?;
+    let signer_info = SignerInfo::Bunker {
+        bunker_uri: bunker_url.to_string(),
+        bunker_app_key: app_key.secret_key().to_secret_hex(),
+        npub: Some(user_public_key.to_bech32()?),
+    };
+    Ok(Some((
+        signer,
+        user_public_key,
+        signer_info,
+        SignerInfoSource::GitGlobal,
+    )))
+}
+
+pub fn generate_nostr_connect_app(
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
+    signer_relays: &[String],
+) -> Result<(Keys, NostrConnectURI)> {
+    let app_key = Keys::generate();
+    let relays = if !signer_relays.is_empty() {
+        signer_relays
+            .iter()
+            .map(|s| {
+                if s.starts_with("ws://") || s.starts_with("wss://") {
+                    s.clone()
+                } else {
+                    format!("wss://{s}")
+                }
+            })
+            .flat_map(|s| RelayUrl::parse(&s))
+            .collect::<Vec<RelayUrl>>()
+    } else if let Some(client) = client {
+        client
+            .get_fallback_signer_relays()
+            .iter()
+            .flat_map(|s| RelayUrl::parse(s))
+            .collect::<Vec<RelayUrl>>()
+    } else {
+        vec![]
+    };
+    let nostr_connect_url = NostrConnectURI::client(app_key.public_key(), relays.clone(), "ngit");
+    Ok((app_key, nostr_connect_url))
+}
+
+/// Print the QR code or nostrconnect URL to stderr.
+///
+/// `choice` must be 0 (QR) or 1 (URL).  Output goes directly to stderr so it
+/// is visible before the relay-selection choice prompt that follows.
+fn display_nostr_connect(choice: usize, url: &NostrConnectURI) -> Result<()> {
+    let dim = Style::new().for_stderr().color256(247);
+    let hint = dim.apply_to("(ctrl+c to change)");
+    eprintln!(
+        "{}",
+        Style::new().for_stderr().bold().apply_to("nostr connect")
+    );
+    if choice == 0 {
+        eprintln!(
+            "{}",
+            dim.apply_to("scan QR code in signer app (eg. Amber):")
+        );
+        for line in generate_qr(&url.to_string())? {
+            eprintln!("{line}");
+        }
+    } else {
+        eprintln!();
+        eprintln!(
+            "{}",
+            Style::new()
+                .for_stderr()
+                .bold()
+                .cyan()
+                .apply_to(url.to_string())
+        );
+        eprintln!();
+    }
+    let relays = url
+        .relays()
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect::<Vec<_>>()
+        .join(", ");
+    eprintln!(
+        "{} {}",
+        dim.apply_to(format!("signer relays: {relays}")),
+        hint
+    );
+    Ok(())
+}
+
+/// Present the multiselect UI for choosing signer relays.
+///
+/// Returns the selected relay list as strings.  An empty return means the user
+/// submitted without selecting anything (caller should keep the existing URL).
+fn select_signer_relays(nostr_connect_url: &NostrConnectURI) -> Result<Vec<String>> {
+    let current_relays: Vec<String> = nostr_connect_url
+        .relays()
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
+
+    let defaults = vec![true; current_relays.len()];
+    let selected = multi_select_with_custom_value(
+        "signer relays",
+        "signer relay",
+        current_relays,
+        defaults,
+        |s| {
+            let url = if s.starts_with("ws://") || s.starts_with("wss://") {
+                s.to_string()
+            } else {
+                format!("wss://{s}")
+            };
+            RelayUrl::parse(&url)
+                .map(|r| r.to_string())
+                .context(format!("invalid relay URL: {s}"))
+        },
+    )?;
+    show_multi_input_prompt_success("signer relays", &selected);
+    Ok(selected)
+}
+
+pub async fn fetch_nip46_uri_from_nip05(nip05: &str) -> Result<NostrConnectURI> {
+    let term = console::Term::stderr();
+    term.write_line("contacting login service provider...")?;
+    let res = nip05_query(nip05).await;
+    term.clear_last_lines(1)?;
+    match res {
+        Ok(profile) => {
+            if profile.nip46.is_empty() {
+                eprintln!("nip05 provider isn't configured for remote login");
+                bail!("nip05 provider isn't configured for remote login")
+            }
+            Ok(NostrConnectURI::Bunker {
+                remote_signer_public_key: profile.public_key,
+                relays: profile.nip46,
+                secret: None,
+            })
+        }
+        Err(error) => {
+            eprintln!("error contacting login service provider: {error}");
+            Err(error).context("error contacting login service provider")
+        }
+    }
+}
+
+pub async fn listen_for_remote_signer(
+    app_key: &Keys,
+    nostr_connect_url: &NostrConnectURI,
+    printer: Arc<Mutex<Printer>>,
+) -> Result<(Arc<dyn NostrSigner>, PublicKey, NostrConnectURI)> {
+    let app_key = app_key.clone();
+    let nostr_connect_url_clone = nostr_connect_url.clone();
+
+    let nostr_connect = Arc::new(NostrConnect::new(
+        nostr_connect_url_clone,
+        app_key,
+        Duration::from_secs(10 * 60),
+        None,
+    )?);
+    let signer: Arc<dyn NostrSigner> = nostr_connect.clone();
+    let pubkey_future = signer.get_public_key();
+
+    // wait for signer response or ctrl + c
+    let res = tokio::select! {
+        pubkey_result = pubkey_future => {
+            Some(pubkey_result)
+        },
+        _ = signal::ctrl_c() => {
+            None
+        }
+    };
+
+    let printer_clone = Arc::clone(&printer);
+    let mut printer = printer_clone.lock().await;
+    printer.clear_all();
+
+    if let Some(Ok(public_key)) = res {
+        // Get the proper bunker URI from the NostrConnect client
+        // This will contain the correct remote-signer-pubkey that was discovered
+        // during the connection handshake, regardless of whether the original URL
+        // was bunker:// (already had it) or nostrconnect:// (extracted from response
+        // event author)
+        let bunker_url = nostr_connect
+            .bunker_uri()
+            .await
+            .context("failed to get bunker URI from NostrConnect client")?;
+
+        Ok((signer, public_key, bunker_url))
+    } else {
+        bail!("failed to get signer")
+    }
+}
+
+pub fn generate_qr(data: &str) -> Result<Vec<String>> {
+    let mut lines = vec![];
+    let qr = QrCode::new(data.as_bytes()).context("failed to create QR")?;
+    let colors = qr.to_colors();
+    let mut rows: Vec<&[qrcode::Color]> = colors.chunks(qr.width()).collect();
+    let light_row = vec![qrcode::Color::Light; qr.width()];
+    rows.insert(0, &light_row);
+    rows.push(&light_row);
+    for (row, data) in rows.iter().enumerate() {
+        let odd = row % 2 != 0;
+        if odd {
+            continue;
+        }
+        let mut line = " ".to_string();
+        for (col, color) in data.iter().enumerate() {
+            let top = color;
+            let mut bottom = qrcode::Color::Light;
+            if let Some(next_row_data) = rows.get(row + 1) {
+                if let Some(color) = next_row_data.get(col) {
+                    bottom = *color;
+                }
+            }
+            line.push(if *top == qrcode::Color::Dark {
+                if bottom == qrcode::Color::Dark {
+                    '█'
+                } else {
+                    '▀'
+                }
+            } else if bottom == qrcode::Color::Dark {
+                '▄'
+            } else {
+                ' '
+            });
+        }
+        lines.push(line);
+    }
+    Ok(lines)
+}
+
+async fn save_to_git_config(
+    git_repo: &Option<&Repo>,
+    signer_info: &SignerInfo,
+    global: bool,
+) -> Result<()> {
+    let global = if std::env::var("NGITTEST").is_ok() {
+        false
+    } else {
+        global
+    };
+    let err_msg = format!(
+        "failed to save login details to {} git config",
+        if global { "global" } else { "local" }
+    );
+    if let Err(error) =
+        silently_save_to_git_config(git_repo, signer_info, global).context(err_msg.clone())
+    {
+        // Check if this is a read-only file system error
+        let is_readonly_error = error
+            .chain()
+            .any(|e| e.to_string().contains("Read-only file system"));
+
+        if is_readonly_error && global {
+            // In non-interactive mode, provide a clear error with --local suggestion
+            if crate::cli_interactor::Interactor::is_non_interactive() {
+                use crate::cli_interactor::cli_error;
+                return Err(cli_error(
+                    "failed to create account",
+                    &[("cause", "global git config is read-only")],
+                    &[
+                        "ngit account create --local --nsec <your-nsec>",
+                        "ngit account login --local --nsec <your-nsec>",
+                    ],
+                ));
+            }
+        }
+
+        eprintln!("Error: {error:?}");
+        match signer_info {
+            SignerInfo::Nsec {
+                nsec,
+                password: _,
+                npub: _,
+            } => {
+                eprintln!("consider manually setting git config nostr.nsec to: {nsec}");
+            }
+            SignerInfo::Bunker {
+                bunker_uri,
+                bunker_app_key,
+                npub: _,
+            } => {
+                eprintln!("consider manually setting git config as follows:");
+                eprintln!("nostr.bunker-uri: {bunker_uri}");
+                eprintln!("nostr.bunker-app-key: {bunker_app_key}");
+            }
+        }
+        if global {
+            loop {
+                match Interactor::default().choice(
+                    PromptChoiceParms::default()
+                        .with_default(0)
+                        .with_prompt(&err_msg)
+                        .with_choices(vec![
+                            "i'll update global git config manually with above values".to_string(),
+                            "only log into local git repository (save to local git config)"
+                                .to_string(),
+                            "one time login".to_string(),
+                        ]),
+                )? {
+                    0 => {
+                        // check
+                        if let Ok((_, user_ref, _)) = load_existing_login(
+                            git_repo,
+                            &None,
+                            &None,
+                            &Some(SignerInfoSource::GitGlobal),
+                            None,
+                            true,
+                            true,
+                            false,
+                        )
+                        .await
+                        {
+                            if user_ref.public_key == get_pubkey_from_signer_info(signer_info)? {
+                                return Ok(());
+                            } else {
+                                eprintln!(
+                                    "global git config hasn't been updated with different npub"
+                                );
+                            }
+                        } else {
+                            eprintln!(
+                                "global git config hasn't been updated with nostr login values"
+                            );
+                        }
+                    }
+                    1 => {
+                        if let Err(error) =
+                            silently_save_to_git_config(git_repo, signer_info, false).context(
+                                format!(
+                                    "failed to save login details to {} git config",
+                                    if global { "global" } else { "local" }
+                                ),
+                            )
+                        {
+                            eprintln!("Error: {error:?}");
+                            eprintln!("login details were not saved");
+                        } else {
+                            eprintln!(
+                                "saved login details to local git config. you are only logged in to this local repository."
+                            );
+                        }
+                        return Ok(());
+                    }
+                    _ => return Ok(()),
+                }
+            }
+        }
+        Err(error)
+    } else {
+        eprintln!(
+            "{}",
+            if global {
+                "saved login details to global git config"
+            } else {
+                "saved login details to local git config. you are only logged in to this local repository."
+            }
+        );
+        Ok(())
+    }
+}
+
+fn get_pubkey_from_signer_info(signer_info: &SignerInfo) -> Result<PublicKey> {
+    let npub = match signer_info {
+        SignerInfo::Bunker {
+            bunker_uri: _,
+            bunker_app_key: _,
+            npub,
+        } => npub,
+        SignerInfo::Nsec {
+            nsec: _,
+            password: _,
+            npub,
+        } => npub,
+    };
+    if let Some(npub) = npub {
+        PublicKey::parse(npub).context("format of npub string in signer_info is invalid")
+    } else {
+        bail!("no npub in signer_info object");
+    }
+}
+
+fn silently_save_to_git_config(
+    git_repo: &Option<&Repo>,
+    signer_info: &SignerInfo,
+    global: bool,
+) -> Result<()> {
+    if global {
+        // remove local login otherwise it will override global next time ngit is called
+        if let Some(git_repo) = git_repo {
+            git_repo.remove_git_config_item("nostr.npub", false)?;
+            git_repo.remove_git_config_item("nostr.nsec", false)?;
+            git_repo.remove_git_config_item("nostr.bunker-uri", false)?;
+            git_repo.remove_git_config_item("nostr.bunker-app-key", false)?;
+        }
+    }
+
+    let git_repo = if global {
+        &None
+    } else if git_repo.is_none() {
+        bail!("failed to update local git config wihout git_repo object")
+    } else {
+        git_repo
+    };
+
+    let npub_to_save;
+    match signer_info {
+        SignerInfo::Nsec {
+            nsec,
+            password: _,
+            npub,
+        } => {
+            npub_to_save = npub;
+            save_git_config_item(git_repo, "nostr.nsec", nsec)?;
+            remove_git_config_item(git_repo, "nostr.bunker-uri")?;
+            remove_git_config_item(git_repo, "nostr.bunker-app-key")?;
+        }
+        SignerInfo::Bunker {
+            bunker_uri,
+            bunker_app_key,
+            npub,
+        } => {
+            npub_to_save = npub;
+            save_git_config_item(git_repo, "nostr.bunker-uri", bunker_uri)?;
+            save_git_config_item(git_repo, "nostr.bunker-app-key", bunker_app_key)?;
+            remove_git_config_item(git_repo, "nostr.nsec")?;
+        }
+    }
+    if let Some(npub) = npub_to_save {
+        save_git_config_item(git_repo, "nostr.npub", npub)?;
+    } else {
+        remove_git_config_item(git_repo, "nostr.npub")?;
+    }
+    Ok(())
+}
+
+/// Non-interactive signup function for creating a new account
+///
+/// # Arguments
+/// * `name` - Display name for the new account
+/// * `client` - Optional client for publishing metadata to relays
+/// * `save_local` - If true, save credentials to local git config only
+/// * `publish` - If true, publish metadata and relay list to relays
+///
+/// # Returns
+/// Returns a tuple of (signer, public_key, signer_info, keys) where keys can be
+/// used to display the nsec
+pub async fn signup_non_interactive(
+    name: String,
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
+    save_local: bool,
+    publish: bool,
+    relay_urls: Vec<String>,
+) -> Result<(Arc<dyn NostrSigner>, PublicKey, SignerInfo, Keys)> {
+    // Generate new keypair
+    let keys = nostr::Keys::generate();
+    let nsec = keys.secret_key().to_bech32()?;
+    let public_key = keys.public_key();
+
+    let signer_info = SignerInfo::Nsec {
+        nsec,
+        password: None,
+        npub: Some(public_key.to_bech32()?),
+    };
+
+    // Save to git config
+    let git_repo = Repo::discover().ok();
+    if let Err(error) = silently_save_to_git_config(&git_repo.as_ref(), &signer_info, !save_local) {
+        let is_readonly = error
+            .chain()
+            .any(|e| e.to_string().contains("Read-only file system"));
+
+        if is_readonly && !save_local {
+            use crate::cli_interactor::cli_error;
+
+            let mut cmds: Vec<String> = match &signer_info {
+                SignerInfo::Nsec { nsec, npub, .. } => {
+                    let mut v = vec![format!("git config --global nostr.nsec {nsec}")];
+                    if let Some(npub) = npub {
+                        v.push(format!("git config --global nostr.npub {npub}"));
+                    }
+                    v
+                }
+                SignerInfo::Bunker {
+                    bunker_uri,
+                    bunker_app_key,
+                    npub,
+                } => {
+                    let mut v = vec![
+                        format!("git config --global nostr.bunker-uri {bunker_uri}"),
+                        format!("git config --global nostr.bunker-app-key {bunker_app_key}"),
+                    ];
+                    if let Some(npub) = npub {
+                        v.push(format!("git config --global nostr.npub {npub}"));
+                    }
+                    v
+                }
+            };
+            cmds.push("ngit account create --local --name <your-name>".to_string());
+
+            let cmd_refs: Vec<&str> = cmds.iter().map(String::as_str).collect();
+            return Err(cli_error(
+                "global git config is read-only. login to local repo or save git config manually",
+                &[("--local", "login scoped to this repositoriy")],
+                &cmd_refs,
+            ));
+        }
+
+        return Err(error);
+    }
+
+    let git_repo_path = if let Some(ref git_repo) = git_repo {
+        Some(git_repo.get_path()?)
+    } else {
+        None
+    };
+
+    // Build events, save to cache, and optionally publish to relays
+    if let Some(client) = client {
+        let profile = EventBuilder::metadata(&Metadata::new().name(name)).sign_with_keys(&keys)?;
+        let relay_list = EventBuilder::relay_list(
+            relay_urls
+                .iter()
+                .filter_map(|s| RelayUrl::parse(s).ok().map(|url| (url, None))),
+        )
+        .sign_with_keys(&keys)?;
+
+        // Save to global cache so subsequent commands don't need to fetch
+        save_event_in_global_cache(git_repo_path, &profile).await?;
+        save_event_in_global_cache(git_repo_path, &relay_list).await?;
+
+        if publish {
+            let _ = send_events(
+                client,
+                git_repo_path,
+                vec![profile, relay_list],
+                relay_urls,
+                vec![],
+                true,
+                false,
+            )
+            .await?;
+        }
+    }
+
+    Ok((Arc::new(keys.clone()), public_key, signer_info, keys))
+}
+
+async fn signup(
+    #[cfg(test)] client: Option<&MockConnect>,
+    #[cfg(not(test))] client: Option<&Client>,
+) -> Result<
+    Option<(
+        Arc<dyn NostrSigner>,
+        PublicKey,
+        SignerInfo,
+        SignerInfoSource,
+    )>,
+> {
+    eprintln!("create account");
+    loop {
+        let name = Interactor::default()
+            .input(
+                PromptInputParms::default()
+                    .with_prompt("user display name")
+                    .optional()
+                    .dont_report(),
+            )
+            .context("failed to get display name input from interactor")?;
+        if name.is_empty() {
+            show_prompt_error("empty display name", "");
+            match Interactor::default().choice(
+                PromptChoiceParms::default()
+                    .with_default(0)
+                    .with_choices(vec![
+                        "enter non-empty display name".to_string(),
+                        "back to login menu".to_string(),
+                    ])
+                    .dont_report(),
+            )? {
+                0 => continue,
+                _ => break Ok(None),
+            }
+        }
+
+        // Call the non-interactive function, using relay_default_set as the
+        // relay list for interactive signup
+        let relay_urls = if let Some(c) = client {
+            c.get_relay_default_set().clone()
+        } else {
+            vec![]
+        };
+        let (signer, public_key, signer_info, _keys) = signup_non_interactive(
+            name.clone(),
+            client,
+            false, // save_local = false (will be saved globally by caller)
+            true,  // publish = true (always publish in interactive mode)
+            relay_urls,
+        )
+        .await?;
+
+        show_prompt_success("user display name", &name);
+        eprintln!(
+            "to login to other nostr clients eg. gitworkshop.dev with this account run `ngit export-keys` at any time to reveal your nostr account secret"
+        );
+        break Ok(Some((
+            signer,
+            public_key,
+            signer_info,
+            // TODO factor in source
+            SignerInfoSource::GitGlobal,
+        )));
+    }
+}
+
+async fn display_login_help_content() {
+    let mut printer = Printer::default();
+    let title_style = Style::new().bold().fg(console::Color::Yellow);
+    printer.println("|==============================|".to_owned());
+    printer.println_with_custom_formatting(
+        format!(
+            "|  {}  |",
+            title_style.apply_to("nostr login / sign up help")
+        ),
+        "|  nostr login / sign up help  |".to_string(),
+    );
+    printer.println("|==============================|".to_owned());
+    print_lines_with_headings(
+        vec![
+            "# What is a Nostr account?",
+            "A Nostr account consists of a secret key you control, known as an 'nsec' and a corresponding public key called an 'npub.' Clients like ngit and gitworkshop.dev use your keys to sign messages and verify that other messages are signed by the correct keys.",
+            "",
+            "# How do I sign into an existing Nostr account?",
+            "1. Using your secret key (nsec): Export your nsec from an existing client or browser extension. Run `ngit login` and enter your nsec.",
+            "2. Using Nostr Connect.",
+            "",
+            "# What is Nostr Connect?",
+            "Nostr Connect allows you to use multiple clients without sharing your secret key. A signer app manages your secret and signs messages on behalf of connected clients. This technology is new, and as of December 2024, only Amber for Android is recommended.",
+            "",
+            "# If I create a Nostr account using ngit, how can I sign in with other Nostr clients?",
+            "You can export your secret key by running `ngit export-key` and import it into another client.",
+            "",
+            "press ctrl + c to return the login / sign up menu again...",
+        ],
+        &mut printer,
+    );
+    let _ = signal::ctrl_c().await;
+    printer.clear_all();
+}
+
+fn print_lines_with_headings(lines: Vec<&str>, printer: &mut Printer) {
+    let heading_style = Style::new().bold();
+    for line in lines {
+        if line.starts_with("# ") {
+            let s = line.replace("# ", "").to_string();
+            printer.println_with_custom_formatting(heading_style.apply_to(&s).to_string(), s);
+        } else {
+            printer.println(line.to_string());
+        }
+    }
+}

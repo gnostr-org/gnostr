@@ -1,0 +1,184 @@
+// Buttons
+
+@w2ui-btn-text-shadow: 0px 0px 1px #111;
+
+input[type=button].w2ui-btn,
+button.w2ui-btn {
+    position: relative;
+    display: inline-block;
+    border-radius: 14px;
+    margin: 0px 3px;
+    padding: 6px 12px;
+    color: #666;
+    font-size: 12px;
+    border: 1px solid transparent;
+    .linear-gradient-vertical4(#E8E8EE, 0%, #E8E8EE, 100%);
+    outline: none;
+    box-shadow: 0px 1px 0px white;
+    cursor: default;
+    min-width: 75px;
+    line-height: 110%;
+    .user-select(none);
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+
+    &:hover {
+        text-decoration: none;
+        // border: 1px solid #bbb;
+        .linear-gradient-vertical4(#ddd, 0%, #DDDDDD, 100%);
+        color: #333;
+    }
+
+    &:active, &.clicked {
+        // border: 1px solid #999;
+        .linear-gradient-vertical4(#ccc, 0%, #ccc, 100%);
+        text-shadow: 1px 1px 1px #eee;
+    }
+
+    &:focus:before {
+        content: "";
+        border: 1px dashed #aaa;
+        border-radius: 15px;
+        position: absolute;
+        top: 2px;
+        bottom: 2px;
+        left: 2px;
+        right: 2px;
+        pointer-events: none; // needed for safari
+    }
+}
+
+// Blue
+input[type=button].w2ui-btn-blue,
+button.w2ui-btn-blue {
+    color: white;
+    .linear-gradient-vertical4(#269DF0, 0%, #269DF0, 100%);
+    border: 1px solid #269DF0;
+    text-shadow: @w2ui-btn-text-shadow;
+
+    &:hover {
+        color: white;
+        .linear-gradient-vertical4(#2391DD, 0%, #2391DD, 100%);
+        border: 1px solid #2391DD;
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:active, &.clicked {
+        color: white;
+        .linear-gradient-vertical4(#1E83C9, 0%, #1E83C9, 100%);
+        border: 1px solid #1268A6;
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:focus:before {
+        border: 1px dashed #e8e8e8;
+    }
+}
+
+// Green
+input[type=button].w2ui-btn-green,
+button.w2ui-btn-green {
+    color: white;
+    .linear-gradient-vertical4(#52A452, 0%, #52A452, 100%);
+    border: 1px solid #52A452;
+    text-shadow: @w2ui-btn-text-shadow;
+
+    &:hover {
+        color: white;
+        .linear-gradient-vertical4(#3F8F3D, 0%, #3F8F3D, 100%);
+        border: 1px solid #3F8F3D;
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:active, &.clicked {
+        color: white;
+        .linear-gradient-vertical4(#377D36, 0%, #377D36, 100%);
+        border: 1px solid #555;
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:focus:before {
+        border: 1px dashed #e8e8e8;
+    }
+}
+
+// Orange
+input[type=button].w2ui-btn-orange,
+button.w2ui-btn-orange {
+    color: white;
+    .linear-gradient-vertical4(#FB8822, 0%, #FB8822, 100%);
+    border: 1px solid #FB8822;
+    text-shadow: @w2ui-btn-text-shadow;
+
+    &:hover {
+        color: white;
+        .linear-gradient-vertical4(#F1731F, 0%, #F1731F, 100%);
+        border: 1px solid #F1731F;
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:active, &.clicked {
+        color: white;
+        border: 1px solid #666;
+        .linear-gradient-vertical4(#B98747, 0%, #B98747, 100%);
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:focus:before {
+        border: 1px dashed #f9f9f9;
+    }
+}
+
+// Red
+input[type=button].w2ui-btn-red,
+button.w2ui-btn-red {
+    color: white;
+    .linear-gradient-vertical4(#f9585a, 0%, #f9585a, 100%);
+    border: 1px solid #f9585a;
+    text-shadow: @w2ui-btn-text-shadow;
+
+    &:hover {
+        color: white;
+        .linear-gradient-vertical4(#de4446, 0%, #de4446, 100%);
+        border: 1px solid #de4446;
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:active, &.clicked {
+        color: white;
+        border: 1px solid #861C1E;
+        .linear-gradient-vertical4(#9C2123, 0%, #9C2123, 100%);
+        text-shadow: @w2ui-btn-text-shadow;
+    }
+
+    &:focus:before {
+        border: 1px dashed #ddd;
+    }
+}
+
+// Small button
+input[type=button].w2ui-btn-small,
+button.w2ui-btn-small {
+    padding: 5px;
+    border-radius: 4px;
+    margin: 0px;
+    min-width: 0px;
+
+    &:focus:before {
+        border-radius: 2px;
+        top: 2px;
+        bottom: 2px;
+        left: 2px;
+        right: 2px;
+    }
+}
+
+// need to be last, so it is applied last
+input[type=button].w2ui-btn,
+button.w2ui-btn {
+    &:disabled {
+        border: 1px solid #e6e6e6;
+        background: rgb(247, 247, 247);
+        color: rgb(189, 188, 188);
+        text-shadow: none;
+    }
+}

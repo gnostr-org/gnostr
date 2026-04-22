@@ -1,16 +1,899 @@
 [package]
-name = "nostr-tool"
-version = "0.1.0"
+name = "gnostr"
+version.workspace = true
 edition = "2021"
+description = "gnostr:a git+nostr workflow utility"
+authors = [
+  "gnostr <admin@gnostr.org>",
+  "0xtr <oxtrr@protonmail.com>",
+  "TODO <add_more@gnostr.org>",
+]
+readme = "README.md"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr.git"
+license = "MIT"
+keywords = ["gnostr", "tool", "nostr"]
+categories = ["command-line-utilities"]
+build = "build.rs"
+default-run = "gnostr"
+exclude = [
+  "GEMINI.md",
+  "Cargo.toml.orig",
+  ".devcontainer/**",
+  ".gemini/**",
+  ".github/**",
+  "assets/**",
+  "coverage/**",
+  "dist-build/**",
+  "docker/**",
+  "docs/**",
+  "examples/**",
+  "helix/**",
+  "test_screenshots/**",
+  "wix/**",
+  "xcode/**",
+  "CHANGELOG.md",
+  "CODECOV.md",
+  "Contrapuntal_Network_Topology.md",
+  "NOSTR-TOOL.md",
+  "build-artifact.uml",
+]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.wix]
+upgrade-guid = "6B5B281A-A1CD-403C-9722-22776599DF63"
+path-guid = "112568BC-3A65-41EB-84F4-210F26CBAAEB"
+license = false
+eula = false
 
+[workspace]
+members = [
+  ".",
+  # Root crate
+  "asyncgit",
+  "crawler",
+  "filetreelist",
+  "git2-hooks",
+  "git2-testing",
+  "grammar",
+  "invalidstring",
+  "legit",
+  "ngit",
+  "qr",
+  "relay",
+  "relay/extensions",
+  "scopetime",
+]
+
+[workspace.package]
+version = "1877.946127.943299"
+
+exclude = [
+  ".git/",
+  ".github/",
+  ".gnostr",
+  ".gnostr/.git",
+  "**.gif",
+  "**.md",
+  "*assets/",
+  "*benches/",
+  "*ci/",
+  "*docs/",
+  "*examples/",
+  "*target/",
+  #"config/",##for app
+  "git2-testing",
+  #"tests/",
+  "org",
+  "proxy",
+  "xcode",
+  "xq",
+  "GEMINI.md",
+]
+
+[workspace.dependencies]
+aes = "0.8"
+anyhow = { version = "1.0.98" }
+arc-swap = "1.8.0"
+ascii = "1.1.0"
+askama = { version = "0.12.1", default-features = false }
+assert_cmd = "2.0.17"
+async-trait = { version = "0.1.88" }
+async-wsocket = { version = "0.13.1" }
+auth-git2 = { version = "0.5.8" }
+axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
+axum-core = "0.4.5"
+actix-web = { version = "4.9.0" }
+base64 = "0.22.1"
+bech32 = "0.11"
+bip39 = { package = "tiny-bip39", version = "2.0.0" }
+bitcoin_hashes = "0.14.0"
+blossom_tui = { package = "gnostr-blossom-tui", version = "1877.946127.943299", path = "tui" }
+bytes = "1.11.0"
+#urlencoding = "2.1.3"
+cbc = { version = "0.1", features = ["std"] }
+chacha20 = "0.9"
+chacha20poly1305 = { version = "0.10.1" }
+chrono = { version = "0.4" }
+clap = { version = "4.5.41", features = [
+  "std",
+  "cargo",
+  "derive",
+  "help",
+  "usage",
+  "env",
+] }
+console = { version = "0.16.0" }
+constant_time_eq = "0.1"
+crossbeam-channel = "0.5.15"
+crossterm = "0.28.1"
+derive_more = "0.99"
+dialoguer = { version = "0.12.0" }
+directories = { version = "6.0.0" }
+env_logger = "0.11"
+expectrl = "0.8.0"
+filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = "1877.946127.943299" }
+flate2 = "1.1.8"
+futures = { version = "0.3.31" }
+futures-util = "0.3.31"
+git2 = { version = "^0.20" }
+#gh = { path = "gh", package = "gh-rs" }
+git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "1877.946127.943299" }
+git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = "1877.946127.943299" }
+
+gnostr-asyncgit = { path = "asyncgit", version = "1877.946127.943299", default-features = false }
+gnostr-extensions = { path = "relay/extensions", version = "1877.946127.943299", default-features = false }
+gnostr-grammar = { path = "grammar", version = "1877.946127.943299" }
+#gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
+gnostr-legit = { path = "legit", version = "1877.946127.943299" }
+gnostr-relay = { path = "relay", version = "1877.946127.943299", default-features = false }
+gnostr_qr = { path = "qr", version = "1877.946127.943299" }
+handlebars = { version = "6.3.2" }
+#zeroize = "1.6.0"
+
+hex = "0.4.3"
+hkdf = "0.12"
+hmac = "0.12"
+http = "1.1"
+httparse = "1.10.1"
+humantime = "2.1.3"
+indicatif = { version = "0.18.0" }
+invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = "1877.946127.943299" }
+itertools = "0.14.0"
+k256 = { version = "0.13", features = ["schnorr", "ecdh"] }
+kanal = "0.1.1"
+lazy_static = "1.5.0"
+libc = "0.2"
+libp2p-quic = { version = "^0.12", features = ["async-std"] }
+libp2p-tls = "^0.6"
+libp2p-webrtc = "0.9.0-alpha"
+# libp2p = { version = "0.54.1", features = ["full"] }
+libp2p = { version = "0.54.1", features = [
+    "full",
+    "autonat",
+    "cbor",
+    "dcutr",
+    "dns",
+    "ecdsa",
+    "ed25519",
+    "floodsub",
+    "gossipsub",
+    "identify",
+    "json",
+    "kad",
+    "macros",
+    "mdns",
+    "memory-connection-limits",
+    "metrics",
+    "noise",
+    "ping",
+    "plaintext",
+    "pnet",
+    "quic",
+    "relay",
+    "rendezvous",
+    "request-response",
+    "rsa",
+    "secp256k1",
+    "serde",
+    "tcp",
+    "tls",
+    "tokio",
+    "uds",
+    "upnp",
+    "wasm-bindgen",
+    #"webrtc",
+    "websocket",
+    "webtransport-websys",
+    "yamux"
+] }
+lightning-invoice = "0.33.2"
+linkify = "0.10"
+log = "0.4.29"
+mailparse = { version = "0.16.1" }
+md5 = "0.7.0"
+moka = { version = "0.12.13", features = ["future"] }
+
+## gnostr-ngit
+nostr = { version = "0.44.1", features = ["nip49"] }
+nostr-connect = { version = "0.44.0" }
+nostr-database = { version = "0.44.0" }
+nostr-lmdb = { version = "0.44.0" }
+nostr-relay-pool = { version = "0.44.0" }
+nostr-sdk = { version = "0.44.1" }
+
+notify = "7.0.0"
+num_cpus = "1.16.0"
+once_cell = "1.21.3"
+parking_lot = "0.12.3"
+passwords = { version = "3.1.16" }
+pbkdf2 = { version = "0.12", default-features = false, features = [
+  "hmac",
+  "sha2",
+  "std",
+] }
+predicates = "3.1.3"
+pretty_env_logger = { version = "0.5.0" }
+proc-macro2 = "1.0"
+qrcode = { version = "0.14.1", default-features = false }
+quote = "1.0"
+rand_core = { version = "0.6", features = ["getrandom"] }
+regex = "1.11"
+reqwest = { version = "0.12.22", features = ["json"] }
+rkyv = "0.8.14"
+rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
+ron = "0.8.1"
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = "0.37.1"
+rust-ini = "0.21.3"
+scopetime = { path = "scopetime", package = "gnostr-scopetime", version = "1877.946127.943299" }
+scrypt = { version = "0.11.0" }
+secp256k1 = { version = "0.29.1", features = [
+  "hashes",
+  "global-context",
+  "rand-std",
+  "serde",
+] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.140" }
+serde_yaml = { version = "0.9.34" }
+service-manager = { version = "0.10.0", features = ["clap"] }
+sha2 = "0.10.9"
+sha256 = "1.6.0"
+shellexpand = "3.1.1"
+shellwords = "1.1.0"
+simdutf8 = "0.1.5"
+simple_logger = "4.3.3"
+sled = "0.34.7"
+speedy = { version = "0.8.7" }
+ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
+strip-ansi-escapes = "0.2.1"
+struct-patch = "0.4.1"
+syn = "2.0"
+syntect = { version = "5.3.0", default-features = false, features = [
+  "parsing",
+  "default-syntaxes",
+  "default-themes",
+  "html",
+  "regex-fancy",
+] }
+tar = { version = "0.4.44", default-features = false }
+tempfile = "3.24.0"
+tera = "1.20.1"
+terminal_size = "0.3.0"
+textwrap = "0.16.2"
+thiserror = "1.0.69"
+thread-priority = "1.2.0"
+time = { version = "0.3.46", features = ["macros", "formatting"] }
+timeago = { version = "0.4.2", default-features = false }
+tiny-hderive = "0.3.0"
+tiny_http = { version = "0.12" }
+tokio = { version = "1.46.1", features = ["full"] }
+tokio-stream = "0.1.18"
+tokio-tungstenite = { version = "0.26.2" }
+tokio-util = { version = "0.7.18", features = ["io"] }
+toml = "0.8.20"
+tower = { version = "0.5.3" }
+tower-http = { version = "0.6.8", features = [
+  "cors",
+  "timeout",
+  "fs",
+  "trace",
+] }
+tower-layer = "0.3.3"
+tower-service = "0.3.3"
+tracing = "0.1.44"
+tracing-core = "0.1.36"
+tracing-subscriber = { version = "0.3.22", default-features = false, features = [
+  "env-filter",
+  "smallvec",
+  "parking_lot",
+  "fmt",
+] }
+tree-sitter = "0.23.2"
+#gnostr-crawler = { version = "1906.925289.572444", path = "crawler" }
+tree-sitter-grammar-repository = { path = "grammar", version = "1877.946127.943299" }
+tree-sitter-highlight = "0.23.2"
+tree-sitter-language = "0.1.6"
+trust-dns-resolver = "0.23.2"
+tui-input = "0.10.1"
+tui-textarea = "0.6.1"
+two-face = { version = "0.4.5", default-features = false }
+unicode-normalization = "0.1.25"
+unicode-segmentation = "1.12.0"
+unicode-truncate = "1.1.0"
+unicode-width = "0.1.14"
+unix_mode = "0.1.4"
+ureq = { version = "2.12.1", features = ["json", "charset"] }
+url = "2.5.8"                                                                         ## 2.2.2?
+urlencoding = { version = "2.1.3" }
+uuid = { version = "1.20.0", features = ["v4"] }
+v_htmlescape = { version = "0.15.8", features = ["bytes-buf"] }
+walkdir = "2.5.0"
+warp = { version = "0.3" }
+webbrowser = { version = "0.8" }
+which = "6.0.3"
+xxhash-rust = { version = "0.8.15", features = ["const_xxh3"] }
+yoke = { version = "0.7.5", features = ["derive"] }
+zeroize = { version = "1.8.1" }
+
+[lib]
+name = "gnostr"
+path = "src/lib/mod.rs"
+doctest = false
+
+[patch.crates-io]
+asn1-rs = { path = "vendor/asn1-rs" }
+actix-web-actors = { path = "vendor/actix-web-actors" }
+
+[[bin]]
+name = "gnostr-server"
+path = "src/bin/gnostr-server.rs"
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bin/git-remote-nostr/main.rs"
+
+[[bin]]
+name = "gnostr-gnit"
+path = "src/bin/gnostr-gnit.rs"
+required-features = ["gnostr-web"]
+
+[[bin]]
+name = "gnostr-web"
+path = "src/bin/gnostr-web.rs"
+required-features = ["gnostr-web"]
+
+[[bin]]
+name = "git-remote-gnostr-node"
+path = "src/lib/node/remote_helper.rs"
+
+[[bin]]
+name = "gnostr-shell"
+path = "src/lib/node/git_shell.rs"
+
+[[bin]]
+name = "gnostr-blossom"
+path = "src/bin/gnostr-blossom.rs"
+required-features = ["blossom-tui"]
+
+[[bin]]
+name = "blossom-filetree"
+path = "src/bin/blossom-filetree.rs"
+required-features = ["blossom-tui"]
+
+[features]
+default = ["ghemoji", "regex-fancy", "trace-libgit"]
+expensive_tests = [] #nostr
+blossom-tui = ["dep:blossom_tui"]
+ghemoji = ["dep:gh-emoji"]
+gnostr-web = [
+  "askama",
+  "httparse",
+  "flate2",
+  "moka",
+  "proc-macro2",
+  "rocksdb",
+  "rust-ini",
+  "tar",
+  "timeago",
+  "tokio-stream",
+  "tower-layer",
+  "tower-service",
+  "actix-cors",
+  "actix-http",
+  "actix-web",
+  "actix-web-actors",
+  "rocket",
+  "gnostr-asyncgit/gnostr_web",
+  "handlebars",
+  "warp",
+  "tiny_http",
+  "webbrowser",
+  "pretty_env_logger",
+]
+# regex-* features are mutually exclusive.
+regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
+regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
+timing = ["scopetime/enabled"]
+trace-libgit = ["gnostr-asyncgit/trace-libgit"]
+vendored-openssl = ["gnostr-asyncgit/vendored-openssl", "openssl/vendored"]
+vendor-openssl = ["vendored-openssl"]
+nightly = []
+coverage = []
 [dependencies]
-chrono = { version = "0.4.22", features = ["serde"] }
-clap = { version = "4.0.22", features = ["derive"] }
-serde = "1.0.147"
-tungstenite = "0.17.3"
-secp256k1 = { version = "0.24", features = ["bitcoin_hashes", "global-context", "rand-std"] }
-serde_json = "1.0.87"
-nostr_rust = "0.5.0"
 
+## relay
+actix-cors = { version = "0.7.0", optional = true }
+actix-http = { version = "3.9.0", optional = true }
+actix-web = { version = "4.9.0", optional = true }
+actix-web-actors = { version = "4.3.1", optional = true }
+## TYPES DEPS
+aes = { workspace = true }
+ansi_term = "0.12"
+
+anstream = "0.6.4"
+#tracing-subscriber = "0.3.18"
+anyhow = { workspace = true }
+## web
+
+arc-swap = "1.7"
+argparse = "0.2.2"
+ascii = { workspace = true }
+
+askama = { version = "0.12.0", default-features = false, optional = true }
+assert_cmd = "2.0.17"
+async-std = { version = "1.12", features = ["attributes"] }
+async-trait = { workspace = true }
+
+axum = { version = "0.7", features = [
+  "query",
+  "tokio",
+  "http1",
+  "macros",
+  "ws",
+] }
+axum-core = "0.4.5"
+axum-template = { version = "0.3.0", features = ["tera"] }
+backtrace = "0.3"
+
+## TYPES DEPS
+base64 = { workspace = true }
+bech32 = { workspace = true }
+
+bincode = "1.3.1"
+## bip39 = "2.2.0"
+bitcoin_hashes = { workspace = true }
+bitflags = "2.9.0"
+block-padding = "0.3.3"
+blossom_tui = { workspace = true, optional = true }
+bugreport = "0.5"
+bwrap = { version = "1.3", features = ["use_std"] }
+bytes = "1.7.1"
+bytesize = { version = "1.3", default-features = false }
+bytestring = "1.3.1"
+cbc = { workspace = true }
+#cc = "1.0.106"
+chacha20 = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+clean-path = "0.2.1"
+# clipboard = "0.5.0" # unused - using xclip/xsel/wl-copy via command line instead
+
+colored = "2.0.0"
+colorful = "0.2"
+comrak = "0.28.0"
+config = { version = "0.14.0", features = [
+  "toml",
+  "json",
+], default-features = false }
+console = { workspace = true }
+
+##comrak = { version = "0.28.0", default-features = false }
+const-hex = "1.12"
+const_format = "0.2"
+constant_time_eq = { workspace = true }
+#chacha20poly1305 = "0.10"
+core-net = "0.1"
+crossbeam-channel = "0.5"
+crossterm = { version = "0.28.0", features = ["event-stream", "serde"] }
+csv = "1.3.0"
+ctrlc = { version = "3.4.7", features = ["termination"] }
+
+derive_more = { workspace = true }
+dialoguer = { workspace = true }
+directories = { workspace = true }
+dirs = "5.0.1"
+dns-lookup = "2.0.4"
+duration-str = { version = "0.11.2", default-features = false }
+easy-cast = "0.5"
+env_logger = "0.11"
+expectrl = "0.8.0"
+filetreelist = { workspace = true }
+flate2 = { version = "1.0", optional = true }
+libc = { workspace = true }
+
+flume = "0.10"
+futures = { workspace = true }
+futures-core = { version = "0.3", optional = false, default-features = false }
+futures-timer = "3.0"
+futures-util = "0.3"
+fuzzy-matcher = "0.3"
+getopts = "0.2.21"
+gh-emoji = { version = "1.0", optional = true }
+git2 = { workspace = true }
+#gh = { workspace = true }
+git2-hooks = { workspace = true }
+
+gix = { version = "0.66", default-features = false, features = [
+  "fast-sha1",
+  "tracing",
+  "parallel",
+  "blob-diff",
+  "revision",
+] }
+globset = "0.4"
+
+##gitui
+gnostr-asyncgit = { workspace = true }
+gnostr-git-helpers = { version = "1877.946127.943299", path = "git-helpers" }
+gnostr-grammar = { workspace = true }
+gnostr-legit = { workspace = true }
+gnostr-relay = { workspace = true }
+gnostr_qr = { workspace = true }
+#gnostr-crawler = { workspace = true } ##version = "1878.945649.607219", path = "crawler" }
+#gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
+#gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
+handlebars = { workspace = true, optional = true }
+hex = { workspace = true }
+hkdf = { workspace = true }
+hmac = { workspace = true }
+home = "0.5.5"
+
+#hex = "0.4"
+hostname = "0.3.1"
+http = { workspace = true }
+
+httparse = { version = "1.7", optional = true }
+humantime = "2.1"
+indexmap = "2"
+indicatif = { workspace = true }
+invalidstring = { workspace = true }
+itertools = "0.13"
+k256 = { workspace = true }
+kanal = "0.1.0-pre8"
+#indicatif = "0.17.7"
+lazy_static = "1.4"
+libp2p = { workspace = true }
+libp2p-quic = { workspace = true }
+libp2p-tls = { workspace = true }
+#hex = "0.4"
+#lazy_static = "1.4"
+lightning-invoice = { workspace = true }
+#lightning-invoice = { path = "../lightning/lightning-invoice", version = "0.31.0-beta" }
+#lightning = { version = "0.0.123-beta", path = "../lightning/lightning" }
+linkify = { workspace = true }
+
+log = "0.4.24"
+
+md5 = "0.7"
+metrics = "0.23.0"
+moka = { version = "0.12.0", features = ["future"], optional = true }
+ngit = { package = "gnostr-ngit", version = "1877.946127.943299", path = "ngit", features = [
+  "vendored-openssl",
+] }
+nostr = { workspace = true }
+
+## nostr deps
+## primary 0.34.0/1
+nostr-database_0_34_0 = { package = "nostr-database", version = "0.34.0" }
+
+nostr-sdk = { workspace = true }
+
+nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
+
+## TODO remove and upgrade
+nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
+
+## aligned with ./crawler
+nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
+
+## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
+nostr-sdk_0_37_0 = { package = "nostr-sdk", version = "0.37.0" }
+nostr-signer_0_34_0 = { package = "nostr-signer", version = "0.34.0" }
+nostr-sqlite_0_34_0 = { package = "nostr-sqlite", version = "0.34.0" }
+## TODO remove and upgrade
+nostr_0_32_0 = { package = "nostr", version = "0.32.0" }
+nostr_0_34_1 = { package = "nostr", version = "0.34.1" }
+nostr_0_37_0 = { package = "nostr", version = "0.37.0" }
+
+notify = "6.1.1"
+notify-debouncer-mini = "0.4"
+num-bigint = "0.4.6"
+num_cpus = { workspace = true }
+
+#num_cpus = "1.16.0"
+once_cell = "1.21.3"
+openssl = { version = "0.10" } # use vendored-openssl feature to enable vendored builds
+pad = "0.1.6"
+parking_lot = "0.12.3"
+#once_cell = "1"
+# pin until upgrading this does not introduce a duplicate dependency
+parking_lot_core = "=0.9.9"
+#tree-sitter-highlight = "0.23"
+path-clean = "1.0.1"
+#num_cpus = "1"
+pbkdf2 = { workspace = true }
+pretty_env_logger = { workspace = true, optional = true }
+proc-macro2 = { version = "1.0", optional = true }
+proctitle = "0.1.1"
+rand = "0.8"
+rand_core = { workspace = true }
+##
+ratatui = { version = "0.28", default-features = false, features = [
+  'crossterm',
+  'serde',
+] }
+rayon-core = "1.12"
+rcgen = "^0.13"
+regex = "1.11.1"
+reqwest = { workspace = true }
+#regex = "1.10.2"
+rkyv = "0.8"
+rocket = { version = "0.5.1", optional = true }
+
+rocksdb = { version = "0.22", default-features = false, features = [
+  "snappy",
+], optional = true }
+ron = "0.8"
+rpassword = "7.2"
+russh = { version = "0.37.1", features = ["openssl"] }
+russh-keys = "0.37.1"
+rust-crypto = "0.2.36"
+rust-ini = { version = "0.21.1", optional = true }
+rustls = { version = "0.23", default-features = false, features = [
+  "ring",
+  "std",
+  "tls12",
+] }
+scopeguard = "1.2.0"
+scopetime = { workspace = true }
+#rand = "0.8"
+#rand_core = "0.6"
+#regex = "1.10"
+#scrypt = "0.11"
+secp256k1 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+service-manager = { version = "0.10.0", features = ["clap"] }
+sha2 = "0.10.8"
+sha256 = "1.5.0"
+shellexpand = "3.1"
+shellwords = "1.1.0"
+
+simdutf8 = "0.1.5"
+simple_logger = "4.1"
+sled = "0.34"
+#serde = { version = "1.0", features = [ "derive" ] }
+#serde_json = "1.0"
+#sha2 = "0.10"
+speedy = { workspace = true }
+ssh-key = { version = "0.6.2", features = ["ed25519"] }
+strip-ansi-escapes = "0.2.0"
+struct-patch = "0.4"
+syntect = { version = "5.2", default-features = false, features = [
+  "parsing",
+  "default-syntaxes",
+  "default-themes",
+  "html",
+] }
+tar = { version = "0.4", default-features = false, optional = true }
+tempfile = "3.5.0"
+tera = "1.19"
+terminal_size = "0.3.0"
+# causes cyclic error test_utils = { path = "test_utils" }
+textwrap = "0.16.0"
+#serde = { version = "1.0.209", features = ["derive"] }
+#serde_json = "1.0.127"
+thiserror = "1.0.63"
+#thiserror = "1.0"
+thread-priority = { workspace = true }
+#thiserror = "1"
+time = { version = "0.3.41", features = ["macros", "formatting"] }
+
+timeago = { version = "0.4.2", default-features = false, optional = true }
+tiny-hderive = { workspace = true }
+tiny_http = { workspace = true, optional = true }
+tokio = { workspace = true }
+
+##tokio = { version = "1.19", features = ["full", "tracing"] }
+tokio-stream = { version = "0.1", optional = true }
+tokio-tungstenite = { workspace = true }
+tokio-util = { version = "0.7.17", features = ["io"] }
+
+toml = "0.8"
+
+tower = { workspace = true }      ##{ version = "0.5.3", optional = true }
+tower-http = { workspace = true } ##{ version = "0.6", features = ["cors", "timeout"], optional = true }
+##tokio-util = { version = "0.7.10", features = ["io"] }
+
+tower-layer = { version = "0.3", optional = true }
+tower-service = { version = "0.3", optional = true }
+tracing = "0.1.41"
+#tracing = { version = "0.1.38", default-features = false }
+tracing-core = "0.1.33"
+
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+tree-sitter = "=0.20.10"
+tree-sitter-highlight = "^0.20"
+tree-sitter-language = "0.1.6"
+#tree-sitter-highlight = "0.26.3"
+#tree-sitter-language = "0.1.6"
+#tree-sitter-language = "0.1"
+trust-dns-resolver = "0.23" # Use the latest version
+tui-input = "0.10.1"
+tui-textarea = "0.6"
+#tungstenite = { version = "0.28", features = [ "rustls-tls-webpki-roots" ] }
+two-face = { version = "0.4.0", default-features = false }
+##
+unicode-normalization = { workspace = true }
+unicode-segmentation = { workspace = true }
+unicode-truncate = { workspace = true }
+unicode-width = { workspace = true }
+unix_mode = "0.1"
+ureq = { workspace = true }
+url = { workspace = true }
+urlencoding = { workspace = true }
+uuid = { version = "1.19.0", features = ["v4"] }
+v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
+walkdir = "2.4"
+warp = { workspace = true, optional = true }
+webbrowser = { workspace = true, optional = true }
+which = "6.0"
+
+xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
+yoke = { version = "0.7.1", features = ["derive"] }
+zeroize = { workspace = true }
+qrcode = { workspace = true }
+nostr-connect = { workspace = true }
+auth-git2 = { workspace = true }
+nostr-lmdb = { workspace = true }
+nostr-relay-pool = { workspace = true }
+nostr-database = { workspace = true }
+mailparse = { workspace = true }
+async-wsocket = { workspace = true }
+nostr-relay = { version = "0.4.8", default-features = false }
+##
+portable-pty = "0.8.1"
+##
+vt100 = "^0.15"
+gnostr-crawler = { version = "1877.946127.943299", path = "crawler" }
+# = { workspace = true }
+# = { workspace = true }
+# = { workspace = true }
+# = { workspace = true }
+
+[target.'cfg(not(windows))'.dependencies]
+sd-notify = "0.4.1"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = [
+  "winnt",
+  "handleapi",
+  "processthreadsapi",
+  "errhandlingapi",
+] }
+# [target.'cfg(windows)'.dependencies.windows-sys]
+# version = "0.52" # or the version matching your error
+# features = [
+#     "Win32_System_Threading",
+#     "Win32_Foundation",
+#     "Win32_Security",
+# ]
+
+# If sccache is using 0.48, add this too
+windows-sys_048 = { package = "windows-sys", version = "0.48", features = [
+  "Win32_System_Threading",
+  "Win32_Foundation",
+  "Win32_Security",
+] }
+
+# Patch for version 0.52
+windows-sys_052 = { package = "windows-sys", version = "0.52", features = [
+  "Win32_System_Threading",
+  "Win32_Foundation",
+  "Win32_Security",
+] }
+
+[build-dependencies]
+anyhow = { workspace = true }
+cc = "1.2.54"
+chrono = { workspace = true, features = ["clock"] }
+heck = "0.5.0"
+hex = "0.4.3"
+prettyplease = "0.2.37"
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+regex = { workspace = true }
+reqwest = { workspace = true, features = ["blocking"] }
+rsass = "0.28.10"
+sccache = "^0.12"
+serde = { workspace = true, features = ["derive"] }
+sha2 = { workspace = true }
+syn = { workspace = true }
+threadpool = "1.8.1"
+toml = { workspace = true }
+
+[dev-dependencies]
+actix-rt = "2.11.0"
+actix-test = "0.1.5"
+anyhow = { workspace = true }
+assert_cmd = { workspace = true }
+cargo-binstall = "1.15"
+cargo-dist = "0.31.0"
+comma = "1.0.0"
+crossterm = { workspace = true }
+ctor = "0.6.3"
+dep-graph = "0.2.0"
+dialoguer = { workspace = true }
+directories = { workspace = true }
+env_logger = { workspace = true }
+expectrl = { workspace = true }
+futures-util = { workspace = true }
+gag = "1.0.0"
+git2 = { workspace = true }
+#gnostr-crawler = "1906.925289.572444"
+grcov = "0.10.5"
+mockall = "0.11.4"
+nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" } # Kept for now, will remove later
+nostr_0_34_1 = { package = "nostr", version = "0.34.1" }         # Kept for now, will remove later
+once_cell = { workspace = true }
+predicates = { workspace = true }
+pretty_assertions = "1.4.1"
+quinn = { version = "0.11.9", default-features = false }
+rand = "0.8.5"
+reqwest = { workspace = true, features = ["json"] }
+serial_test = "2.0.0"
+signal-child = "1.0.6"
+strip-ansi-escapes = { workspace = true }
+structopt = "0.3.26"
+temp-env = "0.3.6"
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tmux_interface = "0.3.2"
+tokio-tungstenite = { workspace = true }
+tracing-subscriber = { workspace = true }
+url = { workspace = true }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+# other patches
+
+# # The profile that 'dist' will build with
+# [profile.dist]
+# inherits = "release"
+# lto = "thin"
+
+# Optimized for development speed
+[profile.dev]
+# 0 = no optimizations (fastest build), 1 = basic (good balance)
+opt-level = 0
+
+# Reduce debug info: 0 = none, 1 = line tables only, 2 = full
+# Setting this to 1 significantly speeds up the linking stage.
+debug = 1
+
+# Enable "Incremental" compilation (usually on by default)
+incremental = true
+
+# Use a faster linker if your OS supports it (lld or mold)
+# This is often set in .cargo/config.toml, but impacts build speed here.
+
+# --- Optimized for faster Check/Build across dependencies ---
+[profile.dev.package."*"]
+# Keeping dependencies slightly optimized can actually speed up 
+# overall build times if your code calls them heavily.
+opt-level = 0

@@ -1,0 +1,11 @@
+name = "gnostr-ssh Server"
+hostname = "localhost"
+port = 2222
+welcome_message = "Welcome to your gnostr-ssh server! Please edit gnostr-ssh.toml to add users."
+
+[users]
+
+# [users.your_username]
+# is_admin = true
+# can_create_repos = true
+# public_key = "ssh-ed25519 AAAA..."

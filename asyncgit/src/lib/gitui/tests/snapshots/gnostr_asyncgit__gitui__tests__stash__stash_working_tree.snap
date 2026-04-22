@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/stash.rs
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+▌Your branch is up to date with 'origin/main'.                                  |
+                                                                                |
+ Staged changes (1)                                                             |
+ added      file-one…                                                           |
+                                                                                |
+ Stashes                                                                        |
+ stash@0 On main: test                                                          |
+                                                                                |
+ Recent commits                                                                 |
+ b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git stash push --staged                                                       |
+Saved working directory and index state WIP on main: b66a0bf add initial-file   |
+$ git stash push --include-untracked --message test                             |
+Saved working directory and index state On main: test                           |
+$ git stash pop -q 1                                                            |
+styles_hash: 6973fd54b1052e05

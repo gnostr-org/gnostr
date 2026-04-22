@@ -1,0 +1,24 @@
+[package]
+name = "gnostr-relay"
+version = "1877.946127.943299"
+edition = "2021"
+authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
+description = "gnostr:git+nostr protocol relay"
+readme = "README.md"
+homepage = "https://gnostr.org"
+repository = "https://github.com/gnostr-org/gnostr.git"
+license = "MIT"
+keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
+categories = ["network-programming", "web-programming"]
+
+## [features] ## dependency lindera-unidic v0.32.3 unavailable
+## search = ["nostr-relay/search"]
+
+[dependencies]
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+nostr-relay = { version = "0.4.8", default-features = false }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

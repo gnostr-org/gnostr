@@ -1,0 +1,23 @@
+name = "gnostr.org"
+port = 2222
+hostname = "gnostr.org"
+
+[users.gnostr-user]
+is_admin = false
+can_create_repos = true
+public_key = """
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGextjLHvRa/hfsEAVg/hQI26XG6l5Y4FRifeL9/0ADj gnostr@gnostr.org
+"""
+
+[users.gnostr]
+is_admin = true
+can_create_repos = true
+public_key = """
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGextjLHvRa/hfsEAVg/hQI26XG6l5Y4FRifeL9/0ADj gnostr@gnostr.org
+"""
+
+[welcome_message]
+welcome_message = "welcome to gnostr.org!"
+
+[extra]
+extra = "extra toml content!"

@@ -1,0 +1,82 @@
+name: gnostr Nostr Notification
+description: >
+  Posts a CI job-status notification as a kind-1 Nostr event to configured
+  relays via gnostr, then queries the event back and prints a njump.me link.
+
+inputs:
+  nsec:
+    description: 'a nostr nsec of sha256 hash'
+    required: false
+    default: '$(gnostr --hash "$GITHUB_REPOSITORY_ID")'
+  kind:
+    description: 'Nostr event kind (integer, e.g. 1)'
+    required: true
+  content:
+    description: 'Event content string'
+    required: true
+  tags:
+    description: 'Comma-separated list of tags (e.g. tag1,tag2,tag3)'
+    required: false
+    default: ''
+  pow:
+    description: 'Proof-of-work difficulty target'
+    required: false
+    default: '16'
+  damus:
+    description: 'Primary relay WebSocket URL'
+    required: false
+    default: 'wss://relay.damus.io'
+  nos:
+    description: 'Secondary relay WebSocket URL'
+    required: false
+    default: 'wss://nos.lol'
+  njump_base:
+    description: 'Base URL for the human-readable Nostr event link'
+    required: false
+    default: 'http://njump.me'
+
+runs:
+  using: composite
+  steps:
+    - name: Post Nostr notification
+      shell: bash
+      env:
+        INPUT_NSEC: ${{ inputs.nsec }}
+        INPUT_KIND: ${{ inputs.kind }}
+        INPUT_CONTENT: ${{ inputs.content }}
+        INPUT_TAGS: ${{ inputs.tags }}
+        INPUT_POW: ${{ inputs.pow }}
+        INPUT_DAMUS: ${{ inputs.damus }}
+        INPUT_NOS: ${{ inputs.nos }}
+        INPUT_NJUMP_BASE: ${{ inputs.njump_base }}
+      run: |
+        gnostr custom-event -h
+
+        nsec="$INPUT_NSEC"
+        if [ -z "$nsec" ] || [ "$nsec" = '$(gnostr --hash "$GITHUB_REPOSITORY_ID")' ]; then
+          nsec="$(gnostr --hash "$GITHUB_REPOSITORY_ID")"
+        fi
+
+        args=(
+          --nsec "$nsec"
+          -d "$INPUT_POW"
+          -r "$INPUT_DAMUS"
+          -r "$INPUT_NOS"
+          custom-event
+          -k "$INPUT_KIND"
+          -c "$INPUT_CONTENT"
+        )
+
+        if [ -n "$INPUT_TAGS" ]; then
+          args+=(-t "$INPUT_TAGS")
+        fi
+
+        EVENT="$(gnostr "${args[@]}" --hex || true)"
+        export EVENT
+
+        NOTE="$(gnostr convert-key -p note -k "$EVENT" || true)"
+        export NOTE
+
+        echo "$NOTE"
+        echo "$EVENT"
+        echo "$INPUT_NJUMP_BASE/$NOTE"

@@ -1,0 +1,27 @@
+@startuml
+title build-artifact workflow
+
+start
+:Trigger workflow_call / workflow_dispatch;
+
+fork
+  :vcpkg-test (matrix across OS/arch);
+fork again
+  :setup (select target matrix);
+  :build-artifacts (needs setup);
+  :checkout repository;
+  :set build name;
+  :fetch tags;
+  :restore cargo/target cache;
+  :install OS dependencies;
+  :install cross and Rust toolchain;
+  :set clang environment variables;
+  :build release binary for target;
+  :save cache;
+  :bundle release artifacts;
+  :run smoke tests for native targets;
+  :upload artifact;
+end fork
+
+stop
+@enduml

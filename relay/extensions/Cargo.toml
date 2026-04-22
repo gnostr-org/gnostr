@@ -1,0 +1,26 @@
+[package]
+name = "gnostr-extensions"
+version = "1877.946127.943299"
+description = "gostr-relay extensions."
+edition = "2021"
+authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
+readme = "README.md"
+homepage = "https://gnostr.org"
+repository = "https://github.com/gnostr-org/gnostr.git"
+license = "MIT"
+keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
+categories = ["network-programming", "web-programming"]
+
+[features]
+default = ["metrics", "rate_limiter", "count", "search"]
+search = ["nostr-extensions/search"]
+metrics = ["nostr-extensions/metrics"]
+rate_limiter = ["nostr-extensions/rate_limiter"]
+count = ["nostr-extensions/count"]
+
+[dependencies]
+actix-web = { workspace = true }
+gnostr-relay = { version = "1877.946127.943299", path = "..", default-features = false }
+nostr-extensions = { version = "0.4.8", default-features = false }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

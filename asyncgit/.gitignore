@@ -1,0 +1,7 @@
+src/lib/js/bundle.js 
+gnostr-asyncgit.log
+/target
+*.snap.new
+/gitu.log
+.direnv
+result

@@ -1,0 +1,585 @@
+use std::{error::Error as StdError, path::PathBuf, process::Command, time::Duration};
+
+use anyhow::{anyhow, Context, Result};
+use clap::{Args, Parser};
+use git2::{ObjectType, Repository};
+use gnostr_asyncgit::sync::{commit::padded_commit_id, RepoPath};
+use libp2p::gossipsub;
+use once_cell::sync::OnceCell;
+use proctitle::set_title;
+use serde_json; // Explicitly added for clarity
+use textwrap::{fill, Options};
+//use async_std::path::PathBuf;
+use tokio::{io, io::AsyncBufReadExt};
+use tracing::{debug, info};
+use tracing_core::metadata::LevelFilter;
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+use uuid::Uuid;
+
+use self::msg::{Msg, MsgKind};
+use crate::queue::InternalEvent;
+use gnostr_asyncgit::{
+    //queue::InternalEvent,
+    types::{
+        metadata::{DEFAULT_AVATAR, DEFAULT_BANNER},
+        nip28::CREATE_CHANNEL_MESSAGE,
+        Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
+    },
+};
+
+pub mod msg;
+pub use msg::*;
+pub mod p2p;
+pub use p2p::evt_loop;
+pub mod tests;
+pub mod ui;
+
+/// Simple CLI application to interact with nostr
+#[derive(Debug, Parser)]
+#[command(name = "gnostr")]
+#[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
+#[command(version = "0.0.1")]
+#[command(author, version, about, long_about = "long_about")]
+pub struct ChatCli {
+    /// Name of the person to greet
+    #[arg(
+        long,
+        value_name = "NAME",
+        help = "gnostr --name <string>",
+        /*default_value = ""*/ //decide whether to allow env var $USER as default
+    )]
+    pub name: Option<String>,
+
+    #[arg(short, long, value_name = "NSEC", help = "gnostr --nsec <sha256>",
+		action = clap::ArgAction::Append,
+		default_value = "0000000000000000000000000000000000000000000000000000000000000001")]
+    pub nsec: Option<String>,
+
+    #[arg(long, value_name = "HASH", help = "gnostr --hash <string>")]
+    pub hash: Option<String>,
+
+    #[arg(long, value_name = "CHAT", help = "gnostr chat")]
+    pub chat: Option<String>,
+
+    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
+    pub topic: Option<String>,
+
+    #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
+		action = clap::ArgAction::Append,
+		default_values_t = ["wss://relay.damus.io".to_string(),"wss://nos.lol".to_string(), "wss://nostr.band".to_string()])]
+    pub relays: Vec<String>,
+    /// Enable debug logging
+    #[arg(
+        long,
+        value_name = "DEBUG",
+        help = "gnostr --debug",
+        default_value = "false"
+    )]
+    pub debug: bool,
+    /// Enable info logging
+    #[arg(
+        long,
+        value_name = "INFO",
+        help = "gnostr --info",
+        default_value = "false"
+    )]
+    pub info: bool,
+    /// Enable trace logging
+    #[arg(
+        long,
+        value_name = "TRACE",
+        help = "gnostr --trace",
+        default_value = "false"
+    )]
+    pub trace: bool,
+    /// Run in headless mode (no TUI)
+    #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
+    pub headless: bool,
+    #[arg(long = "cfg", default_value = "")]
+    pub config: String,
+}
+
+#[derive(Args, Debug, Clone)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+pub struct ChatSubCommands {
+    //#[command(subcommand)]
+    //command: ChatCommands,
+    // nsec or hex private key
+    #[arg(short, long, global = true)]
+    pub nsec: Option<String>,
+    // password to decrypt nsec
+    #[arg(short, long, global = true)]
+    pub password: Option<String>,
+    #[arg(long, global = true)]
+    pub name: Option<String>,
+    // chat topic
+    #[arg(long, global = true)]
+    pub topic: Option<String>,
+    // chat hash
+    #[arg(long, global = true)]
+    pub hash: Option<String>,
+    // disable spinner animations
+    #[arg(long, default_value_t = false)]
+    pub disable_cli_spinners: bool,
+    #[arg(long, default_value_t = false)]
+    pub info: bool,
+    #[arg(long)]
+    pub debug: bool,
+    #[arg(long)]
+    pub trace: bool,
+    /// Run in headless mode (no TUI)
+    #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
+    pub headless: bool,
+    /// workdir
+    pub workdir: Option<String>,
+    #[arg(
+        long,
+        value_name = "GITDIR",
+        default_value = ".",
+        help = "gnostr --gitdir '<string>'"
+    )]
+    /// gitdir
+    pub gitdir: Option<RepoPath>,
+    /// Send a single message to a topic and exit
+    #[arg(long, global = true, requires = "topic")]
+    pub oneshot: Option<String>,
+}
+
+//async tasks
+pub fn global_rt() -> &'static tokio::runtime::Runtime {
+    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
+    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum LocalChatCommand {
+    GitClone {
+        url: String,
+        destination: Option<String>,
+    },
+}
+
+fn parse_local_chat_command(input: &str) -> Result<Option<LocalChatCommand>> {
+    if !input.starts_with('/') {
+        return Ok(None);
+    }
+
+    let parts = shellwords::split(input).context("parse chat command")?;
+    let Some(command) = parts.first().map(String::as_str) else {
+        return Ok(None);
+    };
+
+    let parsed = match (
+        command,
+        parts.get(1).map(String::as_str),
+        parts.get(2),
+        parts.get(3),
+    ) {
+        ("/clone", Some(url), dest, None) => Some(LocalChatCommand::GitClone {
+            url: url.to_string(),
+            destination: dest.cloned(),
+        }),
+        ("/git", Some("clone"), Some(url), dest) => Some(LocalChatCommand::GitClone {
+            url: url.to_string(),
+            destination: dest.cloned(),
+        }),
+        ("/blossom", Some("clone"), Some(url), dest) => Some(LocalChatCommand::GitClone {
+            url: url.to_string(),
+            destination: dest.cloned(),
+        }),
+        _ => None,
+    };
+
+    Ok(parsed)
+}
+
+fn run_local_chat_command(command: LocalChatCommand, cwd: PathBuf) -> Result<String> {
+    match command {
+        LocalChatCommand::GitClone { url, destination } => {
+            let mut cmd = Command::new("git");
+            cmd.arg("clone").arg(&url);
+            if let Some(destination) = destination.as_ref() {
+                cmd.arg(destination);
+            }
+            cmd.current_dir(&cwd);
+
+            let output = cmd.output().context("run git clone")?;
+            if output.status.success() {
+                Ok(format!(
+                    "git clone started from chat: {}{}",
+                    url,
+                    destination
+                        .as_ref()
+                        .map(|dest| format!(" -> {dest}"))
+                        .unwrap_or_default()
+                ))
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+                if stderr.is_empty() {
+                    Err(anyhow!("git clone failed with status {}", output.status))
+                } else {
+                    Err(anyhow!("git clone failed: {stderr}"))
+                }
+            }
+        }
+    }
+}
+
+pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
+    let args = sub_command_args.clone();
+    const DETACHED_ENV: &str = "GNOSTR_CHAT_DETACHED";
+
+    if let Some(hash) = args.hash.clone() {
+        debug!("hash={}", hash);
+    };
+
+    if let Some(name) = args.name.clone() {
+        use std::env;
+        unsafe { env::set_var("USER", &name) };
+    };
+    // Determine the KeySigner to use
+    let nsec_hex = if let Some(nsec) = args.nsec.clone() {
+        nsec
+    } else if let Some(hash) = args.hash.clone() {
+        format!("{:0>64}", hash)
+    } else {
+        //args.nsec = padded_commit_id("0".to_string())
+
+        // Fallback to generate a new key if no nsec or hash is provided.
+        // For now, use a fixed dummy private key for simplicity in testing.
+        // TODO: Implement proper key generation.
+        "0000000000000000000000000000000000000000000000000000000000000001".to_string()
+    };
+    let private_key = gnostr_asyncgit::types::PrivateKey::try_from_hex_string(&nsec_hex).unwrap();
+    let keys = crate::types::KeySigner::from_private_key(private_key, "", 1).unwrap();
+    let public_key = keys.public_key();
+
+    // Initialize NostrClient and channels
+    let (peer_tx, _peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+    let client = crate::nostr_client::NostrClient::new(peer_tx.clone());
+
+    if sub_command_args.headless && std::env::var_os(DETACHED_ENV).is_none() {
+        let topic_name = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
+        let process_title = format!("gnostr-chat-{}", topic_name);
+        let pid = crate::utils::detach::spawn_detached_current_exe_named_with_env(
+            Some(process_title.as_str()),
+            std::env::args_os().skip(1),
+            [(DETACHED_ENV, "1")],
+        )?;
+        tracing::info!("Spawned detached headless chat process (pid: {pid})");
+        return Ok(());
+    }
+
+    // Send NIP-01 metadata event
+    let name = args
+        .name
+        .clone()
+        .unwrap_or_else(|| public_key.as_hex_string().chars().take(8).collect());
+    let metadata = {
+        let mut m = Metadata::default();
+        m.name = Some(name);
+        m.picture = Some(DEFAULT_AVATAR.to_string());
+        m.other.insert(
+            "banner".to_string(),
+            serde_json::Value::String(DEFAULT_BANNER.to_string()),
+        );
+        m
+    };
+
+    let pre_event = gnostr_asyncgit::types::PreEvent {
+        pubkey: public_key,
+        created_at: gnostr_asyncgit::types::Unixtime::now(),
+        kind: gnostr_asyncgit::types::EventKind::Metadata,
+        tags: vec![TagV3::new(&["gnostr"])],
+        content: serde_json::to_string(&metadata).unwrap(),
+    };
+
+    tracing::info!("\n{:?}\n", &sub_command_args);
+    println!(
+        "pre_event={:?}",
+        Into::<gnostr_asyncgit::types::PublicKeyHex>::into(pre_event.pubkey)
+    );
+
+    let id = pre_event.hash().unwrap();
+    let sig = keys.sign_id(id).unwrap();
+
+    let metadata_event = EventV3 {
+        id,
+        pubkey: pre_event.pubkey,
+        created_at: pre_event.created_at,
+        kind: pre_event.kind,
+        tags: pre_event.tags,
+        content: pre_event.content,
+        sig,
+    };
+
+    client.send_event(metadata_event).await?;
+    tracing::info!("NIP-01 metadata event sent successfully.");
+
+    // Define topic outside oneshot block
+    let topic = gossipsub::IdentTopic::new(
+        args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
+    );
+
+    if let Some(message_input) = args.oneshot {
+        if !args.headless {
+            tracing::info!("Oneshot mode: sending message '{}'", message_input);
+
+            let _p2p_handle = tokio::spawn(async move {
+                if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
+                    eprintln!("p2p event loop error: {}", e);
+                }
+            });
+
+            // Allow time for network initialization and peer discovery.
+            println!("Initializing network and discovering peers...");
+            tokio::time::sleep(Duration::from_secs(3)).await;
+
+            // Detect if message_input is a git diff
+            let mut msg_kind = MsgKind::OneShot;
+            if message_input.contains("diff --git")
+                || (message_input.contains("--- a/") && message_input.contains("+++ b/"))
+            {
+                msg_kind = MsgKind::GitDiff;
+            }
+
+            // Create a single Msg object with the entire message_input
+            let msg = Msg::default()
+                .set_kind(msg_kind)
+                .set_content(message_input.clone(), 0); // Use message_input directly
+
+            if input_tx
+                .send(InternalEvent::ChatMessage(msg))
+                .await
+                .is_err()
+            {
+                eprintln!("Failed to send message to event loop.");
+            } else {
+                println!("Oneshot message sent. Waiting for propagation...");
+            }
+
+            // Allow time for the message to propagate.
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            tracing::info!("Oneshot operation complete.");
+        } else {
+            println!("headless conflicts with oneshot!");
+        }
+        return Ok(());
+    }
+
+    // In the detached child, run the event loop directly and keep the process alive.
+
+    if sub_command_args.headless {
+        let topic_name = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
+        let process_title = format!("gnostr-chat-{}", topic_name);
+        set_title(&process_title);
+        println!("Headless mode enabled:");
+        tracing::info!("running event loop in background.");
+        tracing::info!("Process name set to: {}", process_title);
+
+        evt_loop(input_rx, peer_tx, topic.clone()).await?;
+        return Ok(());
+    }
+
+    tokio::task::spawn_blocking(move || {
+        let search_path: PathBuf = match &args.gitdir {
+            Some(repo_path) => match repo_path {
+                RepoPath::Path(p) => p.clone(),
+                _ => panic!("Unsupported RepoPath variant"),
+            },
+            // If no gitdir arg was provided, default to current directory "."
+            None => PathBuf::from("."), //TODO $HOME/.gnostr
+        };
+
+        let repo = Repository::discover(&search_path)?;
+        let head = repo.head()?;
+        let obj = head.resolve()?.peel(ObjectType::Commit)?;
+        let commit = obj.peel_to_commit()?;
+        let commit_id = commit.id().to_string();
+
+        // TODO
+        let _padded_commit_id = format!("{:0>64}", commit_id.clone());
+
+        let mut app = ui::App {
+            topic: args.topic.clone().unwrap_or_else(|| commit_id.to_string()),
+            ..Default::default()
+        };
+
+        let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
+
+        let value = input_tx.clone();
+        let topic_name = app.topic.clone();
+        let topic = gossipsub::IdentTopic::new(topic_name.clone());
+        let full_p2p_input_tx = {
+            let (tx, rx) = tokio::sync::mpsc::channel::<Msg>(100);
+            let (out_tx, mut out_rx) = tokio::sync::mpsc::channel::<Msg>(100);
+            let full_p2p_args = args.clone();
+            let full_p2p_topic = gossipsub::IdentTopic::new(topic_name.clone());
+
+            let peer_tx_for_full = peer_tx.clone();
+            global_rt().spawn(async move {
+                while let Some(msg) = out_rx.recv().await {
+                    let _ = peer_tx_for_full.send(InternalEvent::ChatMessage(msg)).await;
+                }
+            });
+
+            global_rt().spawn(async move {
+                if let Err(e) =
+                    crate::p2p::evt_loop(full_p2p_args, rx, out_tx, full_p2p_topic).await
+                {
+                    tracing::error!("full-feature p2p event loop error: {e}");
+                }
+            });
+
+            tx
+        };
+        let command_tx = peer_tx.clone();
+        let command_cwd = search_path.clone();
+        app.on_submit(move |m| {
+            let value = value.clone();
+            let full_p2p_input_tx = full_p2p_input_tx.clone();
+            let command_tx = command_tx.clone();
+            let command_cwd = command_cwd.clone();
+            global_rt().spawn(async move {
+                debug!("sent: {:?}", m);
+                if matches!(m.kind, MsgKind::Command) {
+                    match parse_local_chat_command(&m.content[0]) {
+                        Ok(Some(command)) => {
+                            match tokio::task::spawn_blocking(move || {
+                                run_local_chat_command(command, command_cwd)
+                            })
+                            .await
+                            {
+                                Ok(Ok(message)) => {
+                                    let _ = command_tx
+                                        .send(InternalEvent::ShowInfoMsg(message))
+                                        .await;
+                                }
+                                Ok(Err(err)) => {
+                                    let _ = command_tx
+                                        .send(InternalEvent::ShowErrorMsg(err.to_string()))
+                                        .await;
+                                }
+                                Err(err) => {
+                                    let _ = command_tx
+                                        .send(InternalEvent::ShowErrorMsg(err.to_string()))
+                                        .await;
+                                }
+                            }
+                        }
+                        Ok(None) => {
+                            let _ = command_tx
+                                .send(InternalEvent::ShowErrorMsg(format!(
+                                    "unknown chat command: {}",
+                                    m.content[0]
+                                )))
+                                .await;
+                        }
+                        Err(err) => {
+                            let _ = command_tx
+                                .send(InternalEvent::ShowErrorMsg(err.to_string()))
+                                .await;
+                        }
+                    }
+                } else {
+                    let full_msg = m.clone();
+                    value.send(InternalEvent::ChatMessage(m)).await.unwrap();
+                    let _ = full_p2p_input_tx.send(full_msg).await;
+                }
+            });
+        });
+
+        global_rt().spawn(async move {
+            evt_loop(input_rx, peer_tx, topic).await.unwrap();
+        });
+
+        let mut tui_msg_adder = app.add_msg_fn();
+        global_rt().spawn(async move {
+            while let Some(event) = peer_rx.recv().await {
+                debug!("recv: {:?}", event);
+                match event {
+                    InternalEvent::ChatMessage(m) => tui_msg_adder(m),
+                    InternalEvent::ShowInfoMsg(text) | InternalEvent::ShowErrorMsg(text) => {
+                        tui_msg_adder(
+                            Msg::default().set_content(text, 0).set_kind(MsgKind::System),
+                        );
+                    }
+                    other => {
+                        debug!("Received non-chat message event: {:?}", other);
+                    }
+                }
+            }
+        });
+
+        let input_tx_clone = input_tx.clone();
+        global_rt().spawn(async move {
+            tokio::time::sleep(Duration::from_millis(1000)).await;
+            input_tx_clone
+                .send(InternalEvent::ChatMessage(
+                    Msg::default().set_kind(MsgKind::Join),
+                ))
+                .await
+                .unwrap();
+        });
+
+        app.run().map_err(|e| anyhow!(e.to_string()))?;
+
+        let _ = input_tx.send(InternalEvent::ChatMessage(
+            Msg::default().set_kind(MsgKind::Leave),
+        ));
+        std::thread::sleep(Duration::from_millis(500));
+        Ok(())
+    })
+    .await?
+}
+
+pub async fn input_loop(
+    self_input: tokio::sync::mpsc::Sender<Vec<u8>>,
+) -> Result<(), Box<dyn StdError>> {
+    let mut stdin = io::BufReader::new(io::stdin()).lines();
+    while let Some(line) = stdin.next_line().await? {
+        let msg = Msg::default().set_content(line, 0);
+        if let Ok(b) = serde_json::to_vec(&msg) {
+            self_input.send(b).await?;
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod command_tests {
+    use super::*;
+
+    #[test]
+    fn parses_clone_command() {
+        let command = parse_local_chat_command("/clone blossom://example.com/abcd/repo dest")
+            .expect("parse command")
+            .expect("expected command");
+
+        assert_eq!(
+            command,
+            LocalChatCommand::GitClone {
+                url: "blossom://example.com/abcd/repo".to_string(),
+                destination: Some("dest".to_string()),
+            }
+        );
+    }
+
+    #[test]
+    fn parses_git_clone_alias() {
+        let command = parse_local_chat_command("/git clone blossom://example.com/abcd/repo")
+            .expect("parse command")
+            .expect("expected command");
+
+        assert_eq!(
+            command,
+            LocalChatCommand::GitClone {
+                url: "blossom://example.com/abcd/repo".to_string(),
+                destination: None,
+            }
+        );
+    }
+}

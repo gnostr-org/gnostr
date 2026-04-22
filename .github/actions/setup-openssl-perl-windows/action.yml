@@ -1,0 +1,39 @@
+name: 'Setup OpenSSL and Perl for Windows'
+description: 'Sets OPENSSL_NO_VENDOR, OPENSSL_DIR, and installs Strawberry Perl and required Perl modules on Windows.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set OpenSSL environment variables
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # Using GITHUB_ENV ensures variables persist across steps
+        echo "OPENSSL_NO_VENDOR=1" >> $env:GITHUB_ENV
+        # Ensure this path matches your vcpkg installation
+        echo "OPENSSL_DIR=C:/path/to/vcpkg/installed/x64-windows-static-md" >> $env:GITHUB_ENV
+
+    - name: Install Strawberry Perl
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        choco install strawberryperl -y
+        # Add Perl and C compiler (GCC) to PATH
+        echo "C:\Strawberry\perl\bin" >> $env:GITHUB_PATH
+        echo "C:\Strawberry\c\bin" >> $env:GITHUB_PATH
+
+    - name: Install Perl modules
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: perl -MCPAN -e "install Locale::Maketext::Simple"
+
+    - name: Print Environment (PowerShell equivalent to printenv)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Write-Host "--- ALL ENVIRONMENT VARIABLES ---" -ForegroundColor Cyan
+        Get-ChildItem Env: | Sort-Object Name | ForEach-Object {
+            Write-Host ("{0,-30} = {1}" -f $_.Name, $_.Value)
+        }
+        
+        Write-Host "`n--- PATH VERIFICATION ---" -ForegroundColor Yellow
+        $env:Path -split ';' | ForEach-Object { Write-Host $_ }
