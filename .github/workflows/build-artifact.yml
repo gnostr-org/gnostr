@@ -92,22 +92,22 @@ jobs:
           - runner: ubuntu-latest
             arch: x64
             cargo_jobs: 8
-            # All features supported on x64 Windows.
+            # Validate all features on Linux x64.
             cargo_test_args: '--all-features'
           - runner: ubuntu-latest
             arch: arm64
             cargo_jobs: 8
-            # All features supported on x64 Windows.
+            # Validate all features on Linux arm64.
             cargo_test_args: '--all-features'
           - runner: macos-latest
             arch: x64
             cargo_jobs: 8
-            # All features supported on x64 Windows.
+            # Validate all features on macOS x64.
             cargo_test_args: '--all-features'
           - runner: macos-latest
             arch: arm64
             cargo_jobs: 8
-            # All features supported on x64 Windows.
+            # Validate all features on macOS arm64.
             cargo_test_args: '--all-features'
           # - runner: macos-15-intel
           #   arch: x64
