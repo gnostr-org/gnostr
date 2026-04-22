@@ -81,7 +81,7 @@ pub struct QuerySubCommand {
     pub ids: Option<String>,
     #[arg(short, long)]
     pub limit: Option<i32>,
-    #[arg(long)]
+    #[arg(long, num_args = 2, value_names = ["tag", "value"])]
     pub generic: Option<Vec<String>>,
     #[arg(short = 't', long)]
     pub hashtag: Option<String>,
