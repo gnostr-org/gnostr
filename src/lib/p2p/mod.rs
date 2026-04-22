@@ -16,6 +16,7 @@ use std::{
     env,
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
+    time::Duration,
 };
 
 use chrono::{Local, Timelike};
@@ -42,7 +43,7 @@ use crate::{
         msg::{Msg, MsgKind},
         ChatSubCommands,
     },
-    p2p::{network_config::Network, swarm_builder},
+    p2p::network_config::Network,
     types::Event,
 };
 
@@ -344,6 +345,7 @@ pub async fn evt_loop(
 }
 
 fn service_announcement_record(service_name: &str, service_url: &str, peer_id: PeerId) -> Record {
+    let key = format!("gnostr/services/{service_name}");
     let value = serde_json::json!({
         "service": service_name,
         "base_url": service_url,
@@ -353,7 +355,7 @@ fn service_announcement_record(service_name: &str, service_url: &str, peer_id: P
     .into_bytes();
 
     Record {
-        key: RecordKey::new(format!("gnostr/services/{service_name}")),
+        key: RecordKey::new(&key),
         value,
         publisher: Some(peer_id),
         expires: None,
@@ -365,7 +367,7 @@ pub async fn advertise_service(
     service_url: String,
 ) -> Result<(), Box<dyn Error>> {
     let keypair = identity::Keypair::generate_ed25519();
-    let mut swarm = swarm_builder::build_swarm(keypair)?;
+    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair)?;
     let peer_id = *swarm.local_peer_id();
 
     let bootstrap_addr: Multiaddr = "/dnsaddr/bootstrap.libp2p.io".parse()?;
@@ -392,7 +394,8 @@ pub async fn advertise_service(
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
     swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
 
-    let record_key = RecordKey::new(format!("gnostr/services/{service_name}"));
+    let record_key_name = format!("gnostr/services/{service_name}");
+    let record_key = RecordKey::new(&record_key_name);
     let mut publish_interval =
         tokio::time::interval(std::time::Duration::from_secs(15 * 60));
 
