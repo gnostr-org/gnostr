@@ -265,14 +265,14 @@ pub async fn evt_loop(
                     .publish(topic.clone(), serde_json::to_vec(&m)?)
                  {
                     debug!("Publish error: {e:?}");
-                    let mut m = Msg::default()
-                        /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
-                    //NOTE:recv.send - send to self
-                    recv.send(m).await?;
-                    m = Msg::default()
-                        /**/.set_content(format!("{{\"blockhash\":\"{}\"}}", env::var("BLOCKHASH").unwrap()), 0).set_kind(MsgKind::System);
-                    //NOTE:recv.send - send to self
-                    recv.send(m).await?;
+                    //let mut m = Msg::default()
+                    //    /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
+                    ////NOTE:recv.send - send to self
+                    //recv.send(m).await?;
+                    //m = Msg::default()
+                    //    /**/.set_content(format!("{{\"blockhash\":\"{}\"}}", env::var("BLOCKHASH").unwrap()), 0).set_kind(MsgKind::System);
+                    ////NOTE:recv.send - send to self
+                    //recv.send(m).await?;
                 }
             }
             event = swarm.select_next_some() => match event {
