@@ -16,7 +16,6 @@ use std::{
     env,
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
-    time::Duration,
 };
 
 use chrono::{Local, Timelike};
@@ -33,7 +32,7 @@ use libp2p::{
     tcp, yamux, Multiaddr, PeerId,
 };
 use serde_json;
-use tokio::{io, select, time::Duration};
+use tokio::{io, select};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
 
@@ -394,7 +393,8 @@ pub async fn advertise_service(
     swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
 
     let record_key = RecordKey::new(format!("gnostr/services/{service_name}"));
-    let mut publish_interval = tokio::time::interval(Duration::from_secs(15 * 60));
+    let mut publish_interval =
+        tokio::time::interval(std::time::Duration::from_secs(15 * 60));
 
     let publish = |swarm: &mut libp2p::Swarm<crate::p2p::behaviour::Behaviour>| {
         let record = service_announcement_record(&service_name, &service_url, peer_id);
