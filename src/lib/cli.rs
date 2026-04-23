@@ -19,8 +19,8 @@ use gnostr_asyncgit::sync::RepoPath;
 use crate::sub_commands::award_badge;
 // Import the sniper subcommand module
 use crate::sub_commands::git;
-// Import the new QuerySubCommand struct
-use crate::sub_commands::query::QuerySubCommand;
+// Import the shared QuerySubCommand struct from the re-exported query module
+use crate::query::cli::QuerySubCommand;
 // Import the new relay subcommand module
 use crate::sub_commands::crawler;
 use crate::sub_commands::relay;
@@ -77,12 +77,6 @@ pub enum LegitCommands {
     /// Mine a git commit with a given prefix
     Mine,
 }
-
-/// Vendored ngit CLI.
-pub type NgitCli = ::ngit::cli::Cli;
-
-/// Vendored ngit command set.
-pub type NgitCommands = ::ngit::cli::Commands;
 
 /// GnostrCli
 #[derive(Parser)]
@@ -186,6 +180,9 @@ pub struct GnostrCli {
     /// Generate bugreport
     #[arg(long, default_value = "false")]
     pub bugreport: bool,
+    /// commands
+    #[arg(long = "command", action = clap::ArgAction::Append, help = "gnostr --command '<string>'")]
+    pub commands: Vec<String>,
 }
 
 impl Default for GnostrCli {
@@ -216,6 +213,7 @@ impl Default for GnostrCli {
             trace: false,
             warn: false,
             bugreport: false,
+            commands: vec![],
         }
     }
 }
