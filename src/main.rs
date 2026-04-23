@@ -9,7 +9,7 @@ use gnostr::{
     types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
 };
-use gnostr_asyncgit::sync::{resolve_repo_path, RepoPath};
+use gnostr_asyncgit::sync::{repo_open_error, resolve_repo_path, RepoPath};
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
@@ -108,6 +108,11 @@ async fn main() -> anyhow::Result<()> {
         Some(value) => {
             debug!("main:103:The --gitdir value is: {}", value);
             let repo_path = resolve_repo_path(&RepoPath::from(value.as_str()))?;
+            if let Some(error) = repo_open_error(&repo_path) {
+                return Err(anyhow!(
+                    "invalid --gitdir value `{value}`: {error}. run `git init` in that directory or omit `--gitdir`"
+                ));
+            }
             debug!("main:105:repo_path={:?}", repo_path);
             let path_os_str = repo_path.as_path().as_os_str();
 
@@ -419,7 +424,9 @@ async fn main() -> anyhow::Result<()> {
                         "342:OVERRIDE!! The git directory is: {:?}",
                         gitdir_string.clone()
                     );
-                    sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
+                    sub_command_args_mut.gitdir = Some(resolve_repo_path(&RepoPath::from(
+                        gitdir_string.as_str(),
+                    ))?);
                     // Call tui and map error, then assign to result
                     result = sub_commands::tui::tui(sub_command_args_mut.clone(), &gnostr_cli_args)
                         .await
