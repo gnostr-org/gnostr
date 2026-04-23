@@ -142,6 +142,12 @@ pub const DEFAULT_GNOSTR_PRIVATE_KEY: [u8; 32] = [
     0xb8, 0x55,
 ];
 
+/// Returns the shared deterministic private key as a `SecretKey`.
+pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
+    secp256k1::SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
+        .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid")
+}
+
 // Re-export web-related constants and modules for Askama templates
 pub use crate::web::git;
 pub use crate::web::layers;
