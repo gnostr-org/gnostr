@@ -23,13 +23,12 @@ fn signature_allow_undefined_name(
         if e.code() == ErrorCode::NotFound {
             let config = repo.config()?;
 
-            if let (Err(_), Ok(email_entry)) = (
-                config.get_entry("user.name"),
-                config.get_entry("user.email"),
-            ) {
+            if config.get_entry("user.name").is_err() {
+                if let Ok(email_entry) = config.get_entry("user.email") {
                 if let Some(email) = email_entry.value() {
                     return Signature::now("unknown", email);
                 }
+            }
             }
         }
     }
@@ -44,14 +43,19 @@ fn note_info(
     annotated_id: Oid,
 ) -> Result<NoteInfo> {
     let note = repo.find_note(notes_ref, annotated_id)?;
+    let message = note.message().unwrap_or_default().to_string();
+    let author = note.author().name().unwrap_or_default().to_string();
+    let committer = note.committer().name().unwrap_or_default().to_string();
 
-    Ok(NoteInfo {
+    let info = NoteInfo {
         note_id,
         annotated_id,
-        message: note.message().unwrap_or_default().to_string(),
-        author: note.author().name().unwrap_or_default().to_string(),
-        committer: note.committer().name().unwrap_or_default().to_string(),
-    })
+        message,
+        author,
+        committer,
+    };
+
+    Ok(info)
 }
 
 /// Returns the repository's default notes reference.
@@ -116,17 +120,19 @@ pub fn show_note<T: Into<Oid>>(
     let repo = repo(repo_path)?;
     let object_id = object_id.into();
 
-    match repo.find_note(notes_ref, object_id) {
-        Ok(note) => Ok(Some(NoteInfo {
+    let note = match repo.find_note(notes_ref, object_id) {
+        Ok(note) => Some(NoteInfo {
             note_id: note.id(),
             annotated_id: object_id,
             message: note.message().unwrap_or_default().to_string(),
             author: note.author().name().unwrap_or_default().to_string(),
             committer: note.committer().name().unwrap_or_default().to_string(),
-        })),
-        Err(err) if err.code() == ErrorCode::NotFound => Ok(None),
-        Err(err) => Err(err.into()),
-    }
+        }),
+        Err(err) if err.code() == ErrorCode::NotFound => None,
+        Err(err) => return Err(err.into()),
+    };
+
+    Ok(note)
 }
 
 /// Removes the note for a specific object.
