@@ -9,7 +9,7 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser};
 use git2::{ObjectType, Repository};
-use gnostr_asyncgit::sync::{commit::padded_commit_id, RepoPath};
+use gnostr_asyncgit::sync::{commit::padded_commit_id, resolve_repo_path, RepoPath};
 use libp2p::gossipsub;
 use once_cell::sync::OnceCell;
 use proctitle::set_title;
@@ -413,8 +413,12 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     tokio::task::spawn_blocking(move || {
         let search_path: PathBuf = match &args.gitdir {
             Some(repo_path) => match repo_path {
-                RepoPath::Path(p) => p.clone(),
-                _ => panic!("Unsupported RepoPath variant"),
+                RepoPath::Path(p) => resolve_repo_path(&RepoPath::Path(p.clone()))?
+                    .as_path()
+                    .to_path_buf(),
+                RepoPath::Workdir { .. } => {
+                    panic!("Unsupported RepoPath variant")
+                }
             },
             // If no gitdir arg was provided, default to current directory "."
             None => PathBuf::from("."), //TODO $HOME/.gnostr
