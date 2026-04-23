@@ -396,6 +396,11 @@ impl Component for RevisionFilesComponent {
                 self.tree.selected_file().is_some(),
                 true,
             ));
+            out.push(CommandInfo::new(
+                strings::commands::new_note(),
+                self.revision.is_some(),
+                true,
+            ));
             out.push(
                 CommandInfo::new(
                     strings::commands::open_file_history(&self.key_config),
@@ -466,6 +471,11 @@ impl Component for RevisionFilesComponent {
                     self.queue.push(InternalEvent::TabSwitchStatus);
                     self.queue
                         .push(InternalEvent::OpenExternalEditor(Some(file)));
+                    return Ok(EventState::Consumed);
+                }
+            } else if key_match(key, self.key_config.keys.log_comment_commit) {
+                if let Some(commit) = self.revision.as_ref().map(|revision| revision.id) {
+                    self.queue.push(InternalEvent::OpenGitNote(commit, None));
                     return Ok(EventState::Consumed);
                 }
             } else if key_match(key, self.key_config.keys.copy) {

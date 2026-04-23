@@ -155,7 +155,8 @@ impl Default for KeysList {
 			exit_popup: GituiKeyEvent::new(KeyCode::Esc,  KeyModifiers::empty()),
 			//open_commit
 			open_commit: GituiKeyEvent::new(KeyCode::Char('c'),  KeyModifiers::empty()),
-			open_commit_editor: GituiKeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL),
+			open_commit_editor: GituiKeyEvent::new(KeyCode::Char('e'), KeyModifiers::CONTROL), //e works
+			//open_note_editor?
 			open_external_chat: GituiKeyEvent::new(KeyCode::Char('c'), KeyModifiers::SHIFT),
 			open_help: GituiKeyEvent::new(KeyCode::Char('H'),  KeyModifiers::SHIFT),
 			open_options: GituiKeyEvent::new(KeyCode::Char('o'),  KeyModifiers::empty()),
@@ -178,7 +179,8 @@ impl Default for KeysList {
 			enter: GituiKeyEvent::new(KeyCode::Enter,  KeyModifiers::empty()),
 			blame: GituiKeyEvent::new(KeyCode::Char('B'),  KeyModifiers::SHIFT),
 			file_history: GituiKeyEvent::new(KeyCode::Char('H'),  KeyModifiers::SHIFT),
-			edit_file: GituiKeyEvent::new(KeyCode::Char('e'),  KeyModifiers::empty()),
+			edit_file: GituiKeyEvent::new(KeyCode::Char('e'),  KeyModifiers::empty()), //e works
+			//edit_note?
 			status_stage_all: GituiKeyEvent::new(KeyCode::Char('a'),  KeyModifiers::empty()),
 			status_reset_item: GituiKeyEvent::new(KeyCode::Char('D'),  KeyModifiers::SHIFT),
 			diff_reset_lines: GituiKeyEvent::new(KeyCode::Char('d'),  KeyModifiers::empty()),
@@ -200,11 +202,11 @@ impl Default for KeysList {
 			log_comment_commit: GituiKeyEvent { code: KeyCode::Char('n'), modifiers: KeyModifiers::empty() },
 			log_reset_commit: GituiKeyEvent { code: KeyCode::Char('R'), modifiers: KeyModifiers::SHIFT },
 			log_reword_commit: GituiKeyEvent { code: KeyCode::Char('r'), modifiers: KeyModifiers::empty() },
-			log_find: GituiKeyEvent { code: KeyCode::Char('f'), modifiers: KeyModifiers::empty() },
+			log_find: GituiKeyEvent { code: KeyCode::Char('f'), modifiers: KeyModifiers::empty() }, //f works
 			find_commit_sha: GituiKeyEvent::new(KeyCode::Char('j'), KeyModifiers::CONTROL),
 			commit_amend: GituiKeyEvent::new(KeyCode::Char('a'),  KeyModifiers::CONTROL),
 			toggle_signoff: GituiKeyEvent::new(KeyCode::Char('s'),  KeyModifiers::CONTROL),
-			toggle_verify: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::CONTROL),
+			toggle_verify: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::CONTROL), //f works
 			copy: GituiKeyEvent::new(KeyCode::Char('y'),  KeyModifiers::empty()),
 			create_branch: GituiKeyEvent::new(KeyCode::Char('c'),  KeyModifiers::empty()),
 			rename_branch: GituiKeyEvent::new(KeyCode::Char('r'),  KeyModifiers::empty()),
@@ -222,11 +224,11 @@ impl Default for KeysList {
 			force_push: GituiKeyEvent::new(KeyCode::Char('P'),  KeyModifiers::SHIFT),
 			undo_commit: GituiKeyEvent::new(KeyCode::Char('U'),  KeyModifiers::SHIFT),
 			fetch: GituiKeyEvent::new(KeyCode::Char('F'),  KeyModifiers::SHIFT),
-			pull: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::empty()),
+			pull: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::empty()), //f works
 			abort_merge: GituiKeyEvent::new(KeyCode::Char('A'),  KeyModifiers::SHIFT),
 			open_file_tree: GituiKeyEvent::new(KeyCode::Char('F'),  KeyModifiers::SHIFT),
-			file_find: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::empty()),
-			branch_find: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::empty()),
+			file_find: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::empty()), //f works
+			branch_find: GituiKeyEvent::new(KeyCode::Char('f'),  KeyModifiers::empty()), //f works
 			diff_hunk_next: GituiKeyEvent::new(KeyCode::Char('n'),  KeyModifiers::empty()),
 			diff_hunk_prev: GituiKeyEvent::new(KeyCode::Char('p'),  KeyModifiers::empty()),
 			stage_unstage_item: GituiKeyEvent::new(KeyCode::Enter,  KeyModifiers::empty()),

@@ -2,7 +2,7 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    sync::{NoteInfo, RepoPathRef},
+    sync::{default_notes_ref, NoteInfo, RepoPathRef},
     AsyncGitNotification, AsyncNotes,
 };
 use git2::Oid;
@@ -130,8 +130,15 @@ impl NotesComponent {
     /// Queue the system note editor through the app's existing editor flow.
     pub fn open_editor(&mut self) {
         if let Some(target) = self.target {
+            let notes_ref = self
+                .notes
+                .first()
+                .and_then(|note| note.notes_ref.clone())
+                .or_else(|| self.notes_ref.clone())
+                .or_else(|| default_notes_ref(&self.repo.borrow()).ok());
+
             self.queue
-                .push(crate::queue::InternalEvent::OpenGitNote(target.into()));
+                .push(crate::queue::InternalEvent::OpenGitNote(target.into(), notes_ref));
         }
     }
 
@@ -143,27 +150,18 @@ impl NotesComponent {
     }
 
     pub fn event(&mut self, ev: &Event) -> Result<bool> {
-        if let Event::Key(k) = ev {
-            if k.code == crossterm::event::KeyCode::Char('n')
-                && k.modifiers.is_empty()
-            {
-                self.open_editor();
-                return Ok(true);
-            }
-        }
-
         Ok(false)
     }
 
     pub fn is_editing(&self) -> bool {
-        false
+        self.target.is_some()
     }
 
     pub fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking {
         out.push(CommandInfo::new(
-            strings::commands::note_open(),
+            strings::commands::new_note(),
             self.target.is_some(),
-            self.target.is_some() || force_all,
+            true,
         ));
         CommandBlocking::PassingOn
     }
@@ -235,7 +233,7 @@ impl NotesComponent {
             notes_area,
         );
 
-        let note_open = strings::commands::note_open();
+        let note_open = strings::commands::new_note();
         let hint = Paragraph::new(Line::from(vec![
             Span::raw(" "),
             Span::styled(note_open.name, self.theme.commit_hash(false)),

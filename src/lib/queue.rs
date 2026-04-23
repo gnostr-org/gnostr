@@ -153,7 +153,7 @@ pub enum InternalEvent {
     SelectBranch,
     OpenExternalEditor(Option<String>),
     OpenExternalChat(Option<String>),
-    OpenGitNote(gnostr_asyncgit::sync::CommitId),
+    OpenGitNote(gnostr_asyncgit::sync::CommitId, Option<String>),
     Push(String, PushType, bool, bool),
     Pull(String),
     PushTags,

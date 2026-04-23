@@ -729,8 +729,8 @@ pub mod commands {
         )
     }
 
-    pub fn note_open() -> CommandText {
-        CommandText::new("Note [n]".to_string(), "open note editor", CMD_GROUP_NOTES)
+    pub fn new_note() -> CommandText {
+        CommandText::new("Edit Note [n]".to_string(), "edit note", CMD_GROUP_NOTES)
     }
 
     pub fn note_save() -> CommandText {

@@ -6,7 +6,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use gnostr_asyncgit::sync::{utils::repo_work_dir, CommitId, RepoPath};
+use gnostr_asyncgit::sync::{default_notes_ref, utils::repo_work_dir, CommitId, RepoPath};
 use ratatui::{
     layout::Rect,
     text::{Line, Span},
@@ -40,8 +40,15 @@ impl GitnotePopup {
         }
     }
 
-    pub fn open_note_in_editor(repo: &RepoPath, oid: &CommitId) -> Result<()> {
+    pub fn open_note_in_editor(
+        repo: &RepoPath,
+        oid: &CommitId,
+        notes_ref: Option<&str>,
+    ) -> Result<()> {
         let work_dir = repo_work_dir(repo)?;
+        let notes_ref = notes_ref
+            .map(str::to_owned)
+            .unwrap_or(default_notes_ref(repo)?);
 
         io::stdout().execute(LeaveAlternateScreen)?;
         defer! {
@@ -50,7 +57,7 @@ impl GitnotePopup {
 
         Command::new("git")
             .current_dir(work_dir)
-            .args(["notes", "edit", &oid.to_string()])
+            .args(["notes", "--ref", &notes_ref, "edit", "--allow-empty", &oid.to_string()])
             .status()?;
 
         Ok(())

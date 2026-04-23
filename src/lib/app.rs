@@ -119,6 +119,7 @@ pub struct App {
     requires_redraw: Cell<bool>,
     file_to_open: Option<String>,
     git_note_target: Option<gnostr_asyncgit::sync::CommitId>,
+    git_note_ref: Option<String>,
     quit_flag: Arc<AtomicBool>,
 }
 
@@ -233,6 +234,7 @@ impl App {
             requires_redraw: Cell::new(false),
             file_to_open: None,
             git_note_target: None,
+            git_note_ref: None,
             repo: env.repo,
             repo_path_text,
             popup_stack: PopupStack::default(),
@@ -345,11 +347,16 @@ impl App {
             self.gitnote_popup.hide();
             if matches!(polling_state, InputState::Paused) {
                 let git_note_target = self.git_note_target.take();
+                let git_note_ref = self.git_note_ref.take();
                 let is_git_note = git_note_target.is_some();
                 let result = if let Some(path) = self.file_to_open.take() {
                     ExternalEditorPopup::open_file_in_editor(&self.repo.borrow(), Path::new(&path))
                 } else if let Some(target) = git_note_target {
-                    GitnotePopup::open_note_in_editor(&self.repo.borrow(), &target)
+                    GitnotePopup::open_note_in_editor(
+                        &self.repo.borrow(),
+                        &target,
+                        git_note_ref.as_deref(),
+                    )
                 } else {
                     let changes = self.status_tab.get_files_changes()?;
                     self.commit_popup.show_editor(changes)
@@ -826,10 +833,11 @@ impl App {
                 self.file_to_open = path;
                 flags.insert(NeedsUpdate::COMMANDS);
             }
-            InternalEvent::OpenGitNote(target) => {
+            InternalEvent::OpenGitNote(target, notes_ref) => {
                 self.input.set_polling(false);
                 self.gitnote_popup.show()?;
                 self.git_note_target = Some(target);
+                self.git_note_ref = notes_ref;
                 flags.insert(NeedsUpdate::COMMANDS);
             }
             InternalEvent::OpenExternalChat(path) => {
@@ -1087,9 +1095,6 @@ impl App {
             .order(100),
         );
 
-        res.push(
-            CommandInfo::new(strings::commands::note_open(), true, true).order(order::PRIORITY),
-        );
         res.push(CommandInfo::new(strings::commands::note_save(), true, true).hidden());
         res.push(CommandInfo::new(strings::commands::note_cancel(), true, true).hidden());
 
