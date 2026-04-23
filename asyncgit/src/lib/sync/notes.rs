@@ -5,7 +5,7 @@ use super::{repository::repo, RepoPath};
 use crate::error::Result;
 
 /// A note attached to a git object.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct NoteInfo {
     pub note_id: Oid,
     pub annotated_id: Oid,
