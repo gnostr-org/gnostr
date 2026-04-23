@@ -36,6 +36,8 @@ pub struct NotesComponent {
     key_config: SharedKeyConfig,
     target: Option<Oid>,
     notes_ref: Option<String>,
+    // Keep only the last delivered snapshot here; the queue/update path is
+    // responsible for refreshing it when async work completes.
     notes: Vec<NoteInfo>,
     input: Input,
     input_mode: InputMode,
@@ -82,6 +84,8 @@ impl NotesComponent {
     }
 
     fn refresh(&mut self) {
+        // Refreshes are intentionally kept off the render path; this borrows the
+        // repo and should only run from the component/update lifecycle.
         let Some(commit_id) = self.target else {
             self.notes.clear();
             return;
@@ -147,6 +151,8 @@ impl NotesComponent {
             )?;
         }
 
+        // Save immediately, then let the next refresh/update cycle rebuild the
+        // in-memory snapshot instead of trying to redraw from the write path.
         self.refresh();
         self.input.reset();
         self.input_mode = InputMode::Normal;

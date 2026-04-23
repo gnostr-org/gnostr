@@ -60,6 +60,8 @@ impl AsyncNotes {
     pub fn request(&mut self, dur: Duration, force: bool, notes_ref: Option<&str>) -> Result<()> {
         log::trace!("request");
 
+        // Spawn the note fetch on the async job queue; callers should apply the
+        // result later from their update loop when the Notes notification arrives.
         if !force && self.job.is_pending() {
             return Ok(());
         }
@@ -86,6 +88,8 @@ impl AsyncNotes {
 
     ///
     pub fn refresh(&mut self) -> Result<bool> {
+        // Drain the completed job result without blocking. This is the only
+        // place the cached note snapshot should be updated.
         if let Some(job) = self.job.take_last() {
             if let Some(Ok(result)) = job.result() {
                 self.last = Some(result);
