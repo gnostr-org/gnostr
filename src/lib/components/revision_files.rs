@@ -1,11 +1,14 @@
-use std::{borrow::Cow, collections::BTreeSet, fmt::Write, path::Path};
+use std::{borrow::Cow, collections::BTreeSet, fmt::Write, path::Path, process::Command};
 
 use anyhow::Result;
 use crossterm::event::Event;
 use filetreelist::{FileTree, FileTreeItem};
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
-    sync::{default_notes_ref, get_commit_info, list_notes, CommitId, CommitInfo, RepoPathRef, TreeFile},
+    sync::{
+        default_notes_ref, get_commit_info, list_notes, utils::repo_work_dir, CommitId,
+        CommitInfo, RepoPathRef, TreeFile,
+    },
     AsyncGitNotification, AsyncTreeFilesJob,
 };
 use ratatui::{
@@ -229,6 +232,30 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
+    fn push_notes(&self) -> Result<()> {
+        let repo = self.repo.borrow();
+        let work_dir = repo_work_dir(&repo)?;
+
+        let output = Command::new("git")
+            .current_dir(work_dir)
+            .args(["push", "origin", "refs/notes/*"])
+            .output()?;
+        let combined = format!(
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        if output.status.success() {
+            if combined.contains("Everything is up to date") {
+                self.queue.push(InternalEvent::ShowInfoMsg(combined));
+            }
+            Ok(())
+        } else {
+            anyhow::bail!("git push notes failed:\n{combined}")
+        }
+    }
+
     fn open_finder(&self) {
         if let Some(files) = self.files.clone() {
             self.queue.push(InternalEvent::OpenFuzzyFinder(
@@ -440,6 +467,11 @@ impl Component for RevisionFilesComponent {
                 self.revision.is_some(),
                 true,
             ));
+            out.push(CommandInfo::new(
+                strings::commands::push_notes(&self.key_config),
+                self.revision.is_some(),
+                true,
+            ));
             out.push(
                 CommandInfo::new(
                     strings::commands::open_file_history(&self.key_config),
@@ -515,6 +547,11 @@ impl Component for RevisionFilesComponent {
             } else if key_match(key, self.key_config.keys.list_notes) {
                 if self.revision.is_some() {
                     self.list_notes()?;
+                    return Ok(EventState::Consumed);
+                }
+            } else if key_match(key, self.key_config.keys.push) {
+                if self.revision.is_some() {
+                    try_or_popup!(self, "failed to push notes:", self.push_notes());
                     return Ok(EventState::Consumed);
                 }
             } else if key_match(key, self.key_config.keys.log_comment_commit) {

@@ -741,6 +741,14 @@ pub mod commands {
         )
     }
 
+    pub fn push_notes(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("Push Notes [{}]", key_config.get_hint(key_config.keys.push)),
+            "push git notes to origin",
+            CMD_GROUP_NOTES,
+        )
+    }
+
     pub fn note_save() -> CommandText {
         CommandText::new("Save note: [Enter]".to_string(), "save note", CMD_GROUP_NOTES)
     }
