@@ -24,6 +24,28 @@ manifest_version() {
     grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}'
 }
 
+cargo_paths() {
+    while IFS= read -r -d '' path; do
+        case "$path" in
+            ./vendor/*|vendor/*) continue ;;
+        esac
+        printf '%s\0' "$path"
+    done < <(
+        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+    )
+}
+
+stage_cargo_files() {
+    local paths=()
+    while IFS= read -r -d '' path; do
+        paths+=("$path")
+    done < <(cargo_paths)
+
+    if [ "${#paths[@]}" -gt 0 ]; then
+        git add -- "${paths[@]}"
+    fi
+}
+
 managed_manifests() {
     python3 - <<'PY'
 import json
@@ -308,26 +330,21 @@ done < <(
 )
 
 git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+stage_cargo_files
 
 if [ -n "${VERSION_TAG:-}" ]; then
     git reset --soft HEAD~1
 
-
-git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+    cargo update --workspace
+    stage_cargo_files
 
 
     gnostr legit -m "$VERSION_TAG"
     git tag -f "$VERSION_TAG" HEAD
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 
-
-git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+    cargo update --workspace
+    stage_cargo_files
 
 
 
@@ -347,24 +364,20 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
 done
 
-if [ -n "$(git status --porcelain -- Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null)" ]; then
-    git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-    git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
+    stage_cargo_files
     git reset --soft HEAD~1
-    git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-    git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+    stage_cargo_files
     if [ -n "${VERSION_TAG:-}" ]; then
 
-git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+        cargo update --workspace
+        stage_cargo_files
 
         gnostr legit -m "$VERSION_TAG"
         git tag -f "$VERSION_TAG" HEAD
     else
-git add -- "${manifest_paths[@]}"
-git add Cargo.lock */Cargo.lock */*/Cargo.lock */*/*/Cargo.lock 2>/dev/null || true
-git add Cargo.toml */Cargo.toml */*/Cargo.toml */*/*/Cargo.toml 2>/dev/null || true
+        cargo update --workspace
+        stage_cargo_files
 
         gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
         cargo publish -j8 --no-verify
