@@ -1,7 +1,8 @@
 #![allow(missing_docs)]
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
-use gnostr_asyncgit::sync::{add_note, list_notes, CommitId, NoteInfo, RepoPathRef};
+use gnostr_asyncgit::sync::{add_note, list_notes, NoteInfo, RepoPathRef};
+use git2::Oid;
 use ratatui::{
     layout::{Alignment, Rect},
     style::Style,
@@ -33,7 +34,7 @@ pub struct NotesComponent {
     queue: Queue,
     theme: SharedTheme,
     key_config: SharedKeyConfig,
-    target: Option<CommitId>,
+    target: Option<Oid>,
     notes_ref: Option<String>,
     notes: Vec<NoteInfo>,
     input: Input,
@@ -66,7 +67,7 @@ impl NotesComponent {
         self.input_mode == InputMode::Editing
     }
 
-    pub fn set_target(&mut self, target: Option<CommitId>) {
+    pub fn set_target(&mut self, target: Option<Oid>) {
         if self.target != target {
             self.target = target;
             self.refresh();
@@ -93,7 +94,7 @@ impl NotesComponent {
 
         match notes_result {
             Ok(mut notes) => {
-                notes.retain(|note| note.annotated_id == commit_id.into());
+                notes.retain(|note| note.annotated_id == commit_id);
                 notes.sort_by(|a, b| {
                     a.committer_time
                         .cmp(&b.committer_time)

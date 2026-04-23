@@ -109,7 +109,7 @@ impl TopicList {
     }
 
     fn refresh_notes(&mut self) {
-        self.notes.set_target(self.selected_commit_id());
+        self.notes.set_target(self.selected_commit_id().map(Into::into));
     }
 
     /// copy_items
