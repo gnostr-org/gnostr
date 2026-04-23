@@ -74,6 +74,8 @@ pub enum StackablePopupOpen {
     InspectCommit(InspectCommitOpen),
     /// CompareCommits
     CompareCommits(InspectCommitOpen),
+    /// NotesList
+    NotesList,
 }
 
 #[derive(Debug)]

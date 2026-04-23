@@ -5,10 +5,7 @@ use crossterm::event::Event;
 use filetreelist::{FileTree, FileTreeItem};
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
-    sync::{
-        default_notes_ref, get_commit_info, list_notes, utils::repo_work_dir, CommitId,
-        CommitInfo, RepoPathRef, TreeFile,
-    },
+    sync::{get_commit_info, utils::repo_work_dir, CommitId, CommitInfo, RepoPathRef, TreeFile},
     AsyncGitNotification, AsyncTreeFilesJob,
 };
 use ratatui::{
@@ -199,36 +196,8 @@ impl RevisionFilesComponent {
     }
 
     fn list_notes(&self) -> Result<()> {
-        let repo = self.repo.borrow();
-        let notes_ref = default_notes_ref(&repo)?;
-        let notes = list_notes(&repo, Some(notes_ref.as_str()))?;
-
-        let mut msg = String::new();
-        if notes.is_empty() {
-            let _ = write!(&mut msg, "no notes in {notes_ref}");
-        } else {
-            let _ = writeln!(&mut msg, "notes in {notes_ref}");
-            for note in notes {
-                let _ = writeln!(
-                    &mut msg,
-                    "note@{} -> {}",
-                    note.note_id,
-                    note.annotated_id
-                );
-                let _ = writeln!(
-                    &mut msg,
-                    "{} {}",
-                    note.committer,
-                    crate::components::time_to_string(note.committer_time, true)
-                );
-                for line in note.message.lines() {
-                    let _ = writeln!(&mut msg, "  {line}");
-                }
-                let _ = writeln!(&mut msg);
-            }
-        }
-
-        self.queue.push(InternalEvent::ShowInfoMsg(msg));
+        self.queue
+            .push(InternalEvent::OpenPopup(StackablePopupOpen::NotesList));
         Ok(())
     }
 

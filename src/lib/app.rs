@@ -42,9 +42,9 @@ use crate::{
         AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
         ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
         FileRevlogPopup, FuzzyFindPopup, GitnotePopup, HelpPopup, InspectChatPopup,
-        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup,
-        PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup,
-        SubmodulesListPopup, TagCommitPopup, TagListPopup,
+        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, NotesListPopup, OptionsPopup,
+        PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
+        StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -84,6 +84,7 @@ pub struct App {
     compare_commits_popup: CompareCommitsPopup,
     external_editor_popup: ExternalEditorPopup,
     gitnote_popup: GitnotePopup,
+    notes_list_popup: NotesListPopup,
     revision_files_popup: RevisionFilesPopup,
     fuzzy_find_popup: FuzzyFindPopup,
     log_search_popup: LogSearchPopupPopup,
@@ -201,6 +202,7 @@ impl App {
 
             external_editor_popup: ExternalEditorPopup::new(&env),
             gitnote_popup: GitnotePopup::new(&env),
+            notes_list_popup: NotesListPopup::new(&env),
             push_popup: PushPopup::new(&env),
             push_tags_popup: PushTagsPopup::new(&env),
             reset_popup: ResetPopup::new(&env),
@@ -509,6 +511,7 @@ impl App {
             //
             external_editor_popup,
             gitnote_popup,
+            notes_list_popup,
             push_popup,
             push_tags_popup,
             pull_popup,
@@ -554,6 +557,7 @@ impl App {
             select_branch_popup,
             submodule_popup,
             tags_popup,
+            notes_list_popup,
             reset_popup,
             create_branch_popup,
             rename_branch_popup,
@@ -735,6 +739,9 @@ impl App {
             }
             StackablePopupOpen::CompareCommits(param) => {
                 self.compare_commits_popup.open(param)?;
+            }
+            StackablePopupOpen::NotesList => {
+                self.notes_list_popup.open()?;
             }
         }
 

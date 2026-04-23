@@ -28,6 +28,7 @@ mod stashmsg;
 mod submodules;
 mod tag_commit;
 mod taglist;
+mod notes_list;
 
 pub use blame_file::{BlameFileOpen, BlameFilePopup};
 pub use branchlist::BranchListPopup;
@@ -52,6 +53,7 @@ pub use options::{AppOption, OptionsPopup};
 pub use pull::PullPopup;
 pub use push::PushPopup;
 pub use push_tags::PushTagsPopup;
+pub use notes_list::NotesListPopup;
 use ratatui::{
     layout::Alignment,
     text::{Span, Text},

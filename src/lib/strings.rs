@@ -56,6 +56,9 @@ pub fn title_branches() -> String {
 pub fn title_tags() -> String {
     "Tags".to_string()
 }
+pub fn title_notes() -> String {
+    "Git Notes".to_string()
+}
 pub fn title_status(_key_config: &SharedKeyConfig) -> String {
     "Unstaged Changes".to_string()
 }
@@ -733,10 +736,30 @@ pub mod commands {
         CommandText::new("Edit Note [n]".to_string(), "edit note", CMD_GROUP_NOTES)
     }
 
+    pub fn select_note() -> CommandText {
+        CommandText::new(
+            "Select Note [space]".to_string(),
+            "toggle note selection",
+            CMD_GROUP_NOTES,
+        )
+    }
+
     pub fn list_notes(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!("List Notes [{}]", key_config.get_hint(key_config.keys.list_notes)),
             "list git notes",
+            CMD_GROUP_NOTES,
+        )
+    }
+
+    pub fn amend_note() -> CommandText {
+        CommandText::new("Amend Note [a]".to_string(), "amend selected note", CMD_GROUP_NOTES)
+    }
+
+    pub fn delete_note_popup() -> CommandText {
+        CommandText::new(
+            "Delete Note [d]".to_string(),
+            "delete selected note(s)",
             CMD_GROUP_NOTES,
         )
     }
