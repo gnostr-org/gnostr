@@ -25,7 +25,7 @@ use crossterm::{
     ExecutableCommand,
 };
 use gnostr_asyncgit::{
-    sync::{resolve_repo_path, utils::repo_work_dir, RepoPath},
+    sync::{repo_open_error, resolve_repo_path, utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
 };
 use nostr_sdk_0_37_0::Keys;
@@ -277,6 +277,13 @@ pub async fn tui(
         if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
             debug!("247:{}", gitdir_env_value);
             let repo_path = resolve_repo_path(&RepoPath::from(gitdir_env_value.as_ref()))?;
+            if let Some(error) = repo_open_error(&repo_path) {
+                eprintln!(
+                    "gnostr: not inside a git repository at `{}`: {error}. Run `git init` first or use `gnostr chat --topic <name>`.",
+                    repo_path.as_path().display()
+                );
+                return Err(anyhow!("not inside a git repository").into());
+            }
 
             debug!("253:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
