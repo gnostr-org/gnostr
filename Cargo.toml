@@ -382,7 +382,7 @@ path = "src/bin/blossom-filetree.rs"
 required-features = ["blossom-tui"]
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit"]
+default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom-tui"]
 expensive_tests = [] #nostr
 blossom-tui = ["dep:blossom_tui"]
 ghemoji = ["dep:gh-emoji"]
