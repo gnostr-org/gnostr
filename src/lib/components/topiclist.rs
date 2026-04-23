@@ -1362,7 +1362,7 @@ impl Component for TopicList {
                     true,
                 ));
                 out.push(CommandInfo::new(
-                    CommandText::new("Note: [\\]/[n]".to_string(), "", ""),
+                    CommandText::new("Note: [\\]/[n]".to_string(), "", "-- Notes --"),
                     true,
                     true,
                 ));
@@ -1371,12 +1371,12 @@ impl Component for TopicList {
             InputMode::Editing => {
                 out.clear();
                 out.push(CommandInfo::new(
-                    CommandText::new("Save note: [Enter]".to_string(), "", ""),
+                    CommandText::new("Save note: [Enter]".to_string(), "", "-- Notes --"),
                     true,
                     true,
                 ));
                 out.push(CommandInfo::new(
-                    CommandText::new("Cancel: [Esc]".to_string(), "", ""),
+                    CommandText::new("Cancel: [Esc]".to_string(), "", "-- Notes --"),
                     true,
                     true,
                 ));
