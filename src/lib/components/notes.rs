@@ -1,36 +1,26 @@
 #![allow(missing_docs)]
 use anyhow::Result;
-use crossterm::event::{Event, KeyCode};
+use crossterm::event::Event;
 use gnostr_asyncgit::{
-    sync::{add_note, NoteInfo, RepoPathRef},
+    sync::{NoteInfo, RepoPathRef},
     AsyncGitNotification, AsyncNotes,
 };
 use git2::Oid;
 use std::time::Duration;
 use ratatui::{
     layout::{Alignment, Rect},
-    style::Style,
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use tui_input::{backend::crossterm::EventHandler, Input};
-
 use crate::{
     app::Environment,
     components::{CommandBlocking, CommandInfo},
-    keys::{key_match, SharedKeyConfig},
+    keys::SharedKeyConfig,
     queue::Queue,
     strings,
     ui::style::SharedTheme,
 };
-
-#[derive(Default, PartialEq, Eq)]
-enum InputMode {
-    #[default]
-    Normal,
-    Editing,
-}
 
 /// Reusable notes editor/viewer for a selected git object.
 pub struct NotesComponent {
@@ -47,8 +37,6 @@ pub struct NotesComponent {
     // Keep only the last delivered snapshot here; the queue/update path is
     // responsible for refreshing it when async work completes.
     notes: Vec<NoteInfo>,
-    input: Input,
-    input_mode: InputMode,
 }
 
 impl NotesComponent {
@@ -63,8 +51,6 @@ impl NotesComponent {
             loaded_target: None,
             notes_ref: None,
             notes: Vec::new(),
-            input: Input::default(),
-            input_mode: InputMode::Normal,
         }
     }
 
@@ -72,12 +58,6 @@ impl NotesComponent {
         self.target = None;
         self.loaded_target = None;
         self.notes.clear();
-        self.input.reset();
-        self.input_mode = InputMode::Normal;
-    }
-
-    pub fn is_editing(&self) -> bool {
-        self.input_mode == InputMode::Editing
     }
 
     pub fn set_target(&mut self, target: Option<Oid>) {
@@ -147,21 +127,11 @@ impl NotesComponent {
         }
     }
 
-    /// Open the editor without blocking; prefill only when the latest async
-    /// snapshot already matches the current target.
+    /// Queue the system note editor through the app's existing editor flow.
     pub fn open_editor(&mut self) {
-        if self.loaded_target == self.target {
-            self.refresh();
-        }
-
-        if let Some(note) = self.notes.first() {
-            self.input = Input::new(note.message.clone());
-        } else {
-            self.input.reset();
-        }
-
-        if self.target.is_some() {
-            self.input_mode = InputMode::Editing;
+        if let Some(target) = self.target {
+            self.queue
+                .push(crate::queue::InternalEvent::OpenGitNote(target.into()));
         }
     }
 
@@ -172,97 +142,30 @@ impl NotesComponent {
         }
     }
 
-    fn save(&mut self) -> Result<()> {
-        let Some(target) = self.target else {
-            self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(
-                "no commit selected".to_string(),
-            ));
-            return Ok(());
-        };
-
-        let note = self.input.value().to_string();
-        {
-            let repo = self.repo.borrow();
-            add_note(
-                &repo,
-                target,
-                note.as_str(),
-                self.notes_ref.as_deref(),
-                true,
-            )?;
+    pub fn event(&mut self, ev: &Event) -> Result<bool> {
+        if let Event::Key(k) = ev {
+            if k.code == crossterm::event::KeyCode::Char('n')
+                && k.modifiers.contains(crossterm::event::KeyModifiers::SHIFT)
+            {
+                self.open_editor();
+                return Ok(true);
+            }
         }
 
-        // Save immediately, then let the next async refresh/update cycle rebuild
-        // the in-memory snapshot instead of trying to redraw from the write path.
-        self.request_refresh();
-        self.input.reset();
-        self.input_mode = InputMode::Normal;
-        Ok(())
+        Ok(false)
     }
 
-    pub fn event(&mut self, ev: &Event) -> Result<bool> {
-        let consumed = match self.input_mode {
-            InputMode::Normal => {
-                if let Event::Key(k) = ev {
-                    if key_match(k, self.key_config.keys.log_comment_commit)
-                        || k.code == KeyCode::Char('n')
-                        || k.code == KeyCode::Char('i')
-                    {
-                        self.open_editor();
-                        return Ok(true);
-                    }
-                }
-
-                false
-            }
-            InputMode::Editing => match ev {
-                Event::Key(key) => match key.code {
-                    KeyCode::Enter => {
-                        self.save()?;
-                        true
-                    }
-                    KeyCode::Esc => {
-                        self.input_mode = InputMode::Normal;
-                        self.input.reset();
-                        true
-                    }
-                    _ => {
-                        self.input.handle_event(ev);
-                        true
-                    }
-                },
-                _ => false,
-            },
-        };
-
-        Ok(consumed)
+    pub fn is_editing(&self) -> bool {
+        false
     }
 
     pub fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking {
-        match self.input_mode {
-            InputMode::Normal => {
-                out.push(CommandInfo::new(
-                    strings::commands::note_open(),
-                    self.target.is_some(),
-                    self.target.is_some() || force_all,
-                ));
-                CommandBlocking::PassingOn
-            }
-            InputMode::Editing => {
-                out.clear();
-                out.push(CommandInfo::new(
-                    strings::commands::note_save(),
-                    true,
-                    true,
-                ));
-                out.push(CommandInfo::new(
-                    strings::commands::note_cancel(),
-                    true,
-                    true,
-                ));
-                CommandBlocking::Blocking
-            }
-        }
+        out.push(CommandInfo::new(
+            strings::commands::note_open(),
+            self.target.is_some(),
+            self.target.is_some() || force_all,
+        ));
+        CommandBlocking::PassingOn
     }
 
     fn get_notes_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
@@ -332,22 +235,14 @@ impl NotesComponent {
             notes_area,
         );
 
-        let width = input_area.width.max(3) - 3;
-        let scroll = self.input.visual_scroll(width as usize);
-        let input = Paragraph::new(self.input.value())
-            .style(match self.input_mode {
-                InputMode::Normal => Style::default(),
-                InputMode::Editing => Style::default().fg(ratatui::style::Color::Cyan),
-            })
-            .scroll((0, scroll as u16))
-            .block(Block::default().borders(Borders::ALL).title("Note"));
-        f.render_widget(input, input_area);
-
-        if self.input_mode == InputMode::Editing {
-            f.set_cursor_position((
-                input_area.x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                input_area.y + 1,
-            ));
-        }
+        let note_open = strings::commands::note_open();
+        let hint = Paragraph::new(Line::from(vec![
+            Span::raw(" "),
+            Span::styled(note_open.name, self.theme.commit_hash(false)),
+            Span::raw(" "),
+            Span::raw(note_open.desc),
+        ]))
+        .block(Block::default().borders(Borders::ALL).title("Note"));
+        f.render_widget(hint, input_area);
     }
 }

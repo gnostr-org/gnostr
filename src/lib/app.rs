@@ -41,10 +41,10 @@ use crate::{
     popups::{
         AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
         ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
-        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,
-        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,
-        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,
-        TagCommitPopup, TagListPopup,
+        FileRevlogPopup, FuzzyFindPopup, GitnotePopup, HelpPopup, InspectChatPopup,
+        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup,
+        PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup,
+        SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -83,6 +83,7 @@ pub struct App {
     inspect_commit_popup: InspectCommitPopup,
     compare_commits_popup: CompareCommitsPopup,
     external_editor_popup: ExternalEditorPopup,
+    gitnote_popup: GitnotePopup,
     revision_files_popup: RevisionFilesPopup,
     fuzzy_find_popup: FuzzyFindPopup,
     log_search_popup: LogSearchPopupPopup,
@@ -117,6 +118,7 @@ pub struct App {
     // "Flags"
     requires_redraw: Cell<bool>,
     file_to_open: Option<String>,
+    git_note_target: Option<gnostr_asyncgit::sync::CommitId>,
     quit_flag: Arc<AtomicBool>,
 }
 
@@ -197,6 +199,7 @@ impl App {
             compare_commits_popup: CompareCommitsPopup::new(&env),
 
             external_editor_popup: ExternalEditorPopup::new(&env),
+            gitnote_popup: GitnotePopup::new(&env),
             push_popup: PushPopup::new(&env),
             push_tags_popup: PushTagsPopup::new(&env),
             reset_popup: ResetPopup::new(&env),
@@ -229,6 +232,7 @@ impl App {
             key_config: env.key_config,
             requires_redraw: Cell::new(false),
             file_to_open: None,
+            git_note_target: None,
             repo: env.repo,
             repo_path_text,
             popup_stack: PopupStack::default(),
@@ -338,18 +342,28 @@ impl App {
         } else if let InputEvent::State(polling_state) = ev {
             //
             self.external_editor_popup.hide();
+            self.gitnote_popup.hide();
             if matches!(polling_state, InputState::Paused) {
+                let git_note_target = self.git_note_target.take();
+                let is_git_note = git_note_target.is_some();
                 let result = if let Some(path) = self.file_to_open.take() {
                     ExternalEditorPopup::open_file_in_editor(&self.repo.borrow(), Path::new(&path))
+                } else if let Some(target) = git_note_target {
+                    GitnotePopup::open_note_in_editor(&self.repo.borrow(), &target)
                 } else {
                     let changes = self.status_tab.get_files_changes()?;
                     self.commit_popup.show_editor(changes)
                 };
+                let result_ok = result.is_ok();
 
-                if let Err(e) = result {
+                if let Err(ref e) = result {
                     let msg = format!("failed to launch editor:\n{e}");
                     log::error!("{}", msg.as_str());
                     self.msg_popup.show_error(msg.as_str())?;
+                }
+
+                if is_git_note && result_ok {
+                    self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
                 }
 
                 self.requires_redraw.set(true);
@@ -487,6 +501,7 @@ impl App {
             compare_commits_popup,
             //
             external_editor_popup,
+            gitnote_popup,
             push_popup,
             push_tags_popup,
             pull_popup,
@@ -809,6 +824,12 @@ impl App {
                 self.input.set_polling(false);
                 self.external_editor_popup.show()?;
                 self.file_to_open = path;
+                flags.insert(NeedsUpdate::COMMANDS);
+            }
+            InternalEvent::OpenGitNote(target) => {
+                self.input.set_polling(false);
+                self.gitnote_popup.show()?;
+                self.git_note_target = Some(target);
                 flags.insert(NeedsUpdate::COMMANDS);
             }
             InternalEvent::OpenExternalChat(path) => {
