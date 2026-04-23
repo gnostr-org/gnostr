@@ -306,7 +306,7 @@ jobs:
           --kind ${{ env.WEEBLE }} \
           --hex \
           -c "query command test" \
-          -t "gnostr|gnostr","gnostr-query|gnostr-query") \
+          -t "gnostr|gnostr","gnostr-query|gnostr-query" \
           && echo "✅" ## || echo "❌"
 
       - name: Cleanup lingering gnostr processes
