@@ -22,6 +22,8 @@ pub mod components;
 pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/crawler/index.html>
 pub mod crawler;
+///  <https://docs.rs/gnostr/latest/gnostr/dashboard/index.html>
+pub mod dashboard;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
 pub mod dns_resolver;
 ///  <https://docs.rs/gnostr/latest/gnostr/git/index.html>
@@ -54,8 +56,9 @@ pub mod popups;
 pub mod query;
 ///  <https://docs.rs/gnostr/latest/gnostr/queue/index.html>
 pub mod queue;
-///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>
-pub mod remote;
+// TODO move this some place else
+// ///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>
+// pub mod remote;
 ///  <https://docs.rs/gnostr/latest/gnostr/repo_ref/index.html>
 pub mod repo_ref;
 ///  <https://docs.rs/gnostr/latest/gnostr/repo_state/index.html>
