@@ -403,6 +403,7 @@ pub mod commands {
     static CMD_GROUP_STASHES: &str = "-- Stashes --";
     static CMD_GROUP_LOG: &str = "-- Log --";
     static CMD_GROUP_BRANCHES: &str = "-- Branches --";
+    static CMD_GROUP_NOTES: &str = "-- Notes --";
 
     pub fn toggle_tabs(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
@@ -726,6 +727,18 @@ pub mod commands {
             "open submodule view",
             CMD_GROUP_GENERAL,
         )
+    }
+
+    pub fn note_open() -> CommandText {
+        CommandText::new("Note: [\\]/[n]".to_string(), "open note editor", CMD_GROUP_NOTES)
+    }
+
+    pub fn note_save() -> CommandText {
+        CommandText::new("Save note: [Enter]".to_string(), "save note", CMD_GROUP_NOTES)
+    }
+
+    pub fn note_cancel() -> CommandText {
+        CommandText::new("Cancel: [Esc]".to_string(), "cancel note editing", CMD_GROUP_NOTES)
     }
 
     pub fn open_submodule(key_config: &SharedKeyConfig) -> CommandText {
