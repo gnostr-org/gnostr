@@ -179,7 +179,7 @@ mod tests {
 
     fn test_event_creation(kind: Nip34Kind, mut tags: Vec<Vec<String>>, content: String) {
         let secp = Secp256k1::new();
-        let secret_key = SecretKey::from_slice(&crate::DEFAULT_GNOSTR_PRIVATE_KEY).unwrap();
+        let secret_key = crate::default_gnostr_private_key();
         let public_key = PublicKey::from_secret_key(&secp, &secret_key);
         let x_only_public_key = public_key.x_only_public_key().0;
         let runtime_tags = UnsignedEvent::runtime_tags();
