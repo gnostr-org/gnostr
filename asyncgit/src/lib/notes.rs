@@ -183,8 +183,9 @@ mod tests {
 
         let file_path = Path::new("foo");
         File::create(td.path().join(file_path))?.write_all(b"a")?;
-        repo.index()?.add_path(file_path)?;
-        let tree_id = repo.index()?.write_tree()?;
+        let mut index = repo.index()?;
+        index.add_path(file_path)?;
+        let tree_id = index.write_tree()?;
         let tree = repo.find_tree(tree_id)?;
         let sig = repo.signature()?;
         repo.commit(Some("HEAD"), &sig, &sig, "initial", &tree, &[])?;
