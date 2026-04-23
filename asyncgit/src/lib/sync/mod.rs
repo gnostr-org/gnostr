@@ -67,7 +67,10 @@ pub use merge::{
     abort_pending_rebase, abort_pending_state, continue_pending_rebase, merge_branch, merge_commit,
     merge_msg, mergehead_ids, rebase_progress,
 };
-pub use notes::{add_note, default_notes_ref, list_notes, remove_note, show_note, NoteInfo};
+pub use notes::{
+    add_note, default_notes_ref, list_notes, remove_note, run_notes_command, show_note, NoteInfo,
+    NotesCommand, NotesCommandResult,
+};
 pub use rebase::rebase_branch;
 pub use remotes::{
     get_default_remote, get_default_remote_for_fetch, get_default_remote_for_push, get_remotes,

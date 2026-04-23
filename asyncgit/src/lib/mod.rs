@@ -127,6 +127,8 @@ pub use crate::{
         diff::{DiffLine, DiffLineType, FileDiff},
         remotes::push::PushType,
         status::{StatusItem, StatusItemType},
+        add_note, default_notes_ref, list_notes, remove_note, run_notes_command, show_note,
+        NoteInfo, NotesCommand, NotesCommandResult,
     },
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,

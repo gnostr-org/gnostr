@@ -16,6 +16,44 @@ pub struct NoteInfo {
     pub committer_time: i64,
 }
 
+/// Commands supported by the notes backend.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NotesCommand {
+    /// Return the repository default notes ref.
+    DefaultRef,
+    /// Add a note to an object.
+    Add {
+        object_id: Oid,
+        note: String,
+        notes_ref: Option<String>,
+        force: bool,
+    },
+    /// Show a note attached to an object.
+    Show {
+        object_id: Oid,
+        notes_ref: Option<String>,
+    },
+    /// List notes under a ref.
+    List {
+        notes_ref: Option<String>,
+    },
+    /// Remove a note attached to an object.
+    Remove {
+        object_id: Oid,
+        notes_ref: Option<String>,
+    },
+}
+
+/// Results returned by a notes backend command.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NotesCommandResult {
+    DefaultRef(String),
+    NoteId(Oid),
+    Note(Option<NoteInfo>),
+    Notes(Vec<NoteInfo>),
+    Removed,
+}
+
 fn signature_allow_undefined_name(
     repo: &git2::Repository,
 ) -> std::result::Result<Signature<'_>, git2::Error> {
@@ -169,6 +207,44 @@ pub fn remove_note<T: Into<Oid>>(
     Ok(())
 }
 
+/// Run a notes backend command through a single typed surface.
+pub fn run_notes_command(repo_path: &RepoPath, command: NotesCommand) -> Result<NotesCommandResult> {
+    match command {
+        NotesCommand::DefaultRef => Ok(NotesCommandResult::DefaultRef(default_notes_ref(repo_path)?)),
+        NotesCommand::Add {
+            object_id,
+            note,
+            notes_ref,
+            force,
+        } => Ok(NotesCommandResult::NoteId(add_note(
+            repo_path,
+            object_id,
+            &note,
+            notes_ref.as_deref(),
+            force,
+        )?)),
+        NotesCommand::Show {
+            object_id,
+            notes_ref,
+        } => Ok(NotesCommandResult::Note(show_note(
+            repo_path,
+            object_id,
+            notes_ref.as_deref(),
+        )?)),
+        NotesCommand::List { notes_ref } => Ok(NotesCommandResult::Notes(list_notes(
+            repo_path,
+            notes_ref.as_deref(),
+        )?)),
+        NotesCommand::Remove {
+            object_id,
+            notes_ref,
+        } => {
+            remove_note(repo_path, object_id, notes_ref.as_deref())?;
+            Ok(NotesCommandResult::Removed)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -222,6 +298,65 @@ mod tests {
         assert_eq!(note.message, "hello custom notes");
         assert!(list_notes(repo_path, None)?.is_empty());
         assert_eq!(list_notes(repo_path, Some("refs/notes/reviews"))?.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn notes_command_roundtrip() -> Result<()> {
+        let (_td, repo) = repo_init()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let head = repo.head()?.target().unwrap();
+
+        assert_eq!(
+            run_notes_command(repo_path, NotesCommand::DefaultRef)?,
+            NotesCommandResult::DefaultRef("refs/notes/commits".to_string())
+        );
+
+        assert!(matches!(
+            run_notes_command(
+                repo_path,
+                NotesCommand::Show {
+                    object_id: head,
+                    notes_ref: None,
+                }
+            )?,
+            NotesCommandResult::Note(None)
+        ));
+
+        assert!(matches!(
+            run_notes_command(
+                repo_path,
+                NotesCommand::Add {
+                    object_id: head,
+                    note: "hello command notes".to_string(),
+                    notes_ref: None,
+                    force: false,
+                }
+            )?,
+            NotesCommandResult::NoteId(_)
+        ));
+
+        assert!(matches!(
+            run_notes_command(
+                repo_path,
+                NotesCommand::List { notes_ref: None }
+            )?,
+            NotesCommandResult::Notes(notes) if notes.len() == 1
+        ));
+
+        assert!(matches!(
+            run_notes_command(
+                repo_path,
+                NotesCommand::Remove {
+                    object_id: head,
+                    notes_ref: None,
+                }
+            )?,
+            NotesCommandResult::Removed
+        ));
 
         Ok(())
     }
