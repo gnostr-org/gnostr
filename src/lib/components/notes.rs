@@ -1,8 +1,12 @@
 #![allow(missing_docs)]
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
-use gnostr_asyncgit::sync::{add_note, list_notes, NoteInfo, RepoPathRef};
+use gnostr_asyncgit::{
+    sync::{add_note, NoteInfo, RepoPathRef},
+    AsyncGitNotification, AsyncNotes,
+};
 use git2::Oid;
+use std::time::Duration;
 use ratatui::{
     layout::{Alignment, Rect},
     style::Style,
@@ -34,6 +38,7 @@ pub struct NotesComponent {
     queue: Queue,
     theme: SharedTheme,
     key_config: SharedKeyConfig,
+    async_notes: AsyncNotes,
     target: Option<Oid>,
     notes_ref: Option<String>,
     // Keep only the last delivered snapshot here; the queue/update path is
@@ -50,6 +55,7 @@ impl NotesComponent {
             queue: env.queue.clone(),
             theme: env.theme.clone(),
             key_config: env.key_config.clone(),
+            async_notes: AsyncNotes::new(env.repo.borrow().clone(), &env.sender_git),
             target: None,
             notes_ref: None,
             notes: Vec::new(),
@@ -72,44 +78,61 @@ impl NotesComponent {
     pub fn set_target(&mut self, target: Option<Oid>) {
         if self.target != target {
             self.target = target;
-            self.refresh();
+            self.request_refresh();
         }
     }
 
     pub fn set_notes_ref(&mut self, notes_ref: Option<String>) {
         if self.notes_ref != notes_ref {
             self.notes_ref = notes_ref;
-            self.refresh();
+            self.request_refresh();
         }
     }
 
-    fn refresh(&mut self) {
-        // Refreshes are intentionally kept off the render path; this borrows the
-        // repo and should only run from the component/update lifecycle.
-        let Some(commit_id) = self.target else {
+    fn request_refresh(&mut self) {
+        // Queue the note fetch instead of blocking the render path; the update
+        // loop drains the completed snapshot when the async job finishes.
+        let Some(_) = self.target else {
             self.notes.clear();
             return;
         };
 
-        let notes_result = {
-            let repo = self.repo.borrow();
-            list_notes(&repo, self.notes_ref.as_deref())
-        };
+        self.notes.clear();
 
-        match notes_result {
-            Ok(mut notes) => {
-                notes.retain(|note| note.annotated_id == commit_id);
-                notes.sort_by(|a, b| {
-                    a.committer_time
-                        .cmp(&b.committer_time)
-                        .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
-                });
-                self.notes = notes;
+        if let Err(err) = self
+            .async_notes
+            .request(Duration::from_secs(0), true, self.notes_ref.as_deref())
+        {
+            log::error!("failed to request notes: {}", err);
+            self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
+                "failed to request notes:\n{}",
+                err
+            )));
+        }
+    }
+
+    fn refresh(&mut self) {
+        // Drain the latest async snapshot here instead of fetching from draw().
+        match self.async_notes.refresh() {
+            Ok(true) => {
+                if let Ok(Some(mut notes)) = self.async_notes.last() {
+                    if let Some(target) = self.target {
+                        notes.retain(|note| note.annotated_id == target);
+                    }
+
+                    notes.sort_by(|a, b| {
+                        a.committer_time
+                            .cmp(&b.committer_time)
+                            .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
+                    });
+                    self.notes = notes;
+                }
             }
+            Ok(false) => {}
             Err(err) => {
-                log::error!("failed to load notes: {}", err);
+                log::error!("failed to refresh notes: {}", err);
                 self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
-                    "failed to load notes:\n{}",
+                    "failed to refresh notes:\n{}",
                     err
                 )));
                 self.notes.clear();
@@ -128,6 +151,12 @@ impl NotesComponent {
 
         if self.target.is_some() {
             self.input_mode = InputMode::Editing;
+        }
+    }
+
+    pub fn update_git(&mut self, ev: AsyncGitNotification) {
+        if matches!(ev, AsyncGitNotification::Notes) {
+            self.refresh();
         }
     }
 
