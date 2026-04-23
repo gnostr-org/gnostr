@@ -19,6 +19,7 @@ fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
+#[allow(unused)]
 pub async fn run() -> anyhow::Result<()> {
     let gnostr_cli_args: GnostrCli = GnostrCli::parse();
     run_with_cli(gnostr_cli_args).await
@@ -556,6 +557,7 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
 }
 
 #[tokio::main]
+#[allow(unused)]
 async fn main() -> anyhow::Result<()> {
     run().await
 }
