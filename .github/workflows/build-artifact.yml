@@ -36,7 +36,7 @@ on:
       toolchain:
         description: 'Rust toolchain to use'
         required: false
-        default: stable
+        default: nightly
         type: choice
         options:
           - stable
