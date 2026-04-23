@@ -9,9 +9,11 @@ use crate::error::Result;
 pub struct NoteInfo {
     pub note_id: Oid,
     pub annotated_id: Oid,
+    pub notes_ref: Option<String>,
     pub message: String,
     pub author: String,
     pub committer: String,
+    pub committer_time: i64,
 }
 
 fn signature_allow_undefined_name(
@@ -46,13 +48,16 @@ fn note_info(
     let message = note.message().unwrap_or_default().to_string();
     let author = note.author().name().unwrap_or_default().to_string();
     let committer = note.committer().name().unwrap_or_default().to_string();
+    let committer_time = note.committer().when().seconds();
 
     let info = NoteInfo {
         note_id,
         annotated_id,
+        notes_ref: notes_ref.map(str::to_string),
         message,
         author,
         committer,
+        committer_time,
     };
 
     Ok(info)
@@ -106,6 +111,12 @@ pub fn list_notes(repo_path: &RepoPath, notes_ref: Option<&str>) -> Result<Vec<N
         result.push(note_info(&repo, notes_ref, note_id, annotated_id)?);
     }
 
+    result.sort_by(|a, b| {
+        a.committer_time
+            .cmp(&b.committer_time)
+            .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
+    });
+
     Ok(result)
 }
 
@@ -124,9 +135,11 @@ pub fn show_note<T: Into<Oid>>(
         Ok(note) => Some(NoteInfo {
             note_id: note.id(),
             annotated_id: object_id,
+            notes_ref: notes_ref.map(str::to_string),
             message: note.message().unwrap_or_default().to_string(),
             author: note.author().name().unwrap_or_default().to_string(),
             committer: note.committer().name().unwrap_or_default().to_string(),
+            committer_time: note.committer().when().seconds(),
         }),
         Err(err) if err.code() == ErrorCode::NotFound => None,
         Err(err) => return Err(err.into()),
