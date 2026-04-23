@@ -25,10 +25,10 @@ fn signature_allow_undefined_name(
 
             if config.get_entry("user.name").is_err() {
                 if let Ok(email_entry) = config.get_entry("user.email") {
-                if let Some(email) = email_entry.value() {
-                    return Signature::now("unknown", email);
+                    if let Some(email) = email_entry.value() {
+                        return Signature::now("unknown", email);
+                    }
                 }
-            }
             }
         }
     }
@@ -165,7 +165,8 @@ mod tests {
     fn notes_roundtrip() -> Result<()> {
         let (_td, repo) = repo_init()?;
         let root = repo.path().parent().unwrap();
-        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
         let head = repo.head()?.target().unwrap();
 
         let notes_ref = default_notes_ref(repo_path)?;
@@ -192,7 +193,8 @@ mod tests {
     fn custom_notes_ref_roundtrip() -> Result<()> {
         let (_td, repo) = repo_init()?;
         let root = repo.path().parent().unwrap();
-        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
         let head = repo.head()?.target().unwrap();
 
         add_note(
