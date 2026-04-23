@@ -145,7 +145,7 @@ impl NotesComponent {
     pub fn event(&mut self, ev: &Event) -> Result<bool> {
         if let Event::Key(k) = ev {
             if k.code == crossterm::event::KeyCode::Char('n')
-                && k.modifiers.contains(crossterm::event::KeyModifiers::SHIFT)
+                && k.modifiers.is_empty()
             {
                 self.open_editor();
                 return Ok(true);
