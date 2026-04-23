@@ -1,76 +1,11 @@
 use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use crate::query::ConfigBuilder;
 use anyhow::{anyhow, bail};
-use clap::Args;
 use log::{debug, error};
 use serde_json::{json, to_string};
 use url::Url;
 
-/// Arguments for the 'query' subcommand.
-#[derive(Debug, Args, Clone)]
-pub struct QuerySubCommand {
-    /// Filter by author public keys (comma-separated).
-    #[arg(long)]
-    pub authors: Option<String>,
-    #[arg(
-        short = 'i',
-        long = "ids",
-        value_name = "EVENT_IDS",
-        help = "Filter by event IDs (comma-separated).",
-        // This is the important part: a multi-line, verbatim example string
-        long_help = r#"
-    Filter by event IDs (comma-separated).
-
-    The argument supports complex command expansion patterns:
-
-    gnostr query -i $(gnostr bech32-to-any \
-    note1wx60lqwu2h8wdyn6t2r74whuwum0r3q4px3258pfnusnpx3pcumqwauly3 | \
-    jq .[] | sed 's/\"//g')
-
-    gnostr query -i \
-    $(gnostr bech32-to-any \
-    $(gnostr note -c "test" | \
-    jq .[] | sed 's/\"//g') | \
-    jq .[] | sed 's/\"//g')
-
-    gnostr query -i \
-    $(gnostr bech32-to-any \
-    $(gnostr --nsec $(gnostr --blockhash) \
-    note -c "test" | \
-    jq .[] | sed 's/\"//g') | \
-    jq .[] | sed 's/\"//g')
-
-    "#
-    )]
-    pub ids: Option<String>,
-
-    /// Maximum number of events to return.
-    #[arg(long, default_value = "1")]
-    pub limit: Option<i32>,
-    /// Generic filters in the format '#<tag> <value>'. Expects two
-    /// space-separated values. Example: --generic "#t" "general,nostr"
-    #[arg(num_args = 2, value_delimiter = ' ', long)]
-    pub generic: Option<Vec<String>>,
-    /// Filter by hashtags (comma-separated).
-    #[arg(long)]
-    pub hashtag: Option<String>,
-    /// Filter by mentions (public keys, comma-separated).
-    #[arg(long)]
-    pub mentions: Option<String>,
-    /// Filter by referenced event IDs (comma-separated).
-    #[arg(long)]
-    pub references: Option<String>,
-    /// Filter by event kinds (comma-separated integers).
-    #[arg(long, default_value = "30617,30618,1617,1618,1621,1630,1631,1632,1633")]
-    pub kinds: Option<String>,
-    /// Search for text within event content. Can take multiple values, but only
-    /// the first is used. Example: --search "keyword1,keyword2"
-    #[arg(num_args = 1.., long)]
-    pub search: Option<Vec<String>>,
-    /// Specify a relay URL to connect to.
-    #[arg(long, short, default_value = "wss://relay.damus.io")]
-    pub relay: Option<String>,
-}
+pub use crate::query::cli::QuerySubCommand;
 
 /// Handles the 'query' subcommand functionality.
 /// It takes the parsed command-line arguments and executes the query.
@@ -138,7 +73,8 @@ fn build_filter_map(
     args: &QuerySubCommand,
 ) -> anyhow::Result<(serde_json::Map<String, serde_json::Value>, i32)> {
     let mut filt = serde_json::Map::new();
-    let mut limit_check: i32 = 0;
+    let limit_check = args.limit.unwrap_or(1);
+    filt.insert("limit".to_string(), json!(limit_check));
 
     if let Some(authors) = &args.authors {
         debug!("Applying authors filter: {}", authors);
@@ -154,12 +90,6 @@ fn build_filter_map(
             "ids".to_string(),
             json!(ids.split(',').collect::<Vec<&str>>()),
         );
-    }
-
-    if let Some(limit) = args.limit {
-        debug!("Applying limit filter: {}", limit);
-        filt.insert("limit".to_string(), json!(limit));
-        limit_check = limit;
     }
 
     if let Some(generic_vec) = &args.generic {
