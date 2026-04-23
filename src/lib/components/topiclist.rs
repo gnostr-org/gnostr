@@ -3,10 +3,7 @@ use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, env, rc::Rc, time
 
 use anyhow::Result;
 use chrono::{DateTime, Local};
-use gnostr_asyncgit::sync::{
-    self, add_note, checkout_commit, list_notes, BranchDetails, BranchInfo, CommitId, NoteInfo,
-    RepoPathRef, Tags,
-};
+use gnostr_asyncgit::sync::{self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags};
 use indexmap::IndexSet;
 use itertools::Itertools;
 use ratatui::{
@@ -16,24 +13,14 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use tui_input::{backend::crossterm::EventHandler, Input};
-
-#[derive(Default)]
-pub enum InputMode {
-    #[default]
-    Normal,
-    Editing,
-}
-
 use super::{
     utils::logitems::{ItemBatch, LogEntry},
-    CommandText,
 };
 use crate::{
     app::Environment,
     components::{
-        utils::{string_width_align, time_to_string},
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
+        utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
+        EventState, NotesComponent, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
     queue::Queue,
@@ -68,9 +55,7 @@ pub struct TopicList {
     theme: SharedTheme,
     queue: Queue,
     key_config: SharedKeyConfig,
-    pub input: Input,
-    pub input_mode: InputMode,
-    pub notes: Vec<NoteInfo>,
+    pub notes: NotesComponent,
 }
 
 impl TopicList {
@@ -103,9 +88,7 @@ impl TopicList {
             queue: env.queue.clone(),
             key_config: env.key_config.clone(),
             title: title.into(),
-            input: Input::default(),
-            input_mode: InputMode::Normal,
-            notes: Vec::new(),
+            notes: NotesComponent::new(env),
         }
     }
 
@@ -126,30 +109,7 @@ impl TopicList {
     }
 
     fn refresh_notes(&mut self) {
-        let Some(commit_id) = self.selected_commit_id() else {
-            self.notes.clear();
-            return;
-        };
-
-        match list_notes(&self.repo.borrow(), None) {
-            Ok(mut notes) => {
-                notes.retain(|note| note.annotated_id == commit_id.into());
-                notes.sort_by(|a, b| {
-                    a.committer_time
-                        .cmp(&b.committer_time)
-                        .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
-                });
-                self.notes = notes;
-            }
-            Err(err) => {
-                log::error!("failed to load notes: {}", err);
-                self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
-                    "failed to load notes:\n{}",
-                    err
-                )));
-                self.notes.clear();
-            }
-        }
+        self.notes.set_target(self.selected_commit_id());
     }
 
     /// copy_items
@@ -234,22 +194,6 @@ impl TopicList {
                 //checkout_commit
                 checkout_commit(&self.repo.borrow(), commit_hash)
             );
-        }
-    }
-
-    /// comment
-    #[allow(clippy::needless_pass_by_ref_mut)]
-    pub fn comment(&mut self) {
-        self.refresh_notes();
-
-        if let Some(note) = self.notes.first() {
-            self.input = Input::new(note.message.clone());
-        } else {
-            self.input.reset();
-        }
-
-        if self.selected_entry().is_some() {
-            self.input_mode = InputMode::Editing;
         }
     }
 
@@ -1040,52 +984,6 @@ impl TopicList {
         txt
     }
 
-    fn get_notes_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
-        let mut txt: Vec<Line> = Vec::with_capacity(height);
-
-        if self.notes.is_empty() {
-            txt.push(Line::from("No notes"));
-            return txt;
-        }
-
-        let notes_ref = self
-            .notes
-            .first()
-            .and_then(|note| note.notes_ref.as_deref())
-            .unwrap_or("refs/notes/commits");
-
-        for note in self.notes.iter().take(height) {
-            if txt.len() >= height {
-                break;
-            }
-
-            let header = format!(
-                "note@{} {} {}",
-                note.note_id.to_string().chars().take(7).collect::<String>(),
-                notes_ref,
-                time_to_string(note.committer_time, true)
-            );
-            txt.push(Line::from(vec![Span::styled(
-                header,
-                self.theme.commit_hash(false),
-            )]));
-
-            for line in note.message.lines() {
-                if txt.len() >= height {
-                    break;
-                }
-
-                let message = truncate_chars(line, width.saturating_sub(2));
-                txt.push(Line::from(vec![Span::styled(
-                    format!("  {}", message),
-                    self.theme.text(true, false),
-                )]));
-            }
-        }
-
-        txt
-    }
-
     /// handle_internal_event
     pub fn handle_internal_event(&mut self, _event: crate::queue::InternalEvent) {
     }
@@ -1195,39 +1093,7 @@ impl DrawableComponent for TopicList {
             left_chunks[1],
         );
 
-        let notes_height = left_chunks[3].height as usize;
-        let notes_width = left_chunks[3].width as usize;
-        f.render_widget(
-            Paragraph::new(self.get_notes_text(notes_height, notes_width))
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Notes")
-                        .border_style(self.theme.block(false)),
-                )
-                .alignment(Alignment::Left),
-            left_chunks[3],
-        );
-
-        // Note input
-        let width = left_chunks[3].width.max(3) - 3; // keep 2 for borders and 1 for cursor
-        let scroll = self.input.visual_scroll(width as usize);
-        let input = Paragraph::new(self.input.value())
-            .style(match self.input_mode {
-                InputMode::Normal => Style::default(),
-                InputMode::Editing => Style::default().fg(ratatui::style::Color::Cyan),
-            })
-            .scroll((0, scroll as u16))
-            .block(Block::default().borders(Borders::ALL).title("Note"));
-        f.render_widget(input, left_chunks[4]);
-
-        match self.input_mode {
-            InputMode::Normal => {}
-            InputMode::Editing => f.set_cursor_position((
-                left_chunks[4].x + ((self.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-                left_chunks[4].y + 1,
-            )),
-        }
+        self.notes.draw(f, left_chunks[3], left_chunks[4]);
         Ok(())
     }
 }
@@ -1243,101 +1109,39 @@ impl Component for TopicList {
             {
                 return Ok(EventState::Consumed);
             }
-            if k.code == crossterm::event::KeyCode::Char('i') {
-                self.input_mode = InputMode::Editing;
-                self.input.reset();
+
+            if self.notes.event(ev)? {
                 return Ok(EventState::Consumed);
             }
 
-            if k.code == crossterm::event::KeyCode::Esc {
-                self.input_mode = InputMode::Normal;
-                self.input.reset();
-                return Ok(EventState::Consumed);
-            }
-
-            let selection_changed = match self.input_mode {
-                InputMode::Normal => {
-                    if key_match(k, self.key_config.keys.move_up) {
-                        self.move_selection(ScrollType::Up)?
-                    } else if key_match(k, self.key_config.keys.move_down) {
-                        self.move_selection(ScrollType::Down)?
-                    } else if key_match(k, self.key_config.keys.shift_up)
-                        || key_match(k, self.key_config.keys.home)
-                    {
-                        self.move_selection(ScrollType::Home)?
-                    } else if key_match(k, self.key_config.keys.shift_down)
-                        || key_match(k, self.key_config.keys.end)
-                    {
-                        self.move_selection(ScrollType::End)?
-                    } else if key_match(k, self.key_config.keys.page_up) {
-                        self.move_selection(ScrollType::PageUp)?
-                    } else if key_match(k, self.key_config.keys.page_down) {
-                        self.move_selection(ScrollType::PageDown)?
-                    } else if key_match(k, self.key_config.keys.log_mark_commit) {
-                        self.mark();
-                        true
-                    } else if key_match(k, self.key_config.keys.log_checkout_commit) {
-                        self.checkout();
-                        true
-                    } else if key_match(k, self.key_config.keys.log_comment_commit)
-                        || k.code == crossterm::event::KeyCode::Char('n')
-                    {
-                        self.comment();
-                        true
-                    } else if key_match(k, self.key_config.keys.enter) {
-                        //dont activate chat text input just because selection_changed
-                        //self.input_mode = InputMode::Editing;
-                        false
-                    } else if key_match(k, self.key_config.keys.exit_popup) {
-                        //always escape chat text input mode
-                        self.input_mode = InputMode::Normal;
-                        false
-                    } else {
-                        false
-                    }
-                }
-                InputMode::Editing => match k.code {
-                    crossterm::event::KeyCode::Enter => {
-                        if let Some(entry) = self.selected_commit_id() {
-                            let note = self.input.value().to_string();
-                            let add_result = {
-                                let repo = self.repo.borrow();
-                                add_note(&repo, entry, note.as_str(), None, true)
-                            };
-
-                            match add_result {
-                                Ok(_) => {
-                                    self.refresh_notes();
-                                    self.input.reset();
-                                    self.input_mode = InputMode::Normal;
-                                }
-                                Err(err) => {
-                                    log::error!("failed to add note: {}", err);
-                                    self.queue.push(
-                                        crate::queue::InternalEvent::ShowErrorMsg(format!(
-                                            "failed to add note:\n{}",
-                                            err
-                                        )),
-                                    );
-                                }
-                            }
-                        } else {
-                            self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(
-                                "no commit selected".to_string(),
-                            ));
-                        }
-                        true
-                    }
-                    crossterm::event::KeyCode::Esc => {
-                        self.input_mode = InputMode::Normal;
-                        self.input.reset();
-                        true
-                    }
-                    _ => {
-                        self.input.handle_event(ev);
-                        true
-                    }
-                },
+            let selection_changed = if key_match(k, self.key_config.keys.move_up) {
+                self.move_selection(ScrollType::Up)?
+            } else if key_match(k, self.key_config.keys.move_down) {
+                self.move_selection(ScrollType::Down)?
+            } else if key_match(k, self.key_config.keys.shift_up)
+                || key_match(k, self.key_config.keys.home)
+            {
+                self.move_selection(ScrollType::Home)?
+            } else if key_match(k, self.key_config.keys.shift_down)
+                || key_match(k, self.key_config.keys.end)
+            {
+                self.move_selection(ScrollType::End)?
+            } else if key_match(k, self.key_config.keys.page_up) {
+                self.move_selection(ScrollType::PageUp)?
+            } else if key_match(k, self.key_config.keys.page_down) {
+                self.move_selection(ScrollType::PageDown)?
+            } else if key_match(k, self.key_config.keys.log_mark_commit) {
+                self.mark();
+                true
+            } else if key_match(k, self.key_config.keys.log_checkout_commit) {
+                self.checkout();
+                true
+            } else if key_match(k, self.key_config.keys.enter) {
+                false
+            } else if key_match(k, self.key_config.keys.exit_popup) {
+                false
+            } else {
+                false
             };
             return Ok(selection_changed.into());
         }
@@ -1345,44 +1149,27 @@ impl Component for TopicList {
         Ok(EventState::NotConsumed)
     }
 
-    fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
-        match self.input_mode {
-            InputMode::Normal => {
-                out.push(CommandInfo::new(
-                    strings::commands::scroll(&self.key_config),
-                    self.selected_entry().is_some(),
-                    true,
-                ));
-                out.push(CommandInfo::new(
-                    strings::commands::commit_list_mark(
-                        &self.key_config,
-                        self.selected_entry_marked(),
-                    ),
-                    true,
-                    true,
-                ));
-                out.push(CommandInfo::new(
-                    CommandText::new("Note: [\\]/[n]".to_string(), "", "-- Notes --"),
-                    true,
-                    true,
-                ));
-                CommandBlocking::PassingOn
-            }
-            InputMode::Editing => {
-                out.clear();
-                out.push(CommandInfo::new(
-                    CommandText::new("Save note: [Enter]".to_string(), "", "-- Notes --"),
-                    true,
-                    true,
-                ));
-                out.push(CommandInfo::new(
-                    CommandText::new("Cancel: [Esc]".to_string(), "", "-- Notes --"),
-                    true,
-                    true,
-                ));
-                CommandBlocking::Blocking
-            }
+    fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking {
+        let note_blocking = self.notes.commands(out, force_all);
+        if note_blocking == CommandBlocking::Blocking {
+            return note_blocking;
         }
+
+        out.push(CommandInfo::new(
+            strings::commands::scroll(&self.key_config),
+            self.selected_entry().is_some(),
+            true,
+        ));
+        out.push(CommandInfo::new(
+            strings::commands::commit_list_mark(
+                &self.key_config,
+                self.selected_entry_marked(),
+            ),
+            true,
+            true,
+        ));
+
+        note_blocking
     }
 }
 
