@@ -19,14 +19,17 @@ fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+pub async fn run() -> anyhow::Result<()> {
+    let gnostr_cli_args: GnostrCli = GnostrCli::parse();
+    run_with_cli(gnostr_cli_args).await
+}
+
+pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> {
     install_rustls_crypto_provider();
     unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
     unsafe { env::set_var("BLOCKHEIGHT", "0") };
     unsafe { env::set_var("WOBBLE", "0") };
-    let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
     // Setup tracing subscriber once and globally
     let base_level = if gnostr_cli_args.debug {
@@ -44,7 +47,9 @@ async fn main() -> anyhow::Result<()> {
     let filter = EnvFilter::builder()
         .with_default_directive(base_level.into())
         .from_env() // This reads RUST_LOG and builds the filter
-        .expect("Failed to build EnvFilter from environment");
+        .expect("Failed to build EnvFilter from environment")
+        .add_directive("nostr_relay_pool=off".parse().unwrap())
+        .add_directive("nostr_relay_pool::relay::inner=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
@@ -548,6 +553,11 @@ async fn main() -> anyhow::Result<()> {
                 .map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
     }
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    run().await
 }
 
 #[cfg(test)]
