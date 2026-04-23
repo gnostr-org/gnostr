@@ -162,3 +162,49 @@ impl AsyncJob for AsyncNotesJob {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use crossbeam_channel::unbounded;
+    use tempfile::TempDir;
+
+    use super::*;
+
+    #[test]
+    fn async_notes_roundtrip() -> Result<()> {
+        let td = TempDir::new()?;
+        let repo = git2::Repository::init(td.path())?;
+        {
+            let mut config = repo.config()?;
+            config.set_str("user.name", "name")?;
+            config.set_str("user.email", "email")?;
+        }
+
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let head = repo.head()?.target().unwrap();
+
+        sync::add_note(repo_path, head, "hello async notes", None, false)?;
+
+        let (sender, receiver) = unbounded();
+        let mut async_notes = AsyncNotes::new(repo_path_owned, &sender);
+        async_notes.request(Duration::from_secs(0), true, None)?;
+
+        let mut saw_notes = false;
+        for _ in 0..10 {
+            if let Ok(notification) = receiver.recv_timeout(Duration::from_secs(1)) {
+                if notification == crate::AsyncGitNotification::Notes {
+                    saw_notes = true;
+                    break;
+                }
+            }
+        }
+
+        assert!(saw_notes);
+        assert_eq!(async_notes.last()?.unwrap()[0].message, "hello async notes");
+
+        Ok(())
+    }
+}
