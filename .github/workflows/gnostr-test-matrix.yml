@@ -372,7 +372,7 @@ jobs:
            custom-event \
            --hex \
            -c "query command test" \
-           -t "gnostr|gnostr","gnostr-query|gnostr-query") \
+           -t "gnostr|gnostr","gnostr-query|gnostr-query" \
           ) \
           && echo "✅" ## || echo "❌"
 
