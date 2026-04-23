@@ -4,7 +4,8 @@ use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, env, rc::Rc, time
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use gnostr_asyncgit::sync::{
-    self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+    self, add_note, checkout_commit, list_notes, BranchDetails, BranchInfo, CommitId, NoteInfo,
+    RepoPathRef, Tags,
 };
 use indexmap::IndexSet;
 use itertools::Itertools;
@@ -31,12 +32,11 @@ use super::{
 use crate::{
     app::Environment,
     components::{
-        utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, ScrollType,
+        utils::{string_width_align, time_to_string},
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
-    p2p::chat::msg::Msg,
-    queue::{InternalEvent, Queue},
+    queue::Queue,
     strings::{self, symbol},
     try_or_popup,
     ui::{
@@ -68,10 +68,9 @@ pub struct TopicList {
     theme: SharedTheme,
     queue: Queue,
     key_config: SharedKeyConfig,
-    // Chat input fields
     pub input: Input,
     pub input_mode: InputMode,
-    pub chat_histories: BTreeMap<CommitId, Vec<String>>,
+    pub notes: Vec<NoteInfo>,
 }
 
 impl TopicList {
@@ -106,7 +105,7 @@ impl TopicList {
             title: title.into(),
             input: Input::default(),
             input_mode: InputMode::Normal,
-            chat_histories: BTreeMap::new(),
+            notes: Vec::new(),
         }
     }
 
@@ -119,6 +118,38 @@ impl TopicList {
     pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
+        self.notes.clear();
+    }
+
+    fn selected_commit_id(&self) -> Option<CommitId> {
+        self.selected_entry().map(|entry| entry.id)
+    }
+
+    fn refresh_notes(&mut self) {
+        let Some(commit_id) = self.selected_commit_id() else {
+            self.notes.clear();
+            return;
+        };
+
+        match list_notes(&self.repo.borrow(), None) {
+            Ok(mut notes) => {
+                notes.retain(|note| note.annotated_id == commit_id.into());
+                notes.sort_by(|a, b| {
+                    a.committer_time
+                        .cmp(&b.committer_time)
+                        .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
+                });
+                self.notes = notes;
+            }
+            Err(err) => {
+                log::error!("failed to load notes: {}", err);
+                self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
+                    "failed to load notes:\n{}",
+                    err
+                )));
+                self.notes.clear();
+            }
+        }
     }
 
     /// copy_items
@@ -186,8 +217,9 @@ impl TopicList {
 
         if let Some(yank) = yank {
             crate::clipboard::copy_string(&yank)?;
-            self.queue
-                .push(InternalEvent::ShowInfoMsg(strings::copy_success(&yank)));
+            self.queue.push(crate::queue::InternalEvent::ShowInfoMsg(
+                strings::copy_success(&yank),
+            ));
         }
         Ok(())
     }
@@ -208,14 +240,16 @@ impl TopicList {
     /// comment
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn comment(&mut self) {
-        //TODO nostr reaction comment
-        if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
-            try_or_popup!(
-                self,
-                "failed to checkout commit:",
-                //checkout_commit
-                checkout_commit(&self.repo.borrow(), commit_hash)
-            );
+        self.refresh_notes();
+
+        if let Some(note) = self.notes.first() {
+            self.input = Input::new(note.message.clone());
+        } else {
+            self.input.reset();
+        }
+
+        if self.selected_entry().is_some() {
+            self.input_mode = InputMode::Editing;
         }
     }
 
@@ -290,6 +324,7 @@ impl TopicList {
         self.select_next_highlight();
         self.set_highlighted_selection_index();
         self.fetch_commits(true);
+        self.refresh_notes();
     }
 
     /// select_commit
@@ -299,6 +334,7 @@ impl TopicList {
         if let Some(index) = index {
             self.selection = index;
             self.set_highlighted_selection_index();
+            self.refresh_notes();
             Ok(())
         } else {
             anyhow::bail!(
@@ -413,6 +449,9 @@ impl TopicList {
         let needs_update = new_selection != self.selection;
 
         self.selection = new_selection;
+        if needs_update {
+            self.refresh_notes();
+        }
 
         Ok(needs_update)
     }
@@ -947,6 +986,7 @@ impl TopicList {
 
             if let Ok(commits) = commits {
                 self.items.set_items(want_min, commits, &self.highlights);
+                self.refresh_notes();
             }
         }
     }
@@ -1000,31 +1040,54 @@ impl TopicList {
         txt
     }
 
-    fn get_chat_history_text(&self, height: usize) -> Vec<Line<'_>> {
-        if let Some(entry) = self.selected_entry() {
-            if let Some(history) = self.chat_histories.get(&entry.id) {
-                return history
-                    .iter()
-                    .rev()
-                    .take(height)
-                    .rev()
-                    .map(|s| Line::from(s.as_str()))
-                    .collect();
+    fn get_notes_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
+        let mut txt: Vec<Line> = Vec::with_capacity(height);
+
+        if self.notes.is_empty() {
+            txt.push(Line::from("No notes"));
+            return txt;
+        }
+
+        let notes_ref = self
+            .notes
+            .first()
+            .and_then(|note| note.notes_ref.as_deref())
+            .unwrap_or("refs/notes/commits");
+
+        for note in self.notes.iter().take(height) {
+            if txt.len() >= height {
+                break;
+            }
+
+            let header = format!(
+                "note@{} {} {}",
+                note.note_id.to_string().chars().take(7).collect::<String>(),
+                notes_ref,
+                time_to_string(note.committer_time, true)
+            );
+            txt.push(Line::from(vec![Span::styled(
+                header,
+                self.theme.commit_hash(false),
+            )]));
+
+            for line in note.message.lines() {
+                if txt.len() >= height {
+                    break;
+                }
+
+                let message = truncate_chars(line, width.saturating_sub(2));
+                txt.push(Line::from(vec![Span::styled(
+                    format!("  {}", message),
+                    self.theme.text(true, false),
+                )]));
             }
         }
-        Vec::new()
+
+        txt
     }
 
     /// handle_internal_event
-    pub fn handle_internal_event(&mut self, event: InternalEvent) {
-        if let InternalEvent::ChatMessage(msg) = event {
-            if let Some(history) = self.chat_histories.get_mut(&msg.commit_id) {
-                history.push(msg.to_string());
-            } else {
-                self.chat_histories
-                    .insert(msg.commit_id, vec![msg.to_string()]);
-            }
-        }
+    pub fn handle_internal_event(&mut self, _event: crate::queue::InternalEvent) {
     }
 }
 
@@ -1132,34 +1195,21 @@ impl DrawableComponent for TopicList {
             left_chunks[1],
         );
 
-        //TODO
-        let chat_history_height = left_chunks[3].height as usize;
-        let chat_history_width = left_chunks[3].width as usize;
+        let notes_height = left_chunks[3].height as usize;
+        let notes_width = left_chunks[3].width as usize;
         f.render_widget(
-            Paragraph::new(self.get_chat_text(chat_history_height, chat_history_width))
+            Paragraph::new(self.get_notes_text(notes_height, notes_width))
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
-                        .title("Commit History")
-                        .border_style(self.theme.block(false)),
-                )
-                .alignment(Alignment::Left),
-            left_chunks[2],
-        );
-
-        f.render_widget(
-            Paragraph::new(self.get_chat_history_text(chat_history_height))
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Chat History")
+                        .title("Notes")
                         .border_style(self.theme.block(false)),
                 )
                 .alignment(Alignment::Left),
             left_chunks[3],
         );
 
-        // Chat input
+        // Note input
         let width = left_chunks[3].width.max(3) - 3; // keep 2 for borders and 1 for cursor
         let scroll = self.input.visual_scroll(width as usize);
         let input = Paragraph::new(self.input.value())
@@ -1168,7 +1218,7 @@ impl DrawableComponent for TopicList {
                 InputMode::Editing => Style::default().fg(ratatui::style::Color::Cyan),
             })
             .scroll((0, scroll as u16))
-            .block(Block::default().borders(Borders::ALL).title("Input"));
+            .block(Block::default().borders(Borders::ALL).title("Note"));
         f.render_widget(input, left_chunks[4]);
 
         match self.input_mode {
@@ -1246,14 +1296,34 @@ impl Component for TopicList {
                 }
                 InputMode::Editing => match k.code {
                     crossterm::event::KeyCode::Enter => {
-                        if let Some(entry) = self.selected_entry() {
-                            let msg = Msg::default()
-                                .set_content(self.input.value().to_string(), 0)
-                                .set_kind(crate::p2p::chat::msg::MsgKind::Chat)
-                                .set_commit_id(entry.id);
-                            self.queue.push(InternalEvent::ChatMessage(msg));
+                        if let Some(entry) = self.selected_commit_id() {
+                            let note = self.input.value().to_string();
+                            let add_result = {
+                                let repo = self.repo.borrow();
+                                add_note(&repo, entry, note.as_str(), None, true)
+                            };
+
+                            match add_result {
+                                Ok(_) => {
+                                    self.refresh_notes();
+                                    self.input.reset();
+                                    self.input_mode = InputMode::Normal;
+                                }
+                                Err(err) => {
+                                    log::error!("failed to add note: {}", err);
+                                    self.queue.push(
+                                        crate::queue::InternalEvent::ShowErrorMsg(format!(
+                                            "failed to add note:\n{}",
+                                            err
+                                        )),
+                                    );
+                                }
+                            }
+                        } else {
+                            self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(
+                                "no commit selected".to_string(),
+                            ));
                         }
-                        self.input.reset();
                         true
                     }
                     crossterm::event::KeyCode::Esc => {
@@ -1290,7 +1360,7 @@ impl Component for TopicList {
                     true,
                 ));
                 out.push(CommandInfo::new(
-                    CommandText::new("Chat: [Enter]".to_string(), "", ""),
+                    CommandText::new("Note: [\\]".to_string(), "", ""),
                     true,
                     true,
                 ));
@@ -1299,7 +1369,7 @@ impl Component for TopicList {
             InputMode::Editing => {
                 out.clear();
                 out.push(CommandInfo::new(
-                    CommandText::new("Submit: [Enter]".to_string(), "", ""),
+                    CommandText::new("Save note: [Enter]".to_string(), "", ""),
                     true,
                     true,
                 ));
