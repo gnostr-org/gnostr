@@ -26,7 +26,7 @@ on:
       os:
         description: 'OS / target to build (select "all" to build every target)'
         required: false
-        default: 'all'
+        default: 'linux-x64'
         type: choice
         options:
           - all
