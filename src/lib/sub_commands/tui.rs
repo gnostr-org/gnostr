@@ -272,31 +272,27 @@ pub async fn tui(
     //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git
     // init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
-    if !valid_path(&gitdir) {
-        debug!("243:invalid path\nplease run gnostr inside of a git repository");
-        if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
-            debug!("247:{}", gitdir_env_value);
-            let repo_path = resolve_repo_path(&RepoPath::from(gitdir_env_value.as_ref()))?;
-            if let Some(error) = repo_open_error(&repo_path) {
-                eprintln!(
-                    "gnostr: not inside a git repository at `{}`: {error}. Run `git init` first or use `gnostr chat --topic <name>`.",
-                    repo_path.as_path().display()
-                );
-                return Err(anyhow!("not inside a git repository").into());
-            }
-
-            debug!("253:{:?}", repo_path);
-            sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            debug!("257:{:?}", sub_command_args.gitdir);
-        } else {
-            debug!("GNOSTR_GITDIR NOT set case!");
-            debug!("fork no return  case!");
+    if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
+        debug!("247:{}", gitdir_env_value);
+        let repo_path = resolve_repo_path(&RepoPath::from(gitdir_env_value.as_ref()))?;
+        if let Some(error) = repo_open_error(&repo_path) {
             eprintln!(
-                "gnostr: not inside a git repository.\nRun `git init` first or start chat with `gnostr chat --topic <name>`."
+                "gnostr: not inside a git repository at `{}`: {error}. Run `git init` first or use `gnostr chat --topic <name>`.",
+                repo_path.as_path().display()
             );
             return Err(anyhow!("not inside a git repository").into());
         }
-    } else { /*NOT NOT valid case!*/
+
+        debug!("253:{:?}", repo_path);
+        sub_command_args.gitdir = Some(repo_path);
+        gitdir = sub_command_args.gitdir.clone().unwrap_or(gitdir);
+        debug!("257:{:?}", sub_command_args.gitdir);
+    } else if !valid_path(&gitdir) {
+        debug!("243:invalid path\nplease run gnostr inside of a git repository");
+        eprintln!(
+            "gnostr: not inside a git repository.\nRun `git init` first or start chat with `gnostr chat --topic <name>`."
+        );
+        return Err(anyhow!("not inside a git repository").into());
     } //must be a valid path to a git repo!
 
     let key_config = KeyConfig::init()
