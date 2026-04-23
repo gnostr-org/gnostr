@@ -25,7 +25,7 @@ use crossterm::{
     ExecutableCommand,
 };
 use gnostr_asyncgit::{
-    sync::{utils::repo_work_dir, RepoPath},
+    sync::{resolve_repo_path, utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
 };
 use nostr_sdk_0_37_0::Keys;
@@ -279,11 +279,11 @@ pub async fn tui(
             //let repo_path: RepoPath =
             // RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().
             // to_string()));
-            let repo_path: RepoPath = RepoPath::from(
+            let repo_path = resolve_repo_path(&RepoPath::from(
                 env::var("GNOSTR_GITDIR")
                     .unwrap_or(env::var("HOME").unwrap().clone() /* TODO */)
                     .as_ref(),
-            );
+            ))?;
 
             debug!("253:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()

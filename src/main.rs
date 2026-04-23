@@ -9,7 +9,7 @@ use gnostr::{
     types::{Keys, PrivateKey, PublicKey},
     weeble, wobble,
 };
-use gnostr_asyncgit::sync::RepoPath;
+use gnostr_asyncgit::sync::{resolve_repo_path, RepoPath};
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
@@ -107,9 +107,8 @@ async fn main() -> anyhow::Result<()> {
     match gitdir_value.clone() {
         Some(value) => {
             debug!("main:103:The --gitdir value is: {}", value);
-            let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
+            let repo_path = resolve_repo_path(&RepoPath::from(value.as_str()))?;
             debug!("main:105:repo_path={:?}", repo_path);
-            // Convert the RepoPath to an OsStr reference
             let path_os_str = repo_path.as_path().as_os_str();
 
             // GNOSTR_GITDIR is used to enable "gnostr chat" or other cases
