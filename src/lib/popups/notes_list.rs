@@ -119,10 +119,25 @@ impl NotesListPopup {
     }
 
     fn amend_selected(&mut self) {
-        if let Some(note_id) = self.current_note().map(|note| note.annotated_id) {
+        let targets: Vec<_> = if self.selected.is_empty() {
+            self.current_note()
+                .map(|note| vec![note.annotated_id])
+                .unwrap_or_default()
+        } else {
+            self.notes
+                .iter()
+                .filter(|note| self.selected.contains(&note.annotated_id))
+                .map(|note| note.annotated_id)
+                .collect()
+        };
+
+        if let Some((first, rest)) = targets.split_first() {
             self.hide();
-            self.queue
-                .push(InternalEvent::OpenGitNote(note_id.into(), Some(self.notes_ref.clone())));
+            self.queue.push(InternalEvent::OpenGitNoteBatch(
+                (*first).into(),
+                Some(self.notes_ref.clone()),
+                rest.iter().copied().map(Into::into).collect(),
+            ));
         }
     }
 

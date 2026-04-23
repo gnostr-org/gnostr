@@ -1,5 +1,6 @@
 use std::{
     cell::{Cell, RefCell},
+    collections::VecDeque,
     env,
     path::{Path, PathBuf},
     rc::Rc,
@@ -121,6 +122,7 @@ pub struct App {
     file_to_open: Option<String>,
     git_note_target: Option<gnostr_asyncgit::sync::CommitId>,
     git_note_ref: Option<String>,
+    git_note_pending: VecDeque<gnostr_asyncgit::sync::CommitId>,
     quit_flag: Arc<AtomicBool>,
 }
 
@@ -237,6 +239,7 @@ impl App {
             file_to_open: None,
             git_note_target: None,
             git_note_ref: None,
+            git_note_pending: VecDeque::new(),
             repo: env.repo,
             repo_path_text,
             popup_stack: PopupStack::default(),
@@ -373,6 +376,20 @@ impl App {
 
                 if is_git_note && result_ok {
                     self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
+                    while let Some(target) = self.git_note_pending.pop_front() {
+                        let result = GitnotePopup::open_note_in_editor(
+                            &self.repo.borrow(),
+                            &target,
+                            git_note_ref.as_deref(),
+                        );
+                        if let Err(ref e) = result {
+                            let msg = format!("failed to launch editor:\n{e}");
+                            log::error!("{}", msg.as_str());
+                            self.msg_popup.show_error(msg.as_str())?;
+                            break;
+                        }
+                        self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
+                    }
                 }
 
                 self.requires_redraw.set(true);
@@ -845,6 +862,15 @@ impl App {
                 self.gitnote_popup.show()?;
                 self.git_note_target = Some(target);
                 self.git_note_ref = notes_ref;
+                self.git_note_pending.clear();
+                flags.insert(NeedsUpdate::COMMANDS);
+            }
+            InternalEvent::OpenGitNoteBatch(target, notes_ref, pending) => {
+                self.input.set_polling(false);
+                self.gitnote_popup.show()?;
+                self.git_note_target = Some(target);
+                self.git_note_ref = notes_ref;
+                self.git_note_pending = pending.into_iter().collect();
                 flags.insert(NeedsUpdate::COMMANDS);
             }
             InternalEvent::OpenExternalChat(path) => {
