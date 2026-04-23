@@ -183,6 +183,8 @@ pub enum AsyncGitNotification {
     TreeFiles,
     ///
     CommitFilter,
+    ///
+    Notes,
 }
 
 /// helper function to calculate the hash of an arbitrary type that
