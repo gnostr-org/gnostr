@@ -17,7 +17,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
@@ -273,7 +273,7 @@ pub async fn tui(
     // init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
     if !valid_path(&gitdir) {
-        debug!("243:invalid path\nplease run gitui inside of a non-bare git repository");
+        debug!("243:invalid path\nplease run gnostr inside of a git repository");
         if Some(env::var("GNOSTR_GITDIR")).is_some() {
             debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap());
             //let repo_path: RepoPath =
@@ -291,8 +291,10 @@ pub async fn tui(
         } else {
             debug!("GNOSTR_GITDIR NOT set case!");
             debug!("fork no return  case!");
-            debug!("TODO:git init in $HOME/.gnostr/tmp repo or /tmp/...");
-            //return Ok(());
+            eprintln!(
+                "gnostr: not inside a git repository.\nRun `git init` first or start chat with `gnostr chat --topic <name>`."
+            );
+            return Err(anyhow!("not inside a git repository").into());
         }
     } else { /*NOT NOT valid case!*/
     } //must be a valid path to a git repo!

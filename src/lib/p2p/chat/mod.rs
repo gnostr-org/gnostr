@@ -1,4 +1,10 @@
-use std::{error::Error as StdError, path::PathBuf, process::Command, time::Duration};
+use std::{
+    error::Error as StdError,
+    fs,
+    path::PathBuf,
+    process::Command,
+    time::Duration,
+};
 
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser};
@@ -393,11 +399,36 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             None => PathBuf::from("."), //TODO $HOME/.gnostr
         };
 
-        let repo = Repository::discover(&search_path)?;
-        let head = repo.head()?;
-        let obj = head.resolve()?.peel(ObjectType::Commit)?;
-        let commit = obj.peel_to_commit()?;
-        let commit_id = commit.id().to_string();
+        let (repo_root, repo) = match Repository::discover(&search_path) {
+            Ok(repo) => {
+                let repo_root = repo
+                    .workdir()
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| search_path.clone());
+                (repo_root, repo)
+            }
+            Err(_) => {
+                if let Some(topic) = args.topic.clone() {
+                    let repo_root = search_path.join(topic);
+                    fs::create_dir_all(&repo_root)?;
+                    let repo = Repository::init(&repo_root)?;
+                    (repo_root, repo)
+                } else {
+                    return Err(anyhow!(
+                        "not inside a git repository; run `git init` or start chat with `--topic`"
+                    ));
+                }
+            }
+        };
+
+        let commit_id = if args.topic.is_some() {
+            args.topic.clone().unwrap_or_default()
+        } else {
+            let head = repo.head()?;
+            let obj = head.resolve()?.peel(ObjectType::Commit)?;
+            let commit = obj.peel_to_commit()?;
+            commit.id().to_string()
+        };
 
         // TODO
         let _padded_commit_id = format!("{:0>64}", commit_id.clone());
@@ -420,6 +451,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             let full_p2p_topic = gossipsub::IdentTopic::new(topic_name.clone());
 
             let peer_tx_for_full = peer_tx.clone();
+            let mut full_p2p_args = full_p2p_args;
+            full_p2p_args.gitdir = Some(RepoPath::from(repo_root.as_os_str().to_str().unwrap()));
             global_rt().spawn(async move {
                 while let Some(msg) = out_rx.recv().await {
                     let _ = peer_tx_for_full.send(InternalEvent::ChatMessage(msg)).await;
