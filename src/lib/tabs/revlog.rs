@@ -163,6 +163,9 @@ impl Revlog {
                         }
                     }
                 }
+                AsyncGitNotification::Notes => {
+                    self.list.update_git(ev);
+                }
                 _ => (),
             }
         }

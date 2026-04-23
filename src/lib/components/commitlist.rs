@@ -3,8 +3,9 @@ use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Ins
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use crossterm::event::Event;
-use gnostr_asyncgit::sync::{
-    self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+use gnostr_asyncgit::{
+    sync::{self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags},
+    AsyncGitNotification,
 };
 use indexmap::IndexSet;
 use itertools::Itertools;
@@ -21,7 +22,7 @@ use crate::{
     app::Environment,
     components::{
         utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, ScrollType,
+        EventState, NotesComponent, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, Queue},
@@ -56,6 +57,7 @@ pub struct CommitList {
     theme: SharedTheme,
     queue: Queue,
     key_config: SharedKeyConfig,
+    notes: NotesComponent,
 }
 
 impl CommitList {
@@ -78,6 +80,7 @@ impl CommitList {
             theme: env.theme.clone(),
             queue: env.queue.clone(),
             key_config: env.key_config.clone(),
+            notes: NotesComponent::new(env),
             title: title.into(),
         }
     }
@@ -91,6 +94,12 @@ impl CommitList {
     pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
+        self.notes.clear();
+    }
+
+    fn refresh_notes(&mut self) {
+        self.notes
+            .set_target(self.selected_entry().map(|entry| entry.id.into()));
     }
 
     /// copy_items
@@ -180,11 +189,10 @@ impl CommitList {
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn comment(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
-            try_or_popup!(
-                self,
-                "failed to checkout commit:",
-                checkout_commit(&self.repo.borrow(), commit_hash)
-            );
+            // Notes stay on the shared editor component so the key path remains
+            // async-friendly and reusable across commit views.
+            self.notes.set_target(Some(commit_hash.into()));
+            self.notes.open_editor();
         }
     }
 
@@ -255,6 +263,7 @@ impl CommitList {
         if let Some(index) = index {
             self.selection = index;
             self.set_highlighted_selection_index();
+            self.refresh_notes();
             Ok(())
         } else {
             anyhow::bail!(
@@ -366,6 +375,7 @@ impl CommitList {
         let needs_update = new_selection != self.selection;
 
         self.selection = new_selection;
+        self.refresh_notes();
 
         Ok(needs_update)
     }
@@ -708,14 +718,39 @@ impl CommitList {
 
             if let Ok(commits) = commits {
                 self.items.set_items(want_min, commits, &self.highlights);
+                self.refresh_notes();
             }
+        }
+    }
+
+    /// Apply notes notifications without blocking the list draw path.
+    pub fn update_git(&mut self, ev: AsyncGitNotification) {
+        if matches!(ev, AsyncGitNotification::Notes) {
+            self.notes.update_git(ev);
         }
     }
 }
 
 impl DrawableComponent for CommitList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
-        let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
+        let show_notes = self.notes.is_editing();
+        let (list_area, notes_area) = if show_notes {
+            let chunks = ratatui::layout::Layout::default()
+                .direction(ratatui::layout::Direction::Horizontal)
+                .constraints(
+                    [
+                        ratatui::layout::Constraint::Percentage(60),
+                        ratatui::layout::Constraint::Percentage(40),
+                    ]
+                    .as_ref(),
+                )
+                .split(area);
+            (chunks[0], chunks[1])
+        } else {
+            (area, area)
+        };
+
+        let current_size = (list_area.width.saturating_sub(2), list_area.height.saturating_sub(2));
         self.current_size.set(Some(current_size));
 
         let height_in_lines = current_size.1 as usize;
@@ -743,17 +778,31 @@ impl DrawableComponent for CommitList {
                         .border_style(self.theme.block(true)),
                 )
                 .alignment(Alignment::Left),
-            area,
+            list_area,
         );
 
         draw_scrollbar(
             f,
-            area,
+            list_area,
             &self.theme,
             self.commits.len(),
             self.selection,
             Orientation::Vertical,
         );
+
+        if show_notes {
+            let note_chunks = ratatui::layout::Layout::default()
+                .direction(ratatui::layout::Direction::Vertical)
+                .constraints(
+                    [
+                        ratatui::layout::Constraint::Percentage(70),
+                        ratatui::layout::Constraint::Length(3),
+                    ]
+                    .as_ref(),
+                )
+                .split(notes_area);
+            self.notes.draw(f, note_chunks[0], note_chunks[1]);
+        }
 
         Ok(())
     }
@@ -762,6 +811,10 @@ impl DrawableComponent for CommitList {
 impl Component for CommitList {
     fn event(&mut self, ev: &Event) -> Result<EventState> {
         if let Event::Key(k) = ev {
+            if self.notes.event(ev)? {
+                return Ok(EventState::Consumed);
+            }
+
             let selection_changed = if key_match(k, self.key_config.keys.move_up) {
                 self.move_selection(ScrollType::Up)?
             } else if key_match(k, self.key_config.keys.move_down) {
@@ -786,7 +839,6 @@ impl Component for CommitList {
                 self.checkout();
                 true
             } else if key_match(k, self.key_config.keys.log_comment_commit) {
-                //
                 self.comment();
                 true
             } else {
@@ -799,6 +851,11 @@ impl Component for CommitList {
     }
 
     fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
+        let note_blocking = self.notes.commands(out, _force_all);
+        if note_blocking == CommandBlocking::Blocking {
+            return note_blocking;
+        }
+
         out.push(CommandInfo::new(
             strings::commands::scroll(&self.key_config),
             self.selected_entry().is_some(),
@@ -809,7 +866,7 @@ impl Component for CommitList {
             true,
             true,
         ));
-        CommandBlocking::PassingOn
+        note_blocking
     }
 }
 
