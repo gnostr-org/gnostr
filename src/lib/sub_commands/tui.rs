@@ -274,16 +274,9 @@ pub async fn tui(
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
     if !valid_path(&gitdir) {
         debug!("243:invalid path\nplease run gnostr inside of a git repository");
-        if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap());
-            //let repo_path: RepoPath =
-            // RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().
-            // to_string()));
-            let repo_path = resolve_repo_path(&RepoPath::from(
-                env::var("GNOSTR_GITDIR")
-                    .unwrap_or(env::var("HOME").unwrap().clone() /* TODO */)
-                    .as_ref(),
-            ))?;
+        if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
+            debug!("247:{}", gitdir_env_value);
+            let repo_path = resolve_repo_path(&RepoPath::from(gitdir_env_value.as_ref()))?;
 
             debug!("253:{:?}", repo_path);
             sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
