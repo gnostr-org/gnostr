@@ -1,9 +1,9 @@
 [package]
 edition = "2021"
 name = "gnostr-crawler"
-version = "1878.945871.306238"
+version = "1877.946127.943299"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
-build = false
+build = true                                        ##false
 autolib = false
 autobins = false
 autoexamples = false
@@ -20,6 +20,10 @@ repository = "https://github.com/gnostr-org/gnostr"
 [lib]
 name = "gnostr_crawler"
 path = "src/lib.rs"
+
+[[bin]]
+name = "gnostr_crawler"
+path = "src/bin/gnostr_crawler.rs"
 
 [dependencies]
 ## TODO align with workspace deps
@@ -41,12 +45,13 @@ nostr-sdk = { version = "0.44.1" }
 predicates = "3.1.3"
 rand = "0.7.3"
 regex = "1.11.1"
-reqwest = { version = "0.11.14", features = ["blocking", "json"] }
-serde = "1.0.152"
+reqwest = { version = "0.12.28", features = ["blocking", "json"] }
+serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
 time = "0.1.39"
 tokio = { version = "1.0", features = ["full"] }
+tokio-tungstenite = { workspace = true }
 tower-http = { version = "0.5", features = ["full"] }
 tracing = "0.1.41"
 tracing-core = "0.1.33"
@@ -55,8 +60,11 @@ url = "2.5.0"
 
 [build-dependencies]
 anyhow = "1.0.100"
+directories = "6.0.0"
 pulldown-cmark = "0.10"
-reqwest = { version = "0.11.14", features = ["json"] }
+reqwest = { version = "0.12.28", features = ["json"] }
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1"
 sha2 = "0.10"
 tokio = { version = "1", features = ["full"] }
 url = "2.5.0"
@@ -72,3 +80,7 @@ path = "examples/gnostr_test.rs"
 [[example]]
 name = "string_pop"
 path = "examples/string_pop.rs"
+
+[[test]]
+name = "crawler_helpers"
+path = "tests/crawler_helpers.rs"

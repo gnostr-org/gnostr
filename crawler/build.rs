@@ -1,19 +1,44 @@
 use std::collections::HashSet;
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::PathBuf;
 use anyhow::Result;
+use directories::ProjectDirs;
 use reqwest::Client;
 use tokio;
 use sha2::{Sha256, Digest};
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use url::Url;
 
 // build.rs - This file will generate src/relays.yaml
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct CachedHashes {
     hashes: HashMap<String, String>,
+}
+
+fn sanitize_relay_entry(line: &str) -> Option<String> {
+    let mut trimmed = line.trim().to_string();
+    if let Some(stripped) = trimmed.strip_prefix("- ") {
+        trimmed = stripped.trim().to_string();
+    } else if let Some(stripped) = trimmed.strip_prefix('-') {
+        trimmed = stripped.trim().to_string();
+    }
+    if let Some(comma_idx) = trimmed.find(',') {
+        trimmed.truncate(comma_idx);
+        trimmed = trimmed.trim().to_string();
+    }
+    if trimmed.starts_with("wss://") || trimmed.starts_with("ws://") {
+        Url::parse(&trimmed).ok().map(|url| url.to_string())
+    } else if trimmed.contains("://") {
+        None
+    } else if trimmed.is_empty() {
+        None
+    } else {
+        let potential = format!("wss://{}", trimmed);
+        Url::parse(&potential).ok().map(|url| url.to_string())
+    }
 }
 
 #[tokio::main]
@@ -66,16 +91,20 @@ async fn main() -> Result<()> {
         }
     }
 
-    // Write combined and deduplicated relays to relays.yaml in OUT_DIR
-    let generated_relays_path_in_out_dir = out_dir.join("relays.yaml");
-    let mut file = File::create(&generated_relays_path_in_out_dir)?;
+    let config_dir = ProjectDirs::from("org", "gnostr", "gnostr/crawler")
+        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
+        .unwrap_or_else(|| PathBuf::from("."));
+    fs::create_dir_all(&config_dir)?;
+
+    // Write combined and deduplicated relays to the user config directory.
+    let generated_relays_path = config_dir.join("relays.yaml");
+    let mut file = File::create(&generated_relays_path)?;
 
     for relay_url in &all_relays {
         writeln!(file, "{}", relay_url)?;
     }
 
     // Tell Cargo the path to the generated file
-    println!("cargo:rustc-env=RELAYS_YAML_PATH={}", generated_relays_path_in_out_dir.display());
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -100,8 +129,7 @@ async fn fetch_online_relays_build(url: &str) -> Result<(Vec<String>, String)> {
     let current_hash = format!("{:x}", hasher.finalize());
 
     let relays: Vec<String> = text.lines()
-        .filter(|line| !line.trim().is_empty())
-        .map(String::from)
+        .filter_map(sanitize_relay_entry)
         .collect();
 
     eprintln!("Fetched {} online relays from {} (hash: {})", relays.len(), url, current_hash);
