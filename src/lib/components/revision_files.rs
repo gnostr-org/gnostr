@@ -10,8 +10,8 @@ use gnostr_asyncgit::{
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    text::Span,
-    widgets::{Block, Borders},
+    text::{Line, Span},
+    widgets::{Block, Borders, Tabs},
     Frame,
 };
 use unicode_truncate::UnicodeTruncateStr;
@@ -340,9 +340,31 @@ impl DrawableComponent for RevisionFilesComponent {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
         if self.is_visible() {
             let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(2), Constraint::Min(1)].as_ref())
+                .split(area);
+
+            let is_tree_focused = matches!(self.focus, Focus::Tree);
+            let tabs = vec![Line::from("Tree"), Line::from("File")];
+
+            f.render_widget(
+                Tabs::new(tabs)
+                    .block(
+                        Block::default()
+                            .borders(Borders::BOTTOM)
+                            .border_style(self.theme.block(false)),
+                    )
+                    .style(self.theme.tab(false))
+                    .highlight_style(self.theme.tab(true))
+                    .divider(strings::tab_divider(&self.key_config))
+                    .select(if is_tree_focused { 0 } else { 1 }),
+                chunks[0],
+            );
+
+            let chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
-                .split(area);
+                .split(chunks[1]);
 
             self.draw_tree(f, chunks[0])?;
 
