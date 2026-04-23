@@ -1,5 +1,8 @@
 name: build-artifact
 on:
+  push:
+    tags:
+      - '*'
   workflow_call:
   workflow_dispatch:
     inputs:
