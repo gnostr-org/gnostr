@@ -74,6 +74,8 @@ pub mod web;
 /// pub mod gitui
 pub mod gitui;
 
+mod notes;
+
 /// pub mod gnostr
 pub mod gnostr;
 
@@ -113,6 +115,7 @@ pub use crate::{
     error::{Error, Result},
     fetch_job::AsyncFetchJob,
     filter_commits::{AsyncCommitFilterJob, CommitFilterResult},
+    notes::{AsyncNotes, AsyncNotesJob},
     progress::ProgressPercent,
     pull::{AsyncPull, FetchRequest},
     push::{AsyncPush, PushRequest},
