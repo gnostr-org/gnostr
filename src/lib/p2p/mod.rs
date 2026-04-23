@@ -16,24 +16,24 @@ use std::{
     env,
     error::Error,
     hash::{DefaultHasher, Hash, Hasher},
-    thread,
+    time::Duration,
 };
 
 use chrono::{Local, Timelike};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub, identify, identity,
+    autonat, dcutr, gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
-        Config as KadConfig,
+        Config as KadConfig, Mode, Quorum, Record, RecordKey,
     },
     mdns, noise, ping, rendezvous,
     swarm::SwarmEvent,
-    tcp, yamux, PeerId,
+    tcp, yamux, Multiaddr, PeerId,
 };
 use serde_json;
-use tokio::{io, select, time::Duration};
+use tokio::{io, select};
 use tracing::{debug, info, trace, warn};
 use ureq::Agent;
 
@@ -43,6 +43,7 @@ use crate::{
         msg::{Msg, MsgKind},
         ChatSubCommands,
     },
+    p2p::network_config::Network,
     types::Event,
 };
 
@@ -165,7 +166,9 @@ pub async fn evt_loop(
         )?
         .with_quic()
         .with_dns()?
-        .with_behaviour(|key| {
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(|key, relay_client| {
+            let local_peer_id = key.public().to_peer_id();
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
                 max_providers_per_key: usize::MAX,
@@ -177,19 +180,22 @@ pub async fn evt_loop(
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
+            let kad_store = MemoryStore::with_config(local_peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
-            let ipfs_store = MemoryStore::new(key.public().to_peer_id());
+            let ipfs_store = MemoryStore::new(local_peer_id);
             Ok(crate::p2p::behaviour::Behaviour {
+                relay: relay_client,
+                autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
+                dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
                     gossipsub::MessageAuthenticity::Signed(key.clone()),
                     gossipsub_config,
                 )
                 .expect(""),
-                ipfs: kad::Behaviour::with_config(key.public().to_peer_id(), ipfs_store, ipfs_cfg),
+                ipfs: kad::Behaviour::with_config(local_peer_id, ipfs_store, ipfs_cfg),
                 kademlia: kad::Behaviour::with_config(
-                    key.public().to_peer_id(),
+                    local_peer_id,
                     kad_store,
                     kad_config,
                 ),
@@ -205,7 +211,7 @@ pub async fn evt_loop(
                 ),
                 mdns: mdns::tokio::Behaviour::new(
                     mdns::Config::default(),
-                    key.public().to_peer_id(),
+                    local_peer_id,
                 )?,
             })
         })?
@@ -250,7 +256,7 @@ pub async fn evt_loop(
         debug!("All done!");
 
         // Wait for a second before checking again to avoid rapid looping
-        thread::sleep(Duration::from_millis(250));
+        tokio::time::sleep(Duration::from_millis(250)).await;
 
         select! {
             Some(m) = send.recv() => {
@@ -259,29 +265,40 @@ pub async fn evt_loop(
                     .publish(topic.clone(), serde_json::to_vec(&m)?)
                  {
                     debug!("Publish error: {e:?}");
-                    let mut m = Msg::default()
-                        /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
-                    //NOTE:recv.send - send to self
-                    recv.send(m).await?;
-                    m = Msg::default()
-                        /**/.set_content(format!("{{\"blockhash\":\"{}\"}}", env::var("BLOCKHASH").unwrap()), 0).set_kind(MsgKind::System);
-                    //NOTE:recv.send - send to self
-                    recv.send(m).await?;
+                    //let mut m = Msg::default()
+                    //    /**/.set_content(format!("{{\"blockheight\":\"{}\"}}", env::var("BLOCKHEIGHT").unwrap()), 0).set_kind(MsgKind::System);
+                    ////NOTE:recv.send - send to self
+                    //recv.send(m).await?;
+                    //m = Msg::default()
+                    //    /**/.set_content(format!("{{\"blockhash\":\"{}\"}}", env::var("BLOCKHASH").unwrap()), 0).set_kind(MsgKind::System);
+                    ////NOTE:recv.send - send to self
+                    //recv.send(m).await?;
                 }
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
-                    for (peer_id, _multiaddr) in list {
+                    for (peer_id, multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+                        swarm.behaviour_mut().autonat.add_server(peer_id, Some(multiaddr.clone()));
                     }
                 },
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
+                        swarm.behaviour_mut().autonat.remove_server(&peer_id);
                     }
                 },
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Autonat(event)) => {
+                    debug!("AutoNAT event: {event:?}");
+                }
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Dcutr(event)) => {
+                    debug!("DCUtR event: {event:?}");
+                }
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Relay(event)) => {
+                    debug!("Relay event: {event:?}");
+                }
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
@@ -324,5 +341,94 @@ pub async fn evt_loop(
             }
         }
         debug!("p2p.rs:end loop");
+    }
+}
+
+fn service_announcement_record(service_name: &str, service_url: &str, peer_id: PeerId) -> Record {
+    let key = format!("gnostr/services/{service_name}");
+    let value = serde_json::json!({
+        "service": service_name,
+        "base_url": service_url,
+        "peer_id": peer_id.to_string(),
+    })
+    .to_string()
+    .into_bytes();
+
+    Record {
+        key: RecordKey::new(&key),
+        value,
+        publisher: Some(peer_id),
+        expires: None,
+    }
+}
+
+pub async fn advertise_service(
+    service_name: String,
+    service_url: String,
+) -> Result<(), Box<dyn Error>> {
+    let keypair = identity::Keypair::generate_ed25519();
+    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair)?;
+    let peer_id = *swarm.local_peer_id();
+
+    let bootstrap_addr: Multiaddr = "/dnsaddr/bootstrap.libp2p.io".parse()?;
+    for (addr, boot_peer) in Network::Ipfs.bootnodes() {
+        swarm.behaviour_mut().ipfs.add_address(&boot_peer, addr.clone());
+        swarm.behaviour_mut().kademlia.add_address(&boot_peer, addr);
+    }
+    for peer in crate::p2p::network_config::IPFS_BOOTNODES {
+        let peer_id: PeerId = peer.parse()?;
+        swarm
+            .behaviour_mut()
+            .ipfs
+            .add_address(&peer_id, bootstrap_addr.clone());
+        swarm
+            .behaviour_mut()
+            .kademlia
+            .add_address(&peer_id, bootstrap_addr.clone());
+    }
+
+    swarm
+        .behaviour_mut()
+        .kademlia
+        .set_mode(Some(Mode::Server));
+    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
+
+    let record_key_name = format!("gnostr/services/{service_name}");
+    let record_key = RecordKey::new(&record_key_name);
+    let mut publish_interval =
+        tokio::time::interval(std::time::Duration::from_secs(15 * 60));
+
+    let publish = |swarm: &mut libp2p::Swarm<crate::p2p::behaviour::Behaviour>| {
+        let record = service_announcement_record(&service_name, &service_url, peer_id);
+        swarm.behaviour_mut().kademlia.put_record(record, Quorum::Majority)?;
+        swarm
+            .behaviour_mut()
+            .kademlia
+            .start_providing(record_key.clone())?;
+        Ok::<_, Box<dyn Error>>(())
+    };
+
+    publish(&mut swarm)?;
+    info!("Advertising {service_name} at {service_url} as {peer_id}");
+
+    loop {
+        select! {
+            _ = publish_interval.tick() => {
+                publish(&mut swarm)?;
+                info!("Refreshed {service_name} advertisement for {service_url}");
+            }
+            event = swarm.select_next_some() => {
+                match event {
+                    SwarmEvent::NewListenAddr { address, .. } => {
+                        debug!("advertiser listening on {address}");
+                    }
+                    SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed { result, .. })) => {
+                        debug!("advertiser kademlia event: {result:?}");
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
 }

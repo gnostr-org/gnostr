@@ -5,7 +5,7 @@ use std::{
 };
 
 use libp2p::{
-    gossipsub, identify, identity,
+    autonat, dcutr, gossipsub, identify, identity,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -57,7 +57,9 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         )?
         .with_quic()
         .with_dns()?
-        .with_behaviour(move |key| {
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(move |key, relay_client| {
+            let local_peer_id = key.public().to_peer_id();
             let kad_store_config = MemoryStoreConfig {
                 max_provided_keys: usize::MAX,
                 max_providers_per_key: usize::MAX,
@@ -69,20 +71,23 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             kad_config.set_replication_factor(std::num::NonZeroUsize::new(20).unwrap());
             kad_config.set_publication_interval(Some(Duration::from_secs(10)));
             kad_config.disjoint_query_paths(false);
-            let kad_store = MemoryStore::with_config(peer_id, kad_store_config);
+            let kad_store = MemoryStore::with_config(local_peer_id, kad_store_config);
             let mut ipfs_cfg = KadConfig::new(IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
-            let ipfs_store = MemoryStore::new(key.public().to_peer_id());
+            let ipfs_store = MemoryStore::new(local_peer_id);
 
             Ok(Behaviour {
+                relay: relay_client,
+                autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
+                dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
                     gossipsub::MessageAuthenticity::Signed(key.clone()),
                     gossipsub_config,
                 )
                 .expect("Valid gossipsub config"),
-                ipfs: kad::Behaviour::with_config(key.public().to_peer_id(), ipfs_store, ipfs_cfg),
+                ipfs: kad::Behaviour::with_config(local_peer_id, ipfs_store, ipfs_cfg),
                 kademlia: kad::Behaviour::with_config(
-                    key.public().to_peer_id(),
+                    local_peer_id,
                     kad_store,
                     kad_config,
                 ),
@@ -98,7 +103,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                 ),
                 mdns: mdns::tokio::Behaviour::new(
                     mdns::Config::default(),
-                    key.public().to_peer_id(),
+                    local_peer_id,
                 )?,
             })
         })?

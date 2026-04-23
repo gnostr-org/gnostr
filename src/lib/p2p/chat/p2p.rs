@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use anyhow::{anyhow, Result};
 use futures::stream::StreamExt;
 use libp2p::{
-    gossipsub, identify, kad, mdns, noise, ping,
+    autonat, dcutr, gossipsub, identify, kad, mdns, noise, ping, relay,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, StreamProtocol,
@@ -150,6 +150,9 @@ impl MessageReassembler {
 
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {
+    pub relay: relay::client::Behaviour,
+    pub autonat: autonat::Behaviour,
+    pub dcutr: dcutr::Behaviour,
     pub gossipsub: gossipsub::Behaviour,
     pub mdns: mdns::tokio::Behaviour,
     pub identify: identify::Behaviour,
@@ -204,7 +207,9 @@ pub async fn evt_loop(
             yamux::Config::default,
         )?
         .with_quic()
-        .with_behaviour(|key| {
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(|key, relay_client| {
+            let local_peer_id = key.public().to_peer_id();
             // NOTE: To content-address message,
             // we can take the hash of message
             // and use it as an ID.
@@ -237,9 +242,12 @@ pub async fn evt_loop(
                 gossipsub_config,
             )?;
 
+            let autonat = autonat::Behaviour::new(local_peer_id, autonat::Config::default());
+            let dcutr = dcutr::Behaviour::new(local_peer_id);
+
             let mdns = libp2p::mdns::tokio::Behaviour::new(
                 libp2p::mdns::Config::default(),
-                key.public().to_peer_id(),
+                local_peer_id,
             )?;
 
             let identify = identify::Behaviour::new(identify::Config::new(
@@ -248,8 +256,8 @@ pub async fn evt_loop(
             ));
 
             let kademlia = kad::Behaviour::new(
-                key.public().to_peer_id(),
-                kad::store::MemoryStore::new(key.public().to_peer_id()),
+                local_peer_id,
+                kad::store::MemoryStore::new(local_peer_id),
             );
 
             let ping = ping::Behaviour::new(ping::Config::new());
@@ -263,6 +271,9 @@ pub async fn evt_loop(
             );
 
             Ok(crate::p2p::chat::p2p::MyBehaviour {
+                relay: relay_client,
+                autonat,
+                dcutr,
                 gossipsub,
                 mdns,
                 identify,
@@ -367,21 +378,32 @@ pub async fn evt_loop(
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
-                    for (peer_id, _multiaddr) in list {
+                    for (peer_id, multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
-                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                        swarm.behaviour_mut().autonat.add_server(peer_id, Some(multiaddr.clone()));
+                        // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                        // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
                 SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
-                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                        swarm.behaviour_mut().autonat.remove_server(&peer_id);
+                        // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                        // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
+                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Autonat(event)) => {
+                    debug!("AutoNAT event: {event:?}");
+                }
+                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Dcutr(event)) => {
+                    debug!("DCUtR event: {event:?}");
+                }
+                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Relay(event)) => {
+                    debug!("Relay event: {event:?}");
+                }
                 SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
@@ -416,8 +438,8 @@ pub async fn evt_loop(
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
-                    let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                    recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                    // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
+                    // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
                 }
                 _ => {}
             }

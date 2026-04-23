@@ -1,4 +1,4 @@
-use libp2p::{gossipsub, kad, mdns, swarm::SwarmEvent};
+use libp2p::{autonat, dcutr, gossipsub, kad, mdns, relay, swarm::SwarmEvent};
 use tracing::{debug, info, trace, warn};
 
 use super::behaviour::BehaviourEvent;
@@ -17,9 +17,41 @@ pub async fn handle_swarm_event(
                 swarm
                     .behaviour_mut()
                     .kademlia
-                    .add_address(&peer_id, multiaddr);
+                    .add_address(&peer_id, multiaddr.clone());
+                swarm
+                    .behaviour_mut()
+                    .autonat
+                    .add_server(peer_id, Some(multiaddr));
             }
         }
+        SwarmEvent::Behaviour(BehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
+            for (peer_id, _multiaddr) in list {
+                info!("mDNS peer expired: {peer_id}");
+                swarm.behaviour_mut().autonat.remove_server(&peer_id);
+            }
+        }
+        SwarmEvent::Behaviour(BehaviourEvent::Autonat(event)) => match event {
+            autonat::Event::StatusChanged { old, new } => {
+                info!("AutoNAT status changed: {old:?} -> {new:?}");
+            }
+            other => {
+                debug!("AutoNAT event: {other:?}");
+            }
+        },
+        SwarmEvent::Behaviour(BehaviourEvent::Dcutr(event)) => {
+            debug!("DCUtR event: {event:?}");
+        }
+        SwarmEvent::Behaviour(BehaviourEvent::Relay(event)) => match event {
+            relay::client::Event::ReservationReqAccepted { relay_peer_id, .. } => {
+                info!("Relay reservation accepted by {relay_peer_id}");
+            }
+            relay::client::Event::OutboundCircuitEstablished { relay_peer_id, .. } => {
+                info!("Relay circuit established via {relay_peer_id}");
+            }
+            relay::client::Event::InboundCircuitEstablished { src_peer_id, .. } => {
+                info!("Inbound relay circuit established from {src_peer_id}");
+            }
+        },
         SwarmEvent::Behaviour(BehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
             result,
             ..
