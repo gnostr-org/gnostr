@@ -33,6 +33,7 @@ jobs:
         os: [ubuntu-latest, macos-15-intel, macos-latest, windows-latest]
         toolchain: [stable, nightly]
       fail-fast: false
+      max-parallel: 1
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -300,7 +301,7 @@ jobs:
         shell: bash
         run: |
           gnostr query \
-          -i $(gnostr --nsec $(gnostr --hash "") \
+          -i $(gnostr convert-key --key $(gnostr --hash "") -p nsec) \
           custom-event \
           --kind ${{ env.WEEBLE }} \
           --hex \
