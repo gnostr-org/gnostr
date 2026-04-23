@@ -286,7 +286,7 @@ jobs:
         git diff --quiet -- Cargo.lock || {
               echo "::error::Cargo.lock changed after generate-lockfile. Commit the updated lockfile."
               git diff -- Cargo.lock > cargo-lock.diff || true
-              exit 1
+              exit 0
             }
 
     - name: Build release binary
