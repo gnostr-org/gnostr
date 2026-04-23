@@ -182,12 +182,14 @@ mod tests {
         let secp = Secp256k1::new();
         let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
         let x_only_public_key = public_key.x_only_public_key().0;
+        let runtime_tags = UnsignedEvent::runtime_tags();
 
-        let unsigned_event = UnsignedEvent::new(
+        let unsigned_event = UnsignedEvent::new_with_runtime_tags(
             &x_only_public_key,
             kind as u16,
             tags.clone(),
             content.clone(),
+            runtime_tags.clone(),
         );
 
         let event = unsigned_event.sign(&secret_key).unwrap();
@@ -196,48 +198,9 @@ mod tests {
         assert_eq!(event.kind, kind as u16);
         assert_eq!(event.content, content);
 
-        if let Ok(val) = weeble::weeble() {
-            tags.push(vec!["weeble".to_string(), val.to_string()]);
-        }
-        if let Ok(val) = blockheight::blockheight() {
-            tags.push(vec!["blockheight".to_string(), val.to_string()]);
-        }
-        if let Ok(val) = wobble::wobble() {
-            tags.push(vec!["wobble".to_string(), val.to_string()]);
-        }
-        if let Ok(val) = blockhash::blockhash() {
-            tags.push(vec!["blockhash".to_string(), val]);
-        }
+        tags.extend(runtime_tags);
 
-        let mut actual_tags = event.tags.clone();
-        let actual_wobble_pos = actual_tags
-            .iter()
-            .position(|t| t.get(0).map_or(false, |s| s == "wobble"));
-        if let Some(pos) = actual_wobble_pos {
-            let _ = actual_tags.remove(pos);
-        }
-
-        let mut expected_tags = tags;
-        let expected_wobble_pos = expected_tags
-            .iter()
-            .position(|t| t.get(0).map_or(false, |s| s == "wobble"));
-        if let Some(pos) = expected_wobble_pos {
-            let _ = expected_tags.remove(pos);
-        }
-
-        assert!(
-            actual_wobble_pos.is_some(),
-            "wobble tag not found in actual tags"
-        );
-        assert!(
-            expected_wobble_pos.is_some(),
-            "wobble tag not found in expected tags"
-        );
-
-        actual_tags.sort();
-        expected_tags.sort();
-
-        assert_eq!(actual_tags, expected_tags);
+        assert_eq!(event.tags, tags);
 
         let event_id_bytes = hex::decode(event.id).unwrap();
         let message = Message::from_digest_slice(&event_id_bytes).unwrap();
