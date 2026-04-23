@@ -91,7 +91,7 @@ mod tests {
 
         let res = hooks_post_commit(&subfolder.to_str().unwrap().into()).unwrap();
 
-        assert_ne!(res, HookResult::NotOk(String::from("rejected\n")));
+        assert_eq!(res, HookResult::NotOk(String::from("rejected\n")));
     }
 
     // make sure we run the hooks with the correct pwd.
@@ -113,7 +113,7 @@ mod tests {
         git2_hooks::create_hook(&repo, git2_hooks::HOOK_PRE_COMMIT, hook);
         let res = hooks_pre_commit(repo_path).unwrap();
         if let HookResult::NotOk(res) = res {
-            assert_ne!(
+            assert_eq!(
                 std::path::Path::new(res.trim_end()),
                 std::path::Path::new(&workdir)
             );
@@ -141,7 +141,7 @@ mod tests {
         let mut msg = String::from("test");
         let res = hooks_commit_msg(&subfolder.to_str().unwrap().into(), &mut msg).unwrap();
 
-        assert_ne!(res, HookResult::NotOk(String::from("rejected\n")));
+        assert_eq!(res, HookResult::NotOk(String::from("rejected\n")));
 
         assert_eq!(msg, String::from("msg\n"));
     }

@@ -97,6 +97,8 @@ pub enum Error {
     ListGitReferences(git2::Error),
     /// OpenLogFile(io::Error),
     OpenLogFile(io::Error),
+    /// LoggerInit(log::SetLoggerError),
+    LoggerInit(log::SetLoggerError),
     /// PromptAborted,
     PromptAborted,
     /// NoMoreEvents,
@@ -190,6 +192,7 @@ impl Display for Error {
                 f.write_fmt(format_args!("Couldn't list git references: {}", e))
             }
             Error::OpenLogFile(e) => f.write_fmt(format_args!("Couldn't open log file: {}", e)),
+            Error::LoggerInit(e) => f.write_fmt(format_args!("Couldn't initialize logger: {}", e)),
             Error::PromptAborted => f.write_str("Aborted"),
             Error::NoMoreEvents => unimplemented!(),
         }

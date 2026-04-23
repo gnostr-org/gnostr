@@ -127,6 +127,7 @@ pub use crate::{
     },
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,
+    types::{Nip34Event, Nip34Kind, Nip34UnsignedEvent},
 };
 
 // Re-export web-related constants and modules for Askama templates
