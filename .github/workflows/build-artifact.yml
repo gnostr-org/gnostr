@@ -281,13 +281,14 @@ jobs:
         echo $GITHUB_ENV && printenv
 
     - name: Generate Cargo.lock
+      shell: bash
       run: |
         cargo generate-lockfile
-        git diff --quiet -- Cargo.lock || {
-              echo "::error::Cargo.lock changed after generate-lockfile. Commit the updated lockfile."
-              git diff -- Cargo.lock > cargo-lock.diff || true
-              exit 0
-            } || true
+        if ! git diff --ignore-cr-at-eol --quiet -- Cargo.lock; then
+          echo "::error::Cargo.lock changed after generate-lockfile. Commit the updated lockfile."
+          git diff -- Cargo.lock > cargo-lock.diff || true
+          exit 1
+        fi
 
     - name: Build release binary
       shell: bash
