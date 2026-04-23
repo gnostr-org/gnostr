@@ -1,6 +1,7 @@
 use futures::{SinkExt, StreamExt};
-use log::info;
+use log::{info, warn};
 use serde_json::{json, Map};
+use std::io::{Error as IoError, ErrorKind};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 
@@ -136,20 +137,69 @@ pub async fn send(
     relay_url: Vec<Url>,
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    //println!("query_string=\n{}\n", query_string);
-    //println!("relay_url=\nsrc/lib.rs:139:{:?}\n", relay_url);
-    //println!("limit=\n{}\n", limit.unwrap());
-    //log::info!("query_string=\n{query_string}\n");
-    //log::debug!("relay_url:\n{relay_url:?}\n");
-    //log::info!("\n{}\n", limit.unwrap());
-    let (ws_stream, _) = connect_async(relay_url[0].as_str()).await?;
+    let requested_limit = limit.unwrap_or(1);
+    if requested_limit < 0 {
+        return Err(Box::new(IoError::new(
+            ErrorKind::InvalidInput,
+            format!("Query limit must be >= 0, got {requested_limit}"),
+        )));
+    }
+    if requested_limit == 0 {
+        return Ok(vec![]);
+    }
+
+    let relays = websocket_relays(relay_url);
+    let relay_count = relays.len();
+    if relays.is_empty() {
+        return Err(Box::new(IoError::new(
+            ErrorKind::InvalidInput,
+            "No websocket relays provided",
+        )));
+    }
+
+    let mut last_error: Option<Box<dyn std::error::Error>> = None;
+
+    for relay in relays {
+        match send_to_relay(query_string.clone(), &relay, requested_limit).await {
+            Ok(result) => return Ok(result),
+            Err(err) => {
+                warn!("relay query failed for {}: {}", relay, err);
+                last_error = Some(err);
+            }
+        }
+    }
+
+    if let Some(err) = last_error {
+        return Err(Box::new(IoError::other(format!(
+            "Failed to query {relay_count} websocket relays. Last error: {err}"
+        ))));
+    }
+
+    Err(Box::new(IoError::other(format!(
+        "Failed to query {relay_count} websocket relays"
+    ))))
+}
+
+fn websocket_relays(relays: Vec<Url>) -> Vec<Url> {
+    relays
+        .into_iter()
+        .filter(|relay| matches!(relay.scheme(), "ws" | "wss"))
+        .collect()
+}
+
+async fn send_to_relay(
+    query_string: String,
+    relay: &Url,
+    limit: i32,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let (ws_stream, _) = connect_async(relay.as_str()).await?;
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string.into())).await?;
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
     while let Some(message) = read.next().await {
         let data = message?;
-        if count >= limit.unwrap() {
+        if count >= limit {
             //std::process::exit(0);
             return Ok(vec_result);
         }
@@ -258,6 +308,9 @@ pub fn build_gnostr_query(
 #[cfg(test)]
 mod tests {
     use super::build_gnostr_query;
+    use super::send;
+    use super::websocket_relays;
+    use url::Url;
 
     #[test]
     fn build_gnostr_query_trims_kind_prefixes_and_whitespace() {
@@ -277,5 +330,47 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&query).unwrap();
         assert_eq!(parsed[2]["#t"], serde_json::json!(["gnostr"]));
         assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2, 3]));
+    }
+
+    #[test]
+    fn websocket_relays_only_keeps_ws_and_wss_schemes() {
+        let relays = vec![
+            Url::parse("https://example.com").unwrap(),
+            Url::parse("wss://relay.damus.io").unwrap(),
+            Url::parse("ws://127.0.0.1:8080").unwrap(),
+            Url::parse("ftp://example.com").unwrap(),
+        ];
+
+        let filtered = websocket_relays(relays);
+
+        assert_eq!(filtered.len(), 2);
+        assert_eq!(filtered[0].as_str(), "wss://relay.damus.io/");
+        assert_eq!(filtered[1].as_str(), "ws://127.0.0.1:8080/");
+    }
+
+    #[tokio::test]
+    async fn send_rejects_negative_limit() {
+        let relays = vec![Url::parse("wss://relay.damus.io").unwrap()];
+        let result = send("[]".to_string(), relays, Some(-1)).await;
+
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Query limit must be >= 0"),
+        );
+    }
+
+    #[tokio::test]
+    async fn send_errors_when_no_websocket_relays_exist() {
+        let relays = vec![Url::parse("https://example.com").unwrap()];
+        let result = send("[]".to_string(), relays, Some(1)).await;
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "No websocket relays provided",
+        );
     }
 }
