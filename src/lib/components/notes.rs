@@ -149,7 +149,7 @@ impl NotesComponent {
         }
     }
 
-    pub fn event(&mut self, ev: &Event) -> Result<bool> {
+    pub fn event(&mut self, _ev: &Event) -> Result<bool> {
         Ok(false)
     }
 
@@ -157,7 +157,7 @@ impl NotesComponent {
         self.target.is_some()
     }
 
-    pub fn commands(&self, out: &mut Vec<CommandInfo>, force_all: bool) -> CommandBlocking {
+    pub fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
         out.push(CommandInfo::new(
             strings::commands::new_note(),
             self.target.is_some(),

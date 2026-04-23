@@ -5,7 +5,7 @@ use crossterm::event::Event;
 use filetreelist::{FileTree, FileTreeItem};
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
-    sync::{get_commit_info, CommitId, CommitInfo, RepoPathRef, TreeFile},
+    sync::{default_notes_ref, get_commit_info, list_notes, CommitId, CommitInfo, RepoPathRef, TreeFile},
     AsyncGitNotification, AsyncTreeFilesJob,
 };
 use ratatui::{
@@ -193,6 +193,40 @@ impl RevisionFilesComponent {
 
             true
         })
+    }
+
+    fn list_notes(&self) -> Result<()> {
+        let repo = self.repo.borrow();
+        let notes_ref = default_notes_ref(&repo)?;
+        let notes = list_notes(&repo, Some(notes_ref.as_str()))?;
+
+        let mut msg = String::new();
+        if notes.is_empty() {
+            let _ = write!(&mut msg, "no notes in {notes_ref}");
+        } else {
+            let _ = writeln!(&mut msg, "notes in {notes_ref}");
+            for note in notes {
+                let _ = writeln!(
+                    &mut msg,
+                    "note@{} -> {}",
+                    note.note_id,
+                    note.annotated_id
+                );
+                let _ = writeln!(
+                    &mut msg,
+                    "{} {}",
+                    note.committer,
+                    crate::components::time_to_string(note.committer_time, true)
+                );
+                for line in note.message.lines() {
+                    let _ = writeln!(&mut msg, "  {line}");
+                }
+                let _ = writeln!(&mut msg);
+            }
+        }
+
+        self.queue.push(InternalEvent::ShowInfoMsg(msg));
+        Ok(())
     }
 
     fn open_finder(&self) {
@@ -401,6 +435,11 @@ impl Component for RevisionFilesComponent {
                 self.revision.is_some(),
                 true,
             ));
+            out.push(CommandInfo::new(
+                strings::commands::list_notes(&self.key_config),
+                self.revision.is_some(),
+                true,
+            ));
             out.push(
                 CommandInfo::new(
                     strings::commands::open_file_history(&self.key_config),
@@ -471,6 +510,11 @@ impl Component for RevisionFilesComponent {
                     self.queue.push(InternalEvent::TabSwitchStatus);
                     self.queue
                         .push(InternalEvent::OpenExternalEditor(Some(file)));
+                    return Ok(EventState::Consumed);
+                }
+            } else if key_match(key, self.key_config.keys.list_notes) {
+                if self.revision.is_some() {
+                    self.list_notes()?;
                     return Ok(EventState::Consumed);
                 }
             } else if key_match(key, self.key_config.keys.log_comment_commit) {

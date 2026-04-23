@@ -76,6 +76,7 @@ pub struct KeysList {
     pub blame: GituiKeyEvent,
     pub file_history: GituiKeyEvent,
     pub edit_file: GituiKeyEvent,
+    pub list_notes: GituiKeyEvent,
     pub status_stage_all: GituiKeyEvent,
     pub status_reset_item: GituiKeyEvent,
     pub status_ignore_file: GituiKeyEvent,
@@ -180,6 +181,7 @@ impl Default for KeysList {
 			blame: GituiKeyEvent::new(KeyCode::Char('B'),  KeyModifiers::SHIFT),
 			file_history: GituiKeyEvent::new(KeyCode::Char('H'),  KeyModifiers::SHIFT),
 			edit_file: GituiKeyEvent::new(KeyCode::Char('e'),  KeyModifiers::empty()), //e works
+			list_notes: GituiKeyEvent::new(KeyCode::Char('l'),  KeyModifiers::empty()),
 			//edit_note?
 			status_stage_all: GituiKeyEvent::new(KeyCode::Char('a'),  KeyModifiers::empty()),
 			status_reset_item: GituiKeyEvent::new(KeyCode::Char('D'),  KeyModifiers::SHIFT),

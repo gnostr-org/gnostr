@@ -733,6 +733,14 @@ pub mod commands {
         CommandText::new("Edit Note [n]".to_string(), "edit note", CMD_GROUP_NOTES)
     }
 
+    pub fn list_notes(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("List Notes [{}]", key_config.get_hint(key_config.keys.list_notes)),
+            "list git notes",
+            CMD_GROUP_NOTES,
+        )
+    }
+
     pub fn note_save() -> CommandText {
         CommandText::new("Save note: [Enter]".to_string(), "save note", CMD_GROUP_NOTES)
     }
