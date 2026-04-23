@@ -67,7 +67,7 @@ impl UnsignedEvent {
     pub fn new(
         pubkey: &XOnlyPublicKey,
         kind: u16,
-        mut tags: Vec<Vec<String>>,
+        tags: Vec<Vec<String>>,
         content: String,
     ) -> Self {
         Self::new_with_runtime_tags(pubkey, kind, tags, content, Self::runtime_tags())
