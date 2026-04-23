@@ -77,7 +77,7 @@ pub use remotes::{
     push::AsyncProgress, tags::PushTagsProgress,
 };
 pub(crate) use repository::repo;
-pub use repository::{RepoPath, RepoPathRef};
+pub use repository::{resolve_repo_path, RepoPath, RepoPathRef};
 pub use reset::{reset_repo, reset_stage, reset_workdir};
 pub use reword::reword;
 pub use staging::{discard_lines, stage_lines};
