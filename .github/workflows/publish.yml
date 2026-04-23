@@ -1,0 +1,108 @@
+name: Publish to crates.io
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --workspace
+
+  publish-lib:
+    needs: test
+    runs-on: self-hosted
+    environment: crates-io
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo publish -p blossom-rs --allow-dirty --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish-nip34:
+    needs: publish-lib
+    runs-on: self-hosted
+    environment: crates-io
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sleep 30
+      - run: cargo publish -p blossom-nip34 --allow-dirty --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish-server:
+    needs: [publish-lib, publish-nip34]
+    runs-on: self-hosted
+    environment: crates-io
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sleep 30
+      - run: cargo publish -p blossom-server --allow-dirty --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish-cli:
+    needs: publish-lib
+    runs-on: self-hosted
+    environment: crates-io
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sleep 30
+      - run: cargo publish -p blossom-cli --allow-dirty --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  release-binaries:
+    needs: test
+    runs-on: self-hosted
+    environment: crates-io
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binaries
+        run: cargo build --release --workspace
+
+      - name: Sign release manifest (blossom-server)
+        if: env.BLOSSOM_RELEASE_NSEC != ''
+        env:
+          BLOSSOM_RELEASE_NSEC: ${{ secrets.BLOSSOM_RELEASE_NSEC }}
+        run: cargo xtask sign-release-manifest --bin target/release/blossom-server
+
+      - name: Sign release manifest (blossom-cli)
+        if: env.BLOSSOM_RELEASE_NSEC != ''
+        env:
+          BLOSSOM_RELEASE_NSEC: ${{ secrets.BLOSSOM_RELEASE_NSEC }}
+        run: cargo xtask sign-release-manifest --bin target/release/blossom-cli
+
+      - name: Generate source Merkle tree
+        env:
+          BLOSSOM_RELEASE_NSEC: ${{ secrets.BLOSSOM_RELEASE_NSEC }}
+        run: |
+          cargo xtask source-merkle-tree --output target/release/source-merkle-tree.json
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          gh release upload "$TAG" \
+            target/release/blossom-server \
+            target/release/blossom-cli \
+            target/release/blossom-server.manifest.json \
+            target/release/blossom-cli.manifest.json \
+            target/release/source-merkle-tree.json \
+            --clobber || true

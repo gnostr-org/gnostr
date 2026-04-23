@@ -1,21 +1,37 @@
+name: CI
+
 on:
   push:
-  repository_dispatch:
-    types: [run-ci-workflow]
+    branches: [master]
+  pull_request:
+    branches: [master]
 
-name: build test
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    timeout-minutes: 8
+  # Trusted CI — runs on self-hosted runner for pushes to master.
+  ci-trusted:
+    if: github.event_name == 'push'
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v3
-      if: ${{ !env.ACT }}
-    - uses: cachix/install-nix-action@v22
-      if: ${{ !env.ACT }}
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
-    - run: nix develop --command cargo clippy
-    - run: nix develop --command cargo fmt --all -- --check
-    - run: nix develop --command cargo test
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+  # PR CI — runs on GitHub-hosted runner for pull requests.
+  ci-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
