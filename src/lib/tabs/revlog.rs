@@ -104,6 +104,7 @@ impl Revlog {
             || self.git_tags.is_pending()
             || self.git_local_branches.is_pending()
             || self.git_remote_branches.is_pending()
+            || self.list.any_work_pending()
             || self.commit_details.any_work_pending()
     }
 

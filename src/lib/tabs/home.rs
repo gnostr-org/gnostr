@@ -56,6 +56,7 @@ impl FilesTab {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn file_finder_update(&mut self, file: &Path) {
         self.files.find_file(file);
     }

@@ -447,6 +447,7 @@ impl TopicList {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[allow(dead_code)]
     fn get_entry_to_add<'a>(
         &self,
         e: &'a LogEntry,
@@ -936,6 +937,7 @@ impl TopicList {
     }
     //#[allow(dead_code)]
     //this is commit history list
+    #[allow(dead_code)]
     fn get_chat_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let selection = self.relative_selection();
         let mut txt: Vec<Line> = Vec::with_capacity(height);

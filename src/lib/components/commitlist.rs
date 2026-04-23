@@ -112,6 +112,11 @@ impl CommitList {
         self.tags = Some(tags);
     }
 
+    /// any_work_pending
+    pub fn any_work_pending(&self) -> bool {
+        self.notes.any_work_pending()
+    }
+
     /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
@@ -309,6 +314,11 @@ impl CommitList {
             .unwrap_or_default()
     }
 
+    fn selected_entry_has_notes(&self) -> bool {
+        self.selected_entry()
+            .is_some_and(|_| self.notes.has_notes())
+    }
+
     fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
         let needs_update = if self.items.highlighting() {
             self.move_selection_highlighting(scroll)?
@@ -430,6 +440,7 @@ impl CommitList {
         &self,
         e: &'a LogEntry,
         selected: bool,
+        notes_present: bool,
         tags: Option<String>,
         local_branches: Option<String>,
         remote_branches: Option<String>,
@@ -438,8 +449,9 @@ impl CommitList {
         now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
-        let mut txt: Vec<Span> =
-            Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 });
+        let mut txt: Vec<Span> = Vec::with_capacity(
+            ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 } + if notes_present { 2 } else { 0 },
+        );
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
 
@@ -463,6 +475,11 @@ impl CommitList {
                 }),
                 theme.log_marker(selected),
             ));
+            txt.push(splitter.clone());
+        }
+
+        if notes_present {
+            txt.push(Span::styled(Cow::from(symbol::DOT), theme.log_marker(selected)));
             txt.push(splitter.clone());
         }
 
@@ -581,6 +598,7 @@ impl CommitList {
             txt.push(self.get_entry_to_add(
                 e,
                 idx + self.scroll_top.get() == selection,
+                idx + self.scroll_top.get() == selection && self.selected_entry_has_notes(),
                 tags,
                 local_branches,
                 self.remote_branches_string(e),
@@ -719,6 +737,7 @@ impl CommitList {
             if let Ok(commits) = commits {
                 self.items.set_items(want_min, commits, &self.highlights);
                 self.refresh_notes();
+                self.notes.refresh();
             }
         }
     }

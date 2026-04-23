@@ -6,7 +6,7 @@ use gnostr_asyncgit::{
     AsyncGitNotification, AsyncNotes,
 };
 use git2::Oid;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use ratatui::{
     layout::{Alignment, Rect},
     text::{Line, Span},
@@ -16,24 +16,32 @@ use ratatui::{
 use crate::{
     app::Environment,
     components::{CommandBlocking, CommandInfo},
-    keys::SharedKeyConfig,
     queue::Queue,
     strings,
+    spinner::spinner_char,
     ui::style::SharedTheme,
 };
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum NotesState {
+    Idle,
+    Loading,
+    Ready,
+    Empty,
+    Error,
+}
 
 /// Reusable notes editor/viewer for a selected git object.
 pub struct NotesComponent {
     repo: RepoPathRef,
     queue: Queue,
     theme: SharedTheme,
-    key_config: SharedKeyConfig,
     // Mirrors the repository snapshot that was last delivered through the
     // async notes notification path.
     async_notes: AsyncNotes,
     target: Option<Oid>,
-    loaded_target: Option<Oid>,
     notes_ref: Option<String>,
+    state: NotesState,
     // Keep only the last delivered snapshot here; the queue/update path is
     // responsible for refreshing it when async work completes.
     notes: Vec<NoteInfo>,
@@ -45,18 +53,17 @@ impl NotesComponent {
             repo: env.repo.clone(),
             queue: env.queue.clone(),
             theme: env.theme.clone(),
-            key_config: env.key_config.clone(),
             async_notes: AsyncNotes::new(env.repo.borrow().clone(), &env.sender_git),
             target: None,
-            loaded_target: None,
             notes_ref: None,
+            state: NotesState::Idle,
             notes: Vec::new(),
         }
     }
 
     pub fn clear(&mut self) {
         self.target = None;
-        self.loaded_target = None;
+        self.state = NotesState::Idle;
         self.notes.clear();
     }
 
@@ -78,12 +85,12 @@ impl NotesComponent {
     /// new snapshot later.
     fn request_refresh(&mut self) {
         let Some(_) = self.target else {
-            self.loaded_target = None;
+            self.state = NotesState::Idle;
             self.notes.clear();
             return;
         };
 
-        self.loaded_target = None;
+        self.state = NotesState::Loading;
 
         if let Err(err) = self
             .async_notes
@@ -97,14 +104,18 @@ impl NotesComponent {
         }
     }
 
+    /// Force a notes reload for the current target.
+    pub fn refresh(&mut self) {
+        self.request_refresh();
+    }
+
     /// Drain the latest notes snapshot from the async job queue.
-    fn refresh(&mut self) {
+    fn refresh_from_async(&mut self) {
         match self.async_notes.refresh() {
             Ok(true) => {
                 if let Ok(Some(mut notes)) = self.async_notes.last() {
                     if let Some(target) = self.target {
                         notes.retain(|note| note.annotated_id == target);
-                        self.loaded_target = Some(target);
                     }
 
                     notes.sort_by(|a, b| {
@@ -112,12 +123,18 @@ impl NotesComponent {
                             .cmp(&b.committer_time)
                             .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
                     });
+                    self.state = if notes.is_empty() {
+                        NotesState::Empty
+                    } else {
+                        NotesState::Ready
+                    };
                     self.notes = notes;
                 }
             }
             Ok(false) => {}
             Err(err) => {
                 log::error!("failed to refresh notes: {}", err);
+                self.state = NotesState::Error;
                 self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
                     "failed to refresh notes:\n{}",
                     err
@@ -145,7 +162,7 @@ impl NotesComponent {
     /// Apply async-git notifications from the app's queue lifecycle.
     pub fn update_git(&mut self, ev: AsyncGitNotification) {
         if matches!(ev, AsyncGitNotification::Notes) {
-            self.refresh();
+            self.refresh_from_async();
         }
     }
 
@@ -155,6 +172,18 @@ impl NotesComponent {
 
     pub fn is_editing(&self) -> bool {
         self.target.is_some()
+    }
+
+    pub fn has_notes(&self) -> bool {
+        matches!(self.state, NotesState::Ready) && !self.notes.is_empty()
+    }
+
+    pub fn state(&self) -> NotesState {
+        self.state
+    }
+
+    pub fn any_work_pending(&self) -> bool {
+        self.async_notes.is_pending() || matches!(self.state, NotesState::Loading)
     }
 
     pub fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
@@ -169,14 +198,20 @@ impl NotesComponent {
     fn get_notes_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let mut txt: Vec<Line> = Vec::with_capacity(height);
 
-        if self.target.is_some() && self.loaded_target != self.target {
-            txt.push(Line::from("Loading notes..."));
-            return txt;
-        }
-
-        if self.notes.is_empty() {
-            txt.push(Line::from("No notes"));
-            return txt;
+        match self.state {
+            NotesState::Loading => {
+                txt.push(Line::from("Loading notes..."));
+                return txt;
+            }
+            NotesState::Error => {
+                txt.push(Line::from("Failed to load notes"));
+                return txt;
+            }
+            NotesState::Idle | NotesState::Empty => {
+                txt.push(Line::from("No notes"));
+                return txt;
+            }
+            NotesState::Ready => {}
         }
 
         let notes_ref = self
@@ -220,13 +255,22 @@ impl NotesComponent {
     pub fn draw(&self, f: &mut Frame, notes_area: Rect, input_area: Rect) {
         let notes_height = notes_area.height as usize;
         let notes_width = notes_area.width as usize;
+        let title = if matches!(self.state, NotesState::Loading) || self.async_notes.is_pending() {
+            let idx = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|dur| (dur.as_millis() / 120) as usize)
+                .unwrap_or_default();
+            format!("{} Notes", spinner_char(idx))
+        } else {
+            "Notes".to_string()
+        };
 
         f.render_widget(
             Paragraph::new(self.get_notes_text(notes_height, notes_width))
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
-                        .title("Notes")
+                        .title(title)
                         .border_style(self.theme.block(false)),
                 )
                 .alignment(Alignment::Left),
