@@ -173,14 +173,20 @@ impl TryFrom<u16> for Nip34Kind {
 
 #[cfg(test)]
 mod tests {
-    use rand::rngs::OsRng;
-    use secp256k1::{schnorr, Secp256k1};
+    use secp256k1::{schnorr, PublicKey, Secp256k1, SecretKey};
 
     use super::*;
 
+    const TEST_SECRET_KEY_BYTES: [u8; 32] = [
+        0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f,
+        0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b,
+        0x78, 0x52, 0xb8, 0x55,
+    ];
+
     fn test_event_creation(kind: Nip34Kind, mut tags: Vec<Vec<String>>, content: String) {
         let secp = Secp256k1::new();
-        let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
+        let secret_key = SecretKey::from_slice(&TEST_SECRET_KEY_BYTES).unwrap();
+        let public_key = PublicKey::from_secret_key(&secp, &secret_key);
         let x_only_public_key = public_key.x_only_public_key().0;
         let runtime_tags = UnsignedEvent::runtime_tags();
 
