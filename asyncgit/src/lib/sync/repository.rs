@@ -74,6 +74,21 @@ pub fn resolve_repo_path(repo_path: &RepoPath) -> Result<RepoPath> {
     })
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{resolve_repo_path, RepoPath};
+    use path_clean::PathClean;
+
+    #[test]
+    fn resolves_relative_repo_paths_against_current_dir() {
+        let repo_path = RepoPath::from("../");
+        let resolved = resolve_repo_path(&repo_path).expect("path resolution should succeed");
+
+        assert!(resolved.as_path().is_absolute());
+        assert_eq!(resolved.as_path(), std::env::current_dir().expect("cwd").join("../").clean());
+    }
+}
+
 pub fn repo(repo_path: &RepoPath) -> Result<Repository> {
     let repo = Repository::open_ext(
         repo_path.gitpath(),
