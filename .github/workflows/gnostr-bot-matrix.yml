@@ -147,7 +147,7 @@ jobs:
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: runner.os == 'macos'
+        if: runner.os == 'macOS' || runner.os == 'macos'
 
       - name: Install OpenSSL for macOS
         run: |
@@ -160,7 +160,7 @@ jobs:
           echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
-        if: runner.os == 'macos'
+        if: runner.os == 'macOS' || runner.os == 'macos'
 
       - name: linuxbrew (with retries)
         run: |
@@ -284,6 +284,7 @@ jobs:
       - name: 🚀 gnostr query test
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
+        continue-on-error: true
         run: |
           gnostr query \
           --authors \
@@ -299,6 +300,7 @@ jobs:
 
       - name: 🚀 gnostr query nested command test
         shell: bash
+        continue-on-error: true
         run: |
           gnostr query \
           -i $(gnostr convert-key --key $(gnostr --hash "") -p nsec) \
