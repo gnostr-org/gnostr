@@ -343,7 +343,7 @@ jobs:
         run: |
           gnostr query \
           --authors \
-          $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k | jq .[] | sed  "s/\"//g") \
+          $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw) \
           --limit 100 | jq
 
       - name: 🚀 cargo run --bin gnostr-tui --
@@ -365,7 +365,7 @@ jobs:
            $(\
             gnostr \
             bech32-to-any \
-            npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k | jq .[] | sed  "s/\"//g"\
+            npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw \
            ) \
            custom-event \
            --hex \
