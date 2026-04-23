@@ -232,6 +232,27 @@ fn run_local_chat_command(command: LocalChatCommand, cwd: PathBuf) -> Result<Str
     }
 }
 
+fn sanitize_topic_dir(topic: &str) -> String {
+    topic
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
+
+fn chat_repo_root(topic: &str) -> Result<PathBuf> {
+    let dirs = crate::get_dirs()?;
+    Ok(dirs
+        .data_local_dir()
+        .join("chat")
+        .join(sanitize_topic_dir(topic)))
+}
+
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
     const DETACHED_ENV: &str = "GNOSTR_CHAT_DETACHED";
@@ -409,7 +430,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             }
             Err(_) => {
                 if let Some(topic) = args.topic.clone() {
-                    let repo_root = search_path.join(topic);
+                    let repo_root = chat_repo_root(&topic)?;
                     fs::create_dir_all(&repo_root)?;
                     let repo = Repository::init(&repo_root)?;
                     (repo_root, repo)
@@ -452,7 +473,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
             let peer_tx_for_full = peer_tx.clone();
             let mut full_p2p_args = full_p2p_args;
-            full_p2p_args.gitdir = Some(RepoPath::from(repo_root.as_os_str().to_str().unwrap()));
+            full_p2p_args.gitdir = Some(RepoPath::Path(repo_root.clone()));
             global_rt().spawn(async move {
                 while let Some(msg) = out_rx.recv().await {
                     let _ = peer_tx_for_full.send(InternalEvent::ChatMessage(msg)).await;
