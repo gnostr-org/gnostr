@@ -66,21 +66,16 @@ fn repo_workdir(repo: &Repository) -> Result<&Path> {
 
 fn system_git_notes(repo: &Repository, oid: Oid, notes_ref: &str, message: &str) -> Result<()> {
     let workdir = repo_workdir(repo)?;
+    let oid = oid.to_string();
 
     println!("== system git notes ==");
     run_git(
         workdir,
-        &["notes", "--ref", notes_ref, "add", "-m", message, &oid.to_string()],
+        &["notes", "--ref", notes_ref, "add", "-m", message, oid.as_str()],
     )?;
-    run_git(
-        workdir,
-        &["notes", "--ref", notes_ref, "show", &oid.to_string()],
-    )?;
+    run_git(workdir, &["notes", "--ref", notes_ref, "show", oid.as_str()])?;
     run_git(workdir, &["notes", "--ref", notes_ref, "list"])?;
-    run_git(
-        workdir,
-        &["notes", "--ref", notes_ref, "remove", &oid.to_string()],
-    )?;
+    run_git(workdir, &["notes", "--ref", notes_ref, "remove", oid.as_str()])?;
 
     Ok(())
 }
