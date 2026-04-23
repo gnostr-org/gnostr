@@ -44,17 +44,8 @@ pub struct UnsignedEvent {
 }
 
 impl UnsignedEvent {
-    /// Create a new unsigned event.
-    pub fn new(
-        pubkey: &XOnlyPublicKey,
-        kind: u16,
-        mut tags: Vec<Vec<String>>,
-        content: String,
-    ) -> Self {
-        let created_at = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+    fn runtime_tags() -> Vec<Vec<String>> {
+        let mut tags = Vec::new();
 
         if let Ok(val) = weeble::weeble() {
             tags.push(vec!["weeble".to_string(), val.to_string()]);
@@ -68,6 +59,33 @@ impl UnsignedEvent {
         if let Ok(val) = blockhash::blockhash() {
             tags.push(vec!["blockhash".to_string(), val]);
         }
+
+        tags
+    }
+
+    /// Create a new unsigned event.
+    pub fn new(
+        pubkey: &XOnlyPublicKey,
+        kind: u16,
+        mut tags: Vec<Vec<String>>,
+        content: String,
+    ) -> Self {
+        Self::new_with_runtime_tags(pubkey, kind, tags, content, Self::runtime_tags())
+    }
+
+    fn new_with_runtime_tags(
+        pubkey: &XOnlyPublicKey,
+        kind: u16,
+        mut tags: Vec<Vec<String>>,
+        content: String,
+        runtime_tags: Vec<Vec<String>>,
+    ) -> Self {
+        let created_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        tags.extend(runtime_tags);
 
         Self {
             pubkey: pubkey.to_string(),
