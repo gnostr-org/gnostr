@@ -1087,7 +1087,9 @@ impl App {
             .order(100),
         );
 
-        res.push(CommandInfo::new(strings::commands::note_open(), true, true).hidden());
+        res.push(
+            CommandInfo::new(strings::commands::note_open(), true, true).order(order::PRIORITY),
+        );
         res.push(CommandInfo::new(strings::commands::note_save(), true, true).hidden());
         res.push(CommandInfo::new(strings::commands::note_cancel(), true, true).hidden());
 
