@@ -79,13 +79,21 @@ impl AsyncNotes {
             notes_ref.map(str::to_string),
         ));
 
+        let _ = self.refresh()?;
+
+        Ok(())
+    }
+
+    ///
+    pub fn refresh(&mut self) -> Result<bool> {
         if let Some(job) = self.job.take_last() {
             if let Some(Ok(result)) = job.result() {
                 self.last = Some(result);
+                return Ok(true);
             }
         }
 
-        Ok(())
+        Ok(false)
     }
 }
 
@@ -212,6 +220,7 @@ mod tests {
         }
 
         assert!(saw_notes);
+        assert!(async_notes.refresh()?);
         assert_eq!(async_notes.last()?.unwrap()[0].message, "hello async notes");
 
         Ok(())
