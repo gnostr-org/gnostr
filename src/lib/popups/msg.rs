@@ -121,7 +121,9 @@ impl Component for MsgPopup {
     fn event(&mut self, ev: &Event) -> Result<EventState> {
         if self.visible {
             if let Event::Key(e) = ev {
-                if key_match(e, self.key_config.keys.enter) {
+                if key_match(e, self.key_config.keys.enter)
+                    || key_match(e, self.key_config.keys.exit_popup)
+                {
                     self.hide();
                 } else if key_match(e, self.key_config.keys.popup_down) {
                     self.scroll.move_top(ScrollType::Down);
