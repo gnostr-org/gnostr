@@ -730,7 +730,7 @@ pub mod commands {
     }
 
     pub fn note_open() -> CommandText {
-        CommandText::new("Note: [\\]/[n]".to_string(), "open note editor", CMD_GROUP_NOTES)
+        CommandText::new("Note: [⇧n]".to_string(), "open note editor", CMD_GROUP_NOTES)
     }
 
     pub fn note_save() -> CommandText {
