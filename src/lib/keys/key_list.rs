@@ -197,7 +197,7 @@ impl Default for KeysList {
 			//log_checkout_commit
 			log_checkout_commit: GituiKeyEvent { code: KeyCode::Char('S'), modifiers: KeyModifiers::SHIFT },
 			//log_comment_commit
-			log_comment_commit: GituiKeyEvent { code: KeyCode::Char('\\'), modifiers: KeyModifiers::empty() },// blackslash - easy pinky access
+			log_comment_commit: GituiKeyEvent { code: KeyCode::Char('n'), modifiers: KeyModifiers::SHIFT },
 			log_reset_commit: GituiKeyEvent { code: KeyCode::Char('R'), modifiers: KeyModifiers::SHIFT },
 			log_reword_commit: GituiKeyEvent { code: KeyCode::Char('r'), modifiers: KeyModifiers::empty() },
 			log_find: GituiKeyEvent { code: KeyCode::Char('f'), modifiers: KeyModifiers::empty() },
