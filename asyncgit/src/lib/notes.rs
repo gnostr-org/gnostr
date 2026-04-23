@@ -164,7 +164,7 @@ impl AsyncJob for AsyncNotesJob {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use std::{fs::File, io::Write, path::Path, time::Duration};
 
     use crossbeam_channel::unbounded;
     use tempfile::TempDir;
@@ -180,6 +180,14 @@ mod tests {
             config.set_str("user.name", "name")?;
             config.set_str("user.email", "email")?;
         }
+
+        let file_path = Path::new("foo");
+        File::create(td.path().join(file_path))?.write_all(b"a")?;
+        repo.index()?.add_path(file_path)?;
+        let tree_id = repo.index()?.write_tree()?;
+        let tree = repo.find_tree(tree_id)?;
+        let sig = repo.signature()?;
+        repo.commit(Some("HEAD"), &sig, &sig, "initial", &tree, &[])?;
 
         let root = repo.path().parent().unwrap();
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
