@@ -38,8 +38,11 @@ pub struct NotesComponent {
     queue: Queue,
     theme: SharedTheme,
     key_config: SharedKeyConfig,
+    // Mirrors the repository snapshot that was last delivered through the
+    // async notes notification path.
     async_notes: AsyncNotes,
     target: Option<Oid>,
+    loaded_target: Option<Oid>,
     notes_ref: Option<String>,
     // Keep only the last delivered snapshot here; the queue/update path is
     // responsible for refreshing it when async work completes.
@@ -57,6 +60,7 @@ impl NotesComponent {
             key_config: env.key_config.clone(),
             async_notes: AsyncNotes::new(env.repo.borrow().clone(), &env.sender_git),
             target: None,
+            loaded_target: None,
             notes_ref: None,
             notes: Vec::new(),
             input: Input::default(),
@@ -66,6 +70,7 @@ impl NotesComponent {
 
     pub fn clear(&mut self) {
         self.target = None;
+        self.loaded_target = None;
         self.notes.clear();
         self.input.reset();
         self.input_mode = InputMode::Normal;
@@ -89,15 +94,16 @@ impl NotesComponent {
         }
     }
 
+    /// Queue a notes fetch and let the async notification path deliver the
+    /// new snapshot later.
     fn request_refresh(&mut self) {
-        // Queue the note fetch instead of blocking the render path; the update
-        // loop drains the completed snapshot when the async job finishes.
         let Some(_) = self.target else {
+            self.loaded_target = None;
             self.notes.clear();
             return;
         };
 
-        self.notes.clear();
+        self.loaded_target = None;
 
         if let Err(err) = self
             .async_notes
@@ -111,13 +117,14 @@ impl NotesComponent {
         }
     }
 
+    /// Drain the latest notes snapshot from the async job queue.
     fn refresh(&mut self) {
-        // Drain the latest async snapshot here instead of fetching from draw().
         match self.async_notes.refresh() {
             Ok(true) => {
                 if let Ok(Some(mut notes)) = self.async_notes.last() {
                     if let Some(target) = self.target {
                         notes.retain(|note| note.annotated_id == target);
+                        self.loaded_target = Some(target);
                     }
 
                     notes.sort_by(|a, b| {
@@ -140,8 +147,12 @@ impl NotesComponent {
         }
     }
 
+    /// Open the editor without blocking; prefill only when the latest async
+    /// snapshot already matches the current target.
     pub fn open_editor(&mut self) {
-        self.refresh();
+        if self.loaded_target == self.target {
+            self.refresh();
+        }
 
         if let Some(note) = self.notes.first() {
             self.input = Input::new(note.message.clone());
@@ -154,6 +165,7 @@ impl NotesComponent {
         }
     }
 
+    /// Apply async-git notifications from the app's queue lifecycle.
     pub fn update_git(&mut self, ev: AsyncGitNotification) {
         if matches!(ev, AsyncGitNotification::Notes) {
             self.refresh();
@@ -180,9 +192,9 @@ impl NotesComponent {
             )?;
         }
 
-        // Save immediately, then let the next refresh/update cycle rebuild the
-        // in-memory snapshot instead of trying to redraw from the write path.
-        self.refresh();
+        // Save immediately, then let the next async refresh/update cycle rebuild
+        // the in-memory snapshot instead of trying to redraw from the write path.
+        self.request_refresh();
         self.input.reset();
         self.input_mode = InputMode::Normal;
         Ok(())
@@ -255,6 +267,11 @@ impl NotesComponent {
 
     fn get_notes_text(&self, height: usize, width: usize) -> Vec<Line<'_>> {
         let mut txt: Vec<Line> = Vec::with_capacity(height);
+
+        if self.target.is_some() && self.loaded_target != self.target {
+            txt.push(Line::from("Loading notes..."));
+            return txt;
+        }
 
         if self.notes.is_empty() {
             txt.push(Line::from("No notes"));

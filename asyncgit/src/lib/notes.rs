@@ -60,8 +60,8 @@ impl AsyncNotes {
     pub fn request(&mut self, dur: Duration, force: bool, notes_ref: Option<&str>) -> Result<()> {
         log::trace!("request");
 
-        // Spawn the note fetch on the async job queue; callers should apply the
-        // result later from their update loop when the Notes notification arrives.
+        // Spawn the note fetch on the async job queue; callers apply the result
+        // later from their update/update_async loop when Notes arrives.
         if !force && self.job.is_pending() {
             return Ok(());
         }
