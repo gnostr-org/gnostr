@@ -1279,7 +1279,9 @@ impl Component for TopicList {
                     } else if key_match(k, self.key_config.keys.log_checkout_commit) {
                         self.checkout();
                         true
-                    } else if key_match(k, self.key_config.keys.log_comment_commit) {
+                    } else if key_match(k, self.key_config.keys.log_comment_commit)
+                        || k.code == crossterm::event::KeyCode::Char('n')
+                    {
                         self.comment();
                         true
                     } else if key_match(k, self.key_config.keys.enter) {
@@ -1360,7 +1362,7 @@ impl Component for TopicList {
                     true,
                 ));
                 out.push(CommandInfo::new(
-                    CommandText::new("Note: [\\]".to_string(), "", ""),
+                    CommandText::new("Note: [\\]/[n]".to_string(), "", ""),
                     true,
                     true,
                 ));
