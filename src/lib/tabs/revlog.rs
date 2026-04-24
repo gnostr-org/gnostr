@@ -120,6 +120,7 @@ impl Revlog {
             }
 
             self.list.refresh_extend_data(self.git_log.extract_items()?);
+            self.list.update();
 
             self.git_tags.request(Duration::from_secs(3), false)?;
 
@@ -133,6 +134,11 @@ impl Revlog {
         }
 
         Ok(())
+    }
+
+    /// update_spinner
+    pub fn update_spinner(&mut self) {
+        self.list.update_spinner();
     }
 
     /// update_git
