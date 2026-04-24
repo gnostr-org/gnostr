@@ -83,9 +83,12 @@ pub fn tab_files(key_config: &SharedKeyConfig) -> String {
 pub fn tab_chat(_key_config: &SharedKeyConfig) -> String {
     "🅖".to_string()
 }
+pub fn tab_stash(key_config: &SharedKeyConfig) -> String {
+    format!("Stash [{}]", key_config.get_hint(key_config.keys.tab_stashing))
+}
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
     format!(
-        "Stashing [{}]",
+        "Files to Stash [{}]",
         key_config.get_hint(key_config.keys.tab_stashing)
     )
 }
@@ -435,12 +438,11 @@ pub mod commands {
     pub fn toggle_tabs_direct(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!(
-                "Tab [{}{}{}{}{}]",
+                "Tab [{}{}{}{}]",
                 key_config.get_hint(key_config.keys.tab_status),
                 key_config.get_hint(key_config.keys.tab_log),
                 key_config.get_hint(key_config.keys.tab_files),
                 key_config.get_hint(key_config.keys.tab_stashing),
-                key_config.get_hint(key_config.keys.tab_stashes),
             ),
             "switch top level tabs directly",
             CMD_GROUP_GENERAL,

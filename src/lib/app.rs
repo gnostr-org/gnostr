@@ -51,7 +51,7 @@ use crate::{
     setup_popups,
     strings::{self, ellipsis_trim_start, order},
     sub_commands::tui::{AsyncAppNotification, AsyncNotification},
-    tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},
+    tabs::{Chatlog, FilesTab, Revlog, StashTab, Status},
     try_or_popup,
     ui::style::{SharedTheme, Theme},
     weeble_sync, wobble_sync,
@@ -105,8 +105,7 @@ pub struct App {
     tab: usize,
     revlog: Revlog,
     status_tab: Status,
-    stashing_tab: Stashing,
-    stashlist_tab: StashList,
+    stash_tab: StashTab,
     files_tab: FilesTab,
     chat_tab: Chatlog,
     queue: Queue,
@@ -225,8 +224,7 @@ impl App {
             msg_popup: MsgPopup::new(&env),
             revlog: Revlog::new(&env),
             status_tab: Status::new(&env),
-            stashing_tab: Stashing::new(&env),
-            stashlist_tab: StashList::new(&env),
+            stash_tab: StashTab::new(&env),
             files_tab: FilesTab::new(&env),
             //chat_tab
             chat_tab: Chatlog::new(&env).await,
@@ -246,7 +244,7 @@ impl App {
             quit_flag,
         };
 
-        app.set_tab(tab)?;
+        app.set_tab(tab.min(4))?;
 
         Ok(app)
     }
@@ -291,8 +289,7 @@ impl App {
                 1 => self.status_tab.draw(f, chunks_main[1])?,
                 2 => self.revlog.draw(f, chunks_main[1])?,
                 3 => self.files_tab.draw(f, chunks_main[1])?,
-                4 => self.stashing_tab.draw(f, chunks_main[1])?,
-                5 => self.stashlist_tab.draw(f, chunks_main[1])?,
+                4 => self.stash_tab.draw(f, chunks_main[1])?,
                 _ => bail!("unknown tab"),
             };
         }
@@ -413,8 +410,7 @@ impl App {
         self.status_tab.update()?;
         self.revlog.update()?;
         self.files_tab.update()?;
-        self.stashing_tab.update()?;
-        self.stashlist_tab.update()?;
+        self.stash_tab.update()?;
         self.reset_popup.update()?;
 
         self.update_commands();
@@ -434,7 +430,7 @@ impl App {
             self.chat_tab.update_git(ev)?;
             //
             self.status_tab.update_git(ev)?;
-            self.stashing_tab.update_git(ev)?;
+            self.stash_tab.update_git(ev)?;
             self.revlog.update_git(ev)?;
             self.file_revlog_popup.update_git(ev)?;
             self.inspect_chat_popup.update_git(ev)?;
@@ -474,7 +470,7 @@ impl App {
     pub fn any_work_pending(&self) -> bool {
         self.status_tab.anything_pending()
             || self.revlog.any_work_pending()
-            || self.stashing_tab.anything_pending()
+            || self.stash_tab.anything_pending()
             || self.files_tab.anything_pending()
             || self.chat_tab.any_work_pending()
             || self.blame_file_popup.any_work_pending()
@@ -547,8 +543,7 @@ impl App {
             status_tab,
             files_tab,
             chat_tab,
-            stashing_tab,
-            stashlist_tab
+            stash_tab
         ]
     );
 
@@ -621,8 +616,7 @@ impl App {
             &mut self.status_tab,
             &mut self.revlog,
             &mut self.files_tab,
-            &mut self.stashing_tab,
-            &mut self.stashlist_tab,
+            &mut self.stash_tab,
         ]
     }
 
@@ -680,8 +674,14 @@ impl App {
             AppTabs::Status => self.set_tab(1)?,
             AppTabs::Log => self.set_tab(2)?,
             AppTabs::Files => self.set_tab(3)?,
-            AppTabs::Stashing => self.set_tab(4)?,
-            AppTabs::Stashlist => self.set_tab(5)?,
+            AppTabs::Stashing => {
+                self.stash_tab.select_files()?;
+                self.set_tab(4)?;
+            }
+            AppTabs::Stashlist => {
+                self.stash_tab.select_stashes()?;
+                self.set_tab(4)?;
+            }
         }
         Ok(())
     }
@@ -982,10 +982,7 @@ impl App {
                 self.status_tab.reset(&r);
             }
             Action::StashDrop(_) | Action::StashPop(_) => {
-                if let Err(e) = self
-                    .stashlist_tab
-                    .action_confirmed(&self.repo.borrow(), &action)
-                {
+                if let Err(e) = self.stash_tab.action_confirmed(&self.repo.borrow(), &action) {
                     self.queue.push(InternalEvent::ShowErrorMsg(e.to_string()));
                 }
             }
@@ -1152,8 +1149,7 @@ impl App {
             Span::raw(strings::tab_status(&self.key_config)),
             Span::raw(strings::tab_log(&self.key_config)),
             Span::raw(strings::tab_files(&self.key_config)),
-            Span::raw(strings::tab_stashing(&self.key_config)),
-            Span::raw(strings::tab_stashes(&self.key_config)),
+            Span::raw(strings::tab_stash(&self.key_config)),
         ];
         let divider = strings::tab_divider(&self.key_config);
 
