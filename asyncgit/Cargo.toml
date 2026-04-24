@@ -43,6 +43,9 @@ speedy = []
 vendored-openssl = ["openssl-sys"]
 vendor-openssl = ["vendored-openssl"]
 
+[target.'cfg(not(windows))'.dependencies]
+sd-notify = "0.4.1"
+
 [dependencies]
 aes = { workspace = true }
 anyhow = "1.0.100"
@@ -204,9 +207,6 @@ webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
-
-[target.'cfg(not(windows))'.dependencies]
-sd-notify = "0.4.1"
 
 [build-dependencies]
 anyhow = "1.0.100"
