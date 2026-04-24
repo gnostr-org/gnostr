@@ -209,11 +209,7 @@ pub async fn evt_loop(
                 )
                 .expect(""),
                 ipfs: kad::Behaviour::with_config(local_peer_id, ipfs_store, ipfs_cfg),
-                kademlia: kad::Behaviour::with_config(
-                    local_peer_id,
-                    kad_store,
-                    kad_config,
-                ),
+                kademlia: kad::Behaviour::with_config(local_peer_id, kad_store, kad_config),
                 identify: identify::Behaviour::new(identify::Config::new(
                     "/yamux/1.0.0".to_string(),
                     key.public(),
@@ -224,10 +220,7 @@ pub async fn evt_loop(
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(60)),
                 ),
-                mdns: mdns::tokio::Behaviour::new(
-                    mdns::Config::default(),
-                    local_peer_id,
-                )?,
+                mdns: mdns::tokio::Behaviour::new(mdns::Config::default(), local_peer_id)?,
             })
         })?
         .build();
@@ -387,7 +380,10 @@ pub async fn advertise_service(
 
     let bootstrap_addr: Multiaddr = "/dnsaddr/bootstrap.libp2p.io".parse()?;
     for (addr, boot_peer) in Network::Ipfs.bootnodes() {
-        swarm.behaviour_mut().ipfs.add_address(&boot_peer, addr.clone());
+        swarm
+            .behaviour_mut()
+            .ipfs
+            .add_address(&boot_peer, addr.clone());
         swarm.behaviour_mut().kademlia.add_address(&boot_peer, addr);
     }
     for peer in crate::p2p::network_config::IPFS_BOOTNODES {
@@ -402,21 +398,20 @@ pub async fn advertise_service(
             .add_address(&peer_id, bootstrap_addr.clone());
     }
 
-    swarm
-        .behaviour_mut()
-        .kademlia
-        .set_mode(Some(Mode::Server));
+    swarm.behaviour_mut().kademlia.set_mode(Some(Mode::Server));
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
     swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
 
     let record_key_name = format!("gnostr/services/{service_name}");
     let record_key = RecordKey::new(&record_key_name);
-    let mut publish_interval =
-        tokio::time::interval(std::time::Duration::from_secs(15 * 60));
+    let mut publish_interval = tokio::time::interval(std::time::Duration::from_secs(15 * 60));
 
     let publish = |swarm: &mut libp2p::Swarm<crate::p2p::behaviour::Behaviour>| {
         let record = service_announcement_record(&service_name, &service_url, peer_id);
-        swarm.behaviour_mut().kademlia.put_record(record, Quorum::Majority)?;
+        swarm
+            .behaviour_mut()
+            .kademlia
+            .put_record(record, Quorum::Majority)?;
         swarm
             .behaviour_mut()
             .kademlia
