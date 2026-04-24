@@ -418,6 +418,11 @@ impl App {
         Ok(())
     }
 
+    /// advance spinner-backed async UI state
+    pub fn update_spinner(&mut self) {
+        self.revlog.update_spinner();
+    }
+
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
 
