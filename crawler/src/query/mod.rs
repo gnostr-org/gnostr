@@ -1,8 +1,9 @@
 use futures::{SinkExt, StreamExt};
-use log::info;
+use log::{debug, info};
 use serde_json::{json, Map};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
+use std::io;
 
 pub mod cli;
 pub mod forms;
@@ -136,29 +137,60 @@ pub async fn send(
     relay_url: Vec<Url>,
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    //println!("query_string=\n{}\n", query_string);
-    //println!("relay_url=\nsrc/lib.rs:139:{:?}\n", relay_url);
-    //println!("limit=\n{}\n", limit.unwrap());
-    //log::info!("query_string=\n{query_string}\n");
-    //log::debug!("relay_url:\n{relay_url:?}\n");
-    //log::info!("\n{}\n", limit.unwrap());
-    let (ws_stream, _) = connect_async(relay_url[0].as_str()).await?;
+    if relay_url.is_empty() {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "no valid relay URLs available",
+        )));
+    }
+
+    let mut last_error: Option<String> = None;
+
+    for relay in relay_url {
+        match send_to_relay(&relay, &query_string, limit).await {
+            Ok(result) => return Ok(result),
+            Err(err) => {
+                debug!("relay {} failed: {}", relay, err);
+                last_error = Some(format!("{}: {}", relay, err));
+            }
+        }
+    }
+
+    Err(Box::new(io::Error::new(
+        io::ErrorKind::Other,
+        format!(
+            "failed to connect to any relay{}",
+            last_error
+                .as_deref()
+                .map(|err| format!(" ({})", err))
+                .unwrap_or_default()
+        ),
+    )))
+}
+
+async fn send_to_relay(
+    relay: &Url,
+    query_string: &str,
+    limit: Option<i32>,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let (ws_stream, _) = connect_async(relay.as_str()).await?;
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string.into())).await?;
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
+    let limit = limit.unwrap_or(i32::MAX);
+
     while let Some(message) = read.next().await {
         let data = message?;
-        if count >= limit.unwrap() {
-            //std::process::exit(0);
+        if count >= limit {
             return Ok(vec_result);
         }
         if let Message::Text(text) = data {
-            //print!("{text}");
             vec_result.push(text.to_string());
             count += 1;
         }
     }
+
     Ok(vec_result)
 }
 
@@ -258,6 +290,11 @@ pub fn build_gnostr_query(
 #[cfg(test)]
 mod tests {
     use super::build_gnostr_query;
+    use super::send;
+    use futures::{SinkExt, StreamExt};
+    use tokio::net::TcpListener;
+    use tokio_tungstenite::{accept_async, tungstenite::Message};
+    use url::Url;
 
     #[test]
     fn build_gnostr_query_trims_kind_prefixes_and_whitespace() {
@@ -277,5 +314,32 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&query).unwrap();
         assert_eq!(parsed[2]["#t"], serde_json::json!(["gnostr"]));
         assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2, 3]));
+    }
+
+    #[tokio::test]
+    async fn send_falls_back_to_later_relay() -> anyhow::Result<()> {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let addr = listener.local_addr()?;
+
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut websocket = accept_async(stream).await.unwrap();
+            if let Some(message) = websocket.next().await {
+                let message = message.unwrap();
+                assert!(matches!(message, Message::Text(_)));
+                websocket
+                    .send(Message::Text("{\"ok\":true}".to_string().into()))
+                    .await
+                    .unwrap();
+            }
+        });
+
+        let bad_relay = Url::parse("ws://127.0.0.1:1/")?;
+        let good_relay = Url::parse(&format!("ws://{}", addr))?;
+        let result = send("REQ".to_string(), vec![bad_relay, good_relay], Some(1)).await?;
+
+        assert_eq!(result, vec!["{\"ok\":true}".to_string()]);
+        server.await.unwrap();
+        Ok(())
     }
 }
