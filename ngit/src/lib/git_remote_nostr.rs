@@ -10,7 +10,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result, bail};
 use crate::{
     client::{
         Client, Connect, FetchReport, Params, consolidate_fetch_reports, get_repo_ref_from_cache,
@@ -20,6 +19,7 @@ use crate::{
     login::existing::load_existing_login,
     utils::read_line,
 };
+use anyhow::{Context, Result, bail};
 use nostr::nips::nip19::Nip19Coordinate;
 
 #[derive(Default, Clone)]
@@ -323,7 +323,10 @@ mod tests {
 
     #[test]
     fn decode_no_escapes_unchanged() {
-        assert_eq!(decode_push_option_escapes("no escapes here"), "no escapes here");
+        assert_eq!(
+            decode_push_option_escapes("no escapes here"),
+            "no escapes here"
+        );
     }
 
     #[test]
