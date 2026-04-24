@@ -6,10 +6,9 @@
 use std::{
     env,
     error::Error,
-    fs,
-    io,
-    process::Command,
+    fs, io,
     io::Write,
+    process::Command,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -36,19 +35,24 @@ use textwrap::{fill, Options};
 use tui_input::{backend::crossterm::EventHandler, Input};
 use uuid::Uuid;
 
+use crate::p2p::chat::msg::{self, MsgKind};
 use crate::ui::{
     draw_scrollbar,
     style::{SharedTheme, Theme},
     Orientation,
 };
-use crate::p2p::chat::msg::{self, MsgKind};
 
 struct TerminalCleanup;
 
 impl Drop for TerminalCleanup {
     fn drop(&mut self) {
         let _ = disable_raw_mode();
-        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture, Show);
+        let _ = execute!(
+            io::stdout(),
+            LeaveAlternateScreen,
+            DisableMouseCapture,
+            Show
+        );
     }
 }
 
@@ -255,7 +259,10 @@ fn open_editor_buffer(initial_contents: &str) -> io::Result<String> {
     let args = editor_parts.drain(1..).collect::<Vec<_>>();
     let status = Command::new(command).args(args).arg(file.path()).status()?;
     if !status.success() {
-        return Err(io::Error::other(format!("editor exited with status {}", status)));
+        return Err(io::Error::other(format!(
+            "editor exited with status {}",
+            status
+        )));
     }
 
     fs::read_to_string(file.path())
@@ -289,7 +296,11 @@ fn run_editor_batch() -> io::Result<Vec<String>> {
     for (idx, command) in commands.iter().enumerate() {
         output.push(format!("[{}] {}", idx + 1, command));
         match run_shell_command(command) {
-            Ok(lines) => output.extend(lines.into_iter().map(|line| format!("[{}] {}", idx + 1, line))),
+            Ok(lines) => output.extend(
+                lines
+                    .into_iter()
+                    .map(|line| format!("[{}] {}", idx + 1, line)),
+            ),
             Err(err) => {
                 output.push(format!("[{}] shell error: {}", idx + 1, err));
                 output.push(format!("batch stopped at line {}", idx + 1));
@@ -314,7 +325,12 @@ fn parse_shell_batch_command(input: &str) -> io::Result<Option<Vec<ShellBatchCom
         let m = caps
             .get(0)
             .ok_or_else(|| io::Error::other("invalid batch marker"))?;
-        if m.start() == 0 || text[..m.start()].chars().last().is_some_and(char::is_whitespace) {
+        if m.start() == 0
+            || text[..m.start()]
+                .chars()
+                .last()
+                .is_some_and(char::is_whitespace)
+        {
             markers.push((
                 m.start(),
                 m.end(),
@@ -355,7 +371,11 @@ fn run_shell_batch(commands: &[ShellBatchCommand]) -> io::Result<Vec<String>> {
         output.push(format!("[:{}] {}", command.label, command.command));
         match run_shell_command(&command.command) {
             Ok(lines) => {
-                output.extend(lines.into_iter().map(|line| format!("[:{}] {}", command.label, line)));
+                output.extend(
+                    lines
+                        .into_iter()
+                        .map(|line| format!("[:{}] {}", command.label, line)),
+                );
             }
             Err(err) => {
                 output.push(format!("[:{}] shell error: {}", command.label, err));
@@ -501,13 +521,18 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 #[cfg(test)]
 mod tests {
-    use super::{execute_colon_command, help_text, parse_editor_buffer, parse_shell_batch_command, App, AppMode};
+    use super::{
+        execute_colon_command, help_text, parse_editor_buffer, parse_shell_batch_command, App,
+        AppMode,
+    };
 
     #[test]
     fn help_text_mentions_clone_and_help_keys() {
         let text = help_text().join("\n");
         assert!(text.contains("/clone <blossom-url> [dest]"));
-        assert!(text.contains("Blossom server auto-starts for local file transfer and clone support."));
+        assert!(
+            text.contains("Blossom server auto-starts for local file transfer and clone support.")
+        );
         assert!(text.contains("open/close this help"));
         assert!(text.contains(":shell / :sh open an interactive shell"));
         assert!(text.contains("Plain chat messages are fanned out to both p2p swarms."));
@@ -552,9 +577,8 @@ mod tests {
 
     #[test]
     fn editor_buffer_ignores_comments_and_blanks() {
-        let commands = parse_editor_buffer(
-            "# comment\n\nls -la\n  # another comment\ncat README.md\n",
-        );
+        let commands =
+            parse_editor_buffer("# comment\n\nls -la\n  # another comment\ncat README.md\n");
         assert_eq!(commands, vec!["ls -la", "cat README.md"]);
     }
 }
@@ -588,17 +612,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
             match app.mode {
                 // Changed from app.input_mode
                 AppMode::Normal => match key.code {
-                KeyCode::Char('e') | KeyCode::Char('i') => {
-                    app.mode = AppMode::Editing; // Changed from app.input_mode
-                    app.msgs_scroll = usize::MAX;
-                }
-                KeyCode::Char(':') => {
-                    app.mode = AppMode::Command;
-                    app.input.reset();
-                }
-                KeyCode::Char('q') => {
-                    return Ok(());
-                }
+                    KeyCode::Char('e') | KeyCode::Char('i') => {
+                        app.mode = AppMode::Editing; // Changed from app.input_mode
+                        app.msgs_scroll = usize::MAX;
+                    }
+                    KeyCode::Char(':') => {
+                        app.mode = AppMode::Command;
+                        app.input.reset();
+                    }
+                    KeyCode::Char('q') => {
+                        return Ok(());
+                    }
                     KeyCode::Char('\\') => {
                         app.show_help = true;
                     }
@@ -730,22 +754,19 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             match parse_shell_batch_command(&command_text) {
                                 Ok(Some(batch)) => match run_shell_batch(&batch) {
                                     Ok(lines) => push_shell_output(app, lines),
-                                    Err(err) => push_shell_output(
-                                        app,
-                                        [format!("shell error: {}", err)],
-                                    ),
+                                    Err(err) => {
+                                        push_shell_output(app, [format!("shell error: {}", err)])
+                                    }
                                 },
                                 Ok(None) => match run_shell_command(&command_text) {
                                     Ok(lines) => push_shell_output(app, lines),
-                                    Err(err) => push_shell_output(
-                                        app,
-                                        [format!("shell error: {}", err)],
-                                    ),
+                                    Err(err) => {
+                                        push_shell_output(app, [format!("shell error: {}", err)])
+                                    }
                                 },
-                                Err(err) => push_shell_output(
-                                    app,
-                                    [format!("shell error: {}", err)],
-                                ),
+                                Err(err) => {
+                                    push_shell_output(app, [format!("shell error: {}", err)])
+                                }
                             }
                         }
                     }
@@ -847,7 +868,9 @@ fn ui(f: &mut Frame, app: &App) {
         app.msgs_scroll.min(msgs.len())
     };
     let show_scrollbar = msgs.len() > height as usize;
-    let message_area_width = chunks[1].width.saturating_sub(if show_scrollbar { 1 } else { 0 });
+    let message_area_width = chunks[1]
+        .width
+        .saturating_sub(if show_scrollbar { 1 } else { 0 });
 
     let mut messages: Vec<ListItem> = Vec::new();
 
@@ -1015,11 +1038,15 @@ fn ui(f: &mut Frame, app: &App) {
     let input = Paragraph::new(input_line)
         .style(default_input_style)
         .scroll((0, scroll as u16))
-        .block(Block::default().borders(Borders::ALL).title(match app.mode {
-            AppMode::Command => "Command",
-            AppMode::Shell => "Shell",
-            _ => "Input",
-        }));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(match app.mode {
+                    AppMode::Command => "Command",
+                    AppMode::Shell => "Shell",
+                    _ => "Input",
+                }),
+        );
     f.render_widget(input, chunks[2]);
 
     match app.mode {
