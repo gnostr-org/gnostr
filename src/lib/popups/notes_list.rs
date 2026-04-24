@@ -198,8 +198,12 @@ impl NotesListPopup {
             .unwrap_or_default();
 
         Row::new(vec![
-            Cell::from(if is_selected { strings::symbol::CHECKMARK } else { " " })
-                .style(self.theme.text_danger()),
+            Cell::from(if is_selected {
+                strings::symbol::CHECKMARK
+            } else {
+                " "
+            })
+            .style(self.theme.text_danger()),
             Cell::from(note_id).style(self.theme.commit_hash(false)),
             Cell::from(annotated_id).style(self.theme.commit_hash(false)),
             Cell::from(note.committer.clone()).style(self.theme.commit_author(false)),
