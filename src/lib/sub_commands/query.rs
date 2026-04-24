@@ -1,4 +1,3 @@
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use crate::query::ConfigBuilder;
 use anyhow::{anyhow, bail};
 use log::{debug, error};
@@ -40,7 +39,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
         vec![Url::parse(relay_str)?]
     } else {
         debug!("Using bootstrap relays.");
-        BOOTSTRAP_RELAYS
+        crate::crawler::bootstrap_relays()
             .iter()
             .filter_map(|s| Url::parse(s).ok())
             .collect()
@@ -155,7 +154,6 @@ fn build_filter_map(
 
 #[cfg(test)]
 mod tests {
-    use crate::crawler::processor::BOOTSTRAP_RELAYS;
     use clap::{Parser, Subcommand};
     use serde_json::json;
 
@@ -355,9 +353,10 @@ mod tests {
     #[ignore]
     async fn test_launch_no_panic_with_all_bootstrap_relays() {
         let base_args = create_query_subcommand(&[]);
-        for relay_url in BOOTSTRAP_RELAYS
+        let bootstrap_relays = crate::crawler::bootstrap_relays();
+        for relay_url in bootstrap_relays
             .iter()
-            .filter(|&r| r != &BOOTSTRAP_RELAYS[0] && r != &BOOTSTRAP_RELAYS[2])
+            .filter(|&r| r != &bootstrap_relays[0] && r != &bootstrap_relays[2])
         {
             debug!("Testing launch with relay: {}", relay_url);
             let result = launch_with_relay(&base_args, relay_url).await;
