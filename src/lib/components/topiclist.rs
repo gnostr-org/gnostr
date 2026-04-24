@@ -1,21 +1,7 @@
 #![allow(missing_docs)]
 use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, env, rc::Rc, time::Instant};
 
-use anyhow::Result;
-use chrono::{DateTime, Local};
-use gnostr_asyncgit::sync::{self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags};
-use indexmap::IndexSet;
-use itertools::Itertools;
-use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Style,
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
-    Frame,
-};
-use super::{
-    utils::logitems::{ItemBatch, LogEntry},
-};
+use super::utils::logitems::{ItemBatch, LogEntry};
 use crate::{
     app::Environment,
     components::{
@@ -31,6 +17,20 @@ use crate::{
         style::{SharedTheme, Theme},
     },
     utils::truncate_chars,
+};
+use anyhow::Result;
+use chrono::{DateTime, Local};
+use gnostr_asyncgit::sync::{
+    self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+};
+use indexmap::IndexSet;
+use itertools::Itertools;
+use ratatui::{
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::Style,
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 
 const ELEMENTS_PER_LINE: usize = 9;
@@ -109,7 +109,8 @@ impl TopicList {
     }
 
     fn refresh_notes(&mut self) {
-        self.notes.set_target(self.selected_commit_id().map(Into::into));
+        self.notes
+            .set_target(self.selected_commit_id().map(Into::into));
     }
 
     /// copy_items
@@ -987,8 +988,7 @@ impl TopicList {
     }
 
     /// handle_internal_event
-    pub fn handle_internal_event(&mut self, _event: crate::queue::InternalEvent) {
-    }
+    pub fn handle_internal_event(&mut self, _event: crate::queue::InternalEvent) {}
 }
 
 impl DrawableComponent for TopicList {
@@ -1163,10 +1163,7 @@ impl Component for TopicList {
             true,
         ));
         out.push(CommandInfo::new(
-            strings::commands::commit_list_mark(
-                &self.key_config,
-                self.selected_entry_marked(),
-            ),
+            strings::commands::commit_list_mark(&self.key_config, self.selected_entry_marked()),
             true,
             true,
         ));
