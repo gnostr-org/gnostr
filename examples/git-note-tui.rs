@@ -41,10 +41,10 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let repo = Repository::open(&args.repo)?;
     let oid = Oid::from_str(&args.object).context("invalid object id")?;
-    let notes_ref = args
-        .notes_ref
-        .clone()
-        .unwrap_or_else(|| repo.note_default_ref().unwrap_or_else(|_| "refs/notes/commits".into()));
+    let notes_ref = args.notes_ref.clone().unwrap_or_else(|| {
+        repo.note_default_ref()
+            .unwrap_or_else(|_| "refs/notes/commits".into())
+    });
 
     match args.demo {
         Demo::System => system_git_notes(&repo, oid, &notes_ref, &args.message)?,
@@ -71,11 +71,25 @@ fn system_git_notes(repo: &Repository, oid: Oid, notes_ref: &str, message: &str)
     println!("== system git notes ==");
     run_git(
         workdir,
-        &["notes", "--ref", notes_ref, "add", "-m", message, oid.as_str()],
+        &[
+            "notes",
+            "--ref",
+            notes_ref,
+            "add",
+            "-m",
+            message,
+            oid.as_str(),
+        ],
     )?;
-    run_git(workdir, &["notes", "--ref", notes_ref, "show", oid.as_str()])?;
+    run_git(
+        workdir,
+        &["notes", "--ref", notes_ref, "show", oid.as_str()],
+    )?;
     run_git(workdir, &["notes", "--ref", notes_ref, "list"])?;
-    run_git(workdir, &["notes", "--ref", notes_ref, "remove", oid.as_str()])?;
+    run_git(
+        workdir,
+        &["notes", "--ref", notes_ref, "remove", oid.as_str()],
+    )?;
 
     Ok(())
 }
@@ -104,7 +118,10 @@ fn signature(repo: &Repository) -> Result<Signature<'_>> {
 }
 
 fn run_git(workdir: &Path, args: &[&str]) -> Result<()> {
-    let output = Command::new("git").current_dir(workdir).args(args).output()?;
+    let output = Command::new("git")
+        .current_dir(workdir)
+        .args(args)
+        .output()?;
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
