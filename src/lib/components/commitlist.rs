@@ -97,7 +97,7 @@ impl CommitList {
         self.notes.clear();
     }
 
-    fn refresh_notes(&mut self) {
+    fn sync_target_notes(&mut self) {
         self.notes
             .set_target(self.selected_entry().map(|entry| entry.id.into()));
     }
@@ -120,6 +120,11 @@ impl CommitList {
     /// update
     pub fn update(&mut self) {
         self.notes.update();
+    }
+
+    /// request_notes_refresh
+    pub fn refresh_notes(&mut self) {
+        self.notes.refresh();
     }
 
     /// advance spinner animation for async notes loading
@@ -278,7 +283,7 @@ impl CommitList {
         if let Some(index) = index {
             self.selection = index;
             self.set_highlighted_selection_index();
-            self.refresh_notes();
+            self.sync_target_notes();
             Ok(())
         } else {
             anyhow::bail!(
@@ -394,7 +399,7 @@ impl CommitList {
         let needs_update = new_selection != self.selection;
 
         self.selection = new_selection;
-        self.refresh_notes();
+        self.sync_target_notes();
 
         Ok(needs_update)
     }
@@ -750,7 +755,7 @@ impl CommitList {
 
             if let Ok(commits) = commits {
                 self.items.set_items(want_min, commits, &self.highlights);
-                self.refresh_notes();
+                self.sync_target_notes();
                 self.notes.refresh();
             }
         }

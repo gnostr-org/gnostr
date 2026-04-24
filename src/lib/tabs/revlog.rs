@@ -141,6 +141,11 @@ impl Revlog {
         self.list.update_spinner();
     }
 
+    /// request_notes_refresh
+    pub fn refresh_notes(&mut self) {
+        self.list.refresh_notes();
+    }
+
     /// update_git
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.visible {

@@ -372,6 +372,7 @@ impl App {
                 }
 
                 if is_git_note && result_ok {
+                    self.revlog.refresh_notes();
                     self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
                     while let Some(target) = self.git_note_pending.pop_front() {
                         let result = GitnotePopup::open_note_in_editor(
@@ -385,6 +386,7 @@ impl App {
                             self.msg_popup.show_error(msg.as_str())?;
                             break;
                         }
+                        self.revlog.refresh_notes();
                         self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
                     }
                 }
