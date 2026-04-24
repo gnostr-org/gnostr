@@ -1,8 +1,8 @@
 use clap::Parser;
 use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
-use simple_logger::SimpleLogger;
 use log::LevelFilter;
 use ratatui::Terminal;
+use simple_logger::SimpleLogger;
 use std::{backtrace::Backtrace, panic};
 
 pub fn main() -> Res<()> {
