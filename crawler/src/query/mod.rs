@@ -1,9 +1,9 @@
 use futures::{SinkExt, StreamExt};
 use log::{debug, info};
 use serde_json::{json, Map};
+use std::io;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
-use std::io;
 
 pub mod cli;
 pub mod forms;
@@ -222,8 +222,8 @@ pub fn build_gnostr_query(
         let trimmed = value.trim();
         let lowered = trimmed.to_ascii_lowercase();
         for prefix in [
-            "nip:", "nip=", "nip/", "nip ", "nips:", "nips=", "nips/", "nips ",
-            "kind:", "kind=", "kind/", "kind ", "kinds:", "kinds=", "kinds/", "kinds ",
+            "nip:", "nip=", "nip/", "nip ", "nips:", "nips=", "nips/", "nips ", "kind:", "kind=",
+            "kind/", "kind ", "kinds:", "kinds=", "kinds/", "kinds ",
         ] {
             if lowered.starts_with(prefix) {
                 return trimmed[prefix.len()..].trim().to_string();
