@@ -1,25 +1,26 @@
 pub mod processor;
 pub mod pubkeys;
+pub mod query;
 pub mod relay_manager;
 pub mod relays;
-pub mod query;
 pub mod stats;
-pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
 pub use query::cli;
+pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
 
 pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
-        .add_directive("hyper::client::trace=trace".parse()?)
-        .add_directive("hyper::client::connect=trace".parse()?)
-        .add_directive("hyper::client::connect::http=off".parse()?)
-        .add_directive("hyper::proto=off".parse()?)
-        .add_directive("nostr_sdk::relay=off".parse()?)
-        .add_directive("nostr_relay_pool=off".parse()?)
-        .add_directive("nostr_relay_pool::relay::inner=off".parse()?)
-        //.add_directive("hyper=off".parse()?)
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive("hyper::client::trace=trace".parse()?)
+                .add_directive("hyper::client::connect=trace".parse()?)
+                .add_directive("hyper::client::connect::http=off".parse()?)
+                .add_directive("hyper::proto=off".parse()?)
+                .add_directive("nostr_sdk::relay=off".parse()?)
+                .add_directive("nostr_relay_pool=off".parse()?)
+                .add_directive("nostr_relay_pool::relay::inner=off".parse()?), //.add_directive("hyper=off".parse()?)
 
-        /**/)/**/
+                                                                               /**/
+        )
         .init();
     Ok(())
 }
@@ -33,8 +34,8 @@ use std::collections::{HashMap, HashSet};
 use std::fs as sync_fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
-use std::str;
 use std::process::{Command, Stdio};
+use std::str;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 
@@ -42,24 +43,24 @@ use serde::{Deserialize, Serialize};
 
 use ::time::at;
 use ::time::Timespec;
-use nostr_sdk::prelude::*;
 use ::url::Url;
+use nostr_sdk::prelude::*;
 
 use crate::processor::Processor;
 use crate::processor::APP_SECRET_KEY;
 use crate::relay_manager::RelayManager;
 
+use crate::processor::BOOTSTRAP_RELAYS;
 #[allow(unused_imports)]
 use crate::processor::LOCALHOST_8080;
-use crate::processor::BOOTSTRAP_RELAYS;
 
 use axum::{
-    extract::{Path as AxumPath, Query},
-    routing::get,
-    response::{IntoResponse, Response},
-    Router,
     body::Body, // Added for explicit body type
-    http::{StatusCode, header::CONTENT_TYPE}, // Changed to axum::http
+    extract::{Path as AxumPath, Query},
+    http::{header::CONTENT_TYPE, StatusCode}, // Changed to axum::http
+    response::{IntoResponse, Response},
+    routing::get,
+    Router,
 };
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -141,7 +142,12 @@ pub fn preprocess_line(line: &str) -> String {
 
 pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
     let base_dir = crate::relays::get_config_dir_path();
-    let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
+    let file_path = base_dir.join(
+        filename
+            .as_ref()
+            .file_name()
+            .unwrap_or(filename.as_ref().as_os_str()),
+    );
 
     if let Some(parent) = file_path.parent() {
         sync_fs::create_dir_all(parent)?;
@@ -152,23 +158,30 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
     let file_content = sync_fs::read_to_string(&file_path)?;
 
     // Preprocess each line to truncate after a comma and trim whitespace
-    let preprocessed_lines: Vec<String> = file_content.lines()
+    let preprocessed_lines: Vec<String> = file_content
+        .lines()
         .map(|line| preprocess_line(line))
         .filter(|line| !line.is_empty())
         .collect();
 
     let preprocessed_content_for_yaml = preprocessed_lines.join("\n");
 
-    let relays: Vec<String> = match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
-        Ok(yaml_relays) => yaml_relays,
-        Err(e) => {
-            // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
-            warn!("Failed to parse {} as YAML: {}. Falling back to preprocessed lines.", file_path.display(), e);
-            preprocessed_lines
-        }
-    };
+    let relays: Vec<String> =
+        match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
+            Ok(yaml_relays) => yaml_relays,
+            Err(e) => {
+                // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
+                warn!(
+                    "Failed to parse {} as YAML: {}. Falling back to preprocessed lines.",
+                    file_path.display(),
+                    e
+                );
+                preprocessed_lines
+            }
+        };
 
-    let filtered_relays: Vec<String> = relays.into_iter()
+    let filtered_relays: Vec<String> = relays
+        .into_iter()
         .filter_map(|line| {
             // Lines are already preprocessed for truncation and trimming.
             // Now, refine filtering to differentiate between actual non-websocket URLs and non-URL lines.
@@ -185,11 +198,14 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
                     Ok(url) => {
                         debug!("Prepended 'wss://' to form valid URL: {}", url);
                         final_line = url.to_string();
-                    },
+                    }
                     Err(_) => {
                         // If prepending wss:// doesn't form a valid URL, keep the original line
                         // and let the next checks handle it as a non-URL line.
-                        debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
+                        debug!(
+                            "Attempted to prepend 'wss://' but it's still not a valid URL: {}",
+                            potential_url
+                        );
                     }
                 }
             }
@@ -198,15 +214,29 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
                 match Url::parse(&final_line) {
                     Ok(url) => Some(url.to_string()),
                     Err(_) => {
-                        warn!("Skipping invalid WEBSOCKET URL in {}: {}", filename.as_ref().display(), final_line);
+                        warn!(
+                            "Skipping invalid WEBSOCKET URL in {}: {}",
+                            filename.as_ref().display(),
+                            final_line
+                        );
                         None
                     }
                 }
-            } else if final_line.contains("://") { // It's a URL, but not a websocket URL
-                warn!("Skipping non-websocket URL scheme in {}: {}", filename.as_ref().display(), final_line);
+            } else if final_line.contains("://") {
+                // It's a URL, but not a websocket URL
+                warn!(
+                    "Skipping non-websocket URL scheme in {}: {}",
+                    filename.as_ref().display(),
+                    final_line
+                );
                 None
-            } else { // It's not a URL at all (e.g., "Relay URL")
-                debug!("Silently skipping non-URL line in {}: {}", filename.as_ref().display(), final_line);
+            } else {
+                // It's not a URL at all (e.g., "Relay URL")
+                debug!(
+                    "Silently skipping non-URL line in {}: {}",
+                    filename.as_ref().display(),
+                    final_line
+                );
                 None
             }
         })
@@ -220,7 +250,9 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
 //}
 
 pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
-    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
+    BufReader::new(sync_fs::File::open(filename)?)
+        .lines()
+        .collect()
 }
 
 fn load_relays_or_bootstrap() -> Vec<String> {
@@ -301,7 +333,6 @@ pub struct CliArgs {
 }
 
 pub async fn run(args: &CliArgs) -> Result<()> {
-
     let _run_async = async {
         let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
         let relay_client = Client::new(app_keys);
@@ -316,14 +347,17 @@ pub async fn run(args: &CliArgs) -> Result<()> {
     let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
     let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
 
-     if args.arg_dump {
+    if args.arg_dump {
         relay_manager.processor.dump();
     }
 
     Ok(())
 }
 
-pub async fn dispatch_cli_command(cli: Cli, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn dispatch_cli_command(
+    cli: Cli,
+    client: &reqwest::Client,
+) -> Result<(), Box<dyn std::error::Error>> {
     match &cli.command {
         Commands::Sniper { nip, shitlist } => {
             run_sniper(*nip, shitlist.clone(), client).await?;
@@ -431,13 +465,15 @@ pub async fn run_sniper(
     // allow to run for a few seconds
     // giving the sniper a populated list
 
-
     // Allow some time for the watcher to populate relays.yaml
     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     info!("run_sniper: Finished initial sleep.");
 
     let relays = load_relays_or_bootstrap();
-    info!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
+    info!(
+        "run_sniper: Loaded {} relays from relays.yaml.",
+        relays.len()
+    );
 
     let shitlist = if let Some(path) = shitlist_path {
         match load_shitlist(&path) {
@@ -450,7 +486,10 @@ pub async fn run_sniper(
     } else {
         std::collections::HashSet::new()
     };
-    info!("run_sniper: Shitlist loaded. Contains {} entries.", shitlist.len());
+    info!(
+        "run_sniper: Shitlist loaded. Contains {} entries.",
+        shitlist.len()
+    );
 
     let initial_relay_count = relays.len();
     let filtered_relays: Vec<String> = relays
@@ -469,14 +508,20 @@ pub async fn run_sniper(
             }
         })
         .collect();
-    info!("run_sniper: Filtered from {} to {} relays.", initial_relay_count, filtered_relays.len());
+    info!(
+        "run_sniper: Filtered from {} to {} relays.",
+        initial_relay_count,
+        filtered_relays.len()
+    );
 
     let bodies = stream::iter(filtered_relays)
         .map(|url| {
             info!("run_sniper: Processing URL: {}", url);
             let client = client.clone();
             async move {
-                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
+                let http_url = url
+                    .replace("wss://", "https://")
+                    .replace("ws://", "http://");
                 info!("run_sniper: Sending request to: {}", http_url);
                 let resp = client
                     .get(&http_url)
@@ -485,7 +530,11 @@ pub async fn run_sniper(
                     .await?;
 
                 if !resp.status().is_success() {
-                    warn!("run_sniper: Failed to fetch NIP-11 document for {}: HTTP Status {}", url, resp.status());
+                    warn!(
+                        "run_sniper: Failed to fetch NIP-11 document for {}: HTTP Status {}",
+                        url,
+                        resp.status()
+                    );
                     return Ok((url, String::new())); // Return empty string to skip JSON parsing
                 }
 
@@ -508,7 +557,10 @@ pub async fn run_sniper(
                         info!("run_sniper: Successfully parsed relay info for {}", url);
                         for n in &relay_info.supported_nips.unwrap_or_default() {
                             if n == &nip_lower {
-                                info!("run_sniper: Found NIP-{} support on relay: {}", nip_lower, url);
+                                info!(
+                                    "run_sniper: Found NIP-{} support on relay: {}",
+                                    nip_lower, url
+                                );
                                 info!("contact:{:?}", &relay_info.contact);
                                 info!("description:{:?}", &relay_info.description);
                                 info!("name:{:?}", &relay_info.name);
@@ -525,29 +577,48 @@ pub async fn run_sniper(
                                 let host = parsed_url.host_str().unwrap_or("unknown");
                                 info!("run_sniper: Host for {} is {}", url, host);
 
-                                let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
+                                let dir_path = crate::relays::get_config_dir_path()
+                                    .join(format!("{}", nip_lower));
                                 if let Err(e) = sync_fs::create_dir_all(&dir_path) {
-                                    error!("Failed to create directory {}: {}", dir_path.display(), e);
+                                    error!(
+                                        "Failed to create directory {}: {}",
+                                        dir_path.display(),
+                                        e
+                                    );
                                     return;
                                 };
-                                info!("run_sniper: Ensured directory exists: {}", dir_path.display());
+                                info!(
+                                    "run_sniper: Ensured directory exists: {}",
+                                    dir_path.display()
+                                );
 
                                 let file_name = format!("{}.json", host);
-                            let file_path = dir_path.join(&file_name);
-                            let file_path_str = file_path.display().to_string();
-                            info!("run_sniper: Attempting to write to file: {}\n\n{}", file_path_str, file_path_str);
+                                let file_path = dir_path.join(&file_name);
+                                let file_path_str = file_path.display().to_string();
+                                info!(
+                                    "run_sniper: Attempting to write to file: {}\n\n{}",
+                                    file_path_str, file_path_str
+                                );
 
                                 match sync_fs::File::create(&file_path) {
                                     Ok(mut file) => {
                                         info!("run_sniper: File created: {}", &file_path_str);
                                         match file.write_all(json_string.as_bytes()) {
-                                            Ok(_) => info!("run_sniper: Wrote relay metadata to: {}", &file_path_str),
+                                            Ok(_) => info!(
+                                                "run_sniper: Wrote relay metadata to: {}",
+                                                &file_path_str
+                                            ),
                                             Err(e) => {
-                                                error!("Failed to write to {}: {}", &file_path_str, e)
+                                                error!(
+                                                    "Failed to write to {}: {}",
+                                                    &file_path_str, e
+                                                )
                                             }
                                         }
                                     }
-                                    Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
+                                    Err(e) => {
+                                        error!("Failed to create file {}: {}", &file_path_str, e)
+                                    }
                                 }
 
                                 info!(
@@ -559,12 +630,19 @@ pub async fn run_sniper(
                                         .replace("ws://", "")
                                 );
                             } else {
-                                trace!("run_sniper: Relay {} does not support NIP-{}", url, nip_lower);
+                                trace!(
+                                    "run_sniper: Relay {} does not support NIP-{}",
+                                    url,
+                                    nip_lower
+                                );
                             }
                         }
-                    },
+                    }
                     Err(e) => {
-                        error!("run_sniper: Failed to parse JSON for {}: {}. JSON: {}", url, e, json_string);
+                        error!(
+                            "run_sniper: Failed to parse JSON for {}: {}. JSON: {}",
+                            url, e, json_string
+                        );
                     }
                 }
             } else if let Err(e) = b {
@@ -576,7 +654,10 @@ pub async fn run_sniper(
     Ok(())
 }
 
-pub async fn run_watch(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_watch(
+    shitlist_path: Option<String>,
+    client: &reqwest::Client,
+) -> Result<(), Box<dyn std::error::Error>> {
     debug!("lib::run_watch");
     let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
     let app_keys = Keys::new(app_secret_key);
@@ -642,12 +723,12 @@ pub async fn run_watch(shitlist_path: Option<String>, client: &reqwest::Client) 
                     for n in &supported_nips {
                         trace!("nip_count:{}", nip_count);
                         if nip_count > 1 {
-                              debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
-                              trace!("LINE::581 lib::run_watch");
-                              let _ = run_sniper(*n, None, client).await;
+                            debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
+                            trace!("LINE::581 lib::run_watch");
+                            let _ = run_sniper(*n, None, client).await;
                         } else {
-                             trace!("{:0>2}", n);
-                             //TODO nip_count < 1 -- add to shitlist? 
+                            trace!("{:0>2}", n);
+                            //TODO nip_count < 1 -- add to shitlist?
                         }
                         nip_count -= 1;
                     }
@@ -664,7 +745,10 @@ pub async fn run_watch(shitlist_path: Option<String>, client: &reqwest::Client) 
     Ok(())
 }
 
-pub async fn run_nip34(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run_nip34(
+    shitlist_path: Option<String>,
+    client: &reqwest::Client,
+) -> Result<(), Box<dyn std::error::Error>> {
     let relays = load_relays_or_bootstrap();
 
     let shitlist = if let Some(path) = shitlist_path {
@@ -802,14 +886,20 @@ pub fn run_api_server_detached(
     command.stderr(Stdio::null());
 
     let child = command.spawn()?;
-    println!("run_api_server_detached: started background server (pid: {})", child.id());
+    println!(
+        "run_api_server_detached: started background server (pid: {})",
+        child.id()
+    );
     Ok(())
 }
 
 async fn get_relays_yaml() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.yaml");
-    debug!("Attempting to serve relays.yaml from: {}", file_path.display());
+    debug!(
+        "Attempting to serve relays.yaml from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_relays_serve_files() {
@@ -819,31 +909,46 @@ async fn get_relays_yaml() -> Response {
 
     match fs::read_to_string(&file_path).await {
         Ok(content) => {
-            let relays: Vec<String> = content.lines()
+            let relays: Vec<String> = content
+                .lines()
                 .filter(|line| !line.trim().is_empty())
                 .map(String::from)
                 .collect();
 
             match serde_yaml::to_string(&relays) {
-                Ok(yaml_content) => {
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .header(CONTENT_TYPE, "application/x-yaml")
-                        .body(Body::from(yaml_content))
-                        .unwrap_or_else(|e| {
-                            error!("Failed to build YAML response: {}", e);
-                            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                        })
-                },
+                Ok(yaml_content) => Response::builder()
+                    .status(StatusCode::OK)
+                    .header(CONTENT_TYPE, "application/x-yaml")
+                    .body(Body::from(yaml_content))
+                    .unwrap_or_else(|e| {
+                        error!("Failed to build YAML response: {}", e);
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Body::from("Internal Server Error"),
+                        )
+                            .into_response()
+                    }),
                 Err(e) => {
                     error!("Failed to serialize relays to YAML: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to serialize relays to YAML: {}", e))).into_response()
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from(format!("Failed to serialize relays to YAML: {}", e)),
+                    )
+                        .into_response()
                 }
             }
-        },
+        }
         Err(e) => {
-            error!("Failed to read relays.yaml: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml: {}", e))).into_response()
+            error!(
+                "Failed to read relays.yaml: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read relays.yaml: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -851,7 +956,10 @@ async fn get_relays_yaml() -> Response {
 async fn get_relays_json() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.json");
-    debug!("Attempting to serve relays.json from: {}", file_path.display());
+    debug!(
+        "Attempting to serve relays.json from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_relays_serve_files() {
@@ -860,19 +968,29 @@ async fn get_relays_json() -> Response {
     }
 
     match fs::read_to_string(&file_path).await {
-        Ok(content) => {
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "application/json")
-                .body(Body::from(content))
-                .unwrap_or_else(|e| {
-                    error!("Failed to build JSON response: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                })
-        },
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build JSON response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
         Err(e) => {
-            error!("Failed to read relays.json: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.json: {}", e))).into_response()
+            error!(
+                "Failed to read relays.json: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read relays.json: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -880,7 +998,10 @@ async fn get_relays_json() -> Response {
 async fn get_relays_txt() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.txt");
-    debug!("Attempting to serve relays.txt from: {}", file_path.display());
+    debug!(
+        "Attempting to serve relays.txt from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_relays_serve_files() {
@@ -889,19 +1010,29 @@ async fn get_relays_txt() -> Response {
     }
 
     match fs::read_to_string(&file_path).await {
-        Ok(content) => {
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "text/plain")
-                .body(Body::from(content))
-                .unwrap_or_else(|e| {
-                    error!("Failed to build TXT response: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                })
-        },
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/plain")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build TXT response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
         Err(e) => {
-            error!("Failed to read relays.txt: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.txt: {}", e))).into_response()
+            error!(
+                "Failed to read relays.txt: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read relays.txt: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -916,7 +1047,9 @@ async fn collect_supported_relays_for_nip(
         .map(|url| {
             let client = client.clone();
             async move {
-                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
+                let http_url = url
+                    .replace("wss://", "https://")
+                    .replace("ws://", "http://");
                 let resp = client
                     .get(&http_url)
                     .header(ACCEPT, "application/nostr+json")
@@ -945,7 +1078,10 @@ async fn collect_supported_relays_for_nip(
         let (url, json_string) = match item {
             Ok(pair) => pair,
             Err(e) => {
-                warn!("Failed to fetch relay metadata for nip {}: {}", nip_lower, e);
+                warn!(
+                    "Failed to fetch relay metadata for nip {}: {}",
+                    nip_lower, e
+                );
                 continue;
             }
         };
@@ -979,8 +1115,13 @@ async fn prime_all_nip_relays_files(
         .map(|url| {
             let client = client.clone();
             async move {
-                info!("prime_all_nip_relays_files: fetching relay metadata for {}", url);
-                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
+                info!(
+                    "prime_all_nip_relays_files: fetching relay metadata for {}",
+                    url
+                );
+                let http_url = url
+                    .replace("wss://", "https://")
+                    .replace("ws://", "http://");
                 let resp = client
                     .get(&http_url)
                     .header(ACCEPT, "application/nostr+json")
@@ -998,14 +1139,13 @@ async fn prime_all_nip_relays_files(
         .buffer_unordered(CONCURRENT_REQUESTS);
 
     let mut nip_relays: HashMap<i32, HashSet<String>> = HashMap::new();
-    let bodies = bodies.collect::<Vec<Result<(String, String), reqwest::Error>>>().await;
+    let bodies = bodies
+        .collect::<Vec<Result<(String, String), reqwest::Error>>>()
+        .await;
     for item in bodies {
         if let Ok((url, json_string)) = item {
             if json_string.is_empty() {
-                info!(
-                    "prime_all_nip_relays_files: no metadata body for {}",
-                    url
-                );
+                info!("prime_all_nip_relays_files: no metadata body for {}", url);
                 continue;
             }
             info!(
@@ -1066,7 +1206,10 @@ async fn prime_all_nip_relays_files(
 
     for (nip, _) in nip_relays {
         crate::relays::record_live_nips(std::iter::once(nip));
-        info!("prime_all_nip_relays_files: rebuilding NIP {} aggregate files", nip);
+        info!(
+            "prime_all_nip_relays_files: rebuilding NIP {} aggregate files",
+            nip
+        );
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip) {
             warn!("Failed to prime nip {} relay files: {}", nip, e);
         }
@@ -1102,14 +1245,20 @@ async fn refresh_nip_relays_files(
 async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.yaml");
-    debug!("Attempting to serve nip relays.yaml from: {}", file_path.display());
+    debug!(
+        "Attempting to serve nip relays.yaml from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
             error!("Failed to derive nip relays.yaml from disk: {}", e);
             let client = reqwest::Client::new();
             if let Err(refresh_err) = refresh_nip_relays_files(nip_lower, &client).await {
-                error!("Failed to refresh nip {} relay cache: {}", nip_lower, refresh_err);
+                error!(
+                    "Failed to refresh nip {} relay cache: {}",
+                    nip_lower, refresh_err
+                );
             }
         }
     }
@@ -1122,11 +1271,23 @@ async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
             .body(Body::from(content))
             .unwrap_or_else(|e| {
                 error!("Failed to build nip YAML response: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
             }),
         Err(e) => {
-            error!("Failed to read nip relays.yaml: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.yaml: {}", e))).into_response()
+            error!(
+                "Failed to read nip relays.yaml: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read nip relays.yaml: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -1134,14 +1295,20 @@ async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
 async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.json");
-    debug!("Attempting to serve nip relays.json from: {}", file_path.display());
+    debug!(
+        "Attempting to serve nip relays.json from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
             error!("Failed to derive nip relays.json from disk: {}", e);
             let client = reqwest::Client::new();
             if let Err(refresh_err) = refresh_nip_relays_files(nip_lower, &client).await {
-                error!("Failed to refresh nip {} relay cache: {}", nip_lower, refresh_err);
+                error!(
+                    "Failed to refresh nip {} relay cache: {}",
+                    nip_lower, refresh_err
+                );
             }
         }
     }
@@ -1154,11 +1321,23 @@ async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
             .body(Body::from(content))
             .unwrap_or_else(|e| {
                 error!("Failed to build nip JSON response: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
             }),
         Err(e) => {
-            error!("Failed to read nip relays.json: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.json: {}", e))).into_response()
+            error!(
+                "Failed to read nip relays.json: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read nip relays.json: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -1166,14 +1345,20 @@ async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
 async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.txt");
-    debug!("Attempting to serve nip relays.txt from: {}", file_path.display());
+    debug!(
+        "Attempting to serve nip relays.txt from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
             error!("Failed to derive nip relays.txt from disk: {}", e);
             let client = reqwest::Client::new();
             if let Err(refresh_err) = refresh_nip_relays_files(nip_lower, &client).await {
-                error!("Failed to refresh nip {} relay cache: {}", nip_lower, refresh_err);
+                error!(
+                    "Failed to refresh nip {} relay cache: {}",
+                    nip_lower, refresh_err
+                );
             }
         }
     }
@@ -1186,11 +1371,23 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
             .body(Body::from(content))
             .unwrap_or_else(|e| {
                 error!("Failed to build nip TXT response: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
             }),
         Err(e) => {
-            error!("Failed to read nip relays.txt: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read nip relays.txt: {}", e))).into_response()
+            error!(
+                "Failed to read nip relays.txt: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read nip relays.txt: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -1208,9 +1405,18 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     }
 
     let mut entries = vec![
-        format!("<li><a href=\"/{}/relays.json\">relays.json</a></li>", nip_lower),
-        format!("<li><a href=\"/{}/relays.yaml\">relays.yaml</a></li>", nip_lower),
-        format!("<li><a href=\"/{}/relays.txt\">relays.txt</a></li>", nip_lower),
+        format!(
+            "<li><a href=\"/{}/relays.json\">relays.json</a></li>",
+            nip_lower
+        ),
+        format!(
+            "<li><a href=\"/{}/relays.yaml\">relays.yaml</a></li>",
+            nip_lower
+        ),
+        format!(
+            "<li><a href=\"/{}/relays.txt\">relays.txt</a></li>",
+            nip_lower
+        ),
     ];
 
     if let Ok(mut dir) = fs::read_dir(&config_dir).await {
@@ -1341,7 +1547,11 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         nip_lower,
         entries.join("")
     );
-    let html = crate::relays::render_page_shell(&format!("gnostr crawler / NIP {}", nip_lower), &nav, &body);
+    let html = crate::relays::render_page_shell(
+        &format!("gnostr crawler / NIP {}", nip_lower),
+        &nav,
+        &body,
+    );
 
     Response::builder()
         .status(StatusCode::OK)
@@ -1349,11 +1559,18 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         .body(Body::from(html))
         .unwrap_or_else(|e| {
             error!("Failed to build nip index response: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Internal Server Error"),
+            )
+                .into_response()
         })
 }
 
-fn load_nip_query_relays(nip_lower: i32, relay_override: Option<&str>) -> Result<Vec<Url>, Box<dyn std::error::Error>> {
+fn load_nip_query_relays(
+    nip_lower: i32,
+    relay_override: Option<&str>,
+) -> Result<Vec<Url>, Box<dyn std::error::Error>> {
     if let Some(relay) = relay_override {
         return Ok(vec![Url::parse(relay)?]);
     }
@@ -1406,7 +1623,11 @@ async fn execute_query_page(
                 .body(Body::from(html))
                 .unwrap_or_else(|build_err| {
                     error!("Failed to build query failure response: {}", build_err);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from("Internal Server Error"),
+                    )
+                        .into_response()
                 });
         }
     };
@@ -1419,9 +1640,7 @@ async fn execute_query_page(
 
     let body = format!(
         "{}<section><h2>Query results</h2><p><code>{}</code></p>{}</section>",
-        form_html,
-        query_string,
-        results_html
+        form_html, query_string, results_html
     );
     let html = crate::relays::render_page_shell(title, nav, &body);
 
@@ -1431,7 +1650,11 @@ async fn execute_query_page(
         .body(Body::from(html))
         .unwrap_or_else(|e| {
             error!("Failed to build query response: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Internal Server Error"),
+            )
+                .into_response()
         })
 }
 
@@ -1448,7 +1671,9 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
     let relay = non_empty_param(&params, "relay");
     let authors = non_empty_param(&params, "authors");
     let ids = non_empty_param(&params, "ids");
-    let limit = params.get("limit").and_then(|value| value.parse::<i32>().ok());
+    let limit = params
+        .get("limit")
+        .and_then(|value| value.parse::<i32>().ok());
     let kinds = non_empty_param(&params, "kinds");
     let search = non_empty_param(&params, "search");
     let generic_tag = non_empty_param(&params, "generic_tag");
@@ -1486,7 +1711,11 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
                 .body(Body::from(html))
                 .unwrap_or_else(|build_err| {
                     error!("Failed to build query error response: {}", build_err);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from("Internal Server Error"),
+                    )
+                        .into_response()
                 });
         }
     };
@@ -1506,7 +1735,11 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
                     .body(Body::from(html))
                     .unwrap_or_else(|build_err| {
                         error!("Failed to build relay error response: {}", build_err);
-                        (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Body::from("Internal Server Error"),
+                        )
+                            .into_response()
                     });
             }
         }
@@ -1613,7 +1846,10 @@ async fn get_nip_query(
             let html = crate::relays::render_page_shell(
                 &format!("gnostr crawler / NIP {} query", nip_lower),
                 &nav,
-                &format!("<p>Failed to build query: {}</p>", escape_html(&e.to_string())),
+                &format!(
+                    "<p>Failed to build query: {}</p>",
+                    escape_html(&e.to_string())
+                ),
             );
             return Response::builder()
                 .status(StatusCode::BAD_REQUEST)
@@ -1621,7 +1857,11 @@ async fn get_nip_query(
                 .body(Body::from(html))
                 .unwrap_or_else(|build_err| {
                     error!("Failed to build query error response: {}", build_err);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from("Internal Server Error"),
+                    )
+                        .into_response()
                 });
         }
     };
@@ -1633,7 +1873,10 @@ async fn get_nip_query(
             let html = crate::relays::render_page_shell(
                 &format!("gnostr crawler / NIP {} query", nip_lower),
                 &nav,
-                &format!("<p>Failed to load relays: {}</p>", escape_html(&e.to_string())),
+                &format!(
+                    "<p>Failed to load relays: {}</p>",
+                    escape_html(&e.to_string())
+                ),
             );
             return Response::builder()
                 .status(StatusCode::BAD_REQUEST)
@@ -1641,7 +1884,11 @@ async fn get_nip_query(
                 .body(Body::from(html))
                 .unwrap_or_else(|build_err| {
                     error!("Failed to build relay error response: {}", build_err);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from("Internal Server Error"),
+                    )
+                        .into_response()
                 });
         }
     };
@@ -1661,7 +1908,11 @@ async fn get_nip_query(
                 .body(Body::from(html))
                 .unwrap_or_else(|build_err| {
                     error!("Failed to build query failure response: {}", build_err);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from("Internal Server Error"),
+                    )
+                        .into_response()
                 });
         }
     };
@@ -1675,10 +1926,7 @@ async fn get_nip_query(
     let results_html = if results.is_empty() {
         "<p>No results.</p>".to_string()
     } else {
-        format!(
-            "<pre>{}</pre>",
-            escape_html(&results.join("\n"))
-        )
+        format!("<pre>{}</pre>", escape_html(&results.join("\n")))
     };
 
     let nav = vec![
@@ -1693,7 +1941,11 @@ async fn get_nip_query(
         escape_html(&query_string),
         results_html
     );
-    let html = crate::relays::render_page_shell(&format!("gnostr crawler / NIP {} query", nip_lower), &nav, &body);
+    let html = crate::relays::render_page_shell(
+        &format!("gnostr crawler / NIP {} query", nip_lower),
+        &nav,
+        &body,
+    );
 
     Response::builder()
         .status(StatusCode::OK)
@@ -1701,17 +1953,30 @@ async fn get_nip_query(
         .body(Body::from(html))
         .unwrap_or_else(|e| {
             error!("Failed to build nip query response: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Internal Server Error"),
+            )
+                .into_response()
         })
 }
 
-async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, String)>) -> Response {
+async fn get_nip_relay_json(
+    AxumPath((nip_lower, relay_file)): AxumPath<(i32, String)>,
+) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join(&relay_file);
-    debug!("Attempting to serve nip relay file from: {}", file_path.display());
+    debug!(
+        "Attempting to serve nip relay file from: {}",
+        file_path.display()
+    );
 
     if !relay_file.ends_with(".json") {
-        return (StatusCode::BAD_REQUEST, Body::from("Expected a .json relay file")).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Body::from("Expected a .json relay file"),
+        )
+            .into_response();
     }
 
     info!("get_nip_relay_json: reading {}", file_path.display());
@@ -1722,11 +1987,23 @@ async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, St
             .body(Body::from(content))
             .unwrap_or_else(|e| {
                 error!("Failed to build nip relay JSON response: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
             }),
         Err(e) => {
-            error!("Failed to read nip relay json: {}. Path: {}", e, file_path.display());
-            (StatusCode::NOT_FOUND, Body::from(format!("Failed to read nip relay json: {}", e))).into_response()
+            error!(
+                "Failed to read nip relay json: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::NOT_FOUND,
+                Body::from(format!("Failed to read nip relay json: {}", e)),
+            )
+                .into_response()
         }
     }
 }
@@ -1734,7 +2011,10 @@ async fn get_nip_relay_json(AxumPath((nip_lower, relay_file)): AxumPath<(i32, St
 async fn get_index_html() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("index.html");
-    debug!("Attempting to serve index.html from: {}", file_path.display());
+    debug!(
+        "Attempting to serve index.html from: {}",
+        file_path.display()
+    );
 
     if !file_path.exists() {
         if let Err(e) = crate::relays::write_index_html() {
@@ -1749,11 +2029,23 @@ async fn get_index_html() -> Response {
             .body(Body::from(content))
             .unwrap_or_else(|e| {
                 error!("Failed to build HTML response: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
             }),
         Err(e) => {
-            error!("Failed to read index.html: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read index.html: {}", e))).into_response()
+            error!(
+                "Failed to read index.html: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read index.html: {}", e)),
+            )
+                .into_response()
         }
     }
 }
