@@ -85,7 +85,10 @@ mod tests {
         let resolved = resolve_repo_path(&repo_path).expect("path resolution should succeed");
 
         assert!(resolved.as_path().is_absolute());
-        assert_eq!(resolved.as_path(), std::env::current_dir().expect("cwd").join("../").clean());
+        assert_eq!(
+            resolved.as_path(),
+            std::env::current_dir().expect("cwd").join("../").clean()
+        );
     }
 }
 
