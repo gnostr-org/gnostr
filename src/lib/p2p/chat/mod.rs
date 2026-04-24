@@ -78,7 +78,7 @@ pub struct ChatCli {
     #[arg(long, value_name = "CHAT", help = "gnostr chat")]
     pub chat: Option<String>,
 
-    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>")]
+    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>", default_value = "gnostr")]
     pub topic: Option<String>,
 
     #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
@@ -163,7 +163,8 @@ pub struct ChatSubCommands {
     /// gitdir
     pub gitdir: Option<RepoPath>,
     /// Send a single message to the topic and exit after propagation.
-    #[arg(long, global = true, requires = "topic")]
+    /// Use `-1` as a short alias for `--oneshot`.
+    #[arg(short = '1', long, global = true, requires = "topic")]
     pub oneshot: Option<String>,
 }
 

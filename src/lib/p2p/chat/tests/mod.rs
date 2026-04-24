@@ -18,6 +18,7 @@ mod tests {
     use super::super::msg::USER_NAME;
     use super::super::*; // Import items from the parent module (chat)
     use crate::{
+        cli::{GnostrCli, GnostrCommands},
         legit::command::{create_event, create_event_with_custom_tags},
         types::{KeySecurity, PrivateKey, Signer},
         utils::{
@@ -408,6 +409,28 @@ More details here."
                 msg_commit_message_part.content[0]
             )
         );
+    }
+
+    #[test]
+    fn test_oneshot_short_alias_parses() {
+        let cli = GnostrCli::parse_from(["gnostr", "chat", "-1", "hello", "--topic", "gnostr"]);
+        match cli.command {
+            Some(GnostrCommands::Chat(args)) => {
+                assert_eq!(args.oneshot.as_deref(), Some("hello"));
+            }
+            _ => panic!("expected chat command"),
+        }
+    }
+
+    #[test]
+    fn test_chat_topic_defaults_to_gnostr() {
+        let cli = GnostrCli::parse_from(["gnostr", "chat"]);
+        match cli.command {
+            Some(GnostrCommands::Chat(args)) => {
+                assert_eq!(args.topic.as_deref(), Some("gnostr"));
+            }
+            _ => panic!("expected chat command"),
+        }
     }
 
     #[test]
