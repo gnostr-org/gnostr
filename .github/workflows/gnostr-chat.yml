@@ -144,26 +144,42 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://njump.me/$NOTE
       - run: |
-          gnostr chat --name listener --topic gnostr-test-topic > listener_output.log 2>&1 &
-          LISTENER_PID=$!
-          echo "Listener PID: $LISTENER_PID"
-          sleep 5 # Give listener time to start
+          LISTENER_HASH="$(printf '%s' listener | sha256sum | cut -d' ' -f1)"
+          SENDER_HASH="$(printf '%s' sender | sha256sum | cut -d' ' -f1)"
+
+          gnostr chat \
+            --headless \
+            --debug \
+            --name listener \
+            --hash "$LISTENER_HASH" \
+            --topic gnostr \
+            > listener_output.log 2>&1 &
+
+          echo "Listener started"
+          sleep 10 # Give the listener time to detach and discover peers
 
           MESSAGE="Hello from github-ci-sender at $(date +%s)"
-          gnostr chat --name sender --topic gnostr-test-topic --message "$MESSAGE"
+          gnostr chat \
+            --debug \
+            --name sender \
+            --hash "$SENDER_HASH" \
+            --topic gnostr \
+            --oneshot "$MESSAGE"
 
-          sleep 5 # Give message time to propagate
+          sleep 10 # Give the network time to propagate the oneshot message
 
           echo "Checking listener output..."
           cat listener_output.log
-          grep -q "$MESSAGE" listener_output.log
-          if [ $? -eq 0 ]; then
-            echo "Test passed: Message received by listener."
+          if grep -Fq "mDNS discovered a new peer" listener_output.log && grep -Fq "$MESSAGE" listener_output.log; then
+            echo "Test passed: Listener detected the peer and message."
           else
-            echo "Test failed: Message not found in listener output."
+            echo "Test failed: Listener did not detect the peer or message."
             exit 1
           fi
-          kill $LISTENER_PID || true # Clean up listener process
+
+      - name: Cleanup lingering gnostr processes
+        uses: ./.github/actions/gnostr-cleanup
+        continue-on-error: true
 
 
 
