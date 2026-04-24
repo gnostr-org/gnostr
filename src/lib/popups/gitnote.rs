@@ -57,7 +57,14 @@ impl GitnotePopup {
 
         Command::new("git")
             .current_dir(work_dir)
-            .args(["notes", "--ref", &notes_ref, "edit", "--allow-empty", &oid.to_string()])
+            .args([
+                "notes",
+                "--ref",
+                &notes_ref,
+                "edit",
+                "--allow-empty",
+                &oid.to_string(),
+            ])
             .status()?;
 
         Ok(())
