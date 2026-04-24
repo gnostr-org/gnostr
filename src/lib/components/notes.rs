@@ -31,8 +31,8 @@ pub enum NotesState {
     Error,
 }
 
-/// Reusable notes editor/viewer for a selected git object.
-pub struct NotesComponent {
+/// Reusable notes service for notes data and refresh lifecycle.
+pub struct NotesService {
     repo: RepoPathRef,
     queue: Queue,
     theme: SharedTheme,
@@ -50,7 +50,7 @@ pub struct NotesComponent {
     snapshot_loaded: bool,
 }
 
-impl NotesComponent {
+impl NotesService {
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -340,3 +340,5 @@ impl NotesComponent {
         f.render_widget(hint, input_area);
     }
 }
+
+pub type NotesComponent = NotesService;

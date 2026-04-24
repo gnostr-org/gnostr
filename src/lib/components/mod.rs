@@ -24,7 +24,7 @@ pub use commitlist::CommitList;
 pub use cred::CredComponent;
 use crossterm::event::Event;
 pub use diff::DiffComponent;
-pub use notes::NotesComponent;
+pub use notes::{NotesComponent, NotesService};
 use ratatui::{
     layout::{Alignment, Rect},
     text::{Span, Text},
