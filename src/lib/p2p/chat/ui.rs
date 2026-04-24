@@ -446,7 +446,7 @@ fn help_text() -> Vec<&'static str> {
         "",
         "Commands",
         "  :help / :h show this help",
-        "  :shell / :sh open shell mode",
+        "  :shell / :sh open an interactive shell",
         "  :B open $EDITOR buffer; run one shell command per line",
         "  :!<cmd> run a shell command and stay in shell mode",
         "  :1 cmd :2 cmd ... :N cmd batch shell commands in order",
