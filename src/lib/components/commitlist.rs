@@ -450,7 +450,9 @@ impl CommitList {
         marked: Option<bool>,
     ) -> Line<'a> {
         let mut txt: Vec<Span> = Vec::with_capacity(
-            ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 } + if notes_present { 2 } else { 0 },
+            ELEMENTS_PER_LINE
+                + if marked.is_some() { 2 } else { 0 }
+                + if notes_present { 2 } else { 0 },
         );
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
@@ -479,7 +481,10 @@ impl CommitList {
         }
 
         if notes_present {
-            txt.push(Span::styled(Cow::from(symbol::DOT), theme.log_marker(selected)));
+            txt.push(Span::styled(
+                Cow::from(symbol::DOT),
+                theme.log_marker(selected),
+            ));
             txt.push(splitter.clone());
         }
 
@@ -769,7 +774,10 @@ impl DrawableComponent for CommitList {
             (area, area)
         };
 
-        let current_size = (list_area.width.saturating_sub(2), list_area.height.saturating_sub(2));
+        let current_size = (
+            list_area.width.saturating_sub(2),
+            list_area.height.saturating_sub(2),
+        );
         self.current_size.set(Some(current_size));
 
         let height_in_lines = current_size.1 as usize;
