@@ -3,13 +3,7 @@
 //! This module binds the chat CLI, terminal UI, local swarm lifecycle, and the
 //! Blossom-backed file transfer / git-clone path into one command surface.
 
-use std::{
-    error::Error as StdError,
-    fs,
-    path::PathBuf,
-    process::Command,
-    time::Duration,
-};
+use std::{error::Error as StdError, fs, path::PathBuf, process::Command, time::Duration};
 
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser};
@@ -29,7 +23,6 @@ use uuid::Uuid;
 
 use self::msg::{Msg, MsgKind};
 use crate::queue::InternalEvent;
-use sha2::{Digest, Sha256};
 use gnostr_asyncgit::{
     //queue::InternalEvent,
     types::{
@@ -38,6 +31,7 @@ use gnostr_asyncgit::{
         Error, EventV3, Id, Metadata, Signer, TagV3, UncheckedUrl,
     },
 };
+use sha2::{Digest, Sha256};
 
 pub mod msg;
 pub use msg::*;
@@ -78,7 +72,12 @@ pub struct ChatCli {
     #[arg(long, value_name = "CHAT", help = "gnostr chat")]
     pub chat: Option<String>,
 
-    #[arg(long, value_name = "TOPIC", help = "gnostr --topic <string>", default_value = "gnostr")]
+    #[arg(
+        long,
+        value_name = "TOPIC",
+        help = "gnostr --topic <string>",
+        default_value = "gnostr"
+    )]
     pub topic: Option<String>,
 
     #[arg(short, long, value_name = "RELAYS", help = "gnostr --relays <string>",
@@ -285,13 +284,18 @@ fn chat_blossom_server_args(args: &ChatSubCommands) -> Result<Vec<String>> {
     let digest = Sha256::digest(peer_seed.as_bytes());
     let port_offset = u16::from_be_bytes([digest[0], digest[1]]) % 10_000;
     let port = 3_000u16 + port_offset;
-    let server_root = chat_repo_root(&topic)?.join("blossom").join(format!("{port}"));
+    let server_root = chat_repo_root(&topic)?
+        .join("blossom")
+        .join(format!("{port}"));
     let data_dir = server_root.join("data");
     let db_path = server_root.join("blossom.db");
     let service_name = sanitize_topic_dir(&format!(
         "chat-{}-{}",
         topic,
-        args.name.as_deref().or(args.hash.as_deref()).unwrap_or("peer")
+        args.name
+            .as_deref()
+            .or(args.hash.as_deref())
+            .unwrap_or("peer")
     ));
 
     fs::create_dir_all(&data_dir)?;
@@ -579,9 +583,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
                             .await
                             {
                                 Ok(Ok(message)) => {
-                                    let _ = command_tx
-                                        .send(InternalEvent::ShowInfoMsg(message))
-                                        .await;
+                                    let _ =
+                                        command_tx.send(InternalEvent::ShowInfoMsg(message)).await;
                                 }
                                 Ok(Err(err)) => {
                                     let _ = command_tx
@@ -629,7 +632,9 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
                     InternalEvent::ChatMessage(m) => tui_msg_adder(m),
                     InternalEvent::ShowInfoMsg(text) | InternalEvent::ShowErrorMsg(text) => {
                         tui_msg_adder(
-                            Msg::default().set_content(text, 0).set_kind(MsgKind::System),
+                            Msg::default()
+                                .set_content(text, 0)
+                                .set_kind(MsgKind::System),
                         );
                     }
                     other => {
