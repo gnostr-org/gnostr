@@ -25,9 +25,9 @@ fn main() {
     // Initialise stderr logging (git ignores our stderr)
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_env("GIT_REMOTE_BLOSSOM_LOG"),
-        )
+        .with_env_filter(tracing_subscriber::EnvFilter::from_env(
+            "GIT_REMOTE_BLOSSOM_LOG",
+        ))
         .init();
 
     let args: Vec<String> = std::env::args().collect();
@@ -43,7 +43,10 @@ fn main() {
         std::process::exit(1);
     });
 
-    eprintln!("[blossom] server={server}  pubkey={}…  repo={repo}", &pubkey[..8]);
+    eprintln!(
+        "[blossom] server={server}  pubkey={}…  repo={repo}",
+        &pubkey[..8]
+    );
 
     let helper = BlossomRemote::new(&server, &pubkey, &repo);
     if let Err(e) = run_helper(helper) {
