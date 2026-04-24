@@ -5041,7 +5041,7 @@ pub fn draw_docs_fullscreen(f: &mut Frame, area: Rect, tab: usize, nip_tab: usiz
                 note_ln("  {"),
                 note_ln("    \"kind\": 10063,"),
                 note_ln("    \"tags\": ["),
-                note_ln("      [\"server\", \"https://blossom.example.com\"],"),
+                note_ln("      [\"server\", \"https://blossom.gnostr.cloud\"],"),
                 note_ln("      [\"server\", \"https://cdn.example.org\"]"),
                 note_ln("    ]"),
                 note_ln("  }"),
