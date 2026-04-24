@@ -171,6 +171,11 @@ pub struct CustomEventCommand {
     hex: bool,
 }
 
+/// Creates and publishes a custom event using the caller-provided secret key.
+///
+/// The `private_key` value is passed in from `GnostrCli.nsec` by the top-level
+/// dispatcher. That value defaults to the built-in test key unless `--nsec` is
+/// supplied, and `--hash` may replace it before dispatch.
 pub async fn create_custom_event(
     private_key: Option<String>,
     relays: Vec<String>,
