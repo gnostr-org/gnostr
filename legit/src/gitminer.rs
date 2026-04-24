@@ -59,11 +59,7 @@ impl Gitminer {
         let author = Gitminer::load_author(&repo)?;
         debug!("Gitminer initialized with author: {}", author);
 
-        Ok(Gitminer {
-            opts: opts,
-            repo: repo,
-            author: author,
-        })
+        Ok(Gitminer { opts, repo, author })
     }
 
     pub fn mine(&mut self) -> Result<String, &'static str> {
