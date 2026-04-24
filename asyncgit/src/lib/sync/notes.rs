@@ -34,9 +34,7 @@ pub enum NotesCommand {
         notes_ref: Option<String>,
     },
     /// List notes under a ref.
-    List {
-        notes_ref: Option<String>,
-    },
+    List { notes_ref: Option<String> },
     /// Remove a note attached to an object.
     Remove {
         object_id: Oid,
@@ -197,20 +195,20 @@ pub fn remove_note<T: Into<Oid>>(
     let repo = repo(repo_path)?;
     let signature = signature_allow_undefined_name(&repo)?;
 
-    repo.note_delete(
-        object_id.into(),
-        notes_ref,
-        &signature,
-        &signature,
-    )?;
+    repo.note_delete(object_id.into(), notes_ref, &signature, &signature)?;
 
     Ok(())
 }
 
 /// Run a notes backend command through a single typed surface.
-pub fn run_notes_command(repo_path: &RepoPath, command: NotesCommand) -> Result<NotesCommandResult> {
+pub fn run_notes_command(
+    repo_path: &RepoPath,
+    command: NotesCommand,
+) -> Result<NotesCommandResult> {
     match command {
-        NotesCommand::DefaultRef => Ok(NotesCommandResult::DefaultRef(default_notes_ref(repo_path)?)),
+        NotesCommand::DefaultRef => Ok(NotesCommandResult::DefaultRef(default_notes_ref(
+            repo_path,
+        )?)),
         NotesCommand::Add {
             object_id,
             note,
