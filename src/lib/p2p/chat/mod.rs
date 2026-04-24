@@ -24,6 +24,7 @@ use uuid::Uuid;
 
 use self::msg::{Msg, MsgKind};
 use crate::queue::InternalEvent;
+use sha2::{Digest, Sha256};
 use gnostr_asyncgit::{
     //queue::InternalEvent,
     types::{
@@ -253,6 +254,51 @@ fn chat_repo_root(topic: &str) -> Result<PathBuf> {
         .join(sanitize_topic_dir(topic)))
 }
 
+fn chat_blossom_server_args(args: &ChatSubCommands) -> Result<Vec<String>> {
+    let topic = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
+    let peer_seed = format!(
+        "{}:{}:{}",
+        topic,
+        args.name.clone().unwrap_or_default(),
+        args.hash.clone().unwrap_or_default()
+    );
+    let digest = Sha256::digest(peer_seed.as_bytes());
+    let port_offset = u16::from_be_bytes([digest[0], digest[1]]) % 10_000;
+    let port = 3_000u16 + port_offset;
+    let server_root = chat_repo_root(&topic)?.join("blossom").join(format!("{port}"));
+    let data_dir = server_root.join("data");
+    let db_path = server_root.join("blossom.db");
+    let service_name = sanitize_topic_dir(&format!(
+        "chat-{}-{}",
+        topic,
+        args.name.as_deref().or(args.hash.as_deref()).unwrap_or("peer")
+    ));
+
+    fs::create_dir_all(&data_dir)?;
+    if let Some(parent) = db_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    Ok(vec![
+        "--detach".to_string(),
+        "--name".to_string(),
+        service_name,
+        "--bind".to_string(),
+        format!("0.0.0.0:{port}"),
+        "--base-url".to_string(),
+        format!("http://localhost:{port}"),
+        "--data-dir".to_string(),
+        data_dir.to_string_lossy().into_owned(),
+        "--db-path".to_string(),
+        db_path.to_string_lossy().into_owned(),
+    ])
+}
+
+fn start_chat_blossom_server(args: &ChatSubCommands) -> Result<()> {
+    crate::server::run_with_args(chat_blossom_server_args(args)?)
+        .map_err(|e| anyhow!(e.to_string()))
+}
+
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
     const DETACHED_ENV: &str = "GNOSTR_CHAT_DETACHED";
@@ -298,6 +344,8 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         tracing::info!("Spawned detached headless chat process (pid: {pid})");
         return Ok(());
     }
+
+    start_chat_blossom_server(&args)?;
 
     // Send NIP-01 metadata event
     let name = args
