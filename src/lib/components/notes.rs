@@ -1,26 +1,26 @@
 #![allow(missing_docs)]
+use crate::{
+    app::Environment,
+    components::{CommandBlocking, CommandInfo},
+    queue::Queue,
+    spinner::spinner_char,
+    strings,
+    ui::style::SharedTheme,
+};
 use anyhow::Result;
 use crossterm::event::Event;
+use git2::Oid;
 use gnostr_asyncgit::{
     sync::{default_notes_ref, NoteInfo, RepoPathRef},
     AsyncGitNotification, AsyncNotes,
 };
-use git2::Oid;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use ratatui::{
     layout::{Alignment, Rect},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use crate::{
-    app::Environment,
-    components::{CommandBlocking, CommandInfo},
-    queue::Queue,
-    strings,
-    spinner::spinner_char,
-    ui::style::SharedTheme,
-};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NotesState {
@@ -92,15 +92,16 @@ impl NotesComponent {
 
         self.state = NotesState::Loading;
 
-        if let Err(err) = self
-            .async_notes
-            .request(Duration::from_secs(0), true, self.notes_ref.as_deref())
+        if let Err(err) =
+            self.async_notes
+                .request(Duration::from_secs(0), true, self.notes_ref.as_deref())
         {
             log::error!("failed to request notes: {}", err);
-            self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
-                "failed to request notes:\n{}",
-                err
-            )));
+            self.queue
+                .push(crate::queue::InternalEvent::ShowErrorMsg(format!(
+                    "failed to request notes:\n{}",
+                    err
+                )));
         }
     }
 
@@ -135,10 +136,11 @@ impl NotesComponent {
             Err(err) => {
                 log::error!("failed to refresh notes: {}", err);
                 self.state = NotesState::Error;
-                self.queue.push(crate::queue::InternalEvent::ShowErrorMsg(format!(
-                    "failed to refresh notes:\n{}",
-                    err
-                )));
+                self.queue
+                    .push(crate::queue::InternalEvent::ShowErrorMsg(format!(
+                        "failed to refresh notes:\n{}",
+                        err
+                    )));
                 self.notes.clear();
             }
         }
@@ -154,8 +156,10 @@ impl NotesComponent {
                 .or_else(|| self.notes_ref.clone())
                 .or_else(|| default_notes_ref(&self.repo.borrow()).ok());
 
-            self.queue
-                .push(crate::queue::InternalEvent::OpenGitNote(target.into(), notes_ref));
+            self.queue.push(crate::queue::InternalEvent::OpenGitNote(
+                target.into(),
+                notes_ref,
+            ));
         }
     }
 
