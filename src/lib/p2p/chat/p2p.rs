@@ -267,10 +267,8 @@ pub async fn evt_loop(
                 key.public(),
             ));
 
-            let kademlia = kad::Behaviour::new(
-                local_peer_id,
-                kad::store::MemoryStore::new(local_peer_id),
-            );
+            let kademlia =
+                kad::Behaviour::new(local_peer_id, kad::store::MemoryStore::new(local_peer_id));
 
             let ping = ping::Behaviour::new(ping::Config::new());
 
