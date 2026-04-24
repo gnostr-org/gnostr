@@ -140,13 +140,6 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-release-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-release-cargo-
-      - name: Setup Windows OpenSSL
-        if: runner.os == 'Windows'
-        uses: ./.github/actions/vcpkg-action
-        with:
-          arch: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
-          run-tests: 'false'
-          install: 'true'
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
