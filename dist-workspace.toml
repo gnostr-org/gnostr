@@ -19,4 +19,4 @@ install-path = "CARGO_HOME"
 publish-jobs = ["homebrew"]
 # Whether to install an updater program
 install-updater = true
-allow-dirty = true
+allow-dirty = ["ci"]
