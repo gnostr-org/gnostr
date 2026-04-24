@@ -20,7 +20,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NotesState {
@@ -42,9 +42,12 @@ pub struct NotesComponent {
     target: Option<Oid>,
     notes_ref: Option<String>,
     state: NotesState,
-    // Keep only the last delivered snapshot here; the queue/update path is
-    // responsible for refreshing it when async work completes.
+    // Keep the full notes snapshot here so any commit row can query it.
+    notes_snapshot: Vec<NoteInfo>,
+    // Keep only the selected commit's notes in this view.
     notes: Vec<NoteInfo>,
+    spinner_idx: usize,
+    snapshot_loaded: bool,
 }
 
 impl NotesComponent {
@@ -57,20 +60,30 @@ impl NotesComponent {
             target: None,
             notes_ref: None,
             state: NotesState::Idle,
+            notes_snapshot: Vec::new(),
             notes: Vec::new(),
+            spinner_idx: 0,
+            snapshot_loaded: false,
         }
     }
 
     pub fn clear(&mut self) {
         self.target = None;
         self.state = NotesState::Idle;
+        self.notes_snapshot.clear();
         self.notes.clear();
+        self.spinner_idx = 0;
+        self.snapshot_loaded = false;
     }
 
     pub fn set_target(&mut self, target: Option<Oid>) {
         if self.target != target {
             self.target = target;
-            self.request_refresh();
+            if self.snapshot_loaded {
+                self.sync_target_notes();
+            } else if self.target.is_some() {
+                self.request_refresh();
+            }
         }
     }
 
@@ -86,11 +99,17 @@ impl NotesComponent {
     fn request_refresh(&mut self) {
         let Some(_) = self.target else {
             self.state = NotesState::Idle;
+            self.snapshot_loaded = false;
+            self.notes_snapshot.clear();
             self.notes.clear();
             return;
         };
 
         self.state = NotesState::Loading;
+        self.snapshot_loaded = false;
+        self.notes_snapshot.clear();
+        self.notes.clear();
+        self.spinner_idx = 0;
 
         if let Err(err) =
             self.async_notes
@@ -110,32 +129,39 @@ impl NotesComponent {
         self.request_refresh();
     }
 
+    /// Drain completed async notes work on the normal update cycle.
+    pub fn update(&mut self) {
+        self.refresh_from_async();
+    }
+
+    /// Advance the notes spinner frame on the shared UI tick.
+    pub fn update_spinner(&mut self) {
+        if matches!(self.state, NotesState::Loading) || self.async_notes.is_pending() {
+            self.spinner_idx = self.spinner_idx.wrapping_add(1);
+        }
+    }
+
     /// Drain the latest notes snapshot from the async job queue.
     fn refresh_from_async(&mut self) {
         match self.async_notes.refresh() {
             Ok(true) => {
                 if let Ok(Some(mut notes)) = self.async_notes.last() {
-                    if let Some(target) = self.target {
-                        notes.retain(|note| note.annotated_id == target);
-                    }
-
                     notes.sort_by(|a, b| {
                         a.committer_time
                             .cmp(&b.committer_time)
                             .then_with(|| a.note_id.to_string().cmp(&b.note_id.to_string()))
                     });
-                    self.state = if notes.is_empty() {
-                        NotesState::Empty
-                    } else {
-                        NotesState::Ready
-                    };
-                    self.notes = notes;
+                    self.notes_snapshot = notes;
+                    self.snapshot_loaded = true;
+                    self.sync_target_notes();
                 }
             }
             Ok(false) => {}
             Err(err) => {
                 log::error!("failed to refresh notes: {}", err);
                 self.state = NotesState::Error;
+                self.snapshot_loaded = false;
+                self.notes_snapshot.clear();
                 self.queue
                     .push(crate::queue::InternalEvent::ShowErrorMsg(format!(
                         "failed to refresh notes:\n{}",
@@ -143,6 +169,26 @@ impl NotesComponent {
                     )));
                 self.notes.clear();
             }
+        }
+    }
+
+    fn sync_target_notes(&mut self) {
+        self.notes.clear();
+
+        if let Some(target) = self.target {
+            self.notes.extend(
+                self.notes_snapshot
+                    .iter()
+                    .filter(|note| note.annotated_id == target)
+                    .cloned(),
+            );
+            self.state = if self.notes.is_empty() {
+                NotesState::Empty
+            } else {
+                NotesState::Ready
+            };
+        } else {
+            self.state = NotesState::Idle;
         }
     }
 
@@ -180,6 +226,12 @@ impl NotesComponent {
 
     pub fn has_notes(&self) -> bool {
         matches!(self.state, NotesState::Ready) && !self.notes.is_empty()
+    }
+
+    pub fn has_notes_for(&self, target: Oid) -> bool {
+        self.notes_snapshot
+            .iter()
+            .any(|note| note.annotated_id == target)
     }
 
     pub fn state(&self) -> NotesState {
@@ -260,11 +312,7 @@ impl NotesComponent {
         let notes_height = notes_area.height as usize;
         let notes_width = notes_area.width as usize;
         let title = if matches!(self.state, NotesState::Loading) || self.async_notes.is_pending() {
-            let idx = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map(|dur| (dur.as_millis() / 120) as usize)
-                .unwrap_or_default();
-            format!("{} Notes", spinner_char(idx))
+            format!("{} Notes", spinner_char(self.spinner_idx))
         } else {
             "Notes".to_string()
         };
