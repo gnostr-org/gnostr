@@ -155,10 +155,6 @@ src/lib/ssh/site/site.md
 src/lib/ssh/ssh.md
 src/lib/sub_commands/sub_commands.md
 src/lib/tabs/tabs.md
-src/lib/test_utils/test_utils.md
-src/lib/test_utils/tests/events/events.md
-src/lib/test_utils/tests/p2p/p2p.md
-src/lib/test_utils/tests/tests.md
 src/lib/types/nip44/nip44.md
 src/lib/types/private_key/private_key.md
 src/lib/types/types.md
