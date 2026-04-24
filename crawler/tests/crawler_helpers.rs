@@ -5,12 +5,12 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
-use axum::{http::StatusCode, routing::{get}, Router};
+use axum::{http::StatusCode, routing::get, Router};
+use futures::{SinkExt, StreamExt};
+use git2::Signature;
 use gnostr_crawler as crawler;
 use gnostr_crawler::query::{build_gnostr_query, ConfigBuilder};
 use gnostr_crawler::relays::{self, Relays};
-use futures::{SinkExt, StreamExt};
-use git2::Signature;
 use nostr_sdk::prelude::{Keys, ToBech32};
 use tokio::net::TcpListener;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
@@ -77,8 +77,10 @@ where
 
 async fn start_http_server(body: &'static str, accept_head: bool) -> SocketAddr {
     let router = if accept_head {
-        Router::new()
-            .route("/", get(move || async move { body }).head(|| async move { StatusCode::OK }))
+        Router::new().route(
+            "/",
+            get(move || async move { body }).head(|| async move { StatusCode::OK }),
+        )
     } else {
         Router::new().route("/", get(move || async move { body }))
     };
@@ -108,7 +110,9 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
         }
 
         for msg in messages {
-            ws.send(Message::Text(msg.to_string().into())).await.unwrap();
+            ws.send(Message::Text(msg.to_string().into()))
+                .await
+                .unwrap();
         }
         let _ = ws.close(None).await;
     });
@@ -118,7 +122,10 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
 
 #[test]
 fn preprocess_line_strips_markers_and_commas() {
-    assert_eq!(crawler::preprocess_line("- wss://relay.example.com, extra"), "wss://relay.example.com");
+    assert_eq!(
+        crawler::preprocess_line("- wss://relay.example.com, extra"),
+        "wss://relay.example.com"
+    );
 }
 
 #[test]
@@ -133,10 +140,13 @@ fn load_file_normalizes_yaml_entries() {
         .unwrap();
 
         let relays = crawler::load_file("relays.yaml").unwrap();
-        assert_eq!(relays, vec![
-            "wss://relay.example.com/".to_string(),
-            "ws://relay.example.org/".to_string(),
-        ]);
+        assert_eq!(
+            relays,
+            vec![
+                "wss://relay.example.com/".to_string(),
+                "ws://relay.example.org/".to_string(),
+            ]
+        );
 
         assert!(root.exists());
     });
@@ -159,11 +169,24 @@ fn load_shitlist_reads_entries() {
 #[test]
 fn signature_and_log_matching_work() {
     let keys = Keys::generate();
-    let sig = Signature::now(&keys.public_key().to_bech32().unwrap(), "gnostr@example.com").unwrap();
-    assert!(crawler::sig_matches(&sig, &Some(keys.public_key().to_bech32().unwrap())));
-    assert!(crawler::log_message_matches(Some("relay connected"), &Some("connected".to_string())));
+    let sig = Signature::now(
+        &keys.public_key().to_bech32().unwrap(),
+        "gnostr@example.com",
+    )
+    .unwrap();
+    assert!(crawler::sig_matches(
+        &sig,
+        &Some(keys.public_key().to_bech32().unwrap())
+    ));
+    assert!(crawler::log_message_matches(
+        Some("relay connected"),
+        &Some("connected".to_string())
+    ));
     assert!(crawler::log_message_matches(Some("relay connected"), &None));
-    assert!(!crawler::log_message_matches(None, &Some("connected".to_string())));
+    assert!(!crawler::log_message_matches(
+        None,
+        &Some("connected".to_string())
+    ));
 }
 
 #[test]
@@ -191,7 +214,14 @@ fn match_with_parent_detects_diffs() {
     let tree_id = index.write_tree().unwrap();
     let tree = repo.find_tree(tree_id).unwrap();
     let second_commit = repo
-        .commit(Some("HEAD"), &sig, &sig, "second", &tree, &[&repo.find_commit(first_commit).unwrap()])
+        .commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            "second",
+            &tree,
+            &[&repo.find_commit(first_commit).unwrap()],
+        )
         .unwrap();
 
     let parent = repo.find_commit(first_commit).unwrap();
@@ -274,7 +304,11 @@ fn relays_collection_helpers_work() {
 
 #[test]
 fn render_page_shell_includes_nav_and_body() {
-    let html = relays::render_page_shell("title", &[("/", "home"), ("/query", "query")], "<p>body</p>");
+    let html = relays::render_page_shell(
+        "title",
+        &[("/", "home"), ("/query", "query")],
+        "<p>body</p>",
+    );
     assert!(html.contains("<title>title</title>"));
     assert!(html.contains("<a href=\"/\">home</a>"));
     assert!(html.contains("<p>body</p>"));
@@ -285,7 +319,11 @@ fn relay_file_writers_use_config_dir() {
     with_isolated_config_dir(|_| {
         let config_dir = relays::get_config_dir_path();
         fs::create_dir_all(&config_dir).unwrap();
-        fs::write(config_dir.join("relays.yaml"), "relay.example.com\nws://relay.example.org\n").unwrap();
+        fs::write(
+            config_dir.join("relays.yaml"),
+            "relay.example.com\nws://relay.example.org\n",
+        )
+        .unwrap();
 
         let json_path = relays::write_relays_json_from_yaml().unwrap();
         let json = fs::read_to_string(json_path).unwrap();
@@ -312,7 +350,9 @@ fn relay_file_writers_use_config_dir() {
 #[test]
 fn nip_relay_file_writers_work() {
     with_isolated_config_dir(|_| {
-        let config_dir = relays::write_nip_relays_serve_files(34, &[String::from("wss://relay.example.com")]).unwrap();
+        let config_dir =
+            relays::write_nip_relays_serve_files(34, &[String::from("wss://relay.example.com")])
+                .unwrap();
         assert!(config_dir.join("relays.yaml").exists());
         assert!(config_dir.join("relays.json").exists());
         assert!(config_dir.join("relays.txt").exists());
@@ -332,13 +372,20 @@ fn nip_relay_file_writers_work() {
 
 #[tokio::test]
 async fn fetch_online_relays_and_liveness_use_http_helpers() {
-    let addr = start_http_server("relay.example.com\nws://relay.example.org\nhttp://skip.example.com\n", true).await;
+    let addr = start_http_server(
+        "relay.example.com\nws://relay.example.org\nhttp://skip.example.com\n",
+        true,
+    )
+    .await;
     let url = format!("http://{}", addr);
     let relays = relays::fetch_online_relays(&url).await.unwrap();
-    assert_eq!(relays, vec![
-        "wss://relay.example.com/".to_string(),
-        "ws://relay.example.org/".to_string(),
-    ]);
+    assert_eq!(
+        relays,
+        vec![
+            "wss://relay.example.com/".to_string(),
+            "ws://relay.example.org/".to_string(),
+        ]
+    );
 
     let liveness = relays::check_relay_liveness(&url.replace("http://", "ws://")).await;
     assert!(liveness);
