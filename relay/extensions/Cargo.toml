@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-extensions"
-version = "1877.946458.540127"
+version = "1877.946458.541038"
 description = "gostr-relay extensions."
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
@@ -20,7 +20,7 @@ count = ["nostr-extensions/count"]
 
 [dependencies]
 actix-web = { workspace = true }
-gnostr-relay = { version = "1877.946458.540127", path = "..", default-features = false }
+gnostr-relay = { version = "1877.946458.541038", path = "..", default-features = false }
 nostr-extensions = { version = "0.4.8", default-features = false }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
