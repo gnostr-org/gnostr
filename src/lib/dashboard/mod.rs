@@ -72,7 +72,9 @@ fn server_install_dialog() -> Vec<Line<'static>> {
     vec![
         Line::from(vec![Span::styled(
             "GNOSTR SERVER NOT INSTALLED",
-            Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(gnostr_purple())
+                .add_modifier(Modifier::BOLD),
         )]),
         Line::from(""),
         Line::from("Install the server binary, then restart the dashboard:"),
@@ -207,7 +209,9 @@ impl TuiNode {
         }) {
             Ok(pair) => pair,
             Err(e) => {
-                eprintln!("dashboard: falling back to a no-op node because pty allocation failed: {e}");
+                eprintln!(
+                    "dashboard: falling back to a no-op node because pty allocation failed: {e}"
+                );
                 return Self {
                     parser,
                     master: None,
@@ -249,8 +253,13 @@ impl TuiNode {
         }
     }
 
-///// the recusive loop must start here
-    pub fn spawn(&self, args: Vec<String>, cwd: PathBuf, command_override: Option<String>) -> io::Result<()> {
+    ///// the recusive loop must start here
+    pub fn spawn(
+        &self,
+        args: Vec<String>,
+        cwd: PathBuf,
+        command_override: Option<String>,
+    ) -> io::Result<()> {
         let Some(slave) = &self.slave else {
             return Ok(());
         };
@@ -280,21 +289,19 @@ impl TuiNode {
             cb.args(&args[1..]);
             cb
         };
-        
+
         cmd.cwd(cwd);
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
 
         // Avoid recursive dashboard relaunches; always spawn an explicit child command.
-        let mut _child = slave
-            .spawn_command(cmd)
-            .expect("failed to spawn command");
-        
+        let mut _child = slave.spawn_command(cmd).expect("failed to spawn command");
+
         let mut reader = {
             let master = master.lock().unwrap();
             master.try_clone_reader().expect("failed to clone reader")
         };
-        
+
         let parser = Arc::clone(&self.parser);
         let byte_count = Arc::clone(&self.byte_count);
         let gnostr_presented = Arc::clone(&self.gnostr_presented);
@@ -308,11 +315,14 @@ impl TuiNode {
                 }
                 let chunk = &buf[..n];
                 byte_count.fetch_add(n, Ordering::SeqCst);
-                
+
                 // Detect alternate screen buffer (CSI ? 1049 h) or hide cursor (CSI ? 25 l)
                 if !is_tui.load(Ordering::SeqCst) {
-                    if chunk.windows(8).any(|w| w == b"\x1b[?1049h" || w == b"\x1b[?1047h") 
-                        || chunk.windows(6).any(|w| w == b"\x1b[?25l") {
+                    if chunk
+                        .windows(8)
+                        .any(|w| w == b"\x1b[?1049h" || w == b"\x1b[?1047h")
+                        || chunk.windows(6).any(|w| w == b"\x1b[?25l")
+                    {
                         is_tui.store(true, Ordering::SeqCst);
                     }
                 }
@@ -372,7 +382,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     for _ in 0..node_commands.len() {
         nodes.push(TuiNode::new(120, 24));
     }
-    
+
     let git_tui_node = TuiNode::new(120, 24);
     let relay_node = TuiNode::new(120, 24);
     let chat_node = TuiNode::new(120, 24);
@@ -390,9 +400,17 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
             node.spawn(vec![], project_root.clone(), Some(cmd_override))?;
         }
     }
-    
-    relay_node.spawn(vec![], project_root.clone(), Some("gnostr relay".to_string()))?;
-    chat_node.spawn(vec![], project_root.clone(), Some("gnostr chat".to_string()))?;
+
+    relay_node.spawn(
+        vec![],
+        project_root.clone(),
+        Some("gnostr relay".to_string()),
+    )?;
+    chat_node.spawn(
+        vec![],
+        project_root.clone(),
+        Some("gnostr chat".to_string()),
+    )?;
     #[cfg(feature = "blossom-tui")]
     if server_available {
         server_node.spawn(
@@ -446,7 +464,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
         if active_tab == git_tui_tab_index && !git_tui_started && git_tui_error.is_none() {
             match ensure_git_tui_available() {
-                Ok(true) => match git_tui_node.spawn(vec![], project_root.clone(), Some("git-tui".to_string())) {
+                Ok(true) => match git_tui_node.spawn(
+                    vec![],
+                    project_root.clone(),
+                    Some("git-tui".to_string()),
+                ) {
                     Ok(()) => {
                         git_tui_started = true;
                         force_redraw = true;
@@ -457,7 +479,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
                 },
                 Ok(false) => {
-                    git_tui_error = Some("git-tui is not on PATH. Run `cargo install gnostr` and try again.".to_string());
+                    git_tui_error = Some(
+                        "git-tui is not on PATH. Run `cargo install gnostr` and try again."
+                            .to_string(),
+                    );
                     force_redraw = true;
                 }
                 Err(err) => {
@@ -476,10 +501,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
 
             let currently_ready = nodes.iter().all(|n| {
                 n.gnostr_presented.load(Ordering::SeqCst)
-                    || (n.byte_count.load(Ordering::SeqCst) > 0 && start_time.elapsed() > Duration::from_secs(3))
-            }) && (relay_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
-               && (chat_node.byte_count.load(Ordering::SeqCst) > 0 || start_time.elapsed() > Duration::from_secs(3))
-               && server_ready;
+                    || (n.byte_count.load(Ordering::SeqCst) > 0
+                        && start_time.elapsed() > Duration::from_secs(3))
+            }) && (relay_node.byte_count.load(Ordering::SeqCst) > 0
+                || start_time.elapsed() > Duration::from_secs(3))
+                && (chat_node.byte_count.load(Ordering::SeqCst) > 0
+                    || start_time.elapsed() > Duration::from_secs(3))
+                && server_ready;
 
             if currently_ready && ready_since.is_none() {
                 ready_since = Some(Instant::now());
@@ -488,9 +516,13 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
             let all_ready = match ready_since {
                 Some(t) => {
                     t.elapsed() > Duration::from_secs(1)
-                        || start_time.elapsed() > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 })
+                        || start_time.elapsed()
+                            > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 })
                 }
-                None => start_time.elapsed() > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 }),
+                None => {
+                    start_time.elapsed()
+                        > Duration::from_secs(if cfg!(debug_assertions) { 60 } else { 10 })
+                }
             };
 
             if all_ready && !was_ready {
@@ -531,7 +563,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 );
                 f.render_widget(
                     Paragraph::new("GNOSTR")
-                        .style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD))
+                        .style(
+                            Style::default()
+                                .fg(gnostr_purple())
+                                .add_modifier(Modifier::BOLD),
+                        )
                         .alignment(Alignment::Center),
                     vertical_chunks[3],
                 );
@@ -555,28 +591,48 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     .split(main_chunks[0]);
 
                 f.render_widget(
-                    Paragraph::new(crate::strings::symbol::CIRCLED_G_STR)
-                        .style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)),
+                    Paragraph::new(crate::strings::symbol::CIRCLED_G_STR).style(
+                        Style::default()
+                            .fg(gnostr_purple())
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     header_chunks[0],
                 );
 
-                let tabs = Tabs::new(tab_titles.iter().map(|t| Line::from(*t)).collect::<Vec<_>>())
-                    .block(Block::default().borders(Borders::NONE))
-                    .select(if active_tab == git_tui_tab_index { 999 } else { active_tab })
-                    .style(Style::default().fg(Color::Gray))
-                    .highlight_style(Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD))
-                    .divider(Span::raw(" | "));
-                
+                let tabs = Tabs::new(
+                    tab_titles
+                        .iter()
+                        .map(|t| Line::from(*t))
+                        .collect::<Vec<_>>(),
+                )
+                .block(Block::default().borders(Borders::NONE))
+                .select(if active_tab == git_tui_tab_index {
+                    999
+                } else {
+                    active_tab
+                })
+                .style(Style::default().fg(Color::Gray))
+                .highlight_style(
+                    Style::default()
+                        .fg(gnostr_purple())
+                        .add_modifier(Modifier::BOLD),
+                )
+                .divider(Span::raw(" | "));
+
                 f.render_widget(tabs, header_chunks[1]);
 
                 let git_tab_style = if active_tab == git_tui_tab_index {
-                    Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(gnostr_purple())
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Color::Gray)
                 };
-                
+
                 f.render_widget(
-                    Paragraph::new("GitUI [\\\\]").style(git_tab_style).alignment(Alignment::Right),
+                    Paragraph::new("GitUI [\\\\]")
+                        .style(git_tab_style)
+                        .alignment(Alignment::Right),
                     header_chunks[2],
                 );
 
@@ -601,18 +657,18 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         let block = Block::default()
                             .borders(Borders::NONE)
                             .title(" GitUI [UNAVAILABLE] ")
-                            .border_style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD));
+                            .border_style(
+                                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                            );
                         f.render_widget(
-                            Paragraph::new(error.clone()).alignment(Alignment::Center).block(block),
+                            Paragraph::new(error.clone())
+                                .alignment(Alignment::Center)
+                                .block(block),
                             git_tui_area,
                         );
                     } else if git_tui_started {
                         let git_tui_width = git_tui_area.width;
-                        git_tui_node.resize(
-                            git_tui_width,
-                            git_tui_area.height,
-                            force_redraw,
-                        );
+                        git_tui_node.resize(git_tui_width, git_tui_area.height, force_redraw);
 
                         let p = git_tui_node.parser.lock().unwrap();
                         let screen = p.screen();
@@ -633,7 +689,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         }
 
                         let block_style = if is_git_tui_active {
-                            Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                            Style::default()
+                                .fg(gnostr_purple())
+                                .add_modifier(Modifier::BOLD)
                         } else {
                             Style::default().fg(Color::Gray)
                         };
@@ -643,7 +701,10 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         } else {
                             " GitUI [SELECTED - Press Enter to focus] "
                         };
-                        let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
+                        let block = Block::default()
+                            .borders(Borders::NONE)
+                            .title(title)
+                            .border_style(block_style);
                         f.render_widget(Paragraph::new(lines).block(block), git_tui_area);
                     } else {
                         let block = Block::default()
@@ -651,21 +712,30 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             .title(" GitUI ")
                             .border_style(Style::default().fg(Color::Gray));
                         f.render_widget(
-                            Paragraph::new("Starting git-tui...").alignment(Alignment::Center).block(block),
+                            Paragraph::new("Starting git-tui...")
+                                .alignment(Alignment::Center)
+                                .block(block),
                             git_tui_area,
                         );
                     }
-                } else if active_tab == 0 { // Nodes Tab
-                    let visible_indices: Vec<usize> = nodes.iter().enumerate()
+                } else if active_tab == 0 {
+                    // Nodes Tab
+                    let visible_indices: Vec<usize> = nodes
+                        .iter()
+                        .enumerate()
                         .filter(|&(i, _)| visible_nodes[i])
                         .map(|(i, _)| i)
                         .collect();
 
                     if visible_indices.is_empty() {
-                        f.render_widget(Paragraph::new("No nodes visible. Press 'q' to exit."), content_area);
+                        f.render_widget(
+                            Paragraph::new("No nodes visible. Press 'q' to exit."),
+                            content_area,
+                        );
                     } else {
                         let constraints: Vec<Constraint> = if let Some(active_idx) = active_node {
-                            visible_indices.iter()
+                            visible_indices
+                                .iter()
                                 .map(|&idx| {
                                     if idx == active_idx {
                                         Constraint::Min(0)
@@ -675,7 +745,8 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 })
                                 .collect()
                         } else {
-                            visible_indices.iter()
+                            visible_indices
+                                .iter()
                                 .map(|_| Constraint::Ratio(1, visible_indices.len() as u32))
                                 .collect()
                         };
@@ -709,13 +780,17 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             }
 
                             let block_style = if active_node == Some(idx) {
-                                Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                                Style::default()
+                                    .fg(gnostr_purple())
+                                    .add_modifier(Modifier::BOLD)
                             } else if active_node.is_none() && selected_node == idx {
-                                Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)
+                                Style::default()
+                                    .fg(Color::Magenta)
+                                    .add_modifier(Modifier::BOLD)
                             } else {
                                 Style::default().fg(Color::Gray)
                             };
-                            
+
                             let is_tui = nodes[idx].is_tui.load(Ordering::SeqCst);
                             let type_str = if is_tui { "TUI" } else { "CLI" };
 
@@ -739,9 +814,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             f.render_widget(Paragraph::new(lines).block(block), chunk);
                         }
                     }
-                } else if active_tab == 1 { // Relay Tab
-                    relay_node.resize(content_area.width, content_area.height, force_redraw || initial_node_redraw);
-                    
+                } else if active_tab == 1 {
+                    // Relay Tab
+                    relay_node.resize(
+                        content_area.width,
+                        content_area.height,
+                        force_redraw || initial_node_redraw,
+                    );
+
                     let p = relay_node.parser.lock().unwrap();
                     let screen = p.screen();
                     let mut lines = Vec::new();
@@ -759,19 +839,33 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         }
                         lines.push(Line::from(spans));
                     }
-                    
+
                     let block_style = if is_relay_active {
-                        Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(gnostr_purple())
+                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::Gray)
                     };
-                    
-                    let title = if is_relay_active { " Relay [ACTIVE - Double ESC to unfocus] " } else { " Relay [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
+
+                    let title = if is_relay_active {
+                        " Relay [ACTIVE - Double ESC to unfocus] "
+                    } else {
+                        " Relay [SELECTED - Press Enter to focus] "
+                    };
+                    let block = Block::default()
+                        .borders(Borders::NONE)
+                        .title(title)
+                        .border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
-                } else if active_tab == 2 { // Chat Tab
-                    chat_node.resize(content_area.width, content_area.height, force_redraw || initial_node_redraw);
-                    
+                } else if active_tab == 2 {
+                    // Chat Tab
+                    chat_node.resize(
+                        content_area.width,
+                        content_area.height,
+                        force_redraw || initial_node_redraw,
+                    );
+
                     let p = chat_node.parser.lock().unwrap();
                     let screen = p.screen();
                     let mut lines = Vec::new();
@@ -789,18 +883,31 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                         }
                         lines.push(Line::from(spans));
                     }
-                    
+
                     let block_style = if is_chat_active {
-                        Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(gnostr_purple())
+                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::Gray)
                     };
-                    
-                    let title = if is_chat_active { " Chat [ACTIVE - Double ESC to unfocus] " } else { " Chat [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
+
+                    let title = if is_chat_active {
+                        " Chat [ACTIVE - Double ESC to unfocus] "
+                    } else {
+                        " Chat [SELECTED - Press Enter to focus] "
+                    };
+                    let block = Block::default()
+                        .borders(Borders::NONE)
+                        .title(title)
+                        .border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
                 } else if active_tab == server_tab_index && server_available {
-                    server_node.resize(content_area.width, content_area.height, force_redraw || initial_node_redraw);
+                    server_node.resize(
+                        content_area.width,
+                        content_area.height,
+                        force_redraw || initial_node_redraw,
+                    );
 
                     let p = server_node.parser.lock().unwrap();
                     let screen = p.screen();
@@ -821,50 +928,77 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     }
 
                     let block_style = if is_server_active {
-                        Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(gnostr_purple())
+                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::Gray)
                     };
 
-                    let title = if is_server_active { " Server [ACTIVE - Double ESC to unfocus] " } else { " Server [SELECTED - Press Enter to focus] " };
-                    let block = Block::default().borders(Borders::NONE).title(title).border_style(block_style);
+                    let title = if is_server_active {
+                        " Server [ACTIVE - Double ESC to unfocus] "
+                    } else {
+                        " Server [SELECTED - Press Enter to focus] "
+                    };
+                    let block = Block::default()
+                        .borders(Borders::NONE)
+                        .title(title)
+                        .border_style(block_style);
                     f.render_widget(Paragraph::new(lines).block(block), content_area);
                 } else if active_tab == server_tab_index && !server_available {
                     let install_lines = server_install_dialog();
                     f.render_widget(
-                        Paragraph::new(install_lines).block(Block::default().borders(Borders::NONE).title(" Server ")),
+                        Paragraph::new(install_lines)
+                            .block(Block::default().borders(Borders::NONE).title(" Server ")),
                         content_area,
                     );
-                } else if active_tab == help_tab_index { // Help Tab
+                } else if active_tab == help_tab_index {
+                    // Help Tab
                     let mut help_text = vec![
                         Line::from(vec![Span::styled(
                             "GNOSTR DASHBOARD HELP",
-                            Style::default().fg(gnostr_purple()).add_modifier(Modifier::BOLD),
+                            Style::default()
+                                .fg(gnostr_purple())
+                                .add_modifier(Modifier::BOLD),
                         )]),
                         Line::from(""),
                         Line::from("Global Controls (when no node is focused):"),
                         Line::from("  [Tab]       : Cycle through tabs"),
                         Line::from("  [Up/Down]   : Select a node"),
-                        Line::from("  [Left/Right]: Toggle horizontal/vertical layout (if at edge)"),
+                        Line::from(
+                            "  [Left/Right]: Toggle horizontal/vertical layout (if at edge)",
+                        ),
                         Line::from("  [Left/Right]: Select adjacent node (if not at edge)"),
                         Line::from("  [Enter]     : Focus the selected node"),
                         Line::from("  [1-9]       : Focus Node 1-9"),
                         Line::from("  [\\]         : Toggle the GitUI tab"),
-                        Line::from("  [q]         : Hide selected node (Quits if only 1 node visible)"),
+                        Line::from(
+                            "  [q]         : Hide selected node (Quits if only 1 node visible)",
+                        ),
                         Line::from("  [.]         : Toggle Help Screen"),
                         Line::from("  [Ctrl+C]    : Force Quit Dashboard"),
                         Line::from(""),
                         Line::from("Node Controls (when a node is focused):"),
                         Line::from("  [Double ESC]: Unfocus the current node"),
-                        Line::from("  [All]       : All other keys are forwarded to the node's PTY"),
+                        Line::from(
+                            "  [All]       : All other keys are forwarded to the node's PTY",
+                        ),
                     ];
                     #[cfg(feature = "blossom-tui")]
-                    help_text.insert(10, Line::from("  Server tab  : Available when blossom-tui is compiled in"));
+                    help_text.insert(
+                        10,
+                        Line::from("  Server tab  : Available when blossom-tui is compiled in"),
+                    );
                     if !server_available {
                         help_text.push(Line::from(""));
-                        help_text.push(Line::from("Server tab opens an install dialog until gnostr-server is available."));
+                        help_text.push(Line::from(
+                            "Server tab opens an install dialog until gnostr-server is available.",
+                        ));
                     }
-                    f.render_widget(Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)), content_area);
+                    f.render_widget(
+                        Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)),
+                        content_area,
+                    );
                 }
 
                 f.render_widget(
@@ -885,7 +1019,9 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                 }
                 Event::Key(key) => {
                     // Global Ctrl+C handler
-                    if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    if key.code == KeyCode::Char('c')
+                        && key.modifiers.contains(KeyModifiers::CONTROL)
+                    {
                         break;
                     }
 
@@ -1013,7 +1149,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     } else {
                         match key.code {
                             KeyCode::Char('\\') => {
-                                active_tab = if active_tab == git_tui_tab_index { 0 } else { git_tui_tab_index };
+                                active_tab = if active_tab == git_tui_tab_index {
+                                    0
+                                } else {
+                                    git_tui_tab_index
+                                };
                                 force_redraw = true;
                             }
                             KeyCode::Tab => {
@@ -1050,7 +1190,11 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Char('.') => {
-                                active_tab = if active_tab == help_tab_index { 0 } else { help_tab_index };
+                                active_tab = if active_tab == help_tab_index {
+                                    0
+                                } else {
+                                    help_tab_index
+                                };
                                 force_redraw = true;
                             }
                             KeyCode::Up => {
@@ -1063,8 +1207,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                     } else {
                                         selected_node = nodes.len().saturating_sub(1);
                                     }
-                                    if visible_nodes[selected_node] { break; }
-                                    if visible_nodes.iter().all(|&v| !v) { break; }
+                                    if visible_nodes[selected_node] {
+                                        break;
+                                    }
+                                    if visible_nodes.iter().all(|&v| !v) {
+                                        break;
+                                    }
                                 }
                             }
                             KeyCode::Down => {
@@ -1077,8 +1225,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                     } else {
                                         selected_node = 0;
                                     }
-                                    if visible_nodes[selected_node] { break; }
-                                    if visible_nodes.iter().all(|&v| !v) { break; }
+                                    if visible_nodes[selected_node] {
+                                        break;
+                                    }
+                                    if visible_nodes.iter().all(|&v| !v) {
+                                        break;
+                                    }
                                 }
                             }
                             KeyCode::Left => {
@@ -1138,7 +1290,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                         is_chat_active = true;
                                     } else if active_tab == 1 {
                                         is_relay_active = true;
-                                    } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
+                                    } else if active_tab == 0
+                                        && visible_nodes
+                                            .get(selected_node)
+                                            .copied()
+                                            .unwrap_or(false)
+                                    {
                                         active_node = Some(selected_node);
                                         active_tab = 0;
                                     }
@@ -1151,7 +1308,12 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                         is_chat_active = true;
                                     } else if active_tab == 1 {
                                         is_relay_active = true;
-                                    } else if active_tab == 0 && visible_nodes.get(selected_node).copied().unwrap_or(false) {
+                                    } else if active_tab == 0
+                                        && visible_nodes
+                                            .get(selected_node)
+                                            .copied()
+                                            .unwrap_or(false)
+                                    {
                                         active_node = Some(selected_node);
                                         active_tab = 0;
                                     }
@@ -1192,7 +1354,7 @@ fn map_vt_color(c: vt100::Color) -> Color {
 fn encode_key(key: event::KeyEvent) -> Vec<u8> {
     use crossterm::event::{KeyCode, KeyModifiers};
     let mut buf = Vec::new();
-    
+
     if key.modifiers.contains(KeyModifiers::ALT) {
         buf.push(27); // ESC
     }
@@ -1230,23 +1392,21 @@ fn encode_key(key: event::KeyEvent) -> Vec<u8> {
         KeyCode::BackTab => buf.extend_from_slice(b"\x1b[Z"),
         KeyCode::Delete => buf.extend_from_slice(b"\x1b[3~"),
         KeyCode::Insert => buf.extend_from_slice(b"\x1b[2~"),
-        KeyCode::F(n) => {
-            match n {
-                1 => buf.extend_from_slice(b"\x1bOP"),
-                2 => buf.extend_from_slice(b"\x1bOQ"),
-                3 => buf.extend_from_slice(b"\x1bOR"),
-                4 => buf.extend_from_slice(b"\x1bOS"),
-                5 => buf.extend_from_slice(b"\x1b[15~"),
-                6 => buf.extend_from_slice(b"\x1b[17~"),
-                7 => buf.extend_from_slice(b"\x1b[18~"),
-                8 => buf.extend_from_slice(b"\x1b[19~"),
-                9 => buf.extend_from_slice(b"\x1b[20~"),
-                10 => buf.extend_from_slice(b"\x1b[21~"),
-                11 => buf.extend_from_slice(b"\x1b[23~"),
-                12 => buf.extend_from_slice(b"\x1b[24~"),
-                _ => {}
-            }
-        }
+        KeyCode::F(n) => match n {
+            1 => buf.extend_from_slice(b"\x1bOP"),
+            2 => buf.extend_from_slice(b"\x1bOQ"),
+            3 => buf.extend_from_slice(b"\x1bOR"),
+            4 => buf.extend_from_slice(b"\x1bOS"),
+            5 => buf.extend_from_slice(b"\x1b[15~"),
+            6 => buf.extend_from_slice(b"\x1b[17~"),
+            7 => buf.extend_from_slice(b"\x1b[18~"),
+            8 => buf.extend_from_slice(b"\x1b[19~"),
+            9 => buf.extend_from_slice(b"\x1b[20~"),
+            10 => buf.extend_from_slice(b"\x1b[21~"),
+            11 => buf.extend_from_slice(b"\x1b[23~"),
+            12 => buf.extend_from_slice(b"\x1b[24~"),
+            _ => {}
+        },
         KeyCode::Esc => buf.push(27),
         _ => {}
     }
