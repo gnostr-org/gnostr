@@ -1,14 +1,14 @@
+use anyhow::Result;
+use directories::ProjectDirs;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
-use anyhow::Result;
-use directories::ProjectDirs;
-use reqwest::Client;
 use tokio;
-use sha2::{Sha256, Digest};
-use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
 use url::Url;
 
 // build.rs - This file will generate src/relays.yaml
@@ -43,7 +43,6 @@ fn sanitize_relay_entry(line: &str) -> Option<String> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let cache_path = out_dir.join("relay_hashes.json");
     let mut cached_hashes: CachedHashes = match fs::read_to_string(&cache_path) {
@@ -70,8 +69,8 @@ async fn main() -> Result<()> {
                 eprintln!("Checking hash for {} (cached: {})...", name, cached_hash);
                 // For simplicity in this `build.rs`, we'll always fetch for now.
                 // A real optimization would involve checking remote hash from headers if available.
-                true 
-            },
+                true
+            }
             None => {
                 eprintln!("No cached hash for {}. Fetching...", name);
                 true
@@ -85,7 +84,7 @@ async fn main() -> Result<()> {
                         all_relays.insert(url_str);
                     }
                     new_hashes.insert(url.to_string(), current_hash);
-                },
+                }
                 Err(e) => eprintln!("Could not fetch online relays from {}: {}", name, e),
             }
         }
@@ -108,8 +107,6 @@ async fn main() -> Result<()> {
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
 
-
-
     // Write updated hashes to cache file
     cached_hashes.hashes = new_hashes;
     let serialized = serde_json::to_string_pretty(&cached_hashes)?;
@@ -128,10 +125,13 @@ async fn fetch_online_relays_build(url: &str) -> Result<(Vec<String>, String)> {
     hasher.update(text.as_bytes());
     let current_hash = format!("{:x}", hasher.finalize());
 
-    let relays: Vec<String> = text.lines()
-        .filter_map(sanitize_relay_entry)
-        .collect();
+    let relays: Vec<String> = text.lines().filter_map(sanitize_relay_entry).collect();
 
-    eprintln!("Fetched {} online relays from {} (hash: {})", relays.len(), url, current_hash);
+    eprintln!(
+        "Fetched {} online relays from {} (hash: {})",
+        relays.len(),
+        url,
+        current_hash
+    );
     Ok((relays, current_hash))
 }
