@@ -34,7 +34,9 @@ pub async fn run() -> anyhow::Result<()> {
     let args = match gnostr::cli::GnostrCli::try_parse_from(filtered_args) {
         Ok(a) => a,
         Err(e) => {
-            if e.kind() == clap::error::ErrorKind::DisplayHelp || e.kind() == clap::error::ErrorKind::DisplayVersion {
+            if e.kind() == clap::error::ErrorKind::DisplayHelp
+                || e.kind() == clap::error::ErrorKind::DisplayVersion
+            {
                 e.exit();
             }
             // Fallback to default if parsing fails due to unrecognized dashboard-specific args
