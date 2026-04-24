@@ -63,6 +63,8 @@ pub mod queue;
 pub mod repo_ref;
 ///  <https://docs.rs/gnostr/latest/gnostr/repo_state/index.html>
 pub mod repo_state;
+///  <https://docs.rs/gnostr/latest/gnostr/server/index.html>
+pub mod server;
 ///  <https://docs.rs/gnostr/latest/gnostr/spinner/index.html>
 pub mod spinner;
 ///  <https://docs.rs/gnostr/latest/gnostr/ssh/index.html>
