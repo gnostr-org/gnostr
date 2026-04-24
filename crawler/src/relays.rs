@@ -18,6 +18,10 @@ pub fn get_config_dir_path() -> PathBuf {
         .unwrap_or_else(|| Path::new(".").to_path_buf())
 }
 
+pub fn bootstrap_relays() -> Vec<String> {
+    BOOTSTRAP_RELAYS.clone()
+}
+
 static LIVE_NIPS: LazyLock<Mutex<HashSet<i32>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 static LIVE_KINDS: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 

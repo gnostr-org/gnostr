@@ -188,6 +188,9 @@ async fn send_to_relay(
         if let Message::Text(text) = data {
             vec_result.push(text.to_string());
             count += 1;
+            if count >= limit {
+                return Ok(vec_result);
+            }
         }
     }
 
@@ -336,7 +339,9 @@ mod tests {
 
         let bad_relay = Url::parse("ws://127.0.0.1:1/")?;
         let good_relay = Url::parse(&format!("ws://{}", addr))?;
-        let result = send("REQ".to_string(), vec![bad_relay, good_relay], Some(1)).await?;
+        let result = send("REQ".to_string(), vec![bad_relay, good_relay], Some(1))
+            .await
+            .expect("query should fall back to the healthy relay");
 
         assert_eq!(result, vec!["{\"ok\":true}".to_string()]);
         server.await.unwrap();
