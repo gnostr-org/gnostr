@@ -1,5 +1,5 @@
 use clap::Parser;
-use gnostr_crawler::{Cli, init_tracing, dispatch_cli_command};
+use gnostr_crawler::{dispatch_cli_command, init_tracing, Cli};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
