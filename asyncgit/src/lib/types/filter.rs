@@ -354,9 +354,7 @@ mod test {
 
     #[test]
     fn test_event_matches() {
-        use crate::{
-            types::{Id, KeySigner, PreEvent, PrivateKey, Signer, Tag, UncheckedUrl},
-        };
+        use crate::types::{Id, KeySigner, PreEvent, PrivateKey, Signer, Tag, UncheckedUrl};
 
         let signer = {
             let privkey = PrivateKey::mock();
