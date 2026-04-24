@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "gnostr-crawler"
-version = "1877.946465.533261"
+version = "1877.946465.533564"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
 build = true                                        ##false
 autolib = false
