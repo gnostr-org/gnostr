@@ -1,3 +1,9 @@
+//! P2P transport for `gnostr chat`.
+//!
+//! This layer owns the libp2p swarm used by chat sessions. It subscribes to a
+//! topic, bridges Gossipsub messages into the UI channel, and reassembles
+//! chunked payloads before delivery.
+
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, Result};
@@ -20,22 +26,24 @@ use crate::p2p::{
     kvs::{FileRequest, FileResponse},
 };
 
-// Struct to manage message reassembly
+/// Buffer and reassemble chunked chat messages by message ID.
 pub struct MessageReassembler {
-    // message_id -> (total_chunks, received_chunks, chunks)
+    /// `message_id -> (total_chunks, received_chunks, chunks)`.
     buffer: Mutex<HashMap<String, (usize, usize, Vec<Option<Msg>>)>>,
 }
 
 impl MessageReassembler {
+    /// Create an empty reassembly buffer.
     pub fn new() -> Self {
         MessageReassembler {
             buffer: Mutex::new(HashMap::new()),
         }
     }
 
-    /// Adds a message chunk to the buffer and attempts reassembly.
-    /// Returns Some(complete_message) if reassembly is successful, None
-    /// otherwise.
+    /// Add a chunk to the buffer and return a full message when complete.
+    ///
+    /// The first chunk supplies the metadata for the reconstructed message; all
+    /// chunk contents are concatenated in sequence order.
     pub fn add_chunk_and_reassemble(&self, msg_chunk: Msg) -> Option<Msg> {
         if msg_chunk.message_id.is_none()
             || msg_chunk.sequence_num.is_none()
@@ -148,6 +156,7 @@ impl MessageReassembler {
     }
 }
 
+/// libp2p behaviours used by the chat swarm.
 #[derive(NetworkBehaviour)]
 pub struct MyBehaviour {
     pub relay: relay::client::Behaviour,
@@ -161,7 +170,7 @@ pub struct MyBehaviour {
     pub request_response: request_response::cbor::Behaviour<FileRequest, FileResponse>,
 }
 
-/// async_prompt
+/// Fetch a mempool URL asynchronously without blocking the swarm thread.
 pub async fn async_prompt(mempool_url: String) -> String {
     let s = tokio::spawn(async move {
         let agent: Agent = ureq::AgentBuilder::new()
@@ -191,7 +200,10 @@ pub async fn async_prompt(mempool_url: String) -> String {
 //    .unwrap() // Handle potential join errors
 //}
 
-/// evt_loop
+/// Run the chat swarm event loop.
+///
+/// This bootstraps the transport stack, subscribes to the requested topic, and
+/// forwards inbound chat messages into the caller's output channel.
 pub async fn evt_loop(
     mut send: tokio::sync::mpsc::Receiver<crate::queue::InternalEvent>,
     recv: tokio::sync::mpsc::Sender<crate::queue::InternalEvent>,

@@ -1,3 +1,8 @@
+//! Chat command plumbing for `gnostr`.
+//!
+//! This module binds the chat CLI, terminal UI, local swarm lifecycle, and the
+//! Blossom-backed file transfer / git-clone path into one command surface.
+
 use std::{
     error::Error as StdError,
     fs,
@@ -42,6 +47,11 @@ pub mod tests;
 pub mod ui;
 
 /// Simple CLI application to interact with nostr
+/// Top-level CLI flags for launching `gnostr chat`.
+///
+/// These flags cover identity, relay selection, logging, and detached/headless
+/// operation so the chat runtime can be used in interactive and workflow
+/// contexts.
 #[derive(Debug, Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
@@ -106,6 +116,10 @@ pub struct ChatCli {
     pub config: String,
 }
 
+/// Options carried into the chat runtime after Clap parsing.
+///
+/// These values control swarm identity, topic scoping, shell commands, and
+/// whether a local Blossom server is started for P2P cloning and transfer.
 #[derive(Args, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -120,7 +134,7 @@ pub struct ChatSubCommands {
     pub password: Option<String>,
     #[arg(long, global = true)]
     pub name: Option<String>,
-    // chat topic
+    /// Chat topic used to scope the local P2P swarm and Blossom workspace.
     #[arg(long, global = true, default_value = "gnostr")]
     pub topic: Option<String>,
     // chat hash
@@ -148,12 +162,12 @@ pub struct ChatSubCommands {
     )]
     /// gitdir
     pub gitdir: Option<RepoPath>,
-    /// Send a single message to a topic and exit
+    /// Send a single message to the topic and exit after propagation.
     #[arg(long, global = true, requires = "topic")]
     pub oneshot: Option<String>,
 }
 
-//async tasks
+/// Return the shared Tokio runtime used by background chat tasks.
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
     static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
     RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
@@ -246,6 +260,7 @@ fn sanitize_topic_dir(topic: &str) -> String {
         .collect()
 }
 
+/// Return the per-topic on-disk root used for chat state and artifacts.
 fn chat_repo_root(topic: &str) -> Result<PathBuf> {
     let dirs = crate::get_dirs()?;
     Ok(dirs
@@ -254,6 +269,10 @@ fn chat_repo_root(topic: &str) -> Result<PathBuf> {
         .join(sanitize_topic_dir(topic)))
 }
 
+/// Build a Blossom server command line for the current chat peer.
+///
+/// Each peer gets its own port and storage directory so headless chat sessions
+/// can coexist without stepping on one another.
 fn chat_blossom_server_args(args: &ChatSubCommands) -> Result<Vec<String>> {
     let topic = args.topic.clone().unwrap_or_else(|| "gnostr".to_string());
     let peer_seed = format!(
@@ -294,11 +313,17 @@ fn chat_blossom_server_args(args: &ChatSubCommands) -> Result<Vec<String>> {
     ])
 }
 
+/// Start the Blossom server that backs chat file transfer and clone support.
 fn start_chat_blossom_server(args: &ChatSubCommands) -> Result<()> {
     crate::server::run_with_args(chat_blossom_server_args(args)?)
         .map_err(|e| anyhow!(e.to_string()))
 }
 
+/// Run the chat command lifecycle.
+///
+/// This initializes identity, optionally starts the detached headless wrapper,
+/// starts the Blossom server used for P2P transfer/cloning, and then launches
+/// the main chat UI or event loop.
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
     let args = sub_command_args.clone();
     const DETACHED_ENV: &str = "GNOSTR_CHAT_DETACHED";

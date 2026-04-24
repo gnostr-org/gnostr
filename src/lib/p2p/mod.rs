@@ -1,3 +1,8 @@
+//! Core peer-to-peer primitives used by `gnostr`.
+//!
+//! This module owns the shared swarm setup, message routing, peer identity
+//! helpers, and the chat/P2P glue that higher-level commands build on.
+
 pub mod args;
 pub mod behaviour;
 pub mod chat;
@@ -49,7 +54,10 @@ use crate::{
 
 //const TOPIC: &str = "gnostr";
 
-/// async_prompt
+/// Fetch a mempool API response asynchronously and return the body.
+///
+/// This is used by chat-driven and UI-driven flows that need a short-lived
+/// external prompt without blocking the swarm event loop.
 pub async fn async_prompt(mempool_url: String) -> String {
     let s = tokio::spawn(async move {
         let agent: Agent = ureq::AgentBuilder::new()
@@ -69,6 +77,10 @@ pub async fn async_prompt(mempool_url: String) -> String {
     s.await.unwrap()
 }
 
+/// Derive a deterministic peer ID from a 32-byte seed.
+///
+/// Chat uses this for local test peers so multiple instances can attach to the
+/// same topic while still behaving like distinct identities.
 pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
     let mut close_bytes;
     close_bytes = bytes;
@@ -112,7 +124,10 @@ pub fn generate_close_peer_id(bytes: [u8; 32], _common_bits: usize) -> PeerId {
     keypair.public().to_peer_id()
 }
 
-/// evt_loop
+/// Run the shared P2P event loop for chat-style message exchange.
+///
+/// The loop subscribes to the topic, listens on TCP and QUIC, and forwards
+/// incoming events back into the caller's message channel.
 pub async fn evt_loop(
     args: ChatSubCommands,
     mut send: tokio::sync::mpsc::Receiver<Msg>,

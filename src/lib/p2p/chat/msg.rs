@@ -1,3 +1,8 @@
+//! Message types and helpers for `gnostr chat`.
+//!
+//! These values represent both plain chat events and the structured payloads
+//! used for Git metadata, diff transfer, and oneshot message delivery.
+
 use std::fmt::Display;
 
 use git2::Oid;
@@ -13,6 +18,7 @@ pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
         .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string())
         .to_string()
 });
+/// Message categories understood by the chat UI and P2P transport.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub enum MsgKind {
     #[default]
@@ -37,16 +43,25 @@ pub enum MsgKind {
     OneShot,
 }
 
+/// A single chat message or structured payload moving through the swarm.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Msg {
+    /// Sender label shown in the UI.
     pub from: String,
+    /// Text payload, split into lines when needed for diffs or wrapped output.
     pub content: Vec<String>,
+    /// High-level kind used for rendering and routing.
     pub kind: MsgKind,
+    /// Associated commit metadata when chat is tied to git objects.
     pub commit_id: CommitId,
+    /// Optional serialized nostr event.
     pub nostr_event: Option<Event>,
-    pub message_id: Option<String>,  // New field
-    pub sequence_num: Option<usize>, // New field
-    pub total_chunks: Option<usize>, // New field
+    /// Stable identifier used to reassemble chunked messages.
+    pub message_id: Option<String>,
+    /// Zero-based chunk index when a message is split across packets.
+    pub sequence_num: Option<usize>,
+    /// Total chunk count for reassembly.
+    pub total_chunks: Option<usize>,
 }
 
 impl Default for Msg {
@@ -65,21 +80,25 @@ impl Default for Msg {
 }
 
 impl Msg {
+    /// Set the message kind and return the updated value.
     pub fn set_kind(mut self, kind: MsgKind) -> Self {
         self.kind = kind;
         self
     }
 
+    /// Replace the primary content line and return the updated value.
     pub fn set_content(mut self, content: String, _int: usize) -> Self {
         self.content[0] = content;
         self
     }
 
+    /// Attach the commit identifier associated with this message.
     pub fn set_commit_id(mut self, commit_id: CommitId) -> Self {
         self.commit_id = commit_id;
         self
     }
 
+    /// Store a serialized nostr event and mark the message as nostr-backed.
     pub fn set_nostr_event(mut self, event: Event) -> Self {
         self.kind = MsgKind::NostrEvent;
         self.content = vec![serde_json::to_string(&event).unwrap_or_default()];
@@ -87,19 +106,19 @@ impl Msg {
         self
     }
 
-    // New setter for message_id
+    /// Set the chunk reassembly identifier.
     pub fn set_message_id(mut self, message_id: String) -> Self {
         self.message_id = Some(message_id);
         self
     }
 
-    // New setter for sequence_num
+    /// Set the zero-based chunk index.
     pub fn set_sequence_num(mut self, sequence_num: usize) -> Self {
         self.sequence_num = Some(sequence_num);
         self
     }
 
-    // New setter for total_chunks
+    /// Set the total number of chunks required to reassemble the message.
     pub fn set_total_chunks(mut self, total_chunks: usize) -> Self {
         self.total_chunks = Some(total_chunks);
         self
