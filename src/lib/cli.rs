@@ -24,13 +24,12 @@ use crate::query::cli::QuerySubCommand;
 // Import the new relay subcommand module
 use crate::sub_commands::crawler;
 use crate::sub_commands::{
-     bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
-     custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
-     hide_public_channel_message, init, legit, list_events, login, mute_publickey, ngit, note,
-     privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, relay, send,
-     send_channel_message, set_channel_metadata, set_metadata, server, sniper, user_status,
-     vanity,
- };
+    bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
+    custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
+    hide_public_channel_message, init, legit, list_events, login, mute_publickey, ngit, note,
+    privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, relay, send,
+    send_channel_message, server, set_channel_metadata, set_metadata, sniper, user_status, vanity,
+};
 
 /// CliArgs
 #[derive(Parser, Debug)]
@@ -127,6 +126,14 @@ pub struct GnostrCli {
     )]
     /// gitdir
     pub gitdir: Option<RepoPath>,
+    /// start on a specific tab (1-6; stash uses 5/6)
+    #[arg(
+        long,
+        global = true,
+        value_name = "TAB",
+        help = "Start on tab number (1-6)"
+    )]
+    pub tab: Option<usize>,
     /// directory
     #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
     pub directory: Option<String>,
@@ -195,6 +202,7 @@ impl Default for GnostrCli {
             hash: None,
             workdir: Some(".".to_string()),
             gitdir: Some(".".into()),
+            tab: None,
             directory: None,
             theme: None,
             watcher: None,
