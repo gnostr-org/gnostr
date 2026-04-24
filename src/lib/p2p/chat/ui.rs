@@ -461,6 +461,7 @@ fn help_text() -> Vec<&'static str> {
         "  blossom+https://<host>/<pubkey-hex>/<repo>",
         "",
         "Behavior",
+        "  Blossom server auto-starts for local file transfer and clone support.",
         "  /clone runs locally and is not broadcast.",
         "  Plain chat messages are fanned out to both p2p swarms.",
         "  --diff <patch> creates a structured diff message.",
@@ -505,6 +506,7 @@ mod tests {
     fn help_text_mentions_clone_and_help_keys() {
         let text = help_text().join("\n");
         assert!(text.contains("/clone <blossom-url> [dest]"));
+        assert!(text.contains("Blossom server auto-starts for local file transfer and clone support."));
         assert!(text.contains("open/close this help"));
         assert!(text.contains(":shell / :sh open an interactive shell"));
         assert!(text.contains("Plain chat messages are fanned out to both p2p swarms."));
