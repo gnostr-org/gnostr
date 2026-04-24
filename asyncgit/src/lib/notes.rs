@@ -117,7 +117,9 @@ impl AsyncNotesJob {
     ///
     pub fn new(last_hash: u64, repo: RepoPath, notes_ref: Option<String>) -> Self {
         Self {
-            state: Arc::new(Mutex::new(Some(JobState::Request(last_hash, repo, notes_ref)))),
+            state: Arc::new(Mutex::new(Some(JobState::Request(
+                last_hash, repo, notes_ref,
+            )))),
         }
     }
 
