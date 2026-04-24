@@ -117,6 +117,16 @@ impl CommitList {
         self.notes.any_work_pending()
     }
 
+    /// update
+    pub fn update(&mut self) {
+        self.notes.update();
+    }
+
+    /// advance spinner animation for async notes loading
+    pub fn update_spinner(&mut self) {
+        self.notes.update_spinner();
+    }
+
     /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
@@ -314,9 +324,8 @@ impl CommitList {
             .unwrap_or_default()
     }
 
-    fn selected_entry_has_notes(&self) -> bool {
-        self.selected_entry()
-            .is_some_and(|_| self.notes.has_notes())
+    fn entry_has_notes(&self, id: CommitId) -> bool {
+        self.notes.has_notes_for(id.into())
     }
 
     fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
@@ -603,7 +612,7 @@ impl CommitList {
             txt.push(self.get_entry_to_add(
                 e,
                 idx + self.scroll_top.get() == selection,
-                idx + self.scroll_top.get() == selection && self.selected_entry_has_notes(),
+                self.entry_has_notes(e.id),
                 tags,
                 local_branches,
                 self.remote_branches_string(e),
