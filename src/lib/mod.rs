@@ -67,8 +67,6 @@ pub mod repo_state;
 pub mod server;
 ///  <https://docs.rs/gnostr/latest/gnostr/spinner/index.html>
 pub mod spinner;
-///  <https://docs.rs/gnostr/latest/gnostr/ssh/index.html>
-pub mod ssh;
 ///  <https://docs.rs/gnostr/latest/gnostr/string_utils/index.html>
 pub mod string_utils;
 ///  <https://docs.rs/gnostr/latest/gnostr/strings/index.html>

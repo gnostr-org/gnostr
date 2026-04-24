@@ -22,16 +22,6 @@ impl Drop for TerminalCleanup {
 }
 
 #[allow(dead_code)]
-mod mock_ssh {
-    pub async fn start() -> Result<(), Box<dyn std::error::Error>> {
-        // In test environment, always return an error for now
-        Err(Box::new(std::io::Error::other("Mock SSH Start Error")))
-    }
-}
-
-#[cfg(test)]
-use mock_ssh::start;
-
 #[derive(Parser, Debug, Clone)]
 #[command(
     about = "A tool for interacting with git repositories.",
@@ -61,8 +51,6 @@ enum GitCommands {
         #[command(subcommand)]
         command: CheckoutCommands,
     },
-    /// Serve a git repository over SSH
-    ServeSsh,
     /// Show git info
     Info,
     /// Open git TUI
@@ -95,10 +83,6 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
     if let Some(command) = &sub_command_args.command {
         let current_dir = std::env::current_dir()?;
         match command {
-            GitCommands::ServeSsh => {
-                env_logger::init_from_env(Env::default().default_filter_or("info"));
-                crate::ssh::start().await?;
-            }
             GitCommands::Tag { command } => match command {
                 TagCommands::Version { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
