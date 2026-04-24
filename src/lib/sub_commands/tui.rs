@@ -538,7 +538,13 @@ pub async fn run_app(
 
         {
             if matches!(event, QueueEvent::SpinnerUpdate) {
+                let pending = app.any_work_pending();
+                app.update_spinner();
                 spinner.update();
+                if pending {
+                    draw(terminal, &app)?;
+                }
+                spinner.set_state(pending);
                 spinner.draw(terminal)?;
                 continue;
             }
