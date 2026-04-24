@@ -1,4 +1,4 @@
-use clap::{Arg, ArgMatches, Command, Args};
+use clap::{Arg, ArgMatches, Args, Command};
 
 use super::ConfigBuilder;
 
@@ -89,7 +89,11 @@ pub struct QuerySubCommand {
     pub mentions: Option<String>,
     #[arg(short = 'e', long)]
     pub references: Option<String>,
-    #[arg(short = 'k', long, default_value = "1630,1632,1621,30618,1633,1631,1617,30617")]
+    #[arg(
+        short = 'k',
+        long,
+        default_value = "1630,1632,1621,30618,1633,1631,1617,30617"
+    )]
     pub kinds: Option<String>,
     #[arg(short, long)]
     pub search: Option<Vec<String>>,
