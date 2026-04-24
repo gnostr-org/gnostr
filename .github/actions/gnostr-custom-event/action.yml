@@ -10,7 +10,8 @@ inputs:
     default: '$(gnostr --hash "$GITHUB_REPOSITORY_ID")'
   kind:
     description: 'Nostr event kind (integer, e.g. 1)'
-    required: true
+    required: false
+    default: '1'
   content:
     description: 'Event content string'
     required: true
