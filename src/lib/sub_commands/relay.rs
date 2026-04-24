@@ -27,6 +27,11 @@ impl std::fmt::Display for LogLevel {
 }
 
 #[derive(Parser, Debug, Clone)]
+/// CLI arguments for `gnostr relay`.
+///
+/// The relay wrapper prefers a local `config/gnostr.toml` when present, uses
+/// the local relay crate defaults otherwise, and supports `--detach` on
+/// Unix-like systems.
 pub struct RelaySubCommand {
     /// Path to configuration file.
     #[arg(short, long)]
@@ -49,6 +54,7 @@ pub struct RelaySubCommand {
     pub detach: bool,
 }
 
+/// Launch the relay wrapper.
 pub async fn relay(args: RelaySubCommand) -> Result<()> {
     info!("Start relay server with args: {:?}", args);
 
