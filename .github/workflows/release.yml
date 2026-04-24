@@ -127,6 +127,13 @@ jobs:
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           fi
+      - name: Setup Windows OpenSSL
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/vcpkg-action
+        with:
+          arch: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
+          run-tests: 'false'
+          install: 'false'
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
