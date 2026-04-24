@@ -146,7 +146,7 @@ jobs:
         with:
           arch: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
           run-tests: 'false'
-          install: 'false'
+          install: 'true'
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
