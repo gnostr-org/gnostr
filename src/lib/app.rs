@@ -43,9 +43,9 @@ use crate::{
         AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
         ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
         FileRevlogPopup, FuzzyFindPopup, GitnotePopup, HelpPopup, InspectChatPopup,
-        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, NotesListPopup, OptionsPopup,
-        PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
-        StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
+        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, NotesListPopup, OptionsPopup, PullPopup,
+        PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup,
+        SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -651,7 +651,7 @@ impl App {
         Ok(())
     }
 
-    fn set_tab(&mut self, tab: usize) -> Result<()> {
+    fn set_tab_internal(&mut self, tab: usize, persist: bool) -> Result<()> {
         let tabs = self.get_tabs();
         for (i, t) in tabs.into_iter().enumerate() {
             if tab == i {
@@ -662,9 +662,33 @@ impl App {
         }
 
         self.tab = tab;
-        self.options.borrow_mut().set_current_tab(tab);
+        if persist {
+            self.options.borrow_mut().set_current_tab(tab);
+        }
 
         Ok(())
+    }
+
+    fn set_tab(&mut self, tab: usize) -> Result<()> {
+        self.set_tab_internal(tab, true)
+    }
+
+    pub fn set_start_tab(&mut self, tab: usize) -> Result<()> {
+        match tab {
+            1 => self.set_tab_internal(0, false),
+            2 => self.set_tab_internal(1, false),
+            3 => self.set_tab_internal(2, false),
+            4 => self.set_tab_internal(3, false),
+            5 => {
+                self.stash_tab.select_files()?;
+                self.set_tab_internal(4, false)
+            }
+            6 => {
+                self.stash_tab.select_stashes()?;
+                self.set_tab_internal(4, false)
+            }
+            _ => bail!("invalid --tab value {tab}; expected 1..=6"),
+        }
     }
 
     fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {

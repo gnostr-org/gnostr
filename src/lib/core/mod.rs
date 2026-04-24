@@ -15,6 +15,13 @@ pub struct GnostrSubCommands {
     //#[arg(long = "gitdir", default_value = ".")]
     #[arg(long = "gitdir")]
     pub gitdir: Option<RepoPath>,
+    /// start on a specific top-level tab
+    #[arg(
+        long,
+        value_name = "TAB",
+        help = "Start on top-level tab index (0..=4)"
+    )]
+    pub tab: Option<usize>,
     /// Enable notify_watcher
     #[arg(
         long,
@@ -53,6 +60,7 @@ impl Default for GnostrSubCommands {
         GnostrSubCommands {
             theme: Some(PathBuf::from("theme.rom")),
             gitdir: Some(RepoPath::from(".")),
+            tab: None,
             notify_watcher: false,
             nsec: None,
             password: None,

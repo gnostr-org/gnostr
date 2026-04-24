@@ -386,6 +386,7 @@ pub async fn tui(
             &mut terminal,
             cli.screenshots,
             Arc::clone(&quit_flag),
+            sub_command_args.tab,
         ))
         .await
         {
@@ -405,6 +406,22 @@ pub async fn tui(
     }
     //run(sub_command_args).await?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use crate::cli::{GnostrCli, GnostrCommands};
+
+    #[test]
+    fn parses_start_tab() {
+        let args = GnostrCli::parse_from(["gnostr", "tui", "--tab", "4"]);
+        match args.command {
+            Some(GnostrCommands::Tui(tui)) => assert_eq!(tui.tab, Some(4)),
+            _ => panic!("expected tui command"),
+        }
+    }
 }
 
 //pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn
@@ -430,6 +447,7 @@ pub async fn run_app(
     terminal: &mut Terminal,
     screenshots: Option<u8>,
     quit_flag: Arc<AtomicBool>,
+    start_tab: Option<usize>,
 ) -> Result<QuitState, anyhow::Error> {
     let (tx_git, rx_git) = unbounded();
     let (tx_app, rx_app) = unbounded();
@@ -464,6 +482,14 @@ pub async fn run_app(
             return Err(e);
         }
     };
+
+    if let Some(tab) = start_tab {
+        if tab > 4 {
+            return Err(anyhow!("invalid --tab value {tab}; expected 0..=4").into());
+        }
+        app.set_start_tab(tab)?;
+    }
+
     let mut spinner = Spinner::default();
     let mut first_update = true;
 
