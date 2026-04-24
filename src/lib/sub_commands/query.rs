@@ -45,6 +45,9 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
             .filter_map(|s| Url::parse(s).ok())
             .collect()
     };
+    if relays.is_empty() {
+        return Err(anyhow!("No valid relay URLs available"));
+    }
 
     let vec_result = crate::query::send(query_string.clone(), relays, Some(limit_check))
         .await
