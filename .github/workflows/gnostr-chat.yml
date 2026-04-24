@@ -147,7 +147,7 @@ jobs:
           LISTENER_HASH="$(printf '%s' listener | sha256sum | cut -d' ' -f1)"
           SENDER_HASH="$(printf '%s' sender | sha256sum | cut -d' ' -f1)"
 
-          gnostr chat \
+          cargo run --bin gnostr -- chat \
             --headless \
             --debug \
             --name listener \
@@ -159,7 +159,7 @@ jobs:
           sleep 10 # Give the listener time to detach and discover peers
 
           MESSAGE="Hello from github-ci-sender at $(date +%s)"
-          gnostr chat \
+          cargo run --bin gnostr -- chat \
             --debug \
             --name sender \
             --hash "$SENDER_HASH" \
