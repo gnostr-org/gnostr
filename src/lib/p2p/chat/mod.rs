@@ -120,7 +120,7 @@ pub struct ChatSubCommands {
     #[arg(long, global = true)]
     pub name: Option<String>,
     // chat topic
-    #[arg(long, global = true)]
+    #[arg(long, global = true, default_value = "gnostr")]
     pub topic: Option<String>,
     // chat hash
     #[arg(long, global = true)]
