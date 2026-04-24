@@ -16,6 +16,7 @@ mod inspect_chat;
 mod inspect_commit;
 mod log_search;
 mod msg;
+mod notes_list;
 mod openchat;
 mod options;
 mod pull;
@@ -28,7 +29,6 @@ mod stashmsg;
 mod submodules;
 mod tag_commit;
 mod taglist;
-mod notes_list;
 
 pub use blame_file::{BlameFileOpen, BlameFilePopup};
 pub use branchlist::BranchListPopup;
@@ -39,21 +39,21 @@ pub use confirm::ConfirmPopup;
 pub use create_branch::CreateBranchPopup;
 pub use display_chat::{DisplayChatOpen, DisplayChatPopup};
 pub use externaleditor::ExternalEditorPopup;
-pub use gitnote::GitnotePopup;
 pub use fetch::FetchPopup;
 pub use file_revlog::{FileRevOpen, FileRevlogPopup};
 pub use fuzzy_find::FuzzyFindPopup;
+pub use gitnote::GitnotePopup;
 pub use help::HelpPopup;
 pub use inspect_chat::{InspectChatOpen, InspectChatPopup};
 pub use inspect_commit::{InspectCommitOpen, InspectCommitPopup};
 pub use log_search::LogSearchPopupPopup;
 pub use msg::MsgPopup;
+pub use notes_list::NotesListPopup;
 pub use openchat::ExternalChatPopup;
 pub use options::{AppOption, OptionsPopup};
 pub use pull::PullPopup;
 pub use push::PushPopup;
 pub use push_tags::PushTagsPopup;
-pub use notes_list::NotesListPopup;
 use ratatui::{
     layout::Alignment,
     text::{Span, Text},
