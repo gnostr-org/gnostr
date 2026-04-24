@@ -84,7 +84,11 @@ pub fn tab_chat(_key_config: &SharedKeyConfig) -> String {
     "🅖".to_string()
 }
 pub fn tab_stash(key_config: &SharedKeyConfig) -> String {
-    format!("Stash [{}]", key_config.get_hint(key_config.keys.tab_stashing))
+    format!(
+        "Stash [{}/{}]",
+        key_config.get_hint(key_config.keys.tab_stashing),
+        key_config.get_hint(key_config.keys.tab_stashes)
+    )
 }
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
     format!(
