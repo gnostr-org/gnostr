@@ -21,6 +21,7 @@ This reusable composite action posts a custom Nostr event (kind-1) using the `gn
 - `status`: Human-readable status label (required)
 - `job_url`: URL to the current job (required)
 - `matrix_label`: Matrix label, e.g. OS/version (required)
+- `kind`: Nostr kind, defaults to `1`
 - `pow`, `damus`, `nos`, `njump_base`: Optional advanced settings
 
 ## Output
