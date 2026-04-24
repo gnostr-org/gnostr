@@ -116,13 +116,9 @@ async fn run_local_relay(setting_path: Option<String>) -> Result<()> {
 
     local_set
         .run_until(async move {
-            let app_data = gnostr_relay::App::create(
-                setting_path,
-                true,
-                Some("NOSTR".to_owned()),
-                None,
-            )
-            .map_err(anyhow::Error::from)?;
+            let app_data =
+                gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), None)
+                    .map_err(anyhow::Error::from)?;
             app_data.web_server()?.await.map_err(anyhow::Error::from)
         })
         .await?;
@@ -185,7 +181,13 @@ mod tests {
 
         assert_eq!(
             resolve_setting_path(&args, tempdir.path()),
-            Some(tempdir.path().join("config/gnostr.toml").to_string_lossy().into_owned())
+            Some(
+                tempdir
+                    .path()
+                    .join("config/gnostr.toml")
+                    .to_string_lossy()
+                    .into_owned()
+            )
         );
     }
 }
