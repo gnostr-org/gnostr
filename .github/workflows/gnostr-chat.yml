@@ -112,8 +112,7 @@ jobs:
 
       - name: Install gnostr via cargo-binstall
         uses: ./.github/actions/cargo-binstall-gnostr
-        if: runner.os != 'macOS'
-        if: matrix.os == 'macos-latest'
+        if: runner.os != 'macOS' && matrix.os == 'macos-latest'
       - run: gnostr --help
       - run: |
           gnostr -d ${{ env.POW }} \
@@ -244,4 +243,3 @@ jobs:
           path: |
             target
           key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
-
