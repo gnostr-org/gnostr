@@ -29,7 +29,7 @@
 use std::collections::HashMap;
 use std::process::Command;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -280,7 +280,11 @@ impl RemoteHelper for IpfsRemote {
 
             let sha256 = Self::sha256_of(&bundle.stdout);
             let path = self.mfs_bundle_path(&sha256);
-            eprintln!("[ipfs] uploading bundle ({} bytes) → {}", bundle.stdout.len(), &sha256[..8]);
+            eprintln!(
+                "[ipfs] uploading bundle ({} bytes) → {}",
+                bundle.stdout.len(),
+                &sha256[..8]
+            );
             self.mfs_write(&path, bundle.stdout)?;
             Some(sha256)
         } else {
@@ -297,13 +301,19 @@ impl RemoteHelper for IpfsRemote {
         for spec in &specs {
             if spec.src.is_empty() {
                 new_refs.remove(&spec.dst);
-                results.push(PushResult { dst: spec.dst.clone(), result: Ok(()) });
+                results.push(PushResult {
+                    dst: spec.dst.clone(),
+                    result: Ok(()),
+                });
                 continue;
             }
             match self.rev_parse(&spec.src) {
                 Ok(oid) => {
                     new_refs.insert(spec.dst.clone(), oid);
-                    results.push(PushResult { dst: spec.dst.clone(), result: Ok(()) });
+                    results.push(PushResult {
+                        dst: spec.dst.clone(),
+                        result: Ok(()),
+                    });
                 }
                 Err(e) => {
                     results.push(PushResult {
@@ -347,14 +357,13 @@ impl RemoteHelper for IpfsRemote {
 /// - `ipfs://<repo>`                → API from `$IPFS_API` or `http://127.0.0.1:5001`
 /// - `ipfs+api://<host>:<port>/<repo>` → API at `http://<host>:<port>`
 pub fn parse_ipfs_url(url: &str) -> Result<(String, String)> {
-    let default_api =
-        std::env::var("IPFS_API").unwrap_or_else(|_| "http://127.0.0.1:5001".into());
+    let default_api = std::env::var("IPFS_API").unwrap_or_else(|_| "http://127.0.0.1:5001".into());
 
     if let Some(rest) = url.strip_prefix("ipfs+api://") {
         // ipfs+api://<host>:<port>/<repo>
-        let (host_port, repo) = rest
-            .split_once('/')
-            .with_context(|| format!("ipfs+api:// URL must be ipfs+api://<host>:<port>/<repo>, got: {url}"))?;
+        let (host_port, repo) = rest.split_once('/').with_context(|| {
+            format!("ipfs+api:// URL must be ipfs+api://<host>:<port>/<repo>, got: {url}")
+        })?;
         let api = format!("http://{host_port}");
         Ok((api, repo.trim_end_matches(".git").to_string()))
     } else if let Some(rest) = url.strip_prefix("ipfs://") {
@@ -376,8 +385,9 @@ mod urlencoding {
         let mut out = String::with_capacity(s.len() + 8);
         for b in s.bytes() {
             match b {
-                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9'
-                | b'-' | b'_' | b'.' | b'~' | b'/' => out.push(b as char),
+                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' | b'/' => {
+                    out.push(b as char)
+                }
                 _ => {
                     out.push('%');
                     out.push_str(&format!("{b:02X}"));
