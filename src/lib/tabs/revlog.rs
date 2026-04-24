@@ -359,6 +359,9 @@ impl DrawableComponent for Revlog {
             Rc::new([area])
         };
 
+        // When commit details are open, the right side is split into
+        // details + notes. Notes are rendered from the same cached snapshot
+        // as the row badges so the view and markers stay in sync.
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(

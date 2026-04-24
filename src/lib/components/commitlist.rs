@@ -127,6 +127,8 @@ impl CommitList {
         self.notes.refresh();
     }
 
+    /// Notes data is cached per commit Oid; this only advances the selected
+    /// commit mapping inside the shared notes service.
     /// advance spinner animation for async notes loading
     pub fn update_spinner(&mut self) {
         self.notes.update_spinner();

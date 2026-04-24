@@ -1,4 +1,9 @@
 #![allow(missing_docs)]
+// Notes lifecycle:
+// 1. the async loader fetches the full notes ref snapshot in the background,
+// 2. the service caches that snapshot and filters it to the selected commit,
+// 3. the revlog toggles the notes pane and advances redraw/update ticks,
+// 4. note editor exit requests a fresh snapshot so commit badges stay current.
 use crate::{
     app::Environment,
     components::{CommandBlocking, CommandInfo},
