@@ -34,15 +34,8 @@ pub fn build_upload_auth(nsec: &str, sha256: &str, content_type: &str) -> Result
     let content = format!("Upload {content_type}");
 
     // Build serialized event for ID computation
-    let serialized = serde_json::json!([
-        0,
-        pubkey_hex,
-        created_at,
-        24242,
-        tags,
-        content
-    ])
-    .to_string();
+    let serialized =
+        serde_json::json!([0, pubkey_hex, created_at, 24242, tags, content]).to_string();
 
     let id = {
         use sha2::{Digest, Sha256};
@@ -88,13 +81,9 @@ pub fn build_push_auth(nsec: &str, url: &str) -> Result<String> {
         .unwrap_or_default()
         .as_secs();
 
-    let tags = serde_json::json!([
-        ["u", url],
-        ["method", "POST"],
-    ]);
+    let tags = serde_json::json!([["u", url], ["method", "POST"],]);
 
-    let serialized = serde_json::json!([0, pubkey_hex, created_at, 27235, tags, ""])
-        .to_string();
+    let serialized = serde_json::json!([0, pubkey_hex, created_at, 27235, tags, ""]).to_string();
 
     let id = {
         use sha2::{Digest, Sha256};
@@ -103,9 +92,8 @@ pub fn build_push_auth(nsec: &str, url: &str) -> Result<String> {
         hex::encode(h.finalize())
     };
 
-    let msg =
-        secp256k1::Message::from_digest_slice(&hex::decode(&id).context("decode event id")?)
-            .context("build signing message")?;
+    let msg = secp256k1::Message::from_digest_slice(&hex::decode(&id).context("decode event id")?)
+        .context("build signing message")?;
     let sig = secp.sign_schnorr_no_aux_rand(&msg, &keypair);
 
     let event = serde_json::json!({
@@ -121,7 +109,6 @@ pub fn build_push_auth(nsec: &str, url: &str) -> Result<String> {
     Ok(base64_encode(serde_json::to_string(&event)?.as_bytes()))
 }
 
-
 /// Decode a Nostr secret key from either `nsec1…` bech32 or 64-char hex.
 pub fn decode_nsec(nsec: &str) -> Result<[u8; 32]> {
     if nsec.starts_with("nsec1") {
@@ -130,7 +117,9 @@ pub fn decode_nsec(nsec: &str) -> Result<[u8; 32]> {
             bail!("expected hrp 'nsec', got '{}'", hrp.as_str());
         }
         let bytes: Vec<u8> = data;
-        let arr: [u8; 32] = bytes.try_into().map_err(|_| anyhow::anyhow!("nsec must be 32 bytes"))?;
+        let arr: [u8; 32] = bytes
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("nsec must be 32 bytes"))?;
         Ok(arr)
     } else {
         let bytes = hex::decode(nsec).context("hex decode nsec")?;
@@ -148,12 +137,28 @@ fn base64_encode(input: &[u8]) -> String {
     let mut out = String::with_capacity((input.len() + 2) / 3 * 4);
     for chunk in input.chunks(3) {
         let b0 = chunk[0] as usize;
-        let b1 = if chunk.len() > 1 { chunk[1] as usize } else { 0 };
-        let b2 = if chunk.len() > 2 { chunk[2] as usize } else { 0 };
+        let b1 = if chunk.len() > 1 {
+            chunk[1] as usize
+        } else {
+            0
+        };
+        let b2 = if chunk.len() > 2 {
+            chunk[2] as usize
+        } else {
+            0
+        };
         out.push(ALPHABET[b0 >> 2] as char);
         out.push(ALPHABET[((b0 & 3) << 4) | (b1 >> 4)] as char);
-        out.push(if chunk.len() > 1 { ALPHABET[((b1 & 0xf) << 2) | (b2 >> 6)] as char } else { '=' });
-        out.push(if chunk.len() > 2 { ALPHABET[b2 & 0x3f] as char } else { '=' });
+        out.push(if chunk.len() > 1 {
+            ALPHABET[((b1 & 0xf) << 2) | (b2 >> 6)] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            ALPHABET[b2 & 0x3f] as char
+        } else {
+            '='
+        });
     }
     out
 }
