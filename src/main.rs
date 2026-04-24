@@ -188,6 +188,12 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
         }
+        Some(GnostrCommands::Server(sub_command_args)) => {
+            debug!("sub_command_args:{:?}", sub_command_args);
+            sub_commands::server::server(sub_command_args)
+                .await
+                .map_err(|e| anyhow!("Error in server subcommand: {}", e))
+        }
         Some(GnostrCommands::Query(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::query::launch(sub_command_args)

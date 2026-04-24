@@ -33,6 +33,7 @@ pub mod push;
 pub mod query;
 pub mod react;
 pub mod relay;
+pub mod server;
 pub mod send;
 pub mod send_channel_message;
 pub mod set_channel_metadata;

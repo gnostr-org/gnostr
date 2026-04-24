@@ -26,14 +26,13 @@ fn app_dirs() -> Option<directories::ProjectDirs> {
     directories::ProjectDirs::from("org", "gnostr", "gnostr")
 }
 
-fn blossom_server_args()
-    -> Result<(Vec<String>, bool, bool, String, Option<String>), Box<dyn std::error::Error>>
-{
+fn blossom_server_args(
+    mut args: Vec<String>,
+) -> Result<(Vec<String>, bool, bool, String, Option<String>), Box<dyn std::error::Error>> {
     let mut detach = false;
     let mut advertise_service = false;
     let mut service_name = None;
 
-    let mut args: Vec<String> = env::args().skip(1).collect();
     if let Ok(extra_args) = env::var("BLOSSOM_EXTRA_ARGS") {
         if !extra_args.trim().is_empty() {
             args.extend(shellwords::split(&extra_args)?);
@@ -228,7 +227,12 @@ fn spawn_advertiser_thread(base_url: String) -> thread::JoinHandle<()> {
 
 /// Run the gnostr server wrapper around upstream `blossom-server`.
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let (args, detach, advertise_service, base_url, service_name) = blossom_server_args()?;
+    run_with_args(env::args().skip(1).collect())
+}
+
+/// Run the gnostr server wrapper around upstream `blossom-server` with explicit args.
+pub fn run_with_args(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let (args, detach, advertise_service, base_url, service_name) = blossom_server_args(args)?;
     let process_name = service_name
         .as_deref()
         .map(|name| format!("gnostr-server-{name}"));
