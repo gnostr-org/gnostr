@@ -28,15 +28,15 @@ impl Worker {
         tx: mpsc::Sender<(u32, String, String)>,
     ) -> Worker {
         Worker {
-            id: id,
+            id,
             digest: sha1::Sha1::new(),
-            tx: tx,
-            target: target,
-            tree: tree,
-            parent: parent,
-            author: author,
-            message: message,
-            timestamp: timestamp,
+            tx,
+            target,
+            tree,
+            parent,
+            author,
+            message,
+            timestamp,
         }
     }
 
