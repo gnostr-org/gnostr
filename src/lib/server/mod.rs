@@ -1,6 +1,5 @@
 use std::{
-    env,
-    fs,
+    env, fs,
     path::PathBuf,
     process::{Command, ExitStatus},
     thread,
@@ -12,13 +11,23 @@ const BLOSSOM_VERSION: &str = "0.5.6";
 
 fn default_blossom_data_dir() -> String {
     app_dirs()
-        .map(|dirs| dirs.data_local_dir().join("blossom/blobs").to_string_lossy().into_owned())
+        .map(|dirs| {
+            dirs.data_local_dir()
+                .join("blossom/blobs")
+                .to_string_lossy()
+                .into_owned()
+        })
         .unwrap_or_else(|| "/var/lib/blossom/blobs".to_string())
 }
 
 fn default_blossom_db_path() -> String {
     app_dirs()
-        .map(|dirs| dirs.data_local_dir().join("blossom/blossom.db").to_string_lossy().into_owned())
+        .map(|dirs| {
+            dirs.data_local_dir()
+                .join("blossom/blossom.db")
+                .to_string_lossy()
+                .into_owned()
+        })
         .unwrap_or_else(|| "/var/lib/blossom/blossom.db".to_string())
 }
 
@@ -114,7 +123,10 @@ fn normalize_bind_addr(bind: &str) -> Result<String, Box<dyn std::error::Error>>
         return Ok(format!("0.0.0.0:{port}"));
     }
 
-    if let Some(port) = bind.strip_prefix(':').and_then(|value| value.parse::<u16>().ok()) {
+    if let Some(port) = bind
+        .strip_prefix(':')
+        .and_then(|value| value.parse::<u16>().ok())
+    {
         return Ok(format!("0.0.0.0:{port}"));
     }
 
@@ -174,11 +186,22 @@ fn ensure_blossom_server_installed() -> Result<(), Box<dyn std::error::Error>> {
     let install_spec = format!("blossom-server@{BLOSSOM_VERSION}");
     let mut installer = if which("cargo-binstall").is_ok() {
         let mut command = Command::new("cargo");
-        command.args(["binstall", "--no-confirm", "--locked", install_spec.as_str()]);
+        command.args([
+            "binstall",
+            "--no-confirm",
+            "--locked",
+            install_spec.as_str(),
+        ]);
         command
     } else {
         let mut command = Command::new("cargo");
-        command.args(["install", "--locked", "blossom-server", "--version", BLOSSOM_VERSION]);
+        command.args([
+            "install",
+            "--locked",
+            "blossom-server",
+            "--version",
+            BLOSSOM_VERSION,
+        ]);
         command
     };
 
