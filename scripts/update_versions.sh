@@ -320,6 +320,15 @@ PUBLISH_CRATES=(
     relay/extensions
 )
 
+tag_package_versions() {
+    local version="$1"
+    local crate
+
+    for crate in "${PUBLISH_CRATES[@]}"; do
+        git tag -f "$crate/v$version" HEAD
+    done
+}
+
 manifest_paths=()
 while IFS= read -r -d '' manifest_path; do
     manifest_paths+=("$manifest_path")
@@ -341,6 +350,7 @@ if [ -n "${VERSION_TAG:-}" ]; then
 
     gnostr legit -m "$VERSION_TAG"
     git tag -f "$VERSION_TAG" HEAD
+    tag_package_versions "$WORKSPACE_VERSION"
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 
     cargo update --workspace
@@ -349,6 +359,7 @@ elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 
 
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
+    tag_package_versions "$WORKSPACE_VERSION"
 fi
 
 if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
@@ -375,11 +386,13 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
 
         gnostr legit -m "$VERSION_TAG"
         git tag -f "$VERSION_TAG" HEAD
+        tag_package_versions "$WORKSPACE_VERSION"
     else
         cargo update --workspace
         stage_cargo_files
 
         gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
+        tag_package_versions "$WORKSPACE_VERSION"
         cargo publish -j8 --no-verify
     fi
 fi
