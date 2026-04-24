@@ -85,7 +85,7 @@ struct BlobDescriptor {
 // ── Backend ────────────────────────────────────────────────────────────────
 
 pub struct BlossomRemote {
-    /// Base URL of the Blossom server, e.g. `https://blossom.example.com`.
+/// Base URL of the Blossom server, e.g. `https://blossom.gnostr.cloud`.
     server: String,
     /// Hex-encoded public key of the repo owner.
     pubkey: String,
@@ -427,7 +427,7 @@ impl RemoteHelper for BlossomRemote {
 
 // ── URL parser ─────────────────────────────────────────────────────────────
 
-/// Parse a `blossom://` or `blossom+https://` URL into components.
+/// Parse a `blossom://`, `blossom+https://`, or `blossom+http://` URL into components.
 ///
 /// Accepted formats:
 /// - `blossom://<host>/<pubkey>/<repo>`          → HTTPS to host
@@ -464,4 +464,39 @@ pub fn parse_blossom_url(url: &str) -> Result<(String, String, String)> {
     }
 
     Ok((server, pubkey, repo))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_blossom_url;
+
+    #[test]
+    fn parses_https_blossom_url() {
+        let (server, pubkey, repo) = parse_blossom_url(
+            "blossom+https://blossom.gnostr.cloud/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/demo",
+        )
+        .expect("parse https blossom url");
+
+        assert_eq!(server, "https://blossom.gnostr.cloud");
+        assert_eq!(
+            pubkey,
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        );
+        assert_eq!(repo, "demo");
+    }
+
+    #[test]
+    fn parses_http_blossom_url() {
+        let (server, pubkey, repo) = parse_blossom_url(
+            "blossom+http://blossom.gnostr.cloud/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/demo",
+        )
+        .expect("parse http blossom url");
+
+        assert_eq!(server, "http://blossom.gnostr.cloud");
+        assert_eq!(
+            pubkey,
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        );
+        assert_eq!(repo, "demo");
+    }
 }

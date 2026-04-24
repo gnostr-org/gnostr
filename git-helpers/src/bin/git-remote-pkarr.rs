@@ -12,7 +12,7 @@
 //! ## Publishing your PKARR record
 //! Use `blossom-server` with the `pkarr-discovery` feature, or the `pkarr` CLI:
 //! ```bash
-//! pkarr publish --key <your-ed25519-key> '_blossom=https://blossom.example.com'
+//! pkarr publish --key <your-ed25519-key> '_blossom=https://blossom.gnostr.cloud'
 //! ```
 
 use anyhow::{Context, Result};
