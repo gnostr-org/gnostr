@@ -120,7 +120,8 @@ async fn ws_query(relay_url: &str, pubkey_hex: &str, repo: &str) -> Result<Strin
         let (mut ws, _) = match connect_async(relay_url).await {
             Ok(pair) => pair,
             Err(err) => {
-                last_err = Some(anyhow::anyhow!(err).context(format!("connect to relay {relay_url}")));
+                last_err =
+                    Some(anyhow::anyhow!(err).context(format!("connect to relay {relay_url}")));
                 continue;
             }
         };
@@ -145,8 +146,12 @@ async fn ws_query(relay_url: &str, pubkey_hex: &str, repo: &str) -> Result<Strin
 
         let _ = tokio::time::timeout(timeout, async {
             while let Some(msg) = ws.next().await {
-                let Ok(Message::Text(text)) = msg else { continue };
-                let Ok(Value::Array(arr)) = serde_json::from_str::<Value>(&text) else { continue };
+                let Ok(Message::Text(text)) = msg else {
+                    continue;
+                };
+                let Ok(Value::Array(arr)) = serde_json::from_str::<Value>(&text) else {
+                    continue;
+                };
 
                 match arr.first().and_then(|v| v.as_str()) {
                     Some("EVENT") => {
@@ -312,9 +317,7 @@ pub fn extract_head_branch(event: &Value) -> Option<String> {
         }
         let val = arr.get(1).and_then(|v| v.as_str())?;
         // "ref: refs/heads/main"
-        let branch = val
-            .strip_prefix("ref: refs/heads/")
-            .unwrap_or(val);
+        let branch = val.strip_prefix("ref: refs/heads/").unwrap_or(val);
         return Some(branch.to_string());
     }
     None
@@ -330,7 +333,9 @@ pub fn extract_refs(event: &Value) -> HashMap<String, String> {
     };
     for tag in tags {
         let Some(arr) = tag.as_array() else { continue };
-        let Some(key) = arr.first().and_then(|v| v.as_str()) else { continue };
+        let Some(key) = arr.first().and_then(|v| v.as_str()) else {
+            continue;
+        };
         if !key.starts_with("refs/") {
             continue;
         }
@@ -553,7 +558,10 @@ mod tests {
     fn clone_takes_priority_over_web() {
         let url = extract_web_url(&event_jmp()).unwrap();
         eprintln!("clone_takes_priority_over_web => {url}");
-        assert!(url.starts_with("https://relay.ngit.dev/"), "expected ngit clone, got: {url}");
+        assert!(
+            url.starts_with("https://relay.ngit.dev/"),
+            "expected ngit clone, got: {url}"
+        );
     }
 
     #[test]
@@ -690,7 +698,10 @@ mod tests {
     fn relay_list_no_duplicates() {
         let list = build_relay_list(Some("wss://relay.damus.io"));
         eprintln!("relay_list_no_duplicates => {list:?}");
-        let count = list.iter().filter(|r| r.as_str() == "wss://relay.damus.io").count();
+        let count = list
+            .iter()
+            .filter(|r| r.as_str() == "wss://relay.damus.io")
+            .count();
         assert_eq!(count, 1, "damus should appear once: {list:?}");
     }
 
@@ -943,7 +954,10 @@ mod tests {
         // git@ URLs are not HTTP(S) — should be skipped, no web fallback → None
         let result = extract_web_url(&event_ssh_only_clone());
         eprintln!("ssh_only_clone_returns_none => {result:?}");
-        assert!(result.is_none(), "SSH-only clone should yield None, got: {result:?}");
+        assert!(
+            result.is_none(),
+            "SSH-only clone should yield None, got: {result:?}"
+        );
     }
 
     #[test]
@@ -966,7 +980,10 @@ mod tests {
     fn grasp_first_then_github_returns_grasp() {
         let url = extract_web_url(&event_grasp_then_github()).unwrap();
         eprintln!("grasp_first_then_github_returns_grasp => {url}");
-        assert!(url.starts_with("https://pyramid.fiatjaf.com/"), "expected pyramid GRASP, got: {url}");
+        assert!(
+            url.starts_with("https://pyramid.fiatjaf.com/"),
+            "expected pyramid GRASP, got: {url}"
+        );
     }
 
     #[test]
@@ -974,7 +991,10 @@ mod tests {
         // First HTTPS wins regardless of server type
         let url = extract_web_url(&event_github_then_grasp()).unwrap();
         eprintln!("github_first_then_grasp_returns_github => {url}");
-        assert!(url.starts_with("https://github.com/"), "expected github first, got: {url}");
+        assert!(
+            url.starts_with("https://github.com/"),
+            "expected github first, got: {url}"
+        );
     }
 
     #[test]
@@ -982,7 +1002,10 @@ mod tests {
         // budabit-landing: gitlab / github / grasp — gitlab is first
         let url = extract_web_url(&event_three_clone_urls()).unwrap();
         eprintln!("three_clone_urls_first_wins => {url}");
-        assert!(url.starts_with("https://gitlab.com/"), "expected gitlab first, got: {url}");
+        assert!(
+            url.starts_with("https://gitlab.com/"),
+            "expected gitlab first, got: {url}"
+        );
     }
 
     #[test]
@@ -990,7 +1013,10 @@ mod tests {
         // codeberg / github / gitnostr — codeberg is first
         let url = extract_web_url(&event_oba()).unwrap();
         eprintln!("oba_three_clone_urls_first_wins => {url}");
-        assert!(url.starts_with("https://codeberg.org/"), "expected codeberg first, got: {url}");
+        assert!(
+            url.starts_with("https://codeberg.org/"),
+            "expected codeberg first, got: {url}"
+        );
     }
 
     #[test]
@@ -1358,21 +1384,30 @@ mod tests {
     fn tip_commit_from_pr_c_tag() {
         let sha = extract_tip_commit(&event_1618_pr());
         eprintln!("tip_commit_from_pr_c_tag => {sha:?}");
-        assert_eq!(sha, Some("c318b8577faef1bc57671b61524af476e86ac800".to_string()));
+        assert_eq!(
+            sha,
+            Some("c318b8577faef1bc57671b61524af476e86ac800".to_string())
+        );
     }
 
     #[test]
     fn tip_commit_from_applied_merge_commit() {
         let sha = extract_tip_commit(&event_1631_applied());
         eprintln!("tip_commit_from_applied_merge_commit => {sha:?}");
-        assert_eq!(sha, Some("c318b8577faef1bc57671b61524af476e86ac800".to_string()));
+        assert_eq!(
+            sha,
+            Some("c318b8577faef1bc57671b61524af476e86ac800".to_string())
+        );
     }
 
     #[test]
     fn tip_commit_from_patch_r_tag() {
         let sha = extract_tip_commit(&event_1617_patch());
         eprintln!("tip_commit_from_patch_r_tag => {sha:?}");
-        assert_eq!(sha, Some("fb30ddf36678dd287b47fe979838672fa4a740f3".to_string()));
+        assert_eq!(
+            sha,
+            Some("fb30ddf36678dd287b47fe979838672fa4a740f3".to_string())
+        );
     }
 
     #[test]
@@ -1387,7 +1422,13 @@ mod tests {
 
     #[test]
     fn status_kind_str_all_values() {
-        for (k, expected) in [(1630u64, "open"), (1631, "applied"), (1632, "closed"), (1633, "draft"), (9999, "unknown")] {
+        for (k, expected) in [
+            (1630u64, "open"),
+            (1631, "applied"),
+            (1632, "closed"),
+            (1633, "draft"),
+            (9999, "unknown"),
+        ] {
             let s = status_kind_str(k);
             eprintln!("status_kind_str({k}) => {s}");
             assert_eq!(s, expected);
