@@ -7,10 +7,7 @@ use std::{
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
 
-pub fn spawn_detached<P, I, S>(
-    program: P,
-    args: I,
-) -> anyhow::Result<u32>
+pub fn spawn_detached<P, I, S>(program: P, args: I) -> anyhow::Result<u32>
 where
     P: AsRef<Path>,
     I: IntoIterator<Item = S>,
@@ -101,9 +98,7 @@ where
     Ok(child.id())
 }
 
-pub fn spawn_detached_current_exe<I, S>(
-    args: I,
-) -> anyhow::Result<u32>
+pub fn spawn_detached_current_exe<I, S>(args: I) -> anyhow::Result<u32>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
