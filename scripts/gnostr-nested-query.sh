@@ -1,8 +1,19 @@
-cargo run --bin gnostr -- query \
-          --ids \
-            $(\
-            gnostr \
-            bech32-to-any \
-            npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw \
-           ) \
-          && echo "✅" ## || echo "❌"
+#!/usr/bin/env bash
+set -euo pipefail
+
+GNOSTR_BIN="${GNOSTR_BIN:-${GNOSTR:-gnostr}}"
+NOSTR_PUBKEY="${NOSTR_PUBKEY:-npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k}"
+QUERY_LIMIT="${QUERY_LIMIT:-1}"
+
+if ! command -v "$GNOSTR_BIN" >/dev/null 2>&1; then
+  echo "gnostr binary not found: $GNOSTR_BIN" >&2
+  exit 1
+fi
+
+ids="$("$GNOSTR_BIN" bech32-to-any "$NOSTR_PUBKEY" --raw)"
+if [[ -z "$ids" ]]; then
+  echo "failed to derive ids from $NOSTR_PUBKEY" >&2
+  exit 1
+fi
+
+"$GNOSTR_BIN" query --ids "$ids" --limit "$QUERY_LIMIT"
