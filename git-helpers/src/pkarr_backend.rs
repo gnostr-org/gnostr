@@ -22,7 +22,7 @@
 //! | `_blossom`        | Blossom HTTP server URL        |
 //! | `_nostr`          | Nostr relay WebSocket URL      |
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use pkarr::dns::rdata::RData;
 use pkarr::Client;
 
@@ -53,10 +53,7 @@ pub async fn resolve_blossom_url(public_key: &pkarr::PublicKey) -> Result<String
         }
     }
 
-    bail!(
-        "no _blossom TXT record found for pkarr key {}",
-        public_key
-    );
+    bail!("no _blossom TXT record found for pkarr key {}", public_key);
 }
 
 // ── Backend ────────────────────────────────────────────────────────────────
@@ -72,7 +69,10 @@ impl PkarrRemote {
     /// (the string you get from `pkarr publish --list` or from blossom-rs
     /// `pkarr_discovery`).
     pub fn resolve(zbase32: &str, repo: &str) -> Result<Self> {
-        eprintln!("[pkarr] resolving key {}…", &zbase32[..zbase32.len().min(12)]);
+        eprintln!(
+            "[pkarr] resolving key {}…",
+            &zbase32[..zbase32.len().min(12)]
+        );
 
         let public_key: pkarr::PublicKey = zbase32
             .parse()
