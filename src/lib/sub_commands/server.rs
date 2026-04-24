@@ -114,7 +114,10 @@ mod tests {
             .output()
             .expect("run git");
         assert!(output.status.success(), "git {:?} failed", args);
-        String::from_utf8(output.stdout).expect("utf8 output").trim().to_string()
+        String::from_utf8(output.stdout)
+            .expect("utf8 output")
+            .trim()
+            .to_string()
     }
 
     fn init_repo(dir: &Path) {
@@ -132,7 +135,9 @@ mod tests {
     }
 
     async fn start_test_server(pubkey: String) -> (SocketAddr, tokio::task::JoinHandle<()>) {
-        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind test server");
+        let listener = TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind test server");
         let addr = listener.local_addr().expect("local addr");
         let state = Arc::new(Mutex::new(TestServerState {
             pubkey,
@@ -241,10 +246,13 @@ mod tests {
                 assert!(push_results.iter().all(|result| result.result.is_ok()));
 
                 let refs = remote.list(false).expect("list through blossom server");
-                assert!(refs.iter().any(|r| r.name == "refs/heads/main" && r.oid == commit_sha));
                 assert!(refs
                     .iter()
-                    .any(|r| r.name == "HEAD" && r.symref_target.as_deref() == Some("refs/heads/main")));
+                    .any(|r| r.name == "refs/heads/main" && r.oid == commit_sha));
+                assert!(refs
+                    .iter()
+                    .any(|r| r.name == "HEAD"
+                        && r.symref_target.as_deref() == Some("refs/heads/main")));
 
                 let fetch_dir = TempDir::new().expect("fetch dir");
                 init_repo(fetch_dir.path());
