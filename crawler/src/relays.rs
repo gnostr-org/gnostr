@@ -1,16 +1,16 @@
-use nostr_sdk::prelude::Url;
-use directories::ProjectDirs;
 use crate::preprocess_line;
 use crate::processor::BOOTSTRAP_RELAYS;
+use anyhow::Result;
+use directories::ProjectDirs;
+use nostr_sdk::prelude::Url;
+use reqwest::header::ACCEPT;
+use reqwest::Client;
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use tracing::{debug, info, warn};
-use reqwest::Client;
-use anyhow::Result;
-use reqwest::header::ACCEPT;
 use std::sync::{LazyLock, Mutex};
+use tracing::{debug, info, warn};
 
 pub fn get_config_dir_path() -> PathBuf {
     ProjectDirs::from("org", "gnostr", "gnostr/crawler")
@@ -138,18 +138,20 @@ pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
         fs::create_dir_all(parent)?;
     }
 
-    debug!("write_relays_json_from_yaml: reading {}", yaml_path.display());
+    debug!(
+        "write_relays_json_from_yaml: reading {}",
+        yaml_path.display()
+    );
     let relays: Vec<String> = match fs::read_to_string(&yaml_path) {
-        Ok(content) => content
-            .lines()
-            .filter_map(sanitize_relay_entry)
-            .collect(),
+        Ok(content) => content.lines().filter_map(sanitize_relay_entry).collect(),
         Err(_) => BOOTSTRAP_RELAYS.clone(),
     };
 
-    let json_content = serde_json::to_string_pretty(&relays)
-        .map_err(std::io::Error::other)?;
-    debug!("write_relays_json_from_yaml: writing {}", json_path.display());
+    let json_content = serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?;
+    debug!(
+        "write_relays_json_from_yaml: writing {}",
+        json_path.display()
+    );
     fs::write(&json_path, json_content)?;
     Ok(json_path)
 }
@@ -159,7 +161,10 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     fs::create_dir_all(&config_dir)?;
 
     let yaml_source = config_dir.join("relays.yaml");
-    debug!("write_relays_serve_files: reading {}", yaml_source.display());
+    debug!(
+        "write_relays_serve_files: reading {}",
+        yaml_source.display()
+    );
     let relays: Vec<String> = match fs::read_to_string(&yaml_source) {
         Ok(content) => content.lines().filter_map(sanitize_relay_entry).collect(),
         Err(_) => BOOTSTRAP_RELAYS.clone(),
@@ -173,7 +178,10 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     debug!("write_relays_serve_files: writing {}", yaml_path.display());
     fs::write(&yaml_path, yaml_content)?;
     debug!("write_relays_serve_files: writing {}", json_path.display());
-    fs::write(&json_path, serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?)?;
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?,
+    )?;
     debug!("write_relays_serve_files: writing {}", txt_path.display());
     fs::write(&txt_path, relays.join(" "))?;
     Ok(())
@@ -187,12 +195,24 @@ pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Res
     let json_path = config_dir.join("relays.json");
     let txt_path = config_dir.join("relays.txt");
 
-    debug!("write_nip_relays_serve_files: writing {}", yaml_path.display());
+    debug!(
+        "write_nip_relays_serve_files: writing {}",
+        yaml_path.display()
+    );
     let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
     fs::write(&yaml_path, yaml_content)?;
-    debug!("write_nip_relays_serve_files: writing {}", json_path.display());
-    fs::write(&json_path, serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?)?;
-    debug!("write_nip_relays_serve_files: writing {}", txt_path.display());
+    debug!(
+        "write_nip_relays_serve_files: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!(
+        "write_nip_relays_serve_files: writing {}",
+        txt_path.display()
+    );
     fs::write(&txt_path, relays.join(" "))?;
 
     Ok(config_dir)
@@ -203,7 +223,10 @@ pub fn write_nip_relays_serve_files_from_dir(nip: i32) -> std::io::Result<PathBu
     fs::create_dir_all(&config_dir)?;
 
     let mut relays: Vec<String> = Vec::new();
-    debug!("write_nip_relays_serve_files_from_dir: reading {}", config_dir.display());
+    debug!(
+        "write_nip_relays_serve_files_from_dir: reading {}",
+        config_dir.display()
+    );
     for entry in fs::read_dir(&config_dir)? {
         let entry = entry?;
         let name = entry.file_name().to_string_lossy().to_string();
@@ -238,12 +261,24 @@ pub fn write_nip_relays_serve_files_from_dir(nip: i32) -> std::io::Result<PathBu
     let json_path = config_dir.join("relays.json");
     let txt_path = config_dir.join("relays.txt");
 
-    debug!("write_nip_relays_serve_files_from_dir: writing {}", yaml_path.display());
+    debug!(
+        "write_nip_relays_serve_files_from_dir: writing {}",
+        yaml_path.display()
+    );
     let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
     fs::write(&yaml_path, yaml_content)?;
-    debug!("write_nip_relays_serve_files_from_dir: writing {}", json_path.display());
-    fs::write(&json_path, serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?)?;
-    debug!("write_nip_relays_serve_files_from_dir: writing {}", txt_path.display());
+    debug!(
+        "write_nip_relays_serve_files_from_dir: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!(
+        "write_nip_relays_serve_files_from_dir: writing {}",
+        txt_path.display()
+    );
     fs::write(&txt_path, relays.join(" "))?;
 
     Ok(config_dir)
@@ -348,87 +383,67 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
     let response = client.get(url).send().await?.error_for_status()?;
     let text = response.text().await?;
 
-    let relays: Vec<String> = text.lines()
+    let relays: Vec<String> = text
+        .lines()
         .filter_map(|line| {
             let preprocessed_line = preprocess_line(line);
 
-                        if preprocessed_line.is_empty() {
+            if preprocessed_line.is_empty() {
+                return None;
+            }
 
-                            return None;
+            let mut final_line = preprocessed_line;
 
-                        }
+            // Attempt to prepend wss:// if it looks like a hostname without a scheme
 
-            
+            if !final_line.contains("://") {
+                let potential_url = format!("wss://{}", final_line);
 
-                        let mut final_line = preprocessed_line;
+                match Url::parse(&potential_url) {
+                    Ok(url) => {
+                        debug!("Prepended 'wss://' to form valid URL: {}", url);
 
-            
+                        final_line = url.to_string();
+                    }
 
-                        // Attempt to prepend wss:// if it looks like a hostname without a scheme
+                    Err(_) => {
+                        // If prepending wss:// doesn't form a valid URL, keep the original line
 
-                        if !final_line.contains("://") {
+                        // and let the next checks handle it as a non-URL line.
 
-                            let potential_url = format!("wss://{}", final_line);
+                        debug!(
+                            "Attempted to prepend 'wss://' but it's still not a valid URL: {}",
+                            potential_url
+                        );
+                    }
+                }
+            }
 
-                            match Url::parse(&potential_url) {
+            if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
+                match Url::parse(&final_line) {
+                    Ok(url) => Some(url.to_string()),
 
-                                Ok(url) => {
+                    Err(_) => {
+                        warn!("Skipping invalid WEBSOCKET URL format: {}", final_line);
 
-                                    debug!("Prepended 'wss://' to form valid URL: {}", url);
+                        None
+                    }
+                }
+            } else if final_line.contains(":://") {
+                // It's a URL, but not a websocket URL
 
-                                    final_line = url.to_string();
+                warn!("Skipping non-websocket URL scheme: {}", final_line);
 
-                                },
+                None
+            } else {
+                // It's not a URL at all (e.g., "Relay URL")
 
-                                Err(_) => {
+                debug!("Silently skipping non-URL line: {}", final_line);
 
-                                    // If prepending wss:// doesn't form a valid URL, keep the original line
-
-                                    // and let the next checks handle it as a non-URL line.
-
-                                    debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
-
-                                }
-
-                            }
-
-                        }
-
-            
-
-                        if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
-
-                            match Url::parse(&final_line) {
-
-                                Ok(url) => Some(url.to_string()),
-
-                                Err(_) => {
-
-                                    warn!("Skipping invalid WEBSOCKET URL format: {}", final_line);
-
-                                    None
-
-                                }
-
-                            }
-
-                        } else if final_line.contains(":://") { // It's a URL, but not a websocket URL
-
-                            warn!("Skipping non-websocket URL scheme: {}", final_line);
-
-                            None
-
-                        } else { // It's not a URL at all (e.g., "Relay URL")
-
-                            debug!("Silently skipping non-URL line: {}", final_line);
-
-                            None
-
-                        }
-
-                    })
-
-                    .collect();
+                None
+            }
+        })
+        .collect();
 
     debug!("Fetched {} online relays", relays.len());
     Ok(relays)
@@ -450,7 +465,11 @@ pub async fn check_relay_liveness(url_str: &str) -> bool {
         Ok(response) => {
             let is_success = response.status().is_success();
             if !is_success {
-                warn!("Liveness check failed for {}: Status {}", url_str, response.status());
+                warn!(
+                    "Liveness check failed for {}: Status {}",
+                    url_str,
+                    response.status()
+                );
             }
             is_success
         }
@@ -493,7 +512,9 @@ impl Relays {
 
     pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
         let list: Vec<Url> = list.to_vec();
-        for url in &list { debug!("de_dup:: url={}", url); }
+        for url in &list {
+            debug!("de_dup:: url={}", url);
+        }
         list
     }
     pub fn de_dup_string(&self, list: &[String]) -> Vec<String> {
@@ -549,8 +570,11 @@ impl Relays {
                 let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
                 write!(file, "{}", yaml_content).expect("Failed to write YAML content");
                 debug!("Relays dumped to {}", file_path.display());
-                debug!("Relays.yaml written to: {}", file_path.canonicalize().unwrap_or_default().display());
-            },
+                debug!(
+                    "Relays.yaml written to: {}",
+                    file_path.canonicalize().unwrap_or_default().display()
+                );
+            }
             Err(e) => {
                 warn!("Failed to serialize relays to YAML for {}: {}", filename, e);
             }
