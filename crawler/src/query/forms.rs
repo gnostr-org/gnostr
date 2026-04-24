@@ -47,5 +47,10 @@ pub fn nip_query_form(
     relay_value: &str,
     kinds_value: Option<&str>,
 ) -> String {
-    query_form_html(&format!("NIP {} query", nip_lower), action, relay_value, kinds_value.unwrap_or(""))
+    query_form_html(
+        &format!("NIP {} query", nip_lower),
+        action,
+        relay_value,
+        kinds_value.unwrap_or(""),
+    )
 }
