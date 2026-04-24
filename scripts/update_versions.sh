@@ -346,7 +346,8 @@ if [ -n "${VERSION_TAG:-}" ]; then
 
     cargo update --workspace
     stage_cargo_files
-
+    
+    git checkout -b $VERSION_TAG
 
     gnostr legit -m "$VERSION_TAG"
     git tag -f "$VERSION_TAG" HEAD
@@ -396,8 +397,6 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
         cargo publish -j8 --no-verify
     fi
 fi
-
-git checkout -b $VERSION_TAG
 
 if [ -n "${VERSION_TAG:-}" ]; then
     git push origin "$VERSION_TAG:$VERSION_TAG"
