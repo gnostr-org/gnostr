@@ -132,6 +132,21 @@ impl CommitList {
         self.notes.update_spinner();
     }
 
+    /// draw_notes
+    pub fn draw_notes(&self, f: &mut Frame, area: Rect) {
+        let note_chunks = ratatui::layout::Layout::default()
+            .direction(ratatui::layout::Direction::Vertical)
+            .constraints(
+                [
+                    ratatui::layout::Constraint::Percentage(70),
+                    ratatui::layout::Constraint::Length(3),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+        self.notes.draw(f, note_chunks[0], note_chunks[1]);
+    }
+
     /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
@@ -771,27 +786,7 @@ impl CommitList {
 
 impl DrawableComponent for CommitList {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
-        let show_notes = self.notes.is_editing();
-        let (list_area, notes_area) = if show_notes {
-            let chunks = ratatui::layout::Layout::default()
-                .direction(ratatui::layout::Direction::Horizontal)
-                .constraints(
-                    [
-                        ratatui::layout::Constraint::Percentage(60),
-                        ratatui::layout::Constraint::Percentage(40),
-                    ]
-                    .as_ref(),
-                )
-                .split(area);
-            (chunks[0], chunks[1])
-        } else {
-            (area, area)
-        };
-
-        let current_size = (
-            list_area.width.saturating_sub(2),
-            list_area.height.saturating_sub(2),
-        );
+        let current_size = (area.width.saturating_sub(2), area.height.saturating_sub(2));
         self.current_size.set(Some(current_size));
 
         let height_in_lines = current_size.1 as usize;
@@ -819,31 +814,17 @@ impl DrawableComponent for CommitList {
                         .border_style(self.theme.block(true)),
                 )
                 .alignment(Alignment::Left),
-            list_area,
+            area,
         );
 
         draw_scrollbar(
             f,
-            list_area,
+            area,
             &self.theme,
             self.commits.len(),
             self.selection,
             Orientation::Vertical,
         );
-
-        if show_notes {
-            let note_chunks = ratatui::layout::Layout::default()
-                .direction(ratatui::layout::Direction::Vertical)
-                .constraints(
-                    [
-                        ratatui::layout::Constraint::Percentage(70),
-                        ratatui::layout::Constraint::Length(3),
-                    ]
-                    .as_ref(),
-                )
-                .split(notes_area);
-            self.notes.draw(f, note_chunks[0], note_chunks[1]);
-        }
 
         Ok(())
     }

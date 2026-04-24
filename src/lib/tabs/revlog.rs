@@ -361,12 +361,20 @@ impl DrawableComponent for Revlog {
 
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(60), Constraint::Percentage(40)].as_ref())
+            .constraints(
+                [
+                    Constraint::Percentage(60),
+                    Constraint::Percentage(20),
+                    Constraint::Percentage(20),
+                ]
+                .as_ref(),
+            )
             .split(area[0]);
 
         if self.commit_details.is_visible() {
             self.list.draw(f, chunks[0])?;
             self.commit_details.draw(f, chunks[1])?;
+            self.list.draw_notes(f, chunks[2]);
         } else {
             self.list.draw(f, area[0])?;
         }
