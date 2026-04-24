@@ -4,6 +4,7 @@
 /// instances to ensure that the CLI TUI messages are consistent and correct.
 ///
 #[cfg(test)]
+#[cfg(target_os = "macos")]
 #[ignore]
 mod tests {
     use std::thread;

@@ -16,6 +16,7 @@ fn is_tmux_installed() -> bool {
 }
 
 #[test]
+#[cfg(target_os = "macos")]
 fn test_capture_tmux() {
     if !is_tmux_installed() {
         println!("Skipping test_capture_tmux: tmux is not installed.");

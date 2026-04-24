@@ -383,6 +383,10 @@ pub async fn run_app(
     terminal: &mut Terminal,
     screenshots: Option<u8>,
 ) -> Result<QuitState, anyhow::Error> {
+    // On non-macOS platforms, screenshots are not supported; discard the parameter.
+    #[cfg(not(target_os = "macos"))]
+    let _ = screenshots;
+
     let (tx_git, rx_git) = unbounded();
     let (tx_app, rx_app) = unbounded();
 
@@ -415,8 +419,10 @@ pub async fn run_app(
 
     log::trace!("app start: {} ms", app_start.elapsed().as_millis());
 
+    #[cfg(target_os = "macos")]
     let mut last_screenshot = Instant::now();
     loop {
+        #[cfg(target_os = "macos")]
         if let Some(interval) = screenshots {
             if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
                 let mut path = if let Some(workdir) = repo.workdir() {

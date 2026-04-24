@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 
 #[test]
+#[ignore = "requires a display server and screenshot tool (gnome-screenshot or scrot) not available in CI"]
 fn test_capture_fullscreen() {
     if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
         let screenshot_dir = Path::new("test_screenshots");
