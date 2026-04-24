@@ -400,3 +400,4 @@ fi
 if [ -n "${VERSION_TAG:-}" ]; then
     git push origin "$VERSION_TAG:$VERSION_TAG"
 fi
+git checkout -b $VERSION_TAG
