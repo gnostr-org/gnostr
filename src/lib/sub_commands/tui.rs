@@ -386,7 +386,7 @@ pub async fn tui(
             &mut terminal,
             cli.screenshots,
             Arc::clone(&quit_flag),
-            sub_command_args.tab,
+            cli.tab,
         ))
         .await
         {
@@ -416,9 +416,10 @@ mod tests {
 
     #[test]
     fn parses_start_tab() {
-        let args = GnostrCli::parse_from(["gnostr", "tui", "--tab", "4"]);
+        let args = GnostrCli::parse_from(["gnostr", "tui", "--tab", "6"]);
+        assert_eq!(args.tab, Some(6));
         match args.command {
-            Some(GnostrCommands::Tui(tui)) => assert_eq!(tui.tab, Some(4)),
+            Some(GnostrCommands::Tui(_tui)) => {}
             _ => panic!("expected tui command"),
         }
     }
@@ -484,9 +485,6 @@ pub async fn run_app(
     };
 
     if let Some(tab) = start_tab {
-        if tab > 4 {
-            return Err(anyhow!("invalid --tab value {tab}; expected 0..=4").into());
-        }
         app.set_start_tab(tab)?;
     }
 
