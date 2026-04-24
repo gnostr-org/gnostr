@@ -45,8 +45,9 @@ jobs:
           fetch-tags: false
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Cache Cargo registry and Git dependencies
-        uses: actions/cache@v4
+      - name: Restore Cargo registry and Git dependencies
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.cargo/registry
@@ -57,8 +58,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache Cargo build target
-        uses: actions/cache@v4
+      - name: Restore Cargo build target
+        id: cache-target-restore
+        uses: actions/cache/restore@v4
         with:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
@@ -379,6 +381,22 @@ jobs:
           damus: ${{ env.DAMUS }}
           nos: ${{ env.NOS }}
           njump_base: 'http://njump.me'
+
+      - name: Save Cargo registry and Git dependencies
+        if: always() && steps.cache-cargo-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+
+      - name: Save Cargo build target
+        if: always() && steps.cache-target-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
 
       ## NOTE: The cache restore steps (cache-cargo-restore, cache-target-restore) above are
       ## commented out since actions/cache@v4 at lines 76-91 already handles both restore and save.
