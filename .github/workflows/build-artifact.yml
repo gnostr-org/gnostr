@@ -5,6 +5,10 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  pull_request:
+  push:
+    tags:
+      - '**[0-9]+.[0-9]+.[0-9]+*'
   workflow_call:
     inputs:
       os:
