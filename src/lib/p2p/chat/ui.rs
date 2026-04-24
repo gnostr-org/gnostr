@@ -499,7 +499,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 #[cfg(test)]
 mod tests {
-    use super::{execute_colon_command, help_text, App};
+    use super::{execute_colon_command, help_text, parse_editor_buffer, parse_shell_batch_command, App, AppMode};
 
     #[test]
     fn help_text_mentions_clone_and_help_keys() {
