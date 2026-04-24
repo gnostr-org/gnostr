@@ -17,7 +17,7 @@
 
 use anyhow::{Context, Result};
 
-use gnostr_git_helpers::ipfs_backend::{IpfsRemote, parse_ipfs_url};
+use gnostr_git_helpers::ipfs_backend::{parse_ipfs_url, IpfsRemote};
 use gnostr_git_helpers::protocol::run_helper;
 
 fn main() -> Result<()> {
@@ -35,8 +35,7 @@ fn main() -> Result<()> {
     }
     let url = &args[2];
 
-    let (api, repo) = parse_ipfs_url(url)
-        .with_context(|| format!("invalid ipfs:// URL: {url}"))?;
+    let (api, repo) = parse_ipfs_url(url).with_context(|| format!("invalid ipfs:// URL: {url}"))?;
 
     eprintln!("[ipfs] api={api} repo={repo}");
     let helper = IpfsRemote::new(&api, &repo);
