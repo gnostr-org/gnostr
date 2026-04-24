@@ -86,11 +86,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                 )
                 .expect("Valid gossipsub config"),
                 ipfs: kad::Behaviour::with_config(local_peer_id, ipfs_store, ipfs_cfg),
-                kademlia: kad::Behaviour::with_config(
-                    local_peer_id,
-                    kad_store,
-                    kad_config,
-                ),
+                kademlia: kad::Behaviour::with_config(local_peer_id, kad_store, kad_config),
                 identify: identify::Behaviour::new(identify::Config::new(
                     "/yamux/1.0.0".to_string(),
                     key.public(),
@@ -101,10 +97,7 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(60)),
                 ),
-                mdns: mdns::tokio::Behaviour::new(
-                    mdns::Config::default(),
-                    local_peer_id,
-                )?,
+                mdns: mdns::tokio::Behaviour::new(mdns::Config::default(), local_peer_id)?,
             })
         })?
         .build();
