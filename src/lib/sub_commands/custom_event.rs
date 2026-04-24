@@ -67,7 +67,7 @@ pub struct CustomEventCommand {
     /// > gnostr custom-event -k 9735 -c '{"amount": 1000, "bolt11":
     /// > "lnbc100..."}' -r wss://relay.example.com -t "p|recipient_pubkey..."
     /// > -t "amount|1000"
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = 1)]
     kind: u16,
 
     /// Note content
