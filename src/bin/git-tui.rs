@@ -1,6 +1,6 @@
 use clap::Parser;
-use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
 use gnostr_asyncgit::gitui::term::Term;
+use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 use std::{backtrace::Backtrace, panic};
