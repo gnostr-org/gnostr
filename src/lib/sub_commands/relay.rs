@@ -73,7 +73,8 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
         debug!("relay --data is accepted but handled by the local relay crate defaults");
     }
 
-    run_local_relay(resolve_setting_path(&args)).await
+    let current_dir = std::env::current_dir().context("Failed to get current directory")?;
+    run_local_relay(resolve_setting_path(&args, &current_dir)).await
 }
 
 async fn run_detached(args: RelaySubCommand) -> Result<()> {
@@ -124,12 +125,12 @@ async fn run_local_relay(setting_path: Option<String>) -> Result<()> {
     Ok(())
 }
 
-fn resolve_setting_path(args: &RelaySubCommand) -> Option<String> {
+fn resolve_setting_path(args: &RelaySubCommand, current_dir: &Path) -> Option<String> {
     if let Some(config) = &args.config {
         return Some(config.to_string_lossy().into_owned());
     }
 
-    let config_file_path = Path::new("config/gnostr.toml");
+    let config_file_path = current_dir.join("config/gnostr.toml");
     if config_file_path.exists() {
         return Some(config_file_path.to_string_lossy().into_owned());
     }
@@ -142,14 +143,6 @@ mod tests {
     use super::*;
     use tempfile::TempDir;
 
-    struct CwdGuard(PathBuf);
-
-    impl Drop for CwdGuard {
-        fn drop(&mut self) {
-            let _ = std::env::set_current_dir(&self.0);
-        }
-    }
-
     #[test]
     fn resolve_setting_path_uses_explicit_config() {
         let args = RelaySubCommand {
@@ -161,7 +154,7 @@ mod tests {
         };
 
         assert_eq!(
-            resolve_setting_path(&args),
+            resolve_setting_path(&args, Path::new(".")),
             Some(String::from("/tmp/custom.toml"))
         );
     }
@@ -169,12 +162,12 @@ mod tests {
     #[test]
     fn resolve_setting_path_uses_repo_config_when_present() {
         let tempdir = TempDir::new().expect("tempdir");
-        let original = std::env::current_dir().expect("cwd");
-        let _guard = CwdGuard(original);
-        std::env::set_current_dir(tempdir.path()).expect("set cwd");
-        std::fs::create_dir_all("config").expect("config dir");
-        std::fs::write("config/gnostr.toml", "[server]\nport = 0\nhost = \"127.0.0.1\"\n")
-            .expect("write config");
+        std::fs::create_dir_all(tempdir.path().join("config")).expect("config dir");
+        std::fs::write(
+            tempdir.path().join("config/gnostr.toml"),
+            "[server]\nport = 0\nhost = \"127.0.0.1\"\n",
+        )
+        .expect("write config");
 
         let args = RelaySubCommand {
             config: None,
@@ -185,8 +178,8 @@ mod tests {
         };
 
         assert_eq!(
-            resolve_setting_path(&args),
-            Some(String::from("config/gnostr.toml"))
+            resolve_setting_path(&args, tempdir.path()),
+            Some(tempdir.path().join("config/gnostr.toml").to_string_lossy().into_owned())
         );
     }
 }
