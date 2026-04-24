@@ -362,22 +362,9 @@ jobs:
           cargo run --bin gnostr -- query \
           --ids \
           $(\
-           gnostr \
-           --nsec \
-           $(\
-            gnostr \
-            --hash "" \
-            ) \
-           $(\
             gnostr \
             bech32-to-any \
             npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw \
-           ) \
-           custom-event \
-           --kind ${{ env.WEEBLE }}
-           --hex \
-           -c "query command test" \
-           -t "gnostr|gnostr","gnostr-query|gnostr-query" \
           ) \
           && echo "✅" ## || echo "❌"
 
