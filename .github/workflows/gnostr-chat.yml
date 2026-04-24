@@ -79,7 +79,7 @@ jobs:
           # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
           # If not specified, it defaults to 'stable'. 
           # It can also read the version from a 'rust-toolchain.toml' file if present.
-          toolchain: stable 
+          toolchain: ${{ matrix.rustup }}
           # Comma-separated list of additional components to install.
           components: clippy, rustfmt
           # Automatically configure smart caching (recommended for speed)
