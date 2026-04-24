@@ -213,6 +213,17 @@ fn blossom_server_binary() -> Result<PathBuf, Box<dyn std::error::Error>> {
     Err(std::io::Error::other("blossom-server was installed but could not be located").into())
 }
 
+/// Print the upstream blossom-server help output.
+pub fn print_help() -> Result<(), Box<dyn std::error::Error>> {
+    let blossom_server = blossom_server_binary()?;
+    let status = Command::new(blossom_server).arg("--help").status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        exit_with_status(status)
+    }
+}
+
 fn spawn_advertiser_thread(base_url: String) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
