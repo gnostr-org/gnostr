@@ -2,9 +2,12 @@
 
 #![deny(clippy::expect_used)]
 
-use std::sync::{
+use std::{
+    sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Mutex, RwLock,
+    },
+    thread,
 };
 
 use crossbeam_channel::Sender;
@@ -137,7 +140,7 @@ impl<J: 'static + AsyncJob> AsyncSingleJob<J> {
 
         if let Some(task) = self.take_next() {
             let self_clone = (*self).clone();
-            rayon_core::spawn(move || {
+            thread::spawn(move || {
                 if let Err(e) = self_clone.run_job(task) {
                     log::error!("async job error: {}", e);
                 }
