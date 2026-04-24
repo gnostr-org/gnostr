@@ -483,7 +483,7 @@ impl CommitList {
         let mut txt: Vec<Span> = Vec::with_capacity(
             ELEMENTS_PER_LINE
                 + if marked.is_some() { 2 } else { 0 }
-                + if notes_present { 2 } else { 0 },
+                + 2,
         );
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
@@ -511,13 +511,15 @@ impl CommitList {
             txt.push(splitter.clone());
         }
 
-        if notes_present {
-            txt.push(Span::styled(
-                Cow::from(symbol::DOT),
-                theme.log_marker(selected),
-            ));
-            txt.push(splitter.clone());
-        }
+        txt.push(Span::styled(
+            Cow::from(if notes_present {
+                symbol::DOT
+            } else {
+                symbol::EMPTY_SPACE
+            }),
+            theme.log_marker(selected),
+        ));
+        txt.push(splitter.clone());
 
         let style_hash = if normal {
             theme.commit_hash(selected)
