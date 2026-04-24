@@ -28,7 +28,8 @@ pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(load_bootstra
 pub static SHITLIST_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     let relays_yaml_bytes = include_bytes!("shitlist.yaml");
     let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
-    relays_yaml_content.lines()
+    relays_yaml_content
+        .lines()
         .filter(|line: &&str| !line.trim().is_empty())
         .map(|line: &str| String::from(line))
         .collect()
@@ -64,7 +65,11 @@ impl Processor {
         //TODO: forward (proxy)
         debug!("{:?}", event.id);
         //println!("{:}", event.as_json());
-        debug!("age {:?}  created_at {:?}", Self::age(event.created_at), event.created_at);
+        debug!(
+            "age {:?}  created_at {:?}",
+            Self::age(event.created_at),
+            event.created_at
+        );
         record_live_kind(format!("{:?}", event.kind));
         match event.kind {
             Kind::Metadata => {
@@ -162,7 +167,7 @@ impl Processor {
                     }
                 }
                 debug!("Contacts {} \t ", cnt); // event.pubkey.to_bech32().unwrap(),
-                // self.print_summary();
+                                                // self.print_summary();
 
                 //println!("{:?}", event);
             }
