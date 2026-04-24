@@ -3,8 +3,7 @@
 /// This test suite is designed to capture the TUI of multiple `gnostr chat`
 /// instances to ensure that the CLI TUI messages are consistent and correct.
 ///
-#[cfg(test)]
-#[cfg(target_os = "macos")]
+#[cfg(all(test, target_os = "macos"))]
 #[ignore]
 mod tests {
     use std::thread;
