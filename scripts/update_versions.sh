@@ -397,7 +397,8 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
     fi
 fi
 
+git checkout -b $VERSION_TAG
+
 if [ -n "${VERSION_TAG:-}" ]; then
     git push origin "$VERSION_TAG:$VERSION_TAG"
 fi
-git checkout -b $VERSION_TAG
