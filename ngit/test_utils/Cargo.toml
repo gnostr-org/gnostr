@@ -3,6 +3,9 @@ name = "test_utils"
 version = "1877.946457.541327"
 edition = "2021"
 
+[package.metadata.dist]
+dist = false
+
 [dependencies]
 anyhow = "1.0.98"
 assert_cmd = "2.0.17"
