@@ -63,3 +63,22 @@ docker compose -f docker-compose.blossom.yml run --rm --service-ports blossom-gi
 The `blossom-git` tools image includes `git`, `git-lfs`, `blossom-cli`, and
 `blossom-lfs`. The `blossom-server` image wraps upstream `blossom-server`
 defaults and persists data under the `blossom_server_data` volume.
+
+## Test wrappers
+
+The repo keeps a few shell wrappers for the most common test paths:
+
+```bash
+./scripts/gnostr-tests.sh [--list] [--test <name>] [--ignored] [--nocapture]
+./scripts/gnostr-asyncgit-tests.sh [--ignored] [--nocapture]
+./scripts/gnostr-ngit-tests.sh [--features <list>] [--all-features] [--no-default-features] [--ignored] [--nocapture]
+```
+
+`gnostr-tests.sh` runs the workspace test suite, `gnostr-asyncgit-tests.sh`
+adds the asyncgit DM/NIP regressions and queries the real event ids it emits,
+and `gnostr-ngit-tests.sh` exercises the ngit library with optional cargo
+feature switches.
+
+The matrix workflow `./.github/workflows/gnostr-test-matrix.yml` runs the
+asyncgit and ngit wrappers on the stable toolchain, which keeps the script
+paths covered in CI.
