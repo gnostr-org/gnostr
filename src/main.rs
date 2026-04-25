@@ -22,6 +22,10 @@ fn install_rustls_crypto_provider() {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     install_rustls_crypto_provider();
+    #[cfg(debug_assertions)]
+    if let Err(err) = sub_commands::chat::oneshot("gnostr-dev", "gnostr main started").await {
+        eprintln!("Failed to send debug startup chat: {err}");
+    }
     unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
     unsafe { env::set_var("BLOCKHEIGHT", "0") };
