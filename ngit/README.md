@@ -21,6 +21,17 @@ install options:
 
 run the commands `ngit` and `git-remote-nostr` to ensure the binaries are in your PATH.
 
+## feature flags
+
+The crate exposes a `nostr` feature that re-exports the `nostr` crate from
+`ngit::nostr` with the DM-related features enabled. This keeps downstream code
+and internal tests on the same namespace while still allowing the feature to be
+turned on and off explicitly.
+
+The helper script `./scripts/gnostr-ngit-tests.sh` uses that feature by
+default, and also accepts `--features`, `--all-features`, and
+`--no-default-features` when you want to override the cargo feature set.
+
 ## contributions welcome!
 
 [gitworkshop.dev/danconwaydev.com/ngit](https://gitworkshop.dev/danconwaydev.com/ngit) to report issues and see PRs
