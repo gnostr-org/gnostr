@@ -595,6 +595,76 @@ mod tests {
     }
 
     #[test]
+    fn repo_ref_defaults_identifier_from_root_commit() {
+        let private_key = PrivateKey::mock();
+        let trusted_maintainer = private_key.public_key();
+        let repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: String::new(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec![],
+            web: vec![],
+            relays: vec![],
+            hashtags: vec![],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+
+        let event = repo_ref.to_event(&private_key).unwrap();
+        let parsed = RepoRef::try_from(event).unwrap();
+
+        assert_eq!(parsed.identifier, "abcdef1");
+    }
+
+    #[test]
+    fn repo_ref_coordinates_include_relay_hint_and_all_maintainers() {
+        let private_key = PrivateKey::mock();
+        let trusted_maintainer = private_key.public_key();
+        let other_maintainer = PrivateKey::mock().public_key();
+        let repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec![],
+            web: vec![],
+            relays: vec![
+                UncheckedUrl::from_str("wss://relay.damus.io"),
+                UncheckedUrl::from_str("wss://blossom.gnostr.cloud"),
+            ],
+            hashtags: vec![],
+            maintainers: vec![trusted_maintainer, other_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+
+        let hinted = repo_ref.coordinate_with_hint();
+        assert_eq!(hinted.relays.len(), 1);
+        assert_eq!(hinted.relays[0], UncheckedUrl::from_str("wss://relay.damus.io"));
+
+        let coordinates = repo_ref.coordinates();
+        assert_eq!(coordinates.len(), 2);
+        assert!(coordinates.iter().any(|coordinate| coordinate.author == trusted_maintainer));
+        assert!(coordinates.iter().any(|coordinate| coordinate.author == other_maintainer));
+    }
+
+    #[test]
+    fn event_tag_from_nip19_or_hex_accepts_npub_when_allowed() {
+        let public_key = PublicKey::mock();
+        let tag = event_tag_from_nip19_or_hex(
+            &public_key.as_bech32_string(),
+            EventRefType::Root,
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(tag.tagname(), "p");
+        assert_eq!(tag.parse_pubkey().unwrap().0, public_key);
+    }
+
+    #[test]
     fn repo_state_round_trip_adds_head() {
         let private_key = PrivateKey::mock();
         let mut state = HashMap::new();
