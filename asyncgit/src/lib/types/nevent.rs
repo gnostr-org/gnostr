@@ -6,6 +6,24 @@ use super::{Error, EventKind, Id, PublicKey, UncheckedUrl};
 #[cfg(test)]
 use crate::test_serde;
 
+fn read_tlv<'a>(data: &'a [u8], cursor: &mut usize) -> Result<(u8, &'a [u8]), Error> {
+    if *cursor + 2 > data.len() {
+        return Err(Error::InvalidProfile);
+    }
+
+    let ty = data[*cursor];
+    let len = data[*cursor + 1] as usize;
+    *cursor += 2;
+
+    if *cursor + len > data.len() {
+        return Err(Error::InvalidProfile);
+    }
+
+    let raw = &data[*cursor..*cursor + len];
+    *cursor += len;
+    Ok((ty, raw))
+}
+
 /// An 'nevent': event id along with some relays in which that event may be
 /// found.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -82,27 +100,19 @@ impl NEvent {
 
             let tlv = data.1;
             let mut pos = 0;
-            loop {
-                // we need at least 2 more characters for anything meaningful
-                if pos > tlv.len() - 2 {
-                    break;
-                }
-                let ty = tlv[pos];
-                let len = tlv[pos + 1] as usize;
-                pos += 2;
-                if pos + len > tlv.len() {
-                    return Err(Error::InvalidProfile);
-                }
-                let raw = &tlv[pos..pos + len];
+            while pos < tlv.len() {
+                let (ty, raw) = read_tlv(&tlv, &mut pos)?;
                 match ty {
                     0 => {
                         // special (32 bytes of id)
-                        if len != 32 {
+                        if raw.len() != 32 {
                             return Err(Error::InvalidNEvent);
                         }
-                        id = Some(Id(raw
-                            .try_into()
-                            .map_err(|_| Error::WrongLengthHexString)?));
+                        id = Some(
+                            Id(raw
+                                .try_into()
+                                .map_err(|_| Error::WrongLengthHexString)?),
+                        );
                     }
                     1 => {
                         // relay
@@ -129,7 +139,6 @@ impl NEvent {
                     }
                     _ => {} // unhandled type for nprofile
                 }
-                pos += len;
             }
             if let Some(id) = id {
                 Ok(NEvent {
@@ -247,5 +256,14 @@ mod test {
         let bech32 = "nevent1qqswrqr63ddwk8l3zfqrgdxh2lxh2jlcxl36k3h33g25gtchzchx8agpp4mhxue69uhkummn9ekx7mqpz3mhxue69uhhyetvv9ujuerpd46hxtnfduq3yamnwvaz7tm0venxx6rpd9hzuur4vgpyqdmyxs6rzdmyx4jxvdpnx4snjdmz8pnr2dtr8pnryefhv5ex2e34xvek2v3nxuckxef4v5ckxenxvs6njdtrxymnjcfnv4skvvekvs6qfe99uy";
 
         let _ne = NEvent::try_from_bech32_string(bech32).unwrap();
+    }
+
+    #[test]
+    fn test_short_tlv_errors_instead_of_panicking() {
+        let mut cursor = 0;
+        assert!(matches!(
+            read_tlv(&[0], &mut cursor),
+            Err(Error::InvalidProfile)
+        ));
     }
 }
