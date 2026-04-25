@@ -41,6 +41,7 @@ pub enum MsgKind {
     NostrEvent,
     GitDiff,
     OneShot,
+    Debug,
 }
 
 /// A single chat message or structured payload moving through the swarm.
@@ -356,6 +357,22 @@ impl<'a> From<&'a Msg> for ratatui::text::Line<'a> {
                 }
                 Line::from(spans)
             }
+            Debug => {
+                let mut spans = Vec::new();
+                let blue_style = Style::default().fg(Color::Blue);
+
+                if let Some(first_line) = m.content.first() {
+                    spans.push(Span::styled(
+                        format!("[DEBUG] {}: {}", m.from, first_line),
+                        blue_style,
+                    ));
+                }
+
+                for line in m.content.iter().skip(1) {
+                    spans.push(Span::styled(line.clone(), blue_style));
+                }
+                Line::from(spans)
+            }
         }
     }
 }
@@ -369,6 +386,7 @@ impl Display for Msg {
             MsgKind::System => write!(f, "[System] {}", self.content[0]),
             MsgKind::Raw => write!(f, "{}", self.content[0]),
             MsgKind::Command => write!(f, "[Command] {}:{}", self.from, self.content[0]),
+            MsgKind::Debug => write!(f, "[DEBUG] {}: {}", self.from, self.content[0]),
             MsgKind::GitCommitId => {
                 write!(
                     f,

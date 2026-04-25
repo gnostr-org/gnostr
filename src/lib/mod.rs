@@ -11,7 +11,22 @@ pub mod cli;
 ///  <https://docs.rs/gnostr/latest/gnostr/cli_interactor/index.html>
 pub mod cli_interactor;
 ///  <https://docs.rs/gnostr/latest/gnostr/client/index.html>
-pub mod client;
+pub mod client {
+    pub use ngit::client::*;
+
+    #[cfg(test)]
+    pub type MockConnect = Client;
+
+    pub trait ClientCompat {
+        fn get_fallback_relays(&self) -> &Vec<String>;
+    }
+
+    impl ClientCompat for Client {
+        fn get_fallback_relays(&self) -> &Vec<String> {
+            self.get_fallback_signer_relays()
+        }
+    }
+}
 ///  <https://docs.rs/gnostr/latest/gnostr/clipboard/index.html>
 pub mod clipboard;
 ///  <https://docs.rs/gnostr/latest/gnostr/cmdbar/index.html>
@@ -34,6 +49,8 @@ pub mod git_events;
 pub mod global_rt;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
+///  <https://docs.rs/gnostr/latest/gnostr/introspection/index.html>
+pub mod introspection;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
 pub mod keys;
 ///  <https://docs.rs/gnostr/latest/gnostr/asyncgit/types/nostr_client/index.html>

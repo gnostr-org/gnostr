@@ -18,6 +18,7 @@ pub mod git;
 pub mod hide_public_channel_message;
 pub mod init;
 pub mod legit;
+pub mod ngit;
 pub mod list;
 pub mod list_events;
 pub mod login;

@@ -188,12 +188,9 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
                 .await
                 .map_err(|e| anyhow!("Error in legit subcommand: {}", e))
         }
-        Some(GnostrCommands::Ngit(sub_command_args)) => {
-            debug!("running ngit subcommand");
-            sub_commands::ngit::ngit(sub_command_args.clone())
-                .await
-                .map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
-        }
+        Some(GnostrCommands::Ngit(sub_command_args)) => ngit::run_cli(sub_command_args)
+            .await
+            .map_err(|e| anyhow!("Error in ngit subcommand: {}", e)),
         Some(GnostrCommands::Server(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::server::server(sub_command_args)

@@ -345,6 +345,25 @@ macro_rules! chat_oneshot {
     };
 }
 
+#[macro_export]
+macro_rules! chat_oneshot_named {
+    ($topic:expr, $message:expr) => {{
+        $crate::chat_oneshot!(
+            $topic,
+            format!("{}::{} {}", module_path!(), function_name!(), $message)
+        )
+    }};
+}
+
+#[macro_export]
+macro_rules! chat_debug {
+    ($message:expr) => {{
+        $crate::p2p::chat::msg::Msg::default()
+            .set_content($crate::introspection_debug!($message), 0)
+            .set_kind($crate::p2p::chat::msg::MsgKind::Debug)
+    }};
+}
+
 /// Run the chat command lifecycle.
 ///
 /// This initializes identity, optionally starts the detached headless wrapper,
@@ -740,5 +759,36 @@ mod command_tests {
 
         assert_eq!(args.topic.as_deref(), Some("gnostr-dev"));
         assert_eq!(args.oneshot.as_deref(), Some("gnostr main started"));
+    }
+
+    #[function_name::named]
+    #[test]
+    fn builds_named_oneshot_subcommand() {
+        let args = crate::chat_oneshot_named!("gnostr-dev", "gnostr main started");
+        let expected = format!(
+            "{}::{} {}",
+            module_path!(),
+            function_name!(),
+            "gnostr main started"
+        );
+
+        assert_eq!(args.topic.as_deref(), Some("gnostr-dev"));
+        assert_eq!(args.oneshot.as_deref(), Some(expected.as_str()));
+    }
+
+    #[function_name::named]
+    #[test]
+    fn builds_debug_message() {
+        let msg = crate::chat_debug!("trace ready");
+        assert_eq!(msg.kind, MsgKind::Debug);
+        assert_eq!(
+            msg.content[0],
+            format!(
+                "[DEBUG] {}::{} {}",
+                module_path!(),
+                function_name!(),
+                "trace ready"
+            )
+        );
     }
 }

@@ -106,6 +106,8 @@ pub enum Commands {
     /// publish a repository to nostr; signal you are its maintainer accepting
     /// PRs and issues
     Init(sub_commands::init::SubCommandArgs),
+    /// fetch updates for the repo cache
+    Fetch(sub_commands::fetch::SubCommandArgs),
     /// manage repository metadata and maintainership
     #[command(
         long_about = "manage repository metadata and maintainership\n\nrun without a subcommand to show repository info"

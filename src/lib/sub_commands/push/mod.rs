@@ -36,11 +36,6 @@ pub async fn launch(args: &PushArgs) -> Result<()> {
         force_pr: args.force,
         force_patch: false,
         push_options: vec![],
-        bunker_app_key: args.bunker_app_key.clone(),
-        bunker_uri: args.bunker_uri.clone(),
-        disable_cli_spinners: args.disable_cli_spinners,
-        nsec: args.nsec.clone(),
-        password: args.password.clone(),
     };
 
     ngit::sub_commands::send::launch(&cli, &send_args, false).await

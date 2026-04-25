@@ -26,10 +26,10 @@ use nostr_sdk::RelayUrl;
 pub struct SubCommandArgs {
     /// optionally just sync a specific reference. eg main or v1.5.2
     #[arg(short, long)]
-    pub(crate) ref_name: Option<String>,
+    pub ref_name: Option<String>,
     /// force push updates and delete refs from non-grasp git servers
     #[arg(long)]
-    force: bool,
+    pub force: bool,
 }
 
 #[allow(clippy::too_many_lines)]

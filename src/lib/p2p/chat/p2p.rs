@@ -313,7 +313,7 @@ pub async fn evt_loop(
         }
 
         match msg.kind {
-            MsgKind::Chat | MsgKind::OneShot => {
+            MsgKind::Chat | MsgKind::OneShot | MsgKind::Debug => {
                 // OneShot without --diff will be handled here
                 let wrapped_content = textwrap::fill(&msg.content[0], Options::new(terminal_width));
                 msg.content = wrapped_content.lines().map(String::from).collect();

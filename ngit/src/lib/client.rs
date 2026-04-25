@@ -1815,11 +1815,7 @@ async fn create_relays_request(
                 a
             }
         })
-        .unwrap()
-        .to_string()
-        .chars()
-        .count()
-        + 2;
+        .map_or(2, |relay| relay.to_string().chars().count() + 2);
 
     Ok(FetchRequest {
         selected_relay: None,

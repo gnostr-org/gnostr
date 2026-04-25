@@ -107,6 +107,7 @@ pub struct App {
     pub msgs_scroll: usize,
     pub topic: String,
     pub show_side_panel: bool,
+    pub show_debug_timeline: bool,
     pub show_help: bool,
     pub shell_output: Vec<String>,
 }
@@ -121,6 +122,7 @@ impl Default for App {
             msgs_scroll: usize::MAX,
             topic: String::from("gnostr"),
             show_side_panel: false,
+            show_debug_timeline: false,
             show_help: false,
             shell_output: Vec::new(),
         }
@@ -461,6 +463,7 @@ fn help_text() -> Vec<&'static str> {
         "  Esc leave edit mode or close help",
         "  q quit",
         "  d open diff picker",
+        "  Shift+D toggle debug timeline",
         "  arrows scroll messages",
         "  Ctrl-C quit immediately",
         "",
@@ -625,6 +628,12 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                     KeyCode::Char('\\') => {
                         app.show_help = true;
+                    }
+                    KeyCode::Char('d') if key.modifiers.contains(event::KeyModifiers::SHIFT) => {
+                        app.show_debug_timeline = !app.show_debug_timeline;
+                    }
+                    KeyCode::Char('D') => {
+                        app.show_debug_timeline = !app.show_debug_timeline;
                     }
                     KeyCode::Char('d') => {
                         // New keybinding for selecting diffs
@@ -828,7 +837,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 //as popup widget is constructed in chat_details/mos.rs
 fn ui(f: &mut Frame, app: &App) {
     let theme: SharedTheme = Rc::new(Theme::default());
-    let main_layout_constraints = if app.show_side_panel {
+    let main_layout_constraints = if app.show_side_panel || app.show_debug_timeline {
         vec![Constraint::Percentage(70), Constraint::Percentage(30)]
     } else {
         vec![Constraint::Percentage(100)]
@@ -862,19 +871,23 @@ fn ui(f: &mut Frame, app: &App) {
     // Messages Widget
     let height = chunks[1].height; // Re-introduce height variable
     let msgs = app.messages.lock().unwrap();
+    let visible_msgs: Vec<&msg::Msg> = msgs
+        .iter()
+        .filter(|msg| msg.kind != MsgKind::Debug)
+        .collect();
     let scroll_pos = if app.msgs_scroll == usize::MAX {
-        msgs.len()
+        visible_msgs.len()
     } else {
-        app.msgs_scroll.min(msgs.len())
+        app.msgs_scroll.min(visible_msgs.len())
     };
-    let show_scrollbar = msgs.len() > height as usize;
+    let show_scrollbar = visible_msgs.len() > height as usize;
     let message_area_width = chunks[1]
         .width
         .saturating_sub(if show_scrollbar { 1 } else { 0 });
 
     let mut messages: Vec<ListItem> = Vec::new();
 
-    for msg in msgs.iter().rev() {
+    for msg in visible_msgs.iter().rev() {
         match msg.kind {
             MsgKind::Chat => {
                 let mut chat_spans: Vec<ratatui::text::Span> = Vec::new();
@@ -920,12 +933,13 @@ fn ui(f: &mut Frame, app: &App) {
                     messages.push(ListItem::new(Line::from(Span::styled(
                         line_content.clone(),
                         style,
-                    ))));
+                        ))));
                 }
             }
+            MsgKind::Debug => {}
             _ => {
                 // For other MsgKind, directly convert to ListItem
-                messages.push(ListItem::new(ratatui::text::Text::from(Line::from(msg))));
+                messages.push(ListItem::new(ratatui::text::Text::from(Line::from(*msg))));
             }
         }
     }
@@ -941,7 +955,7 @@ fn ui(f: &mut Frame, app: &App) {
             f,
             chunks[1],
             &theme,
-            msgs.len(),
+            visible_msgs.len(),
             scroll_pos,
             Orientation::Vertical,
         );
@@ -1067,13 +1081,28 @@ fn ui(f: &mut Frame, app: &App) {
     }
 
     // Render side panel if active
-    if app.show_side_panel {
+    if app.show_side_panel || app.show_debug_timeline {
         let side_panel_area = main_layout_chunks[1];
-        let side_panel = Block::default()
-            .borders(Borders::ALL)
-            .title("Side Panel")
-            .fg(Color::White);
-        f.render_widget(side_panel, side_panel_area);
+        if app.show_debug_timeline {
+            let debug_msgs = msgs
+                .iter()
+                .filter(|msg| msg.kind == MsgKind::Debug)
+                .map(|msg| ListItem::new(Line::from(msg)))
+                .collect::<Vec<_>>();
+            let debug_panel = List::new(if debug_msgs.is_empty() {
+                vec![ListItem::new("No debug messages yet")]
+            } else {
+                debug_msgs
+            })
+            .block(Block::default().borders(Borders::ALL).title("Debug"));
+            f.render_widget(debug_panel, side_panel_area);
+        } else {
+            let side_panel = Block::default()
+                .borders(Borders::ALL)
+                .title("Side Panel")
+                .fg(Color::White);
+            f.render_widget(side_panel, side_panel_area);
+        }
     }
 
     if app.show_help {

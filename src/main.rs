@@ -19,13 +19,22 @@ fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
+#[cfg(debug_assertions)]
+#[function_name::named]
+async fn _send_debug_startup_chat() {
+    let args = gnostr::chat_oneshot_named!("gnostr-dev", "gnostr main started");
+    if let Err(err) = gnostr::sub_commands::chat::chat(&args).await {
+        eprintln!("Failed to send debug startup chat: {err}");
+    }
+}
+
+#[cfg(not(debug_assertions))]
+async fn _send_debug_startup_chat() {}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     install_rustls_crypto_provider();
-    #[cfg(debug_assertions)]
-    if let Err(err) = gnostr::p2p::chat::oneshot("gnostr-dev", "gnostr main started").await {
-        eprintln!("Failed to send debug startup chat: {err}");
-    }
+    //_send_debug_startup_chat().await;
     unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
     unsafe { env::set_var("BLOCKHEIGHT", "0") };
@@ -186,12 +195,9 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .map_err(|e| anyhow!("Error in legit subcommand: {}", e))
         }
-        Some(GnostrCommands::Ngit(sub_command_args)) => {
-            debug!("running ngit subcommand");
-            sub_commands::ngit::ngit(sub_command_args.clone())
-                .await
-                .map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
-        }
+        Some(GnostrCommands::Ngit(sub_command_args)) => ngit::run_cli(sub_command_args)
+            .await
+            .map_err(|e| anyhow!("Error in ngit subcommand: {}", e)),
         Some(GnostrCommands::Server(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             sub_commands::server::server(sub_command_args)

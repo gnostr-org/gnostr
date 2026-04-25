@@ -1,8 +1,6 @@
-use std::collections::HashSet;
-
 use anyhow::{Context, Result};
 use clap;
-use ngit::nostr::nips::nip01::Coordinate;
+use nostr::nips::{nip01::Coordinate, nip19::Nip19Coordinate};
 
 use ngit::{
     client::{fetching_with_report, Client, Connect},
@@ -21,25 +19,22 @@ pub async fn launch(
     //args: &Cli,
     args: &FetchArgs,
 ) -> Result<()> {
-    let _ = args;
     let git_repo = Repo::discover().context("cannot find a git repository")?;
-    let _client = Client::default();
 
     #[cfg(test)]
     let client: &crate::client::MockConnect = &mut Default::default();
     #[cfg(not(test))]
     let client = Client::default();
 
-    let repo_coordinates = if args.repo.is_empty() {
+    let repo_coordinates: Nip19Coordinate = if args.repo.is_empty() {
         get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?
     } else {
-        let mut repo_coordinates = HashSet::new();
-        for repo in &args.repo {
-            repo_coordinates.insert(Coordinate::parse(repo.clone())?);
+        Nip19Coordinate {
+            coordinate: Coordinate::parse(&args.repo[0])?,
+            relays: vec![],
         }
-        repo_coordinates
     };
-    fetching_with_report(git_repo.get_path()?, &client, &repo_coordinates, true).await?;
+    fetching_with_report(git_repo.get_path()?, &client, &repo_coordinates).await?;
     client.disconnect().await?;
     Ok(())
 }

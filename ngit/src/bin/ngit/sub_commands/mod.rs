@@ -2,6 +2,7 @@ pub mod apply;
 pub mod checkout;
 pub mod create;
 pub mod export_keys;
+pub mod fetch;
 pub mod init;
 pub mod list;
 pub mod login;

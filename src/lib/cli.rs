@@ -26,7 +26,7 @@ use crate::sub_commands::crawler;
 use crate::sub_commands::{
     bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
     custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
-    hide_public_channel_message, init, legit, list_events, login, mute_publickey, ngit, note,
+    hide_public_channel_message, init, legit, list_events, login, mute_publickey, note,
     privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, relay, send,
     send_channel_message, server, set_channel_metadata, set_metadata, sniper, user_status, vanity,
 };
@@ -259,6 +259,8 @@ pub enum GnostrCommands {
     GenerateKeypair(generate_keypair::GenerateKeypairSubCommand),
     /// Git sub commands
     Git(git::GitSubCommand),
+    /// ngit passthrough subcommands
+    Ngit(ngit::cli::Cli),
     /// Hide a message in a public chat room
     HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
     /// Legit sub commands
@@ -267,8 +269,6 @@ pub enum GnostrCommands {
     ListEvents(list_events::ListEventsSubCommand),
     /// Mute a public key
     MutePublicKey(mute_publickey::MutePublickeySubCommand),
-    /// Ngit sub commands
-    Ngit(ngit::NgitSubCommand),
     /// Nip34 sub commands
     Nip34(crate::sub_commands::nip34::Nip34Command),
     /// Send text note
