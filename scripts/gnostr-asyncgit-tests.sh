@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 TEST_FLAGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --no-capture)
+    --nocapture)
       TEST_FLAGS+=(--nocapture)
       ;;
     --ignored)
@@ -39,10 +39,10 @@ fi
 
 bash ./scripts/asyncgit-tests.sh
 
-cargo test -p gnostr-asyncgit --lib types::event_kind::test::test_replaceable_ephemeral -- --nocapture "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::naddr::test::test_short_tlv_errors_instead_of_panicking -- --nocapture "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_instead_of_panicking -- --nocapture "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking -- --nocapture "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg -- --ignored --nocapture "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths -- --ignored --nocapture "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions -- --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::event_kind::test::test_replaceable_ephemeral --  "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::naddr::test::test_short_tlv_errors_instead_of_panicking --  "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_instead_of_panicking --  "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking --  "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg --   "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths --   "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions --  "${TEST_FLAGS[@]}"
