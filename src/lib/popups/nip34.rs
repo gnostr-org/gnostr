@@ -7,7 +7,7 @@ use std::{
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use gnostr_asyncgit::{
-    sync::{repo_work_dir, RepoPathRef},
+    sync::{utils::repo_work_dir, RepoPathRef},
     types::{
         nip34::{RepoRef, RepoState},
         EventKind, EventV3, PrivateKey, PublicKey, UncheckedUrl,
@@ -113,8 +113,8 @@ impl Nip34Popup {
         hash.chars().take(8).collect()
     }
 
-    fn repo_name(work_dir: &std::path::Path) -> String {
-        work_dir
+    fn repo_name(work_dir: &str) -> String {
+        std::path::Path::new(work_dir)
             .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or("repository")
@@ -126,14 +126,6 @@ impl Nip34Popup {
             Nip34Mode::Commits => self.commit_state.borrow().selected().unwrap_or(0),
             Nip34Mode::Branches => self.branch_state.borrow().selected().unwrap_or(0),
             Nip34Mode::Events => self.event_state.borrow().selected().unwrap_or(0),
-        }
-    }
-
-    fn selected_count(&self) -> usize {
-        match self.mode {
-            Nip34Mode::Commits => self.commits.len(),
-            Nip34Mode::Branches => self.branches.len(),
-            Nip34Mode::Events => self.events.len(),
         }
     }
 
