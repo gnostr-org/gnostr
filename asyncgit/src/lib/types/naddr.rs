@@ -9,6 +9,24 @@ use super::Error;
 use crate::test_serde;
 use crate::types::{EventKind, PublicKey, UncheckedUrl};
 
+fn read_tlv<'a>(data: &'a [u8], cursor: &mut usize) -> Result<(u8, &'a [u8]), Error> {
+    if *cursor + 2 > data.len() {
+        return Err(Error::InvalidProfile);
+    }
+
+    let ty = data[*cursor];
+    let len = data[*cursor + 1] as usize;
+    *cursor += 2;
+
+    if *cursor + len > data.len() {
+        return Err(Error::InvalidProfile);
+    }
+
+    let raw = &data[*cursor..*cursor + len];
+    *cursor += len;
+    Ok((ty, raw))
+}
+
 /// An 'naddr': data to address a possibly parameterized replaceable event
 /// (d-tag, kind, author, and relays)
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -79,18 +97,8 @@ impl NAddr {
 
             let tlv = data.1;
             let mut pos = 0;
-            loop {
-                // we need at least 2 more characters for anything meaningful
-                if pos > tlv.len() - 2 {
-                    break;
-                }
-                let ty = tlv[pos];
-                let len = tlv[pos + 1] as usize;
-                pos += 2;
-                if pos + len > tlv.len() {
-                    return Err(Error::InvalidProfile);
-                }
-                let raw = &tlv[pos..pos + len];
+            while pos < tlv.len() {
+                let (ty, raw) = read_tlv(&tlv, &mut pos)?;
                 match ty {
                     0 => {
                         // special (bytes of d tag)
@@ -121,7 +129,6 @@ impl NAddr {
                     }
                     _ => {} // unhandled type for nprofile
                 }
-                pos += len;
             }
 
             match (maybe_d, maybe_kind, maybe_author) {
@@ -191,5 +198,14 @@ mod test {
             NAddr::mock(),
             NAddr::try_from_bech32_string(&bech32).unwrap()
         );
+    }
+
+    #[test]
+    fn test_short_tlv_errors_instead_of_panicking() {
+        let mut cursor = 0;
+        assert!(matches!(
+            read_tlv(&[0], &mut cursor),
+            Err(Error::InvalidProfile)
+        ));
     }
 }
