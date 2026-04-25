@@ -24,6 +24,7 @@ pub mod sub_commands;
 // See src/lib/transport.rs header for full removal instructions.
 pub mod transport;
 pub mod utils;
+pub use nostr;
 
 use anyhow::{Result, anyhow};
 #[cfg(not(test))]
@@ -121,5 +122,13 @@ pub async fn run_cli(cli: &Cli) -> Result<()> {
         cmd.print_help()?;
         println!();
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn reexports_nostr_crate_with_enabled_features() {
+        let _ = core::any::type_name::<crate::nostr::nips::nip49::EncryptedSecretKey>();
     }
 }
