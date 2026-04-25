@@ -10,7 +10,8 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use gnostr_asyncgit::types::nip34::{Event as Nip34Event, Nip34Kind, UnsignedEvent};
+use gnostr_asyncgit::types::nip34::{Nip34Event, Nip34UnsignedEvent};
+use gnostr_asyncgit::types::{EventKind, PrivateKey, PublicKey, TagV3, Unixtime};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -18,7 +19,6 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
     Frame, Terminal,
 };
-use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey};
 
 /// Represents a relevant subset of a Git commit's data.
 #[derive(Debug, Clone)]
@@ -63,8 +63,8 @@ struct App {
     selected_nip34_events: HashSet<usize>,
     full_commit_details: Option<String>,
     show_full_commit: bool,
-    secret_key: SecretKey,
-    public_key: XOnlyPublicKey,
+    private_key: PrivateKey,
+    public_key: PublicKey,
 }
 
 impl App {
@@ -132,46 +132,49 @@ impl App {
             }
         }
 
-        let secp = Secp256k1::new();
-        let (secret_key, public_key) = secp.generate_keypair(&mut rand::thread_rng());
-        let public_key = public_key.x_only_public_key().0;
+        let private_key = PrivateKey::generate();
+        let public_key = private_key.public_key();
 
         // For now, create sample NIP-34 events
         // In a real implementation, these would be loaded from Nostr relays
-        let sample_events_data = vec![
+        let sample_events_data: Vec<(EventKind, &str, Vec<TagV3>)> = vec![
             (
-                Nip34Kind::Patch,
+                EventKind::Patches,
                 "Fix critical authentication bug in NIP-34 implementation",
                 vec![
-                    vec!["d".to_string(), "fix-auth-bug".to_string()],
-                    vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                    TagV3::from_strings(vec!["d".to_string(), "fix-auth-bug".to_string()]),
+                    TagV3::from_strings(vec!["repository".to_string(), "gnostr-org/gnostr".to_string()]),
                 ],
             ),
             (
-                Nip34Kind::PullRequest,
+                EventKind::Other(1630),
                 "Add NIP-34 event creation and signing support",
                 vec![
-                    vec!["r".to_string(), "main".to_string()],
-                    vec!["pr".to_string(), "42".to_string()],
-                    vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                    TagV3::from_strings(vec!["r".to_string(), "main".to_string()]),
+                    TagV3::from_strings(vec!["pr".to_string(), "42".to_string()]),
+                    TagV3::from_strings(vec!["repository".to_string(), "gnostr-org/gnostr".to_string()]),
                 ],
             ),
             (
-                Nip34Kind::Issue,
+                EventKind::GitIssue,
                 "Implement NIP-34 event serialization for git patches",
                 vec![
-                    vec!["k".to_string(), "issue-123".to_string()],
-                    vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
-                    vec!["title".to_string(), "Feature: NIP-34 support".to_string()],
+                    TagV3::from_strings(vec!["k".to_string(), "issue-123".to_string()]),
+                    TagV3::from_strings(vec!["repository".to_string(), "gnostr-org/gnostr".to_string()]),
+                    TagV3::from_strings(vec!["title".to_string(), "Feature: NIP-34 support".to_string()]),
                 ],
             ),
         ];
         let mut nip34_events = vec![];
         for (kind, content, tags) in sample_events_data {
-            let unsigned_event =
-                UnsignedEvent::new(&public_key, kind as u16, tags, content.to_string());
-            let event = unsigned_event
-                .sign(&secret_key)
+            let preevent = Nip34UnsignedEvent {
+                pubkey: public_key,
+                created_at: Unixtime::now(),
+                kind,
+                tags,
+                content: content.to_string(),
+            };
+            let event = Nip34Event::sign_with_private_key(preevent, &private_key)
                 .map_err(|e| anyhow::anyhow!(e.to_string()))?;
             nip34_events.push(event);
         }
@@ -204,7 +207,7 @@ impl App {
             selected_nip34_events: HashSet::new(),
             full_commit_details: None,
             show_full_commit: false,
-            secret_key,
+            private_key,
             public_key,
         })
     }
@@ -375,17 +378,21 @@ impl App {
                     })?;
 
                     let tags = vec![
-                        vec![
+                        TagV3::from_strings(vec![
                             "d".to_string(),
                             format!("{}..{}", from_commit.full_hash, to_commit.full_hash),
-                        ],
-                        vec!["repository".to_string(), "gnostr-org/gnostr".to_string()],
+                        ]),
+                        TagV3::from_strings(vec!["repository".to_string(), "gnostr-org/gnostr".to_string()]),
                     ];
 
-                    let unsigned_event =
-                        UnsignedEvent::new(&self.public_key, Nip34Kind::Patch as u16, tags, patch);
-                    unsigned_event
-                        .sign(&self.secret_key)
+                    let preevent = Nip34UnsignedEvent {
+                        pubkey: self.public_key,
+                        created_at: Unixtime::now(),
+                        kind: EventKind::Patches,
+                        tags,
+                        content: patch,
+                    };
+                    Nip34Event::sign_with_private_key(preevent, &self.private_key)
                         .map_err(|e| anyhow::anyhow!(e.to_string()))?
                 };
 
@@ -405,14 +412,14 @@ impl App {
     fn republish_nip34_event(&mut self) -> Result<()> {
         if let Some(selected_index) = self.nip34_state.selected() {
             if let Some(event_to_republish) = self.nip34_events.get(selected_index).cloned() {
-                let unsigned_event = UnsignedEvent::new(
-                    &self.public_key,
-                    event_to_republish.kind,
-                    event_to_republish.tags,
-                    event_to_republish.content,
-                );
-                let new_event = unsigned_event
-                    .sign(&self.secret_key)
+                let preevent = Nip34UnsignedEvent {
+                    pubkey: self.public_key,
+                    created_at: Unixtime::now(),
+                    kind: event_to_republish.kind,
+                    tags: event_to_republish.tags,
+                    content: event_to_republish.content,
+                };
+                let new_event = Nip34Event::sign_with_private_key(preevent, &self.private_key)
                     .map_err(|e| anyhow::anyhow!(e.to_string()))?;
                 //ensure the event is pushed to all relays
                 self.nip34_events.push(new_event);
@@ -1041,13 +1048,13 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 "  "
             };
-            let kind_name = match Nip34Kind::try_from(event.kind) {
-                Ok(Nip34Kind::RepoAnnouncement) => "Repo Announcement",
-                Ok(Nip34Kind::RepoState) => "Repo State",
-                Ok(Nip34Kind::Patch) => "Patch",
-                Ok(Nip34Kind::PullRequest) => "Pull Request",
-                Ok(Nip34Kind::PullRequestUpdate) => "PR Update",
-                Ok(Nip34Kind::Issue) => "Issue",
+            let kind_name = match event.kind {
+                EventKind::Patches => "Patch",
+                EventKind::GitIssue => "Issue",
+                EventKind::Other(1630) => "Pull Request",
+                EventKind::Other(1631) => "PR Update",
+                EventKind::Other(30617) => "Repo Announcement",
+                EventKind::Other(30618) => "Repo State",
                 _ => "Unknown",
             };
 
@@ -1064,7 +1071,7 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
             let content = format!(
                 "{}[{}] {} - {}\n",
                 selected_indicator,
-                &event.id[..8],
+                &event.id.as_hex_string()[..8],
                 kind_name,
                 content_preview
             );
@@ -1128,31 +1135,31 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
                 Signature: {}\n\\
                 Content: {}\n\n\\
                 Tags:\n{}",
-                event.id,
+                event.id.as_hex_string(),
                 event.pubkey,
-                event.kind,
-                match Nip34Kind::try_from(event.kind) {
-                    Ok(Nip34Kind::RepoAnnouncement) => "Repo Announcement",
-                    Ok(Nip34Kind::RepoState) => "Repo State",
-                    Ok(Nip34Kind::Patch) => "Patch",
-                    Ok(Nip34Kind::PullRequest) => "Pull Request",
-                    Ok(Nip34Kind::PullRequestUpdate) => "PR Update",
-                    Ok(Nip34Kind::Issue) => "Issue",
+                u32::from(event.kind),
+                match event.kind {
+                    EventKind::Patches => "Patch",
+                    EventKind::GitIssue => "Issue",
+                    EventKind::Other(1630) => "Pull Request",
+                    EventKind::Other(1631) => "PR Update",
+                    EventKind::Other(30617) => "Repo Announcement",
+                    EventKind::Other(30618) => "Repo State",
                     _ => "Unknown",
                 },
-                chrono::DateTime::from_timestamp(event.created_at as i64, 0)
+                chrono::DateTime::from_timestamp(event.created_at.0, 0)
                     .map(|dt| dt.naive_local())
                     .unwrap_or_default()
                     .format("%Y-%m-%d %H:%M:%S"),
-                &event.sig[..16],
+                &event.sig.as_hex_string()[..16],
                 event.content,
                 event
                     .tags
                     .iter()
                     .map(|tag| format!(
                         "  {}: {}\n",
-                        tag.get(0).unwrap_or(&"".to_string()),
-                        tag.get(1).unwrap_or(&"".to_string())
+                        tag.0.get(0).map(|s| s.as_str()).unwrap_or(""),
+                        tag.0.get(1).map(|s| s.as_str()).unwrap_or("")
                     ))
                     .collect::<Vec<_>>()
                     .join("")
