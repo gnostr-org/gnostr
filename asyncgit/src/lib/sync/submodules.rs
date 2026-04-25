@@ -134,6 +134,7 @@ pub fn submodule_parent_info(repo_path: &RepoPath) -> Result<Option<SubmodulePar
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use std::path::Path;
 

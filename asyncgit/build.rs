@@ -4,6 +4,9 @@ use std::{
 };
 
 use anyhow::Context;
+use sha2::{Digest, Sha256};
+
+const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
 
 #[derive(Copy, Clone)]
 pub struct Paths<'a> {
@@ -33,8 +36,27 @@ fn run() -> anyhow::Result<()> {
 
     build_scss(paths).context("Failed to build CSS stylesheets")?;
     build_js(paths).context("Failed to build JS bundle")?;
+    verify_nip44_vectors(&statics_in_dir).context("Failed to verify NIP-44 test vectors")?;
 
     println!("cargo:rerun-if-changed=build.rs");
+    Ok(())
+}
+
+fn verify_nip44_vectors(manifest_dir: &Path) -> anyhow::Result<()> {
+    let vectors_path = manifest_dir.join("src/lib/types/nip44/nip44.vectors.json");
+    println!("cargo:rerun-if-changed={}", vectors_path.display());
+
+    let vectors = std::fs::read(&vectors_path).context("Failed to read NIP-44 vectors")?;
+    let actual = Sha256::digest(&vectors);
+    let actual = format!("{:x}", actual);
+
+    anyhow::ensure!(
+        actual == NIP44_VECTORS_SHA256,
+        "NIP-44 vector hash mismatch: expected {}, got {}",
+        NIP44_VECTORS_SHA256,
+        actual
+    );
+
     Ok(())
 }
 

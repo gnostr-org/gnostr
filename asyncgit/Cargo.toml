@@ -211,6 +211,7 @@ zeroize = { workspace = true }
 [build-dependencies]
 anyhow = "1.0.100"
 rsass = "0.28.0"
+sha2 = "0.10.8"
 warp = "0.3"
 
 ## [[bench]]

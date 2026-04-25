@@ -91,7 +91,7 @@ fn pad(unpadded: &str) -> Result<Vec<u8>, Error> {
     if len < 1 {
         return Err(Error::MessageIsEmpty);
     }
-    if len > 65536 - 128 {
+    if len > 0xffff {
         return Err(Error::MessageIsTooLong);
     }
 
@@ -143,7 +143,8 @@ fn encrypt_inner(
 
 /// Decrypt the base64 encrypted contents with a conversation key
 pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<String, Error> {
-    if base64_ciphertext.is_empty() {
+    let payload_len = base64_ciphertext.len();
+    if payload_len < 132 || payload_len > 87472 {
         return Err(Error::InvalidLength);
     }
     if base64_ciphertext.as_bytes()[0] == b'#' {
@@ -159,6 +160,9 @@ pub fn decrypt(conversation_key: &[u8; 32], base64_ciphertext: &str) -> Result<S
         return Err(Error::UnknownVersion);
     }
     let dlen = binary_ciphertext.len();
+    if dlen < 99 || dlen > 65603 {
+        return Err(Error::InvalidLength);
+    }
     let nonce = &binary_ciphertext[1..33];
     let mut buffer = binary_ciphertext[33..dlen - 32].to_owned();
     let mac = &binary_ciphertext[dlen - 32..dlen];

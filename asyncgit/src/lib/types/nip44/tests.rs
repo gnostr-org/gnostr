@@ -1,7 +1,9 @@
 #![allow(clippy::all)]
 #[rustfmt::skip]
+use base64::Engine;
 use crate::*;
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
+use sha2::{Digest, Sha256};
 
 use super::{calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key, Error};
 
@@ -198,19 +200,13 @@ fn test_valid_encrypt_decrypt() {
                     i
                 );
 
-                //// 4. Test decryption (safely handling null/None expected ciphertext)
-                //if let Some(ct) = ciphertext {
-                //    let computed_plaintext = decrypt(&conversation_key, ct)
-                //        .expect(&format!("Decryption failed for vector #{}", i));
-
-                //	println!("{} == {}", computed_plaintext.clone(), plaintext.clone());
-                //    // 5. Assert plaintext matches expected value
-                //    assert_eq!(
-                //        computed_plaintext, plaintext,
-                //        "Decryption does not match on ValidSec #{}",
-                //        i
-                //    );
-                //}
+                let computed_plaintext = decrypt(&conversation_key, &computed_ciphertext)
+                    .expect(&format!("Decryption failed for vector #{}", i));
+                assert_eq!(
+                    computed_plaintext, plaintext,
+                    "Decryption does not match on ValidSec #{}",
+                    i
+                );
             } else {
                 //std::process::exit(1);
             }
@@ -220,15 +216,101 @@ fn test_valid_encrypt_decrypt() {
     }
 }
 
-//TBD?
-//#[test]
-//fn test_valid_encrypt_decrypt_long_msg() {
-//}
+#[test]
+#[ignore]
+#[serial]
+fn test_valid_encrypt_decrypt_long_msg() {
+    let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
-//TBD?
-//#[test]
-//fn test_invalid_encrypt_msg_lengths() {
-//}
+    for (i, vectorobj) in json
+        .as_object()
+        .unwrap()
+        .get("v2")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("valid")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("encrypt_decrypt_long_msg")
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+    {
+        let vector = vectorobj.as_object().unwrap();
+        let conversation_key: [u8; 32] = hex::decode(vector.get("conversation_key").unwrap().as_str().unwrap())
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let nonce: [u8; 32] = hex::decode(vector.get("nonce").unwrap().as_str().unwrap())
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let pattern = vector.get("pattern").unwrap().as_str().unwrap();
+        let repeat = vector.get("repeat").unwrap().as_u64().unwrap() as usize;
+        let plaintext = pattern.repeat(repeat);
+
+        let computed_plaintext_hash = hex::encode(Sha256::digest(plaintext.as_bytes()));
+        assert_eq!(
+            computed_plaintext_hash,
+            vector.get("plaintext_sha256").unwrap().as_str().unwrap(),
+            "Plaintext hash mismatch in long vector #{}",
+            i
+        );
+
+        let payload = encrypt_inner(&conversation_key, &plaintext, Some(&nonce))
+            .expect(&format!("encrypt_inner failed for long vector #{}", i));
+        let computed_payload_hash = hex::encode(Sha256::digest(payload.as_bytes()));
+        assert_eq!(
+            computed_payload_hash,
+            vector.get("payload_sha256").unwrap().as_str().unwrap(),
+            "Payload hash mismatch in long vector #{}",
+            i
+        );
+
+        let decrypted = decrypt(&conversation_key, &payload)
+            .expect(&format!("decrypt failed for long vector #{}", i));
+        assert_eq!(decrypted, plaintext, "Decrypt mismatch in long vector #{}", i);
+    }
+}
+
+#[test]
+#[ignore]
+fn test_invalid_encrypt_msg_lengths() {
+    let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
+
+    for (i, len) in json
+        .as_object()
+        .unwrap()
+        .get("v2")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("invalid")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("encrypt_msg_lengths")
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+        .map(|(i, v)| (i, v.as_u64().unwrap() as usize))
+    {
+        let conversation_key = [0u8; 32];
+        let plaintext = if len == 0 {
+            String::new()
+        } else {
+            "a".repeat(len)
+        };
+        let err = encrypt(&conversation_key, &plaintext).unwrap_err();
+        assert_eq!(err, if len == 0 { Error::MessageIsEmpty } else { Error::MessageIsTooLong }, "Unexpected encrypt error for invalid length #{}", i);
+    }
+}
 
 //TBD?
 //#[test]
@@ -293,7 +375,7 @@ fn test_invalid_decrypt() {
         Error::InvalidLength, // Changed from InvalidPadding
         Error::InvalidLength,
         Error::InvalidLength,
-        Error::InvalidMac,
+        Error::InvalidLength,
     ];
 
     for (i, vectorobj) in json
@@ -352,6 +434,13 @@ fn test_invalid_decrypt() {
             i
         );
     }
+}
+
+#[test]
+fn test_invalid_decrypt_short_raw_payload() {
+    let payload = base64::engine::general_purpose::STANDARD.encode([2u8; 65]);
+    let err = decrypt(&[0u8; 32], &payload).unwrap_err();
+    assert_eq!(err, Error::InvalidLength);
 }
 
 #[test]
