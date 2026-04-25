@@ -46,6 +46,22 @@ check_nip44_vectors() {
   fi
 }
 
+send_chat_update() {
+  local message="$1"
+  cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "$message" >/dev/null 2>&1 || true
+}
+
+run_test_step() {
+  local test_name="$1"
+  shift
+  if "$@"; then
+    send_chat_update "$test_name successful"
+  else
+    send_chat_update "$test_name fail"
+    return 1
+  fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --workspace)
@@ -91,14 +107,14 @@ fi
 
 if [[ -n "$TEST_NAME" ]]; then
   if [[ "$RUN_IGNORED" == true ]]; then
-    cargo test --workspace --all-targets "$TEST_NAME" -- --exact --nocapture --ignored
+    run_test_step "gnostr workspace test ${TEST_NAME}" cargo test --workspace --all-targets "$TEST_NAME" -- --exact --nocapture --ignored
   else
-    cargo test --workspace --all-targets "$TEST_NAME" -- --exact --nocapture
+    run_test_step "gnostr workspace test ${TEST_NAME}" cargo test --workspace --all-targets "$TEST_NAME" -- --exact --nocapture
   fi
 else
   if [[ "$RUN_IGNORED" == true ]]; then
-    cargo test --workspace --all-targets -- --nocapture --ignored
+    run_test_step "gnostr workspace test suite" cargo test --workspace --all-targets -- --nocapture --ignored
   else
-    cargo test --workspace --all-targets -- --nocapture
+    run_test_step "gnostr workspace test suite" cargo test --workspace --all-targets -- --nocapture
   fi
 fi
