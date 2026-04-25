@@ -29,9 +29,6 @@
 
 use ureq::Agent;
 
-// TODO /// nostr_sdk bridge
-//TODO pub mod bridge;
-
 /// internal
 pub mod internal;
 
