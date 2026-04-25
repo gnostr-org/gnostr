@@ -45,12 +45,12 @@ macro_rules! define_event_kinds {
             fn from(u: u32) -> Self {
                 match u {
                     $($value => $name,)*
-                    x if (5_000..5_999).contains(&x) => JobRequest(x),
-                    x if (6_000..6_999).contains(&x) => JobResult(x),
-                    x if (9_000..9_030).contains(&x) => GroupControl(x),
-                    x if (10_000..20_000).contains(&x) => Replaceable(x),
-                    x if (20_000..30_000).contains(&x) => Ephemeral(x),
-                    x if (39_000..39_009).contains(&x) => GroupMetadata(x),
+                    x if (5_000..=5_999).contains(&x) => JobRequest(x),
+                    x if (6_000..=6_999).contains(&x) => JobResult(x),
+                    x if (9_000..=9_030).contains(&x) => GroupControl(x),
+                    x if (10_000..=19_999).contains(&x) => Replaceable(x),
+                    x if (20_000..=29_999).contains(&x) => Ephemeral(x),
+                    x if (39_000..=39_008).contains(&x) => GroupMetadata(x),
                     x => Other(x),
                 }
             }
@@ -515,6 +515,13 @@ mod test {
         assert!(!TextNote.is_replaceable());
         assert!(!Zap.is_replaceable());
         assert!(LongFormContent.is_replaceable());
+
+        assert!(EventKind::from(5_999).is_job_request());
+        assert!(EventKind::from(6_999).is_job_result());
+        assert!(matches!(EventKind::from(9_030), GroupControl(9_030)));
+        assert!(EventKind::from(19_999).is_replaceable());
+        assert!(EventKind::from(29_999).is_ephemeral());
+        assert!(matches!(EventKind::from(39_008), GroupMetadata(39_008)));
 
         assert!(!TextNote.is_ephemeral());
         assert!(Auth.is_ephemeral());
