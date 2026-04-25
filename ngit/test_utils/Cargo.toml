@@ -1,6 +1,6 @@
 [package]
 name = "test_utils"
-version = "1877.946515.466430"
+version = "1877.946519.461500"
 edition = "2021"
 
 [package.metadata.dist]
