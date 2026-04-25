@@ -125,7 +125,10 @@ impl Connect for Client {
         let blaster_relays: Vec<String> = if std::env::var("NGITTEST").is_ok() {
             vec!["ws://localhost:8057".to_string()]
         } else {
-            vec!["wss://relay.damus.io".to_string()]
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://blossom.gnostr.cloud".to_string(),
+            ]
         };
         Client {
             client: nostr_sdk_0_34_0::ClientBuilder::new()

@@ -43,9 +43,9 @@ use crate::{
         AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
         ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
         FileRevlogPopup, FuzzyFindPopup, GitnotePopup, HelpPopup, InspectChatPopup,
-        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, NotesListPopup, OptionsPopup, PullPopup,
-        PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup,
-        SubmodulesListPopup, TagCommitPopup, TagListPopup,
+        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, Nip34Popup, NotesListPopup, OptionsPopup,
+        PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
+        StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
     },
     queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
     setup_popups,
@@ -85,6 +85,7 @@ pub struct App {
     compare_commits_popup: CompareCommitsPopup,
     external_editor_popup: ExternalEditorPopup,
     gitnote_popup: GitnotePopup,
+    nip34_popup: Nip34Popup,
     notes_list_popup: NotesListPopup,
     revision_files_popup: RevisionFilesPopup,
     fuzzy_find_popup: FuzzyFindPopup,
@@ -203,6 +204,7 @@ impl App {
 
             external_editor_popup: ExternalEditorPopup::new(&env),
             gitnote_popup: GitnotePopup::new(&env),
+            nip34_popup: Nip34Popup::new(&env),
             notes_list_popup: NotesListPopup::new(&env),
             push_popup: PushPopup::new(&env),
             push_tags_popup: PushTagsPopup::new(&env),
@@ -335,6 +337,9 @@ impl App {
                     //
                     self.options_popup.show()?;
                     NeedsUpdate::ALL
+                } else if key_match(k, self.key_config.keys.open_nip34) {
+                    self.queue.push(InternalEvent::OpenPopup(StackablePopupOpen::Nip34));
+                    NeedsUpdate::ALL | NeedsUpdate::COMMANDS
                 } else {
                     NeedsUpdate::empty()
                 };
@@ -486,6 +491,7 @@ impl App {
             || self.inspect_chat_popup.any_work_pending()
             || self.inspect_commit_popup.any_work_pending()
             || self.compare_commits_popup.any_work_pending()
+            || self.nip34_popup.any_work_pending()
             || self.input.is_state_changing()
             || self.push_popup.any_work_pending()
             || self.push_tags_popup.any_work_pending()
@@ -531,6 +537,7 @@ impl App {
             //
             external_editor_popup,
             gitnote_popup,
+            nip34_popup,
             notes_list_popup,
             push_popup,
             push_tags_popup,
@@ -576,6 +583,7 @@ impl App {
             select_branch_popup,
             submodule_popup,
             tags_popup,
+            nip34_popup,
             notes_list_popup,
             reset_popup,
             create_branch_popup,
@@ -790,6 +798,9 @@ impl App {
             }
             StackablePopupOpen::NotesList => {
                 self.notes_list_popup.open()?;
+            }
+            StackablePopupOpen::Nip34 => {
+                self.nip34_popup.show()?;
             }
         }
 
@@ -1141,6 +1152,14 @@ impl App {
         res.push(
             CommandInfo::new(
                 strings::commands::options_popup(&self.key_config),
+                true,
+                !self.any_popup_visible(),
+            )
+            .order(order::NAV),
+        );
+        res.push(
+            CommandInfo::new(
+                strings::commands::nip34_popup(&self.key_config),
                 true,
                 !self.any_popup_visible(),
             )

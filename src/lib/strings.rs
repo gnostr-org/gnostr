@@ -414,6 +414,7 @@ pub mod commands {
     static CMD_GROUP_LOG: &str = "-- Log --";
     static CMD_GROUP_BRANCHES: &str = "-- Branches --";
     static CMD_GROUP_NOTES: &str = "-- Notes --";
+    static CMD_GROUP_NIP34: &str = "-- NIP-34 --";
 
     pub fn toggle_tabs(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
@@ -460,6 +461,13 @@ pub mod commands {
             ),
             "open options popup",
             CMD_GROUP_GENERAL,
+        )
+    }
+    pub fn nip34_popup(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("NIP-34 [{}]", key_config.get_hint(key_config.keys.open_nip34)),
+            "open NIP-34 popup",
+            CMD_GROUP_NIP34,
         )
     }
     pub fn help_open(key_config: &SharedKeyConfig) -> CommandText {
@@ -675,6 +683,13 @@ pub mod commands {
             ),
             "close overlay (e.g commit, help)",
             CMD_GROUP_GENERAL,
+        )
+    }
+    pub fn nip34_switch_mode() -> CommandText {
+        CommandText::new(
+            "Switch Mode [Tab]".to_string(),
+            "switch NIP-34 popup mode",
+            CMD_GROUP_NIP34,
         )
     }
     pub fn scroll_popup(key_config: &SharedKeyConfig) -> CommandText {
