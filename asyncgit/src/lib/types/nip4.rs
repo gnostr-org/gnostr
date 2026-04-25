@@ -71,3 +71,38 @@ pub fn decrypt(
 
     Ok(String::from_utf8(decrypted_bytes)?)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+    use secp256k1::{Keypair, Secp256k1};
+
+    fn test_keypair(seed: u8) -> (SecretKey, XOnlyPublicKey) {
+        let secp = Secp256k1::new();
+        let sk = SecretKey::from_slice(&[seed; 32]).unwrap();
+        let keypair = Keypair::from_secret_key(&secp, &sk);
+        let (pk, _) = XOnlyPublicKey::from_keypair(&keypair);
+        (sk, pk)
+    }
+
+    #[test]
+    fn decrypt_rejects_invalid_iv_length() {
+        let (sender_sk, sender_pk) = test_keypair(1);
+        let (recipient_sk, _) = test_keypair(2);
+        let payload = format!("{}?iv={}", BASE64.encode(b"ciphertext"), BASE64.encode([7u8; 15]));
+
+        let err = decrypt(&recipient_sk, &sender_pk, &payload).unwrap_err();
+        assert!(err.to_string().contains("Invalid IV length"));
+        let _ = sender_sk;
+    }
+
+    #[test]
+    fn decrypt_rejects_missing_iv() {
+        let (_, sender_pk) = test_keypair(1);
+        let (recipient_sk, _) = test_keypair(2);
+
+        let err = decrypt(&recipient_sk, &sender_pk, "ciphertext").unwrap_err();
+        assert!(err.to_string().contains("missing iv"));
+    }
+}
