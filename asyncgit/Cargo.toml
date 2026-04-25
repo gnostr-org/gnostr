@@ -19,21 +19,21 @@ keywords = ["git"]
 name = "gnostr_asyncgit"
 path = "src/lib/mod.rs"
 
-[[bin]]
+[[example]]
 name = "gnostr_gnit"
-path = "src/bin/gnostr_gnit.rs"
+path = "examples/gnostr_gnit.rs"
 
 [[bin]]
 name = "git-tui"
 path = "src/bin/git_tui.rs"
 
-[[bin]]
+[[example]]
 name = "gnostr_web"
-path = "src/bin/gnostr_web.rs"
+path = "examples/gnostr_web.rs"
 
-[[bin]]
+[[example]]
 name = "gnostr_nip34"
-path = "src/bin/gnostr_nip34.rs"
+path = "examples/gnostr_nip34.rs"
 
 [features]
 default = ["trace-libgit"]
