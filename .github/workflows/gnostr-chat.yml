@@ -64,8 +64,9 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Restore target
         id: cache-target-restore
@@ -74,7 +75,7 @@ jobs:
         with:
           path: |
             target
-          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Setup Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -179,7 +180,8 @@ jobs:
         if: ${{ !env.ACT && steps.cache-cargo-restore.outputs.cache-hit != 'true' }}
         with:
           path: |
-            ~/.cargo
+            ~/.cargo/registry
+            ~/.cargo/git
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
 
       - name: Save target
@@ -225,8 +227,9 @@ jobs:
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Restore target
         id: cache-target-restore
@@ -235,7 +238,7 @@ jobs:
         with:
           path: |
             target
-          key: ${{ runner.os }}-target-${{ matrix.rustup }}
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
 
       - uses: actions/checkout@v4
         with:
@@ -270,7 +273,8 @@ jobs:
         if: ${{ !env.ACT && steps.cache-cargo-restore.outputs.cache-hit != 'true' }}
         with:
           path: |
-            ~/.cargo
+            ~/.cargo/registry
+            ~/.cargo/git
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
 
       - name: Save target
