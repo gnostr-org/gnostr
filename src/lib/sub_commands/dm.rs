@@ -4,6 +4,9 @@ use tracing::{error, info};
 
 use crate::types::{Client, Error, Id, Keys, PublicKey};
 
+#[cfg(test)]
+const REAL_DM_RELAYS: &[&str] = &["wss://relay.damus.io", "wss://blossom.gnostr.cloud"];
+
 #[async_trait]
 pub trait DmClientTrait {
     async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error>;
@@ -42,6 +45,7 @@ pub async fn dm_command(
     match client.nip44_direct_message(recipient_pubkey, message).await {
         Ok(event_id) => {
             info!("Direct message sent successfully! Event ID: {}", event_id);
+            println!("Direct message event id: {}", event_id);
             Ok(())
         }
         Err(e) => {
@@ -63,6 +67,10 @@ mod dm_tests {
         ContentEncryptionAlgorithm, Keys, PrivateKey,
     };
 
+    fn log_relays(label: &str, relays: &[&str]) {
+        println!("{label} relays: {}", relays.join(", "));
+    }
+
     #[tokio::test]
     #[serial]
     async fn test_dm_command_success() {
@@ -74,12 +82,9 @@ mod dm_tests {
         let sender_keys = Keys::new(sender_privkey);
         let mut client = Client::new(&sender_keys, Options::new());
 
-        // Add a gnostr-relay
+        log_relays("test_dm_command_success", REAL_DM_RELAYS);
         client
-            .add_relays(vec![
-                "wss://relay.damus.io".to_string(),
-                "ws://localhost:8080".to_string(),
-            ])
+            .add_relays(REAL_DM_RELAYS.iter().map(|relay| relay.to_string()).collect())
             .await
             .unwrap();
 
@@ -113,12 +118,9 @@ mod dm_tests {
         let _sender_keys = Keys::new(sender_privkey);
         let mut client = Client::new(&_sender_keys, Options::new());
 
-        // Add gnostr-relays
+        log_relays("test_dm_command_success_bech32_recipient", REAL_DM_RELAYS);
         client
-            .add_relays(vec![
-                "wss://relay.damus.io".to_string(),
-                "ws://localhost:8080".to_string(),
-            ])
+            .add_relays(REAL_DM_RELAYS.iter().map(|relay| relay.to_string()).collect())
             .await
             .unwrap();
 
@@ -160,6 +162,10 @@ mod dm_tests {
         let mut client = Client::new(&sender_keys, Options::new());
 
         // Add intentional ws:// and wss:// mistakes
+        log_relays(
+            "test_dm_command_failure",
+            &["ws://relay.damus.io", "wss://localhost:8080"],
+        );
         client
             .add_relays(vec![
                 "ws://relay.damus.io".to_string(),
@@ -209,15 +215,12 @@ mod dm_tests {
         let recipient_pubkey = recipient_privkey.public_key();
         let _recipient_keys = Keys::new(recipient_privkey.clone());
 
-        // Add a dummy relay for the sender client (actual relay not needed for
-        // encryption/decryption logic)
         sender_client
-            .add_relays(vec![
-                "wss://relay.damus.io".to_string(),
-                "ws://localhost:8080".to_string(),
-            ])
+            .add_relays(REAL_DM_RELAYS.iter().map(|relay| relay.to_string()).collect())
             .await
             .unwrap();
+
+        log_relays("test_dm_command_decryption_success", REAL_DM_RELAYS);
 
         let original_message = "This is a secret message!".to_string();
 
