@@ -548,7 +548,7 @@ fn if_windows() -> bool {
 
     if target_os == "windows" {
         println!(
-            "{} may require additional configuration for vendored/openssl?",
+            "{} may require additional configuration for native TLS support?",
             target_os
         );
         println!("cargo:rustc-cfg=target_os_windows");
@@ -572,36 +572,22 @@ fn if_linux_unknown() -> bool {
 
     if target_os == "linux" && target_arch == "aarch64" {
         println!(
-            "cargo:warning=On AArch64 Linux, the `libssl-dev` package is required for this crate."
+            "cargo:warning=On AArch64 Linux, native dependencies may need to be installed manually."
         );
-        println!("cargo:warning=Please ensure you have it installed.");
-        println!("cargo:warning=For Debian/Ubuntu-based systems, use:");
-        println!("cargo:warning=  sudo apt-get update && sudo apt-get install libssl-dev");
-        println!("cargo:warning=For Fedora/CentOS/RHEL-based systems, use:");
-        println!("cargo:warning=  sudo dnf install openssl-devel"); // Package name might vary
-        println!("cargo:warning=Or:");
-        println!("cargo:warning=  sudo yum install openssl-devel"); // Older systems
-        println!("cargo:warning=For Arch Linux-based systems, use:");
-        println!("cargo:warning=  sudo pacman -S openssl"); // Development headers are usually included
+        println!("cargo:warning=Please ensure the required build tools are installed.");
 
-        // Optionally, you can try to check if the necessary libraries exist
-        // This is more reliable than trying to run package managers
-        let check_libssl = Command::new("ldconfig").arg("-p").output();
+        let pkg_config_check = Command::new("which").arg("pkg-config").output();
 
-        match check_libssl {
-            Ok(output)
-                if String::from_utf8_lossy(&output.stdout).contains("libssl.so")
-                    && String::from_utf8_lossy(&output.stdout).contains("libcrypto.so") =>
-            {
-                //println!("cargo:rustc-link-lib=dylib=ssl");
-                //println!("cargo:rustc-link-lib=dylib=crypto");
+        match pkg_config_check {
+            Ok(output) if output.status.success() => {
+                println!(
+                    "cargo:warning=Found `pkg-config` in your PATH."
+                );
             }
             _ => {
                 println!(
-                    "cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly."
+                    "cargo:warning=`pkg-config` not found in your PATH. Ensure it is installed and accessible."
                 );
-                // You might choose to fail the build here if it's strictly
-                // necessary std::process::exit(1);
             }
         }
         true
