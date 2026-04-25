@@ -7,10 +7,13 @@ use std::{
 use git2::Oid;
 use serde::{Deserialize, Serialize};
 
-use super::{Error, EventKind, EventV3, NAddr, PreEventV3, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl};
+use super::{Error, EventKind, EventV3, Id, NAddr, PreEventV3, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl};
 
 pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
 pub const REPO_STATE_KIND: u32 = 30618;
+pub const PULL_REQUEST_KIND: u32 = 1618;
+pub const PULL_REQUEST_UPDATE_KIND: u32 = 1619;
+pub const USER_GRASP_LIST_KIND: u32 = 10317;
 
 pub type Nip34Kind = EventKind;
 pub type Nip34Event = EventV3;
@@ -43,6 +46,90 @@ fn root_commit_tag(root_commit: &str) -> Result<TagV3, Error> {
         root_commit.to_string(),
         "euc".to_string(),
     ]))
+}
+
+pub fn status_kinds() -> Vec<EventKind> {
+    vec![
+        EventKind::GitStatusOpen,
+        EventKind::GitStatusApplied,
+        EventKind::GitStatusClosed,
+        EventKind::GitStatusDraft,
+    ]
+}
+
+pub fn tag_value(event: &EventV3, tag_name: &str) -> Result<String, Error> {
+    event
+        .tags
+        .iter()
+        .find(|tag| tag.tagname() == tag_name)
+        .map(|tag| tag.value().to_string())
+        .ok_or(Error::TagMismatch)
+}
+
+pub fn get_commit_id_from_patch(event: &EventV3) -> Result<String, Error> {
+    if let Ok(value) = tag_value(event, "commit") {
+        return Ok(value);
+    }
+
+    if event.content.starts_with("From ") && event.content.len() > 45 {
+        return Ok(event.content[5..45].to_string());
+    }
+
+    Err(Error::InvalidOperation)
+}
+
+pub fn event_is_patch_set_root(event: &EventV3) -> bool {
+    event.kind == EventKind::Patches
+        && event
+            .tags
+            .iter()
+            .any(|tag| tag.tagname() == "e" && tag.marker() == "root")
+}
+
+pub fn event_is_revision_root(event: &EventV3) -> bool {
+    (event.kind == EventKind::Patches
+        && event.tags.iter().any(|tag| {
+            tag.tagname() == "e"
+                && matches!(tag.marker(), "revision-root" | "root-revision")
+        }))
+        || (event.kind == EventKind::from(PULL_REQUEST_KIND)
+            && event.tags.iter().any(|tag| tag.tagname() == "e"))
+}
+
+pub fn patch_supports_commit_ids(event: &EventV3) -> bool {
+    if event.kind != EventKind::Patches {
+        return false;
+    }
+
+    if event
+        .tags
+        .iter()
+        .any(|tag| tag.tagname() == "commit-pgp-sig")
+    {
+        return true;
+    }
+
+    if event
+        .tags
+        .iter()
+        .any(|tag| tag.tagname() == "parent-commit")
+    {
+        return true;
+    }
+
+    event.content.starts_with("From ") && event.content.len() > 45
+}
+
+pub fn event_is_valid_pr_or_pr_update(event: &EventV3) -> bool {
+    [PULL_REQUEST_KIND, PULL_REQUEST_UPDATE_KIND]
+        .iter()
+        .map(|kind| EventKind::from(*kind))
+        .any(|kind| kind == event.kind)
+        && event
+            .tags
+            .iter()
+            .any(|tag| tag.tagname() == "c" && git2::Oid::from_str(tag.value()).is_ok())
+        && event.tags.iter().any(|tag| tag.tagname() == "clone")
 }
 
 /// Repo announcement metadata.
@@ -438,5 +525,58 @@ mod tests {
             RepoRef::try_from((event, None)),
             Err(Error::WrongEventKind)
         ));
+    }
+
+    #[test]
+    fn patch_helpers_work() {
+        let mut event = EventV3::new_dummy();
+        event.kind = EventKind::Patches;
+        event.content = "From 0123456789abcdef0123456789abcdef01234567 Mon Sep 17 00:00:00 2001".to_string();
+        event.tags = vec![
+            TagV3::new_event(
+                Id::try_from_hex_string(
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                )
+                .unwrap(),
+                None,
+                Some("root".to_string()),
+            ),
+            TagV3::new_tag("commit", "abcdef1234567890abcdef1234567890abcdef12"),
+            TagV3::new_tag("parent-commit", "fedcba9876543210fedcba9876543210fedcba98"),
+            TagV3::new_tag("c", "0123456789abcdef0123456789abcdef01234567"),
+            TagV3::new_tag("clone", "https://example.com/repo.git"),
+        ];
+
+        assert_eq!(
+            tag_value(&event, "commit").unwrap(),
+            "abcdef1234567890abcdef1234567890abcdef12"
+        );
+        assert_eq!(
+            get_commit_id_from_patch(&event).unwrap(),
+            "abcdef1234567890abcdef1234567890abcdef12"
+        );
+        assert!(patch_supports_commit_ids(&event));
+        assert!(event_is_patch_set_root(&event));
+        assert_eq!(status_kinds().len(), 4);
+
+        let mut revision_event = EventV3::new_dummy();
+        revision_event.kind = EventKind::Patches;
+        revision_event.tags = vec![TagV3::new_event(
+            Id::try_from_hex_string(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            )
+            .unwrap(),
+            None,
+            Some("revision-root".to_string()),
+        )];
+        assert!(event_is_revision_root(&revision_event));
+
+        let mut pr_event = EventV3::new_dummy();
+        pr_event.kind = EventKind::from(PULL_REQUEST_KIND);
+        pr_event.tags = vec![
+            TagV3::new_tag("c", "0123456789abcdef0123456789abcdef01234567"),
+            TagV3::new_tag("clone", "https://example.com/repo.git"),
+        ];
+        assert!(event_is_valid_pr_or_pr_update(&pr_event));
     }
 }
