@@ -28,3 +28,4 @@ cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_i
 cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking -- --nocapture
 cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg -- --ignored --nocapture
 cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths -- --ignored --nocapture
+cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions -- --nocapture
