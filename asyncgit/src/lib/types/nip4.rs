@@ -1,5 +1,6 @@
 use aes::{cipher::block_padding::Pkcs7, Aes256};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use anyhow::anyhow;
 use cbc::{
     cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit},
     Decryptor, Encryptor,
@@ -53,6 +54,9 @@ pub fn decrypt(
         .ok_or_else(|| anyhow::anyhow!("Invalid encrypted content format: missing iv"))?;
 
     let iv = BASE64.decode(iv_base64)?;
+    if iv.len() != 16 {
+        return Err(anyhow!("Invalid IV length"));
+    }
     let encrypted_bytes = BASE64.decode(content_base64)?;
 
     let _secp = Secp256k1::new();
