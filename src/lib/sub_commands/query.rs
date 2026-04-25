@@ -34,15 +34,16 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     let query_string = to_string(&q)?;
     debug!("{}", query_string);
 
-    let relays = if let Some(relay_str) = &args.relay {
-        debug!("Using specified relay: {}", relay_str);
-        vec![Url::parse(relay_str)?]
-    } else {
+    let relays = if args.relay.is_empty() {
         debug!("Using bootstrap relays.");
         crate::crawler::bootstrap_relays()
             .iter()
             .filter_map(|s| Url::parse(s).ok())
             .collect()
+    } else {
+        let relays = parse_relays(&args.relay)?;
+        debug!("Using specified relays: {:?}", relays);
+        relays
     };
     if relays.is_empty() {
         return Err(anyhow!("No valid relay URLs available"));
@@ -152,6 +153,16 @@ fn build_filter_map(
     Ok((filt, limit_check))
 }
 
+fn parse_relays(relay_args: &[String]) -> anyhow::Result<Vec<Url>> {
+    let mut relays = Vec::new();
+    for relay_arg in relay_args {
+        for relay in relay_arg.split(',').map(str::trim).filter(|relay| !relay.is_empty()) {
+            relays.push(Url::parse(relay)?);
+        }
+    }
+    Ok(relays)
+}
+
 #[cfg(test)]
 mod tests {
     use clap::{Parser, Subcommand};
@@ -185,8 +196,31 @@ mod tests {
     // Helper function to launch a query with a specific relay
     async fn launch_with_relay(args: &QuerySubCommand, relay_url: &str) -> anyhow::Result<()> {
         let mut modified_args = args.clone();
-        modified_args.relay = Some(relay_url.to_string());
+        modified_args.relay = vec![relay_url.to_string()];
         launch(&modified_args).await
+    }
+
+    #[test]
+    fn test_parse_relay_flags_and_csv() -> anyhow::Result<()> {
+        let args = create_query_subcommand(&[
+            "-r",
+            "wss://relay.damus.io",
+            "-r",
+            "wss://blossom.gnostr.cloud",
+            "-r",
+            "wss://nos.lol,wss://relay.nos.social",
+        ]);
+
+        assert_eq!(
+            args.relay,
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://blossom.gnostr.cloud".to_string(),
+                "wss://nos.lol".to_string(),
+                "wss://relay.nos.social".to_string(),
+            ]
+        );
+        Ok(())
     }
 
     #[test]
