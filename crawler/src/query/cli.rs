@@ -1,6 +1,7 @@
-use clap::{Arg, ArgMatches, Command};
-pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
-    let matches = Command::new("gnostr-query")
+use clap::{Arg, ArgAction, ArgMatches, Command};
+
+fn command() -> Command {
+    Command::new("gnostr-query")
         .about("Construct nostr queries and send them over a websocket")
         .arg(
             Arg::new("authors")
@@ -60,14 +61,48 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .short('r')
                 .long("relay")
                 .required(false)
-                //.help("-r wss://relay.damus.io")
-                .default_value("wss://relay.damus.io"),
+                .value_delimiter(',')
+                .action(ArgAction::Append),
         )
-        .arg(
-            Arg::new("search").short('s').long("search").required(false), //.help("-r wss://relay.damus.io")
-                                                                          //.default_value("gnostr"),
-        )
-        .get_matches();
+        .arg(Arg::new("search").short('s').long("search").required(false))
+}
+
+pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
+    let matches = command().get_matches();
 
     Ok(matches)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::command;
+
+    #[test]
+    fn parses_multiple_relays_and_csv_values() {
+        let matches = command().get_matches_from([
+            "gnostr-query",
+            "-r",
+            "wss://relay.damus.io",
+            "-r",
+            "wss://blossom.gnostr.cloud",
+            "-r",
+            "wss://nos.lol,wss://relay.nos.social",
+        ]);
+
+        let relays: Vec<String> = matches
+            .get_many::<String>("relay")
+            .expect("relay values")
+            .cloned()
+            .collect();
+
+        assert_eq!(
+            relays,
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://blossom.gnostr.cloud".to_string(),
+                "wss://nos.lol".to_string(),
+                "wss://relay.nos.social".to_string(),
+            ]
+        );
+    }
 }
