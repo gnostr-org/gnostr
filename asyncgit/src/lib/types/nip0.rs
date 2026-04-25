@@ -69,12 +69,28 @@ pub async fn verify(public_key: &XOnlyPublicKey, nip05_identifier: &str) -> Resu
     let name = parts.next();
     let domain = parts.next();
 
-    if name.is_none() || domain.is_none() {
+    if name.is_none() || domain.is_none() || parts.next().is_some() {
         return Err(anyhow!("Invalid NIP-05 identifier format"));
     }
 
     let name = name.unwrap();
     let domain = domain.unwrap();
+
+    if name.is_empty()
+        || !name
+            .chars()
+            .all(|c| matches!(c, 'a'..='z' | '0'..='9' | '-' | '_' | '.'))
+    {
+        return Err(anyhow!("Invalid NIP-05 local-part"));
+    }
+
+    if domain.is_empty()
+        || domain
+            .chars()
+            .any(|c| matches!(c, '/' | '?' | '#' | '\\' | ' '))
+    {
+        return Err(anyhow!("Invalid NIP-05 domain"));
+    }
 
     let url = format!("https://{}/.well-known/nostr.json?name={}", domain, name);
 
@@ -87,4 +103,25 @@ pub async fn verify(public_key: &XOnlyPublicKey, nip05_identifier: &str) -> Resu
     }
 
     Ok(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_multiple_at_signs() {
+        let pk = XOnlyPublicKey::from_slice(&[2u8; 32]).unwrap();
+        let err = futures::executor::block_on(verify(&pk, "bob@example.com@evil.com"))
+            .expect_err("identifier should be rejected before fetch");
+        assert!(err.to_string().contains("Invalid NIP-05 identifier format"));
+    }
+
+    #[test]
+    fn rejects_invalid_local_part_chars() {
+        let pk = XOnlyPublicKey::from_slice(&[2u8; 32]).unwrap();
+        let err = futures::executor::block_on(verify(&pk, "Bob@example.com"))
+            .expect_err("uppercase local-part should be rejected");
+        assert!(err.to_string().contains("Invalid NIP-05 local-part"));
+    }
 }
