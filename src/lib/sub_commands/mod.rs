@@ -22,7 +22,6 @@ pub mod list;
 pub mod list_events;
 pub mod login;
 pub mod mute_publickey;
-pub mod ngit;
 pub mod nip34;
 pub mod note;
 pub mod privkey_to_bech32;
