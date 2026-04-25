@@ -662,6 +662,59 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn repo_announcement_event_matches_ngit() {
+        let private_key = PrivateKey::mock();
+        let trusted_maintainer = private_key.public_key();
+        let trusted_maintainer_hex = trusted_maintainer.as_hex_string();
+        let ngit_trusted_maintainer = nostr::PublicKey::from_str(&trusted_maintainer_hex).unwrap();
+
+        let async_repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+        let async_event = async_repo_ref.to_event(&private_key).unwrap();
+
+        let ngit_repo_ref = ngit::repo_ref::RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![nostr_sdk::RelayUrl::parse("wss://relay.damus.io").unwrap()],
+            blossoms: vec![],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![ngit_trusted_maintainer.clone()],
+            trusted_maintainer: ngit_trusted_maintainer,
+            maintainers_without_annoucnement: None,
+            events: HashMap::new(),
+            nostr_git_url: None,
+        };
+        let ngit_signer: Arc<dyn nostr_sdk::NostrSigner> = Arc::new(nostr_sdk::Keys::generate());
+        let ngit_event = ngit_repo_ref.to_event(&ngit_signer).await.unwrap();
+
+        let async_tags: Vec<Vec<String>> = async_event.tags.iter().map(|tag| tag.0.clone()).collect();
+        let ngit_tags: Vec<Vec<String>> = ngit_event
+            .tags
+            .iter()
+            .map(|tag| tag.as_slice().iter().cloned().collect())
+            .collect();
+
+        assert_eq!(format!("{:?}", async_event.kind), format!("{:?}", ngit_event.kind));
+        assert_eq!(async_event.content, ngit_event.content);
+        assert_eq!(async_tags, ngit_tags);
+    }
+
+    #[tokio::test]
     async fn repo_state_parsing_matches_ngit() {
         let private_key = PrivateKey::mock();
         let mut state = HashMap::new();
