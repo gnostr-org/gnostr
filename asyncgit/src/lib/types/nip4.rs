@@ -78,12 +78,22 @@ mod tests {
     use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
     use secp256k1::{Keypair, Secp256k1};
 
+    use crate::{
+        default_gnostr_private_key,
+        types::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
+        types::ContentEncryptionAlgorithm,
+    };
+
     fn test_keypair(seed: u8) -> (SecretKey, XOnlyPublicKey) {
         let secp = Secp256k1::new();
         let sk = SecretKey::from_slice(&[seed; 32]).unwrap();
         let keypair = Keypair::from_secret_key(&secp, &sk);
         let (pk, _) = XOnlyPublicKey::from_keypair(&keypair);
         (sk, pk)
+    }
+
+    fn test_private_key(seed: u8) -> PrivateKey {
+        PrivateKey(SecretKey::from_slice(&[seed; 32]).unwrap(), KeySecurity::Weak)
     }
 
     #[test]
@@ -104,5 +114,52 @@ mod tests {
 
         let err = decrypt(&recipient_sk, &sender_pk, "ciphertext").unwrap_err();
         assert!(err.to_string().contains("missing iv"));
+    }
+
+    #[test]
+    fn encrypt_and_decrypt_real_dm_events_in_both_directions() {
+        let sender = PrivateKey(default_gnostr_private_key(), KeySecurity::Weak);
+        let recipient = test_private_key(2);
+        let sender_pubkey = sender.public_key();
+        let recipient_pubkey = recipient.public_key();
+
+        let outbound_message = "hello from asyncgit";
+        let outbound_ciphertext = sender
+            .encrypt(
+                &recipient_pubkey,
+                outbound_message,
+                ContentEncryptionAlgorithm::Nip04,
+            )
+            .unwrap();
+        let outbound_event = EventBuilder::new(
+            EventKind::EncryptedDirectMessage,
+            outbound_ciphertext,
+            vec![Tag::new_pubkey(recipient_pubkey, None, None)],
+        )
+        .to_event(&sender)
+        .unwrap();
+        outbound_event.verify(None).unwrap();
+        assert_eq!(outbound_event.pubkey, sender_pubkey);
+        assert_eq!(outbound_event.kind, EventKind::EncryptedDirectMessage);
+        assert_eq!(recipient.decrypt(&sender_pubkey, &outbound_event.content).unwrap(), outbound_message);
+
+        let return_message = "and back again";
+        let return_ciphertext = recipient
+            .encrypt(
+                &sender_pubkey,
+                return_message,
+                ContentEncryptionAlgorithm::Nip04,
+            )
+            .unwrap();
+        let return_event = EventBuilder::new(
+            EventKind::EncryptedDirectMessage,
+            return_ciphertext,
+            vec![Tag::new_pubkey(sender_pubkey, None, None)],
+        )
+        .to_event(&recipient)
+        .unwrap();
+        return_event.verify(None).unwrap();
+        assert_eq!(return_event.pubkey, recipient_pubkey);
+        assert_eq!(sender.decrypt(&recipient_pubkey, &return_event.content).unwrap(), return_message);
     }
 }
