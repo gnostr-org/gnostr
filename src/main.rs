@@ -23,7 +23,7 @@ fn install_rustls_crypto_provider() {
 async fn main() -> anyhow::Result<()> {
     install_rustls_crypto_provider();
     #[cfg(debug_assertions)]
-    if let Err(err) = sub_commands::chat::oneshot("gnostr-dev", "gnostr main started").await {
+    if let Err(err) = gnostr::p2p::chat::oneshot("gnostr-dev", "gnostr main started").await {
         eprintln!("Failed to send debug startup chat: {err}");
     }
     unsafe { env::set_var("GNOSTR_GITDIR", "") };
