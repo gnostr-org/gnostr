@@ -4,6 +4,23 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+TEST_FLAGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --no-capture)
+      TEST_FLAGS+=(--nocapture)
+      ;;
+    --ignored)
+      TEST_FLAGS+=(--ignored)
+      ;;
+    *)
+      echo "Unsupported flag: $1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
 VECTOR_FILE="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
 EXPECTED_VECTOR_SHA256="269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040"
 if command -v shasum >/dev/null 2>&1; then
@@ -22,10 +39,10 @@ fi
 
 bash ./scripts/asyncgit-tests.sh
 
-cargo test -p gnostr-asyncgit --lib types::event_kind::test::test_replaceable_ephemeral -- --nocapture
-cargo test -p gnostr-asyncgit --lib types::naddr::test::test_short_tlv_errors_instead_of_panicking -- --nocapture
-cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_instead_of_panicking -- --nocapture
-cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking -- --nocapture
-cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg -- --ignored --nocapture
-cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths -- --ignored --nocapture
-cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions -- --nocapture
+cargo test -p gnostr-asyncgit --lib types::event_kind::test::test_replaceable_ephemeral -- --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::naddr::test::test_short_tlv_errors_instead_of_panicking -- --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_instead_of_panicking -- --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking -- --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg -- --ignored --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths -- --ignored --nocapture "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions -- --nocapture "${TEST_FLAGS[@]}"
