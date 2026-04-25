@@ -266,29 +266,30 @@ impl Client {
         recipient_pubkey: PublicKey,
         content: String,
     ) -> Result<Id, Error> {
-        // Use the proper NIP-44 v2 encryption provided by PrivateKey
-        let encrypted_content = self.keys.secret_key()?.encrypt(
+        let direct_message_event =
+            self.build_nip44_direct_message_event(recipient_pubkey, content)?;
+        self.send_event(direct_message_event).await
+    }
+
+    fn build_nip44_direct_message_event(
+        &self,
+        recipient_pubkey: PublicKey,
+        content: String,
+    ) -> Result<Event, Error> {
+        let sender = self.keys.secret_key()?;
+        let encrypted_content = sender.encrypt(
             &recipient_pubkey,
             &content,
             ContentEncryptionAlgorithm::Nip44v2,
         )?;
 
-        // 5. Create EventKind::EncryptedDirectMessage (kind 4) event
-        let direct_message_event = EventBuilder::new(
+        EventBuilder::new(
             EventKind::EncryptedDirectMessage,
             encrypted_content,
             vec![Tag::new_pubkey(recipient_pubkey, None, None)],
         )
-        .to_event(
-            &self
-                .keys
-                .secret_key()
-                .map_err(|e| Error::Custom(e.into()))?,
-        )
-        .map_err(|e| Error::Custom(e.into()))?;
-
-        // 6. Send the event
-        self.send_event(direct_message_event).await
+        .to_event(&sender)
+        .map_err(|e| Error::Custom(e.into()))
     }
 
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
@@ -358,5 +359,43 @@ impl std::fmt::Display for Client {
             self.keys.public_key().as_hex_string(),
             self.relays.len()
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_private_key(seed: u8) -> crate::types::PrivateKey {
+        crate::types::PrivateKey(
+            secp256k1::SecretKey::from_slice(&[seed; 32]).unwrap(),
+            crate::types::KeySecurity::Weak,
+        )
+    }
+
+    #[test]
+    fn build_nip44_direct_message_event_uses_real_keys_and_recipient_tag() {
+        let sender =
+            crate::types::PrivateKey(crate::default_gnostr_private_key(), crate::types::KeySecurity::Weak);
+        let recipient = test_private_key(2);
+        let client = Client::new(&Keys::new(sender.clone()), Options::new());
+
+        let content = "hello from asyncgit";
+        let event = client
+            .build_nip44_direct_message_event(recipient.public_key(), content.to_string())
+            .unwrap();
+
+        println!("direct message event id: {}", event.id);
+        assert_eq!(event.kind, EventKind::EncryptedDirectMessage);
+        assert_eq!(event.pubkey, sender.public_key());
+        assert_eq!(event.tags.len(), 1);
+        assert_eq!(event.tags[0].tagname(), "p");
+        assert_eq!(event.tags[0].parse_pubkey().unwrap().0, recipient.public_key());
+        assert_eq!(
+            recipient
+                .decrypt(&sender.public_key(), &event.content)
+                .unwrap(),
+            content
+        );
     }
 }
