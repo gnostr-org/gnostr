@@ -1,4 +1,4 @@
-use clap::{Arg, ArgMatches, Args, Command};
+use clap::{Arg, ArgAction, ArgMatches, Args, Command};
 
 use super::ConfigBuilder;
 
@@ -63,7 +63,8 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
                 .short('r')
                 .long("relay")
                 .required(false)
-                .default_value("wss://relay.damus.io"),
+                .value_delimiter(',')
+                .action(ArgAction::Append),
         )
         .arg(Arg::new("search").short('s').long("search").required(false))
         .get_matches();
@@ -74,7 +75,8 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
 #[derive(Args, Clone, Debug, Default)]
 pub struct QuerySubCommand {
     #[arg(short, long)]
-    pub relay: Option<String>,
+    #[arg(short = 'r', long, value_delimiter = ',', action = ArgAction::Append)]
+    pub relay: Vec<String>,
     #[arg(short, long)]
     pub authors: Option<String>,
     #[arg(short, long)]
@@ -103,8 +105,8 @@ impl QuerySubCommand {
     pub fn into_config_builder(self) -> ConfigBuilder {
         let mut builder = ConfigBuilder::default();
 
-        if let Some(relay) = self.relay {
-            builder = builder.host(&relay);
+        if let Some(relay) = self.relay.first() {
+            builder = builder.host(relay);
         }
         if let Some(authors) = self.authors {
             builder = builder.authors(&authors);
