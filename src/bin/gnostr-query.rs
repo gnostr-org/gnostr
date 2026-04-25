@@ -112,17 +112,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //debug!("debug:query_string:\n{:?}", query_string);
     //println!("println :query_string:\n{:?}", query_string);
 
-    let relays = if let Some(relay_str) = matches.get_one::<String>("relay") {
-        //log::debug!("117:log:using relay: {}", relay_str);
-        //println!("118:print:using relay: {}", relay_str);
-        vec![Url::parse(relay_str)?]
-    } else {
-        //log::debug!("log:using bootstrap relays");
-        //println!("print:using bootstrap relays");
+    let relay_args: Vec<String> = matches
+        .get_many::<String>("relay")
+        .map(|values| values.cloned().collect())
+        .unwrap_or_default();
+    let relays = if relay_args.is_empty() {
         BOOTSTRAP_RELAYS
             .iter()
             .filter_map(|s| Url::parse(s).ok())
             .collect()
+    } else {
+        relay_args
+            .iter()
+            .flat_map(|relay_arg| relay_arg.split(','))
+            .map(str::trim)
+            .filter(|relay| !relay.is_empty())
+            .map(Url::parse)
+            .collect::<Result<Vec<_>, _>>()?
     };
 
     let vec_result = gnostr::query::send(query_string.clone(), relays, Some(limit_check)).await?;
