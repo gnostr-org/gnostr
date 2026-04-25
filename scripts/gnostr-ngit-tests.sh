@@ -5,6 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 TEST_FLAGS=()
+FEATURES=""
+ALL_FEATURES=false
+NO_DEFAULT_FEATURES=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --nocapture)
@@ -12,6 +15,26 @@ while [[ $# -gt 0 ]]; do
       ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
+      ;;
+    --all-features)
+      ALL_FEATURES=true
+      ;;
+    --no-default-features)
+      NO_DEFAULT_FEATURES=true
+      ;;
+    --features)
+      shift
+      [[ $# -gt 0 ]] || { echo "--features requires a value" >&2; exit 1; }
+      if [[ -n "$FEATURES" ]]; then
+        FEATURES+=","
+      fi
+      FEATURES+="$1"
+      ;;
+    --features=*)
+      if [[ -n "$FEATURES" ]]; then
+        FEATURES+=","
+      fi
+      FEATURES+="${1#*=}"
       ;;
     *)
       echo "Unsupported flag: $1" >&2
@@ -21,8 +44,24 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-  cargo test -p gnostr-ngit --lib --features nostr -- "${TEST_FLAGS[@]}"
+declare -a CARGO_FLAGS=(test -p gnostr-ngit --lib)
+if [[ "$ALL_FEATURES" == true ]]; then
+  CARGO_FLAGS+=(--all-features)
+elif [[ "$NO_DEFAULT_FEATURES" == true ]]; then
+  CARGO_FLAGS+=(--no-default-features)
+  if [[ -n "$FEATURES" ]]; then
+    CARGO_FLAGS+=(--features "$FEATURES")
+  fi
 else
-  cargo test -p gnostr-ngit --lib --features nostr
+  if [[ -n "$FEATURES" ]]; then
+    CARGO_FLAGS+=(--features "$FEATURES")
+  else
+    CARGO_FLAGS+=(--features nostr)
+  fi
+fi
+
+if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+  cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
+else
+  cargo "${CARGO_FLAGS[@]}"
 fi
