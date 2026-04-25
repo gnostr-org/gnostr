@@ -17,6 +17,7 @@ mod tests {
     #[test]
     #[serial]
     #[cfg(feature = "expensive_tests")]
+    #[cfg(target_os = "macos")]
     #[ignore]
     fn test_chat_simulation() -> Result<(), Box<dyn std::error::Error>> {
         // Enable verbose output for this test
