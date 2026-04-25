@@ -138,6 +138,7 @@ mod tests {
         )
         .to_event(&sender)
         .unwrap();
+        println!("outbound dm event id: {}", outbound_event.id);
         outbound_event.verify(None).unwrap();
         assert_eq!(outbound_event.pubkey, sender_pubkey);
         assert_eq!(outbound_event.kind, EventKind::EncryptedDirectMessage);
@@ -158,6 +159,7 @@ mod tests {
         )
         .to_event(&recipient)
         .unwrap();
+        println!("return dm event id: {}", return_event.id);
         return_event.verify(None).unwrap();
         assert_eq!(return_event.pubkey, recipient_pubkey);
         assert_eq!(sender.decrypt(&recipient_pubkey, &return_event.content).unwrap(), return_message);
