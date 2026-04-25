@@ -72,6 +72,24 @@ const TLV_TYPE_RELAY: u8 = 1;
 const TLV_TYPE_AUTHOR: u8 = 2;
 const TLV_TYPE_KIND: u8 = 3;
 
+fn read_tlv<'a>(data: &'a [u8], cursor: &mut usize) -> Result<(u8, &'a [u8]), Error> {
+    if *cursor + 2 > data.len() {
+        return Err(Error::InvalidNip19Data);
+    }
+
+    let ty = data[*cursor];
+    let len = data[*cursor + 1] as usize;
+    *cursor += 2;
+
+    if *cursor + len > data.len() {
+        return Err(Error::InvalidNip19Data);
+    }
+
+    let raw = &data[*cursor..*cursor + len];
+    *cursor += len;
+    Ok((ty, raw))
+}
+
 impl Nip19 {
     /// Decode a bech32 encoded NIP-19 string
     pub fn decode(s: &str) -> Result<Self, Error> {
@@ -93,13 +111,7 @@ impl Nip19 {
                 let mut relays = Vec::new();
                 let mut cursor = 0;
                 while cursor < data.len() {
-                    let t = data[cursor];
-                    cursor += 1;
-                    let l = data[cursor] as usize;
-                    cursor += 1;
-                    let v = &data[cursor..cursor + l];
-                    cursor += l;
-
+                    let (t, v) = read_tlv(&data, &mut cursor)?;
                     match t {
                         TLV_TYPE_SPECIAL => public_key = Some(PublicKey::from_bytes(v, true)?),
                         TLV_TYPE_RELAY => {
@@ -118,13 +130,7 @@ impl Nip19 {
                 let mut relays = Vec::new();
                 let mut cursor = 0;
                 while cursor < data.len() {
-                    let t = data[cursor];
-                    cursor += 1;
-                    let l = data[cursor] as usize;
-                    cursor += 1;
-                    let v = &data[cursor..cursor + l];
-                    cursor += l;
-
+                    let (t, v) = read_tlv(&data, &mut cursor)?;
                     match t {
                         TLV_TYPE_SPECIAL => {
                             event_id = Some(Id::try_from_bytes(v).map_err(|_| Error::InvalidId)?)
@@ -158,13 +164,7 @@ impl Nip19 {
                 let mut relays = Vec::new();
                 let mut cursor = 0;
                 while cursor < data.len() {
-                    let t = data[cursor];
-                    cursor += 1;
-                    let l = data[cursor] as usize;
-                    cursor += 1;
-                    let v = &data[cursor..cursor + l];
-                    cursor += l;
-
+                    let (t, v) = read_tlv(&data, &mut cursor)?;
                     match t {
                         TLV_TYPE_SPECIAL => identifier = Some(String::from_utf8(v.to_vec())?),
                         TLV_TYPE_RELAY => {
@@ -284,5 +284,19 @@ impl Nip19 {
                     .map_err(|e| e.into())
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_short_tlv_errors_instead_of_panicking() {
+        let mut cursor = 0;
+        assert!(matches!(
+            read_tlv(&[0], &mut cursor),
+            Err(Error::InvalidNip19Data)
+        ));
     }
 }
