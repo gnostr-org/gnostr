@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 LIST_ONLY=false
 TEST_NAME=""
-RUN_IGNORED=false
+TEST_FLAGS=()
 
 usage() {
   cat <<'EOF'
@@ -17,11 +17,13 @@ Options:
   --list        List all workspace tests
   --test NAME   Run one exact test by name
   --ignored     Run ignored tests
+  --nocapture   Print test output
   --help        Show this help
 
 Examples:
   ./scripts/gnostr-tests.sh --list
   ./scripts/gnostr-tests.sh --test sub_commands::dm::dm_tests::test_dm_command_success
+  ./scripts/gnostr-tests.sh --ignored
   ./scripts/gnostr-tests.sh --workspace --ignored
 EOF
 }
@@ -78,8 +80,11 @@ while [[ $# -gt 0 ]]; do
       fi
       TEST_NAME="$1"
       ;;
+    --nocapture)
+      TEST_FLAGS+=(--nocapture)
+      ;;
     --ignored)
-      RUN_IGNORED=true
+      TEST_FLAGS+=(--ignored)
       ;;
     --help|-h)
       usage
@@ -106,15 +111,17 @@ if [[ "$LIST_ONLY" == true ]]; then
 fi
 
 if [[ -n "$TEST_NAME" ]]; then
-  if [[ "$RUN_IGNORED" == true ]]; then
-    run_test_step "gnostr workspace test ${TEST_NAME}" cargo test --workspace --all-targets "$TEST_NAME" -- --exact --nocapture --ignored
+  if cargo test --workspace --all-targets "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}"; then
+    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} successful" >/dev/null 2>&1 || true
   else
-    run_test_step "gnostr workspace test ${TEST_NAME}" cargo test --workspace --all-targets "$TEST_NAME" -- --exact --nocapture
+    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} fail" >/dev/null 2>&1 || true
+    exit 1
   fi
 else
-  if [[ "$RUN_IGNORED" == true ]]; then
-    run_test_step "gnostr workspace test suite" cargo test --workspace --all-targets -- --nocapture --ignored
+  if cargo test --workspace --all-targets -- "${TEST_FLAGS[@]}"; then
+    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true
   else
-    run_test_step "gnostr workspace test suite" cargo test --workspace --all-targets -- --nocapture
+    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite fail" >/dev/null 2>&1 || true
+    exit 1
   fi
 fi
