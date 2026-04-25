@@ -361,6 +361,18 @@ jobs:
           cargo run --bin gnostr -- query --help
           bash ./scripts/gnostr-nested-query.sh && echo "✅"
 
+      - name: 🚀 gnostr asyncgit script tests
+        if: matrix.toolchain == 'stable'
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-asyncgit-tests.sh --nocapture
+
+      - name: 🚀 gnostr ngit script tests
+        if: matrix.toolchain == 'stable'
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-ngit-tests.sh --nocapture
+
       # - name: 🚀 cargo test -j8
       #   #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
       #   shell: bash
