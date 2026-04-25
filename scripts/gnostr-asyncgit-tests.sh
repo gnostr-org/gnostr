@@ -39,10 +39,25 @@ fi
 
 bash ./scripts/asyncgit-tests.sh
 
-cargo test -p gnostr-asyncgit --lib types::event_kind::test::test_replaceable_ephemeral --  "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::naddr::test::test_short_tlv_errors_instead_of_panicking --  "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_instead_of_panicking --  "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking --  "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg --   "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths --   "${TEST_FLAGS[@]}"
-cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions --  "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::event_kind::test::test_replaceable_ephemeral \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::naddr::test::test_short_tlv_errors_instead_of_panicking \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nevent::test::test_short_tlv_errors_instead_of_panicking \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip19::tests::test_short_tlv_errors_instead_of_panicking \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_valid_encrypt_decrypt_long_msg \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip34::tests::repo_ref_defaults_identifier_from_root_commit \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip34::tests::repo_ref_coordinates_include_relay_hint_and_all_maintainers \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip34::tests::event_tag_from_nip19_or_hex_accepts_npub_when_allowed \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions \
+-- "${TEST_FLAGS[@]}"
+cargo test -p gnostr-asyncgit --lib types::client::tests::build_nip44_direct_message_event_uses_real_keys_and_recipient_tag \
+-- "${TEST_FLAGS[@]}"
