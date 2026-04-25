@@ -24,6 +24,7 @@ pub mod sub_commands;
 // See src/lib/transport.rs header for full removal instructions.
 pub mod transport;
 pub mod utils;
+#[cfg(feature = "nostr")]
 pub use nostr;
 
 use anyhow::{Result, anyhow};
@@ -125,7 +126,7 @@ pub async fn run_cli(cli: &Cli) -> Result<()> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "nostr"))]
 mod tests {
     #[test]
     fn reexports_nostr_crate_with_enabled_features() {
