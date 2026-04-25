@@ -77,31 +77,66 @@ pub fn verify(
 
     // Verify conditions
     for condition in conditions.split('&') {
-        let mut parts = condition.split('=');
-        let key = parts.next();
-        let value = parts.next();
-
-        if let (Some(key), Some(value)) = (key, value) {
-            match key {
-                "kind" => {
-                    if value.parse::<u16>()? != event_kind {
-                        return Ok(false);
-                    }
-                }
-                "created_at<" => {
-                    if created_at >= value.parse::<u64>()? {
-                        return Ok(false);
-                    }
-                }
-                "created_at>" => {
-                    if created_at <= value.parse::<u64>()? {
-                        return Ok(false);
-                    }
-                }
-                _ => {} // Unknown conditions are ignored
+        if let Some(value) = condition.strip_prefix("kind=") {
+            if value.parse::<u16>()? != event_kind {
+                return Ok(false);
+            }
+        } else if let Some(value) = condition.strip_prefix("created_at<") {
+            if created_at >= value.parse::<u64>()? {
+                return Ok(false);
+            }
+        } else if let Some(value) = condition.strip_prefix("created_at>") {
+            if created_at <= value.parse::<u64>()? {
+                return Ok(false);
             }
         }
     }
 
     Ok(true)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_keypair(seed: u8) -> (SecretKey, XOnlyPublicKey) {
+        let secp = Secp256k1::new();
+        let sk = SecretKey::from_slice(&[seed; 32]).unwrap();
+        let keypair = Keypair::from_secret_key(&secp, &sk);
+        let (pk, _) = XOnlyPublicKey::from_keypair(&keypair);
+        (sk, pk)
+    }
+
+    #[test]
+    fn verify_accepts_valid_delegation_window() {
+        let (delegator_sk, delegator_pk) = test_keypair(1);
+        let (_, delegatee_pk) = test_keypair(2);
+        let delegation = Delegation {
+            delegator: delegator_pk,
+            delegatee: delegatee_pk,
+            event_kind: 1,
+            since: Some(100),
+            until: Some(200),
+        };
+        let tag = delegation.create_tag(&delegator_sk).unwrap();
+
+        assert!(verify(&tag, &delegatee_pk, 1, 150).unwrap());
+    }
+
+    #[test]
+    fn verify_rejects_out_of_window_created_at() {
+        let (delegator_sk, delegator_pk) = test_keypair(3);
+        let (_, delegatee_pk) = test_keypair(4);
+        let delegation = Delegation {
+            delegator: delegator_pk,
+            delegatee: delegatee_pk,
+            event_kind: 1,
+            since: Some(100),
+            until: Some(200),
+        };
+        let tag = delegation.create_tag(&delegator_sk).unwrap();
+
+        assert!(!verify(&tag, &delegatee_pk, 1, 50).unwrap());
+        assert!(!verify(&tag, &delegatee_pk, 1, 250).unwrap());
+    }
 }
