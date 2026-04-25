@@ -378,67 +378,6 @@ fn install_xcb_deps() {
     }
 }
 
-fn install_openssl_brew() {
-    println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
-    let install_result = Command::new("brew").args(["install", "openssl"]).status();
-
-    match install_result {
-        Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed openssl via Homebrew.");
-            // Instruct rustc to link against the OpenSSL libraries installed by
-            // Brew. The exact paths might vary slightly based on
-            // Brew's configuration. It's generally safer to rely on
-            // the `openssl` crate to handle linking. However, if
-            // you need explicit linking: The corrected paths are
-            // used conditionally in the main function.
-        }
-        Ok(status) => {
-            println!(
-                "cargo:warning=Failed to install openssl@3 via Homebrew (exit code: {}).",
-                status
-            );
-            println!(
-                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
-            );
-            println!("cargo:warning=  brew install openssl");
-        }
-        Err(e) => {
-            println!(
-                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
-                e
-            );
-        }
-    }
-}
-fn install_pkg_config() {
-    println!("cargo:warning=Attempting to install pkg-config using Homebrew...");
-    let install_result = Command::new("brew")
-        .args(["install", "pkg-config"])
-        .status();
-
-    match install_result {
-        Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed pkg-config via Homebrew.");
-            // Linking will be handled by the `openssl` crate or via pkg-config.
-        }
-        Ok(status) => {
-            println!(
-                "cargo:warning=Failed to install pkg-config via Homebrew (exit code: {}).",
-                status
-            );
-            println!(
-                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
-            );
-            println!("cargo:warning=  brew install pkg-config");
-        }
-        Err(e) => {
-            println!(
-                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
-                e
-            );
-        }
-    }
-}
 fn install_zlib() {
     if check_brew() {
         println!("cargo:warning=Attempting to install zlib using Homebrew...");
@@ -593,41 +532,12 @@ fn main() {
             linux_install_pkg_config();
         }
         if target_os == "macos" {
-            println!("cargo:warning=On macOS, openssl@3 is recommended for this crate.");
-
             if check_brew() {
                 println!("cargo:warning=Homebrew detected.");
-                install_pkg_config();
                 install_zlib();
-                install_openssl_brew();
-
-                // Instruct rustc to link against the OpenSSL libraries.
-                // The `openssl` crate generally handles finding these libraries.
-                // If you need explicit linking (less recommended):
-                if target_arch == "aarch64" {
-                    //println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
-                    //println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    //println!("cargo:rustc-link-lib=dylib=crypto@3");
-                } else if target_arch == "x86_64" {
-                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl");
-                    println!("cargo:rustc-link-lib=dylib=crypto");
-                }
             } else {
-                println!(
-                    "cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:"
-                );
-                println!("cargo:warning=  brew install openssl@3");
-                println!("cargo:warning=  brew install pkg-config");
-                println!("cargo:warning=  brew install zlib");
-                println!("cargo:warning=Or using MacPorts:");
-                println!("cargo:warning=  sudo port install openssl@3");
-                println!("cargo:warning=And ensure your system can find the libraries.");
+                println!("cargo:warning=Homebrew not found. Please install zlib manually if needed.");
             }
-        } else {
-            // For other operating systems, the `openssl` crate should handle linking.
-            println!("cargo:rustc-link-lib=dylib=ssl");
-            println!("cargo:rustc-link-lib=dylib=crypto");
         }
     }
     // Add other build logic here if needed
