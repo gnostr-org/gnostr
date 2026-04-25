@@ -324,32 +324,25 @@ fn start_chat_blossom_server(args: &ChatSubCommands) -> Result<()> {
         .map_err(|e| anyhow!(e.to_string()))
 }
 
-/// Build a chat command configured for oneshot delivery.
-pub fn oneshot_subcommand(topic: impl Into<String>, message: impl Into<String>) -> ChatSubCommands {
-    ChatSubCommands {
-        nsec: None,
-        password: None,
-        name: None,
-        topic: Some(topic.into()),
-        hash: None,
-        disable_cli_spinners: false,
-        info: false,
-        debug: false,
-        trace: false,
-        headless: false,
-        workdir: None,
-        gitdir: None,
-        oneshot: Some(message.into()),
-    }
-}
-
-/// Send a single chat message to the requested topic and exit after propagation.
-pub async fn oneshot(
-    topic: impl Into<String>,
-    message: impl Into<String>,
-) -> Result<(), anyhow::Error> {
-    let args = oneshot_subcommand(topic, message);
-    crate::sub_commands::chat::chat(&args).await
+#[macro_export]
+macro_rules! chat_oneshot {
+    ($topic:expr, $message:expr) => {
+        $crate::p2p::chat::ChatSubCommands {
+            nsec: None,
+            password: None,
+            name: None,
+            topic: Some($topic.into()),
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+            headless: false,
+            workdir: None,
+            gitdir: None,
+            oneshot: Some($message.into()),
+        }
+    };
 }
 
 /// Run the chat command lifecycle.
@@ -743,7 +736,7 @@ mod command_tests {
 
     #[test]
     fn builds_oneshot_subcommand() {
-        let args = oneshot_subcommand("gnostr-dev", "gnostr main started");
+        let args = crate::chat_oneshot!("gnostr-dev", "gnostr main started");
 
         assert_eq!(args.topic.as_deref(), Some("gnostr-dev"));
         assert_eq!(args.oneshot.as_deref(), Some("gnostr main started"));
