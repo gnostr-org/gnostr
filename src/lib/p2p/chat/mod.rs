@@ -349,7 +349,7 @@ pub async fn oneshot(
     message: impl Into<String>,
 ) -> Result<(), anyhow::Error> {
     let args = oneshot_subcommand(topic, message);
-    run(&args).await
+    crate::sub_commands::chat::chat(&args).await
 }
 
 /// Run the chat command lifecycle.
