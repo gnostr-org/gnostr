@@ -7,13 +7,23 @@ use std::{
 use git2::Oid;
 use serde::{Deserialize, Serialize};
 
-use super::{Error, EventKind, EventV3, Id, NAddr, PreEventV3, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl};
+use super::{
+    Error, EventKind, EventV3, Id, NAddr, NEvent, Nip19, PreEventV3, PrivateKey, PublicKey,
+    TagV3, Unixtime, UncheckedUrl,
+};
 
 pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
 pub const REPO_STATE_KIND: u32 = 30618;
 pub const PULL_REQUEST_KIND: u32 = 1618;
 pub const PULL_REQUEST_UPDATE_KIND: u32 = 1619;
 pub const USER_GRASP_LIST_KIND: u32 = 10317;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EventRefType {
+    Root,
+    Reply,
+    Quote,
+}
 
 pub type Nip34Kind = EventKind;
 pub type Nip34Event = EventV3;
@@ -78,6 +88,27 @@ pub fn get_commit_id_from_patch(event: &EventV3) -> Result<String, Error> {
     Err(Error::InvalidOperation)
 }
 
+pub fn get_parent_commit_from_patch(event: &EventV3) -> Result<String, Error> {
+    if let Ok(value) = tag_value(event, "parent-commit") {
+        return Ok(value);
+    }
+
+    if event.content.starts_with("From ") && event.content.len() > 45 {
+        return Ok(event.content[5..45].to_string());
+    }
+
+    Err(Error::InvalidOperation)
+}
+
+pub fn get_event_root(event: &EventV3) -> Result<Id, Error> {
+    event
+        .tags
+        .iter()
+        .find(|tag| tag.tagname() == "e" && matches!(tag.marker(), "root" | "revision-root" | "root-revision"))
+        .ok_or(Error::TagMismatch)
+        .and_then(|tag| tag.parse_event().map(|(id, _, _)| id))
+}
+
 pub fn event_is_patch_set_root(event: &EventV3) -> bool {
     event.kind == EventKind::Patches
         && event
@@ -130,6 +161,83 @@ pub fn event_is_valid_pr_or_pr_update(event: &EventV3) -> bool {
             .iter()
             .any(|tag| tag.tagname() == "c" && git2::Oid::from_str(tag.value()).is_ok())
         && event.tags.iter().any(|tag| tag.tagname() == "clone")
+}
+
+pub fn event_tag_from_nip19_or_hex(
+    reference: &str,
+    ref_type: EventRefType,
+    allow_npub_reference: bool,
+) -> Result<TagV3, Error> {
+    let marker = match ref_type {
+        EventRefType::Root => Some("root".to_string()),
+        EventRefType::Reply => Some("reply".to_string()),
+        EventRefType::Quote => None,
+    };
+
+    match Nip19::decode(reference) {
+        Ok(Nip19::Event(event)) => {
+            if ref_type == EventRefType::Quote {
+                Ok(TagV3::new_quote(
+                    event.event_id,
+                    event
+                        .relays
+                        .first()
+                        .map(|relay| UncheckedUrl::from_str(relay.as_str())),
+                ))
+            } else {
+                Ok(TagV3::new_event(
+                    event.event_id,
+                    event
+                        .relays
+                        .first()
+                        .map(|relay| UncheckedUrl::from_str(relay.as_str())),
+                    marker,
+                ))
+            }
+        }
+        Ok(Nip19::EventId(id)) => {
+            if ref_type == EventRefType::Quote {
+                Ok(TagV3::new_quote(id, None))
+            } else {
+                Ok(TagV3::new_event(id, None, marker))
+            }
+        }
+        Ok(Nip19::Address(addr)) => Ok(TagV3::new_address(
+            &NAddr {
+                d: addr.identifier,
+                relays: addr
+                    .relays
+                    .into_iter()
+                    .map(|relay| UncheckedUrl::from_str(relay.as_str()))
+                    .collect(),
+                kind: addr.kind,
+                author: addr.public_key,
+            },
+            None,
+        )),
+        Ok(Nip19::Profile(profile)) if allow_npub_reference => Ok(TagV3::new_pubkey(
+            profile.public_key,
+            profile
+                .relays
+                .first()
+                .map(|relay| UncheckedUrl::from_str(relay.as_str())),
+            None,
+        )),
+        Ok(Nip19::PublicKey(public_key)) if allow_npub_reference => Ok(TagV3::new_pubkey(
+            public_key,
+            None,
+            None,
+        )),
+        Ok(_) | Err(_) => Id::try_from_hex_string(reference)
+            .map(|id| {
+                if ref_type == EventRefType::Quote {
+                    TagV3::new_quote(id, None)
+                } else {
+                    TagV3::new_event(id, None, marker)
+                }
+            })
+            .map_err(Into::into),
+    }
 }
 
 /// Repo announcement metadata.
@@ -578,5 +686,33 @@ mod tests {
             TagV3::new_tag("clone", "https://example.com/repo.git"),
         ];
         assert!(event_is_valid_pr_or_pr_update(&pr_event));
+
+        let note_ref = "note1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
+        let _ = event_tag_from_nip19_or_hex("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", EventRefType::Reply, false).unwrap();
+
+        let nevent = NEvent::mock().as_bech32_string();
+        let tag = event_tag_from_nip19_or_hex(&nevent, EventRefType::Quote, false).unwrap();
+        assert_eq!(tag.tagname(), "q");
+
+        let naddr = NAddr::mock().as_bech32_string();
+        let tag = event_tag_from_nip19_or_hex(&naddr, EventRefType::Root, false).unwrap();
+        assert_eq!(tag.tagname(), "a");
+
+        let tag = event_tag_from_nip19_or_hex(note_ref, EventRefType::Root, false);
+        assert!(tag.is_err());
+
+        let root_tag = TagV3::new_event(
+            Id::try_from_hex_string(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            )
+            .unwrap(),
+            None,
+            Some("root".to_string()),
+        );
+        let root_event = EventV3 {
+            tags: vec![root_tag],
+            ..EventV3::new_dummy()
+        };
+        assert!(get_event_root(&root_event).is_ok());
     }
 }
