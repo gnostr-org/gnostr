@@ -1,352 +1,442 @@
-//! NIP-34 implementation for creating git-related events.
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryFrom,
+    str::FromStr,
+};
 
-use std::time::{SystemTime, UNIX_EPOCH};
-
-use anyhow::anyhow;
-use secp256k1::{Message, SecretKey, XOnlyPublicKey};
+use git2::Oid;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
-use crate::{blockhash, blockheight, weeble, wobble};
+use super::{Error, EventKind, EventV3, NAddr, PreEventV3, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl};
 
-/// A signed Nostr event.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Event {
-    /// 32-byte, hex-encoded SHA256 hash of the serialized event data.
-    pub id: String,
-    /// 32-byte, hex-encoded public key of the event creator.
-    pub pubkey: String,
-    /// Unix timestamp in seconds.
-    pub created_at: u64,
-    /// Event kind.
-    pub kind: u16,
-    /// A list of tags.
-    pub tags: Vec<Vec<String>>,
-    /// Event content.
-    pub content: String,
-    /// 64-byte signature of the event ID hash.
-    pub sig: String,
+pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
+pub const REPO_STATE_KIND: u32 = 30618;
+
+pub type Nip34Kind = EventKind;
+pub type Nip34Event = EventV3;
+pub type Nip34UnsignedEvent = PreEventV3;
+
+fn repo_announcement_kind() -> EventKind {
+    EventKind::from(REPO_ANNOUNCEMENT_KIND)
 }
 
-/// An unsigned Nostr event.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UnsignedEvent {
-    /// 32-byte, hex-encoded public key of the event creator.
-    pub pubkey: String,
-    /// Unix timestamp in seconds.
-    pub created_at: u64,
-    /// Event kind.
-    pub kind: u16,
-    /// A list of tags.
-    pub tags: Vec<Vec<String>>,
-    /// Event content.
-    pub content: String,
+fn repo_state_kind() -> EventKind {
+    EventKind::from(REPO_STATE_KIND)
 }
 
-impl UnsignedEvent {
-    fn runtime_tags() -> Vec<Vec<String>> {
-        let mut tags = Vec::new();
-
-        if let Ok(val) = weeble::weeble() {
-            tags.push(vec!["weeble".to_string(), val.to_string()]);
-        }
-        if let Ok(val) = blockheight::blockheight() {
-            tags.push(vec!["blockheight".to_string(), val.to_string()]);
-        }
-        if let Ok(val) = wobble::wobble() {
-            tags.push(vec!["wobble".to_string(), val.to_string()]);
-        }
-        if let Ok(val) = blockhash::blockhash() {
-            tags.push(vec!["blockhash".to_string(), val]);
-        }
-
-        tags
+fn unique_push<T: PartialEq + Clone>(values: &mut Vec<T>, value: T) {
+    if !values.contains(&value) {
+        values.push(value);
     }
+}
 
-    /// Create a new unsigned event.
-    pub fn new(
-        pubkey: &XOnlyPublicKey,
-        kind: u16,
-        tags: Vec<Vec<String>>,
-        content: String,
-    ) -> Self {
-        Self::new_with_runtime_tags(pubkey, kind, tags, content, Self::runtime_tags())
+fn default_identifier(root_commit: &str) -> String {
+    root_commit.chars().take(7).collect()
+}
+
+fn root_commit_tag(root_commit: &str) -> Result<TagV3, Error> {
+    if root_commit.is_empty() {
+        return Err(Error::InvalidOperation);
     }
+    Ok(TagV3::from_strings(vec![
+        "r".to_string(),
+        root_commit.to_string(),
+        "euc".to_string(),
+    ]))
+}
 
-    fn new_with_runtime_tags(
-        pubkey: &XOnlyPublicKey,
-        kind: u16,
-        mut tags: Vec<Vec<String>>,
-        content: String,
-        runtime_tags: Vec<Vec<String>>,
-    ) -> Self {
-        let created_at = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+/// Repo announcement metadata.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RepoRef {
+    pub name: String,
+    pub description: String,
+    pub identifier: String,
+    pub root_commit: String,
+    pub git_server: Vec<String>,
+    pub web: Vec<String>,
+    pub relays: Vec<UncheckedUrl>,
+    pub hashtags: Vec<String>,
+    pub maintainers: Vec<PublicKey>,
+    pub trusted_maintainer: PublicKey,
+    pub events: HashMap<NAddr, EventV3>,
+}
 
-        tags.extend(runtime_tags);
+impl RepoRef {
+    pub fn to_event(&self, private_key: &PrivateKey) -> Result<EventV3, Error> {
+        if self.root_commit.is_empty() {
+            return Err(Error::InvalidOperation);
+        }
 
-        Self {
-            pubkey: pubkey.to_string(),
-            created_at,
-            kind,
+        let identifier = if self.identifier.is_empty() {
+            default_identifier(&self.root_commit)
+        } else {
+            self.identifier.clone()
+        };
+
+        let mut tags = vec![
+            TagV3::new_identifier(identifier),
+            root_commit_tag(&self.root_commit)?,
+            TagV3::new_name(self.name.clone()),
+            TagV3::new_tag("description", &self.description),
+            TagV3::from_strings({
+                let mut values = vec!["clone".to_string()];
+                values.extend(self.git_server.iter().cloned());
+                values
+            }),
+            TagV3::from_strings({
+                let mut values = vec!["web".to_string()];
+                values.extend(self.web.iter().cloned());
+                values
+            }),
+            TagV3::from_strings({
+                let mut values = vec!["relays".to_string()];
+                values.extend(self.relays.iter().map(ToString::to_string));
+                values
+            }),
+            TagV3::from_strings({
+                let mut values = vec!["maintainers".to_string()];
+                values.extend(self.maintainers.iter().map(PublicKey::as_hex_string));
+                values
+            }),
+            TagV3::new_tag("alt", &format!("git repository: {}", self.name)),
+        ];
+
+        tags.extend(self.hashtags.iter().cloned().map(TagV3::new_hashtag));
+
+        let preevent = PreEventV3 {
+            pubkey: private_key.public_key(),
+            created_at: Unixtime::now(),
+            kind: repo_announcement_kind(),
             tags,
-            content,
+            content: "repo announcement".to_string(),
+        };
+
+        EventV3::sign_with_private_key(preevent, private_key)
+    }
+
+    pub fn coordinates(&self) -> HashSet<NAddr> {
+        let mut res = HashSet::new();
+
+        let _ = res.insert(self.coordinate_with_hint());
+        for maintainer in &self.maintainers {
+            let _ = res.insert(NAddr {
+                d: self.identifier.clone(),
+                relays: vec![],
+                kind: repo_announcement_kind(),
+                author: *maintainer,
+            });
+        }
+
+        res
+    }
+
+    pub fn coordinate_with_hint(&self) -> NAddr {
+        NAddr {
+            d: self.identifier.clone(),
+            relays: self.relays.first().cloned().into_iter().collect(),
+            kind: repo_announcement_kind(),
+            author: self.trusted_maintainer,
         }
     }
 
-    /// Serialize the event data for hashing and signing.
-    fn serialize(&self) -> Result<String, serde_json::Error> {
-        let data = (
-            0,
-            &self.pubkey,
-            self.created_at,
-            self.kind,
-            &self.tags,
-            &self.content,
-        );
-        serde_json::to_string(&data)
+    pub fn coordinates_with_timestamps(&self) -> Vec<(NAddr, Option<Unixtime>)> {
+        self.coordinates()
+            .iter()
+            .map(|coordinate| {
+                (
+                    coordinate.clone(),
+                    self.events.get(coordinate).map(|event| event.created_at),
+                )
+            })
+            .collect()
+    }
+}
+
+impl TryFrom<(EventV3, Option<PublicKey>)> for RepoRef {
+    type Error = Error;
+
+    fn try_from(value: (EventV3, Option<PublicKey>)) -> Result<Self, Self::Error> {
+        let (event, trusted_maintainer) = value;
+
+        if event.kind != repo_announcement_kind() {
+            return Err(Error::WrongEventKind);
+        }
+
+        let mut repo = RepoRef {
+            name: String::new(),
+            description: String::new(),
+            identifier: String::new(),
+            root_commit: String::new(),
+            git_server: Vec::new(),
+            web: Vec::new(),
+            relays: Vec::new(),
+            hashtags: Vec::new(),
+            maintainers: Vec::new(),
+            trusted_maintainer: trusted_maintainer.unwrap_or(event.pubkey),
+            events: HashMap::new(),
+        };
+
+        for tag in &event.tags {
+            match tag.0.as_slice() {
+                [name, identifier, ..] if name == "d" => repo.identifier = identifier.clone(),
+                [name, value, ..] if name == "name" => repo.name = value.clone(),
+                [name, value, ..] if name == "description" => repo.description = value.clone(),
+                [name, values @ ..] if name == "clone" => {
+                    repo.git_server.clear();
+                    for value in values {
+                        unique_push(&mut repo.git_server, value.clone());
+                    }
+                }
+                [name, values @ ..] if name == "web" => {
+                    repo.web.clear();
+                    for value in values {
+                        unique_push(&mut repo.web, value.clone());
+                    }
+                }
+                [name, commit_id] if name == "r" && Oid::from_str(commit_id).is_ok() => {
+                    repo.root_commit = commit_id.clone();
+                }
+                [name, commit_id, marker] if name == "r" && marker == "euc" && Oid::from_str(commit_id).is_ok() => {
+                    repo.root_commit = commit_id.clone();
+                }
+                [name, values @ ..] if name == "relays" => {
+                    for relay in values {
+                        unique_push(&mut repo.relays, UncheckedUrl::from_str(relay));
+                    }
+                }
+                [name, hashtag, ..] if name == "t" => repo.hashtags.push(hashtag.clone()),
+                [name, values @ ..] if name == "maintainers" => {
+                    for value in values {
+                        let maintainer = PublicKey::try_from_hex_string(value, true)?;
+                        unique_push_public_key(&mut repo.maintainers, maintainer);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        if repo.identifier.is_empty() {
+            return Err(Error::TagMismatch);
+        }
+
+        if repo.root_commit.is_empty() {
+            return Err(Error::TagMismatch);
+        }
+
+        if repo.maintainers.is_empty() {
+            repo.maintainers.push(event.pubkey);
+        }
+
+        let coordinate = repo.coordinate_for_event(event.pubkey);
+        let _ = repo.events.insert(coordinate, event);
+
+        Ok(repo)
+    }
+}
+
+impl TryFrom<EventV3> for RepoRef {
+    type Error = Error;
+
+    fn try_from(event: EventV3) -> Result<Self, Self::Error> {
+        Self::try_from((event, None))
+    }
+}
+
+fn unique_push_public_key(values: &mut Vec<PublicKey>, value: PublicKey) {
+    if !values.contains(&value) {
+        values.push(value);
+    }
+}
+
+impl RepoRef {
+    fn coordinate_for_event(&self, author: PublicKey) -> NAddr {
+        NAddr {
+            d: self.identifier.clone(),
+            relays: vec![],
+            kind: repo_announcement_kind(),
+            author,
+        }
+    }
+}
+
+/// Repo state snapshot.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RepoState {
+    pub identifier: String,
+    pub state: HashMap<String, String>,
+    pub event: EventV3,
+}
+
+impl RepoState {
+    pub fn try_from(mut state_events: Vec<EventV3>) -> Result<Self, Error> {
+        if state_events.is_empty() {
+            return Err(Error::InvalidOperation);
+        }
+
+        state_events.sort_by_key(|event| event.created_at);
+        let event = state_events.last().cloned().ok_or(Error::InvalidOperation)?;
+
+        if event.kind != repo_state_kind() {
+            return Err(Error::WrongEventKind);
+        }
+
+        let mut state = HashMap::new();
+        for tag in &event.tags {
+            if let Some(name) = tag.0.first() {
+                if ["refs/heads/", "refs/tags", "HEAD"]
+                    .iter()
+                    .any(|prefix| name.starts_with(prefix))
+                {
+                    if let Some(value) = tag.0.get(1) {
+                        if Oid::from_str(value).is_ok() || value.contains("ref: refs/") {
+                            let _ = state.insert(name.clone(), value.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        add_head(&mut state);
+
+        let identifier = event
+            .tags
+            .iter()
+            .find_map(|tag| tag.0.first().zip(tag.0.get(1)))
+            .filter(|(name, _)| *name == "d")
+            .map(|(_, value)| value.clone())
+            .ok_or(Error::TagMismatch)?;
+
+        Ok(RepoState {
+            identifier,
+            state,
+            event,
+        })
     }
 
-    /// Sign the event and return a signed `Event`.
-    pub fn sign(self, secret_key: &SecretKey) -> Result<Event, Box<dyn std::error::Error>> {
-        let serialized_event = self.serialize()?;
-        let mut hasher = Sha256::new();
-        hasher.update(serialized_event.as_bytes());
-        let event_id_bytes = hasher.finalize();
-        let id = hex::encode(event_id_bytes);
+    pub fn build(
+        identifier: String,
+        mut state: HashMap<String, String>,
+        private_key: &PrivateKey,
+    ) -> Result<Self, Error> {
+        add_head(&mut state);
 
-        let secp = secp256k1::Secp256k1::new();
-        let message = Message::from_digest_slice(&event_id_bytes)?;
-        let sig = secp.sign_schnorr(&message, &secret_key.keypair(&secp));
+        let mut tags = vec![TagV3::new_identifier(identifier.clone())];
+        let mut keys: Vec<_> = state.keys().cloned().collect();
+        keys.sort();
+        for key in keys {
+            tags.push(TagV3::from_strings(vec![key.clone(), state[&key].clone()]));
+        }
 
-        Ok(Event {
-            id,
-            pubkey: self.pubkey,
-            created_at: self.created_at,
-            kind: self.kind,
-            tags: self.tags,
-            content: self.content,
-            sig: sig.to_string(),
+        let event = EventV3::sign_with_private_key(
+            PreEventV3 {
+                pubkey: private_key.public_key(),
+                created_at: Unixtime::now(),
+                kind: repo_state_kind(),
+                tags,
+                content: String::new(),
+            },
+            private_key,
+        )?;
+
+        Ok(RepoState {
+            identifier,
+            state,
+            event,
         })
     }
 }
 
-/// NIP-34 event kinds.
-#[allow(missing_docs)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Nip34Kind {
-    RepoAnnouncement = 30617,
-    RepoState = 30618,
-    Patch = 1617,
-    PullRequest = 1618,
-    PullRequestUpdate = 1619,
-    Issue = 1621,
-    StatusOpen = 1630,
-    StatusApplied = 1631,
-    StatusClosed = 1632,
-    StatusDraft = 1633,
-    UserGraspList = 10317,
-}
+fn add_head(state: &mut HashMap<String, String>) {
+    if state.contains_key("HEAD") {
+        return;
+    }
 
-impl TryFrom<u16> for Nip34Kind {
-    type Error = anyhow::Error;
-
-    fn try_from(value: u16) -> Result<Self, Self::Error> {
-        match value {
-            30617 => Ok(Nip34Kind::RepoAnnouncement),
-            30618 => Ok(Nip34Kind::RepoState),
-            1617 => Ok(Nip34Kind::Patch),
-            1618 => Ok(Nip34Kind::PullRequest),
-            1619 => Ok(Nip34Kind::PullRequestUpdate),
-            1621 => Ok(Nip34Kind::Issue),
-            1630 => Ok(Nip34Kind::StatusOpen),
-            1631 => Ok(Nip34Kind::StatusApplied),
-            1632 => Ok(Nip34Kind::StatusClosed),
-            1633 => Ok(Nip34Kind::StatusDraft),
-            10317 => Ok(Nip34Kind::UserGraspList),
-            _ => Err(anyhow::anyhow!("Invalid NIP-34 kind: {}", value)),
-        }
+    if state.contains_key("refs/heads/master") {
+        let _ = state.insert("HEAD".to_string(), "ref: refs/heads/master".to_string());
+    } else if state.contains_key("refs/heads/main") {
+        let _ = state.insert("HEAD".to_string(), "ref: refs/heads/main".to_string());
+    } else if let Some(key) = state.keys().find(|key| key.starts_with("refs/heads/")).cloned() {
+        let _ = state.insert("HEAD".to_string(), format!("ref: {key}"));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use secp256k1::{schnorr, PublicKey, Secp256k1, SecretKey};
-
     use super::*;
 
-    fn test_event_creation(kind: Nip34Kind, mut tags: Vec<Vec<String>>, content: String) {
-        let secp = Secp256k1::new();
-        let secret_key = crate::default_gnostr_private_key();
-        let public_key = PublicKey::from_secret_key(&secp, &secret_key);
-        let x_only_public_key = public_key.x_only_public_key().0;
-        let runtime_tags = UnsignedEvent::runtime_tags();
+    #[test]
+    fn repo_ref_round_trip() {
+        let private_key = PrivateKey::mock();
+        let trusted_maintainer = private_key.public_key();
+        let repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
 
-        let unsigned_event = UnsignedEvent::new_with_runtime_tags(
-            &x_only_public_key,
-            kind as u16,
-            tags.clone(),
-            content.clone(),
-            runtime_tags.clone(),
+        let event = repo_ref.to_event(&private_key).unwrap();
+        let parsed = RepoRef::try_from((event.clone(), None)).unwrap();
+
+        assert_eq!(event.kind, repo_announcement_kind());
+        assert_eq!(parsed.identifier, repo_ref.identifier);
+        assert_eq!(parsed.root_commit, repo_ref.root_commit);
+        assert_eq!(parsed.name, repo_ref.name);
+        assert_eq!(parsed.description, repo_ref.description);
+        assert_eq!(parsed.git_server, repo_ref.git_server);
+        assert_eq!(parsed.web, repo_ref.web);
+        assert_eq!(parsed.relays, repo_ref.relays);
+        assert_eq!(parsed.hashtags, repo_ref.hashtags);
+        assert_eq!(parsed.maintainers, repo_ref.maintainers);
+        assert_eq!(parsed.trusted_maintainer, repo_ref.trusted_maintainer);
+        assert_eq!(parsed.events.len(), 1);
+    }
+
+    #[test]
+    fn repo_state_round_trip_adds_head() {
+        let private_key = PrivateKey::mock();
+        let mut state = HashMap::new();
+        let _ = state.insert(
+            "refs/heads/main".to_string(),
+            "0123456789abcdef0123456789abcdef01234567".to_string(),
+        );
+        let _ = state.insert(
+            "refs/tags/v0.1.0".to_string(),
+            "89abcdef0123456789abcdef0123456789abcdef".to_string(),
         );
 
-        let event = unsigned_event.sign(&secret_key).unwrap();
-        println!("Signed event for kind {:?}: {:?}", kind, event);
+        let repo_state = RepoState::build("gnostr".to_string(), state, &private_key).unwrap();
+        let parsed = RepoState::try_from(vec![repo_state.event.clone()]).unwrap();
 
-        assert_eq!(event.kind, kind as u16);
-        assert_eq!(event.content, content);
-
-        tags.extend(runtime_tags);
-
-        assert_eq!(event.tags, tags);
-
-        let event_id_bytes = hex::decode(event.id).unwrap();
-        let message = Message::from_digest_slice(&event_id_bytes).unwrap();
-        let signature = schnorr::Signature::from_slice(&hex::decode(event.sig).unwrap()).unwrap();
-
-        secp.verify_schnorr(&signature, &message, &x_only_public_key)
-            .unwrap();
+        assert_eq!(parsed.identifier, "gnostr");
+        assert_eq!(
+            parsed.state.get("HEAD"),
+            Some(&"ref: refs/heads/main".to_string())
+        );
+        assert_eq!(
+            parsed.state.get("refs/heads/main"),
+            Some(&"0123456789abcdef0123456789abcdef01234567".to_string())
+        );
+        assert_eq!(
+            parsed.state.get("refs/tags/v0.1.0"),
+            Some(&"89abcdef0123456789abcdef0123456789abcdef".to_string())
+        );
+        assert_eq!(parsed.event.kind, repo_state_kind());
     }
 
     #[test]
-    fn test_repo_announcement() {
-        let tags = vec![
-            vec!["d".to_string(), "gnostr".to_string()],
-            vec!["name".to_string(), "gnostr".to_string()],
-            vec![
-                "description".to_string(),
-                "A git implementation on nostr".to_string(),
-            ],
-            vec![
-                "web".to_string(),
-                "https://github.com/gnostr-org/gnostr".to_string(),
-            ],
-            vec![
-                "clone".to_string(),
-                "https://github.com/gnostr-org/gnostr.git".to_string(),
-            ],
-            vec!["relays".to_string(), "wss://relay.damus.io".to_string()],
-        ];
-        test_event_creation(Nip34Kind::RepoAnnouncement, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_repo_state() {
-        let tags = vec![
-            vec!["d".to_string(), "gnostr".to_string()],
-            vec!["refs/heads/main".to_string(), "abcdef123456".to_string()],
-            vec!["refs/tags/v0.1.0".to_string(), "fedcba654321".to_string()],
-        ];
-        test_event_creation(Nip34Kind::RepoState, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_patch() {
-        let tags = vec![
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-            vec!["commit".to_string(), "abcdef123456".to_string()],
-        ];
-        let content = "--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,3 @@\n # gnostr\n-A git implementation on nostr\n+A git implementation over nostr".to_string();
-        test_event_creation(Nip34Kind::Patch, tags, content);
-    }
-
-    #[test]
-    fn test_pull_request() {
-        let tags = vec![
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-            vec!["subject".to_string(), "Add new feature".to_string()],
-            vec!["branch-name".to_string(), "feature-branch".to_string()],
-            vec!["merge-base".to_string(), "abcdef123456".to_string()],
-        ];
-        test_event_creation(Nip34Kind::PullRequest, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_pull_request_update() {
-        let tags = vec![
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-            vec!["e".to_string(), "event_id_of_pr".to_string()],
-            vec!["c".to_string(), "new_commit_hash".to_string()],
-        ];
-        test_event_creation(Nip34Kind::PullRequestUpdate, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_issue() {
-        let tags = vec![
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-            vec!["subject".to_string(), "Bug report".to_string()],
-        ];
-        test_event_creation(Nip34Kind::Issue, tags, "This is a bug report.".to_string());
-    }
-
-    #[test]
-    fn test_status_open() {
-        let tags = vec![
-            vec![
-                "e".to_string(),
-                "event_id_of_issue".to_string(),
-                "root".to_string(),
-            ],
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-        ];
-        test_event_creation(Nip34Kind::StatusOpen, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_status_applied() {
-        let tags = vec![
-            vec![
-                "e".to_string(),
-                "event_id_of_patch".to_string(),
-                "root".to_string(),
-            ],
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-            vec![
-                "applied-as-commits".to_string(),
-                "commit1,commit2".to_string(),
-            ],
-        ];
-        test_event_creation(Nip34Kind::StatusApplied, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_status_closed() {
-        let tags = vec![
-            vec![
-                "e".to_string(),
-                "event_id_of_pr".to_string(),
-                "root".to_string(),
-            ],
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-        ];
-        test_event_creation(Nip34Kind::StatusClosed, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_status_draft() {
-        let tags = vec![
-            vec![
-                "e".to_string(),
-                "event_id_of_patch".to_string(),
-                "root".to_string(),
-            ],
-            vec!["a".to_string(), "30617:pubkey:gnostr".to_string()],
-        ];
-        test_event_creation(Nip34Kind::StatusDraft, tags, "".to_string());
-    }
-
-    #[test]
-    fn test_user_grasp_list() {
-        let tags = vec![
-            vec!["g".to_string(), "wss://grasp.example.com".to_string()],
-            vec![
-                "g".to_string(),
-                "wss://another-grasp.example.com".to_string(),
-            ],
-        ];
-        test_event_creation(Nip34Kind::UserGraspList, tags, "".to_string());
+    fn repo_ref_requires_repo_kind() {
+        let event = EventV3::new_dummy();
+        assert!(matches!(
+            RepoRef::try_from((event, None)),
+            Err(Error::WrongEventKind)
+        ));
     }
 }

@@ -134,7 +134,10 @@ pub use crate::{
     },
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,
-    types::{Nip34Event, Nip34Kind, Nip34UnsignedEvent},
+    types::{
+        Nip34Event, Nip34Kind, Nip34UnsignedEvent, RepoRef, RepoState, REPO_ANNOUNCEMENT_KIND,
+        REPO_STATE_KIND,
+    },
 };
 
 /// Default deterministic private key material used by tests and fixtures.
