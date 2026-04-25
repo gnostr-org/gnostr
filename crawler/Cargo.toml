@@ -39,6 +39,7 @@ dns-lookup = "2.0.4"
 env_logger = "0.11"
 futures = "0.3.25"
 git2 = "0.20.1"
+gnostr-asyncgit = { version = "1877.946519.461500", path = "../asyncgit", features = ["vendored-openssl"] }
 indicatif = "0.14.0"
 log = "0.4.24"
 nostr-sdk = { version = "0.44.1" }

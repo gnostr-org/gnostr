@@ -6700,6 +6700,7 @@ dependencies = [
  "env_logger 0.11.10",
  "futures",
  "git2",
+ "gnostr-asyncgit",
  "indicatif 0.14.0",
  "log 0.4.29",
  "nostr-sdk 0.44.1",
