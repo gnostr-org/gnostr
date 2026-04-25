@@ -558,6 +558,138 @@ fn add_head(state: &mut HashMap<String, String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Arc;
+    use std::str::FromStr;
+
+    use ngit::{client::STATE_KIND as NGIT_STATE_KIND, git_events as ngit_git_events};
+
+    fn ngit_kind_number<T: std::fmt::Debug>(kind: T) -> u32 {
+        match format!("{kind:?}").as_str() {
+            "GitStatusOpen" => 1630,
+            "GitStatusApplied" => 1631,
+            "GitStatusClosed" => 1632,
+            "GitStatusDraft" => 1633,
+            "GitRepoAnnouncement" => 30618,
+            "Custom(1618)" => 1618,
+            "Custom(1619)" => 1619,
+            "Custom(10317)" => 10317,
+            other if other.starts_with("Custom(") && other.ends_with(')') => {
+                other[7..other.len() - 1].parse().unwrap()
+            }
+            other => panic!("unexpected ngit kind {other}"),
+        }
+    }
+
+    #[test]
+    fn nip34_constants_match_ngit() {
+        assert_eq!(u32::from(repo_announcement_kind()), 30617);
+        assert_eq!(u32::from(repo_state_kind()), ngit_kind_number(NGIT_STATE_KIND));
+        assert_eq!(
+            status_kinds().into_iter().map(u32::from).collect::<Vec<_>>(),
+            ngit_git_events::status_kinds()
+                .into_iter()
+                .map(ngit_kind_number)
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            u32::from(PULL_REQUEST_KIND),
+            ngit_kind_number(ngit_git_events::KIND_PULL_REQUEST)
+        );
+        assert_eq!(
+            u32::from(PULL_REQUEST_UPDATE_KIND),
+            ngit_kind_number(ngit_git_events::KIND_PULL_REQUEST_UPDATE)
+        );
+        assert_eq!(
+            u32::from(USER_GRASP_LIST_KIND),
+            ngit_kind_number(ngit_git_events::KIND_USER_GRASP_LIST)
+        );
+    }
+
+    #[test]
+    fn repo_ref_coordinates_match_ngit() {
+        let trusted_maintainer = PublicKey::mock_deterministic();
+        let trusted_maintainer_hex = trusted_maintainer.as_hex_string();
+        let ngit_trusted_maintainer = nostr::PublicKey::from_str(&trusted_maintainer_hex).unwrap();
+
+        let async_repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+
+        let ngit_repo_ref = ngit::repo_ref::RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![nostr_sdk::RelayUrl::parse("wss://relay.damus.io").unwrap()],
+            blossoms: vec![],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![ngit_trusted_maintainer.clone()],
+            trusted_maintainer: ngit_trusted_maintainer,
+            maintainers_without_annoucnement: None,
+            events: HashMap::new(),
+            nostr_git_url: None,
+        };
+
+        let async_coordinate = async_repo_ref.coordinate_with_hint();
+        let ngit_coordinate = ngit_repo_ref.coordinate_with_hint();
+
+        assert_eq!(
+            u32::from(async_coordinate.kind),
+            ngit_kind_number(ngit_coordinate.coordinate.kind)
+        );
+        assert_eq!(async_coordinate.d, ngit_coordinate.coordinate.identifier);
+        assert_eq!(
+            async_coordinate.author.as_hex_string(),
+            ngit_coordinate.coordinate.public_key.to_string()
+        );
+        assert_eq!(
+            async_coordinate.relays[0].to_string(),
+            ngit_coordinate.relays[0].to_string()
+        );
+        assert_eq!(async_repo_ref.coordinates().len(), ngit_repo_ref.coordinates().len());
+    }
+
+    #[tokio::test]
+    async fn repo_state_parsing_matches_ngit() {
+        let private_key = PrivateKey::mock();
+        let mut state = HashMap::new();
+        let _ = state.insert(
+            "refs/heads/main".to_string(),
+            "0123456789abcdef0123456789abcdef01234567".to_string(),
+        );
+        let _ = state.insert(
+            "refs/tags/v0.1.0".to_string(),
+            "89abcdef0123456789abcdef0123456789abcdef".to_string(),
+        );
+
+        let async_state = RepoState::build("gnostr".to_string(), state.clone(), &private_key).unwrap();
+        let async_parsed = RepoState::try_from(vec![async_state.event.clone()]).unwrap();
+
+        let ngit_signer: Arc<dyn nostr_sdk::NostrSigner> = Arc::new(nostr_sdk::Keys::generate());
+        let ngit_state =
+            ngit::repo_state::RepoState::build("gnostr".to_string(), state.clone(), &ngit_signer)
+                .await
+                .unwrap();
+        let ngit_parsed = ngit::repo_state::RepoState::try_from(vec![ngit_state.event.clone()])
+            .unwrap();
+
+        assert_eq!(async_parsed.identifier, ngit_parsed.identifier);
+        assert_eq!(async_parsed.state, ngit_parsed.state);
+        assert_eq!(async_parsed.state.get("HEAD"), Some(&"ref: refs/heads/main".to_string()));
+        assert_eq!(ngit_parsed.state.get("HEAD"), Some(&"ref: refs/heads/main".to_string()));
+    }
 
     #[test]
     fn repo_ref_round_trip() {
