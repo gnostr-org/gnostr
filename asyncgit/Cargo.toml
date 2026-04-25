@@ -153,7 +153,7 @@ scrypt = { workspace = true }
 secp256k1 = { workspace = true }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
-sha2 = "0.10.8"
+sha2 = { workspace = true }
 shellwords = "1.1.0"
 simdutf8 = "0.1.5"
 # serde = { version = "1.0.219", features = ["derive"] }
@@ -211,7 +211,7 @@ zeroize = { workspace = true }
 [build-dependencies]
 anyhow = "1.0.100"
 rsass = "0.28.0"
-sha2 = "0.10.8"
+sha2 = { workspace = true }
 warp = "0.3"
 
 ## [[bench]]
