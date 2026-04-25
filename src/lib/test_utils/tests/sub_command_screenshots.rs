@@ -5,7 +5,7 @@
 ///
 /// To add a new screenshot test, simply add a new call to the `screenshot_test`
 /// macro with the subcommand name.
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos", feature = "expensive_tests"))]
 mod tests {
     //TODO use anyhow::Error;
     use std::{error::Error, fs, io::Write, path::Path, process::Command};

@@ -5,8 +5,7 @@
 ///
 /// To add a new screenshot test, simply add a new call to the `screenshot_test`
 /// macro with the subcommand name.
-#[cfg(not(feature = "nightly"))]
-#[cfg(test)]
+#[cfg(all(test, not(feature = "nightly"), target_os = "macos", feature = "expensive_tests"))]
 mod tests {
 
     use std::{fs, io::Write, path::Path, process::Command};
@@ -70,15 +69,11 @@ mod tests {
     }
 
     // cargo t -j$(nproc) --features expensive_tests -- --no-capture --ignored
-    #[cfg(not(feature = "nightly"))]
     macro_rules! screenshot_test {
         ($name:ident, $subcommand:expr, $is_tui:expr) => {
             #[test]
             #[serial]
             #[ignore]
-            #[cfg(target_os = "macos")]
-            #[cfg(feature = "expensive_tests")]
-            #[cfg(not(feature = "nightly"))]
             fn $name() -> Result<(), Box<dyn crate::Error>> {
                 let (_tmp_dir, repo) = _setup_test_repo();
                 let repo_path = repo.path().to_str().unwrap().to_string();
