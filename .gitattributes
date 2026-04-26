@@ -1,0 +1,2 @@
+# Enforce LF line endings for files where consistent hashing matters
+asyncgit/src/lib/types/nip44/nip44.vectors.json text eol=lf
