@@ -23,20 +23,7 @@ function init_local_relay_sync() {
             local_relay = relay;
 
             const sub_id = `db-sync-${Math.random().toString(36).substring(7)}`;
-            const nip34_kinds = [
-            KIND_REPO_ANNOUNCE,
-            KIND_REPO_STATE_ANNOUNCE,
-            KIND_REPO_PATCH,
-            KIND_REPO_PULL_REQ,
-            KIND_REPO_PULL_REQ_UPDATE,
-            KIND_REPO_ISSUE,
-            KIND_REPO_REPLY,
-            KIND_REPO_STATUS_OPEN,
-            KIND_REPO_STATUS_APPLIED,
-            KIND_REPO_STATUS_CLOSED,
-            KIND_REPO_STATUS_DRAFT,
-        ];
-            relay.subscribe(sub_id, [{ kinds: nip34_kinds }]);
+            relay.subscribe(sub_id, [{ kinds: NIP34_KINDS }]);
         });
 
         relay.on('event', (sub_id, ev) => {
