@@ -4,6 +4,7 @@ pub mod css;
 pub mod images;
 pub mod template_html;
 pub mod websock_index_html;
+pub mod web_app;
 
 /// TEMPLATE_HTML
 pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
