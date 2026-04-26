@@ -17,12 +17,35 @@ const SID_EVENT         = "evnt";
 const SID_NIP34_GLOBAL  = "nip34-global";
 const SID_NIP65_RELAY_POLL = "nip65-relay-poll";
 
-// This is our main entry.
-// https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
-addEventListener('DOMContentLoaded', (ev) => {
+const gnostrWeb = {
+	start: gnostr_web_start,
+	init: gnostr_web_init,
+	ready: gnostr_web_init_ready,
+	signin,
+	webapp_init,
+	parse_url_mode,
+};
+
+if (typeof globalThis !== "undefined") {
+	globalThis.gnostrWeb = gnostrWeb;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+	module.exports = gnostrWeb;
+}
+
+if (typeof window !== "undefined" && window.gnostrWebAutoStart !== false) {
+	// This is our main entry.
+	// https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
+	addEventListener("DOMContentLoaded", () => {
+		gnostr_web_start();
+	});
+}
+
+async function gnostr_web_start() {
 	gnostr_web_init();
 	document.addEventListener("click", onclick_any);
-});
+}
 
 async function gnostr_web_init() {
 	let tries = 0;
