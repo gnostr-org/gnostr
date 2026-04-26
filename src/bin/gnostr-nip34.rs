@@ -97,7 +97,7 @@ struct App {
     full_commit_details: Option<String>,
     show_full_commit: bool,
     private_key: PrivateKey,
-    public_key: PublicKey,
+    _public_key: PublicKey,
 }
 
 impl App {
@@ -240,7 +240,7 @@ impl App {
             full_commit_details: None,
             show_full_commit: false,
             private_key,
-            public_key,
+            _public_key: public_key,
         })
     }
 
