@@ -4,8 +4,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use clap::Parser;
 use gnostr_asyncgit::images::images_bundle::get_images_assets;
-use gnostr_asyncgit::js::js_bundle::get_js_assets;
 use gnostr_asyncgit::css::css_bundle::get_css_assets;
+use gnostr_asyncgit::types::bridge::{asset_content_type, get_js_assets};
+use gnostr_asyncgit::template_html::TemplateHtml;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,74 +25,7 @@ async fn main() {
     let js_assets_map = Arc::new(get_js_assets());
     let css_assets_map = Arc::new(get_css_assets());
     let images_assets_map = Arc::new(get_images_assets());
-
-    let script_tags = {
-        let mut tags = String::new();
-        // Explicitly load db.js, model.js, and ui/state.js first due to dependencies
-        tags.push_str("<script src=\"/js/core.js\"></script>\n");
-        tags.push_str("<script src=\"/js/db.js\"></script>\n");
-        tags.push_str("<script src=\"/js/model.js\"></script>\n");
-        tags.push_str("<script src=\"/js/ui/state.js\"></script>\n");
-
-        let mut filenames: Vec<_> = js_assets_map.keys().cloned().collect();
-        filenames.sort();
-        for filename in filenames {
-            // Skip db.js, model.js and ui/state.js as they're already added
-            if filename == "core.js" ||
-                filename == "db.js" ||
-                filename == "model.js" ||
-                filename == "ui/state.js" {
-                continue;
-            }
-            tags.push_str(&format!("<script src=\"/js/{}\"></script>\n", filename));
-        }
-        tags
-    };
-
-    let link_tags = {
-        let mut tags = String::new();
-        let mut filenames: Vec<_> = css_assets_map.keys().cloned().collect();
-        filenames.sort();
-        for filename in filenames {
-            tags.push_str(&format!("<link rel=\"stylesheet\" href=\"/css/{}\">\n", filename));
-        }
-        tags
-    };
-
-    //add let images_tags
-    let images_tags = {
-        let mut tags = String::new();
-        let mut filenames: Vec<_> = images_assets_map.keys().cloned().collect();
-        filenames.sort();
-        for filename in filenames {
-            // Assuming images are SVG for simplicity, adjust Content-Type if other image types are needed
-            // For SVG, we might embed them directly or link to them, linking is generally better.
-            // Here, we'll link them as <img> tags
-            tags.push_str(&format!("<img src=\"/images/{}\" alt=\"{}\">\n", filename, filename));
-        }
-        tags
-    };
-
-    let index_html_content = format!(
-        r#"<!DOCTYPE html>
-        <html lang="en">
-        <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Embedded JS and CSS</title>
-        <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
-            {}
-        </head>
-        <body>
-            <h1>Hello from Rust with embedded JS and CSS!</h1>
-            {}
-            {}
-        </body>
-        </html>"#,
-        link_tags, // Insert CSS link tags here
-        script_tags,
-        images_tags // Insert image tags here
-    );
+    let index_html_content = TemplateHtml::new().to_string();
 
     let index_html_route = warp::path::end()
         .map(move || {
@@ -104,7 +38,7 @@ async fn main() {
         .and(warp::any().map(move || Arc::clone(&js_assets_map)))
         .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
             if let Some(&content) = assets.get(&filename) {
-                Ok(warp::reply::with_header(content, "Content-Type", "application/javascript"))
+                Ok(warp::reply::with_header(content, "Content-Type", asset_content_type(&filename)))
             } else {
                 Err(warp::reject::not_found())
             }
@@ -114,7 +48,7 @@ async fn main() {
         .and(warp::any().map(move || Arc::clone(&css_assets_map)))
         .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
             if let Some(&content) = assets.get(&filename) {
-                Ok(warp::reply::with_header(content, "Content-Type", "text/css"))
+                Ok(warp::reply::with_header(content, "Content-Type", asset_content_type(&filename)))
             } else {
                 Err(warp::reject::not_found())
             }
@@ -124,18 +58,7 @@ async fn main() {
         .and(warp::any().map(move || Arc::clone(&images_assets_map)))
         .and_then(|filename: String, assets: Arc<HashMap<String, &'static [u8]>>| async move {
             if let Some(&content) = assets.get(&filename) {
-                let content_type = if filename.ends_with(".svg") {
-                    "image/svg+xml"
-                } else if filename.ends_with(".png") {
-                    "image/png"
-                } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
-                    "image/jpeg"
-                } else if filename.ends_with(".ico") {
-                    "image/x-icon"
-                } else {
-                    "application/octet-stream"
-                };
-                Ok(warp::reply::with_header(content, "Content-Type", content_type))
+                Ok(warp::reply::with_header(content, "Content-Type", asset_content_type(&filename)))
             } else {
                 Err(warp::reject::not_found())
             }
