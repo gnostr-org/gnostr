@@ -170,7 +170,7 @@ async fn test_commit_page_does_not_panic() {
     // Verify it's a valid git patch format
     let patch_content = res.text().await.expect("Failed to read patch content");
     assert!(patch_content.contains(&format!("From {}", crlf_commit)));
-    assert!(patch_content.contains("Subject: [PATCH] Add nostr cheatsheet and CRLF demo"));
+    assert!(patch_content.contains("Subject: [PATCH] Add CRLF patch demo"));
 
     //TODO mote tests
 

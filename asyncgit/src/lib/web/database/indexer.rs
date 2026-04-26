@@ -85,35 +85,46 @@ fn create_help_material_source_repo(source_repo: &Path) -> anyhow::Result<git2::
     write_fixture_file(
         source_repo,
         "README.md",
-        b"# gnostr learning repo\n\nThis fixture is a small guided tour through the gnostr UI.\n\n## What to try\n\n- Open the repository tree to browse the help files.\n- Open a commit to read the walkthrough.\n- Inspect the patch view for the CRLF demo file.\n",
+        b"# gnostr learning repo\n\nThis fixture is a guided tour through gnostr and git history.\n\n## Start here\n\n- Open the tree view to browse the help files.\n- Open the log view to follow the commits in order.\n- Open the patch view to see how CRLF changes are rendered.\n- Visit the repo summary to read the description and recent history.\n",
     )?;
     write_fixture_file(
         source_repo,
-        "docs/getting-started.md",
-        b"# Getting started\n\n1. Start the gnostr server.\n2. Open the repository in the browser.\n3. Compare the commit and patch views.\n\nEach screen is meant to help you explore git history and Nostr-backed repository metadata.\n",
+        "docs/quickstart.md",
+        b"# Quickstart\n\n1. Start gnostr.\n2. Open this repository in the browser.\n3. Click into `README.md` or `docs/` to explore the tree.\n4. Open the latest commit to read the release notes.\n5. Open the patch view to inspect the CRLF demo.\n\nThe goal is to make each page teach one small thing about the UI.\n",
     )?;
 
     commit_fixture(
         &repo,
         "Add gnostr learning guide",
-        &["README.md", "docs/getting-started.md"],
+        &["README.md", "docs/quickstart.md"],
     )?;
 
     write_fixture_file(
         source_repo,
-        "docs/nostr-cheatsheet.md",
-        b"# Nostr cheatsheet\n\n- `npub` identifies a public key.\n- `nsec` keeps the private key secret.\n- Relays carry events between clients.\n- Repository metadata is surfaced as browseable history.\n\nUse this repo to learn how the UI renders commits, trees, and patches.\n",
+        "docs/nostr-basics.md",
+        b"# Nostr basics\n\n- `npub` is a public key people can share.\n- `nsec` is a private key and should stay secret.\n- Relays move events between clients.\n- Events are the packets the network exchanges.\n- Repo metadata becomes browseable history in gnostr.\n\nUse this file to explain the Nostr terms that appear in the UI.\n",
+    )?;
+    write_fixture_file(
+        source_repo,
+        "docs/repo-tour.md",
+        b"# Repo tour\n\n- `README.md` gives the overview.\n- `docs/quickstart.md` shows the first clicks.\n- `docs/nostr-basics.md` explains the protocol terms.\n- `examples/crlf-demo.txt` exists so the patch view has a line-ending example.\n\nTry the tree, commit, and patch pages to see each file in context.\n",
     )?;
     write_fixture_file(
         source_repo,
         "examples/crlf-demo.txt",
-        b"gnostr keeps the history readable.\r\nThis file intentionally uses CRLF line endings.\r\nOpen the patch view to see the line-ending change.\r\n",
+        b"gnostr keeps the history readable.\r\nThis file intentionally uses CRLF line endings.\r\nOpen the patch view to see how the line endings are shown.\r\n",
     )?;
 
     commit_fixture(
         &repo,
-        "Add nostr cheatsheet and CRLF demo",
-        &["docs/nostr-cheatsheet.md", "examples/crlf-demo.txt"],
+        "Add nostr basics and repo tour",
+        &["docs/nostr-basics.md", "docs/repo-tour.md"],
+    )?;
+
+    commit_fixture(
+        &repo,
+        "Add CRLF patch demo",
+        &["examples/crlf-demo.txt"],
     )?;
 
     Ok(repo)
@@ -157,7 +168,7 @@ pub fn ensure_bare_repo_fixture(fixture_root: &Path, fixture_name: &str) -> anyh
 
     fs::write(
         fixture_path.join("description"),
-        b"gnostr learning repo for browsing commits, trees, and patches\n",
+        b"Interactive gnostr learning repo for browsing commits, trees, and patches\n",
     )
     .with_context(|| format!("failed to write {}", fixture_path.join("description").display()))?;
 
