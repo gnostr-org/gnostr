@@ -1,4 +1,28 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} {% block head %}
+<style>
+  .repo-jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .repo-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .repo-group summary {
+    cursor: pointer;
+    line-height: 3ch;
+  }
+
+  .repo-row td {
+    height: 3ch;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 3ch;
+  }
+</style>
+{% endblock %} {% block content %}
 <!-- begin gnostr chat web view -->
 <div id="container-busy">
 <!-- begin gnostr chat web view
@@ -342,7 +366,7 @@
     </summary>
     <table class="repositories">
       <thead>
-        <tr>
+        <tr class="repo-row">
           <th>Name</th>
           <th>Description</th>
           <th>Owner</th>
