@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO=""
 WORKFLOW=""
+LIMIT=100
 
 usage() {
   cat <<'EOF'
@@ -13,6 +14,7 @@ Delete all GitHub Actions workflow runs in a repository.
 Options:
   -r, --repo R         Target repo, e.g. owner/name (default: current repo)
   -w, --workflow W     Limit to one workflow file/name/ID
+  -l, --limit N        Keep the newest N pages (default: 100)
   -h, --help           Show help
 
 Examples:
@@ -39,6 +41,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -w|--workflow)
       WORKFLOW="${2:?missing value for --workflow}"
+      shift 2
+      ;;
+    -l|--limit)
+      LIMIT="${2:?missing value for --limit}"
       shift 2
       ;;
     -h|--help)
@@ -87,9 +93,13 @@ if [[ "$total" -eq 0 ]]; then
   echo "No workflow runs found."
 else
   pages=$(((total + 99) / 100))
-  current=0
-  for page in $(seq "$pages" -1 1); do
-    echo "Listing workflow runs on page ${page}..."
+  if [[ "$pages" -le "$LIMIT" ]]; then
+    echo "Nothing to delete; only ${pages} pages exist and limit is ${LIMIT}."
+  else
+    delete_from_page=$((LIMIT + 1))
+    current="$total"
+    for page in $(seq "$pages" -1 "$delete_from_page"); do
+    echo "Listing workflow runs on page ${page}"
     run_ids=()
     while IFS= read -r run_id; do
       [[ -z "$run_id" ]] && continue
@@ -98,10 +108,11 @@ else
 
     for ((i=${#run_ids[@]} - 1; i >= 0; i--)); do
       run_id="${run_ids[$i]}"
-      current=$((current + 1))
-      echo "Deleting workflow run ${current}/${total} run_id=${run_id}..."
+      echo "Deleting workflow run ${current}/${total} run_id=${run_id}"
+      current=$((current - 1))
       delete_run "$run_id"
       deleted=$((deleted + 1))
+    done
     done
   done
 fi
