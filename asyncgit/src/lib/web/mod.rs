@@ -490,6 +490,26 @@ pub async fn run_indexer(
         };
 
         async move {
+            let bootstrap_runs = 2;
+            let bootstrap_delay = Duration::from_secs(1);
+
+            for remaining in (0..bootstrap_runs).rev() {
+                tokio::select! {
+                    _ = sighup.recv() => {},
+                    _ = tokio::time::sleep(bootstrap_delay) => {},
+                }
+
+                if indexer_wakeup_send.send(()).await.is_err() {
+                    tracing::error!(
+                        "Indexing thread has died and is no longer accepting wakeup messages"
+                    );
+                    return;
+                }
+
+                tracing::info!("Bootstrap index pass scheduled; {remaining} remaining");
+            }
+
+            tracing::info!("Switching to steady-state index cadence");
             loop {
                 tokio::select! {
                     _ = sighup.recv() => {},
@@ -500,6 +520,7 @@ pub async fn run_indexer(
                     tracing::error!(
                         "Indexing thread has died and is no longer accepting wakeup messages"
                     );
+                    return;
                 }
             }
         }
