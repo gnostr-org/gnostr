@@ -6830,6 +6830,10 @@ name = "gnostr-invalidstring"
 version = "1877.946747.169395"
 
 [[package]]
+name = "gnostr-js"
+version = "1877.946747.169395"
+
+[[package]]
 name = "gnostr-legit"
 version = "1877.946747.169395"
 dependencies = [

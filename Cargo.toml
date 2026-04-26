@@ -57,6 +57,7 @@ members = [
   "grammar",
   "invalidstring",
   "legit",
+  "js",
   "ngit",
   "qr",
   "relay",
