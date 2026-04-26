@@ -372,10 +372,7 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
             };
 
             let reference_name = reference.name();
-            if !matches!(
-                reference_name.category(),
-                Some(Category::Tag | Category::LocalBranch)
-            ) {
+            if reference_name.category() != Some(Category::LocalBranch) {
                 continue;
             }
 
@@ -641,13 +638,14 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
     }
 
     // Existing check for working tree or normal repository
-    if gix::open(current).is_ok() {
+    let is_repo = gix::open(current).is_ok();
+    if is_repo {
         debug!("Discovered Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
     }
 
     // Check if current is a directory that contains .git
-    if current.is_dir() {
+    if current.is_dir() && !is_repo {
         let git_path = current.join(".git");
 
         // Check if .git exists as either file or directory
