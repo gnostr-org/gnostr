@@ -93,6 +93,26 @@ delete_run() {
   fi
 }
 
+tmpdir=""
+cleanup() {
+  if [[ -n "$tmpdir" ]]; then
+    rm -rf "$tmpdir"
+  fi
+}
+
+on_interrupt() {
+  echo "Cancelled by user." >&2
+  local pids
+  pids="$(jobs -pr || true)"
+  if [[ -n "$pids" ]]; then
+    kill $pids 2>/dev/null || true
+  fi
+  exit 130
+}
+
+trap cleanup EXIT
+trap on_interrupt INT TERM
+
 deleted=0
 echo "Counting workflow runs..."
 total="$(gh api "$runs_json_path" --jq '.total_count')"
@@ -115,7 +135,6 @@ else
     fi
 
     tmpdir="$(mktemp -d)"
-    trap 'rm -rf "$tmpdir"' EXIT
 
     for thread in $(seq 1 "$THREADS"); do
       (
