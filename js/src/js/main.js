@@ -128,6 +128,7 @@ async function webapp_init() {
 	on_timer_save();
 	on_timer_tick();
 
+	setTimeout(() => start_local_relay_sync(), 0);
 	await model_load_events(model, (ev) => {
 		model_process_event(model, null, ev);
 	});
