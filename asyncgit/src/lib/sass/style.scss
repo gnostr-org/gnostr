@@ -66,6 +66,13 @@ body {
   }
 }
 
+body > header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--clrBg);
+}
+
 header {
   border-bottom: solid 1px var(--clrBorder);
 }
