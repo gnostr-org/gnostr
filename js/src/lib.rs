@@ -22,7 +22,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		<link rel=\"apple-touch-icon\" href=\"/pwa/icon-256.png\"/>
 		<link rel=\"stylesheet\" href=\"/css/vars.css?v=1\">
 		<link rel=\"stylesheet\" href=\"/css/utils.css?v=1\">
-		<link rel=\"stylesheet\" href=\"/css/styles.css?v=13\">
+		<link rel=\"stylesheet\" href=\"/css/styles.css?v=14\">
 		<link rel=\"stylesheet\" href=\"/css/responsive.css?v=10\">
 		<script defer src=\"/js/util.js?v=5\"></script>
 		<script defer src=\"/js/ui/safe-html.js?v=1\"></script>
