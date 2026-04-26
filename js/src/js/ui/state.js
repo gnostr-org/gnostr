@@ -78,8 +78,8 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	if (mode == VM_THREAD) {
 		view_show_spinner(true);
 		const clicked_event = model.all_events[thread_id];
-		if (clicked_event && clicked_event.kind >= KIND_REPO_ANNOUNCE && clicked_event.kind <= KIND_REPO_STATUS_DRAFT) {
-			const repo_id_tag = clicked_event.tags.find(tag => tag[0] === 'a');
+        if (clicked_event && is_nip34_repo_kind(clicked_event.kind)) {
+            const repo_id_tag = clicked_event.tags.find(tag => tag[0] === 'a');
 			if (repo_id_tag) {
 				const repo_id = repo_id_tag[1];
 				const parts = repo_id.split(':');
@@ -106,7 +106,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	if (mode == VM_NOTIFICATIONS) {
 		reset_notifications(model);
 	}
-        if (mode == VM_NIP34 || mode == VM_GNOSTR) {
+    if (mode == VM_NIP34 || mode == VM_GNOSTR) {
             view_show_spinner(true);
             // NIP-34 events are already fetched as part of PUBLIC_KINDS,
             // so no special fetch is needed here beyond what's done for friends.

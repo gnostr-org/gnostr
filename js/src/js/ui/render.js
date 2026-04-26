@@ -150,7 +150,7 @@ function render_event_body(model, ev, opts) {
 		show_media = model.contacts.friends.has(ev.pubkey);
 	}
 	let str = "<div>";
-    if (ev.kind >= KIND_REPO_ANNOUNCE && ev.kind <= KIND_REPO_STATUS_DRAFT) {
+    if (is_nip34_repo_kind(ev.kind)) {
         str += render_repo_event_summary(model, ev);
     }
 	str += render_replying_to(model, ev);
@@ -435,4 +435,3 @@ function render_profile_img(profile, noclick=false) {
 	title="${name}" 
 	src="${get_profile_pic(profile)}" onerror="this.onerror=null;this.src='${IMG_NO_USER}';"/>`
 }
-

@@ -1,16 +1,5 @@
 // Add NIP-34 event kinds constant
-const NIP_34_KINDS = [
-    KIND_REPO_ANNOUNCE,
-    KIND_REPO_STATE_ANNOUNCE,
-    KIND_REPO_PATCH,
-    KIND_REPO_PULL_REQ,
-    KIND_REPO_PULL_REQ_UPDATE,
-    KIND_REPO_ISSUE,
-    KIND_REPO_STATUS_OPEN,
-    KIND_REPO_STATUS_APPLIED,
-    KIND_REPO_STATUS_CLOSED,
-    KIND_REPO_STATUS_DRAFT,
-];
+const NIP_34_KINDS = [...NIP34_REPO_KINDS, KIND_RELAY_LIST];
 
 /* model_process_event is the main point where events are post-processed from
  * a relay. Additionally other side effects happen such as notification checks
