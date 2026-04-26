@@ -107,11 +107,17 @@ jobs:
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
-          pwd
-          ls -l target/debug/gnostr
-      - run: ./target/debug/gnostr --help
+          if [ -x target/debug/gnostr ]; then
+            ./target/debug/gnostr --help
+          else
+            cargo run --bin gnostr -- --help
+          fi
       - run: |
-          ./target/debug/gnostr \
+          if [ -x target/debug/gnostr ]; then
+            ./target/debug/gnostr \
+          else
+            cargo run --bin gnostr -- \
+          fi \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             --nsec "$(gnostr-sha256)" \
