@@ -50,6 +50,14 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'false'
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
       - name: Restore rustup
         id: cache-rustup-restore
         uses: actions/cache/restore@v4
@@ -103,14 +111,6 @@ jobs:
           components: clippy, rustfmt
           # Automatically configure smart caching (recommended for speed)
           cache: true
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'true'
-          set-safe-directory: 'true'
-          fetch-depth: '0'
-          fetch-tags: 'false'
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - run: rustup default ${{ matrix.rustup }}
       - name: Install cargo-binstall
