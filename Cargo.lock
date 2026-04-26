@@ -6364,6 +6364,7 @@ dependencies = [
  "gnostr-git2-hooks",
  "gnostr-grammar",
  "gnostr-invalidstring",
+ "gnostr-js",
  "gnostr-legit",
  "gnostr-ngit",
  "gnostr-relay",
@@ -6934,6 +6935,11 @@ dependencies = [
 [[package]]
 name = "gnostr-web"
 version = "1877.946747.169395"
+dependencies = [
+ "clap 4.6.1",
+ "gnostr-js",
+ "tokio",
+]
 
 [[package]]
 name = "gnostr_qr"
