@@ -1,0 +1,15 @@
+[package]
+name = "gnostr-js"
+version.workspace = true
+edition = "2021"
+description = "gnostr JavaScript support crate"
+authors = [
+  "gnostr <admin@gnostr.org>",
+]
+license = "MIT"
+
+[lib]
+name = "gnostr_js"
+path = "src/lib.rs"
+
+[dependencies]
