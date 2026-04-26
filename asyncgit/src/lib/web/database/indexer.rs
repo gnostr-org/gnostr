@@ -2,11 +2,13 @@ use std::{
     collections::HashSet,
     ffi::OsStr,
     fmt::Debug,
+    fs,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 use anyhow::Context;
+use git2::{build::RepoBuilder, RepositoryInitOptions, Signature};
 use gix::{bstr::ByteSlice, refs::Category, Reference};
 use ini::Ini;
 use itertools::Itertools;
@@ -22,6 +24,144 @@ use crate::web::database::schema::{
 
 fn is_bare_repository(path: &Path) -> bool {
     path.join("HEAD").is_file() && path.join("objects").is_dir()
+}
+
+fn is_help_material_fixture(path: &Path) -> bool {
+    if !is_bare_repository(path) {
+        return false;
+    }
+
+    fs::read_to_string(path.join("description"))
+        .map(|description| description.contains("gnostr learning repo for browsing commits, trees, and patches"))
+        .unwrap_or(false)
+}
+
+fn write_fixture_file(root: &Path, relative_path: &str, content: &[u8]) -> anyhow::Result<()> {
+    let path = root.join(relative_path);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create fixture directory {}", parent.display()))?;
+    }
+
+    fs::write(&path, content)
+        .with_context(|| format!("failed to write fixture file {}", path.display()))?;
+    Ok(())
+}
+
+fn stage_paths(repo: &git2::Repository, paths: &[&str]) -> anyhow::Result<()> {
+    let mut index = repo.index()?;
+    for path in paths {
+        index.add_path(Path::new(path))?;
+    }
+    index.write()?;
+    Ok(())
+}
+
+fn commit_fixture(
+    repo: &git2::Repository,
+    message: &str,
+    paths: &[&str],
+) -> anyhow::Result<()> {
+    stage_paths(repo, paths)?;
+
+    let tree_id = repo.index()?.write_tree()?;
+    let tree = repo.find_tree(tree_id)?;
+    let sig = Signature::now("Copilot", "copilot@users.noreply.github.com")?;
+    let parents = match repo.head() {
+        Ok(head) => vec![head.peel_to_commit()?],
+        Err(_) => Vec::new(),
+    };
+    let parent_refs: Vec<_> = parents.iter().collect();
+
+    repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &parent_refs)?;
+    Ok(())
+}
+
+fn create_help_material_source_repo(source_repo: &Path) -> anyhow::Result<git2::Repository> {
+    let mut init_opts = RepositoryInitOptions::new();
+    init_opts.initial_head("main");
+    let repo = git2::Repository::init_opts(source_repo, &init_opts)?;
+
+    write_fixture_file(
+        source_repo,
+        "README.md",
+        b"# gnostr learning repo\n\nThis fixture is a small guided tour through the gnostr UI.\n\n## What to try\n\n- Open the repository tree to browse the help files.\n- Open a commit to read the walkthrough.\n- Inspect the patch view for the CRLF demo file.\n",
+    )?;
+    write_fixture_file(
+        source_repo,
+        "docs/getting-started.md",
+        b"# Getting started\n\n1. Start the gnostr server.\n2. Open the repository in the browser.\n3. Compare the commit and patch views.\n\nEach screen is meant to help you explore git history and Nostr-backed repository metadata.\n",
+    )?;
+
+    commit_fixture(
+        &repo,
+        "Add gnostr learning guide",
+        &["README.md", "docs/getting-started.md"],
+    )?;
+
+    write_fixture_file(
+        source_repo,
+        "docs/nostr-cheatsheet.md",
+        b"# Nostr cheatsheet\n\n- `npub` identifies a public key.\n- `nsec` keeps the private key secret.\n- Relays carry events between clients.\n- Repository metadata is surfaced as browseable history.\n\nUse this repo to learn how the UI renders commits, trees, and patches.\n",
+    )?;
+    write_fixture_file(
+        source_repo,
+        "examples/crlf-demo.txt",
+        b"gnostr keeps the history readable.\r\nThis file intentionally uses CRLF line endings.\r\nOpen the patch view to see the line-ending change.\r\n",
+    )?;
+
+    commit_fixture(
+        &repo,
+        "Add nostr cheatsheet and CRLF demo",
+        &["docs/nostr-cheatsheet.md", "examples/crlf-demo.txt"],
+    )?;
+
+    Ok(repo)
+}
+
+pub fn ensure_bare_repo_fixture(fixture_root: &Path, fixture_name: &str) -> anyhow::Result<PathBuf> {
+    let fixture_path = fixture_root.join(format!("{fixture_name}.git"));
+
+    if is_help_material_fixture(&fixture_path) {
+        return Ok(fixture_path);
+    }
+
+    fs::create_dir_all(fixture_root)
+        .with_context(|| format!("failed to create fixture directory {}", fixture_root.display()))?;
+
+    if fixture_path.exists() {
+        fs::remove_dir_all(&fixture_path)
+            .with_context(|| format!("failed to remove stale fixture {}", fixture_path.display()))?;
+    }
+
+    let source_repo_dir = tempfile::tempdir_in(fixture_root)
+        .with_context(|| format!("failed to create temp repo under {}", fixture_root.display()))?;
+    create_help_material_source_repo(source_repo_dir.path())?;
+
+    RepoBuilder::new()
+        .bare(true)
+        .clone(
+            source_repo_dir
+                .path()
+                .to_str()
+                .context("source repository path must be valid UTF-8")?,
+            &fixture_path,
+        )
+        .with_context(|| {
+            format!(
+                "failed to create bare fixture {} from {}",
+                fixture_path.display(),
+                source_repo_dir.path().display()
+            )
+        })?;
+
+    fs::write(
+        fixture_path.join("description"),
+        b"gnostr learning repo for browsing commits, trees, and patches\n",
+    )
+    .with_context(|| format!("failed to write {}", fixture_path.join("description").display()))?;
+
+    Ok(fixture_path)
 }
 
 pub fn run(scan_path: &Path, db: &Arc<rocksdb::DB>) {
