@@ -98,17 +98,23 @@ function init_local_relay_sync() {
 }
 
 function stop_local_relay_sync() {
+    const model = GNOSTR;
+    model.local_relay_enabled = false;
     if (local_relay) {
         local_relay.close();
         local_relay = null;
     }
     local_relay_stats.connected = false;
+    model_save_settings(model);
     if (typeof render_relay_dashboard === 'function') {
         render_relay_dashboard();
     }
 }
 
 function start_local_relay_sync() {
+    const model = GNOSTR;
+    model.local_relay_enabled = true;
+    model_save_settings(model);
     if (local_relay && local_relay.ws && local_relay.ws.readyState === 1) {
         return local_relay;
     }

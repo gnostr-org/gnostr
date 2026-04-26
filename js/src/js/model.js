@@ -505,6 +505,7 @@ async function model_save_settings(model) {
 				pubkey: model.pubkey,
 				notifications_last_viewed: model.notifications.last_viewed,
 				relays: Array.from(model.relays),
+				local_relay_enabled: model.local_relay_enabled,
 				dms_seen: model_get_dms_seen(model),
 			});
 		};
@@ -525,6 +526,8 @@ async function model_load_settings(model) {
 				if (settings.relays.length) 
 					model.relays = new Set(settings.relays);
 				model.embeds = settings.embeds ? settings.embeds : "friends";
+				if (settings.local_relay_enabled != null)
+					model.local_relay_enabled = settings.local_relay_enabled;
 				model_set_dms_seen(model, settings.dms_seen);
 			}
 			db.close();
@@ -632,6 +635,7 @@ function new_model() {
 		deletions: {},
 		deleted: {},
 		pow: 0, // pow difficulty target
+        local_relay_enabled: true,
         nip34_sub_id: null, // To store the active NIP-34 subscription ID
 		nip34_polling_counter: 0, // Counter for NIP-34 polling frequency
 	};
