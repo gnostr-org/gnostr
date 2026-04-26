@@ -299,9 +299,7 @@ pub(crate) fn parse_nostr_url_inner(
 
         // 2-segment path — relay from env, then fallbacks (empty string = use defaults)
         (None, [npub, repo]) => {
-            let relay = env_relay.ok_or_else(|| {
-                anyhow::anyhow!("no relay in URL and NOSTR_RELAY env var not set")
-            })?;
+            let relay = env_relay.unwrap_or(crate::nostr_relay::DEFAULT_RELAY_FALLBACKS[0]);
             (normalize_relay_url(relay), *npub, *repo)
         }
 
@@ -320,6 +318,9 @@ pub(crate) fn parse_nostr_url_inner(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const TEST_NIP34_REPO_URL: &str =
+        "nostr://npub1p8c67pa0q0hfee0krwhspe2qzhw8324rplxhgq079sahhpex27ks8a56ac/test-nip34-repo";
 
     const NPUB: &str = "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy";
 
@@ -374,16 +375,13 @@ mod tests {
     // ── Relay from env fallback ───────────────────────────────────────────
 
     #[test]
-    fn two_segment_no_relay_is_error() {
+    fn two_segment_no_relay_uses_default_fallback() {
         let url = format!("nostr://{NPUB}/gnostr");
-        let err = parse_nostr_url_inner(&url, None).unwrap_err();
-        eprintln!("two_segment_no_relay_is_error: {url}");
-        eprintln!("  error={err}");
-        assert!(
-            err.to_string()
-                .contains("no relay in URL and NOSTR_RELAY env var not set"),
-            "unexpected error: {err}"
-        );
+        let (relay, pubkey, repo) = parse_nostr_url_inner(&url, None).unwrap();
+        eprintln!("two_segment_no_relay_uses_default_fallback: {url}");
+        eprintln!("  relay={relay}  pubkey={pubkey:.16}…  repo={repo}");
+        assert_eq!(relay, crate::nostr_relay::DEFAULT_RELAY_FALLBACKS[0]);
+        assert_eq!(repo, "gnostr");
     }
 
     #[test]
@@ -540,5 +538,18 @@ mod tests {
         let (_, _, repo) = parse_nostr_url_inner(url, None).unwrap();
         eprintln!("hello_nostr_with_git_suffix: hello-nostr.git => {repo}");
         assert_eq!(repo, "hello-nostr");
+    }
+
+    #[tokio::test]
+    async fn shared_repo_url_matches_ngit_parser() {
+        let (relay, pubkey_hex, repo) = parse_nostr_url_inner(TEST_NIP34_REPO_URL, None).unwrap();
+        let decoded =
+            ngit::git::nostr_url::NostrUrlDecoded::parse_and_resolve(TEST_NIP34_REPO_URL, &None)
+                .await
+                .unwrap();
+
+        assert_eq!(relay, crate::nostr_relay::DEFAULT_RELAY_FALLBACKS[0]);
+        assert_eq!(pubkey_hex, decoded.coordinate.public_key.to_string());
+        assert_eq!(repo, decoded.coordinate.identifier);
     }
 }

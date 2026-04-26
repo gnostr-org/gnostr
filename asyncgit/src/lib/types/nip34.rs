@@ -563,6 +563,9 @@ mod tests {
 
     use ngit::{client::STATE_KIND as NGIT_STATE_KIND, git_events as ngit_git_events};
 
+    const TEST_NIP34_REPO_URL: &str =
+        "nostr://npub1p8c67pa0q0hfee0krwhspe2qzhw8324rplxhgq079sahhpex27ks8a56ac/test-nip34-repo";
+
     fn ngit_kind_number<T: std::fmt::Debug>(kind: T) -> u32 {
         match format!("{kind:?}").as_str() {
             "GitStatusOpen" => 1630,
@@ -659,6 +662,43 @@ mod tests {
             ngit_coordinate.relays[0].to_string()
         );
         assert_eq!(async_repo_ref.coordinates().len(), ngit_repo_ref.coordinates().len());
+    }
+
+    #[tokio::test]
+    async fn repo_url_vector_matches_ngit_coordinate() {
+        let decoded =
+            ngit::git::nostr_url::NostrUrlDecoded::parse_and_resolve(TEST_NIP34_REPO_URL, &None)
+                .await
+                .unwrap();
+        let async_trusted_maintainer =
+            PublicKey::parse(decoded.coordinate.public_key.to_string()).unwrap();
+
+        let async_repo_ref = RepoRef {
+            name: "test-nip34-repo".to_string(),
+            description: String::new(),
+            identifier: decoded.coordinate.identifier.clone(),
+            root_commit: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
+            git_server: vec![],
+            web: vec![],
+            relays: vec![],
+            hashtags: vec![],
+            maintainers: vec![async_trusted_maintainer],
+            trusted_maintainer: async_trusted_maintainer,
+            events: HashMap::new(),
+        };
+
+        let async_coordinate = async_repo_ref.coordinate_with_hint();
+
+        assert_eq!(async_coordinate.d, "test-nip34-repo");
+        assert_eq!(
+            async_coordinate.author.as_hex_string(),
+            decoded.coordinate.public_key.to_string()
+        );
+        assert_eq!(
+            u32::from(async_coordinate.kind),
+            u32::from(repo_announcement_kind())
+        );
+        assert!(async_coordinate.relays.is_empty());
     }
 
     #[tokio::test]

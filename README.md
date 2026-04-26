@@ -76,8 +76,15 @@ The repo keeps a few shell wrappers for the most common test paths:
 
 `gnostr-tests.sh` runs the workspace test suite, `gnostr-asyncgit-tests.sh`
 adds the asyncgit DM/NIP regressions and queries the real event ids it emits,
-and `gnostr-ngit-tests.sh` exercises the ngit library with optional cargo
-feature switches.
+including the shared NIP-34 repo URL vector regression, and
+`gnostr-ngit-tests.sh` exercises the ngit library with optional cargo feature
+switches.
+
+For the workspace runner, a handy targeted example is:
+
+```bash
+./scripts/gnostr-tests.sh --test blossom_remote_push_list_and_fetch_round_trip -- --nocapture
+```
 
 The matrix workflow `./.github/workflows/gnostr-test-matrix.yml` runs the
 asyncgit and ngit wrappers on the stable toolchain, which keeps the script

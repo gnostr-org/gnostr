@@ -70,3 +70,6 @@ tokio-tungstenite = { version = "0.21", features = ["rustls-tls-webpki-roots"] }
 # Logging to stderr (helpers must not pollute stdout)
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+ngit = { package = "gnostr-ngit", path = "../ngit" }

@@ -3,7 +3,7 @@ use clap;
 use nostr::nips::{nip01::Coordinate, nip19::Nip19Coordinate};
 
 use ngit::{
-    client::{fetching_with_report, Client, Connect},
+    client::{fetching_with_report, Client, Connect, Params},
     git::{Repo, RepoActions},
     repo_ref::get_repo_coordinates_when_remote_unknown,
 };
@@ -20,11 +20,7 @@ pub async fn launch(
     args: &FetchArgs,
 ) -> Result<()> {
     let git_repo = Repo::discover().context("cannot find a git repository")?;
-
-    #[cfg(test)]
-    let client: &crate::client::MockConnect = &mut Default::default();
-    #[cfg(not(test))]
-    let client = Client::default();
+    let client = Client::new(Params::with_git_config_relay_defaults(&Some(&git_repo)));
 
     let repo_coordinates: Nip19Coordinate = if args.repo.is_empty() {
         get_repo_coordinates_when_remote_unknown(&git_repo, &client).await?

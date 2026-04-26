@@ -3,6 +3,7 @@
 //! Provides git-remote helper binaries extending git with:
 //! - `git-remote-blossom`: Blossom blob storage (BUD-01/02, kind:24242 auth)
 //! - `git-remote-nostr`: NIP-34 repos resolved via Nostr relay → GRASP HTTP
+//!   and aligned with the workspace git-remote-nostr wrappers
 //! - `git-remote-ipfs`: IPFS/Kubo MFS storage (ipfs://)
 //! - `git-remote-pkarr`: PKARR DHT discovery → Blossom endpoint (pkarr://)
 //! - `git-remote-tor`: Blossom over Tor SOCKS5 proxy (blossom+onion://, tor://)

@@ -6768,6 +6768,7 @@ dependencies = [
  "anyhow",
  "bech32 0.11.1",
  "futures-util",
+ "gnostr-ngit",
  "hex",
  "pkarr 6.0.0-rc.0",
  "reqwest 0.12.28",

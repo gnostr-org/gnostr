@@ -83,6 +83,7 @@ run_cargo_test_step "asyncgit nip44 long message test" cargo test -p gnostr-asyn
 run_cargo_test_step "asyncgit nip44 invalid lengths test" cargo test -p gnostr-asyncgit --lib types::nip44::tests::test_invalid_encrypt_msg_lengths -- "${TEST_FLAGS[@]}"
 run_cargo_test_step "asyncgit nip34 root commit test" cargo test -p gnostr-asyncgit --lib types::nip34::tests::repo_ref_defaults_identifier_from_root_commit -- "${TEST_FLAGS[@]}"
 run_cargo_test_step "asyncgit nip34 maintainer fanout test" cargo test -p gnostr-asyncgit --lib types::nip34::tests::repo_ref_coordinates_include_relay_hint_and_all_maintainers -- "${TEST_FLAGS[@]}"
+run_cargo_test_step "asyncgit nip34 repo url vector test" cargo test -p gnostr-asyncgit --lib types::nip34::tests::repo_url_vector_matches_ngit_coordinate -- "${TEST_FLAGS[@]}"
 run_cargo_test_step "asyncgit nip34 npub tag test" cargo test -p gnostr-asyncgit --lib types::nip34::tests::event_tag_from_nip19_or_hex_accepts_npub_when_allowed -- "${TEST_FLAGS[@]}"
 NIP4_TEST_OUTPUT="$(run_cargo_capture_step "asyncgit nip4 dm roundtrip test" cargo test -p gnostr-asyncgit --lib types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions -- "${TEST_FLAGS[@]}")"
 printf '%s\n' "$NIP4_TEST_OUTPUT"

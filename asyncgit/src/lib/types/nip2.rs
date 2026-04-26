@@ -59,7 +59,7 @@ mod tests {
         assert_eq!(u32::from(event.kind), 3);
         assert_eq!(event.content, "");
         assert_eq!(event.tags.len(), 1);
-        assert_eq!(event.tags[0], vec![
+        assert_eq!(event.tags[0].0, vec![
             "p".to_string(),
             XOnlyPublicKey::from_slice(&[3u8; 32]).unwrap().to_string(),
             "wss://relay.damus.io".to_string(),

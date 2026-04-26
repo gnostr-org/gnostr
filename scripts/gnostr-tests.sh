@@ -25,6 +25,7 @@ Examples:
   ./scripts/gnostr-tests.sh --test sub_commands::dm::dm_tests::test_dm_command_success
   ./scripts/gnostr-tests.sh --ignored
   ./scripts/gnostr-tests.sh --workspace --ignored
+  ./scripts/gnostr-tests.sh --test blossom_remote_push_list_and_fetch_round_trip -- --nocapture
 EOF
 }
 
@@ -111,14 +112,24 @@ if [[ "$LIST_ONLY" == true ]]; then
 fi
 
 if [[ -n "$TEST_NAME" ]]; then
-  if cargo test --workspace --all-targets "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}"; then
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    cargo_cmd=(cargo test --workspace --all-targets "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}")
+  else
+    cargo_cmd=(cargo test --workspace --all-targets "$TEST_NAME" -- --exact)
+  fi
+  if "${cargo_cmd[@]}"; then
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} successful" >/dev/null 2>&1 || true
   else
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} fail" >/dev/null 2>&1 || true
     exit 1
   fi
 else
-  if cargo test --workspace --all-targets -- "${TEST_FLAGS[@]}"; then
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    cargo_cmd=(cargo test --workspace --all-targets -- "${TEST_FLAGS[@]}")
+  else
+    cargo_cmd=(cargo test --workspace --all-targets --)
+  fi
+  if "${cargo_cmd[@]}"; then
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true
   else
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite fail" >/dev/null 2>&1 || true
