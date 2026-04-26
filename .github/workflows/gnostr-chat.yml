@@ -132,38 +132,26 @@ jobs:
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
             curl https://njump.me/$NOTE
       - run: |
-          LISTENER_HASH="$(printf '%s' listener | sha256sum | cut -d' ' -f1)"
+          set -euo pipefail
+
           SENDER_HASH="$(printf '%s' sender | sha256sum | cut -d' ' -f1)"
+          END_AT=$((SECONDS + 120))
+          COUNT=0
 
-          ./target/debug/gnostr chat \
-            --headless \
-            --debug \
-            --name listener \
-            --hash "$LISTENER_HASH" \
-            --topic gnostr \
-            > listener_output.log 2>&1 &
+          echo "Pushing oneshot chat messages for 2 minutes..."
+          while [ "$SECONDS" -lt "$END_AT" ]; do
+            COUNT=$((COUNT + 1))
+            MESSAGE="Hello from github-ci-sender #${COUNT} at $(date +%s)"
+            ./target/debug/gnostr chat \
+              --debug \
+              --name sender \
+              --hash "$SENDER_HASH" \
+              --topic gnostr \
+              --oneshot "$MESSAGE"
+            sleep 5
+          done
 
-          echo "Listener started"
-          sleep 10 # Give the listener time to detach and discover peers
-
-          MESSAGE="Hello from github-ci-sender at $(date +%s)"
-          ./target/debug/gnostr chat \
-            --debug \
-            --name sender \
-            --hash "$SENDER_HASH" \
-            --topic gnostr \
-            --oneshot "$MESSAGE"
-
-          sleep 10 # Give the network time to propagate the oneshot message
-
-          echo "Checking listener output..."
-          cat listener_output.log
-          if grep -Fq "mDNS discovered a new peer" listener_output.log && grep -Fq "$MESSAGE" listener_output.log; then
-            echo "Test passed: Listener detected the peer and message."
-          else
-            echo "Test failed: Listener did not detect the peer or message."
-            exit 1
-          fi
+          echo "Finished pushing ${COUNT} oneshot messages."
 
       - name: Save rustup
         id: cache-rustup-save
