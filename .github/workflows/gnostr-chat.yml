@@ -117,40 +117,40 @@ jobs:
       - name: Install cargo-binstall
         id: binstall
         continue-on-error: true
-        if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' }}
+        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
         uses: cargo-bins/cargo-binstall@v1.18.1
 
       - name: Fallback install cargo-binstall (from crates.io)
-        if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' && steps.binstall.outcome != 'success' }}
+        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') && steps.binstall.outcome != 'success' }}
         shell: bash
         run: |
           set -euxo pipefail
           cargo install cargo-binstall --locked
 
       - name: Install gnostr via cargo-binstall
-        if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' }}
+        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
         uses: ./.github/actions/cargo-binstall-gnostr
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
-          if [ -f ~/.cargo/bin/gnostr ]; then
-            chmod +x "$HOME/.cargo/bin/gnostr"
-            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
-          elif [ -f target/debug/gnostr ]; then
+          if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
           $GNOSTR_CMD --help
       - run: |
-          if [ -f ~/.cargo/bin/gnostr ]; then
-            chmod +x "$HOME/.cargo/bin/gnostr"
-            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
-          elif [ -f target/debug/gnostr ]; then
+          if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
@@ -165,24 +165,24 @@ jobs:
             -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
             -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
-          if [ -f ~/.cargo/bin/gnostr ]; then
-            chmod +x "$HOME/.cargo/bin/gnostr"
-            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
-          elif [ -f target/debug/gnostr ]; then
+          if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
           $GNOSTR_CMD ngit --nsec $(gnostr-sha256) fetch
       - run: |
-          if [ -f ~/.cargo/bin/gnostr ]; then
-            chmod +x "$HOME/.cargo/bin/gnostr"
-            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
-          elif [ -f target/debug/gnostr ]; then
+          if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
@@ -212,12 +212,12 @@ jobs:
           END_AT=$((SECONDS + 120))
           COUNT=0
 
-          if [ -f ~/.cargo/bin/gnostr ]; then
-            chmod +x "$HOME/.cargo/bin/gnostr"
-            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
-          elif [ -f target/debug/gnostr ]; then
+          if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
