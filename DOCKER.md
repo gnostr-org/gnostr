@@ -125,3 +125,7 @@ For cross-build usage details, see [`CROSS.md`](CROSS.md).
   Podman.
 - On Apple Silicon, `cross 0.2.5` has a known host/toolchain issue for some
   Linux cross targets; that behavior is documented in `CROSS.md`.
+- `build-artifact.yml` publishes the main runtime images to GHCR as
+  `ghcr.io/gnostr-org/{gnostr,gnostr-node,blossom-server,blossom-git}`.
+- If `GITHUB_TOKEN` is restricted for package publish, add a repo secret named
+  `GHCR_PAT` with `packages:write` and `read:packages` access.
