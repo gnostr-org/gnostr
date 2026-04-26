@@ -19,3 +19,20 @@ pub fn asset_content_type(filename: &str) -> &'static str {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{asset_content_type, get_js_assets};
+
+    #[test]
+    fn asset_content_types_match_extensions() {
+        assert_eq!(asset_content_type("main.js"), "application/javascript");
+        assert_eq!(asset_content_type("style.css"), "text/css");
+        assert_eq!(asset_content_type("logo.svg"), "image/svg+xml");
+    }
+
+    #[test]
+    fn js_assets_are_available() {
+        assert!(get_js_assets().contains_key("core.js"));
+        assert!(get_js_assets().contains_key("ui/state.js"));
+    }
+}
