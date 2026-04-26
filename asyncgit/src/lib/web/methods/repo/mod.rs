@@ -78,93 +78,81 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
 
-    // Check if root path should be treated as a repository
     let root_repo_path = scan_path.join("");
-    let is_root_repo = root_repo_path.is_dir() || root_repo_path.is_file();
     let root_repo_exists_in_db =
-        crate::web::database::schema::repository::Repository::exists(db, &PathBuf::from(""))
+        crate::web::database::schema::repository::Repository::exists(db, &PathBuf::from("."))
             .unwrap_or_default();
-
-    debug!(
-        "Root repo detection - path: {}, is_dir: {}, is_file: {}, exists_in_db: {}",
-        root_repo_path.display(),
-        root_repo_path.is_dir(),
-        root_repo_path.is_file(),
-        root_repo_exists_in_db
-    );
 
     // Try to find the repository name and handler segment
     let mut current_segment_index = 0;
 
-    // Handle root repository case (URI segments could be ["summary"], ["about"], etc. for root repo)
-    if is_root_repo && root_repo_exists_in_db {
-        repository_name = PathBuf::new();
+    while current_segment_index < uri_segments.len() {
+        let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
+        debug!("Looping URI Segments: {:?}", potential_repo_name_segments);
+        let potential_repo_name = potential_repo_name_segments
+            .iter()
+            .collect::<PathBuf>()
+            .clean();
+        debug!("Potential Repo Name: {}", potential_repo_name.display());
+        let full_potential_repo_path = scan_path.join(&potential_repo_name);
+        debug!(
+            "Full Potential Repo Path: {}",
+            full_potential_repo_path.display()
+        );
+
+        //We detect repo types
+        let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() //<repo>.git/HEAD
+        && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
+        let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
+        let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
+        let exists_in_db = crate::web::database::schema::repository::Repository::exists(
+            db,
+            &potential_repo_name,
+        )
+        .unwrap_or_default();
+        debug!(
+            "  Is Bare: {}, Is Working Tree: {}, Is Working Tree Repo:{}, Exists in DB: {}",
+            is_bare_repo, is_working_tree, is_working_tree_repo, exists_in_db
+        );
+
+        // Only consider it a repository if it exists on disk *and* is in the database
+        if (is_bare_repo || is_working_tree || is_working_tree_repo) && exists_in_db {
+            repository_name = potential_repo_name;
+
+            // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
+            // we should treat the part before .git as the repository_name
+            if (is_working_tree || is_working_tree_repo)
+                && current_segment_index + 1 < uri_segments.len()
+                && uri_segments[current_segment_index + 1] == ".git"
+            {
+                // Adjust segments to skip ".git"
+                current_segment_index += 1; // Skip the .git segment
+            }
+
+            if current_segment_index + 1 < uri_segments.len() {
+                handler_segment = Some(uri_segments[current_segment_index + 1]);
+                child_path_segments = uri_segments[current_segment_index + 2..].to_vec();
+            }
+            break;
+        }
+        current_segment_index += 1;
+    }
+
+    if repository_name.as_os_str().is_empty() && root_repo_exists_in_db {
+        repository_name = PathBuf::from(".");
         handler_segment = uri_segments.get(0).copied();
         child_path_segments = if uri_segments.len() > 1 {
             uri_segments[1..].to_vec()
         } else {
             Vec::new()
         };
-    } else {
-        // If not root repository, continue with normal detection
-        while current_segment_index < uri_segments.len() {
-            let potential_repo_name_segments = &uri_segments[0..=current_segment_index];
-            debug!("Looping URI Segments: {:?}", potential_repo_name_segments);
-            let potential_repo_name = potential_repo_name_segments
-                .iter()
-                .collect::<PathBuf>()
-                .clean();
-            debug!("Potential Repo Name: {}", potential_repo_name.display());
-            let full_potential_repo_path = scan_path.join(&potential_repo_name);
-            debug!(
-                "Full Potential Repo Path: {}",
-                full_potential_repo_path.display()
-            );
-
-            //We detect repo types
-            let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() //<repo>.git/HEAD
-            && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
-            let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
-            let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
-            let exists_in_db = crate::web::database::schema::repository::Repository::exists(
-                db,
-                &potential_repo_name,
-            )
-            .unwrap_or_default();
-            debug!(
-                "  Is Bare: {}, Is Working Tree: {}, Is Working Tree Repo:{}, Exists in DB: {}",
-                is_bare_repo, is_working_tree, is_working_tree_repo, exists_in_db
-            );
-
-            // Only consider it a repository if it exists on disk *and* is in the database
-            if (is_bare_repo || is_working_tree || is_working_tree_repo) && exists_in_db {
-                repository_name = potential_repo_name;
-
-                // If it's a working tree repo, but the URL *includes* .git (e.g., /repo/.git/tree)
-                // we should treat the part before .git as the repository_name
-                if (is_working_tree || is_working_tree_repo)
-                    && current_segment_index + 1 < uri_segments.len()
-                    && uri_segments[current_segment_index + 1] == ".git"
-                {
-                    // Adjust segments to skip ".git"
-                    current_segment_index += 1; // Skip the .git segment
-                }
-
-                if current_segment_index + 1 < uri_segments.len() {
-                    handler_segment = Some(uri_segments[current_segment_index + 1]);
-                    child_path_segments = uri_segments[current_segment_index + 2..].to_vec();
-                }
-                break;
-            }
-            current_segment_index += 1;
-        }
     }
 
     debug!("Repository Name: {}", repository_name.display());
     debug!("Handler Segment: {:?}", handler_segment);
     debug!("Child Path Segments: {:?}", child_path_segments);
 
-    if repository_name.as_os_str().is_empty() && !(is_root_repo && root_repo_exists_in_db) {
+    if repository_name.as_os_str().is_empty() {
         return RepositoryNotFound.into_response();
     }
 
@@ -202,9 +190,14 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     debug!("Final Child Path: {:?}", child_path);
 
-    let repository_abs_path = if repository_name.as_os_str().is_empty() {
-        // Root repository - use .git directory
-        scan_path.join(".git")
+    let repository_abs_path = if repository_name.as_os_str().is_empty() || repository_name == Path::new(".") {
+        // Root repository - open the scan root's git dir when it is a working tree.
+        let git_dir = scan_path.join(".git");
+        if git_dir.is_dir() || git_dir.is_file() {
+            git_dir
+        } else {
+            scan_path.to_path_buf()
+        }
     } else {
         // Check if this is a working tree repo and use .git subdirectory
         let repo_path = scan_path.join(&repository_name);
@@ -239,6 +232,16 @@ impl Deref for Repository {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Repository {
+    pub fn href_base(&self) -> String {
+        if self.0.as_os_str().is_empty() || self.0 == Path::new(".") {
+            "/".to_string()
+        } else {
+            format!("/{}/", self.0.display())
+        }
     }
 }
 

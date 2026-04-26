@@ -25,7 +25,7 @@
             <td>
                 {% match tagged_object %}
                     {% when crate::git::TaggedObject::Commit with (commit) %}
-                        <a href="/{{ repo.display() }}/commit?id={{ commit }}{% call link::maybe_branch_suffix(branch) %}">commit {{ commit|truncate(10) }}...</a>
+                        <a href="{{ repo.href_base() }}commit?id={{ commit }}{% call link::maybe_branch_suffix(branch) %}">commit {{ commit|truncate(10) }}...</a>
                     {% when crate::git::TaggedObject::Tree with (tree) %}
                         tree {{ tree }}
                 {% endmatch %}
@@ -34,7 +34,7 @@
     {% endif %}
     <tr>
         <th>download</th>
-        <td colspan="2"><pre><a href="/{{ repo.display() }}/snapshot?h={{ tag.name }}">{{ tag.name }}.tar.gz</a></pre></td>
+        <td colspan="2"><pre><a href="{{ repo.href_base() }}snapshot?h={{ tag.name }}">{{ tag.name }}.tar.gz</a></pre></td>
     </tr>
     </tbody>
 </table>

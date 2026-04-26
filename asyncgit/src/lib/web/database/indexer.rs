@@ -225,8 +225,16 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             }
         };
 
-        let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
-            continue;
+        let name = if relative == Path::new(".") {
+            scan_path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap_or(".")
+        } else {
+            relative
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap_or(".")
         };
         // Read description from correct location based on repository type
         let description_path = if std::process::Command::new("git")
@@ -602,7 +610,13 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
         "get_relative_path:full_path:{} (repository)",
         &full_path.display()
     ); //repository
-    full_path.strip_prefix(relative_to).ok()
+    let relative = full_path.strip_prefix(relative_to).ok()?;
+
+    if relative.as_os_str().is_empty() {
+        Some(Path::new("."))
+    } else {
+        Some(relative)
+    }
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
@@ -618,7 +632,6 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
     if gix::open(current).is_ok() {
         debug!("Discovered Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
-        return; // Stop recursion for this path
     }
 
     // Check if current is a directory that contains .git
@@ -662,6 +675,9 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         let path = entry.path();
 
         if path.is_dir() {
+            if path.file_name() == Some(OsStr::new(".git")) {
+                continue;
+            }
             // Skip directories under `target/`
             if path.components().any(|c| c.as_os_str() == "target") {
                 debug!("Skipping target directory: {}", path.display());

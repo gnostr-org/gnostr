@@ -20,27 +20,27 @@ crate::HIGHLIGHT_CSS_HASH.get() %}
       <tr>
         <th>commit</th>
         <td colspan="2">
-          <pre><a href="/{{ repo.display() }}/commit?id={{ commit.oid() }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ commit.oid() }}</a> <a href="/{{ repo.display() }}/patch?id={{ commit.oid() }}">[patch]</a></pre>
+          <pre><a href="{{ repo.href_base() }}commit?id={{ commit.oid() }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ commit.oid() }}</a> <a href="{{ repo.href_base() }}patch?id={{ commit.oid() }}">[patch]</a></pre>
         </td>
       </tr>
       <tr>
         <th>tree</th>
         <td colspan="2">
-          <pre><a href="/{{ repo.display() }}/tree?id={{ commit.tree() }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ commit.tree() }}</a></pre>
+          <pre><a href="{{ repo.href_base() }}tree?id={{ commit.tree() }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ commit.tree() }}</a></pre>
         </td>
       </tr>
       {%- for parent in commit.parents() %}
       <tr>
         <th>parent</th>
         <td colspan="2">
-          <pre><a href="/{{ repo.display() }}/commit?id={{ parent }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ parent }}</a></pre>
+          <pre><a href="{{ repo.href_base() }}commit?id={{ parent }}{% call link::maybe_branch_suffix(branch) %}" class="no-style">{{ parent }}</a></pre>
         </td>
       </tr>
       {%- endfor %}
       <tr>
         <th>download</th>
         <td colspan="2">
-          <pre><a href="/{{ repo.display() }}/snapshot?{% if let Some(id) = id %}id={{ id }}{% else %}h={{ dl_branch }}{% endif %}">{{ id.as_deref().unwrap_or(dl_branch.as_ref()) }}.tar.gz</a></pre>
+          <pre><a href="{{ repo.href_base() }}snapshot?{% if let Some(id) = id %}id={{ id }}{% else %}h={{ dl_branch }}{% endif %}">{{ id.as_deref().unwrap_or(dl_branch.as_ref()) }}.tar.gz</a></pre>
         </td>
       </tr>
     </tbody>
