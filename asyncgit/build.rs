@@ -47,6 +47,9 @@ fn verify_nip44_vectors(manifest_dir: &Path) -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed={}", vectors_path.display());
 
     let vectors = std::fs::read(&vectors_path).context("Failed to read NIP-44 vectors")?;
+    // Normalize line endings to LF before hashing so the hash is consistent
+    // across platforms (Windows checks out files with CRLF by default).
+    let vectors: Vec<u8> = vectors.into_iter().filter(|&b| b != b'\r').collect();
     let actual = Sha256::digest(&vectors);
     let actual = format!("{:x}", actual);
 
