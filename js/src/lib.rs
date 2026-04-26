@@ -1,7 +1,9 @@
 #![allow(unused)]
-pub mod js;
+pub mod bridge;
 pub mod css;
 pub mod images;
+pub mod js;
+pub mod pwa;
 pub mod template_html;
 pub mod websock_index_html;
 pub mod web_app;

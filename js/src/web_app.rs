@@ -1,30 +1,14 @@
-use std::{collections::HashMap, env, path::PathBuf, sync::Arc};
-
-use handlebars::Handlebars;
-use serde::Serialize;
-use serde_json::json;
-use futures_util::{FutureExt, StreamExt};
 use std::io;
+use std::sync::Arc;
+
+use clap::Parser;
 use warp::Filter;
-use warp::reply;
-use warp::reply::json;
 
-use crate::*;
-
-struct WithTemplate<T: Serialize> {
-    name: &'static str,
-    value: T,
-}
-
-fn render<T>(template: WithTemplate<T>, hbs: Arc<Handlebars<'_>>) -> impl warp::Reply
-where
-    T: Serialize,
-{
-    let render = hbs
-        .render(template.name, &template.value)
-        .unwrap_or_else(|err| err.to_string());
-    warp::reply::html(render)
-}
+use crate::bridge;
+use crate::css::css_bundle::get_css_assets;
+use crate::images::images_bundle::get_images_assets;
+use crate::js::js_bundle::get_js_assets;
+use crate::pwa::pwa_bundle::get_pwa_assets;
 
 fn open(host: &str, port: i32) -> io::Result<()> {
     let url = format!("http://{}:{}", host, port);
@@ -39,111 +23,98 @@ fn open(host: &str, port: i32) -> io::Result<()> {
     Ok(())
 }
 
-/// Run the Nostr web app on the given port.
+/// Run the embedded Nostr web app on the given port.
 pub async fn run(port: u16) {
     const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
 
     pretty_env_logger::init();
 
-    let main_js = js::main_js::JSMain::new();
-    let main_js_bytes: &[u8] = include_bytes!("js/main.js");
-    assert_eq!(main_js_bytes, main_js.main_js);
+    let shell_html = Arc::new(bridge::shell_html());
+    let js_assets_map = Arc::new(get_js_assets());
+    let css_assets_map = Arc::new(get_css_assets());
+    let images_assets_map = Arc::new(get_images_assets());
+    let pwa_assets_map = Arc::new(get_pwa_assets());
 
-    let template = template_html::TemplateHtml::new();
-    let mut hb = Handlebars::new();
-    hb.register_template_string("template.html", template.to_string())
-        .unwrap();
-    let hb = Arc::new(hb);
-    let handlebars = move |with_template| render(with_template, hb.clone());
-
-    let route = warp::get()
-        .and(warp::path::end())
-        .map(|| WithTemplate {
-            name: "template.html",
-            value: json!({"user" : "🅖"}),
+    let shell = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::get().and(warp::path::end()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
         })
-        .map(handlebars.clone())
-        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
+    };
 
-    let routes = warp::path("echo")
-        .and(warp::ws())
-        .map(|ws: warp::ws::Ws| {
-            ws.on_upgrade(|websocket| {
-                let (tx, rx) = websocket.split();
-                rx.forward(tx).map(|result| {
-                    if let Err(e) = result {
-                        eprintln!("websocket error: {:?}", e);
-                    }
-                })
+    let messages_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path("messages").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
+    let gnostr_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path("gnostr").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
+    let repository_detail_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("repository-details" / String)
+            .and(warp::get())
+            .map(move |_repo_id: String| {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
             })
-        });
+    };
 
-    let cargo_manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root_static_files = warp::fs::dir(cargo_manifest_dir.join("."));
+    let js_route = warp::path("js")
+        .and(warp::path::tail())
+        .map(|tail: warp::path::Tail| tail.as_str().to_string())
+        .and(warp::any().map(move || Arc::clone(&js_assets_map)))
+        .map(bridge::asset_response);
 
-    let messages_route = warp::path("messages")
-        .and(warp::get())
-        .map(|| WithTemplate {
-            name: "template.html",
-            value: json!({ "user": "🅖" }),
-        })
-        .map(handlebars.clone())
-        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
+    let css_route = warp::path("css")
+        .and(warp::path::tail())
+        .map(|tail: warp::path::Tail| tail.as_str().to_string())
+        .and(warp::any().map(move || Arc::clone(&css_assets_map)))
+        .map(bridge::asset_response);
 
-    let pwa_route = warp::path("pwa").and(warp::fs::dir(cargo_manifest_dir.join("pwa")));
-    let images_route = warp::path("images").and(warp::fs::dir(cargo_manifest_dir.join("images")));
-    let js_files = warp::path("js").and(warp::fs::dir(cargo_manifest_dir.join("js")));
-    let css_files = warp::path("css").and(warp::fs::dir(cargo_manifest_dir.join("css")));
+    let images_route = warp::path("images")
+        .and(warp::path::tail())
+        .map(|tail: warp::path::Tail| tail.as_str().to_string())
+        .and(warp::any().map(move || Arc::clone(&images_assets_map)))
+        .map(bridge::asset_response);
 
-    let nip34_detail_route = warp::path!("repository-details" / String)
-        .and(warp::get())
-        .map(|_repo_id: String| WithTemplate {
-            name: "template.html",
-            value: json!({ "user": "🅖" }),
-        })
-        .map(handlebars.clone())
-        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
+    let pwa_route = warp::path("pwa")
+        .and(warp::path::tail())
+        .map(|tail: warp::path::Tail| tail.as_str().to_string())
+        .and(warp::any().map(move || Arc::clone(&pwa_assets_map)))
+        .map(bridge::asset_response);
 
-    let gnostr = warp::path!("gnostr")
-        .and(warp::get())
-        .map(|| WithTemplate {
-            name: "template.html",
-            value: json!({ "user": "🅖" }),
-        })
-        .map(handlebars.clone())
-        .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
-
-    let root_routes = root_static_files
+    let routes = shell
         .or(messages_route)
-        .or(pwa_route)
+        .or(gnostr_route)
+        .or(repository_detail_route)
+        .or(js_route)
+        .or(css_route)
         .or(images_route)
-        .or(js_files)
-        .or(css_files)
-        .or(nip34_detail_route)
-        .or(gnostr)
-        .or(warp::get().and(
-            warp::path::end()
-                .map(|| WithTemplate {
-                    name: "template.html",
-                    value: json!({ "user": "🅖" }),
-                })
-                .map(handlebars.clone())
-                .map(|reply| {
-                    reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)
-                }),
-        ))
-        .or(warp::get()
-            .and(warp::path::full())
-            .map(|_| WithTemplate {
-                name: "template.html",
-                value: json!({ "user": "🅖" }),
-            })
-            .map(handlebars)
-            .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING)));
+        .or(pwa_route);
 
     let _ = open("127.0.0.1", port.try_into().unwrap());
     println!("http://127.0.0.1:{}", port);
-    warp::serve(root_routes.clone())
-        .run(([127, 0, 0, 1], port))
-        .await;
+    warp::serve(routes).run(([127, 0, 0, 1], port)).await;
 }
