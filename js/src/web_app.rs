@@ -68,6 +68,17 @@ pub async fn run(port: u16) {
         })
     };
 
+    let nip34_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path("nip-34").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
     let repository_detail_route = {
         let shell_html = Arc::clone(&shell_html);
         warp::path!("repository-details" / String)
@@ -108,6 +119,7 @@ pub async fn run(port: u16) {
     let routes = shell
         .or(messages_route)
         .or(gnostr_route)
+        .or(nip34_route)
         .or(repository_detail_route)
         .or(js_route)
         .or(css_route)

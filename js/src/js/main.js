@@ -24,6 +24,9 @@ const gnostrWeb = {
 	signin,
 	webapp_init,
 	parse_url_mode,
+	get model() {
+		return GNOSTR;
+	},
 };
 
 if (typeof globalThis !== "undefined") {
