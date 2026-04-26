@@ -18,21 +18,7 @@ function linkify(text="") {
 }
 
 function format_content(model, ev) {
-    const nip34_kinds = new Set([
-        KIND_REPO_ANNOUNCE,
-        KIND_REPO_STATE_ANNOUNCE,
-        KIND_REPO_PATCH,
-        KIND_REPO_PULL_REQ,
-        KIND_REPO_PULL_REQ_UPDATE,
-        KIND_REPO_ISSUE,
-        KIND_REPO_REPLY,
-        KIND_REPO_STATUS_OPEN,
-        KIND_REPO_STATUS_APPLIED,
-        KIND_REPO_STATUS_CLOSED,
-        KIND_REPO_STATUS_DRAFT,
-    ]);
-
-    if (nip34_kinds.has(ev.kind)) {
+    if (event_is_nip34_kind(ev.kind)) {
         return render_repo_event_summary(model, ev);
     }
 
@@ -93,11 +79,11 @@ function fmt_mentions(model, str, tags) {
 			buf += `#[${x}]`
 			continue;
 		}
-		let ref = tag[1];
-		if (tag[0] == 'e') {
+		let ref = tag_value(tag);
+		if (tag_name(tag) == 'e') {
 			buf += `<span class="clickable bold" action="open-thread"
 			data-thread-id="${ref}">note:${fmt_pubkey(ref)}</span>`;
-		} else if (tag[0] == 'p') {
+		} else if (tag_name(tag) == 'p') {
 			let profile = model_get_profile(model, ref);
 			buf += `<span class="username clickable" action="open-profile" 
 			data-pubkey="${ref}">${fmt_name(profile)}</span>`;
