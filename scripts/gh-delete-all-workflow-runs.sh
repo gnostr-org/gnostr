@@ -80,18 +80,35 @@ delete_run() {
 }
 
 deleted=0
-listed=0
-echo "Listing workflow runs..."
-while IFS= read -r run_id; do
-  [[ -z "$run_id" ]] && continue
-  listed=$((listed + 1))
-  echo "Deleting workflow run ${run_id}..."
-  delete_run "$run_id"
-  deleted=$((deleted + 1))
-done < <(gh api --paginate "$runs_json_path" --jq '.workflow_runs[].id')
+echo "Counting workflow runs..."
+total="$(gh api "$runs_json_path" --jq '.total_count')"
 
-if [[ "$listed" -eq 0 ]]; then
+if [[ "$total" -eq 0 ]]; then
   echo "No workflow runs found."
+else
+  page=1
+  current=0
+  while :; do
+    echo "Listing workflow runs on page ${page}..."
+    run_ids=()
+    while IFS= read -r run_id; do
+      [[ -z "$run_id" ]] && continue
+      run_ids+=("$run_id")
+    done < <(gh api "${runs_json_path}&page=${page}" --jq '.workflow_runs[].id')
+
+    if [[ "${#run_ids[@]}" -eq 0 ]]; then
+      break
+    fi
+
+    for run_id in "${run_ids[@]}"; do
+      current=$((current + 1))
+      echo "Deleting workflow run ${current}/${total}: ${run_id}..."
+      delete_run "$run_id"
+      deleted=$((deleted + 1))
+    done
+
+    page=$((page + 1))
+  done
 fi
 
 echo "Deleted ${deleted} workflow runs from ${repo}."
