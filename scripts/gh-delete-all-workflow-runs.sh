@@ -86,9 +86,9 @@ total="$(gh api "$runs_json_path" --jq '.total_count')"
 if [[ "$total" -eq 0 ]]; then
   echo "No workflow runs found."
 else
-  page=1
+  pages=$(((total + 99) / 100))
   current=0
-  while :; do
+  for page in $(seq "$pages" -1 1); do
     echo "Listing workflow runs on page ${page}..."
     run_ids=()
     while IFS= read -r run_id; do
@@ -96,18 +96,13 @@ else
       run_ids+=("$run_id")
     done < <(gh api "${runs_json_path}&page=${page}" --jq '.workflow_runs[].id')
 
-    if [[ "${#run_ids[@]}" -eq 0 ]]; then
-      break
-    fi
-
-    for run_id in "${run_ids[@]}"; do
+    for ((i=${#run_ids[@]} - 1; i >= 0; i--)); do
+      run_id="${run_ids[$i]}"
       current=$((current + 1))
       echo "Deleting workflow run ${current}/${total} run_id=${run_id}..."
       delete_run "$run_id"
       deleted=$((deleted + 1))
     done
-
-    page=$((page + 1))
   done
 fi
 
