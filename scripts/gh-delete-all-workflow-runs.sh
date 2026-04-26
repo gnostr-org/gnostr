@@ -102,7 +102,7 @@ else
 
     for run_id in "${run_ids[@]}"; do
       current=$((current + 1))
-      echo "Deleting workflow run ${current}/${total}: ${run_id}..."
+      echo "Deleting workflow run ${current}/${total} run_id=${run_id}..."
       delete_run "$run_id"
       deleted=$((deleted + 1))
     done
