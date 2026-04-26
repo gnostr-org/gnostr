@@ -314,8 +314,24 @@
 
 <!-- begit git web view -->
 <div class="table-responsive">
+  <div class="mb-2">
+    <button id="expand-all-repos" class="action small" type="button">Expand all</button>
+    <button id="collapse-all-repos" class="action small" type="button">Collapse all</button>
+  </div>
+  <div class="mb-2 repo-jump">
+    {%- for (path, repositories) in repositories %}
+    <a href="#repo-group-{{ loop.index0 }}">
+      {%- if let Some(path) = path -%}
+        {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
+      {%- else -%}
+        top-level
+      {%- endif -%}
+      ({{ repositories.len() }})
+    </a>
+    {%- endfor %}
+  </div>
   {%- for (path, repositories) in repositories %}
-  <details class="repo-group">
+  <details class="repo-group" id="repo-group-{{ loop.index0 }}" {% if loop.first %}open{% endif %}>
     <summary class="repo-group-summary">
       {%- if let Some(path) = path -%}
         {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
@@ -371,6 +387,15 @@
 </div>
 {% endblock %} {% block scripts %}
 <script>
+  const repoGroups = Array.from(document.querySelectorAll("details.repo-group"));
+  const expandAllRepos = document.getElementById("expand-all-repos");
+  const collapseAllRepos = document.getElementById("collapse-all-repos");
+  if (expandAllRepos) {
+    expandAllRepos.addEventListener("click", () => repoGroups.forEach((group) => group.open = true));
+  }
+  if (collapseAllRepos) {
+    collapseAllRepos.addEventListener("click", () => repoGroups.forEach((group) => group.open = false));
+  }
   const IMG_EVENT_LIKE = "/event-like-{{ crate::EVENT_LIKE_SVG_HASH.get().unwrap() }}.svg"
   const IMG_EVENT_LIKED = "/event-liked-{{ crate::EVENT_LIKED_SVG_HASH.get().unwrap() }}.svg"
   const IMG_NO_USER = "/no-user-{{ crate::NO_USER_SVG_HASH.get().unwrap() }}.svg"
