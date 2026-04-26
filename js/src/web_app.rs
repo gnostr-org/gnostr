@@ -116,6 +116,17 @@ pub async fn run(port: u16) {
         .and(warp::any().map(move || Arc::clone(&pwa_assets_map)))
         .map(bridge::asset_response);
 
+    let shell_fallback = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path::full().and(warp::get()).map(move |_| {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
     let routes = shell
         .or(messages_route)
         .or(gnostr_route)
@@ -124,7 +135,8 @@ pub async fn run(port: u16) {
         .or(js_route)
         .or(css_route)
         .or(images_route)
-        .or(pwa_route);
+        .or(pwa_route)
+        .or(shell_fallback);
 
     let _ = open("127.0.0.1", port.try_into().unwrap());
     println!("http://127.0.0.1:{}", port);

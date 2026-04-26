@@ -28,7 +28,6 @@ async function webapp_init() {
 	on_timer_save();
 	on_timer_tick();
 
-	setTimeout(() => init_local_relay_sync(), 0);
 	await model_load_nip34_events(model);
 	subscribe_nip34_events(model);
 

@@ -128,9 +128,6 @@ async function webapp_init() {
 	on_timer_save();
 	on_timer_tick();
 
-	// Start the DB sync in the background after the main UI is initialized
-	//await model_load_nip34_events(model);
-	setTimeout(() => init_local_relay_sync(), 0);
 	await model_load_nip34_events(model);
     // Initial subscription to NIP-34 events
     subscribe_nip34_events(model);
