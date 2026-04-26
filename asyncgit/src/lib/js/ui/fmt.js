@@ -18,13 +18,14 @@ function linkify(text="") {
 }
 
 function format_content(model, ev) {
-	const nip34_kinds = new Set([
+    const nip34_kinds = new Set([
         KIND_REPO_ANNOUNCE,
         KIND_REPO_STATE_ANNOUNCE,
         KIND_REPO_PATCH,
         KIND_REPO_PULL_REQ,
         KIND_REPO_PULL_REQ_UPDATE,
         KIND_REPO_ISSUE,
+        KIND_REPO_REPLY,
         KIND_REPO_STATUS_OPEN,
         KIND_REPO_STATUS_APPLIED,
         KIND_REPO_STATUS_CLOSED,

@@ -19,7 +19,7 @@ function event_contains_pubkey(ev, pubkey) {
 
 function event_tags_pubkey(ev, pubkey) {
 	for (const tag of ev.tags) {
-		if (tag.length >= 2 && tag[0] == "p" && tag[1] == pubkey)
+		if (tag_name(tag) == "p" && tag_value(tag) == pubkey)
 			return true;
 	}
 	return false
@@ -28,8 +28,8 @@ function event_tags_pubkey(ev, pubkey) {
 function event_get_tagged_pubkeys(ev) {
 	const keys = [];
 	for (const tag of ev.tags) {
-		if (tag.length >= 2 && tag[0] == "p")
-			keys.push(tag[1]);
+		if (tag_name(tag) == "p")
+			keys.push(tag_value(tag));
 	}
 	return keys;
 }
@@ -44,7 +44,7 @@ function event_get_tag_values(ev) {
 	const keys = [];
 	for (const tag of ev.tags) {
 		if (tag.length >= 2)
-			keys.push(tag[1]);
+			keys.push(tag_value(tag));
 	}
 	return keys;
 }
@@ -76,6 +76,7 @@ function event_can_reply(ev) {
            ev.kind === KIND_REPO_PULL_REQ ||
            ev.kind === KIND_REPO_PULL_REQ_UPDATE ||
            ev.kind === KIND_REPO_ISSUE ||
+           ev.kind === KIND_REPO_REPLY ||
            ev.kind === KIND_REPO_STATUS_OPEN ||
            ev.kind === KIND_REPO_STATUS_APPLIED ||
            ev.kind === KIND_REPO_STATUS_CLOSED ||
@@ -94,17 +95,17 @@ function event_get_tag_refs(tags) {
 	let pubkeys = []
 	let root, reply
 	for (const tag of tags) {
-		if (tag.length >= 4 && tag[0] == "e") {
-			ids.push(tag[1])
-			if (tag[3] === "root") {
-				root = tag[1]
-			} else if (tag[3] === "reply") {
-				reply = tag[1]
+		if (tag.length >= 2 && tag_name(tag) == "e") {
+			const ref_id = tag_value(tag)
+			ids.push(ref_id)
+			const marker = tag_marker(tag)
+			if (marker === "root" || marker === "revision-root" || marker === "root-revision") {
+				root = ref_id
+			} else if (marker === "reply") {
+				reply = ref_id
 			}
-		} else if (tag.length >= 2 && tag[0] == "e") {
-			ids.push(tag[1])
-		} else if (tag.length >= 2 && tag[0] == "p") {
-			pubkeys.push(tag[1])
+		} else if (tag.length >= 2 && tag_name(tag) == "p") {
+			pubkeys.push(tag_value(tag))
 		}
 	}
 	if (!(root && reply) && ids.length > 0) {
@@ -144,8 +145,9 @@ function event_refs_event(a, b) {
 function event_get_last_tags(ev) {
 	let o = {};
 	for (const tag of ev.tags) {
-		if (tag.length >= 2 && (tag[0] === "e" || tag[0] === "p"))
-			o[tag[0]] = tag[1];
+		const name = tag_name(tag);
+		if (tag.length >= 2 && (name === "e" || name === "p"))
+			o[name] = tag_value(tag);
 	}
 	return o;
 }

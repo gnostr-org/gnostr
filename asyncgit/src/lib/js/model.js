@@ -6,6 +6,7 @@ const NIP_34_KINDS = [
     KIND_REPO_PULL_REQ,
     KIND_REPO_PULL_REQ_UPDATE,
     KIND_REPO_ISSUE,
+    KIND_REPO_REPLY,
     KIND_REPO_STATUS_OPEN,
     KIND_REPO_STATUS_APPLIED,
     KIND_REPO_STATUS_CLOSED,
@@ -51,11 +52,12 @@ function model_process_event(model, relay, ev) {
         case KIND_REPO_PULL_REQ:
         case KIND_REPO_PULL_REQ_UPDATE:
         case KIND_REPO_ISSUE:
+        case KIND_REPO_REPLY:
         case KIND_REPO_STATUS_OPEN:
         case KIND_REPO_STATUS_APPLIED:
         case KIND_REPO_STATUS_CLOSED:
         case KIND_REPO_STATUS_DRAFT:
-			fetch_profile = true;
+            fetch_profile = true;
 			break;
 		case KIND_METADATA:
 			fn = model_process_event_metadata;
@@ -101,6 +103,9 @@ function model_process_event(model, relay, ev) {
 	                break;
 	            case KIND_REPO_ISSUE:
 	                log_info(`NIP-34 Repository Issue from followed profile ${ev.pubkey}:\n${eventData}`);
+	                break;
+	            case KIND_REPO_REPLY:
+	                log_info(`NIP-34 Repository Reply from followed profile ${ev.pubkey}:\n${eventData}`);
 	                break;
 	            case KIND_REPO_STATUS_OPEN:
 	                log_info(`NIP-34 Repository Status Open from followed profile ${ev.pubkey}:\n${eventData}`);

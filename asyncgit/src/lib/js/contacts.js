@@ -12,8 +12,8 @@ function contacts_process_event(contacts, our_pubkey, ev) {
 	contacts.event = ev
 	contacts.friends = new Set();
 	for (const tag of ev.tags) {
-		if (tag.length > 1 && tag[0] === "p") {
-			contacts.friends.add(tag[1])
+		if (tag_name(tag) === "p") {
+			contacts.friends.add(tag_value(tag))
 		}
 	}
 }

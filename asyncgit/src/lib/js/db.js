@@ -30,6 +30,7 @@ function init_local_relay_sync() {
             KIND_REPO_PULL_REQ,
             KIND_REPO_PULL_REQ_UPDATE,
             KIND_REPO_ISSUE,
+            KIND_REPO_REPLY,
             KIND_REPO_STATUS_OPEN,
             KIND_REPO_STATUS_APPLIED,
             KIND_REPO_STATUS_CLOSED,
@@ -144,9 +145,9 @@ async function add_nip34_event_to_db(event, is_from_local = false) {
         
         const storable_event = { ...event };
         
-        const repo_tag = storable_event.tags.find(tag => tag[0] === 'a');
+        const repo_tag = storable_event.tags.find(tag => tag_name(tag) === 'a');
         if (repo_tag) {
-            storable_event.repo_id = repo_tag[1];
+            storable_event.repo_id = tag_value(repo_tag);
         }
 
         store.put(storable_event);

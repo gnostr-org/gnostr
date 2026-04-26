@@ -12,18 +12,56 @@ const KIND_REPO_STATE_ANNOUNCE = 30618;
 const KIND_REPO_PATCH = 1617;
 const KIND_REPO_PULL_REQ = 1618;
 const KIND_REPO_PULL_REQ_UPDATE = 1619;
-const KIND_REPO_ISSUE = 1620;
+const KIND_REPO_ISSUE = 1621;
+const KIND_REPO_REPLY = 1622;
 const KIND_REPO_STATUS_OPEN = 1630;
 const KIND_REPO_STATUS_APPLIED = 1631;
 const KIND_REPO_STATUS_CLOSED = 1632;
 const KIND_REPO_STATUS_DRAFT = 1633;
 const KIND_RELAY_LIST = 10002;
 
+const NIP34_KINDS = [
+	KIND_REPO_ANNOUNCE,
+	KIND_REPO_STATE_ANNOUNCE,
+	KIND_REPO_PATCH,
+	KIND_REPO_PULL_REQ,
+	KIND_REPO_PULL_REQ_UPDATE,
+	KIND_REPO_ISSUE,
+	KIND_REPO_REPLY,
+	KIND_REPO_STATUS_OPEN,
+	KIND_REPO_STATUS_APPLIED,
+	KIND_REPO_STATUS_CLOSED,
+	KIND_REPO_STATUS_DRAFT,
+];
+
 const TAG_P = "#p";
 const TAG_E = "#e";
 
 const R_HEART = "❤️";
 const R_SHAKA = "🤙";
+
+function tag_name(tag) {
+	return tag && tag.length > 0 ? tag[0] : "";
+}
+
+function tag_value(tag) {
+	return tag && tag.length > 1 ? tag[1] : "";
+}
+
+function tag_marker(tag) {
+	const name = tag_name(tag);
+	if (name === "e") {
+		return tag && tag.length > 3 ? tag[3] : "";
+	}
+	if (name === "a") {
+		return tag && tag.length > 2 ? tag[2] : "";
+	}
+	return "";
+}
+
+function event_is_nip34_kind(kind) {
+	return NIP34_KINDS.includes(kind);
+}
 
 const STANDARD_KINDS = [
 	KIND_NOTE,
@@ -53,6 +91,7 @@ const PUBLIC_KINDS = [
         KIND_REPO_PULL_REQ,
         KIND_REPO_PULL_REQ_UPDATE,
         KIND_REPO_ISSUE,
+        KIND_REPO_REPLY,
         KIND_REPO_STATUS_OPEN,
         KIND_REPO_STATUS_APPLIED,
         KIND_REPO_STATUS_CLOSED,
