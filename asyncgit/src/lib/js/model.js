@@ -1,18 +1,3 @@
-// Add NIP-34 event kinds constant
-const NIP_34_KINDS = [
-    KIND_REPO_ANNOUNCE,
-    KIND_REPO_STATE_ANNOUNCE,
-    KIND_REPO_PATCH,
-    KIND_REPO_PULL_REQ,
-    KIND_REPO_PULL_REQ_UPDATE,
-    KIND_REPO_ISSUE,
-    KIND_REPO_REPLY,
-    KIND_REPO_STATUS_OPEN,
-    KIND_REPO_STATUS_APPLIED,
-    KIND_REPO_STATUS_CLOSED,
-    KIND_REPO_STATUS_DRAFT,
-];
-
 /* model_process_event is the main point where events are post-processed from
  * a relay. Additionally other side effects happen such as notification checks
  * and fetching of unknown pubkey profiles.
@@ -26,20 +11,6 @@ function model_process_event(model, relay, ev) {
 	model.all_events[ev.id] = ev;
 	ev.refs = event_get_tag_refs(ev.tags);
 	ev.pow = event_calculate_pow(ev);
-
-    const nip34_kinds = new Set([
-        KIND_REPO_ANNOUNCE,
-        KIND_REPO_STATE_ANNOUNCE,
-        KIND_REPO_PATCH,
-        KIND_REPO_PULL_REQ,
-        KIND_REPO_PULL_REQ_UPDATE,
-        KIND_REPO_ISSUE,
-        KIND_REPO_STATUS_OPEN,
-        KIND_REPO_STATUS_APPLIED,
-        KIND_REPO_STATUS_CLOSED,
-        KIND_REPO_STATUS_DRAFT,
-        KIND_RELAY_LIST,
-    ]);
 
 	// Process specific event needs based on it's kind.
 	let fn;
@@ -83,7 +54,7 @@ function model_process_event(model, relay, ev) {
 		fn(model, ev, !!relay);
 
 	    // Detect and log NIP-34 events from followed profiles
-	    if (nip34_kinds.has(ev.kind) && model.contacts.friends.has(ev.pubkey)) {
+    if (event_is_nip34_kind(ev.kind) && model.contacts.friends.has(ev.pubkey)) {
 	        const eventData = JSON.stringify(ev, null, 2);
 	        switch (ev.kind) {
 	            case KIND_REPO_ANNOUNCE:
@@ -130,14 +101,14 @@ function model_process_event(model, relay, ev) {
 	// let us simply ignore fetching new things.
 	if (!relay) {
         // If it's a NIP-34 event and from storage, no need to re-add it
-        if (nip34_kinds.has(ev.kind)) {
+        if (event_is_nip34_kind(ev.kind)) {
             return;
         }
 		return;
     }
 
     // Save NIP-34 events to IndexedDB if they come from a relay
-    if (nip34_kinds.has(ev.kind)) {
+    if (event_is_nip34_kind(ev.kind)) {
         add_nip34_event_to_db(ev);
     }
 
