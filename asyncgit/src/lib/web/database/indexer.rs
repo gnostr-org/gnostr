@@ -18,6 +18,7 @@ use tracing::{debug, debug_span, error, instrument, warn};
 
 use crate::web::database::schema::{
     commit::Commit,
+    prefixes::REPOSITORY_FAMILY,
     repository::{ArchivedRepository, Repository, RepositoryId},
     tag::{Tag, TagTree},
 };
@@ -269,6 +270,14 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             .filter(|v| !v.is_empty());
 
         let repository_path = scan_path.join(relative);
+
+        if relative == Path::new(".") && name != "." {
+            if let Some(repo_cf) = db.cf_handle(REPOSITORY_FAMILY) {
+                if let Err(error) = db.delete_cf(repo_cf, name) {
+                    warn!(%error, "Failed to remove stale root repository key");
+                }
+            }
+        }
 
         let mut git_repository = match gix::open(repository_path.clone()) {
             Ok(v) => v,
