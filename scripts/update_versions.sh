@@ -324,11 +324,14 @@ tag_package_versions() {
     local version="$1"
     local crate
     local tag
+    local tree
+    local commit
 
+    tree="$(git rev-parse HEAD^{tree})"
     for crate in "${PUBLISH_CRATES[@]}"; do
         tag="$crate/v$version"
-        git commit --allow-empty -m "$tag"
-        git tag -f "$tag" HEAD
+        commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
+        git tag -f "$tag" "$commit"
     done
 }
 
