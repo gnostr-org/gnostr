@@ -308,7 +308,12 @@ fn find_last_committed_time(repo: &gix::Repository) -> Result<OffsetDateTime, an
     let mut timestamp = OffsetDateTime::UNIX_EPOCH;
 
     for reference in repo.references()?.all()? {
-        let Ok(commit) = reference.unwrap().peel_to_commit() else {
+        let Ok(mut reference) = reference else {
+            warn!("Skipping unreadable reference while finding last committed time");
+            continue;
+        };
+
+        let Ok(commit) = reference.peel_to_commit() else {
             continue;
         };
 

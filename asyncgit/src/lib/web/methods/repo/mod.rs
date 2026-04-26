@@ -78,7 +78,6 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .get::<Arc<rocksdb::DB>>()
         .expect("db extension missing");
 
-    let root_repo_path = scan_path.join("");
     let root_repo_exists_in_db =
         crate::web::database::schema::repository::Repository::exists(db, &PathBuf::from("."))
             .unwrap_or_default();
