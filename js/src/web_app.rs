@@ -39,6 +39,7 @@ fn open(host: &str, port: i32) -> io::Result<()> {
     Ok(())
 }
 
+/// Run the Nostr web app on the given port.
 pub async fn run(port: u16) {
     const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
 
@@ -89,18 +90,10 @@ pub async fn run(port: u16) {
         .map(handlebars.clone())
         .map(|reply| reply::with_header(reply, "Content-Security-Policy", RELAXED_CSP_STRING));
 
-    let pwa_route = warp::path("pwa").and(warp::fs::dir(
-        cargo_manifest_dir.join("../../asyncgit/src/lib/pwa"),
-    ));
-    let images_route = warp::path("images").and(warp::fs::dir(
-        cargo_manifest_dir.join("../../asyncgit/src/lib/images"),
-    ));
-    let js_files = warp::path("js").and(warp::fs::dir(
-        cargo_manifest_dir.join("../../asyncgit/src/lib/js"),
-    ));
-    let css_files = warp::path("css").and(warp::fs::dir(
-        cargo_manifest_dir.join("../../asyncgit/src/lib/css"),
-    ));
+    let pwa_route = warp::path("pwa").and(warp::fs::dir(cargo_manifest_dir.join("pwa")));
+    let images_route = warp::path("images").and(warp::fs::dir(cargo_manifest_dir.join("images")));
+    let js_files = warp::path("js").and(warp::fs::dir(cargo_manifest_dir.join("js")));
+    let css_files = warp::path("css").and(warp::fs::dir(cargo_manifest_dir.join("css")));
 
     let nip34_detail_route = warp::path!("repository-details" / String)
         .and(warp::get())
