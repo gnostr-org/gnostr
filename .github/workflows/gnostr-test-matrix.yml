@@ -172,6 +172,11 @@ jobs:
         run: |
           make || true
 
+      - name: Build gnostr binary
+        shell: bash
+        run: |
+          cargo build --bin gnostr
+
       - name: cargo search gnostr --limit 100
         shell: bash
         run: |
