@@ -1206,10 +1206,7 @@ impl UnsignedEventV3 {
         let tags = tags.into_iter().map(TagV3).collect();
 
         UnsignedEventV3(PreEventV3 {
-            pubkey: PublicKey::from_bytes(
-                &pubkey.public_key(secp256k1::Parity::Even).serialize(),
-                false,
-            )
+            pubkey: PublicKey::from_bytes(&pubkey.serialize(), false)
             .unwrap(),
             created_at: Unixtime::now(),
             kind: EventKind::from(kind as u32),
