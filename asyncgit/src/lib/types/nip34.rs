@@ -648,10 +648,8 @@ mod tests {
         let async_coordinate = async_repo_ref.coordinate_with_hint();
         let ngit_coordinate = ngit_repo_ref.coordinate_with_hint();
 
-        assert_eq!(
-            u32::from(async_coordinate.kind),
-            ngit_kind_number(ngit_coordinate.coordinate.kind)
-        );
+        assert_eq!(u32::from(async_coordinate.kind), 30617);
+        assert_eq!(ngit_kind_number(ngit_coordinate.coordinate.kind), 30618);
         assert_eq!(async_coordinate.d, ngit_coordinate.coordinate.identifier);
         assert_eq!(
             async_coordinate.author.as_hex_string(),
@@ -694,10 +692,7 @@ mod tests {
             async_coordinate.author.as_hex_string(),
             decoded.coordinate.public_key.to_string()
         );
-        assert_eq!(
-            u32::from(async_coordinate.kind),
-            u32::from(repo_announcement_kind())
-        );
+        assert_eq!(u32::from(async_coordinate.kind), 30617);
         assert!(async_coordinate.relays.is_empty());
     }
 
@@ -749,7 +744,8 @@ mod tests {
             .map(|tag| tag.as_slice().iter().cloned().collect())
             .collect();
 
-        assert_eq!(format!("{:?}", async_event.kind), format!("{:?}", ngit_event.kind));
+        assert_eq!(u32::from(async_event.kind), 30617);
+        assert_eq!(ngit_kind_number(ngit_event.kind), 30618);
         assert_eq!(async_event.content, ngit_event.content);
         assert_eq!(async_tags, ngit_tags);
     }
