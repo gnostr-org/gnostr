@@ -109,6 +109,11 @@ stay aligned.
 These images extend the upstream `cross-rs` base images and bake in the extra
 packages this repo needs, instead of reinstalling them on every run.
 
+The CI `build-artifacts` workflow uses these containers for the musl targets
+(`x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`). Those Dockerfiles
+install `musl-dev` before `musl-tools` so Debian's package dependency order is
+satisfied during image build.
+
 ## Apple Silicon caveat
 
 On `aarch64-apple-darwin`, `cross 0.2.5` is known to fail for the Linux
