@@ -48,6 +48,18 @@ description: 'Reusable action to install gnostr using cargo-binstall'
 runs:
   using: 'composite'
   steps:
+    - name: Install cargo-binstall
+      id: binstall
+      continue-on-error: true
+      uses: cargo-bins/cargo-binstall@v1.18.1
+
+    - name: Fallback install cargo-binstall (from crates.io)
+      if: steps.binstall.outcome != 'success'
+      shell: bash
+      run: |
+        set -euxo pipefail
+        cargo install cargo-binstall --locked
+
     - name: Install gnostr via cargo-binstall
       shell: bash
       run: |
