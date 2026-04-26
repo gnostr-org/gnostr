@@ -9,7 +9,7 @@ usage() {
   cat <<'EOF'
 Usage: gh-delete-all-workflow-runs.sh [options]
 
-Delete all GitHub Actions workflow runs in a repository.
+Delete GitHub Actions workflow runs in a repository while keeping the newest N pages.
 
 Options:
   -r, --repo R         Target repo, e.g. owner/name (default: current repo)
@@ -21,6 +21,7 @@ Examples:
   gh-delete-all-workflow-runs.sh
   gh-delete-all-workflow-runs.sh --repo gnostr-org/gnostr
   gh-delete-all-workflow-runs.sh --workflow release.yml
+  gh-delete-all-workflow-runs.sh --limit 25
 EOF
 }
 
@@ -99,22 +100,22 @@ else
     delete_from_page=$((LIMIT + 1))
     current="$total"
     for page in $(seq "$pages" -1 "$delete_from_page"); do
-    echo "Listing workflow runs on page ${page}"
-    run_ids=()
-    while IFS= read -r run_id; do
-      [[ -z "$run_id" ]] && continue
-      run_ids+=("$run_id")
-    done < <(gh api "${runs_json_path}&page=${page}" --jq '.workflow_runs[].id')
+      echo "Listing workflow runs on page ${page}"
+      run_ids=()
+      while IFS= read -r run_id; do
+        [[ -z "$run_id" ]] && continue
+        run_ids+=("$run_id")
+      done < <(gh api "${runs_json_path}&page=${page}" --jq '.workflow_runs[].id')
 
-    for ((i=${#run_ids[@]} - 1; i >= 0; i--)); do
-      run_id="${run_ids[$i]}"
-      echo "Deleting workflow run ${current}/${total} run_id=${run_id}"
-      current=$((current - 1))
-      delete_run "$run_id"
-      deleted=$((deleted + 1))
+      for ((i=${#run_ids[@]} - 1; i >= 0; i--)); do
+        run_id="${run_ids[$i]}"
+        echo "Deleting workflow run ${current}/${total} run_id=${run_id}"
+        current=$((current - 1))
+        delete_run "$run_id"
+        deleted=$((deleted + 1))
+      done
     done
-    done
-  done
+  fi
 fi
 
 echo "Deleted ${deleted} workflow runs from ${repo}."
