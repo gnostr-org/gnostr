@@ -57,7 +57,7 @@ fn get_messages() -> impl warp::Reply {
 
 use webbrowser;
 
-fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+fn open(host: &str, port: i32) -> std::result::Result<(), tokio::io::Error> {
     let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 
     println!("Attempting to open: {}", url);
@@ -80,7 +80,7 @@ async fn main() {
     pretty_env_logger::init();
 
     let main_js = js::main_js::JSMain::new();
-    let main_js_bytes: &[u8] = include_bytes!("../js/main.js");
+    let main_js_bytes: &[u8] = include_bytes!("../lib/js/main.js");
     assert_eq!(main_js_bytes, main_js.main_js);
     // if let Ok(main_js_string) = String::from_utf8(main_js_bytes.to_vec()) {
     //     println!("main.js content: {}", main_js_string);
@@ -88,7 +88,7 @@ async fn main() {
     //     println!("main.js is not valid UTF-8.");
     // }
 
-    let template = gnostr_asyncgit::template_html::TemplateHtml::new();
+    let template = gnostr_asyncgit::web::template_html::TemplateHtml::new();
     let mut hb = Handlebars::new();
     hb.register_template_string("template.html", template.to_string())
         .unwrap();

@@ -17,7 +17,7 @@ use warp::ws::{Message, WebSocket};
 use log::{trace, debug, info, warn, error};
 use pretty_env_logger::env_logger::Env;
 
-use gnostr_asyncgit::websock_index_html::WEBSOCKET_INDEX_HTML;
+use gnostr_asyncgit::web::websock_index_html::WEBSOCKET_INDEX_HTML;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -38,7 +38,7 @@ type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Message>>>>;
 
 use webbrowser;
 
-fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
+fn open(host: &str, port: i32) -> std::result::Result<(), tokio::io::Error> {
 
 let url = format!("http://{}:{}", host, port); // Correctly format with the protocol
 

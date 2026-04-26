@@ -8,10 +8,10 @@ use clap::Parser;
 use gnostr_asyncgit::images::images_bundle::get_images_assets;
 use gnostr_asyncgit::js::js_bundle::get_js_assets;
 use gnostr_asyncgit::css::css_bundle::get_css_assets;
-use gnostr_asyncgit::template_html::get_template_assets;
-use gnostr_asyncgit::layout_html::get_layout_assets;
+use gnostr_asyncgit::web::template_html::get_template_assets;
+use gnostr_asyncgit::web::layout_html::get_layout_assets;
 
-use gnostr_asyncgit::W2UiArgs;
+use gnostr_asyncgit::web::W2UiArgs;
 
 #[tokio::main]
 async fn main() {

@@ -6,7 +6,7 @@ use clap::Parser;
 use gnostr_asyncgit::images::images_bundle::get_images_assets;
 use gnostr_asyncgit::js::js_bundle::get_js_assets;
 use gnostr_asyncgit::css::css_bundle::get_css_assets;
-use gnostr_asyncgit::template_html::TemplateHtml;
+use gnostr_asyncgit::web::template_html::TemplateHtml;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
