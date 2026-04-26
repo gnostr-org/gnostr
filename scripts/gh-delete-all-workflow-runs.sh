@@ -55,8 +55,10 @@ done
 
 repo="$(resolve_repo)"
 
+echo "Target repo: ${repo}"
 if [[ -n "$WORKFLOW" ]]; then
   runs_json_path="/repos/$repo/actions/workflows/$WORKFLOW/runs?per_page=100"
+  echo "Target workflow: ${WORKFLOW}"
 else
   runs_json_path="/repos/$repo/actions/runs?per_page=100"
 fi
@@ -78,10 +80,18 @@ delete_run() {
 }
 
 deleted=0
+listed=0
+echo "Listing workflow runs..."
 while IFS= read -r run_id; do
   [[ -z "$run_id" ]] && continue
+  listed=$((listed + 1))
+  echo "Deleting workflow run ${run_id}..."
   delete_run "$run_id"
   deleted=$((deleted + 1))
 done < <(gh api --paginate "$runs_json_path" --jq '.workflow_runs[].id')
+
+if [[ "$listed" -eq 0 ]]; then
+  echo "No workflow runs found."
+fi
 
 echo "Deleted ${deleted} workflow runs from ${repo}."
