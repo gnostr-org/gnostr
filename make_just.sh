@@ -105,7 +105,7 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. \$(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b -j \$(NPROC) \$(QUIET)
-cargo-install: 	asyncgit 	###         cargo install --path . \$(FORCE)
+cargo-install: 	###         cargo install --path . \$(FORCE)
 	@. \$(HOME)/.cargo/env
 	@cargo install -j \$(NPROC) --path . \$(FORCE)
 
