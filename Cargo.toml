@@ -62,7 +62,7 @@ members = [
   "qr",
   "relay",
   "relay/extensions",
-  "scopetime",
+  "scopetime", "web",
 ]
 
 [workspace.package]
