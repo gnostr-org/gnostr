@@ -314,53 +314,60 @@
 
 <!-- begit git web view -->
 <div class="table-responsive">
-  <table class="repositories">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Owner</th>
-        <th>Idle</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {%- for (path, repositories) in repositories %} {%- if let Some(path) = path %}{%- if path != "." %}
-      <tr>
-        <td class="repo-section" colspan="4">{{ path }}</td>
-      </tr>
-      {%- endif -%}{%- endif -%} {%- for repository in repositories %} {% set repository = repository.get() %}
-      <tr class="{% if let Some(path) = path %}{% if path != "." %}has-parent{% endif %}{% endif %}">
-        <td>
-          <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
-            {{- repository.name -}}
-          </a>
-        </td>
-        <td>
-          <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
-            {%- if let Some(description) = repository.description.as_ref() -%} {{- description -}} {%- else -%} Unnamed
-            repository; edit this file 'description' to name the repository. {%- endif -%}
-          </a>
-        </td>
-        <td>
-          <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
-            {%- if let Some(owner) = repository.owner.as_ref() -%} {{- owner -}} {%- endif -%}
-          </a>
-        </td>
-        <td>
-          <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
-            <time
-              datetime="{{ repository.last_modified|format_time }}"
-              title="{{ repository.last_modified|format_time }}"
-            >
-              {{- repository.last_modified|timeago -}}
-            </time>
-          </a>
-        </td>
-      </tr>
-      {%- endfor -%} {%- endfor %}
-    </tbody>
-  </table>
+  {%- for (path, repositories) in repositories %}
+  <details class="repo-group">
+    <summary class="repo-group-summary">
+      {%- if let Some(path) = path -%}
+        {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
+      {%- else -%}
+        top-level
+      {%- endif -%}
+      ({{ repositories.len() }})
+    </summary>
+    <table class="repositories">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Owner</th>
+          <th>Idle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for repository in repositories %} {% set repository = repository.get() %}
+        <tr>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              {{- repository.name -}}
+            </a>
+          </td>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              {%- if let Some(description) = repository.description.as_ref() -%} {{- description -}} {%- else -%}
+              Unnamed repository; edit this file 'description' to name the repository. {%- endif -%}
+            </a>
+          </td>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              {%- if let Some(owner) = repository.owner.as_ref() -%} {{- owner -}} {%- endif -%}
+            </a>
+          </td>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              <time
+                datetime="{{ repository.last_modified|format_time }}"
+                title="{{ repository.last_modified|format_time }}"
+              >
+                {{- repository.last_modified|timeago -}}
+              </time>
+            </a>
+          </td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  </details>
+  {%- endfor %}
 </div>
 {% endblock %} {% block scripts %}
 <script>
