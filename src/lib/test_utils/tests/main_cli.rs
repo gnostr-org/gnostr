@@ -529,6 +529,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "macos")]
     #[serial]
     fn test_run_tui_and_sleep_screenshot() -> Result<(), Box<dyn Error>> {
         let _cleanup_guard = TerminalCleanup;
