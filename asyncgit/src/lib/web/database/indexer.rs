@@ -37,9 +37,8 @@ fn is_help_material_fixture(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn should_index_reference(reference_name: &gix::ReferenceName<'_>) -> bool {
-    reference_name.category() == Some(Category::LocalBranch)
-        || is_notes_reference(reference_name.as_bstr().as_ref())
+fn should_index_reference(reference_name: &str, category: Option<Category>) -> bool {
+    category == Some(Category::LocalBranch) || is_notes_reference(reference_name)
 }
 
 fn is_notes_reference(reference_name: &str) -> bool {
@@ -395,11 +394,12 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
             };
 
             let reference_name = reference.name();
-            if !should_index_reference(reference_name) {
+            let reference_name_str = reference_name.as_bstr().to_string();
+            if !should_index_reference(reference_name_str.as_str(), reference_name.category()) {
                 continue;
             }
 
-            valid_references.push(reference_name.as_bstr().to_string());
+            valid_references.push(reference_name_str);
 
             if let Err(error) = branch_index_update(
                 &mut reference,
