@@ -106,6 +106,9 @@ jobs:
       - run: rustup default ${{ matrix.rustup }}
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
+      - run: |
+          pwd
+          ls -l target/debug/gnostr
       - run: ./target/debug/gnostr --help
       - run: |
           ./target/debug/gnostr \
