@@ -250,12 +250,11 @@ function view_timeline_refresh(model, mode, opts = {}) {
       if (root_event) {
         let announcement_event = null
         if (root_event.kind === KIND_REPO_STATE_ANNOUNCE) {
-          const d_tag = root_event.tags.find((tag) => tag[0] === "d")
-          if (d_tag) {
-            const repo_id = d_tag[1]
+          const repo_id = event_find_tag_value(root_event.tags, "d")
+          if (repo_id) {
             for (const key in model.all_events) {
               const ev = model.all_events[key]
-              if (ev.kind === KIND_REPO_ANNOUNCE && ev.tags.find((t) => t[0] === "d" && t[1] === repo_id)) {
+              if (ev.kind === KIND_REPO_ANNOUNCE && event_find_tag_value(ev.tags, "d") === repo_id) {
                 announcement_event = ev
                 break
               }
