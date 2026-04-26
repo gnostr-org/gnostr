@@ -69,6 +69,14 @@ jobs:
             ~/.cargo/git
           key: cargo-registry-git-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
 
+      - name: Restore cargo bin
+        id: cache-cargo-bin-restore
+        uses: actions/cache/restore@v4
+        if: ${{ !env.ACT }}
+        with:
+          path: ~/.cargo/bin/gnostr
+          key: cargo-bin-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
+
       - name: Restore target
         id: cache-target-restore
         uses: actions/cache/restore@v4
@@ -81,6 +89,7 @@ jobs:
       - name: List restored target
         shell: bash
         run: |
+          ls -l ~/.cargo/bin/gnostr || true
           find target -maxdepth 3 -print | sort
 
       - name: Setup Rust toolchain
@@ -105,24 +114,29 @@ jobs:
 
       - run: rustup default ${{ matrix.rustup }}
       - name: Install gnostr via cargo-binstall
+        if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/cargo-binstall-gnostr
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
-          if [ -x target/debug/gnostr ]; then
+          if [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          elif [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
-          elif command -v gnostr >/dev/null 2>&1; then
-            GNOSTR_CMD=gnostr
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
           $GNOSTR_CMD --help
       - run: |
-          if [ -x target/debug/gnostr ]; then
+          if [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          elif [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
-          elif command -v gnostr >/dev/null 2>&1; then
-            GNOSTR_CMD=gnostr
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
@@ -137,20 +151,24 @@ jobs:
             -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
             -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
-          if [ -x target/debug/gnostr ]; then
+          if [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          elif [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
-          elif command -v gnostr >/dev/null 2>&1; then
-            GNOSTR_CMD=gnostr
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
           $GNOSTR_CMD ngit --nsec $(gnostr-sha256) fetch
       - run: |
-          if [ -x target/debug/gnostr ]; then
+          if [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          elif [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
-          elif command -v gnostr >/dev/null 2>&1; then
-            GNOSTR_CMD=gnostr
           else
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
@@ -180,7 +198,11 @@ jobs:
           END_AT=$((SECONDS + 120))
           COUNT=0
 
-          if [ -x target/debug/gnostr ]; then
+          if [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          elif [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
             GNOSTR_CMD=./target/debug/gnostr
           else
             GNOSTR_CMD="cargo run --bin gnostr --"

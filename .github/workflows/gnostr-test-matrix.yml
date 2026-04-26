@@ -500,6 +500,13 @@ jobs:
             ~/.cargo/git
           key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
 
+      - name: Save cargo bin
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cargo/bin/gnostr
+          key: cargo-bin-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+
       - name: Save Cargo build target
         if: always() && steps.cache-target-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
