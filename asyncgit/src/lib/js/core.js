@@ -59,6 +59,18 @@ function tag_marker(tag) {
 	return "";
 }
 
+function event_find_tag(tags, name) {
+	return (tags || []).find((tag) => tag_name(tag) === name);
+}
+
+function event_find_tag_value(tags, name) {
+	return tag_value(event_find_tag(tags, name));
+}
+
+function event_has_tag(tags, name) {
+	return !!event_find_tag(tags, name);
+}
+
 function event_is_nip34_kind(kind) {
 	return NIP34_KINDS.includes(kind);
 }
@@ -307,10 +319,11 @@ function gather_reply_tags(pubkey, from) {
 
 	for (const tag of from.tags) {
 		if (tag.length >= 2) {
-			if (tag[0] === "p" && tag[1] !== pubkey) {
-				if (!ids.has(tag[1])) {
-					tags.push(["p", tag[1]])
-					ids.add(tag[1])
+			if (tag_name(tag) === "p" && tag_value(tag) !== pubkey) {
+				const value = tag_value(tag);
+				if (!ids.has(value)) {
+					tags.push(["p", value])
+					ids.add(value)
 				}
 			}
 		}
@@ -325,10 +338,10 @@ function get_tag_event(tag) {
 	const model = GNOSTR;
 	if (tag.length < 2)
 		return null
-	if (tag[0] === "e")
-		return model.all_events[tag[1]]
-	if (tag[0] === "p") {
-		let profile = model_get_profile(model, tag[1]);
+	if (tag_name(tag) === "e")
+		return model.all_events[tag_value(tag)]
+	if (tag_name(tag) === "p") {
+		let profile = model_get_profile(model, tag_value(tag));
 		if (profile.evid)
 			return model.all_events[profile.evid];
 	}
@@ -337,15 +350,15 @@ function get_tag_event(tag) {
 
 function* yield_etags(tags) {
 	for (const tag of tags) {
-		if (tag.length >= 2 && tag[0] === "e")
+		if (tag.length >= 2 && tag_name(tag) === "e")
 			yield tag
 	}
 }
 
 function get_content_warning(tags) {
 	for (const tag of tags) {
-		if (tag.length >= 1 && tag[0] === "content-warning")
-			return tag[1] || ""
+		if (tag.length >= 1 && tag_name(tag) === "content-warning")
+			return tag_value(tag) || ""
 	}
 	return null
 }
