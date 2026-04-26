@@ -52,7 +52,7 @@ function event_get_tag_values(ev) {
 function event_calculate_pow(ev) {
 	const id_bits = leading_zero_bits(ev.id)
 	for (const tag of ev.tags) {
-		if (tag.length >= 3 && tag[0] === "nonce") {
+		if (tag.length >= 3 && tag_name(tag) === "nonce") {
 			const target = +tag[2]
 			if (isNaN(target))
 				return 0
@@ -136,7 +136,7 @@ function event_cmp_created(a={}, b={}) {
  */
 function event_refs_event(a, b) {
 	for (const tag of a.tags) {
-		if (tag.length >= 2 && tag[0] === "e" && tag[1] == b.id)
+		if (tag.length >= 2 && tag_name(tag) === "e" && tag_value(tag) == b.id)
 			return true;
 	}
 	return false;
