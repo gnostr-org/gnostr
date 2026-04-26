@@ -827,33 +827,9 @@ function view_mode_contains_event(model, ev, mode, opts={}) {
 				(ev.pubkey == model.pubkey &&
 				event_tags_pubkey(ev, opts.pubkey));
         case VM_GNOSTR:
-            const global_nip34_kinds = new Set([
-                KIND_REPO_ANNOUNCE,
-                KIND_REPO_STATE_ANNOUNCE,
-                KIND_REPO_PATCH,
-                KIND_REPO_PULL_REQ,
-                KIND_REPO_PULL_REQ_UPDATE,
-                KIND_REPO_ISSUE,
-                KIND_REPO_STATUS_OPEN,
-                KIND_REPO_STATUS_APPLIED,
-                KIND_REPO_STATUS_CLOSED,
-                KIND_REPO_STATUS_DRAFT,
-            ]);
-            return global_nip34_kinds.has(ev.kind);
+            return is_nip34_repo_kind(ev.kind);
         case VM_NIP34:
-            const nip34_kinds = new Set([
-                KIND_REPO_ANNOUNCE,
-                KIND_REPO_STATE_ANNOUNCE,
-                KIND_REPO_PATCH,
-                KIND_REPO_PULL_REQ,
-                KIND_REPO_PULL_REQ_UPDATE,
-                KIND_REPO_ISSUE,
-                KIND_REPO_STATUS_OPEN,
-                KIND_REPO_STATUS_APPLIED,
-                KIND_REPO_STATUS_CLOSED,
-                KIND_REPO_STATUS_DRAFT,
-            ]);
-            return nip34_kinds.has(ev.kind) && model.contacts.friends.has(ev.pubkey);
+            return is_nip34_repo_kind(ev.kind);
         case VM_NIP34_DETAIL:
             console.log(`view_mode_contains_event: Filtering for VM_NIP34_DETAIL. Event ID: ${ev.id}, Repo ID from opts: ${opts.repo_id}`);
             const all_nip34_kinds = new Set([
@@ -973,7 +949,7 @@ function init_postbox(model) {
 		.addEventListener("click", onclick_reply);
 	find_node("button[name='reply-all']")
 		.addEventListener("click", onclick_reply);
-	find_node("button[name='send']")
+	find_node("button[role='send'], button[name='send']")
 		.addEventListener("click", onclick_send);
 	find_node("button[name='send-dm']")
 		.addEventListener("click", onclick_send_dm);
@@ -983,18 +959,8 @@ async function onclick_reply(ev) {
 }
 async function onclick_send(ev) {
 	const el = find_node("#reply-modal");
-	const pubkey = await get_pubkey();
 	const el_input = el.querySelector("#reply-content");
-	let post = {
-		pubkey,
-		kind: KIND_NOTE,
-		created_at: new_creation_time(),
-		content: el_input.value,
-		tags: [],
-	};
-	post.id = await nostrjs.calculate_id(post);
-	post = await sign_event(post);
-	broadcast_event(post);
+	await send_note(el_input.value);
 
 	// Reset UI
 	el_input.value = "";
@@ -1030,7 +996,7 @@ function oninput_post(ev) {
 function trigger_postbox_assess(el) { 
 	el.style.height = `0px`;
 	el.style.height = `${el.scrollHeight}px`;
-	let btn = el.parentElement.querySelector("button[role=send]");
+	let btn = el.parentElement.querySelector("button[role='send'], button[name='send']");
 	if (btn) btn.disabled = el.value === "";
 }
 /* toggle_cw changes the active stage of the Content Warning for a post. It is
