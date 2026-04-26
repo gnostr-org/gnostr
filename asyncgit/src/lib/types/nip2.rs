@@ -42,14 +42,18 @@ pub fn set_contact_list(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+use super::*;
+use secp256k1::{SECP256K1, SecretKey, XOnlyPublicKey};
 
     #[test]
     fn set_contact_list_builds_kind_3_with_expected_tags() {
         let public_key = XOnlyPublicKey::from_slice(&[1u8; 32]).unwrap();
         let private_key = secp256k1::SecretKey::from_slice(&[2u8; 32]).unwrap();
+        let contact_secret_key = SecretKey::from_slice(&[3u8; 32]).unwrap();
+        let contact_public_key = secp256k1::PublicKey::from_secret_key(&SECP256K1, &contact_secret_key);
+        let (contact_xonly, _) = contact_public_key.x_only_public_key();
         let contacts = vec![Contact {
-            public_key: XOnlyPublicKey::from_slice(&[3u8; 32]).unwrap(),
+            public_key: contact_xonly,
             relay_url: Some("wss://relay.damus.io".to_string()),
             petname: Some("alice".to_string()),
         }];
