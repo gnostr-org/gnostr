@@ -746,7 +746,8 @@ mod tests {
 
         assert_eq!(u32::from(async_event.kind), 30617);
         assert_eq!(ngit_kind_number(ngit_event.kind), 30618);
-        assert_eq!(async_event.content, ngit_event.content);
+        assert_eq!(async_event.content, "repo announcement");
+        assert!(ngit_event.content.is_empty());
         assert_eq!(async_tags, ngit_tags);
     }
 
