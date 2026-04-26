@@ -48,6 +48,5 @@ taplo format "$ROOT_CARGO_TOML"
 
 stage_cargo_files
 git add "$ROOT_CARGO_TOML"
-gnostr legit -m "$NEW_TAG"
 
 SKIP_VERSION_COMMIT=1 VERSION_TAG="$NEW_TAG" exec "$SCRIPT_DIR/update_versions.sh" "$@"

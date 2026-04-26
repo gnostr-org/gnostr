@@ -323,9 +323,12 @@ PUBLISH_CRATES=(
 tag_package_versions() {
     local version="$1"
     local crate
+    local tag
 
     for crate in "${PUBLISH_CRATES[@]}"; do
-        git tag -f "$crate/v$version" HEAD
+        tag="$crate/v$version"
+        git commit --allow-empty -m "$tag"
+        git tag -f "$tag" HEAD
     done
 }
 
@@ -342,12 +345,10 @@ git add -- "${manifest_paths[@]}"
 stage_cargo_files
 
 if [ -n "${VERSION_TAG:-}" ]; then
-    git reset --soft HEAD~1
-
     cargo update --workspace
     stage_cargo_files
-    
-    git checkout -b $VERSION_TAG
+
+    git checkout -b "$VERSION_TAG"
 
     gnostr legit -m "$VERSION_TAG"
     git tag -f "$VERSION_TAG" HEAD
@@ -377,28 +378,12 @@ for crate in "${PUBLISH_CRATES[@]}"; do
 done
 
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
-    stage_cargo_files
-    git reset --soft HEAD~1
-    stage_cargo_files
-    if [ -n "${VERSION_TAG:-}" ]; then
-
-        cargo update --workspace
-        stage_cargo_files
-
-        gnostr legit -m "$VERSION_TAG"
-        git tag -f "$VERSION_TAG" HEAD
-        tag_package_versions "$WORKSPACE_VERSION"
-    else
-        cargo update --workspace
-        stage_cargo_files
-
-        gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
-        tag_package_versions "$WORKSPACE_VERSION"
-        cargo publish -j8 --no-verify
-    fi
+    echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
 
 if [ -n "${VERSION_TAG:-}" ]; then
-    git push origin "$VERSION_TAG:$VERSION_TAG"
+  git push origin "$VERSION_TAG:$VERSION_TAG"
 fi
-git push origin --tag $VERSION_TAG
+for crate in "${PUBLISH_CRATES[@]}"; do
+    git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
+done
