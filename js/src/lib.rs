@@ -22,7 +22,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		<link rel=\"apple-touch-icon\" href=\"/pwa/icon-256.png\"/>
 		<link rel=\"stylesheet\" href=\"/css/vars.css?v=1\">
 		<link rel=\"stylesheet\" href=\"/css/utils.css?v=1\">
-		<link rel=\"stylesheet\" href=\"/css/styles.css?v=14\">
+		<link rel=\"stylesheet\" href=\"/css/styles.css?v=15\">
 		<link rel=\"stylesheet\" href=\"/css/responsive.css?v=10\">
 		<script defer src=\"/js/util.js?v=5\"></script>
 		<script defer src=\"/js/ui/safe-html.js?v=1\"></script>
@@ -184,8 +184,26 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 									</tr>
 								</thead>
 								<tbody>
-								</tbody>
-							</table>
+										</tbody>
+									</table>
+									<section>
+										<header>
+											<label>Local Relay Dashboard</label>
+											<div class=\"flex\">
+												<button id=\"local-relay-start\" class=\"btn-text\">Start</button>
+												<button id=\"local-relay-stop\" class=\"btn-text\">Stop</button>
+											</div>
+										</header>
+										<div id=\"local-relay-dashboard\">
+											<p><strong>URL:</strong> <span data-field=\"url\"></span></p>
+											<p><strong>Status:</strong> <span data-field=\"status\"></span></p>
+											<p><strong>Events sent:</strong> <span data-field=\"sent\"></span></p>
+											<p><strong>Events received:</strong> <span data-field=\"received\"></span></p>
+											<p><strong>Errors:</strong> <span data-field=\"errors\"></span></p>
+											<p><strong>Last error:</strong> <span data-field=\"last_error\"></span></p>
+										</div>
+										<div id=\"local-relay-info\"></div>
+									</section>
 						</section>
 						<section>
 							<header><label>Info</label></header>

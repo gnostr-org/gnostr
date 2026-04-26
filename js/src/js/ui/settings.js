@@ -10,6 +10,7 @@ function init_settings(model) {
 	});
 
 	render_relay_dashboard();
+	render_local_relay_info();
     render_nip65_relays(model);
 }
 
@@ -24,6 +25,43 @@ function render_relay_dashboard() {
     find_node("[data-field='last_error']", el).textContent = status.last_error || "none";
     find_node("#local-relay-start", el.parentElement).disabled = status.connected;
     find_node("#local-relay-stop", el.parentElement).disabled = !status.connected;
+}
+
+async function render_local_relay_info() {
+    const el = find_node("#local-relay-info");
+    if (!el) {
+        return;
+    }
+    el.textContent = "Loading relay info...";
+
+    try {
+        const url = new URL(local_relay_url);
+        const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
+        const response = await fetch(http_url, {
+            headers: {
+                'Accept': 'application/nostr+json',
+            },
+        });
+        const data = await response.json();
+        el.innerHTML = "";
+        const dl = document.createElement("dl");
+        for (const key of ["name", "description", "pubkey", "software", "version", "supported_nips"]) {
+            if (data[key] == null) {
+                continue;
+            }
+            const dt = document.createElement("dt");
+            dt.textContent = key;
+            dl.appendChild(dt);
+
+            const dd = document.createElement("dd");
+            dd.textContent = Array.isArray(data[key]) ? data[key].join(", ") : data[key];
+            dl.appendChild(dd);
+        }
+        el.appendChild(dl);
+    } catch (error) {
+        el.textContent = "Unable to load relay info.";
+        log_error("Failed to fetch local relay info:", error);
+    }
 }
 
 function on_click_start_local_relay_sync() {

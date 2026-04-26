@@ -244,7 +244,7 @@ button.nav > img.icon {
 }
 #view header {
     position: sticky;
-    top: var(--master-pane-top);
+    top: 0;
     background-color: var(--clrBg); /* Ensure it has a background */
     z-index: var(--zHeader); /* Keep it above other content */
     padding: 15px; /* Adjust padding as needed */
@@ -255,7 +255,7 @@ button.nav > img.icon {
 }
 #view > header > label {
     position: sticky;
-    top: var(--master-pane-top);
+    top: 0;
     background-color: var(--clrBg); /* Ensure it has a background */
 	pa_dding: 15px;
 	font-size: 22px;
