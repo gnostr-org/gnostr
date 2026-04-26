@@ -295,6 +295,16 @@ jobs:
         fi
         echo $GITHUB_ENV && printenv
 
+    - name: Generate Cargo.lock
+      shell: bash
+      run: |
+        cargo generate-lockfile
+        if ! git diff --ignore-cr-at-eol --quiet -- Cargo.lock; then
+          echo "::error::Cargo.lock changed after generate-lockfile. Commit the updated lockfile."
+          git diff -- Cargo.lock > cargo-lock.diff || true
+          exit 1
+        fi
+
     - name: Build release binary
       shell: bash
       env:
@@ -303,7 +313,6 @@ jobs:
         CC_aarch64_unknown_linux_musl: aarch64-linux-gnu-gcc
         CXX_aarch64_unknown_linux_musl: aarch64-linux-gnu-g++
       run: |
-        cargo generate-lockfile && git diff
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
