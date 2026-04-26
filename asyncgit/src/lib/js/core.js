@@ -412,21 +412,8 @@ async function fetch_repo_events(repo_id, pool, until=Math.floor(Date.now() / 10
     }
 
     const sid = `${SID_NIP34_DETAIL}:${repo_id}`;
-    const nip34_kinds = [
-        KIND_REPO_ANNOUNCE,
-        KIND_REPO_STATE_ANNOUNCE,
-        KIND_REPO_PATCH,
-        KIND_REPO_PULL_REQ,
-        KIND_REPO_PULL_REQ_UPDATE,
-        KIND_REPO_ISSUE,
-        KIND_REPO_STATUS_OPEN,
-        KIND_REPO_STATUS_APPLIED,
-        KIND_REPO_STATUS_CLOSED,
-        KIND_REPO_STATUS_DRAFT,
-    ];
-
     const filter = {
-        kinds: nip34_kinds,
+        kinds: NIP34_KINDS,
         "#a": [repo_id],
         limit: 100, // Increased limit for more frequent updates
         until: until, // Always use `until` for fetching older events
