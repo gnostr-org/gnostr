@@ -1,10 +1,21 @@
-use nostr_database_0_34_0;
-use nostr_db;
-use nostr_sdk_0_32_0;
-use nostr_sdk_0_34_0;
-use nostr_sdk_0_37_0;
-use nostr_signer_0_34_0;
-use nostr_sqlite_0_34_0;
-use nostr_0_32_0;
-use nostr_0_34_1;
-use nostr_0_37_0;
+pub use crate::js::js_bundle::get_js_assets;
+
+/// Return the MIME type used for a static asset filename.
+pub fn asset_content_type(filename: &str) -> &'static str {
+    if filename.ends_with(".css") {
+        "text/css"
+    } else if filename.ends_with(".svg") {
+        "image/svg+xml"
+    } else if filename.ends_with(".png") {
+        "image/png"
+    } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
+        "image/jpeg"
+    } else if filename.ends_with(".ico") {
+        "image/x-icon"
+    } else if filename.ends_with(".js") {
+        "application/javascript"
+    } else {
+        "application/octet-stream"
+    }
+}
+
