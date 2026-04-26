@@ -34,7 +34,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		<script defer src=\"/js/ui/settings.js?v=1\"></script>
 		<script defer src=\"/js/ui/dm.js?v=1\"></script>
 		<script defer src=\"/js/nostr.js?v=7\"></script>
-		<script defer src=\"/js/core.js?v=1\"></script>
+		<script defer src=\"/js/core.js?v=2\"></script>
 		<script defer src=\"/js/model.js?v=1\"></script>
 		<script defer src=\"/js/contacts.js?v=1\"></script>
 		<script defer src=\"/js/event.js?v=1\"></script>
@@ -249,7 +249,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 					<textarea id=\"reply-content\" class=\"post-input\"
 						placeholder=\"Reply...\"></textarea>
 					<div class=\"post-tools new\">
-						<button class=\"action\" name=\"send\">Send</button>
+						<button class=\"action\" role=\"send\" name=\"send\">Send</button>
 					</div>
 					<div class=\"post-tools reply\">
 						<button class=\"action\" name=\"reply-all\" data-all=\"1\">Reply All</button>

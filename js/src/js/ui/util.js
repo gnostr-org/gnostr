@@ -98,6 +98,8 @@ function update_reply_box(state="new") {
 function new_note() {
 	const modal = document.querySelector("#reply-modal");
 	const inputbox = modal.querySelector("#reply-content");
+	const replying_to = modal.querySelector("#replying-to");
+	replying_to.dataset.evid = "";
 	update_reply_box("new");
 	inputbox.placeholder = "What's up?";
 	modal.showModal();

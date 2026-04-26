@@ -142,6 +142,33 @@ async function update_contacts() {
 	return ev;
 }
 
+async function create_note(pubkey, content) {
+	let post = {
+		pubkey,
+		kind: KIND_NOTE,
+		created_at: new_creation_time(),
+		content,
+		tags: [],
+	};
+	post.id = await nostrjs.calculate_id(post);
+	post = await sign_event(post);
+	return post;
+}
+
+async function send_note(content) {
+	const pubkey = await get_pubkey();
+	if (!pubkey) {
+		return;
+	}
+
+	const post = await create_note(pubkey, content);
+	broadcast_event(post);
+	model_process_event(GNOSTR, null, post);
+	view_timeline_update(GNOSTR);
+	view_timeline_show_new(GNOSTR);
+	return post;
+}
+
 async function sign_event(ev) {
 	if (!(window.nostr && window.nostr.signEvent)) {
 		console.error("window.nostr.signEvent is unsupported");
@@ -196,6 +223,9 @@ async function send_reply(content, replying_to, all=true) {
 	let reply = await create_reply(pubkey, content, ev, all)
 
 	broadcast_event(reply)
+	model_process_event(GNOSTR, null, reply);
+	view_timeline_update(GNOSTR);
+	view_timeline_show_new(GNOSTR);
 	broadcast_related_events(reply)
 }
 
