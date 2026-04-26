@@ -78,6 +78,11 @@ jobs:
             target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
 
+      - name: List restored target
+        shell: bash
+        run: |
+          find target -maxdepth 3 -print | sort
+
       - name: Setup Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -99,7 +104,8 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - run: rustup default ${{ matrix.rustup }}
-      - run: cargo build --bin gnostr
+      # - run: cargo build --bin gnostr
+      # Use the restored target cache from gnostr-test-matrix.yml.
       - run: ./target/debug/gnostr --help
       - run: |
           ./target/debug/gnostr \
