@@ -113,6 +113,19 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - run: rustup default ${{ matrix.rustup }}
+      - name: Install cargo-binstall
+        id: binstall
+        continue-on-error: true
+        if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' }}
+        uses: cargo-bins/cargo-binstall@v1.18.1
+
+      - name: Fallback install cargo-binstall (from crates.io)
+        if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' && steps.binstall.outcome != 'success' }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cargo install cargo-binstall --locked
+
       - name: Install gnostr via cargo-binstall
         if: ${{ !env.ACT && steps.cache-cargo-bin-restore.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/cargo-binstall-gnostr
