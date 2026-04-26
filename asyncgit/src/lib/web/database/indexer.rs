@@ -37,6 +37,15 @@ fn is_help_material_fixture(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+fn should_index_reference(reference_name: &gix::ReferenceName<'_>) -> bool {
+    reference_name.category() == Some(Category::LocalBranch)
+        || is_notes_reference(reference_name.as_bstr().as_ref())
+}
+
+fn is_notes_reference(reference_name: &str) -> bool {
+    reference_name.starts_with("refs/notes/")
+}
+
 fn write_fixture_file(root: &Path, relative_path: &str, content: &[u8]) -> anyhow::Result<()> {
     let path = root.join(relative_path);
     if let Some(parent) = path.parent() {
@@ -386,7 +395,7 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
             };
 
             let reference_name = reference.name();
-            if reference_name.category() != Some(Category::LocalBranch) {
+            if !should_index_reference(reference_name) {
                 continue;
             }
 
@@ -501,6 +510,19 @@ fn branch_index_update(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_notes_reference;
+
+    #[test]
+    fn notes_reference_detection_is_prefix_based() {
+        assert!(is_notes_reference("refs/notes/commits"));
+        assert!(is_notes_reference("refs/notes/reviews"));
+        assert!(!is_notes_reference("refs/heads/main"));
+        assert!(!is_notes_reference("refs/tags/v1"));
+    }
 }
 
 #[instrument(skip(db))]
