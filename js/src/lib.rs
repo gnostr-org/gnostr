@@ -42,6 +42,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		        <script defer src=\"/js/lib.js?v=1\"></script>
 				<script defer src=\"/js/main.js?v=1\"></script>
 		        <script defer src=\"/js/db.js?v=1\"></script>
+		        <script defer src=\"/js/app.js?v=1\"></script>
 			</head>	<body>
 		<div id=\"container-busy\">
 			<div class=\"loader\" title=\"Loading...\">
