@@ -6832,6 +6832,23 @@ version = "1877.946747.169395"
 [[package]]
 name = "gnostr-js"
 version = "1877.946747.169395"
+dependencies = [
+ "clap 4.6.1",
+ "futures-util",
+ "handlebars",
+ "lazy_static",
+ "log 0.4.29",
+ "pretty_env_logger",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "structopt",
+ "tiny_http",
+ "tokio",
+ "tokio-stream",
+ "warp",
+ "webbrowser",
+]
 
 [[package]]
 name = "gnostr-legit"

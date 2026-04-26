@@ -2,14 +2,39 @@
 name = "gnostr-js"
 version.workspace = true
 edition = "2021"
-description = "gnostr JavaScript support crate"
-authors = [
-  "gnostr <admin@gnostr.org>",
-]
+default-run = "gnostr-js"
+authors = ["gnostr <admin@gnostr.org>"]
 license = "MIT"
 
 [lib]
 name = "gnostr_js"
 path = "src/lib.rs"
 
+[[bin]]
+name = "gnostr-js"
+path = "src/main.rs"
+
+[[bin]]
+name = "websockets_chat"
+path = "src/bin/websockets_chat.rs"
+
+[[bin]]
+name = "embedded_js"
+path = "src/bin/embedded_js.rs"
+
 [dependencies]
+clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
+futures-util = "0.3.31"
+handlebars = "6.3.2"
+lazy_static = "1.5.0"
+log = "0.4"
+pretty_env_logger = "0.5.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+sha2 = "0.10.8"
+structopt = "0.3.26"
+tiny_http = "0.12.0"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1.17"
+warp = "0.3"
+webbrowser = "0.8"
