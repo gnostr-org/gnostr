@@ -328,8 +328,8 @@ async function model_process_event_relay_list(model, ev, update_view) {
 
     const relays = [];
     for (const tag of ev.tags) {
-        if (tag[0] === 'r' && tag[1]) {
-            const url = tag[1];
+        if (tag_name(tag) === 'r' && tag_value(tag)) {
+            const url = tag_value(tag);
             let policy = {};
             if (tag.length > 2) {
                 if (tag[2] === 'read') {
@@ -464,8 +464,8 @@ function model_process_event_reaction(model, ev, update_view) {
  */
 function model_process_event_deletion(model, ev, update_view) {
 	for (const tag of ev.tags) {
-		if (tag.length >= 2 && tag[0] === "e" && tag[1]) {
-			let evid = tag[1];
+		if (tag.length >= 2 && tag_name(tag) === "e" && tag_value(tag)) {
+			let evid = tag_value(tag);
 			model.invalidated.push(evid);
 			model_remove_reaction(model, evid, update_view);
 			if (model.deleted[evid])

@@ -234,20 +234,6 @@ async function poll_nip34_from_nip65_relays(model) {
     }
   }
 
-  const nip34_kinds = [
-    KIND_REPO_ANNOUNCE,
-    KIND_REPO_STATE_ANNOUNCE,
-    KIND_REPO_PATCH,
-    KIND_REPO_PULL_REQ,
-    KIND_REPO_PULL_REQ_UPDATE,
-    KIND_REPO_ISSUE,
-    KIND_REPO_REPLY,
-    KIND_REPO_STATUS_OPEN,
-    KIND_REPO_STATUS_APPLIED,
-    KIND_REPO_STATUS_CLOSED,
-    KIND_REPO_STATUS_DRAFT,
-  ]
-
   for (const [relay_url, policy] of nip65_relays_data) {
     // Only subscribe to relays marked for reading
     if (!policy.read) {
@@ -262,7 +248,7 @@ async function poll_nip34_from_nip65_relays(model) {
 
     const sub_id = `${SID_NIP65_RELAY_POLL}:${pubkey}:${relay_url}`
     const filter = {
-      kinds: nip34_kinds,
+      kinds: NIP34_KINDS,
       // No authors filter here, as this is for *global* NIP-34 events from these relays
       limit: 100, // Fetch a reasonable number of events
       since: Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 7, // Last 7 days, adjust as needed
