@@ -6915,6 +6915,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-web"
+version = "1877.946747.169395"
+
+[[package]]
 name = "gnostr_qr"
 version = "1877.946747.169395"
 dependencies = [
