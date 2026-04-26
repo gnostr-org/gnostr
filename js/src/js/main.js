@@ -128,6 +128,9 @@ async function webapp_init() {
 	on_timer_save();
 	on_timer_tick();
 
+	await model_load_events(model, (ev) => {
+		model_process_event(model, null, ev);
+	});
 	await model_load_nip34_events(model);
     // Initial subscription to NIP-34 events
     subscribe_nip34_events(model);
