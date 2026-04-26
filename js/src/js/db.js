@@ -7,6 +7,24 @@ const INDEX_REPO_ID = 'repo_id_idx';
 let db = null;
 let local_relay = null;
 const local_relay_url = "ws://127.0.0.1:8080";
+let local_relay_stats = {
+    connected: false,
+    sent: 0,
+    received: 0,
+    errors: 0,
+    last_error: "",
+};
+
+function get_local_relay_status() {
+    return {
+        url: local_relay_url,
+        connected: !!(local_relay && local_relay.ws && local_relay.ws.readyState === 1),
+        sent: local_relay_stats.sent,
+        received: local_relay_stats.received,
+        errors: local_relay_stats.errors,
+        last_error: local_relay_stats.last_error,
+    };
+}
 
 function init_local_relay_sync() {
     log_info("Initializing local relay DB sync...");
@@ -21,6 +39,11 @@ function init_local_relay_sync() {
         relay.on('open', () => {
             log_info(`Connected to local relay for DB sync: ${local_relay_url}`);
             local_relay = relay;
+            local_relay_stats.connected = true;
+            local_relay_stats.last_error = "";
+            if (typeof render_relay_dashboard === 'function') {
+                render_relay_dashboard();
+            }
 
             const sub_id = `db-sync-${Math.random().toString(36).substring(7)}`;
             const nip34_kinds = [
@@ -39,22 +62,61 @@ function init_local_relay_sync() {
         });
 
         relay.on('event', (sub_id, ev) => {
+            local_relay_stats.received += 1;
             add_nip34_event_to_db(ev, true);
+            if (typeof render_relay_dashboard === 'function') {
+                render_relay_dashboard();
+            }
         });
 
         relay.on('error', (err) => { 
             log_warn(`Could not connect to local relay at ${local_relay_url}:`, err);
             local_relay = null; 
+            local_relay_stats.connected = false;
+            local_relay_stats.errors += 1;
+            local_relay_stats.last_error = String(err);
+            if (typeof render_relay_dashboard === 'function') {
+                render_relay_dashboard();
+            }
         });
 
         relay.on('close', () => { 
             log_info(`Disconnected from local relay ${local_relay_url}`);
             local_relay = null; 
+            local_relay_stats.connected = false;
+            if (typeof render_relay_dashboard === 'function') {
+                render_relay_dashboard();
+            }
         });
 
     } catch (err) {
         log_error("Error initializing local relay sync connection:", err);
+        local_relay_stats.connected = false;
+        local_relay_stats.errors += 1;
+        local_relay_stats.last_error = String(err);
+        if (typeof render_relay_dashboard === 'function') {
+            render_relay_dashboard();
+        }
     }
+}
+
+function stop_local_relay_sync() {
+    if (local_relay) {
+        local_relay.close();
+        local_relay = null;
+    }
+    local_relay_stats.connected = false;
+    if (typeof render_relay_dashboard === 'function') {
+        render_relay_dashboard();
+    }
+}
+
+function start_local_relay_sync() {
+    if (local_relay && local_relay.ws && local_relay.ws.readyState === 1) {
+        return local_relay;
+    }
+    init_local_relay_sync();
+    return local_relay;
 }
 
 function open_db() {
@@ -154,6 +216,7 @@ async function add_nip34_event_to_db(event, is_from_local = false) {
 
         if (!is_from_local && local_relay && local_relay.ws.readyState === 1) {
             log_debug(`Syncing event ${event.id} to local relay.`);
+            local_relay_stats.sent += 1;
             local_relay.send(["EVENT", event]);
         }
     } catch (error) {

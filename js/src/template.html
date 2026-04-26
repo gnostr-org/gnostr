@@ -23,6 +23,7 @@
 		<script defer src="/js/ui/settings.js?v=1"></script>
 		<script defer src="/js/ui/dm.js?v=1"></script>
 		<script defer src="/js/nostr.js?v=7"></script>
+		<script defer src="/js/nip34.js?v=1"></script>
 		<script defer src="/js/core.js?v=2"></script>
 		<script defer src="/js/postbox.js?v=1"></script>
 		<script defer src="/js/model.js?v=1"></script>
@@ -34,7 +35,7 @@
 		<script defer src="/js/db.js?v=1"></script>
 		<script defer src="/js/relay.js?v=1"></script>
 		<script defer src="/js/timers.js?v=1"></script>
-		<script defer src="/js/app.js?v=1"></script>
+		<script defer src="/js/bootstrap.js?v=1"></script>
 	</head>
 	<body>
 		<div id="container-busy">
@@ -210,6 +211,23 @@
 								<tbody>
 									<!-- Dynamically generated rows should have <td> with classes: column-address, column-action -->
 							</table>
+						</section>
+						<section>
+							<header>
+								<label>Local Relay Dashboard</label>
+								<div class="flex">
+									<button id="local-relay-start" class="btn-text">Start</button>
+									<button id="local-relay-stop" class="btn-text">Stop</button>
+								</div>
+							</header>
+							<div id="local-relay-dashboard">
+								<p><strong>URL:</strong> <span data-field="url"></span></p>
+								<p><strong>Status:</strong> <span data-field="status"></span></p>
+								<p><strong>Events sent:</strong> <span data-field="sent"></span></p>
+								<p><strong>Events received:</strong> <span data-field="received"></span></p>
+								<p><strong>Errors:</strong> <span data-field="errors"></span></p>
+								<p><strong>Last error:</strong> <span data-field="last_error"></span></p>
+							</div>
 						</section>
 						<section>
 							<header><label>Info</label></header>

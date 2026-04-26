@@ -22,7 +22,12 @@ path = "src/bin/websockets_chat.rs"
 name = "embedded_js"
 path = "src/bin/embedded_js.rs"
 
+[[bin]]
+name = "gnostr-js-relay"
+path = "src/bin/gnostr-js-relay.rs"
+
 [dependencies]
+actix-web = "4"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 futures-util = "0.3.31"
 handlebars = "6.3.2"
@@ -38,3 +43,4 @@ tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.17"
 warp = "0.3"
 webbrowser = "0.8"
+gnostr-relay = { path = "../relay" }

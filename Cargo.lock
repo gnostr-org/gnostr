@@ -6834,8 +6834,10 @@ version = "1877.946747.169395"
 name = "gnostr-js"
 version = "1877.946747.169395"
 dependencies = [
+ "actix-web",
  "clap 4.6.1",
  "futures-util",
+ "gnostr-relay",
  "handlebars",
  "lazy_static",
  "log 0.4.29",

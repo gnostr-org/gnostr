@@ -34,6 +34,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		<script defer src=\"/js/ui/settings.js?v=1\"></script>
 		<script defer src=\"/js/ui/dm.js?v=1\"></script>
 		<script defer src=\"/js/nostr.js?v=7\"></script>
+		<script defer src=\"/js/nip34.js?v=1\"></script>
 		<script defer src=\"/js/core.js?v=2\"></script>
 		<script defer src=\"/js/postbox.js?v=1\"></script>
 		<script defer src=\"/js/model.js?v=1\"></script>
@@ -45,7 +46,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		        <script defer src=\"/js/db.js?v=1\"></script>
 		        <script defer src=\"/js/relay.js?v=1\"></script>
 		        <script defer src=\"/js/timers.js?v=1\"></script>
-		        <script defer src=\"/js/app.js?v=1\"></script>
+		        <script defer src=\"/js/bootstrap.js?v=1\"></script>
 			</head>	<body>
 		<div id=\"container-busy\">
 			<div class=\"loader\" title=\"Loading...\">

@@ -2,13 +2,39 @@ function init_settings(model) {
 	test_and_add_local_relay(model);
 	const el = find_node("#settings");
 	find_node("#add-relay", el).addEventListener("click", on_click_add_relay);
+	find_node("#local-relay-start", el).onclick = on_click_start_local_relay_sync;
+	find_node("#local-relay-stop", el).onclick = on_click_stop_local_relay_sync;
 	const rlist = find_node("#relay-list tbody", el);
 	rlist.innerHTML = ''; // Clear existing relays to prevent duplicates
 	model.relays.forEach((str) => {
 		rlist.appendChild(new_relay_item(str));
 	});
 
+	render_relay_dashboard();
     render_nip65_relays(model);
+}
+
+function render_relay_dashboard() {
+    const status = get_local_relay_status();
+    const el = find_node("#local-relay-dashboard");
+    find_node("[data-field='url']", el).textContent = status.url;
+    find_node("[data-field='status']", el).textContent = status.connected ? "connected" : "stopped";
+    find_node("[data-field='sent']", el).textContent = String(status.sent);
+    find_node("[data-field='received']", el).textContent = String(status.received);
+    find_node("[data-field='errors']", el).textContent = String(status.errors);
+    find_node("[data-field='last_error']", el).textContent = status.last_error || "none";
+    find_node("#local-relay-start", el.parentElement).disabled = status.connected;
+    find_node("#local-relay-stop", el.parentElement).disabled = !status.connected;
+}
+
+function on_click_start_local_relay_sync() {
+    start_local_relay_sync();
+    render_relay_dashboard();
+}
+
+function on_click_stop_local_relay_sync() {
+    stop_local_relay_sync();
+    render_relay_dashboard();
 }
 
 async function render_nip65_relays(model) {

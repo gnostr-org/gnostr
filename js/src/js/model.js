@@ -1,6 +1,3 @@
-// Add NIP-34 event kinds constant
-const NIP_34_KINDS = [...NIP34_REPO_KINDS, KIND_RELAY_LIST];
-
 /* model_process_event is the main point where events are post-processed from
  * a relay. Additionally other side effects happen such as notification checks
  * and fetching of unknown pubkey profiles.
