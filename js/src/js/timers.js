@@ -43,6 +43,12 @@ function on_timer_tick() {
 			log_debug(`NIP-34 Cache Size: ${size}`);
 		}
 
+		const settingsEl = find_node("#settings");
+		if (settingsEl && !settingsEl.classList.contains("hide") &&
+			typeof render_relay_dashboard === 'function') {
+			render_relay_dashboard();
+		}
+
 		model.nip34_polling_counter++;
 		if (model.nip34_polling_counter % 60 === 0) {
 			subscribe_nip34_events(model);

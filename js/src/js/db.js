@@ -64,9 +64,6 @@ function init_local_relay_sync() {
         relay.on('event', (sub_id, ev) => {
             local_relay_stats.received += 1;
             add_nip34_event_to_db(ev, true);
-            if (typeof render_relay_dashboard === 'function') {
-                render_relay_dashboard();
-            }
         });
 
         relay.on('error', (err) => { 

@@ -1,5 +1,4 @@
 function init_settings(model) {
-	test_and_add_local_relay(model);
 	const el = find_node("#settings");
 	find_node("#add-relay", el).addEventListener("click", on_click_add_relay);
 	find_node("#local-relay-start", el).onclick = on_click_start_local_relay_sync;

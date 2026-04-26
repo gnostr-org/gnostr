@@ -635,7 +635,6 @@ function new_model() {
         nip34_sub_id: null, // To store the active NIP-34 subscription ID
 		nip34_polling_counter: 0, // Counter for NIP-34 polling frequency
 	};
-	test_and_add_local_relay(model);
 	return model;
 }
 
@@ -675,25 +674,18 @@ async function test_and_add_local_relay(model) {
 
 			relay.on('eose', () => {
 				clearTimeout(timeout);
-				if (!model.relays.has(local_relay_url)) {
-					model.relays.add(local_relay_url);
-					// This assumes a function exists to refresh the settings UI
-					if (typeof init_settings === 'function') {
-						// A bit of a hack, but we need to re-init to show the new relay
-						// A better implementation would have a dedicated update function
-						init_settings(model);
-					}
+				model.local_relay_available = true;
+				if (typeof render_relay_dashboard === 'function') {
+					render_relay_dashboard();
 				}
 				relay.close();
 			});
 		});
 
 		relay.on('error', (err) => {
-			if (model.relays.has(local_relay_url)) {
-				model.relays.delete(local_relay_url);
-				if (typeof init_settings === 'function') {
-					init_settings(model);
-				}
+			model.local_relay_available = false;
+			if (typeof render_relay_dashboard === 'function') {
+				render_relay_dashboard();
 			}
 			relay.close();
 		});
