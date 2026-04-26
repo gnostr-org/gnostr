@@ -43,15 +43,16 @@ pub fn set_contact_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{default_gnostr_private_key, types::PublicKey};
-    use secp256k1::{Keypair, Secp256k1};
+    use secp256k1::XOnlyPublicKey;
 
     #[test]
     fn set_contact_list_builds_kind_3_with_expected_tags() {
-        let secp = Secp256k1::new();
-        let private_key = default_gnostr_private_key();
-        let keypair = Keypair::from_secret_key(&secp, &private_key);
-        let (public_key, _) = secp256k1::XOnlyPublicKey::from_keypair(&keypair);
+        let public_key = XOnlyPublicKey::from_slice(
+            &hex::decode("f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768")
+                .unwrap(),
+        )
+        .unwrap();
+        let private_key = secp256k1::SecretKey::from_slice(&[2u8; 32]).unwrap();
         let contacts = vec![Contact {
             public_key,
             relay_url: Some("wss://relay.damus.io".to_string()),
