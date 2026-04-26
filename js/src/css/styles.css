@@ -270,13 +270,16 @@ button.nav > img.icon {
 /* Add specific styling for #gnostr-nip34-feed if it needs to deviate from .events */
 #header-tools {
 	display: flex;
+	align-items: center;
+	gap: 15px;
 }
 #header-tools > * {
-	margin-left: 15px;
+	margin-left: 0;
 }
 #header-tools .pfp {
-	width: 32px;
-	height: 32px;
+	width: 40px;
+	height: 40px;
+	flex: 0 0 auto;
 }
 
 /* Events & Content */
