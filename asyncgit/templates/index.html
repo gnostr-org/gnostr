@@ -21,7 +21,36 @@
     padding-bottom: 0;
     line-height: 3ch;
   }
+
+  .repo-browser-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin: 1rem 0 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: solid 1px var(--clrBorder);
+  }
 </style>
+{% endblock %} {% block nav %}
+<nav class="repo-browser-nav">
+  <div>
+    <button id="expand-all-repos" class="action small" type="button">Expand all</button>
+    <button id="collapse-all-repos" class="action small" type="button">Collapse all</button>
+  </div>
+  <div class="repo-jump">
+    {%- for (path, repositories) in repositories %}
+    <a href="#repo-group-{{ loop.index0 }}">
+      {%- if let Some(path) = path -%}
+        {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
+      {%- else -%}
+        top-level
+      {%- endif -%}
+      ({{ repositories.len() }})
+    </a>
+    {%- endfor %}
+  </div>
+</nav>
 {% endblock %} {% block content %}
 <!-- begin gnostr chat web view -->
 <div id="container-busy">
@@ -338,22 +367,6 @@
 
 <!-- begit git web view -->
 <div class="table-responsive">
-  <div class="mb-2">
-    <button id="expand-all-repos" class="action small" type="button">Expand all</button>
-    <button id="collapse-all-repos" class="action small" type="button">Collapse all</button>
-  </div>
-  <div class="mb-2 repo-jump">
-    {%- for (path, repositories) in repositories %}
-    <a href="#repo-group-{{ loop.index0 }}">
-      {%- if let Some(path) = path -%}
-        {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
-      {%- else -%}
-        top-level
-      {%- endif -%}
-      ({{ repositories.len() }})
-    </a>
-    {%- endfor %}
-  </div>
   {%- for (path, repositories) in repositories %}
   <details class="repo-group" id="repo-group-{{ loop.index0 }}" {% if loop.first %}open{% endif %}>
     <summary class="repo-group-summary">
