@@ -42,23 +42,18 @@ pub fn set_contact_list(
 
 #[cfg(test)]
 mod tests {
-use super::*;
-use secp256k1::{SecretKey, XOnlyPublicKey};
+    use super::*;
+    use crate::{default_gnostr_private_key, types::PublicKey};
+    use secp256k1::{Keypair, Secp256k1};
 
     #[test]
     fn set_contact_list_builds_kind_3_with_expected_tags() {
-        let public_key = XOnlyPublicKey::from_slice(
-            &hex::decode("f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768")
-                .unwrap(),
-        )
-        .unwrap();
-        let private_key = secp256k1::SecretKey::from_slice(&[2u8; 32]).unwrap();
+        let secp = Secp256k1::new();
+        let private_key = default_gnostr_private_key();
+        let keypair = Keypair::from_secret_key(&secp, &private_key);
+        let (public_key, _) = secp256k1::XOnlyPublicKey::from_keypair(&keypair);
         let contacts = vec![Contact {
-            public_key: XOnlyPublicKey::from_slice(
-                &hex::decode("f53e4bcd7a9cdef049cf6467d638a1321958acd3b71eb09823fd6fadb023d768")
-                    .unwrap(),
-            )
-            .unwrap(),
+            public_key,
             relay_url: Some("wss://relay.damus.io".to_string()),
             petname: Some("alice".to_string()),
         }];
@@ -70,7 +65,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey};
         assert_eq!(event.tags.len(), 1);
         assert_eq!(event.tags[0].0, vec![
             "p".to_string(),
-            XOnlyPublicKey::from_slice(&[3u8; 32]).unwrap().to_string(),
+            public_key.to_string(),
             "wss://relay.damus.io".to_string(),
             "alice".to_string(),
         ]);
