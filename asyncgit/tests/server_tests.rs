@@ -1,9 +1,38 @@
-use std::time::Duration;
+use std::{fs, path::PathBuf, time::Duration};
+
+use git2::build::RepoBuilder;
 use tempfile::tempdir;
+
+fn ensure_crlf_fixture() -> PathBuf {
+    let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = crate_dir
+        .parent()
+        .expect("asyncgit crate should have a parent repo");
+    let fixture_dir = crate_dir.join("tests/resources");
+    let fixture_path = fixture_dir.join("crlf.git");
+
+    if fixture_path.exists() {
+        return fixture_path;
+    }
+
+    fs::create_dir_all(&fixture_dir).expect("create asyncgit test resources directory");
+    RepoBuilder::new()
+        .bare(true)
+        .clone(
+            repo_root
+                .to_str()
+                .expect("repo root path should be valid utf-8"),
+            &fixture_path,
+        )
+        .expect("create crlf.git fixture");
+
+    fixture_path
+}
 
 #[tokio::test]
 #[ignore]
 async fn test_commit_page_does_not_panic() {
+    let _fixture = ensure_crlf_fixture();
     let db_dir = tempdir().unwrap();
     let db_path = db_dir.path().to_str().unwrap();
 
