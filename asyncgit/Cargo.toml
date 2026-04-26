@@ -19,21 +19,9 @@ keywords = ["git"]
 name = "gnostr_asyncgit"
 path = "src/lib/mod.rs"
 
-[[example]]
-name = "gnostr_gnit"
-path = "examples/gnostr_gnit.rs"
-
 [[bin]]
 name = "git-tui"
 path = "src/bin/git_tui.rs"
-
-[[example]]
-name = "gnostr_web"
-path = "examples/gnostr_web.rs"
-
-[[example]]
-name = "gnostr_nip34"
-path = "examples/gnostr_nip34.rs"
 
 [features]
 default = ["trace-libgit"]
@@ -224,7 +212,7 @@ criterion = "0.5.1"
 env_logger = "0.11"
 expectrl = "0.8.0"
 insta = "1.42.2"
-invalidstring = { workspace = true }                #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1878.945649.607219" }
+invalidstring = { workspace = true }                 #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1878.945649.607219" }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
 nostr = { workspace = true }
 nostr-sdk = { workspace = true }
@@ -235,3 +223,15 @@ serial_test = "3.1"
 temp-dir = "0.1.13"
 tempfile = "3"
 tokio = { version = "1", features = ["full"] }
+
+[[example]]
+name = "gnostr_gnit"
+path = "examples/gnostr_gnit.rs"
+
+[[example]]
+name = "gnostr_web"
+path = "examples/gnostr_web.rs"
+
+[[example]]
+name = "gnostr_nip34"
+path = "examples/gnostr_nip34.rs"
