@@ -166,6 +166,18 @@ pub fn ensure_bare_repo_fixture(fixture_root: &Path, fixture_name: &str) -> anyh
             )
         })?;
 
+    let fixture_repo = git2::Repository::open_bare(&fixture_path)
+        .with_context(|| format!("failed to open bare fixture {}", fixture_path.display()))?;
+    let head_commit = fixture_repo
+        .head()
+        .context("failed to read fixture HEAD")?
+        .peel_to_commit()
+        .context("failed to peel fixture HEAD to commit")?
+        .id();
+    fixture_repo
+        .reference("refs/heads/main", head_commit, true, "ensure fixture main ref")
+        .context("failed to write fixture main ref")?;
+
     fs::write(
         fixture_path.join("description"),
         b"Interactive gnostr learning repo for browsing commits, trees, and patches\n",
