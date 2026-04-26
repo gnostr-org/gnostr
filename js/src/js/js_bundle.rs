@@ -16,6 +16,7 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("event.js".to_string(), include_bytes!("event.js") as &'static [u8]);
     assets.insert("lib.js".to_string(), include_bytes!("lib.js") as &'static [u8]);
     assets.insert("main.js".to_string(), include_bytes!("main.js") as &'static [u8]);
+    assets.insert("startup.js".to_string(), include_bytes!("startup.js") as &'static [u8]);
     assets.insert("app.js".to_string(), include_bytes!("app.js") as &'static [u8]);
     assets.insert("relay.js".to_string(), include_bytes!("relay.js") as &'static [u8]);
     assets.insert("timers.js".to_string(), include_bytes!("timers.js") as &'static [u8]);

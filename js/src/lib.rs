@@ -41,6 +41,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		<script defer src=\"/js/event.js?v=1\"></script>
 		        <script defer src=\"/js/lib.js?v=1\"></script>
 				<script defer src=\"/js/main.js?v=1\"></script>
+		        <script defer src=\"/js/startup.js?v=1\"></script>
 		        <script defer src=\"/js/db.js?v=1\"></script>
 		        <script defer src=\"/js/relay.js?v=1\"></script>
 		        <script defer src=\"/js/timers.js?v=1\"></script>
