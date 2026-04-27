@@ -10,11 +10,158 @@ const FLAT_CSS_PARTS: [&[u8]; 4] = [
 ];
 
 const FLAT_LAYOUT_CSS: &str = r#"
-body { font-family: sans-serif; display: grid; grid-template-columns: 250px 1fr; margin: 0; }
-nav { border-right: 1px solid #ccc; height: 100vh; overflow-y: auto; padding: 10px; position: sticky; top: 0; background: #f9f9f9; }
-main { padding: 20px; }
-textarea { width: 100%; height: 500px; }
-.view-btn { padding: 10px; cursor: pointer; }
+:root {
+    color-scheme: light dark;
+}
+body.flat-app {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--clrBg);
+    color: var(--clrText);
+}
+.flat-shell {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    min-height: 100vh;
+}
+.flat-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow: auto;
+    padding: 20px;
+    border-right: 1px solid var(--clrBorder);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 26%), var(--clrBg);
+}
+.flat-sidebar h1 {
+    margin: 0 0 8px;
+    font-size: 1.45rem;
+}
+.flat-sidebar .flat-repo {
+    margin: 0 0 16px;
+    color: var(--clrTextLight);
+    font-size: 0.95rem;
+    word-break: break-all;
+}
+.flat-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0 18px;
+}
+.view-btn {
+    border: 1px solid var(--clrBorder);
+    border-radius: 999px;
+    background: var(--clrPanel);
+    color: var(--clrText);
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.view-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--clrLink);
+}
+.flat-toc {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+.flat-toc a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: var(--clrText);
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid transparent;
+}
+.flat-toc a:hover {
+    background: var(--clrPanel);
+    border-color: var(--clrBorder);
+}
+.flat-main {
+    padding: 24px;
+    min-width: 0;
+}
+.flat-panel {
+    max-width: 100%;
+}
+.flat-section {
+    margin-bottom: 20px;
+}
+.flat-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.flat-section-head h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    word-break: break-word;
+}
+.flat-meta {
+    color: var(--clrTextLight);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+.flat-card {
+    border: 1px solid var(--clrBorder);
+    border-radius: 18px;
+    background: var(--clrPanel);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+.flat-card-body {
+    padding: 18px;
+}
+.flat-code {
+    margin: 0;
+    padding: 18px;
+    background: var(--clrBg);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+.flat-binary {
+    margin: 0;
+    color: #b91c1c;
+    font-weight: 700;
+}
+.flat-llm textarea {
+    width: 100%;
+    min-height: 500px;
+    border: 1px solid var(--clrBorder);
+    border-radius: 18px;
+    background: var(--clrPanel);
+    color: var(--clrText);
+    padding: 18px;
+    box-sizing: border-box;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 0.92rem;
+}
+@media (max-width: 900px) {
+    .flat-shell {
+        grid-template-columns: 1fr;
+    }
+    .flat-sidebar {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--clrBorder);
+    }
+    .flat-main {
+        padding: 16px;
+    }
+}
 "#;
 
 fn escape_html(s: &str) -> String {
@@ -76,19 +223,16 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
                     escape_html(c)
                 ));
                 format!(
-                    "<pre style='background:#f6f8fa; padding:10px; border-radius:5px;'><code>{}</code></pre>",
+                    "<pre class=\"flat-code\"><code>{}</code></pre>",
                     highlight_code(c)
                 )
             }
-            None => format!(
-                "<p style=\"color:red;\">Skipped: Binary or too large (Size: {} bytes).</p>",
-                f.size
-            ),
+            None => format!("<p class=\"flat-binary\">Skipped binary or large file ({})</p>", f.size),
         };
 
         sections.push_str(&format!(
-            "<section id='{}' style='border-top:1px solid #eee; margin-top:20px;'><h3>{}</h3>{}</section>",
-            anchor, f.rel, body
+            "<section id='{}' class='flat-section'><div class='flat-section-head'><h2>{}</h2><span class='flat-meta'>{} bytes</span></div><div class='flat-card'><div class='flat-card-body'>{}</div></div></section>",
+            anchor, f.rel, f.size, body
         ));
     }
     cxml.push_str("&lt;/documents&gt;");
@@ -96,32 +240,37 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
     format!(
         r#"
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <style>{styles}</style>
 <script>
 function show(id) {{
-document.getElementById('human').style.display = id === 'h' ? 'block' : 'none';
-document.getElementById('llm').style.display = id === 'l' ? 'block' : 'none';
+document.getElementById('human').classList.toggle('hide', id !== 'h');
+document.getElementById('llm').classList.toggle('hide', id !== 'l');
 }}
 </script>
 </head>
-<body>
-<nav>
+<body class="flat-app">
+<div class="flat-shell">
+<aside class="flat-sidebar">
+<h1>Flat view</h1>
+<p class="flat-repo">{url}</p>
+<div class="flat-actions">
+<button class="view-btn" onclick="show('h')">Human</button>
+<button class="view-btn" onclick="show('l')">LLM</button>
+</div>
 <strong>Files</strong>
-<ul style="padding-left:15px; font-size:12px;">{toc}</ul>
-</nav>
-<main>
-<h1>Repo: {url}</h1>
-<button class="view-btn" onclick="show('h')">👤 Human View</button>
-<button class="view-btn" onclick="show('l')">🤖 LLM View</button>
-<div id="human">{sections}</div>
-<div id="llm" style="display:none;">
+<ul class="flat-toc">{toc}</ul>
+</aside>
+<main class="flat-main">
+<div id="human" class="flat-panel">{sections}</div>
+<div id="llm" class="flat-panel hide flat-llm">
 <h2>LLM CXML</h2>
 <textarea readonly>{cxml}</textarea>
 </div>
 </main>
+</div>
 </body></html>
 "#,
         url = url,
