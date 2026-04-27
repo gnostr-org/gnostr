@@ -16,14 +16,17 @@ const FLAT_LAYOUT_CSS: &str = r#"
 body.flat-app {
     margin: 0;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--clrBg);
     color: var(--clrText);
 }
 .flat-shell {
+    flex: 1 1 auto;
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-    min-height: 100vh;
+    min-height: 0;
 }
 .flat-header {
     position: sticky;
@@ -51,10 +54,26 @@ body.flat-app {
 }
 .flat-header .flat-header-left {
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 .flat-header .flat-actions {
     margin: 0;
     flex: 0 0 auto;
+}
+.flat-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+}
+.flat-logo svg {
+    width: 44px;
+    height: 44px;
+    display: block;
 }
 .flat-sidebar {
     overflow: auto;
@@ -104,9 +123,14 @@ body.flat-app {
 .flat-main {
     padding: 24px;
     min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 .flat-panel {
     max-width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 .flat-section {
     margin-bottom: 20px;
@@ -154,7 +178,8 @@ body.flat-app {
 }
 .flat-llm textarea {
     width: 100%;
-    min-height: 500px;
+    min-height: 0;
+    flex: 1 1 auto;
     border: 1px solid var(--clrBorder);
     border-radius: 18px;
     background: var(--clrPanel);
@@ -163,6 +188,36 @@ body.flat-app {
     box-sizing: border-box;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     font-size: 0.92rem;
+}
+.flat-llm {
+    display: flex;
+    flex-direction: column;
+}
+.flat-llm h2 {
+    margin: 0 0 12px;
+}
+.flat-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--clrBorder);
+    background: linear-gradient(0deg, rgba(255, 255, 255, 0.04), transparent 42%), var(--clrBg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--clrTextLight);
+    font-size: 0.9rem;
+}
+.flat-footer a {
+    color: var(--clrLink);
+    text-decoration: none;
+}
+.flat-footer a:hover {
+    text-decoration: underline;
 }
 @media (max-width: 900px) {
     .flat-header {
@@ -222,11 +277,20 @@ fn build_flat_css() -> String {
     css
 }
 
+fn build_flat_logo_svg() -> String {
+    include_str!("../images/logo.svg")
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("<?xml"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
     let mut toc = String::new();
     let mut sections = String::new();
     let mut cxml = String::from("&lt;documents&gt;\n");
     let styles = build_flat_css();
+    let logo_svg = build_flat_logo_svg();
 
     for (idx, f) in files.iter().enumerate() {
         let anchor = format!("f-{}", idx);
@@ -256,7 +320,7 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
     cxml.push_str("&lt;/documents&gt;");
 
     format!(
-        r#"
+        r##"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -269,10 +333,10 @@ document.getElementById('llm').classList.toggle('hide', id !== 'l');
 }}
 </script>
 </head>
-<body class="flat-app">
+<body class="flat-app" id="top">
 <header class="flat-header">
 <div class="flat-header-left">
-<h1>Flat view</h1>
+<div class="flat-logo" role="img" aria-label="gnostr">{logo_svg}</div>
 <p class="flat-repo">{url}</p>
 </div>
 <div class="flat-actions">
@@ -293,8 +357,12 @@ document.getElementById('llm').classList.toggle('hide', id !== 'l');
 </div>
 </main>
 </div>
+<footer class="flat-footer">
+<span>gnostr flat view</span>
+<a href="#top">Back to top</a>
+</footer>
 </body></html>
-"#,
+        "##,
         url = url,
         toc = toc,
         sections = sections,
