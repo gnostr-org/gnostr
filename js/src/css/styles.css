@@ -948,6 +948,36 @@ code {
 	word-break: break-word;
 }
 
+.nip34-json-card {
+	margin-top: 12px;
+	padding: 12px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 12px;
+	background: var(--clrPanel);
+}
+.nip34-json-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+.nip34-json-label {
+	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.nip34-json-card pre {
+	margin: 0;
+	padding: 12px;
+	border-radius: 10px;
+	background: var(--clrBg);
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
 /* Inputs */
 
 .block {

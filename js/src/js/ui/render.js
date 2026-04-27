@@ -263,7 +263,12 @@ function render_repo_event_summary(model, ev) {
     let issue_title = "";
     let patch_id = "";
     let pull_req_id = "";
-    let json_body = "";
+    const json_body = html`<div class="nip34-json-card">
+        <div class="nip34-json-card-head">
+            <span class="nip34-json-label">Raw JSON</span>
+        </div>
+        <pre>${JSON.stringify(ev, null, 2)}</pre>
+    </div>`;
     for (const tag of ev.tags) {
     console.log("______________________tag=", tag);
         if (tag[0] === "d") { // Repository Announcement Address
@@ -304,9 +309,6 @@ function render_repo_event_summary(model, ev) {
             e = tag[1];
         } else if (tag[0] === "p") {
             p = tag[1];
-        } else {
-          // capture full event
-          json_body = JSON.stringify(ev, null, 2);
         }
     }
 
