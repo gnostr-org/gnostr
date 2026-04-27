@@ -199,7 +199,8 @@ pub fn listener_pid_on_port(port: u16) -> anyhow::Result<Option<u32>> {
     #[cfg(unix)]
     {
         let output = Command::new("lsof")
-            .args(["-tiTCP:", &port.to_string(), "-sTCP:LISTEN"])
+            .arg(format!("-tiTCP:{port}"))
+            .arg("-sTCP:LISTEN")
             .output();
 
         let Ok(output) = output else {

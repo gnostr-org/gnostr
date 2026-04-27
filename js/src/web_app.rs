@@ -2,6 +2,7 @@ use std::io;
 use std::sync::Arc;
 
 use clap::Parser;
+use warp::http::StatusCode;
 use warp::Filter;
 
 use crate::bridge;

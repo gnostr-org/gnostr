@@ -114,7 +114,8 @@ async function stop_local_relay_sync() {
         local_relay = null;
     }
     try {
-        await relay_process_request("/api/relay/stop");
+        const data = await relay_process_request("/api/relay/stop");
+        log_info(data.message);
     } catch (error) {
         log_error("Failed to stop local relay process:", error);
     }
@@ -130,7 +131,8 @@ async function start_local_relay_sync() {
     model.local_relay_enabled = true;
     model_save_settings(model);
     try {
-        await relay_process_request("/api/relay/start");
+        const data = await relay_process_request("/api/relay/start");
+        log_info(data.message);
     } catch (error) {
         log_error("Failed to start local relay process:", error);
     }

@@ -22,24 +22,24 @@ fn relay_config_path() -> String {
     RelayCli::default().config_file_path
 }
 
-fn relay_pid() -> anyhow::Result<Option<u32>> {
-    if let Some(pid) = existing_detached_pid(RELAY_PID_NAME)? {
-        return Ok(Some(pid));
-    }
-
-    if relay_port_is_listening(RELAY_PORT) {
-        return listener_pid_on_port(RELAY_PORT);
-    }
-
-    Ok(None)
-}
-
 pub fn relay_status() -> anyhow::Result<RelayProcessState> {
-    if let Some(pid) = relay_pid()? {
+    if let Some(pid) = existing_detached_pid(RELAY_PID_NAME)? {
         return Ok(RelayProcessState {
             running: true,
             pid: Some(pid),
             message: format!("relay already running with pid {pid}"),
+        });
+    }
+
+    if relay_port_is_listening(RELAY_PORT) {
+        let pid = listener_pid_on_port(RELAY_PORT)?;
+        return Ok(RelayProcessState {
+            running: true,
+            pid,
+            message: match pid {
+                Some(pid) => format!("relay already listening on 127.0.0.1:{RELAY_PORT} with pid {pid}"),
+                None => format!("relay already listening on 127.0.0.1:{RELAY_PORT}"),
+            },
         });
     }
 
@@ -51,12 +51,9 @@ pub fn relay_status() -> anyhow::Result<RelayProcessState> {
 }
 
 pub fn start_relay() -> anyhow::Result<RelayProcessState> {
-    if let Some(pid) = relay_pid()? {
-        return Ok(RelayProcessState {
-            running: true,
-            pid: Some(pid),
-            message: format!("relay already running with pid {pid}"),
-        });
+    let status = relay_status()?;
+    if status.running {
+        return Ok(status);
     }
 
     let config_file_path = relay_config_path();
@@ -80,7 +77,13 @@ pub fn start_relay() -> anyhow::Result<RelayProcessState> {
 }
 
 pub fn stop_relay() -> anyhow::Result<RelayProcessState> {
-    let Some(pid) = relay_pid()? else {
+    let status = relay_status()?;
+    let Some(pid) = status.pid else {
+        if status.running {
+            return Err(anyhow::anyhow!(
+                "relay is listening on 127.0.0.1:{RELAY_PORT} but its PID could not be determined"
+            ));
+        }
         return Ok(RelayProcessState {
             running: false,
             pid: None,
