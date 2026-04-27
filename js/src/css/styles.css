@@ -723,7 +723,7 @@ code {
 #settings .settings-actions .nav.icon {
 	padding: 10px;
 }
-#settings header, #relays header {
+#settings header {
     position: sticky;
     top: var(--master-pane-top);
     background-color: var(--clrBg); /* Ensure it has a background */
@@ -733,6 +733,20 @@ code {
     display: flex;
     align-items: center; /* Vertically align content */
     justify-content: space-between; /* Distribute items horizontally */
+}
+#relays header {
+	position: relative;
+	top: auto;
+	background-color: var(--clrBg);
+	z-index: auto;
+	padding: 15px;
+	border-bottom: 1px solid var(--clrBorder);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+#relays section > table {
+	margin-top: 15px;
 }
 #settings header > label, #relays header > label {
 	font-weight: bold;
