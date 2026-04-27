@@ -23,10 +23,11 @@ fn open(host: &str, port: i32) -> io::Result<()> {
 }
 
 /// Run the embedded Nostr web app on the given port.
-pub async fn run(port: u16) {
+pub async fn run(port: u16) -> anyhow::Result<()> {
     const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
 
     pretty_env_logger::init();
+    relay_control::start_relay()?;
 
     let shell_html = Arc::new(bridge::shell_html());
     let js_assets_map = Arc::new(get_js_assets());
@@ -185,4 +186,5 @@ pub async fn run(port: u16) {
     let _ = open("127.0.0.1", port.try_into().unwrap());
     println!("http://127.0.0.1:{}", port);
     warp::serve(routes).run(([127, 0, 0, 1], port)).await;
+    Ok(())
 }

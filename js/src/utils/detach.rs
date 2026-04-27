@@ -165,6 +165,13 @@ pub fn read_detached_pid(name: &str) -> anyhow::Result<Option<u32>> {
 pub fn pid_is_running(pid: u32) -> bool {
     let result = unsafe { libc::kill(pid as i32, 0) };
     if result == 0 {
+        let output = Command::new("ps")
+            .args(["-o", "stat=", "-p", &pid.to_string()])
+            .output();
+        if let Ok(output) = output {
+            let stat = String::from_utf8_lossy(&output.stdout);
+            return !stat.chars().any(|c| c == 'Z');
+        }
         true
     } else {
         matches!(std::io::Error::last_os_error().raw_os_error(), Some(code) if code == libc::EPERM)

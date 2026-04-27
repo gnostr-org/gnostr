@@ -110,3 +110,6 @@ The web UI uses these backend endpoints to manage the local relay:
 Detached launches write their PID to `.gnostr/gnostr-js-relay.pid`, and the
 startup path refuses to spawn a duplicate relay when port `8080` is already in
 use.
+
+The `web` server now starts the detached local relay automatically on boot, so
+the browser UI comes up with the relay already available.

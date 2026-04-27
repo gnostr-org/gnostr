@@ -5,7 +5,10 @@ use gnostr_relay::launcher;
 use gnostr_js::utils::detach::{
     capture_detached_pid, existing_detached_pid, relay_port_is_listening,
     spawn_detached_current_exe_named,
+    spawn_detached_current_exe_named_with_env,
 };
+
+const DETACHED_ENV: &str = "GNOSTR_JS_RELAY_DETACHED";
 
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
@@ -49,11 +52,13 @@ async fn run_web(port: u16, detach: bool) {
         return;
     }
 
-    gnostr_js::web_app::run(port).await;
+    gnostr_js::web_app::run(port).await.expect("run web app");
 }
 
 async fn run_relay(relay: RelayCli, detach: bool) {
-    if relay_port_is_listening(8080) {
+    let is_detached_child = std::env::var_os(DETACHED_ENV).is_some();
+
+    if !is_detached_child && relay_port_is_listening(8080) {
         println!("gnostr-js relay is already listening on 127.0.0.1:8080");
         return;
     }
@@ -65,7 +70,7 @@ async fn run_relay(relay: RelayCli, detach: bool) {
         }
         let logging = relay.logging.clone();
         let config_file_path = relay.config_file_path.clone();
-        let pid = spawn_detached_current_exe_named(
+        let pid = spawn_detached_current_exe_named_with_env(
             Some("gnostr-js"),
             [
                 "relay",
@@ -74,6 +79,7 @@ async fn run_relay(relay: RelayCli, detach: bool) {
                 "--config-file-path",
                 config_file_path.as_str(),
             ],
+            [(DETACHED_ENV, "1")],
         )
         .expect("spawn detached relay");
         let pid_path = capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
@@ -81,9 +87,11 @@ async fn run_relay(relay: RelayCli, detach: bool) {
         return;
     }
 
-    if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
-        println!("gnostr-js relay already running with pid {pid}");
-        return;
+    if !is_detached_child {
+        if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+            println!("gnostr-js relay already running with pid {pid}");
+            return;
+        }
     }
 
     launcher::run(relay.clone(), relay.config_path_if_exists(), "NOSTR")
