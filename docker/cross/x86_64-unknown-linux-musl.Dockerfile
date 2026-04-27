@@ -1,7 +1,7 @@
 FROM ghcr.io/cross-rs/x86_64-unknown-linux-musl:main
 
-RUN apt-get update \
- && apt-get install --assume-yes --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes --no-install-recommends \
       clang \
       libclang-dev \
       llvm-dev \
