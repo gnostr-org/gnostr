@@ -143,58 +143,15 @@ async function webapp_init() {
 }
 
 function parse_url_mode() {
-	var mode;
-	var valid = true;
-	var opts = {};
-	var parts = window.location.pathname.split("/").slice(1);
-	if (parts[0] == "nip") {
-		if (parts[1] == "34") {
-			mode = VM_NIP34;
-			if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
-				const kind = parseInt(parts[2], 10);
-				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
-					opts.kind = kind;
-				} else {
-					valid = false;
-				}
-			}
-		} else {
-			mode = VM_NIP_EXPLORER;
-		}
-	} else if (parts[0] == "relays") {
-		mode = VM_RELAYS;
-	} else {
-		for (var key in VIEW_NAMES) {
-			if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
-				mode = key;
-				break;
-			}
-		}
+	const parsed = view_path_to_mode(window.location.pathname);
+	if (parsed) {
+		return parsed;
 	}
-	if (!mode) {
-		mode = VM_FRIENDS;
-		valid = false;
-	}
-	switch (mode) {
-		case VM_FRIENDS:
-			//opts.hide_replys = true;
-			break;
-		case VM_THREAD:
-			opts.thread_id = parts[1];
-			break;
-		case VM_DM_THREAD:
-		case VM_USER:
-			opts.pubkey = parts[1];
-			break;
-		case VM_NIP_EXPLORER:
-			break;
-		case VM_RELAYS:
-			break;
-		case VM_NIP34_DETAIL:
-			opts.repo_id = parts[1];
-			break;
-	}
-	return { mode, opts, valid };
+	return {
+		mode: VM_FRIENDS,
+		opts: {},
+		valid: false,
+	};
 }
 
 function on_timer_timestamps() {
