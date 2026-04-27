@@ -197,6 +197,8 @@ function open_thread(thread_id) {
     }
 	const opts = { thread_id };
 	if (current_thread_id && event && is_nip34_repo_kind(event.kind)) {
+		// Preserve the originating thread so related repo events can keep using
+		// it as their context after the drill-down.
 		opts.related_thread_id = current_thread_id;
 	}
 	view_timeline_apply_mode(GNOSTR, VM_THREAD, opts);

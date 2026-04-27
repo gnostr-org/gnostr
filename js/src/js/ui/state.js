@@ -316,6 +316,8 @@ function view_timeline_refresh(model, mode, opts={}) {
 				}
 				replies.sort((a, b) => a.created_at - b.created_at);
 
+				// Keep repo activity anchored to the original thread when we drill
+				// from a thread into a related NIP-34 event.
 				const related_anchor_id = opts.related_thread_id || root_id;
 				const related_nip34 = [];
 				for (const ev of evs) {
@@ -346,6 +348,8 @@ function view_timeline_refresh(model, mode, opts={}) {
 				}
 
 				if (related_nip34.length > 0) {
+					// Render matching repo events directly beneath the thread so the
+					// related activity stays visible while navigating nested threads.
 					const section = document.createElement("section");
 					section.classList.add("related-nip34");
 					section.innerHTML = "<header><label>Related NIP-34</label></header>";
