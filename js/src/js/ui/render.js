@@ -257,6 +257,7 @@ function render_repo_event_summary(model, ev) {
     let repo_name = "";
     let description = "";
     let clone_url = "";
+    let flat_url = "";
     let relays = [];
     let maintainers = [];
     let status_tag = "";
@@ -287,6 +288,7 @@ function render_repo_event_summary(model, ev) {
             description = tag[1];
         } else if (tag[0] === "clone") {
             clone_url = tag[1];
+            flat_url = `/flat?repo=${encodeURIComponent(tag[1])}`;
         } else if (tag[0] === "relays") {
             relays = tag.slice(1);
         } else if (tag[0] === "maintainers") {
@@ -322,7 +324,10 @@ function render_repo_event_summary(model, ev) {
                 summary += `<br>Web: <a href="${repo_url}" target="_blank">${repo_url}</a>`;
             }
             if (clone_url) {
-                summary += `<br>Clone: <a href="${clone_url}" target="_blank">${clone_url}</a>`;
+                summary += `<br>Clone: <a href="${clone_url}" target="_blank" rel="noreferrer">${clone_url}</a>`;
+                if (flat_url) {
+                    summary += ` <a href="${flat_url}" target="_blank" rel="noreferrer">Flat view</a>`;
+                }
             }
             if (maintainers.length > 0) {
                 summary += `<br>Maintainers: ${maintainers.map(pk => fmt_name(model_get_profile(model, pk))).join(", ")}`;

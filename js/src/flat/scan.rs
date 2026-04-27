@@ -13,7 +13,7 @@ pub(crate) struct FileInfo {
 pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<PathBuf> {
     println!("Cloning repository...");
     let status = Command::new("git")
-        .args(["clone", "--depth", "1", repo_url, "repo"])
+        .args(["clone", "--depth", "1", "--single-branch", "--no-tags", repo_url, "repo"])
         .current_dir(tmp_dir)
         .status()
         .context("Git command failed")?;

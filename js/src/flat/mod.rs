@@ -22,11 +22,15 @@ pub fn run() -> Result<()> {
     run_with_args(Args::parse())
 }
 
-pub fn run_with_args(args: Args) -> Result<()> {
+pub fn build_html(repo_url: &str, max_bytes: u64) -> Result<String> {
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
-    let repo_path = scan::clone_repo(tmp_dir.path(), &args.repo_url)?;
-    let files = scan::collect_files(&repo_path, args.max_bytes)?;
-    let html = render::build_html(&args.repo_url, &files);
+    let repo_path = scan::clone_repo(tmp_dir.path(), repo_url)?;
+    let files = scan::collect_files(&repo_path, max_bytes)?;
+    Ok(render::build_html(repo_url, &files))
+}
+
+pub fn run_with_args(args: Args) -> Result<()> {
+    let html = build_html(&args.repo_url, args.max_bytes)?;
     let out = args.out.unwrap_or_else(|| PathBuf::from("repo_flat.html"));
     fs::write(&out, html)?;
 

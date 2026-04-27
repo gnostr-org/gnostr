@@ -1,11 +1,14 @@
 use std::io;
 use std::sync::Arc;
+use std::collections::HashMap;
 
 use clap::Parser;
 use warp::http::StatusCode;
+use warp::Reply;
 use warp::Filter;
 
 use crate::bridge;
+use crate::flat;
 use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_assets};
 use crate::relay_control;
 
@@ -197,6 +200,37 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
             })
     };
 
+    let flat_route = warp::path("flat")
+        .and(warp::get())
+        .and(warp::query::<HashMap<String, String>>())
+        .map(|query: HashMap<String, String>| {
+            match query.get("repo") {
+                Some(repo_url) if !repo_url.is_empty() => match flat::build_html(repo_url, 51_200) {
+                    Ok(html) => warp::reply::with_header(
+                        warp::reply::html(html),
+                        "Content-Security-Policy",
+                        RELAXED_CSP_STRING,
+                    )
+                    .into_response(),
+                    Err(err) => warp::reply::with_status(
+                        warp::reply::html(format!(
+                            "<h1>Flat view unavailable</h1><p>{}</p>",
+                            err
+                        )),
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                    )
+                    .into_response(),
+                },
+                _ => warp::reply::with_status(
+                    warp::reply::html(
+                        "<h1>Flat view unavailable</h1><p>Missing repo query parameter.</p>",
+                    ),
+                    StatusCode::BAD_REQUEST,
+                )
+                .into_response(),
+            }
+        });
+
     let relay_status_route = warp::path!("api" / "relay" / "status")
         .and(warp::get())
         .map(|| match relay_control::relay_status() {
@@ -287,6 +321,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(nip34_relays_txt_route)
         .or(nip34_relay_route)
         .or(repository_detail_route)
+        .or(flat_route)
         .or(relay_status_route)
         .or(relay_start_route)
         .or(relay_stop_route)
