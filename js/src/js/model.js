@@ -206,6 +206,9 @@ function model_process_event_metadata(model, ev, update_view) {
 		sync_active_user_metadata_to_local_relay(model);
 	}
 	const timeline_el = view_get_timeline_el();
+	if (ev.pubkey == model.pubkey && typeof view_update_cached_active_pfp === "function") {
+		view_update_cached_active_pfp(model);
+	}
 	if (ev.pubkey == model.pubkey && timeline_el && timeline_el.dataset.mode == VM_SETTINGS && typeof render_settings_profile === "function") {
 		render_settings_profile(model);
 	}

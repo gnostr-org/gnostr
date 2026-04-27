@@ -7,6 +7,9 @@ function init_settings(model) {
 	if (pubkey_el && model.pubkey) {
 		pubkey_el.textContent = model.pubkey;
 	}
+	if (model.pubkey) {
+		view_update_cached_active_pfp(model);
+	}
 	render_settings_profile(model);
 }
 
