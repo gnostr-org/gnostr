@@ -446,7 +446,6 @@ button.nav > img.icon {
 	gap: 12px;
 }
 #view .nip-explorer-item {
-	padding: 16px;
 	border: 1px solid var(--clrBorder);
 	border-radius: 16px;
 	background: var(--clrPanel);
@@ -456,6 +455,16 @@ button.nav > img.icon {
 	transform: translateY(-1px);
 	border-color: var(--clrLink);
 	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+#view .nip-explorer-card {
+	display: block;
+	padding: 16px;
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+}
+#view .nip-explorer-card:hover {
+	text-decoration: none;
 }
 #view .nip-explorer-item-head {
 	display: flex;
@@ -477,13 +486,11 @@ button.nav > img.icon {
 }
 #view .nip-explorer-link {
 	color: var(--clrText);
-	text-decoration: none;
 	font-weight: 800;
 	font-size: var(--fsEnlarged);
 }
-#view .nip-explorer-link:hover {
+#view .nip-explorer-card:hover .nip-explorer-link {
 	color: var(--clrLink);
-	text-decoration: underline;
 }
 #view .nip-explorer-item p {
 	margin: 0;

@@ -109,11 +109,13 @@ function render_nip_explorer() {
 		<ul class="nip-explorer-list">
 			$${NIP_EXPLORER_ITEMS.map((item) => html`
 				<li class="nip-explorer-item">
-					<div class="nip-explorer-item-head">
-						<span class="nip-explorer-id">/${item.nip}</span>
-						<a class="nip-explorer-link" href="${item.href}">${item.title}</a>
-					</div>
-					<p>${item.description}</p>
+					<a class="nip-explorer-card" href="${item.href}">
+						<div class="nip-explorer-item-head">
+							<span class="nip-explorer-id">/${item.nip}</span>
+							<span class="nip-explorer-link">${item.title}</span>
+						</div>
+						<p>${item.description}</p>
+					</a>
 				</li>
 			`).join("")}
 		</ul>
