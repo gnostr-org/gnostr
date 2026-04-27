@@ -3,6 +3,8 @@ use futures::{stream, StreamExt};
 use log::warn;
 use reqwest::header::ACCEPT;
 
+const CONCURRENT_REQUESTS: usize = 16;
+
 pub fn websocket_http_url(url: &str) -> String {
     url.replace("wss://", "https://")
         .replace("ws://", "http://")
@@ -34,7 +36,7 @@ pub async fn fetch_relay_texts(
                 Ok((url, text))
             }
         })
-        .buffer_unordered(crate::CONCURRENT_REQUESTS)
+        .buffer_unordered(CONCURRENT_REQUESTS)
         .collect::<Vec<Result<(String, String), reqwest::Error>>>()
         .await
 }

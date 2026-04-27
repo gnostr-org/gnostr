@@ -21,7 +21,7 @@ use tokio::task::spawn;
 use tower_http::trace::{self, TraceLayer};
 use ::url::Url;
 
-async fn collect_supported_relays_for_nip(
+pub(crate) async fn collect_supported_relays_for_nip(
     nip_lower: i32,
     client: &reqwest::Client,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -63,7 +63,7 @@ async fn collect_supported_relays_for_nip(
     Ok(supported)
 }
 
-async fn prime_all_nip_relays_files(
+pub(crate) async fn prime_all_nip_relays_files(
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("prime_all_nip_relays_files: starting pass");
@@ -155,7 +155,7 @@ async fn prime_all_nip_relays_files(
     Ok(())
 }
 
-async fn run_sniper_service(client: reqwest::Client) {
+pub(crate) async fn run_sniper_service(client: reqwest::Client) {
     info!("starting sniper service");
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
     interval.tick().await;
@@ -169,7 +169,7 @@ async fn run_sniper_service(client: reqwest::Client) {
     }
 }
 
-async fn refresh_nip_relays_files(
+pub(crate) async fn refresh_nip_relays_files(
     nip_lower: i32,
     client: &reqwest::Client,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
@@ -178,7 +178,7 @@ async fn refresh_nip_relays_files(
     Ok(dir)
 }
 
-async fn get_relays_yaml() -> Response {
+pub(crate) async fn get_relays_yaml() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.yaml");
     debug!(
@@ -238,7 +238,7 @@ async fn get_relays_yaml() -> Response {
     }
 }
 
-async fn get_relays_json() -> Response {
+pub(crate) async fn get_relays_json() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.json");
     debug!(
@@ -280,7 +280,7 @@ async fn get_relays_json() -> Response {
     }
 }
 
-async fn get_relays_txt() -> Response {
+pub(crate) async fn get_relays_txt() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("relays.txt");
     debug!(
@@ -322,7 +322,7 @@ async fn get_relays_txt() -> Response {
     }
 }
 
-async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+pub(crate) async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.yaml");
     debug!(
@@ -372,7 +372,7 @@ async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     }
 }
 
-async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+pub(crate) async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.json");
     debug!(
@@ -422,7 +422,7 @@ async fn get_nip_relays_json(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     }
 }
 
-async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+pub(crate) async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.txt");
     debug!(
@@ -472,7 +472,7 @@ async fn get_nip_relays_txt(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     }
 }
 
-async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
+pub(crate) async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let default_kinds = nip_lower.to_string();
     fn escape_html(input: &str) -> String {
@@ -647,7 +647,7 @@ async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Response {
         })
 }
 
-fn load_nip_query_relays(
+pub(crate) fn load_nip_query_relays(
     nip_lower: i32,
     relay_override: Option<&str>,
 ) -> Result<Vec<Url>, Box<dyn std::error::Error>> {
@@ -674,14 +674,14 @@ fn load_nip_query_relays(
     Ok(relays)
 }
 
-fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
+pub(crate) fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
     params
         .get(key)
         .map(String::as_str)
         .filter(|value| !value.trim().is_empty())
 }
 
-async fn execute_query_page(
+pub(crate) async fn execute_query_page(
     title: &str,
     nav: &[(&str, &str)],
     form_html: &str,
@@ -738,7 +738,7 @@ async fn execute_query_page(
         })
 }
 
-async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
+pub(crate) async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
     fn escape_html(input: &str) -> String {
         input
             .replace('&', "&amp;")
@@ -844,7 +844,7 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
     .await
 }
 
-async fn get_nip_query(
+pub(crate) async fn get_nip_query(
     AxumPath(nip_lower): AxumPath<i32>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Response {
@@ -1041,7 +1041,7 @@ async fn get_nip_query(
         })
 }
 
-async fn get_nip_relay_json(
+pub(crate) async fn get_nip_relay_json(
     AxumPath((nip_lower, relay_file)): AxumPath<(i32, String)>,
 ) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
@@ -1088,7 +1088,7 @@ async fn get_nip_relay_json(
     }
 }
 
-async fn get_index_html() -> Response {
+pub(crate) async fn get_index_html() -> Response {
     let config_dir = crate::relays::get_config_dir_path();
     let file_path = config_dir.join("index.html");
     debug!(
