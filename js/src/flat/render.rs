@@ -163,7 +163,7 @@ body.flat-app {
     border-color: var(--clrBorder);
 }
 .flat-main {
-    padding: 24px;
+    padding: 0 24px 24px;
     min-width: 0;
     min-height: 0;
     display: flex;
@@ -384,19 +384,25 @@ fn insert_tree(root: &mut TreeNode, rel: &str, anchor: String) {
     }
 }
 
-fn render_tree_node(name: &str, node: &TreeNode, out: &mut String) {
+fn render_tree_node(name: &str, node: &TreeNode, path: &str, out: &mut String) {
+    let current_path = if path.is_empty() {
+        name.to_string()
+    } else {
+        format!("{path}/{name}")
+    };
+
     if let Some(anchor) = &node.file {
         out.push_str(&format!(
-            "<li class='flat-tree-file'><a href='#{anchor}'>{name}</a></li>"
+            "<li class='flat-tree-file'><a href='#{anchor}' data-file-anchor='{anchor}' data-file-path='{current_path}'>{name}</a></li>"
         ));
         return;
     }
 
-    out.push_str("<li class='flat-tree-dir'><details><summary>");
+    out.push_str(&format!("<li class='flat-tree-dir'><details data-tree-path='{current_path}'><summary>"));
     out.push_str(name);
     out.push_str("</summary><ul>");
     for (child_name, child) in &node.children {
-        render_tree_node(child_name, child, out);
+        render_tree_node(child_name, child, &current_path, out);
     }
     out.push_str("</ul></details></li>");
 }
@@ -435,7 +441,7 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
         ));
     }
     for (name, node) in &tree.children {
-        render_tree_node(name, node, &mut toc);
+        render_tree_node(name, node, "", &mut toc);
     }
     cxml.push_str("&lt;/documents&gt;");
 
@@ -452,22 +458,69 @@ document.getElementById('human').classList.toggle('hide', id !== 'h');
 document.getElementById('llm').classList.toggle('hide', id !== 'l');
 }}
 
+function treeDetails() {{
+return Array.from(document.querySelectorAll('.flat-tree-dir > details'));
+}}
+
+function treeLinks() {{
+return Array.from(document.querySelectorAll('.flat-tree-file a'));
+}}
+
+function openTreePath(filePath) {{
+const parts = filePath.split('/').filter(Boolean);
+let current = '';
+
+for (let i = 0; i < parts.length - 1; i += 1) {{
+    current = current ? `${{current}}/${{parts[i]}}` : parts[i];
+    const node = treeDetails().find((details) => details.dataset.treePath === current);
+    if (node) {{
+        node.open = true;
+    }}
+}}
+}}
+
 function syncSelectedFile() {{
 const hash = window.location.hash.slice(1);
 const sections = document.querySelectorAll('.flat-file-details');
 let target = null;
+let selectedSection = null;
 
 sections.forEach((details) => {{
     const section = details.closest('section');
     const isTarget = hash && section && section.id === hash;
     if (isTarget) {{
         target = details;
+        selectedSection = section;
     }}
 }});
 
 sections.forEach((details) => {{
     details.open = target ? details === target : false;
 }});
+
+const treeLink = treeLinks().find((link) => link.dataset.fileAnchor === hash);
+if (!treeLink) {{
+    return;
+}}
+
+const filePath = treeLink.dataset.filePath || '';
+openTreePath(filePath);
+
+const pathParts = filePath.split('/').filter(Boolean);
+const folderPath = pathParts.slice(0, -1).join('/');
+const folderNode = folderPath
+    ? treeDetails().find((details) => details.dataset.treePath === folderPath)
+    : null;
+
+if (folderNode) {{
+    folderNode.scrollIntoView({{ block: 'start', inline: 'nearest' }});
+}}
+
+if (selectedSection) {{
+    window.requestAnimationFrame(() => {{
+        selectedSection.scrollIntoView({{ block: 'start', inline: 'nearest' }});
+    }});
+}}
 }}
 
 window.addEventListener('hashchange', syncSelectedFile);
