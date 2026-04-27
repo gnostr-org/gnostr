@@ -6,6 +6,7 @@ pub mod images;
 pub mod js;
 pub mod pwa;
 pub mod relay_app;
+pub mod relay_control;
 pub mod utils;
 pub mod template_html;
 pub mod websock_index_html;
