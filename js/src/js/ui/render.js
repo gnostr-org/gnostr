@@ -324,6 +324,9 @@ function render_repo_event_summary(model, ev) {
     switch (ev.kind) {
         case KIND_REPO_ANNOUNCE:
             summary = `Repository Announcement: <b>${repo_name || "309:Untitled Repository"}</b>`;
+            if (flat_url) {
+                summary += ` <a href="${flat_url}" target="_blank" rel="noreferrer">Flat View</a>`;
+            }
             if (description) {
                 summary += `<br>${description}`;
             }
@@ -332,9 +335,6 @@ function render_repo_event_summary(model, ev) {
             }
             if (clone_url) {
                 summary += `<br>Clone: <a href="${clone_url}" target="_blank" rel="noreferrer">${clone_url}</a>`;
-                if (flat_url) {
-                    summary += ` <a href="${flat_url}" target="_blank" rel="noreferrer">Flat view</a>`;
-                }
             }
             if (maintainers.length > 0) {
                 summary += `<br>Maintainers: ${maintainers.map(pk => fmt_name(model_get_profile(model, pk))).join(", ")}`;
