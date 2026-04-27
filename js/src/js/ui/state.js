@@ -579,43 +579,6 @@ function view_timeline_show_more(model) {
 	view_timeline_update_timestamps();
 }
 
-function view_timeline_show_more(model) {
-	const el = view_get_timeline_el();
-	const mode = el.dataset.mode;
-	const opts = view_get_el_opts(el);
-	const oldest_evid = el.lastElementChild ? el.lastElementChild.id.slice(2) : undefined;
-	const oldest = model.all_events[oldest_evid];
-	const evs = model_events_arr(model);
-	const fragment = new DocumentFragment();
-	let i = arr_bsearch(evs, oldest, (a, b) => {
-		if (a.id == b.id || a.created_at == b.created_at)
-			return 0;
-		if (a.created_at > b.created_at)
-			return 1;
-		return -1;
-	});
-	const limit = 200;
-	let count = 0;
-	for (; i >= 0 && count < limit; i--){
-		const ev = evs[i];
-		if (!view_mode_contains_event(model, ev, mode, opts))
-			continue;
-		let ev_el = model.elements[ev.id];
-		if (!ev_el || ev_el.parentElement)
-			continue;
-		fragment.appendChild(ev_el);
-		count++;
-	}
-	if (count > 0) {
-		el.append(fragment);
-	}
-	if (count < limit) {
-		// No more to show, hide the button
-		find_node("#show-more").classList.add("hide");
-	}
-	view_timeline_update_timestamps();
-}
-
 function show_more_nip34_events(model) {
     console.log("show_more_nip34_events called.");
     const el = view_get_timeline_el();
