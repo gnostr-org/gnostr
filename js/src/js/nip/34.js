@@ -71,7 +71,7 @@ const NIP_EXPLORER_ITEMS = [
 	{
 		nip: "34",
 		title: "NIP-34",
-		href: "/nip/34",
+		href: "/nip/34/30617",
 		description: "Git repositories, announcements, patches, issues, and status events.",
 	},
 	...NIP34_REPO_KINDS.map((kind) => {

@@ -399,6 +399,7 @@ function view_path_to_mode(pathname) {
 	if (parts[0] == "nip") {
 		if (parts[1] == "34") {
 			mode = VM_NIP34;
+			opts.kind = KIND_REPO_ANNOUNCE;
 			if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
 				const kind = parseInt(parts[2], 10);
 				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
