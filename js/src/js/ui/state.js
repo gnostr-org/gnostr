@@ -356,8 +356,22 @@ function view_timeline_refresh(model, mode, opts={}) {
 
 function view_update_navs(mode) {
 	find_nodes("nav.nav button[data-view]").forEach((el)=> {
-		el.classList.toggle("active", el.dataset.view == mode)
+		el.classList.toggle("active", view_matches_mode(el.dataset.view, mode))
 	});
+}
+
+function view_matches_mode(view_name, mode) {
+	if (view_name == mode)
+		return true;
+	if (view_name == "nip" && mode == VM_NIP_EXPLORER)
+		return true;
+	return false;
+}
+
+function view_name_to_mode(view_name) {
+	if (view_name == "nip")
+		return VM_NIP_EXPLORER;
+	return view_name;
 }
 
 function view_show_spinner(show=true) {
@@ -1077,7 +1091,7 @@ function onclick_any(ev) {
 			signin();
 			break;
 		case "open-view":
-			switch_view(el.dataset.view);
+			switch_view(view_name_to_mode(el.dataset.view));
 			break;
 		case "close-media":
 			close_media_preview();
