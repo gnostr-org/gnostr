@@ -25,25 +25,41 @@ body.flat-app {
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
     min-height: 100vh;
 }
-.flat-sidebar {
+.flat-header {
     position: sticky;
     top: 0;
-    align-self: start;
-    height: 100vh;
-    overflow: auto;
-    padding: 20px;
-    border-right: 1px solid var(--clrBorder);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 26%), var(--clrBg);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--clrBorder);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 42%), var(--clrBg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
-.flat-sidebar h1 {
-    margin: 0 0 8px;
-    font-size: 1.45rem;
+.flat-header h1 {
+    margin: 0;
+    font-size: 1.25rem;
 }
-.flat-sidebar .flat-repo {
-    margin: 0 0 16px;
+.flat-header .flat-repo {
+    margin: 4px 0 0;
     color: var(--clrTextLight);
     font-size: 0.95rem;
     word-break: break-all;
+}
+.flat-header .flat-header-left {
+    min-width: 0;
+}
+.flat-header .flat-actions {
+    margin: 0;
+    flex: 0 0 auto;
+}
+.flat-sidebar {
+    overflow: auto;
+    padding: 20px;
+    border-right: 1px solid var(--clrBorder);
 }
 .flat-actions {
     display: flex;
@@ -149,12 +165,14 @@ body.flat-app {
     font-size: 0.92rem;
 }
 @media (max-width: 900px) {
+    .flat-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
     .flat-shell {
         grid-template-columns: 1fr;
     }
     .flat-sidebar {
-        position: relative;
-        height: auto;
         border-right: 0;
         border-bottom: 1px solid var(--clrBorder);
     }
@@ -252,14 +270,18 @@ document.getElementById('llm').classList.toggle('hide', id !== 'l');
 </script>
 </head>
 <body class="flat-app">
-<div class="flat-shell">
-<aside class="flat-sidebar">
+<header class="flat-header">
+<div class="flat-header-left">
 <h1>Flat view</h1>
 <p class="flat-repo">{url}</p>
+</div>
 <div class="flat-actions">
 <button class="view-btn" onclick="show('h')">Human</button>
 <button class="view-btn" onclick="show('l')">LLM</button>
 </div>
+</header>
+<div class="flat-shell">
+<aside class="flat-sidebar">
 <strong>Files</strong>
 <ul class="flat-toc">{toc}</ul>
 </aside>
