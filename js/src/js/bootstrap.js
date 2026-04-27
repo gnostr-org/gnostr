@@ -45,10 +45,26 @@ function parse_url_mode() {
 	var valid = true;
 	var opts = {};
 	var parts = window.location.pathname.split("/").slice(1);
-	for (var key in VIEW_NAMES) {
-		if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
-			mode = key;
-			break;
+	if (parts[0] == "nip") {
+		if (parts[1] == "34") {
+			mode = VM_NIP34;
+			if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
+				const kind = parseInt(parts[2], 10);
+				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
+					opts.kind = kind;
+				} else {
+					valid = false;
+				}
+			}
+		} else {
+			mode = VM_NIP_EXPLORER;
+		}
+	} else {
+		for (var key in VIEW_NAMES) {
+			if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
+				mode = key;
+				break;
+			}
 		}
 	}
 	if (!mode) {
@@ -64,6 +80,8 @@ function parse_url_mode() {
 		case VM_DM_THREAD:
 		case VM_USER:
 			opts.pubkey = parts[1];
+			break;
+		case VM_NIP_EXPLORER:
 			break;
 		case VM_NIP34_DETAIL:
 			opts.repo_id = parts[1];

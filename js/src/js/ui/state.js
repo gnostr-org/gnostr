@@ -157,6 +157,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	delete el.dataset.threadId;
 	delete el.dataset.pubkey;
 	delete el.dataset.repoId;
+	delete el.dataset.kind;
 	switch(mode) {
 	case VM_FRIENDS:
 		el.dataset.hideReplys = opts.hide_replys;
@@ -173,6 +174,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		break;
 	case VM_NIP34:
 		if (opts.kind) {
+			el.dataset.kind = opts.kind;
 			name = `nip/34/${opts.kind}`;
 		}
 		break;
@@ -383,6 +385,7 @@ function view_get_el_opts(el) {
 	return {
 		thread_id: el.dataset.threadId,
 		pubkey: el.dataset.pubkey,
+		kind: el.dataset.kind ? parseInt(el.dataset.kind, 10) : undefined,
 		hide_replys: mode == VM_FRIENDS && el.dataset.hideReplys == "true",
 	};
 }
@@ -840,8 +843,11 @@ function view_mode_contains_event(model, ev, mode, opts={}) {
 				event_tags_pubkey(ev, opts.pubkey));
         case VM_GNOSTR:
             return is_nip34_repo_kind(ev.kind);
-        case VM_NIP34:
-            return is_nip34_repo_kind(ev.kind);
+	case VM_NIP34:
+		if (opts.kind && ev.kind != opts.kind) {
+			return false;
+		}
+		return is_nip34_repo_kind(ev.kind);
         case VM_NIP34_DETAIL:
             console.log(`view_mode_contains_event: Filtering for VM_NIP34_DETAIL. Event ID: ${ev.id}, Repo ID from opts: ${opts.repo_id}`);
             const all_nip34_kinds = new Set([

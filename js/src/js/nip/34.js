@@ -24,6 +24,49 @@ const NIP34_REPO_KINDS = [
 ];
 
 const NIP_34_KINDS = [...NIP34_REPO_KINDS, KIND_RELAY_LIST];
+const NIP34_KIND_META = {
+	[KIND_REPO_ANNOUNCE]: {
+		title: "Repository announcement",
+		description: "Initial repository announcements.",
+	},
+	[KIND_REPO_STATE_ANNOUNCE]: {
+		title: "Repository state",
+		description: "Repository state changes and follow-up announcements.",
+	},
+	[KIND_REPO_PATCH]: {
+		title: "Patch",
+		description: "Patch events for repository changes.",
+	},
+	[KIND_REPO_PULL_REQ]: {
+		title: "Pull request",
+		description: "Pull request events.",
+	},
+	[KIND_REPO_PULL_REQ_UPDATE]: {
+		title: "Pull request update",
+		description: "Pull request updates and revisions.",
+	},
+	[KIND_REPO_ISSUE]: {
+		title: "Issue",
+		description: "Repository issue events.",
+	},
+	[KIND_REPO_STATUS_OPEN]: {
+		title: "Status open",
+		description: "Open status events.",
+	},
+	[KIND_REPO_STATUS_APPLIED]: {
+		title: "Status applied",
+		description: "Applied status events.",
+	},
+	[KIND_REPO_STATUS_CLOSED]: {
+		title: "Status closed",
+		description: "Closed status events.",
+	},
+	[KIND_REPO_STATUS_DRAFT]: {
+		title: "Status draft",
+		description: "Draft status events.",
+	},
+};
+
 const NIP_EXPLORER_ITEMS = [
 	{
 		nip: "34",
@@ -31,6 +74,15 @@ const NIP_EXPLORER_ITEMS = [
 		href: "/nip/34",
 		description: "Git repositories, announcements, patches, issues, and status events.",
 	},
+	...NIP34_REPO_KINDS.map((kind) => {
+		const meta = nip34_kind_meta(kind);
+		return {
+			nip: `34/${kind}`,
+			title: meta.title,
+			href: `/nip/34/${kind}`,
+			description: meta.description,
+		};
+	}),
 	{
 		nip: "65",
 		title: "NIP-65",
@@ -41,6 +93,17 @@ const NIP_EXPLORER_ITEMS = [
 
 function is_nip34_repo_kind(kind) {
 	return NIP34_REPO_KINDS.includes(kind);
+}
+
+function nip34_kind_meta(kind) {
+	return NIP34_KIND_META[kind] || {
+		title: `Kind ${kind}`,
+		description: "NIP-34 kind view.",
+	};
+}
+
+function nip34_filter_kinds(kind) {
+	return Number.isInteger(kind) ? [kind] : NIP34_REPO_KINDS;
 }
 
 function render_nip_explorer() {

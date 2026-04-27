@@ -654,7 +654,9 @@ function subscribe_nip34_events(model) {
     }
 
     const sub_id = `nip34-polling-${Math.random().toString(36).substring(7)}`;
-    const filter = { kinds: NIP_34_KINDS, limit: 100 }; // Fetch up to 100 new events
+    const timeline = view_get_timeline_el();
+    const kind = timeline && timeline.dataset.kind ? parseInt(timeline.dataset.kind, 10) : undefined;
+    const filter = { kinds: nip34_filter_kinds(Number.isNaN(kind) ? undefined : kind), limit: 100 }; // Fetch up to 100 new events
 
     log_debug(`Subscribing to NIP-34 events with sub_id: ${sub_id}`);
     model.pool.subscribe(sub_id, [filter]);

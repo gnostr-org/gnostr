@@ -153,6 +153,8 @@ function parse_url_mode() {
 				const kind = parseInt(parts[2], 10);
 				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
 					opts.kind = kind;
+				} else {
+					valid = false;
 				}
 			}
 		} else {
