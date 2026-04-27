@@ -1,12 +1,18 @@
 #![allow(unused)]
 pub mod bridge;
 pub mod css;
+pub mod embedded;
 pub mod images;
 pub mod js;
 pub mod pwa;
 pub mod template_html;
 pub mod websock_index_html;
 pub mod web_app;
+
+pub use embedded::{
+    asset_content_type, get_css_assets, get_images_assets, get_js_assets, get_pwa_assets,
+    get_template_assets, shell_html, TemplateHtml,
+};
 
 /// TEMPLATE_HTML
 pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
