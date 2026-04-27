@@ -2,6 +2,7 @@
 pub mod bridge;
 pub mod crawler;
 pub mod css;
+pub mod flat;
 pub mod embedded;
 pub mod images;
 pub mod js;

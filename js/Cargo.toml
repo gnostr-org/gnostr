@@ -26,6 +26,10 @@ path = "src/bin/embedded_js.rs"
 name = "gnostr-js-relay"
 path = "src/bin/gnostr-js-relay.rs"
 
+[[bin]]
+name = "flat"
+path = "src/bin/flat.rs"
+
 [dependencies]
 actix-web = "4"
 anyhow = { workspace = true }
@@ -35,14 +39,17 @@ handlebars = "6.3.2"
 lazy_static = "1.5.0"
 log = "0.4"
 pretty_env_logger = "0.5.0"
+regex = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 sha2 = "0.10.8"
 libc = { workspace = true }
 structopt = "0.3.26"
+tempfile = { workspace = true }
 tiny_http = "0.12.0"
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.17"
+walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
 gnostr-relay = { version = "1876.946894.932223", path = "../relay" }
