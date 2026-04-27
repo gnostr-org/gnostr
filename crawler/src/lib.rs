@@ -1,5 +1,6 @@
 pub mod processor;
 pub mod api;
+pub mod relay_io;
 pub mod pubkeys;
 pub mod commands;
 pub mod query;
@@ -10,6 +11,7 @@ pub use query::cli;
 pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
 pub use api::{run_api_server, run_api_server_detached};
 pub use commands::{run_nip34, run_sniper, run_watch};
+pub use relay_io::{load_file, load_relays_or_bootstrap, load_shitlist, preprocess_line};
 
 pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
@@ -36,8 +38,6 @@ use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use reqwest::header::ACCEPT;
 use std::collections::{HashMap, HashSet};
 use std::fs as sync_fs;
-use std::io::{self, BufRead, BufReader};
-use std::path::Path;
 use std::str;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
@@ -121,149 +121,6 @@ pub struct Relay {
     pub supported_nips: Option<Vec<i32>>,
     pub supported_nip_extensions: Option<Vec<String>>,
     pub version: Option<String>,
-}
-
-pub fn preprocess_line(line: &str) -> String {
-    let mut trimmed_line = line.trim().to_string();
-    if let Some(stripped) = trimmed_line.strip_prefix("- ") {
-        trimmed_line = stripped.trim().to_string();
-    } else if let Some(stripped) = trimmed_line.strip_prefix('-') {
-        trimmed_line = stripped.trim().to_string();
-    }
-    // Truncate at the first comma, if any
-    if let Some(comma_idx) = trimmed_line.find(',') {
-        trimmed_line.truncate(comma_idx);
-        trimmed_line = trimmed_line.trim().to_string(); // Re-trim after truncation
-    }
-    trimmed_line
-}
-
-pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-    let base_dir = crate::relays::get_config_dir_path();
-    let file_path = base_dir.join(
-        filename
-            .as_ref()
-            .file_name()
-            .unwrap_or(filename.as_ref().as_os_str()),
-    );
-
-    if let Some(parent) = file_path.parent() {
-        sync_fs::create_dir_all(parent)?;
-    }
-
-    debug!("Loading file: {}", file_path.display());
-
-    let file_content = sync_fs::read_to_string(&file_path)?;
-
-    // Preprocess each line to truncate after a comma and trim whitespace
-    let preprocessed_lines: Vec<String> = file_content
-        .lines()
-        .map(|line| preprocess_line(line))
-        .filter(|line| !line.is_empty())
-        .collect();
-
-    let preprocessed_content_for_yaml = preprocessed_lines.join("\n");
-
-    let relays: Vec<String> =
-        match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
-            Ok(yaml_relays) => yaml_relays,
-            Err(e) => {
-                // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
-                warn!(
-                    "Failed to parse {} as YAML: {}. Falling back to preprocessed lines.",
-                    file_path.display(),
-                    e
-                );
-                preprocessed_lines
-            }
-        };
-
-    let filtered_relays: Vec<String> = relays
-        .into_iter()
-        .filter_map(|line| {
-            // Lines are already preprocessed for truncation and trimming.
-            // Now, refine filtering to differentiate between actual non-websocket URLs and non-URL lines.
-            if line.is_empty() {
-                return None;
-            }
-
-            let mut final_line = line.clone();
-
-            // Attempt to prepend wss:// if it looks like a hostname without a scheme
-            if !final_line.contains("://") {
-                let potential_url = format!("wss://{}", final_line);
-                match Url::parse(&potential_url) {
-                    Ok(url) => {
-                        debug!("Prepended 'wss://' to form valid URL: {}", url);
-                        final_line = url.to_string();
-                    }
-                    Err(_) => {
-                        // If prepending wss:// doesn't form a valid URL, keep the original line
-                        // and let the next checks handle it as a non-URL line.
-                        debug!(
-                            "Attempted to prepend 'wss://' but it's still not a valid URL: {}",
-                            potential_url
-                        );
-                    }
-                }
-            }
-
-            if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
-                match Url::parse(&final_line) {
-                    Ok(url) => Some(url.to_string()),
-                    Err(_) => {
-                        warn!(
-                            "Skipping invalid WEBSOCKET URL in {}: {}",
-                            filename.as_ref().display(),
-                            final_line
-                        );
-                        None
-                    }
-                }
-            } else if final_line.contains("://") {
-                // It's a URL, but not a websocket URL
-                warn!(
-                    "Skipping non-websocket URL scheme in {}: {}",
-                    filename.as_ref().display(),
-                    final_line
-                );
-                None
-            } else {
-                // It's not a URL at all (e.g., "Relay URL")
-                debug!(
-                    "Silently skipping non-URL line in {}: {}",
-                    filename.as_ref().display(),
-                    final_line
-                );
-                None
-            }
-        })
-        .collect();
-
-    Ok(filtered_relays)
-}
-
-//pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-//    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
-//}
-
-pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
-    BufReader::new(sync_fs::File::open(filename)?)
-        .lines()
-        .collect()
-}
-
-fn load_relays_or_bootstrap() -> Vec<String> {
-    match load_file("relays.yaml") {
-        Ok(relays) => relays,
-        Err(e) => {
-            warn!(
-                "Failed to load relays.yaml ({}); falling back to bootstrap relays",
-                e
-            );
-            BOOTSTRAP_RELAYS.iter().cloned().collect()
-        }
-    }
 }
 
 #[allow(clippy::manual_strip)]
