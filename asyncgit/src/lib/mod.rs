@@ -105,6 +105,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+pub use git2;
 pub use git2::message_prettify;
 
 pub use crate::{
