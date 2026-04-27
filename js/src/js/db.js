@@ -65,6 +65,18 @@ function sync_related_user_metadata_to_local_relay(model, event) {
     return local_relay_send_event(event);
 }
 
+function sync_all_user_metadata_to_local_relay(model) {
+    let sent = false;
+    for (const id in model.all_events) {
+        const ev = model.all_events[id];
+        if (!ev || ev.kind !== KIND_METADATA) {
+            continue;
+        }
+        sent = local_relay_send_event(ev) || sent;
+    }
+    return sent;
+}
+
 function sync_active_user_metadata_to_local_relay(model, event=null) {
     if (!model || !model.pubkey) {
         return false;
@@ -143,6 +155,7 @@ function init_local_relay_sync() {
             local_relay = relay;
             local_relay_stats.connected = true;
             local_relay_stats.last_error = "";
+            sync_all_user_metadata_to_local_relay(GNOSTR);
             sync_active_user_metadata_to_local_relay(GNOSTR);
             sync_all_nip34_events_to_local_relay(GNOSTR);
             if (typeof render_relay_dashboard === 'function') {

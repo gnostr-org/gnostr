@@ -201,7 +201,7 @@ function model_process_event_metadata(model, ev, update_view) {
 		return;
 	profile.evid = ev.id;
 	profile.data = safe_parse_json(ev.content, "profile contents");
-	sync_related_user_metadata_to_local_relay(model, ev);
+	local_relay_send_event(ev);
 	if (ev.pubkey == model.pubkey) {
 		sync_active_user_metadata_to_local_relay(model);
 	}
