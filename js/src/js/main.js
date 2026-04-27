@@ -160,6 +160,8 @@ function parse_url_mode() {
 		} else {
 			mode = VM_NIP_EXPLORER;
 		}
+	} else if (parts[0] == "relays") {
+		mode = VM_RELAYS;
 	} else {
 		for (var key in VIEW_NAMES) {
 			if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
@@ -184,6 +186,8 @@ function parse_url_mode() {
 			opts.pubkey = parts[1];
 			break;
 		case VM_NIP_EXPLORER:
+			break;
+		case VM_RELAYS:
 			break;
 		case VM_NIP34_DETAIL:
 			opts.repo_id = parts[1];

@@ -85,6 +85,20 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
             })
     };
 
+    let relays_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path("relays")
+            .and(warp::path::end())
+            .and(warp::get())
+            .map(move || {
+                warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                )
+            })
+    };
+
     let nip34_route = {
         let shell_html = Arc::clone(&shell_html);
         warp::path!("nip" / "34").and(warp::get()).map(move || {
@@ -264,6 +278,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(messages_route)
         .or(gnostr_route)
         .or(nip_index_route)
+        .or(relays_route)
         .or(nip34_route)
         .or(nip34_kind_route)
         .or(nip34_query_route)

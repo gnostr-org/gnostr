@@ -5,6 +5,7 @@ const VM_DM_THREAD     = "dmthread"; // all events from a user of KIND_DM
 const VM_THREAD        = "thread"; // all events in response to target event
 const VM_USER          = "user"; // all events by pubkey 
 const VM_SETTINGS      = "settings";
+const VM_RELAYS        = "relays";
 const VM_NIP_EXPLORER  = "nip-explorer";
 const VM_NIP34         = "nip34-view-friends"; // NIP-34 events from followed profiles
 const VM_GNOSTR  = "gnostr"; // All NIP-34 events
@@ -20,6 +21,7 @@ VIEW_NAMES[VM_DM_THREAD] = "dm";
 VIEW_NAMES[VM_USER] = "profile";
 VIEW_NAMES[VM_THREAD] = "thread";
 VIEW_NAMES[VM_SETTINGS] = "settings";
+VIEW_NAMES[VM_RELAYS] = "relays";
 VIEW_NAMES[VM_NIP_EXPLORER] = "nip";
 VIEW_NAMES[VM_NIP34] = "nip/34";
 VIEW_NAMES[VM_GNOSTR] = "gnostr";
@@ -67,12 +69,14 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				if (el.dataset.threadId == thread_id)
 					return;
 				break;
-			case VM_NIP34_DETAIL:
-				if (el.dataset.repoId == opts.repo_id)
-					return;
-				break;
-			case VM_NIP_EXPLORER:
-				return;
+	case VM_NIP34_DETAIL:
+		if (el.dataset.repoId == opts.repo_id)
+			return;
+		break;
+	case VM_RELAYS:
+		return;
+	case VM_NIP_EXPLORER:
+		return;
 			default:
 				return;
 		}
@@ -110,7 +114,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	if (mode == VM_NOTIFICATIONS) {
 		reset_notifications(model);
 	}
-    if (mode == VM_NIP34 || mode == VM_GNOSTR) {
+	if (mode == VM_NIP34 || mode == VM_GNOSTR) {
             view_show_spinner(true);
             // NIP-34 events are already fetched as part of PUBLIC_KINDS,
             // so no special fetch is needed here beyond what's done for friends.
@@ -146,10 +150,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 					pieces.push(opts.kind);
 				}
 				break;
-			case VM_NIP34_DETAIL:
-			        pieces.push(opts.repo_id);
-			        break;
-		}
+	case VM_NIP34_DETAIL:
+	        pieces.push(opts.repo_id);
+	        break;
+	}
 			window.history.pushState({mode, opts}, "", "/"+pieces.join("/"));
 	}
 
@@ -182,6 +186,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		name = "NIP explorer";
 		view_set_show_count(0, true, true);
 		break;
+	case VM_RELAYS:
+		name = "Relays";
+		view_set_show_count(0, true, true);
+		break;
         case VM_NIP34_DETAIL:
 		el.dataset.repoId = opts.repo_id;
 		//finger print
@@ -200,8 +208,8 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		find_node("#view [role='profile-info']").classList.toggle("hide", mode != VM_USER);
 		const timeline_el = find_node("#timeline");
 		timeline_el.classList.toggle("reverse", mode == VM_DM_THREAD);
-		timeline_el.classList.toggle("hide", mode == VM_SETTINGS || mode == VM_DM);
-		find_node("#settings").classList.toggle("hide", mode != VM_SETTINGS);
+		timeline_el.classList.toggle("hide", mode == VM_SETTINGS || mode == VM_RELAYS || mode == VM_DM);
+		find_node("#settings").classList.toggle("hide", mode != VM_SETTINGS && mode != VM_RELAYS);
 		find_node("#dms").classList.toggle("hide", mode != VM_DM);
 		find_node("#dm-post").classList.toggle("hide", mode != VM_DM_THREAD);
 		find_node("#new-note-mobile").classList.toggle("hide", mode == VM_DM_THREAD);
