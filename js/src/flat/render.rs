@@ -19,6 +19,7 @@ body.flat-app {
     height: 100vh;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
+    --flat-sidebar-width: 320px;
     overflow: hidden;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--clrBg);
@@ -26,7 +27,7 @@ body.flat-app {
 }
 .flat-shell {
     display: grid;
-    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    grid-template-columns: minmax(220px, var(--flat-sidebar-width)) 8px minmax(0, 1fr);
     min-height: 0;
     overflow: hidden;
 }
@@ -83,6 +84,19 @@ body.flat-app {
     min-height: 0;
     padding: 20px;
     border-right: 1px solid var(--clrBorder);
+}
+.flat-resizer {
+    cursor: col-resize;
+    background: linear-gradient(180deg, transparent, var(--clrBorder) 50%, transparent);
+    opacity: 0.8;
+}
+.flat-resizer:hover {
+    opacity: 1;
+}
+body.flat-resizing,
+body.flat-resizing * {
+    cursor: col-resize !important;
+    user-select: none !important;
 }
 .flat-actions {
     display: flex;
@@ -305,6 +319,9 @@ body.flat-app {
     .flat-shell {
         grid-template-columns: 1fr;
     }
+    .flat-resizer {
+        display: none;
+    }
     .flat-sidebar {
         border-right: 0;
         border-bottom: 1px solid var(--clrBorder);
@@ -458,6 +475,12 @@ document.getElementById('human').classList.toggle('hide', id !== 'h');
 document.getElementById('llm').classList.toggle('hide', id !== 'l');
 }}
 
+function applySidebarWidth(width) {{
+const value = Math.max(220, Math.min(width, window.innerWidth * 0.6));
+document.body.style.setProperty('--flat-sidebar-width', `${{value}}px`);
+localStorage.setItem('flat-sidebar-width', String(value));
+}}
+
 function treeDetails() {{
 return Array.from(document.querySelectorAll('.flat-tree-dir > details'));
 }}
@@ -525,6 +548,47 @@ if (selectedSection) {{
 
 window.addEventListener('hashchange', syncSelectedFile);
 window.addEventListener('DOMContentLoaded', syncSelectedFile);
+window.addEventListener('DOMContentLoaded', () => {{
+const saved = Number(localStorage.getItem('flat-sidebar-width'));
+if (!Number.isNaN(saved) && saved > 0) {{
+    applySidebarWidth(saved);
+}}
+
+const resizer = document.querySelector('.flat-resizer');
+if (!resizer) {{
+    return;
+}}
+
+let dragging = false;
+
+const move = (event) => {{
+    if (!dragging) {{
+        return;
+    }}
+    applySidebarWidth(event.clientX);
+}};
+
+const stop = () => {{
+    dragging = false;
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', stop);
+    window.removeEventListener('pointercancel', stop);
+    document.body.classList.remove('flat-resizing');
+}};
+
+resizer.addEventListener('pointerdown', (event) => {{
+    if (event.button !== 0) {{
+        return;
+    }}
+    dragging = true;
+    document.body.classList.add('flat-resizing');
+    resizer.setPointerCapture(event.pointerId);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+    applySidebarWidth(event.clientX);
+}});
+}});
 </script>
 </head>
 <body class="flat-app" id="top">
@@ -543,6 +607,7 @@ window.addEventListener('DOMContentLoaded', syncSelectedFile);
 <strong>Files</strong>
 <ul class="flat-toc flat-tree">{toc}</ul>
 </aside>
+<div class="flat-resizer" aria-hidden="true"></div>
 <main class="flat-main">
 <div id="human" class="flat-panel">{sections}</div>
 <div id="llm" class="flat-panel hide flat-llm">
