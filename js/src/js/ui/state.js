@@ -5,6 +5,7 @@ const VM_DM_THREAD     = "dmthread"; // all events from a user of KIND_DM
 const VM_THREAD        = "thread"; // all events in response to target event
 const VM_USER          = "user"; // all events by pubkey 
 const VM_SETTINGS      = "settings";
+const VM_NIP_EXPLORER  = "nip-explorer";
 const VM_NIP34         = "nip34-view-friends"; // NIP-34 events from followed profiles
 const VM_GNOSTR  = "gnostr"; // All NIP-34 events
 const VM_NIP34_DETAIL  = "nip34-detail"; // Detailed view of a NIP-34 repository
@@ -19,6 +20,7 @@ VIEW_NAMES[VM_DM_THREAD] = "dm";
 VIEW_NAMES[VM_USER] = "profile";
 VIEW_NAMES[VM_THREAD] = "thread";
 VIEW_NAMES[VM_SETTINGS] = "settings";
+VIEW_NAMES[VM_NIP_EXPLORER] = "nip";
 VIEW_NAMES[VM_NIP34] = "nip/34";
 VIEW_NAMES[VM_GNOSTR] = "gnostr";
 VIEW_NAMES[VM_NIP34_DETAIL] = "repository-details";
@@ -69,6 +71,8 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				if (el.dataset.repoId == opts.repo_id)
 					return;
 				break;
+			case VM_NIP_EXPLORER:
+				return;
 			default:
 				return;
 		}
@@ -110,6 +114,9 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
             view_show_spinner(true);
             // NIP-34 events are already fetched as part of PUBLIC_KINDS,
             // so no special fetch is needed here beyond what's done for friends.
+        }
+        if (mode == VM_NIP_EXPLORER) {
+            view_show_spinner(false);
         }
         if (mode == VM_NIP34_DETAIL) {
             console.log(`view_timeline_apply_mode: Entering VM_NIP34_DETAIL for repo_id: ${opts.repo_id}`);
@@ -168,6 +175,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		if (opts.kind) {
 			name = `nip/34/${opts.kind}`;
 		}
+		break;
+	case VM_NIP_EXPLORER:
+		name = "NIP explorer";
+		view_set_show_count(0, true, true);
 		break;
         case VM_NIP34_DETAIL:
 		el.dataset.repoId = opts.repo_id;
@@ -249,6 +260,12 @@ function view_timeline_refresh(model, mode, opts={}) {
 	}
 	if (!opts.is_showing_more) {
 		el.innerHTML = "";
+	}
+
+	if (mode == VM_NIP_EXPLORER) {
+		el.appendChild(document.createRange().createContextualFragment(render_nip_explorer()));
+		view_set_show_count(0, true, true);
+		return;
 	}
 
 	let evs = model_events_arr(model);
@@ -362,6 +379,10 @@ function view_get_el_opts(el) {
 function view_timeline_update(model) {
 	const el = view_get_timeline_el();
 	const mode = el.dataset.mode;
+	if (mode == VM_NIP_EXPLORER) {
+		view_show_spinner(false);
+		return;
+	}
 	const opts = view_get_el_opts(el);
 	let count = 0;
 	let ncount = 0;
@@ -506,6 +527,10 @@ function view_timeline_show_new(model) {
 function view_timeline_show_more(model) {
 	const el = view_get_timeline_el();
 	const mode = el.dataset.mode;
+	if (mode == VM_NIP_EXPLORER) {
+		view_show_spinner(false);
+		return;
+	}
 	const opts = view_get_el_opts(el);
 	const oldest_evid = el.lastElementChild ? el.lastElementChild.id.slice(2) : undefined;
 	const oldest = model.all_events[oldest_evid];

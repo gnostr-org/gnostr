@@ -47,7 +47,7 @@ pub static TEMPLATE_HTML_BYTES: &[u8] = include_bytes!("template.html");
 		<script defer src=\"/js/ui/settings.js?v=1\"></script>
 		<script defer src=\"/js/ui/dm.js?v=1\"></script>
 		<script defer src=\"/js/nostr.js?v=7\"></script>
-		<script defer src=\"/js/nip34.js?v=1\"></script>
+		<script defer src=\"/js/nip/34.js?v=1\"></script>
 		<script defer src=\"/js/core.js?v=2\"></script>
 		<script defer src=\"/js/postbox.js?v=1\"></script>
 		<script defer src=\"/js/model.js?v=1\"></script>

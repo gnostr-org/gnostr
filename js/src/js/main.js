@@ -146,13 +146,17 @@ function parse_url_mode() {
 	var valid = true;
 	var opts = {};
 	var parts = window.location.pathname.split("/").slice(1);
-	if (parts[0] == "nip" && parts[1] == "34") {
-		mode = VM_NIP34;
-		if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
-			const kind = parseInt(parts[2], 10);
-			if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
-				opts.kind = kind;
+	if (parts[0] == "nip") {
+		if (parts[1] == "34") {
+			mode = VM_NIP34;
+			if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
+				const kind = parseInt(parts[2], 10);
+				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
+					opts.kind = kind;
+				}
 			}
+		} else {
+			mode = VM_NIP_EXPLORER;
 		}
 	} else {
 		for (var key in VIEW_NAMES) {
@@ -177,9 +181,11 @@ function parse_url_mode() {
 		case VM_USER:
 			opts.pubkey = parts[1];
 			break;
-        case VM_NIP34_DETAIL:
-            opts.repo_id = parts[1];
-            break;
+		case VM_NIP_EXPLORER:
+			break;
+		case VM_NIP34_DETAIL:
+			opts.repo_id = parts[1];
+			break;
 	}
 	return { mode, opts, valid };
 }
