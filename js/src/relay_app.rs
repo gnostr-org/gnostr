@@ -3,7 +3,8 @@ use gnostr_relay::cli::RelayCli;
 use gnostr_relay::launcher;
 
 use crate::utils::detach::{
-    capture_detached_pid, existing_detached_pid, spawn_detached_current_exe_named,
+    capture_detached_pid, existing_detached_pid, relay_port_is_listening,
+    spawn_detached_current_exe_named,
 };
 
 #[derive(Parser, Debug)]
@@ -16,6 +17,11 @@ struct Args {
 
 pub async fn run() {
     let args = Args::parse();
+
+    if relay_port_is_listening(8080) {
+        println!("gnostr-js relay is already listening on 127.0.0.1:8080");
+        return;
+    }
 
     if args.detach {
         if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
