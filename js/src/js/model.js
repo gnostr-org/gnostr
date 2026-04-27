@@ -67,7 +67,7 @@ function model_process_event(model, relay, ev) {
 		fn(model, ev, !!relay);
 
 	    // Detect and log NIP-34 events from followed profiles
-	    if (nip34_kinds.has(ev.kind) && model.contacts.friends.has(ev.pubkey)) {
+    if (nip34_kinds.has(ev.kind) && model.contacts.friends.has(ev.pubkey)) {
 	        const eventData = JSON.stringify(ev, null, 2);
 	        switch (ev.kind) {
 	            case KIND_REPO_ANNOUNCE:
@@ -120,6 +120,7 @@ function model_process_event(model, relay, ev) {
     // Save NIP-34 events to IndexedDB if they come from a relay
     if (nip34_kinds.has(ev.kind)) {
         add_nip34_event_to_db(ev);
+        sync_nip34_event_to_local_relay(model, ev);
     }
 
 	// Request new profiles for unseen pubkeys of the event
@@ -200,6 +201,7 @@ function model_process_event_metadata(model, ev, update_view) {
 		return;
 	profile.evid = ev.id;
 	profile.data = safe_parse_json(ev.content, "profile contents");
+	sync_related_user_metadata_to_local_relay(model, ev);
 	if (update_view)
 		view_timeline_update_profiles(model, profile.pubkey); 
 	// If it's my pubkey let's redraw my pfp that is not located in the view
@@ -600,6 +602,7 @@ async function model_load_nip34_events(model) {
 		for (const ev of events) {
 			// Process event without a relay, which prevents re-fetching
 			model_process_event(model, null, ev);
+			sync_nip34_event_to_local_relay(model, ev);
 		}
 	} catch (error) {
 		log_error("Error loading NIP-34 events from DB:", error);

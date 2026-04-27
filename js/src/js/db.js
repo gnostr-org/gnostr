@@ -6,6 +6,7 @@ const INDEX_REPO_ID = 'repo_id_idx';
 
 let db = null;
 let local_relay = null;
+const local_relay_synced_event_ids = new Set();
 const local_relay_url = "ws://127.0.0.1:8080";
 let local_relay_stats = {
     connected: false,
@@ -24,6 +25,78 @@ function get_local_relay_status() {
         errors: local_relay_stats.errors,
         last_error: local_relay_stats.last_error,
     };
+}
+
+function local_relay_is_connected() {
+    return !!(local_relay && local_relay.ws && local_relay.ws.readyState === 1);
+}
+
+function local_relay_send_event(event) {
+    if (!event || !event.id || !local_relay_is_connected()) {
+        return false;
+    }
+    if (local_relay_synced_event_ids.has(event.id)) {
+        return false;
+    }
+
+    local_relay_synced_event_ids.add(event.id);
+    local_relay_stats.sent += 1;
+    local_relay.send(["EVENT", event]);
+    return true;
+}
+
+function model_has_nip34_events_for_pubkey(model, pubkey) {
+    for (const id in model.all_events) {
+        const ev = model.all_events[id];
+        if (ev && ev.pubkey === pubkey && NIP_34_KINDS.includes(ev.kind)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function sync_related_user_metadata_to_local_relay(model, event) {
+    if (!event || event.kind !== KIND_METADATA) {
+        return false;
+    }
+    if (!model_has_nip34_events_for_pubkey(model, event.pubkey)) {
+        return false;
+    }
+    return local_relay_send_event(event);
+}
+
+function sync_nip34_event_to_local_relay(model, event) {
+    if (!event) {
+        return false;
+    }
+
+    if (event.kind === KIND_METADATA) {
+        return sync_related_user_metadata_to_local_relay(model, event);
+    }
+
+    if (!NIP_34_KINDS.includes(event.kind)) {
+        return false;
+    }
+
+    let sent = local_relay_send_event(event);
+
+    const profile = model_get_profile(model, event.pubkey);
+    if (profile && profile.evid) {
+        const metadata_event = model.all_events[profile.evid];
+        if (metadata_event && metadata_event.kind === KIND_METADATA) {
+            sent = local_relay_send_event(metadata_event) || sent;
+        }
+    }
+
+    return sent;
+}
+
+function sync_all_nip34_events_to_local_relay(model) {
+    let sent = false;
+    for (const id in model.all_events) {
+        sent = sync_nip34_event_to_local_relay(model, model.all_events[id]) || sent;
+    }
+    return sent;
 }
 
 async function relay_process_request(path) {
@@ -50,6 +123,7 @@ function init_local_relay_sync() {
             local_relay = relay;
             local_relay_stats.connected = true;
             local_relay_stats.last_error = "";
+            sync_all_nip34_events_to_local_relay(GNOSTR);
             if (typeof render_relay_dashboard === 'function') {
                 render_relay_dashboard();
             }
@@ -238,10 +312,9 @@ async function add_nip34_event_to_db(event, is_from_local = false) {
         store.put(storable_event);
         await tx.complete;
 
-        if (!is_from_local && local_relay && local_relay.ws.readyState === 1) {
+        if (!is_from_local && local_relay_is_connected()) {
             log_debug(`Syncing event ${event.id} to local relay.`);
-            local_relay_stats.sent += 1;
-            local_relay.send(["EVENT", event]);
+            local_relay_send_event(event);
         }
     } catch (error) {
         console.error("IndexedDB: Error adding NIP-34 event", error);
