@@ -6838,6 +6838,7 @@ dependencies = [
  "anyhow",
  "clap 4.6.1",
  "futures-util",
+ "gnostr-crawler",
  "gnostr-relay",
  "handlebars",
  "lazy_static",
