@@ -2,6 +2,21 @@ use regex::Regex;
 
 use super::scan::FileInfo;
 
+const FLAT_CSS_PARTS: [&[u8]; 4] = [
+    include_bytes!("../css/vars.css"),
+    include_bytes!("../css/utils.css"),
+    include_bytes!("../css/styles.css"),
+    include_bytes!("../css/responsive.css"),
+];
+
+const FLAT_LAYOUT_CSS: &str = r#"
+body { font-family: sans-serif; display: grid; grid-template-columns: 250px 1fr; margin: 0; }
+nav { border-right: 1px solid #ccc; height: 100vh; overflow-y: auto; padding: 10px; position: sticky; top: 0; background: #f9f9f9; }
+main { padding: 20px; }
+textarea { width: 100%; height: 500px; }
+.view-btn { padding: 10px; cursor: pointer; }
+"#;
+
 fn escape_html(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -30,10 +45,23 @@ fn highlight_code(code: &str) -> String {
     third_pass.to_string()
 }
 
+fn build_flat_css() -> String {
+    let mut css = String::new();
+
+    for part in FLAT_CSS_PARTS {
+        css.push_str(std::str::from_utf8(part).expect("flat CSS assets must be UTF-8"));
+        css.push('\n');
+    }
+
+    css.push_str(FLAT_LAYOUT_CSS);
+    css
+}
+
 pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
     let mut toc = String::new();
     let mut sections = String::new();
     let mut cxml = String::from("&lt;documents&gt;\n");
+    let styles = build_flat_css();
 
     for (idx, f) in files.iter().enumerate() {
         let anchor = format!("f-{}", idx);
@@ -71,13 +99,7 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
 <html>
 <head>
 <meta charset="utf-8">
-<style>
-body {{ font-family: sans-serif; display: grid; grid-template-columns: 250px 1fr; margin: 0; }}
-nav {{ border-right: 1px solid #ccc; height: 100vh; overflow-y: auto; padding: 10px; position: sticky; top: 0; background: #f9f9f9; }}
-main {{ padding: 20px; }}
-textarea {{ width: 100%; height: 500px; }}
-.view-btn {{ padding: 10px; cursor: pointer; }}
-</style>
+<style>{styles}</style>
 <script>
 function show(id) {{
 document.getElementById('human').style.display = id === 'h' ? 'block' : 'none';
@@ -105,6 +127,7 @@ document.getElementById('llm').style.display = id === 'l' ? 'block' : 'none';
         url = url,
         toc = toc,
         sections = sections,
-        cxml = cxml
+        cxml = cxml,
+        styles = styles
     )
 }
