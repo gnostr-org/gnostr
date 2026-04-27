@@ -26,6 +26,7 @@ struct FileInfo {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+    let repo_url = normalize_repo_url(&args.repo_url);
 
     // Approved tempfile 3.23.0
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
@@ -38,7 +39,7 @@ fn main() -> Result<()> {
             "GIT_SSH_COMMAND",
             "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
         )
-        .args(["clone", "--depth", "1", &args.repo_url, "repo"])
+        .args(["clone", "--depth", "1", &repo_url, "repo"])
         .current_dir(tmp_dir.path())
         .status()
         .context("Git command failed")?;
@@ -76,10 +77,10 @@ fn main() -> Result<()> {
         }
     }
 
-    let html = build_html(&args.repo_url, files)?;
+    let html = build_html(&repo_url, files)?;
     let out = args
         .out
-        .unwrap_or_else(|| default_output_path(&args.repo_url, &short_hash));
+        .unwrap_or_else(|| default_output_path(&repo_url, &short_hash));
     fs::write(&out, html)?;
 
     println!("✓ Flattened HTML generated at: {:?}", out);
@@ -97,6 +98,32 @@ fn git_short_hash(repo_path: &Path) -> Result<String> {
     }
 
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn normalize_repo_url(repo_url: &str) -> String {
+    let repo_url = repo_url.strip_prefix("git+").unwrap_or(repo_url);
+    if let Some(normalized) = normalize_scp_style_url(repo_url) {
+        return normalized;
+    }
+    repo_url.to_string()
+}
+
+fn normalize_scp_style_url(repo_url: &str) -> Option<String> {
+    if repo_url.contains("://") {
+        return None;
+    }
+
+    let (left, right) = repo_url.split_once(':')?;
+    if left.is_empty()
+        || right.is_empty()
+        || left.contains('/')
+        || right.starts_with('/')
+        || right.starts_with('\\')
+    {
+        return None;
+    }
+
+    Some(format!("ssh://{left}/{right}"))
 }
 
 fn default_output_path(repo_url: &str, short_hash: &str) -> PathBuf {

@@ -43,7 +43,29 @@ pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<ClonedRepo> {
 }
 
 fn normalize_repo_url(repo_url: &str) -> String {
-    repo_url.strip_prefix("git+").unwrap_or(repo_url).to_string()
+    let repo_url = repo_url.strip_prefix("git+").unwrap_or(repo_url);
+    if let Some(normalized) = normalize_scp_style_url(repo_url) {
+        return normalized;
+    }
+    repo_url.to_string()
+}
+
+fn normalize_scp_style_url(repo_url: &str) -> Option<String> {
+    if repo_url.contains("://") {
+        return None;
+    }
+
+    let (left, right) = repo_url.split_once(':')?;
+    if left.is_empty()
+        || right.is_empty()
+        || left.contains('/')
+        || right.starts_with('/')
+        || right.starts_with('\\')
+    {
+        return None;
+    }
+
+    Some(format!("ssh://{left}/{right}"))
 }
 
 fn ensure_helper_support(repo_url: &str) -> Result<()> {
