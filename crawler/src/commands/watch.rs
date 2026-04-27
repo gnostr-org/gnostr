@@ -1,6 +1,6 @@
-use crate::{load_relays_or_bootstrap, load_shitlist, Relay};
+use crate::{load_shitlist, Relay};
 use futures::{stream, StreamExt};
-use log::{debug, error, info, trace};
+use log::{debug, trace};
 use nostr_sdk::prelude::*;
 use reqwest::header::ACCEPT;
 use crate::commands::run_sniper;

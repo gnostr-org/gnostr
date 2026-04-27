@@ -34,7 +34,7 @@ use git2::{Commit, DiffOptions, Repository, Signature, Time};
 use reqwest::header::ACCEPT;
 use std::collections::{HashMap, HashSet};
 use std::fs as sync_fs;
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::str;
@@ -49,7 +49,6 @@ use ::url::Url;
 use nostr_sdk::prelude::*;
 
 use crate::processor::Processor;
-use crate::processor::APP_SECRET_KEY;
 use crate::relay_manager::RelayManager;
 
 use crate::processor::BOOTSTRAP_RELAYS;
