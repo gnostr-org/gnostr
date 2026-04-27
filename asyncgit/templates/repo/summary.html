@@ -10,7 +10,7 @@
     {%- if refs.heads.len() > 10 -%}
     <tbody>
     <tr class="no-background">
-        <td><a href="/{{ repo.display() }}/refs" class="no-style">[...]</a></td>
+        <td><a href="{{ repo.href_base() }}refs" class="no-style">[...]</a></td>
         <td></td>
         <td></td>
         <td></td>
@@ -32,7 +32,7 @@
         {%- if refs.tags.len() > 10 -%}
         <tbody>
         <tr class="no-background">
-            <td><a href="/{{ repo.display() }}/refs" class="no-style">[...]</a></td>
+        <td><a href="{{ repo.href_base() }}refs" class="no-style">[...]</a></td>
             <td></td>
             <td></td>
             <td></td>
@@ -54,7 +54,7 @@
     {% if commit_list.len() > 10 %}
     <tbody>
     <tr class="no-background">
-        <td><a href="/{{ repo.display() }}/log" class="no-style">[...]</a></td>
+        <td><a href="{{ repo.href_base() }}log" class="no-style">[...]</a></td>
         <td></td>
         <td></td>
         <td></td>

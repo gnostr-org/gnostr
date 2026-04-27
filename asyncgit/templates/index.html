@@ -1,4 +1,57 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} {% block head %}
+<style>
+  .repo-jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .repo-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .repo-group summary {
+    cursor: pointer;
+    line-height: 3ch;
+  }
+
+  .repo-row td {
+    height: 3ch;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 3ch;
+  }
+
+  .repo-browser-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin: 1rem 0 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: solid 1px var(--clrBorder);
+  }
+</style>
+{% endblock %} {% block nav %}
+<nav class="repo-browser-nav">
+  <div>
+    <button id="expand-all-repos" class="action small" type="button">Expand all</button>
+    <button id="collapse-all-repos" class="action small" type="button">Collapse all</button>
+  </div>
+  <div class="repo-jump">
+    {%- for (path, repositories) in repositories %}
+    <a href="#repo-group-{{ loop.index0 }}">
+      {%- if let Some(path) = path -%}
+        {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
+      {%- else -%}
+        top-level
+      {%- endif -%}
+      ({{ repositories.len() }})
+    </a>
+    {%- endfor %}
+  </div>
+</nav>
+{% endblock %} {% block content %}
 <!-- begin gnostr chat web view -->
 <div id="container-busy">
 <!-- begin gnostr chat web view
@@ -314,56 +367,72 @@
 
 <!-- begit git web view -->
 <div class="table-responsive">
-  <table class="repositories">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Owner</th>
-        <th>Idle</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {%- for (path, repositories) in repositories %} {%- if let Some(path) = path %}
-      <tr>
-        <td class="repo-section" colspan="4">{{ path }}</td>
-      </tr>
-      {%- endif -%} {%- for repository in repositories %} {% set repository = repository.get() %}
-      <tr class="{% if path.is_some() %}has-parent{% endif %}">
-        <td>
-          <a href="/{% if let Some(path) = path %}{{ path }}/{% endif %}{{ repository.name }}">
-            {{- repository.name -}}
-          </a>
-        </td>
-        <td>
-          <a href="/{% if let Some(path) = path %}{{ path }}/{% endif %}{{ repository.name }}">
-            {%- if let Some(description) = repository.description.as_ref() -%} {{- description -}} {%- else -%} Unnamed
-            repository; edit this file 'description' to name the repository. {%- endif -%}
-          </a>
-        </td>
-        <td>
-          <a href="/{% if let Some(path) = path %}{{ path }}/{% endif %}{{ repository.name }}">
-            {%- if let Some(owner) = repository.owner.as_ref() -%} {{- owner -}} {%- endif -%}
-          </a>
-        </td>
-        <td>
-          <a href="/{% if let Some(path) = path %}{{ path }}/{% endif %}{{ repository.name }}">
-            <time
-              datetime="{{ repository.last_modified|format_time }}"
-              title="{{ repository.last_modified|format_time }}"
-            >
-              {{- repository.last_modified|timeago -}}
-            </time>
-          </a>
-        </td>
-      </tr>
-      {%- endfor -%} {%- endfor %}
-    </tbody>
-  </table>
+  {%- for (path, repositories) in repositories %}
+  <details class="repo-group" id="repo-group-{{ loop.index0 }}" {% if loop.first %}open{% endif %}>
+    <summary class="repo-group-summary">
+      {%- if let Some(path) = path -%}
+        {%- if path == "." -%}root repo{%- else -%}{{ path }}{%- endif -%}
+      {%- else -%}
+        top-level
+      {%- endif -%}
+      ({{ repositories.len() }})
+    </summary>
+    <table class="repositories">
+      <thead>
+        <tr class="repo-row">
+          <th>Name</th>
+          <th>Description</th>
+          <th>Owner</th>
+          <th>Idle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for repository in repositories %} {% set repository = repository.get() %}
+        <tr>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              {{- repository.name -}}
+            </a>
+          </td>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              {%- if let Some(description) = repository.description.as_ref() -%} {{- description -}} {%- else -%}
+              Unnamed repository; edit this file 'description' to name the repository. {%- endif -%}
+            </a>
+          </td>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              {%- if let Some(owner) = repository.owner.as_ref() -%} {{- owner -}} {%- endif -%}
+            </a>
+          </td>
+          <td>
+            <a href="{% if let Some(path) = path %}{% if path == "." %}/about{% else %}/{{ path }}/{{ repository.name }}{% endif %}{% else %}/{{ repository.name }}{% endif %}">
+              <time
+                datetime="{{ repository.last_modified|format_time }}"
+                title="{{ repository.last_modified|format_time }}"
+              >
+                {{- repository.last_modified|timeago -}}
+              </time>
+            </a>
+          </td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  </details>
+  {%- endfor %}
 </div>
 {% endblock %} {% block scripts %}
 <script>
+  const repoGroups = Array.from(document.querySelectorAll("details.repo-group"));
+  const expandAllRepos = document.getElementById("expand-all-repos");
+  const collapseAllRepos = document.getElementById("collapse-all-repos");
+  if (expandAllRepos) {
+    expandAllRepos.addEventListener("click", () => repoGroups.forEach((group) => group.open = true));
+  }
+  if (collapseAllRepos) {
+    collapseAllRepos.addEventListener("click", () => repoGroups.forEach((group) => group.open = false));
+  }
   const IMG_EVENT_LIKE = "/event-like-{{ crate::EVENT_LIKE_SVG_HASH.get().unwrap() }}.svg"
   const IMG_EVENT_LIKED = "/event-liked-{{ crate::EVENT_LIKED_SVG_HASH.get().unwrap() }}.svg"
   const IMG_NO_USER = "/no-user-{{ crate::NO_USER_SVG_HASH.get().unwrap() }}.svg"

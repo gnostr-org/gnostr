@@ -12,18 +12,68 @@ const KIND_REPO_STATE_ANNOUNCE = 30618;
 const KIND_REPO_PATCH = 1617;
 const KIND_REPO_PULL_REQ = 1618;
 const KIND_REPO_PULL_REQ_UPDATE = 1619;
-const KIND_REPO_ISSUE = 1620;
+const KIND_REPO_ISSUE = 1621;
+const KIND_REPO_REPLY = 1622;
 const KIND_REPO_STATUS_OPEN = 1630;
 const KIND_REPO_STATUS_APPLIED = 1631;
 const KIND_REPO_STATUS_CLOSED = 1632;
 const KIND_REPO_STATUS_DRAFT = 1633;
 const KIND_RELAY_LIST = 10002;
 
+const NIP34_KINDS = [
+	KIND_REPO_ANNOUNCE,
+	KIND_REPO_STATE_ANNOUNCE,
+	KIND_REPO_PATCH,
+	KIND_REPO_PULL_REQ,
+	KIND_REPO_PULL_REQ_UPDATE,
+	KIND_REPO_ISSUE,
+	KIND_REPO_REPLY,
+	KIND_REPO_STATUS_OPEN,
+	KIND_REPO_STATUS_APPLIED,
+	KIND_REPO_STATUS_CLOSED,
+	KIND_REPO_STATUS_DRAFT,
+];
+
 const TAG_P = "#p";
 const TAG_E = "#e";
 
 const R_HEART = "❤️";
 const R_SHAKA = "🤙";
+
+function tag_name(tag) {
+	return tag && tag.length > 0 ? tag[0] : "";
+}
+
+function tag_value(tag) {
+	return tag && tag.length > 1 ? tag[1] : "";
+}
+
+function tag_marker(tag) {
+	const name = tag_name(tag);
+	if (name === "e") {
+		return tag && tag.length > 3 ? tag[3] : "";
+	}
+	if (name === "a") {
+		return tag && tag.length > 2 ? tag[2] : "";
+	}
+	return "";
+}
+
+function event_find_tag(tags, name) {
+	return (tags || []).find((tag) => tag_name(tag) === name);
+}
+
+function event_find_tag_value(tags, name) {
+	return tag_value(event_find_tag(tags, name));
+}
+
+function event_has_tag(tags, name) {
+	return !!event_find_tag(tags, name);
+}
+
+function event_is_nip34_kind(kind) {
+	return NIP34_KINDS.includes(kind);
+}
 
 const STANDARD_KINDS = [
 	KIND_NOTE,
@@ -53,6 +103,7 @@ const PUBLIC_KINDS = [
         KIND_REPO_PULL_REQ,
         KIND_REPO_PULL_REQ_UPDATE,
         KIND_REPO_ISSUE,
+        KIND_REPO_REPLY,
         KIND_REPO_STATUS_OPEN,
         KIND_REPO_STATUS_APPLIED,
         KIND_REPO_STATUS_CLOSED,
@@ -268,10 +319,11 @@ function gather_reply_tags(pubkey, from) {
 
 	for (const tag of from.tags) {
 		if (tag.length >= 2) {
-			if (tag[0] === "p" && tag[1] !== pubkey) {
-				if (!ids.has(tag[1])) {
-					tags.push(["p", tag[1]])
-					ids.add(tag[1])
+			if (tag_name(tag) === "p" && tag_value(tag) !== pubkey) {
+				const value = tag_value(tag);
+				if (!ids.has(value)) {
+					tags.push(["p", value])
+					ids.add(value)
 				}
 			}
 		}
@@ -286,10 +338,10 @@ function get_tag_event(tag) {
 	const model = GNOSTR;
 	if (tag.length < 2)
 		return null
-	if (tag[0] === "e")
-		return model.all_events[tag[1]]
-	if (tag[0] === "p") {
-		let profile = model_get_profile(model, tag[1]);
+	if (tag_name(tag) === "e")
+		return model.all_events[tag_value(tag)]
+	if (tag_name(tag) === "p") {
+		let profile = model_get_profile(model, tag_value(tag));
 		if (profile.evid)
 			return model.all_events[profile.evid];
 	}
@@ -298,15 +350,15 @@ function get_tag_event(tag) {
 
 function* yield_etags(tags) {
 	for (const tag of tags) {
-		if (tag.length >= 2 && tag[0] === "e")
+		if (tag.length >= 2 && tag_name(tag) === "e")
 			yield tag
 	}
 }
 
 function get_content_warning(tags) {
 	for (const tag of tags) {
-		if (tag.length >= 1 && tag[0] === "content-warning")
-			return tag[1] || ""
+		if (tag.length >= 1 && tag_name(tag) === "content-warning")
+			return tag_value(tag) || ""
 	}
 	return null
 }
@@ -360,21 +412,8 @@ async function fetch_repo_events(repo_id, pool, until=Math.floor(Date.now() / 10
     }
 
     const sid = `${SID_NIP34_DETAIL}:${repo_id}`;
-    const nip34_kinds = [
-        KIND_REPO_ANNOUNCE,
-        KIND_REPO_STATE_ANNOUNCE,
-        KIND_REPO_PATCH,
-        KIND_REPO_PULL_REQ,
-        KIND_REPO_PULL_REQ_UPDATE,
-        KIND_REPO_ISSUE,
-        KIND_REPO_STATUS_OPEN,
-        KIND_REPO_STATUS_APPLIED,
-        KIND_REPO_STATUS_CLOSED,
-        KIND_REPO_STATUS_DRAFT,
-    ];
-
     const filter = {
-        kinds: nip34_kinds,
+        kinds: NIP34_KINDS,
         "#a": [repo_id],
         limit: 100, // Increased limit for more frequent updates
         until: until, // Always use `until` for fetching older events

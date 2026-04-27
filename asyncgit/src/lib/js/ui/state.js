@@ -74,10 +74,10 @@ function view_timeline_apply_mode(model, mode, opts = {}, push_state = true) {
   if (mode == VM_THREAD) {
     view_show_spinner(true)
     const clicked_event = model.all_events[thread_id]
-    if (clicked_event && clicked_event.kind >= KIND_REPO_ANNOUNCE && clicked_event.kind <= KIND_REPO_STATUS_DRAFT) {
-      const repo_id_tag = clicked_event.tags.find((tag) => tag[0] === "a")
+    if (clicked_event && event_is_nip34_kind(clicked_event.kind)) {
+      const repo_id_tag = clicked_event.tags.find((tag) => tag_name(tag) === "a")
       if (repo_id_tag) {
-        const repo_id = repo_id_tag[1]
+        const repo_id = tag_value(repo_id_tag)
         const parts = repo_id.split(":")
         if (parts.length === 3) {
           const kind = parseInt(parts[0])
@@ -250,12 +250,11 @@ function view_timeline_refresh(model, mode, opts = {}) {
       if (root_event) {
         let announcement_event = null
         if (root_event.kind === KIND_REPO_STATE_ANNOUNCE) {
-          const d_tag = root_event.tags.find((tag) => tag[0] === "d")
-          if (d_tag) {
-            const repo_id = d_tag[1]
+          const repo_id = event_find_tag_value(root_event.tags, "d")
+          if (repo_id) {
             for (const key in model.all_events) {
               const ev = model.all_events[key]
-              if (ev.kind === KIND_REPO_ANNOUNCE && ev.tags.find((t) => t[0] === "d" && t[1] === repo_id)) {
+              if (ev.kind === KIND_REPO_ANNOUNCE && event_find_tag_value(ev.tags, "d") === repo_id) {
                 announcement_event = ev
                 break
               }
@@ -482,39 +481,6 @@ function view_timeline_show_new(model) {
   view_set_show_count(-count, true)
   view_timeline_update_timestamps()
   if (mode == VM_DM_THREAD) decrypt_dms(model)
-}
-
-function view_timeline_show_more(model) {
-  const el = view_get_timeline_el()
-  const mode = el.dataset.mode
-  const opts = view_get_el_opts(el)
-  const oldest_evid = el.lastElementChild ? el.lastElementChild.id.slice(2) : undefined
-  const oldest = model.all_events[oldest_evid]
-  const evs = model_events_arr(model)
-  const fragment = new DocumentFragment()
-  let i = arr_bsearch(evs, oldest, (a, b) => {
-    if (a.id == b.id || a.created_at == b.created_at) return 0
-    if (a.created_at > b.created_at) return 1
-    return -1
-  })
-  const limit = 200
-  let count = 0
-  for (; i >= 0 && count < limit; i--) {
-    const ev = evs[i]
-    if (!view_mode_contains_event(model, ev, mode, opts)) continue
-    let ev_el = model.elements[ev.id]
-    if (!ev_el || ev_el.parentElement) continue
-    fragment.appendChild(ev_el)
-    count++
-  }
-  if (count > 0) {
-    el.append(fragment)
-  }
-  if (count < limit) {
-    // No more to show, hide the button
-    find_node("#show-more").classList.add("hide")
-  }
-  view_timeline_update_timestamps()
 }
 
 function view_timeline_show_more(model) {
@@ -807,6 +773,7 @@ function view_mode_contains_event(model, ev, mode, opts = {}) {
         KIND_REPO_PULL_REQ,
         KIND_REPO_PULL_REQ_UPDATE,
         KIND_REPO_ISSUE,
+        KIND_REPO_REPLY,
         KIND_REPO_STATUS_OPEN,
         KIND_REPO_STATUS_APPLIED,
         KIND_REPO_STATUS_CLOSED,
@@ -821,6 +788,7 @@ function view_mode_contains_event(model, ev, mode, opts = {}) {
         KIND_REPO_PULL_REQ,
         KIND_REPO_PULL_REQ_UPDATE,
         KIND_REPO_ISSUE,
+        KIND_REPO_REPLY,
         KIND_REPO_STATUS_OPEN,
         KIND_REPO_STATUS_APPLIED,
         KIND_REPO_STATUS_CLOSED,
@@ -838,6 +806,7 @@ function view_mode_contains_event(model, ev, mode, opts = {}) {
         KIND_REPO_PULL_REQ,
         KIND_REPO_PULL_REQ_UPDATE,
         KIND_REPO_ISSUE,
+        KIND_REPO_REPLY,
         KIND_REPO_STATUS_OPEN,
         KIND_REPO_STATUS_APPLIED,
         KIND_REPO_STATUS_CLOSED,
@@ -849,7 +818,7 @@ function view_mode_contains_event(model, ev, mode, opts = {}) {
       }
       // Check for the 'a' tag matching the repo_id
       for (const tag of ev.tags) {
-        if (tag[0] === "a" && tag[1] === opts.repo_id) {
+        if (tag_name(tag) === "a" && tag_value(tag) === opts.repo_id) {
           console.log(`view_mode_contains_event: Event ${ev.id} matches repo ID ${opts.repo_id}.`)
           return true
         }
@@ -873,6 +842,7 @@ function event_is_renderable(ev = {}) {
     ev.kind == KIND_REPO_PULL_REQ ||
     ev.kind == KIND_REPO_PULL_REQ_UPDATE ||
     ev.kind == KIND_REPO_ISSUE ||
+    ev.kind == KIND_REPO_REPLY ||
     ev.kind == KIND_REPO_STATUS_OPEN ||
     ev.kind == KIND_REPO_STATUS_APPLIED ||
     ev.kind == KIND_REPO_STATUS_CLOSED ||

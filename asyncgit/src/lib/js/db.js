@@ -23,19 +23,7 @@ function init_local_relay_sync() {
             local_relay = relay;
 
             const sub_id = `db-sync-${Math.random().toString(36).substring(7)}`;
-            const nip34_kinds = [
-            KIND_REPO_ANNOUNCE,
-            KIND_REPO_STATE_ANNOUNCE,
-            KIND_REPO_PATCH,
-            KIND_REPO_PULL_REQ,
-            KIND_REPO_PULL_REQ_UPDATE,
-            KIND_REPO_ISSUE,
-            KIND_REPO_STATUS_OPEN,
-            KIND_REPO_STATUS_APPLIED,
-            KIND_REPO_STATUS_CLOSED,
-            KIND_REPO_STATUS_DRAFT,
-        ];
-            relay.subscribe(sub_id, [{ kinds: nip34_kinds }]);
+            relay.subscribe(sub_id, [{ kinds: NIP34_KINDS }]);
         });
 
         relay.on('event', (sub_id, ev) => {
@@ -144,9 +132,9 @@ async function add_nip34_event_to_db(event, is_from_local = false) {
         
         const storable_event = { ...event };
         
-        const repo_tag = storable_event.tags.find(tag => tag[0] === 'a');
+        const repo_tag = storable_event.tags.find(tag => tag_name(tag) === 'a');
         if (repo_tag) {
-            storable_event.repo_id = repo_tag[1];
+            storable_event.repo_id = tag_value(repo_tag);
         }
 
         store.put(storable_event);

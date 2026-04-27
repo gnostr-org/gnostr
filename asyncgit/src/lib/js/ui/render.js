@@ -150,7 +150,7 @@ function render_event_body(model, ev, opts) {
 		show_media = model.contacts.friends.has(ev.pubkey);
 	}
 	let str = "<div>";
-    if (ev.kind >= KIND_REPO_ANNOUNCE && ev.kind <= KIND_REPO_STATUS_DRAFT) {
+    if (event_is_nip34_kind(ev.kind)) {
         str += render_repo_event_summary(model, ev);
     }
 	str += render_replying_to(model, ev);
@@ -266,44 +266,42 @@ function render_repo_event_summary(model, ev) {
     let json_body = "";
     for (const tag of ev.tags) {
     console.log("______________________tag=", tag);
-        if (tag[0] === "d") { // Repository Announcement Address
-            repo_id = tag[1];
-            repo_name = tag[1];
-            d = tag[1];
-        } else if (tag[0] === "d" && tag[1].includes("30618:")) { // Repository Announcement Address
-            repo_id = tag[1];
-            repo_name = tag[1];
-            d = tag[1];
-        } else if (tag[0] === "name") {
+        const name = tag_name(tag);
+        const value = tag_value(tag);
+        if (name === "d") { // Repository Announcement Address
+            repo_id = value;
+            repo_name = value;
+            d = value;
+        } else if (name === "name") {
             //repo_name = tag[1];
-        } else if (tag[0] === "url" || tag[0] === "web") {
-            repo_url = tag[1];
-        } else if (tag[0] === "description") {
-            description = tag[1];
-        } else if (tag[0] === "clone") {
-            clone_url = tag[1];
-        } else if (tag[0] === "relays") {
+        } else if (name === "url" || name === "web") {
+            repo_url = value;
+        } else if (name === "description") {
+            description = value;
+        } else if (name === "clone") {
+            clone_url = value;
+        } else if (name === "relays") {
             relays = tag.slice(1);
-        } else if (tag[0] === "maintainers") {
+        } else if (name === "maintainers") {
             maintainers = tag.slice(1);
-        } else if (tag[0] === "status") {
-            status_tag = tag[1];
-        } else if (tag[0] === "title") {
-            issue_title = tag[1];
-        } else if (tag[0] === "e" && tag[3] === "patch") { // Patch ID
-            patch_id = tag[1];
-        } else if (tag[0] === "e" && tag[3] === "pull_request") { // Pull Request ID
-            pull_req_id = tag[1];
-        } else if (tag[0] === "a") {
-            a = tag[1];
-        } else if (tag[0] === "r") {
-            r = tag[1];
-        } else if (tag[0] === "alt") {
-            alt = tag[1];
-        } else if (tag[0] === "e") {
-            e = tag[1];
-        } else if (tag[0] === "p") {
-            p = tag[1];
+        } else if (name === "status") {
+            status_tag = value;
+        } else if (name === "title") {
+            issue_title = value;
+        } else if (name === "e" && tag_marker(tag) === "patch") { // Patch ID
+            patch_id = value;
+        } else if (name === "e" && tag_marker(tag) === "pull_request") { // Pull Request ID
+            pull_req_id = value;
+        } else if (name === "a") {
+            a = value;
+        } else if (name === "r") {
+            r = value;
+        } else if (name === "alt") {
+            alt = value;
+        } else if (name === "e") {
+            e = value;
+        } else if (name === "p") {
+            p = value;
         } else {
           // capture full event
           json_body = JSON.stringify(ev, null, 2);
@@ -336,7 +334,7 @@ function render_repo_event_summary(model, ev) {
             for (const tag of ev.tags) {
                 if (tag.length >= 2) {
                     const dt = document.createElement('dt');
-                    dt.textContent = tag[0];
+                    dt.textContent = tag_name(tag);
                     state_dl.appendChild(dt);
 
                     const dd = document.createElement('dd');
@@ -435,4 +433,3 @@ function render_profile_img(profile, noclick=false) {
 	title="${name}" 
 	src="${get_profile_pic(profile)}" onerror="this.onerror=null;this.src='${IMG_NO_USER}';"/>`
 }
-

@@ -1,0 +1,10 @@
+[package]
+name = "gnostr-web"
+edition = "2024"
+version.workspace = true
+exclude.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+gnostr-js = { path = "../js", package = "gnostr-js" }
+tokio = { workspace = true }

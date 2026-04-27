@@ -171,24 +171,23 @@ async function get_pubkey(use_prompt=true) {
 function open_thread(thread_id) {
     const event = GNOSTR.all_events[thread_id];
     if (event && event.kind === KIND_REPO_STATE_ANNOUNCE) {
-        const d_tag = event.tags.find(tag => tag[0] === 'd');
-        if (d_tag) {
-            const repo_name = d_tag[1];
+        const repo_name = event_find_tag_value(event.tags, "d");
+        if (repo_name) {
             for (const key in GNOSTR.all_events) {
                 const ev = GNOSTR.all_events[key];
-                if (ev.kind === KIND_REPO_ANNOUNCE && ev.tags.some(t => t[0] === 'd' && t[1] === repo_name)) {
-                    const a_tag = ev.tags.find(t => t[0] === 'a');
+                if (ev.kind === KIND_REPO_ANNOUNCE && event_find_tag_value(ev.tags, "d") === repo_name) {
+                    const a_tag = event_find_tag(ev.tags, "a");
                     if (a_tag) {
-                        switch_view(VM_NIP34_DETAIL, { repo_id: a_tag[1] });
+                        switch_view(VM_NIP34_DETAIL, { repo_id: tag_value(a_tag) });
                         return;
                     }
                 }
             }
         }
         // Fallback to using the 'a' tag directly from the 30618 event
-        const a_tag = event.tags.find(tag => tag[0] === 'a');
+        const a_tag = event_find_tag(event.tags, "a");
         if (a_tag) {
-            switch_view(VM_NIP34_DETAIL, { repo_id: a_tag[1] });
+            switch_view(VM_NIP34_DETAIL, { repo_id: tag_value(a_tag) });
             return;
         }
     }

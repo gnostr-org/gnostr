@@ -10,13 +10,13 @@
 {% block nav %}
 <nav>
     <div>
-        <a href="/{{ repo.display() }}/about{% call link::maybe_branch(branch) %}" class="{% block about_nav_class %}{% endblock %}">about</a>
-        <a href="/{{ repo.display() }}" class="{% block summary_nav_class %}{% endblock %}">summary</a>
-        <a href="/{{ repo.display() }}/refs" class="{% block refs_nav_class %}{% endblock %}">refs</a>
-        <a href="/{{ repo.display() }}/log{% call link::maybe_branch(branch) %}" class="{% block log_nav_class %}{% endblock %}">log</a>
-        <a href="/{{ repo.display() }}/tree{% call link::maybe_branch(branch) %}" class="{% block tree_nav_class %}{% endblock %}">tree</a>
-        <a href="/{{ repo.display() }}/commit{% call link::maybe_branch(branch) %}" class="{% block commit_nav_class %}{% endblock %}">commit</a>
-        <a href="/{{ repo.display() }}/diff{% call link::maybe_branch(branch) %}" class="{% block diff_nav_class %}{% endblock %}">diff</a>
+        <a href="{{ repo.href_base() }}about{% call link::maybe_branch(branch) %}" class="{% block about_nav_class %}{% endblock %}">about</a>
+        <a href="{{ repo.href_base() }}" class="{% block summary_nav_class %}{% endblock %}">summary</a>
+        <a href="{{ repo.href_base() }}refs" class="{% block refs_nav_class %}{% endblock %}">refs</a>
+        <a href="{{ repo.href_base() }}log{% call link::maybe_branch(branch) %}" class="{% block log_nav_class %}{% endblock %}">log</a>
+        <a href="{{ repo.href_base() }}tree{% call link::maybe_branch(branch) %}" class="{% block tree_nav_class %}{% endblock %}">tree</a>
+        <a href="{{ repo.href_base() }}commit{% call link::maybe_branch(branch) %}" class="{% block commit_nav_class %}{% endblock %}">commit</a>
+        <a href="{{ repo.href_base() }}diff{% call link::maybe_branch(branch) %}" class="{% block diff_nav_class %}{% endblock %}">diff</a>
     </div>
 
     <div class="grow"></div>

@@ -11,8 +11,8 @@
     <tbody>
     {% for (name, commit) in branches -%}
     <tr>
-        <td><a href="/{{ repo.display() }}/log/?h={{ name }}">{{ name }}</a></td>
-        <td><a href="/{{ repo.display() }}/commit/?id={{ commit.get().hash|hex }}">{{ commit.get().summary }}</a></td>
+        <td><a href="{{ repo.href_base() }}log?h={{ name }}">{{ name }}</a></td>
+        <td><a href="{{ repo.href_base() }}commit?id={{ commit.get().hash|hex }}">{{ commit.get().summary }}</a></td>
         <td>
             <img src="{{ commit.get().author.email|gravatar }}" width="13" height="13">
             {{ commit.get().author.name }}
@@ -40,8 +40,8 @@
     <tbody>
     {% for (name, tag) in tags -%}
     <tr>
-        <td><a href="/{{ repo.display() }}/tag/?h={{ name.get() }}">{{- name.get() -}}</a></td>
-        <td><a href="/{{ repo.display() }}/snapshot?h={{ name.get() }}">{{- name.get() -}}.tar.gz</a></td>
+        <td><a href="{{ repo.href_base() }}tag?h={{ name.get() }}">{{- name.get() -}}</a></td>
+        <td><a href="{{ repo.href_base() }}snapshot?h={{ name.get() }}">{{- name.get() -}}.tar.gz</a></td>
         <td>
             {% if let Some(tagger) = tag.get().tagger.as_ref() -%}
             <img src="{{ tagger.email|gravatar }}" width="13" height="13">
@@ -78,7 +78,7 @@
                 {{- commit.committer.time|timeago -}}
             </time>
         </td>
-        <td><a href="/{{ repo.display() }}/commit/?id={{ commit.hash|hex }}">{{ commit.summary }}</a></td>
+        <td><a href="{{ repo.href_base() }}commit?id={{ commit.hash|hex }}">{{ commit.summary }}</a></td>
         <td>
             <img src="{{ commit.author.email|gravatar }}?s=13&d=retro" width="13" height="13">
             {{ commit.author.name }}

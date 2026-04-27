@@ -27,6 +27,11 @@ pub async fn handle(
 
     for (k, v) in fetched {
         // TODO: fixme
+        if k == "." {
+            repositories.entry(Some(".".to_string())).or_default().push(v);
+            continue;
+        }
+
         let mut split: Vec<_> = k.split('/').collect();
         split.pop();
         let key = Some(split.join("/")).filter(|v| !v.is_empty());

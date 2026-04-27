@@ -33,13 +33,28 @@ pub struct Repository {
 pub type YokedRepository = Yoked<&'static <Repository as Archive>::Archived>;
 
 impl Repository {
+    fn path_candidates<P: AsRef<Path>>(path: P) -> Result<Vec<String>> {
+        let path = path.as_ref();
+        let path = path.to_str().context("invalid path")?;
+
+        Ok(if path.is_empty() || path == "." {
+            vec![".".to_string(), String::new()]
+        } else {
+            vec![path.to_string()]
+        })
+    }
+
     pub fn exists<P: AsRef<Path>>(database: &rocksdb::DB, path: P) -> Result<bool> {
         let cf = database
             .cf_handle(REPOSITORY_FAMILY)
             .context("repository column family missing")?;
-        let path = path.as_ref().to_str().context("invalid path")?;
+        for candidate in Self::path_candidates(path)? {
+            if database.get_pinned_cf(cf, candidate)?.is_some() {
+                return Ok(true);
+            }
+        }
 
-        Ok(database.get_pinned_cf(cf, path)?.is_some())
+        Ok(false)
     }
 
     pub fn fetch_all(database: &rocksdb::DB) -> Result<BTreeMap<String, YokedRepository>> {
@@ -66,6 +81,7 @@ impl Repository {
             .cf_handle(REPOSITORY_FAMILY)
             .context("repository column family missing")?;
         let path = path.as_ref().to_str().context("invalid path")?;
+        let path = if path.is_empty() { "." } else { path };
 
         database.put_cf(cf, path, rkyv::to_bytes::<rkyv::rancor::Error>(self)?)?;
 
@@ -80,8 +96,15 @@ impl Repository {
             .cf_handle(REPOSITORY_FAMILY)
             .context("repository column family missing")?;
 
-        let path = path.as_ref().to_str().context("invalid path")?;
-        let Some(value) = database.get_cf(cf, path)? else {
+        let mut value = None;
+        for candidate in Self::path_candidates(path)? {
+            if let Some(found) = database.get_cf(cf, candidate)? {
+                value = Some(found);
+                break;
+            }
+        }
+
+        let Some(value) = value else {
             return Ok(None);
         };
 
@@ -115,8 +138,9 @@ impl ArchivedRepository {
         let repo_cf = database
             .cf_handle(REPOSITORY_FAMILY)
             .context("repository column family missing")?;
-        let path = path.as_ref().to_str().context("invalid path")?;
-        database.delete_cf(repo_cf, path)?;
+        for candidate in Repository::path_candidates(path)? {
+            database.delete_cf(repo_cf, candidate)?;
+        }
 
         Ok(())
     }

@@ -61,7 +61,7 @@ cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
 	@RUST_BACKTRACE=all cargo b -j $(NPROC) $(QUIET)
-cargo-install: 	asyncgit 	###         cargo install --path . $(FORCE)
+cargo-install: 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
 	@cargo install -j $(NPROC) --path . $(FORCE)
 
@@ -146,7 +146,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr --oneshot "testing-1877/946204/845428" -n "d8d1713dc581651249161742dc814f8368913d77c6f08041e79df7a7fe73750b"
+	cargo run --bin gnostr -- chat --topic gnostr --oneshot "testing-1877/946758/153822" -n "d8d1713dc581651249161742dc814f8368913d77c6f08041e79df7a7fe73750b"
 	cargo run --bin gnostr -- chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id

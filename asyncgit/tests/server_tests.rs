@@ -1,9 +1,26 @@
+use git2::Repository;
 use std::time::Duration;
 use tempfile::tempdir;
 
 #[tokio::test]
 #[ignore]
 async fn test_commit_page_does_not_panic() {
+    let crate_dir = env!("CARGO_MANIFEST_DIR");
+    let fixture_root = std::path::Path::new(crate_dir).join("tests/resources");
+    let _fixture = gnostr_asyncgit::web::database::indexer::ensure_bare_repo_fixture(
+        &fixture_root,
+        "crlf",
+    )
+    .expect("create crlf.git fixture");
+    let fixture_repo = Repository::open_bare(fixture_root.join("crlf.git"))
+        .expect("open crlf.git fixture");
+    let crlf_commit = fixture_repo
+        .head()
+        .expect("read crlf.git HEAD")
+        .peel_to_commit()
+        .expect("peel crlf.git HEAD to commit")
+        .id()
+        .to_string();
     let db_dir = tempdir().unwrap();
     let db_path = db_dir.path().to_str().unwrap();
 
@@ -139,8 +156,8 @@ async fn test_commit_page_does_not_panic() {
     // Test patch endpoint with specific commit ID
     let res = client
         .get(&format!(
-            "http://localhost:{}/crlf.git/patch?id=00075f5cf3b95f42baba2b355b8a3197f949e297",
-            port
+            "http://localhost:{}/crlf.git/patch?id={}",
+            port, crlf_commit
         ))
         .send()
         .await
@@ -152,8 +169,8 @@ async fn test_commit_page_does_not_panic() {
 
     // Verify it's a valid git patch format
     let patch_content = res.text().await.expect("Failed to read patch content");
-    assert!(patch_content.contains("From 00075f5cf3b95f42baba2b355b8a3197f949e297"));
-    assert!(patch_content.contains("Subject: [PATCH] 1896/932470/576827"));
+    assert!(patch_content.contains(&format!("From {}", crlf_commit)));
+    assert!(patch_content.contains("Subject: [PATCH] Add CRLF patch demo"));
 
     //TODO mote tests
 

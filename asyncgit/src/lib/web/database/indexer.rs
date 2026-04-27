@@ -2,11 +2,13 @@ use std::{
     collections::HashSet,
     ffi::OsStr,
     fmt::Debug,
+    fs,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 use anyhow::Context;
+use git2::{build::RepoBuilder, RepositoryInitOptions, Signature};
 use gix::{bstr::ByteSlice, refs::Category, Reference};
 use ini::Ini;
 use itertools::Itertools;
@@ -16,12 +18,182 @@ use tracing::{debug, debug_span, error, instrument, warn};
 
 use crate::web::database::schema::{
     commit::Commit,
+    prefixes::REPOSITORY_FAMILY,
     repository::{ArchivedRepository, Repository, RepositoryId},
     tag::{Tag, TagTree},
 };
 
 fn is_bare_repository(path: &Path) -> bool {
     path.join("HEAD").is_file() && path.join("objects").is_dir()
+}
+
+fn is_help_material_fixture(path: &Path) -> bool {
+    if !is_bare_repository(path) {
+        return false;
+    }
+
+    fs::read_to_string(path.join("description"))
+        .map(|description| description.contains("gnostr learning repo for browsing commits, trees, and patches"))
+        .unwrap_or(false)
+}
+
+fn should_index_reference(reference_name: &str, category: Option<Category>) -> bool {
+    category == Some(Category::LocalBranch) || is_notes_reference(reference_name)
+}
+
+fn is_notes_reference(reference_name: &str) -> bool {
+    reference_name.starts_with("refs/notes/")
+}
+
+fn write_fixture_file(root: &Path, relative_path: &str, content: &[u8]) -> anyhow::Result<()> {
+    let path = root.join(relative_path);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create fixture directory {}", parent.display()))?;
+    }
+
+    fs::write(&path, content)
+        .with_context(|| format!("failed to write fixture file {}", path.display()))?;
+    Ok(())
+}
+
+fn stage_paths(repo: &git2::Repository, paths: &[&str]) -> anyhow::Result<()> {
+    let mut index = repo.index()?;
+    for path in paths {
+        index.add_path(Path::new(path))?;
+    }
+    index.write()?;
+    Ok(())
+}
+
+fn commit_fixture(
+    repo: &git2::Repository,
+    message: &str,
+    paths: &[&str],
+) -> anyhow::Result<()> {
+    stage_paths(repo, paths)?;
+
+    let tree_id = repo.index()?.write_tree()?;
+    let tree = repo.find_tree(tree_id)?;
+    let sig = Signature::now("Copilot", "copilot@users.noreply.github.com")?;
+    let parents = match repo.head() {
+        Ok(head) => vec![head.peel_to_commit()?],
+        Err(_) => Vec::new(),
+    };
+    let parent_refs: Vec<_> = parents.iter().collect();
+
+    repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &parent_refs)?;
+    Ok(())
+}
+
+fn create_help_material_source_repo(source_repo: &Path) -> anyhow::Result<git2::Repository> {
+    let mut init_opts = RepositoryInitOptions::new();
+    init_opts.initial_head("main");
+    let repo = git2::Repository::init_opts(source_repo, &init_opts)?;
+
+    write_fixture_file(
+        source_repo,
+        "README.md",
+        b"# gnostr learning repo\n\nThis fixture is a guided tour through gnostr and git history.\n\n## Start here\n\n- Open the tree view to browse the help files.\n- Open the log view to follow the commits in order.\n- Open the patch view to see how CRLF changes are rendered.\n- Visit the repo summary to read the description and recent history.\n",
+    )?;
+    write_fixture_file(
+        source_repo,
+        "docs/quickstart.md",
+        b"# Quickstart\n\n1. Start gnostr.\n2. Open this repository in the browser.\n3. Click into `README.md` or `docs/` to explore the tree.\n4. Open the latest commit to read the release notes.\n5. Open the patch view to inspect the CRLF demo.\n\nThe goal is to make each page teach one small thing about the UI.\n",
+    )?;
+
+    commit_fixture(
+        &repo,
+        "Add gnostr learning guide",
+        &["README.md", "docs/quickstart.md"],
+    )?;
+
+    write_fixture_file(
+        source_repo,
+        "docs/nostr-basics.md",
+        b"# Nostr basics\n\n- `npub` is a public key people can share.\n- `nsec` is a private key and should stay secret.\n- Relays move events between clients.\n- Events are the packets the network exchanges.\n- Repo metadata becomes browseable history in gnostr.\n\nUse this file to explain the Nostr terms that appear in the UI.\n",
+    )?;
+    write_fixture_file(
+        source_repo,
+        "docs/repo-tour.md",
+        b"# Repo tour\n\n- `README.md` gives the overview.\n- `docs/quickstart.md` shows the first clicks.\n- `docs/nostr-basics.md` explains the protocol terms.\n- `examples/crlf-demo.txt` exists so the patch view has a line-ending example.\n\nTry the tree, commit, and patch pages to see each file in context.\n",
+    )?;
+    write_fixture_file(
+        source_repo,
+        "examples/crlf-demo.txt",
+        b"gnostr keeps the history readable.\r\nThis file intentionally uses CRLF line endings.\r\nOpen the patch view to see how the line endings are shown.\r\n",
+    )?;
+
+    commit_fixture(
+        &repo,
+        "Add nostr basics and repo tour",
+        &["docs/nostr-basics.md", "docs/repo-tour.md"],
+    )?;
+
+    commit_fixture(
+        &repo,
+        "Add CRLF patch demo",
+        &["examples/crlf-demo.txt"],
+    )?;
+
+    Ok(repo)
+}
+
+pub fn ensure_bare_repo_fixture(fixture_root: &Path, fixture_name: &str) -> anyhow::Result<PathBuf> {
+    let fixture_path = fixture_root.join(format!("{fixture_name}.git"));
+
+    if is_help_material_fixture(&fixture_path) {
+        return Ok(fixture_path);
+    }
+
+    fs::create_dir_all(fixture_root)
+        .with_context(|| format!("failed to create fixture directory {}", fixture_root.display()))?;
+
+    if fixture_path.exists() {
+        fs::remove_dir_all(&fixture_path)
+            .with_context(|| format!("failed to remove stale fixture {}", fixture_path.display()))?;
+    }
+
+    let source_repo_dir = tempfile::tempdir_in(fixture_root)
+        .with_context(|| format!("failed to create temp repo under {}", fixture_root.display()))?;
+    create_help_material_source_repo(source_repo_dir.path())?;
+
+    RepoBuilder::new()
+        .bare(true)
+        .clone(
+            source_repo_dir
+                .path()
+                .to_str()
+                .context("source repository path must be valid UTF-8")?,
+            &fixture_path,
+        )
+        .with_context(|| {
+            format!(
+                "failed to create bare fixture {} from {}",
+                fixture_path.display(),
+                source_repo_dir.path().display()
+            )
+        })?;
+
+    let fixture_repo = git2::Repository::open_bare(&fixture_path)
+        .with_context(|| format!("failed to open bare fixture {}", fixture_path.display()))?;
+    let head_commit = fixture_repo
+        .head()
+        .context("failed to read fixture HEAD")?
+        .peel_to_commit()
+        .context("failed to peel fixture HEAD to commit")?
+        .id();
+    fixture_repo
+        .reference("refs/heads/main", head_commit, true, "ensure fixture main ref")
+        .context("failed to write fixture main ref")?;
+
+    fs::write(
+        fixture_path.join("description"),
+        b"Interactive gnostr learning repo for browsing commits, trees, and patches\n",
+    )
+    .with_context(|| format!("failed to write {}", fixture_path.join("description").display()))?;
+
+    Ok(fixture_path)
 }
 
 pub fn run(scan_path: &Path, db: &Arc<rocksdb::DB>) {
@@ -74,8 +246,16 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             }
         };
 
-        let Some(name) = relative.file_name().and_then(OsStr::to_str) else {
-            continue;
+        let name = if relative == Path::new(".") {
+            scan_path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap_or(".")
+        } else {
+            relative
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap_or(".")
         };
         // Read description from correct location based on repository type
         let description_path = if std::process::Command::new("git")
@@ -98,6 +278,14 @@ fn update_repository_metadata(scan_path: &Path, db: &rocksdb::DB) {
             .filter(|v| !v.is_empty());
 
         let repository_path = scan_path.join(relative);
+
+        if relative == Path::new(".") && name != "." {
+            if let Some(repo_cf) = db.cf_handle(REPOSITORY_FAMILY) {
+                if let Err(error) = db.delete_cf(repo_cf, name) {
+                    warn!(%error, "Failed to remove stale root repository key");
+                }
+            }
+        }
 
         let mut git_repository = match gix::open(repository_path.clone()) {
             Ok(v) => v,
@@ -137,7 +325,12 @@ fn find_last_committed_time(repo: &gix::Repository) -> Result<OffsetDateTime, an
     let mut timestamp = OffsetDateTime::UNIX_EPOCH;
 
     for reference in repo.references()?.all()? {
-        let Ok(commit) = reference.unwrap().peel_to_commit() else {
+        let Ok(mut reference) = reference else {
+            warn!("Skipping unreadable reference while finding last committed time");
+            continue;
+        };
+
+        let Ok(commit) = reference.peel_to_commit() else {
             continue;
         };
 
@@ -201,14 +394,12 @@ fn update_repository_reflog(scan_path: &Path, db: Arc<rocksdb::DB>) {
             };
 
             let reference_name = reference.name();
-            if !matches!(
-                reference_name.category(),
-                Some(Category::Tag | Category::LocalBranch)
-            ) {
+            let reference_name_str = reference_name.as_bstr().to_string();
+            if !should_index_reference(reference_name_str.as_str(), reference_name.category()) {
                 continue;
             }
 
-            valid_references.push(reference_name.as_bstr().to_string());
+            valid_references.push(reference_name_str);
 
             if let Err(error) = branch_index_update(
                 &mut reference,
@@ -319,6 +510,19 @@ fn branch_index_update(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_notes_reference;
+
+    #[test]
+    fn notes_reference_detection_is_prefix_based() {
+        assert!(is_notes_reference("refs/notes/commits"));
+        assert!(is_notes_reference("refs/notes/reviews"));
+        assert!(!is_notes_reference("refs/heads/main"));
+        assert!(!is_notes_reference("refs/tags/v1"));
+    }
 }
 
 #[instrument(skip(db))]
@@ -451,7 +655,13 @@ fn get_relative_path<'a>(relative_to: &Path, full_path: &'a Path) -> Option<&'a 
         "get_relative_path:full_path:{} (repository)",
         &full_path.display()
     ); //repository
-    full_path.strip_prefix(relative_to).ok()
+    let relative = full_path.strip_prefix(relative_to).ok()?;
+
+    if relative.as_os_str().is_empty() {
+        Some(Path::new("."))
+    } else {
+        Some(relative)
+    }
 }
 
 fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
@@ -464,14 +674,14 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
     }
 
     // Existing check for working tree or normal repository
-    if gix::open(current).is_ok() {
+    let is_repo = gix::open(current).is_ok();
+    if is_repo {
         debug!("Discovered Git repository at: {}", current.display());
         discovered_repos.push(current.to_path_buf());
-        return; // Stop recursion for this path
     }
 
     // Check if current is a directory that contains .git
-    if current.is_dir() {
+    if current.is_dir() && !is_repo {
         let git_path = current.join(".git");
 
         // Check if .git exists as either file or directory
@@ -511,6 +721,9 @@ fn discover_repositories(current: &Path, discovered_repos: &mut Vec<PathBuf>) {
         let path = entry.path();
 
         if path.is_dir() {
+            if path.file_name() == Some(OsStr::new(".git")) {
+                continue;
+            }
             // Skip directories under `target/`
             if path.components().any(|c| c.as_os_str() == "target") {
                 debug!("Skipping target directory: {}", path.display());
