@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use gnostr_relay::cli::RelayCli;
 use gnostr_relay::launcher;
 
-use gnostr_js::utils::detach::spawn_detached_current_exe_named;
+use gnostr_js::utils::detach::{capture_detached_pid, spawn_detached_current_exe_named};
 
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
@@ -35,8 +35,10 @@ struct Args {
 async fn run_web(port: u16, detach: bool) {
     if detach {
         let port_str = port.to_string();
-        spawn_detached_current_exe_named(Some("gnostr-js"), ["web", "--port", port_str.as_str()])
+        let pid = spawn_detached_current_exe_named(Some("gnostr-js"), ["web", "--port", port_str.as_str()])
             .expect("spawn detached web app");
+        let pid_path = capture_detached_pid("gnostr-js-web", pid).expect("write detached web pid");
+        println!("spawned detached web app pid {pid} at {}", pid_path.display());
         return;
     }
 
@@ -47,7 +49,7 @@ async fn run_relay(relay: RelayCli, detach: bool) {
     if detach {
         let logging = relay.logging.clone();
         let config_file_path = relay.config_file_path.clone();
-        spawn_detached_current_exe_named(
+        let pid = spawn_detached_current_exe_named(
             Some("gnostr-js"),
             [
                 "relay",
@@ -58,6 +60,8 @@ async fn run_relay(relay: RelayCli, detach: bool) {
             ],
         )
         .expect("spawn detached relay");
+        let pid_path = capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
+        println!("spawned detached relay pid {pid} at {}", pid_path.display());
         return;
     }
 
