@@ -41,6 +41,10 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
     let images_assets_map = Arc::new(get_images_assets());
     let pwa_assets_map = Arc::new(get_pwa_assets());
 
+    let root_route = warp::path::end()
+        .and(warp::get())
+        .map(|| warp::redirect::temporary(warp::http::Uri::from_static("/nip")));
+
     let shell = {
         let shell_html = Arc::clone(&shell_html);
         warp::get().and(warp::path::end()).map(move || {
@@ -309,6 +313,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
     };
 
     let routes = shell
+        .or(root_route)
         .or(messages_route)
         .or(gnostr_route)
         .or(nip_index_route)

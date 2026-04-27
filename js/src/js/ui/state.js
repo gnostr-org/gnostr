@@ -453,7 +453,9 @@ function view_path_to_mode(pathname) {
 	let opts = {};
 	let valid = true;
 
-	if (parts[0] == "nip") {
+	if (pathname == "/" || parts[0] == "") {
+		mode = VM_NIP_EXPLORER;
+	} else if (parts[0] == "nip") {
 		if (parts[1] == "34") {
 			mode = VM_NIP34;
 			opts.kind = KIND_REPO_ANNOUNCE;
