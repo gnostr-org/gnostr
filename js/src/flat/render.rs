@@ -177,6 +177,43 @@ body.flat-app {
 .flat-section {
     margin-bottom: 20px;
 }
+.flat-file-details {
+    border: 1px solid var(--clrBorder);
+    border-radius: 18px;
+    background: var(--clrPanel);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+.flat-file-details > summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    list-style: none;
+}
+.flat-file-details > summary::-webkit-details-marker {
+    display: none;
+}
+.flat-file-details > summary::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    opacity: 0.8;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 4l4 4-4 4'/%3E%3C/svg%3E");
+    transition: transform 0.15s ease;
+}
+.flat-file-details[open] > summary::before {
+    transform: rotate(90deg);
+}
+.flat-file-details > summary:hover {
+    background: color-mix(in srgb, var(--clrPanel) 70%, var(--clrBg));
+}
 .flat-section-head {
     display: flex;
     align-items: baseline;
@@ -184,7 +221,13 @@ body.flat-app {
     gap: 12px;
     margin-bottom: 12px;
 }
-.flat-section-head h2 {
+.flat-file-summary {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+.flat-file-summary h2 {
     margin: 0;
     font-size: 1.2rem;
     word-break: break-word;
@@ -193,13 +236,6 @@ body.flat-app {
     color: var(--clrTextLight);
     font-size: 0.9rem;
     white-space: nowrap;
-}
-.flat-card {
-    border: 1px solid var(--clrBorder);
-    border-radius: 18px;
-    background: var(--clrPanel);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
 }
 .flat-card-body {
     padding: 18px;
@@ -364,6 +400,10 @@ fn render_tree_node(name: &str, node: &TreeNode, out: &mut String) {
     out.push_str("</ul></details></li>");
 }
 
+fn should_open_file(size: u64) -> bool {
+    size <= 16 * 1024
+}
+
 pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
     let mut tree = TreeNode::default();
     let mut toc = String::new();
@@ -392,9 +432,10 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
             None => format!("<p class=\"flat-binary\">Skipped binary or large file ({})</p>", f.size),
         };
 
+        let open_attr = if should_open_file(f.size) { " open" } else { "" };
         sections.push_str(&format!(
-            "<section id='{}' class='flat-section'><div class='flat-section-head'><h2>{}</h2><span class='flat-meta'>{} bytes</span></div><div class='flat-card'><div class='flat-card-body'>{}</div></div></section>",
-            anchor, f.rel, f.size, body
+            "<section id='{}' class='flat-section'><details class='flat-file-details'{}><summary><div class='flat-file-summary'><h2>{}</h2></div><span class='flat-meta'>{} bytes</span></summary><div class='flat-card-body'>{}</div></details></section>",
+            anchor, open_attr, f.rel, f.size, body
         ));
     }
     for (name, node) in &tree.children {
