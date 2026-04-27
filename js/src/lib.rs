@@ -15,7 +15,9 @@ pub use embedded::{
 };
 
 /// TEMPLATE_HTML
-pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
+pub static TEMPLATE_HTML: &str = include_str!("template.html");
+pub static TEMPLATE_HTML_BYTES: &[u8] = include_bytes!("template.html");
+/*
 <html lang=\"en\">
 	<head>
 		<meta charset=\"utf-8\">
@@ -328,7 +330,7 @@ pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>
 		</div>
 	</body>
 </html>
-"#;
+*/
 
 
 
