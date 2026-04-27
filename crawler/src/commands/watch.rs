@@ -1,7 +1,9 @@
 use crate::{load_relays_or_bootstrap, load_shitlist, Relay};
 use futures::{stream, StreamExt};
 use log::{debug, error, info, trace};
+use nostr_sdk::prelude::*;
 use reqwest::header::ACCEPT;
+use crate::commands::run_sniper;
 
 pub async fn run_watch(
     shitlist_path: Option<String>,
