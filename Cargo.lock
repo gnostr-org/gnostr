@@ -6835,11 +6835,13 @@ name = "gnostr-js"
 version = "1877.946804.97293"
 dependencies = [
  "actix-web",
+ "anyhow",
  "clap 4.6.1",
  "futures-util",
  "gnostr-relay",
  "handlebars",
  "lazy_static",
+ "libc",
  "log 0.4.29",
  "pretty_env_logger",
  "serde",
