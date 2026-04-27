@@ -1,610 +1,38 @@
-pub mod processor;
-pub mod api;
-pub mod pubkeys;
-pub mod commands;
-pub mod query;
-pub mod relay_manager;
-pub mod relays;
-pub mod stats;
-pub use query::cli;
-pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
-pub use api::{run_api_server, run_api_server_detached};
-pub use commands::{run_nip34, run_sniper, run_watch};
-
-pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("hyper::client::trace=trace".parse()?)
-                .add_directive("hyper::client::connect=trace".parse()?)
-                .add_directive("hyper::client::connect::http=off".parse()?)
-                .add_directive("hyper::proto=off".parse()?)
-                .add_directive("nostr_sdk::relay=off".parse()?)
-                .add_directive("nostr_relay_pool=off".parse()?)
-                .add_directive("nostr_relay_pool::relay::inner=off".parse()?), //.add_directive("hyper=off".parse()?)
-
-                                                                               /**/
-        )
-        .init();
-    Ok(())
-}
-
-use clap::{Parser, Subcommand};
-use futures::{stream, StreamExt};
-use git2::Error;
-use git2::{Commit, DiffOptions, Repository, Signature, Time};
-use reqwest::header::ACCEPT;
-use std::collections::{HashMap, HashSet};
-use std::fs as sync_fs;
-use std::io::{self, BufRead, BufReader};
-use std::path::Path;
-use std::process::{Command, Stdio};
-use std::str;
-#[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn};
-
-use serde::{Deserialize, Serialize};
-
-use ::time::at;
-use ::time::Timespec;
-use ::url::Url;
-use nostr_sdk::prelude::*;
-
-use crate::processor::Processor;
-use crate::relay_manager::RelayManager;
-
-use crate::processor::BOOTSTRAP_RELAYS;
-#[allow(unused_imports)]
-use crate::processor::LOCALHOST_8080;
-
+use crate::commands::run_watch;
+use crate::load_relays_or_bootstrap;
+use crate::{build_gnostr_query, send, Relay, CONCURRENT_REQUESTS};
 use axum::{
-    body::Body, // Added for explicit body type
+    body::Body,
     extract::{Path as AxumPath, Query},
-    http::{header::CONTENT_TYPE, StatusCode}, // Changed to axum::http
+    http::{header::CONTENT_TYPE, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
     Router,
 };
+use futures::{stream, StreamExt};
+use log::{debug, error, info, warn};
+use nostr_sdk::prelude::*;
+use reqwest::header::ACCEPT;
+use std::collections::{HashMap, HashSet};
+use std::fs as sync_fs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use tokio::fs; // For async file operations
-#[allow(unused_imports)] // Suppress false positive for tokio::task::spawn
-use tokio::task::spawn; // Added for spawning async tasks
-use tower_http::trace::{self, TraceLayer}; // For logging requests
-
-const CONCURRENT_REQUESTS: usize = 16;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-pub struct Cli {
-    #[command(subcommand)]
-    pub command: Commands,
-    //nsec: Option<String>,
-}
-
-#[derive(Subcommand, Debug, Clone)]
-pub enum Commands {
-    /// Runs the sniper mode to find relays supporting a specific NIP
-    Sniper {
-        /// The NIP number to search for (e.g., 1)
-        nip: i32,
-        /// Optional: Path to a shitlist file to exclude relays
-        #[arg(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Runs the watch mode to monitor relays and print their metadata
-    Watch {
-        /// Optional: Path to a shitlist file to exclude relays
-        #[arg(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Lists relays that are likely to support NIP-34 (Git collaboration)
-    Nip34 {
-        /// Optional: Path to a shitlist file to exclude relays
-        #[arg(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Runs the main gnostr-crawler logic
-    Crawl(CliArgs),
-    /// Starts a web server to serve relay information
-    Serve {
-        /// The port to listen on for the API server
-        #[arg(long, short, default_value_t = 3000)]
-        port: u16,
-        /// Run the API server in the background.
-        #[arg(long, default_value_t = false)]
-        detach: bool,
-    },
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Relay {
-    pub contact: Option<String>,
-    pub description: Option<String>,
-    pub name: Option<String>,
-    pub software: Option<String>,
-    pub supported_nips: Option<Vec<i32>>,
-    pub supported_nip_extensions: Option<Vec<String>>,
-    pub version: Option<String>,
-}
-
-pub fn preprocess_line(line: &str) -> String {
-    let mut trimmed_line = line.trim().to_string();
-    if let Some(stripped) = trimmed_line.strip_prefix("- ") {
-        trimmed_line = stripped.trim().to_string();
-    } else if let Some(stripped) = trimmed_line.strip_prefix('-') {
-        trimmed_line = stripped.trim().to_string();
-    }
-    // Truncate at the first comma, if any
-    if let Some(comma_idx) = trimmed_line.find(',') {
-        trimmed_line.truncate(comma_idx);
-        trimmed_line = trimmed_line.trim().to_string(); // Re-trim after truncation
-    }
-    trimmed_line
-}
-
-pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-    let base_dir = crate::relays::get_config_dir_path();
-    let file_path = base_dir.join(
-        filename
-            .as_ref()
-            .file_name()
-            .unwrap_or(filename.as_ref().as_os_str()),
-    );
-
-    if let Some(parent) = file_path.parent() {
-        sync_fs::create_dir_all(parent)?;
-    }
-
-    debug!("Loading file: {}", file_path.display());
-
-    let file_content = sync_fs::read_to_string(&file_path)?;
-
-    // Preprocess each line to truncate after a comma and trim whitespace
-    let preprocessed_lines: Vec<String> = file_content
-        .lines()
-        .map(|line| preprocess_line(line))
-        .filter(|line| !line.is_empty())
-        .collect();
-
-    let preprocessed_content_for_yaml = preprocessed_lines.join("\n");
-
-    let relays: Vec<String> =
-        match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
-            Ok(yaml_relays) => yaml_relays,
-            Err(e) => {
-                // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
-                warn!(
-                    "Failed to parse {} as YAML: {}. Falling back to preprocessed lines.",
-                    file_path.display(),
-                    e
-                );
-                preprocessed_lines
-            }
-        };
-
-    let filtered_relays: Vec<String> = relays
-        .into_iter()
-        .filter_map(|line| {
-            // Lines are already preprocessed for truncation and trimming.
-            // Now, refine filtering to differentiate between actual non-websocket URLs and non-URL lines.
-            if line.is_empty() {
-                return None;
-            }
-
-            let mut final_line = line.clone();
-
-            // Attempt to prepend wss:// if it looks like a hostname without a scheme
-            if !final_line.contains("://") {
-                let potential_url = format!("wss://{}", final_line);
-                match Url::parse(&potential_url) {
-                    Ok(url) => {
-                        debug!("Prepended 'wss://' to form valid URL: {}", url);
-                        final_line = url.to_string();
-                    }
-                    Err(_) => {
-                        // If prepending wss:// doesn't form a valid URL, keep the original line
-                        // and let the next checks handle it as a non-URL line.
-                        debug!(
-                            "Attempted to prepend 'wss://' but it's still not a valid URL: {}",
-                            potential_url
-                        );
-                    }
-                }
-            }
-
-            if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
-                match Url::parse(&final_line) {
-                    Ok(url) => Some(url.to_string()),
-                    Err(_) => {
-                        warn!(
-                            "Skipping invalid WEBSOCKET URL in {}: {}",
-                            filename.as_ref().display(),
-                            final_line
-                        );
-                        None
-                    }
-                }
-            } else if final_line.contains("://") {
-                // It's a URL, but not a websocket URL
-                warn!(
-                    "Skipping non-websocket URL scheme in {}: {}",
-                    filename.as_ref().display(),
-                    final_line
-                );
-                None
-            } else {
-                // It's not a URL at all (e.g., "Relay URL")
-                debug!(
-                    "Silently skipping non-URL line in {}: {}",
-                    filename.as_ref().display(),
-                    final_line
-                );
-                None
-            }
-        })
-        .collect();
-
-    Ok(filtered_relays)
-}
-
-//pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-//    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
-//}
-
-pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
-    BufReader::new(sync_fs::File::open(filename)?)
-        .lines()
-        .collect()
-}
-
-fn load_relays_or_bootstrap() -> Vec<String> {
-    match load_file("relays.yaml") {
-        Ok(relays) => relays,
-        Err(e) => {
-            warn!(
-                "Failed to load relays.yaml ({}); falling back to bootstrap relays",
-                e
-            );
-            BOOTSTRAP_RELAYS.iter().cloned().collect()
-        }
-    }
-}
-
-#[allow(clippy::manual_strip)]
-#[derive(Parser, Debug, Clone)]
-pub struct CliArgs {
-    //#[clap(name = "topo-order", long)]
-    ///// sort commits in topological order
-    //flag_topo_order: bool,
-    //#[clap(name = "date-order", long)]
-    ///// sort commits in date order
-    //flag_date_order: bool,
-    //#[clap(name = "reverse", long)]
-    ///// sort commits in reverse
-    //flag_reverse: bool,
-    //#[clap(name = "author", long)]
-    ///// author to sort by
-    //flag_author: Option<String>,
-    //#[clap(name = "committer", long)]
-    ///// committer to sort by
-    //flag_committer: Option<String>,
-    //#[clap(name = "pat", long = "grep")]
-    ///// pattern to filter commit messages by
-    //flag_grep: Option<String>,
-    #[arg(long = "git-dir")]
-    /// alternative git directory to use
-    flag_git_dir: Option<String>,
-    //#[clap(name = "skip", long)]
-    ///// number of commits to skip
-    //flag_skip: Option<usize>,
-    //#[clap(name = "max-count", short = 'n', long)]
-    ///// maximum number of commits to show
-    //flag_max_count: Option<usize>,
-    //#[clap(name = "merges", long)]
-    ///// only show merge commits
-    //flag_merges: bool,
-    //#[clap(name = "no-merges", long)]
-    ///// don't show merge commits
-    //flag_no_merges: bool,
-    //#[clap(name = "no-min-parents", long)]
-    ///// don't require a minimum number of parents
-    //flag_no_min_parents: bool,
-    //#[clap(name = "no-max-parents", long)]
-    ///// don't require a maximum number of parents
-    //flag_no_max_parents: bool,
-    //#[clap(name = "max-parents")]
-    ///// specify a maximum number of parents for a commit
-    //flag_max_parents: Option<usize>,
-    //#[clap(name = "min-parents")]
-    ///// specify a minimum number of parents for a commit
-    //flag_min_parents: Option<usize>,
-    #[arg(long, short)]
-    /// show commit diff
-    flag_patch: bool,
-    #[arg(
-        value_name = "nsec",
-        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    )]
-    arg_nsec: Option<String>,
-    #[arg(value_name = "commit")]
-    arg_commit: Vec<String>,
-    #[arg(value_name = "spec", last = true)]
-    arg_spec: Vec<String>,
-    #[arg(long)]
-    arg_dump: bool,
-}
-
-pub async fn run(args: &CliArgs) -> Result<()> {
-    let _run_async = async {
-        let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-        let relay_client = Client::new(app_keys);
-        let _ = relay_client
-            .send_event_builder(EventBuilder::text_note("#gnostr"))
-            .await;
-    };
-
-    let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-    let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor).await;
-    let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
-    let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
-
-    if args.arg_dump {
-        relay_manager.processor.dump();
-    }
-
-    Ok(())
-}
-
-pub async fn dispatch_cli_command(
-    cli: Cli,
-    client: &reqwest::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
-    match &cli.command {
-        Commands::Sniper { nip, shitlist } => {
-            run_sniper(*nip, shitlist.clone(), client).await?;
-        }
-        Commands::Watch { shitlist } => {
-            run_watch(shitlist.clone(), client).await?;
-        }
-        Commands::Nip34 { shitlist } => {
-            run_nip34(shitlist.clone(), client).await?;
-        }
-        Commands::Crawl(args) => {
-            crate::run(args).await?;
-        }
-        Commands::Serve { port, detach } => {
-            if *detach {
-                run_api_server_detached(&["serve"], *port)?;
-            } else {
-                run_api_server(*port).await?;
-            }
-        }
-    }
-    Ok(())
-}
-
-pub fn sig_matches(sig: &Signature, arg: &Option<String>) -> bool {
-    match *arg {
-        Some(ref s) => {
-            sig.name().map(|n| n.contains(s)).unwrap_or(false)
-                || sig.email().map(|n| n.contains(s)).unwrap_or(false)
-        }
-        None => true,
-    }
-}
-
-pub fn log_message_matches(msg: Option<&str>, grep: &Option<String>) -> bool {
-    match (grep, msg) {
-        (&None, _) => true,
-        (&Some(_), None) => false,
-        (Some(s), Some(msg)) => msg.contains(s),
-    }
-}
-
-pub fn print_commit(commit: &Commit) {
-    //println!("commit {}", commit.id());
-
-    if commit.parents().len() > 1 {
-        print!("Merge:");
-        for id in commit.parent_ids() {
-            print!(" {:.8}", id);
-        }
-        println!();
-    }
-
-    let author = commit.author();
-    println!("Author: {}", author);
-    print_time(&author.when(), "Date:   ");
-    println!();
-
-    for line in String::from_utf8_lossy(commit.message_bytes()).lines() {
-        println!("    {}", line);
-    }
-    println!();
-}
-
-pub fn print_time(time: &Time, prefix: &str) {
-    let (offset, sign) = match time.offset_minutes() {
-        n if n < 0 => (-n, '-'),
-        n => (n, '+'),
-    };
-    let (hours, minutes) = (offset / 60, offset % 60);
-    let ts = Timespec::new(time.seconds() + (time.offset_minutes() as i64) * 60, 0);
-    let time = at(ts);
-
-    println!(
-        "{}{} {}{:02}{:02}",
-        prefix,
-        time.strftime("%a %b %e %T %Y").unwrap(),
-        sign,
-        hours,
-        minutes
-    );
-}
-
-pub fn match_with_parent(
-    repo: &Repository,
-    commit: &Commit,
-    parent: &Commit,
-    opts: &mut DiffOptions,
-) -> Result<bool, Error> {
-    let a = parent.tree()?;
-    let b = commit.tree()?;
-    let diff = repo.diff_tree_to_tree(Some(&a), Some(&b), Some(opts))?;
-    Ok(diff.deltas().len() > 0)
-}
-
-async fn get_relays_yaml() -> Response {
-    let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.yaml");
-    debug!(
-        "Attempting to serve relays.yaml from: {}",
-        file_path.display()
-    );
-
-    if !file_path.exists() {
-        if let Err(e) = crate::relays::write_relays_serve_files() {
-            error!("Failed to create relays.yaml: {}", e);
-        }
-    }
-
-    match fs::read_to_string(&file_path).await {
-        Ok(content) => {
-            let relays: Vec<String> = content
-                .lines()
-                .filter(|line| !line.trim().is_empty())
-                .map(String::from)
-                .collect();
-
-            match serde_yaml::to_string(&relays) {
-                Ok(yaml_content) => Response::builder()
-                    .status(StatusCode::OK)
-                    .header(CONTENT_TYPE, "application/x-yaml")
-                    .body(Body::from(yaml_content))
-                    .unwrap_or_else(|e| {
-                        error!("Failed to build YAML response: {}", e);
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            Body::from("Internal Server Error"),
-                        )
-                            .into_response()
-                    }),
-                Err(e) => {
-                    error!("Failed to serialize relays to YAML: {}", e);
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Body::from(format!("Failed to serialize relays to YAML: {}", e)),
-                    )
-                        .into_response()
-                }
-            }
-        }
-        Err(e) => {
-            error!(
-                "Failed to read relays.yaml: {}. Path: {}",
-                e,
-                file_path.display()
-            );
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Body::from(format!("Failed to read relays.yaml: {}", e)),
-            )
-                .into_response()
-        }
-    }
-}
-
-async fn get_relays_json() -> Response {
-    let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.json");
-    debug!(
-        "Attempting to serve relays.json from: {}",
-        file_path.display()
-    );
-
-    if !file_path.exists() {
-        if let Err(e) = crate::relays::write_relays_serve_files() {
-            error!("Failed to create relays.json: {}", e);
-        }
-    }
-
-    match fs::read_to_string(&file_path).await {
-        Ok(content) => Response::builder()
-            .status(StatusCode::OK)
-            .header(CONTENT_TYPE, "application/json")
-            .body(Body::from(content))
-            .unwrap_or_else(|e| {
-                error!("Failed to build JSON response: {}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Body::from("Internal Server Error"),
-                )
-                    .into_response()
-            }),
-        Err(e) => {
-            error!(
-                "Failed to read relays.json: {}. Path: {}",
-                e,
-                file_path.display()
-            );
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Body::from(format!("Failed to read relays.json: {}", e)),
-            )
-                .into_response()
-        }
-    }
-}
-
-async fn get_relays_txt() -> Response {
-    let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.txt");
-    debug!(
-        "Attempting to serve relays.txt from: {}",
-        file_path.display()
-    );
-
-    if !file_path.exists() {
-        if let Err(e) = crate::relays::write_relays_serve_files() {
-            error!("Failed to create relays.txt: {}", e);
-        }
-    }
-
-    match fs::read_to_string(&file_path).await {
-        Ok(content) => Response::builder()
-            .status(StatusCode::OK)
-            .header(CONTENT_TYPE, "text/plain")
-            .body(Body::from(content))
-            .unwrap_or_else(|e| {
-                error!("Failed to build TXT response: {}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Body::from("Internal Server Error"),
-                )
-                    .into_response()
-            }),
-        Err(e) => {
-            error!(
-                "Failed to read relays.txt: {}. Path: {}",
-                e,
-                file_path.display()
-            );
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Body::from(format!("Failed to read relays.txt: {}", e)),
-            )
-                .into_response()
-        }
-    }
-}
+use std::process::{Command, Stdio};
+use tokio::fs;
+use tokio::task::spawn;
+use tower_http::trace::{self, TraceLayer};
+use ::url::Url;
 
 async fn collect_supported_relays_for_nip(
     nip_lower: i32,
     client: &reqwest::Client,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let relays = load_relays_or_bootstrap();
+    info!(
+        "collect_supported_relays_for_nip: checking {} relays for NIP {}",
+        relays.len(),
+        nip_lower
+    );
 
     let bodies = stream::iter(relays)
         .map(|url| {
@@ -620,8 +48,8 @@ async fn collect_supported_relays_for_nip(
                     .await?;
 
                 if !resp.status().is_success() {
-                    info!(
-                        "prime_all_nip_relays_files: skipping {} due to HTTP {}",
+                    warn!(
+                        "collect_supported_relays_for_nip: skipping {} due to HTTP {}",
                         url,
                         resp.status()
                     );
@@ -748,10 +176,13 @@ async fn prime_all_nip_relays_files(
                                 e
                             );
                         }
+                    } else {
+                        warn!(
+                            "prime_all_nip_relays_files: invalid relay URL {}",
+                            url
+                        );
                     }
-                }
-                for nip in supported_nips {
-                    nip_relays.entry(nip).or_default().insert(url.clone());
+                    nip_relays.entry(*nip).or_default().insert(url.clone());
                 }
             } else {
                 info!(
@@ -803,6 +234,150 @@ async fn refresh_nip_relays_files(
     let relays = collect_supported_relays_for_nip(nip_lower, client).await?;
     let dir = crate::relays::write_nip_relays_serve_files(nip_lower, &relays)?;
     Ok(dir)
+}
+
+async fn get_relays_yaml() -> Response {
+    let config_dir = crate::relays::get_config_dir_path();
+    let file_path = config_dir.join("relays.yaml");
+    debug!(
+        "Attempting to serve relays.yaml from: {}",
+        file_path.display()
+    );
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_relays_serve_files() {
+            error!("Failed to create relays.yaml: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => {
+            let relays: Vec<String> = content
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .map(String::from)
+                .collect();
+
+            match serde_yaml::to_string(&relays) {
+                Ok(yaml_content) => Response::builder()
+                    .status(StatusCode::OK)
+                    .header(CONTENT_TYPE, "application/x-yaml")
+                    .body(Body::from(yaml_content))
+                    .unwrap_or_else(|e| {
+                        error!("Failed to build relays.yaml response: {}", e);
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Body::from("Internal Server Error"),
+                        )
+                            .into_response()
+                    }),
+                Err(e) => {
+                    error!("Failed to serialize relays.yaml content: {}", e);
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Body::from(format!("Failed to serialize relays.yaml: {}", e)),
+                    )
+                        .into_response()
+                }
+            }
+        }
+        Err(e) => {
+            error!(
+                "Failed to read relays.yaml: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read relays.yaml: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+async fn get_relays_json() -> Response {
+    let config_dir = crate::relays::get_config_dir_path();
+    let file_path = config_dir.join("relays.json");
+    debug!(
+        "Attempting to serve relays.json from: {}",
+        file_path.display()
+    );
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_relays_json_from_yaml() {
+            error!("Failed to create relays.json: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build relays.json response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!(
+                "Failed to read relays.json: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read relays.json: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+async fn get_relays_txt() -> Response {
+    let config_dir = crate::relays::get_config_dir_path();
+    let file_path = config_dir.join("relays.txt");
+    debug!(
+        "Attempting to serve relays.txt from: {}",
+        file_path.display()
+    );
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_relays_serve_files() {
+            error!("Failed to create relays.txt: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/plain")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build relays.txt response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!(
+                "Failed to read relays.txt: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read relays.txt: {}", e)),
+            )
+                .into_response()
+        }
+    }
 }
 
 async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
@@ -1172,7 +747,7 @@ async fn execute_query_page(
     relays: Vec<Url>,
     limit: Option<i32>,
 ) -> Response {
-    let results = match crate::send(query_string.clone(), relays, limit.or(Some(100))).await {
+    let results = match send(query_string.clone(), relays, limit.or(Some(100))).await {
         Ok(results) => results,
         Err(e) => {
             let html = crate::relays::render_page_shell(
@@ -1250,7 +825,7 @@ async fn get_query(Query(params): Query<HashMap<String, String>>) -> Response {
         _ => None,
     };
 
-    let query_string = match crate::build_gnostr_query(
+    let query_string = match build_gnostr_query(
         authors,
         ids,
         limit,
@@ -1392,7 +967,7 @@ async fn get_nip_query(
         _ => None,
     };
 
-    let query_string = match crate::build_gnostr_query(
+    let query_string = match build_gnostr_query(
         authors,
         ids,
         limit,
@@ -1456,7 +1031,7 @@ async fn get_nip_query(
         }
     };
 
-    let results = match crate::send(query_string.clone(), relays, limit.or(Some(100))).await {
+    let results = match send(query_string.clone(), relays, limit.or(Some(100))).await {
         Ok(results) => results,
         Err(e) => {
             let nav = vec![("/", "gnostr/crawler"), (back_href.as_str(), "back")];
@@ -1611,4 +1186,78 @@ async fn get_index_html() -> Response {
                 .into_response()
         }
     }
+}
+
+pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("run_api_server: Starting API server on port {}", port);
+
+    let client = reqwest::Client::new();
+    if let Err(e) = crate::relays::write_relays_serve_files() {
+        warn!("Failed to prepare relay serve files: {}", e);
+    }
+    crate::relays::prime_live_kinds_from_disk();
+    if let Err(e) = crate::relays::write_kinds_serve_files() {
+        warn!("Failed to prepare kinds serve files: {}", e);
+    }
+    if let Err(e) = crate::relays::write_index_html() {
+        warn!("Failed to prepare index.html: {}", e);
+    }
+
+    let client_for_watch = client.clone();
+    tokio::task::spawn(async move {
+        if let Err(e) = run_watch(None, &client_for_watch).await {
+            error!("Watch process failed: {}", e);
+        }
+    });
+
+    let client_for_sniper = client.clone();
+    spawn(async move {
+        run_sniper_service(client_for_sniper).await;
+    });
+
+    let app = Router::new()
+        .route("/", get(get_index_html))
+        .route("/query", get(get_query))
+        .route("/relays.yaml", get(get_relays_yaml))
+        .route("/relays.json", get(get_relays_json))
+        .route("/relays.txt", get(get_relays_txt))
+        .route("/:nip", get(get_nip_index))
+        .route("/:nip/query", get(get_nip_query))
+        .route("/:nip/relays.yaml", get(get_nip_relays_yaml))
+        .route("/:nip/relays.json", get(get_nip_relays_json))
+        .route("/:nip/relays.txt", get(get_nip_relays_txt))
+        .route("/:nip/:relay.json", get(get_nip_relay_json))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
+                .on_response(trace::DefaultOnResponse::new().include_headers(true)),
+        );
+
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    info!("run_api_server: listening on {}", addr);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, app.into_make_service()).await?;
+
+    Ok(())
+}
+
+pub fn run_api_server_detached(
+    command_prefix: &[&str],
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let current_exe = std::env::current_exe()?;
+    let mut command = Command::new(current_exe);
+    command.args(command_prefix);
+    command.arg("--port");
+    command.arg(port.to_string());
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+
+    let child = command.spawn()?;
+    println!(
+        "run_api_server_detached: started background server (pid: {})",
+        child.id()
+    );
+    Ok(())
 }
