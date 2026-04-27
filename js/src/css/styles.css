@@ -410,6 +410,95 @@ button.nav > img.icon {
 	font-size: var(--fsNormal);
 	font-weight: bold;
 }
+
+/* NIP explorer */
+#view .nip-explorer {
+	margin: 16px;
+	padding: 20px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 18px;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 42%), var(--clrBg);
+	box-shadow: 0 18px 32px rgba(0, 0, 0, 0.08);
+}
+#view .nip-explorer > header {
+	padding: 0;
+	margin-bottom: 16px;
+	border-bottom: 0;
+	display: block;
+	position: static;
+	background: transparent;
+}
+#view .nip-explorer > header h2 {
+	margin: 0 0 6px;
+	font-size: var(--fsEnlarged);
+}
+#view .nip-explorer > header p {
+	margin: 0;
+	color: var(--clrTextLight);
+	line-height: 1.5;
+}
+#view .nip-explorer-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 12px;
+}
+#view .nip-explorer-item {
+	padding: 16px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 16px;
+	background: var(--clrPanel);
+	transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+#view .nip-explorer-item:hover {
+	transform: translateY(-1px);
+	border-color: var(--clrLink);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+#view .nip-explorer-item-head {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 8px;
+}
+#view .nip-explorer-id {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: var(--clrBg);
+	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+	font-weight: 800;
+	letter-spacing: 0.04em;
+}
+#view .nip-explorer-link {
+	color: var(--clrText);
+	text-decoration: none;
+	font-weight: 800;
+	font-size: var(--fsEnlarged);
+}
+#view .nip-explorer-link:hover {
+	color: var(--clrLink);
+	text-decoration: underline;
+}
+#view .nip-explorer-item p {
+	margin: 0;
+	color: var(--clrTextLight);
+	line-height: 1.5;
+}
+@media (min-width: 760px) {
+	#view .nip-explorer-list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	#view .nip-explorer-item:first-child {
+		grid-column: 1 / -1;
+	}
+}
+
 .userpic { /* TODO remove .userpic and use helper class */
 	flex-shrink: 1;
 }
