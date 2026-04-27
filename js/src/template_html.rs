@@ -1,35 +1,24 @@
-#[allow(unused)]
-use handlebars::Handlebars;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct TemplateHtml {
-    pub template_html: &'static [u8],
 }
 
 impl TemplateHtml {
     pub fn new() -> Self {
-        let template_html_bytes: &'static [u8] = include_bytes!("template.html");
-        TemplateHtml {
-            template_html: template_html_bytes,
-        }
+        TemplateHtml {}
     }
 
-    pub fn template_html(&self) -> &'static [u8] {
-        self.template_html
+    pub fn bytes(&self) -> &'static [u8] {
+        include_bytes!("template.html")
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        include_str!("template.html")
     }
 
     pub fn to_string(&self) -> String {
-        if let Ok(template_html_string) = String::from_utf8(self.template_html.to_vec()) {
-            template_html_string
-        } else {
-            String::from("template.html is not valid UTF-8.")
-        }
-    }
-    pub fn get_template_assets() -> HashMap<String, &'static [u8]> {
-        let mut assets = HashMap::new();
-        assets.insert("template.html".to_string(), include_bytes!("template.html") as &'static [u8]);
-        assets
+        self.as_str().to_owned()
     }
 }
 
