@@ -172,6 +172,7 @@ async function get_pubkey(use_prompt=true) {
 
 function open_thread(thread_id) {
     const event = GNOSTR.all_events[thread_id];
+    const current_thread_id = view_get_timeline_el().dataset.threadId;
     if (event && event.kind === KIND_REPO_STATE_ANNOUNCE) {
         const d_tag = event.tags.find(tag => tag[0] === 'd');
         if (d_tag) {
@@ -194,7 +195,11 @@ function open_thread(thread_id) {
             return;
         }
     }
-	view_timeline_apply_mode(GNOSTR, VM_THREAD, { thread_id });
+	const opts = { thread_id };
+	if (current_thread_id && event && is_nip34_repo_kind(event.kind)) {
+		opts.related_thread_id = current_thread_id;
+	}
+	view_timeline_apply_mode(GNOSTR, VM_THREAD, opts);
 }
 
 function close_modal(el) {

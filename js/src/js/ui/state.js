@@ -66,7 +66,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 					return;
 				break;
 			case VM_THREAD:
-				if (el.dataset.threadId == thread_id)
+				if (el.dataset.threadId == thread_id && el.dataset.relatedThreadId == opts.related_thread_id)
 					return;
 				break;
 	case VM_NIP34_DETAIL:
@@ -159,6 +159,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 
 	el.dataset.mode = mode;
 	delete el.dataset.threadId;
+	delete el.dataset.relatedThreadId;
 	delete el.dataset.pubkey;
 	delete el.dataset.repoId;
 	delete el.dataset.kind;
@@ -169,6 +170,9 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		break;
 	case VM_THREAD:
 		el.dataset.threadId = thread_id;
+		if (opts.related_thread_id) {
+			el.dataset.relatedThreadId = opts.related_thread_id;
+		}
 		break;
 	case VM_USER:
 	case VM_DM_THREAD:
@@ -312,16 +316,17 @@ function view_timeline_refresh(model, mode, opts={}) {
 				}
 				replies.sort((a, b) => a.created_at - b.created_at);
 
+				const related_anchor_id = opts.related_thread_id || root_id;
 				const related_nip34 = [];
 				for (const ev of evs) {
 					if (ev.id === root_id || !is_nip34_repo_kind(ev.kind)) {
 						continue;
 					}
-					if (ev.refs && (ev.refs.root === root_id || ev.refs.reply === root_id)) {
+					if (ev.refs && (ev.refs.root === related_anchor_id || ev.refs.reply === related_anchor_id)) {
 						related_nip34.push(ev);
 						continue;
 					}
-					if (event_refs_event(ev, {id: root_id})) {
+					if (event_refs_event(ev, {id: related_anchor_id})) {
 						related_nip34.push(ev);
 					}
 				}
@@ -478,6 +483,7 @@ function view_get_el_opts(el) {
 	const mode = el.dataset.mode;
 	return {
 		thread_id: el.dataset.threadId,
+		related_thread_id: el.dataset.relatedThreadId,
 		pubkey: el.dataset.pubkey,
 		kind: el.dataset.kind ? parseInt(el.dataset.kind, 10) : undefined,
 		hide_replys: mode == VM_FRIENDS && el.dataset.hideReplys == "true",
