@@ -89,3 +89,24 @@ For the workspace runner, a handy targeted example is:
 The matrix workflow `./.github/workflows/gnostr-test-matrix.yml` runs the
 asyncgit and ngit wrappers on the stable toolchain, which keeps the script
 paths covered in CI.
+
+## JS web app relay control
+
+The `js` crate now exposes relay process control through the web server:
+
+```bash
+cargo run -p gnostr-js --bin gnostr-js -- web
+cargo run -p gnostr-js --bin gnostr-js -- relay
+cargo run -p gnostr-js --bin gnostr-js -- relay --detach
+cargo run -p gnostr-js --bin gnostr-js-relay --detach
+```
+
+The web UI uses these backend endpoints to manage the local relay:
+
+- `GET /api/relay/status`
+- `POST /api/relay/start`
+- `POST /api/relay/stop`
+
+Detached launches write their PID to `.gnostr/gnostr-js-relay.pid`, and the
+startup path refuses to spawn a duplicate relay when port `8080` is already in
+use.
