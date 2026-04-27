@@ -137,10 +137,53 @@ where
 }
 
 pub fn capture_detached_pid(name: &str, pid: u32) -> anyhow::Result<PathBuf> {
-    let dir = PathBuf::from(".gnostr");
-    fs::create_dir_all(&dir)?;
-
-    let path = dir.join(format!("{name}.pid"));
+    let path = detached_pid_path(name);
+    if let Some(dir) = path.parent() {
+        fs::create_dir_all(dir)?;
+    }
     fs::write(&path, format!("{pid}\n"))?;
     Ok(path)
+}
+
+pub fn detached_pid_path(name: &str) -> PathBuf {
+    PathBuf::from(".gnostr").join(format!("{name}.pid"))
+}
+
+pub fn read_detached_pid(name: &str) -> anyhow::Result<Option<u32>> {
+    let path = detached_pid_path(name);
+    let Ok(raw) = fs::read_to_string(&path) else {
+        return Ok(None);
+    };
+
+    let pid = raw.trim().parse::<u32>()?;
+    Ok(Some(pid))
+}
+
+#[cfg(unix)]
+pub fn pid_is_running(pid: u32) -> bool {
+    let result = unsafe { libc::kill(pid as i32, 0) };
+    if result == 0 {
+        true
+    } else {
+        matches!(std::io::Error::last_os_error().raw_os_error(), Some(code) if code == libc::EPERM)
+    }
+}
+
+#[cfg(not(unix))]
+pub fn pid_is_running(_pid: u32) -> bool {
+    false
+}
+
+pub fn existing_detached_pid(name: &str) -> anyhow::Result<Option<u32>> {
+    let path = detached_pid_path(name);
+    let Some(pid) = read_detached_pid(name)? else {
+        return Ok(None);
+    };
+
+    if pid_is_running(pid) {
+        return Ok(Some(pid));
+    }
+
+    let _ = fs::remove_file(path);
+    Ok(None)
 }
