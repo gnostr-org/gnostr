@@ -33,6 +33,11 @@ fn main() -> Result<()> {
 
     println!("Cloning repository...");
     let status = Command::new("git")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env(
+            "GIT_SSH_COMMAND",
+            "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
+        )
         .args(["clone", "--depth", "1", &args.repo_url, "repo"])
         .current_dir(tmp_dir.path())
         .status()
