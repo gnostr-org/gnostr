@@ -64,13 +64,13 @@ async function render_local_relay_info() {
     }
 }
 
-function on_click_start_local_relay_sync() {
-    start_local_relay_sync();
+async function on_click_start_local_relay_sync() {
+    await start_local_relay_sync();
     render_relay_dashboard();
 }
 
-function on_click_stop_local_relay_sync() {
-    stop_local_relay_sync();
+async function on_click_stop_local_relay_sync() {
+    await stop_local_relay_sync();
     render_relay_dashboard();
 }
 
