@@ -220,14 +220,14 @@ pub static TEMPLATE_HTML_BYTES: &[u8] = include_bytes!("template.html");
 						</section>
 						<section>
 							<header><label>Info</label></header>
-							<p>
-							<a href=\"https://github.com/gnostr-org/gnostr\">Source Code</a>
-							<a href=\"https://github.com/gnostr-org/gnostr/issues\">Bug Tracker</a>
-							<a href=\"mailto:admin@gnostr.org\">Email Me</a>
-							</p>
 						</section>
 					</div>
 					<footer>
+						<div class=\"footer-links\">
+							<a href=\"https://github.com/gnostr-org/gnostr\">Source Code</a>
+							<a href=\"https://github.com/gnostr-org/gnostr/issues\">Bug Tracker</a>
+							<a href=\"mailto:admin@gnostr.org\">Email Me</a>
+						</div>
 						<div id=\"dm-post\" class=\"hide\">
 							<textarea class=\"post-input dm\" name=\"message\"></textarea>
 							<div class=\"post-tools\">

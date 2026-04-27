@@ -181,6 +181,7 @@ th, td {
 	position: sticky;
 	bottom: 0;
 	z-index: var(--zHeader);
+	background: var(--clrBg);
 }
 .nav.full {
 	/* Removed border-right and padding as handled by master-pane */
@@ -206,6 +207,18 @@ th, td {
 	padding: 18px;
 	flex: 1;
 	position: relative;
+}
+.footer-links {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	padding: 10px 15px;
+	border-top: 1px solid var(--clrBorder);
+	border-bottom: 1px solid var(--clrBorder);
+	background: var(--clrBg);
+}
+.footer-links a {
+	font-size: var(--fsReduced);
 }
 .nav [data-view].active img.inactive,
 .nav [data-view] img.active {
