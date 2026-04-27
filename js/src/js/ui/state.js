@@ -312,6 +312,21 @@ function view_timeline_refresh(model, mode, opts={}) {
 				}
 				replies.sort((a, b) => a.created_at - b.created_at);
 
+				const related_nip34 = [];
+				for (const ev of evs) {
+					if (ev.id === root_id || !is_nip34_repo_kind(ev.kind)) {
+						continue;
+					}
+					if (ev.refs && (ev.refs.root === root_id || ev.refs.reply === root_id)) {
+						related_nip34.push(ev);
+						continue;
+					}
+					if (event_refs_event(ev, {id: root_id})) {
+						related_nip34.push(ev);
+					}
+				}
+				related_nip34.sort((a, b) => a.created_at - b.created_at);
+
 				const fragment = new DocumentFragment();
 				if (announcement_event) {
 					const el = view_render_event(model, announcement_event);
@@ -323,6 +338,19 @@ function view_timeline_refresh(model, mode, opts={}) {
 				for (const reply of replies) {
 					const reply_el = view_render_event(model, reply);
 					if (reply_el) fragment.appendChild(reply_el);
+				}
+
+				if (related_nip34.length > 0) {
+					const section = document.createElement("section");
+					section.classList.add("related-nip34");
+					section.innerHTML = "<header><label>Related NIP-34</label></header>";
+					for (const ev of related_nip34) {
+						const related_el = view_render_event(model, ev);
+						if (related_el) {
+							section.appendChild(related_el);
+						}
+					}
+					fragment.appendChild(section);
 				}
 				el.appendChild(fragment);
 			}
