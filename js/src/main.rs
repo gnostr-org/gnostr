@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use gnostr_relay::cli::RelayCli;
-use gnostr_relay::launcher;
+
+use gnostr_js::utils::detach::spawn_detached_current_exe_named;
 
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
@@ -9,11 +10,17 @@ enum Commands {
         /// Port to listen on
         #[arg(short, long, default_value_t = 3030)]
         port: u16,
+        /// Detach and run in the background
+        #[arg(long)]
+        detach: bool,
     },
     /// Run the relay server using the shared relay config
     Relay {
         #[command(flatten)]
         relay: RelayCli,
+        /// Detach and run in the background
+        #[arg(long)]
+        detach: bool,
     },
 }
 
@@ -27,12 +34,34 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    match args.command.unwrap_or(Commands::Web { port: 3030 }) {
-        Commands::Web { port } => gnostr_js::web_app::run(port).await,
-        Commands::Relay { relay } => {
-            launcher::run(relay.clone(), relay.config_path_if_exists(), "NOSTR")
-                .await
-                .expect("run relay server");
+    match args.command.unwrap_or(Commands::Web {
+        port: 3030,
+        detach: false,
+    }) {
+        Commands::Web { port, detach } => {
+            if detach {
+                spawn_detached_current_exe_named(Some("gnostr-js"), ["web", "--port", &port.to_string()])
+                    .expect("spawn detached web app");
+                return;
+            }
+            gnostr_js::web_app::run(port).await;
+        }
+        Commands::Relay { relay, detach } => {
+            if detach {
+                spawn_detached_current_exe_named(
+                    Some("gnostr-js"),
+                    [
+                        "relay",
+                        "--logging",
+                        relay.logging.as_str(),
+                        "--config-file-path",
+                        relay.config_file_path.as_str(),
+                    ],
+                )
+                .expect("spawn detached relay");
+                return;
+            }
+            gnostr_js::relay_app::run().await;
         }
     }
 }
