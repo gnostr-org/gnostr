@@ -2,7 +2,9 @@ use clap::{Parser, Subcommand};
 use gnostr_relay::cli::RelayCli;
 use gnostr_relay::launcher;
 
-use gnostr_js::utils::detach::{capture_detached_pid, spawn_detached_current_exe_named};
+use gnostr_js::utils::detach::{
+    capture_detached_pid, existing_detached_pid, spawn_detached_current_exe_named,
+};
 
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
@@ -34,6 +36,10 @@ struct Args {
 
 async fn run_web(port: u16, detach: bool) {
     if detach {
+        if let Some(pid) = existing_detached_pid("gnostr-js-web").expect("check detached web pid") {
+            println!("gnostr-js web already running with pid {pid}");
+            return;
+        }
         let port_str = port.to_string();
         let pid = spawn_detached_current_exe_named(Some("gnostr-js"), ["web", "--port", port_str.as_str()])
             .expect("spawn detached web app");
@@ -47,6 +53,10 @@ async fn run_web(port: u16, detach: bool) {
 
 async fn run_relay(relay: RelayCli, detach: bool) {
     if detach {
+        if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+            println!("gnostr-js relay already running with pid {pid}");
+            return;
+        }
         let logging = relay.logging.clone();
         let config_file_path = relay.config_file_path.clone();
         let pid = spawn_detached_current_exe_named(
@@ -62,6 +72,11 @@ async fn run_relay(relay: RelayCli, detach: bool) {
         .expect("spawn detached relay");
         let pid_path = capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
         println!("spawned detached relay pid {pid} at {}", pid_path.display());
+        return;
+    }
+
+    if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+        println!("gnostr-js relay already running with pid {pid}");
         return;
     }
 
