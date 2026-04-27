@@ -451,6 +451,27 @@ function show(id) {{
 document.getElementById('human').classList.toggle('hide', id !== 'h');
 document.getElementById('llm').classList.toggle('hide', id !== 'l');
 }}
+
+function syncSelectedFile() {{
+const hash = window.location.hash.slice(1);
+const sections = document.querySelectorAll('.flat-file-details');
+let target = null;
+
+sections.forEach((details) => {{
+    const section = details.closest('section');
+    const isTarget = hash && section && section.id === hash;
+    if (isTarget) {{
+        target = details;
+    }}
+}});
+
+sections.forEach((details) => {{
+    details.open = target ? details === target : false;
+}});
+}}
+
+window.addEventListener('hashchange', syncSelectedFile);
+window.addEventListener('DOMContentLoaded', syncSelectedFile);
 </script>
 </head>
 <body class="flat-app" id="top">
