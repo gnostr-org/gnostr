@@ -122,8 +122,8 @@ function render_nip_explorer() {
 			$${NIP_EXPLORER_ITEMS.map((item) => html`
 				<li class="nip-explorer-item">
 					<div class="nip-explorer-item-head">
-						<a class="nip-explorer-link" href="${item.href}">${item.title}</a>
 						<span class="nip-explorer-id">/${item.nip}</span>
+						<a class="nip-explorer-link" href="${item.href}">${item.title}</a>
 					</div>
 					<p>${item.description}</p>
 				</li>
