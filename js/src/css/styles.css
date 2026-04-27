@@ -105,12 +105,16 @@ th, td {
     height: var(--header-height);
     background-color: var(--clrBg);
     border-bottom: 1px solid var(--clrBorder);
-    z-index: 0;
+    z-index: 1;
     display: flex;
     align-items: center;
     padding: 0 15px;
     box-sizing: border-box;
     justify-content: flex-start; /* Align items to the start */
+}
+
+#global-header #header-tools {
+    margin-left: auto;
 }
 
 #global-header-gnostr-btn {
@@ -162,9 +166,14 @@ th, td {
     flex: 1;
     display: flex;
     flex-direction: column;
-    position: sticky;
+    position: fixed;
+    top: var(--header-height);
+    left: 220px;
+    right: 0;
+    bottom: 0;
     z-index: 1;
-    height: 100%; /* Ensure it takes full height for its child #view */
+    height: calc(100vh - var(--header-height));
+    overflow: hidden;
 }
 
 /* Navigation */
@@ -240,8 +249,10 @@ button.nav > img.icon {
 	flex-direction: column;
 	flex-grow: 1; /* Allow #view to grow and take available space */
 	width: 100%;
-	min-height: 100%; /* Fill the height of #detail-pane */
+	min-height: 0; /* Allow content to shrink within the sticky pane */
     height: 100%; /* Explicitly set height */
+    overflow-y: auto;
+    position: relative;
 }
 #view header {
     position: sticky;

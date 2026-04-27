@@ -153,7 +153,7 @@ function update_notifications(model) {
 	update_notification_markers(count, "activity");
 	update_notification_markers(dm_count, "dm");
 	// slight hack :)
-	find_node("#header-tools button[action='mark-all-read']")
+	find_node("#global-header #header-tools button[action='mark-all-read']")
 		.disabled = dm_count == 0;
 }
 

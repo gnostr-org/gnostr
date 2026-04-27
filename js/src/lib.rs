@@ -26,7 +26,7 @@ pub static TEMPLATE_HTML_BYTES: &[u8] = include_bytes!("template.html");
 		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
 		<meta name=\"theme-color\" content=\"\#0f0f0f\"/>
 		        <meta http-equiv=\"Content-Security-Policy\"
-		            content=\"default-src 'none'; manifest-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; script-src-elem 'self'; script-src-attr 'unsafe-hashes' 'sha256-Td3Y/ET9puc5SaGYiJIrX89xKCA2VzXvfyS6pEAPuUM='; style-src 'self' fonts.googleapis.com; img-src http: https: data:; media-src *; font-src 'self' fonts.gstatic.com; child-src 'none';\" />		<title>gnostr<h1>Hello 🅖!</h1>¬</title>
+		            content=\"default-src 'none'; manifest-src 'self'; connect-src 'self' ws: wss:; script-src 'self'; script-src-elem 'self'; script-src-attr 'unsafe-hashes' 'sha256-Td3Y/ET9puc5SaGYiJIrX89xKCA2VzXvfyS6pEAPuUM='; style-src 'self' fonts.googleapis.com; img-src http: https: data:; media-src *; font-src 'self' fonts.gstatic.com; child-src 'none';\" />		<title>__gnostr__<h1>Hello 🅖!</h1>¬</title>
 		<link rel=\"manifest\" href=\"/pwa/manifest.json\"/>
 		<link rel=\"images\" href=\"/images/icon.svg\" type=\"image/svg+xml\"/>
 		<link rel=\"apple-touch-icon\" href=\"/pwa/icon-256.png\"/>

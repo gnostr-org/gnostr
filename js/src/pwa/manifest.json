@@ -1,7 +1,7 @@
 {
 	"$schema": "https://json.schemastore.org/web-manifest-combined.json",
 	"name": "gnostr.org",
-	"short_name": "gnostr",
+	"short_name": "_gnostr_",
 	"start_url": "..",
 	"display": "standalone",
 	"background_color": "#0f0f0f",

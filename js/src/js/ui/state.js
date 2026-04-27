@@ -172,7 +172,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	if (mode !== VM_USER && mode !== VM_DM_THREAD && mode !== VM_NIP34_DETAIL) {
 		name = name.charAt(0).toUpperCase() + name.slice(1);
 	}
-		find_node("#view header > label").innerText = name;
+		find_node("#global-header #app-title").innerText = name;
 		view_update_navs(mode);
 		find_node("#view [role='profile-info']").classList.toggle("hide", mode != VM_USER);
 		const timeline_el = find_node("#timeline");
@@ -632,7 +632,7 @@ function view_timeline_update_profiles(model, pubkey) {
 			case VM_USER:
 				view_update_profile(model, pubkey);
 			case VM_DM_THREAD:
-				find_node("#view header > label").innerText = name;
+				find_node("#global-header #app-title").innerText = name;
 		}
 	}
 	// Update dm's section since they are not in our view, dm's themselves will
