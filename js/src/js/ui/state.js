@@ -1134,15 +1134,18 @@ function onclick_any(ev) {
             }
 		}
 	}
-	if (action == null && el.tagName == "A") {
-		const pathname = new URL(el.href, window.location.href).pathname;
-		if (pathname.startsWith("/nip") || pathname == "/relays" || pathname == "/settings") {
-			ev.preventDefault();
-			const nav = view_path_to_mode(pathname);
-			if (nav) {
-				switch_view(nav.mode, nav.opts);
+	if (action == null) {
+		const link = el.tagName == "A" ? el : find_parent(el, "a[href]");
+		if (link) {
+			const pathname = new URL(link.href, window.location.href).pathname;
+			if (pathname.startsWith("/nip") || pathname == "/relays" || pathname == "/settings") {
+				ev.preventDefault();
+				const nav = view_path_to_mode(pathname);
+				if (nav) {
+					switch_view(nav.mode, nav.opts);
+				}
+				return;
 			}
-			return;
 		}
 	}
 	switch (action) {
