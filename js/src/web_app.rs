@@ -6,6 +6,7 @@ use warp::Filter;
 
 use crate::bridge;
 use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_assets};
+use crate::relay_control;
 
 fn open(host: &str, port: i32) -> io::Result<()> {
     let url = format!("http://{}:{}", host, port);
@@ -89,6 +90,48 @@ pub async fn run(port: u16) {
             })
     };
 
+    let relay_status_route = warp::path!("api" / "relay" / "status")
+        .and(warp::get())
+        .map(|| match relay_control::relay_status() {
+            Ok(status) => relay_control::response(status, StatusCode::OK),
+            Err(err) => relay_control::response(
+                relay_control::RelayProcessState {
+                    running: false,
+                    pid: None,
+                    message: err.to_string(),
+                },
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ),
+        });
+
+    let relay_start_route = warp::path!("api" / "relay" / "start")
+        .and(warp::post())
+        .map(|| match relay_control::start_relay() {
+            Ok(status) => relay_control::response(status, StatusCode::OK),
+            Err(err) => relay_control::response(
+                relay_control::RelayProcessState {
+                    running: false,
+                    pid: None,
+                    message: err.to_string(),
+                },
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ),
+        });
+
+    let relay_stop_route = warp::path!("api" / "relay" / "stop")
+        .and(warp::post())
+        .map(|| match relay_control::stop_relay() {
+            Ok(status) => relay_control::response(status, StatusCode::OK),
+            Err(err) => relay_control::response(
+                relay_control::RelayProcessState {
+                    running: true,
+                    pid: None,
+                    message: err.to_string(),
+                },
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ),
+        });
+
     let js_route = warp::path("js")
         .and(warp::path::tail())
         .map(|tail: warp::path::Tail| tail.as_str().to_string())
@@ -129,6 +172,9 @@ pub async fn run(port: u16) {
         .or(gnostr_route)
         .or(nip34_route)
         .or(repository_detail_route)
+        .or(relay_status_route)
+        .or(relay_start_route)
+        .or(relay_stop_route)
         .or(js_route)
         .or(css_route)
         .or(images_route)
