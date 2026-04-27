@@ -5,10 +5,7 @@ use clap::Parser;
 use warp::Filter;
 
 use crate::bridge;
-use crate::css::css_bundle::get_css_assets;
-use crate::images::images_bundle::get_images_assets;
-use crate::js::js_bundle::get_js_assets;
-use crate::pwa::pwa_bundle::get_pwa_assets;
+use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_assets};
 
 fn open(host: &str, port: i32) -> io::Result<()> {
     let url = format!("http://{}:{}", host, port);
