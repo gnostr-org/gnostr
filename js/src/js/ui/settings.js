@@ -3,6 +3,7 @@ function init_settings(model) {
 	if (!el) {
 		return;
 	}
+	render_settings_profile(model);
 }
 
 function init_relays(model) {
@@ -38,6 +39,32 @@ function render_relay_dashboard() {
     find_node("[data-field='last_error']", el).textContent = status.last_error || "none";
     find_node("#local-relay-start", el.parentElement).disabled = status.connected;
     find_node("#local-relay-stop", el.parentElement).disabled = !status.connected;
+}
+
+function render_settings_profile(model) {
+    const el = find_node("#settings-profile");
+    if (!el || !model.pubkey) {
+        return;
+    }
+
+    const profile = model_get_profile(model, model.pubkey);
+    const name = fmt_name(profile);
+    const image = find_node("img[name='settings-profile-image']", el);
+    image.src = get_profile_pic(profile);
+    image.classList.toggle("hide", !profile.data.picture);
+
+    find_node("[name='settings-profile-name']", el).textContent = name;
+
+    const nip05_el = find_node("[name='settings-profile-nip05']", el);
+    nip05_el.textContent = profile.data.nip05 || "";
+    nip05_el.classList.toggle("hide", !profile.data.nip05);
+
+    const about_el = find_node("[name='settings-profile-about']", el);
+    about_el.innerHTML = newlines_to_br(linkify(profile.data.about || ""));
+    about_el.classList.toggle("hide", !profile.data.about);
+
+    find_node("[name='settings-profile-pubkey']", el).textContent = model.pubkey;
+    el.classList.toggle("hide", false);
 }
 
 async function render_local_relay_info() {

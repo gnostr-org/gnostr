@@ -667,6 +667,29 @@ code {
     position: sticky;
 	margin: 15px;
 }
+#settings-profile {
+	margin: 15px;
+	padding: 15px;
+	background: var(--clrPanel);
+	border-radius: 12px;
+}
+#settings-profile .settings-profile-top {
+	display: flex;
+	gap: 15px;
+	align-items: flex-start;
+}
+#settings-profile .settings-profile-meta {
+	flex: 1;
+	min-width: 0;
+}
+#settings-profile code {
+	display: block;
+	word-break: break-all;
+	margin-top: 8px;
+}
+#settings-profile p[name="settings-profile-about"] {
+	margin: 8px 0 0;
+}
 #settings .settings-actions {
 	display: flex;
 	margin-top: 12px;
