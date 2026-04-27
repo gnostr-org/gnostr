@@ -1,9 +1,11 @@
 use std::{
     ffi::OsStr,
     fs,
+    net::{IpAddr, Ipv4Addr, SocketAddr, TcpStream},
     path::Path,
     path::PathBuf,
     process::{Command, Stdio},
+    time::Duration,
 };
 
 #[cfg(unix)]
@@ -186,4 +188,9 @@ pub fn existing_detached_pid(name: &str) -> anyhow::Result<Option<u32>> {
 
     let _ = fs::remove_file(path);
     Ok(None)
+}
+
+pub fn relay_port_is_listening(port: u16) -> bool {
+    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port);
+    TcpStream::connect_timeout(&addr, Duration::from_millis(100)).is_ok()
 }
