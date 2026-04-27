@@ -187,7 +187,7 @@ body.flat-app {
 .flat-file-details > summary {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
     padding: 14px 18px;
     cursor: pointer;
@@ -223,6 +223,7 @@ body.flat-app {
 }
 .flat-file-summary {
     min-width: 0;
+    flex: 1 1 auto;
     display: flex;
     align-items: baseline;
     gap: 12px;
@@ -400,10 +401,6 @@ fn render_tree_node(name: &str, node: &TreeNode, out: &mut String) {
     out.push_str("</ul></details></li>");
 }
 
-fn should_open_file(size: u64) -> bool {
-    size <= 16 * 1024
-}
-
 pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
     let mut tree = TreeNode::default();
     let mut toc = String::new();
@@ -432,10 +429,9 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
             None => format!("<p class=\"flat-binary\">Skipped binary or large file ({})</p>", f.size),
         };
 
-        let open_attr = if should_open_file(f.size) { " open" } else { "" };
         sections.push_str(&format!(
-            "<section id='{}' class='flat-section'><details class='flat-file-details'{}><summary><div class='flat-file-summary'><h2>{}</h2></div><span class='flat-meta'>{} bytes</span></summary><div class='flat-card-body'>{}</div></details></section>",
-            anchor, open_attr, f.rel, f.size, body
+            "<section id='{}' class='flat-section'><details class='flat-file-details'><summary><div class='flat-file-summary'><h2>{}</h2></div><span class='flat-meta'>{} bytes</span></summary><div class='flat-card-body'>{}</div></details></section>",
+            anchor, f.rel, f.size, body
         ));
     }
     for (name, node) in &tree.children {
