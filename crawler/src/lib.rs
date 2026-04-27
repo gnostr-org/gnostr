@@ -1,6 +1,7 @@
 pub mod processor;
 pub mod api;
 pub mod cli;
+pub mod relay_metadata;
 pub mod relay_io;
 pub mod pubkeys;
 pub mod commands;
@@ -12,6 +13,7 @@ pub use cli::{dispatch_cli_command, run, Cli, CliArgs, Commands};
 pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
 pub use api::{run_api_server, run_api_server_detached};
 pub use commands::{run_nip34, run_sniper, run_watch};
+pub use relay_metadata::Relay;
 pub use relay_io::{load_file, load_relays_or_bootstrap, load_shitlist, preprocess_line};
 
 pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,8 +43,6 @@ use std::fs as sync_fs;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 
-use serde::{Deserialize, Serialize};
-
 use ::time::at;
 use ::time::Timespec;
 use ::url::Url;
@@ -59,17 +59,6 @@ use std::path::PathBuf;
 use tokio::fs; // For async file operations
 
 const CONCURRENT_REQUESTS: usize = 16;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Relay {
-    pub contact: Option<String>,
-    pub description: Option<String>,
-    pub name: Option<String>,
-    pub software: Option<String>,
-    pub supported_nips: Option<Vec<i32>>,
-    pub supported_nip_extensions: Option<Vec<String>>,
-    pub version: Option<String>,
-}
 
 pub fn sig_matches(sig: &Signature, arg: &Option<String>) -> bool {
     match *arg {
