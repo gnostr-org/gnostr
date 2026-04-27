@@ -667,6 +667,13 @@ code {
     position: sticky;
 	margin: 15px;
 }
+#settings .settings-actions {
+	display: flex;
+	margin-top: 12px;
+}
+#settings .settings-actions .nav.icon {
+	padding: 10px;
+}
 #settings header, #relays header {
     position: sticky;
     top: var(--master-pane-top);
