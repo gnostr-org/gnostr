@@ -27,6 +27,7 @@ body.flat-app {
     flex: 1 1 auto;
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    align-items: start;
     min-height: 0;
     overflow: hidden;
 }
@@ -78,6 +79,10 @@ body.flat-app {
     display: block;
 }
 .flat-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
     overflow: auto;
     min-height: 0;
     padding: 20px;
