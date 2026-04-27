@@ -66,6 +66,17 @@
 					<span id="app-title-btn-label">gnostr</span>
 				<label id="app-title"></label>
 				</button>
+				<div id="header-tools">
+					<input type="search" id="main-search" placeholder="Search..."/>
+					<button class="action small hide"
+					        disabled action="mark-all-read">
+						Mark All Read
+					</button>
+					<img class="pfp hide" role="their-pfp" data-pubkey=""
+					        src="/images/no-user.svg"/>
+					<img class="pfp hide" role="my-pfp" data-pubkey=""
+					        src="/images/no-user.svg"/>
+				</div>
 				<!-- Potentially add global actions here -->
 			</header>
 
@@ -116,17 +127,6 @@
 					<div id="view">
 						<header>
 							<label></label>
-							<div id="header-tools">
-								<input type="search" id="main-search" placeholder="Search..."/>
-								<button class="action small hide"
-								        disabled action="mark-all-read">
-									Mark All Read
-								</button>
-								<img class="pfp hide" role="their-pfp" data-pubkey=""
-								        src="/images/no-user.svg"/>
-								<img class="pfp hide" role="my-pfp" data-pubkey=""
-								        src="/images/no-user.svg"/>
-							</div>
 						</header>
 						<div id="gnostr-nip34-feed" class="events hide"></div>
 						<div id="profile-info" role="profile-info" class="bottom-border hide">

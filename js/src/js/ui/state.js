@@ -182,14 +182,14 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		find_node("#dms").classList.toggle("hide", mode != VM_DM);
 		find_node("#dm-post").classList.toggle("hide", mode != VM_DM_THREAD);
 		find_node("#new-note-mobile").classList.toggle("hide", mode == VM_DM_THREAD);
-		find_node("#header-tools button[action='mark-all-read']")
+		find_node("#global-header #header-tools button[action='mark-all-read']")
 			.classList.toggle("hide", mode != VM_DM);
 
 		// Show/hide different profile image in header
 		const show_mypfp = mode != VM_DM_THREAD && mode != VM_USER;
-		const el_their_pfp = find_node("#view header img.pfp[role='their-pfp']");
+		const el_their_pfp = find_node("#global-header img.pfp[role='their-pfp']");
 		el_their_pfp.classList.toggle("hide", show_mypfp);
-		find_node("#view header img.pfp[role='my-pfp']")
+		find_node("#global-header img.pfp[role='my-pfp']")
 			.classList.toggle("hide", !show_mypfp);
 
 		view_timeline_refresh(model, mode, opts);
@@ -638,7 +638,7 @@ function view_timeline_update_profiles(model, pubkey) {
 	// Update dm's section since they are not in our view, dm's themselves will
 	// be caught by the process above.
 	update_el_profile(find_node("#dms"), pubkey, name, pic);
-	update_el_profile(find_node("#view header"), pubkey, name, pic);
+	update_el_profile(find_node("#global-header"), pubkey, name, pic);
 }
 
 function update_el_profile(el, pubkey, name, pic) {
