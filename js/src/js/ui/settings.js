@@ -3,6 +3,10 @@ function init_settings(model) {
 	if (!el) {
 		return;
 	}
+	const pubkey_el = find_node("[name='settings-profile-pubkey']");
+	if (pubkey_el && model.pubkey) {
+		pubkey_el.textContent = model.pubkey;
+	}
 	render_settings_profile(model);
 }
 
@@ -63,7 +67,9 @@ function render_settings_profile(model) {
     about_el.innerHTML = newlines_to_br(linkify(profile.data.about || ""));
     about_el.classList.toggle("hide", !profile.data.about);
 
-    find_node("[name='settings-profile-pubkey']", el).textContent = model.pubkey;
+    const pubkey_el = find_node("[name='settings-profile-pubkey']", el);
+    pubkey_el.textContent = model.pubkey;
+    pubkey_el.style.minHeight = "2.4em";
     el.classList.toggle("hide", false);
 }
 

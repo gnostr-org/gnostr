@@ -711,6 +711,7 @@ code {
 	display: block;
 	word-break: break-all;
 	margin-top: 8px;
+	min-height: 2.4em;
 }
 #settings-profile p[name="settings-profile-about"] {
 	margin: 8px 0 0;
