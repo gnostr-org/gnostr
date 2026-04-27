@@ -178,12 +178,17 @@ th, td {
 
 /* Navigation */
 #view footer {
-	position: sticky;
+	position: fixed;
+	left: 220px;
+	right: 0;
 	bottom: 0;
 	z-index: var(--zHeader);
 	background: var(--clrBg);
 	border-top: 1px solid var(--clrBorder);
 	box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+}
+#view {
+	padding-bottom: 150px;
 }
 .nav.full {
 	/* Removed border-right and padding as handled by master-pane */

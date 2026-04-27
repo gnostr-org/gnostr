@@ -202,6 +202,9 @@ function model_process_event_metadata(model, ev, update_view) {
 	profile.evid = ev.id;
 	profile.data = safe_parse_json(ev.content, "profile contents");
 	sync_related_user_metadata_to_local_relay(model, ev);
+	if (ev.pubkey == model.pubkey) {
+		sync_active_user_metadata_to_local_relay(model);
+	}
 	if (ev.pubkey == model.pubkey && typeof render_settings_profile === "function") {
 		render_settings_profile(model);
 	}

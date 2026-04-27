@@ -91,6 +91,7 @@ async function update_profile(profile={}) {
 	ev.id = await nostrjs.calculate_id(ev);
 	ev = await sign_event(ev);
 	broadcast_event(ev);
+	sync_active_user_metadata_to_local_relay(GNOSTR);
 	return ev;
 }
 

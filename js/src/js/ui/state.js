@@ -210,6 +210,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		timeline_el.classList.toggle("reverse", mode == VM_DM_THREAD);
 		timeline_el.classList.toggle("hide", mode == VM_SETTINGS || mode == VM_RELAYS || mode == VM_DM);
 		find_node("#settings").classList.toggle("hide", mode != VM_SETTINGS);
+		find_node("#settings-profile").classList.toggle("hide", mode != VM_SETTINGS);
 		find_node("#relays").classList.toggle("hide", mode != VM_RELAYS);
 		find_node("#dms").classList.toggle("hide", mode != VM_DM);
 		find_node("#dm-post").classList.toggle("hide", mode != VM_DM_THREAD);
