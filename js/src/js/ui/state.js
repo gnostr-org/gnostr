@@ -390,6 +390,57 @@ function view_name_to_mode(view_name) {
 	return view_name;
 }
 
+function view_path_to_mode(pathname) {
+	const parts = pathname.split("/").slice(1);
+	let mode;
+	let opts = {};
+	let valid = true;
+
+	if (parts[0] == "nip") {
+		if (parts[1] == "34") {
+			mode = VM_NIP34;
+			if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
+				const kind = parseInt(parts[2], 10);
+				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
+					opts.kind = kind;
+				} else {
+					valid = false;
+				}
+			}
+		} else {
+			mode = VM_NIP_EXPLORER;
+		}
+	} else if (parts[0] == "relays") {
+		mode = VM_RELAYS;
+	} else {
+		for (var key in VIEW_NAMES) {
+			if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
+				mode = key;
+				break;
+			}
+		}
+	}
+
+	if (!mode) {
+		return null;
+	}
+
+	switch (mode) {
+		case VM_THREAD:
+			opts.thread_id = parts[1];
+			break;
+		case VM_DM_THREAD:
+		case VM_USER:
+			opts.pubkey = parts[1];
+			break;
+		case VM_NIP34_DETAIL:
+			opts.repo_id = parts[1];
+			break;
+	}
+
+	return { mode, opts, valid };
+}
+
 function view_show_spinner(show=true) {
 	find_node("#view .loading-events").classList.toggle("hide", !show);
 }
@@ -974,6 +1025,20 @@ function init_my_pfp(model) {
 	});
 }
 
+function view_update_cached_active_pfp(model) {
+	const profile = model_get_profile(model, model.pubkey);
+	const pic = get_profile_pic(profile);
+	find_nodes(`img[role='my-pfp']`).forEach((el)=> {
+		el.src = pic;
+	});
+	find_nodes(`img[role='their-pfp']`).forEach((el)=> {
+		if (!el.dataset.pubkey || el.dataset.pubkey === model.pubkey) {
+			el.dataset.pubkey = model.pubkey;
+			el.src = pic;
+		}
+	});
+}
+
 function init_postbox(model) {
 	find_node("#reply-content").addEventListener("input", oninput_post);
 	find_node("#dm-post textarea").addEventListener("input", oninput_post);
@@ -1067,6 +1132,17 @@ function onclick_any(ev) {
                 el = parent;
                 action = parent_action;
             }
+		}
+	}
+	if (action == null && el.tagName == "A") {
+		const pathname = new URL(el.href, window.location.href).pathname;
+		if (pathname.startsWith("/nip") || pathname == "/relays" || pathname == "/settings") {
+			ev.preventDefault();
+			const nav = view_path_to_mode(pathname);
+			if (nav) {
+				switch_view(nav.mode, nav.opts);
+			}
+			return;
 		}
 	}
 	switch (action) {
