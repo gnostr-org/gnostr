@@ -4,7 +4,7 @@ use crate::relays::Relays;
 
 use nostr_sdk::{
     prelude::{
-        Client, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, RelayUrl, Result,
+        Client, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, Result,
         TagStandard, Timestamp,
     },
     RelayMessage, RelayStatus,
