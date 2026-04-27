@@ -1,6 +1,8 @@
 use std::{
     ffi::OsStr,
+    fs,
     path::Path,
+    path::PathBuf,
     process::{Command, Stdio},
 };
 
@@ -132,4 +134,13 @@ where
     V: AsRef<OsStr>,
 {
     spawn_detached_named_with_env(std::env::current_exe()?, process_name, args, envs)
+}
+
+pub fn capture_detached_pid(name: &str, pid: u32) -> anyhow::Result<PathBuf> {
+    let dir = PathBuf::from(".gnostr");
+    fs::create_dir_all(&dir)?;
+
+    let path = dir.join(format!("{name}.pid"));
+    fs::write(&path, format!("{pid}\n"))?;
+    Ok(path)
 }
