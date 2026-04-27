@@ -26,6 +26,15 @@ function get_local_relay_status() {
     };
 }
 
+async function relay_process_request(path) {
+    const response = await fetch(path, { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || data.error || `Request failed for ${path}`);
+    }
+    return data;
+}
+
 function init_local_relay_sync() {
     log_info("Initializing local relay DB sync...");
     try {
@@ -97,12 +106,17 @@ function init_local_relay_sync() {
     }
 }
 
-function stop_local_relay_sync() {
+async function stop_local_relay_sync() {
     const model = GNOSTR;
     model.local_relay_enabled = false;
     if (local_relay) {
         local_relay.close();
         local_relay = null;
+    }
+    try {
+        await relay_process_request("/api/relay/stop");
+    } catch (error) {
+        log_error("Failed to stop local relay process:", error);
     }
     local_relay_stats.connected = false;
     model_save_settings(model);
@@ -111,10 +125,15 @@ function stop_local_relay_sync() {
     }
 }
 
-function start_local_relay_sync() {
+async function start_local_relay_sync() {
     const model = GNOSTR;
     model.local_relay_enabled = true;
     model_save_settings(model);
+    try {
+        await relay_process_request("/api/relay/start");
+    } catch (error) {
+        log_error("Failed to start local relay process:", error);
+    }
     if (local_relay && local_relay.ws && local_relay.ws.readyState === 1) {
         return local_relay;
     }
