@@ -111,6 +111,7 @@ async function webapp_init() {
 	// Load data from storage 
 	await model_load_settings(model);
 	init_settings(model);
+	init_relays(model);
 
 	// Create our pool so that event processing functions can work
 	const pool = nostrjs.RelayPool(model.relays);

@@ -1,5 +1,15 @@
 function init_settings(model) {
 	const el = find_node("#settings");
+	if (!el) {
+		return;
+	}
+}
+
+function init_relays(model) {
+	const el = find_node("#relays");
+	if (!el) {
+		return;
+	}
 	find_node("#add-relay", el).addEventListener("click", on_click_add_relay);
 	find_node("#local-relay-start", el).onclick = on_click_start_local_relay_sync;
 	find_node("#local-relay-stop", el).onclick = on_click_stop_local_relay_sync;
@@ -16,7 +26,10 @@ function init_settings(model) {
 
 function render_relay_dashboard() {
     const status = get_local_relay_status();
-    const el = find_node("#local-relay-dashboard");
+    const el = find_node("#relays #local-relay-dashboard");
+    if (!el) {
+        return;
+    }
     find_node("[data-field='url']", el).textContent = status.url;
     find_node("[data-field='status']", el).textContent = status.connected ? "connected" : "stopped";
     find_node("[data-field='sent']", el).textContent = String(status.sent);
@@ -28,7 +41,7 @@ function render_relay_dashboard() {
 }
 
 async function render_local_relay_info() {
-    const el = find_node("#local-relay-info");
+    const el = find_node("#relays #local-relay-info");
     if (!el) {
         return;
     }
@@ -82,7 +95,10 @@ async function render_nip65_relays(model) {
     }
 
     const nip65_relays = await get_nip65_relays_from_db(pubkey);
-    const rlist = find_node("#nip65-relay-list tbody");
+    const rlist = find_node("#relays #nip65-relay-list tbody");
+    if (!rlist) {
+        return;
+    }
     rlist.innerHTML = ''; // Clear existing NIP-65 relays
 
     nip65_relays.forEach(([url, policy]) => {
@@ -155,7 +171,7 @@ function on_click_add_relay(ev) {
 	if (!model.pool.add(address))
 		return;
 	model.relays.add(address);
-	find_node("#relay-list tbody").appendChild(new_relay_item(address));
+	find_node("#relays #relay-list tbody").appendChild(new_relay_item(address));
 	model_save_settings(model);
 }
 

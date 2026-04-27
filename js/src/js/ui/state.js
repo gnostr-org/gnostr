@@ -209,7 +209,8 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		const timeline_el = find_node("#timeline");
 		timeline_el.classList.toggle("reverse", mode == VM_DM_THREAD);
 		timeline_el.classList.toggle("hide", mode == VM_SETTINGS || mode == VM_RELAYS || mode == VM_DM);
-		find_node("#settings").classList.toggle("hide", mode != VM_SETTINGS && mode != VM_RELAYS);
+		find_node("#settings").classList.toggle("hide", mode != VM_SETTINGS);
+		find_node("#relays").classList.toggle("hide", mode != VM_RELAYS);
 		find_node("#dms").classList.toggle("hide", mode != VM_DM);
 		find_node("#dm-post").classList.toggle("hide", mode != VM_DM_THREAD);
 		find_node("#new-note-mobile").classList.toggle("hide", mode == VM_DM_THREAD);
@@ -375,12 +376,16 @@ function view_matches_mode(view_name, mode) {
 		return true;
 	if (view_name == "nip" && mode == VM_NIP_EXPLORER)
 		return true;
+	if (view_name == "relays" && mode == VM_RELAYS)
+		return true;
 	return false;
 }
 
 function view_name_to_mode(view_name) {
 	if (view_name == "nip")
 		return VM_NIP_EXPLORER;
+	if (view_name == "relays")
+		return VM_RELAYS;
 	return view_name;
 }
 

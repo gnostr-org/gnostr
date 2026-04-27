@@ -12,6 +12,7 @@ async function webapp_init() {
 
 	await model_load_settings(model);
 	init_settings(model);
+	init_relays(model);
 
 	const pool = nostrjs.RelayPool(model.relays);
 	model.pool = pool;

@@ -274,7 +274,7 @@ button.nav > img.icon {
 	font-weight: 800;
 	display: block;
 }
-#timeline, #settings, #dms, #gnostr-nip34-feed {
+#timeline, #settings, #relays, #dms, #gnostr-nip34-feed {
         background-color: var(--clrBg); /* Ensure it has a background */
 	flex: 1;
 	min-height: 0; /* Allow these flex items to shrink below their content's intrinsic height */
@@ -663,11 +663,11 @@ code {
 
 /* Settings */
 
-#settings section {
+#settings section, #relays section {
     position: sticky;
 	margin: 15px;
 }
-#settings header {
+#settings header, #relays header {
     position: sticky;
     top: var(--master-pane-top);
     background-color: var(--clrBg); /* Ensure it has a background */
@@ -678,7 +678,7 @@ code {
     align-items: center; /* Vertically align content */
     justify-content: space-between; /* Distribute items horizontally */
 }
-#settings header > label {
+#settings header > label, #relays header > label {
 	font-weight: bold;
 	font-size: var(--fsLarge);
 }

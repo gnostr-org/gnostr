@@ -97,6 +97,11 @@
 								<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
 								<img class="icon svg active" src="/images/logo.svg"/>
 							</button>
+							<button action="open-view" data-view="relays" class="nav icon"
+							        title="Relays">
+								<img class="icon svg inactive" src="/images/add-relay.svg"/>
+								<img class="icon svg active" src="/images/add-relay.svg"/>
+							</button>
 							<button action="open-view" data-view="nip34-view-friends" class="nav icon"
 							        title="NIP-34">
 								<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
@@ -180,7 +185,8 @@
 								<img class="dark-invert" src="/images/loader-fragment.svg"/>
 							</div>
 						</div>
-						<div id="settings" class="hide">						<section>
+						<div id="relays" class="hide">
+							<section>
 							<header>
 								<label>Relays</label>
 								<button id="add-relay" class="btn-text">
@@ -232,14 +238,16 @@
 							</div>
 							<div id="local-relay-info"></div>
 						</section>
-						<section>
-							<header><label>Info</label></header>
-							<p>
-							<a href="https://github.com/gnostr-org/gnostr">Source Code</a>
-							<a href="https://github.com/gnostr-org/gnostr/issues">Bug Tracker</a>
-							<a href="mailto:admin@gnostr.org">Email Me</a>
-							</p>
-						</section>
+						</div>
+						<div id="settings" class="hide">
+							<section>
+								<header><label>Info</label></header>
+								<p>
+								<a href="https://github.com/gnostr-org/gnostr">Source Code</a>
+								<a href="https://github.com/gnostr-org/gnostr/issues">Bug Tracker</a>
+								<a href="mailto:admin@gnostr.org">Email Me</a>
+								</p>
+							</section>
 						</div>
 						<footer>
 							<div id="dm-post" class="hide">
@@ -265,6 +273,11 @@
 									<img class="icon svg inactive" src="/images/notifications.svg"/>
 									<img class="icon svg active" src="/images/notifications-active.svg"/>
 									<div class="new-notifications hide" role="activity"></div>
+								</button>
+								<button action="open-view" data-view="relays"
+								        class="icon" title="Relays">
+									<img class="icon svg inactive" src="/images/add-relay.svg"/>
+									<img class="icon svg active" src="/images/add-relay.svg"/>
 								</button>
 								<button action="open-view" data-view="settings" 
 								        title="Settings" class="icon">

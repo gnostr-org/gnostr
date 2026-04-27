@@ -43,8 +43,8 @@ function on_timer_tick() {
 			log_debug(`NIP-34 Cache Size: ${size}`);
 		}
 
-		const settingsEl = find_node("#settings");
-		if (settingsEl && !settingsEl.classList.contains("hide") &&
+		const relaysEl = find_node("#relays");
+		if (relaysEl && !relaysEl.classList.contains("hide") &&
 			typeof render_relay_dashboard === 'function') {
 			render_relay_dashboard();
 		}
