@@ -53,6 +53,13 @@ function render_shared_by(ev, opts) {
 		</div>`
 }
 
+function render_collapsible_block(title, body, open=false, class_name="") {
+    return `<details class="nip34-collapsible ${class_name}"${open ? " open" : ""}>
+        <summary>${title}</summary>
+        <div class="nip34-collapsible-body">${body}</div>
+    </details>`;
+}
+
 function render_event(model, ev, opts={}) {
 	switch(ev.kind) {
 		case KIND_SHARE:
@@ -264,12 +271,12 @@ function render_repo_event_summary(model, ev) {
     let issue_title = "";
     let patch_id = "";
     let pull_req_id = "";
-    const json_body = html`<div class="nip34-json-card">
+    const json_body = render_collapsible_block("Raw JSON", html`<div class="nip34-json-card">
         <div class="nip34-json-card-head">
             <span class="nip34-json-label">Raw JSON</span>
         </div>
         <pre>${JSON.stringify(ev, null, 2)}</pre>
-    </div>`;
+    </div>`);
     for (const tag of ev.tags) {
     console.log("______________________tag=", tag);
         if (tag[0] === "d") { // Repository Announcement Address
@@ -361,7 +368,12 @@ function render_repo_event_summary(model, ev) {
             //} else {
             //    summary = `357:Repository Patch: <b>${ev.d || ev.id}</b>`;
             //}
-            summary += `</br><code>${patch_content}</code>`; //TODO git commit formatting
+            summary += render_collapsible_block(
+                "Patch content",
+                html`<pre class="nip34-patch-code">${patch_content}</pre>`,
+                false,
+                "nip34-patch-card"
+            ); //TODO git commit formatting
             if (issue_title) {
                 summary += `<br>Title: ${issue_title}`;
             }

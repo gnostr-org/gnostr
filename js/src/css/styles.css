@@ -976,6 +976,39 @@ code {
 	white-space: pre-wrap;
 	word-break: break-word;
 	overflow-wrap: anywhere;
+	max-height: 24rem;
+	overflow: auto;
+}
+
+.nip34-collapsible {
+	margin-top: 12px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 12px;
+	background: var(--clrPanel);
+	overflow: hidden;
+}
+.nip34-collapsible > summary {
+	padding: 12px 14px;
+	cursor: pointer;
+	font-weight: 800;
+	list-style: none;
+}
+.nip34-collapsible > summary::-webkit-details-marker {
+	display: none;
+}
+.nip34-collapsible-body {
+	padding: 0 12px 12px;
+}
+.nip34-patch-card pre {
+	margin: 0;
+	padding: 12px;
+	border-radius: 10px;
+	background: var(--clrBg);
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+	max-height: 22rem;
+	overflow: auto;
 }
 
 /* Inputs */
