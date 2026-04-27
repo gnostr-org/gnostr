@@ -5,13 +5,18 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use walkdir::WalkDir;
 
+pub(crate) struct ClonedRepo {
+    pub(crate) path: PathBuf,
+    pub(crate) short_hash: String,
+}
+
 pub(crate) struct FileInfo {
     pub(crate) rel: String,
     pub(crate) size: u64,
     pub(crate) content: Option<String>,
 }
 
-pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<PathBuf> {
+pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<ClonedRepo> {
     let repo_url = normalize_repo_url(repo_url);
     ensure_helper_support(&repo_url)?;
 
@@ -31,7 +36,10 @@ pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<PathBuf> {
         anyhow::bail!("Failed to clone repository.");
     }
 
-    Ok(tmp_dir.join("repo"))
+    let path = tmp_dir.join("repo");
+    let short_hash = git_short_hash(&path).unwrap_or_else(|_| "unknown".to_string());
+
+    Ok(ClonedRepo { path, short_hash })
 }
 
 fn normalize_repo_url(repo_url: &str) -> String {
@@ -86,6 +94,19 @@ fn command_in_path(command: &str) -> bool {
     }
 
     false
+}
+
+fn git_short_hash(repo_path: &Path) -> Result<String> {
+    let out = Command::new("git")
+        .args(["-C", repo_path.to_string_lossy().as_ref(), "rev-parse", "--short", "HEAD"])
+        .output()
+        .context("git rev-parse --short HEAD")?;
+
+    if !out.status.success() {
+        anyhow::bail!("git rev-parse --short HEAD failed");
+    }
+
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
 
 pub(crate) fn collect_files(repo_path: &Path, max_bytes: u64) -> Result<Vec<FileInfo>> {

@@ -47,6 +47,8 @@ fn main() -> Result<()> {
         anyhow::bail!("Failed to clone repository.");
     }
 
+    let short_hash = git_short_hash(&repo_path).unwrap_or_else(|_| "unknown".to_string());
+
     let mut files = Vec::new();
     // Approved walkdir 2.5.0
     for entry in WalkDir::new(&repo_path).sort_by_file_name() {
@@ -75,11 +77,64 @@ fn main() -> Result<()> {
     }
 
     let html = build_html(&args.repo_url, files)?;
-    let out = args.out.unwrap_or_else(|| PathBuf::from("repo_flat.html"));
+    let out = args
+        .out
+        .unwrap_or_else(|| default_output_path(&args.repo_url, &short_hash));
     fs::write(&out, html)?;
 
     println!("✓ Flattened HTML generated at: {:?}", out);
     Ok(())
+}
+
+fn git_short_hash(repo_path: &Path) -> Result<String> {
+    let out = Command::new("git")
+        .args(["-C", repo_path.to_string_lossy().as_ref(), "rev-parse", "--short", "HEAD"])
+        .output()
+        .context("git rev-parse --short HEAD")?;
+
+    if !out.status.success() {
+        anyhow::bail!("git rev-parse --short HEAD failed");
+    }
+
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn default_output_path(repo_url: &str, short_hash: &str) -> PathBuf {
+    if short_hash == "unknown" {
+        return PathBuf::from("repo_flat.html");
+    }
+
+    let safe_repo = sanitize_filename(repo_url);
+    PathBuf::from(format!("{safe_repo}@{short_hash}.html"))
+}
+
+fn sanitize_filename(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut prev_underscore = false;
+
+    for ch in input.chars() {
+        let safe = matches!(ch, 'a'..='z' | 'A'..='Z' | '0'..='9' | '.' | '-' | '_');
+        let mapped = if safe { ch } else { '_' };
+        if mapped == '_' {
+            if prev_underscore {
+                continue;
+            }
+            prev_underscore = true;
+        } else {
+            prev_underscore = false;
+        }
+        out.push(mapped);
+    }
+
+    while out.ends_with('_') {
+        out.pop();
+    }
+
+    if out.is_empty() {
+        "repo".to_string()
+    } else {
+        out
+    }
 }
 
 fn is_binary(path: &Path) -> bool {
