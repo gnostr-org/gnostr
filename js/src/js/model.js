@@ -510,12 +510,21 @@ async function model_save_settings(model) {
 			reject(ev);
 		};
 		store.clear().onsuccess = () => {
+			let active_profile = null;
+			if (model.pubkey) {
+				const profile = model_get_profile(model, model.pubkey);
+				active_profile = {
+					evid: profile.evid || "",
+					data: profile.data || {},
+				};
+			}
 			store.put({
 				pubkey: model.pubkey,
 				notifications_last_viewed: model.notifications.last_viewed,
 				relays: Array.from(model.relays),
 				local_relay_enabled: model.local_relay_enabled,
 				dms_seen: model_get_dms_seen(model),
+				active_profile,
 			});
 		};
 	}
@@ -538,6 +547,14 @@ async function model_load_settings(model) {
 				if (settings.local_relay_enabled != null)
 					model.local_relay_enabled = settings.local_relay_enabled;
 				model_set_dms_seen(model, settings.dms_seen);
+				if (settings.active_profile && model.pubkey) {
+					model.profiles.set(model.pubkey, {
+						pubkey: model.pubkey,
+						evid: settings.active_profile.evid || "",
+						relays: [],
+						data: settings.active_profile.data || {},
+					});
+				}
 			}
 			db.close();
 			resolve();
