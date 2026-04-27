@@ -1,6 +1,6 @@
 use crate::commands::run_watch;
 use crate::load_relays_or_bootstrap;
-use crate::{build_gnostr_query, send, Relay, CONCURRENT_REQUESTS};
+use crate::{build_gnostr_query, fetch_relay_texts, parse_relay_metadata, send};
 use axum::{
     body::Body,
     extract::{Path as AxumPath, Query},
@@ -9,10 +9,8 @@ use axum::{
     routing::get,
     Router,
 };
-use futures::{stream, StreamExt};
 use log::{debug, error, info, warn};
 use nostr_sdk::prelude::*;
-use reqwest::header::ACCEPT;
 use std::collections::{HashMap, HashSet};
 use std::fs as sync_fs;
 use std::net::SocketAddr;
@@ -34,35 +32,7 @@ async fn collect_supported_relays_for_nip(
         nip_lower
     );
 
-    let bodies = stream::iter(relays)
-        .map(|url| {
-            let client = client.clone();
-            async move {
-                let http_url = url
-                    .replace("wss://", "https://")
-                    .replace("ws://", "http://");
-                let resp = client
-                    .get(&http_url)
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-
-                if !resp.status().is_success() {
-                    warn!(
-                        "collect_supported_relays_for_nip: skipping {} due to HTTP {}",
-                        url,
-                        resp.status()
-                    );
-                    return Ok((url, String::new()));
-                }
-
-                let text = resp.text().await?;
-                Ok((url, text))
-            }
-        })
-        .buffer_unordered(CONCURRENT_REQUESTS)
-        .collect::<Vec<Result<(String, String), reqwest::Error>>>()
-        .await;
+    let bodies = fetch_relay_texts(relays, client, "collect_supported_relays_for_nip").await;
 
     let mut supported = Vec::new();
     for item in bodies {
@@ -77,7 +47,7 @@ async fn collect_supported_relays_for_nip(
             }
         };
 
-        let data: Result<Relay, _> = serde_json::from_str(&json_string);
+        let data = parse_relay_metadata(&json_string);
         if let Ok(relay_info) = data {
             if relay_info
                 .supported_nips
@@ -102,37 +72,9 @@ async fn prime_all_nip_relays_files(
         "prime_all_nip_relays_files: checking {} relays for NIP support",
         relays.len()
     );
-    let bodies = stream::iter(relays)
-        .map(|url| {
-            let client = client.clone();
-            async move {
-                info!(
-                    "prime_all_nip_relays_files: fetching relay metadata for {}",
-                    url
-                );
-                let http_url = url
-                    .replace("wss://", "https://")
-                    .replace("ws://", "http://");
-                let resp = client
-                    .get(&http_url)
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-
-                if !resp.status().is_success() {
-                    return Ok((url, String::new()));
-                }
-
-                let text = resp.text().await?;
-                Ok((url, text))
-            }
-        })
-        .buffer_unordered(CONCURRENT_REQUESTS);
+    let bodies = fetch_relay_texts(relays, client, "prime_all_nip_relays_files").await;
 
     let mut nip_relays: HashMap<i32, HashSet<String>> = HashMap::new();
-    let bodies = bodies
-        .collect::<Vec<Result<(String, String), reqwest::Error>>>()
-        .await;
     for item in bodies {
         if let Ok((url, json_string)) = item {
             if json_string.is_empty() {
@@ -144,7 +86,7 @@ async fn prime_all_nip_relays_files(
                 url,
                 json_string.len()
             );
-            if let Ok(relay_info) = serde_json::from_str::<Relay>(&json_string) {
+            if let Ok(relay_info) = parse_relay_metadata(&json_string) {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();
                 if supported_nips.is_empty() {
                     info!(

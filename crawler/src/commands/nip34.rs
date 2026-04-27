@@ -1,6 +1,4 @@
-use crate::{load_relays_or_bootstrap, load_shitlist, Relay};
-use futures::{stream, StreamExt};
-use reqwest::header::ACCEPT;
+use crate::{fetch_relay_texts, load_relays_or_bootstrap, load_shitlist, parse_relay_metadata};
 
 pub async fn run_nip34(
     shitlist_path: Option<String>,
@@ -33,43 +31,23 @@ pub async fn run_nip34(
         })
         .collect();
 
-    let bodies = stream::iter(filtered_relays)
-        .map(|url| {
-            let client = client.clone();
-            async move {
-                let resp = client
-                    .get(
-                        url.replace("wss://", "https://")
-                            .replace("ws://", "http://"),
-                    )
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-                let text = resp.text().await?;
+    let bodies = fetch_relay_texts(filtered_relays, client, "run_nip34").await;
 
-                let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
-                r
-            }
-        })
-        .buffer_unordered(crate::CONCURRENT_REQUESTS);
+    for b in bodies {
+        if let Ok((url, json_string)) = b {
+            let data = parse_relay_metadata(&json_string);
+            if let Ok(relay_info) = data {
+                let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                let _supports_nip01 = supported_nips.contains(&1);
+                let _supports_nip11 = supported_nips.contains(&11);
+                let supports_nip34 = supported_nips.contains(&34);
 
-    bodies
-        .for_each(|b: Result<(String, String), reqwest::Error>| async {
-            if let Ok((url, json_string)) = b {
-                let data: Result<Relay, _> = serde_json::from_str(&json_string);
-                if let Ok(relay_info) = data {
-                    let supported_nips = relay_info.supported_nips.unwrap_or_default();
-                    let _supports_nip01 = supported_nips.contains(&1);
-                    let _supports_nip11 = supported_nips.contains(&11);
-                    let supports_nip34 = supported_nips.contains(&34);
-
-                    if supports_nip34 {
-                        println!("{}", url);
-                    }
+                if supports_nip34 {
+                    println!("{}", url);
                 }
             }
-        })
-        .await;
+        }
+    }
 
     Ok(())
 }

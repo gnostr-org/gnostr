@@ -1,8 +1,6 @@
-use crate::{load_shitlist, Relay};
-use futures::{stream, StreamExt};
+use crate::{fetch_relay_texts, load_shitlist, parse_relay_metadata, Relay};
 use log::{debug, trace};
 use nostr_sdk::prelude::*;
-use reqwest::header::ACCEPT;
 use crate::commands::run_sniper;
 
 pub async fn run_watch(
@@ -44,48 +42,29 @@ pub async fn run_watch(
         }
     });
 
-    let bodies = stream::iter(relays_iterator)
-        .map(|url: String| {
-            let client = client.clone();
-            async move {
-                let resp = client
-                    .get(
-                        url.replace("wss://", "https://")
-                            .replace("ws://", "http://"),
-                    )
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-                let text = resp.text().await?;
+    let bodies = fetch_relay_texts(relays_iterator.collect(), client, "run_watch").await;
 
-                Ok((url, text))
-            }
-        })
-        .buffer_unordered(crate::CONCURRENT_REQUESTS);
-
-    bodies
-        .for_each(|b: Result<(String, String), reqwest::Error>| async {
-            if let Ok((url, json_string)) = b {
-                trace!("{{\"relay\":\"{}\", \"data\":{}}}", url, json_string);
-                let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json_string);
-                if let Ok(relay_info) = data {
-                    let supported_nips = relay_info.supported_nips.unwrap_or_default();
-                    let mut nip_count = supported_nips.len();
-                    for n in &supported_nips {
-                        trace!("nip_count:{}", nip_count);
-                        if nip_count > 1 {
-                            debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
-                            trace!("LINE::581 lib::run_watch");
-                            let _ = run_sniper(*n, None, client).await;
-                        } else {
-                            trace!("{:0>2}", n);
-                        }
-                        nip_count -= 1;
+    for b in bodies {
+        if let Ok((url, json_string)) = b {
+            trace!("{{\"relay\":\"{}\", \"data\":{}}}", url, json_string);
+            let data: Result<Relay, serde_json::Error> = parse_relay_metadata(&json_string);
+            if let Ok(relay_info) = data {
+                let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                let mut nip_count = supported_nips.len();
+                for n in &supported_nips {
+                    trace!("nip_count:{}", nip_count);
+                    if nip_count > 1 {
+                        debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
+                        trace!("LINE::581 lib::run_watch");
+                        let _ = run_sniper(*n, None, client).await;
+                    } else {
+                        trace!("{:0>2}", n);
                     }
+                    nip_count -= 1;
                 }
             }
-        })
-        .await;
+        }
+    }
 
     Ok(())
 }
