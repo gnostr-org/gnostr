@@ -205,7 +205,8 @@ function model_process_event_metadata(model, ev, update_view) {
 	if (ev.pubkey == model.pubkey) {
 		sync_active_user_metadata_to_local_relay(model);
 	}
-	if (ev.pubkey == model.pubkey && typeof render_settings_profile === "function") {
+	const timeline_el = view_get_timeline_el();
+	if (ev.pubkey == model.pubkey && timeline_el && timeline_el.dataset.mode == VM_SETTINGS && typeof render_settings_profile === "function") {
 		render_settings_profile(model);
 	}
 	if (update_view)
