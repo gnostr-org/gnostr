@@ -119,7 +119,7 @@ function render_nip_explorer() {
 			<p>Browse supported NIPs and jump straight into their views.</p>
 		</header>
 		<ul class="nip-explorer-list">
-			${NIP_EXPLORER_ITEMS.map((item) => html`
+			$${NIP_EXPLORER_ITEMS.map((item) => html`
 				<li class="nip-explorer-item">
 					<div class="nip-explorer-item-head">
 						<a class="nip-explorer-link" href="${item.href}">${item.title}</a>
