@@ -66,7 +66,7 @@ async fn run_relay(relay: RelayCli, detach: bool) {
         .expect("run relay server");
 }
 
-#[tokio::main]
+#[actix_web::main]
 async fn main() {
     let args = Args::parse();
     match args.command.unwrap_or(Commands::Web {
