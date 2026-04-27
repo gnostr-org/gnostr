@@ -1,5 +1,6 @@
 pub mod processor;
 pub mod api;
+pub mod cli;
 pub mod relay_io;
 pub mod pubkeys;
 pub mod commands;
@@ -7,7 +8,7 @@ pub mod query;
 pub mod relay_manager;
 pub mod relays;
 pub mod stats;
-pub use query::cli;
+pub use cli::{dispatch_cli_command, run, Cli, CliArgs, Commands};
 pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
 pub use api::{run_api_server, run_api_server_detached};
 pub use commands::{run_nip34, run_sniper, run_watch};
@@ -31,14 +32,12 @@ pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-use clap::{Parser, Subcommand};
-use futures::{stream, StreamExt};
 use git2::Error;
 use git2::{Commit, DiffOptions, Repository, Signature, Time};
+use futures::{stream, StreamExt};
 use reqwest::header::ACCEPT;
 use std::collections::{HashMap, HashSet};
 use std::fs as sync_fs;
-use std::str;
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 
@@ -47,12 +46,6 @@ use serde::{Deserialize, Serialize};
 use ::time::at;
 use ::time::Timespec;
 use ::url::Url;
-use nostr_sdk::prelude::*;
-
-use crate::processor::Processor;
-use crate::relay_manager::RelayManager;
-
-use crate::processor::BOOTSTRAP_RELAYS;
 #[allow(unused_imports)]
 use crate::processor::LOCALHOST_8080;
 
@@ -64,53 +57,8 @@ use axum::{
 };
 use std::path::PathBuf;
 use tokio::fs; // For async file operations
-#[allow(unused_imports)] // Suppress false positive for tokio::task::spawn
-use tokio::task::spawn; // Added for spawning async tasks
 
 const CONCURRENT_REQUESTS: usize = 16;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-pub struct Cli {
-    #[command(subcommand)]
-    pub command: Commands,
-    //nsec: Option<String>,
-}
-
-#[derive(Subcommand, Debug, Clone)]
-pub enum Commands {
-    /// Runs the sniper mode to find relays supporting a specific NIP
-    Sniper {
-        /// The NIP number to search for (e.g., 1)
-        nip: i32,
-        /// Optional: Path to a shitlist file to exclude relays
-        #[arg(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Runs the watch mode to monitor relays and print their metadata
-    Watch {
-        /// Optional: Path to a shitlist file to exclude relays
-        #[arg(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Lists relays that are likely to support NIP-34 (Git collaboration)
-    Nip34 {
-        /// Optional: Path to a shitlist file to exclude relays
-        #[arg(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Runs the main gnostr-crawler logic
-    Crawl(CliArgs),
-    /// Starts a web server to serve relay information
-    Serve {
-        /// The port to listen on for the API server
-        #[arg(long, short, default_value_t = 3000)]
-        port: u16,
-        /// Run the API server in the background.
-        #[arg(long, default_value_t = false)]
-        detach: bool,
-    },
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Relay {
@@ -121,120 +69,6 @@ pub struct Relay {
     pub supported_nips: Option<Vec<i32>>,
     pub supported_nip_extensions: Option<Vec<String>>,
     pub version: Option<String>,
-}
-
-#[allow(clippy::manual_strip)]
-#[derive(Parser, Debug, Clone)]
-pub struct CliArgs {
-    //#[clap(name = "topo-order", long)]
-    ///// sort commits in topological order
-    //flag_topo_order: bool,
-    //#[clap(name = "date-order", long)]
-    ///// sort commits in date order
-    //flag_date_order: bool,
-    //#[clap(name = "reverse", long)]
-    ///// sort commits in reverse
-    //flag_reverse: bool,
-    //#[clap(name = "author", long)]
-    ///// author to sort by
-    //flag_author: Option<String>,
-    //#[clap(name = "committer", long)]
-    ///// committer to sort by
-    //flag_committer: Option<String>,
-    //#[clap(name = "pat", long = "grep")]
-    ///// pattern to filter commit messages by
-    //flag_grep: Option<String>,
-    #[arg(long = "git-dir")]
-    /// alternative git directory to use
-    flag_git_dir: Option<String>,
-    //#[clap(name = "skip", long)]
-    ///// number of commits to skip
-    //flag_skip: Option<usize>,
-    //#[clap(name = "max-count", short = 'n', long)]
-    ///// maximum number of commits to show
-    //flag_max_count: Option<usize>,
-    //#[clap(name = "merges", long)]
-    ///// only show merge commits
-    //flag_merges: bool,
-    //#[clap(name = "no-merges", long)]
-    ///// don't show merge commits
-    //flag_no_merges: bool,
-    //#[clap(name = "no-min-parents", long)]
-    ///// don't require a minimum number of parents
-    //flag_no_min_parents: bool,
-    //#[clap(name = "no-max-parents", long)]
-    ///// don't require a maximum number of parents
-    //flag_no_max_parents: bool,
-    //#[clap(name = "max-parents")]
-    ///// specify a maximum number of parents for a commit
-    //flag_max_parents: Option<usize>,
-    //#[clap(name = "min-parents")]
-    ///// specify a minimum number of parents for a commit
-    //flag_min_parents: Option<usize>,
-    #[arg(long, short)]
-    /// show commit diff
-    flag_patch: bool,
-    #[arg(
-        value_name = "nsec",
-        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    )]
-    arg_nsec: Option<String>,
-    #[arg(value_name = "commit")]
-    arg_commit: Vec<String>,
-    #[arg(value_name = "spec", last = true)]
-    arg_spec: Vec<String>,
-    #[arg(long)]
-    arg_dump: bool,
-}
-
-pub async fn run(args: &CliArgs) -> Result<()> {
-    let _run_async = async {
-        let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-        let relay_client = Client::new(app_keys);
-        let _ = relay_client
-            .send_event_builder(EventBuilder::text_note("#gnostr"))
-            .await;
-    };
-
-    let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-    let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor).await;
-    let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
-    let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
-
-    if args.arg_dump {
-        relay_manager.processor.dump();
-    }
-
-    Ok(())
-}
-
-pub async fn dispatch_cli_command(
-    cli: Cli,
-    client: &reqwest::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
-    match &cli.command {
-        Commands::Sniper { nip, shitlist } => {
-            run_sniper(*nip, shitlist.clone(), client).await?;
-        }
-        Commands::Watch { shitlist } => {
-            run_watch(shitlist.clone(), client).await?;
-        }
-        Commands::Nip34 { shitlist } => {
-            run_nip34(shitlist.clone(), client).await?;
-        }
-        Commands::Crawl(args) => {
-            crate::run(args).await?;
-        }
-        Commands::Serve { port, detach } => {
-            if *detach {
-                run_api_server_detached(&["serve"], *port)?;
-            } else {
-                run_api_server(*port).await?;
-            }
-        }
-    }
-    Ok(())
 }
 
 pub fn sig_matches(sig: &Signature, arg: &Option<String>) -> bool {
