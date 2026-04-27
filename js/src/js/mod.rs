@@ -7,3 +7,5 @@ pub mod model_js;
 pub mod nostr_js;
 pub mod ui;
 pub mod js_bundle;
+
+pub use js_bundle::get_js_assets;
