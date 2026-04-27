@@ -163,11 +163,6 @@ jobs:
         run: |
           make || true
 
-      - name: Build gnostr binary
-        shell: bash
-        run: |
-          cargo build --bin gnostr
-
       - name: cargo search gnostr --limit 100
         shell: bash
         run: |
@@ -305,6 +300,44 @@ jobs:
           nostr://npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k/blossom.gnostr.cloud/gnostr
           git remote add git-tui-upstream-https \
           https://github.com/gnostr-org/gnostr-tui-upstream.git
+
+      ## build/run sequences
+      ## build/run sequences
+      ## build/run sequences
+
+      - name: Build gnostr binary
+        shell: bash
+        run: |
+          cargo build --bin gnostr
+
+      - name: 🚀 cargo run --bin gnostr-tui --
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          cargo run --bin gnostr-tui -- --version
+          cargo run --bin gnostr-tui -- --help
+
+      - name: 🚀 gnostr query nested command test
+        shell: bash
+        run: |
+          cargo run --bin gnostr -- query --help
+          bash ./scripts/gnostr-nested-query.sh && echo "✅"
+
+      - name: 🚀 gnostr asyncgit script tests
+        if: matrix.toolchain == 'stable'
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-asyncgit-tests.sh --nocapture
+
+      - name: 🚀 gnostr ngit script tests
+        if: matrix.toolchain == 'stable'
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-ngit-tests.sh --nocapture
+
+      ## install sequences
+      ## install sequences
+      ## install sequences
 
       - name: 🚀 cargo install --path .
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
