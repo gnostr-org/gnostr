@@ -31,9 +31,6 @@ impl ActiveRelayList {
         }
     }
 
-    pub fn get_active_relays(&self) -> Vec<RelayUrl> {
-        self.active_relays.lock().unwrap().clone()
-    }
 }
 
 impl Default for ActiveRelayList {
