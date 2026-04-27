@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::collections::BTreeMap;
 
 use super::scan::FileInfo;
 
@@ -105,18 +106,56 @@ body.flat-app {
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 6px;
+    gap: 4px;
 }
-.flat-toc a {
-    display: block;
-    padding: 10px 12px;
-    border-radius: 12px;
+.flat-tree {
+    margin: 0;
+    padding: 0;
+}
+.flat-tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 18px;
+    border-left: 1px solid color-mix(in srgb, var(--clrBorder) 80%, transparent);
+}
+.flat-tree summary,
+.flat-tree-file a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
     color: var(--clrText);
     text-decoration: none;
     background: transparent;
     border: 1px solid transparent;
 }
-.flat-toc a:hover {
+.flat-tree summary {
+    cursor: pointer;
+    list-style: none;
+}
+.flat-tree summary::-webkit-details-marker {
+    display: none;
+}
+.flat-tree summary::before,
+.flat-tree-file a::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    opacity: 0.85;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+.flat-tree summary::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 4.5h4l1.5 2h7.5v5.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1Z'/%3E%3C/svg%3E");
+}
+.flat-tree-file a::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 1.5h5l4 4V14.5h-9z'/%3E%3Cpath d='M8.5 1.5V5.5H12.5'/%3E%3C/svg%3E");
+}
+.flat-tree summary:hover,
+.flat-tree-file a:hover {
     background: var(--clrPanel);
     border-color: var(--clrBorder);
 }
@@ -285,7 +324,45 @@ fn build_flat_logo_svg() -> String {
         .join("\n")
 }
 
+#[derive(Default)]
+struct TreeNode {
+    children: BTreeMap<String, TreeNode>,
+    file: Option<String>,
+}
+
+fn insert_tree(root: &mut TreeNode, rel: &str, anchor: String) {
+    let mut node = root;
+    let mut parts = rel.split('/').peekable();
+    let mut anchor = Some(anchor);
+
+    while let Some(part) = parts.next() {
+        if parts.peek().is_none() {
+            node.children.entry(part.to_string()).or_default().file = anchor.take();
+        } else {
+            node = node.children.entry(part.to_string()).or_default();
+        }
+    }
+}
+
+fn render_tree_node(name: &str, node: &TreeNode, out: &mut String) {
+    if let Some(anchor) = &node.file {
+        out.push_str(&format!(
+            "<li class='flat-tree-file'><a href='#{anchor}'>{name}</a></li>"
+        ));
+        return;
+    }
+
+    out.push_str("<li class='flat-tree-dir'><details open><summary>");
+    out.push_str(name);
+    out.push_str("</summary><ul>");
+    for (child_name, child) in &node.children {
+        render_tree_node(child_name, child, out);
+    }
+    out.push_str("</ul></details></li>");
+}
+
 pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
+    let mut tree = TreeNode::default();
     let mut toc = String::new();
     let mut sections = String::new();
     let mut cxml = String::from("&lt;documents&gt;\n");
@@ -294,7 +371,7 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
 
     for (idx, f) in files.iter().enumerate() {
         let anchor = format!("f-{}", idx);
-        toc.push_str(&format!("<li><a href='#{}'>{}</a></li>", anchor, f.rel));
+        insert_tree(&mut tree, &f.rel, anchor.clone());
 
         let body = match &f.content {
             Some(c) => {
@@ -316,6 +393,9 @@ pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
             "<section id='{}' class='flat-section'><div class='flat-section-head'><h2>{}</h2><span class='flat-meta'>{} bytes</span></div><div class='flat-card'><div class='flat-card-body'>{}</div></div></section>",
             anchor, f.rel, f.size, body
         ));
+    }
+    for (name, node) in &tree.children {
+        render_tree_node(name, node, &mut toc);
     }
     cxml.push_str("&lt;/documents&gt;");
 
@@ -347,7 +427,7 @@ document.getElementById('llm').classList.toggle('hide', id !== 'l');
 <div class="flat-shell">
 <aside class="flat-sidebar">
 <strong>Files</strong>
-<ul class="flat-toc">{toc}</ul>
+<ul class="flat-toc flat-tree">{toc}</ul>
 </aside>
 <main class="flat-main">
 <div id="human" class="flat-panel">{sections}</div>
