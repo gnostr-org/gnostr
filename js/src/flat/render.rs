@@ -392,7 +392,7 @@ fn render_tree_node(name: &str, node: &TreeNode, out: &mut String) {
         return;
     }
 
-    out.push_str("<li class='flat-tree-dir'><details open><summary>");
+    out.push_str("<li class='flat-tree-dir'><details><summary>");
     out.push_str(name);
     out.push_str("</summary><ul>");
     for (child_name, child) in &node.children {
