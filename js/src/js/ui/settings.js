@@ -70,7 +70,6 @@ function render_settings_profile(model) {
     const pubkey_el = find_node("[name='settings-profile-pubkey']", el);
     pubkey_el.textContent = model.pubkey;
     pubkey_el.style.minHeight = "2.4em";
-    el.classList.toggle("hide", false);
 }
 
 async function render_local_relay_info() {
