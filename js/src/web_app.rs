@@ -70,7 +70,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
 
     let nip34_route = {
         let shell_html = Arc::clone(&shell_html);
-        warp::path("nip-34").and(warp::get()).map(move || {
+        warp::path!("nip" / "34").and(warp::get()).map(move || {
             warp::reply::with_header(
                 warp::reply::html((*shell_html).clone()),
                 "Content-Security-Policy",
