@@ -287,8 +287,24 @@ body.flat-resizing * {
     display: flex;
     flex-direction: column;
 }
-.flat-llm h2 {
+.flat-llm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin: 0 0 12px;
+}
+.flat-llm h2 {
+    margin: 0;
+}
+.flat-llm-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.flat-llm-actions .view-btn {
+    padding: 8px 12px;
+    font-size: 0.9rem;
 }
 .flat-footer {
     position: relative;
@@ -475,6 +491,23 @@ document.getElementById('human').classList.toggle('hide', id !== 'h');
 document.getElementById('llm').classList.toggle('hide', id !== 'l');
 }}
 
+function exportCxml() {{
+const textarea = document.querySelector('#llm textarea');
+if (!textarea) {{
+    return;
+}}
+
+const blob = new Blob([textarea.value], {{ type: 'text/plain;charset=utf-8' }});
+const url = URL.createObjectURL(blob);
+const link = document.createElement('a');
+link.href = url;
+link.download = 'llm-cxml.txt';
+document.body.appendChild(link);
+link.click();
+link.remove();
+URL.revokeObjectURL(url);
+}}
+
 function applySidebarWidth(width) {{
 const value = Math.max(220, Math.min(width, window.innerWidth * 0.6));
 document.body.style.setProperty('--flat-sidebar-width', `${{value}}px`);
@@ -611,7 +644,12 @@ resizer.addEventListener('pointerdown', (event) => {{
 <main class="flat-main">
 <div id="human" class="flat-panel">{sections}</div>
 <div id="llm" class="flat-panel hide flat-llm">
+<div class="flat-llm-head">
 <h2>LLM CXML</h2>
+<div class="flat-llm-actions">
+<button class="view-btn" onclick="exportCxml()">Export</button>
+</div>
+</div>
 <textarea readonly>{cxml}</textarea>
 </div>
 </main>
