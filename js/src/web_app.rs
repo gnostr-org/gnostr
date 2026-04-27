@@ -25,6 +25,9 @@ fn open(host: &str, port: i32) -> io::Result<()> {
 /// Run the embedded Nostr web app on the given port.
 pub async fn run(port: u16) -> anyhow::Result<()> {
     const RELAXED_CSP_STRING: &str = "default-src *; manifest-src *; connect-src * ws: wss: http: https:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;";
+    const NIP34_REPO_KINDS: [i32; 10] = [
+        30617, 30618, 1617, 1618, 1619, 1620, 1630, 1631, 1632, 1633,
+    ];
 
     pretty_env_logger::init();
     relay_control::start_relay()?;
@@ -77,6 +80,25 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                 RELAXED_CSP_STRING,
             )
         })
+    };
+
+    let nip34_kind_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("nip" / "34" / i32)
+            .and(warp::get())
+            .map(move |kind: i32| {
+                let status = if NIP34_REPO_KINDS.contains(&kind) {
+                    StatusCode::OK
+                } else {
+                    StatusCode::NOT_FOUND
+                };
+                let reply = warp::reply::with_header(
+                    warp::reply::html((*shell_html).clone()),
+                    "Content-Security-Policy",
+                    RELAXED_CSP_STRING,
+                );
+                warp::reply::with_status(reply, status)
+            })
     };
 
     let nip34_query_route = {
@@ -228,6 +250,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(messages_route)
         .or(gnostr_route)
         .or(nip34_route)
+        .or(nip34_kind_route)
         .or(nip34_query_route)
         .or(nip34_relays_yaml_route)
         .or(nip34_relays_json_route)

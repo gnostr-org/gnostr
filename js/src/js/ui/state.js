@@ -134,6 +134,11 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 			case VM_GNOSTR: // Add for nip34-global
 				pieces.push(pubkey); // This should be empty for global
 				break;
+			case VM_NIP34:
+				if (opts.kind) {
+					pieces.push(opts.kind);
+				}
+				break;
 			case VM_NIP34_DETAIL:
 			        pieces.push(opts.repo_id);
 			        break;
@@ -158,6 +163,11 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		profile = model_get_profile(model, pubkey);
 		name = fmt_name(profile);
 		el.dataset.pubkey = pubkey;
+		break;
+	case VM_NIP34:
+		if (opts.kind) {
+			name = `nip/34/${opts.kind}`;
+		}
 		break;
         case VM_NIP34_DETAIL:
 		el.dataset.repoId = opts.repo_id;

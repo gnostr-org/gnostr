@@ -146,10 +146,20 @@ function parse_url_mode() {
 	var valid = true;
 	var opts = {};
 	var parts = window.location.pathname.split("/").slice(1);
-	for (var key in VIEW_NAMES) {
-		if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
-			mode = key;
-			break;
+	if (parts[0] == "nip" && parts[1] == "34") {
+		mode = VM_NIP34;
+		if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
+			const kind = parseInt(parts[2], 10);
+			if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
+				opts.kind = kind;
+			}
+		}
+	} else {
+		for (var key in VIEW_NAMES) {
+			if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
+				mode = key;
+				break;
+			}
 		}
 	}
 	if (!mode) {
