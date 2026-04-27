@@ -1,7 +1,6 @@
-use crate::load_file;
 use crate::processor::Processor;
 use crate::relays::record_live_kind;
-use crate::relays::{fetch_online_relays, Relays};
+use crate::relays::Relays;
 
 use nostr_sdk::{
     prelude::{
@@ -11,7 +10,6 @@ use nostr_sdk::{
     RelayMessage, RelayStatus,
 };
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use log::debug;
@@ -22,45 +20,11 @@ use log::warn;
 const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
 
-#[derive(Clone)]
-pub struct ActiveRelayList {
-    active_relays: Arc<Mutex<Vec<RelayUrl>>>,
-}
+mod active;
+mod sources;
 
-impl ActiveRelayList {
-    pub fn new() -> Self {
-        Self {
-            active_relays: Arc::new(Mutex::new(Vec::new())),
-        }
-    }
-
-    pub fn add_relay(&self, relay_url: RelayUrl) {
-        let mut active_relays = self.active_relays.lock().unwrap();
-        if !active_relays.contains(&relay_url) {
-            debug!("Adding relay to active list: {}", relay_url);
-            active_relays.push(relay_url);
-        }
-    }
-
-    pub fn remove_relay(&self, relay_url: &RelayUrl) {
-        let mut active_relays = self.active_relays.lock().unwrap();
-        let initial_len = active_relays.len();
-        active_relays.retain(|r| r != relay_url);
-        if active_relays.len() < initial_len {
-            debug!("Removed relay from active list: {}", relay_url);
-        }
-    }
-
-    pub fn get_active_relays(&self) -> Vec<RelayUrl> {
-        self.active_relays.lock().unwrap().clone()
-    }
-}
-
-impl Default for ActiveRelayList {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+use active::ActiveRelayList;
+use sources::{is_shitlisted, load_relay_sources, seed_bootstrap_relays};
 
 /// Keeps a set of active connections to relays
 pub struct RelayManager {
@@ -76,50 +40,7 @@ pub struct RelayManager {
 impl RelayManager {
     pub async fn new(app_keys: Keys, processor: Processor) -> Self {
         let relay_client = Client::new(app_keys);
-        let mut relays_instance = Relays::new();
-
-        // Load relays from relays.yaml
-        match load_file("relays.yaml") {
-            Ok(urls) => {
-                for url_str in urls {
-                    debug!("relay_manager::new::url_str={}", &url_str);
-                    relays_instance.add(&url_str);
-                }
-                debug!("Loaded {} relays from relays.yaml", relays_instance.count());
-            }
-            Err(e) => debug!("Could not load relays.yaml: {}", e),
-        }
-
-        // Fetch online relays (permissionlesstech/bitchat)
-        let bitchat_online_relays_url = "https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv";
-        match fetch_online_relays(bitchat_online_relays_url).await {
-            Ok(urls) => {
-                for url_str in urls {
-                    relays_instance.add(&url_str);
-                }
-                debug!(
-                    "Loaded {} relays from online CSV (bitchat)",
-                    relays_instance.count()
-                );
-            }
-            Err(e) => debug!("Could not fetch online relays from bitchat: {}", e),
-        }
-
-        // Fetch online relays (sesseor/nostr-relays-list)
-        let sesseor_online_relays_url =
-            "https://raw.githubusercontent.com/sesseor/nostr-relays-list/main/relays.txt";
-        match fetch_online_relays(sesseor_online_relays_url).await {
-            Ok(urls) => {
-                for url_str in urls {
-                    relays_instance.add(&url_str);
-                }
-                debug!(
-                    "Loaded {} relays from online TXT (sesseor)",
-                    relays_instance.count()
-                );
-            }
-            Err(e) => debug!("Could not fetch online relays from sesseor: {}", e),
-        }
+        let relays_instance = load_relay_sources().await;
 
         Self {
             // app_keys,
@@ -133,12 +54,10 @@ impl RelayManager {
 
     fn add_bootstrap_relays_if_needed(&mut self, bootstrap_relays: Vec<&str>) {
         debug!("relay_manager::add_bootstrap_relays_if_needed");
-        for us in &bootstrap_relays {
-            if self.relays.count() >= MAX_ACTIVE_RELAYS {
-                //return;
-            }
-            self.relays.add(us);
+        if self.relays.count() >= MAX_ACTIVE_RELAYS {
+            return;
         }
+        seed_bootstrap_relays(&mut self.relays, bootstrap_relays.as_slice());
     }
 
     async fn add_some_relays(&mut self) -> Result<()> {
@@ -167,13 +86,11 @@ impl RelayManager {
 
         let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
         for url in &some_relays {
-            //if url NOT contain
-            if !url.as_str().contains("")
-                || !url.as_str().contains("")
-                || !url.as_str().contains("")
-            {
-                self.relay_client.add_relay(url.to_string()).await?;
+            if is_shitlisted(url.as_str()) {
+                debug!("Skipping shitlisted relay: {}", url);
+                continue;
             }
+            self.relay_client.add_relay(url.to_string()).await?;
         }
         self.connect().await?;
         self.wait_and_handle_messages().await?;
