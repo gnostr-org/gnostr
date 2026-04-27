@@ -69,12 +69,6 @@ const NIP34_KIND_META = {
 
 const NIP_EXPLORER_ITEMS = [
 	{
-		nip: "1",
-		title: "NIP-1",
-		href: "/nip/1",
-		description: "Basic protocol guidance and conventions.",
-	},
-	{
 		nip: "34",
 		title: "NIP-34",
 		href: "/nip/34/30617",
@@ -89,12 +83,6 @@ const NIP_EXPLORER_ITEMS = [
 			description: meta.description,
 		};
 	}),
-	{
-		nip: "65",
-		title: "NIP-65",
-		href: "/settings",
-		description: "Relay lists and relay preferences.",
-	},
 ];
 
 function is_nip34_repo_kind(kind) {
