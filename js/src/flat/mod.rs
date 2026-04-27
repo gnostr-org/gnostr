@@ -26,14 +26,22 @@ pub fn build_html(repo_url: &str, max_bytes: u64) -> Result<String> {
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
     let repo = scan::clone_repo(tmp_dir.path(), repo_url)?;
     let files = scan::collect_files(&repo.path, max_bytes)?;
-    Ok(render::build_html(repo_url, &files))
+    Ok(render::build_html(
+        repo_url,
+        &files,
+        &default_output_stem(repo_url, &repo.short_hash),
+    ))
 }
 
 pub fn run_with_args(args: Args) -> Result<()> {
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
     let repo = scan::clone_repo(tmp_dir.path(), &args.repo_url)?;
     let files = scan::collect_files(&repo.path, args.max_bytes)?;
-    let html = render::build_html(&args.repo_url, &files);
+    let html = render::build_html(
+        &args.repo_url,
+        &files,
+        &default_output_stem(&args.repo_url, &repo.short_hash),
+    );
     let out = args
         .out
         .unwrap_or_else(|| default_output_path(&args.repo_url, &repo.short_hash));
@@ -44,12 +52,15 @@ pub fn run_with_args(args: Args) -> Result<()> {
 }
 
 fn default_output_path(repo_url: &str, short_hash: &str) -> PathBuf {
+    PathBuf::from(format!("{}.html", default_output_stem(repo_url, short_hash)))
+}
+
+fn default_output_stem(repo_url: &str, short_hash: &str) -> String {
     if short_hash == "unknown" {
-        return PathBuf::from("repo_flat.html");
+        return "repo_flat".to_string();
     }
 
-    let safe_repo = sanitize_filename(repo_url);
-    PathBuf::from(format!("{safe_repo}@{short_hash}.html"))
+    format!("{}@{short_hash}", sanitize_filename(repo_url))
 }
 
 fn sanitize_filename(input: &str) -> String {

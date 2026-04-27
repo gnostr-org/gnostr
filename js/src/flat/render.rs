@@ -440,7 +440,7 @@ fn render_tree_node(name: &str, node: &TreeNode, path: &str, out: &mut String) {
     out.push_str("</ul></details></li>");
 }
 
-pub(crate) fn build_html(url: &str, files: &[FileInfo]) -> String {
+pub(crate) fn build_html(url: &str, files: &[FileInfo], export_stem: &str) -> String {
     let mut tree = TreeNode::default();
     let mut toc = String::new();
     let mut sections = String::new();
@@ -497,11 +497,12 @@ if (!textarea) {{
     return;
 }}
 
+const stem = document.body.dataset.exportStem || 'repo_flat';
 const blob = new Blob([textarea.value], {{ type: 'text/plain;charset=utf-8' }});
 const url = URL.createObjectURL(blob);
 const link = document.createElement('a');
 link.href = url;
-link.download = 'llm-cxml.txt';
+link.download = `${{stem}}.cxml`;
 document.body.appendChild(link);
 link.click();
 link.remove();
@@ -624,7 +625,7 @@ resizer.addEventListener('pointerdown', (event) => {{
 }});
 </script>
 </head>
-<body class="flat-app" id="top">
+<body class="flat-app" id="top" data-export-stem="{export_stem}">
 <header class="flat-header">
 <div class="flat-header-left">
 <div class="flat-logo" role="img" aria-label="gnostr">{logo_svg}</div>
