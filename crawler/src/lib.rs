@@ -62,15 +62,11 @@ use axum::{
     extract::{Path as AxumPath, Query},
     http::{header::CONTENT_TYPE, StatusCode}, // Changed to axum::http
     response::{IntoResponse, Response},
-    routing::get,
-    Router,
 };
-use std::net::SocketAddr;
 use std::path::PathBuf;
 use tokio::fs; // For async file operations
 #[allow(unused_imports)] // Suppress false positive for tokio::task::spawn
 use tokio::task::spawn; // Added for spawning async tasks
-use tower_http::trace::{self, TraceLayer}; // For logging requests
 
 const CONCURRENT_REQUESTS: usize = 16;
 
