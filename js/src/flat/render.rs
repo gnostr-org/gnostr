@@ -19,7 +19,7 @@ body.flat-app {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    --flat-header-height: 77px;
+    overflow: hidden;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--clrBg);
     color: var(--clrText);
@@ -28,7 +28,6 @@ body.flat-app {
     flex: 1 1 auto;
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-    align-items: start;
     min-height: 0;
     overflow: hidden;
 }
@@ -80,9 +79,8 @@ body.flat-app {
     display: block;
 }
 .flat-sidebar {
-    position: sticky;
-    top: var(--flat-header-height);
-    align-self: start;
+    height: 100%;
+    overflow: auto;
     min-height: 0;
     padding: 20px;
     border-right: 1px solid var(--clrBorder);
@@ -303,9 +301,6 @@ body.flat-app {
     text-decoration: underline;
 }
 @media (max-width: 900px) {
-    body.flat-app {
-        --flat-header-height: 137px;
-    }
     .flat-header {
         flex-direction: column;
         align-items: flex-start;
@@ -316,6 +311,7 @@ body.flat-app {
     .flat-sidebar {
         border-right: 0;
         border-bottom: 1px solid var(--clrBorder);
+        height: auto;
     }
     .flat-main {
         padding: 16px;
