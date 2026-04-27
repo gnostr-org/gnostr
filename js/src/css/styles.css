@@ -689,7 +689,7 @@ code {
 /* Settings */
 
 #settings section, #relays section {
-    position: sticky;
+    position: relative;
 	margin: 15px;
 }
 #settings-profile {
