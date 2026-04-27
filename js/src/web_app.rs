@@ -79,6 +79,61 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         })
     };
 
+    let nip34_query_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("nip" / "34" / "query").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
+    let nip34_relays_yaml_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("nip" / "34" / "relays.yaml").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
+    let nip34_relays_json_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("nip" / "34" / "relays.json").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
+    let nip34_relays_txt_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("nip" / "34" / "relays.txt").and(warp::get()).map(move || {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
+    let nip34_relay_route = {
+        let shell_html = Arc::clone(&shell_html);
+        warp::path!("nip" / "34" / String).and(warp::get()).map(move |_relay_file: String| {
+            warp::reply::with_header(
+                warp::reply::html((*shell_html).clone()),
+                "Content-Security-Policy",
+                RELAXED_CSP_STRING,
+            )
+        })
+    };
+
     let repository_detail_route = {
         let shell_html = Arc::clone(&shell_html);
         warp::path!("repository-details" / String)
@@ -173,6 +228,11 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(messages_route)
         .or(gnostr_route)
         .or(nip34_route)
+        .or(nip34_query_route)
+        .or(nip34_relays_yaml_route)
+        .or(nip34_relays_json_route)
+        .or(nip34_relays_txt_route)
+        .or(nip34_relay_route)
         .or(repository_detail_route)
         .or(relay_status_route)
         .or(relay_start_route)
