@@ -194,3 +194,57 @@ pub fn relay_port_is_listening(port: u16) -> bool {
     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port);
     TcpStream::connect_timeout(&addr, Duration::from_millis(100)).is_ok()
 }
+
+pub fn listener_pid_on_port(port: u16) -> anyhow::Result<Option<u32>> {
+    #[cfg(unix)]
+    {
+        let output = Command::new("lsof")
+            .args(["-tiTCP:", &port.to_string(), "-sTCP:LISTEN"])
+            .output();
+
+        let Ok(output) = output else {
+            return Ok(None);
+        };
+
+        let pid = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .next()
+            .and_then(|line| line.trim().parse::<u32>().ok());
+        return Ok(pid);
+    }
+
+    #[cfg(not(unix))]
+    {
+        let _ = port;
+        Ok(None)
+    }
+}
+
+pub fn kill_process_by_pid(pid: u32) -> anyhow::Result<()> {
+    #[cfg(unix)]
+    {
+        let result = unsafe { libc::kill(pid as i32, libc::SIGTERM) };
+        if result == 0 {
+            return Ok(());
+        }
+
+        let err = std::io::Error::last_os_error();
+        if matches!(err.raw_os_error(), Some(code) if code == libc::ESRCH) {
+            return Ok(());
+        }
+
+        return Err(err.into());
+    }
+
+    #[cfg(windows)]
+    {
+        let status = Command::new("taskkill")
+            .args(["/PID", &pid.to_string(), "/T", "/F"])
+            .status()?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "taskkill failed").into())
+        }
+    }
+}
