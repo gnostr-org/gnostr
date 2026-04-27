@@ -5,6 +5,7 @@ pub mod embedded;
 pub mod images;
 pub mod js;
 pub mod pwa;
+pub mod relay_app;
 pub mod template_html;
 pub mod websock_index_html;
 pub mod web_app;
