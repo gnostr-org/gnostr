@@ -16,16 +16,15 @@ const FLAT_LAYOUT_CSS: &str = r#"
 }
 body.flat-app {
     margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--clrBg);
     color: var(--clrText);
 }
 .flat-shell {
-    flex: 1 1 auto;
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
     min-height: 0;
@@ -278,9 +277,7 @@ body.flat-app {
     margin: 0 0 12px;
 }
 .flat-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 20;
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
