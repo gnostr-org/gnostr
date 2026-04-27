@@ -294,15 +294,28 @@ function view_timeline_refresh(model, mode, opts={}) {
 
 			if (root_event) {
 				let announcement_event = null;
+				let repo_state_events = [];
+				let repo_id = "";
 				if (root_event.kind === KIND_REPO_STATE_ANNOUNCE) {
 					const d_tag = root_event.tags.find(tag => tag[0] === 'd');
 					if (d_tag) {
-						const repo_id = d_tag[1];
+						repo_id = d_tag[1];
 						for (const key in model.all_events) {
 							const ev = model.all_events[key];
 							if (ev.kind === KIND_REPO_ANNOUNCE && ev.tags.find(t => t[0] === 'd' && t[1] === repo_id)) {
 								announcement_event = ev;
 								break;
+							}
+						}
+					}
+				} else if (root_event.kind === KIND_REPO_ANNOUNCE) {
+					const d_tag = root_event.tags.find(tag => tag[0] === 'd');
+					if (d_tag) {
+						repo_id = d_tag[1];
+						for (const key in model.all_events) {
+							const ev = model.all_events[key];
+							if (ev.kind === KIND_REPO_STATE_ANNOUNCE && ev.tags.find(t => t[0] === 'd' && t[1] === repo_id)) {
+								repo_state_events.push(ev);
 							}
 						}
 					}
@@ -324,6 +337,9 @@ function view_timeline_refresh(model, mode, opts={}) {
 					if (ev.id === root_id || !is_nip34_repo_kind(ev.kind)) {
 						continue;
 					}
+					if (root_event.kind === KIND_REPO_ANNOUNCE && ev.kind === KIND_REPO_STATE_ANNOUNCE) {
+						continue;
+					}
 					if (ev.refs && (ev.refs.root === related_anchor_id || ev.refs.reply === related_anchor_id)) {
 						related_nip34.push(ev);
 						continue;
@@ -341,6 +357,10 @@ function view_timeline_refresh(model, mode, opts={}) {
 				}
 				const root_el = view_render_event(model, root_event);
 				if (root_el) fragment.appendChild(root_el);
+				for (const ev of repo_state_events) {
+					const state_el = view_render_event(model, ev);
+					if (state_el) fragment.appendChild(state_el);
+				}
 
 				for (const reply of replies) {
 					const reply_el = view_render_event(model, reply);
