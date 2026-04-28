@@ -167,6 +167,7 @@ pub async fn run_indexer(
     });
 
     tokio::spawn({
+        #[cfg(unix)]
         let mut sighup = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())
             .expect("could not subscribe to sighup");
         let build_sleeper = move || async move {
@@ -182,6 +183,7 @@ pub async fn run_indexer(
 
             for remaining in (0..bootstrap_runs).rev() {
                 tokio::select! {
+                    #[cfg(unix)]
                     _ = sighup.recv() => {},
                     _ = tokio::time::sleep(bootstrap_delay) => {},
                 }
@@ -199,6 +201,7 @@ pub async fn run_indexer(
             tracing::info!("Switching to steady-state index cadence");
             loop {
                 tokio::select! {
+                    #[cfg(unix)]
                     _ = sighup.recv() => {},
                     () = build_sleeper() => {},
                 }
