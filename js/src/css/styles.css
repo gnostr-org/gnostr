@@ -232,6 +232,11 @@ th, td {
 	text-decoration: underline;
 	opacity: 1;
 }
+.footer-build {
+	padding: 0 15px 10px;
+	font-size: var(--fsReduced);
+	opacity: 0.75;
+}
 .nav [data-view].active img.inactive,
 .nav [data-view] img.active {
 	display: none;

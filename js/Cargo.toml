@@ -55,3 +55,6 @@ warp = "0.3"
 webbrowser = "0.8"
 gnostr-relay = { version = "1876.947024.762894", path = "../relay" }
 gnostr-crawler = { version = "1876.947024.762894", path = "../crawler" }
+
+[build-dependencies]
+chrono = { workspace = true, features = ["clock"] }

@@ -18,7 +18,8 @@ impl TemplateHtml {
     }
 
     pub fn to_string(&self) -> String {
-        self.as_str().to_owned()
+        self.as_str()
+            .replace("__BUILD_NAME__", env!("GITUI_BUILD_NAME"))
     }
 }
 
