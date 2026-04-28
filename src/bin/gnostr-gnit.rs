@@ -10,10 +10,10 @@ use axum::{
 };
 use clap::Parser;
 use const_format::formatcp;
-use gnostr_web::web::{
+use gnostr_web::app::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
 };
-use gnostr_web::web::{
+use gnostr_web::app::{
     init_static_asset_hashes, /* build_asset_hash, */ open_database, run_indexer, Config,
     GnitArgs, ADD_RELAY_SVG, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG, CLOSE_MODAL_SVG_HASH,
     CONTENT_WARNING_SVG, CONTENT_WARNING_SVG_HASH, DARK_HIGHLIGHT_CSS_BYTES,
@@ -146,7 +146,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .context("Could not canonicalize scan path")?;
 
     println!("canonical_scan_path={}", &canonical_scan_path.display());
-    let _fixture = gnostr_web::web::database::indexer::ensure_bare_repo_fixture(
+    let _fixture = gnostr_web::app::database::indexer::ensure_bare_repo_fixture(
         &canonical_scan_path,
         "crlf",
     )
