@@ -145,7 +145,7 @@ rayon-core = "1.12"
 regex = "1.11.1"
 rkyv = "0.8"
 
-rocksdb = { workspace = true }
+rocksdb = { workspace = true, optional = true }
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = { version = "0.37.1" }
 rust-ini = "0.21.1"

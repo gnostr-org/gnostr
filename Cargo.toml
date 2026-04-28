@@ -397,7 +397,6 @@ gnostr-web = [
   "flate2",
   "moka",
   "proc-macro2",
-  "rocksdb",
   "rust-ini",
   "tar",
   "timeago",
