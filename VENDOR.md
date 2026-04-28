@@ -17,6 +17,18 @@ material.
 The current workspace keeps that dependency on the vendored path so the
 `ed25519-dalek` patch above is applied consistently during builds.
 
+## curve25519-dalek
+
+`vendor/curve25519-dalek` is a local patch of the `5.0.0-pre.1` prerelease
+snapshot. It is needed because the workspace resolves both `pkarr` and
+`iroh-base` through that prerelease line, and the upstream snapshot still used
+the older `digest::crypto_common` path that fails on the current toolchain.
+
+## rpassword
+
+`rpassword` is pinned to `=7.4.0` in the workspace so `cargo install --path .`
+stays on the macOS-compatible release instead of selecting `7.5.0`.
+
 ## actix-web-actors
 
 `vendor/actix-web-actors` is a vendored snapshot of the registry package, not a
