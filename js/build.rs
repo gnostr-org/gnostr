@@ -66,6 +66,18 @@ fn emit_patch_event(build_name: &str) {
 
         let head_commit = git_output(["rev-parse", "HEAD"]).unwrap_or_else(|| get_git_hash());
         let parent_commit = git_output(["rev-parse", "HEAD^"]).unwrap_or_default();
+        let branch_name = git_output(["rev-parse", "--abbrev-ref", "HEAD"])
+            .unwrap_or_default()
+            .replace("refs/heads/", "");
+        let branch_name_without_id_or_prefix = if branch_name.is_empty()
+            || branch_name == "HEAD"
+            || branch_name == "main"
+            || branch_name == "master"
+        {
+            safe_branch_name_for_pr(build_name)
+        } else {
+            safe_branch_name_for_pr(&branch_name)
+        };
         let clone_url = git_output(["remote", "get-url", "origin"]).unwrap_or_default();
         let patch_body = git_output(["diff", "--binary", "--no-ext-diff", "--no-color", "HEAD"])
             .unwrap_or_default();
@@ -82,6 +94,7 @@ fn emit_patch_event(build_name: &str) {
         if !clone_url.is_empty() {
             tags.push(Tag::new_tag("clone", &clone_url));
         }
+        tags.push(Tag::new_tag("branch-name", &branch_name_without_id_or_prefix));
         tags.push(Tag::new_tag("build-name", build_name));
 
         let event = EventBuilder::new(EventKind::Patches, content, tags)
@@ -146,6 +159,20 @@ fn git_output<const N: usize>(args: [&str; N]) -> Option<String> {
     } else {
         Some(value)
     }
+}
+
+fn safe_branch_name_for_pr(s: &str) -> String {
+    s.replace(' ', "-")
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '/' {
+                c
+            } else {
+                '-'
+            }
+        })
+        .take(60)
+        .collect()
 }
 
 fn get_git_hash() -> String {
