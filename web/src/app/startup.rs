@@ -182,10 +182,16 @@ pub async fn run_indexer(
             let bootstrap_delay = Duration::from_secs(1);
 
             for remaining in (0..bootstrap_runs).rev() {
-                tokio::select! {
-                    #[cfg(unix)]
-                    _ = sighup.recv() => {},
-                    _ = tokio::time::sleep(bootstrap_delay) => {},
+                #[cfg(unix)]
+                {
+                    tokio::select! {
+                        _ = sighup.recv() => {},
+                        _ = tokio::time::sleep(bootstrap_delay) => {},
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    tokio::time::sleep(bootstrap_delay).await;
                 }
 
                 if indexer_wakeup_send.send(()).await.is_err() {
@@ -200,10 +206,16 @@ pub async fn run_indexer(
 
             tracing::info!("Switching to steady-state index cadence");
             loop {
-                tokio::select! {
-                    #[cfg(unix)]
-                    _ = sighup.recv() => {},
-                    () = build_sleeper() => {},
+                #[cfg(unix)]
+                {
+                    tokio::select! {
+                        _ = sighup.recv() => {},
+                        () = build_sleeper() => {},
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    build_sleeper().await;
                 }
 
                 if indexer_wakeup_send.send(()).await.is_err() {
