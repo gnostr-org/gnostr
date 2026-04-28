@@ -1,0 +1,25 @@
+{% import "macros/refs.html" as refs %}
+{% extends "repo/base.html" %}
+
+{% block refs_nav_class %}active{% endblock %}
+
+{% block content %}
+<div class="table-responsive">
+<table class="repositories">
+    {% call refs::branch_table(refs.heads) %}
+
+    {%- if !refs.tags.is_empty() %}
+    <tbody>
+    <tr class="separator">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+
+    {%- call refs::tag_table(refs.tags) -%}
+    {%- endif %}
+</table>
+</div>
+{% endblock %}
