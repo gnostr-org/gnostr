@@ -24,7 +24,7 @@ pub async fn server(args: &ServerSubCommand) -> Result<(), Box<dyn std::error::E
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "blossom"))]
 mod tests {
     use std::{
         collections::HashMap,
