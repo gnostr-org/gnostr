@@ -22,11 +22,24 @@ path = "src/lib/mod.rs"
 [[bin]]
 name = "git-tui"
 path = "src/bin/git_tui.rs"
+required-features = ["gitui"]
+
+[[example]]
+name = "git_tui"
+path = "examples/git_tui.rs"
+required-features = ["gitui"]
+
+[[bench]]
+name = "show"
+path = "benches/show.rs"
+harness = false
+required-features = ["gitui"]
 
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
 gnostr_web = []
+gitui = []
 speedy = []
 vendored-openssl = ["openssl-sys"]
 vendor-openssl = ["vendored-openssl"]

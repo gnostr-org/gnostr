@@ -543,7 +543,7 @@ gix = { version = "0.66", default-features = false, features = [
 globset = "0.4"
 
 ##gitui
-gnostr-asyncgit = { workspace = true }
+gnostr-asyncgit = { workspace = true, features = ["gitui"] }
 gnostr-git-helpers = { version = "1876.947024.762894", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }

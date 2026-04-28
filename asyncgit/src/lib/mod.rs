@@ -66,6 +66,7 @@ pub mod css;
 pub mod types;
 
 /// Terminal UI entry points.
+#[cfg(feature = "gitui")]
 pub mod gitui;
 
 mod notes;
