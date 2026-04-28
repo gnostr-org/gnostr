@@ -1,5 +1,5 @@
 #![deny(warnings)]
-use gnostr_asyncgit::js::main_js::JSMain;
+use gnostr_asyncgit::js::js_bundle::get_js_assets;
 use gnostr_asyncgit::web::template_html::TemplateHtml;
 use std::sync::Arc;
 
@@ -54,10 +54,8 @@ async fn main() {
 }
 
 async fn serve() {
-    let main_js = JSMain::new();
-
-    let main_js_bytes: &[u8] = include_bytes!("../src/lib/js/main.js");
-    assert_eq!(main_js_bytes, main_js.main_js);
+    let js_assets = get_js_assets();
+    let main_js_bytes = js_assets.get("main.js").copied().expect("main.js missing");
 
     let template = TemplateHtml::new();
 

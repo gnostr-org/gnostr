@@ -17,6 +17,7 @@ use warp::reply::json;
 //dev server
 use tiny_http::{Response, Server};
 
+use gnostr_asyncgit::js::js_bundle::get_js_assets;
 use gnostr_asyncgit::*;
 
 #[derive(Parser, Debug)]
@@ -79,9 +80,8 @@ async fn main() {
 
     pretty_env_logger::init();
 
-    let main_js = js::main_js::JSMain::new();
-    let main_js_bytes: &[u8] = include_bytes!("../src/lib/js/main.js");
-    assert_eq!(main_js_bytes, main_js.main_js);
+    let js_assets = get_js_assets();
+    let main_js_bytes = js_assets.get("main.js").copied().expect("main.js missing");
     // if let Ok(main_js_string) = String::from_utf8(main_js_bytes.to_vec()) {
     //     println!("main.js content: {}", main_js_string);
     // } else {
