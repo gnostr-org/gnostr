@@ -389,7 +389,6 @@ default = [
   "ghemoji",
   "regex-fancy",
   "trace-libgit",
-  "blossom-tui",
   "gnostr-web",
 ]
 expensive_tests = [] #nostr
