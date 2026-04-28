@@ -201,14 +201,20 @@ function on_timer_tick() {
             log_debug(`NIP-34 Cache Size: ${size}`);
         }
 
-        // Periodically poll for NIP-34 events from all connected relays
+        // Refresh relay-driven subscriptions on a slower cadence.
         model.nip34_polling_counter++;
+        if (model.nip34_polling_counter % 30 === 0) {
+            const relaysEl = find_node("#relays");
+            if (relaysEl && !relaysEl.classList.contains("hide") &&
+                typeof render_nip65_relays === "function") {
+                await render_nip65_relays(model);
+            }
+            await poll_nip34_from_nip65_relays(model);
+        }
         if (model.nip34_polling_counter % 60 === 0) { // Every 60 seconds
             subscribe_nip34_events(model);
             model.nip34_polling_counter = 0;
         }
-
-        await poll_nip34_from_nip65_relays(model);
 
 		on_timer_tick();
 	}, 1 * 1000);

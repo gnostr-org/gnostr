@@ -50,12 +50,17 @@ function on_timer_tick() {
 		}
 
 		model.nip34_polling_counter++;
+		if (model.nip34_polling_counter % 30 === 0) {
+			if (relaysEl && !relaysEl.classList.contains("hide") &&
+				typeof render_nip65_relays === "function") {
+				await render_nip65_relays(model);
+			}
+			await poll_nip34_from_nip65_relays(model);
+		}
 		if (model.nip34_polling_counter % 60 === 0) {
 			subscribe_nip34_events(model);
 			model.nip34_polling_counter = 0;
 		}
-
-		await poll_nip34_from_nip65_relays(model);
 		on_timer_tick();
 	}, 1 * 1000);
 }
