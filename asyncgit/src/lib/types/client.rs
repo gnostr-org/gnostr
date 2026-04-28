@@ -41,12 +41,14 @@ use crate::types::{
     UncheckedUrl, Unixtime,
 };
 
+/// Filter behavior for relay subscriptions.
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum FilterOptions {
     ExitOnEOSE,
     // Add other options as needed
 }
 
+/// Client options that control relay send behavior.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_copy_implementations)]
 pub struct Options {
@@ -57,6 +59,7 @@ pub struct Options {
 }
 
 impl Options {
+    /// Create a client with default options.
     pub fn new() -> Self {
         Self {
             send_timeout: None,
@@ -65,22 +68,26 @@ impl Options {
         }
     }
 
+    /// Set an optional send timeout.
     pub fn send_timeout(mut self, timeout: Option<Duration>) -> Self {
         self.send_timeout = timeout;
         self
     }
 
+    /// Wait for relay send completion before returning.
     pub fn wait_for_send(mut self, wait: bool) -> Self {
         self.wait_for_send = wait;
         self
     }
 
+    /// Set the proof-of-work difficulty target.
     pub fn difficulty(mut self, difficulty: u8) -> Self {
         self.difficulty = difficulty;
         self
     }
 }
 
+/// Nostr client with relay connection and signing state.
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Client {
@@ -90,6 +97,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// Construct a client from signing keys and options.
     pub fn new(keys: &Keys, options: Options) -> Self {
         Self {
             keys: keys.clone(),
@@ -98,10 +106,12 @@ impl Client {
         }
     }
 
+    /// Construct a client with explicit options.
     pub fn with_opts(keys: &Keys, options: Options) -> Self {
         Self::new(keys, options)
     }
 
+    /// Add relay URLs to the client.
     pub async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error> {
         for relay_str in relays {
             match RelayUrl::try_from_str(&relay_str) {
@@ -112,12 +122,14 @@ impl Client {
         Ok(())
     }
 
+    /// Log a connection attempt to configured relays.
     pub async fn connect(&self) {
         info!("Client connecting to {} relays", self.relays.len());
         // In a real implementation, this would establish WebSocket connections
         // For now, just log connection attempt
     }
 
+    /// Fetch events matching filters with explicit options.
     pub async fn get_events_of_with_opts(
         &self,
         _filters: Vec<Filter>,
@@ -134,6 +146,7 @@ impl Client {
         Ok(Vec::new())
     }
 
+    /// Fetch events matching filters.
     pub async fn get_events_of(
         &self,
         filters: Vec<Filter>,
@@ -143,6 +156,7 @@ impl Client {
             .await
     }
 
+    /// Send a reaction event to configured relays.
     pub async fn reaction(&self, event: &Event, reaction: String) -> Result<Id, Error> {
         let reaction_event = EventBuilder::new(
             EventKind::Reaction,
@@ -163,6 +177,7 @@ impl Client {
         self.send_event(reaction_event).await
     }
 
+    /// Send an event deletion event.
     pub async fn delete_event(&self, event_id: Id) -> Result<Id, Error> {
         let delete_event = EventBuilder::new(
             EventKind::EventDeletion,
@@ -180,6 +195,7 @@ impl Client {
         self.send_event(delete_event).await
     }
 
+    /// Publish profile metadata.
     pub async fn set_metadata(&self, metadata: &Metadata) -> Result<Id, Error> {
         let content = serde_json::to_string(metadata).map_err(|e| Error::Custom(e.into()))?;
 
@@ -195,6 +211,7 @@ impl Client {
         self.send_event(metadata_event).await
     }
 
+    /// Hide a message in a public channel.
     pub async fn hide_channel_msg(&self, channel_id: Id, reason: String) -> Result<Id, Error> {
         let moderation_event = EventBuilder::new(
             EventKind::ChannelHideMessage,
@@ -212,6 +229,7 @@ impl Client {
         self.send_event(moderation_event).await
     }
 
+    /// Mute a user in a public channel.
     pub async fn mute_channel_user(
         &self,
         pubkey_to_mute: PublicKey,
@@ -233,6 +251,7 @@ impl Client {
         self.send_event(mute_event).await
     }
 
+    /// Publish a text note with tags.
     pub async fn publish_text_note(&self, content: String, tags: Vec<Tag>) -> Result<Id, Error> {
         let text_note = EventBuilder::new(EventKind::TextNote, content, tags)
             .to_event(
@@ -246,6 +265,7 @@ impl Client {
         self.send_event(text_note).await
     }
 
+    /// Publish a contact list.
     pub async fn set_contact_list(&self, contacts: Vec<Tag>) -> Result<(), Error> {
         let contact_event = EventBuilder::new(EventKind::ContactList, "".to_string(), contacts)
             .to_event(
@@ -261,6 +281,7 @@ impl Client {
         Ok(())
     }
 
+    /// Publish an encrypted NIP-44 direct message.
     pub async fn nip44_direct_message(
         &self,
         recipient_pubkey: PublicKey,
@@ -271,6 +292,7 @@ impl Client {
         self.send_event(direct_message_event).await
     }
 
+    /// Build an encrypted NIP-44 direct message event.
     fn build_nip44_direct_message_event(
         &self,
         recipient_pubkey: PublicKey,
@@ -292,6 +314,7 @@ impl Client {
         .map_err(|e| Error::Custom(e.into()))
     }
 
+    /// Serialize and send an event to each configured relay.
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
         debug!("Sending event {} to {} relays", event.id, self.relays.len());
 

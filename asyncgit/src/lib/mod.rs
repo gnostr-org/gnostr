@@ -41,42 +41,42 @@ use tracing::debug;
 use tracing::error;
 use ureq::Agent;
 
-/// pub mod weeble
+/// Deterministic helper utilities.
 pub mod weeble;
 
-/// pub mod wobble
+/// Randomized helper utilities.
 pub mod wobble;
 
-/// pub mod images
+/// Embedded image assets.
 pub mod images;
 
-/// pub mod blockheight
+/// Block height helpers.
 pub mod blockheight;
 
-/// pub mod blockhash
+/// Block hash helpers.
 pub mod blockhash;
 
-/// pub mod css
+/// Embedded CSS assets.
 pub mod css;
 
-/// pub mod js
+/// Embedded JavaScript assets.
 pub mod js;
 
-/// pub mod theme
+/// Theme helpers and bundled themes.
 pub mod theme;
 
-/// pub mod types
+/// Local Nostr and Git domain types.
 pub mod types;
 
-/// pub mod web
+/// HTTP and web UI handlers.
 pub mod web;
 
-/// pub mod gitui
+/// Terminal UI entry points.
 pub mod gitui;
 
 mod notes;
 
-/// pub mod gnostr
+/// gnostr command helpers.
 pub mod gnostr;
 
 pub mod asyncjob;

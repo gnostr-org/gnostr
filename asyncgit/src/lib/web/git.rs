@@ -38,6 +38,7 @@ use crate::web::{
 
 type ReadmeCacheKey = (PathBuf, Option<Arc<str>>);
 
+/// Repository cache and diff helper state.
 pub struct Git {
     commits: Cache<(ObjectId, bool), Arc<Commit>>,
     readme_cache: Cache<ReadmeCacheKey, Option<(ReadmeFormat, Arc<str>)>>,
@@ -46,6 +47,7 @@ pub struct Git {
 
 impl Git {
     #[instrument]
+    /// Create a new repository helper with bounded caches.
     pub fn new() -> Self {
         Self {
             commits: Cache::builder()
@@ -66,6 +68,7 @@ impl Git {
 
 impl Git {
     #[instrument(skip(self))]
+    /// Open a repository and bind it to an optional branch ref.
     pub async fn repo(
         self: Arc<Self>,
         repo_path: PathBuf,
@@ -99,6 +102,7 @@ impl Git {
     }
 }
 
+/// Open repository handle with a resolved branch ref.
 pub struct OpenRepository {
     git: Arc<Git>,
     cache_key: PathBuf,
@@ -108,6 +112,7 @@ pub struct OpenRepository {
 
 impl OpenRepository {
     #[allow(clippy::too_many_lines)]
+    /// Resolve a repository path into a file or tree destination.
     pub async fn path(
         self: Arc<Self>,
         root_path_param: Option<PathBuf>,

@@ -12,10 +12,15 @@ use super::{
     TagV3, Unixtime, UncheckedUrl,
 };
 
+/// NIP-34 repository announcement kind.
 pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
+/// NIP-34 repository state kind.
 pub const REPO_STATE_KIND: u32 = 30618;
+/// NIP-34 pull request kind.
 pub const PULL_REQUEST_KIND: u32 = 1618;
+/// NIP-34 pull request update kind.
 pub const PULL_REQUEST_UPDATE_KIND: u32 = 1619;
+/// NIP-34 user grasp list kind.
 pub const USER_GRASP_LIST_KIND: u32 = 10317;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -58,6 +63,7 @@ fn root_commit_tag(root_commit: &str) -> Result<TagV3, Error> {
     ]))
 }
 
+/// Return the kinds used for git status events.
 pub fn status_kinds() -> Vec<EventKind> {
     vec![
         EventKind::GitStatusOpen,
@@ -67,6 +73,7 @@ pub fn status_kinds() -> Vec<EventKind> {
     ]
 }
 
+/// Return a tag value by name.
 pub fn tag_value(event: &EventV3, tag_name: &str) -> Result<String, Error> {
     event
         .tags
@@ -76,6 +83,7 @@ pub fn tag_value(event: &EventV3, tag_name: &str) -> Result<String, Error> {
         .ok_or(Error::TagMismatch)
 }
 
+/// Extract the commit id from a patch event.
 pub fn get_commit_id_from_patch(event: &EventV3) -> Result<String, Error> {
     if let Ok(value) = tag_value(event, "commit") {
         return Ok(value);
@@ -88,6 +96,7 @@ pub fn get_commit_id_from_patch(event: &EventV3) -> Result<String, Error> {
     Err(Error::InvalidOperation)
 }
 
+/// Extract the parent commit id from a patch event.
 pub fn get_parent_commit_from_patch(event: &EventV3) -> Result<String, Error> {
     if let Ok(value) = tag_value(event, "parent-commit") {
         return Ok(value);
@@ -100,6 +109,7 @@ pub fn get_parent_commit_from_patch(event: &EventV3) -> Result<String, Error> {
     Err(Error::InvalidOperation)
 }
 
+/// Return the root event referenced by a reply or revision chain.
 pub fn get_event_root(event: &EventV3) -> Result<Id, Error> {
     event
         .tags
@@ -109,6 +119,7 @@ pub fn get_event_root(event: &EventV3) -> Result<Id, Error> {
         .and_then(|tag| tag.parse_event().map(|(id, _, _)| id))
 }
 
+/// Check whether the event is the root patch in a patch set.
 pub fn event_is_patch_set_root(event: &EventV3) -> bool {
     event.kind == EventKind::Patches
         && event
@@ -117,6 +128,7 @@ pub fn event_is_patch_set_root(event: &EventV3) -> bool {
             .any(|tag| tag.tagname() == "e" && tag.marker() == "root")
 }
 
+/// Check whether the event is the root of a revision chain.
 pub fn event_is_revision_root(event: &EventV3) -> bool {
     (event.kind == EventKind::Patches
         && event.tags.iter().any(|tag| {
@@ -127,6 +139,7 @@ pub fn event_is_revision_root(event: &EventV3) -> bool {
             && event.tags.iter().any(|tag| tag.tagname() == "e"))
 }
 
+/// Check whether a patch event carries commit identifiers.
 pub fn patch_supports_commit_ids(event: &EventV3) -> bool {
     if event.kind != EventKind::Patches {
         return false;
@@ -151,6 +164,7 @@ pub fn patch_supports_commit_ids(event: &EventV3) -> bool {
     event.content.starts_with("From ") && event.content.len() > 45
 }
 
+/// Check whether an event is a valid PR or PR update.
 pub fn event_is_valid_pr_or_pr_update(event: &EventV3) -> bool {
     [PULL_REQUEST_KIND, PULL_REQUEST_UPDATE_KIND]
         .iter()
@@ -163,6 +177,7 @@ pub fn event_is_valid_pr_or_pr_update(event: &EventV3) -> bool {
         && event.tags.iter().any(|tag| tag.tagname() == "clone")
 }
 
+/// Convert a NIP-19 or hex reference into a tag.
 pub fn event_tag_from_nip19_or_hex(
     reference: &str,
     ref_type: EventRefType,
@@ -240,7 +255,7 @@ pub fn event_tag_from_nip19_or_hex(
     }
 }
 
-/// Repo announcement metadata.
+/// Repository announcement metadata.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RepoRef {
     pub name: String,
@@ -257,6 +272,7 @@ pub struct RepoRef {
 }
 
 impl RepoRef {
+    /// Convert the repository announcement into a signed event.
     pub fn to_event(&self, private_key: &PrivateKey) -> Result<EventV3, Error> {
         if self.root_commit.is_empty() {
             return Err(Error::InvalidOperation);
@@ -454,7 +470,7 @@ impl RepoRef {
     }
 }
 
-/// Repo state snapshot.
+/// Repository state snapshot.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RepoState {
     pub identifier: String,
@@ -463,6 +479,7 @@ pub struct RepoState {
 }
 
 impl RepoState {
+    /// Build a signed repository state event from branch refs.
     pub fn try_from(mut state_events: Vec<EventV3>) -> Result<Self, Error> {
         if state_events.is_empty() {
             return Err(Error::InvalidOperation);
@@ -508,6 +525,7 @@ impl RepoState {
         })
     }
 
+    /// Build a signed repository state event.
     pub fn build(
         identifier: String,
         mut state: HashMap<String, String>,
