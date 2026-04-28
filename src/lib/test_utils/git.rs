@@ -150,17 +150,8 @@ impl GitTestRepo {
 
     pub fn initial_commit(&mut self) -> Result<Oid> {
         let mut index = self.git_repo.index()?;
-        index.read_tree(&self.git_repo.head()?.peel_to_tree()?)?;
-        index.write_tree()?;
-
         let tree_id = index.write_tree()?;
         let tree = self.git_repo.find_tree(tree_id)?;
-
-        let head_commit_result = self.git_repo.head()?.peel_to_commit();
-        let parents = match head_commit_result {
-            Ok(commit) => vec![commit],
-            Err(_) => vec![], // No parent commit for the very first commit
-        };
 
         let commit_oid = self.git_repo.commit(
             Some("HEAD"), // Update HEAD to point to this commit
@@ -168,7 +159,7 @@ impl GitTestRepo {
             &joe_signature(),
             "Initial commit",
             &tree,
-            &parents.iter().collect::<Vec<&git2::Commit>>(),
+            &[],
         )?;
         Ok(commit_oid)
     }
