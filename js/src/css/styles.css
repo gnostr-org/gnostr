@@ -1078,6 +1078,63 @@ code {
 }
 .nip34-collapsible-body {
 	padding: 0 12px 12px;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+.event-fold-body {
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+.nip34-state-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.nip34-state-heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.nip34-state-count {
+	font-size: var(--fsSmall);
+	color: var(--clrTextLight);
+}
+
+.nip34-state-name {
+	font-weight: 800;
+	word-break: break-word;
+}
+
+.nip34-state-ref-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 6px;
+}
+
+.nip34-state-ref-item {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: baseline;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+.nip34-state-ref-arrow {
+	color: var(--clrTextLight);
+}
+
+.nip34-state-preview-note {
+	margin: 0 0 10px;
+	color: var(--clrTextLight);
+	font-size: var(--fsSmall);
 }
 .nip34-patch-card pre {
 	margin: 0;

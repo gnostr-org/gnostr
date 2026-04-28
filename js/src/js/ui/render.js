@@ -113,6 +113,21 @@ function render_dm(model, ev, opts) {
 	</div>`
 }
 
+function event_body_should_fold(ev) {
+	if (!ev) {
+		return false;
+	}
+
+	const content = (ev.kind == KIND_DM ? ev.decrypted || ev.content : ev.content).trim();
+	if (!content) {
+		return false;
+	}
+
+	return content.length > 280
+		|| /https?:\/\/\S{80,}/i.test(content)
+		|| content.split(/\r?\n/).some((line) => line.length > 120);
+}
+
 function event_shows_media(model, ev, mode) {
 	if (mode == "friends")
 		return model.contacts.friends.has(ev.pubkey);
@@ -161,9 +176,19 @@ function render_event_body(model, ev, opts) {
         str += render_repo_event_summary(model, ev);
     }
 	str += render_replying_to(model, ev);
-	str += `</div><p>
-	${format_content(model, ev, show_media)}
-	</p>`;
+	const content = format_content(model, ev, show_media);
+	if (!opts.is_composing && !is_nip34_repo_kind(ev.kind) && event_body_should_fold(ev)) {
+		str += `</div>${render_collapsible_block(
+			"Long event body",
+			`<div class="event-fold-body"><p>${content}</p></div>`,
+			false,
+			"event-fold"
+		)}`;
+	} else {
+		str += `</div><p>
+		${content}
+		</p>`;
+	}
 	str += render_reactions(model, ev);
 	str += opts.nobar || ev.kind == KIND_DM ? "" : 
 		render_action_bar(model, ev, {can_delete, shared});
@@ -251,7 +276,6 @@ function render_repo_event_summary(model, ev) {
         console.warn("render_repo_event_summary: event object is undefined.");
         return "";
     }
-    console.log("Rendering NIP-34 event summary for:", JSON.stringify(ev, null, 2));
     let a = "";
     let d = "";
     let r = "";
@@ -271,6 +295,7 @@ function render_repo_event_summary(model, ev) {
     let issue_title = "";
     let patch_id = "";
     let pull_req_id = "";
+    const state_refs = [];
     const json_body = render_collapsible_block("Raw JSON", html`<div class="nip34-json-card">
         <div class="nip34-json-card-head">
             <span class="nip34-json-label">Raw JSON</span>
@@ -278,7 +303,6 @@ function render_repo_event_summary(model, ev) {
         <pre>${JSON.stringify(ev, null, 2)}</pre>
     </div>`);
     for (const tag of ev.tags) {
-    console.log("______________________tag=", tag);
         if (tag[0] === "d") { // Repository Announcement Address
             repo_id = tag[1];
             repo_name = tag[1];
@@ -318,6 +342,8 @@ function render_repo_event_summary(model, ev) {
             e = tag[1];
         } else if (tag[0] === "p") {
             p = tag[1];
+        } else if (tag[0] && tag[0].startsWith("refs/") && tag[1]) {
+            state_refs.push([tag[0], tag[1]]);
         }
     }
 
@@ -344,21 +370,35 @@ function render_repo_event_summary(model, ev) {
             }
             break;
         case KIND_REPO_STATE_ANNOUNCE:
-            summary = `<strong>Repository State</strong>`;
-            const state_dl = document.createElement('dl');
-
-            for (const tag of ev.tags) {
-                if (tag.length >= 2) {
-                    const dt = document.createElement('dt');
-                    dt.textContent = tag[0];
-                    state_dl.appendChild(dt);
-
-                    const dd = document.createElement('dd');
-                    dd.textContent = tag.slice(1).join(', ');
-                    state_dl.appendChild(dd);
-                }
+            summary = html`<div class="nip34-state-summary">
+                <div class="nip34-state-heading">
+                    <strong>Repository State</strong>
+                    <span class="nip34-state-count">${state_refs.length} refs</span>
+                </div>
+                <div class="nip34-state-name">${repo_name || "Unnamed repository state"}</div>
+            </div>`;
+            if (state_refs.length > 0) {
+                const preview_refs = state_refs.slice(0, 20).map(([ref_name, ref_value]) => html`
+                    <li class="nip34-state-ref-item">
+                        <code class="nip34-state-ref-name">${ref_name}</code>
+                        <span class="nip34-state-ref-arrow">→</span>
+                        <code class="nip34-state-ref-value">${ref_value}</code>
+                    </li>
+                `).join("");
+                const preview_note = state_refs.length > 20
+                    ? html`<p class="nip34-state-preview-note">Showing 20 of ${state_refs.length} refs.</p>`
+                    : "";
+                summary += render_collapsible_block(
+                    `Refs (${state_refs.length})`,
+                    html`<div class="nip34-state-fold">
+                        ${preview_note}
+                        <ul class="nip34-state-ref-list">${preview_refs}</ul>
+                    </div>`,
+                    false,
+                    "nip34-state-card"
+                );
             }
-            summary += state_dl.outerHTML;
+            summary += json_body;
             break;
         case KIND_REPO_PATCH:
             //let patch_d = ev.tags.filter(tag => tag[0] === "d");
