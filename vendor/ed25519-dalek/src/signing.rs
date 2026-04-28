@@ -12,7 +12,7 @@
 use core::fmt::Debug;
 
 #[cfg(feature = "pkcs8")]
-use ed25519::pkcs8::{self, KeyError};
+use ed25519::pkcs8;
 
 #[cfg(any(test, feature = "rand_core"))]
 use rand_core::CryptoRng;
@@ -710,11 +710,11 @@ impl TryFrom<&pkcs8::KeypairBytes> for SigningKey {
 
         // Validate the public key in the PKCS#8 document if present
         if let Some(public_bytes) = &pkcs8_key.public_key {
-            let expected_verifying_key = VerifyingKey::from_bytes(public_bytes.as_ref())
-                .map_err(|_| pkcs8::Error::KeyMalformed(KeyError::Invalid))?;
+            let expected_verifying_key =
+                VerifyingKey::from_bytes(public_bytes.as_ref()).map_err(|_| pkcs8::Error::KeyMalformed)?;
 
             if signing_key.verifying_key() != expected_verifying_key {
-                return Err(pkcs8::Error::KeyMalformed(KeyError::Invalid));
+                return Err(pkcs8::Error::KeyMalformed);
             }
         }
 
