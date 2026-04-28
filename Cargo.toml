@@ -347,6 +347,7 @@ doctest = false
 [patch.crates-io]
 asn1-rs = { path = "vendor/asn1-rs" }
 actix-web-actors = { path = "vendor/actix-web-actors" }
+curve25519-dalek = { path = "vendor/curve25519-dalek" }
 ed25519-dalek = { path = "vendor/ed25519-dalek" }
 
 [[bin]]
@@ -655,7 +656,7 @@ rocksdb = { version = "0.22", default-features = false, features = [
   "snappy",
 ], optional = true }
 ron = "0.8"
-rpassword = "7.2"
+rpassword = "=7.4.0"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-crypto = "0.2.36"
