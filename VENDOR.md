@@ -29,4 +29,4 @@ registry copy is a normalized dependency constraint in `Cargo.toml`.
 `vendor/asn1-rs` is also a vendored snapshot, and the current worktree adds
 `src/tostatic.rs` plus `tests/to_static.rs`,
 `tests/toder_sequence_lifetime.rs`, and `tests/toder_sequence_simple.rs`.
-` .cargo-checksum.json` is the Cargo-generated vendor checksum for that crate.
+`.cargo-checksum.json` is the Cargo-generated vendor checksum for that crate.
