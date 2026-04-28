@@ -848,6 +848,9 @@ code {
 	border-collapse: separate;
 	border-spacing: 0 12px;
 }
+#relays #relay-discovery-list {
+	table-layout: fixed;
+}
 #relays table.row tbody tr {
 	vertical-align: top;
 }
@@ -880,6 +883,24 @@ code {
 	font-size: var(--fsReduced);
 	color: var(--clrTextLight);
 	word-break: break-word;
+}
+#relays #relay-discovery-list td,
+#relays #relay-discovery-list a {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+#relays #relay-discovery-list td:nth-child(1) {
+	width: 34%;
+}
+#relays #relay-discovery-list td:nth-child(2) {
+	width: 10%;
+}
+#relays #relay-discovery-list td:nth-child(3) {
+	width: 41%;
+}
+#relays #relay-discovery-list td:nth-child(4) {
+	width: 15%;
 }
 #relays .relay-info-name {
 	font-size: var(--fsNormal);
