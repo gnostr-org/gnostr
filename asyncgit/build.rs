@@ -65,7 +65,7 @@ fn verify_nip44_vectors(manifest_dir: &Path) -> anyhow::Result<()> {
 
 fn build_scss(paths: Paths) -> anyhow::Result<()> {
     //gnostr-gnit
-    let in_dir = paths.statics_in_dir.join("src/lib/sass");
+    let in_dir = paths.statics_in_dir.join("../web/src/sass");
     let out_dir = paths.statics_out_dir.join("src/lib/css");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory")?;
 

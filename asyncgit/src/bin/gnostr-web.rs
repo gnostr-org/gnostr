@@ -88,7 +88,7 @@ async fn main() {
     //     println!("main.js is not valid UTF-8.");
     // }
 
-    let template = gnostr_asyncgit::web::template_html::TemplateHtml::new();
+    let template = gnostr_web::web::template_html::TemplateHtml::new();
     let mut hb = Handlebars::new();
     hb.register_template_string("template.html", template.to_string())
         .unwrap();

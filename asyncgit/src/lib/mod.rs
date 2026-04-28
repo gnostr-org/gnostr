@@ -47,29 +47,23 @@ pub mod weeble;
 /// Randomized helper utilities.
 pub mod wobble;
 
-/// Embedded image assets.
-pub mod images;
-
 /// Block height helpers.
 pub mod blockheight;
 
 /// Block hash helpers.
 pub mod blockhash;
 
-/// Embedded CSS assets.
-pub mod css;
+/// Embedded image assets.
+pub mod images;
 
 /// Embedded JavaScript assets.
 pub mod js;
 
-/// Theme helpers and bundled themes.
-pub mod theme;
+/// Embedded CSS assets.
+pub mod css;
 
 /// Local Nostr and Git domain types.
 pub mod types;
-
-/// HTTP and web UI handlers.
-pub mod web;
 
 /// Terminal UI entry points.
 pub mod gitui;
@@ -155,20 +149,6 @@ pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
     secp256k1::SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
         .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid")
 }
-
-// Re-export web-related constants and modules for Askama templates
-pub use crate::web::git;
-pub use crate::web::layers;
-pub use crate::web::{
-    ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG_HASH, CRATE_VERSION, DARK_HIGHLIGHT_CSS_HASH,
-    EVENT_DELETE_SVG_HASH, EVENT_LIKED_SVG_HASH, EVENT_LIKE_SVG_HASH, EVENT_OPTIONS_SVG_HASH,
-    EVENT_REPLY_SVG_HASH, EVENT_SHARE_SVG_HASH, GLOBAL_CSS_HASH, GNOSTR_NOTIF_SVG_HASH,
-    GNOSTR_SVG_HASH, HIGHLIGHT_CSS_HASH, HOME_ACTIVE_SVG_HASH, HOME_SVG_HASH, JS_BUNDLE_HASH,
-    LOADER_FRAGMENT_SVG_HASH, LOGO_INVERTED_SVG_HASH, LOGO_SVG_HASH, MESSAGES_ACTIVE_SVG_HASH,
-    MESSAGES_SVG_HASH, MESSAGE_USER_SVG_HASH, NEW_NOTE_SVG_HASH, NOTIFICATIONS_ACTIVE_SVG_HASH,
-    NOTIFICATIONS_SVG_HASH, NO_USER_SVG_HASH, PROFILE_WEBSITE_SVG_HASH, PROFILE_ZAP_SVG_HASH,
-    PUBKEY_SVG_HASH, SETTINGS_ACTIVE_SVG_HASH, SETTINGS_SVG_HASH,
-};
 
 /// this type is used to communicate events back through the channel
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

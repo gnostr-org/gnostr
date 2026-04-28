@@ -17,7 +17,7 @@ use warp::ws::{Message, WebSocket};
 use log::{trace, debug, info, warn, error};
 use pretty_env_logger::env_logger::Env;
 
-use gnostr_asyncgit::web::websock_index_html::WEBSOCKET_INDEX_HTML;
+use gnostr_web::web::websock_index_html::WEBSOCKET_INDEX_HTML;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
