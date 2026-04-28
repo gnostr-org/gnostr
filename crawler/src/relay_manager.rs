@@ -112,19 +112,18 @@ impl RelayManager {
 
         loop {
             interval.tick().await;
-            let mut active = Vec::new();
             let relays = relay_client.relays().await;
             for (url, relay_handle) in relays.into_iter() {
                 match relay_handle.status() {
                     RelayStatus::Connected | RelayStatus::Connecting => {
                         active_relay_list.add_relay(url.clone());
-                        active.push(url);
                     }
                     _ => {
                         active_relay_list.remove_relay(&url);
                     }
                 }
             }
+            let active = active_relay_list.get_active_relays();
             debug!("monitor_relays: {} active relays", active.len());
         }
     }
