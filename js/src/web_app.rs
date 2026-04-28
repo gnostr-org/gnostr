@@ -1,13 +1,16 @@
 use std::io;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
-use std::collections::HashMap;
+use std::fs as sync_fs;
 
 use clap::Parser;
+use serde::Serialize;
 use warp::http::StatusCode;
 use warp::Reply;
 use warp::Filter;
 
 use crate::bridge;
+use crate::crawler;
 use crate::flat;
 use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_assets};
 use crate::relay_control;
@@ -23,6 +26,126 @@ fn open(host: &str, port: i32) -> io::Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Serialize)]
+struct RelayDiscoveryEntry {
+    url: String,
+    contact: Option<String>,
+    description: Option<String>,
+    name: Option<String>,
+    software: Option<String>,
+    version: Option<String>,
+    supported_nips: Vec<i32>,
+    supported_nip_extensions: Vec<String>,
+    source_nips: Vec<i32>,
+}
+
+#[derive(Default)]
+struct RelayDiscoveryState {
+    contact: Option<String>,
+    description: Option<String>,
+    name: Option<String>,
+    software: Option<String>,
+    version: Option<String>,
+    supported_nips: BTreeSet<i32>,
+    supported_nip_extensions: BTreeSet<String>,
+    source_nips: BTreeSet<i32>,
+}
+
+fn collect_relay_discovery() -> Vec<RelayDiscoveryEntry> {
+    let config_dir = crawler::relays::get_config_dir_path();
+    let mut discovered: BTreeMap<String, RelayDiscoveryState> = BTreeMap::new();
+
+    let Ok(nip_dirs) = sync_fs::read_dir(&config_dir) else {
+        return Vec::new();
+    };
+
+    for nip_entry in nip_dirs.flatten() {
+        let Ok(file_type) = nip_entry.file_type() else {
+            continue;
+        };
+        if !file_type.is_dir() {
+            continue;
+        }
+
+        let nip = match nip_entry.file_name().to_string_lossy().parse::<i32>() {
+            Ok(nip) => nip,
+            Err(_) => continue,
+        };
+
+        let Ok(relay_files) = sync_fs::read_dir(nip_entry.path()) else {
+            continue;
+        };
+
+        for relay_entry in relay_files.flatten() {
+            let file_name = relay_entry.file_name().to_string_lossy().to_string();
+            if !file_name.ends_with(".json") || file_name == "relays.json" {
+                continue;
+            }
+
+            let Ok(content) = sync_fs::read_to_string(relay_entry.path()) else {
+                continue;
+            };
+            let Ok(relay_meta) = serde_json::from_str::<crawler::Relay>(&content) else {
+                continue;
+            };
+
+            let Some(host) = file_name.strip_suffix(".json") else {
+                continue;
+            };
+            let url = format!("wss://{}", host);
+            let state = discovered.entry(url).or_default();
+
+            if state.contact.is_none() {
+                state.contact = relay_meta.contact;
+            }
+            if state.description.is_none() {
+                state.description = relay_meta.description;
+            }
+            if state.name.is_none() {
+                state.name = relay_meta.name;
+            }
+            if state.software.is_none() {
+                state.software = relay_meta.software;
+            }
+            if state.version.is_none() {
+                state.version = relay_meta.version;
+            }
+            state.source_nips.insert(nip);
+            if let Some(supported_nips) = relay_meta.supported_nips {
+                state.supported_nips.extend(supported_nips);
+            }
+            if let Some(supported_extensions) = relay_meta.supported_nip_extensions {
+                state.supported_nip_extensions.extend(supported_extensions);
+            }
+        }
+    }
+
+    let mut entries: Vec<RelayDiscoveryEntry> = discovered
+        .into_iter()
+        .map(|(url, state)| RelayDiscoveryEntry {
+            url,
+            contact: state.contact,
+            description: state.description,
+            name: state.name,
+            software: state.software,
+            version: state.version,
+            supported_nips: state.supported_nips.into_iter().collect(),
+            supported_nip_extensions: state.supported_nip_extensions.into_iter().collect(),
+            source_nips: state.source_nips.into_iter().collect(),
+        })
+        .collect();
+
+    entries.sort_by(|a, b| {
+        b.supported_nips
+            .len()
+            .cmp(&a.supported_nips.len())
+            .then_with(|| b.source_nips.len().cmp(&a.source_nips.len()))
+            .then_with(|| a.url.cmp(&b.url))
+    });
+
+    entries
 }
 
 /// Run the embedded Nostr web app on the given port.
@@ -249,6 +372,10 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
             ),
         });
 
+    let relay_discovery_route = warp::path!("api" / "relay" / "discovery")
+        .and(warp::get())
+        .map(|| warp::reply::json(&collect_relay_discovery()));
+
     let relay_start_route = warp::path!("api" / "relay" / "start")
         .and(warp::post())
         .map(|| match relay_control::start_relay() {
@@ -328,6 +455,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(repository_detail_route)
         .or(flat_route)
         .or(relay_status_route)
+        .or(relay_discovery_route)
         .or(relay_start_route)
         .or(relay_stop_route)
         .or(js_route)

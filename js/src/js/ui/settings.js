@@ -13,6 +13,18 @@ function init_settings(model) {
 	render_settings_profile(model);
 }
 
+async function fetch_relay_discovery() {
+	const response = await fetch("/api/relay/discovery", {
+		headers: {
+			"Accept": "application/json",
+		},
+	});
+	if (!response.ok) {
+		throw new Error(`relay discovery request failed with ${response.status}`);
+	}
+	return await response.json();
+}
+
 function init_relays(model) {
 	const el = find_node("#relays");
 	if (!el) {
@@ -29,7 +41,7 @@ function init_relays(model) {
 
 	render_relay_dashboard();
 	render_local_relay_info();
-    render_nip65_relays(model);
+	render_nip65_relays(model);
 }
 
 function render_relay_dashboard() {
@@ -123,22 +135,80 @@ async function on_click_stop_local_relay_sync() {
 }
 
 async function render_nip65_relays(model) {
-    const pubkey = model.pubkey;
-    if (!pubkey) {
-        log_warn("render_nip65_relays: No pubkey found, cannot fetch NIP-65 relays.");
-        return;
-    }
+	const pubkey = model.pubkey;
+	if (!pubkey) {
+		log_warn("render_nip65_relays: No pubkey found, cannot fetch NIP-65 relays.");
+		return;
+	}
 
-    const nip65_relays = await get_nip65_relays_from_db(pubkey);
-    const rlist = find_node("#relays #nip65-relay-list tbody");
-    if (!rlist) {
-        return;
-    }
-    rlist.innerHTML = ''; // Clear existing NIP-65 relays
+	const [nip65_relays, relay_discovery] = await Promise.all([
+		get_nip65_relays_from_db(pubkey),
+		fetch_relay_discovery().catch((error) => {
+			log_warn("render_nip65_relays: Failed to fetch relay discovery", error);
+			return [];
+		}),
+	]);
+	const discovery_by_url = new Map(relay_discovery.map((entry) => [entry.url, entry]));
+	render_relay_discovery(model, relay_discovery);
 
-    nip65_relays.forEach(([url, policy]) => {
-        rlist.appendChild(new_nip65_relay_item(url, policy));
-    });
+	const rlist = find_node("#relays #nip65-relay-list tbody");
+	if (!rlist) {
+		return;
+	}
+	rlist.innerHTML = ''; // Clear existing NIP-65 relays
+
+	nip65_relays
+		.slice()
+		.sort((left, right) => {
+			const left_score = discovery_score(discovery_by_url.get(left[0]));
+			const right_score = discovery_score(discovery_by_url.get(right[0]));
+			if (right_score !== left_score) {
+				return right_score - left_score;
+			}
+			return left[0].localeCompare(right[0]);
+		})
+		.forEach(([url, policy]) => {
+			rlist.appendChild(new_nip65_relay_item(url, policy));
+		});
+}
+
+function discovery_score(entry) {
+	if (!entry || !Array.isArray(entry.supported_nips)) {
+		return 0;
+	}
+	return entry.supported_nips.length;
+}
+
+function render_relay_discovery(model, relay_discovery) {
+	const rlist = find_node("#relays #relay-discovery-list tbody");
+	if (!rlist) {
+		return;
+	}
+
+	rlist.innerHTML = '';
+	if (!relay_discovery.length) {
+		const tr = document.createElement('tr');
+		const td = document.createElement('td');
+		td.colSpan = 4;
+		td.textContent = 'No crawler relay discovery available.';
+		tr.appendChild(td);
+		rlist.appendChild(tr);
+		return;
+	}
+
+	relay_discovery
+		.slice()
+		.sort((left, right) => {
+			const left_score = discovery_score(left);
+			const right_score = discovery_score(right);
+			if (right_score !== left_score) {
+				return right_score - left_score;
+			}
+			return left.url.localeCompare(right.url);
+		})
+		.forEach((entry) => {
+			rlist.appendChild(new_relay_discovery_item(entry, model));
+		});
 }
 
 function new_nip65_relay_item(url, policy) {
@@ -165,8 +235,15 @@ function new_nip65_relay_item(url, policy) {
 }
 
 function on_click_add_nip65_relay(ev) {
+	add_relay_address(ev.target.dataset.address, "NIP-65 relay");
+}
+
+function on_click_add_discovered_relay(ev) {
+	add_relay_address(ev.target.dataset.address, "discovered relay");
+}
+
+function add_relay_address(address, label) {
 	const model = GNOSTR;
-	const address = ev.target.dataset.address;
 
 	if (model.relays.has(address)) {
 		log_info(`Relay ${address} is already in the active list.`);
@@ -180,7 +257,7 @@ function on_click_add_nip65_relay(ev) {
 	model.relays.add(address);
 	find_node("#relay-list tbody").appendChild(new_relay_item(address));
 	model_save_settings(model);
-    log_info(`Added NIP-65 relay: ${address}`);
+	log_info(`Added ${label}: ${address}`);
 }
 
 function new_relay_item(str) {
@@ -195,6 +272,65 @@ function new_relay_item(str) {
 	</td>`;
 	find_node(".remove-relay", tr).addEventListener("click", on_click_remove_relay);
 	find_node(".details-relay", tr).addEventListener("click", on_click_details_relay);
+	return tr;
+}
+
+function new_relay_discovery_item(entry, model) {
+	const tr = document.createElement('tr');
+	const supported_nips = Array.isArray(entry.supported_nips) ? entry.supported_nips : [];
+	const meta_bits = [];
+	if (entry.name) {
+		meta_bits.push(entry.name);
+	}
+	if (entry.software) {
+		meta_bits.push(entry.version ? `${entry.software} ${entry.version}` : entry.software);
+	} else if (entry.version) {
+		meta_bits.push(entry.version);
+	}
+
+	const td_url = document.createElement('td');
+	const link = document.createElement('a');
+	link.href = '#';
+	link.className = 'details-relay';
+	link.dataset.address = entry.url;
+	link.textContent = entry.url;
+	td_url.appendChild(link);
+	tr.appendChild(td_url);
+
+	const td_kinds = document.createElement('td');
+	td_kinds.title = supported_nips.length ? supported_nips.join(', ') : 'No supported NIPs reported';
+	td_kinds.textContent = supported_nips.length ? `${supported_nips.length} kind${supported_nips.length === 1 ? '' : 's'}` : '—';
+	tr.appendChild(td_kinds);
+
+	const td_meta = document.createElement('td');
+	if (meta_bits.length) {
+		const meta_line = document.createElement('div');
+		meta_line.textContent = meta_bits.join(' · ');
+		td_meta.appendChild(meta_line);
+	}
+	if (entry.description) {
+		const desc_line = document.createElement('div');
+		desc_line.textContent = entry.description;
+		td_meta.appendChild(desc_line);
+	}
+	if (Array.isArray(entry.supported_nip_extensions) && entry.supported_nip_extensions.length) {
+		const ext_line = document.createElement('div');
+		ext_line.textContent = `Extensions: ${entry.supported_nip_extensions.join(', ')}`;
+		td_meta.appendChild(ext_line);
+	}
+	tr.appendChild(td_meta);
+
+	const td_action = document.createElement('td');
+	const button = document.createElement('button');
+	button.className = 'add-nip65-relay btn-text';
+	button.dataset.address = entry.url;
+	button.textContent = model.relays.has(entry.url) ? 'Added' : 'Add';
+	button.disabled = model.relays.has(entry.url);
+	button.setAttribute('role', 'add-discovered-relay');
+	button.addEventListener('click', on_click_add_discovered_relay);
+	td_action.appendChild(button);
+	tr.appendChild(td_action);
+
 	return tr;
 }
 
