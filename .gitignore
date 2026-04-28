@@ -5,6 +5,7 @@ vendor/
 !vendor/ed25519-dalek
 
 index.html
+!web/templates/index.html
 repo_flat.html
 
 crlf.git
