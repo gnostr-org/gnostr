@@ -423,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "expensive_tests")]
+    #[cfg(feature = "long_tests")]
     fn test_bech32_to_any_with_nostr_url() -> anyhow::Result<()> {
         use std::process::Command;
 

@@ -14,7 +14,7 @@ mod kvs_tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "expensive_tests")]
+        #[cfg(feature = "long_tests")]
     #[ignore]
     async fn test_new_client_and_event_loop() -> Result<(), Box<dyn Error + Send>> {
         let (mut client, mut event_receiver, event_loop) = new(None).await?;

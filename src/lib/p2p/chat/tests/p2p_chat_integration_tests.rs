@@ -92,7 +92,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "expensive_tests")]
+    #[cfg(feature = "long_tests")]
     #[ignore]
     async fn test_p2p_connectivity_three_nodes() {
         // Create channels for three chat instances

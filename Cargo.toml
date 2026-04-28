@@ -386,7 +386,8 @@ required-features = ["blossom-tui"]
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "gnostr-web"]
-expensive_tests = [] #nostr
+long_tests = []
+expensive_tests = ["long_tests"] # Backward-compatible alias.
 blossom-tui = ["dep:blossom_tui"]
 ghemoji = ["dep:gh-emoji"]
 gnostr-web = [

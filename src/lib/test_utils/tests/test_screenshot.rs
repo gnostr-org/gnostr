@@ -19,7 +19,7 @@ fn _is_tmux_installed() -> bool {
 }
 
 #[test]
-#[cfg(feature = "expensive_tests")]
+#[cfg(feature = "long_tests")]
 #[ignore]
 fn test_capture_tmux() {
     if !_is_tmux_installed() {
