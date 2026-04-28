@@ -128,6 +128,73 @@ function event_body_should_fold(ev) {
 		|| content.split(/\r?\n/).some((line) => line.length > 120);
 }
 
+function state_ref_namespace(ref_name) {
+	if (!ref_name || !ref_name.startsWith("refs/")) {
+		return "refs/other";
+	}
+
+	const parts = ref_name.split("/");
+	if (parts.length < 3) {
+		return "refs/other";
+	}
+
+	switch (parts[1]) {
+		case "tags":
+		case "heads":
+		case "notes":
+			return `refs/${parts[1]}`;
+		case "remotes":
+			return parts.length >= 3 ? `refs/remotes/${parts[2]}` : "refs/remotes";
+		case "pull":
+			return "refs/pull";
+		default:
+			return parts.length >= 3 ? `refs/${parts[1]}/${parts[2]}` : `refs/${parts[1]}`;
+	}
+}
+
+function group_state_refs(state_refs) {
+	const groups = new Map();
+	for (const [ref_name, ref_value] of state_refs) {
+		const namespace = state_ref_namespace(ref_name);
+		if (!groups.has(namespace)) {
+			groups.set(namespace, []);
+		}
+		groups.get(namespace).push([ref_name, ref_value]);
+	}
+
+	return Array.from(groups.entries())
+		.map(([namespace, refs]) => ({
+			namespace,
+			refs: refs.slice().sort((left, right) => left[0].localeCompare(right[0])),
+		}))
+		.sort((left, right) => right.refs.length - left.refs.length || left.namespace.localeCompare(right.namespace));
+}
+
+function render_state_ref_groups(state_refs) {
+	const groups = group_state_refs(state_refs);
+	if (!groups.length) {
+		return "";
+	}
+
+	return groups.map((group) => {
+		const ref_items = group.refs.map(([ref_name, ref_value]) => html`
+			<li class="nip34-state-ref-item">
+				<code class="nip34-state-ref-name">${ref_name}</code>
+				<span class="nip34-state-ref-arrow">→</span>
+				<code class="nip34-state-ref-value">${ref_value}</code>
+			</li>
+		`).join("");
+		return render_collapsible_block(
+			`${group.namespace} (${group.refs.length})`,
+			html`<div class="nip34-state-group">
+				<ul class="nip34-state-ref-list">${ref_items}</ul>
+			</div>`,
+			false,
+			"nip34-state-group-card"
+		);
+	}).join("");
+}
+
 function event_shows_media(model, ev, mode) {
 	if (mode == "friends")
 		return model.contacts.friends.has(ev.pubkey);
@@ -373,31 +440,11 @@ function render_repo_event_summary(model, ev) {
             summary = html`<div class="nip34-state-summary">
                 <div class="nip34-state-heading">
                     <strong>Repository State</strong>
-                    <span class="nip34-state-count">${state_refs.length} refs</span>
+                    <span class="nip34-state-count">${state_refs.length} refs in ${group_state_refs(state_refs).length} groups</span>
                 </div>
                 <div class="nip34-state-name">${repo_name || "Unnamed repository state"}</div>
             </div>`;
-            if (state_refs.length > 0) {
-                const preview_refs = state_refs.slice(0, 20).map(([ref_name, ref_value]) => html`
-                    <li class="nip34-state-ref-item">
-                        <code class="nip34-state-ref-name">${ref_name}</code>
-                        <span class="nip34-state-ref-arrow">→</span>
-                        <code class="nip34-state-ref-value">${ref_value}</code>
-                    </li>
-                `).join("");
-                const preview_note = state_refs.length > 20
-                    ? html`<p class="nip34-state-preview-note">Showing 20 of ${state_refs.length} refs.</p>`
-                    : "";
-                summary += render_collapsible_block(
-                    `Refs (${state_refs.length})`,
-                    html`<div class="nip34-state-fold">
-                        ${preview_note}
-                        <ul class="nip34-state-ref-list">${preview_refs}</ul>
-                    </div>`,
-                    false,
-                    "nip34-state-card"
-                );
-            }
+            summary += render_state_ref_groups(state_refs);
             summary += json_body;
             break;
         case KIND_REPO_PATCH:

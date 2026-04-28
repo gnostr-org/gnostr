@@ -1136,6 +1136,16 @@ code {
 	color: var(--clrTextLight);
 	font-size: var(--fsSmall);
 }
+
+.nip34-state-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.nip34-state-group-card {
+	margin-top: 8px;
+}
 .nip34-patch-card pre {
 	margin: 0;
 	padding: 12px;
