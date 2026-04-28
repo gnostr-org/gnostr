@@ -7,6 +7,7 @@ cd "$ROOT_DIR"
 FEATURES=()
 RUN_ALLOW_ALL=true
 RUN_NO_DEFAULT_FEATURES=true
+NO_DEFAULT_FEATURES_EXTRA=(--features regex-fancy)
 
 usage() {
   cat <<'EOF'
@@ -88,8 +89,8 @@ fi
 
 if [[ "$RUN_NO_DEFAULT_FEATURES" == true ]]; then
   if [[ ${#FEATURE_ARGS[@]} -gt 0 ]]; then
-    run_install "no-default-features install" --no-default-features "${FEATURE_ARGS[@]}"
+    run_install "no-default-features install" --no-default-features "${NO_DEFAULT_FEATURES_EXTRA[@]}" "${FEATURE_ARGS[@]}"
   else
-    run_install "no-default-features install" --no-default-features
+    run_install "no-default-features install" --no-default-features "${NO_DEFAULT_FEATURES_EXTRA[@]}"
   fi
 fi
