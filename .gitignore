@@ -1,6 +1,7 @@
 vendor/
 !vendor/actix-web-actors
 !vendor/asn1-rs
+!vendor/curve25519-dalek
 !vendor/ed25519-dalek
 
 index.html
