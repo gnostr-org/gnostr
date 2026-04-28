@@ -1,6 +1,7 @@
 vendor/
 !vendor/actix-web-actors
 !vendor/asn1-rs
+!vendor/ed25519-dalek
 
 index.html
 repo_flat.html
