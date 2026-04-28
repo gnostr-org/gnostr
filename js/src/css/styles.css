@@ -788,22 +788,22 @@ code {
     position: relative;
 	margin: 15px;
 }
-#settings-profile {
+#settings-profile, #relays-profile {
 	margin: 15px;
 	padding: 15px;
 	background: var(--clrPanel);
 	border-radius: 12px;
 }
-#settings-profile .settings-profile-top {
+#settings-profile .settings-profile-top, #relays-profile .settings-profile-top {
 	display: flex;
 	gap: 15px;
 	align-items: flex-start;
 }
-#settings-profile .settings-profile-meta {
+#settings-profile .settings-profile-meta, #relays-profile .settings-profile-meta {
 	flex: 1;
 	min-width: 0;
 }
-#settings-profile code {
+#settings-profile code, #relays-profile code {
 	display: block;
 	word-break: break-all;
 	margin-top: 8px;
