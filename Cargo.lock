@@ -6369,6 +6369,7 @@ dependencies = [
  "gnostr-ngit",
  "gnostr-relay",
  "gnostr-scopetime",
+ "gnostr-web",
  "gnostr_qr",
  "grcov",
  "handlebars",

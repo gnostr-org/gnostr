@@ -407,6 +407,7 @@ gnostr-web = [
   "actix-web",
   "actix-web-actors",
   "rocket",
+  "dep:gnostr-web",
   "gnostr-asyncgit/gnostr_web",
   "gnostr-js",
   "handlebars",
@@ -546,6 +547,7 @@ gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
 gnostr_qr = { workspace = true }
+gnostr-web = { path = "web", version = "1876.947024.762894", default-features = false, optional = true }
 #gnostr-crawler = { workspace = true } ##version = "1878.945649.607219", path = "crawler" }
 #gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
 #gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
