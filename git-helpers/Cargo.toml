@@ -40,7 +40,7 @@ futures-util = "0.3"
 hex = "0.4"
 
 # PKARR DHT resolution (Ed25519 keys → blossom endpoints)
-pkarr = { version = "6.0.0-rc.0", default-features = false, features = [
+pkarr = { version = "5.0.4", default-features = false, features = [
   "relays",
   "signed_packet",
 ] }
