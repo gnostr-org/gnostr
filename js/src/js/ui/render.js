@@ -177,7 +177,7 @@ function render_state_ref_groups(state_refs) {
 	}
 
 	return groups.map((group) => {
-		const ref_items = group.refs.map(([ref_name, ref_value]) => html`
+		const ref_items = group.refs.map(([ref_name, ref_value]) => `
 			<li class="nip34-state-ref-item">
 				<code class="nip34-state-ref-name">${ref_name}</code>
 				<span class="nip34-state-ref-arrow">→</span>
@@ -186,7 +186,7 @@ function render_state_ref_groups(state_refs) {
 		`).join("");
 		return render_collapsible_block(
 			`${group.namespace} (${group.refs.length})`,
-			html`<div class="nip34-state-group">
+			`<div class="nip34-state-group">
 				<ul class="nip34-state-ref-list">${ref_items}</ul>
 			</div>`,
 			false,
@@ -437,7 +437,7 @@ function render_repo_event_summary(model, ev) {
             }
             break;
         case KIND_REPO_STATE_ANNOUNCE:
-            summary = html`<div class="nip34-state-summary">
+            summary = `<div class="nip34-state-summary">
                 <div class="nip34-state-heading">
                     <strong>Repository State</strong>
                     <span class="nip34-state-count">${state_refs.length} refs in ${group_state_refs(state_refs).length} groups</span>
