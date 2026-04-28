@@ -72,6 +72,7 @@ The repo keeps a few shell wrappers for the most common test paths:
 ./scripts/gnostr-tests.sh [--list] [--test <name>] [--ignored] [--nocapture]
 ./scripts/gnostr-asyncgit-tests.sh [--ignored] [--nocapture]
 ./scripts/gnostr-ngit-tests.sh [--features <list>] [--all-features] [--no-default-features] [--ignored] [--nocapture]
+./scripts/cargo-install-feature-variants.sh [--features <list>] [--allow-all] [--no-default-features]
 ```
 
 `gnostr-tests.sh` runs the workspace test suite, `gnostr-asyncgit-tests.sh`
@@ -79,6 +80,8 @@ adds the asyncgit DM/NIP regressions and queries the real event ids it emits,
 including the shared NIP-34 repo URL vector regression, and
 `gnostr-ngit-tests.sh` exercises the ngit library with optional cargo feature
 switches.
+`cargo-install-feature-variants.sh` runs `cargo install --path .` for the
+default feature set, `--all-features`, and `--no-default-features`.
 
 For the workspace runner, a handy targeted example is:
 
