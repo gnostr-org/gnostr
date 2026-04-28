@@ -400,6 +400,13 @@ button.nav > img.icon {
 .show-new, .show-more {
 	text-align: center;
 }
+.show-more {
+	position: sticky;
+	bottom: 0;
+	z-index: var(--zHeader);
+	background: var(--clrBg);
+	border-top: 1px solid var(--clrBorder);
+}
 .show-more > button,
 .show-new > button {
 	color: var(--clrText);
