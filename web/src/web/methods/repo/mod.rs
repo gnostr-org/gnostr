@@ -102,7 +102,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         //We detect repo types
         let is_bare_repo = full_potential_repo_path.join("HEAD").is_file() //<repo>.git/HEAD
         && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
-        let is_working_tree = full_potential_repo_path.join("/.git").is_file(); //<repo>/.git
+        let is_working_tree = full_potential_repo_path.join(".git").is_file(); //<repo>/.git
         let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
         let exists_in_db = crate::web::database::schema::repository::Repository::exists(
             db,
@@ -189,23 +189,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
 
     debug!("Final Child Path: {:?}", child_path);
 
-    let repository_abs_path = if repository_name.as_os_str().is_empty() || repository_name == Path::new(".") {
-        // Root repository - open the scan root's git dir when it is a working tree.
-        let git_dir = scan_path.join(".git");
-        if git_dir.is_dir() || git_dir.is_file() {
-            git_dir
-        } else {
-            scan_path.to_path_buf()
-        }
-    } else {
-        // Check if this is a working tree repo and use .git subdirectory
-        let repo_path = scan_path.join(&repository_name);
-        if repo_path.join(".git").is_dir() {
-            repo_path.join(".git")
-        } else {
-            repo_path
-        }
-    };
+    let repository_abs_path = repository_abs_path(scan_path, &repository_name);
 
     debug!("Repository Name: {}", repository_name.display());
     debug!("Repository Path: {}", repository_abs_path.display());
@@ -244,11 +228,43 @@ impl Repository {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::repository_abs_path;
+    use std::path::Path;
+
+    #[test]
+    fn root_repository_uses_scan_path() {
+        let scan_path = Path::new("/tmp/gnostr-worktree");
+        assert_eq!(
+            repository_abs_path(scan_path, Path::new(".")),
+            scan_path
+        );
+    }
+
+    #[test]
+    fn nested_repository_keeps_repository_root() {
+        let scan_path = Path::new("/tmp");
+        assert_eq!(
+            repository_abs_path(scan_path, Path::new("repo")),
+            Path::new("/tmp/repo")
+        );
+    }
+}
+
 #[derive(Clone)]
 pub struct RepositoryPath(pub PathBuf);
 
 #[derive(Clone)]
 pub struct ChildPath(pub Option<PathBuf>);
+
+fn repository_abs_path(scan_path: &Path, repository_name: &Path) -> PathBuf {
+    if repository_name.as_os_str().is_empty() || repository_name == Path::new(".") {
+        scan_path.to_path_buf()
+    } else {
+        scan_path.join(repository_name)
+    }
+}
 
 impl Deref for RepositoryPath {
     type Target = Path;
