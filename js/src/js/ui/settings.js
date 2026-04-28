@@ -265,17 +265,82 @@ function add_relay_address(address, label) {
 
 function new_relay_item(str) {
 	const tr = document.createElement('tr');
-	tr.innerHTML = `<td><a href="#" class="details-relay" data-address="${str}">${str}</a></td>
-	<td>
-	<button class="remove-relay btn-text"
-		data-address="${str}"
-		role="remove-relay">
-		<img class="icon svg small" src="/images/event-delete.svg"/>
-	</button>
-	</td>`;
+	tr.classList.add("relay-card");
+	tr.innerHTML = `
+		<td class="relay-card-main">
+			<a href="#" class="details-relay relay-address" data-address="${str}">${str}</a>
+			<div class="relay-info">
+				<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
+				<div class="relay-info-line relay-info-software hide" data-relay-software></div>
+				<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
+				<div class="relay-info-line relay-info-description hide" data-relay-description></div>
+			</div>
+		</td>
+		<td class="relay-card-action">
+			<button class="remove-relay btn-text"
+				data-address="${str}"
+				role="remove-relay">
+				<img class="icon svg small" src="/images/event-delete.svg"/>
+			</button>
+		</td>`;
 	find_node(".remove-relay", tr).addEventListener("click", on_click_remove_relay);
 	find_node(".details-relay", tr).addEventListener("click", on_click_details_relay);
+	void hydrate_relay_item(tr, str);
 	return tr;
+}
+
+async function hydrate_relay_item(tr, address) {
+	const name_el = find_node("[data-relay-name]", tr);
+	const software_el = find_node("[data-relay-software]", tr);
+	const nips_el = find_node("[data-relay-nips]", tr);
+	const description_el = find_node("[data-relay-description]", tr);
+	if (!name_el || !software_el || !nips_el || !description_el) {
+		return;
+	}
+
+	try {
+		const url = new URL(address);
+		const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
+		const response = await fetch(http_url, {
+			headers: {
+				'Accept': 'application/nostr+json',
+			},
+		});
+		const data = await response.json();
+		const label = data.name || data.pubkey || address;
+		name_el.textContent = label;
+		name_el.classList.toggle("hide", !label);
+
+		const software_bits = [];
+		if (data.software) {
+			software_bits.push(data.software);
+		}
+		if (data.version) {
+			software_bits.push(data.version);
+		}
+		software_el.textContent = software_bits.length ? software_bits.join(" ") : "";
+		software_el.classList.toggle("hide", !software_bits.length);
+
+		const supported_nips = Array.isArray(data.supported_nips) ? data.supported_nips : [];
+		nips_el.textContent = supported_nips.length ? `Supports NIPs: ${supported_nips.join(", ")}` : "";
+		nips_el.classList.toggle("hide", !supported_nips.length);
+
+		const description = data.description || "";
+		description_el.textContent = description;
+		description_el.classList.toggle("hide", !description);
+		tr.dataset.relayName = label;
+		tr.dataset.relaySoftware = software_bits.join(" ");
+		tr.dataset.relayNips = supported_nips.join(", ");
+	} catch (error) {
+		name_el.textContent = "Unable to load relay info";
+		software_el.textContent = "";
+		software_el.classList.add("hide");
+		nips_el.textContent = "";
+		nips_el.classList.add("hide");
+		description_el.textContent = "";
+		description_el.classList.add("hide");
+		log_warn(`Failed to fetch relay info for ${address}:`, error);
+	}
 }
 
 function new_relay_discovery_item(entry, model) {

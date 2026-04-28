@@ -844,6 +844,53 @@ code {
 #relays section > table {
 	margin-top: 15px;
 }
+#relays table.row {
+	border-collapse: separate;
+	border-spacing: 0 12px;
+}
+#relays table.row tbody tr {
+	vertical-align: top;
+}
+#relays table.row tbody td {
+	background: var(--clrPanel);
+	padding: 14px 16px;
+}
+#relays table.row tbody td:first-child {
+	border-radius: 12px 0 0 12px;
+}
+#relays table.row tbody td:last-child {
+	border-radius: 0 12px 12px 0;
+}
+#relays table.row tbody tr:hover td {
+	background: color-mix(in srgb, var(--clrPanel) 88%, var(--clrText) 12%);
+}
+#relays .relay-card-main {
+	width: 100%;
+}
+#relays .relay-address {
+	display: inline-block;
+	margin-bottom: 8px;
+	word-break: break-all;
+}
+#relays .relay-info {
+	display: grid;
+	gap: 4px;
+}
+#relays .relay-info-line {
+	font-size: var(--fsReduced);
+	color: var(--clrTextLight);
+	word-break: break-word;
+}
+#relays .relay-info-name {
+	font-size: var(--fsNormal);
+	color: var(--clrText);
+	font-weight: bold;
+}
+#relays .relay-card-action {
+	width: 1%;
+	white-space: nowrap;
+	text-align: right;
+}
 #settings header > label, #relays header > label {
 	font-weight: bold;
 	font-size: var(--fsLarge);
