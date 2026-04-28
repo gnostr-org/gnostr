@@ -1,6 +1,5 @@
 use std::{
     borrow::Cow,
-    collections::HashMap,
     fmt::{Display, Formatter},
     net::IpAddr,
     path::PathBuf,
@@ -12,10 +11,7 @@ use std::{
 use axum::response::{IntoResponse, Response};
 use clap::Args;
 use clap::Parser;
-use handlebars::Handlebars;
-use serde::Serialize as serdeSerialize;
 use tokio::net::TcpListener;
-use warp::reply::json as warpReplayJson;
 
 use crate::web::database::schema::prefixes::{
     COMMIT_COUNT_FAMILY, COMMIT_FAMILY, REFERENCE_FAMILY, REPOSITORY_FAMILY, TAG_FAMILY,
@@ -470,31 +466,6 @@ struct AppArgs {
     /// Port to listen on for the main server
     #[arg(short, long, default_value_t = 3030)]
     port: u16,
-}
-
-struct WithTemplate<T: serdeSerialize> {
-    name: &'static str,
-    value: T,
-}
-
-fn render<T>(template: WithTemplate<T>, hbs: Arc<Handlebars<'_>>) -> impl warp::Reply
-where
-    T: serdeSerialize,
-{
-    let render = hbs
-        .render(template.name, &template.value)
-        .unwrap_or_else(|err| err.to_string());
-    warp::reply::html(render)
-}
-
-#[derive(serdeSerialize)]
-struct Message {
-    text: String,
-}
-
-fn get_messages() -> impl warp::Reply {
-    let response = HashMap::from([("status", "ok"), ("data", "This is the messages endpoint!")]);
-    warpReplayJson(&response)
 }
 
 #[derive(Parser, Debug)]
