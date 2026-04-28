@@ -66,6 +66,10 @@ function model_process_event(model, relay, ev) {
 	if (fn)
 		fn(model, ev, !!relay);
 
+    if (ev.kind === KIND_DM) {
+        sync_dm_event_to_local_relay(ev);
+    }
+
 	    // Detect and log NIP-34 events from followed profiles
     if (nip34_kinds.has(ev.kind) && model.contacts.friends.has(ev.pubkey)) {
 	        const eventData = JSON.stringify(ev, null, 2);

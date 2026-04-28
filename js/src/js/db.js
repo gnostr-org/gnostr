@@ -123,10 +123,30 @@ function sync_nip34_event_to_local_relay(model, event) {
     return sent;
 }
 
+function sync_dm_event_to_local_relay(event) {
+    if (!event || event.kind !== KIND_DM) {
+        return false;
+    }
+
+    return local_relay_send_event(event);
+}
+
 function sync_all_nip34_events_to_local_relay(model) {
     let sent = false;
     for (const id in model.all_events) {
         sent = sync_nip34_event_to_local_relay(model, model.all_events[id]) || sent;
+    }
+    return sent;
+}
+
+function sync_all_dm_events_to_local_relay(model) {
+    let sent = false;
+    for (const id in model.all_events) {
+        const event = model.all_events[id];
+        if (!event || event.kind !== KIND_DM) {
+            continue;
+        }
+        sent = sync_dm_event_to_local_relay(event) || sent;
     }
     return sent;
 }
@@ -157,6 +177,7 @@ function init_local_relay_sync() {
             local_relay_stats.last_error = "";
             sync_all_user_metadata_to_local_relay(GNOSTR);
             sync_active_user_metadata_to_local_relay(GNOSTR);
+            sync_all_dm_events_to_local_relay(GNOSTR);
             sync_all_nip34_events_to_local_relay(GNOSTR);
             if (typeof render_relay_dashboard === 'function') {
                 render_relay_dashboard();
