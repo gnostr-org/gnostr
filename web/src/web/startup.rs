@@ -9,26 +9,12 @@ use std::{
     time::Duration,
 };
 
-use axum::{
-    body::Body,
-    http::{self, HeaderValue},
-    response::Response,
-    routing::get,
-    Extension, Router,
-};
+use axum::response::{IntoResponse, Response};
 use clap::Args;
 use clap::Parser;
 use handlebars::Handlebars;
-use rkyv::Serialize as rkyvSerialize;
 use serde::Serialize as serdeSerialize;
 use tokio::net::TcpListener;
-use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
-use tower_layer::layer_fn;
-use tracing::info;
-use tracing_subscriber::{
-    fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
-};
-use warp::body::json as warpBodyJson;
 use warp::reply::json as warpReplayJson;
 
 use crate::web::database::schema::prefixes::{
@@ -413,8 +399,8 @@ pub struct TemplateResponse<T> {
     template: T,
 }
 
-impl<T: askama::Template> axum::response::IntoResponse for TemplateResponse<T> {
-    fn into_response(self) -> axum::response::Response {
+impl<T: askama::Template> IntoResponse for TemplateResponse<T> {
+    fn into_response(self) -> Response {
         match self.template.render() {
             Ok(body) => {
                 let headers = [(
@@ -430,7 +416,7 @@ impl<T: askama::Template> axum::response::IntoResponse for TemplateResponse<T> {
 }
 
 /// Convert a template into a response
-pub fn into_response<T: askama::Template>(template: T) -> impl axum::response::IntoResponse {
+pub fn into_response<T: askama::Template>(template: T) -> impl IntoResponse {
     TemplateResponse { template }
 }
 
@@ -440,10 +426,8 @@ pub enum ResponseEither<A, B> {
     Right(B),
 }
 
-impl<A: axum::response::IntoResponse, B: axum::response::IntoResponse> axum::response::IntoResponse
-    for ResponseEither<A, B>
-{
-    fn into_response(self) -> axum::response::Response {
+impl<A: IntoResponse, B: IntoResponse> IntoResponse for ResponseEither<A, B> {
+    fn into_response(self) -> Response {
         match self {
             Self::Left(a) => a.into_response(),
             Self::Right(b) => b.into_response(),
@@ -466,8 +450,6 @@ pub async fn find_available_port() -> u16 {
 
     3333
 }
-
-use webbrowser;
 
 pub fn open(host: &str, port: i32) -> Result<(), tokio::io::Error> {
     let url = format!("http://{}:{}", host, port);

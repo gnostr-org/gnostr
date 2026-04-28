@@ -1,16 +1,4 @@
 #![deny(clippy::pedantic)]
-use clap::Args;
-use clap::Parser;
-use clap::Subcommand;
-use handlebars::Handlebars;
-use rkyv::Serialize as rkyvSerialize;
-use serde::Serialize as serdeSerialize;
-use std::collections::HashMap;
-use std::env::Args as stdEnvArgs;
-
-use warp::body::json as warpBodyJson;
-
-use warp::reply::json as warpReplayJson;
 
 pub mod chat;
 //pub mod css;
@@ -32,10 +20,7 @@ pub use crate::web::{
     unified_diff_builder::UnifiedDiffBuilder,
 };
 
-// Re-export commonly used items for templates
-pub use const_hex;
-pub use std::sync::OnceLock;
-pub use xxhash_rust;
+use std::sync::OnceLock;
 
 pub mod startup;
 pub use startup::*;
