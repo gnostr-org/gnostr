@@ -5,7 +5,7 @@ use askama::Template;
 use axum::{response::IntoResponse, Extension};
 
 use super::filters;
-use crate::web::{
+use crate::app::{
     database::schema::repository::{Repository, YokedRepository},
     into_response,
 };
@@ -49,7 +49,7 @@ pub async fn handle_spa() -> impl IntoResponse {
     // For SPA routes, we don't need repositories data, just serve the template
     let empty_repositories: BTreeMap<
         Option<String>,
-        Vec<crate::web::database::schema::repository::YokedRepository>,
+        Vec<crate::app::database::schema::repository::YokedRepository>,
     > = BTreeMap::new();
     into_response(View {
         repositories: empty_repositories,

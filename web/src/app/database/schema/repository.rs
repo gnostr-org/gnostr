@@ -6,7 +6,7 @@ use rkyv::{Archive, Serialize};
 use rocksdb::IteratorMode;
 use yoke::{Yoke, Yokeable};
 
-use crate::web::database::schema::{
+use crate::app::database::schema::{
     commit::CommitTree,
     prefixes::{COMMIT_FAMILY, REFERENCE_FAMILY, REPOSITORY_FAMILY, TAG_FAMILY},
     tag::TagTree,

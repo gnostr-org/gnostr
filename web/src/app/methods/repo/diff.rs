@@ -12,7 +12,7 @@ use bytes::{BufMut, BytesMut};
 use clap::crate_version;
 use time::format_description::well_known::Rfc2822;
 
-use crate::web::{
+use crate::app::{
     git::Commit,
     into_response,
     methods::{
@@ -49,8 +49,8 @@ pub async fn handle(
         repo,
         commit,
         branch: query.branch,
-        _highlight_css_hash: crate::web::HIGHLIGHT_CSS_HASH.get().unwrap(),
-        _dark_highlight_css_hash: crate::web::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _highlight_css_hash: crate::app::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _dark_highlight_css_hash: crate::app::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }
 

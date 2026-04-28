@@ -8,7 +8,7 @@ use time::{OffsetDateTime, UtcOffset};
 use tracing::debug;
 use yoke::{Yoke, Yokeable};
 
-use crate::web::database::schema::{
+use crate::app::database::schema::{
     prefixes::{COMMIT_COUNT_FAMILY, COMMIT_FAMILY},
     repository::RepositoryId,
     Yoked,

@@ -13,7 +13,7 @@ use clap::Args;
 use clap::Parser;
 use tokio::net::TcpListener;
 
-use crate::web::database::schema::prefixes::{
+use crate::app::database::schema::prefixes::{
     COMMIT_COUNT_FAMILY, COMMIT_FAMILY, REFERENCE_FAMILY, REPOSITORY_FAMILY, TAG_FAMILY,
 };
 
@@ -120,12 +120,12 @@ pub fn open_database(config: &Config) -> Result<Arc<rocksdb::DB>, anyhow::Error>
         )?;
 
         let needs_schema_regen = match db.get("schema_version")? {
-            Some(v) if v.as_slice() != crate::web::database::schema::SCHEMA_VERSION.as_bytes() => {
+            Some(v) if v.as_slice() != crate::app::database::schema::SCHEMA_VERSION.as_bytes() => {
                 Some(Some(v))
             }
             Some(_) => None,
             None => {
-                db.put("schema_version", crate::web::database::schema::SCHEMA_VERSION)?;
+                db.put("schema_version", crate::app::database::schema::SCHEMA_VERSION)?;
                 None
             }
         };
@@ -137,7 +137,7 @@ pub fn open_database(config: &Config) -> Result<Arc<rocksdb::DB>, anyhow::Error>
 
             tracing::warn!(
                 "Clearing outdated database ({old_version} != {})",
-                crate::web::database::schema::SCHEMA_VERSION
+                crate::app::database::schema::SCHEMA_VERSION
             );
 
             drop(db);
@@ -158,7 +158,7 @@ pub async fn run_indexer(
 
     std::thread::spawn(move || loop {
         tracing::info!("Running periodic index");
-        crate::web::database::indexer::run(&scan_path, &db);
+        crate::app::database::indexer::run(&scan_path, &db);
         tracing::info!("Finished periodic index");
 
         if indexer_wakeup_recv.blocking_recv().is_none() {

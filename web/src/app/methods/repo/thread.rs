@@ -3,8 +3,8 @@ use axum::{body::Body, http::Request, response::Html};
 use std::{path::PathBuf, sync::Arc};
 use tracing::debug;
 
-use crate::web::methods::filters; // GEMINI: Fix filters import
-use crate::web::Git;
+use crate::app::methods::filters; // GEMINI: Fix filters import
+use crate::app::Git;
 
 #[derive(Template)]
 #[template(path = "thread.html")]
@@ -34,17 +34,17 @@ pub async fn handle(request: Request<Body>) -> Result<Html<String>, super::Error
         .clone();
     let _repo = request
         .extensions()
-        .get::<crate::web::methods::repo::Repository>()
+        .get::<crate::app::methods::repo::Repository>()
         .expect("repository extension missing")
         .clone();
     let _repo_path = request
         .extensions()
-        .get::<crate::web::methods::repo::RepositoryPath>()
+        .get::<crate::app::methods::repo::RepositoryPath>()
         .expect("repository path extension missing")
         .clone();
     let child_path = request
         .extensions()
-        .get::<crate::web::methods::repo::ChildPath>()
+        .get::<crate::app::methods::repo::ChildPath>()
         .expect("child path extension missing")
         .clone();
 

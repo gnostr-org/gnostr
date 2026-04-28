@@ -12,7 +12,7 @@ mod tag;
 mod thread; // GEMINI: Add thread module
 mod tree;
 
-use crate::web::database::schema::repository::YokedRepository;
+use crate::app::database::schema::repository::YokedRepository;
 
 use std::{
     collections::BTreeMap,
@@ -43,8 +43,8 @@ use self::{
     thread::handle as handle_thread, // GEMINI: Import thread handler
     tree::handle as handle_tree,
 };
-use crate::web::database::schema::tag::YokedString;
-use crate::web::{
+use crate::app::database::schema::tag::YokedString;
+use crate::app::{
     database::schema::{commit::YokedCommit, tag::YokedTag},
     layers::UnwrapInfallible,
 };
@@ -79,7 +79,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         .expect("db extension missing");
 
     let root_repo_exists_in_db =
-        crate::web::database::schema::repository::Repository::exists(db, &PathBuf::from("."))
+        crate::app::database::schema::repository::Repository::exists(db, &PathBuf::from("."))
             .unwrap_or_default();
 
     // Try to find the repository name and handler segment
@@ -104,7 +104,7 @@ pub async fn service(mut request: Request<Body>) -> Response {
         && full_potential_repo_path.join("objects").is_dir(); //<repo>.git/objects/
         let is_working_tree = full_potential_repo_path.join(".git").is_file(); //<repo>/.git
         let is_working_tree_repo = full_potential_repo_path.join(".git").is_dir();
-        let exists_in_db = crate::web::database::schema::repository::Repository::exists(
+        let exists_in_db = crate::app::database::schema::repository::Repository::exists(
             db,
             &potential_repo_name,
         )

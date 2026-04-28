@@ -13,7 +13,7 @@ pub mod syntax_highlight;
 pub mod template_html;
 pub mod unified_diff_builder;
 pub mod websock_index_html;
-pub use crate::web::{
+pub use crate::app::{
     database::schema::{commit::Commit, repository::Repository, tag::Tag},
     git::Git,
     syntax_highlight::prime_highlighters,

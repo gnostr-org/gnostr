@@ -5,7 +5,7 @@ use gix::actor::SignatureRef;
 use rkyv::{Archive, Serialize};
 use yoke::{Yoke, Yokeable};
 
-use crate::web::database::schema::{
+use crate::app::database::schema::{
     commit::{ArchivedAuthor, Author},
     prefixes::TAG_FAMILY,
     repository::RepositoryId,

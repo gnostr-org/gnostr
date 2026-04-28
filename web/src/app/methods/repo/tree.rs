@@ -9,19 +9,19 @@ use std::{
 };
 
 use crate::theme::*;
-pub use crate::web::git::Content;
-pub use crate::web::git::TreeItem;
-use crate::web::methods::filters;
-use crate::web::{
+pub use crate::app::git::Content;
+pub use crate::app::git::TreeItem;
+use crate::app::methods::filters;
+use crate::app::{
     git::{FileWithContent, PathDestination, TreeItem as GitTreeItem},
     into_response,
     layers::*,
     Git, ResponseEither, *,
 };
 
-use crate::web::methods::repo::ChildPath;
-use crate::web::methods::repo::Repository;
-use crate::web::methods::repo::{Error, RepositoryPath};
+use crate::app::methods::repo::ChildPath;
+use crate::app::methods::repo::Repository;
+use crate::app::methods::repo::{Error, RepositoryPath};
 
 #[derive(Deserialize)]
 pub struct UriQuery {

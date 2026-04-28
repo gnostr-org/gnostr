@@ -4,7 +4,7 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
-use crate::web::{
+use crate::app::{
     git::ReadmeFormat,
     into_response,
     methods::{
@@ -46,7 +46,7 @@ pub async fn handle(
         repo,
         readme,
         branch: query.branch,
-        _highlight_css_hash: crate::web::HIGHLIGHT_CSS_HASH.get().unwrap(),
-        _dark_highlight_css_hash: crate::web::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _highlight_css_hash: crate::app::HIGHLIGHT_CSS_HASH.get().unwrap(),
+        _dark_highlight_css_hash: crate::app::DARK_HIGHLIGHT_CSS_HASH.get().unwrap(),
     }))
 }

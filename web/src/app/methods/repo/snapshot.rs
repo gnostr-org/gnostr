@@ -7,7 +7,7 @@ use tokio_stream::wrappers::ReceiverStream;
 use tracing::{debug_span, error, Instrument};
 
 use super::{RepositoryPath, Result};
-use crate::web::git::Git;
+use crate::app::git::Git;
 
 #[derive(Deserialize)]
 pub struct UriQuery {

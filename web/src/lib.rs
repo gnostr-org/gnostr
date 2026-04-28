@@ -1,6 +1,6 @@
 pub mod css;
 pub mod images;
 pub mod theme;
-pub mod web;
+pub mod app;
 
-pub use web::*;
+pub use app::*;

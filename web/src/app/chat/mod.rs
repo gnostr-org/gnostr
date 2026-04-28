@@ -1,6 +1,6 @@
 #![allow(unused)]
-use crate::web::template_html;
-use crate::web::websock_index_html;
+use crate::app::template_html;
+use crate::app::websock_index_html;
 
 /// TEMPLATE_HTML
 pub static TEMPLATE_HTML: &str = r#"<!DOCTYPE html>

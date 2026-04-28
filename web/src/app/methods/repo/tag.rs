@@ -4,7 +4,7 @@ use askama::Template;
 use axum::{extract::Query, response::IntoResponse, Extension};
 use serde::Deserialize;
 
-use crate::web::{
+use crate::app::{
     git::DetailedTag,
     into_response,
     methods::{
