@@ -5,6 +5,7 @@ edition = "2021"
 default-run = "gnostr-js"
 authors = ["gnostr <admin@gnostr.org>"]
 license = "MIT"
+build = "build.rs"
 
 [lib]
 name = "gnostr_js"
