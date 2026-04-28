@@ -320,8 +320,9 @@ jobs:
       - name: 🚀 gnostr query nested command test
         shell: bash
         run: |
-          cargo run --bin gnostr -- query --help
-          bash ./scripts/gnostr-nested-query.sh && echo "✅"
+          cargo build --bin gnostr
+          ./target/debug/gnostr query --help
+          GNOSTR_BIN=./target/debug/gnostr bash ./scripts/gnostr-nested-query.sh && echo "✅"
 
       - name: 🚀 gnostr asyncgit script tests
         if: matrix.toolchain == 'stable'
@@ -378,7 +379,7 @@ jobs:
       - name: 🚀 gnostr query nested command test
         shell: bash
         run: |
-          cargo run --bin gnostr -- query --help
+          gnostr query --help
           bash ./scripts/gnostr-nested-query.sh && echo "✅"
 
       - name: 🚀 gnostr asyncgit script tests
