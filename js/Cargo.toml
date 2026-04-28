@@ -52,5 +52,5 @@ tokio-stream = "0.1.17"
 walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
-gnostr-relay = { version = "1876.946894.932223", path = "../relay" }
-gnostr-crawler = { version = "1876.946894.932223", path = "../crawler" }
+gnostr-relay = { version = "1876.947024.762894", path = "../relay" }
+gnostr-crawler = { version = "1876.947024.762894", path = "../crawler" }
