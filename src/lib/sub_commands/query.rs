@@ -1,7 +1,7 @@
 use crate::query::ConfigBuilder;
 use anyhow::{anyhow, bail};
 use log::{debug, error};
-use serde_json::{json, to_string};
+use serde_json::{json, to_string, Value};
 use url::Url;
 
 pub use crate::query::cli::QuerySubCommand;
@@ -10,6 +10,7 @@ pub use crate::query::cli::QuerySubCommand;
 /// It takes the parsed command-line arguments and executes the query.
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     let (filt, limit_check) = build_filter_map(args)?;
+    let search_term = search_term(args);
     let _config = ConfigBuilder::new()
         .host("localhost")
         .port(8080)
@@ -34,7 +35,9 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     let query_string = to_string(&q)?;
     debug!("{}", query_string);
 
-    let relays = if args.relay.is_empty() {
+    let relays = if search_term.is_some() {
+        search_relays_for_nip50()?
+    } else if args.relay.is_empty() {
         debug!("Using bootstrap relays.");
         crate::crawler::bootstrap_relays()
             .iter()
@@ -143,14 +146,61 @@ fn build_filter_map(
     }
 
     if let Some(search_vec) = &args.search {
-        if !search_vec.is_empty() {
-            let search_string = "search".to_string();
-            let val = search_vec[0].clone();
-            debug!("Applying search filter: {}", val);
-            filt.insert(search_string, json!(val));
+        if let Some(search) = search_vec.first() {
+            if !search.is_empty() {
+                debug!("Applying search filter: {}", search);
+                filt.insert("search".to_string(), json!(search));
+            }
         }
     }
     Ok((filt, limit_check))
+}
+
+fn search_term(args: &QuerySubCommand) -> Option<String> {
+    args.search
+        .as_ref()
+        .and_then(|search_vec| search_vec.first())
+        .cloned()
+        .filter(|search| !search.is_empty())
+}
+
+pub fn search_relays_for_nip50() -> anyhow::Result<Vec<Url>> {
+    let raw = crate::get_relays_by_nip("50").map_err(anyhow::Error::msg)?;
+    parse_relay_urls(&raw)
+}
+
+fn parse_relay_urls(raw: &str) -> anyhow::Result<Vec<Url>> {
+    let value: Value = serde_json::from_str(raw)?;
+    match value {
+        Value::Array(items) => items.into_iter().map(parse_relay_url_value).collect(),
+        Value::Object(mut obj) => {
+            if let Some(items) = obj.remove("relays").or_else(|| obj.remove("data")).or_else(|| obj.remove("items")) {
+                match items {
+                    Value::Array(items) => items.into_iter().map(parse_relay_url_value).collect(),
+                    other => parse_relay_url_value(other).map(|url| vec![url]),
+                }
+            } else if let Some(url) = obj.remove("url") {
+                parse_relay_url_value(url).map(|url| vec![url])
+            } else {
+                Err(anyhow!("Unexpected relay list shape: {}", raw))
+            }
+        }
+        _ => Err(anyhow!("Unexpected relay list shape: {}", raw)),
+    }
+}
+
+fn parse_relay_url_value(value: Value) -> anyhow::Result<Url> {
+    match value {
+        Value::String(url) => Ok(Url::parse(&url)?),
+        Value::Object(mut obj) => {
+            if let Some(Value::String(url)) = obj.remove("url") {
+                Ok(Url::parse(&url)?)
+            } else {
+                Err(anyhow!("Unexpected relay item shape"))
+            }
+        }
+        _ => Err(anyhow!("Unexpected relay item shape")),
+    }
 }
 
 fn parse_relays(relay_args: &[String]) -> anyhow::Result<Vec<Url>> {
@@ -334,6 +384,20 @@ mod tests {
         let (filt, _) = build_filter_map(&args)?;
 
         assert_eq!(filt.get("search").unwrap(), &json!("keyword1,keyword2"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_relay_urls_array() -> anyhow::Result<()> {
+        let relays = parse_relay_urls(r#"["wss://relay.example","wss://relay2.example"]"#)?;
+
+        assert_eq!(
+            relays,
+            vec![
+                Url::parse("wss://relay.example")?,
+                Url::parse("wss://relay2.example")?
+            ]
+        );
         Ok(())
     }
 
