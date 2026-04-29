@@ -124,7 +124,7 @@ async function render_local_relay_info() {
         const data = await response.json();
         el.innerHTML = "";
         const dl = document.createElement("dl");
-        for (const key of ["name", "description", "pubkey", "software", "version", "supported_nips"]) {
+        for (const key of ["name", "description", "contact", "pubkey", "software", "version", "supported_nips", "supported_nip_extensions"]) {
             if (data[key] == null) {
                 continue;
             }

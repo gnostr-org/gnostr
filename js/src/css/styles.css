@@ -329,13 +329,16 @@ button.nav > img.icon {
 	align-items: stretch;
 	flex-direction: column;
 	gap: 10px;
-	margin-left: 16px;
+	width: 100%;
+	margin-left: 0;
 	padding: 8px 12px;
 	border: 1px solid var(--clrBorder);
 	border-radius: 14px;
 	background: var(--clrPanel);
+	box-sizing: border-box;
 }
 .local-relay-profile {
+	width: 100%;
 	padding: 0;
 	background: transparent;
 	border: 0;
@@ -347,6 +350,10 @@ button.nav > img.icon {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+	width: 100%;
+}
+.local-relay-card-meta {
+	width: 100%;
 }
 .local-relay-card-title {
 	display: flex;
@@ -371,6 +378,21 @@ button.nav > img.icon {
 	flex-wrap: wrap;
 	color: var(--clrTextLight);
 	font-size: var(--fsReduced);
+}
+.local-relay-card-meta dl {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 4px 12px;
+	margin: 0;
+}
+.local-relay-card-meta dt {
+	color: var(--clrTextLight);
+	font-weight: 800;
+}
+.local-relay-card-meta dd {
+	margin: 0;
+	word-break: break-word;
+	overflow-wrap: anywhere;
 }
 
 /* Events & Content */
