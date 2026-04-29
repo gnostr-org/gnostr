@@ -11,6 +11,11 @@ function init_settings(model) {
 		view_update_cached_active_pfp(model);
 	}
 	render_settings_profile(model);
+	void render_crawler_interval_setting();
+	const save_button = find_node("#sniper-interval-save", el);
+	if (save_button) {
+		save_button.onclick = on_click_save_sniper_interval;
+	}
 }
 
 function format_bytes(bytes) {
@@ -116,6 +121,69 @@ function sync_discovered_relay_state(address, model = GNOSTR) {
             button.disabled = is_added;
         }
     });
+}
+
+async function fetch_crawler_interval_minutes() {
+	const response = await fetch("/api/crawler/sniper-interval", {
+		headers: {
+			"Accept": "application/json",
+		},
+	});
+	if (!response.ok) {
+		throw new Error(`crawler interval request failed with ${response.status}`);
+	}
+	return await response.json();
+}
+
+async function save_crawler_interval_minutes(minutes) {
+	const response = await fetch("/api/crawler/sniper-interval", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			"Accept": "application/json",
+		},
+		body: JSON.stringify({ minutes }),
+	});
+	if (!response.ok) {
+		throw new Error(`crawler interval save failed with ${response.status}`);
+	}
+	return await response.json();
+}
+
+async function render_crawler_interval_setting() {
+	const input = find_node("#sniper-interval-minutes");
+	if (!input) {
+		return;
+	}
+	try {
+		const data = await fetch_crawler_interval_minutes();
+		if (Number.isFinite(data.minutes)) {
+			input.value = String(data.minutes);
+		}
+	} catch (error) {
+		log_error("Failed to load crawler interval:", error);
+	}
+}
+
+async function on_click_save_sniper_interval() {
+	const input = find_node("#sniper-interval-minutes");
+	if (!input) {
+		return;
+	}
+	const minutes = Number.parseInt(input.value, 10);
+	if (!Number.isFinite(minutes) || minutes < 1) {
+		log_error("Crawler interval must be at least 1 minute.");
+		return;
+	}
+	try {
+		const data = await save_crawler_interval_minutes(minutes);
+		if (Number.isFinite(data.minutes)) {
+			input.value = String(data.minutes);
+		}
+		log_info(`Saved crawler interval to ${minutes} minutes.`);
+	} catch (error) {
+		log_error("Failed to save crawler interval:", error);
+	}
 }
 
 function render_settings_profile(model) {

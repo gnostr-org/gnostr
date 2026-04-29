@@ -904,6 +904,11 @@ code {
 	font-weight: bold;
 	font-size: var(--fsLarge);
 }
+#relays .relay-section > summary .relay-section-meta {
+	font-size: var(--fsSmall);
+	font-weight: 600;
+	color: var(--clrTextLight);
+}
 #relays .relay-section > summary::-webkit-details-marker {
 	display: none;
 }
@@ -966,6 +971,21 @@ code {
 #settings .settings-actions {
 	display: flex;
 	margin-top: 12px;
+}
+#settings .settings-crawler {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 12px;
+}
+#settings .settings-crawler-controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+#settings .settings-crawler-controls input {
+	width: 7rem;
 }
 #settings .settings-actions .nav.icon {
 	padding: 10px;

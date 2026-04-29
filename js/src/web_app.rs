@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::fs as sync_fs;
 
 use clap::Parser;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use warp::http::StatusCode;
 use warp::Reply;
 use warp::Filter;
@@ -54,6 +54,11 @@ struct RelayDiscoveryState {
     supported_nips: BTreeSet<i32>,
     supported_nip_extensions: BTreeSet<String>,
     source_nips: BTreeSet<i32>,
+}
+
+#[derive(Deserialize)]
+struct SniperIntervalRequest {
+    minutes: u64,
 }
 
 fn collect_relay_discovery() -> Vec<RelayDiscoveryEntry> {
@@ -414,6 +419,40 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .and(warp::get())
         .map(|| warp::reply::json(&collect_relay_discovery()));
 
+    let sniper_interval_route = warp::path!("api" / "crawler" / "sniper-interval")
+        .and(warp::get())
+        .map(|| {
+            warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "minutes": crawler::relays::sniper_interval_minutes(),
+                })),
+                StatusCode::OK,
+            )
+            .into_response()
+        })
+        .or(warp::path!("api" / "crawler" / "sniper-interval")
+            .and(warp::post())
+            .and(warp::body::json::<SniperIntervalRequest>())
+            .map(|request: SniperIntervalRequest| {
+                let minutes = request.minutes.max(1);
+                match crawler::relays::write_sniper_interval_minutes(minutes) {
+                    Ok(()) => warp::reply::with_status(
+                        warp::reply::json(&serde_json::json!({
+                            "minutes": minutes,
+                        })),
+                        StatusCode::OK,
+                    )
+                    .into_response(),
+                    Err(err) => warp::reply::with_status(
+                        warp::reply::json(&serde_json::json!({
+                            "error": err.to_string(),
+                        })),
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                    )
+                    .into_response(),
+                }
+            }));
+
     let relay_start_route = warp::path!("api" / "relay" / "start")
         .and(warp::post())
         .map(|| match relay_control::start_relay() {
@@ -496,6 +535,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .or(flat_route)
         .or(relay_status_route)
         .or(relay_discovery_route)
+        .or(sniper_interval_route)
         .or(relay_start_route)
         .or(relay_stop_route)
         .or(js_route)

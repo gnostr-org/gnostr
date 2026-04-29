@@ -17,6 +17,7 @@ use std::fs as sync_fs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::time::Duration;
 use tokio::fs;
 use tokio::task::spawn;
 use tower_http::trace::{self, TraceLayer};
@@ -161,15 +162,13 @@ pub(crate) async fn prime_all_nip_relays_files(
 
 pub(crate) async fn run_sniper_service(client: reqwest::Client) {
     info!("starting sniper service");
-    let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
-    interval.tick().await;
-
     loop {
         info!("run_sniper_service: triggering prime pass");
         if let Err(e) = prime_all_nip_relays_files(&client).await {
             warn!("Sniper service failed: {}", e);
         }
-        interval.tick().await;
+        let minutes = crate::relays::sniper_interval_minutes().max(1);
+        tokio::time::sleep(Duration::from_secs(minutes.saturating_mul(60))).await;
     }
 }
 

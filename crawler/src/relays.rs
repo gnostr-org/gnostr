@@ -28,6 +28,27 @@ pub fn bootstrap_relays() -> Vec<String> {
     BOOTSTRAP_RELAYS.clone()
 }
 
+const SNIPER_INTERVAL_DEFAULT_MINUTES: u64 = 5;
+
+pub fn sniper_interval_minutes_path() -> PathBuf {
+    get_config_dir_path().join("sniper_interval_minutes.txt")
+}
+
+pub fn sniper_interval_minutes() -> u64 {
+    let path = sniper_interval_minutes_path();
+    fs::read_to_string(path)
+        .ok()
+        .and_then(|content| content.trim().parse::<u64>().ok())
+        .filter(|minutes| *minutes >= 1)
+        .unwrap_or(SNIPER_INTERVAL_DEFAULT_MINUTES)
+}
+
+pub fn write_sniper_interval_minutes(minutes: u64) -> std::io::Result<()> {
+    let config_dir = get_config_dir_path();
+    fs::create_dir_all(&config_dir)?;
+    fs::write(sniper_interval_minutes_path(), minutes.to_string())
+}
+
 static LIVE_NIPS: LazyLock<Mutex<HashSet<i32>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 static LIVE_KINDS: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 
