@@ -8,22 +8,34 @@ let db = null;
 let local_relay = null;
 const local_relay_synced_event_ids = new Set();
 const local_relay_url = "ws://127.0.0.1:8080";
+let local_relay_backend_stats = {
+    disk_usage_bytes: null,
+};
 let local_relay_stats = {
     connected: false,
     sent: 0,
+    bytes_sent: 0,
     received: 0,
+    bytes_received: 0,
     errors: 0,
     last_error: "",
 };
+
+function byte_length(value) {
+    return new TextEncoder().encode(String(value)).length;
+}
 
 function get_local_relay_status() {
     return {
         url: local_relay_url,
         connected: !!(local_relay && local_relay.ws && local_relay.ws.readyState === 1),
         sent: local_relay_stats.sent,
+        bytes_sent: local_relay_stats.bytes_sent,
         received: local_relay_stats.received,
+        bytes_received: local_relay_stats.bytes_received,
         errors: local_relay_stats.errors,
         last_error: local_relay_stats.last_error,
+        disk_usage_bytes: local_relay_backend_stats.disk_usage_bytes,
     };
 }
 
@@ -41,6 +53,7 @@ function local_relay_send_event(event) {
 
     local_relay_synced_event_ids.add(event.id);
     local_relay_stats.sent += 1;
+    local_relay_stats.bytes_sent += byte_length(JSON.stringify(event));
     local_relay.send(["EVENT", event]);
     return true;
 }
@@ -201,6 +214,7 @@ function init_local_relay_sync() {
 
         relay.on('event', (sub_id, ev) => {
             local_relay_stats.received += 1;
+            local_relay_stats.bytes_received += byte_length(JSON.stringify(ev));
             add_nip34_event_to_db(ev, true);
         });
 

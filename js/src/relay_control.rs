@@ -2,6 +2,8 @@ use serde::Serialize;
 use std::path::PathBuf;
 use warp::http::StatusCode;
 use warp::Reply;
+use std::fs;
+use std::path::Path;
 
 use crate::utils::detach::{
     capture_detached_pid, existing_detached_pid, kill_process_by_pid, listener_pid_on_port,
@@ -19,10 +21,35 @@ pub struct RelayProcessState {
     pub running: bool,
     pub pid: Option<u32>,
     pub message: String,
+    pub disk_usage_bytes: Option<u64>,
 }
 
 fn relay_config_path() -> String {
     RelayCli::default().config_file_path
+}
+
+fn directory_usage_bytes(path: &Path) -> anyhow::Result<u64> {
+    let mut total = 0u64;
+    if !path.exists() {
+        return Ok(0);
+    }
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_dir() {
+            total = total.saturating_add(directory_usage_bytes(&entry.path())?);
+        } else {
+            total = total.saturating_add(metadata.len());
+        }
+    }
+    Ok(total)
+}
+
+fn relay_disk_usage_bytes() -> anyhow::Result<u64> {
+    let config_file_path = relay_config_path();
+    let config_path = Path::new(&config_file_path);
+    let usage_path = config_path.parent().unwrap_or(config_path);
+    directory_usage_bytes(usage_path)
 }
 
 fn relay_spawn_target() -> anyhow::Result<(PathBuf, bool)> {
@@ -49,6 +76,7 @@ pub fn relay_status() -> anyhow::Result<RelayProcessState> {
             running: true,
             pid: Some(pid),
             message: format!("relay already running with pid {pid}"),
+            disk_usage_bytes: Some(relay_disk_usage_bytes()?),
         });
     }
 
@@ -61,6 +89,7 @@ pub fn relay_status() -> anyhow::Result<RelayProcessState> {
                 Some(pid) => format!("relay already listening on 127.0.0.1:{RELAY_PORT} with pid {pid}"),
                 None => format!("relay already listening on 127.0.0.1:{RELAY_PORT}"),
             },
+            disk_usage_bytes: Some(relay_disk_usage_bytes()?),
         });
     }
 
@@ -68,6 +97,7 @@ pub fn relay_status() -> anyhow::Result<RelayProcessState> {
         running: false,
         pid: None,
         message: "relay stopped".to_string(),
+        disk_usage_bytes: Some(relay_disk_usage_bytes()?),
     })
 }
 
@@ -111,6 +141,7 @@ pub fn start_relay() -> anyhow::Result<RelayProcessState> {
         running: true,
         pid: Some(pid),
         message: format!("spawned detached relay pid {pid}"),
+        disk_usage_bytes: Some(relay_disk_usage_bytes()?),
     })
 }
 
@@ -126,6 +157,7 @@ pub fn stop_relay() -> anyhow::Result<RelayProcessState> {
             running: false,
             pid: None,
             message: "relay already stopped".to_string(),
+            disk_usage_bytes: Some(relay_disk_usage_bytes()?),
         });
     };
 
@@ -135,6 +167,7 @@ pub fn stop_relay() -> anyhow::Result<RelayProcessState> {
         running: false,
         pid: Some(pid),
         message: format!("stopped relay pid {pid}"),
+        disk_usage_bytes: Some(relay_disk_usage_bytes()?),
     })
 }
 

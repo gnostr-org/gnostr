@@ -13,6 +13,23 @@ function init_settings(model) {
 	render_settings_profile(model);
 }
 
+function format_bytes(bytes) {
+	if (bytes == null || Number.isNaN(bytes)) {
+		return "unknown";
+	}
+	if (bytes < 1024) {
+		return `${bytes} B`;
+	}
+	const units = ["KiB", "MiB", "GiB", "TiB"];
+	let value = bytes / 1024;
+	let unit = 0;
+	while (value >= 1024 && unit < units.length - 1) {
+		value /= 1024;
+		unit++;
+	}
+	return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
+
 async function fetch_relay_discovery() {
 	const response = await fetch("/api/relay/discovery", {
 		headers: {
@@ -49,18 +66,17 @@ function init_relays(model) {
 
 function render_relay_dashboard() {
     const status = get_local_relay_status();
-    const el = find_node("#relays #local-relay-dashboard");
+    const el = find_node("#relays #local-relay-header-card");
     if (!el) {
         return;
     }
     find_node("[data-field='url']", el).textContent = status.url;
     find_node("[data-field='status']", el).textContent = status.connected ? "connected" : "stopped";
-    find_node("[data-field='sent']", el).textContent = String(status.sent);
-    find_node("[data-field='received']", el).textContent = String(status.received);
-    find_node("[data-field='errors']", el).textContent = String(status.errors);
-    find_node("[data-field='last_error']", el).textContent = status.last_error || "none";
-    find_node("#local-relay-start", el.parentElement).disabled = status.connected;
-    find_node("#local-relay-stop", el.parentElement).disabled = !status.connected;
+    find_node("[data-field='net_io']", el).textContent = `${format_bytes(status.bytes_sent)} out / ${format_bytes(status.bytes_received)} in`;
+    find_node("[data-field='disk_usage']", el).textContent = format_bytes(status.disk_usage_bytes);
+    find_node("#local-relay-start", el).disabled = status.connected;
+    find_node("#local-relay-stop", el).disabled = !status.connected;
+    void refresh_local_relay_backend_status();
 }
 
 function render_settings_profile(model) {
@@ -124,6 +140,28 @@ async function render_local_relay_info() {
     } catch (error) {
         el.textContent = "Unable to load relay info.";
         log_error("Failed to fetch local relay info:", error);
+    }
+}
+
+async function refresh_local_relay_backend_status() {
+    try {
+        const response = await fetch("/api/relay/status", {
+            headers: {
+                "Accept": "application/json",
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`relay status request failed with ${response.status}`);
+        }
+        const data = await response.json();
+        local_relay_backend_stats.disk_usage_bytes = data.disk_usage_bytes ?? null;
+        const el = find_node("#relays #local-relay-header-card");
+        if (el) {
+            const status = get_local_relay_status();
+            find_node("[data-field='disk_usage']", el).textContent = format_bytes(status.disk_usage_bytes);
+        }
+    } catch (error) {
+        log_warn("Failed to refresh local relay backend status:", error);
     }
 }
 

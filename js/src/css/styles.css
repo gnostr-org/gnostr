@@ -324,6 +324,42 @@ button.nav > img.icon {
 	flex: 0 0 auto;
 }
 
+.local-relay-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-left: 16px;
+	padding: 8px 12px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 14px;
+	background: var(--clrPanel);
+	flex-wrap: wrap;
+}
+.local-relay-card-title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	white-space: nowrap;
+}
+.local-relay-card-title span {
+	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+}
+.local-relay-card-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.local-relay-card-stats {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+}
+
 /* Events & Content */
 .events {
 	display: flex;
@@ -855,6 +891,8 @@ code {
 	border-bottom: 1px solid var(--clrBorder);
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px;
 	justify-content: space-between;
 }
 #relays section > table {

@@ -11,7 +11,7 @@
 		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
 		<link rel="stylesheet" href="/css/vars.css?v=1">
 		<link rel="stylesheet" href="/css/utils.css?v=1">
-		<link rel="stylesheet" href="/css/styles.css?v=19">
+		<link rel="stylesheet" href="/css/styles.css?v=20">
 		<link rel="stylesheet" href="/css/responsive.css?v=10">
 		<script defer src="/js/util.js?v=5"></script>
 		<script defer src="/js/ui/safe-html.js?v=1"></script>
@@ -206,9 +206,24 @@
 							<section>
 							<header>
 								<label>Relays</label>
-								<button id="add-relay" class="btn-text">
-									<img class="svg icon small" src="/images/add-relay.svg"/>
-								</button>
+								<div id="local-relay-header-card" class="local-relay-card">
+									<div class="local-relay-card-title">
+										<strong>Local Relay</strong>
+										<span data-field="status"></span>
+									</div>
+									<div class="local-relay-card-actions">
+										<button id="local-relay-start" class="btn-text">Start</button>
+										<button id="local-relay-stop" class="btn-text">Stop</button>
+										<button id="add-relay" class="btn-text">
+											<img class="svg icon small" src="/images/add-relay.svg"/>
+										</button>
+									</div>
+									<div class="local-relay-card-stats">
+										<span><strong>URL:</strong> <span data-field="url"></span></span>
+										<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
+										<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
+									</div>
+								</div>
 							</header>
 							                            <table id="relay-list" class="row">
 							                                <thead>
@@ -254,22 +269,11 @@
 								</tbody>
 							</table>
 						</section>
-						<section>
-							<header>
-								<label>Local Relay Dashboard</label>
-								<div class="flex">
-									<button id="local-relay-start" class="btn-text">Start</button>
-									<button id="local-relay-stop" class="btn-text">Stop</button>
-								</div>
-							</header>
-							<div id="local-relay-dashboard">
-								<p><strong>URL:</strong> <span data-field="url"></span></p>
-								<p><strong>Status:</strong> <span data-field="status"></span></p>
-								<p><strong>Events sent:</strong> <span data-field="sent"></span></p>
-								<p><strong>Events received:</strong> <span data-field="received"></span></p>
-								<p><strong>Errors:</strong> <span data-field="errors"></span></p>
-								<p><strong>Last error:</strong> <span data-field="last_error"></span></p>
-							</div>
+							<section>
+								<header>
+									<label>Local Relay Dashboard</label>
+								</header>
+							<div id="local-relay-dashboard" class="hide"></div>
 							<div id="local-relay-info"></div>
 						</section>
 						</div>

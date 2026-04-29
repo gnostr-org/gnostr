@@ -25,6 +25,10 @@
 	.show-more {
 		left: 0;
 	}
+	.local-relay-card {
+		margin-left: 0;
+		width: 100%;
+	}
 	.nav.mobile {
 		display: flex;
 	}
