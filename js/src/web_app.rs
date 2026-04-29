@@ -11,6 +11,7 @@ use warp::Filter;
 
 use crate::bridge;
 use crate::crawler;
+use crate::crawler_control;
 use crate::flat;
 use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_assets};
 use crate::relay_control;
@@ -157,6 +158,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
 
     pretty_env_logger::init();
     relay_control::start_relay()?;
+    crawler_control::start_crawler(3000)?;
 
     let shell_html = Arc::new(bridge::shell_html());
     let js_assets_map = Arc::new(get_js_assets());

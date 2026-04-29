@@ -1,7 +1,7 @@
 use crate::{fetch_relay_texts, load_shitlist, parse_relay_metadata, Relay};
-use log::{debug, trace};
+use log::{debug, info, trace};
 use nostr_sdk::prelude::*;
-use crate::commands::run_sniper;
+use std::collections::HashSet;
 
 pub async fn run_watch(
     shitlist_path: Option<String>,
@@ -43,6 +43,7 @@ pub async fn run_watch(
     });
 
     let bodies = fetch_relay_texts(relays_iterator.collect(), client, "run_watch").await;
+    let mut discovered_nips = HashSet::new();
 
     for b in bodies {
         if let Ok((url, json_string)) = b {
@@ -50,20 +51,25 @@ pub async fn run_watch(
             let data: Result<Relay, serde_json::Error> = parse_relay_metadata(&json_string);
             if let Ok(relay_info) = data {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();
-                let mut nip_count = supported_nips.len();
                 for n in &supported_nips {
-                    trace!("nip_count:{}", nip_count);
-                    if nip_count > 1 {
-                        debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
-                        trace!("LINE::581 lib::run_watch");
-                        let _ = run_sniper(*n, None, client).await;
-                    } else {
-                        trace!("{:0>2}", n);
+                    trace!("run_watch: discovered NIP {:0>2} on {}", n, url);
+                    discovered_nips.insert(*n);
+                    if let Err(e) =
+                        crate::commands::sniper::write_nip_relay_metadata(*n, &url, &json_string)
+                    {
+                        debug!(
+                            "run_watch: failed to persist NIP-{} metadata for {}: {}",
+                            n, url, e
+                        );
                     }
-                    nip_count -= 1;
                 }
             }
         }
+    }
+
+    for nip in discovered_nips {
+        info!("run_watch: refreshing NIP {} bucket", nip);
+        crate::commands::sniper::refresh_nip_bucket(nip);
     }
 
     Ok(())

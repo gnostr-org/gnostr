@@ -53,8 +53,8 @@ tokio-stream = "0.1.17"
 walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
-gnostr-relay = { version = "1876.947085.693512", path = "../relay" }
-gnostr-crawler = { version = "1876.947085.693512", path = "../crawler" }
+gnostr-relay = { version = "1876.947089.686958", path = "../relay" }
+gnostr-crawler = { version = "1876.947089.686958", path = "../crawler" }
 
 [build-dependencies]
 chrono = { workspace = true, features = ["clock"] }
