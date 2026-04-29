@@ -32,7 +32,8 @@ fn main() {
 
     println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
     emit_patch_event(&build_name);
-    watch_js_sources(Path::new("src/js"));
+    watch_sources(Path::new("src/js"), &["js"]);
+    watch_sources(Path::new("src/css"), &["css"]);
 }
 
 fn emit_patch_event(build_name: &str) {
@@ -195,7 +196,7 @@ fn get_git_hash() -> String {
     panic!("Can not get git commit: {}", commit.unwrap_err());
 }
 
-fn watch_js_sources(dir: &Path) {
+fn watch_sources(dir: &Path, extensions: &[&str]) {
     let entries = match fs::read_dir(dir) {
         Ok(entries) => entries,
         Err(err) => {
@@ -209,11 +210,15 @@ fn watch_js_sources(dir: &Path) {
         });
         let path = entry.path();
         if path.is_dir() {
-            watch_js_sources(&path);
+            watch_sources(&path, extensions);
             continue;
         }
 
-        if path.extension().and_then(|ext| ext.to_str()) == Some("js") {
+        if path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .is_some_and(|ext| extensions.contains(&ext))
+        {
             println!("cargo:rerun-if-changed={}", path.display());
         }
     }
