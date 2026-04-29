@@ -30,6 +30,19 @@ function format_bytes(bytes) {
 	return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
+function ensure_local_relay_header_card() {
+	const mount = find_node("#local-relay-header-card-mount");
+	if (!mount || mount.querySelector("#local-relay-header-card")) {
+		return mount;
+	}
+	const template = find_node("#local-relay-header-card-template");
+	if (!template || !(template instanceof HTMLTemplateElement)) {
+		return mount;
+	}
+	mount.appendChild(template.content.cloneNode(true));
+	return mount;
+}
+
 async function fetch_relay_discovery() {
 	const response = await fetch("/api/relay/discovery", {
 		headers: {
@@ -50,6 +63,7 @@ function init_relays(model) {
 	if (model.pubkey) {
 		view_update_cached_active_pfp(model);
 	}
+	ensure_local_relay_header_card();
 	find_node("#add-relay", el).addEventListener("click", on_click_add_relay);
 	find_node("#local-relay-start", el).onclick = on_click_start_local_relay_sync;
 	find_node("#local-relay-stop", el).onclick = on_click_stop_local_relay_sync;
@@ -65,6 +79,7 @@ function init_relays(model) {
 }
 
 function render_relay_dashboard() {
+    ensure_local_relay_header_card();
     const status = get_local_relay_status();
     const el = find_node("#relays #local-relay-header-card");
     if (!el) {
@@ -107,6 +122,7 @@ function render_settings_profile(model) {
 }
 
 async function render_local_relay_info() {
+    ensure_local_relay_header_card();
     const el = find_node("#relays #local-relay-info");
     if (!el) {
         return;
@@ -144,6 +160,7 @@ async function render_local_relay_info() {
 }
 
 async function refresh_local_relay_backend_status() {
+    ensure_local_relay_header_card();
     try {
         const response = await fetch("/api/relay/status", {
             headers: {

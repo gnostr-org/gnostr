@@ -20,7 +20,7 @@
 		<script defer src="/js/ui/state.js?v=1"></script>
 		<script defer src="/js/ui/fmt.js?v=1"></script>
 		<script defer src="/js/ui/profile.js?v=1"></script>
-		<script defer src="/js/ui/settings.js?v=1"></script>
+		<script defer src="/js/ui/settings.js?v=2"></script>
 		<script defer src="/js/ui/dm.js?v=1"></script>
 		<script defer src="/js/nostr.js?v=7"></script>
 		<script defer src="/js/nip/34.js?v=1"></script>
@@ -194,34 +194,37 @@
 						<div id="relays" class="hide">
 							<section>
 							<header>
-								<div id="local-relay-header-card" class="local-relay-card">
-									<div id="relays-profile" class="settings-profile local-relay-profile">
-										<div class="settings-profile-top">
-											<img role="my-pfp" class="pfp jumbo" src="/images/no-user.svg"/>
-											<div class="settings-profile-meta">
-												<div id="local-relay-info" class="local-relay-card-meta"></div>
+								<template id="local-relay-header-card-template">
+									<div id="local-relay-header-card" class="local-relay-card">
+										<div id="relays-profile" class="settings-profile local-relay-profile">
+											<div class="settings-profile-top">
+												<img role="my-pfp" class="pfp jumbo clickable" src="/images/no-user.svg"/>
+												<div class="settings-profile-meta">
+													<div id="local-relay-info" class="local-relay-card-meta"></div>
+												</div>
+											</div>
+										</div>
+										<div class="local-relay-card-body">
+											<div class="local-relay-card-title">
+												<strong>Local Relay</strong>
+												<span data-field="status"></span>
+											</div>
+											<div class="local-relay-card-actions">
+												<button id="local-relay-start" class="btn-text">Start</button>
+												<button id="local-relay-stop" class="btn-text">Stop</button>
+												<button id="add-relay" class="btn-text">
+													<img class="svg icon small" src="/images/add-relay.svg"/>
+												</button>
+											</div>
+											<div class="local-relay-card-stats">
+												<span><strong>URL:</strong> <span data-field="url"></span></span>
+												<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
+												<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
 											</div>
 										</div>
 									</div>
-									<div class="local-relay-card-body">
-										<div class="local-relay-card-title">
-											<strong>Local Relay</strong>
-											<span data-field="status"></span>
-										</div>
-										<div class="local-relay-card-actions">
-											<button id="local-relay-start" class="btn-text">Start</button>
-											<button id="local-relay-stop" class="btn-text">Stop</button>
-											<button id="add-relay" class="btn-text">
-												<img class="svg icon small" src="/images/add-relay.svg"/>
-											</button>
-										</div>
-										<div class="local-relay-card-stats">
-											<span><strong>URL:</strong> <span data-field="url"></span></span>
-											<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
-											<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
-										</div>
-									</div>
-								</div>
+								</template>
+								<div id="local-relay-header-card-mount"></div>
 							</header>
 							                            <table id="relay-list" class="row">
 							                                <thead>

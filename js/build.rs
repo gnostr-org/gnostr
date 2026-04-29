@@ -34,6 +34,7 @@ fn main() {
     emit_patch_event(&build_name);
     watch_sources(Path::new("src/js"), &["js"]);
     watch_sources(Path::new("src/css"), &["css"]);
+    watch_sources(Path::new("src"), &["html"]);
 }
 
 fn emit_patch_event(build_name: &str) {

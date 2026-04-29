@@ -337,6 +337,13 @@ button.nav > img.icon {
 	background: var(--clrPanel);
 	box-sizing: border-box;
 }
+.local-relay-card,
+#relays section {
+	border: 1px solid var(--clrBorder);
+	border-radius: 14px;
+	background: var(--clrPanel);
+	box-sizing: border-box;
+}
 .local-relay-profile {
 	width: 100%;
 	margin: 0;
@@ -879,6 +886,9 @@ code {
     position: relative;
 	margin: 15px;
 }
+#relays section {
+	padding: 8px 12px;
+}
 #settings-profile, #relays-profile {
 	margin: 15px;
 	padding: 15px;
@@ -949,6 +959,13 @@ code {
 	flex-wrap: wrap;
 	gap: 12px;
 	justify-content: space-between;
+}
+#local-relay-header-card-mount {
+	display: block;
+	width: 100%;
+	flex: 1 0 100%;
+	align-self: stretch;
+	min-width: 0;
 }
 #relays section > table {
 	margin-top: 15px;
