@@ -1034,6 +1034,19 @@ code {
 #relays #relay-discovery-list td:nth-child(4) {
 	width: 15%;
 }
+#relays #relay-discovery-list .relay-discovery-kinds,
+#relays #relay-discovery-list .relay-discovery-meta {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+#relays #relay-discovery-list .relay-discovery-meta {
+	display: grid;
+	gap: 4px;
+}
+#relays #relay-discovery-list .relay-discovery-kinds {
+	white-space: nowrap;
+}
 #relays #nip65-relay-list td,
 #relays #nip65-relay-list a {
 	min-width: 0;

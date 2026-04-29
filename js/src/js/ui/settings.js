@@ -514,9 +514,8 @@ function new_relay_discovery_item(entry, model) {
 		meta_bits.push(entry.version);
 	}
 
-	const td_url = document.createElement('td');
-	const link = document.createElement('a');
 	const address = find_node("[data-relay-address]", tr);
+	const link = find_node(".details-relay", tr);
 	const name_el = find_node("[data-relay-name]", tr);
 	const software_el = find_node("[data-relay-software]", tr);
 	const nips_el = find_node("[data-relay-nips]", tr);
@@ -526,6 +525,11 @@ function new_relay_discovery_item(entry, model) {
 	const button = find_node(".add-discovered-relay", tr);
 	if (address) {
 		address.textContent = entry.url;
+	}
+	if (link) {
+		link.dataset.address = entry.url;
+		link.setAttribute("data-address", entry.url);
+		link.addEventListener("click", on_click_details_relay);
 	}
 	if (name_el) {
 		name_el.textContent = entry.name || entry.pubkey || entry.url;
@@ -577,6 +581,7 @@ function new_relay_discovery_item(entry, model) {
 	}
 	if (button) {
 		button.dataset.address = entry.url;
+		button.setAttribute("data-address", entry.url);
 		button.textContent = model.relays.has(entry.url) ? 'Added' : 'Add';
 		button.disabled = model.relays.has(entry.url);
 		button.addEventListener('click', on_click_add_discovered_relay);
