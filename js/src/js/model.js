@@ -643,6 +643,8 @@ async function model_load_nip34_events(model) {
 function new_model() {
 	const model = {
 		all_events: {}, // our master list of all events
+		search_results: [],
+		search_query: "",
 		notifications: {
 			last_viewed: 0, // time since last looking at notifications
 			count: 0, // the number not seen  since last looking

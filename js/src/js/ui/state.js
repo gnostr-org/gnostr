@@ -894,51 +894,24 @@ function view_timeline_update_reaction(model, ev) {
 
 function init_search() {
     const search_input = find_node("#main-search");
+    if (!search_input) {
+        return;
+    }
+
+    const submit_search = () => {
+        const query = search_input.value.trim();
+        if (!query) {
+            return;
+        }
+
+        const search_url = new URL("/query", window.location.origin);
+        search_url.searchParams.set("search", query);
+        window.location.assign(search_url.toString());
+    };
+
     search_input.addEventListener("keyup", (ev) => {
         if (ev.key === "Enter") {
-            const query = search_input.value.toLowerCase();
-            if (query) {
-                GNOSTR.search_results = [];
-                for (const key in GNOSTR.all_events) {
-                    const event = GNOSTR.all_events[key];
-                    let found = false;
-
-                    // Helper function to recursively search an object/array
-                    function searchInObject(obj) {
-                        if (typeof obj === 'string') {
-                            return obj.toLowerCase().includes(query);
-                        }
-                        if (typeof obj === 'number' || typeof obj === 'boolean') {
-                            return String(obj).includes(query);
-                        }
-                        if (Array.isArray(obj)) {
-                            for (const item of obj) {
-                                if (searchInObject(item)) {
-                                    return true;
-                                }
-                            }
-                        } else if (typeof obj === 'object' && obj !== null) {
-                            for (const prop in obj) {
-                                if (Object.prototype.hasOwnProperty.call(obj, prop)) {
-                                    if (searchInObject(obj[prop])) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                        return false;
-                    }
-
-                    if (searchInObject(event)) {
-                        found = true;
-                    }
-
-                    if (found) {
-                        GNOSTR.search_results.push(event);
-                    }
-                }
-                switch_view(VM_SEARCH, { query: search_input.value });
-            }
+            submit_search();
         }
     });
 }

@@ -145,15 +145,27 @@ pub async fn send(
     }
 
     let mut last_error: Option<String> = None;
+    let mut empty_result: Option<Vec<String>> = None;
 
     for relay in relay_url {
         match send_to_relay(&relay, &query_string, limit).await {
-            Ok(result) => return Ok(result),
+            Ok(result) => {
+                if result.is_empty() {
+                    debug!("relay {} returned no results; trying next relay", relay);
+                    empty_result = Some(result);
+                    continue;
+                }
+                return Ok(result);
+            }
             Err(err) => {
                 debug!("relay {} failed: {}", relay, err);
                 last_error = Some(format!("{}: {}", relay, err));
             }
         }
+    }
+
+    if let Some(result) = empty_result {
+        return Ok(result);
     }
 
     Err(Box::new(io::Error::new(

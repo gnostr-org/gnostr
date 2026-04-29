@@ -1,4 +1,5 @@
 use crate::commands::run_watch;
+use crate::processor::LOCALHOST_8080;
 use crate::load_relays_or_bootstrap;
 use crate::{build_gnostr_query, fetch_relay_texts, parse_relay_metadata, send};
 use axum::{
@@ -674,6 +675,19 @@ pub(crate) fn load_nip_query_relays(
     Ok(relays)
 }
 
+fn prepend_local_relay(relays: Vec<Url>) -> Vec<Url> {
+    let mut with_local = Vec::with_capacity(relays.len() + 1);
+    if let Ok(local_relay) = Url::parse(LOCALHOST_8080) {
+        with_local.push(local_relay);
+    }
+    for relay in relays {
+        if !with_local.iter().any(|existing| existing == &relay) {
+            with_local.push(relay);
+        }
+    }
+    with_local
+}
+
 pub(crate) fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
     params
         .get(key)
@@ -829,6 +843,7 @@ pub(crate) async fn get_query(Query(params): Query<HashMap<String, String>>) -> 
             .filter_map(|relay| Url::parse(&relay).ok())
             .collect()
     };
+    let relays = prepend_local_relay(relays);
 
     let kinds_value = crate::relays::live_kinds().join(",");
     let query_form = crate::query::forms::generic_query_form("/query", Some(kinds_value.as_str()));
@@ -972,6 +987,7 @@ pub(crate) async fn get_nip_query(
                 });
         }
     };
+    let relays = prepend_local_relay(relays);
 
     let results = match send(query_string.clone(), relays, limit.or(Some(100))).await {
         Ok(results) => results,
