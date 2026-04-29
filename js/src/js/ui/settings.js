@@ -94,6 +94,28 @@ function render_relay_dashboard() {
     void refresh_local_relay_backend_status();
 }
 
+function sync_discovered_relay_state(address, model = GNOSTR) {
+    const discovery_list = find_node("#relays #relay-discovery-list tbody");
+    if (!discovery_list) {
+        return;
+    }
+
+    const is_added = model.relays.has(address);
+    discovery_list.querySelectorAll(".add-discovered-relay").forEach((button) => {
+        if (button.dataset.address !== address) {
+            return;
+        }
+        button.textContent = is_added ? "Added" : "Add";
+        button.disabled = is_added;
+        button.setAttribute("aria-pressed", is_added ? "true" : "false");
+        button.classList.toggle("is-added", is_added);
+        const row = button.closest("tr");
+        if (row) {
+            row.dataset.relayState = is_added ? "added" : "available";
+        }
+    });
+}
+
 function render_settings_profile(model) {
     const el = find_node("#settings-profile");
     if (!el || !model.pubkey) {
@@ -544,6 +566,7 @@ function new_relay_discovery_item(entry, model) {
 		button.disabled = model.relays.has(entry.url);
 		button.addEventListener('click', on_click_add_discovered_relay);
 	}
+	sync_discovered_relay_state(entry.url, model);
 
 	return tr;
 }
@@ -557,6 +580,7 @@ function on_click_add_relay(ev) {
 		return;
 	model.relays.add(address);
 	find_node("#relays #relay-list tbody").appendChild(new_relay_item(address));
+	sync_discovered_relay_state(address, model);
 	model_save_settings(model);
 }
 
@@ -574,6 +598,7 @@ function on_click_remove_relay(ev) {
 		}
 		parent = parent.parentElement;
 	}
+	sync_discovered_relay_state(address, model);
 	model_save_settings(model);
 }
 
