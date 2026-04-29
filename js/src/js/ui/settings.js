@@ -233,6 +233,7 @@ async function render_nip65_relays(model) {
 	const discovery_by_url = new Map(relay_discovery.map((entry) => [entry.url, entry]));
 	model.relay_discovery = relay_discovery;
 	render_relay_discovery(model, relay_discovery);
+	sort_pool_relays_by_ping(model);
 	const timeline = typeof view_get_timeline_el === "function" ? view_get_timeline_el() : null;
 	if (model.search_query && timeline && timeline.dataset.mode === VM_SEARCH && typeof refresh_search_subscription === "function") {
 		await refresh_search_subscription(model);
@@ -395,6 +396,7 @@ function add_relay_address(address, label) {
 		return;
 	}
 	model.relays.add(address);
+	sort_pool_relays_by_ping(model);
 	find_node("#relay-list tbody").appendChild(new_relay_item(address));
 	model_save_settings(model);
 	log_info(`Added ${label}: ${address}`);
@@ -497,6 +499,7 @@ async function hydrate_relay_item(tr, address) {
 		tr.dataset.relayPingMs = String(ping_ms);
 		tr.dataset.relaySoftware = software_bits.join(" ");
 		tr.dataset.relayNips = supported_nips.join(", ");
+		sort_pool_relays_by_ping(GNOSTR);
 	} catch (error) {
 		name_el.textContent = "Unable to load relay info";
 		software_el.textContent = "";
@@ -605,6 +608,7 @@ function on_click_remove_relay(ev) {
 	if (!model.pool.remove(address))
 		return;
 	model.relays.delete(address);
+	sort_pool_relays_by_ping(model);
 	let parent = ev.target;
 	while (parent) {
 		if (parent.matches("tr")) {

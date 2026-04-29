@@ -188,6 +188,11 @@ function init_local_relay_sync() {
             local_relay = relay;
             local_relay_stats.connected = true;
             local_relay_stats.last_error = "";
+            if (GNOSTR.pool && !GNOSTR.pool.has(local_relay_url)) {
+                GNOSTR.pool.add(relay);
+                sort_pool_relays_by_ping(GNOSTR);
+            }
+            on_pool_open(relay);
             sync_all_user_metadata_to_local_relay(GNOSTR);
             sync_active_user_metadata_to_local_relay(GNOSTR);
             sync_all_dm_events_to_local_relay(GNOSTR);
@@ -231,6 +236,9 @@ function init_local_relay_sync() {
 
         relay.on('close', () => { 
             log_info(`Disconnected from local relay ${local_relay_url}`);
+            if (GNOSTR.pool && GNOSTR.pool.has(local_relay_url)) {
+                GNOSTR.pool.remove(local_relay_url);
+            }
             local_relay = null; 
             local_relay_stats.connected = false;
             if (typeof render_relay_dashboard === 'function') {
@@ -252,6 +260,9 @@ function init_local_relay_sync() {
 async function stop_local_relay_sync() {
     const model = GNOSTR;
     model.local_relay_enabled = false;
+    if (model.pool && model.pool.has(local_relay_url)) {
+        model.pool.remove(local_relay_url);
+    }
     if (local_relay) {
         local_relay.close();
         local_relay = null;

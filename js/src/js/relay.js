@@ -8,6 +8,7 @@ async function poll_nip34_from_nip65_relays(model) {
 	}
 
 	const nip65_relays_data = await get_nip65_relays_from_db(pubkey);
+	const ordered_nip65_relays = sort_relay_pairs_by_ping(model, nip65_relays_data);
 	const current_nip65_relay_urls = new Set(nip65_relays_data.map(r => r[0]));
 
 	for (const [relay_url, sub_id] of active_nip34_nip65_subscriptions.entries()) {
@@ -31,7 +32,7 @@ async function poll_nip34_from_nip65_relays(model) {
 		KIND_REPO_STATUS_DRAFT,
 	];
 
-	for (const [relay_url, policy] of nip65_relays_data) {
+	for (const [relay_url, policy] of ordered_nip65_relays) {
 		if (!policy.read) {
 			continue;
 		}

@@ -118,8 +118,9 @@ RelayPool.prototype.find_relays = function relayPoolFindRelays(relay_ids) {
 	if (relay_ids[0] instanceof Relay)
 		return relay_ids
 
-	return this.relays.reduce((acc, relay) => {
-		if (relay_ids.some((rid) => relay.url === rid))
+	return relay_ids.reduce((acc, relay_id) => {
+		const relay = this.relays.find((item) => item.url === relay_id)
+		if (relay)
 			acc.push(relay)
 		return acc
 	}, [])

@@ -114,7 +114,7 @@ async function webapp_init() {
 	init_relays(model);
 
 	// Create our pool so that event processing functions can work
-	const pool = nostrjs.RelayPool(model.relays);
+	const pool = nostrjs.RelayPool(sort_relays_by_ping(model, Array.from(model.relays)));
 	model.pool = pool
 	pool.on("open", on_pool_open);
 	pool.on("event", on_pool_event);

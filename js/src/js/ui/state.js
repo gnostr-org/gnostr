@@ -313,6 +313,53 @@ function normalize_relay_urls(relays) {
 	return relays.filter((relay) => typeof relay === "string" && (relay.startsWith("ws://") || relay.startsWith("wss://")));
 }
 
+function relay_ping_sort_value(model, url) {
+	if (url === "ws://127.0.0.1:8080") {
+		return -1;
+	}
+	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
+	const entry = discovery.find((item) => item && item.url === url);
+	return Number.isFinite(entry?.ping_ms) ? entry.ping_ms : Number.POSITIVE_INFINITY;
+}
+
+function sort_relays_by_ping(model, relays) {
+	return relays
+		.map((relay, index) => ({ relay, index, ping: relay_ping_sort_value(model, relay) }))
+		.sort((left, right) => {
+			if (left.ping !== right.ping) {
+				return left.ping - right.ping;
+			}
+			return left.index - right.index;
+		})
+		.map((item) => item.relay);
+}
+
+function sort_relay_pairs_by_ping(model, relay_pairs) {
+	return relay_pairs
+		.map((pair, index) => ({ pair, index, ping: relay_ping_sort_value(model, pair[0]) }))
+		.sort((left, right) => {
+			if (left.ping !== right.ping) {
+				return left.ping - right.ping;
+			}
+			return left.index - right.index;
+		})
+		.map((item) => item.pair);
+}
+
+function sort_pool_relays_by_ping(model) {
+	if (!model || !model.pool || !Array.isArray(model.pool.relays)) {
+		return;
+	}
+	model.pool.relays.sort((left, right) => {
+		const left_ping = relay_ping_sort_value(model, left.url);
+		const right_ping = relay_ping_sort_value(model, right.url);
+		if (left_ping !== right_ping) {
+			return left_ping - right_ping;
+		}
+		return left.url.localeCompare(right.url);
+	});
+}
+
 /* view_timeline_refresh is a hack for redrawing the events in order
  */
 function view_timeline_refresh(model, mode, opts={}) {

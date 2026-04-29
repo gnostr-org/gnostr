@@ -562,8 +562,10 @@ async function model_load_settings(model) {
 			const settings = ev.target.result;
 			if (settings) {
 				model.notifications.last_viewed = settings.notifications_last_viewed || 0;
-				if (Array.isArray(settings.relays) && settings.relays.length)
-					model.relays = new Set(settings.relays);
+				if (Array.isArray(settings.relays)) {
+					const relays = settings.relays.filter((relay) => relay !== local_relay_url);
+					model.relays = new Set([local_relay_url, ...relays]);
+				}
 				model.embeds = settings.embeds ? settings.embeds : "friends";
 				if (settings.local_relay_enabled != null)
 					model.local_relay_enabled = settings.local_relay_enabled;
