@@ -677,9 +677,7 @@ function new_model() {
 		elements: {}, // map of evid > rendered element
 		relay_que: new Map(),
 		relays: new Set([
-			"wss://relay.nostr.band",
-			"ws://relay.gnostr.org",
-			"wss://relay.snort.social",
+			"wss://blossom.gnostr.cloud",
 			"wss://nos.lol",
 		]),
 		
