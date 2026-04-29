@@ -37,8 +37,8 @@ pub(crate) async fn collect_supported_relays_for_nip(
 
     let mut supported = Vec::new();
     for item in bodies {
-        let (url, json_string) = match item {
-            Ok(pair) => pair,
+        let (url, json_string, _ping_ms) = match item {
+            Ok(tuple) => tuple,
             Err(e) => {
                 warn!(
                     "Failed to fetch relay metadata for nip {}: {}",
@@ -77,7 +77,7 @@ pub(crate) async fn prime_all_nip_relays_files(
 
     let mut nip_relays: HashMap<i32, HashSet<String>> = HashMap::new();
     for item in bodies {
-        if let Ok((url, json_string)) = item {
+        if let Ok((url, json_string, ping_ms)) = item {
             if json_string.is_empty() {
                 info!("prime_all_nip_relays_files: no metadata body for {}", url);
                 continue;
@@ -87,8 +87,9 @@ pub(crate) async fn prime_all_nip_relays_files(
                 url,
                 json_string.len()
             );
-            if let Ok(relay_info) = parse_relay_metadata(&json_string) {
-                let supported_nips = relay_info.supported_nips.unwrap_or_default();
+            if let Ok(mut relay_info) = parse_relay_metadata(&json_string) {
+                relay_info.ping_ms = Some(ping_ms);
+                let supported_nips = relay_info.supported_nips.clone().unwrap_or_default();
                 if supported_nips.is_empty() {
                     info!(
                         "prime_all_nip_relays_files: {} reported no supported_nips",
@@ -112,7 +113,9 @@ pub(crate) async fn prime_all_nip_relays_files(
                             "prime_all_nip_relays_files: writing relay metadata to {}",
                             file_path.display()
                         );
-                        if let Err(e) = sync_fs::write(&file_path, &json_string) {
+                        let serialized = serde_json::to_string_pretty(&relay_info)
+                            .map_err(std::io::Error::other)?;
+                        if let Err(e) = sync_fs::write(&file_path, serialized) {
                             warn!(
                                 "Failed to write individual relay file {}: {}",
                                 file_path.display(),

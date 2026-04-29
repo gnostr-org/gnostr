@@ -1,4 +1,4 @@
-use crate::{fetch_relay_texts, load_relays_or_bootstrap, load_shitlist, parse_relay_metadata};
+use crate::{fetch_relay_texts, load_relays_or_bootstrap, load_shitlist, parse_relay_metadata, Relay};
 use log::{error, info, trace};
 use nostr_sdk::prelude::Url;
 use std::fs as sync_fs;
@@ -7,7 +7,7 @@ use std::io::Write;
 pub(crate) fn write_nip_relay_metadata(
     nip_lower: i32,
     url: &str,
-    json_string: &str,
+    relay_info: &Relay,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let parsed_url = Url::parse(url)?;
     let host = parsed_url.host_str().unwrap_or("unknown");
@@ -19,6 +19,7 @@ pub(crate) fn write_nip_relay_metadata(
 
     info!("write_nip_relay_metadata: writing {}", file_path_str);
     let mut file = sync_fs::File::create(&file_path)?;
+    let json_string = serde_json::to_string_pretty(relay_info)?;
     file.write_all(json_string.as_bytes())?;
     Ok(())
 }
@@ -88,12 +89,14 @@ pub async fn run_sniper(
     let bodies = fetch_relay_texts(filtered_relays, client, "run_sniper").await;
 
     for b in bodies {
-        if let Ok((url, json_string)) = b {
+        if let Ok((url, json_string, ping_ms)) = b {
             let data = parse_relay_metadata(&json_string);
             match data {
-                Ok(relay_info) => {
+                Ok(mut relay_info) => {
+                    relay_info.ping_ms = Some(ping_ms);
                     info!("run_sniper: Successfully parsed relay info for {}", url);
-                    for n in &relay_info.supported_nips.unwrap_or_default() {
+                    let supported_nips = relay_info.supported_nips.clone().unwrap_or_default();
+                    for n in &supported_nips {
                         if n == &nip_lower {
                             info!(
                                 "run_sniper: Found NIP-{} support on relay: {}",
@@ -105,7 +108,7 @@ pub async fn run_sniper(
                             info!("software:{:?}", &relay_info.software);
                             info!("version:{:?}", &relay_info.version);
 
-                            if let Err(e) = write_nip_relay_metadata(nip_lower, &url, &json_string)
+                            if let Err(e) = write_nip_relay_metadata(nip_lower, &url, &relay_info)
                             {
                                 error!(
                                     "Failed to write NIP-{} metadata for {}: {}",

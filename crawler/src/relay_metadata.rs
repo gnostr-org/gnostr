@@ -5,6 +5,8 @@ pub struct Relay {
     pub contact: Option<String>,
     pub description: Option<String>,
     pub name: Option<String>,
+    #[serde(default)]
+    pub ping_ms: Option<u64>,
     pub software: Option<String>,
     pub supported_nips: Option<Vec<i32>>,
     pub supported_nip_extensions: Option<Vec<String>>,

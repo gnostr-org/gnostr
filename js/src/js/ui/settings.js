@@ -515,7 +515,7 @@ function new_relay_discovery_item(entry, model) {
 		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a>`;
 		const body = document.createElement('div');
 		body.className = 'relay-discovery-body';
-		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
+		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-ping hide" data-relay-ping></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
 		item.append(summary, body);
 	}
 	item.classList.add('relay-card', 'relay-discovery-card');
@@ -524,6 +524,7 @@ function new_relay_discovery_item(entry, model) {
 	const address = find_node("[data-relay-address]", item);
 	const link = find_node(".details-relay", item);
 	const name_el = find_node("[data-relay-name]", item);
+	const ping_el = find_node("[data-relay-ping]", item);
 	const software_el = find_node("[data-relay-software]", item);
 	const nips_el = find_node("[data-relay-nips]", item);
 	const description_el = find_node("[data-relay-description]", item);
@@ -539,6 +540,10 @@ function new_relay_discovery_item(entry, model) {
 	if (name_el) {
 		name_el.textContent = entry.name || entry.pubkey || entry.url;
 		name_el.classList.toggle("hide", !name_el.textContent);
+	}
+	if (ping_el) {
+		ping_el.textContent = Number.isFinite(entry.ping_ms) ? `Ping: ${entry.ping_ms} ms` : "";
+		ping_el.classList.toggle("hide", !ping_el.textContent);
 	}
 	if (software_el) {
 		const software_bits = [];

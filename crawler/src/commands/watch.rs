@@ -46,16 +46,18 @@ pub async fn run_watch(
     let mut discovered_nips = HashSet::new();
 
     for b in bodies {
-        if let Ok((url, json_string)) = b {
+        if let Ok((url, json_string, ping_ms)) = b {
             trace!("{{\"relay\":\"{}\", \"data\":{}}}", url, json_string);
             let data: Result<Relay, serde_json::Error> = parse_relay_metadata(&json_string);
             if let Ok(relay_info) = data {
-                let supported_nips = relay_info.supported_nips.unwrap_or_default();
+                let mut relay_info = relay_info;
+                relay_info.ping_ms = Some(ping_ms);
+                let supported_nips = relay_info.supported_nips.clone().unwrap_or_default();
                 for n in &supported_nips {
                     trace!("run_watch: discovered NIP {:0>2} on {}", n, url);
                     discovered_nips.insert(*n);
                     if let Err(e) =
-                        crate::commands::sniper::write_nip_relay_metadata(*n, &url, &json_string)
+                        crate::commands::sniper::write_nip_relay_metadata(*n, &url, &relay_info)
                     {
                         debug!(
                             "run_watch: failed to persist NIP-{} metadata for {}: {}",

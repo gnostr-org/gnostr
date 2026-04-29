@@ -34,7 +34,7 @@ pub async fn run_nip34(
     let bodies = fetch_relay_texts(filtered_relays, client, "run_nip34").await;
 
     for b in bodies {
-        if let Ok((url, json_string)) = b {
+        if let Ok((url, json_string, _ping_ms)) = b {
             let data = parse_relay_metadata(&json_string);
             if let Ok(relay_info) = data {
                 let supported_nips = relay_info.supported_nips.unwrap_or_default();

@@ -35,6 +35,7 @@ struct RelayDiscoveryEntry {
     contact: Option<String>,
     description: Option<String>,
     name: Option<String>,
+    ping_ms: Option<u64>,
     software: Option<String>,
     version: Option<String>,
     supported_nips: Vec<i32>,
@@ -47,6 +48,7 @@ struct RelayDiscoveryState {
     contact: Option<String>,
     description: Option<String>,
     name: Option<String>,
+    ping_ms: Option<u64>,
     software: Option<String>,
     version: Option<String>,
     supported_nips: BTreeSet<i32>,
@@ -107,6 +109,9 @@ fn collect_relay_discovery() -> Vec<RelayDiscoveryEntry> {
             if state.name.is_none() {
                 state.name = relay_meta.name;
             }
+            if state.ping_ms.is_none() {
+                state.ping_ms = relay_meta.ping_ms;
+            }
             if state.software.is_none() {
                 state.software = relay_meta.software;
             }
@@ -130,6 +135,7 @@ fn collect_relay_discovery() -> Vec<RelayDiscoveryEntry> {
             contact: state.contact,
             description: state.description,
             name: state.name,
+            ping_ms: state.ping_ms,
             software: state.software,
             version: state.version,
             supported_nips: state.supported_nips.into_iter().collect(),
