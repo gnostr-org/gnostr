@@ -1033,6 +1033,31 @@ code {
 #relays .relay-discovery-summary::-webkit-details-marker {
 	display: none;
 }
+#relays .relay-active-card {
+	display: block;
+}
+#relays .relay-active-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px;
+	list-style: none;
+}
+#relays .relay-active-summary::-webkit-details-marker {
+	display: none;
+}
+#relays .relay-active-card .relay-info {
+	padding: 0 16px 16px;
+}
+#relays .relay-active-summary .remove-relay {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 6px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
+}
 #relays .relay-discovery-body {
 	display: flex;
 	align-items: flex-start;

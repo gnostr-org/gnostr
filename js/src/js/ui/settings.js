@@ -376,6 +376,8 @@ function new_nip65_relay_item(url, policy, discovery_entry) {
 }
 
 function on_click_add_nip65_relay(ev) {
+	ev.preventDefault();
+	ev.stopPropagation();
 	add_relay_address(ev.currentTarget.dataset.address, "NIP-65 relay");
 }
 
@@ -412,28 +414,35 @@ function new_relay_item(str) {
 		tr = template.content.firstElementChild.cloneNode(true);
 	} else {
 		tr = document.createElement("tr");
-		const main = document.createElement("td");
-		main.className = "relay-card-main";
-		main.innerHTML = `
-			<a href="#" class="details-relay relay-address" data-address="">
-				<span data-relay-address></span>
-			</a>
-			<div class="relay-info">
-				<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
-				<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
-				<div class="relay-info-line relay-info-software hide" data-relay-software></div>
-				<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
-				<div class="relay-info-line relay-info-description hide" data-relay-description></div>
-			</div>`;
-		const action = document.createElement("td");
-		action.className = "relay-card-action";
-		action.innerHTML = `
-			<button class="remove-relay btn-text" data-address="" role="remove-relay">
-				<img class="icon svg small" src="/images/event-delete.svg"/>
-			</button>`;
-		tr.append(main, action);
+		const cell = document.createElement("td");
+		cell.colSpan = 2;
+		cell.innerHTML = `
+			<details class="relay-active-card">
+				<summary class="relay-active-summary">
+					<span class="relay-active-summary-text">
+						<span class="relay-active-summary-name" data-relay-name>Loading relay info...</span>
+						<span class="relay-active-summary-address" data-relay-address></span>
+						<span class="relay-active-summary-ping" data-relay-ping></span>
+					</span>
+					<button class="remove-relay btn-text" data-address="" role="remove-relay">
+						<img class="icon svg small" src="/images/event-delete.svg"/>
+					</button>
+				</summary>
+				<div class="relay-info">
+					<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
+					<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
+					<div class="relay-info-line relay-info-software hide" data-relay-software></div>
+					<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
+					<div class="relay-info-line relay-info-description hide" data-relay-description></div>
+				</div>
+			</details>`;
+		tr.append(cell);
 	}
 	tr.classList.add("relay-card");
+	const card = find_node(".relay-active-card", tr);
+	if (card) {
+		card.open = false;
+	}
 	const remove = find_node(".remove-relay", tr);
 	if (remove) {
 		remove.dataset.address = str;
@@ -607,8 +616,10 @@ function on_click_add_relay(ev) {
 }
 
 function on_click_remove_relay(ev) {
+	ev.preventDefault();
+	ev.stopPropagation();
 	const model = GNOSTR;
-	const address = ev.target.dataset.address;
+	const address = ev.currentTarget.dataset.address;
 	if (!model.pool.remove(address))
 		return;
 	model.relays.delete(address);
@@ -627,7 +638,8 @@ function on_click_remove_relay(ev) {
 
 async function on_click_details_relay(ev) {
 	ev.preventDefault();
-	const address = ev.target.dataset.address;
+	ev.stopPropagation();
+	const address = ev.currentTarget.dataset.address;
 	const url = new URL(address);
 	const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
 
