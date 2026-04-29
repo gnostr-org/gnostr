@@ -95,23 +95,25 @@ function render_relay_dashboard() {
 }
 
 function sync_discovered_relay_state(address, model = GNOSTR) {
-    const discovery_list = find_node("#relays #relay-discovery-list tbody");
+    const discovery_list = find_node("#relays #relay-discovery-list");
     if (!discovery_list) {
         return;
     }
 
     const is_added = model.relays.has(address);
-    discovery_list.querySelectorAll(".add-discovered-relay").forEach((button) => {
-        if (button.dataset.address !== address) {
+    discovery_list.querySelectorAll("[data-relay-address]").forEach((address_el) => {
+        if (address_el.textContent !== address) {
             return;
         }
-        button.textContent = is_added ? "Added" : "Add";
-        button.disabled = is_added;
-        button.setAttribute("aria-pressed", is_added ? "true" : "false");
-        button.classList.toggle("is-added", is_added);
-        const row = button.closest("tr");
-        if (row) {
-            row.dataset.relayState = is_added ? "added" : "available";
+        const item = address_el.closest("details");
+        if (!item) {
+            return;
+        }
+        item.open = !is_added;
+        item.dataset.relayState = is_added ? "added" : "available";
+        const button = item.querySelector(".add-discovered-relay");
+        if (button) {
+            button.disabled = is_added;
         }
     });
 }
@@ -265,19 +267,17 @@ function discovery_score(entry) {
 }
 
 function render_relay_discovery(model, relay_discovery) {
-	const rlist = find_node("#relays #relay-discovery-list tbody");
+	const rlist = find_node("#relays #relay-discovery-list");
 	if (!rlist) {
 		return;
 	}
 
 	rlist.innerHTML = '';
 	if (!relay_discovery.length) {
-		const tr = document.createElement('tr');
-		const td = document.createElement('td');
-		td.colSpan = 4;
-		td.textContent = 'No crawler relay discovery available.';
-		tr.appendChild(td);
-		rlist.appendChild(tr);
+		const empty = document.createElement('div');
+		empty.className = 'relay-discovery-empty';
+		empty.textContent = 'No crawler relay discovery available.';
+		rlist.appendChild(empty);
 		return;
 	}
 
@@ -504,30 +504,30 @@ async function hydrate_relay_item(tr, address) {
 
 function new_relay_discovery_item(entry, model) {
 	const template = find_node("#relay-discovery-template");
-	let tr = null;
+	let item = null;
 	if (template instanceof HTMLTemplateElement && template.content.firstElementChild) {
-		tr = template.content.firstElementChild.cloneNode(true);
+		item = template.content.firstElementChild.cloneNode(true);
 	} else {
-		tr = document.createElement('tr');
-		tr.className = 'relay-card relay-discovery-card';
-		const td_url = document.createElement('td');
-		td_url.className = 'relay-card-main relay-discovery-address';
-		td_url.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a><div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div>`;
-		const td_action = document.createElement('td');
-		td_action.className = 'relay-card-action relay-discovery-action';
-		td_action.innerHTML = `<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay">Add</button>`;
-		tr.append(td_url, td_action);
+		item = document.createElement('details');
+		item.className = 'relay-card relay-discovery-card';
+		const summary = document.createElement('summary');
+		summary.className = 'relay-discovery-summary';
+		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a>`;
+		const body = document.createElement('div');
+		body.className = 'relay-discovery-body';
+		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay">Add</button>`;
+		item.append(summary, body);
 	}
-	tr.classList.add('relay-card', 'relay-discovery-card');
+	item.classList.add('relay-card', 'relay-discovery-card');
 	const supported_nips = Array.isArray(entry.supported_nips) ? entry.supported_nips : [];
 
-	const address = find_node("[data-relay-address]", tr);
-	const link = find_node(".details-relay", tr);
-	const name_el = find_node("[data-relay-name]", tr);
-	const software_el = find_node("[data-relay-software]", tr);
-	const nips_el = find_node("[data-relay-nips]", tr);
-	const description_el = find_node("[data-relay-description]", tr);
-	const button = find_node(".add-discovered-relay", tr);
+	const address = find_node("[data-relay-address]", item);
+	const link = find_node(".details-relay", item);
+	const name_el = find_node("[data-relay-name]", item);
+	const software_el = find_node("[data-relay-software]", item);
+	const nips_el = find_node("[data-relay-nips]", item);
+	const description_el = find_node("[data-relay-description]", item);
+	const button = find_node(".add-discovered-relay", item);
 	if (address) {
 		address.textContent = entry.url;
 	}
@@ -562,13 +562,13 @@ function new_relay_discovery_item(entry, model) {
 	if (button) {
 		button.dataset.address = entry.url;
 		button.setAttribute("data-address", entry.url);
-		button.textContent = model.relays.has(entry.url) ? 'Added' : 'Add';
+		button.textContent = 'Add';
 		button.disabled = model.relays.has(entry.url);
 		button.addEventListener('click', on_click_add_discovered_relay);
 	}
 	sync_discovered_relay_state(entry.url, model);
 
-	return tr;
+	return item;
 }
 
 function on_click_add_relay(ev) {
@@ -603,6 +603,7 @@ function on_click_remove_relay(ev) {
 }
 
 async function on_click_details_relay(ev) {
+	ev.preventDefault();
 	const address = ev.target.dataset.address;
 	const url = new URL(address);
 	const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
@@ -623,7 +624,7 @@ async function on_click_details_relay(ev) {
 function render_relay_details(data, target_element) {
 	let parent = target_element;
 	while (parent) {
-		if (parent.matches("tr")) {
+		if (parent.matches("tr") || parent.matches("details")) {
 			const is_already_open = parent.nextElementSibling && parent.nextElementSibling.classList.contains('relay-details');
 
 			// Close all open details
@@ -632,11 +633,15 @@ function render_relay_details(data, target_element) {
 
 			// If it wasn't already open, open it now.
 			if (!is_already_open) {
-				let details_row = document.createElement('tr');
+				const details_row = parent.matches("tr") ? document.createElement('tr') : document.createElement('div');
 				details_row.classList.add('relay-details');
-				const td = document.createElement('td');
-				td.colSpan = 2;
-				details_row.appendChild(td);
+				let details_body = details_row;
+				if (parent.matches("tr")) {
+					const td = document.createElement('td');
+					td.colSpan = 2;
+					details_row.appendChild(td);
+					details_body = td;
+				}
 				parent.insertAdjacentElement('afterend', details_row);
 
 				const dl = document.createElement('dl');
@@ -663,7 +668,7 @@ function render_relay_details(data, target_element) {
 					}
 					dl.appendChild(dd);
 				}
-				td.appendChild(dl);
+				details_body.appendChild(dl);
 			}
 			break;
 		}

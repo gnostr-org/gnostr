@@ -246,24 +246,24 @@
 									</tr>
 								</template>
 								<template id="relay-discovery-template">
-									<tr class="relay-card relay-discovery-card">
-										<td class="relay-card-main relay-discovery-address">
+									<details class="relay-card relay-discovery-card" open>
+										<summary class="relay-discovery-summary">
 											<a href="#" class="details-relay relay-address" data-address="">
 												<span data-relay-address></span>
 											</a>
+										</summary>
+										<div class="relay-discovery-body">
 											<div class="relay-info">
 												<div class="relay-info-line relay-info-name" data-relay-name></div>
 												<div class="relay-info-line relay-info-software hide" data-relay-software></div>
 												<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
 												<div class="relay-info-line relay-info-description hide" data-relay-description></div>
 											</div>
-										</td>
-										<td class="relay-card-action relay-discovery-action">
 											<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay">
 												Add
 											</button>
-										</td>
-									</tr>
+										</div>
+									</details>
 								</template>
 								<table id="relay-list" class="row">
 									<thead>
@@ -279,16 +279,7 @@
 							</details>
 							<details class="relay-section" open>
 								<summary><label>Crawler Relay Discovery</label></summary>
-								<table id="relay-discovery-list" class="row">
-									<thead>
-										<tr>
-											<td class="column-address">Address</td>
-											<td class="column-action">Add</td>
-										</tr>
-									</thead>
-									<tbody>
-									</tbody>
-								</table>
+								<div id="relay-discovery-list" class="relay-discovery-list"></div>
 							</details>
 						</div>
 						<div id="settings" class="hide">
