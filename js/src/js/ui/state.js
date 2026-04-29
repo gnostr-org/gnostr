@@ -7,6 +7,7 @@ const VM_USER          = "user"; // all events by pubkey
 const VM_SETTINGS      = "settings";
 const VM_RELAYS        = "relays";
 const VM_NIP_EXPLORER  = "nip-explorer";
+const VM_NIP_KIND      = "nip-kind";
 const VM_NIP34         = "nip34-view-friends"; // NIP-34 events from followed profiles
 const VM_GNOSTR  = "gnostr"; // All NIP-34 events
 const VM_NIP34_DETAIL  = "nip34-detail"; // Detailed view of a NIP-34 repository
@@ -23,6 +24,7 @@ VIEW_NAMES[VM_THREAD] = "thread";
 VIEW_NAMES[VM_SETTINGS] = "settings";
 VIEW_NAMES[VM_RELAYS] = "relays";
 VIEW_NAMES[VM_NIP_EXPLORER] = "nip";
+VIEW_NAMES[VM_NIP_KIND] = "nip";
 VIEW_NAMES[VM_NIP34] = "nip/34";
 VIEW_NAMES[VM_GNOSTR] = "gnostr";
 VIEW_NAMES[VM_NIP34_DETAIL] = "repository-details";
@@ -63,6 +65,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				if ((el.dataset.hideReplys == "true") == opts.hide_replys)
 					return;
 				push_state = false;
+				break;
+			case VM_NIP_KIND:
+				if (el.dataset.kind == String(opts.kind))
+					return;
 				break;
 			case VM_SEARCH:
 				if (el.dataset.searchQuery == (opts.query || ""))
@@ -156,12 +162,15 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 			case VM_GNOSTR: // Add for nip34-global
 				pieces.push(pubkey); // This should be empty for global
 				break;
-			case VM_NIP34:
-				if (opts.kind) {
-					pieces.push(opts.kind);
-				}
-				break;
-	case VM_NIP34_DETAIL:
+	case VM_NIP34:
+		if (opts.kind) {
+			pieces.push(opts.kind);
+		}
+		break;
+		case VM_NIP_KIND:
+			pieces = ["nip", opts.kind];
+			break;
+		case VM_NIP34_DETAIL:
 	        pieces.push(opts.repo_id);
 	        break;
 	}
@@ -202,6 +211,12 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 			name = `nip/34/${opts.kind}`;
 		}
 		break;
+	case VM_NIP_KIND:
+		if (opts.kind !== undefined) {
+			el.dataset.kind = opts.kind;
+			name = `nip/${opts.kind}`;
+		}
+		break;
 	case VM_NIP_EXPLORER:
 		name = "NIP explorer";
 		view_set_show_count(0, true, true);
@@ -224,7 +239,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	// Do some visual updates
 	find_node("#show-more").classList.add("hide");
 	// Capitalize the first letter of the name for display, unless it's a special case
-	if (mode !== VM_USER && mode !== VM_DM_THREAD && mode !== VM_NIP34_DETAIL) {
+	if (mode !== VM_USER && mode !== VM_DM_THREAD && mode !== VM_NIP34_DETAIL && mode !== VM_NIP_KIND) {
 		name = name.charAt(0).toUpperCase() + name.slice(1);
 	}
 		find_node("#global-header #app-title").innerText = name;
@@ -422,7 +437,7 @@ function view_timeline_refresh(model, mode, opts={}) {
 		}
 	} else {
 		// Existing logic for other views
-		if (mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP34) {
+		if (mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP34 || mode == VM_NIP_KIND) {
 			evs.sort((a, b) => b.created_at - a.created_at);
 		} else {
 			evs.reverse();
@@ -446,7 +461,7 @@ function view_timeline_refresh(model, mode, opts={}) {
 		if (count > 0) {
 			el.append(fragment);
 		}
-		const is_more_mode = mode == VM_FRIENDS || mode == VM_NOTIFICATIONS || mode == VM_NIP34_DETAIL || mode == VM_GNOSTR;
+		const is_more_mode = mode == VM_FRIENDS || mode == VM_NOTIFICATIONS || mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP_KIND;
 		if (is_more_mode && evs.length > limit) {
 			find_node("#show-more").classList.remove("hide");
 		} else {
@@ -468,7 +483,7 @@ function view_update_navs(mode) {
 function view_matches_mode(view_name, mode) {
 	if (view_name == mode)
 		return true;
-	if (view_name == "nip" && mode == VM_NIP_EXPLORER)
+	if (view_name == "nip" && (mode == VM_NIP_EXPLORER || mode == VM_NIP_KIND))
 		return true;
 	if (view_name == "relays" && mode == VM_RELAYS)
 		return true;
@@ -503,6 +518,15 @@ function view_path_to_mode(pathname) {
 					valid = false;
 				}
 			}
+		} else if (parts[1]) {
+			const kind = parseInt(parts[1], 10);
+			if (!Number.isNaN(kind)) {
+				mode = VM_NIP_KIND;
+				opts.kind = kind;
+			} else {
+				mode = VM_NIP_EXPLORER;
+				valid = false;
+			}
 		} else {
 			mode = VM_NIP_EXPLORER;
 		}
@@ -531,6 +555,9 @@ function view_path_to_mode(pathname) {
 			break;
 		case VM_NIP34_DETAIL:
 			opts.repo_id = parts[1];
+			break;
+		case VM_NIP_KIND:
+			opts.kind = parseInt(opts.kind, 10);
 			break;
 	}
 
@@ -1080,6 +1107,8 @@ function view_mode_contains_event(model, ev, mode, opts={}) {
 			return false;
 		}
 		return is_nip34_repo_kind(ev.kind);
+	case VM_NIP_KIND:
+		return opts.kind != null && ev.kind == opts.kind;
         case VM_NIP34_DETAIL:
             console.log(`view_mode_contains_event: Filtering for VM_NIP34_DETAIL. Event ID: ${ev.id}, Repo ID from opts: ${opts.repo_id}`);
             const all_nip34_kinds = new Set([
