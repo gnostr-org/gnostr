@@ -491,28 +491,13 @@ function new_relay_discovery_item(entry, model) {
 		const td_url = document.createElement('td');
 		td_url.className = 'relay-card-main relay-discovery-address';
 		td_url.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a><div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div>`;
-		const td_kinds = document.createElement('td');
-		td_kinds.className = 'relay-discovery-kinds';
-		td_kinds.setAttribute('data-relay-kinds', '');
-		const td_meta = document.createElement('td');
-		td_meta.className = 'relay-discovery-meta';
-		td_meta.setAttribute('data-relay-meta', '');
 		const td_action = document.createElement('td');
 		td_action.className = 'relay-card-action relay-discovery-action';
 		td_action.innerHTML = `<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay">Add</button>`;
-		tr.append(td_url, td_kinds, td_meta, td_action);
+		tr.append(td_url, td_action);
 	}
 	tr.classList.add('relay-card', 'relay-discovery-card');
 	const supported_nips = Array.isArray(entry.supported_nips) ? entry.supported_nips : [];
-	const meta_bits = [];
-	if (entry.name) {
-		meta_bits.push(entry.name);
-	}
-	if (entry.software) {
-		meta_bits.push(entry.version ? `${entry.software} ${entry.version}` : entry.software);
-	} else if (entry.version) {
-		meta_bits.push(entry.version);
-	}
 
 	const address = find_node("[data-relay-address]", tr);
 	const link = find_node(".details-relay", tr);
@@ -520,8 +505,6 @@ function new_relay_discovery_item(entry, model) {
 	const software_el = find_node("[data-relay-software]", tr);
 	const nips_el = find_node("[data-relay-nips]", tr);
 	const description_el = find_node("[data-relay-description]", tr);
-	const td_kinds = find_node("[data-relay-kinds]", tr);
-	const td_meta = find_node("[data-relay-meta]", tr);
 	const button = find_node(".add-discovered-relay", tr);
 	if (address) {
 		address.textContent = entry.url;
@@ -553,31 +536,6 @@ function new_relay_discovery_item(entry, model) {
 	if (description_el) {
 		description_el.textContent = entry.description || "";
 		description_el.classList.toggle("hide", !entry.description);
-	}
-	if (td_kinds) {
-		td_kinds.title = supported_nips.length ? supported_nips.join(', ') : 'No supported NIPs reported';
-		td_kinds.textContent = supported_nips.length ? `NIPs: ${supported_nips.join(', ')}` : '—';
-	}
-	if (td_meta) {
-		td_meta.innerHTML = "";
-		if (meta_bits.length) {
-			const meta_line = document.createElement('div');
-			meta_line.className = 'relay-info-line relay-info-name';
-			meta_line.textContent = meta_bits.join(' · ');
-			td_meta.appendChild(meta_line);
-		}
-		if (entry.description) {
-			const desc_line = document.createElement('div');
-			desc_line.className = 'relay-info-line';
-			desc_line.textContent = entry.description;
-			td_meta.appendChild(desc_line);
-		}
-		if (Array.isArray(entry.supported_nip_extensions) && entry.supported_nip_extensions.length) {
-			const ext_line = document.createElement('div');
-			ext_line.className = 'relay-info-line';
-			ext_line.textContent = `Extensions: ${entry.supported_nip_extensions.join(', ')}`;
-			td_meta.appendChild(ext_line);
-		}
 	}
 	if (button) {
 		button.dataset.address = entry.url;
