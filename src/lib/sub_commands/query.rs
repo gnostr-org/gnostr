@@ -35,9 +35,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     let query_string = to_string(&q)?;
     debug!("{}", query_string);
 
-    let relays = if search_term.is_some() {
-        search_relays_for_nip50()?
-    } else if args.relay.is_empty() {
+    let relays = if args.relay.is_empty() {
         debug!("Using bootstrap relays.");
         crate::crawler::bootstrap_relays()
             .iter()
@@ -60,13 +58,11 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
         })?;
     debug!("Received query result.");
 
-    let mut json_result: Vec<String> = vec![];
-    debug!("json_result={:?}", json_result);
-    debug!("json_result.len()={:?}", json_result.len());
-    for element in vec_result {
-        debug!("element={}", element);
-        json_result.push(element);
-    }
+    let json_result = if let Some(search_term) = search_term {
+        filter_query_results(vec_result, &search_term)
+    } else {
+        vec_result
+    };
 
     for element in json_result {
         print!("{}", element);
@@ -145,14 +141,6 @@ fn build_filter_map(
         }
     }
 
-    if let Some(search_vec) = &args.search {
-        if let Some(search) = search_vec.first() {
-            if !search.is_empty() {
-                debug!("Applying search filter: {}", search);
-                filt.insert("search".to_string(), json!(search));
-            }
-        }
-    }
     Ok((filt, limit_check))
 }
 
@@ -162,6 +150,27 @@ fn search_term(args: &QuerySubCommand) -> Option<String> {
         .and_then(|search_vec| search_vec.first())
         .cloned()
         .filter(|search| !search.is_empty())
+}
+
+fn filter_query_results(results: Vec<String>, search_term: &str) -> Vec<String> {
+    let needles: Vec<String> = search_term
+        .split(|c: char| c.is_whitespace() || c == ',')
+        .map(str::trim)
+        .filter(|term| !term.is_empty())
+        .map(|term| term.to_ascii_lowercase())
+        .collect();
+
+    if needles.is_empty() {
+        return results;
+    }
+
+    results
+        .into_iter()
+        .filter(|result| {
+            let haystack = result.to_ascii_lowercase();
+            needles.iter().all(|needle| haystack.contains(needle))
+        })
+        .collect()
 }
 
 pub fn search_relays_for_nip50() -> anyhow::Result<Vec<Url>> {
@@ -383,8 +392,20 @@ mod tests {
         let args = create_query_subcommand(&["--search", "keyword1,keyword2"]);
         let (filt, _) = build_filter_map(&args)?;
 
-        assert_eq!(filt.get("search").unwrap(), &json!("keyword1,keyword2"));
+        assert!(filt.get("search").is_none());
         Ok(())
+    }
+
+    #[test]
+    fn test_filter_query_results_matches_search_terms() {
+        let results = vec![
+            r#"{"content":"hello world","kind":1}"#.to_string(),
+            r#"{"content":"goodbye","kind":1}"#.to_string(),
+        ];
+
+        let filtered = filter_query_results(results, "hello");
+        assert_eq!(filtered.len(), 1);
+        assert!(filtered[0].contains("hello world"));
     }
 
     #[test]
