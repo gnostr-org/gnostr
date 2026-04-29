@@ -838,7 +838,6 @@ actix-rt = "2.11.0"
 actix-test = "0.1.5"
 anyhow = { workspace = true }
 assert_cmd = { workspace = true }
-cargo-dist = "0.31.0"
 comma = "1.0.0"
 crossterm = { workspace = true }
 ctor = "0.6.3"

@@ -153,4 +153,3 @@ gnostr-bot-macos:
 
 gnostr-bot-macos-intel:
   @make gnostr-bot-macos-intel
-
