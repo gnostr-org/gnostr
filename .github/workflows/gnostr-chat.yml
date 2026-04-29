@@ -141,7 +141,7 @@ jobs:
             chmod +x "$HOME/.cargo/bin/gnostr"
             GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
-            GNOSTR_CMD="cargo run --bin gnostr -- "
+            GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
           $GNOSTR_CMD --help
