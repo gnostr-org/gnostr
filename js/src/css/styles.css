@@ -339,6 +339,7 @@ button.nav > img.icon {
 }
 .local-relay-profile {
 	width: 100%;
+	margin: 0;
 	padding: 0;
 	background: transparent;
 	border: 0;
@@ -898,6 +899,22 @@ code {
 	word-break: break-all;
 	margin-top: 8px;
 	min-height: 2.4em;
+}
+#relays .settings-profile.local-relay-profile {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	box-sizing: border-box;
+}
+#relays .settings-profile.local-relay-profile .settings-profile-top {
+	align-items: center;
+}
+#relays .settings-profile.local-relay-profile .settings-profile-meta {
+	flex: 1;
+	min-width: 0;
+	width: 100%;
 }
 #settings-profile p[name="settings-profile-about"] {
 	margin: 8px 0 0;
