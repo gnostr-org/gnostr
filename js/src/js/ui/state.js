@@ -48,6 +48,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	const el = view_get_timeline_el();
 	const now = new Date().getTime();
 
+	if (mode !== VM_SEARCH) {
+		clear_search_subscription(model);
+	}
+
 	if (opts.hide_replys == undefined) {
 		opts.hide_replys = el.dataset.hideReplys == "true";
 	}
@@ -59,6 +63,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				if ((el.dataset.hideReplys == "true") == opts.hide_replys)
 					return;
 				push_state = false;
+				break;
+			case VM_SEARCH:
+				if (el.dataset.searchQuery == (opts.query || ""))
+					return;
 				break;
 			case VM_DM_THREAD:
 			case VM_USER:
@@ -119,9 +127,9 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
             // NIP-34 events are already fetched as part of PUBLIC_KINDS,
             // so no special fetch is needed here beyond what's done for friends.
         }
-        if (mode == VM_NIP_EXPLORER) {
-            view_show_spinner(false);
-        }
+	if (mode == VM_NIP_EXPLORER) {
+		view_show_spinner(false);
+	}
         if (mode == VM_NIP34_DETAIL) {
             console.log(`view_timeline_apply_mode: Entering VM_NIP34_DETAIL for repo_id: ${opts.repo_id}`);
         }
@@ -136,6 +144,9 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		switch (mode) {
 			case VM_FRIENDS:
 				pieces = [];
+				break;
+			case VM_SEARCH:
+				pieces = ["search"];
 				break;
 			case VM_THREAD:
 				pieces.push(thread_id);
@@ -154,7 +165,11 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	        pieces.push(opts.repo_id);
 	        break;
 	}
-			window.history.pushState({mode, opts}, "", "/"+pieces.join("/"));
+			let next_path = "/" + pieces.join("/");
+			if (mode == VM_SEARCH) {
+				next_path += `?search=${encodeURIComponent(opts.query || "")}`;
+			}
+			window.history.pushState({mode, opts}, "", next_path);
 	}
 
 	el.dataset.mode = mode;
@@ -163,6 +178,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	delete el.dataset.pubkey;
 	delete el.dataset.repoId;
 	delete el.dataset.kind;
+	delete el.dataset.searchQuery;
 	switch(mode) {
 	case VM_FRIENDS:
 		el.dataset.hideReplys = opts.hide_replys;
@@ -189,6 +205,10 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	case VM_NIP_EXPLORER:
 		name = "NIP explorer";
 		view_set_show_count(0, true, true);
+		break;
+	case VM_SEARCH:
+		el.dataset.searchQuery = opts.query || "";
+		name = "Search";
 		break;
 	case VM_RELAYS:
 		name = "Relays";
@@ -232,6 +252,9 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		view_timeline_refresh(model, mode, opts);
 
 		switch (mode) {
+			case VM_SEARCH:
+				perform_search(model, opts.query || "");
+				break;
 			case VM_DM_THREAD:
 				decrypt_dms(model);
 				model_dm_seen(model, pubkey);
@@ -260,6 +283,18 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				break;
 		}
 	return mode;
+}
+
+function clear_search_subscription(model) {
+	if (!model.search_sub_id || !model.pool) {
+		return;
+	}
+	model.pool.unsubscribe(model.search_sub_id);
+	model.search_sub_id = null;
+}
+
+function normalize_relay_urls(relays) {
+	return relays.filter((relay) => typeof relay === "string" && (relay.startsWith("ws://") || relay.startsWith("wss://")));
 }
 
 /* view_timeline_refresh is a hack for redrawing the events in order
@@ -894,53 +929,123 @@ function view_timeline_update_reaction(model, ev) {
 
 function init_search() {
     const search_input = find_node("#main-search");
+    if (!search_input) {
+        return;
+    }
+
+    const submit_search = () => {
+        switch_view(VM_SEARCH, { query: search_input.value.trim() });
+    };
+
     search_input.addEventListener("keyup", (ev) => {
         if (ev.key === "Enter") {
-            const query = search_input.value.toLowerCase();
-            if (query) {
-                GNOSTR.search_results = [];
-                for (const key in GNOSTR.all_events) {
-                    const event = GNOSTR.all_events[key];
-                    let found = false;
-
-                    // Helper function to recursively search an object/array
-                    function searchInObject(obj) {
-                        if (typeof obj === 'string') {
-                            return obj.toLowerCase().includes(query);
-                        }
-                        if (typeof obj === 'number' || typeof obj === 'boolean') {
-                            return String(obj).includes(query);
-                        }
-                        if (Array.isArray(obj)) {
-                            for (const item of obj) {
-                                if (searchInObject(item)) {
-                                    return true;
-                                }
-                            }
-                        } else if (typeof obj === 'object' && obj !== null) {
-                            for (const prop in obj) {
-                                if (Object.prototype.hasOwnProperty.call(obj, prop)) {
-                                    if (searchInObject(obj[prop])) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                        return false;
-                    }
-
-                    if (searchInObject(event)) {
-                        found = true;
-                    }
-
-                    if (found) {
-                        GNOSTR.search_results.push(event);
-                    }
-                }
-                switch_view(VM_SEARCH, { query: search_input.value });
-            }
+            submit_search();
         }
     });
+}
+
+function search_in_object(obj, query) {
+    if (!query) {
+        return false;
+    }
+    const needle = query.toLowerCase();
+    if (typeof obj === "string") {
+        return obj.toLowerCase().includes(needle);
+    }
+    if (typeof obj === "number" || typeof obj === "boolean") {
+        return String(obj).includes(needle);
+    }
+    if (Array.isArray(obj)) {
+        return obj.some((item) => search_in_object(item, query));
+    }
+    if (obj && typeof obj === "object") {
+        return Object.keys(obj).some((key) => search_in_object(obj[key], query));
+    }
+    return false;
+}
+
+function perform_search(model, query) {
+    const events = model_events_arr(model).filter((ev) => event_is_renderable(ev));
+    let results = [];
+
+    if (!query) {
+        const first = events[0];
+        if (first) {
+            results = [first];
+        }
+    } else {
+        results = events.filter((ev) => search_in_object(ev, query));
+    }
+
+    model.search_query = query;
+    model.search_results = results;
+    void refresh_search_subscription(model);
+}
+
+async function load_nip_relays(model, nip) {
+	if (!model.nip_relay_lists) {
+		model.nip_relay_lists = new Map();
+	}
+	if (model.nip_relay_lists.has(nip)) {
+		return model.nip_relay_lists.get(nip);
+	}
+
+	try {
+		const response = await fetch(`/${nip}/relays.json`, {
+			headers: {
+				"Accept": "application/json",
+			},
+		});
+		if (!response.ok) {
+			throw new Error(`nip relay request failed with ${response.status}`);
+		}
+		const relays = normalize_relay_urls(await response.json());
+		if (relays.length) {
+			model.nip_relay_lists.set(nip, relays);
+		}
+		return relays;
+	} catch (error) {
+		log_warn(`load_nip_relays: failed to load NIP-${nip} relays`, error);
+	}
+
+	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
+	const fallback = discovery
+		.filter((entry) => {
+			if (!entry || !entry.url || !Array.isArray(entry.supported_nips)) {
+				return false;
+			}
+			return entry.supported_nips.includes(nip);
+		})
+		.map((entry) => entry.url);
+	const normalized_fallback = normalize_relay_urls(fallback);
+	if (normalized_fallback.length) {
+		model.nip_relay_lists.set(nip, normalized_fallback);
+	}
+	return normalized_fallback;
+}
+
+async function refresh_search_subscription(model) {
+	clear_search_subscription(model);
+	if (!model.search_query || !model.pool) {
+		return;
+	}
+
+	const query = model.search_query;
+	const relays = await load_nip_relays(model, 50);
+	if (query !== model.search_query || !model.pool) {
+		return;
+	}
+	if (!relays.length) {
+		log_warn("No NIP-50 relays available for search.");
+		return;
+	}
+
+	model.search_sub_id = `search:${query}`;
+	model.pool.subscribe(model.search_sub_id, [{
+		search: query,
+		kinds: PUBLIC_KINDS,
+		limit: 100,
+	}], relays);
 }
 
 function view_mode_contains_event(model, ev, mode, opts={}) {
@@ -1001,8 +1106,20 @@ function view_mode_contains_event(model, ev, mode, opts={}) {
             }
             console.log(`view_mode_contains_event: Event ${ev.id} does NOT match repo ID ${opts.repo_id}.`);
             return false;
-        case VM_SEARCH:
-            return model.search_results.includes(ev);
+	case VM_SEARCH:
+            if (model.search_results.includes(ev)) {
+                return true;
+            }
+            if (typeof search_in_object === "function" && model.search_query && event_is_renderable(ev)) {
+                const timeline = view_get_timeline_el();
+                if (timeline && timeline.dataset.mode === VM_SEARCH && search_in_object(ev, model.search_query)) {
+                    if (!model.search_results.some((item) => item.id === ev.id)) {
+                        model.search_results.push(ev);
+                    }
+                    return true;
+                }
+            }
+            return false;
 	}
 	return false;
 }

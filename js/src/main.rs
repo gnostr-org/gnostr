@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use gnostr_relay::cli::RelayCli;
 use gnostr_relay::launcher;
 
+use gnostr_js::crawler_control;
 use gnostr_js::utils::detach::{
     capture_detached_pid, existing_detached_pid, relay_port_is_listening,
     spawn_detached_current_exe_named,
@@ -25,6 +26,15 @@ enum Commands {
     Relay {
         #[command(flatten)]
         relay: RelayCli,
+        /// Detach and run in the background
+        #[arg(long)]
+        detach: bool,
+    },
+    /// Run the crawler API server
+    Crawler {
+        /// Port to listen on
+        #[arg(short, long, default_value_t = 3000)]
+        port: u16,
         /// Detach and run in the background
         #[arg(long)]
         detach: bool,
@@ -99,6 +109,29 @@ async fn run_relay(relay: RelayCli, detach: bool) {
         .expect("run relay server");
 }
 
+async fn run_crawler(port: u16, detach: bool) {
+    if detach {
+        match crawler_control::start_crawler(port) {
+            Ok(status) => {
+                println!("{}", status.message);
+                return;
+            }
+            Err(e) => {
+                panic!("spawn detached crawler: {e}");
+            }
+        }
+    }
+
+    if relay_port_is_listening(port) {
+        println!("gnostr-js crawler is already listening on 127.0.0.1:{port}");
+        return;
+    }
+
+    gnostr_crawler::run_api_server(port)
+        .await
+        .expect("run crawler server");
+}
+
 #[actix_web::main]
 async fn main() {
     let args = Args::parse();
@@ -108,5 +141,6 @@ async fn main() {
     }) {
         Commands::Web { port, detach } => run_web(port, detach).await,
         Commands::Relay { relay, detach } => run_relay(relay, detach).await,
+        Commands::Crawler { port, detach } => run_crawler(port, detach).await,
     }
 }

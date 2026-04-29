@@ -5,6 +5,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  push:
+  pull_request:
   workflow_run:
     workflows:
       - gnostr-test-matrix
@@ -126,23 +128,56 @@ jobs:
         with:
           arch: ${{ matrix.os.arch }}
           run-tests: 'false'
-      - uses: actions/cache@v4
+      - name: Restore Cargo registry index cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/registry/index
-          key: index-${{ runner.os }}-${{ github.run_number }}
+          key: index-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            index-${{ runner.os }}-
-      #- run: cargo generate-lockfile && git diff
-      - uses: actions/cache@v4
+            index-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-
+      - name: Restore Cargo registry cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/registry/cache
           key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-
+      - name: Restore Cargo git cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cargo/git
+          key: git-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            git-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-
       - run: cargo fetch
-      - uses: actions/cache@v4
+      - name: Restore Cargo target cache
+        uses: actions/cache/restore@v4
         with:
           path: target
           key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-
       - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - name: Save Cargo registry index cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cargo/registry/index
+          key: index-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+      - name: Save Cargo registry cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry/cache
+            ~/.cargo/git
+          key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+      - name: Save Cargo target cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
 
   build-artifacts:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
@@ -344,7 +379,7 @@ jobs:
         path: ${{ env.BUILD_NAME }}
 
   publish-ghcr-images:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     needs: build-artifacts
     runs-on: ubuntu-latest
     permissions:
@@ -389,6 +424,8 @@ jobs:
           file: ${{ matrix.file }}
           platforms: linux/amd64,linux/arm64
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ${{ matrix.image }}:latest
             ${{ matrix.image }}:${{ github.event.workflow_run.head_sha || github.sha }}

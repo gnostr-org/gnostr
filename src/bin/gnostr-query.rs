@@ -1,6 +1,7 @@
 use gnostr::crawler::processor::BOOTSTRAP_RELAYS;
 use gnostr::query::cli::cli;
 use gnostr::query::ConfigBuilder;
+use gnostr::sub_commands::query::search_relays_for_nip50;
 use serde_json::{json, to_string};
 use url::Url;
 
@@ -79,15 +80,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             std::process::exit(1);
         }
     }
-    //["REQ", "", { "search": "orange" }, { "kinds": [1, 2], "search": "purple" }]
-    if let Some(search) = matches.get_many::<String>("search") {
-        let search_vec: Vec<&String> = search.collect();
-        //if search_vec.len() == 2 {
-        let search_string = "search".to_string();
-        let val = search_vec[0].split(',').collect::<String>();
-        filt.insert(search_string, json!(val));
-        //}
-    }
+    let search_term = matches
+        .get_many::<String>("search")
+        .and_then(|search| search.into_iter().next().cloned())
+        .filter(|search| !search.is_empty());
 
     let _config = ConfigBuilder::new()
         .host("localhost")
@@ -116,7 +112,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .get_many::<String>("relay")
         .map(|values| values.cloned().collect())
         .unwrap_or_default();
-    let relays = if relay_args.is_empty() {
+    let relays = if search_term.is_some() {
+        search_relays_for_nip50()?
+    } else if relay_args.is_empty() {
         BOOTSTRAP_RELAYS
             .iter()
             .filter_map(|s| Url::parse(s).ok())
@@ -145,15 +143,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         json_result.push(element);
     }
 
-    if matches.get_many::<String>("search").is_some() {
-        for element in json_result {
-            print!("{}", element);
-        }
-        std::process::exit(0);
-    } else {
-        for element in json_result {
-            print!("{}", element);
-        }
+    for element in json_result {
+        print!("{}", element);
     }
     Ok(())
 }

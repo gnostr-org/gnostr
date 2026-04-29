@@ -152,7 +152,12 @@ async function render_nip65_relays(model) {
 		}),
 	]);
 	const discovery_by_url = new Map(relay_discovery.map((entry) => [entry.url, entry]));
+	model.relay_discovery = relay_discovery;
 	render_relay_discovery(model, relay_discovery);
+	const timeline = typeof view_get_timeline_el === "function" ? view_get_timeline_el() : null;
+	if (model.search_query && timeline && timeline.dataset.mode === VM_SEARCH && typeof refresh_search_subscription === "function") {
+		await refresh_search_subscription(model);
+	}
 
 	const rlist = find_node("#relays #nip65-relay-list tbody");
 	if (!rlist) {
@@ -367,7 +372,7 @@ function new_relay_discovery_item(entry, model) {
 
 	const td_kinds = document.createElement('td');
 	td_kinds.title = supported_nips.length ? supported_nips.join(', ') : 'No supported NIPs reported';
-	td_kinds.textContent = supported_nips.length ? `${supported_nips.length} kind${supported_nips.length === 1 ? '' : 's'}` : '—';
+	td_kinds.textContent = supported_nips.length ? `NIPs: ${supported_nips.join(', ')}` : '—';
 	tr.appendChild(td_kinds);
 
 	const td_meta = document.createElement('td');

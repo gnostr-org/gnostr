@@ -225,6 +225,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/", get(methods::index::handle))
         .route("/gnostr", get(methods::gnostr::handle))
         .route("/gnostr/", get(methods::gnostr::handle)) // Handle trailing slash
+        .route("/search", get(methods::index::handle_spa))
         .route("/thread/:thread_id", get(methods::index::handle_spa)) // Thread view
         .route("/messages", get(methods::index::handle_spa)) // Messages view
         .route("/dm", get(methods::index::handle_spa)) // Messages view
