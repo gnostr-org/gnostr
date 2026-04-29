@@ -60,6 +60,17 @@ function render_collapsible_block(title, body, open=false, class_name="") {
     </details>`;
 }
 
+function build_flat_url(repo_url, git_ref="") {
+    if (!repo_url) {
+        return "";
+    }
+    const params = new URLSearchParams({ repo: repo_url });
+    if (git_ref) {
+        params.set("ref", git_ref);
+    }
+    return `/flat?${params.toString()}`;
+}
+
 function render_event(model, ev, opts={}) {
 	switch(ev.kind) {
 		case KIND_SHARE:
@@ -170,7 +181,7 @@ function group_state_refs(state_refs) {
 		.sort((left, right) => right.refs.length - left.refs.length || left.namespace.localeCompare(right.namespace));
 }
 
-function render_state_ref_groups(state_refs) {
+function render_state_ref_groups(state_refs, clone_url="") {
 	const groups = group_state_refs(state_refs);
 	if (!groups.length) {
 		return "";
@@ -182,6 +193,7 @@ function render_state_ref_groups(state_refs) {
 				<code class="nip34-state-ref-name">${ref_name}</code>
 				<span class="nip34-state-ref-arrow">→</span>
 				<code class="nip34-state-ref-value">${ref_value}</code>
+				${clone_url ? `<a class="nip34-state-flat-link" href="${build_flat_url(clone_url, ref_name)}" target="_blank" rel="noreferrer">Flat</a>` : ""}
 			</li>
 		`).join("");
 		return render_collapsible_block(
@@ -386,7 +398,7 @@ function render_repo_event_summary(model, ev) {
             description = tag[1];
         } else if (tag[0] === "clone") {
             clone_url = tag[1];
-            flat_url = `/flat?repo=${encodeURIComponent(tag[1])}`;
+            flat_url = build_flat_url(tag[1]);
         } else if (tag[0] === "relays") {
             relays = tag.slice(1);
         } else if (tag[0] === "maintainers") {
@@ -444,7 +456,7 @@ function render_repo_event_summary(model, ev) {
                 </div>
                 <div class="nip34-state-name">${repo_name || "Unnamed repository state"}</div>
             </div>`;
-            summary += render_state_ref_groups(state_refs);
+            summary += render_state_ref_groups(state_refs, clone_url);
             summary += json_body;
             break;
         case KIND_REPO_PATCH:

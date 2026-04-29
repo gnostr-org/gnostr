@@ -12,6 +12,8 @@ const MAX_DEFAULT_BYTES: u64 = 51200; // 50 KiB
 #[command(author, version, about = "Strictly-compliant Repo Flattener")]
 pub struct Args {
     pub repo_url: String,
+    #[arg(long)]
+    pub git_ref: Option<String>,
     #[arg(short, long)]
     pub out: Option<PathBuf>,
     #[arg(long, default_value_t = MAX_DEFAULT_BYTES)]
@@ -22,9 +24,12 @@ pub fn run() -> Result<()> {
     run_with_args(Args::parse())
 }
 
-pub fn build_html(repo_url: &str, max_bytes: u64) -> Result<String> {
+pub fn build_html(repo_url: &str, git_ref: Option<&str>, max_bytes: u64) -> Result<String> {
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
     let repo = scan::clone_repo(tmp_dir.path(), repo_url)?;
+    if let Some(git_ref) = git_ref.filter(|value| !value.is_empty()) {
+        scan::checkout_ref(&repo.path, git_ref)?;
+    }
     let files = scan::collect_files(&repo.path, max_bytes)?;
     Ok(render::build_html(
         repo_url,
@@ -36,6 +41,9 @@ pub fn build_html(repo_url: &str, max_bytes: u64) -> Result<String> {
 pub fn run_with_args(args: Args) -> Result<()> {
     let tmp_dir = tempfile::Builder::new().prefix("flatten_").tempdir()?;
     let repo = scan::clone_repo(tmp_dir.path(), &args.repo_url)?;
+    if let Some(git_ref) = args.git_ref.as_deref().filter(|value| !value.is_empty()) {
+        scan::checkout_ref(&repo.path, git_ref)?;
+    }
     let files = scan::collect_files(&repo.path, args.max_bytes)?;
     let html = render::build_html(
         &args.repo_url,

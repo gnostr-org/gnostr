@@ -335,6 +335,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .map(|query: HashMap<String, String>| {
             match query.get("repo") {
                 Some(repo_url) if !repo_url.is_empty() => {
+                    let git_ref = query.get("ref").map(String::as_str);
                     let is_precheck = query
                         .get("check")
                         .or_else(|| query.get("precheck"))
@@ -342,11 +343,12 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                         .unwrap_or(false);
 
                     if is_precheck {
-                        match flat::scan::probe_repo(repo_url) {
+                        match flat::scan::probe_repo(repo_url, git_ref) {
                             Ok(_) => warp::reply::with_status(
                                 warp::reply::json(&serde_json::json!({
                                     "available": true,
                                     "repo": repo_url,
+                                    "ref": git_ref,
                                 })),
                                 StatusCode::OK,
                             )
@@ -355,6 +357,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                                 warp::reply::json(&serde_json::json!({
                                     "available": false,
                                     "repo": repo_url,
+                                    "ref": git_ref,
                                     "error": err.to_string(),
                                 })),
                                 StatusCode::NOT_FOUND,
@@ -362,7 +365,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                             .into_response(),
                         }
                     } else {
-                        match flat::build_html(repo_url, 51_200) {
+                        match flat::build_html(repo_url, git_ref, 51_200) {
                             Ok(html) => warp::reply::with_header(
                                 warp::reply::html(html),
                                 "Content-Security-Policy",

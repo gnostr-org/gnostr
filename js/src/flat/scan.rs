@@ -42,9 +42,28 @@ pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<ClonedRepo> {
     Ok(ClonedRepo { path, short_hash })
 }
 
-pub(crate) fn probe_repo(repo_url: &str) -> Result<()> {
+pub(crate) fn checkout_ref(repo_path: &Path, git_ref: &str) -> Result<()> {
+    let status = Command::new("git")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .args(["-C", repo_path.to_string_lossy().as_ref(), "checkout", "--force", git_ref])
+        .status()
+        .context("Git checkout command failed")?;
+
+    if status.success() {
+        return Ok(());
+    }
+
+    anyhow::bail!("Failed to checkout ref '{git_ref}'");
+}
+
+pub(crate) fn probe_repo(repo_url: &str, git_ref: Option<&str>) -> Result<()> {
     let repo_url = normalize_repo_url(repo_url);
     ensure_helper_support(&repo_url)?;
+
+    let mut args = vec!["ls-remote", "--exit-code", &repo_url];
+    if let Some(git_ref) = git_ref.filter(|value| !value.is_empty()) {
+        args.push(git_ref);
+    }
 
     let output = Command::new("git")
         .env("GIT_TERMINAL_PROMPT", "0")
@@ -52,7 +71,7 @@ pub(crate) fn probe_repo(repo_url: &str) -> Result<()> {
             "GIT_SSH_COMMAND",
             "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
         )
-        .args(["ls-remote", "--exit-code", &repo_url])
+        .args(args)
         .output()
         .context("Git ls-remote command failed")?;
 
