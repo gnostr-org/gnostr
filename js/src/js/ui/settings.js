@@ -231,7 +231,7 @@ async function render_nip65_relays(model) {
 			return left[0].localeCompare(right[0]);
 		})
 		.forEach(([url, policy]) => {
-			rlist.appendChild(new_nip65_relay_item(url, policy));
+			rlist.appendChild(new_nip65_relay_item(url, policy, discovery_by_url.get(url)));
 		});
 }
 
@@ -274,7 +274,7 @@ function render_relay_discovery(model, relay_discovery) {
 		});
 }
 
-function new_nip65_relay_item(url, policy) {
+function new_nip65_relay_item(url, policy, discovery_entry) {
 	const policy_str = Object.keys(policy).length === 0 ? "" :
 		(policy.read && policy.write ? "read/write" :
 		(policy.read ? "read" : "write"));
@@ -284,14 +284,15 @@ function new_nip65_relay_item(url, policy) {
 		tr = template.content.firstElementChild.cloneNode(true);
 	} else {
 		tr = document.createElement("tr");
+		tr.className = "relay-card nip65-relay";
 		const td_address = document.createElement("td");
-		td_address.className = "nip65-relay-address";
+		td_address.className = "relay-card-main nip65-relay-address";
 		td_address.innerHTML = `<a href="#" class="details-relay" data-address=""><span data-relay-address></span></a>`;
 		const td_policy = document.createElement("td");
 		td_policy.className = "nip65-relay-policy";
 		td_policy.setAttribute("data-relay-policy", "");
 		const td_action = document.createElement("td");
-		td_action.className = "nip65-relay-action";
+		td_action.className = "relay-card-action nip65-relay-action";
 		td_action.innerHTML = `<button class="add-nip65-relay btn-text" data-address="" role="add-nip65-relay">Add</button>`;
 		tr.append(td_address, td_policy, td_action);
 	}
@@ -302,6 +303,10 @@ function new_nip65_relay_item(url, policy) {
 	const link = find_node(".details-relay", tr);
 	const address = find_node("[data-relay-address]", tr);
 	const policy_el = find_node("[data-relay-policy]", tr);
+	const name_el = find_node("[data-relay-name]", tr);
+	const software_el = find_node("[data-relay-software]", tr);
+	const nips_el = find_node("[data-relay-nips]", tr);
+	const description_el = find_node("[data-relay-description]", tr);
 	const button = find_node(".add-nip65-relay", tr);
 	if (link) {
 		link.dataset.address = url;
@@ -313,6 +318,31 @@ function new_nip65_relay_item(url, policy) {
 	}
 	if (policy_el) {
 		policy_el.textContent = policy_str;
+	}
+	if (name_el) {
+		const label = discovery_entry?.name || discovery_entry?.pubkey || url;
+		name_el.textContent = label;
+		name_el.classList.toggle("hide", !label);
+	}
+	if (software_el) {
+		const software_bits = [];
+		if (discovery_entry?.software) {
+			software_bits.push(discovery_entry.software);
+		}
+		if (discovery_entry?.version) {
+			software_bits.push(discovery_entry.version);
+		}
+		software_el.textContent = software_bits.join(" ");
+		software_el.classList.toggle("hide", !software_bits.length);
+	}
+	if (nips_el) {
+		const supported_nips = Array.isArray(discovery_entry?.supported_nips) ? discovery_entry.supported_nips : [];
+		nips_el.textContent = supported_nips.length ? `Supports NIPs: ${supported_nips.join(", ")}` : "";
+		nips_el.classList.toggle("hide", !supported_nips.length);
+	}
+	if (description_el) {
+		description_el.textContent = discovery_entry?.description || "";
+		description_el.classList.toggle("hide", !discovery_entry?.description);
 	}
 	if (button) {
 		button.dataset.address = url;
@@ -451,7 +481,28 @@ async function hydrate_relay_item(tr, address) {
 }
 
 function new_relay_discovery_item(entry, model) {
-	const tr = document.createElement('tr');
+	const template = find_node("#relay-discovery-template");
+	let tr = null;
+	if (template instanceof HTMLTemplateElement && template.content.firstElementChild) {
+		tr = template.content.firstElementChild.cloneNode(true);
+	} else {
+		tr = document.createElement('tr');
+		tr.className = 'relay-card relay-discovery-card';
+		const td_url = document.createElement('td');
+		td_url.className = 'relay-card-main relay-discovery-address';
+		td_url.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a><div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div>`;
+		const td_kinds = document.createElement('td');
+		td_kinds.className = 'relay-discovery-kinds';
+		td_kinds.setAttribute('data-relay-kinds', '');
+		const td_meta = document.createElement('td');
+		td_meta.className = 'relay-discovery-meta';
+		td_meta.setAttribute('data-relay-meta', '');
+		const td_action = document.createElement('td');
+		td_action.className = 'relay-card-action relay-discovery-action';
+		td_action.innerHTML = `<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay">Add</button>`;
+		tr.append(td_url, td_kinds, td_meta, td_action);
+	}
+	tr.classList.add('relay-card', 'relay-discovery-card');
 	const supported_nips = Array.isArray(entry.supported_nips) ? entry.supported_nips : [];
 	const meta_bits = [];
 	if (entry.name) {
@@ -465,46 +516,71 @@ function new_relay_discovery_item(entry, model) {
 
 	const td_url = document.createElement('td');
 	const link = document.createElement('a');
-	link.href = '#';
-	link.className = 'details-relay';
-	link.dataset.address = entry.url;
-	link.textContent = entry.url;
-	td_url.appendChild(link);
-	tr.appendChild(td_url);
-
-	const td_kinds = document.createElement('td');
-	td_kinds.title = supported_nips.length ? supported_nips.join(', ') : 'No supported NIPs reported';
-	td_kinds.textContent = supported_nips.length ? `NIPs: ${supported_nips.join(', ')}` : '—';
-	tr.appendChild(td_kinds);
-
-	const td_meta = document.createElement('td');
-	if (meta_bits.length) {
-		const meta_line = document.createElement('div');
-		meta_line.textContent = meta_bits.join(' · ');
-		td_meta.appendChild(meta_line);
+	const address = find_node("[data-relay-address]", tr);
+	const name_el = find_node("[data-relay-name]", tr);
+	const software_el = find_node("[data-relay-software]", tr);
+	const nips_el = find_node("[data-relay-nips]", tr);
+	const description_el = find_node("[data-relay-description]", tr);
+	const td_kinds = find_node("[data-relay-kinds]", tr);
+	const td_meta = find_node("[data-relay-meta]", tr);
+	const button = find_node(".add-discovered-relay", tr);
+	if (address) {
+		address.textContent = entry.url;
 	}
-	if (entry.description) {
-		const desc_line = document.createElement('div');
-		desc_line.textContent = entry.description;
-		td_meta.appendChild(desc_line);
+	if (name_el) {
+		name_el.textContent = entry.name || entry.pubkey || entry.url;
+		name_el.classList.toggle("hide", !name_el.textContent);
 	}
-	if (Array.isArray(entry.supported_nip_extensions) && entry.supported_nip_extensions.length) {
-		const ext_line = document.createElement('div');
-		ext_line.textContent = `Extensions: ${entry.supported_nip_extensions.join(', ')}`;
-		td_meta.appendChild(ext_line);
+	if (software_el) {
+		const software_bits = [];
+		if (entry.software) {
+			software_bits.push(entry.software);
+		}
+		if (entry.version) {
+			software_bits.push(entry.version);
+		}
+		software_el.textContent = software_bits.join(" ");
+		software_el.classList.toggle("hide", !software_bits.length);
 	}
-	tr.appendChild(td_meta);
-
-	const td_action = document.createElement('td');
-	const button = document.createElement('button');
-	button.className = 'add-nip65-relay btn-text';
-	button.dataset.address = entry.url;
-	button.textContent = model.relays.has(entry.url) ? 'Added' : 'Add';
-	button.disabled = model.relays.has(entry.url);
-	button.setAttribute('role', 'add-discovered-relay');
-	button.addEventListener('click', on_click_add_discovered_relay);
-	td_action.appendChild(button);
-	tr.appendChild(td_action);
+	if (nips_el) {
+		nips_el.textContent = supported_nips.length ? `Supports NIPs: ${supported_nips.join(", ")}` : "";
+		nips_el.classList.toggle("hide", !supported_nips.length);
+	}
+	if (description_el) {
+		description_el.textContent = entry.description || "";
+		description_el.classList.toggle("hide", !entry.description);
+	}
+	if (td_kinds) {
+		td_kinds.title = supported_nips.length ? supported_nips.join(', ') : 'No supported NIPs reported';
+		td_kinds.textContent = supported_nips.length ? `NIPs: ${supported_nips.join(', ')}` : '—';
+	}
+	if (td_meta) {
+		td_meta.innerHTML = "";
+		if (meta_bits.length) {
+			const meta_line = document.createElement('div');
+			meta_line.className = 'relay-info-line relay-info-name';
+			meta_line.textContent = meta_bits.join(' · ');
+			td_meta.appendChild(meta_line);
+		}
+		if (entry.description) {
+			const desc_line = document.createElement('div');
+			desc_line.className = 'relay-info-line';
+			desc_line.textContent = entry.description;
+			td_meta.appendChild(desc_line);
+		}
+		if (Array.isArray(entry.supported_nip_extensions) && entry.supported_nip_extensions.length) {
+			const ext_line = document.createElement('div');
+			ext_line.className = 'relay-info-line';
+			ext_line.textContent = `Extensions: ${entry.supported_nip_extensions.join(', ')}`;
+			td_meta.appendChild(ext_line);
+		}
+	}
+	if (button) {
+		button.dataset.address = entry.url;
+		button.textContent = model.relays.has(entry.url) ? 'Added' : 'Add';
+		button.disabled = model.relays.has(entry.url);
+		button.addEventListener('click', on_click_add_discovered_relay);
+	}
 
 	return tr;
 }

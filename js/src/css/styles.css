@@ -971,10 +971,16 @@ code {
 	margin-top: 15px;
 }
 #relays table.row {
+	width: 100%;
 	border-collapse: separate;
 	border-spacing: 0 12px;
 }
 #relays #relay-discovery-list {
+	width: 100%;
+	table-layout: fixed;
+}
+#relays #nip65-relay-list {
+	width: 100%;
 	table-layout: fixed;
 }
 #relays table.row tbody tr {
@@ -1026,6 +1032,21 @@ code {
 	width: 41%;
 }
 #relays #relay-discovery-list td:nth-child(4) {
+	width: 15%;
+}
+#relays #nip65-relay-list td,
+#relays #nip65-relay-list a {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+#relays #nip65-relay-list td:nth-child(1) {
+	width: 70%;
+}
+#relays #nip65-relay-list td:nth-child(2) {
+	width: 15%;
+}
+#relays #nip65-relay-list td:nth-child(3) {
 	width: 15%;
 }
 #relays .relay-info-name {
