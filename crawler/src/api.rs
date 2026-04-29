@@ -1219,6 +1219,12 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         .route("/:nip/relays.json", get(get_nip_relays_json))
         .route("/:nip/relays.txt", get(get_nip_relays_txt))
         .route("/:nip/:relay.json", get(get_nip_relay_json))
+        .route("/nip/:nip", get(get_nip_index))
+        .route("/nip/:nip/query", get(get_nip_query))
+        .route("/nip/:nip/relays.yaml", get(get_nip_relays_yaml))
+        .route("/nip/:nip/relays.json", get(get_nip_relays_json))
+        .route("/nip/:nip/relays.txt", get(get_nip_relays_txt))
+        .route("/nip/:nip/:relay.json", get(get_nip_relay_json))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
