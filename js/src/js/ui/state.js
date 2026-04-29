@@ -1171,6 +1171,7 @@ function reset_notifications(model) {
 	model.notifications.count = 0;
 	model.notifications.last_viewed = new_creation_time();
 	update_notifications(model);
+	void model_save_settings(model);
 }
 
 function html2el(html) {
@@ -1393,6 +1394,7 @@ function onclick_any(ev) {
 			break;
 		case "mark-all-read":
 			model_mark_dms_seen(GNOSTR);
+			void model_save_settings(GNOSTR);
 			break;
 		case "toggle-hide-replys":
 			toggle_hide_replys(el);

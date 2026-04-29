@@ -541,7 +541,7 @@ async function model_save_settings(model) {
 			}
 			store.put({
 				pubkey: model.pubkey,
-				notifications_last_viewed: model.notifications.last_viewed,
+				notifications_last_viewed: model.notifications.last_viewed || 0,
 				relays: Array.from(model.relays),
 				local_relay_enabled: model.local_relay_enabled,
 				dms_seen: model_get_dms_seen(model),
@@ -561,8 +561,8 @@ async function model_load_settings(model) {
 		req.onsuccess = (ev) => {
 			const settings = ev.target.result;
 			if (settings) {
-				model.notifications.last_viewed = settings.notifications_last_viewed;
-				if (settings.relays.length) 
+				model.notifications.last_viewed = settings.notifications_last_viewed || 0;
+				if (Array.isArray(settings.relays) && settings.relays.length)
 					model.relays = new Set(settings.relays);
 				model.embeds = settings.embeds ? settings.embeds : "friends";
 				if (settings.local_relay_enabled != null)
