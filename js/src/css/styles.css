@@ -882,12 +882,46 @@ code {
 
 /* Settings */
 
-#settings section, #relays section {
+#settings section, #relays .relay-section {
     position: relative;
 	margin: 15px;
 }
-#relays section {
-	padding: 8px 12px;
+#relays .relay-section {
+	padding: 0;
+	border: 1px solid var(--clrBorder);
+	border-radius: 14px;
+	background: var(--clrPanel);
+	overflow: hidden;
+}
+#relays .relay-section > summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	cursor: pointer;
+	list-style: none;
+	padding: 14px 16px;
+	font-weight: bold;
+	font-size: var(--fsLarge);
+}
+#relays .relay-section > summary::-webkit-details-marker {
+	display: none;
+}
+#relays .relay-section > summary::after {
+	content: "▾";
+	font-size: var(--fsNormal);
+	color: var(--clrTextLight);
+	transition: transform 0.15s ease;
+}
+#relays .relay-section:not([open]) > summary::after {
+	transform: rotate(-90deg);
+}
+#relays .relay-section > summary:hover {
+	background: color-mix(in srgb, var(--clrPanel) 80%, var(--clrBg) 20%);
+}
+#relays .relay-section > table {
+	margin: 0;
+	border-top: 1px solid var(--clrBorder);
 }
 #settings-profile, #relays-profile {
 	margin: 15px;
@@ -966,9 +1000,6 @@ code {
 	flex: 1 0 100%;
 	align-self: stretch;
 	min-width: 0;
-}
-#relays section > table {
-	margin-top: 15px;
 }
 #relays table.row {
 	width: 100%;
