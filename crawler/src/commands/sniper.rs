@@ -4,6 +4,32 @@ use nostr_sdk::prelude::Url;
 use std::fs as sync_fs;
 use std::io::Write;
 
+pub(crate) fn write_nip_relay_metadata(
+    nip_lower: i32,
+    url: &str,
+    json_string: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let parsed_url = Url::parse(url)?;
+    let host = parsed_url.host_str().unwrap_or("unknown");
+    let dir_path = crate::relays::get_config_dir_path().join(nip_lower.to_string());
+    sync_fs::create_dir_all(&dir_path)?;
+
+    let file_path = dir_path.join(format!("{}.json", host));
+    let file_path_str = file_path.display().to_string();
+
+    info!("write_nip_relay_metadata: writing {}", file_path_str);
+    let mut file = sync_fs::File::create(&file_path)?;
+    file.write_all(json_string.as_bytes())?;
+    Ok(())
+}
+
+pub(crate) fn refresh_nip_bucket(nip_lower: i32) {
+    crate::relays::record_live_nips(std::iter::once(nip_lower));
+    if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip_lower) {
+        error!("Failed to refresh nip {} relay files: {}", nip_lower, e);
+    }
+}
+
 pub async fn run_sniper(
     nip_lower: i32,
     shitlist_path: Option<String>,
@@ -79,52 +105,13 @@ pub async fn run_sniper(
                             info!("software:{:?}", &relay_info.software);
                             info!("version:{:?}", &relay_info.version);
 
-                            let parsed_url = match Url::parse(&url) {
-                                Ok(u) => u,
-                                Err(e) => {
-                                    error!("Failed to parse URL {}: {}", url, e);
-                                    continue;
-                                }
-                            };
-                            let host = parsed_url.host_str().unwrap_or("unknown");
-                            info!("run_sniper: Host for {} is {}", url, host);
-
-                            let dir_path =
-                                crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
-                            if let Err(e) = sync_fs::create_dir_all(&dir_path) {
+                            if let Err(e) = write_nip_relay_metadata(nip_lower, &url, &json_string)
+                            {
                                 error!(
-                                    "Failed to create directory {}: {}",
-                                    dir_path.display(),
-                                    e
+                                    "Failed to write NIP-{} metadata for {}: {}",
+                                    nip_lower, url, e
                                 );
                                 continue;
-                            }
-                            info!("run_sniper: Ensured directory exists: {}", dir_path.display());
-
-                            let file_name = format!("{}.json", host);
-                            let file_path = dir_path.join(&file_name);
-                            let file_path_str = file_path.display().to_string();
-                            info!(
-                                "run_sniper: Attempting to write to file: {}\n\n{}",
-                                file_path_str, file_path_str
-                            );
-
-                            match sync_fs::File::create(&file_path) {
-                                Ok(mut file) => {
-                                    info!("run_sniper: File created: {}", &file_path_str);
-                                    match file.write_all(json_string.as_bytes()) {
-                                        Ok(_) => info!(
-                                            "run_sniper: Wrote relay metadata to: {}",
-                                            &file_path_str
-                                        ),
-                                        Err(e) => {
-                                            error!("Failed to write to {}: {}", &file_path_str, e)
-                                        }
-                                    }
-                                }
-                                Err(e) => {
-                                    error!("Failed to create file {}: {}", &file_path_str, e)
-                                }
                             }
 
                             info!(
@@ -151,6 +138,8 @@ pub async fn run_sniper(
             error!("run_sniper: Error fetching relay data: {}", e);
         }
     }
+
+    refresh_nip_bucket(nip_lower);
 
     Ok(())
 }

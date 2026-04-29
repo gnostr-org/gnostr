@@ -293,6 +293,10 @@ function clear_search_subscription(model) {
 	model.search_sub_id = null;
 }
 
+function normalize_relay_urls(relays) {
+	return relays.filter((relay) => typeof relay === "string" && (relay.startsWith("ws://") || relay.startsWith("wss://")));
+}
+
 /* view_timeline_refresh is a hack for redrawing the events in order
  */
 function view_timeline_refresh(model, mode, opts={}) {
@@ -975,32 +979,37 @@ function perform_search(model, query) {
 
     model.search_query = query;
     model.search_results = results;
-    refresh_search_subscription(model);
+    void refresh_search_subscription(model);
 }
 
-function refresh_search_subscription(model) {
-	clear_search_subscription(model);
-	if (!model.search_query || !model.pool) {
-		return;
+async function load_nip_relays(model, nip) {
+	if (!model.nip_relay_lists) {
+		model.nip_relay_lists = new Map();
+	}
+	if (model.nip_relay_lists.has(nip)) {
+		return model.nip_relay_lists.get(nip);
 	}
 
-	const relays = get_relays_supporting_nip(model, 50);
-	if (!relays.length) {
-		log_warn("No NIP-50 relays available for search.");
-		return;
+	try {
+		const response = await fetch(`/${nip}/relays.json`, {
+			headers: {
+				"Accept": "application/json",
+			},
+		});
+		if (!response.ok) {
+			throw new Error(`nip relay request failed with ${response.status}`);
+		}
+		const relays = normalize_relay_urls(await response.json());
+		if (relays.length) {
+			model.nip_relay_lists.set(nip, relays);
+		}
+		return relays;
+	} catch (error) {
+		log_warn(`load_nip_relays: failed to load NIP-${nip} relays`, error);
 	}
 
-	model.search_sub_id = `search:${model.search_query}`;
-	model.pool.subscribe(model.search_sub_id, [{
-		search: model.search_query,
-		kinds: PUBLIC_KINDS,
-		limit: 100,
-	}], relays);
-}
-
-function get_relays_supporting_nip(model, nip) {
 	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
-	return discovery
+	const fallback = discovery
 		.filter((entry) => {
 			if (!entry || !entry.url || !Array.isArray(entry.supported_nips)) {
 				return false;
@@ -1008,6 +1017,35 @@ function get_relays_supporting_nip(model, nip) {
 			return entry.supported_nips.includes(nip);
 		})
 		.map((entry) => entry.url);
+	const normalized_fallback = normalize_relay_urls(fallback);
+	if (normalized_fallback.length) {
+		model.nip_relay_lists.set(nip, normalized_fallback);
+	}
+	return normalized_fallback;
+}
+
+async function refresh_search_subscription(model) {
+	clear_search_subscription(model);
+	if (!model.search_query || !model.pool) {
+		return;
+	}
+
+	const query = model.search_query;
+	const relays = await load_nip_relays(model, 50);
+	if (query !== model.search_query || !model.pool) {
+		return;
+	}
+	if (!relays.length) {
+		log_warn("No NIP-50 relays available for search.");
+		return;
+	}
+
+	model.search_sub_id = `search:${query}`;
+	model.pool.subscribe(model.search_sub_id, [{
+		search: query,
+		kinds: PUBLIC_KINDS,
+		limit: 100,
+	}], relays);
 }
 
 function view_mode_contains_event(model, ev, mode, opts={}) {

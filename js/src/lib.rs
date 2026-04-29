@@ -1,6 +1,7 @@
 #![allow(unused)]
 pub mod bridge;
 pub mod crawler;
+pub mod crawler_control;
 pub mod css;
 pub mod flat;
 pub mod embedded;

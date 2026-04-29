@@ -156,7 +156,7 @@ async function render_nip65_relays(model) {
 	render_relay_discovery(model, relay_discovery);
 	const timeline = typeof view_get_timeline_el === "function" ? view_get_timeline_el() : null;
 	if (model.search_query && timeline && timeline.dataset.mode === VM_SEARCH && typeof refresh_search_subscription === "function") {
-		refresh_search_subscription(model);
+		await refresh_search_subscription(model);
 	}
 
 	const rlist = find_node("#relays #nip65-relay-list tbody");

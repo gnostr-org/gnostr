@@ -660,6 +660,7 @@ function new_model() {
 		search_results: [],
 		search_query: "",
 		search_sub_id: null,
+		nip_relay_lists: new Map(),
 		relay_discovery: [],
 		notifications: {
 			last_viewed: 0, // time since last looking at notifications
