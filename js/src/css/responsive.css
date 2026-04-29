@@ -22,6 +22,9 @@
 		width: initial;
 		border-right: none;
 	}
+	.show-more {
+		left: 0;
+	}
 	.nav.mobile {
 		display: flex;
 	}

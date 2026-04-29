@@ -406,11 +406,14 @@ button.nav > img.icon {
 	text-align: center;
 }
 .show-more {
-	position: sticky;
+	position: fixed;
+	left: 220px;
+	right: 0;
 	bottom: 0;
 	z-index: var(--zHeader);
 	background: var(--clrBg);
 	border-top: 1px solid var(--clrBorder);
+	box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
 }
 .show-more > button,
 .show-new > button {
@@ -421,6 +424,7 @@ button.nav > img.icon {
 	width: 100%;
 	font-size: var(--fsNormal);
 	font-weight: bold;
+	cursor: pointer;
 }
 
 /* NIP explorer */

@@ -739,32 +739,39 @@ function view_timeline_show_more(model) {
 	}
 	const opts = view_get_el_opts(el);
 	const oldest_evid = el.lastElementChild ? el.lastElementChild.id.slice(2) : undefined;
-	const oldest = model.all_events[oldest_evid];
 	const evs = model_events_arr(model);
+	const sorted = (mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP34 || mode == VM_NIP_KIND)
+		? evs.slice().sort((a, b) => b.created_at - a.created_at)
+		: evs.slice().reverse();
+	const oldest_index = oldest_evid ? sorted.findIndex((ev) => ev.id === oldest_evid) : -1;
+	if (oldest_index < 0) {
+		find_node("#show-more").classList.add("hide");
+		return;
+	}
 	const fragment = new DocumentFragment();
-	let i = arr_bsearch(evs, oldest, (a, b) => {
-		if (a.id == b.id || a.created_at == b.created_at)
-			return 0;
-		if (a.created_at > b.created_at)
-			return 1;
-		return -1;
-	});
 	const limit = 200;
 	let count = 0;
-	for (; i >= 0 && count < limit; i--){
-		const ev = evs[i];
+	let has_more = false;
+	for (let i = oldest_index + 1; i < sorted.length; i++) {
+		const ev = sorted[i];
 		if (!view_mode_contains_event(model, ev, mode, opts))
 			continue;
 		let ev_el = model.elements[ev.id];
-		if (!ev_el || ev_el.parentElement)
+		if (!ev_el || ev_el.parentElement) {
+			has_more = true;
 			continue;
+		}
 		fragment.appendChild(ev_el);
 		count++;
+		if (count >= limit) {
+			has_more = true;
+			break;
+		}
 	}
 	if (count > 0) {
 		el.append(fragment);
 	}
-	if (count < limit) {
+	if (!has_more) {
 		// No more to show, hide the button
 		find_node("#show-more").classList.add("hide");
 	}
