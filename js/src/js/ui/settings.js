@@ -324,27 +324,49 @@ function add_relay_address(address, label) {
 }
 
 function new_relay_item(str) {
-	const tr = document.createElement('tr');
-	tr.classList.add("relay-card");
-	tr.innerHTML = `
-		<td class="relay-card-main">
-			<a href="#" class="details-relay relay-address" data-address="${str}">${str}</a>
+	const template = find_node("#relay-card-template");
+	let tr = null;
+	if (template instanceof HTMLTemplateElement && template.content.firstElementChild) {
+		tr = template.content.firstElementChild.cloneNode(true);
+	} else {
+		tr = document.createElement("tr");
+		const main = document.createElement("td");
+		main.className = "relay-card-main";
+		main.innerHTML = `
+			<a href="#" class="details-relay relay-address" data-address="">
+				<span data-relay-address></span>
+			</a>
 			<div class="relay-info">
 				<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
 				<div class="relay-info-line relay-info-software hide" data-relay-software></div>
 				<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
 				<div class="relay-info-line relay-info-description hide" data-relay-description></div>
-			</div>
-		</td>
-		<td class="relay-card-action">
-			<button class="remove-relay btn-text"
-				data-address="${str}"
-				role="remove-relay">
+			</div>`;
+		const action = document.createElement("td");
+		action.className = "relay-card-action";
+		action.innerHTML = `
+			<button class="remove-relay btn-text" data-address="" role="remove-relay">
 				<img class="icon svg small" src="/images/event-delete.svg"/>
-			</button>
-		</td>`;
-	find_node(".remove-relay", tr).addEventListener("click", on_click_remove_relay);
+			</button>`;
+		tr.append(main, action);
+	}
+	tr.classList.add("relay-card");
+	const remove = find_node(".remove-relay", tr);
+	if (remove) {
+		remove.dataset.address = str;
+		remove.setAttribute("data-address", str);
+		remove.addEventListener("click", on_click_remove_relay);
+	}
 	find_node(".details-relay", tr).addEventListener("click", on_click_details_relay);
+	const link = find_node(".details-relay", tr);
+	const address = find_node("[data-relay-address]", tr);
+	if (link) {
+		link.dataset.address = str;
+		link.setAttribute("data-address", str);
+	}
+	if (address) {
+		address.textContent = str;
+	}
 	void hydrate_relay_item(tr, str);
 	return tr;
 }
