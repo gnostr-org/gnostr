@@ -415,6 +415,7 @@ function new_relay_item(str) {
 			</a>
 			<div class="relay-info">
 				<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
+				<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
 				<div class="relay-info-line relay-info-software hide" data-relay-software></div>
 				<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
 				<div class="relay-info-line relay-info-description hide" data-relay-description></div>
@@ -450,14 +451,16 @@ function new_relay_item(str) {
 
 async function hydrate_relay_item(tr, address) {
 	const name_el = find_node("[data-relay-name]", tr);
+	const ping_el = find_node("[data-relay-ping]", tr);
 	const software_el = find_node("[data-relay-software]", tr);
 	const nips_el = find_node("[data-relay-nips]", tr);
 	const description_el = find_node("[data-relay-description]", tr);
-	if (!name_el || !software_el || !nips_el || !description_el) {
+	if (!name_el || !ping_el || !software_el || !nips_el || !description_el) {
 		return;
 	}
 
 	try {
+		const started = performance.now();
 		const url = new URL(address);
 		const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
 		const response = await fetch(http_url, {
@@ -465,10 +468,13 @@ async function hydrate_relay_item(tr, address) {
 				'Accept': 'application/nostr+json',
 			},
 		});
+		const ping_ms = Math.round(performance.now() - started);
 		const data = await response.json();
 		const label = data.name || data.pubkey || address;
 		name_el.textContent = label;
 		name_el.classList.toggle("hide", !label);
+		ping_el.textContent = `Ping: ${ping_ms} ms`;
+		ping_el.classList.toggle("hide", false);
 
 		const software_bits = [];
 		if (data.software) {
@@ -488,11 +494,14 @@ async function hydrate_relay_item(tr, address) {
 		description_el.textContent = description;
 		description_el.classList.toggle("hide", !description);
 		tr.dataset.relayName = label;
+		tr.dataset.relayPingMs = String(ping_ms);
 		tr.dataset.relaySoftware = software_bits.join(" ");
 		tr.dataset.relayNips = supported_nips.join(", ");
 	} catch (error) {
 		name_el.textContent = "Unable to load relay info";
 		software_el.textContent = "";
+		ping_el.textContent = "";
+		ping_el.classList.add("hide");
 		software_el.classList.add("hide");
 		nips_el.textContent = "";
 		nips_el.classList.add("hide");
