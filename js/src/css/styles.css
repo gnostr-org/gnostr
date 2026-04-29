@@ -1014,6 +1014,46 @@ code {
 	width: 100%;
 	table-layout: fixed;
 }
+#relays .relay-discovery-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+#relays .relay-discovery-card {
+	margin: 0;
+}
+#relays .relay-discovery-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px;
+	list-style: none;
+}
+#relays .relay-discovery-summary::-webkit-details-marker {
+	display: none;
+}
+#relays .relay-discovery-body {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 0 16px 16px;
+}
+#relays .add-discovered-relay {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 6px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--clrSuccess) 18%, transparent);
+}
+#relays .add-discovered-relay:disabled {
+	opacity: 0.7;
+}
+#relays .add-discovered-relay .relay-add-icon {
+	filter: invert(46%) sepia(98%) saturate(1040%) hue-rotate(88deg) brightness(92%) contrast(94%);
+}
 #relays table.row tbody tr {
 	vertical-align: top;
 }

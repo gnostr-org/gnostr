@@ -515,7 +515,7 @@ function new_relay_discovery_item(entry, model) {
 		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a>`;
 		const body = document.createElement('div');
 		body.className = 'relay-discovery-body';
-		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay">Add</button>`;
+		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
 		item.append(summary, body);
 	}
 	item.classList.add('relay-card', 'relay-discovery-card');
@@ -562,8 +562,9 @@ function new_relay_discovery_item(entry, model) {
 	if (button) {
 		button.dataset.address = entry.url;
 		button.setAttribute("data-address", entry.url);
-		button.textContent = 'Add';
 		button.disabled = model.relays.has(entry.url);
+		button.setAttribute("aria-label", "Add relay");
+		button.setAttribute("title", "Add relay");
 		button.addEventListener('click', on_click_add_discovered_relay);
 	}
 	sync_discovered_relay_state(entry.url, model);
