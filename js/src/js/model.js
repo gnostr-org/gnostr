@@ -66,9 +66,23 @@ function model_process_event(model, relay, ev) {
 	if (fn)
 		fn(model, ev, !!relay);
 
-    if (ev.kind === KIND_DM) {
-        sync_dm_event_to_local_relay(ev);
-    }
+	if (ev.kind === KIND_DM) {
+		sync_dm_event_to_local_relay(ev);
+	}
+
+	if (
+		model.search_query &&
+		typeof search_in_object === "function" &&
+		typeof event_is_renderable === "function" &&
+		event_is_renderable(ev)
+	) {
+		const timeline = typeof view_get_timeline_el === "function" ? view_get_timeline_el() : null;
+		if (timeline && timeline.dataset.mode === VM_SEARCH && search_in_object(ev, model.search_query)) {
+			if (!model.search_results.some((item) => item.id === ev.id)) {
+				model.search_results.push(ev);
+			}
+		}
+	}
 
 	    // Detect and log NIP-34 events from followed profiles
     if (nip34_kinds.has(ev.kind) && model.contacts.friends.has(ev.pubkey)) {
@@ -645,6 +659,8 @@ function new_model() {
 		all_events: {}, // our master list of all events
 		search_results: [],
 		search_query: "",
+		search_sub_id: null,
+		relay_discovery: [],
 		notifications: {
 			last_viewed: 0, // time since last looking at notifications
 			count: 0, // the number not seen  since last looking

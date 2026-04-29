@@ -145,6 +145,10 @@ async function webapp_init() {
 function parse_url_mode() {
 	const parsed = view_path_to_mode(window.location.pathname);
 	if (parsed) {
+		if (parsed.mode == VM_SEARCH) {
+			const params = new URLSearchParams(window.location.search);
+			parsed.opts.query = params.get("search") || "";
+		}
 		return parsed;
 	}
 	return {
