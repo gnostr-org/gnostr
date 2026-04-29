@@ -483,26 +483,34 @@ function new_relay_item(str) {
 		tr = document.createElement("tr");
 		const main = document.createElement("td");
 		main.className = "relay-card-main";
+		main.colSpan = 2;
 		main.innerHTML = `
-			<a href="#" class="details-relay relay-address" data-address="">
-				<span data-relay-address></span>
-			</a>
-			<div class="relay-info">
-				<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
-				<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
-				<div class="relay-info-line relay-info-software hide" data-relay-software></div>
-				<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
-				<div class="relay-info-line relay-info-description hide" data-relay-description></div>
-			</div>`;
-		const action = document.createElement("td");
-		action.className = "relay-card-action";
-		action.innerHTML = `
-			<button class="remove-relay btn-text" data-address="" role="remove-relay">
-				<img class="icon svg small" src="/images/event-delete.svg"/>
-			</button>`;
-		tr.append(main, action);
+			<details class="relay-card-details">
+				<summary class="relay-card-summary">
+					<a href="#" class="details-relay relay-address" data-address="">
+						<span data-relay-address></span>
+					</a>
+					<button class="remove-relay btn-text" data-address="" role="remove-relay">
+						<img class="icon svg small" src="/images/event-delete.svg"/>
+					</button>
+				</summary>
+				<div class="relay-card-body">
+					<div class="relay-info">
+						<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
+						<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
+						<div class="relay-info-line relay-info-software hide" data-relay-software></div>
+						<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
+						<div class="relay-info-line relay-info-description hide" data-relay-description></div>
+					</div>
+				</div>
+			</details>`;
+		tr.append(main);
 	}
 	tr.classList.add("relay-card");
+	const details = find_node(".relay-card-details", tr);
+	if (details) {
+		details.open = false;
+	}
 	const remove = find_node(".remove-relay", tr);
 	if (remove) {
 		remove.dataset.address = str;

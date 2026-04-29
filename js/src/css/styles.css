@@ -1034,6 +1034,28 @@ code {
 	width: 100%;
 	table-layout: fixed;
 }
+#relays .relay-card-details {
+	display: block;
+	border: 1px solid var(--clrBorder);
+	border-radius: 14px;
+	background: var(--clrPanel);
+	overflow: hidden;
+}
+#relays .relay-card-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px;
+	list-style: none;
+	cursor: pointer;
+}
+#relays .relay-card-summary::-webkit-details-marker {
+	display: none;
+}
+#relays .relay-card-body {
+	padding: 0 16px 16px;
+}
 #relays .relay-discovery-list {
 	display: flex;
 	flex-direction: column;
