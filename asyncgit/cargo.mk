@@ -72,12 +72,6 @@ cargo-deps-gnostr-legit:### 	cargo-deps-gnostr-legit
 cargo-deps-gnostr-sha256:### 	cargo-deps-gnostr-sha256
 	cargo -Z unstable-options  -C deps/gnostr-sha256 install --path .
 ##===============================================================================
-cargo-dist:### 	cargo-dist -h
-	cargo dist -h
-cargo-dist-build:### 	cargo-dist-build
-	RUSTFLAGS="--cfg tokio_unstable" cargo dist build
-cargo-dist-manifest-global:### 	cargo dist manifest --artifacts=all
-	cargo dist manifest --artifacts=all
 # vim: set noexpandtab:
 # vim: set setfiletype make
 #
