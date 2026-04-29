@@ -715,7 +715,7 @@ impl TryFrom<&pkcs8::KeypairBytes> for SigningKey {
                     .map_err(|_| pkcs8::Error::from(pkcs8::spki::Error::KeyMalformed))?;
 
             if signing_key.verifying_key() != expected_verifying_key {
-                return Err(pkcs8::Error::KeyMalformed);
+                return Err(pkcs8::Error::from(pkcs8::spki::Error::KeyMalformed));
             }
         }
 
