@@ -346,6 +346,9 @@ button.nav > img.icon {
 .local-relay-profile .settings-profile-top {
 	align-items: center;
 }
+.local-relay-profile .settings-profile-meta {
+	width: 100%;
+}
 .local-relay-card-body {
 	display: flex;
 	flex-direction: column;

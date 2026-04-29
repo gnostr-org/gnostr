@@ -11,7 +11,7 @@
 		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
 		<link rel="stylesheet" href="/css/vars.css?v=1">
 		<link rel="stylesheet" href="/css/utils.css?v=1">
-		<link rel="stylesheet" href="/css/styles.css?v=22">
+		<link rel="stylesheet" href="/css/styles.css?v=23">
 		<link rel="stylesheet" href="/css/responsive.css?v=10">
 		<script defer src="/js/util.js?v=5"></script>
 		<script defer src="/js/ui/safe-html.js?v=1"></script>
@@ -199,8 +199,7 @@
 										<div class="settings-profile-top">
 											<img role="my-pfp" class="pfp jumbo" src="/images/no-user.svg"/>
 											<div class="settings-profile-meta">
-												<label>Relays</label>
-												<p>Manage local relays and discovery metadata.</p>
+												<div id="local-relay-info" class="local-relay-card-meta"></div>
 											</div>
 										</div>
 									</div>
@@ -221,7 +220,6 @@
 											<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
 											<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
 										</div>
-										<div id="local-relay-info" class="local-relay-card-meta"></div>
 									</div>
 								</div>
 							</header>
