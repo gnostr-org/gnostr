@@ -247,11 +247,14 @@
 									</tr>
 								</template>
 								<template id="relay-discovery-template">
-									<details class="relay-card relay-discovery-card" open>
+									<details class="relay-card relay-discovery-card">
 										<summary class="relay-discovery-summary">
 											<a href="#" class="details-relay relay-address" data-address="">
 												<span data-relay-address></span>
 											</a>
+											<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
+												<img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/>
+											</button>
 										</summary>
 										<div class="relay-discovery-body">
 											<div class="relay-info">
@@ -261,9 +264,6 @@
 												<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
 												<div class="relay-info-line relay-info-description hide" data-relay-description></div>
 											</div>
-											<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
-												<img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/>
-											</button>
 										</div>
 									</details>
 								</template>

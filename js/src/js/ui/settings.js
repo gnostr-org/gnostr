@@ -95,10 +95,10 @@ function render_relay_dashboard() {
 }
 
 function sync_discovered_relay_state(address, model = GNOSTR) {
-    const discovery_list = find_node("#relays #relay-discovery-list");
-    if (!discovery_list) {
-        return;
-    }
+	const discovery_list = find_node("#relays #relay-discovery-list");
+	if (!discovery_list) {
+		return;
+	}
 
     const is_added = model.relays.has(address);
     discovery_list.querySelectorAll("[data-relay-address]").forEach((address_el) => {
@@ -106,14 +106,14 @@ function sync_discovered_relay_state(address, model = GNOSTR) {
             return;
         }
         const item = address_el.closest("details");
-        if (!item) {
-            return;
-        }
-        item.open = !is_added;
-        item.dataset.relayState = is_added ? "added" : "available";
-        const button = item.querySelector(".add-discovered-relay");
-        if (button) {
-            button.disabled = is_added;
+		if (!item) {
+			return;
+		}
+		item.open = false;
+		item.dataset.relayState = is_added ? "added" : "available";
+		const button = item.querySelector(".add-discovered-relay");
+		if (button) {
+			button.disabled = is_added;
         }
     });
 }
@@ -376,11 +376,13 @@ function new_nip65_relay_item(url, policy, discovery_entry) {
 }
 
 function on_click_add_nip65_relay(ev) {
-	add_relay_address(ev.target.dataset.address, "NIP-65 relay");
+	add_relay_address(ev.currentTarget.dataset.address, "NIP-65 relay");
 }
 
 function on_click_add_discovered_relay(ev) {
-	add_relay_address(ev.target.dataset.address, "discovered relay");
+	ev.preventDefault();
+	ev.stopPropagation();
+	add_relay_address(ev.currentTarget.dataset.address, "discovered relay");
 }
 
 function add_relay_address(address, label) {
@@ -398,6 +400,7 @@ function add_relay_address(address, label) {
 	model.relays.add(address);
 	sort_pool_relays_by_ping(model);
 	find_node("#relay-list tbody").appendChild(new_relay_item(address));
+	sync_discovered_relay_state(address, model);
 	model_save_settings(model);
 	log_info(`Added ${label}: ${address}`);
 }
@@ -524,13 +527,14 @@ function new_relay_discovery_item(entry, model) {
 		item.className = 'relay-card relay-discovery-card';
 		const summary = document.createElement('summary');
 		summary.className = 'relay-discovery-summary';
-		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a>`;
+		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
 		const body = document.createElement('div');
 		body.className = 'relay-discovery-body';
-		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-ping hide" data-relay-ping></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
+		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-ping hide" data-relay-ping></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div>`;
 		item.append(summary, body);
 	}
 	item.classList.add('relay-card', 'relay-discovery-card');
+	item.open = false;
 	const supported_nips = Array.isArray(entry.supported_nips) ? entry.supported_nips : [];
 
 	const address = find_node("[data-relay-address]", item);
