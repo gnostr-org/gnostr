@@ -17,7 +17,7 @@ use crate::embedded::{get_css_assets, get_images_assets, get_js_assets, get_pwa_
 use crate::relay_control;
 
 fn open(host: &str, port: i32) -> io::Result<()> {
-    let url = format!("http://{}:{}", host, port);
+    let url = format!("http://{}:{}/nip", host, port);
 
     println!("Attempting to open: {}", url);
 
