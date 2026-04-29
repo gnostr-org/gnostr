@@ -261,11 +261,12 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				el_their_pfp.src = get_profile_pic(profile);
 				el_their_pfp.dataset.pubkey = pubkey;
 				break;
-			case VM_DM:
-				model.dms_need_redraw = true;
-				view_show_spinner(true);
-				view_set_show_count(0, true, true);
-				//decrypt_dms(model);
+	case VM_DM:
+		sync_all_dm_events_to_local_relay(GNOSTR);
+		model.dms_need_redraw = true;
+		view_show_spinner(true);
+		view_set_show_count(0, true, true);
+		//decrypt_dms(model);
 				//view_dm_update(model);
 				break;
 			case VM_SETTINGS:
