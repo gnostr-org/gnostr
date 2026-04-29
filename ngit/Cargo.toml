@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-ngit"
-version = "1876.947083.693881"
+version = "1876.947085.693512"
 edition = "2021"
 description = "nostr plugin for git"
 authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
