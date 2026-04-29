@@ -275,25 +275,50 @@ function render_relay_discovery(model, relay_discovery) {
 }
 
 function new_nip65_relay_item(url, policy) {
-    const is_read_only = policy.read && !policy.write;
-    const tr = document.createElement('tr');
-    if (is_read_only) {
-        tr.classList.add('read-only-relay');
-    }
-    const policy_str = Object.keys(policy).length === 0 ? "" :
-                       (policy.read && policy.write ? "read/write" :
-                       (policy.read ? "read" : "write"));
-    tr.innerHTML = `<td><a href="#" class="details-relay" data-address="${url}">${url}</a></td>
-    <td>${policy_str}</td>
-    <td>
-    <button class="add-nip65-relay btn-text"
-		data-address="${url}"
-		role="add-nip65-relay">
-		Add
-	</button>
-    </td>`;
-	find_node("button", tr).addEventListener("click", on_click_add_nip65_relay);
-	find_node(".details-relay", tr).addEventListener("click", on_click_details_relay);
+	const policy_str = Object.keys(policy).length === 0 ? "" :
+		(policy.read && policy.write ? "read/write" :
+		(policy.read ? "read" : "write"));
+	const template = find_node("#nip65-relay-template");
+	let tr = null;
+	if (template instanceof HTMLTemplateElement && template.content.firstElementChild) {
+		tr = template.content.firstElementChild.cloneNode(true);
+	} else {
+		tr = document.createElement("tr");
+		const td_address = document.createElement("td");
+		td_address.className = "nip65-relay-address";
+		td_address.innerHTML = `<a href="#" class="details-relay" data-address=""><span data-relay-address></span></a>`;
+		const td_policy = document.createElement("td");
+		td_policy.className = "nip65-relay-policy";
+		td_policy.setAttribute("data-relay-policy", "");
+		const td_action = document.createElement("td");
+		td_action.className = "nip65-relay-action";
+		td_action.innerHTML = `<button class="add-nip65-relay btn-text" data-address="" role="add-nip65-relay">Add</button>`;
+		tr.append(td_address, td_policy, td_action);
+	}
+	tr.classList.add("nip65-relay");
+	if (policy.read && !policy.write) {
+		tr.classList.add("read-only-relay");
+	}
+	const link = find_node(".details-relay", tr);
+	const address = find_node("[data-relay-address]", tr);
+	const policy_el = find_node("[data-relay-policy]", tr);
+	const button = find_node(".add-nip65-relay", tr);
+	if (link) {
+		link.dataset.address = url;
+		link.setAttribute("data-address", url);
+		link.addEventListener("click", on_click_details_relay);
+	}
+	if (address) {
+		address.textContent = url;
+	}
+	if (policy_el) {
+		policy_el.textContent = policy_str;
+	}
+	if (button) {
+		button.dataset.address = url;
+		button.setAttribute("data-address", url);
+		button.addEventListener("click", on_click_add_nip65_relay);
+	}
 	return tr;
 }
 
@@ -357,12 +382,12 @@ function new_relay_item(str) {
 		remove.setAttribute("data-address", str);
 		remove.addEventListener("click", on_click_remove_relay);
 	}
-	find_node(".details-relay", tr).addEventListener("click", on_click_details_relay);
 	const link = find_node(".details-relay", tr);
 	const address = find_node("[data-relay-address]", tr);
 	if (link) {
 		link.dataset.address = str;
 		link.setAttribute("data-address", str);
+		link.addEventListener("click", on_click_details_relay);
 	}
 	if (address) {
 		address.textContent = str;
