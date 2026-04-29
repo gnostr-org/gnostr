@@ -127,10 +127,11 @@ jobs:
           set -euxo pipefail
           cargo install cargo-binstall --locked
 
-      - name: Install gnostr via cargo-binstall
-        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
-        uses: ./.github/actions/cargo-binstall-gnostr
+      #- name: Install gnostr via cargo-binstall
+      #  if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
+      #  uses: ./.github/actions/cargo-binstall-gnostr
       # - run: cargo build --bin gnostr
+      
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
           if [ -f target/debug/gnostr ]; then
@@ -140,7 +141,7 @@ jobs:
             chmod +x "$HOME/.cargo/bin/gnostr"
             GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
           else
-            GNOSTR_CMD="cargo run --bin gnostr --"
+            GNOSTR_CMD="cargo run --bin gnostr -- "
           fi
 
           $GNOSTR_CMD --help
