@@ -24,17 +24,6 @@ name = "git-tui"
 path = "src/bin/git_tui.rs"
 required-features = ["gitui"]
 
-[[example]]
-name = "git_tui"
-path = "examples/git_tui.rs"
-required-features = ["gitui"]
-
-[[bench]]
-name = "show"
-path = "benches/show.rs"
-harness = false
-required-features = ["gitui"]
-
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
@@ -236,3 +225,14 @@ serial_test = "3.1"
 # pretty_assertions = "1.4.0"
 temp-dir = "0.1.13"
 tokio = { version = "1", features = ["full"] }
+
+[[example]]
+name = "git_tui"
+path = "examples/git_tui.rs"
+required-features = ["gitui"]
+
+[[bench]]
+name = "show"
+path = "benches/show.rs"
+harness = false
+required-features = ["gitui"]
