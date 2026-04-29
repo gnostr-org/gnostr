@@ -42,6 +42,35 @@ pub(crate) fn clone_repo(tmp_dir: &Path, repo_url: &str) -> Result<ClonedRepo> {
     Ok(ClonedRepo { path, short_hash })
 }
 
+pub(crate) fn probe_repo(repo_url: &str) -> Result<()> {
+    let repo_url = normalize_repo_url(repo_url);
+    ensure_helper_support(&repo_url)?;
+
+    let output = Command::new("git")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env(
+            "GIT_SSH_COMMAND",
+            "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
+        )
+        .args(["ls-remote", "--exit-code", &repo_url])
+        .output()
+        .context("Git ls-remote command failed")?;
+
+    if output.status.success() {
+        return Ok(());
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let detail = match (stderr.is_empty(), stdout.is_empty()) {
+        (true, true) => "repository is not reachable".to_string(),
+        (false, true) => stderr,
+        (true, false) => stdout,
+        (false, false) => format!("{stderr}: {stdout}"),
+    };
+    anyhow::bail!("Flat precheck failed: {detail}");
+}
+
 fn normalize_repo_url(repo_url: &str) -> String {
     let repo_url = repo_url.strip_prefix("git+").unwrap_or(repo_url);
     if let Some(normalized) = normalize_scp_style_url(repo_url) {

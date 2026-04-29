@@ -334,22 +334,52 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
         .and(warp::query::<HashMap<String, String>>())
         .map(|query: HashMap<String, String>| {
             match query.get("repo") {
-                Some(repo_url) if !repo_url.is_empty() => match flat::build_html(repo_url, 51_200) {
-                    Ok(html) => warp::reply::with_header(
-                        warp::reply::html(html),
-                        "Content-Security-Policy",
-                        RELAXED_CSP_STRING,
-                    )
-                    .into_response(),
-                    Err(err) => warp::reply::with_status(
-                        warp::reply::html(format!(
-                            "<h1>Flat view unavailable</h1><p>{}</p>",
-                            err
-                        )),
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                    )
-                    .into_response(),
-                },
+                Some(repo_url) if !repo_url.is_empty() => {
+                    let is_precheck = query
+                        .get("check")
+                        .or_else(|| query.get("precheck"))
+                        .map(|value| !matches!(value.as_str(), "" | "0" | "false"))
+                        .unwrap_or(false);
+
+                    if is_precheck {
+                        match flat::scan::probe_repo(repo_url) {
+                            Ok(_) => warp::reply::with_status(
+                                warp::reply::json(&serde_json::json!({
+                                    "available": true,
+                                    "repo": repo_url,
+                                })),
+                                StatusCode::OK,
+                            )
+                            .into_response(),
+                            Err(err) => warp::reply::with_status(
+                                warp::reply::json(&serde_json::json!({
+                                    "available": false,
+                                    "repo": repo_url,
+                                    "error": err.to_string(),
+                                })),
+                                StatusCode::NOT_FOUND,
+                            )
+                            .into_response(),
+                        }
+                    } else {
+                        match flat::build_html(repo_url, 51_200) {
+                            Ok(html) => warp::reply::with_header(
+                                warp::reply::html(html),
+                                "Content-Security-Policy",
+                                RELAXED_CSP_STRING,
+                            )
+                            .into_response(),
+                            Err(err) => warp::reply::with_status(
+                                warp::reply::html(format!(
+                                    "<h1>Flat view unavailable</h1><p>{}</p>",
+                                    err
+                                )),
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                            )
+                            .into_response(),
+                        }
+                    }
+                }
                 _ => warp::reply::with_status(
                     warp::reply::html(
                         "<h1>Flat view unavailable</h1><p>Missing repo query parameter.</p>",
