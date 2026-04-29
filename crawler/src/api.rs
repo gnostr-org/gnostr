@@ -688,6 +688,7 @@ pub(crate) async fn execute_query_page(
     query_string: String,
     relays: Vec<Url>,
     limit: Option<i32>,
+    search_term: Option<&str>,
 ) -> Response {
     let results = match send(query_string.clone(), relays, limit.or(Some(100))).await {
         Ok(results) => results,
@@ -710,6 +711,12 @@ pub(crate) async fn execute_query_page(
                         .into_response()
                 });
         }
+    };
+
+    let results = if let Some(search_term) = search_term {
+        filter_query_results(results, search_term)
+    } else {
+        results
     };
 
     let results_html = if results.is_empty() {
@@ -840,6 +847,7 @@ pub(crate) async fn get_query(Query(params): Query<HashMap<String, String>>) -> 
         escape_html(&query_string),
         relays,
         limit,
+        search,
     )
     .await
 }
@@ -1003,6 +1011,11 @@ pub(crate) async fn get_nip_query(
         relay.unwrap_or(""),
         Some(default_kinds.as_str()),
     );
+    let results = if let Some(search_term) = search {
+        filter_query_results(results, search_term)
+    } else {
+        results
+    };
     let results_html = if results.is_empty() {
         "<p>No results.</p>".to_string()
     } else {
@@ -1039,6 +1052,27 @@ pub(crate) async fn get_nip_query(
             )
                 .into_response()
         })
+}
+
+fn filter_query_results(results: Vec<String>, search_term: &str) -> Vec<String> {
+    let needles: Vec<String> = search_term
+        .split(|c: char| c.is_whitespace() || c == ',')
+        .map(str::trim)
+        .filter(|term| !term.is_empty())
+        .map(|term| term.to_ascii_lowercase())
+        .collect();
+
+    if needles.is_empty() {
+        return results;
+    }
+
+    results
+        .into_iter()
+        .filter(|result| {
+            let haystack = result.to_ascii_lowercase();
+            needles.iter().all(|needle| haystack.contains(needle))
+        })
+        .collect()
 }
 
 pub(crate) async fn get_nip_relay_json(

@@ -207,7 +207,7 @@ pub fn build_gnostr_query(
     mentions: Option<&str>,
     references: Option<&str>,
     kinds: Option<&str>,
-    search: Option<(&str, &str)>,
+    _search: Option<(&str, &str)>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut filt = Map::new();
     let split_csv = |value: &str| {
@@ -278,11 +278,6 @@ pub fn build_gnostr_query(
             }
         }
     }
-    if search.is_some() {
-        let (field, value) = search.expect("REASON");
-        filt.insert(field.trim().to_string(), json!(value.trim()));
-    }
-
     println!("{:?}", filt);
     let q = json!(["REQ", "gnostr-query", filt]);
     info!("q={}", q);
@@ -317,6 +312,25 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&query).unwrap();
         assert_eq!(parsed[2]["#t"], serde_json::json!(["gnostr"]));
         assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2, 3]));
+    }
+
+    #[test]
+    fn build_gnostr_query_ignores_search_for_wire_filtering() {
+        let query = build_gnostr_query(
+            None,
+            None,
+            Some(10),
+            None,
+            None,
+            None,
+            None,
+            Some("1"),
+            Some(("search", "hello")),
+        )
+        .unwrap();
+
+        let parsed: serde_json::Value = serde_json::from_str(&query).unwrap();
+        assert!(parsed[2].get("search").is_none());
     }
 
     #[tokio::test]
