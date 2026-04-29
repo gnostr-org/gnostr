@@ -443,14 +443,14 @@ function new_nip65_relay_item(url, policy, discovery_entry) {
 }
 
 function on_click_add_nip65_relay(ev) {
-	add_relay_address(ev.target.dataset.address, "NIP-65 relay");
+	add_relay_address(ev.currentTarget.dataset.address, "NIP-65 relay", ev.currentTarget);
 }
 
 function on_click_add_discovered_relay(ev) {
-	add_relay_address(ev.target.dataset.address, "discovered relay");
+	add_relay_address(ev.currentTarget.dataset.address, "discovered relay", ev.currentTarget);
 }
 
-function add_relay_address(address, label) {
+function add_relay_address(address, label, source_element = null) {
 	const model = GNOSTR;
 
 	if (model.relays.has(address)) {
@@ -463,6 +463,12 @@ function add_relay_address(address, label) {
 		return;
 	}
 	model.relays.add(address);
+	if (source_element) {
+		const item = source_element.closest("details");
+		if (item) {
+			item.open = false;
+		}
+	}
 	find_node("#relay-list tbody").appendChild(new_relay_item(address));
 	model_save_settings(model);
 	log_info(`Added ${label}: ${address}`);
