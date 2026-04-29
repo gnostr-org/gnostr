@@ -193,14 +193,10 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
     };
 
     let gnostr_route = {
-        let shell_html = Arc::clone(&shell_html);
-        warp::path("gnostr").and(warp::get()).map(move || {
-            warp::reply::with_header(
-                warp::reply::html((*shell_html).clone()),
-                "Content-Security-Policy",
-                RELAXED_CSP_STRING,
-            )
-        })
+        warp::path("gnostr")
+            .and(warp::path::end())
+            .and(warp::get())
+            .map(|| warp::redirect::temporary(warp::http::Uri::from_static("/nip")))
     };
 
     let nip_index_route = {
