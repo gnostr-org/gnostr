@@ -112,6 +112,8 @@ jobs:
           components: clippy, rustfmt
           # Automatically configure smart caching (recommended for speed)
           cache: true
+          # Do not add -D warnings to RUSTFLAGS (allow all warnings)
+          rustflags: ""
 
       - run: rustup default ${{ matrix.rustup }}
       - name: Install cargo-binstall
