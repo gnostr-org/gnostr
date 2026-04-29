@@ -192,8 +192,9 @@
 							</div>
 						</div>
 						<div id="relays" class="hide">
-							<section>
-							<header>
+							<details class="relay-section">
+							<summary><label>Relays</label></summary>
+							<div class="relay-section-body">
 								<template id="local-relay-header-card-template">
 									<div id="local-relay-header-card" class="local-relay-card">
 										<div id="relays-profile" class="settings-profile local-relay-profile">
@@ -225,7 +226,6 @@
 									</div>
 								</template>
 								<div id="local-relay-header-card-mount"></div>
-							</header>
 							<template id="relay-card-template">
 								<tr class="relay-card">
 									<td class="relay-card-main">
@@ -297,11 +297,8 @@
 							                                        									<!-- Dynamically generated rows should have <td> with classes: column-address, column-action -->
 								</tbody>
 							</table>
-						</section>
-						<section>
-							<header>
-								<label>NIP-65 Relays</label>
-							</header>
+							<details class="relay-section">
+								<summary><label>NIP-65 Relays</label></summary>
 							<table id="nip65-relay-list" class="row">
 								<thead>
 									<tr>
@@ -313,11 +310,9 @@
 								<tbody>
 									<!-- Dynamically generated rows should have <td> with classes: column-address, column-action -->
 							</table>
-						</section>
-						<section>
-							<header>
-								<label>Crawler Relay Discovery</label>
-							</header>
+							</details>
+							<details class="relay-section">
+								<summary><label>Crawler Relay Discovery</label></summary>
 							<table id="relay-discovery-list" class="row">
 								<thead>
 									<tr>
@@ -328,7 +323,9 @@
 								<tbody>
 								</tbody>
 							</table>
-						</section>
+							</details>
+							</div>
+							</details>
 						</div>
 						<div id="settings" class="hide">
 							<section>
