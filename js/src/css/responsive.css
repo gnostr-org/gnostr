@@ -6,21 +6,34 @@
 
 	/* Application Framework */
 	#list-detail-container {
-		flex-wrap: wrap;
+		display: flex;
+		flex-direction: column;
 	}
 	#master-pane {
 		display: block !important; /* Ensure master pane is always visible */
 		width: 100% !important; /* Allow it to take full width on small screens */
 		border-right: none;
+		height: auto;
+		position: relative;
+		top: auto;
 	}
 	#detail-pane {
 		flex: 1;
 		width: 100%; /* Take full width below the master-pane */
+		height: auto;
+		position: relative;
+		top: auto;
+		left: auto;
+		right: auto;
+		bottom: auto;
 	}
 	#view {
 		flex: 1;
 		width: initial;
 		border-right: none;
+	}
+	#view footer {
+		left: 0;
 	}
 	.show-more {
 		left: 0;
