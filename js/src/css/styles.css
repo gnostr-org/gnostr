@@ -326,14 +326,27 @@ button.nav > img.icon {
 
 .local-relay-card {
 	display: flex;
-	align-items: center;
-	gap: 12px;
+	align-items: stretch;
+	flex-direction: column;
+	gap: 10px;
 	margin-left: 16px;
 	padding: 8px 12px;
 	border: 1px solid var(--clrBorder);
 	border-radius: 14px;
 	background: var(--clrPanel);
-	flex-wrap: wrap;
+}
+.local-relay-profile {
+	padding: 0;
+	background: transparent;
+	border: 0;
+}
+.local-relay-profile .settings-profile-top {
+	align-items: center;
+}
+.local-relay-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 .local-relay-card-title {
 	display: flex;

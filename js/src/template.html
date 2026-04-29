@@ -11,7 +11,7 @@
 		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
 		<link rel="stylesheet" href="/css/vars.css?v=1">
 		<link rel="stylesheet" href="/css/utils.css?v=1">
-		<link rel="stylesheet" href="/css/styles.css?v=20">
+		<link rel="stylesheet" href="/css/styles.css?v=21">
 		<link rel="stylesheet" href="/css/responsive.css?v=10">
 		<script defer src="/js/util.js?v=5"></script>
 		<script defer src="/js/ui/safe-html.js?v=1"></script>
@@ -193,35 +193,34 @@
 						</div>
 						<div id="relays" class="hide">
 							<section>
-								<div id="relays-profile" class="settings-profile">
-									<div class="settings-profile-top">
-										<img role="my-pfp" class="pfp jumbo" src="/images/no-user.svg"/>
-										<div class="settings-profile-meta">
-											<label>Relays</label>
-											<p>Manage local relays and discovery metadata.</p>
+							<header>
+								<div id="local-relay-header-card" class="local-relay-card">
+									<div id="relays-profile" class="settings-profile local-relay-profile">
+										<div class="settings-profile-top">
+											<img role="my-pfp" class="pfp jumbo" src="/images/no-user.svg"/>
+											<div class="settings-profile-meta">
+												<label>Relays</label>
+												<p>Manage local relays and discovery metadata.</p>
+											</div>
 										</div>
 									</div>
-								</div>
-							</section>
-							<section>
-							<header>
-								<label>Relays</label>
-								<div id="local-relay-header-card" class="local-relay-card">
-									<div class="local-relay-card-title">
-										<strong>Local Relay</strong>
-										<span data-field="status"></span>
-									</div>
-									<div class="local-relay-card-actions">
-										<button id="local-relay-start" class="btn-text">Start</button>
-										<button id="local-relay-stop" class="btn-text">Stop</button>
-										<button id="add-relay" class="btn-text">
-											<img class="svg icon small" src="/images/add-relay.svg"/>
-										</button>
-									</div>
-									<div class="local-relay-card-stats">
-										<span><strong>URL:</strong> <span data-field="url"></span></span>
-										<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
-										<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
+									<div class="local-relay-card-body">
+										<div class="local-relay-card-title">
+											<strong>Local Relay</strong>
+											<span data-field="status"></span>
+										</div>
+										<div class="local-relay-card-actions">
+											<button id="local-relay-start" class="btn-text">Start</button>
+											<button id="local-relay-stop" class="btn-text">Stop</button>
+											<button id="add-relay" class="btn-text">
+												<img class="svg icon small" src="/images/add-relay.svg"/>
+											</button>
+										</div>
+										<div class="local-relay-card-stats">
+											<span><strong>URL:</strong> <span data-field="url"></span></span>
+											<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
+											<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
+										</div>
 									</div>
 								</div>
 							</header>
