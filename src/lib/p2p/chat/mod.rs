@@ -23,6 +23,7 @@ use uuid::Uuid;
 
 pub use gnostr_chat::{msg, p2p};
 pub use gnostr_chat::evt_loop;
+pub use gnostr_chat::ChatEvent;
 use gnostr_chat::event::ChatEvent;
 use gnostr_chat::msg::{Msg, MsgKind};
 
