@@ -10,7 +10,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-extern crate git2 as gnostr_asyncgit;
+use gnostr_asyncgit::git2;
 use gnostr_asyncgit::types::{
     nip34::{Nip34Event, Nip34UnsignedEvent, RepoRef, RepoState},
     EventKind, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl,

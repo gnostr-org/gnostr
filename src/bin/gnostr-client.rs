@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use clap::{Parser, Subcommand};
-extern crate git2 as gnostr_asyncgit;
 use gnostr::nostr_client::NostrClient;
 use gnostr::queue::InternalEvent;
 use gnostr_asyncgit::types::{

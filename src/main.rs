@@ -2,7 +2,6 @@ use std::env;
 
 use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
-extern crate git2 as gnostr_asyncgit;
 use gnostr::{
     blockhash, blockheight,
     cli::{get_app_cache_path, GnostrCli, GnostrCommands},
