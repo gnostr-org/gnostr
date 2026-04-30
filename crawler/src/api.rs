@@ -1356,6 +1356,7 @@ mod tests {
         )
         .await;
         let config_dir = crate::relays::get_config_dir_path();
+        fs::create_dir_all(&config_dir).unwrap();
         fs::write(
             config_dir.join("relays.yaml"),
             format!("{}\nws://127.0.0.1:1\n", relay_url),
