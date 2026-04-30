@@ -6583,6 +6583,24 @@ dependencies = [
 [[package]]
 name = "gnostr-p2p"
 version = "1876.947089.686958"
+dependencies = [
+ "ansi_term",
+ "anyhow",
+ "async-std",
+ "clap 4.6.1",
+ "futures",
+ "futures-util",
+ "gnostr-asyncgit",
+ "libp2p",
+ "log",
+ "rand 0.8.6",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "gnostr-relay"
