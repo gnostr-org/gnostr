@@ -286,7 +286,7 @@ fn main() {
             get_git_hash()
         )
     } else {
-        format!("nightly {} ({})", build_date, get_git_hash())
+        format!("gnostr-legit@{} ({})", get_git_hash(), build_date)
     };
 
     println!("cargo:warning=buildname '{}'", build_name);
