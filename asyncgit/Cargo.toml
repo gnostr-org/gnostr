@@ -219,7 +219,9 @@ expectrl = "0.8.0"
 insta = "1.42.2"
 invalidstring = { workspace = true }                 #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1878.945649.607219" }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
+#supposed to be ngit re-export #REMOVE
 nostr = { workspace = true }
+#supposed to be ngit re-export #REMOVE
 nostr-sdk = { workspace = true }
 pretty_assertions = "1.4"
 reqwest = { version = "0.11", features = ["json"] }
