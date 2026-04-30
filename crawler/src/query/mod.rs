@@ -384,6 +384,7 @@ mod tests {
             if let Some(message) = websocket.next().await {
                 assert!(matches!(message.unwrap(), Message::Text(_)));
             }
+            websocket.close(None).await.unwrap();
         });
 
         let listener_two = TcpListener::bind("127.0.0.1:0").await?;
@@ -394,6 +395,7 @@ mod tests {
             if let Some(message) = websocket.next().await {
                 assert!(matches!(message.unwrap(), Message::Text(_)));
             }
+            websocket.close(None).await.unwrap();
         });
 
         let relay_one = Url::parse(&format!("ws://{}", addr_one))?;
