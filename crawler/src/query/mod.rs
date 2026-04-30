@@ -398,7 +398,9 @@ mod tests {
 
         let relay_one = Url::parse(&format!("ws://{}", addr_one))?;
         let relay_two = Url::parse(&format!("ws://{}", addr_two))?;
-        let result = send("REQ".to_string(), vec![relay_one, relay_two], Some(1)).await?;
+        let result = send("REQ".to_string(), vec![relay_one, relay_two], Some(1))
+            .await
+            .expect("empty relays should still return Ok");
 
         assert!(result.is_empty());
         server_one.await.unwrap();
