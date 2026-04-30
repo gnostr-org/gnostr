@@ -1032,6 +1032,52 @@ code {
 	word-break: break-word;
 	overflow-wrap: anywhere;
 }
+#settings #nip89-app-card {
+	padding: 0;
+	overflow: hidden;
+}
+#settings #nip89-app-card::-webkit-details-marker,
+#settings #nip89-app-card > summary::-webkit-details-marker {
+	display: none;
+}
+#settings #nip89-app-card > summary {
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1fr);
+	gap: 12px;
+	align-items: center;
+	padding: 15px;
+	list-style: none;
+	cursor: pointer;
+}
+#settings #nip89-app-card > summary::after {
+	content: "▾";
+	justify-self: end;
+	color: var(--clrTextLight);
+	transition: transform 0.15s ease;
+}
+#settings #nip89-app-card:not([open]) > summary::after {
+	transform: rotate(-90deg);
+}
+#settings #nip89-app-card > summary:hover {
+	background: color-mix(in srgb, var(--clrPanel) 80%, var(--clrBg) 20%);
+}
+#settings .nip89-app-summary-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+#settings .nip89-app-summary-text [name='nip89-app-summary-name'] {
+	font-weight: 800;
+	color: var(--clrText);
+}
+#settings .nip89-app-summary-text [name='nip89-app-summary-subtitle'] {
+	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+	word-break: break-word;
+}
+#settings .nip89-app-body {
+	padding: 0 15px 15px;
+}
 #settings .settings-actions {
 	display: flex;
 	margin-top: 12px;
