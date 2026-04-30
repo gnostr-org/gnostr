@@ -30,6 +30,7 @@ trace-libgit = []
 gnostr_web = []
 gitui = []
 speedy = []
+nostr = []
 vendored-openssl = ["openssl-sys"]
 vendor-openssl = ["vendored-openssl"]
 
