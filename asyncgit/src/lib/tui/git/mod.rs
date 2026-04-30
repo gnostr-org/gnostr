@@ -1,43 +1,24 @@
-#[path = "../../gitui/bindings/mod.rs"]
-pub mod bindings;
-#[path = "../../gitui/cli/mod.rs"]
+mod bindings;
 pub mod cli;
-#[path = "../../gitui/cmd_log/mod.rs"]
-pub mod cmd_log;
-#[path = "../../gitui/config/mod.rs"]
+mod cmd_log;
 pub mod config;
-#[path = "../../gitui/file_watcher/mod.rs"]
-pub mod file_watcher;
-#[path = "../../gitui/git/mod.rs"]
+mod file_watcher;
 pub mod git;
-#[path = "../../gitui/git2_opts/mod.rs"]
-pub mod git2_opts;
-#[path = "../../gitui/gitu_diff/mod.rs"]
+mod git2_opts;
 pub mod gitu_diff;
-#[path = "../../gitui/gitui_error/mod.rs"]
 pub mod gitui_error;
-#[path = "../../gitui/highlight/mod.rs"]
-pub mod highlight;
-#[path = "../../gitui/items/mod.rs"]
+mod highlight;
 pub mod items;
-#[path = "../../gitui/key_parser/mod.rs"]
-pub mod key_parser;
-#[path = "../../gitui/menu/mod.rs"]
+mod key_parser;
 pub mod menu;
-#[path = "../../gitui/ops/mod.rs"]
 pub mod ops;
-#[path = "../../gitui/prompt/mod.rs"]
-pub mod prompt;
-#[path = "../../gitui/screen/mod.rs"]
+mod prompt;
 pub mod screen;
-#[path = "../../gitui/state/mod.rs"]
 pub mod state;
-#[path = "../../gitui/ui/mod.rs"]
 pub mod ui;
 
 #[cfg(test)]
-#[path = "../../gitui/tests/mod.rs"]
-pub mod tests;
+mod tests;
 
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState, KeyModifiers};
 use git2::Repository;
@@ -49,7 +30,7 @@ use std::{
     rc::Rc,
     time::Duration,
 };
-use term::Term;
+use crate::tui::shared::term::Term;
 
 pub use crate::tui::shared::{syntax_parser, term};
 
