@@ -1109,17 +1109,12 @@ code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	margin-left: auto;
 	min-width: 36px;
 	min-height: 36px;
 	padding: 8px 10px;
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
-}
-#relays .relay-remove-icon {
-	color: var(--clrWarn);
-	font-size: 28px;
-	line-height: 1;
-	font-weight: 700;
 }
 #relays .relay-discovery-body {
 	display: flex;

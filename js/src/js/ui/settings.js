@@ -437,7 +437,7 @@ function new_relay_item(str) {
 						<span class="relay-active-summary-ping" data-relay-ping></span>
 					</span>
 					<button class="remove-relay btn-text" data-address="" role="remove-relay">
-						<span class="relay-remove-icon" aria-hidden="true">−</span>
+						<img class="icon svg small" src="/images/event-delete.svg"/>
 					</button>
 				</summary>
 				<div class="relay-info">
