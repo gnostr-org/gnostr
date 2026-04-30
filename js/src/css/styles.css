@@ -1043,8 +1043,8 @@ code {
 #relays .relay-active-summary,
 #relays .relay-discovery-summary {
 	display: grid;
-	grid-template-columns: 24px minmax(0, 1fr) 80px;
-	align-items: center;
+	grid-template-columns: 24px minmax(0, 1fr) auto;
+	align-items: start;
 	gap: 12px;
 	width: 100%;
 	padding: 14px 16px;
@@ -1137,7 +1137,7 @@ code {
 	border-radius: 999px;
 	flex: 0 0 auto;
 	justify-self: end;
-	width: 80px;
+	width: auto;
 }
 #relays .relay-active-summary .remove-relay {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
