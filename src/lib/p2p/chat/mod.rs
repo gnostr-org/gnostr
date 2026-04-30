@@ -563,7 +563,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         tracing::info!("running event loop in background.");
         tracing::info!("Process name set to: {}", process_title);
 
-        evt_loop(input_rx, peer_tx, topic.clone()).await?;
+        std::future::pending::<()>().await;
         return Ok(());
     }
 
