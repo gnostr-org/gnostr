@@ -230,6 +230,9 @@ function model_process_event_metadata(model, ev, update_view) {
 	if (ev.pubkey == model.pubkey && timeline_el && timeline_el.dataset.mode == VM_SETTINGS && typeof render_settings_profile === "function") {
 		render_settings_profile(model);
 	}
+	if (ev.pubkey == model.pubkey && timeline_el && timeline_el.dataset.mode == VM_SETTINGS && typeof render_nip89_app_metadata === "function") {
+		render_nip89_app_metadata(model);
+	}
 	if (update_view)
 		view_timeline_update_profiles(model, profile.pubkey); 
 	// If it's my pubkey let's redraw my pfp that is not located in the view
@@ -669,6 +672,7 @@ function new_model() {
 			count: 0, // the number not seen  since last looking
 		},
 		profiles: new Map(), // pubkey => profile data
+		nip89_app_metadata: null,
 		contacts: {
 			event: null,
 			friends: new Set(),

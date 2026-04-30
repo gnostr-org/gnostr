@@ -1006,6 +1006,21 @@ code {
 #settings-profile p[name="settings-profile-about"] {
 	margin: 8px 0 0;
 }
+#settings .nip89-app-links dl {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	gap: 4px 12px;
+	margin: 0;
+}
+#settings .nip89-app-links dt {
+	color: var(--clrTextLight);
+	font-weight: 800;
+}
+#settings .nip89-app-links dd {
+	margin: 0;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
 #settings .settings-actions {
 	display: flex;
 	margin-top: 12px;

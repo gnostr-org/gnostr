@@ -11,6 +11,7 @@ function init_settings(model) {
 		view_update_cached_active_pfp(model);
 	}
 	render_settings_profile(model);
+	render_nip89_app_metadata(model);
 }
 
 function format_bytes(bytes) {
@@ -158,6 +159,99 @@ function render_settings_profile(model) {
     const pubkey_el = find_node("[name='settings-profile-pubkey']", el);
     pubkey_el.textContent = model.pubkey;
     pubkey_el.style.minHeight = "2.4em";
+}
+
+function ensure_nip89_app_metadata_card() {
+	const mount = find_node("#nip89-app-mount");
+	if (!mount || mount.querySelector("#nip89-app-card")) {
+		return mount;
+	}
+	const template = find_node("#nip89-app-template");
+	if (!template || !(template instanceof HTMLTemplateElement)) {
+		return mount;
+	}
+	mount.appendChild(template.content.cloneNode(true));
+	return mount;
+}
+
+function render_nip89_app_metadata(model, metadata = null) {
+	const mount = ensure_nip89_app_metadata_card();
+	if (!mount) {
+		return;
+	}
+	const card = find_node("#nip89-app-card", mount);
+	if (!card) {
+		return;
+	}
+	const profile = model.pubkey ? model_get_profile(model, model.pubkey) : null;
+	const source = metadata || model.nip89_app_metadata || profile?.data || {};
+	const name = source.name || source.display_name || source.displayName || source.title || "";
+	const description = source.description || source.about || "";
+	const picture = source.picture || source.image || "";
+	const pubkey = source.pubkey || model.pubkey || "";
+	const website = source.website || source.url || source.lud16 || "";
+	const kinds = [];
+	const handlers = [];
+	if (Array.isArray(source.kinds)) {
+		kinds.push(...source.kinds);
+	}
+	if (Array.isArray(source.supported_kinds)) {
+		kinds.push(...source.supported_kinds);
+	}
+	if (Array.isArray(source.tags)) {
+		for (const tag of source.tags) {
+			if (!Array.isArray(tag) || tag.length < 2) {
+				continue;
+			}
+			if (tag[0] === "k") {
+				kinds.push(tag[1]);
+				continue;
+			}
+			if (tag[0] !== "d") {
+				handlers.push(tag.slice(1).filter(Boolean).join(" • "));
+			}
+		}
+	}
+	const kinds_label = [...new Set(kinds.map((kind) => String(kind).trim()).filter(Boolean))].join(", ");
+	const handlers_label = [...new Set(handlers.map((handler) => handler.trim()).filter(Boolean))].join(" • ");
+	const has_data = !!(name || description || pubkey || website || kinds_label || handlers_label || picture);
+
+	find_node("[name='nip89-app-name']", card).textContent = name;
+	find_node("[name='nip89-app-name']", card).classList.toggle("hide", !name);
+	find_node("[name='nip89-app-about']", card).textContent = description;
+	find_node("[name='nip89-app-about']", card).classList.toggle("hide", !description);
+	find_node("[name='nip89-app-pubkey']", card).textContent = pubkey;
+	find_node("[name='nip89-app-pubkey']", card).classList.toggle("hide", !pubkey);
+	find_node("[name='nip89-app-kinds']", card).textContent = kinds_label ? `Kinds: ${kinds_label}` : "";
+	find_node("[name='nip89-app-kinds']", card).classList.toggle("hide", !kinds_label);
+
+	const image = find_node("[name='nip89-app-image']", card);
+	if (image) {
+		if (picture) {
+			image.src = picture;
+			image.classList.remove("hide");
+		} else {
+			image.classList.add("hide");
+		}
+	}
+
+	const website_el = find_node("[data-field='nip89-app-website']", card);
+	if (website_el) {
+		website_el.textContent = website;
+		website_el.classList.toggle("hide", !website);
+	}
+
+	const handlers_el = find_node("[data-field='nip89-app-handlers']", card);
+	if (handlers_el) {
+		handlers_el.textContent = handlers_label;
+		handlers_el.classList.toggle("hide", !handlers_label);
+	}
+
+	mount.classList.toggle("hide", !has_data);
+	const section = find_node("#nip89-app-section");
+	if (section) {
+		section.classList.toggle("hide", !has_data);
+	}
 }
 
 async function render_local_relay_info() {

@@ -205,6 +205,33 @@
                   </tbody>
                 </table>
               </section>
+              <section id="nip89-app-section" class="hide">
+                <header>
+                  <label>NIP-89 App Metadata</label>
+                </header>
+                <template id="nip89-app-template">
+                  <div id="nip89-app-card" class="settings-profile nip89-app-profile">
+                    <div class="settings-profile-top">
+                      <img name="nip89-app-image" class="pfp jumbo hide" />
+                      <div class="settings-profile-meta">
+                        <label name="nip89-app-name"></label>
+                        <label name="nip89-app-kinds"></label>
+                        <p name="nip89-app-about"></p>
+                        <code name="nip89-app-pubkey"></code>
+                      </div>
+                    </div>
+                    <div class="nip89-app-links">
+                      <dl>
+                        <dt>Website</dt>
+                        <dd data-field="nip89-app-website"></dd>
+                        <dt>Handlers</dt>
+                        <dd data-field="nip89-app-handlers"></dd>
+                      </dl>
+                    </div>
+                  </div>
+                </template>
+                <div id="nip89-app-mount"></div>
+              </section>
               <section>
                 <header><label>Info</label></header>
                 <p>
