@@ -6,21 +6,19 @@ mod tests {
     use tokio::sync::mpsc;
 
     use crate::{
-        p2p::chat::{
-            msg::{Msg, MsgKind},
-            p2p::evt_loop,
-        },
-        queue::InternalEvent,
+        event::ChatEvent,
+        evt_loop,
+        msg::{Msg, MsgKind},
     };
 
     #[tokio::test]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes() {
         // Create channels for two chat instances
-        let (send_tx1, send_rx1) = mpsc::channel::<InternalEvent>(100);
-        let (recv_tx1, mut recv_rx1) = mpsc::channel::<InternalEvent>(100);
-        let (send_tx2, send_rx2) = mpsc::channel::<InternalEvent>(100);
-        let (recv_tx2, mut recv_rx2) = mpsc::channel::<InternalEvent>(100);
+        let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, mut recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes");
 
@@ -41,7 +39,7 @@ mod tests {
         .set_kind(MsgKind::Chat);
 
         send_tx1
-            .send(InternalEvent::ChatMessage(msg1))
+            .send(ChatEvent::ChatMessage(msg1))
             .await
             .unwrap();
 
@@ -51,7 +49,7 @@ mod tests {
             .expect("Timeout waiting for message on peer 2")
             .expect("Channel closed on peer 2");
 
-        if let InternalEvent::ChatMessage(received_msg) = received_event {
+        if let ChatEvent::ChatMessage(received_msg) = received_event {
             assert_eq!(received_msg.from, "peer1");
             assert_eq!(received_msg.content[0], msg1_content);
             assert_eq!(received_msg.kind, MsgKind::Chat);
@@ -69,7 +67,7 @@ mod tests {
         .set_kind(MsgKind::Chat);
 
         send_tx2
-            .send(InternalEvent::ChatMessage(msg2))
+            .send(ChatEvent::ChatMessage(msg2))
             .await
             .unwrap();
 
@@ -79,7 +77,7 @@ mod tests {
             .expect("Timeout waiting for message on peer 1")
             .expect("Channel closed on peer 1");
 
-        if let InternalEvent::ChatMessage(received_msg_2) = received_event_2 {
+        if let ChatEvent::ChatMessage(received_msg_2) = received_event_2 {
             assert_eq!(received_msg_2.from, "peer2");
             assert_eq!(received_msg_2.content[0], msg2_content);
             assert_eq!(received_msg_2.kind, MsgKind::Chat);
@@ -96,12 +94,12 @@ mod tests {
     #[ignore]
     async fn test_p2p_connectivity_three_nodes() {
         // Create channels for three chat instances
-        let (send_tx1, send_rx1) = mpsc::channel::<InternalEvent>(100);
-        let (recv_tx1, mut _recv_rx1) = mpsc::channel::<InternalEvent>(100);
-        let (send_tx2, send_rx2) = mpsc::channel::<InternalEvent>(100);
-        let (recv_tx2, mut recv_rx2) = mpsc::channel::<InternalEvent>(100);
-        let (send_tx3, send_rx3) = mpsc::channel::<InternalEvent>(100);
-        let (recv_tx3, mut recv_rx3) = mpsc::channel::<InternalEvent>(100);
+        let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, mut _recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (send_tx3, send_rx3) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx3, mut recv_rx3) = mpsc::channel::<ChatEvent>(100);
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-three-nodes");
 
@@ -123,7 +121,7 @@ mod tests {
         .set_kind(MsgKind::Chat);
 
         send_tx1
-            .send(InternalEvent::ChatMessage(msg1))
+            .send(ChatEvent::ChatMessage(msg1))
             .await
             .unwrap();
 
@@ -133,7 +131,7 @@ mod tests {
             .expect("Timeout waiting for message on peer 2")
             .expect("Channel closed on peer 2");
 
-        if let InternalEvent::ChatMessage(received_msg) = received_event_2 {
+        if let ChatEvent::ChatMessage(received_msg) = received_event_2 {
             assert_eq!(received_msg.from, "peer1");
             assert_eq!(received_msg.content[0], msg1_content);
         } else {
@@ -149,7 +147,7 @@ mod tests {
             .expect("Timeout waiting for message on peer 3")
             .expect("Channel closed on peer 3");
 
-        if let InternalEvent::ChatMessage(received_msg) = received_event_3 {
+        if let ChatEvent::ChatMessage(received_msg) = received_event_3 {
             assert_eq!(received_msg.from, "peer1");
             assert_eq!(received_msg.content[0], msg1_content);
         } else {
@@ -178,8 +176,8 @@ mod tests {
 
         // Send messages concurrently from peers 2 and 3
         let (tx2_result, tx3_result) = tokio::join!(
-            send_tx2.send(InternalEvent::ChatMessage(msg2)),
-            send_tx3.send(InternalEvent::ChatMessage(msg3))
+            send_tx2.send(ChatEvent::ChatMessage(msg2)),
+            send_tx3.send(ChatEvent::ChatMessage(msg3))
         );
         tx2_result.unwrap();
         tx3_result.unwrap();
@@ -192,7 +190,7 @@ mod tests {
                 .expect("Timeout waiting for message on peer 1")
                 .expect("Channel closed on peer 1");
 
-            if let InternalEvent::ChatMessage(msg) = received_event {
+            if let ChatEvent::ChatMessage(msg) = received_event {
                 received_messages.push(msg);
             } else {
                 panic!("Received wrong event type on peer 1: {:?}", received_event);
