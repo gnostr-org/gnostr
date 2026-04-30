@@ -1064,11 +1064,22 @@ code {
 	height: 18px;
 	flex: 0 0 auto;
 }
+#relays .relay-discovery-nip34 {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
+}
 @media (prefers-color-scheme: light) {
 	#relays .relay-active-summary-nip34-light {
 		display: inline-block;
 	}
 	#relays .relay-active-summary-nip34-dark {
+		display: none;
+	}
+	#relays .relay-discovery-nip34-light {
+		display: inline-block;
+	}
+	#relays .relay-discovery-nip34-dark {
 		display: none;
 	}
 }
@@ -1077,6 +1088,12 @@ code {
 		display: none;
 	}
 	#relays .relay-active-summary-nip34-dark {
+		display: inline-block;
+	}
+	#relays .relay-discovery-nip34-light {
+		display: none;
+	}
+	#relays .relay-discovery-nip34-dark {
 		display: inline-block;
 	}
 }

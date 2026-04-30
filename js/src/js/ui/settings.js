@@ -552,7 +552,7 @@ function new_relay_discovery_item(entry, model) {
 		item.className = 'relay-card relay-discovery-card';
 		const summary = document.createElement('summary');
 		summary.className = 'relay-discovery-summary';
-		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
+		summary.innerHTML = `<a href="#" class="details-relay relay-address" data-address=""><span data-relay-address></span></a><img class="relay-discovery-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/><img class="relay-discovery-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
 		const body = document.createElement('div');
 		body.className = 'relay-discovery-body';
 		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-ping hide" data-relay-ping></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div>`;
@@ -569,6 +569,7 @@ function new_relay_discovery_item(entry, model) {
 	const software_el = find_node("[data-relay-software]", item);
 	const nips_el = find_node("[data-relay-nips]", item);
 	const description_el = find_node("[data-relay-description]", item);
+	const nip34_icons = item.querySelectorAll(".relay-discovery-nip34");
 	const button = find_node(".add-discovered-relay", item);
 	if (address) {
 		address.textContent = entry.url;
@@ -601,6 +602,9 @@ function new_relay_discovery_item(entry, model) {
 		nips_el.textContent = supported_nips.length ? `Supports NIPs: ${supported_nips.join(", ")}` : "";
 		nips_el.classList.toggle("hide", !supported_nips.length);
 	}
+	nip34_icons.forEach((icon) => {
+		icon.classList.toggle("hide", !supported_nips.includes(34));
+	});
 	if (description_el) {
 		description_el.textContent = entry.description || "";
 		description_el.classList.toggle("hide", !entry.description);
