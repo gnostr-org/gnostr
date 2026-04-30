@@ -347,8 +347,8 @@ jobs:
       run: |
         mkdir -p "$BUILD_NAME"
         cp README.md LICENSE "$BUILD_NAME/"
-        cp "target/${{ matrix.target }}/release/blossom-cli" "$BUILD_NAME/"
-        cp "target/${{ matrix.target }}/release/blossom-server" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-blossom" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-server" "$BUILD_NAME/"
 
     - name: Bundle release (Windows)
       if: matrix.build == 'windows-x64'
@@ -356,22 +356,22 @@ jobs:
       run: |
         mkdir -p "$BUILD_NAME"
         cp README.md LICENSE "$BUILD_NAME/"
-        cp "target/${{ matrix.target }}/release/blossom-cli.exe" "$BUILD_NAME/"
-        cp "target/${{ matrix.target }}/release/blossom-server.exe" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-blossom.exe" "$BUILD_NAME/"
+        cp "target/${{ matrix.target }}/release/gnostr-server.exe" "$BUILD_NAME/"
 
     - name: Run smoke test (Unix)
       if: matrix.native && matrix.build != 'windows-x64'
       shell: bash
       run: |
-        "$BUILD_NAME/blossom-cli" --version
-        "$BUILD_NAME/blossom-server" --version
+        "$BUILD_NAME/gnostr-blossom" --version
+        "$BUILD_NAME/gnostr-server" --version
 
     - name: Run smoke test (Windows)
       if: matrix.native && matrix.build == 'windows-x64'
       shell: bash
       run: |
-        "$BUILD_NAME/blossom-cli.exe" --version
-        "$BUILD_NAME/blossom-server.exe" --version
+        "$BUILD_NAME/gnostr-blossom.exe" --version
+        "$BUILD_NAME/gnostr-server.exe" --version
 
     - name: Upload asset
       uses: actions/upload-artifact@v4
