@@ -428,15 +428,15 @@ function new_relay_item(str) {
 		cell.colSpan = 2;
 		cell.innerHTML = `
 			<details class="relay-active-card">
-				<summary class="relay-active-summary">
-					<img class="relay-active-summary-nip34 relay-active-summary-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
-					<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
-					<span class="relay-active-summary-text">
-						<span class="relay-active-summary-name" data-relay-name></span>
-						<span class="relay-active-summary-address" data-relay-address></span>
-						<span class="relay-active-summary-ping" data-relay-ping></span>
+				<summary class="relay-active-summary relay-summary">
+					<img class="relay-active-summary-nip34 relay-active-summary-nip34-light relay-summary-icon icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+					<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark relay-summary-icon icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+					<span class="relay-active-summary-text relay-summary-text">
+						<span class="relay-active-summary-name relay-summary-name" data-relay-name></span>
+						<span class="relay-active-summary-address relay-summary-address" data-relay-address></span>
+						<span class="relay-active-summary-ping relay-summary-ping" data-relay-ping></span>
 					</span>
-					<button class="remove-relay btn-text" data-address="" role="remove-relay">
+					<button class="remove-relay btn-text relay-summary-action" data-address="" role="remove-relay">
 						<img class="icon svg small" src="/images/event-delete.svg"/>
 					</button>
 				</summary>
@@ -561,9 +561,9 @@ function new_relay_discovery_item(entry, model) {
 		item = document.createElement('details');
 		item.className = 'relay-card relay-discovery-card';
 		const summary = document.createElement('summary');
-		summary.className = 'relay-discovery-summary';
+		summary.className = 'relay-discovery-summary relay-summary';
 		// Discovery uses the same summary stack as active relays so the layout stays consistent.
-		summary.innerHTML = `<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/><img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/><span class="relay-active-summary-text"><span class="relay-active-summary-name" data-relay-name></span><span class="relay-active-summary-address" data-relay-address></span><span class="relay-active-summary-ping" data-relay-ping></span></span><button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
+		summary.innerHTML = `<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-light relay-summary-icon icon svg small hide" src="/images/logo.svg" alt="NIP-34"/><img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-dark relay-summary-icon icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/><span class="relay-active-summary-text relay-summary-text"><span class="relay-active-summary-name relay-summary-name" data-relay-name></span><span class="relay-active-summary-address relay-summary-address" data-relay-address></span><span class="relay-active-summary-ping relay-summary-ping" data-relay-ping></span></span><button class="add-discovered-relay btn-text relay-summary-action" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay"><img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/></button>`;
 		const body = document.createElement('div');
 		body.className = 'relay-discovery-body';
 		body.innerHTML = `<div class="relay-info"><div class="relay-info-line relay-info-name" data-relay-name></div><div class="relay-info-line relay-info-ping hide" data-relay-ping></div><div class="relay-info-line relay-info-software hide" data-relay-software></div><div class="relay-info-line relay-info-nips hide" data-relay-nips></div><div class="relay-info-line relay-info-description hide" data-relay-description></div></div>`;

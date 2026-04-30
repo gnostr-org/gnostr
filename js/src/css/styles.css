@@ -339,14 +339,19 @@ button.nav > img.icon {
 }
 .local-relay-summary {
 	display: grid;
-	grid-template-columns: 24px minmax(0, 1fr);
-	align-items: center;
+	grid-template-columns: 24px minmax(0, 1fr) 56px;
+	align-items: start;
 	gap: 12px;
 }
 .local-relay-summary-logo {
 	width: 24px;
 	height: 24px;
 	flex: 0 0 auto;
+}
+.local-relay-summary-action-spacer {
+	width: 56px;
+	min-height: 36px;
+	display: block;
 }
 .local-relay-card,
 #relays section {
@@ -414,6 +419,9 @@ button.nav > img.icon {
 	flex-wrap: wrap;
 	color: var(--clrTextLight);
 	font-size: var(--fsReduced);
+}
+.local-relay-summary .relay-summary-text {
+	min-width: 0;
 }
 .local-relay-card-meta dl {
 	display: grid;
@@ -1054,94 +1062,85 @@ code {
 	flex-direction: column;
 	gap: 12px;
 }
-#relays .relay-discovery-card {
-	margin: 0;
-}
 /* iOS-style grouped cell: one rounded container, one summary row, one detail body. */
-#relays .relay-active-card {
+#relays .relay-active-card,
+#relays .relay-discovery-card {
 	display: block;
+	margin: 0;
 	overflow: hidden;
 	border: 1px solid var(--clrBorder);
 	border-radius: 12px;
 	background: var(--clrPanel);
 }
-#relays .relay-active-summary,
-#relays .relay-discovery-summary {
+#relays .relay-summary {
 	display: grid;
-	grid-template-columns: 24px minmax(0, 1fr) auto;
+	grid-template-columns: 24px minmax(0, 1fr) 56px;
 	align-items: start;
 	gap: 12px;
 	width: 100%;
 	padding: 14px 16px;
 	list-style: none;
 }
-#relays .relay-active-summary::-webkit-details-marker,
-#relays .relay-discovery-summary::-webkit-details-marker {
+#relays .relay-summary::-webkit-details-marker {
 	display: none;
 }
-#relays .relay-discovery-card {
-	overflow: hidden;
-	border: 1px solid var(--clrBorder);
-	border-radius: 12px;
-	background: var(--clrPanel);
-}
 /* Shared master/detail row: icon, stacked relay data, trailing action button. */
-#relays .relay-active-summary-text {
+#relays .relay-summary-text {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 2px;
 	min-width: 0;
 }
-#relays .relay-active-summary-address,
-#relays .relay-active-summary-ping {
-	color: var(--clrTextLight);
-	font-size: var(--fsReduced);
-	line-height: 1.2;
-	word-break: break-all;
-}
-#relays .relay-active-summary-name {
+#relays .relay-summary-name {
 	color: var(--clrText);
 	font-size: var(--fsNormal);
 	font-weight: 600;
 	line-height: 1.2;
 	word-break: break-word;
 }
-#relays .relay-active-summary-nip34 {
+#relays .relay-summary-address,
+#relays .relay-summary-ping {
+	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+	line-height: 1.2;
+	word-break: break-all;
+}
+#relays .relay-summary-icon {
 	width: 24px;
 	height: 24px;
 	flex: 0 0 auto;
 }
-#relays .relay-discovery-nip34 {
-	width: 24px;
-	height: 24px;
-	flex: 0 0 auto;
+#relays .relay-summary-action-spacer {
+	width: 56px;
+	min-height: 36px;
+	display: block;
 }
 @media (prefers-color-scheme: light) {
-	#relays .relay-active-summary-nip34-light {
+	#relays .relay-summary-icon-light,
+	#relays .relay-active-summary-nip34-light,
+	#relays .relay-discovery-nip34-light,
+	#relays .local-relay-summary-logo-light {
 		display: inline-block;
 	}
-	#relays .relay-active-summary-nip34-dark {
-		display: none;
-	}
-	#relays .relay-discovery-nip34-light {
-		display: inline-block;
-	}
-	#relays .relay-discovery-nip34-dark {
+	#relays .relay-summary-icon-dark,
+	#relays .relay-active-summary-nip34-dark,
+	#relays .relay-discovery-nip34-dark,
+	#relays .local-relay-summary-logo-dark {
 		display: none;
 	}
 }
 @media (prefers-color-scheme: dark) {
-	#relays .relay-active-summary-nip34-light {
+	#relays .relay-summary-icon-light,
+	#relays .relay-active-summary-nip34-light,
+	#relays .relay-discovery-nip34-light,
+	#relays .local-relay-summary-logo-light {
 		display: none;
 	}
-	#relays .relay-active-summary-nip34-dark {
-		display: inline-block;
-	}
-	#relays .relay-discovery-nip34-light {
-		display: none;
-	}
-	#relays .relay-discovery-nip34-dark {
+	#relays .relay-summary-icon-dark,
+	#relays .relay-active-summary-nip34-dark,
+	#relays .relay-discovery-nip34-dark,
+	#relays .local-relay-summary-logo-dark {
 		display: inline-block;
 	}
 }
@@ -1151,8 +1150,7 @@ code {
 #relays .relay-discovery-body {
 	padding: 0 16px 16px;
 }
-#relays .relay-active-summary .remove-relay,
-#relays .add-discovered-relay {
+#relays .relay-summary-action {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -1164,7 +1162,7 @@ code {
 	justify-self: end;
 	width: auto;
 }
-#relays .relay-active-summary .remove-relay {
+#relays .relay-summary-action.remove-relay {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
 }
 #relays .add-discovered-relay {

@@ -196,14 +196,15 @@
 								<summary><label>Relays</label></summary>
 								<template id="local-relay-header-card-template">
 									<details id="local-relay-header-card" class="local-relay-card relay-active-card">
-										<summary class="relay-active-summary local-relay-summary">
-											<img class="local-relay-summary-logo local-relay-summary-logo-light icon svg small hide" src="/images/logo.svg" alt="Local Relay"/>
-											<img class="local-relay-summary-logo local-relay-summary-logo-dark icon svg small hide" src="/images/logo-inverted.svg" alt="Local Relay"/>
-											<span class="relay-active-summary-text">
-												<span class="relay-active-summary-name">Local Relay</span>
-												<span class="relay-active-summary-address" data-field="url"></span>
-												<span class="relay-active-summary-ping" data-field="status"></span>
+										<summary class="relay-active-summary relay-summary local-relay-summary">
+											<img class="local-relay-summary-logo local-relay-summary-logo-light relay-summary-icon icon svg small" src="/images/logo.svg" alt="Local Relay"/>
+											<img class="local-relay-summary-logo local-relay-summary-logo-dark relay-summary-icon icon svg small" src="/images/logo-inverted.svg" alt="Local Relay"/>
+											<span class="relay-active-summary-text relay-summary-text">
+												<span class="relay-active-summary-name relay-summary-name">Local Relay</span>
+												<span class="relay-active-summary-address relay-summary-address" data-field="url"></span>
+												<span class="relay-active-summary-ping relay-summary-ping" data-field="status"></span>
 											</span>
+											<span class="local-relay-summary-action-spacer relay-summary-action-spacer" aria-hidden="true"></span>
 										</summary>
 										<div class="local-relay-card-body">
 											<div id="relays-profile" class="settings-profile local-relay-profile">
@@ -233,16 +234,16 @@
 									<tr class="relay-card">
 										<td colspan="2">
 											<details class="relay-active-card">
-										<summary class="relay-active-summary">
+										<summary class="relay-active-summary relay-summary">
 											<!-- Shared master/detail relay row: icon, stacked relay data, trailing action. -->
-											<img class="relay-active-summary-nip34 relay-active-summary-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
-											<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
-											<span class="relay-active-summary-text">
-												<span class="relay-active-summary-name" data-relay-name></span>
-												<span class="relay-active-summary-address" data-relay-address></span>
-												<span class="relay-active-summary-ping" data-relay-ping></span>
+											<img class="relay-active-summary-nip34 relay-active-summary-nip34-light relay-summary-icon icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+											<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark relay-summary-icon icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+											<span class="relay-active-summary-text relay-summary-text">
+												<span class="relay-active-summary-name relay-summary-name" data-relay-name></span>
+												<span class="relay-active-summary-address relay-summary-address" data-relay-address></span>
+												<span class="relay-active-summary-ping relay-summary-ping" data-relay-ping></span>
 											</span>
-											<button class="remove-relay btn-text" data-address="" role="remove-relay">
+											<button class="remove-relay btn-text relay-summary-action" data-address="" role="remove-relay">
 												<img class="icon svg small" src="/images/event-delete.svg"/>
 											</button>
 										</summary>
@@ -259,16 +260,16 @@
 								</template>
 								<template id="relay-discovery-template">
 									<details class="relay-card relay-discovery-card">
-										<summary class="relay-discovery-summary">
+										<summary class="relay-discovery-summary relay-summary">
 											<!-- Discovery cards reuse the same master/detail row as active cards. -->
-											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
-											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
-											<span class="relay-active-summary-text">
-												<span class="relay-active-summary-name" data-relay-name></span>
-												<span class="relay-active-summary-address" data-relay-address></span>
-												<span class="relay-active-summary-ping" data-relay-ping></span>
+											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-light relay-summary-icon icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-dark relay-summary-icon icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+											<span class="relay-active-summary-text relay-summary-text">
+												<span class="relay-active-summary-name relay-summary-name" data-relay-name></span>
+												<span class="relay-active-summary-address relay-summary-address" data-relay-address></span>
+												<span class="relay-active-summary-ping relay-summary-ping" data-relay-ping></span>
 											</span>
-											<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
+											<button class="add-discovered-relay btn-text relay-summary-action" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
 												<img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/>
 											</button>
 										</summary>
