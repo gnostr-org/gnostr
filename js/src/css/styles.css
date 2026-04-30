@@ -343,10 +343,10 @@ button.nav > img.icon {
 	align-items: center;
 	gap: 12px;
 }
-.local-relay-summary-spacer {
+.local-relay-summary-logo {
 	width: 24px;
 	height: 24px;
-	display: block;
+	flex: 0 0 auto;
 }
 .local-relay-card,
 #relays section {
@@ -386,6 +386,20 @@ button.nav > img.icon {
 .local-relay-card-title span {
 	color: var(--clrTextLight);
 	font-size: var(--fsReduced);
+}
+.local-relay-summary-logo-light {
+	display: inline-block;
+}
+.local-relay-summary-logo-dark {
+	display: none;
+}
+@media (prefers-color-scheme: dark) {
+	.local-relay-summary-logo-light {
+		display: none;
+	}
+	.local-relay-summary-logo-dark {
+		display: inline-block;
+	}
 }
 .local-relay-card-actions {
 	display: flex;

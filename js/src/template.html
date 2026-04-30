@@ -195,19 +195,24 @@
 							<details class="relay-section" open>
 								<summary><label>Relays</label></summary>
 								<template id="local-relay-header-card-template">
-									<div id="local-relay-header-card" class="local-relay-card">
-										<div id="relays-profile" class="settings-profile local-relay-profile">
-											<div class="settings-profile-top">
-												<img role="my-pfp" class="pfp jumbo clickable" src="/images/no-user.svg"/>
-												<div class="settings-profile-meta">
-													<div id="local-relay-info" class="local-relay-card-meta"></div>
-												</div>
-											</div>
-										</div>
+									<details id="local-relay-header-card" class="local-relay-card relay-active-card">
+										<summary class="relay-active-summary local-relay-summary">
+											<img class="local-relay-summary-logo local-relay-summary-logo-light icon svg small hide" src="/images/logo.svg" alt="Local Relay"/>
+											<img class="local-relay-summary-logo local-relay-summary-logo-dark icon svg small hide" src="/images/logo-inverted.svg" alt="Local Relay"/>
+											<span class="relay-active-summary-text">
+												<span class="relay-active-summary-name">Local Relay</span>
+												<span class="relay-active-summary-address" data-field="url"></span>
+												<span class="relay-active-summary-ping" data-field="status"></span>
+											</span>
+										</summary>
 										<div class="local-relay-card-body">
-											<div class="local-relay-card-title">
-												<strong>Local Relay</strong>
-												<span data-field="status"></span>
+											<div id="relays-profile" class="settings-profile local-relay-profile">
+												<div class="settings-profile-top">
+													<img role="my-pfp" class="pfp jumbo clickable" src="/images/no-user.svg"/>
+													<div class="settings-profile-meta">
+														<div id="local-relay-info" class="local-relay-card-meta"></div>
+													</div>
+												</div>
 											</div>
 											<div class="local-relay-card-actions">
 												<button id="local-relay-start" class="btn-text">Start</button>
@@ -217,12 +222,11 @@
 												</button>
 											</div>
 											<div class="local-relay-card-stats">
-												<span><strong>URL:</strong> <span data-field="url"></span></span>
 												<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
 												<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
 											</div>
 										</div>
-									</div>
+									</details>
 								</template>
 								<div id="local-relay-header-card-mount"></div>
 								<template id="relay-card-template">
