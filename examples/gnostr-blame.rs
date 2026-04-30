@@ -20,7 +20,8 @@ use std::{
     path::Path,
 };
 
-use git2::{BlameOptions, Repository};
+use gnostr_asyncgit::git2;
+use gnostr_asyncgit::git2::{BlameOptions, Repository};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]

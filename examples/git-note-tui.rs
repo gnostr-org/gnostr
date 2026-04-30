@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
-use git2::{Oid, Repository, Signature};
+use gnostr_asyncgit::git2::{Oid, Repository, Signature};
 
 #[derive(Parser, Debug)]
 struct Args {

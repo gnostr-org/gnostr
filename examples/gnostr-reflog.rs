@@ -3,6 +3,7 @@ use std::{env, process};
 
 use getopts::Options;
 use gnostr::{get_pwd, hash_list, hash_list_padded, hash_list_w_commit_message};
+use gnostr_asyncgit::git2;
 
 mod std_input {
 

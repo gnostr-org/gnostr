@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Context, Result};
 use auth_git2::GitAuthenticator;
 use client::get_state_from_cache;
+use gnostr_asyncgit::git2;
 use git::RepoActions;
 use git_events::{event_to_cover_letter, get_commit_id_from_patch};
 use gnostr::{

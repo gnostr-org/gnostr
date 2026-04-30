@@ -17,6 +17,7 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
     Frame, Terminal,
 };
+use gnostr_asyncgit::git2;
 
 /// Represents a Git branch's data.
 #[derive(Debug, Clone)]

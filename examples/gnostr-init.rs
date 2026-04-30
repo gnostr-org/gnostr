@@ -18,7 +18,8 @@
 
 use std::path::{Path, PathBuf};
 
-use git2::{Error, Repository, RepositoryInitMode, RepositoryInitOptions};
+use gnostr_asyncgit::git2;
+use gnostr_asyncgit::git2::{Error, Repository, RepositoryInitMode, RepositoryInitOptions};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]

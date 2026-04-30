@@ -17,7 +17,8 @@
 
 use std::str;
 
-use git2::{
+use gnostr_asyncgit::git2;
+use gnostr_asyncgit::git2::{
     Blob, Diff, DiffDelta, DiffFindOptions, DiffFormat, DiffHunk, DiffLine, DiffOptions, Error,
     Object, ObjectType, Oid, Repository,
 };

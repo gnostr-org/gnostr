@@ -17,7 +17,7 @@
 
 use std::str;
 
-use git2::{Commit, Error, Repository, Tag};
+use gnostr_asyncgit::git2::{Commit, Error, Repository, Tag};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
