@@ -699,10 +699,6 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
             });
         });
 
-        global_rt().spawn(async move {
-            evt_loop(input_rx, peer_tx, topic).await.unwrap();
-        });
-
         let mut tui_msg_adder = app.add_msg_fn();
         global_rt().spawn(async move {
             while let Some(event) = peer_rx.recv().await {
