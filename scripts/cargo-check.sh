@@ -74,7 +74,7 @@ run_check() {
   shift
 
   printf '==> %s\n' "$label"
-  cargo check -j$NPROC "$@"
+  cargo check -j"$NPROC" "$@"
 }
 
 add_package() {
@@ -170,35 +170,35 @@ build_matrix() {
   for variant in "${SELECTED_VARIANTS[@]}"; do
     case "$variant" in
       all)
-        add_command "workspace default" cargo check --workspace
-        add_command "workspace all-features" cargo check --workspace --all-features
-        add_command "workspace no-default-features" cargo check --workspace --no-default-features
+        add_command "workspace default" --workspace
+        add_command "workspace all-features" --workspace --all-features
+        add_command "workspace no-default-features" --workspace --no-default-features
 
-        add_command "root default" cargo check -p gnostr
-        add_command "root all-features" cargo check -p gnostr --all-features
-        add_command "root no-default-features" cargo check -p gnostr --no-default-features
-        add_command "root nostr feature" cargo check -p gnostr --features nostr
+        add_command "root default" -p gnostr
+        add_command "root all-features" -p gnostr --all-features
+        add_command "root no-default-features" -p gnostr --no-default-features
+        add_command "root nostr feature" -p gnostr --features nostr
 
-        add_command "asyncgit default" cargo check -p gnostr-asyncgit
-        add_command "asyncgit all-features" cargo check -p gnostr-asyncgit --all-features
+        add_command "asyncgit default" -p gnostr-asyncgit
+        add_command "asyncgit all-features" -p gnostr-asyncgit --all-features
 
-        add_command "ngit default" cargo check -p gnostr-ngit
-        add_command "ngit all-features" cargo check -p gnostr-ngit --all-features
-        add_command "ngit nostr feature" cargo check -p gnostr-ngit --features nostr
-        add_command "ngit vendored-openssl feature" cargo check -p gnostr-ngit --features vendored-openssl
+        add_command "ngit default" -p gnostr-ngit
+        add_command "ngit all-features" -p gnostr-ngit --all-features
+        add_command "ngit nostr feature" -p gnostr-ngit --features nostr
+        add_command "ngit vendored-openssl feature" -p gnostr-ngit --features vendored-openssl
 
-        add_command "web default" cargo check -p gnostr-web
-        add_command "web all-features" cargo check -p gnostr-web --all-features
+        add_command "web default" -p gnostr-web
+        add_command "web all-features" -p gnostr-web --all-features
         ;;
       workspace)
-        add_command "workspace default" cargo check --workspace
-        add_command "workspace all-features" cargo check --workspace --all-features
-        add_command "workspace no-default-features" cargo check --workspace --no-default-features
+        add_command "workspace default" --workspace
+        add_command "workspace all-features" --workspace --all-features
+        add_command "workspace no-default-features" --workspace --no-default-features
         ;;
       packages)
         for package in "${PACKAGES[@]}"; do
-          add_command "$package default" cargo check -p "$package"
-          add_command "$package all-features" cargo check -p "$package" --all-features
+          add_command "$package default" -p "$package"
+          add_command "$package all-features" -p "$package" --all-features
         done
         ;;
       features)
@@ -207,28 +207,28 @@ build_matrix() {
           exit 1
         fi
         for package in "${PACKAGES[@]}"; do
-          add_command "$package features:$(join_by_comma "${FEATURES[@]}")" cargo check -p "$package" "${feature_args[@]}"
+          add_command "$package features:$(join_by_comma "${FEATURES[@]}")" -p "$package" "${feature_args[@]}"
         done
         ;;
       root)
-        add_command "root default" cargo check -p gnostr
-        add_command "root all-features" cargo check -p gnostr --all-features
-        add_command "root no-default-features" cargo check -p gnostr --no-default-features
-        add_command "root nostr feature" cargo check -p gnostr --features nostr
+        add_command "root default" -p gnostr
+        add_command "root all-features" -p gnostr --all-features
+        add_command "root no-default-features" -p gnostr --no-default-features
+        add_command "root nostr feature" -p gnostr --features nostr
         ;;
       asyncgit)
-        add_command "asyncgit default" cargo check -p gnostr-asyncgit
-        add_command "asyncgit all-features" cargo check -p gnostr-asyncgit --all-features
+        add_command "asyncgit default" -p gnostr-asyncgit
+        add_command "asyncgit all-features" -p gnostr-asyncgit --all-features
         ;;
       ngit)
-        add_command "ngit default" cargo check -p gnostr-ngit
-        add_command "ngit all-features" cargo check -p gnostr-ngit --all-features
-        add_command "ngit nostr feature" cargo check -p gnostr-ngit --features nostr
-        add_command "ngit vendored-openssl feature" cargo check -p gnostr-ngit --features vendored-openssl
+        add_command "ngit default" -p gnostr-ngit
+        add_command "ngit all-features" -p gnostr-ngit --all-features
+        add_command "ngit nostr feature" -p gnostr-ngit --features nostr
+        add_command "ngit vendored-openssl feature" -p gnostr-ngit --features vendored-openssl
         ;;
       web)
-        add_command "web default" cargo check -p gnostr-web
-        add_command "web all-features" cargo check -p gnostr-web --all-features
+        add_command "web default" -p gnostr-web
+        add_command "web all-features" -p gnostr-web --all-features
         ;;
     esac
   done
