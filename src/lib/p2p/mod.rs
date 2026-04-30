@@ -3,19 +3,11 @@
 //! This module owns the shared swarm setup, message routing, peer identity
 //! helpers, and the chat/P2P glue that higher-level commands build on.
 
-pub mod args;
-pub mod behaviour;
+pub use gnostr_p2p::{
+    args, behaviour, command_handler, event_handler, git_integration, git_publisher, kvs, lookup,
+    network_config, opt, swarm_builder, utils,
+};
 pub mod chat;
-pub mod command_handler;
-pub mod event_handler;
-pub mod git_integration;
-pub mod git_publisher;
-pub mod kvs;
-pub mod lookup;
-pub mod network_config;
-pub mod opt;
-pub mod swarm_builder;
-pub mod utils;
 
 use std::{
     env,
