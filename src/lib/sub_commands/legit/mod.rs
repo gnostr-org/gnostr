@@ -43,6 +43,16 @@ pub struct LegitSubCommand {
     kind: Option<u16>,
 }
 
+impl LegitSubCommand {
+    pub(crate) fn command(&self) -> Option<&LegitCommands> {
+        self.command.as_ref()
+    }
+
+    pub(crate) fn verbose(&self) -> u8 {
+        self.verbose
+    }
+}
+
 /// legit
 ///
 /// # Panics
