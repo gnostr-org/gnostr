@@ -1,50 +1,51 @@
 use clap::Parser;
 
 use crate::cli::{GnostrCli, GnostrCommands, LegitCommands};
+use crate::sub_commands::legit::LegitSubCommand;
 
-fn parse_legit(args: &[&str]) -> crate::cli::LegitSubCommand {
+fn parse_legit(args: &[&str]) -> LegitSubCommand {
     let cli = GnostrCli::try_parse_from(args).expect("legit command should parse");
     match cli.command {
         Some(GnostrCommands::Legit(command)) => command,
-        other => panic!("expected legit command, got {other:?}"),
+        _ => panic!("expected legit command"),
     }
 }
 
-fn is_init(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_init(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Init(_)))
 }
 
-fn is_fetch(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_fetch(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Fetch(_)))
 }
 
-fn is_list(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_list(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::List))
 }
 
-fn is_pull(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_pull(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Pull))
 }
 
-fn is_push(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_push(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Push(_)))
 }
 
-fn is_send(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_send(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Send(_)))
 }
 
-fn is_login(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_login(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Login(_)))
 }
 
-fn is_mine(command: &crate::cli::LegitSubCommand) -> bool {
+fn is_mine(command: &LegitSubCommand) -> bool {
     matches!(command.command, Some(LegitCommands::Mine))
 }
 
 #[test]
 fn parses_legit_subcommands() {
-    let cases: [(&[&str], fn(&crate::cli::LegitSubCommand) -> bool); 8] = [
+    let cases: [(&[&str], fn(&LegitSubCommand) -> bool); 8] = [
         (["gnostr", "legit", "init"].as_slice(), is_init),
         (["gnostr", "legit", "fetch"].as_slice(), is_fetch),
         (["gnostr", "legit", "list"].as_slice(), is_list),
