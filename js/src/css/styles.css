@@ -1047,6 +1047,39 @@ code {
 #relays .relay-active-summary::-webkit-details-marker {
 	display: none;
 }
+#relays .relay-active-summary-text {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	min-width: 0;
+}
+#relays .relay-active-summary-address,
+#relays .relay-active-summary-ping {
+	color: var(--clrTextLight);
+	word-break: break-all;
+}
+#relays .relay-active-summary-nip34 {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
+}
+@media (prefers-color-scheme: light) {
+	#relays .relay-active-summary-nip34-light {
+		display: inline-block;
+	}
+	#relays .relay-active-summary-nip34-dark {
+		display: none;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	#relays .relay-active-summary-nip34-light {
+		display: none;
+	}
+	#relays .relay-active-summary-nip34-dark {
+		display: inline-block;
+	}
+}
 #relays .relay-active-card .relay-info {
 	padding: 0 16px 16px;
 }

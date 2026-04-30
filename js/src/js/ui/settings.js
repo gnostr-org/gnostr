@@ -420,16 +420,18 @@ function new_relay_item(str) {
 			<details class="relay-active-card">
 				<summary class="relay-active-summary">
 					<span class="relay-active-summary-text">
-						<span class="relay-active-summary-name" data-relay-name>Loading relay info...</span>
+						<span class="relay-active-summary-name" data-relay-name></span>
 						<span class="relay-active-summary-address" data-relay-address></span>
 						<span class="relay-active-summary-ping" data-relay-ping></span>
+						<img class="relay-active-summary-nip34 relay-active-summary-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+						<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
 					</span>
 					<button class="remove-relay btn-text" data-address="" role="remove-relay">
 						<img class="icon svg small" src="/images/event-delete.svg"/>
 					</button>
 				</summary>
 				<div class="relay-info">
-					<div class="relay-info-line relay-info-name" data-relay-name>Loading relay info...</div>
+					<div class="relay-info-line relay-info-name" data-relay-name></div>
 					<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
 					<div class="relay-info-line relay-info-software hide" data-relay-software></div>
 					<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
@@ -464,12 +466,13 @@ function new_relay_item(str) {
 }
 
 async function hydrate_relay_item(tr, address) {
-	const name_el = find_node("[data-relay-name]", tr);
-	const ping_el = find_node("[data-relay-ping]", tr);
-	const software_el = find_node("[data-relay-software]", tr);
-	const nips_el = find_node("[data-relay-nips]", tr);
-	const description_el = find_node("[data-relay-description]", tr);
-	if (!name_el || !ping_el || !software_el || !nips_el || !description_el) {
+	const name_els = tr.querySelectorAll("[data-relay-name]");
+	const ping_els = tr.querySelectorAll("[data-relay-ping]");
+	const software_els = tr.querySelectorAll("[data-relay-software]");
+	const nips_els = tr.querySelectorAll("[data-relay-nips]");
+	const description_els = tr.querySelectorAll("[data-relay-description]");
+	const nip34_icons = tr.querySelectorAll(".relay-active-summary-nip34");
+	if (!name_els.length || !ping_els.length || !software_els.length || !nips_els.length || !description_els.length) {
 		return;
 	}
 
@@ -485,10 +488,14 @@ async function hydrate_relay_item(tr, address) {
 		const ping_ms = Math.round(performance.now() - started);
 		const data = await response.json();
 		const label = data.name || data.pubkey || address;
-		name_el.textContent = label;
-		name_el.classList.toggle("hide", !label);
-		ping_el.textContent = `Ping: ${ping_ms} ms`;
-		ping_el.classList.toggle("hide", false);
+		name_els.forEach((el) => {
+			el.textContent = label;
+			el.classList.toggle("hide", !label);
+		});
+		ping_els.forEach((el) => {
+			el.textContent = `Ping ${ping_ms} ms`;
+			el.classList.toggle("hide", false);
+		});
 
 		const software_bits = [];
 		if (data.software) {
@@ -497,16 +504,25 @@ async function hydrate_relay_item(tr, address) {
 		if (data.version) {
 			software_bits.push(data.version);
 		}
-		software_el.textContent = software_bits.length ? software_bits.join(" ") : "";
-		software_el.classList.toggle("hide", !software_bits.length);
+		software_els.forEach((el) => {
+			el.textContent = software_bits.length ? software_bits.join(" ") : "";
+			el.classList.toggle("hide", !software_bits.length);
+		});
 
 		const supported_nips = Array.isArray(data.supported_nips) ? data.supported_nips : [];
-		nips_el.textContent = supported_nips.length ? `Supports NIPs: ${supported_nips.join(", ")}` : "";
-		nips_el.classList.toggle("hide", !supported_nips.length);
+		nips_els.forEach((el) => {
+			el.textContent = supported_nips.length ? `Supports NIPs: ${supported_nips.join(", ")}` : "";
+			el.classList.toggle("hide", !supported_nips.length);
+		});
+		nip34_icons.forEach((icon) => {
+			icon.classList.toggle("hide", !supported_nips.includes(34));
+		});
 
 		const description = data.description || "";
-		description_el.textContent = description;
-		description_el.classList.toggle("hide", !description);
+		description_els.forEach((el) => {
+			el.textContent = description;
+			el.classList.toggle("hide", !description);
+		});
 		tr.dataset.relayName = label;
 		tr.dataset.relayPingMs = String(ping_ms);
 		tr.dataset.relaySoftware = software_bits.join(" ");
