@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-JOBS="${JOBS:-${NPROC:-8}}"
+NPROC="$(nproc)"
 TEST_FLAGS=()
 FEATURES=()
 ALL_FEATURES=false
@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-declare -a CARGO_FLAGS=(test --workspace -j "$JOBS")
+declare -a CARGO_FLAGS=(test --workspace -j"$NPROC")
 
 if [[ "$ALL_FEATURES" == true ]]; then
   CARGO_FLAGS+=(--all-features)
