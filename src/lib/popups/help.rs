@@ -64,7 +64,11 @@ impl DrawableComponent for HelpPopup {
 
             f.render_widget(
                 Paragraph::new(Line::from(vec![Span::styled(
-                    Cow::from(format!("gnostr-tui {}", env!("GITUI_BUILD_NAME"),)),
+                    Cow::from(format!(
+                        "gnostr-tui {} • {}",
+                        env!("GITUI_BUILD_NAME"),
+                        env!("GITUI_APP_NAME")
+                    )),
                     Style::default(),
                 )]))
                 .alignment(Alignment::Right),

@@ -964,7 +964,9 @@ code {
 	margin: 0;
 	border-top: 1px solid var(--clrBorder);
 }
-#settings-profile, #relays-profile {
+.settings-profile,
+#settings-profile,
+#relays-profile {
 	margin: 15px;
 	padding: 15px;
 	background: var(--clrPanel);
@@ -972,16 +974,22 @@ code {
 	border-radius: 16px;
 	box-sizing: border-box;
 }
-#settings-profile .settings-profile-top, #relays-profile .settings-profile-top {
+.nip89-app-profile .settings-profile-top,
+#settings-profile .settings-profile-top,
+#relays-profile .settings-profile-top {
 	display: flex;
 	gap: 15px;
 	align-items: flex-start;
 }
-#settings-profile .settings-profile-meta, #relays-profile .settings-profile-meta {
+.nip89-app-profile .settings-profile-meta,
+#settings-profile .settings-profile-meta,
+#relays-profile .settings-profile-meta {
 	flex: 1;
 	min-width: 0;
 }
-#settings-profile code, #relays-profile code {
+.nip89-app-profile code,
+#settings-profile code,
+#relays-profile code {
 	display: block;
 	word-break: break-all;
 	margin-top: 8px;
@@ -1004,6 +1012,9 @@ code {
 	width: 100%;
 }
 #settings-profile p[name="settings-profile-about"] {
+	margin: 8px 0 0;
+}
+#settings #nip89-app-card p[name="nip89-app-about"] {
 	margin: 8px 0 0;
 }
 #settings .nip89-app-links dl {
