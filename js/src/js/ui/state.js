@@ -313,10 +313,27 @@ function normalize_relay_urls(relays) {
 	return relays.filter((relay) => typeof relay === "string" && (relay.startsWith("ws://") || relay.startsWith("wss://")));
 }
 
-function relay_ping_sort_value(model, url) {
-	if (url === "ws://127.0.0.1:8080") {
-		return -1;
+function relay_supports_nip34(model, url) {
+	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
+	const entry = discovery.find((item) => item && item.url === url);
+	return Array.isArray(entry?.supported_nips) && entry.supported_nips.includes(34);
+}
+
+function relay_is_local(url) {
+	return typeof local_relay_url !== "undefined" && url === local_relay_url;
+}
+
+function relay_sort_priority(model, url) {
+	if (relay_supports_nip34(model, url)) {
+		return 0;
 	}
+	if (relay_is_local(url)) {
+		return 1;
+	}
+	return 2;
+}
+
+function relay_ping_sort_value(model, url) {
 	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
 	const entry = discovery.find((item) => item && item.url === url);
 	return Number.isFinite(entry?.ping_ms) ? entry.ping_ms : Number.POSITIVE_INFINITY;
@@ -324,8 +341,16 @@ function relay_ping_sort_value(model, url) {
 
 function sort_relays_by_ping(model, relays) {
 	return relays
-		.map((relay, index) => ({ relay, index, ping: relay_ping_sort_value(model, relay) }))
+		.map((relay, index) => ({
+			relay,
+			index,
+			priority: relay_sort_priority(model, relay),
+			ping: relay_ping_sort_value(model, relay),
+		}))
 		.sort((left, right) => {
+			if (left.priority !== right.priority) {
+				return left.priority - right.priority;
+			}
 			if (left.ping !== right.ping) {
 				return left.ping - right.ping;
 			}
@@ -336,8 +361,16 @@ function sort_relays_by_ping(model, relays) {
 
 function sort_relay_pairs_by_ping(model, relay_pairs) {
 	return relay_pairs
-		.map((pair, index) => ({ pair, index, ping: relay_ping_sort_value(model, pair[0]) }))
+		.map((pair, index) => ({
+			pair,
+			index,
+			priority: relay_sort_priority(model, pair[0]),
+			ping: relay_ping_sort_value(model, pair[0]),
+		}))
 		.sort((left, right) => {
+			if (left.priority !== right.priority) {
+				return left.priority - right.priority;
+			}
 			if (left.ping !== right.ping) {
 				return left.ping - right.ping;
 			}
@@ -351,6 +384,11 @@ function sort_pool_relays_by_ping(model) {
 		return;
 	}
 	model.pool.relays.sort((left, right) => {
+		const left_priority = relay_sort_priority(model, left.url);
+		const right_priority = relay_sort_priority(model, right.url);
+		if (left_priority !== right_priority) {
+			return left_priority - right_priority;
+		}
 		const left_ping = relay_ping_sort_value(model, left.url);
 		const right_ping = relay_ping_sort_value(model, right.url);
 		if (left_ping !== right_ping) {
@@ -1083,7 +1121,9 @@ async function load_nip_relays(model, nip) {
 		}
 		const relays = normalize_relay_urls(await response.json());
 		if (relays.length) {
-			model.nip_relay_lists.set(nip, relays);
+			const sorted_relays = sort_relays_by_ping(model, relays);
+			model.nip_relay_lists.set(nip, sorted_relays);
+			return sorted_relays;
 		}
 		return relays;
 	} catch (error) {
@@ -1101,7 +1141,9 @@ async function load_nip_relays(model, nip) {
 		.map((entry) => entry.url);
 	const normalized_fallback = normalize_relay_urls(fallback);
 	if (normalized_fallback.length) {
-		model.nip_relay_lists.set(nip, normalized_fallback);
+		const sorted_fallback = sort_relays_by_ping(model, normalized_fallback);
+		model.nip_relay_lists.set(nip, sorted_fallback);
+		return sorted_fallback;
 	}
 	return normalized_fallback;
 }

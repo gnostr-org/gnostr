@@ -248,6 +248,11 @@ async function render_nip65_relays(model) {
 	nip65_relays
 		.slice()
 		.sort((left, right) => {
+			const left_nip34 = relay_supports_nip34(model, left[0]) ? 1 : 0;
+			const right_nip34 = relay_supports_nip34(model, right[0]) ? 1 : 0;
+			if (right_nip34 !== left_nip34) {
+				return right_nip34 - left_nip34;
+			}
 			const left_score = discovery_score(discovery_by_url.get(left[0]));
 			const right_score = discovery_score(discovery_by_url.get(right[0]));
 			if (right_score !== left_score) {
@@ -285,6 +290,11 @@ function render_relay_discovery(model, relay_discovery) {
 	relay_discovery
 		.slice()
 		.sort((left, right) => {
+			const left_nip34 = relay_supports_nip34(model, left.url) ? 1 : 0;
+			const right_nip34 = relay_supports_nip34(model, right.url) ? 1 : 0;
+			if (right_nip34 !== left_nip34) {
+				return right_nip34 - left_nip34;
+			}
 			const left_score = discovery_score(left);
 			const right_score = discovery_score(right);
 			if (right_score !== left_score) {
