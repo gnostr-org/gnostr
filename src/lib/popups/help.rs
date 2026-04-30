@@ -4,6 +4,7 @@ use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::hash;
 use itertools::Itertools;
+use serde_json::Value;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -52,7 +53,7 @@ impl DrawableComponent for HelpPopup {
                 .vertical_margin(1)
                 .horizontal_margin(1)
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Min(1), Constraint::Length(3)].as_ref())
+                .constraints([Constraint::Min(1), Constraint::Length(4)].as_ref())
                 .split(area);
 
             f.render_widget(
@@ -63,17 +64,7 @@ impl DrawableComponent for HelpPopup {
             );
 
             f.render_widget(
-                Paragraph::new(vec![
-                    Line::from(Span::styled(Cow::from("gnostr-tui"), Style::default())),
-                    Line::from(Span::styled(
-                        Cow::from(env!("GITUI_BUILD_NAME")),
-                        Style::default(),
-                    )),
-                    Line::from(Span::styled(
-                        Cow::from(env!("GITUI_APP_NAME")),
-                        Style::default(),
-                    )),
-                ])
+                Paragraph::new(self.get_footer_text())
                 .alignment(Alignment::Right),
                 chunks[1],
             );
@@ -225,4 +216,55 @@ impl HelpPopup {
 
         txt
     }
+
+    fn get_footer_text(&self) -> Vec<Line<'static>> {
+        let metadata = app_metadata();
+        let app_name = metadata
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or("gnostr");
+        let description = metadata
+            .get("description")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let repository = metadata
+            .get("repository")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let build_name = metadata
+            .get("build_name")
+            .and_then(Value::as_str)
+            .unwrap_or(env!("GITUI_BUILD_NAME"));
+
+        let mut lines = vec![Line::from(Span::styled(
+            Cow::from("gnostr-tui"),
+            Style::default(),
+        ))];
+        lines.push(Line::from(Span::styled(
+            Cow::from(build_name.to_string()),
+            Style::default(),
+        )));
+        lines.push(Line::from(Span::styled(
+            Cow::from(app_name.to_string()),
+            Style::default(),
+        )));
+        if !description.is_empty() {
+            lines.push(Line::from(Span::styled(
+                Cow::from(description.to_string()),
+                Style::default(),
+            )));
+        } else if !repository.is_empty() {
+            lines.push(Line::from(Span::styled(
+                Cow::from(repository.to_string()),
+                Style::default(),
+            )));
+        }
+
+        lines
+    }
+}
+
+fn app_metadata() -> Value {
+    serde_json::from_str(env!("GITUI_APP_METADATA_JSON"))
+        .unwrap_or_else(|error| panic!("invalid GITUI_APP_METADATA_JSON: {error}"))
 }
