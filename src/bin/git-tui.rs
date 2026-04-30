@@ -1,4 +1,5 @@
 use clap::Parser;
+extern crate git2 as gnostr_asyncgit;
 use gnostr_asyncgit::gitui::term::Term;
 use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
 use log::LevelFilter;
