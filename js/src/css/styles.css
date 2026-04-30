@@ -1042,7 +1042,8 @@ code {
 }
 #relays .relay-active-summary,
 #relays .relay-discovery-summary {
-	display: flex;
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1fr) 80px;
 	align-items: center;
 	gap: 12px;
 	width: 100%;
@@ -1065,7 +1066,6 @@ code {
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 2px;
-	flex: 1 1 auto;
 	min-width: 0;
 }
 #relays .relay-active-summary-address,
@@ -1131,12 +1131,13 @@ code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	margin-left: auto;
 	min-width: 36px;
 	min-height: 36px;
 	padding: 8px 10px;
 	border-radius: 999px;
 	flex: 0 0 auto;
+	justify-self: end;
+	width: 80px;
 }
 #relays .relay-active-summary .remove-relay {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
