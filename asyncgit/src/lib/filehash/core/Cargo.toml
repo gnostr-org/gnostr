@@ -1,0 +1,47 @@
+[package]
+name = "get_file_hash_core"
+version = { workspace = true }
+edition = { workspace = true }
+description = { workspace = true }
+license = { workspace = true }
+documentation = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+authors = { workspace = true }
+
+[features]
+nostr = ["dep:nostr", "dep:nostr-sdk", "dep:serde_json", "dep:sha2", "dep:hex", "dep:reqwest", "dep:tokio", "dep:csv", "dep:url", "dep:frost-secp256k1-tr", "dep:rand"]
+frost = ["dep:nostr", "dep:nostr-sdk", "dep:serde_json", "dep:sha2", "dep:hex", "dep:reqwest", "dep:tokio", "dep:csv", "dep:url", "dep:frost-secp256k1-tr", "dep:rand"]
+
+[dependencies]
+sha2 = { workspace = true, optional = true }
+nostr = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+## remove nostr-sdk deps
+## and use gnostr-asyncgit nostr impls
+## nostr-sdk = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+csv = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
+frost-secp256k1-tr = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+
+[dev-dependencies]
+sha2 = { workspace = true }
+tempfile = { workspace = true }
+nostr = { workspace = true }
+## remove nostr-sdk deps
+## and use gnostr-asyncgit nostr impls
+## nostr-sdk = { workspace = true, optional = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+csv = { workspace = true }
+url = { workspace = true }
+frost-secp256k1-tr = { workspace = true }
+serial_test = { workspace = true, features = ["test_logging"] }
+log = { workspace = true }
+
+[build-dependencies]
+reqwest = { workspace = true, features = ["json"], optional = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"], optional = true }
