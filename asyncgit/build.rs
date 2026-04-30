@@ -37,9 +37,30 @@ fn run() -> anyhow::Result<()> {
     build_scss(paths).context("Failed to build CSS stylesheets")?;
     build_js(paths).context("Failed to build JS bundle")?;
     verify_nip44_vectors(&statics_in_dir).context("Failed to verify NIP-44 test vectors")?;
+    export_filehash_envs(&statics_in_dir).context("Failed to export filehash build envs")?;
 
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
+}
+
+fn export_filehash_envs(manifest_dir: &Path) -> anyhow::Result<()> {
+    let build_rs = manifest_dir.join("build.rs");
+    let cargo_toml = manifest_dir.join("Cargo.toml");
+    let lib_mod = manifest_dir.join("src/lib/mod.rs");
+
+    println!("cargo:rerun-if-changed={}", build_rs.display());
+    println!("cargo:rerun-if-changed={}", cargo_toml.display());
+    println!("cargo:rerun-if-changed={}", lib_mod.display());
+
+    println!("cargo:rustc-env=BUILD_HASH={}", hash_file(&build_rs)?);
+    println!("cargo:rustc-env=CARGO_TOML_HASH={}", hash_file(&cargo_toml)?);
+    println!("cargo:rustc-env=LIB_HASH={}", hash_file(&lib_mod)?);
+    Ok(())
+}
+
+fn hash_file(path: &Path) -> anyhow::Result<String> {
+    let bytes = std::fs::read(path).with_context(|| format!("Failed to read {}", path.display()))?;
+    Ok(format!("{:x}", Sha256::digest(&bytes)))
 }
 
 fn verify_nip44_vectors(manifest_dir: &Path) -> anyhow::Result<()> {
