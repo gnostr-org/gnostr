@@ -20,6 +20,7 @@ pub async fn run(config: RelayCli, setting_path: Option<&str>, app_name: &str) -
                 None,
             )
             .map_err(Error::from)?;
+            app_data.setting.write().add_nip(34);
             app_data.web_server()?.await.map_err(Error::from)
         })
         .await?;
