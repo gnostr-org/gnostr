@@ -1,5 +1,5 @@
 use clap::Parser;
-use gnostr_asyncgit::gitui::{cli::Args, gitui_error::Error, term, Res};
+use gnostr_asyncgit::tui::git::{cli::Args, gitui_error::Error, term, Res};
 use simple_logger::SimpleLogger;
 use log::LevelFilter;
 use ratatui::Terminal;
@@ -51,5 +51,5 @@ fn setup_term_and_run(args: &Args) -> Res<()> {
     terminal.clear().map_err(Error::Term)?;
 
     log::debug!("Starting app");
-    gnostr_asyncgit::gitui::run(args, &mut terminal)
+    gnostr_asyncgit::tui::git::run(args, &mut terminal)
 }
