@@ -11,7 +11,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use textwrap::{wrap, Options};
 
-use crate::types::Event; // Add this line
+use gnostr_asyncgit::types::Event;
 
 pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")

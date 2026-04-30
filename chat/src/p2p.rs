@@ -21,10 +21,11 @@ use tokio::{io, select};
 use tracing::{debug, warn};
 use ureq::Agent;
 
-use crate::p2p::{
-    chat::msg::{Msg, MsgKind},
-    kvs::{FileRequest, FileResponse},
+use crate::{
+    event::ChatEvent,
+    msg::{Msg, MsgKind},
 };
+use gnostr_p2p::kvs::{FileRequest, FileResponse};
 
 /// Buffer and reassemble chunked chat messages by message ID.
 pub struct MessageReassembler {
@@ -205,8 +206,8 @@ pub async fn async_prompt(mempool_url: String) -> String {
 /// This bootstraps the transport stack, subscribes to the requested topic, and
 /// forwards inbound chat messages into the caller's output channel.
 pub async fn evt_loop(
-    mut send: tokio::sync::mpsc::Receiver<crate::queue::InternalEvent>,
-    recv: tokio::sync::mpsc::Sender<crate::queue::InternalEvent>,
+    mut send: tokio::sync::mpsc::Receiver<ChatEvent>,
+    recv: tokio::sync::mpsc::Sender<ChatEvent>,
     topic: gossipsub::IdentTopic,
 ) -> Result<()> {
     let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
@@ -280,7 +281,7 @@ pub async fn evt_loop(
                 request_response::Config::default(),
             );
 
-            Ok(crate::p2p::chat::p2p::MyBehaviour {
+            Ok(MyBehaviour {
                 relay: relay_client,
                 autonat,
                 dcutr,
@@ -376,45 +377,45 @@ pub async fn evt_loop(
     loop {
         select! {
             Some(event) = send.recv() => {
-                if let crate::queue::InternalEvent::ChatMessage(m) = event {
+                if let ChatEvent::ChatMessage(m) = event {
                     if let Err(e) = swarm
                         .behaviour_mut().gossipsub
                         .publish(topic.clone(), serde_json::to_vec(&m)?) {
                         debug!("Publish error: {e:?}");
-                        let m = crate::p2p::chat::msg::Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
+                        let m = Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(MsgKind::System);
+                        recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
                     }
                 }
             }
             event = swarm.select_next_some() => match event {
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                     for (peer_id, multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
                         swarm.behaviour_mut().autonat.add_server(peer_id, Some(multiaddr.clone()));
-                        // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                        // let m = Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(MsgKind::System);
+                        // recv.send(ChatEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                         swarm.behaviour_mut().autonat.remove_server(&peer_id);
-                        // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                        // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                        // let m = Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(MsgKind::System);
+                        // recv.send(ChatEvent::ShowInfoMsg(m.to_string())).await?;
                     }
                 },
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Autonat(event)) => {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Autonat(event)) => {
                     debug!("AutoNAT event: {event:?}");
                 }
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Dcutr(event)) => {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Dcutr(event)) => {
                     debug!("DCUtR event: {event:?}");
                 }
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Relay(event)) => {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Relay(event)) => {
                     debug!("Relay event: {event:?}");
                 }
-                SwarmEvent::Behaviour(crate::p2p::chat::p2p::MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
                     message_id: id,
                     message,
@@ -429,27 +430,27 @@ pub async fn evt_loop(
                                                                 if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
                                                                     let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
                                                                     apply_text_wrapping(&mut reassembled_msg, terminal_width);
-                                                                    recv.send(crate::queue::InternalEvent::ChatMessage(reassembled_msg)).await?;
+                                                                    recv.send(ChatEvent::ChatMessage(reassembled_msg)).await?;
                                                                 }
                             } else {
                                 // It's a single-part message, send directly
                                 let mut processed_msg = msg;
                                 let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
                                 apply_text_wrapping(&mut processed_msg, terminal_width);
-                                recv.send(crate::queue::InternalEvent::ChatMessage(processed_msg)).await?;
+                                recv.send(ChatEvent::ChatMessage(processed_msg)).await?;
                             }
                         },
                         Err(e) => {
                             debug!("Error deserializing message: {e:?}");
                             let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(MsgKind::System);
-                            recv.send(crate::queue::InternalEvent::ShowErrorMsg(m.to_string())).await?;
+                            recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
                         }
                     }
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
-                    // let m = crate::p2p::chat::msg::Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(crate::p2p::chat::msg::MsgKind::System);
-                    // recv.send(crate::queue::InternalEvent::ShowInfoMsg(m.to_string())).await?;
+                    // let m = Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(MsgKind::System);
+                    // recv.send(ChatEvent::ShowInfoMsg(m.to_string())).await?;
                 }
                 _ => {}
             }
