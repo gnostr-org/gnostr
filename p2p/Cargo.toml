@@ -1,0 +1,19 @@
+[package]
+name = "gnostr-p2p"
+version.workspace = true
+edition = "2021"
+description = "gnostr p2p crate"
+authors = [
+  "gnostr <admin@gnostr.org>",
+  "0xtr <oxtrr@protonmail.com>",
+  "TODO <add_more@gnostr.org>",
+]
+license = "MIT"
+repository = "https://github.com/gnostr-org/gnostr.git"
+
+[lib]
+name = "gnostr_p2p"
+path = "src/lib.rs"
+
+[dependencies]
+

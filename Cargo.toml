@@ -58,6 +58,7 @@ members = [
   "invalidstring",
   "legit",
   "js",
+  "p2p",
   "ngit",
   "qr",
   "relay",

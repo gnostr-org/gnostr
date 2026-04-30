@@ -6581,6 +6581,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-p2p"
+version = "1876.947089.686958"
+
+[[package]]
 name = "gnostr-relay"
 version = "1876.947089.686958"
 dependencies = [
