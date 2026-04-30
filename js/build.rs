@@ -31,10 +31,70 @@ fn main() {
     };
 
     println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+    write_nip89_app_asset(&build_name);
     emit_patch_event(&build_name);
     watch_sources(Path::new("src/js"), &["js"]);
     watch_sources(Path::new("src/css"), &["css"]);
     watch_sources(Path::new("src"), &["html"]);
+}
+
+fn write_nip89_app_asset(build_name: &str) {
+    let out_dir = match std::env::var("OUT_DIR") {
+        Ok(dir) => dir,
+        Err(error) => {
+            println!("cargo:warning=skipping NIP-89 app asset: {error}");
+            return;
+        }
+    };
+
+    let app_pubkey = load_private_key()
+        .map(|key| key.public_key().to_string())
+        .unwrap_or_default();
+    let repo_url = git_output(["remote", "get-url", "origin"]).unwrap_or_default();
+    let repository = if repo_url.is_empty() {
+        env!("CARGO_PKG_REPOSITORY").to_string()
+    } else {
+        repo_url
+    };
+    let description = env!("CARGO_PKG_DESCRIPTION");
+    let metadata = serde_json::json!({
+        "kind": 31990,
+        "pubkey": app_pubkey,
+        "content": {
+            "name": "gnostr",
+            "about": if description.is_empty() { "git+nostr workflow utility" } else { description },
+            "website": repository,
+            "picture": "/images/logo.svg",
+            "version": env!("CARGO_PKG_VERSION"),
+            "build_name": build_name,
+        },
+        "tags": [
+            ["d", "gnostr"],
+            ["k", "0"],
+            ["k", "1"],
+            ["k", "3"],
+            ["k", "4"],
+            ["k", "10002"],
+            ["k", "31989"],
+            ["k", "31990"],
+            ["web", "/settings"],
+        ]
+    });
+
+    let path = Path::new(&out_dir).join("nip89-app.json");
+    let data = match serde_json::to_vec_pretty(&metadata) {
+        Ok(data) => data,
+        Err(error) => {
+            println!("cargo:warning=skipping NIP-89 app asset: {error}");
+            return;
+        }
+    };
+
+    if let Err(error) = fs::write(&path, data) {
+        println!("cargo:warning=failed to write NIP-89 app asset: {error}");
+    } else {
+        println!("cargo:rerun-if-changed={}", path.display());
+    }
 }
 
 fn emit_patch_event(build_name: &str) {

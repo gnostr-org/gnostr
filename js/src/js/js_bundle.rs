@@ -2,6 +2,10 @@ use std::collections::HashMap;
 
 pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
+    assets.insert(
+        "nip89-app.json".to_string(),
+        include_bytes!(concat!(env!("OUT_DIR"), "/nip89-app.json")) as &'static [u8],
+    );
     assets.insert("db.js".to_string(), include_bytes!("db.js") as &'static [u8]);
     assets.insert("mempool.js".to_string(), include_bytes!("mempool.js") as &'static [u8]);
     assets.insert("browserify-cipher@1.0.1.js".to_string(), include_bytes!("browserify-cipher@1.0.1.js") as &'static [u8]);

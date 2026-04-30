@@ -11,7 +11,7 @@ function init_settings(model) {
 		view_update_cached_active_pfp(model);
 	}
 	render_settings_profile(model);
-	render_nip89_app_metadata(model);
+	void load_nip89_app_metadata(model);
 }
 
 function format_bytes(bytes) {
@@ -174,6 +174,30 @@ function ensure_nip89_app_metadata_card() {
 	return mount;
 }
 
+function nip89_metadata_source(metadata, model) {
+	const profile = model.pubkey ? model_get_profile(model, model.pubkey) : null;
+	const source = metadata || model.nip89_app_metadata || profile?.data || {};
+	if (source && typeof source === "object" && typeof source.content === "string") {
+		const parsed = safe_parse_json(source.content, "NIP-89 app metadata");
+		if (parsed && typeof parsed === "object") {
+			return {
+				source: parsed,
+				tags: Array.isArray(source.tags) ? source.tags : Array.isArray(parsed.tags) ? parsed.tags : [],
+			};
+		}
+	}
+	if (source && typeof source === "object" && source.content && typeof source.content === "object") {
+		return {
+			source: source.content,
+			tags: Array.isArray(source.tags) ? source.tags : Array.isArray(source.content.tags) ? source.content.tags : [],
+		};
+	}
+	return {
+		source,
+		tags: Array.isArray(source.tags) ? source.tags : [],
+	};
+}
+
 function render_nip89_app_metadata(model, metadata = null) {
 	const mount = ensure_nip89_app_metadata_card();
 	if (!mount) {
@@ -183,8 +207,7 @@ function render_nip89_app_metadata(model, metadata = null) {
 	if (!card) {
 		return;
 	}
-	const profile = model.pubkey ? model_get_profile(model, model.pubkey) : null;
-	const source = metadata || model.nip89_app_metadata || profile?.data || {};
+	const { source, tags } = nip89_metadata_source(metadata, model);
 	const name = source.name || source.display_name || source.displayName || source.title || "";
 	const description = source.description || source.about || "";
 	const picture = source.picture || source.image || "";
@@ -198,8 +221,8 @@ function render_nip89_app_metadata(model, metadata = null) {
 	if (Array.isArray(source.supported_kinds)) {
 		kinds.push(...source.supported_kinds);
 	}
-	if (Array.isArray(source.tags)) {
-		for (const tag of source.tags) {
+	if (Array.isArray(tags)) {
+		for (const tag of tags) {
 			if (!Array.isArray(tag) || tag.length < 2) {
 				continue;
 			}
@@ -251,6 +274,25 @@ function render_nip89_app_metadata(model, metadata = null) {
 	const section = find_node("#nip89-app-section");
 	if (section) {
 		section.classList.toggle("hide", !has_data);
+	}
+}
+
+async function load_nip89_app_metadata(model) {
+	try {
+		const response = await fetch("/js/nip89-app.json", {
+			headers: {
+				Accept: "application/json",
+			},
+		});
+		if (!response.ok) {
+			throw new Error(`nip89 app metadata request failed with ${response.status}`);
+		}
+		const metadata = await response.json();
+		model.nip89_app_metadata = metadata;
+		render_nip89_app_metadata(model, metadata);
+	} catch (error) {
+		log_warn("Failed to load NIP-89 app metadata:", error);
+		render_nip89_app_metadata(model);
 	}
 }
 

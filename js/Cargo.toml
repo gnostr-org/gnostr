@@ -59,4 +59,5 @@ gnostr-crawler = { version = "1876.947089.686958", path = "../crawler" }
 [build-dependencies]
 chrono = { workspace = true, features = ["clock"] }
 gnostr-asyncgit = { path = "../asyncgit" }
+serde_json = "1.0.140"
 tokio = { version = "1", features = ["rt-multi-thread"] }
