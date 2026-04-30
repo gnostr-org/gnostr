@@ -192,7 +192,7 @@ static BLACKLISTED_MODULES: &[&str] = &[
     "log",
     "hoon",
     "hocon",
-    "hcl",
+    "tfvars",
     "koka",
     "tact",
     "pkl",
