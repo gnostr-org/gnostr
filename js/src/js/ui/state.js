@@ -417,7 +417,12 @@ function view_timeline_refresh(model, mode, opts={}) {
 	if (mode == VM_NIP_EXPLORER) {
 		el.appendChild(document.createRange().createContextualFragment(render_nip_explorer()));
 		if (typeof load_nip89_app_metadata === "function") {
-			void load_nip89_app_metadata(model, "#nip89-app-mount-nip");
+			void load_nip89_app_metadata(
+				model,
+				"#nip89-app-mount-nip",
+				"#nip89-app-template-nip",
+				"#nip89-app-card-nip"
+			);
 		}
 		view_set_show_count(0, true, true);
 		return;

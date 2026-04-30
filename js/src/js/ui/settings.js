@@ -163,10 +163,11 @@ function render_settings_profile(model) {
 
 function ensure_nip89_app_metadata_card(
 	mount_selector = "#nip89-app-mount",
-	template_selector = "#nip89-app-template"
+	template_selector = "#nip89-app-template",
+	card_selector = "#nip89-app-card"
 ) {
 	const mount = find_node(mount_selector);
-	if (!mount || mount.querySelector("#nip89-app-card")) {
+	if (!mount || mount.querySelector(card_selector)) {
 		return mount;
 	}
 	const template = find_node(template_selector);
