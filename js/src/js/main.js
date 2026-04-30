@@ -4,6 +4,9 @@ let GNOSTR = new_model();
 const IMG_EVENT_LIKED = "/images/event-liked.svg";
 const IMG_EVENT_LIKE  = "/images/event-like.svg";
 const IMG_NO_USER     = "/images/no-user.svg";
+const IMG_ICON        = "/images/icon.svg";
+const IMG_FAVICON     = "/images/gnostr.svg";
+const IMG_FAVICON_NOTIF = "/images/gnostr_notif.svg";
 
 const SID_META          = "meta";
 const SID_HISTORY       = "hist";

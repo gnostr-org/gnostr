@@ -149,7 +149,7 @@ function update_notifications(model) {
 	const suffix = "gnostr.org";
 	const total = count + dm_count;
 	document.title = total ? `(${total}) ${suffix}` : suffix;
-	update_favicon(total ? "/images/gnostr_notif.svg" : "/images/gnostr.svg");
+	update_favicon(total ? IMG_FAVICON_NOTIF : IMG_FAVICON);
 	update_notification_markers(count, "activity");
 	update_notification_markers(dm_count, "dm");
 	// slight hack :)

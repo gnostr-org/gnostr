@@ -101,6 +101,10 @@ function render_relay_dashboard() {
     if (!el) {
         return;
     }
+    const avatar = find_node("img[role='my-pfp']", el);
+    if (avatar) {
+        avatar.src = IMG_ICON;
+    }
     find_node("[data-field='url']", el).textContent = status.url;
     find_node("[data-field='status']", el).textContent = status.connected ? "connected" : "stopped";
     find_node("[data-field='net_io']", el).textContent = `${format_bytes(status.bytes_sent)} out / ${format_bytes(status.bytes_received)} in`;
