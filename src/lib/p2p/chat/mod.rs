@@ -484,15 +484,38 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         args.topic.clone().unwrap_or_else(|| "gnostr".to_string()), // Default topic
     );
 
+    let (chat_input_tx, chat_input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+    let (chat_output_tx, mut chat_output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+
+    {
+        let peer_tx = peer_tx.clone();
+        global_rt().spawn(async move {
+            while let Some(event) = chat_output_rx.recv().await {
+                let _ = peer_tx.send(from_transport_event(event)).await;
+            }
+        });
+    }
+
+    {
+        let chat_input_tx = chat_input_tx.clone();
+        global_rt().spawn(async move {
+            while let Some(event) = input_rx.recv().await {
+                if let Some(event) = to_transport_event(event) {
+                    let _ = chat_input_tx.send(event).await;
+                }
+            }
+        });
+    }
+
+    global_rt().spawn(async move {
+        if let Err(e) = evt_loop(chat_input_rx, chat_output_tx, topic.clone()).await {
+            tracing::error!("chat event loop error: {e}");
+        }
+    });
+
     if let Some(message_input) = args.oneshot {
         if !args.headless {
             tracing::info!("Oneshot mode: sending message '{}'", message_input);
-
-            let _p2p_handle = tokio::spawn(async move {
-                if let Err(e) = evt_loop(input_rx, peer_tx, topic.clone()).await {
-                    eprintln!("p2p event loop error: {}", e);
-                }
-            });
 
             // Allow time for network initialization and peer discovery.
             println!("Initializing network and discovering peers...");
