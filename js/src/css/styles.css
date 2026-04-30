@@ -333,14 +333,14 @@ button.nav > img.icon {
 	margin-left: 0;
 	padding: 8px 12px;
 	border: 1px solid var(--clrBorder);
-	border-radius: 14px;
+	border-radius: 16px;
 	background: var(--clrPanel);
 	box-sizing: border-box;
 }
 .local-relay-card,
 #relays section {
 	border: 1px solid var(--clrBorder);
-	border-radius: 14px;
+	border-radius: 16px;
 	background: var(--clrPanel);
 	box-sizing: border-box;
 }
@@ -843,6 +843,14 @@ input[type="text"].cw {
 #profile-info > div:last-child {
 	padding-top: 0;
 }
+#profile-info {
+	margin: 16px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 16px;
+	background: var(--clrPanel);
+	box-sizing: border-box;
+	overflow: hidden;
+}
 .profile-tools {
 	flex: 1;
 	text-align: right;
@@ -889,7 +897,7 @@ code {
 #relays .relay-section {
 	padding: 0;
 	border: 1px solid var(--clrBorder);
-	border-radius: 14px;
+	border-radius: 16px;
 	background: var(--clrPanel);
 	overflow: hidden;
 }
@@ -927,7 +935,9 @@ code {
 	margin: 15px;
 	padding: 15px;
 	background: var(--clrPanel);
-	border-radius: 12px;
+	border: 1px solid var(--clrBorder);
+	border-radius: 16px;
+	box-sizing: border-box;
 }
 #settings-profile .settings-profile-top, #relays-profile .settings-profile-top {
 	display: flex;
