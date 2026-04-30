@@ -143,7 +143,6 @@ git2 = { package = "gnostr-asyncgit", path = "asyncgit", version = "1876.947089.
 git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "1876.947089.686958" }
 git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = "1876.947089.686958" }
 
-gnostr-asyncgit = { path = "asyncgit", version = "1876.947089.686958", default-features = false }
 gnostr-extensions = { path = "relay/extensions", version = "1876.947089.686958", default-features = false }
 gnostr-grammar = { path = "grammar", version = "1876.947089.686958" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
@@ -411,7 +410,7 @@ gnostr-web = [
   "actix-web-actors",
   "rocket",
   "dep:gnostr-web",
-  "gnostr-asyncgit/gnostr_web",
+  "git2/gnostr_web",
   "gnostr-js",
   "handlebars",
   "warp",
@@ -423,8 +422,8 @@ gnostr-web = [
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
 regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
-trace-libgit = ["gnostr-asyncgit/trace-libgit"]
-vendored-openssl = ["gnostr-asyncgit/vendored-openssl", "openssl/vendored"]
+trace-libgit = ["git2/trace-libgit"]
+vendored-openssl = ["git2/vendored-openssl", "openssl/vendored"]
 vendor-openssl = ["vendored-openssl"]
 nightly = []
 coverage = []
@@ -530,7 +529,7 @@ futures-util = "0.3"
 fuzzy-matcher = "0.3"
 getopts = "0.2.21"
 gh-emoji = { version = "1.0", optional = true }
-git2 = { workspace = true }
+git2 = { workspace = true, features = ["gitui"] }
 #gh = { workspace = true }
 git2-hooks = { workspace = true }
 
@@ -544,7 +543,6 @@ gix = { version = "0.66", default-features = false, features = [
 globset = "0.4"
 
 ##gitui
-gnostr-asyncgit = { workspace = true, features = ["gitui"] }
 gnostr-git-helpers = { version = "1876.947089.686958", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
