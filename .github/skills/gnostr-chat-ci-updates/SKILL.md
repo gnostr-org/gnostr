@@ -7,6 +7,18 @@ description: Send short P2P status updates for CI jobs and local gnostr chat run
 
 Use `gnostr chat` to broadcast short, readable status messages from CI jobs and local runs.
 
+## Verified gnostr notes
+
+- `gnostr -V` prints the installed version and is useful when CI and local behavior differ.
+- `gnostr chat` supports short oneshot messages with `--topic`, `--name`, and `--oneshot`.
+- `gnostr legit` is for git/nostr workflow tasks, not chat updates.
+- When using repeated `-m` flags with `gnostr legit`, wrap each line to 80 columns.
+- `gnostr server` runs the Blossom server.
+- `gnostr ngit` is the passthrough for ngit subcommands.
+- Useful top-level flags include `--workdir`, `--gitdir`, `--tab`, `--relays`,
+  `--difficulty-target`, `--screenshots`, and `--bugreport`.
+- `gnostr --command` can run an explicit command string when needed.
+
 ## Command
 
 ```bash
