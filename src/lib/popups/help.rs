@@ -52,7 +52,7 @@ impl DrawableComponent for HelpPopup {
                 .vertical_margin(1)
                 .horizontal_margin(1)
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Min(1), Constraint::Length(1)].as_ref())
+                .constraints([Constraint::Min(1), Constraint::Length(3)].as_ref())
                 .split(area);
 
             f.render_widget(
@@ -63,14 +63,17 @@ impl DrawableComponent for HelpPopup {
             );
 
             f.render_widget(
-                Paragraph::new(Line::from(vec![Span::styled(
-                    Cow::from(format!(
-                        "gnostr-tui {} • {}",
-                        env!("GITUI_BUILD_NAME"),
-                        env!("GITUI_APP_NAME")
+                Paragraph::new(vec![
+                    Line::from(Span::styled(Cow::from("gnostr-tui"), Style::default())),
+                    Line::from(Span::styled(
+                        Cow::from(env!("GITUI_BUILD_NAME")),
+                        Style::default(),
                     )),
-                    Style::default(),
-                )]))
+                    Line::from(Span::styled(
+                        Cow::from(env!("GITUI_APP_NAME")),
+                        Style::default(),
+                    )),
+                ])
                 .alignment(Alignment::Right),
                 chunks[1],
             );
