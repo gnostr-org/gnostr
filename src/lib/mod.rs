@@ -2,6 +2,8 @@
 #![deny(non_ascii_idents)]
 //! gnostr: a git+nostr workflow utility and library
 
+extern crate git2 as gnostr_asyncgit;
+
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
 pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
