@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
+BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
+BASH_MINOR="${BASH_VERSINFO[1]:-0}"
+if ! bash -n "${BASH_SOURCE[0]}"; then
+  exit 1
+fi
+
 GNOSTR_BIN="${GNOSTR_BIN:-${GNOSTR:-gnostr}}"
 NOSTR_PUBKEY="${NOSTR_PUBKEY:-npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k}"
 QUERY_LIMIT="${QUERY_LIMIT:-1}"
