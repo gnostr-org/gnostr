@@ -1,4 +1,4 @@
-use libp2p::{autonat, dcutr, gossipsub, kad, mdns, relay, swarm::SwarmEvent};
+use libp2p::{autonat, gossipsub, kad, mdns, relay, swarm::SwarmEvent};
 use tracing::{debug, info, trace, warn};
 
 use super::behaviour::BehaviourEvent;
