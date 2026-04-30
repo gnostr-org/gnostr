@@ -6,7 +6,5 @@ RUN apt-get update \
       libclang-dev \
       llvm-dev \
       pkg-config \
-      musl-dev \
-      musl-tools \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
