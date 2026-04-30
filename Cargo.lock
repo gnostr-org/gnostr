@@ -6014,6 +6014,7 @@ dependencies = [
  "globset",
  "gnostr-asyncgit",
  "gnostr-blossom-tui",
+ "gnostr-chat",
  "gnostr-crawler",
  "gnostr-filetreelist",
  "gnostr-git-helpers",
@@ -6035,7 +6036,7 @@ dependencies = [
  "hkdf",
  "hmac 0.12.1",
  "home",
- "hostname 0.3.1",
+ "hostname",
  "http 1.4.0",
  "httparse",
  "humantime",
@@ -6174,7 +6175,7 @@ dependencies = [
  "unicode-truncate 1.1.0",
  "unicode-width 0.1.14",
  "unix_mode",
- "ureq 2.12.1",
+ "ureq",
  "url",
  "urlencoding",
  "uuid",
@@ -6328,7 +6329,7 @@ dependencies = [
  "unicode-truncate 1.1.0",
  "unicode-width 0.1.14",
  "unix_mode",
- "ureq 2.12.1",
+ "ureq",
  "url",
  "uuid",
  "v_htmlescape",
@@ -6372,17 +6373,18 @@ dependencies = [
  "git2",
  "gnostr-asyncgit",
  "gnostr-p2p",
- "hostname 0.4.2",
+ "hostname",
  "libp2p",
  "once_cell",
  "parking_lot 0.12.3",
+ "ratatui 0.28.1",
  "serde",
  "serde_json",
  "terminal_size 0.4.4",
  "textwrap 0.16.2",
  "tokio",
  "tracing",
- "ureq 3.3.0",
+ "ureq",
 ]
 
 [[package]]
@@ -7236,17 +7238,6 @@ dependencies = [
  "libc",
  "match_cfg",
  "winapi",
-]
-
-[[package]]
-name = "hostname"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "617aaa3557aef3810a6369d0a99fac8a080891b68bd9f9812a1eeda0c0730cbd"
-dependencies = [
- "cfg-if 1.0.4",
- "libc",
- "windows-link",
 ]
 
 [[package]]
@@ -10986,7 +10977,7 @@ dependencies = [
  "bitcoin_hashes 0.12.0",
  "opentimestamps",
  "thiserror 1.0.69",
- "ureq 2.12.1",
+ "ureq",
 ]
 
 [[package]]
@@ -17771,35 +17762,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ureq"
-version = "3.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dea7109cdcd5864d4eeb1b58a1648dc9bf520360d7af16ec26d0a9354bafcfc0"
-dependencies = [
- "base64 0.22.1",
- "flate2",
- "log",
- "percent-encoding",
- "rustls 0.23.39",
- "rustls-pki-types",
- "ureq-proto",
- "utf8-zero",
- "webpki-roots 1.0.7",
-]
-
-[[package]]
-name = "ureq-proto"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e994ba84b0bd1b1b0cf92878b7ef898a5c1760108fe7b6010327e274917a808c"
-dependencies = [
- "base64 0.22.1",
- "http 1.4.0",
- "httparse",
- "log",
-]
-
-[[package]]
 name = "url"
 version = "2.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -17823,12 +17785,6 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
-
-[[package]]
-name = "utf8-zero"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8c0a043c9540bae7c578c88f91dda8bd82e59ae27c21baca69c8b191aaf5a6e"
 
 [[package]]
 name = "utf8_iter"
