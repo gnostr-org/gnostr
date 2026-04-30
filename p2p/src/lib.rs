@@ -6,29 +6,17 @@ extern crate gnostr_asyncgit as git2;
 
 use std::path::PathBuf;
 
-#[path = "../../src/lib/p2p/args.rs"]
 pub mod args;
-#[path = "../../src/lib/p2p/behaviour.rs"]
 pub mod behaviour;
-#[path = "../../src/lib/p2p/command_handler.rs"]
 pub mod command_handler;
-#[path = "../../src/lib/p2p/event_handler.rs"]
 pub mod event_handler;
-#[path = "../../src/lib/p2p/git_integration.rs"]
 pub mod git_integration;
-#[path = "../../src/lib/p2p/git_publisher.rs"]
 pub mod git_publisher;
-#[path = "../../src/lib/p2p/kvs.rs"]
 pub mod kvs;
-#[path = "../../src/lib/p2p/lookup.rs"]
 pub mod lookup;
-#[path = "../../src/lib/p2p/network_config.rs"]
 pub mod network_config;
-#[path = "../../src/lib/p2p/opt.rs"]
 pub mod opt;
-#[path = "../../src/lib/p2p/swarm_builder.rs"]
 pub mod swarm_builder;
-#[path = "../../src/lib/p2p/utils.rs"]
 pub mod utils;
 
 /// Crate name.
