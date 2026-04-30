@@ -24,6 +24,7 @@ use uuid::Uuid;
 pub use gnostr_chat::{msg, p2p};
 pub use gnostr_chat::evt_loop;
 use gnostr_chat::event::ChatEvent;
+use gnostr_chat::msg::{Msg, MsgKind};
 
 use crate::queue::InternalEvent;
 use gnostr_asyncgit::{
