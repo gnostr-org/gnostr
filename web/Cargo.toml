@@ -19,7 +19,7 @@ const-hex = "1.12"
 flate2 = "1"
 futures = "0.3"
 futures-util = "0.3.31"
-git2 = { workspace = true }
+gnostr-asyncgit = { workspace = true }
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
   "tracing",
