@@ -16,6 +16,7 @@ pub mod kvs;
 pub mod lookup;
 pub mod network_config;
 pub mod opt;
+pub mod js;
 pub mod swarm_builder;
 pub mod utils;
 
@@ -26,6 +27,8 @@ pub const PACKAGE_NAME: &str = "gnostr-p2p";
 pub fn js_source_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/js")
 }
+
+pub use js::get_js_assets;
 
 #[cfg(test)]
 mod tests {
