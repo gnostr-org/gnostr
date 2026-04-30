@@ -21,7 +21,10 @@ use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 use uuid::Uuid;
 
-use self::msg::{Msg, MsgKind};
+pub use gnostr_chat::{msg, p2p};
+pub use gnostr_chat::evt_loop;
+use gnostr_chat::event::ChatEvent;
+
 use crate::queue::InternalEvent;
 use gnostr_asyncgit::{
     //queue::InternalEvent,
@@ -33,12 +36,24 @@ use gnostr_asyncgit::{
 };
 use sha2::{Digest, Sha256};
 
-pub mod msg;
-pub use msg::*;
-pub mod p2p;
-pub use p2p::evt_loop;
-pub mod tests;
 pub mod ui;
+
+fn to_transport_event(event: InternalEvent) -> Option<ChatEvent> {
+    match event {
+        InternalEvent::ChatMessage(msg) => Some(ChatEvent::ChatMessage(msg)),
+        InternalEvent::ShowErrorMsg(text) => Some(ChatEvent::ShowErrorMsg(text)),
+        InternalEvent::ShowInfoMsg(text) => Some(ChatEvent::ShowInfoMsg(text)),
+        _ => None,
+    }
+}
+
+fn from_transport_event(event: ChatEvent) -> InternalEvent {
+    match event {
+        ChatEvent::ChatMessage(msg) => InternalEvent::ChatMessage(msg),
+        ChatEvent::ShowErrorMsg(text) => InternalEvent::ShowErrorMsg(text),
+        ChatEvent::ShowInfoMsg(text) => InternalEvent::ShowInfoMsg(text),
+    }
+}
 
 /// Simple CLI application to interact with nostr
 /// Top-level CLI flags for launching `gnostr chat`.
