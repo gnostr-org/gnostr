@@ -101,7 +101,7 @@ function nip34_filter_kinds(kind) {
 }
 
 function render_nip_explorer() {
-	return html`<section class="nip-explorer">
+	return html`
 		<section id="nip89-app-section-nip" class="hide nip89-app-section-top">
 			<template id="nip89-app-template-nip">
 				<details id="nip89-app-card-nip" class="settings-profile nip89-app-profile" open>
@@ -135,6 +135,7 @@ function render_nip_explorer() {
 			</template>
 			<div id="nip89-app-mount-nip"></div>
 		</section>
+		<section class="nip-explorer">
 		<header>
 			<h2>NIP explorer</h2>
 			<p>Browse supported NIPs and jump straight into their views.</p>
