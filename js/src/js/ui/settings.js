@@ -255,8 +255,11 @@ function render_nip89_app_metadata(
 	find_node("[name='nip89-app-name']", card).classList.toggle("hide", !name);
 	find_node("[name='nip89-app-about']", card).textContent = description;
 	find_node("[name='nip89-app-about']", card).classList.toggle("hide", !description);
-	find_node("[name='nip89-app-pubkey']", card).textContent = pubkey;
-	find_node("[name='nip89-app-pubkey']", card).classList.toggle("hide", !pubkey);
+	const pubkey_el = find_node("[name='nip89-app-pubkey']", card);
+	if (pubkey_el) {
+		pubkey_el.textContent = pubkey;
+		pubkey_el.classList.toggle("hide", !pubkey);
+	}
 	find_node("[name='nip89-app-kinds']", card).textContent = kinds_label ? `Kinds: ${kinds_label}` : "";
 	find_node("[name='nip89-app-kinds']", card).classList.toggle("hide", !kinds_label);
 
