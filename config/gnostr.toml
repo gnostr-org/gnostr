@@ -140,7 +140,9 @@ ip_whitelist = ["127.0.0.1"]
 [count]
 enabled = false
 
-# NIP-50 Search extension
-# use carefully. see README.md#search
-[search]
-enabled = true
+## search feature removed/disabled
+## due to crate compatibily issues
+## # NIP-50 Search extension
+## # use carefully. see README.md#search
+## [search]
+## enabled = true
