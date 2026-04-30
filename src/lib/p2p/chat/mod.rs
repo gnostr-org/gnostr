@@ -499,6 +499,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
     {
         let chat_input_tx = chat_input_tx.clone();
         global_rt().spawn(async move {
+            let mut input_rx = input_rx;
             while let Some(event) = input_rx.recv().await {
                 if let Some(event) = to_transport_event(event) {
                     let _ = chat_input_tx.send(event).await;

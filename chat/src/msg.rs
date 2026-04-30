@@ -13,7 +13,7 @@ use textwrap::{wrap, Options};
 
 use gnostr_asyncgit::types::Event;
 
-pub(crate) static USER_NAME: Lazy<String> = Lazy::new(|| {
+pub static USER_NAME: Lazy<String> = Lazy::new(|| {
     std::env::var("USER")
         .unwrap_or_else(|_| hostname::get().unwrap().to_string_lossy().to_string())
         .to_string()
