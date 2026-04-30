@@ -3,7 +3,7 @@
 //! This macro allows you to compute the SHA-256 hash of a file at compile time,
 //! embedding the resulting hash string directly into your Rust executable.
 
-pub use get_file_hash_core::get_file_hash;
+pub use gnostr_filehash_core::get_file_hash;
 
 /// The SHA-256 hash of this crate's `build.rs` at the time of compilation.
 pub const BUILD_HASH: &str = env!("BUILD_HASH");

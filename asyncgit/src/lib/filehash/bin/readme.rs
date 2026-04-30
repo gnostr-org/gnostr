@@ -5,7 +5,7 @@
 //! the hash of a specified file at compile time and incorporate it into runtime
 //! logic.
 use get_file_hash::{BUILD_HASH, CARGO_TOML_HASH, LIB_HASH};
-use get_file_hash_core::get_file_hash;
+use gnostr_filehash_core::get_file_hash;
 use sha2::{Digest, Sha256};
 
 const README_TEMPLATE_PART0: &str = r##"# `get_file_hash` macro

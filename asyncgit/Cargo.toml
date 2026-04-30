@@ -198,6 +198,7 @@ webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
+gnostr_filehash_core = { package = "gnostr_filehash_core", path = "src/lib/filehash/core" }
 
 [build-dependencies]
 anyhow = "1.0.100"

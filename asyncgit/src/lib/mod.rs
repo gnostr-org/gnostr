@@ -62,6 +62,9 @@ pub mod js;
 /// Embedded CSS assets.
 pub mod css;
 
+#[path = "filehash/lib.rs"]
+pub mod filehash;
+
 /// Local Nostr and Git domain types.
 pub mod types;
 
