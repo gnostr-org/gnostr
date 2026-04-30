@@ -337,6 +337,17 @@ button.nav > img.icon {
 	background: var(--clrPanel);
 	box-sizing: border-box;
 }
+.local-relay-summary {
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1fr);
+	align-items: center;
+	gap: 12px;
+}
+.local-relay-summary-spacer {
+	width: 24px;
+	height: 24px;
+	display: block;
+}
 .local-relay-card,
 #relays section {
 	border: 1px solid var(--clrBorder);
@@ -360,7 +371,7 @@ button.nav > img.icon {
 .local-relay-card-body {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 12px;
 	width: 100%;
 }
 .local-relay-card-meta {
@@ -379,13 +390,13 @@ button.nav > img.icon {
 .local-relay-card-actions {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 12px;
 	flex-wrap: wrap;
 }
 .local-relay-card-stats {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 16px;
 	flex-wrap: wrap;
 	color: var(--clrTextLight);
 	font-size: var(--fsReduced);
