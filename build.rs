@@ -1,8 +1,8 @@
 use chrono::TimeZone;
+use serde_json::json;
+use std::process::Command;
 
 fn get_git_hash() -> String {
-    use std::process::Command;
-
     // Allow builds from `git archive` generated tarballs if output of `git get-tar-commit-id` is
     // set in an env var.
     if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
@@ -45,4 +45,14 @@ fn main() {
 
     println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+    let app_metadata = json!({
+        "name": "gnostr",
+        "description": env!("CARGO_PKG_DESCRIPTION"),
+        "website": env!("CARGO_PKG_HOMEPAGE"),
+        "repository": env!("CARGO_PKG_REPOSITORY"),
+        "build_name": build_name,
+        "kind": 31990,
+    });
+    println!("cargo:rustc-env=GITUI_APP_NAME=gnostr");
+    println!("cargo:rustc-env=GITUI_APP_METADATA_JSON={}", app_metadata.to_string());
 }

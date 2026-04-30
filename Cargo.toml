@@ -828,6 +828,7 @@ regex = { workspace = true }
 reqwest = { workspace = true, features = ["blocking"] }
 rsass = "0.28.10"
 serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 sha2 = { workspace = true }
 syn = { workspace = true }
 threadpool = "1.8.1"
