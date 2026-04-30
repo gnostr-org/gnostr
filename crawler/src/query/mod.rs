@@ -290,7 +290,7 @@ pub fn build_gnostr_query(
             }
         }
     }
-    println!("{:?}", filt);
+    debug!("build_gnostr_query filter={:?}", filt);
     let q = json!(["REQ", "gnostr-query", filt]);
     info!("q={}", q);
     info!("{}", serde_json::to_string(&q)?);
@@ -371,6 +371,38 @@ mod tests {
 
         assert_eq!(result, vec!["{\"ok\":true}".to_string()]);
         server.await.unwrap();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn send_returns_empty_result_when_all_relays_are_empty() -> anyhow::Result<()> {
+        let listener_one = TcpListener::bind("127.0.0.1:0").await?;
+        let addr_one = listener_one.local_addr()?;
+        let server_one = tokio::spawn(async move {
+            let (stream, _) = listener_one.accept().await.unwrap();
+            let mut websocket = accept_async(stream).await.unwrap();
+            if let Some(message) = websocket.next().await {
+                assert!(matches!(message.unwrap(), Message::Text(_)));
+            }
+        });
+
+        let listener_two = TcpListener::bind("127.0.0.1:0").await?;
+        let addr_two = listener_two.local_addr()?;
+        let server_two = tokio::spawn(async move {
+            let (stream, _) = listener_two.accept().await.unwrap();
+            let mut websocket = accept_async(stream).await.unwrap();
+            if let Some(message) = websocket.next().await {
+                assert!(matches!(message.unwrap(), Message::Text(_)));
+            }
+        });
+
+        let relay_one = Url::parse(&format!("ws://{}", addr_one))?;
+        let relay_two = Url::parse(&format!("ws://{}", addr_two))?;
+        let result = send("REQ".to_string(), vec![relay_one, relay_two], Some(1)).await?;
+
+        assert!(result.is_empty());
+        server_one.await.unwrap();
+        server_two.await.unwrap();
         Ok(())
     }
 }

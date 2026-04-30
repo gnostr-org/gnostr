@@ -1183,6 +1183,203 @@ pub(crate) async fn get_index_html() -> Response {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{body::to_bytes, routing::get, Router};
+    use std::env;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::sync::{Mutex, OnceLock};
+    use tokio::net::TcpListener;
+
+    static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    struct EnvGuard {
+        prev_home: Option<std::ffi::OsString>,
+        prev_xdg: Option<std::ffi::OsString>,
+        _lock: std::sync::MutexGuard<'static, ()>,
+        root: PathBuf,
+    }
+
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            unsafe {
+                match self.prev_home.take() {
+                    Some(value) => env::set_var("HOME", value),
+                    None => env::remove_var("HOME"),
+                }
+                match self.prev_xdg.take() {
+                    Some(value) => env::set_var("XDG_CONFIG_HOME", value),
+                    None => env::remove_var("XDG_CONFIG_HOME"),
+                }
+            }
+            let _ = fs::remove_dir_all(&self.root);
+        }
+    }
+
+    fn isolate_config_dir() -> EnvGuard {
+        let lock = TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let mut root = std::env::temp_dir();
+        root.push(format!(
+            "gnostr-crawler-api-tests-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system time should be monotonic")
+                .as_nanos()
+        ));
+        let home = root.join("home");
+        let xdg = root.join("xdg");
+        fs::create_dir_all(&home).unwrap();
+        fs::create_dir_all(&xdg).unwrap();
+
+        let prev_home = env::var_os("HOME");
+        let prev_xdg = env::var_os("XDG_CONFIG_HOME");
+
+        unsafe {
+            env::set_var("HOME", &home);
+            env::set_var("XDG_CONFIG_HOME", &xdg);
+        }
+
+        EnvGuard {
+            prev_home,
+            prev_xdg,
+            _lock: lock,
+            root,
+        }
+    }
+
+    async fn start_http_server(body: &'static str) -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let app = Router::new().route("/", get(move || async move { body }));
+        tokio::spawn(async move {
+            axum::serve(listener, app.into_make_service())
+                .await
+                .unwrap();
+        });
+        format!("ws://{}", addr)
+    }
+
+    async fn response_text(response: Response) -> String {
+        let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        String::from_utf8(bytes.to_vec()).unwrap()
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn relay_files_are_served_with_content_types() {
+        let _guard = isolate_config_dir();
+        let config_dir = crate::relays::get_config_dir_path();
+        fs::create_dir_all(&config_dir).unwrap();
+        fs::write(
+            config_dir.join("relays.yaml"),
+            "wss://relay.example.com\nws://relay.example.org\n",
+        )
+        .unwrap();
+        fs::write(config_dir.join("relays.json"), "[\"wss://relay.example.com/\"]").unwrap();
+        fs::write(config_dir.join("relays.txt"), "wss://relay.example.com/ ws://relay.example.org/")
+            .unwrap();
+
+        let yaml = get_relays_yaml().await;
+        assert_eq!(yaml.status(), StatusCode::OK);
+        assert_eq!(
+            yaml.headers().get(CONTENT_TYPE).unwrap(),
+            "application/x-yaml"
+        );
+        assert!(response_text(yaml).await.contains("relay.example.com"));
+
+        let json = get_relays_json().await;
+        assert_eq!(json.status(), StatusCode::OK);
+        assert_eq!(
+            json.headers().get(CONTENT_TYPE).unwrap(),
+            "application/json"
+        );
+        assert!(response_text(json).await.contains("relay.example.com"));
+
+        let txt = get_relays_txt().await;
+        assert_eq!(txt.status(), StatusCode::OK);
+        assert_eq!(txt.headers().get(CONTENT_TYPE).unwrap(), "text/plain");
+        assert!(response_text(txt).await.contains("relay.example.com"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn nip_files_and_index_are_served_from_disk() {
+        let _guard = isolate_config_dir();
+        let config_dir = crate::relays::get_config_dir_path();
+        let nip_dir = config_dir.join("34");
+        fs::create_dir_all(&nip_dir).unwrap();
+        fs::write(
+            nip_dir.join("relay-one.json"),
+            r#"{"name":"Relay One","supported_nips":[34,35],"ping_ms":17}"#,
+        )
+        .unwrap();
+        fs::write(nip_dir.join("relays.yaml"), "wss://relay-one/\n").unwrap();
+        fs::write(nip_dir.join("relays.json"), "[\"wss://relay-one/\"]").unwrap();
+        fs::write(nip_dir.join("relays.txt"), "wss://relay-one/").unwrap();
+
+        let yaml = get_nip_relays_yaml(AxumPath(34)).await;
+        assert_eq!(yaml.status(), StatusCode::OK);
+        assert_eq!(
+            yaml.headers().get(CONTENT_TYPE).unwrap(),
+            "application/x-yaml"
+        );
+        assert!(response_text(yaml).await.contains("wss://relay-one"));
+
+        let json = get_nip_relays_json(AxumPath(34)).await;
+        assert_eq!(json.status(), StatusCode::OK);
+        assert_eq!(
+            json.headers().get(CONTENT_TYPE).unwrap(),
+            "application/json"
+        );
+        assert!(response_text(json).await.contains("wss://relay-one"));
+
+        let txt = get_nip_relays_txt(AxumPath(34)).await;
+        assert_eq!(txt.status(), StatusCode::OK);
+        assert_eq!(txt.headers().get(CONTENT_TYPE).unwrap(), "text/plain");
+        assert!(response_text(txt).await.contains("wss://relay-one"));
+
+        let index = get_nip_index(AxumPath(34)).await;
+        assert_eq!(index.status(), StatusCode::OK);
+        assert_eq!(index.headers().get(CONTENT_TYPE).unwrap(), "text/html");
+        let html = response_text(index).await;
+        assert!(html.contains("Relay One"));
+        assert!(html.contains("/34/relay-one.json"));
+        assert!(html.contains("NIP 35"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn prime_all_nip_relays_files_writes_ping_and_aggregate_files() {
+        let _guard = isolate_config_dir();
+        let relay_url = start_http_server(
+            r#"{"name":"Relay One","supported_nips":[34],"version":"1.0"}"#,
+        )
+        .await;
+        let config_dir = crate::relays::get_config_dir_path();
+        fs::write(
+            config_dir.join("relays.yaml"),
+            format!("{}\nws://127.0.0.1:1\n", relay_url),
+        )
+        .unwrap();
+
+        let client = reqwest::Client::new();
+        prime_all_nip_relays_files(&client).await.unwrap();
+
+        let nip_dir = config_dir.join("34");
+        let relay_file = nip_dir.join("127.0.0.1.json");
+        assert!(relay_file.exists());
+        let relay_json = fs::read_to_string(&relay_file).unwrap();
+        let relay: crate::relay_metadata::Relay = serde_json::from_str(&relay_json).unwrap();
+        assert_eq!(relay.name.as_deref(), Some("Relay One"));
+        assert_eq!(relay.supported_nips, Some(vec![34]));
+        assert!(relay.ping_ms.is_some());
+
+        assert!(nip_dir.join("relays.yaml").exists());
+        assert!(nip_dir.join("relays.json").exists());
+        assert!(nip_dir.join("relays.txt").exists());
+    }
+}
+
 pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     debug!("run_api_server: Starting API server on port {}", port);
 

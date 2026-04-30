@@ -48,3 +48,33 @@ pub async fn fetch_relay_texts(
 pub fn parse_relay_metadata(json_string: &str) -> Result<Relay, serde_json::Error> {
     serde_json::from_str(json_string)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_relay_metadata, websocket_http_url};
+
+    #[test]
+    fn websocket_http_url_converts_ws_schemes() {
+        assert_eq!(
+            websocket_http_url("wss://relay.example.com"),
+            "https://relay.example.com"
+        );
+        assert_eq!(
+            websocket_http_url("ws://relay.example.com"),
+            "http://relay.example.com"
+        );
+    }
+
+    #[test]
+    fn parse_relay_metadata_preserves_supported_nips_and_ping() {
+        let relay = parse_relay_metadata(
+            r#"{"name":"Relay","supported_nips":[1,34],"ping_ms":42,"version":"1.0"}"#,
+        )
+        .unwrap();
+
+        assert_eq!(relay.name.as_deref(), Some("Relay"));
+        assert_eq!(relay.supported_nips, Some(vec![1, 34]));
+        assert_eq!(relay.ping_ms, Some(42));
+        assert_eq!(relay.version.as_deref(), Some("1.0"));
+    }
+}
