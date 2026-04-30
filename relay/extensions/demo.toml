@@ -126,7 +126,7 @@ enabled = false
 # kinds = [[0, 40000]]
 
 # # skip when ip in whitelist
-ip_whitelist = ["127.0.0.1"]
+# ip_whitelist = ["127.0.0.1"]
 
 # [[rate_limiter.event]]
 # name = "kind 10000"
