@@ -230,6 +230,7 @@
 										<td colspan="2">
 											<details class="relay-active-card">
 										<summary class="relay-active-summary">
+											<!-- Shared master/detail relay row: icon, stacked relay data, trailing action. -->
 											<img class="relay-active-summary-nip34 relay-active-summary-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
 											<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
 											<span class="relay-active-summary-text">
@@ -255,11 +256,14 @@
 								<template id="relay-discovery-template">
 									<details class="relay-card relay-discovery-card">
 										<summary class="relay-discovery-summary">
-											<img class="relay-discovery-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
-											<img class="relay-discovery-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
-											<a href="#" class="details-relay relay-address" data-address="">
-												<span data-relay-address></span>
-											</a>
+											<!-- Discovery cards reuse the same master/detail row as active cards. -->
+											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+											<span class="relay-active-summary-text">
+												<span class="relay-active-summary-name" data-relay-name></span>
+												<span class="relay-active-summary-address" data-relay-address></span>
+												<span class="relay-active-summary-ping" data-relay-ping></span>
+											</span>
 											<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
 												<img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/>
 											</button>

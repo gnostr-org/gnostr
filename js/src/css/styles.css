@@ -1022,6 +1022,15 @@ code {
 #relays .relay-discovery-card {
 	margin: 0;
 }
+/* iOS-style grouped cell: one rounded container, one summary row, one detail body. */
+#relays .relay-active-card {
+	display: block;
+	overflow: hidden;
+	border: 1px solid var(--clrBorder);
+	border-radius: 12px;
+	background: var(--clrPanel);
+}
+#relays .relay-active-summary,
 #relays .relay-discovery-summary {
 	display: flex;
 	align-items: center;
@@ -1030,39 +1039,38 @@ code {
 	padding: 14px 16px;
 	list-style: none;
 }
+#relays .relay-active-summary::-webkit-details-marker,
 #relays .relay-discovery-summary::-webkit-details-marker {
 	display: none;
 }
-#relays .relay-active-card {
-	display: block;
+#relays .relay-discovery-card {
+	overflow: hidden;
+	border: 1px solid var(--clrBorder);
+	border-radius: 12px;
+	background: var(--clrPanel);
 }
-#relays .relay-active-summary {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	width: 100%;
-	padding: 14px 16px;
-	list-style: none;
-}
-#relays .relay-active-summary::-webkit-details-marker {
-	display: none;
-}
+/* Shared master/detail row: icon, stacked relay data, trailing action button. */
 #relays .relay-active-summary-text {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 2px;
-	flex: 0 1 auto;
-	min-width: 0;
-}
-#relays .relay-discovery-summary .details-relay {
-	flex: 0 1 auto;
+	flex: 1 1 auto;
 	min-width: 0;
 }
 #relays .relay-active-summary-address,
 #relays .relay-active-summary-ping {
 	color: var(--clrTextLight);
+	font-size: var(--fsReduced);
+	line-height: 1.2;
 	word-break: break-all;
+}
+#relays .relay-active-summary-name {
+	color: var(--clrText);
+	font-size: var(--fsNormal);
+	font-weight: 600;
+	line-height: 1.2;
+	word-break: break-word;
 }
 #relays .relay-active-summary-nip34 {
 	width: 24px;
@@ -1105,7 +1113,11 @@ code {
 #relays .relay-active-card .relay-info {
 	padding: 0 16px 16px;
 }
-#relays .relay-active-summary .remove-relay {
+#relays .relay-discovery-body {
+	padding: 0 16px 16px;
+}
+#relays .relay-active-summary .remove-relay,
+#relays .add-discovered-relay {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -1114,21 +1126,13 @@ code {
 	min-height: 36px;
 	padding: 8px 10px;
 	border-radius: 999px;
+	flex: 0 0 auto;
+}
+#relays .relay-active-summary .remove-relay {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
 }
-#relays .relay-discovery-body {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 0 16px 16px;
-}
 #relays .add-discovered-relay {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	padding: 6px;
-	border-radius: 999px;
 	background: color-mix(in srgb, var(--clrSuccess) 18%, transparent);
 }
 #relays .add-discovered-relay:disabled {
