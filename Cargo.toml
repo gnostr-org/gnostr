@@ -547,7 +547,7 @@ globset = "0.4"
 
 ##gitui
 gnostr-asyncgit = { workspace = true, features = ["gitui"] }
-gnostr-chat = { path = "chat", version = "1876.947089.686958" }
+gnostr_chat = { package = "gnostr-chat", path = "chat", version = "1876.947089.686958" }
 gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = "1876.947089.686958" }
 gnostr-git-helpers = { version = "1876.947089.686958", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
