@@ -229,18 +229,18 @@
 									<tr class="relay-card">
 										<td colspan="2">
 											<details class="relay-active-card">
-												<summary class="relay-active-summary">
-													<span class="relay-active-summary-text">
-														<span class="relay-active-summary-name" data-relay-name></span>
-														<span class="relay-active-summary-address" data-relay-address></span>
-														<span class="relay-active-summary-ping" data-relay-ping></span>
-														<img class="relay-active-summary-nip34 relay-active-summary-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
-														<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
-													</span>
-													<button class="remove-relay btn-text" data-address="" role="remove-relay">
-														<img class="icon svg small" src="/images/event-delete.svg"/>
-													</button>
-												</summary>
+										<summary class="relay-active-summary">
+											<img class="relay-active-summary-nip34 relay-active-summary-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+											<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+											<span class="relay-active-summary-text">
+												<span class="relay-active-summary-name" data-relay-name></span>
+												<span class="relay-active-summary-address" data-relay-address></span>
+												<span class="relay-active-summary-ping" data-relay-ping></span>
+											</span>
+											<button class="remove-relay btn-text" data-address="" role="remove-relay">
+												<span class="relay-remove-icon" aria-hidden="true">−</span>
+											</button>
+										</summary>
 												<div class="relay-info">
 													<div class="relay-info-line relay-info-name" data-relay-name></div>
 													<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
@@ -255,11 +255,11 @@
 								<template id="relay-discovery-template">
 									<details class="relay-card relay-discovery-card">
 										<summary class="relay-discovery-summary">
+											<img class="relay-discovery-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+											<img class="relay-discovery-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
 											<a href="#" class="details-relay relay-address" data-address="">
 												<span data-relay-address></span>
 											</a>
-											<img class="relay-discovery-nip34 relay-discovery-nip34-light icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
-											<img class="relay-discovery-nip34 relay-discovery-nip34-dark icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
 											<button class="add-discovered-relay btn-text" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
 												<img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/>
 											</button>
