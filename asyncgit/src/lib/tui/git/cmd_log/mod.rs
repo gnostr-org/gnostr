@@ -1,4 +1,4 @@
-use crate::tui::git::config::Config;
+use crate::tui::shared::config::Config;
 use itertools::Itertools;
 use ratatui::style::Style;
 use ratatui::style::Stylize;

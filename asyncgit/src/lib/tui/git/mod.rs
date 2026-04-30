@@ -1,7 +1,6 @@
 mod bindings;
 pub mod cli;
 mod cmd_log;
-pub mod config;
 mod file_watcher;
 pub mod git;
 mod git2_opts;
@@ -30,7 +29,7 @@ use std::{
     rc::Rc,
     time::Duration,
 };
-use crate::tui::shared::term::Term;
+use crate::tui::shared::{config, term::Term};
 
 pub use crate::tui::shared::{syntax_parser, term};
 
