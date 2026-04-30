@@ -16,7 +16,9 @@ pub mod kvs;
 pub mod lookup;
 pub mod network_config;
 pub mod opt;
+pub mod bridge;
 pub mod js;
+pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
 
@@ -28,7 +30,9 @@ pub fn js_source_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/js")
 }
 
+pub use bridge::{asset_content_type, asset_response, shell_html};
 pub use js::get_js_assets;
+pub use template_html::{get_template_assets, TemplateHtml};
 
 #[cfg(test)]
 mod tests {
