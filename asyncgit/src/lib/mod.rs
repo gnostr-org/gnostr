@@ -104,6 +104,7 @@ use std::{
 };
 
 pub use git2;
+pub use git2::*;
 pub use git2::message_prettify;
 
 pub use crate::{
