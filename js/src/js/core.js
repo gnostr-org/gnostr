@@ -81,6 +81,8 @@ async function share(evid) {
 }
 
 async function update_profile(profile={}) {
+	// Profile updates still publish the legacy kind-0 metadata event.
+	// App metadata / NIP-89 is a separate surface and is not handled here yet.
 	let ev = {
 		kind: KIND_METADATA,
 		created_at: new_creation_time(),

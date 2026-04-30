@@ -266,8 +266,8 @@ function model_process_event_following(model, ev, update_view) {
 }
 
 /**
- * Processes a KIND_RELAY_LIST (NIP-65) event, extracting relay information
- * and storing it in IndexedDB.
+ * Processes a KIND_RELAY_LIST (NIP-65) event.
+ * This stores the user's relay list (tags on kind 10002), not relay info documents.
  * @param {object} model The global model object.
  * @param {object} ev The NIP-65 event.
  * @param {boolean} update_view Whether to trigger a view update (not applicable here).

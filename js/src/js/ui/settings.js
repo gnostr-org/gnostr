@@ -30,6 +30,21 @@ function format_bytes(bytes) {
 	return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
+function relay_metadata_label(metadata, fallback) {
+	if (metadata && typeof metadata === "object") {
+		for (const key of ["name", "relay_name", "display_name", "displayName", "title"]) {
+			const value = metadata[key];
+			if (typeof value === "string" && value.trim()) {
+				return value.trim();
+			}
+		}
+		if (typeof metadata.pubkey === "string" && metadata.pubkey.trim()) {
+			return metadata.pubkey.trim();
+		}
+	}
+	return fallback;
+}
+
 function ensure_local_relay_header_card() {
 	const mount = find_node("#local-relay-header-card-mount");
 	if (!mount || mount.querySelector("#local-relay-header-card")) {
@@ -154,6 +169,7 @@ async function render_local_relay_info() {
     el.textContent = "Loading relay info...";
 
     try {
+        // NIP-11 relay info is fetched directly from the relay over HTTP.
         const url = new URL(local_relay_url);
         const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
         const response = await fetch(http_url, {
@@ -223,6 +239,7 @@ async function render_nip65_relays(model) {
 		return;
 	}
 
+	// NIP-65 relay lists come from stored kind-10002 events, while discovery is crawler metadata.
 	const [nip65_relays, relay_discovery] = await Promise.all([
 		get_nip65_relays_from_db(pubkey),
 		fetch_relay_discovery().catch((error) => {
@@ -353,7 +370,7 @@ function new_nip65_relay_item(url, policy, discovery_entry) {
 		policy_el.textContent = policy_str;
 	}
 	if (name_el) {
-		const label = discovery_entry?.name || discovery_entry?.pubkey || url;
+		const label = relay_metadata_label(discovery_entry, url);
 		name_el.textContent = label;
 		name_el.classList.toggle("hide", !label);
 	}
@@ -497,7 +514,7 @@ async function hydrate_relay_item(tr, address) {
 		});
 		const ping_ms = Math.round(performance.now() - started);
 		const data = await response.json();
-		const label = data.name || data.pubkey || address;
+		const label = relay_metadata_label(data, address);
 		name_els.forEach((el) => {
 			el.textContent = label;
 			el.classList.toggle("hide", !label);
@@ -591,7 +608,7 @@ function new_relay_discovery_item(entry, model) {
 		link.addEventListener("click", on_click_details_relay);
 	}
 	if (name_el) {
-		name_el.textContent = entry.name || entry.pubkey || entry.url;
+		name_el.textContent = relay_metadata_label(entry, entry.url);
 		name_el.classList.toggle("hide", !name_el.textContent);
 	}
 	if (ping_el) {
@@ -675,6 +692,7 @@ async function on_click_details_relay(ev) {
 	const http_url = `http${url.protocol === 'wss:' ? 's' : ''}://${url.host}`;
 
 	try {
+		// The detail pane shows the relay's NIP-11 JSON document verbatim.
 		const response = await fetch(http_url, {
 			headers: {
 				'Accept': 'application/nostr+json',
