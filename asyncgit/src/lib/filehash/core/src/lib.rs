@@ -310,7 +310,7 @@ pub async fn publish_repo_patch_event(
 /// # Examples
 ///
 /// ```rust
-/// use get_file_hash_core::get_file_hash;
+/// use gnostr_filehash_core::get_file_hash;
 /// use sha2::{Digest, Sha256};
 ///
 /// let hash = get_file_hash!("lib.rs");
@@ -341,7 +341,7 @@ macro_rules! get_file_hash {
 /// # Examples
 ///
 /// ```rust
-/// use get_file_hash_core::file_hash_as_nostr_private_key;
+/// use gnostr_filehash_core::file_hash_as_nostr_private_key;
 /// use sha2::{Digest, Sha256};
 /// use nostr_sdk::prelude::ToBech32;
 ///
@@ -366,8 +366,8 @@ macro_rules! file_hash_as_nostr_private_key {
 /// # Examples
 ///
 /// ```no_run
-/// use get_file_hash_core::repository_announcement;
-/// use get_file_hash_core::get_file_hash;
+/// use gnostr_filehash_core::repository_announcement;
+/// use gnostr_filehash_core::get_file_hash;
 /// use nostr_sdk::Keys;
 /// use sha2::{Digest, Sha256};
 ///
@@ -432,7 +432,7 @@ macro_rules! repository_announcement {
 /// # Examples
 ///
 /// ```no_run
-/// use get_file_hash_core::publish_patch;
+/// use gnostr_filehash_core::publish_patch;
 /// use nostr_sdk::Keys;
 ///
 /// #[tokio::main]
@@ -487,7 +487,7 @@ macro_rules! publish_patch {
 /// # Examples
 ///
 /// ```no_run
-/// use get_file_hash_core::publish_pull_request;
+/// use gnostr_filehash_core::publish_pull_request;
 /// use nostr_sdk::Keys;
 ///
 /// #[tokio::main]
@@ -562,7 +562,7 @@ macro_rules! publish_pull_request {
 /// # Examples
 ///
 /// ```no_run
-/// use get_file_hash_core::publish_pr_update;
+/// use gnostr_filehash_core::publish_pr_update;
 /// use nostr_sdk::Keys;
 /// use nostr_sdk::EventId;
 /// use std::str::FromStr;
@@ -622,7 +622,7 @@ macro_rules! publish_pr_update {
 /// # Examples
 ///
 /// ```no_run
-/// use get_file_hash_core::publish_repository_state;
+/// use gnostr_filehash_core::publish_repository_state;
 /// use nostr_sdk::Keys;
 ///
 /// #[tokio::main]
@@ -664,7 +664,7 @@ macro_rules! publish_repository_state {
 /// # Examples
 ///
 /// ```no_run
-/// use get_file_hash_core::publish_issue;
+/// use gnostr_filehash_core::publish_issue;
 /// use nostr_sdk::Keys;
 ///
 /// #[tokio::main]
