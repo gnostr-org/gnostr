@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-JOBS="${JOBS:-${NPROC:-8}}"
+NPROC="$(nproc)"
 LIST_ONLY=false
 RUN_ALL=true
 FEATURES=()
@@ -67,7 +67,7 @@ run_check() {
   shift
 
   printf '==> %s\n' "$label"
-  cargo check -j "$JOBS" "$@"
+  cargo check -j$NPROC "$@"
 }
 
 add_package() {
