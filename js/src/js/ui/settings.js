@@ -161,12 +161,15 @@ function render_settings_profile(model) {
     pubkey_el.style.minHeight = "2.4em";
 }
 
-function ensure_nip89_app_metadata_card() {
-	const mount = find_node("#nip89-app-mount");
+function ensure_nip89_app_metadata_card(
+	mount_selector = "#nip89-app-mount",
+	template_selector = "#nip89-app-template"
+) {
+	const mount = find_node(mount_selector);
 	if (!mount || mount.querySelector("#nip89-app-card")) {
 		return mount;
 	}
-	const template = find_node("#nip89-app-template");
+	const template = find_node(template_selector);
 	if (!template || !(template instanceof HTMLTemplateElement)) {
 		return mount;
 	}
@@ -198,12 +201,18 @@ function nip89_metadata_source(metadata, model) {
 	};
 }
 
-function render_nip89_app_metadata(model, metadata = null) {
-	const mount = ensure_nip89_app_metadata_card();
+function render_nip89_app_metadata(
+	model,
+	metadata = null,
+	mount_selector = "#nip89-app-mount",
+	template_selector = "#nip89-app-template",
+	card_selector = "#nip89-app-card"
+) {
+	const mount = ensure_nip89_app_metadata_card(mount_selector, template_selector);
 	if (!mount) {
 		return;
 	}
-	const card = find_node("#nip89-app-card", mount);
+	const card = find_node(card_selector, mount);
 	if (!card) {
 		return;
 	}
@@ -291,14 +300,19 @@ function render_nip89_app_metadata(model, metadata = null) {
 	}
 
 	mount.classList.toggle("hide", !has_data);
-	const section = find_node("#nip89-app-section");
+	const section = mount.closest("#nip89-app-section");
 	if (section) {
 		section.classList.toggle("hide", !has_data);
 	}
 	card.open = false;
 }
 
-async function load_nip89_app_metadata(model) {
+async function load_nip89_app_metadata(
+	model,
+	mount_selector = "#nip89-app-mount",
+	template_selector = "#nip89-app-template",
+	card_selector = "#nip89-app-card"
+) {
 	try {
 		const response = await fetch("/js/nip89-app.json", {
 			headers: {
@@ -310,10 +324,10 @@ async function load_nip89_app_metadata(model) {
 		}
 		const metadata = await response.json();
 		model.nip89_app_metadata = metadata;
-		render_nip89_app_metadata(model, metadata);
+		render_nip89_app_metadata(model, metadata, mount_selector, template_selector, card_selector);
 	} catch (error) {
 		log_warn("Failed to load NIP-89 app metadata:", error);
-		render_nip89_app_metadata(model);
+		render_nip89_app_metadata(model, null, mount_selector, template_selector, card_selector);
 	}
 }
 

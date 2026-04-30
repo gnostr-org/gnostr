@@ -102,6 +102,39 @@ function nip34_filter_kinds(kind) {
 
 function render_nip_explorer() {
 	return html`<section class="nip-explorer">
+		<section id="nip89-app-section-nip" class="hide nip89-app-section-top">
+			<template id="nip89-app-template-nip">
+				<details id="nip89-app-card-nip" class="settings-profile nip89-app-profile" open>
+					<summary class="nip89-app-summary">
+						<img name="nip89-app-summary-image" class="pfp hide" />
+						<span class="nip89-app-summary-text">
+							<span name="nip89-app-summary-name"></span>
+							<span name="nip89-app-summary-subtitle"></span>
+						</span>
+					</summary>
+					<div class="nip89-app-body">
+						<div class="settings-profile-top">
+							<img name="nip89-app-image" class="pfp jumbo hide"/>
+							<div class="settings-profile-meta">
+								<label name="nip89-app-name"></label>
+								<label name="nip89-app-kinds"></label>
+								<p name="nip89-app-about"></p>
+								<code name="nip89-app-pubkey"></code>
+							</div>
+						</div>
+						<div class="nip89-app-links">
+							<dl>
+								<dt>Website</dt>
+								<dd data-field="nip89-app-website"></dd>
+								<dt>Handlers</dt>
+								<dd data-field="nip89-app-handlers"></dd>
+							</dl>
+						</div>
+					</div>
+				</details>
+			</template>
+			<div id="nip89-app-mount-nip"></div>
+		</section>
 		<header>
 			<h2>NIP explorer</h2>
 			<p>Browse supported NIPs and jump straight into their views.</p>

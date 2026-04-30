@@ -1032,6 +1032,9 @@ code {
 	word-break: break-word;
 	overflow-wrap: anywhere;
 }
+.nip89-app-section-top {
+	margin: 0 15px 15px;
+}
 #settings #nip89-app-card {
 	padding: 0;
 	overflow: hidden;
