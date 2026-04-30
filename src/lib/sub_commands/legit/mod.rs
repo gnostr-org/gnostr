@@ -63,10 +63,10 @@ impl LegitSubCommand {
 ///
 /// This function will return an error if the command fails.
 pub async fn legit(sub_command_args: &LegitSubCommand) -> Result<(), Box<dyn StdError>> {
-    if sub_command_args.verbose > 0 {
+    if sub_command_args.verbose() > 0 {
         unsafe { std::env::set_var("NGIT_VERBOSE", "1") };
     }
-    match &sub_command_args.command {
+    match sub_command_args.command() {
         Some(LegitCommands::Login(args)) => login::launch(args).await?,
         Some(LegitCommands::Init(args)) => init::launch(args).await?,
         Some(LegitCommands::Send(args)) => send::launch(args, true).await?,
