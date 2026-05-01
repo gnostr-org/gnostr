@@ -29,6 +29,7 @@ mod error;
 mod hookspath;
 
 use std::{
+	env,
 	fs::File,
 	io::{Read, Write},
 	path::{Path, PathBuf},
@@ -99,6 +100,61 @@ pub fn is_macos() -> bool {
 /// assumptions without spelling out `cfg!(target_os = "linux")`.
 pub fn is_linux() -> bool {
 	current_os() == "linux"
+}
+
+/// Find a `gnostr` executable in a caller-provided list of search paths.
+///
+/// The lookup is cross-platform:
+/// - on Unix-like systems the candidate must exist and be executable
+/// - on Windows the candidate only needs to exist as a file
+///
+/// This helper is useful for tests and for callers that already have a custom
+/// PATH-like list they want to search.
+pub fn gnostr_bin_from_paths(paths: &[PathBuf]) -> Option<PathBuf> {
+	find_program_in_paths("gnostr", paths)
+		.or_else(|| find_program_in_paths("gnostr.exe", paths))
+}
+
+/// Find a `gnostr` executable on the current process PATH.
+///
+/// The search honors the `GNOSTR_BIN` environment variable first, then falls
+/// back to the current process PATH.
+pub fn gnostr_bin() -> Option<PathBuf> {
+	if let Ok(path) = env::var("GNOSTR_BIN") {
+		if !path.is_empty() {
+			return Some(PathBuf::from(path));
+		}
+	}
+
+	let path_var = env::var_os("PATH")?;
+	let paths: Vec<PathBuf> = env::split_paths(&path_var).collect();
+	gnostr_bin_from_paths(&paths)
+}
+
+fn find_program_in_paths(
+	program: &str,
+	paths: &[PathBuf],
+) -> Option<PathBuf> {
+	paths
+		.iter()
+		.map(|dir| dir.join(program))
+		.find(|candidate| candidate.is_file() && is_executable(candidate))
+}
+
+fn is_executable(path: &Path) -> bool {
+	#[cfg(unix)]
+	{
+		use std::os::unix::fs::PermissionsExt;
+
+		path.metadata()
+			.map(|meta| meta.permissions().mode() & 0o111 != 0)
+			.unwrap_or(false)
+	}
+
+	#[cfg(windows)]
+	{
+		path.is_file()
+	}
 }
 
 const HOOK_COMMIT_MSG_TEMP_FILE: &str = "COMMIT_EDITMSG";
@@ -644,7 +700,7 @@ pub fn hooks_prepare_commit_msg(
 
 #[cfg(test)]
 mod tests {
-	use std::process::Command;
+	use std::{fs, process::Command};
 
 	use super::*;
 	use git2_testing::{repo_init, repo_init_bare};
@@ -696,6 +752,33 @@ mod tests {
 
 	fn head_branch(repo: &Repository) -> String {
 		repo.head().unwrap().shorthand().unwrap().to_string()
+	}
+
+	#[test]
+	fn gnostr_bin_from_paths_finds_gnostr() {
+		let tempdir = TempDir::new().expect("tempdir");
+		let gnostr_name = if cfg!(windows) {
+			"gnostr.exe"
+		} else {
+			"gnostr"
+		};
+		let gnostr_path = tempdir.path().join(gnostr_name);
+
+		fs::write(&gnostr_path, "#!/bin/sh\nexit 0\n").expect("write gnostr stub");
+		#[cfg(unix)]
+		{
+			use std::os::unix::fs::PermissionsExt;
+
+			let mut perms = fs::metadata(&gnostr_path)
+				.expect("metadata")
+				.permissions();
+			perms.set_mode(0o755);
+			fs::set_permissions(&gnostr_path, perms).expect("chmod gnostr stub");
+		}
+
+		let found = gnostr_bin_from_paths(&[tempdir.path().to_path_buf()]);
+
+		assert_eq!(found, Some(gnostr_path));
 	}
 
 	#[test]
