@@ -373,13 +373,13 @@ fn draw(
         .constraints([Constraint::Percentage(48), Constraint::Percentage(52)])
         .split(root[1]);
 
-    frame.render_widget(header(tree), root[0]);
+    frame.render_widget(header(tree, input_mode, search_query), root[0]);
     frame.render_widget(tree_panel(tree, body[0]), body[0]);
     render_selected(frame, body[1], selected);
-    frame.render_widget(footer(tree, input_mode, search_query, status_message), root[2]);
+    frame.render_widget(footer(tree, status_message), root[2]);
 }
 
-fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
+fn header(tree: &BucketedCrawlerTree, input_mode: InputMode, search_query: &str) -> Paragraph<'static> {
     let bucket_line = tree
         .sorted_buckets()
         .into_iter()
@@ -390,8 +390,15 @@ fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
         .active_filter()
         .map(|filter| format!("filter: {filter}"))
         .unwrap_or_else(|| String::from("filter: all"));
+    let search_label = if matches!(input_mode, InputMode::Search) {
+        format!("/{}", search_query)
+    } else {
+        String::from("/ search")
+    };
 
     Paragraph::new(Line::from(vec![
+        Span::styled(search_label, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::raw("  "),
         Span::styled("crawler file buckets", Style::default().fg(Color::Cyan)),
         Span::raw("  "),
         Span::styled(filter_label, Style::default().fg(Color::Magenta)),
@@ -475,33 +482,25 @@ enum InputMode {
 
 fn footer(
     tree: &BucketedCrawlerTree,
-    input_mode: InputMode,
-    search_query: &str,
     status_message: Option<&str>,
 ) -> Paragraph<'static> {
-    let search_prompt = if matches!(input_mode, InputMode::Search) {
-        format!("/{}", search_query)
-    } else {
-        String::from("/ search")
-    };
-
     let status_line = status_message.unwrap_or_default().to_string();
 
     Paragraph::new(vec![
         Line::from(vec![
-            Span::styled(search_prompt, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled("q quit", Style::default().fg(Color::DarkGray)),
             Span::raw("  "),
+            Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
+            Span::raw("  "),
+            Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
+        ]),
+        Line::from(vec![
             Span::styled("enter apply", Style::default().fg(Color::Cyan)),
             Span::raw("  "),
             Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
         ]),
         Line::from(vec![
-            Span::styled("q quit", Style::default().fg(Color::DarkGray)),
-            Span::raw("  "),
-            Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
-        ]),
-        Line::from(vec![
-            Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
+            Span::raw(""),
         ]),
         Line::from(vec![
             Span::styled(
