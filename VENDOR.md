@@ -42,3 +42,18 @@ registry copy is a normalized dependency constraint in `Cargo.toml`.
 `src/tostatic.rs` plus `tests/to_static.rs`,
 `tests/toder_sequence_lifetime.rs`, and `tests/toder_sequence_simple.rs`.
 `.cargo-checksum.json` is the Cargo-generated vendor checksum for that crate.
+
+## actix test crates
+
+`vendor/actix-http-test`, `vendor/actix-test`, and `vendor/actix-http` carry
+local fixes so the vendored test suite builds cleanly. The `actix-http-test`
+helper now sets `SO_REUSEADDR` before bind, `actix-test` enables the
+`actix-web` `macros` feature for its doctests, and `actix-http` keeps its test
+targets trimmed to the upstream manifest shape.
+
+## cargo-test scripts
+
+`scripts/cargo-test-vendor.sh` and `scripts/cargo-test-workspace.sh` now accept
+`--target-dir` and a shared `--target-tmpdir` mode. Vendored runs copy the tree
+into `$(TMPDIR)/cargo-test-vendor`, and `--target-tmpdir-clean` removes that
+shared temp root first.
