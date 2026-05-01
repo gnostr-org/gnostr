@@ -234,14 +234,15 @@ name = "test_httpserver"
 path = "tests/test_httpserver.rs"
 
 [[test]]
-name = "test_server"
-path = "tests/test_server.rs"
+name = "test_server_openssl"
+path = "tests/test_server_openssl.rs"
 required-features = [
-    "compress-brotli",
-    "compress-gzip",
-    "compress-zstd",
-    "cookies",
+    "openssl",
 ]
+
+[[test]]
+name = "test_server_streaming"
+path = "tests/test_server_streaming.rs"
 
 [[test]]
 name = "test_streaming_response"
