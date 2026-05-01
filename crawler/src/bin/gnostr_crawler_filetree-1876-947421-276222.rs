@@ -191,7 +191,8 @@ impl BucketedCrawlerTree {
     fn discover(root: impl AsRef<Path>) -> Result<Self> {
         let root = root.as_ref().to_path_buf();
         let files = collect_files(&root)?;
-        let entries = build_entries(&root, &files)?;
+        let mut entries = build_entries(&root, &files)?;
+        sort_entries_for_tree(&mut entries);
         let buckets = summarize_buckets(&entries);
         let tree = build_tree(&entries)?;
         let virtual_to_real = entries
@@ -272,9 +273,9 @@ impl BucketedCrawlerTree {
         let path = Path::new(path);
         let relative = path.strip_prefix(&self.root).unwrap_or(path);
         let name = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .or_else(|| path.file_name().and_then(|name| name.to_str()))
+            .file_name()
+            .and_then(|name| name.to_str())
+            .or_else(|| path.file_stem().and_then(|stem| stem.to_str()))
             .unwrap_or(path.to_str().unwrap_or_default());
         let bucket = relative
             .components()
@@ -852,6 +853,27 @@ fn summarize_buckets(entries: &[FileEntry]) -> Vec<BucketSummary> {
         .into_iter()
         .map(|(name, files)| BucketSummary { name, files })
         .collect()
+}
+
+fn favorite_rank(name: &str) -> usize {
+    match name.to_ascii_lowercase().as_str() {
+        "relay.json" | "relays.json" => 0,
+        "relay.txt" | "relays.txt" => 1,
+        "relay.yaml" | "relays.yaml" | "relay.yml" | "relays.yml" => 2,
+        _ => 3,
+    }
+}
+
+fn sort_entries_for_tree(entries: &mut [FileEntry]) {
+    entries.sort_by(|a, b| {
+        a.bucket
+            .cmp(&b.bucket)
+            .then_with(|| favorite_rank(a.real.file_name().and_then(|name| name.to_str()).unwrap_or_default()).cmp(
+                &favorite_rank(b.real.file_name().and_then(|name| name.to_str()).unwrap_or_default()),
+            ))
+            .then_with(|| a.real.file_name().cmp(&b.real.file_name()))
+            .then_with(|| a.real.cmp(&b.real))
+    });
 }
 
 fn build_tree(entries: &[FileEntry]) -> Result<FileTree> {
