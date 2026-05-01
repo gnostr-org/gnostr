@@ -258,6 +258,12 @@ impl BucketedCrawlerTree {
             .map(PathBuf::as_path)
     }
 
+    fn favorite_items(&self) -> Vec<String> {
+        let mut items = self.favorites.iter().cloned().collect::<Vec<_>>();
+        items.sort();
+        items
+    }
+
     fn toggle_selected_favorite(&mut self) -> Result<Option<bool>> {
         let Some(path) = self.selected_path() else {
             return Ok(None);
@@ -467,12 +473,13 @@ fn draw(
 
     let tree_area = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0)])
+        .constraints([Constraint::Length(5), Constraint::Length(3), Constraint::Min(0)])
         .split(body[0]);
+    frame.render_widget(favorites_panel(tree), tree_area[0]);
     frame.render_widget(search_box(input_mode, search_query, tree.best_completion(search_query).as_deref()).block(
         Block::default().borders(Borders::ALL).title("tree search"),
-    ), tree_area[0]);
-    frame.render_widget(tree_panel_list(tree, tree_area[1]), tree_area[1]);
+    ), tree_area[1]);
+    frame.render_widget(tree_panel_list(tree, tree_area[2]), tree_area[2]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree, status_message), root[2]);
 }
@@ -529,6 +536,31 @@ fn search_box(
         Line::from(vec![Span::styled(hint, Style::default().fg(Color::DarkGray))]),
     ])
     .block(Block::default().borders(Borders::ALL).title("search"))
+}
+
+fn favorites_panel(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
+    let favorites = tree.favorite_items();
+    let lines = if favorites.is_empty() {
+        vec![Line::from(vec![Span::styled(
+            "space favorite selected row",
+            Style::default().fg(Color::DarkGray),
+        )])]
+    } else {
+        let mut lines = vec![Line::from(vec![Span::styled(
+            format!("favorites ({})", favorites.len()),
+            Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
+        )])];
+        lines.extend(favorites.into_iter().map(|item| {
+            Line::from(vec![
+                Span::styled("♥", Style::default().fg(Color::Red)),
+                Span::raw(" "),
+                Span::raw(item),
+            ])
+        }));
+        lines
+    };
+
+    Paragraph::new(lines).block(Block::default().borders(Borders::ALL).title("favorites"))
 }
 
 fn tree_panel_list(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
