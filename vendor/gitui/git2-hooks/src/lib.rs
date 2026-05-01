@@ -63,6 +63,44 @@ pub const HOOK_PROC_RECEIVE: &str = "proc-receive";
 pub const HOOK_PUSH_TO_CHECKOUT: &str = "push-to-checkout";
 pub const HOOK_REFERENCE_TRANSACTION: &str = "reference-transaction";
 
+/// Return the current target operating system name.
+///
+/// This is a lightweight wrapper around [`std::env::consts::OS`] so callers
+/// can branch on platform without hard-coding `cfg` checks everywhere.
+pub fn current_os() -> &'static str {
+	std::env::consts::OS
+}
+
+/// Return `true` when the current target is Windows.
+///
+/// Use this when a hook path, shell, or interpreter differs on Windows.
+pub fn is_windows() -> bool {
+	current_os() == "windows"
+}
+
+/// Return `true` when the current target is Unix-like.
+///
+/// This includes Linux, macOS, BSDs, and other Rust-supported Unix targets.
+pub fn is_unix() -> bool {
+	cfg!(unix)
+}
+
+/// Return `true` when the current target is macOS.
+///
+/// This is useful for tests or hook wrappers that need Apple-specific paths or
+/// command-line behavior.
+pub fn is_macos() -> bool {
+	current_os() == "macos"
+}
+
+/// Return `true` when the current target is Linux.
+///
+/// This is useful for tests or hook wrappers that need Linux-specific
+/// assumptions without spelling out `cfg!(target_os = "linux")`.
+pub fn is_linux() -> bool {
+	current_os() == "linux"
+}
+
 const HOOK_COMMIT_MSG_TEMP_FILE: &str = "COMMIT_EDITMSG";
 
 /// Check if a given hook is present considering config/paths and optional extra paths.
