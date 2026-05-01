@@ -6,6 +6,7 @@ exclude.workspace = true
 build = "build.rs"
 
 [dependencies]
+actix-http = { version = "3.9.0" }
 arc-swap = "1.7"
 anyhow = "1.0.100"
 askama = { version = "0.12.0", default-features = false }

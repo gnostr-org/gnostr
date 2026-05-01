@@ -7461,6 +7461,7 @@ dependencies = [
 name = "gnostr-web"
 version = "1876.947437.254765"
 dependencies = [
+ "actix-http",
  "anyhow",
  "arc-swap",
  "askama",
