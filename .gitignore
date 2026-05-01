@@ -11,6 +11,12 @@ vendor/*/**
 !vendor/actix-codec
 !vendor/actix-codec/*
 !vendor/actix-codec/*/**
+!vendor/actix-http
+!vendor/actix-http/*
+!vendor/actix-http/*/**
+!vendor/actix-http-test
+!vendor/actix-http-test/*
+!vendor/actix-http-test/*/**
 !vendor/gitui
 !vendor/gitui/*
 !vendor/gitui/*/**
