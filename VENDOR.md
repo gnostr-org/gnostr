@@ -57,3 +57,9 @@ targets trimmed to the upstream manifest shape.
 `--target-dir` and a shared `--target-tmpdir` mode. Vendored runs copy the tree
 into `$(TMPDIR)/cargo-test-vendor`, and `--target-tmpdir-clean` removes that
 shared temp root first.
+
+## host-specific tests
+
+For tests that depend on local machine setup, prefer a runtime preflight check
+with a clear skip message over a hard failure. The `actix-tls` local-address
+test now uses that pattern when `127.0.0.3` is not configured on macOS.
