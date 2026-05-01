@@ -380,7 +380,15 @@ fn draw(
 
     frame.render_widget(header(tree), top[0]);
     frame.render_widget(search_box(input_mode, search_query), top[1]);
-    frame.render_widget(tree_panel(tree, body[0]), body[0]);
+
+    let tree_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(3), Constraint::Min(0)])
+        .split(body[0]);
+    frame.render_widget(search_box(input_mode, search_query).block(
+        Block::default().borders(Borders::ALL).title("tree search"),
+    ), tree_area[0]);
+    frame.render_widget(tree_panel_list(tree, tree_area[1]), tree_area[1]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree, status_message), root[2]);
 }
@@ -423,7 +431,7 @@ fn search_box(input_mode: InputMode, search_query: &str) -> Paragraph<'static> {
     .block(Block::default().borders(Borders::ALL).title("search"))
 }
 
-fn tree_panel(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
+fn tree_panel_list(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
     let mut items = vec![ListItem::new(Line::from(vec![
         Span::styled("crawler", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
         Span::raw("  "),
