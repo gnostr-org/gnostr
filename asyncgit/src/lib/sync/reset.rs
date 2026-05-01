@@ -219,7 +219,7 @@ mod tests {
 
         debug_cmd_print(repo_path, "git status");
 
-        debug_cmd_print(repo_path, "git add .");
+        stage_add_file(repo_path, Path::new(file)).unwrap();
 
         debug_cmd_print(repo_path, "git status");
 
