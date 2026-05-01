@@ -3,7 +3,7 @@
 
 use std::{
     io,
-    net::{IpAddr, Ipv4Addr},
+    net::{IpAddr, Ipv4Addr, TcpListener},
 };
 
 use actix_codec::{BytesCodec, Framed};
@@ -147,7 +147,6 @@ async fn test_rustls_uri() {
     assert_eq!(con.peer_addr().unwrap(), srv.addr());
 }
 
-#[cfg_attr(target_os = "macos", ignore = "requires a loopback alias on macOS")]
 #[actix_rt::test]
 async fn test_local_addr() {
     let srv = TestServer::start(|| {
@@ -158,11 +157,20 @@ async fn test_local_addr() {
         })
     });
 
-    // if you've arrived here because of a failing test on macOS run this in your terminal:
-    // sudo ifconfig lo0 alias 127.0.0.3
+    // macOS needs a loopback alias for this test:
+    //   sudo ifconfig lo0 alias 127.0.0.3
+    // If you want to remove it later:
+    //   sudo ifconfig lo0 -alias 127.0.0.3
 
     let conn = Connector::default().service();
     let local = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 3));
+
+    if cfg!(target_os = "macos") && TcpListener::bind((local, 0)).is_err() {
+        eprintln!(
+            "Skipping test_local_addr on macOS: bind to 127.0.0.3 failed; add the loopback alias with `sudo ifconfig lo0 alias 127.0.0.3`"
+        );
+        return;
+    }
 
     let (con, _) = conn
         .call(ConnectInfo::with_addr("10", srv.addr()).set_local_addr(local))
