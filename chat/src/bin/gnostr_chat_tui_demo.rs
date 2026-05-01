@@ -14,9 +14,9 @@ use gnostr_asyncgit::{
     tui::nostr::widgets::*,
     types::{
         ChannelCreationEvent, ChannelMessageEvent, EventKind, EventReference, EventV3, Filter,
-        Id, IdHex, Metadata, NAddr, Nip19, Nip19Address, Nip19Event, Nip19Profile, Profile,
-        PublicKey, PublicKeyHex, RelayInformationDocument, RelayList, RelayListUsage, RelayMessage,
-        RelayUrl, RepoRef, RepoState, Tag, Unixtime, UncheckedUrl, Url, RelayUsageSet,
+        Id, IdHex, Metadata, NAddr, Nip19, Nip19Profile, Profile, PublicKey, PublicKeyHex,
+        RelayInformationDocument, RelayList, RelayListUsage, RelayMessage, RelayUrl, RepoRef,
+        RepoState, Tag, Unixtime, UncheckedUrl, Url, RelayUsageSet,
     },
 };
 use gnostr_crawler::Relay as CrawlerRelay;
@@ -112,7 +112,7 @@ impl App {
     }
 
     fn draw(&self, frame: &mut Frame) {
-        let root = frame.size();
+        let root = frame.area();
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
