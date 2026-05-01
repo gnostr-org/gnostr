@@ -12,7 +12,7 @@ usage() {
   cat <<'EOF'
 Usage: git-inspect-notes.sh
 
-Lists note refs and the objects they annotate.
+Lists note refs and prints the note contents for each annotated object.
 EOF
 }
 
@@ -34,7 +34,11 @@ notes_found=false
 while IFS= read -r ref; do
   notes_found=true
   echo "== $ref =="
-  git notes --ref="$ref" list || true
+  while IFS=' ' read -r note_oid object_oid; do
+    echo "-- object: $object_oid"
+    git notes --ref="$ref" show "$object_oid"
+    echo
+  done < <(git notes --ref="$ref" list)
 done < <(git for-each-ref --format='%(refname)' refs/notes)
 
 if [[ "$notes_found" == false ]]; then
