@@ -113,9 +113,9 @@ pub fn run() -> Result<()> {
                     }
                     KeyCode::Char(' ') => {
                         status_message = match tree.toggle_selected_favorite()? {
-                            Some(true) => Some(String::from("favorited selected row")),
-                            Some(false) => Some(String::from("unfavorited selected row")),
-                            None => Some(String::from("select a file row to favorite")),
+                            Some(true) => Some(String::from("selected bucket")),
+                            Some(false) => Some(String::from("cleared selected bucket")),
+                            None => Some(String::from("select a relay file to toggle bucket")),
                         };
                     }
                     KeyCode::Up | KeyCode::Char('k') => {
@@ -312,6 +312,24 @@ impl BucketedCrawlerTree {
             return Ok(None);
         };
 
+        if let Some(bucket) = self.selected_relay_bucket(path) {
+            let bucket_keys = self.bucket_keys(bucket);
+            let favored = bucket_keys.iter().all(|key| self.favorites.contains(key));
+
+            if favored {
+                for key in bucket_keys {
+                    self.favorites.remove(&key);
+                }
+            } else {
+                for key in bucket_keys {
+                    self.favorites.insert(key);
+                }
+            }
+
+            save_favorites(&self.favorites_path, &self.favorites)?;
+            return Ok(Some(!favored));
+        }
+
         let key = path.display().to_string();
         let favored = if self.favorites.contains(&key) {
             self.favorites.remove(&key);
@@ -348,6 +366,26 @@ impl BucketedCrawlerTree {
                 .and_then(|component| component.as_os_str().to_str())
                 == Some(bucket)
         })
+    }
+
+    fn selected_relay_bucket<'a>(&'a self, path: &'a Path) -> Option<&'a str> {
+        let name = path.file_name().and_then(|name| name.to_str())?;
+        if !matches!(
+            name.to_ascii_lowercase().as_str(),
+            "relay.json" | "relays.json" | "relay.txt" | "relays.txt" | "relay.yaml" | "relays.yaml" | "relay.yml" | "relays.yml"
+        ) {
+            return None;
+        }
+
+        self.bucket_for_real(path)
+    }
+
+    fn bucket_keys(&self, bucket: &str) -> Vec<String> {
+        self.entries
+            .iter()
+            .filter(|entry| entry.bucket == bucket)
+            .map(|entry| entry.real.display().to_string())
+            .collect()
     }
 
     fn filtered_entries(&self) -> Vec<FileEntry> {
@@ -907,7 +945,25 @@ fn favorite_rank(name: &str) -> usize {
 }
 
 fn sort_entries_for_tree(entries: &mut [FileEntry]) {
-    entries.sort_by(|a, b| a.virtual_path.cmp(&b.virtual_path));
+    entries.sort_by(|a, b| {
+        let a_parent = a.virtual_path.parent().unwrap_or_else(|| Path::new(""));
+        let b_parent = b.virtual_path.parent().unwrap_or_else(|| Path::new(""));
+        let a_name = a
+            .virtual_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+        let b_name = b
+            .virtual_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+
+        a_parent
+            .cmp(b_parent)
+            .then_with(|| favorite_rank(a_name).cmp(&favorite_rank(b_name)))
+            .then_with(|| a.virtual_path.cmp(&b.virtual_path))
+    });
 }
 
 fn build_tree(entries: &[FileEntry]) -> Result<FileTree> {
