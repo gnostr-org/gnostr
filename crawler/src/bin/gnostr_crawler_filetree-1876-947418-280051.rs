@@ -52,26 +52,28 @@ pub fn run() -> Result<()> {
                     KeyCode::Char('q') if matches!(input_mode, InputMode::Normal) => break,
                     KeyCode::Char('/') if matches!(input_mode, InputMode::Normal) => {
                         input_mode = InputMode::Search;
-                        search_query.clear();
+                        search_query = tree.active_filter().unwrap_or_default();
                         status_message = None;
                     }
                     _ if matches!(input_mode, InputMode::Search) => match key.code {
                         KeyCode::Esc => {
                             input_mode = InputMode::Normal;
-                            search_query.clear();
                             status_message = None;
                         }
                         KeyCode::Enter => {
-                            if search_query.is_empty() {
+                            tree.apply_filter(Some(&search_query))?;
+                            if search_query.trim().is_empty() {
+                                status_message = Some(String::from("filter cleared"));
                                 input_mode = InputMode::Normal;
-                                status_message = None;
-                            } else if tree.search_next(&search_query) {
-                                input_mode = InputMode::Normal;
-                                status_message = None;
-                                selected.sync(tree.selected_path())?;
                             } else {
-                                status_message = Some(format!("no match for /{}", search_query));
+                                status_message = Some(format!(
+                                    "filter: {} ({} paths)",
+                                    search_query,
+                                    tree.visible_count()
+                                ));
+                                input_mode = InputMode::Normal;
                             }
+                            selected.sync(tree.selected_path())?;
                         }
                         KeyCode::Backspace => {
                             search_query.pop();
@@ -149,6 +151,7 @@ struct BucketedCrawlerTree {
     entries: Vec<FileEntry>,
     virtual_to_real: HashMap<PathBuf, PathBuf>,
     buckets: Vec<BucketSummary>,
+    active_filter: Option<String>,
 }
 
 impl BucketedCrawlerTree {
@@ -169,24 +172,46 @@ impl BucketedCrawlerTree {
             entries,
             virtual_to_real,
             buckets,
+            active_filter: None,
         })
     }
 
     fn refresh(&mut self) -> Result<()> {
+        let filter = self.active_filter.clone();
         let next = Self::discover(&self.root)?;
-        self.tree = next.tree;
         self.entries = next.entries;
-        self.virtual_to_real = next.virtual_to_real;
-        self.buckets = next.buckets;
-        Ok(())
+        self.apply_filter(filter.as_deref())
     }
 
     fn move_selection(&mut self, dir: MoveSelection) -> bool {
         self.tree.move_selection(dir)
     }
 
-    fn search_next(&mut self, query: &str) -> bool {
-        self.tree.search_next(query)
+    fn apply_filter(&mut self, query: Option<&str>) -> Result<()> {
+        self.active_filter = query
+            .map(str::trim)
+            .filter(|query| !query.is_empty())
+            .map(ToOwned::to_owned);
+
+        let filtered_entries = self.filtered_entries();
+        self.buckets = summarize_buckets(&filtered_entries);
+        self.tree = build_tree(&filtered_entries)?;
+        self.virtual_to_real = filtered_entries
+            .iter()
+            .map(|entry| (entry.virtual_path.clone(), entry.real.clone()))
+            .collect::<HashMap<_, _>>();
+        Ok(())
+    }
+
+    fn active_filter(&self) -> Option<String> {
+        self.active_filter.clone()
+    }
+
+    fn visible_count(&self) -> usize {
+        self.entries
+            .iter()
+            .filter(|entry| self.entry_matches_filter(entry))
+            .count()
     }
 
     fn selected_path(&self) -> Option<&Path> {
@@ -200,6 +225,24 @@ impl BucketedCrawlerTree {
         let mut buckets = self.buckets.clone();
         buckets.sort_by(|a, b| a.name.cmp(&b.name));
         buckets
+    }
+
+    fn filtered_entries(&self) -> Vec<FileEntry> {
+        self.entries
+            .iter()
+            .filter(|entry| self.entry_matches_filter(entry))
+            .cloned()
+            .collect()
+    }
+
+    fn entry_matches_filter(&self, entry: &FileEntry) -> bool {
+        self.active_filter
+            .as_ref()
+            .is_none_or(|filter| {
+                let needle = filter.to_ascii_lowercase();
+                let path = entry.virtual_path.to_string_lossy().to_ascii_lowercase();
+                path.contains(&needle)
+            })
     }
 
     fn render_items(&self, start: usize, max: usize) -> Vec<ListItem<'static>> {
@@ -343,9 +386,15 @@ fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
         .map(|bucket| format!("{}:{}", bucket.name, bucket.files))
         .collect::<Vec<_>>()
         .join("  ");
+    let filter_label = tree
+        .active_filter()
+        .map(|filter| format!("filter: {filter}"))
+        .unwrap_or_else(|| String::from("filter: all"));
 
     Paragraph::new(Line::from(vec![
         Span::styled("crawler file buckets", Style::default().fg(Color::Cyan)),
+        Span::raw("  "),
+        Span::styled(filter_label, Style::default().fg(Color::Magenta)),
         Span::raw("  "),
         Span::styled(tree.root.display().to_string(), Style::default().fg(Color::Yellow)),
         Span::raw("  "),
@@ -442,7 +491,7 @@ fn footer(
         Line::from(vec![
             Span::styled(search_prompt, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::raw("  "),
-            Span::styled("enter next", Style::default().fg(Color::Cyan)),
+            Span::styled("enter apply", Style::default().fg(Color::Cyan)),
             Span::raw("  "),
             Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
         ]),
