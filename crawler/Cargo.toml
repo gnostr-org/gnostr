@@ -45,6 +45,10 @@ path = "src/bin/gnostr_crawler_filetree-1876947415284713-947415-284728.rs"
 name = "gnostr_crawler_filetree-1876-947418-280051"
 path = "src/bin/gnostr_crawler_filetree-1876-947418-280051.rs"
 
+[[bin]]
+name = "gnostr_crawler_filetree-1876-947421-276222"
+path = "src/bin/gnostr_crawler_filetree-1876-947421-276222.rs"
+
 [dependencies]
 ## TODO align with workspace deps
 anyhow = "1.0.100"
