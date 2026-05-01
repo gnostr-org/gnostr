@@ -1624,6 +1624,8 @@ fn refspec_remote_ref_name(
         s.to_string()
     } else if let Some(s) = to.strip_prefix("refs/tags/") {
         s.to_string()
+    } else if let Some(s) = to.strip_prefix("refs/notes/") {
+        s.to_string()
     } else {
         to.to_string()
     };
@@ -1680,6 +1682,7 @@ fn get_refspecs_from_push_batch(stdin: &Stdin, initial_refspec: &str) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_utils::git::GitTestRepo;
 
     mod refspec_to_from_to {
         use super::*;
@@ -1689,5 +1692,30 @@ mod tests {
             let (from, _) = refspec_to_from_to("+testing:testingb").unwrap();
             assert_eq!(from, "testing");
         }
+    }
+
+    #[test]
+    fn notes_refspec_updates_remote_tracking_ref() {
+        let repo = GitTestRepo::new("main").unwrap();
+        let remote_url = repo.dir.to_string_lossy().to_string();
+        repo.git_repo.remote("origin", &remote_url).unwrap();
+
+        let head = repo.git_repo.head().unwrap().peel_to_commit().unwrap().id();
+        repo.git_repo
+            .reference("refs/notes/commits", head, true, "test notes ref")
+            .unwrap();
+
+        update_remote_refs_pushed(
+            &repo.git_repo,
+            "refs/notes/commits:refs/notes/commits",
+            &remote_url,
+        )
+        .unwrap();
+
+        let remote_ref = repo
+            .git_repo
+            .find_reference("refs/remotes/origin/commits")
+            .unwrap();
+        assert_eq!(remote_ref.peel_to_commit().unwrap().id(), head);
     }
 }

@@ -91,3 +91,33 @@ fn add_head(state: &mut HashMap<String, String>) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+    use test_utils::TEST_KEY_1_SIGNER;
+
+    #[tokio::test]
+    async fn notes_refs_round_trip_through_repo_state() {
+        let mut state = HashMap::new();
+        state.insert(
+            "refs/heads/main".to_string(),
+            "9ee507fc4357d7ee16a5d8901bedcd103f23c17d".to_string(),
+        );
+        state.insert(
+            "refs/notes/commits".to_string(),
+            "9ee507fc4357d7ee16a5d8901bedcd103f23c17d".to_string(),
+        );
+
+        let repo_state = RepoState::build("example".to_string(), state, &TEST_KEY_1_SIGNER)
+            .await
+            .unwrap();
+        let round_tripped = RepoState::try_from(vec![repo_state.event]).unwrap();
+
+        assert!(round_tripped.state.contains_key("refs/notes/commits"));
+        assert!(round_tripped.state.contains_key("HEAD"));
+        assert_eq!(round_tripped.identifier, "example");
+    }
+}

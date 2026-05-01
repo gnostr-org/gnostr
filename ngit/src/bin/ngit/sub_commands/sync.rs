@@ -32,33 +32,40 @@ pub struct SubCommandArgs {
     pub force: bool,
 }
 
+fn resolve_full_ref_name(git_repo: &git2::Repository, ref_name: &str) -> Result<String> {
+    if ref_name.starts_with("refs/") {
+        if git_repo.find_reference(ref_name).is_ok() {
+            Ok(ref_name.to_string())
+        } else {
+            bail!("could not find reference {ref_name}");
+        }
+    } else if git_repo
+        .find_reference(&format!("refs/tags/{ref_name}"))
+        .is_ok()
+    {
+        Ok(format!("refs/tags/{ref_name}"))
+    } else if git_repo
+        .find_reference(&format!("refs/heads/{ref_name}"))
+        .is_ok()
+    {
+        Ok(format!("refs/heads/{ref_name}"))
+    } else if git_repo
+        .find_reference(&format!("refs/notes/{ref_name}"))
+        .is_ok()
+    {
+        Ok(format!("refs/notes/{ref_name}"))
+    } else {
+        bail!("could not find reference {ref_name}");
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 pub async fn launch(args: &SubCommandArgs) -> Result<()> {
     let git_repo = Repo::discover().context("failed to find a git repository")?;
     let git_repo_path = git_repo.get_path()?;
 
     let full_ref_name = if let Some(ref_name) = &args.ref_name {
-        if ref_name.starts_with("refs/") {
-            if git_repo.git_repo.find_reference(ref_name).is_ok() {
-                Some(ref_name.clone())
-            } else {
-                bail!("could not find reference {ref_name}");
-            }
-        } else if git_repo
-            .git_repo
-            .find_reference(&format!("refs/tags/{ref_name}"))
-            .is_ok()
-        {
-            Some(format!("refs/tags/{ref_name}"))
-        } else if git_repo
-            .git_repo
-            .find_reference(&format!("refs/heads/{ref_name}"))
-            .is_ok()
-        {
-            Some(format!("refs/heads/{ref_name}"))
-        } else {
-            bail!("could not find reference {ref_name}");
-        }
+        Some(resolve_full_ref_name(&git_repo.git_repo, ref_name)?)
     } else {
         None
     };
@@ -506,7 +513,8 @@ fn fetch_missing_refs(
 
 #[cfg(test)]
 mod tests {
-    use super::invalid_nostr_state_ref;
+    use super::{invalid_nostr_state_ref, resolve_full_ref_name};
+    use test_utils::git::GitTestRepo;
 
     // Regression test: annotated-tag peeled refs (ending with ^{}) must be
     // treated as invalid nostr state refs so they are never used to build
@@ -562,6 +570,24 @@ mod tests {
         assert!(
             !invalid_nostr_state_ref("refs/notes/commits"),
             "notes ref must be valid"
+        );
+    }
+
+    #[test]
+    fn resolves_notes_ref_names() {
+        let repo = GitTestRepo::new("main").unwrap();
+        let head = repo.git_repo.head().unwrap().peel_to_commit().unwrap().id();
+        repo.git_repo
+            .reference("refs/notes/commits", head, true, "test notes ref")
+            .unwrap();
+
+        assert_eq!(
+            resolve_full_ref_name(&repo.git_repo, "commits").unwrap(),
+            "refs/notes/commits"
+        );
+        assert_eq!(
+            resolve_full_ref_name(&repo.git_repo, "refs/notes/commits").unwrap(),
+            "refs/notes/commits"
         );
     }
 }
