@@ -18,9 +18,10 @@ pub enum HookResult {
 impl From<git2_hooks::HookResult> for HookResult {
     fn from(v: git2_hooks::HookResult) -> Self {
         match v {
-            git2_hooks::HookResult::Ok { .. } | git2_hooks::HookResult::NoHookFound => Self::Ok,
-            git2_hooks::HookResult::RunNotSuccessful { stdout, stderr, .. } => {
-                Self::NotOk(format!("{stdout}{stderr}"))
+            git2_hooks::HookResult::NoHookFound => Self::Ok,
+            git2_hooks::HookResult::Run(response) if response.is_successful() => Self::Ok,
+            git2_hooks::HookResult::Run(response) => {
+                Self::NotOk(format!("{}{}", response.stdout, response.stderr))
             }
         }
     }
