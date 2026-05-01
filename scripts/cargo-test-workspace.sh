@@ -162,9 +162,11 @@ if [[ "$OFFLINE" == true ]]; then
   CARGO_FLAGS+=(--offline)
 fi
 
-for package in "${PACKAGES[@]}"; do
-  CARGO_FLAGS+=(--package "$package")
-done
+if [[ ${#PACKAGES[@]} -gt 0 ]]; then
+  for package in "${PACKAGES[@]}"; do
+    CARGO_FLAGS+=(--package "$package")
+  done
+fi
 
 if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
   cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
