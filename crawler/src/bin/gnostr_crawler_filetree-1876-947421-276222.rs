@@ -276,7 +276,7 @@ impl BucketedCrawlerTree {
                 .unwrap_or("(root)")
                 .to_string();
             let name = path
-                .file_stem()
+                .file_name()
                 .and_then(|name| name.to_str())
                 .unwrap_or(path.to_str().unwrap_or_default())
                 .to_string();
@@ -289,7 +289,12 @@ impl BucketedCrawlerTree {
         let mut items = Vec::new();
         for (bucket, mut entries) in buckets {
             entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
-            if let Some((_, name)) = entries.into_iter().next() {
+            let bucket_keys = self.bucket_keys(&bucket);
+            let all_selected = !bucket_keys.is_empty()
+                && bucket_keys.iter().all(|key| self.favorites.contains(key));
+            if all_selected {
+                items.push(format!("♥ {bucket}"));
+            } else if let Some((_, name)) = entries.into_iter().next() {
                 items.push(format!("{name} ({bucket})"));
             }
         }
