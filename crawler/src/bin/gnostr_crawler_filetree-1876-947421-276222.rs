@@ -259,9 +259,29 @@ impl BucketedCrawlerTree {
     }
 
     fn favorite_items(&self) -> Vec<String> {
-        let mut items = self.favorites.iter().cloned().collect::<Vec<_>>();
+        let mut items = self
+            .favorites
+            .iter()
+            .map(|path| self.favorite_label(path))
+            .collect::<Vec<_>>();
         items.sort();
         items
+    }
+
+    fn favorite_label(&self, path: &str) -> String {
+        let path = Path::new(path);
+        let relative = path.strip_prefix(&self.root).unwrap_or(path);
+        let name = path
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .or_else(|| path.file_name().and_then(|name| name.to_str()))
+            .unwrap_or(path.to_str().unwrap_or_default());
+        let bucket = relative
+            .components()
+            .next()
+            .and_then(|component| component.as_os_str().to_str())
+            .unwrap_or("(root)");
+        format!("{name} ({bucket})")
     }
 
     fn toggle_selected_favorite(&mut self) -> Result<Option<bool>> {
@@ -550,13 +570,7 @@ fn favorites_panel(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
             format!("favorites ({})", favorites.len()),
             Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
         )])];
-        lines.extend(favorites.into_iter().map(|item| {
-            Line::from(vec![
-                Span::styled("♥", Style::default().fg(Color::Red)),
-                Span::raw(" "),
-                Span::raw(item),
-            ])
-        }));
+        lines.extend(favorites.into_iter().map(|item| Line::from(vec![Span::raw(item)])));
         lines
     };
 
