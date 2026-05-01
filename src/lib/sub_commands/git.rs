@@ -141,10 +141,10 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
             }
             GitCommands::Tui => {
                 let _cleanup_guard = TerminalCleanup;
-                let term = gnostr_asyncgit::gitui::term::backend();
-                let mut terminal = gnostr_asyncgit::gitui::term::Term::new(term)?;
-                gnostr_asyncgit::gitui::run(
-                    &gnostr_asyncgit::gitui::cli::Args::default(),
+                let term = gnostr_asyncgit::tui::git::term::backend();
+                let mut terminal = gnostr_asyncgit::tui::git::term::Term::new(term)?;
+                gnostr_asyncgit::tui::git::run(
+                    &gnostr_asyncgit::tui::git::cli::Args::default(),
                     &mut terminal,
                 )
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
