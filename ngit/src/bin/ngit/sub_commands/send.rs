@@ -240,7 +240,6 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Re
             false
         }
     } || git_repo.are_commits_too_big_for_patches(&commits);
-
     let as_pr = if args.force_patch {
         false
     } else if args.force_pr {
@@ -461,27 +460,6 @@ fn check_commits_are_suitable_for_proposal(
     main_branch_name: &str,
     main_tip: &Sha1Hash,
 ) -> Result<()> {
-    // check proposal ahead of origin/main
-    if first_commit_ahead.len().gt(&1) {
-        if cli.interactive {
-            if !Interactor::default().confirm(
-                PromptConfirmParms::default()
-                    .with_prompt(
-                        format!("proposal builds on a commit {} ahead of '{main_branch_name}' - do you want to continue?", first_commit_ahead.len() - 1)
-                    )
-                    .with_default(false)
-            ).context("failed to get confirmation response from interactor confirm")? {
-                bail!("aborting ...");
-            }
-        } else if !cli.force {
-            bail!(
-                "proposal builds on a commit {} ahead of '{}'. use --force to proceed",
-                first_commit_ahead.len() - 1,
-                main_branch_name
-            );
-        }
-    }
-
     // check if a selected commit is already in origin
     if commits.iter().any(|c| c.eq(main_tip)) {
         if cli.interactive {
