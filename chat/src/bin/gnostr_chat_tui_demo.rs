@@ -99,6 +99,7 @@ struct App {
     input_mode: InputMode,
     show_help: bool,
     page_scroll: u16,
+    gallery_layout: usize,
     data: Arc<RwLock<DemoData>>,
 }
 
@@ -113,6 +114,7 @@ impl App {
             input_mode: preset.initial_input_mode(),
             show_help: false,
             page_scroll: 0,
+            gallery_layout: 0,
             preset,
             pages,
             data,
@@ -337,7 +339,7 @@ impl App {
                 Span::raw(" search  "),
                 Span::styled("?", Style::default().fg(Color::Yellow)),
                 Span::raw(" help  "),
-                Span::styled("1-6", Style::default().fg(Color::Yellow)),
+                Span::styled("1-8", Style::default().fg(Color::Yellow)),
                 Span::raw(" jump  "),
                 Span::styled("j/k", Style::default().fg(Color::Yellow)),
                 Span::raw(" move  "),
@@ -399,7 +401,7 @@ impl App {
                     Span::raw("/ search, ? help, enter accept, esc exit"),
                 ]),
                 Line::from(vec![
-                    Span::raw("j/k or arrows move, tab cycles pages, 1-6 jump"),
+                    Span::raw("j/k or arrows move, tab cycles pages, 1-8 jump"),
                 ]),
                 Line::from(vec![
                     Span::raw("ctrl-u clears search query"),
@@ -465,7 +467,7 @@ impl App {
             chunks[0],
         );
 
-        page.render(frame, chunks[1], data);
+        page.render(frame, chunks[1], data, self.gallery_layout);
     }
 
     fn status_lines(&self, data: &DemoData) -> String {
@@ -495,7 +497,7 @@ impl App {
                 Line::from("/ focus search input"),
                 Line::from("? toggle help overlay"),
                 Line::from("F1 toggle help overlay"),
-                Line::from("1-6 jump presets, tab cycles pages"),
+                Line::from("1-8 jump presets, tab cycles pages"),
                 Line::from("ctrl-u clears search, pgup/pgdn scroll"),
             ])
             .wrap(Wrap { trim: true })
@@ -528,6 +530,7 @@ impl App {
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Page {
     Overview,
+    Gallery,
     Relays,
     Settings,
     Explorer,
@@ -540,6 +543,7 @@ impl Page {
     fn title(self) -> &'static str {
         match self {
             Page::Overview => "home",
+            Page::Gallery => "gallery",
             Page::Relays => "relays",
             Page::Settings => "settings",
             Page::Explorer => "nip explorer",
@@ -583,7 +587,7 @@ impl Page {
                 data.filter.kinds,
                 data.filter.tags.len()
             ),
-            Page::Help => "Keyboard help and interaction hints.\n\nUse / to focus the search input, ? to open this help view, and 1-6 to jump between page presets.".to_string(),
+            Page::Help => "Keyboard help and interaction hints.\n\nUse / to focus the search input, ? to open this help view, and 1-8 to jump between page presets.".to_string(),
         }
     }
 
@@ -593,7 +597,7 @@ impl Page {
         title.contains(query) || summary.contains(query)
     }
 
-    fn render(self, frame: &mut Frame, area: Rect, data: &DemoData) {
+    fn render(self, frame: &mut Frame, area: Rect, data: &DemoData, gallery_layout: usize) {
         match self {
             Page::Overview => {
                 let chunks = Layout::default()
@@ -611,7 +615,7 @@ impl Page {
                     chunks[1],
                 );
             }
-            Page::Gallery => self.render_gallery(frame, area, data),
+            Page::Gallery => render_gallery(frame, area, data, gallery_layout),
             Page::Relays => {
                 let chunks = Layout::default()
                     .direction(Direction::Horizontal)
@@ -776,7 +780,7 @@ impl Page {
                         Line::from("q / esc quit"),
                         Line::from("/ search input"),
                         Line::from("? open help"),
-                        Line::from("1-6 jump pages"),
+                        Line::from("1-8 jump pages"),
                         Line::from("j/k or arrows move"),
                         Line::from("tab / shift-tab cycle"),
                         Line::from("ctrl-u clears search"),
@@ -803,9 +807,10 @@ impl Page {
             }
         }
     }
+}
 
-    fn render_gallery(&self, frame: &mut Frame, area: Rect, data: &DemoData) {
-        match self.gallery_layout % DemoPreset::gallery_layout_count() {
+fn render_gallery(frame: &mut Frame, area: Rect, data: &DemoData, gallery_layout: usize) {
+    match gallery_layout % DemoPreset::gallery_layout_count() {
             0 => {
                 let rows = Layout::default()
                     .direction(Direction::Vertical)
@@ -981,7 +986,6 @@ impl Page {
                     right[1],
                 );
             }
-        }
     }
 }
 
@@ -1016,6 +1020,7 @@ impl DemoPreset {
         match self {
             DemoPreset::Full => vec![
                 Page::Overview,
+                Page::Gallery,
                 Page::Relays,
                 Page::Settings,
                 Page::Explorer,
@@ -1027,6 +1032,7 @@ impl DemoPreset {
                 Page::Search,
                 Page::Help,
                 Page::Overview,
+                Page::Gallery,
                 Page::Explorer,
                 Page::Relays,
                 Page::Nip34,
@@ -1037,6 +1043,7 @@ impl DemoPreset {
                 Page::Nip34,
                 Page::Help,
                 Page::Overview,
+                Page::Gallery,
                 Page::Settings,
                 Page::Explorer,
                 Page::Search,
@@ -1045,6 +1052,7 @@ impl DemoPreset {
                 Page::Help,
                 Page::Search,
                 Page::Overview,
+                Page::Gallery,
                 Page::Relays,
                 Page::Explorer,
                 Page::Nip34,
@@ -1093,6 +1101,10 @@ impl DemoPreset {
             DemoPreset::RelaysFirst => 9,
             DemoPreset::HelpFirst => 11,
         }
+    }
+
+    fn gallery_layout_count() -> usize {
+        4
     }
 
 }
