@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/unstage.rs
+assertion_line: 26
+expression: ctx.redact_buffer()
+---
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 355101d0bd329837

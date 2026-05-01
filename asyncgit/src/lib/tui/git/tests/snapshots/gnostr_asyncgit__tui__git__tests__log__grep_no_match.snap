@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/log.rs
+assertion_line: 53
+expression: ctx.redact_buffer()
+---
+▌No commits found                                                               |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 90ecdf643519e051

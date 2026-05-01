@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/discard.rs
+assertion_line: 70
+expression: ctx.redact_buffer()
+---
+ On branch main                                                                 |
+ Your branch is ahead of 'origin/main' by 1 commit.                             |
+                                                                                |
+ Recent commits                                                                 |
+▌4f3ed19 main add file-one                                                      |
+ b66a0bf origin/main add initial-file                                           |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git checkout HEAD -- file-one                                                 |
+styles_hash: 19cf9a9796ec3951

@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/mod.rs
+assertion_line: 257
+expression: ctx.redact_buffer()
+---
+▌Branches                                                                       |
+▌? main                                                                         |
+                                                                                |
+ Remote origin                                                                  |
+   origin/HEAD                                                                  |
+ ? origin/main                                                                  |
+                                                                                |
+ Tags                                                                           |
+ ? v1.0                                                                         |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: fd8cb7fb62be808a

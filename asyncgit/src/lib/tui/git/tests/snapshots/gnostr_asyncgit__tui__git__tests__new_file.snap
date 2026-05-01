@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/mod.rs
+assertion_line: 69
+expression: ctx.redact_buffer()
+---
+▌No branch                                                                      |
+                                                                                |
+ Untracked files                                                                |
+ new-file                                                                       |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: a6b912f6bf3acdf4

@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/unstage.rs
+assertion_line: 8
+expression: ctx.redact_buffer()
+---
+ No branch                                                                      |
+                                                                                |
+ Untracked files                                                                |
+ one                                                                            |
+ two                                                                            |
+▌unaffected                                                                     |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+$ git reset HEAD --                                                             |
+styles_hash: d392b4980ef581b2
