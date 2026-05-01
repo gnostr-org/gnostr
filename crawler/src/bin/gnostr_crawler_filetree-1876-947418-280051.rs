@@ -431,6 +431,12 @@ fn footer(
     status_message: Option<&str>,
 ) -> Paragraph<'static> {
     let mut segments = vec![
+        Span::styled("/ search", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::raw("  "),
+        Span::styled("enter next", Style::default().fg(Color::Cyan)),
+        Span::raw("  "),
+        Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
+        Span::raw("  "),
         Span::styled("q quit", Style::default().fg(Color::DarkGray)),
         Span::raw("  "),
         Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
@@ -459,17 +465,10 @@ fn footer(
             format!("/{}", search_query),
             Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
         ));
-        segments.push(Span::raw("  "));
-        segments.push(Span::styled("enter search esc cancel", Style::default().fg(Color::DarkGray)));
-    } else {
-        segments.push(Span::raw("  "));
-        segments.push(Span::styled("/ search", Style::default().fg(Color::DarkGray)));
-        segments.push(Span::raw("  "));
-        segments.push(Span::styled("enter next esc cancel", Style::default().fg(Color::DarkGray)));
     }
 
     Paragraph::new(Line::from(segments))
-    .block(Block::default().borders(Borders::ALL))
+    .block(Block::default().borders(Borders::ALL).title("help"))
 }
 
 fn collect_files(root: &Path) -> Result<Vec<PathBuf>> {
