@@ -260,7 +260,7 @@ impl BucketedCrawlerTree {
     }
 
     fn favorite_items(&self) -> Vec<String> {
-        let mut buckets: BTreeMap<String, Vec<(usize, String)>> = BTreeMap::new();
+        let mut buckets: BTreeMap<String, Vec<(usize, String, String)>> = BTreeMap::new();
 
         for path in &self.favorites {
             let path = Path::new(path);
@@ -272,22 +272,20 @@ impl BucketedCrawlerTree {
                 .unwrap_or("(root)")
                 .to_string();
             let name = path
-                .file_stem()
+                .file_name()
                 .and_then(|name| name.to_str())
                 .unwrap_or(path.to_str().unwrap_or_default())
                 .to_string();
             buckets
                 .entry(bucket)
                 .or_default()
-                .push((favorite_rank(&name), name));
+                .push((favorite_rank(&name), name, format!("{} ({})", path.file_name().and_then(|name| name.to_str()).unwrap_or_default(), relative.components().next().and_then(|component| component.as_os_str().to_str()).unwrap_or("(root)"))));
         }
 
         let mut items = Vec::new();
         for (bucket, mut entries) in buckets {
             entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
-            if let Some((_, name)) = entries.into_iter().next() {
-                items.push(format!("{name} ({bucket})"));
-            }
+            items.extend(entries.into_iter().map(move |(_, name, _)| format!("{name} ({bucket})")));
         }
         items
     }
