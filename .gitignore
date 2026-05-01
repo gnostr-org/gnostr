@@ -1,3 +1,7 @@
+## gnostr-relay/server artifacts
+relay_db/
+relay_policy.db
+
 vendor/
 !vendor/actix-web-actors
 !vendor/asn1-rs
