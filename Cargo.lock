@@ -1141,7 +1141,7 @@ dependencies = [
  "pretty_assertions",
  "rayon",
  "rayon-core",
- "scopetime",
+ "scopetime 0.1.2",
  "serde",
  "serial_test 3.4.0",
  "ssh-key",
@@ -5260,7 +5260,7 @@ dependencies = [
  "rayon-core",
  "ron 0.12.1",
  "scopeguard",
- "scopetime",
+ "scopetime 0.1.2",
  "serde",
  "shellexpand",
  "simplelog",
@@ -7445,6 +7445,7 @@ name = "gnostr-scopetime"
 version = "1876.947437.254765"
 dependencies = [
  "log",
+ "scopetime 0.1.0",
 ]
 
 [[package]]
@@ -15352,6 +15353,13 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
+
+[[package]]
+name = "scopetime"
+version = "0.1.0"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "scopetime"
