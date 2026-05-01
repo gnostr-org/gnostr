@@ -327,6 +327,58 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
+    async fn notes_refs_are_pushed_and_tracked() -> Result<()> {
+        use console::Term;
+        use gnostr_ngit::push::push_to_remote_url;
+
+        let git_repo = prep_git_repo()?;
+        git_repo.create_branch("example-branch")?;
+        let notes_commit_id = git_repo.get_tip_of_local_branch("main")?.to_string();
+        git_repo.git_repo.reference(
+            "refs/notes/commits",
+            Oid::from_str(&notes_commit_id)?,
+            true,
+            "test notes ref",
+        )?;
+        let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
+        let example_commit_id = source_git_repo
+            .get_tip_of_local_branch("example-branch")?
+            .to_string();
+        let push_repo = gnostr_ngit::git::Repo {
+            git_repo: gnostr_asyncgit::git2::Repository::open(&git_repo.dir)?,
+        };
+        let remote_url = source_git_repo.dir.to_str().unwrap().to_string();
+        let updates = push_to_remote_url(
+            &push_repo,
+            &remote_url,
+            None,
+            &["refs/notes/commits:refs/notes/commits".to_string()],
+            &Term::stderr(),
+            &[],
+        )?;
+
+        assert!(updates.contains_key("refs/notes/commits"));
+        let notes_on_server = source_git_repo
+            .git_repo
+            .find_reference("refs/notes/commits")?
+            .peel_to_commit()?
+            .id()
+            == Oid::from_str(&notes_commit_id)?;
+        assert!(notes_on_server, "notes ref should be pushed to the server");
+        assert_eq!(
+            source_git_repo
+                .git_repo
+                .find_reference("refs/heads/example-branch")?
+                .peel_to_commit()?
+                .id()
+                .to_string(),
+            example_commit_id
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[serial]
     async fn existing_state_event_published_in_nostr_state_event() -> Result<()> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
