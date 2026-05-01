@@ -289,14 +289,7 @@ impl BucketedCrawlerTree {
         let mut items = Vec::new();
         for (bucket, mut entries) in buckets {
             entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
-            let bucket_keys = self.bucket_keys(&bucket);
-            let all_selected = !bucket_keys.is_empty()
-                && bucket_keys.iter().all(|key| self.favorites.contains(key));
-            if all_selected {
-                items.push(format!("♥ {bucket}"));
-            } else if let Some((_, name)) = entries.into_iter().next() {
-                items.push(format!("{name} ({bucket})"));
-            }
+            items.extend(entries.into_iter().map(move |(_, name)| format!("{name} ({bucket})")));
         }
         items
     }
