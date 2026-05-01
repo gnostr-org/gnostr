@@ -17,7 +17,7 @@ asyncgit = { package = "gnostr-asyncgit", version = "1876.947089.686958", path =
 bech32 = "0.11"
 blossom-rs = "0.5.6"
 crossbeam-channel = "0.5"
-crossterm = "0.28.1"
+crossterm = "0.29"
 filetreelist = { package = "gnostr-filetreelist", version = "1876.947089.686958", path = "../filetreelist" }
 futures-util = { version = "0.3", default-features = false, features = [
   "sink",
@@ -26,7 +26,7 @@ futures-util = { version = "0.3", default-features = false, features = [
 hex = "0.4"
 open = "5"
 #blossom-rs = { path = "..", features = ["client"] }
-ratatui = "0.29"
+ratatui = "0.30"
 reqwest = { version = "0.12", default-features = false, features = [
   "json",
   "http2",
