@@ -322,7 +322,7 @@ fn draw(
 ) {
     let root = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
+        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(5)])
         .split(frame.area());
 
     let body = Layout::default()
@@ -430,44 +430,45 @@ fn footer(
     search_query: &str,
     status_message: Option<&str>,
 ) -> Paragraph<'static> {
-    let mut segments = vec![
-        Span::styled("/ search", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::raw("  "),
-        Span::styled("enter next", Style::default().fg(Color::Cyan)),
-        Span::raw("  "),
-        Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
-        Span::raw("  "),
-        Span::styled("q quit", Style::default().fg(Color::DarkGray)),
-        Span::raw("  "),
-        Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
-        Span::raw("  "),
-        Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
-        Span::raw("  "),
-        Span::styled(
-            format!(
-                "selected: {}",
-                tree.selected_path()
-                    .map(|p| p.display().to_string())
-                    .unwrap_or_default()
+    let search_prompt = if matches!(input_mode, InputMode::Search) {
+        format!("/{}", search_query)
+    } else {
+        String::from("/ search")
+    };
+
+    let status_line = status_message.unwrap_or_default().to_string();
+
+    Paragraph::new(vec![
+        Line::from(vec![
+            Span::styled(search_prompt, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::raw("  "),
+            Span::styled("enter next", Style::default().fg(Color::Cyan)),
+            Span::raw("  "),
+            Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
+        ]),
+        Line::from(vec![
+            Span::styled("q quit", Style::default().fg(Color::DarkGray)),
+            Span::raw("  "),
+            Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
+        ]),
+        Line::from(vec![
+            Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
+        ]),
+        Line::from(vec![
+            Span::styled(
+                format!(
+                    "selected: {}",
+                    tree.selected_path()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_default()
+                ),
+                Style::default().fg(Color::Green),
             ),
-            Style::default().fg(Color::Green),
-        ),
-    ];
-
-    if let Some(message) = status_message {
-        segments.push(Span::raw("  "));
-        segments.push(Span::styled(message.to_string(), Style::default().fg(Color::Red)));
-    }
-
-    if matches!(input_mode, InputMode::Search) {
-        segments.push(Span::raw("  "));
-        segments.push(Span::styled(
-            format!("/{}", search_query),
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-        ));
-    }
-
-    Paragraph::new(Line::from(segments))
+        ]),
+        Line::from(vec![
+            Span::styled(status_line, Style::default().fg(Color::Red)),
+        ]),
+    ])
     .block(Block::default().borders(Borders::ALL).title("help"))
 }
 
