@@ -438,7 +438,7 @@ coverage = []
 
 ## relay
 actix-cors = { version = "0.7.0", optional = true }
-actix-http = { version = "3.9.0", optional = true }
+actix-http = { version = "3.9.0" }
 actix-web = { version = "4.9.0", optional = true }
 actix-web-actors = { version = "4.3.1", optional = true }
 gnostr-js = { path = "js", version = "1876.947437.254765", default-features = false, optional = true }
