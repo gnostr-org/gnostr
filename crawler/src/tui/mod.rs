@@ -4,8 +4,10 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{ListItem, ListState};
 
 mod widgets;
+mod json;
 pub mod gnostr_crawler_filetree;
 
+pub use json::{value_to_lines, JsonPanel};
 pub use widgets::{DetailPanel, ListPanel};
 pub use gnostr_crawler_filetree::{
     BucketSummary, CrawlerDiskTree, CrawlerFileTreeWidget, MoveSelection,

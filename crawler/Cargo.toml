@@ -26,8 +26,8 @@ name = "gnostr_crawler"
 path = "src/bin/gnostr_crawler.rs"
 
 [[bin]]
-name = "gnostr_crawler_filetree-285805"
-path = "src/bin/gnostr_crawler_filetree-285805.rs"
+name = "gnostr_crawler_filetree-1876"
+path = "src/bin/gnostr_crawler_filetree-1876.rs"
 
 [dependencies]
 ## TODO align with workspace deps

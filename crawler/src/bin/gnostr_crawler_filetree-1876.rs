@@ -3,7 +3,7 @@ use std::{fs, io, time::Duration};
 use anyhow::Result;
 use gnostr_crawler::{
     relays::get_config_dir_path,
-    tui::{CrawlerDiskTree, CrawlerFileTreeWidget, MoveSelection},
+    tui::{CrawlerDiskTree, CrawlerFileTreeWidget, JsonPanel, MoveSelection},
 };
 use ratatui::{
     backend::CrosstermBackend,
@@ -18,20 +18,25 @@ use ratatui::crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use serde_json::Value;
+use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     run()
 }
 
-fn run() -> Result<()> {
+pub fn run() -> Result<()> {
     let mut terminal = TerminalGuard::enter()?;
     let root = get_config_dir_path();
     fs::create_dir_all(&root)?;
     let mut tree = CrawlerDiskTree::discover(root)?;
+    let mut selected = SelectedJson::default();
+    selected.sync(tree.selected_path())?;
 
     loop {
-        terminal.terminal.draw(|frame| draw(frame, &tree))?;
+        selected.sync(tree.selected_path())?;
+        terminal.terminal.draw(|frame| draw(frame, &tree, &selected))?;
 
         if event::poll(Duration::from_millis(150))? {
             match event::read()? {
@@ -63,6 +68,7 @@ fn run() -> Result<()> {
                     }
                     KeyCode::Char('r') => {
                         tree.refresh()?;
+                        selected.sync(tree.selected_path())?;
                     }
                     _ => {}
                 },
@@ -73,6 +79,41 @@ fn run() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Default)]
+struct SelectedJson {
+    path: Option<PathBuf>,
+    value: Option<Value>,
+    error: Option<String>,
+}
+
+impl SelectedJson {
+    fn sync(&mut self, path: Option<&std::path::Path>) -> Result<()> {
+        match path {
+            Some(path) if self.path.as_deref() != Some(path) => {
+                self.path = Some(path.to_path_buf());
+                let content = fs::read_to_string(path)?;
+                match serde_json::from_str::<Value>(&content) {
+                    Ok(value) => {
+                        self.value = Some(value);
+                        self.error = None;
+                    }
+                    Err(error) => {
+                        self.value = None;
+                        self.error = Some(error.to_string());
+                    }
+                }
+            }
+            None => {
+                self.path = None;
+                self.value = None;
+                self.error = None;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
 }
 
 struct TerminalGuard {
@@ -98,11 +139,16 @@ impl Drop for TerminalGuard {
     }
 }
 
-fn draw(frame: &mut Frame, tree: &CrawlerDiskTree) {
+fn draw(frame: &mut Frame, tree: &CrawlerDiskTree, selected: &SelectedJson) {
     let root = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
         .split(frame.area());
+
+    let body = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(48), Constraint::Percentage(52)])
+        .split(root[1]);
 
     frame.render_widget(
         Paragraph::new(Line::from(vec![
@@ -124,7 +170,17 @@ fn draw(frame: &mut Frame, tree: &CrawlerDiskTree) {
             tree,
             title: "crawler on disk",
         },
-        root[1],
+        body[0],
+    );
+    frame.render_widget(
+        JsonPanel {
+            title: "selected json",
+            value: selected.value.as_ref(),
+            error: selected.error.as_deref(),
+            empty_message: "select a file to parse json",
+            scroll: (0, 0),
+        },
+        body[1],
     );
     frame.render_widget(
         Paragraph::new(Line::from(vec![
@@ -135,7 +191,12 @@ fn draw(frame: &mut Frame, tree: &CrawlerDiskTree) {
             Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
             Span::raw("  "),
             Span::styled(
-                format!("selected: {}", tree.selected_path().map(|p| p.display().to_string()).unwrap_or_default()),
+                format!(
+                    "selected: {}",
+                    tree.selected_path()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_default()
+                ),
                 Style::default().fg(Color::Green),
             ),
         ]))
