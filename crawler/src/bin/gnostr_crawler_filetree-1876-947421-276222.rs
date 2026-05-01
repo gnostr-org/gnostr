@@ -60,6 +60,18 @@ pub fn run() -> Result<()> {
                             input_mode = InputMode::Normal;
                             status_message = None;
                         }
+                        KeyCode::Tab => {
+                            if let Some(completion) = tree.best_completion(&search_query) {
+                                search_query = completion;
+                                tree.apply_filter(Some(&search_query))?;
+                                selected.sync(tree.selected_path())?;
+                                status_message = Some(format!(
+                                    "completed: {} ({} paths)",
+                                    search_query,
+                                    tree.visible_count()
+                                ));
+                            }
+                        }
                         KeyCode::Enter => {
                             input_mode = InputMode::Normal;
                             status_message = if search_query.trim().is_empty() {
@@ -250,10 +262,24 @@ impl BucketedCrawlerTree {
         self.active_filter
             .as_ref()
             .is_none_or(|filter| {
-                let needle = filter.to_ascii_lowercase();
-                let path = entry.virtual_path.to_string_lossy().to_ascii_lowercase();
-                path.contains(&needle)
+                fuzzy_score(&entry.virtual_path.to_string_lossy(), filter).is_some()
             })
+    }
+
+    fn best_completion(&self, query: &str) -> Option<String> {
+        let needle = query.trim();
+        if needle.is_empty() {
+            return None;
+        }
+
+        self.filtered_entries()
+            .into_iter()
+            .filter_map(|entry| {
+                let path = entry.virtual_path.to_string_lossy().into_owned();
+                fuzzy_score(&path, needle).map(|score| (score, path))
+            })
+            .min_by(|a, b| a.0.cmp(&b.0).then(a.1.len().cmp(&b.1.len())))
+            .map(|(_, path)| path)
     }
 
     fn render_items(&self, start: usize, max: usize) -> Vec<ListItem<'static>> {
@@ -390,13 +416,16 @@ fn draw(
         .split(root[1]);
 
     frame.render_widget(header(tree), top[0]);
-    frame.render_widget(search_box(input_mode, search_query), top[1]);
+    frame.render_widget(
+        search_box(input_mode, search_query, tree.best_completion(search_query).as_deref()),
+        top[1],
+    );
 
     let tree_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
         .split(body[0]);
-    frame.render_widget(search_box(input_mode, search_query).block(
+    frame.render_widget(search_box(input_mode, search_query, tree.best_completion(search_query).as_deref()).block(
         Block::default().borders(Borders::ALL).title("tree search"),
     ), tree_area[0]);
     frame.render_widget(tree_panel_list(tree, tree_area[1]), tree_area[1]);
@@ -428,17 +457,33 @@ fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
     .block(Block::default().borders(Borders::ALL).title("gnostr"))
 }
 
-fn search_box(input_mode: InputMode, search_query: &str) -> Paragraph<'static> {
+fn search_box(
+    input_mode: InputMode,
+    search_query: &str,
+    completion: Option<&str>,
+) -> Paragraph<'static> {
     let label = if matches!(input_mode, InputMode::Search) {
         format!("/{}", search_query)
     } else {
         String::from("/ search")
     };
 
-    Paragraph::new(Line::from(vec![Span::styled(
-        label,
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
-    )]))
+    let hint = match (input_mode, completion) {
+        (InputMode::Search, Some(completion)) if completion != search_query => {
+            format!("tab → {}", completion)
+        }
+        (InputMode::Search, _) => String::from("type to filter"),
+        (InputMode::Normal, Some(_)) => String::from("tab fuzzy complete"),
+        (InputMode::Normal, None) => String::from("type / to search"),
+    };
+
+    Paragraph::new(vec![
+        Line::from(vec![Span::styled(
+            label,
+            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(vec![Span::styled(hint, Style::default().fg(Color::DarkGray))]),
+    ])
     .block(Block::default().borders(Borders::ALL).title("search"))
 }
 
@@ -529,6 +574,8 @@ fn footer(
         Line::from(vec![
             Span::styled("type filters live", Style::default().fg(Color::Cyan)),
             Span::raw("  "),
+            Span::styled("tab fuzzy complete", Style::default().fg(Color::Cyan)),
+            Span::raw("  "),
             Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
         ]),
         Line::from(vec![
@@ -557,6 +604,34 @@ fn collect_files(root: &Path) -> Result<Vec<PathBuf>> {
     walk(root, &mut files)?;
     files.sort();
     Ok(files)
+}
+
+fn fuzzy_score(candidate: &str, query: &str) -> Option<usize> {
+    let candidate = candidate.to_ascii_lowercase();
+    let query = query.trim().to_ascii_lowercase();
+    if query.is_empty() {
+        return Some(0);
+    }
+
+    let mut search_from = 0usize;
+    let mut score = 0usize;
+
+    for needle in query.chars() {
+        let mut found = None;
+        for (offset, ch) in candidate[search_from..].char_indices() {
+            if ch == needle {
+                found = Some(search_from + offset);
+                break;
+            }
+        }
+
+        let index = found?;
+        score += index.saturating_sub(search_from);
+        search_from = index + needle.len_utf8();
+    }
+
+    score += candidate.len().saturating_sub(search_from);
+    Some(score)
 }
 
 fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
