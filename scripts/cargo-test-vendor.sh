@@ -17,33 +17,37 @@ RELEASE=false
 LOCKED=false
 OFFLINE=false
 TARGET_DIR=""
+TARGET_TMPDIR=""
+TARGET_ROOT=""
 VENDOR_ROOT="$ROOT_DIR/vendor"
 
 OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
-case "$OS_NAME" in
-  Darwin|Linux|FreeBSD|OpenBSD|NetBSD|DragonFly|CYGWIN*|MINGW*|MSYS*)
-    TMP_BASE="${TMPDIR:-${TMP:-${TEMP:-/tmp}}}"
+  case "$OS_NAME" in
+    Darwin|Linux|FreeBSD|OpenBSD|NetBSD|DragonFly|CYGWIN*|MINGW*|MSYS*)
+    TMP_BASE="${TARGET_TMPDIR:-${TMPDIR:-${TMP:-${TEMP:-/tmp}}}}"
     if command -v mktemp >/dev/null 2>&1; then
-      TARGET_DIR="$(mktemp -d "${TMP_BASE%/}/cargo-test-vendor.XXXXXX")"
+      TARGET_ROOT="$(mktemp -d "${TMP_BASE%/}/cargo-test-vendor.XXXXXX")"
     else
-      TARGET_DIR="${TMP_BASE%/}/cargo-test-vendor.$$"
-      mkdir -p "$TARGET_DIR"
+      TARGET_ROOT="${TMP_BASE%/}/cargo-test-vendor.$$"
+      mkdir -p "$TARGET_ROOT"
     fi
-    VENDOR_ROOT="$TARGET_DIR/vendor"
+    VENDOR_ROOT="$TARGET_ROOT/vendor"
     cp -R "$ROOT_DIR/vendor" "$VENDOR_ROOT"
-    trap '[[ -n "${TARGET_DIR:-}" && -d "$TARGET_DIR" ]] && rm -rf "$TARGET_DIR"' EXIT
+    trap '[[ -n "${TARGET_ROOT:-}" && -d "$TARGET_ROOT" ]] && rm -rf "$TARGET_ROOT"' EXIT
     ;;
 esac
 
 usage() {
   cat <<'EOF'
-Usage: cargo-test-vendor.sh [--quiet] [--release] [--locked] [--offline] [--ignored] [--nocapture] [--test-threads VALUE]
+Usage: cargo-test-vendor.sh [--quiet] [--release] [--locked] [--offline] [--target-dir VALUE] [--target-tmpdir VALUE] [--ignored] [--nocapture] [--test-threads VALUE]
 
 Options:
   --quiet              Pass --quiet to cargo test
   --release            Pass --release to cargo test
   --locked             Pass --locked to cargo test
   --offline            Pass --offline to cargo test
+  --target-dir VALUE   Set Cargo's target directory
+  --target-tmpdir VALUE Set the vendored temp directory base
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --test-threads VALUE Pass --test-threads VALUE to the test harness
@@ -65,6 +69,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --offline)
       OFFLINE=true
+      ;;
+    --target-dir|--target_dir)
+      shift
+      [[ $# -gt 0 ]] || { echo "--target-dir requires a value" >&2; exit 1; }
+      TARGET_DIR="$1"
+      ;;
+    --target-dir=*|--target_dir=*)
+      TARGET_DIR="${1#*=}"
+      ;;
+    --target-tmpdir|--target_tmpdir)
+      shift
+      [[ $# -gt 0 ]] || { echo "--target-tmpdir requires a value" >&2; exit 1; }
+      TARGET_TMPDIR="$1"
+      ;;
+    --target-tmpdir=*|--target_tmpdir=*)
+      TARGET_TMPDIR="${1#*=}"
       ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
@@ -107,6 +127,8 @@ for manifest in "${MANIFESTS[@]}"; do
 
   if [[ -n "$TARGET_DIR" ]]; then
     cargo_args+=(--target-dir "$TARGET_DIR")
+  elif [[ -n "$TARGET_ROOT" ]]; then
+    cargo_args+=(--target-dir "$TARGET_ROOT")
   fi
 
   if [[ "$QUIET" == true ]]; then
