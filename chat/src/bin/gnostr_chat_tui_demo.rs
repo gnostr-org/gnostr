@@ -494,8 +494,9 @@ impl DemoData {
         anyhow::ensure!(!relay_urls.is_empty(), "no relay URLs available for demo");
 
         let primary = crawler_relays
-            .first()
-            .context("missing primary crawler relay")?;
+            .iter()
+            .find(|relay| relay.pubkey_hex.is_some())
+            .context("no crawler relay with a pubkey field found")?;
         let primary_pubkey = relay_pubkey(&primary)?;
         let primary_url = relay_urls
             .first()
@@ -705,7 +706,10 @@ impl DemoData {
                 .then_with(|| a.relay.name.cmp(&b.relay.name))
         });
 
-        if let Some(primary) = refreshed_relays.first() {
+        if let Some(primary) = refreshed_relays
+            .iter()
+            .find(|relay| relay.pubkey_hex.is_some())
+        {
             let primary_pubkey = relay_pubkey(primary)?;
             let relay_urls = {
                 let state = data.read().expect("demo state poisoned");
@@ -977,10 +981,20 @@ fn merge_relay(existing: &mut CrawlerRelay, incoming: CrawlerRelay) {
 fn load_relay_urls(config_dir: &Path, relays: &[LoadedRelay]) -> Result<Vec<String>> {
     let relays_yaml = config_dir.join("relays.yaml");
     if let Ok(content) = fs::read_to_string(&relays_yaml) {
-        let relays: Vec<String> = serde_yaml::from_str(&content)
-            .with_context(|| format!("parsing {}", relays_yaml.display()))?;
-        if !relays.is_empty() {
-            return Ok(relays);
+        if let Ok(relays) = serde_yaml::from_str::<Vec<String>>(&content) {
+            if !relays.is_empty() {
+                return Ok(relays);
+            }
+        } else {
+            let relays: Vec<String> = content
+                .split_whitespace()
+                .map(str::trim)
+                .filter(|relay| !relay.is_empty())
+                .map(String::from)
+                .collect();
+            if !relays.is_empty() {
+                return Ok(relays);
+            }
         }
     }
 
