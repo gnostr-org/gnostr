@@ -147,6 +147,7 @@ async fn test_rustls_uri() {
     assert_eq!(con.peer_addr().unwrap(), srv.addr());
 }
 
+#[cfg_attr(target_os = "macos", ignore = "requires a loopback alias on macOS")]
 #[actix_rt::test]
 async fn test_local_addr() {
     let srv = TestServer::start(|| {
