@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::{BTreeMap, BTreeSet, HashMap},
     fs,
     path::{Path, PathBuf},
 };
@@ -21,10 +21,19 @@ pub struct BucketSummary {
     pub files: usize,
 }
 
+#[derive(Clone, Debug)]
+struct FileEntry {
+    real: PathBuf,
+    virtual_path: PathBuf,
+    bucket: String,
+    format: String,
+}
+
 pub struct CrawlerDiskTree {
     root: PathBuf,
     tree: FileTree,
-    files: Vec<PathBuf>,
+    entries: Vec<FileEntry>,
+    virtual_to_real: HashMap<PathBuf, PathBuf>,
     buckets: Vec<BucketSummary>,
 }
 
@@ -32,13 +41,19 @@ impl CrawlerDiskTree {
     pub fn discover(root: impl AsRef<Path>) -> Result<Self> {
         let root = root.as_ref().to_path_buf();
         let files = collect_files(&root)?;
-        let buckets = summarize_buckets(&root, &files);
-        let tree = build_tree(&files)?;
+        let entries = build_entries(&root, &files)?;
+        let buckets = summarize_buckets(&entries);
+        let tree = build_tree(&entries)?;
+        let virtual_to_real = entries
+            .iter()
+            .map(|entry| (entry.virtual_path.clone(), entry.real.clone()))
+            .collect::<HashMap<_, _>>();
 
         Ok(Self {
             root,
             tree,
-            files,
+            entries,
+            virtual_to_real,
             buckets,
         })
     }
@@ -46,7 +61,8 @@ impl CrawlerDiskTree {
     pub fn refresh(&mut self) -> Result<()> {
         let next = Self::discover(&self.root)?;
         self.tree = next.tree;
-        self.files = next.files;
+        self.entries = next.entries;
+        self.virtual_to_real = next.virtual_to_real;
         self.buckets = next.buckets;
         Ok(())
     }
@@ -56,7 +72,10 @@ impl CrawlerDiskTree {
     }
 
     pub fn selected_path(&self) -> Option<&Path> {
-        self.tree.selected_file().map(|info| info.full_path())
+        self.tree
+            .selected_file()
+            .and_then(|info| self.virtual_to_real.get(info.full_path()))
+            .map(PathBuf::as_path)
     }
 
     pub fn buckets(&self) -> &[BucketSummary] {
@@ -85,8 +104,8 @@ impl CrawlerDiskTree {
                         "▾"
                     }
                 } else {
-                    " "
-                };
+                        " "
+                    };
                 let label = format!("{indent}{icon} {}", item.info().path_str());
                 let style = if selected {
                     Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD)
@@ -148,6 +167,83 @@ fn collect_files(root: &Path) -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
+fn build_entries(root: &Path, files: &[PathBuf]) -> Result<Vec<FileEntry>> {
+    files.iter().map(|file| build_entry(root, file)).collect()
+}
+
+fn build_entry(root: &Path, real: &Path) -> Result<FileEntry> {
+    let relative = real
+        .strip_prefix(root)
+        .with_context(|| format!("path {} is outside {}", real.display(), root.display()))?;
+
+    let bucket = bucket_name(relative, real);
+    let format = file_format(real);
+    let virtual_path = virtual_path(root, relative, &bucket, &format, real)?;
+
+    Ok(FileEntry {
+        real: real.to_path_buf(),
+        virtual_path,
+        bucket,
+        format,
+    })
+}
+
+fn bucket_name(relative: &Path, real: &Path) -> String {
+    if relative.parent().is_some_and(|parent| !parent.as_os_str().is_empty()) {
+        relative
+            .components()
+            .next()
+            .map(|component| component.as_os_str().to_string_lossy().to_string())
+            .unwrap_or_else(|| String::from("(root)"))
+    } else {
+        real.file_stem()
+            .and_then(|stem| stem.to_str())
+            .map(String::from)
+            .unwrap_or_else(|| String::from("(root)"))
+    }
+}
+
+fn file_format(real: &Path) -> String {
+    match real
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("json") => String::from("json"),
+        Some("yaml") | Some("yml") => String::from("yaml"),
+        Some("txt") => String::from("text"),
+        Some(other) => other.to_string(),
+        None => String::from("text"),
+    }
+}
+
+fn virtual_path(
+    root: &Path,
+    relative: &Path,
+    bucket: &str,
+    format: &str,
+    real: &Path,
+) -> Result<PathBuf> {
+    let mut virtual_path = PathBuf::from(root);
+    virtual_path.push(bucket);
+    virtual_path.push(format);
+
+    let parent = relative.parent().unwrap_or_else(|| Path::new(""));
+    if !parent.as_os_str().is_empty() {
+        for component in parent.components().skip(1) {
+            virtual_path.push(component.as_os_str());
+        }
+    }
+
+    let stem = real
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .context("missing file stem")?;
+    virtual_path.push(stem);
+    Ok(virtual_path)
+}
+
 fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
     for entry in fs::read_dir(dir).with_context(|| format!("reading {}", dir.display()))? {
         let entry = entry?;
@@ -167,16 +263,10 @@ fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn summarize_buckets(root: &Path, files: &[PathBuf]) -> Vec<BucketSummary> {
+fn summarize_buckets(entries: &[FileEntry]) -> Vec<BucketSummary> {
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
-    for file in files {
-        let label = file
-            .strip_prefix(root)
-            .ok()
-            .and_then(|relative| relative.components().next())
-            .map(|component| component.as_os_str().to_string_lossy().to_string())
-            .unwrap_or_else(|| String::from("(root)"));
-        *counts.entry(label).or_insert(0) += 1;
+    for entry in entries {
+        *counts.entry(entry.bucket.clone()).or_insert(0) += 1;
     }
 
     counts
@@ -185,8 +275,11 @@ fn summarize_buckets(root: &Path, files: &[PathBuf]) -> Vec<BucketSummary> {
         .collect()
 }
 
-fn build_tree(files: &[PathBuf]) -> Result<FileTree> {
-    let refs = files.iter().map(PathBuf::as_path).collect::<Vec<_>>();
+fn build_tree(entries: &[FileEntry]) -> Result<FileTree> {
+    let refs = entries
+        .iter()
+        .map(|entry| entry.virtual_path.as_path())
+        .collect::<Vec<_>>();
     let collapsed = BTreeSet::new();
     let mut tree = FileTree::new(&refs, &collapsed)?;
     tree.collapse_but_root();
