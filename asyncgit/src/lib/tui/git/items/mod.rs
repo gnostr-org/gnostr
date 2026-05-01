@@ -1,4 +1,4 @@
-use crate::tui::git::config::Config;
+use crate::tui::shared::config::Config;
 use crate::tui::git::git::diff::Diff;
 use crate::tui::git::gitu_diff;
 use crate::tui::git::gitui_error::Error;

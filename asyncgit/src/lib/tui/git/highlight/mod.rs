@@ -1,6 +1,6 @@
-use crate::tui::git::config::Config;
-use crate::tui::git::config::DiffHighlightConfig;
-use crate::tui::git::config::SyntaxHighlightConfig;
+use crate::tui::shared::config::Config;
+use crate::tui::shared::config::DiffHighlightConfig;
+use crate::tui::shared::config::SyntaxHighlightConfig;
 use crate::tui::git::git::diff::Diff;
 use crate::tui::git::gitu_diff;
 use crate::tui::shared::syntax_parser;

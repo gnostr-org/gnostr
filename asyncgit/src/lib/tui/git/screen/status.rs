@@ -1,6 +1,6 @@
 use super::Screen;
 use crate::{
-    tui::git::config::Config,
+    tui::shared::config::Config,
     tui::git::git::{self, diff::Diff},
     tui::git::git2_opts,
     tui::git::gitui_error::Error,

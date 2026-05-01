@@ -1,6 +1,6 @@
 use crate::{
     tui::git::cli::{self, Args},
-    tui::git::config::{self, Config},
+    tui::shared::config::{self, Config},
     tui::git::gitui_error::Error,
     tui::git::key_parser::parse_keys,
     tui::git::state::State,

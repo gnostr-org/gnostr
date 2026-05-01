@@ -23,7 +23,7 @@ use crate::tui::git::bindings::Bindings;
 use crate::tui::git::cli;
 use crate::tui::git::cmd_log::CmdLog;
 use crate::tui::git::cmd_log::CmdLogEntry;
-use crate::tui::git::config::Config;
+use crate::tui::shared::config::Config;
 use crate::tui::git::file_watcher::FileWatcher;
 use crate::tui::git::gitui_error::Error;
 use crate::tui::git::items::TargetData;
