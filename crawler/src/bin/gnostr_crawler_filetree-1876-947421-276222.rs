@@ -184,6 +184,7 @@ struct BucketedCrawlerTree {
     buckets: Vec<BucketSummary>,
     active_filter: Option<String>,
     favorites: HashSet<String>,
+    bucket_favorite_snapshots: HashMap<String, Vec<String>>,
     favorites_path: PathBuf,
 }
 
@@ -210,14 +211,17 @@ impl BucketedCrawlerTree {
             buckets,
             active_filter: None,
             favorites,
+            bucket_favorite_snapshots: HashMap::new(),
             favorites_path,
         })
     }
 
     fn refresh(&mut self) -> Result<()> {
         let filter = self.active_filter.clone();
+        let bucket_favorite_snapshots = self.bucket_favorite_snapshots.clone();
         let next = Self::discover(&self.root)?;
         self.entries = next.entries;
+        self.bucket_favorite_snapshots = bucket_favorite_snapshots;
         self.apply_filter(filter.as_deref())
     }
 
@@ -260,7 +264,7 @@ impl BucketedCrawlerTree {
     }
 
     fn favorite_items(&self) -> Vec<String> {
-        let mut buckets: BTreeMap<String, Vec<(usize, String, String)>> = BTreeMap::new();
+        let mut buckets: BTreeMap<String, Vec<(usize, String)>> = BTreeMap::new();
 
         for path in &self.favorites {
             let path = Path::new(path);
@@ -272,20 +276,22 @@ impl BucketedCrawlerTree {
                 .unwrap_or("(root)")
                 .to_string();
             let name = path
-                .file_name()
+                .file_stem()
                 .and_then(|name| name.to_str())
                 .unwrap_or(path.to_str().unwrap_or_default())
                 .to_string();
             buckets
                 .entry(bucket)
                 .or_default()
-                .push((favorite_rank(&name), name, format!("{} ({})", path.file_name().and_then(|name| name.to_str()).unwrap_or_default(), relative.components().next().and_then(|component| component.as_os_str().to_str()).unwrap_or("(root)"))));
+                .push((favorite_rank(&name), name));
         }
 
         let mut items = Vec::new();
         for (bucket, mut entries) in buckets {
             entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
-            items.extend(entries.into_iter().map(move |(_, name, _)| format!("{name} ({bucket})")));
+            if let Some((_, name)) = entries.into_iter().next() {
+                items.push(format!("{name} ({bucket})"));
+            }
         }
         items
     }
@@ -294,6 +300,39 @@ impl BucketedCrawlerTree {
         let Some(path) = self.selected_path() else {
             return Ok(None);
         };
+
+        if let Some(bucket) = self.selected_relay_bucket(path) {
+            let bucket = bucket.to_string();
+            let bucket_keys = self.bucket_keys(&bucket);
+            let all_selected = bucket_keys.iter().all(|key| self.favorites.contains(key));
+
+            if all_selected {
+                let previous = self
+                    .bucket_favorite_snapshots
+                    .remove(&bucket)
+                    .unwrap_or_default();
+                for key in bucket_keys {
+                    self.favorites.remove(&key);
+                }
+                for key in previous {
+                    self.favorites.insert(key);
+                }
+                save_favorites(&self.favorites_path, &self.favorites)?;
+                return Ok(Some(false));
+            }
+
+            let previous = bucket_keys
+                .iter()
+                .filter(|key| self.favorites.contains(*key))
+                .cloned()
+                .collect::<Vec<_>>();
+            self.bucket_favorite_snapshots.insert(bucket.clone(), previous);
+            for key in bucket_keys {
+                self.favorites.insert(key);
+            }
+            save_favorites(&self.favorites_path, &self.favorites)?;
+            return Ok(Some(true));
+        }
 
         let key = path.display().to_string();
         let favored = if self.favorites.contains(&key) {
@@ -311,6 +350,30 @@ impl BucketedCrawlerTree {
         let mut buckets = self.buckets.clone();
         buckets.sort_by(|a, b| a.name.cmp(&b.name));
         buckets
+    }
+
+    fn selected_relay_bucket<'a>(&'a self, path: &'a Path) -> Option<&'a str> {
+        let name = path.file_name().and_then(|name| name.to_str())?;
+        if !matches!(
+            name.to_ascii_lowercase().as_str(),
+            "relay.json" | "relays.json" | "relay.txt" | "relays.txt" | "relay.yaml" | "relays.yaml" | "relay.yml" | "relays.yml"
+        ) {
+            return None;
+        }
+
+        let relative = path.strip_prefix(&self.root).ok()?;
+        relative
+            .components()
+            .next()
+            .and_then(|component| component.as_os_str().to_str())
+    }
+
+    fn bucket_keys(&self, bucket: &str) -> Vec<String> {
+        self.entries
+            .iter()
+            .filter(|entry| entry.bucket == bucket)
+            .map(|entry| entry.real.display().to_string())
+            .collect()
     }
 
     fn filtered_entries(&self) -> Vec<FileEntry> {
