@@ -464,6 +464,8 @@ fn footer(
     } else {
         segments.push(Span::raw("  "));
         segments.push(Span::styled("/ search", Style::default().fg(Color::DarkGray)));
+        segments.push(Span::raw("  "));
+        segments.push(Span::styled("enter next esc cancel", Style::default().fg(Color::DarkGray)));
     }
 
     Paragraph::new(Line::from(segments))
