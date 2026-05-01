@@ -129,7 +129,7 @@ clap = { version = "4.5.41", features = [
 console = { version = "0.16.0" }
 constant_time_eq = "0.1"
 crossbeam-channel = "0.5.15"
-crossterm = "0.28.1"
+crossterm = "0.29"
 derive_more = "0.99"
 dialoguer = { version = "0.12.0" }
 directories = { version = "6.0.0" }
@@ -507,7 +507,7 @@ constant_time_eq = { workspace = true }
 #chacha20poly1305 = "0.10"
 core-net = "0.1"
 crossbeam-channel = "0.5"
-crossterm = { version = "0.28.1", features = ["event-stream", "serde"] }
+crossterm = { version = "0.29", features = ["event-stream", "serde"] }
 csv = "1.3.0"
 ctrlc = { version = "3.4.7", features = ["termination"] }
 
