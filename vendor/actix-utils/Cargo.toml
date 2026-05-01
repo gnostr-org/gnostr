@@ -40,3 +40,12 @@ version = "0.1"
 
 [dependencies.pin-project-lite]
 version = "0.2"
+
+[dev-dependencies.actix-rt]
+version = "2.11.0"
+
+[dev-dependencies.futures-util]
+version = "0.3.31"
+
+[dev-dependencies.static_assertions]
+version = "1"
