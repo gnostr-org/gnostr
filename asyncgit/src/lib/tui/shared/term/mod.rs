@@ -8,7 +8,7 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
-    backend::{Backend, CrosstermBackend, TestBackend},
+    backend::{Backend, ClearType, CrosstermBackend, TestBackend},
     layout::Size,
     prelude::{backend::WindowSize, buffer::Cell, Position},
     Terminal,
@@ -90,13 +90,22 @@ pub enum TermBackend {
 
 ///
 impl Backend for TermBackend {
+    type Error = io::Error;
+
     fn draw<'a, I>(&mut self, content: I) -> io::Result<()>
     where
         I: Iterator<Item = (u16, u16, &'a Cell)>,
     {
         match self {
             TermBackend::Crossterm(t) => t.draw(content),
-            TermBackend::Test { backend, .. } => backend.draw(content),
+            TermBackend::Test { backend, .. } => backend.draw(content).map_err(infallible),
+        }
+    }
+
+    fn clear_region(&mut self, clear_type: ClearType) -> io::Result<()> {
+        match self {
+            TermBackend::Crossterm(t) => t.clear_region(clear_type),
+            TermBackend::Test { backend, .. } => backend.clear_region(clear_type).map_err(infallible),
         }
     }
 
@@ -104,7 +113,7 @@ impl Backend for TermBackend {
     fn hide_cursor(&mut self) -> io::Result<()> {
         match self {
             TermBackend::Crossterm(t) => t.hide_cursor(),
-            TermBackend::Test { backend, .. } => backend.hide_cursor(),
+            TermBackend::Test { backend, .. } => backend.hide_cursor().map_err(infallible),
         }
     }
 
@@ -112,7 +121,7 @@ impl Backend for TermBackend {
     fn show_cursor(&mut self) -> io::Result<()> {
         match self {
             TermBackend::Crossterm(t) => t.show_cursor(),
-            TermBackend::Test { backend, .. } => backend.show_cursor(),
+            TermBackend::Test { backend, .. } => backend.show_cursor().map_err(infallible),
         }
     }
 
@@ -120,7 +129,7 @@ impl Backend for TermBackend {
     fn get_cursor_position(&mut self) -> io::Result<Position> {
         match self {
             TermBackend::Crossterm(t) => t.get_cursor_position(),
-            TermBackend::Test { backend, .. } => backend.get_cursor_position(),
+            TermBackend::Test { backend, .. } => backend.get_cursor_position().map_err(infallible),
         }
     }
 
@@ -128,7 +137,7 @@ impl Backend for TermBackend {
     fn set_cursor_position<P: Into<Position>>(&mut self, position: P) -> io::Result<()> {
         match self {
             TermBackend::Crossterm(t) => t.set_cursor_position(position),
-            TermBackend::Test { backend, .. } => backend.set_cursor_position(position),
+            TermBackend::Test { backend, .. } => backend.set_cursor_position(position).map_err(infallible),
         }
     }
 
@@ -136,7 +145,7 @@ impl Backend for TermBackend {
     fn clear(&mut self) -> io::Result<()> {
         match self {
             TermBackend::Crossterm(t) => t.clear(),
-            TermBackend::Test { backend, .. } => backend.clear(),
+            TermBackend::Test { backend, .. } => backend.clear().map_err(infallible),
         }
     }
 
@@ -144,7 +153,7 @@ impl Backend for TermBackend {
     fn size(&self) -> io::Result<Size> {
         match self {
             TermBackend::Crossterm(t) => t.size(),
-            TermBackend::Test { backend, .. } => backend.size(),
+            TermBackend::Test { backend, .. } => backend.size().map_err(infallible),
         }
     }
 
@@ -152,7 +161,7 @@ impl Backend for TermBackend {
     fn window_size(&mut self) -> io::Result<WindowSize> {
         match self {
             TermBackend::Crossterm(t) => t.window_size(),
-            TermBackend::Test { backend, .. } => backend.window_size(),
+            TermBackend::Test { backend, .. } => backend.window_size().map_err(infallible),
         }
     }
 
@@ -160,9 +169,13 @@ impl Backend for TermBackend {
     fn flush(&mut self) -> io::Result<()> {
         match self {
             TermBackend::Crossterm(t) => t.flush(),
-            TermBackend::Test { backend, .. } => backend.flush(),
+            TermBackend::Test { backend, .. } => backend.flush().map_err(infallible),
         }
     }
+}
+
+fn infallible(error: std::convert::Infallible) -> io::Error {
+    match error {}
 }
 
 ///
