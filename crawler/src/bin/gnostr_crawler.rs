@@ -113,9 +113,9 @@ pub fn run() -> Result<()> {
                     }
                     KeyCode::Char(' ') => {
                         status_message = match tree.toggle_selected_favorite()? {
-                            Some(true) => Some(String::from("favorited selected row")),
-                            Some(false) => Some(String::from("unfavorited selected row")),
-                            None => Some(String::from("select a file row to favorite")),
+                            Some(true) => Some(String::from("selected bucket")),
+                            Some(false) => Some(String::from("cleared selected bucket")),
+                            None => Some(String::from("select a relay file to toggle bucket")),
                         };
                     }
                     KeyCode::Up | KeyCode::Char('k') => {
@@ -191,7 +191,8 @@ impl BucketedCrawlerTree {
     fn discover(root: impl AsRef<Path>) -> Result<Self> {
         let root = root.as_ref().to_path_buf();
         let files = collect_files(&root)?;
-        let entries = build_entries(&root, &files)?;
+        let mut entries = build_entries(&root, &files)?;
+        sort_entries_for_tree(&mut entries);
         let buckets = summarize_buckets(&entries);
         let tree = build_tree(&entries)?;
         let virtual_to_real = entries
@@ -259,8 +260,35 @@ impl BucketedCrawlerTree {
     }
 
     fn favorite_items(&self) -> Vec<String> {
-        let mut items = self.favorites.iter().cloned().collect::<Vec<_>>();
-        items.sort();
+        let mut buckets: BTreeMap<String, Vec<(usize, String)>> = BTreeMap::new();
+
+        for path in &self.favorites {
+            let path = Path::new(path);
+            let relative = path.strip_prefix(&self.root).unwrap_or(path);
+            let bucket = relative
+                .components()
+                .next()
+                .and_then(|component| component.as_os_str().to_str())
+                .unwrap_or("(root)")
+                .to_string();
+            let name = path
+                .file_stem()
+                .and_then(|name| name.to_str())
+                .unwrap_or(path.to_str().unwrap_or_default())
+                .to_string();
+            buckets
+                .entry(bucket)
+                .or_default()
+                .push((favorite_rank(&name), name));
+        }
+
+        let mut items = Vec::new();
+        for (bucket, mut entries) in buckets {
+            entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
+            if let Some((_, name)) = entries.into_iter().next() {
+                items.push(format!("{name} ({bucket})"));
+            }
+        }
         items
     }
 
@@ -268,6 +296,24 @@ impl BucketedCrawlerTree {
         let Some(path) = self.selected_path() else {
             return Ok(None);
         };
+
+        if let Some(bucket) = self.selected_relay_bucket(path) {
+            let bucket_keys = self.bucket_keys(bucket);
+            let favored = bucket_keys.iter().all(|key| self.favorites.contains(key));
+
+            if favored {
+                for key in bucket_keys {
+                    self.favorites.remove(&key);
+                }
+            } else {
+                for key in bucket_keys {
+                    self.favorites.insert(key);
+                }
+            }
+
+            save_favorites(&self.favorites_path, &self.favorites)?;
+            return Ok(Some(!favored));
+        }
 
         let key = path.display().to_string();
         let favored = if self.favorites.contains(&key) {
@@ -285,6 +331,46 @@ impl BucketedCrawlerTree {
         let mut buckets = self.buckets.clone();
         buckets.sort_by(|a, b| a.name.cmp(&b.name));
         buckets
+    }
+
+    fn bucket_for_real<'a>(&'a self, path: &'a Path) -> Option<&'a str> {
+        let relative = path.strip_prefix(&self.root).ok()?;
+        relative
+            .components()
+            .next()
+            .and_then(|component| component.as_os_str().to_str())
+    }
+
+    fn bucket_is_favorited(&self, bucket: &str) -> bool {
+        self.favorites.iter().any(|path| {
+            let path = Path::new(path);
+            let relative = path.strip_prefix(&self.root).unwrap_or(path);
+            relative
+                .components()
+                .next()
+                .and_then(|component| component.as_os_str().to_str())
+                == Some(bucket)
+        })
+    }
+
+    fn selected_relay_bucket<'a>(&'a self, path: &'a Path) -> Option<&'a str> {
+        let name = path.file_name().and_then(|name| name.to_str())?;
+        if !matches!(
+            name.to_ascii_lowercase().as_str(),
+            "relay.json" | "relays.json" | "relay.txt" | "relays.txt" | "relay.yaml" | "relays.yaml" | "relay.yml" | "relays.yml"
+        ) {
+            return None;
+        }
+
+        self.bucket_for_real(path)
+    }
+
+    fn bucket_keys(&self, bucket: &str) -> Vec<String> {
+        self.entries
+            .iter()
+            .filter(|entry| entry.bucket == bucket)
+            .map(|entry| entry.real.display().to_string())
+            .collect()
     }
 
     fn filtered_entries(&self) -> Vec<FileEntry> {
@@ -336,11 +422,11 @@ impl BucketedCrawlerTree {
                 let favorite = if item.kind().is_path() {
                     " "
                 } else {
-                    let key = self
+                    let bucket = self
                         .virtual_to_real
                         .get(item.info().full_path())
-                        .map(|path| path.display().to_string());
-                    if key.as_ref().is_some_and(|key| self.favorites.contains(key)) {
+                        .and_then(|path| self.bucket_for_real(path));
+                    if bucket.is_some_and(|bucket| self.bucket_is_favorited(bucket)) {
                         "♥"
                     } else {
                         " "
@@ -473,12 +559,12 @@ fn draw(
 
     let tree_area = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(5), Constraint::Length(3), Constraint::Min(0)])
+        .constraints([Constraint::Length(3), Constraint::Length(5), Constraint::Min(0)])
         .split(body[0]);
-    frame.render_widget(favorites_panel(tree), tree_area[0]);
     frame.render_widget(search_box(input_mode, search_query, tree.best_completion(search_query).as_deref()).block(
         Block::default().borders(Borders::ALL).title("tree search"),
-    ), tree_area[1]);
+    ), tree_area[0]);
+    frame.render_widget(favorites_panel(tree), tree_area[1]);
     frame.render_widget(tree_panel_list(tree, tree_area[2]), tree_area[2]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree, status_message), root[2]);
@@ -550,13 +636,7 @@ fn favorites_panel(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
             format!("favorites ({})", favorites.len()),
             Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
         )])];
-        lines.extend(favorites.into_iter().map(|item| {
-            Line::from(vec![
-                Span::styled("♥", Style::default().fg(Color::Red)),
-                Span::raw(" "),
-                Span::raw(item),
-            ])
-        }));
+        lines.extend(favorites.into_iter().map(|item| Line::from(vec![Span::raw(item)])));
         lines
     };
 
@@ -838,6 +918,37 @@ fn summarize_buckets(entries: &[FileEntry]) -> Vec<BucketSummary> {
         .into_iter()
         .map(|(name, files)| BucketSummary { name, files })
         .collect()
+}
+
+fn favorite_rank(name: &str) -> usize {
+    match name.to_ascii_lowercase().as_str() {
+        "relay.json" | "relays.json" => 0,
+        "relay.txt" | "relays.txt" => 1,
+        "relay.yaml" | "relays.yaml" | "relay.yml" | "relays.yml" => 2,
+        _ => 3,
+    }
+}
+
+fn sort_entries_for_tree(entries: &mut [FileEntry]) {
+    entries.sort_by(|a, b| {
+        let a_parent = a.virtual_path.parent().unwrap_or_else(|| Path::new(""));
+        let b_parent = b.virtual_path.parent().unwrap_or_else(|| Path::new(""));
+        let a_name = a
+            .virtual_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+        let b_name = b
+            .virtual_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+
+        a_parent
+            .cmp(b_parent)
+            .then_with(|| favorite_rank(a_name).cmp(&favorite_rank(b_name)))
+            .then_with(|| a.virtual_path.cmp(&b.virtual_path))
+    });
 }
 
 fn build_tree(entries: &[FileEntry]) -> Result<FileTree> {
