@@ -321,7 +321,7 @@ tree-sitter-grammar-repository = { path = "grammar", version = "1876.947089.6869
 tree-sitter-highlight = "0.23.2"
 tree-sitter-language = "0.1.6"
 trust-dns-resolver = "0.23.2"
-tui-input = "0.15.3"
+tui-input = "0.14.0"
 tui-textarea = "0.7.0"
 two-face = { version = "0.4.5", default-features = false }
 unicode-normalization = "0.1.25"
@@ -747,7 +747,7 @@ tree-sitter-language = "0.1.6"
 #tree-sitter-language = "0.1.6"
 #tree-sitter-language = "0.1"
 trust-dns-resolver = "0.23" # Use the latest version
-tui-input = "0.15.3"
+tui-input = "0.14.0"
 tui-textarea = "0.7.0"
 #tungstenite = { version = "0.28", features = [ "rustls-tls-webpki-roots" ] }
 two-face = { version = "0.4.0", default-features = false }

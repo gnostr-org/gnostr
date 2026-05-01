@@ -13344,23 +13344,23 @@ dependencies = [
 
 [[package]]
 name = "ratatui"
-version = "0.28.1"
+version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdef7f9be5c0122f890d58bdf4d964349ba6a6161f705907526d891efabba57d"
+checksum = "eabd94c2f37801c20583fc49dd5cd6b0ba68c716787c2dd6ed18571e1e63117b"
 dependencies = [
  "bitflags 2.11.1",
  "cassowary",
  "compact_str 0.8.1",
  "crossterm 0.28.1",
+ "indoc",
  "instability",
  "itertools 0.13.0",
  "lru 0.12.5",
  "paste",
  "strum 0.26.3",
- "strum_macros 0.26.4",
  "unicode-segmentation",
  "unicode-truncate 1.1.0",
- "unicode-width 0.1.14",
+ "unicode-width 0.2.0",
 ]
 
 [[package]]
@@ -17329,12 +17329,12 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tui-input"
-version = "0.10.1"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd137780d743c103a391e06fe952487f914b299a4fe2c3626677f6a6339a7c6b"
+checksum = "911e93158bf80bbc94bad533b2b16e3d711e1132d69a6a6980c3920a63422c19"
 dependencies = [
- "ratatui 0.28.1",
- "unicode-width 0.1.14",
+ "ratatui 0.29.0",
+ "unicode-width 0.2.0",
 ]
 
 [[package]]
@@ -17353,13 +17353,13 @@ dependencies = [
 
 [[package]]
 name = "tui-textarea"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29c07084342a575cea919eea996b9658a358c800b03d435df581c1d7c60e065a"
+checksum = "0a5318dd619ed73c52a9417ad19046724effc1287fb75cdcc4eca1d6ac1acbae"
 dependencies = [
  "crossterm 0.28.1",
- "ratatui 0.28.1",
- "unicode-width 0.1.14",
+ "ratatui 0.29.0",
+ "unicode-width 0.2.0",
 ]
 
 [[package]]
