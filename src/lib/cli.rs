@@ -28,8 +28,10 @@ use crate::sub_commands::{
     custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
     hide_public_channel_message, init, legit, list_events, login, mute_publickey, note,
     privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, relay, send,
-    send_channel_message, server, set_channel_metadata, set_metadata, sniper, user_status, vanity,
+    send_channel_message, set_channel_metadata, set_metadata, sniper, user_status, vanity,
 };
+#[cfg(feature = "blossom")]
+use crate::sub_commands::server;
 
 /// CliArgs
 #[derive(Parser, Debug)]
@@ -285,6 +287,7 @@ pub enum GnostrCommands {
     React(react::ReactionSubCommand),
     /// Relay sub commands
     Relay(relay::RelaySubCommand),
+    #[cfg(feature = "blossom")]
     /// Run the Blossom server
     Server(server::ServerSubCommand),
     /// Send a message to a public channel
@@ -350,7 +353,22 @@ pub fn get_app_config_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-//#[test]
-//fn verify_app() {
-//    app().debug_assert();
-//}
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use super::*;
+
+    #[test]
+    #[cfg(not(feature = "blossom"))]
+    fn server_subcommand_is_hidden_without_blossom() {
+        assert!(GnostrCli::try_parse_from(["gnostr", "server"]).is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "blossom")]
+    fn server_subcommand_parses_with_blossom() {
+        let cli = GnostrCli::try_parse_from(["gnostr", "server"]).expect("server subcommand");
+        assert!(matches!(cli.command, Some(GnostrCommands::Server(_))));
+    }
+}

@@ -358,6 +358,7 @@ gitui = { path = "vendor/gitui" }
 [[bin]]
 name = "gnostr-server"
 path = "src/bin/gnostr-server.rs"
+required-features = ["blossom"]
 
 [[bin]]
 name = "git-remote-nostr"

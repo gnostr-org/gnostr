@@ -35,6 +35,7 @@ pub mod react;
 pub mod relay;
 pub mod send;
 pub mod send_channel_message;
+#[cfg(feature = "blossom")]
 pub mod server;
 pub mod set_channel_metadata;
 pub mod set_metadata;

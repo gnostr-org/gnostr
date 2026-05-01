@@ -78,8 +78,10 @@ fn server_install_dialog() -> Vec<Line<'static>> {
         )]),
         Line::from(""),
         Line::from("Install the server binary, then restart the dashboard:"),
-        Line::from("  cargo build --bin gnostr-server"),
-        Line::from("  cargo install --path /absolute/path/to/gnostr --bin gnostr-server"),
+        Line::from("  cargo build --features blossom --bin gnostr-server"),
+        Line::from(
+            "  cargo install --path /absolute/path/to/gnostr --features blossom --bin gnostr-server",
+        ),
         Line::from(""),
         Line::from("Replace /absolute/path/to/gnostr with your checkout path."),
         Line::from("Then make sure `gnostr-server` is on your PATH."),

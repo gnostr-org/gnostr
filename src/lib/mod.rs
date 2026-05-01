@@ -83,6 +83,7 @@ pub mod repo_ref;
 ///  <https://docs.rs/gnostr/latest/gnostr/repo_state/index.html>
 pub mod repo_state;
 ///  <https://docs.rs/gnostr/latest/gnostr/server/index.html>
+#[cfg(feature = "blossom")]
 pub mod server;
 ///  <https://docs.rs/gnostr/latest/gnostr/spinner/index.html>
 pub mod spinner;
