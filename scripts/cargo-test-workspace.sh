@@ -15,6 +15,8 @@ NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
 TEST_FLAGS=()
 FEATURES=()
 PACKAGES=()
+TARGET_DIR=""
+TARGET_TMPDIR=""
 ALL_FEATURES=false
 NO_DEFAULT_FEATURES=false
 VENDORED=false
@@ -41,6 +43,14 @@ Options:
   --features=VALUE     Add a Cargo feature
   --package VALUE      Select a Cargo package (repeatable)
   --package=VALUE      Select a Cargo package
+  --target-dir VALUE   Set Cargo's target directory
+  --target-dir=VALUE   Set Cargo's target directory
+  --target_dir VALUE   Set Cargo's target directory
+  --target_dir=VALUE   Set Cargo's target directory
+  --target-tmpdir VALUE Set the vendored temp directory base
+  --target-tmpdir=VALUE Set the vendored temp directory base
+  --target_tmpdir VALUE Set the vendored temp directory base
+  --target_tmpdir=VALUE Set the vendored temp directory base
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --quiet              Pass --quiet to cargo test
@@ -107,6 +117,22 @@ while [[ $# -gt 0 ]]; do
     --package=*)
       add_package "${1#*=}"
       ;;
+    --target-dir|--target_dir)
+      shift
+      [[ $# -gt 0 ]] || { echo "--target-dir requires a value" >&2; exit 1; }
+      TARGET_DIR="$1"
+      ;;
+    --target-dir=*|--target_dir=*)
+      TARGET_DIR="${1#*=}"
+      ;;
+    --target-tmpdir|--target_tmpdir)
+      shift
+      [[ $# -gt 0 ]] || { echo "--target-tmpdir requires a value" >&2; exit 1; }
+      TARGET_TMPDIR="$1"
+      ;;
+    --target-tmpdir=*|--target_tmpdir=*)
+      TARGET_TMPDIR="${1#*=}"
+      ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
       ;;
@@ -165,6 +191,14 @@ if [[ "$VENDORED" == true ]]; then
     VENDORED_FLAGS+=(--offline)
   fi
 
+  if [[ -n "$TARGET_DIR" ]]; then
+    VENDORED_FLAGS+=(--target-dir "$TARGET_DIR")
+  fi
+
+  if [[ -n "$TARGET_TMPDIR" ]]; then
+    VENDORED_FLAGS+=(--target-tmpdir "$TARGET_TMPDIR")
+  fi
+
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
     ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}" "${TEST_FLAGS[@]}"
   else
@@ -193,6 +227,15 @@ fi
 
 if [[ "$OFFLINE" == true ]]; then
   CARGO_FLAGS+=(--offline)
+fi
+
+if [[ -n "$TARGET_DIR" ]]; then
+  CARGO_FLAGS+=(--target-dir "$TARGET_DIR")
+fi
+
+if [[ -n "$TARGET_TMPDIR" ]]; then
+  echo "--target-tmpdir is only supported with vendored mode" >&2
+  exit 1
 fi
 
 if [[ ${#PACKAGES[@]} -gt 0 ]]; then
