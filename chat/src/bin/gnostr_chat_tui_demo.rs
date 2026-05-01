@@ -473,7 +473,7 @@ struct DemoData {
     updated_at: Unixtime,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 struct LoadedRelay {
     url: String,
     relay: CrawlerRelay,
@@ -495,7 +495,6 @@ impl DemoData {
 
         let primary = crawler_relays
             .first()
-            .cloned()
             .context("missing primary crawler relay")?;
         let primary_pubkey = relay_pubkey(&primary)?;
         let primary_url = relay_urls
@@ -505,7 +504,7 @@ impl DemoData {
         let relay_url = RelayUrl::try_from_str(&primary_url)?;
         let unchecked_relay = UncheckedUrl::from_str(&primary_url);
         let relay_list = relay_list_from_urls(&relay_urls)?;
-        let relay_document = relay_document_from_relay(&primary, primary_pubkey)?;
+        let relay_document = relay_document_from_relay(primary, primary_pubkey)?;
         let profile = Profile {
             pubkey: primary_pubkey,
             relays: relay_urls
@@ -513,7 +512,7 @@ impl DemoData {
                 .map(|url| UncheckedUrl::from_str(url))
                 .collect(),
         };
-        let metadata = metadata_from_relay(&primary);
+        let metadata = metadata_from_relay(primary);
         let relay_usage = RelayUsageSet::new_empty();
         let nip19 = Nip19::Profile(Nip19Profile {
             public_key: primary_pubkey,
@@ -697,12 +696,13 @@ impl DemoData {
         }
 
         refreshed_relays.sort_by(|a, b| {
-            b.supported_nips
+            b.relay
+                .supported_nips
                 .as_ref()
                 .map(|v| v.len())
                 .unwrap_or(0)
-                .cmp(&a.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
-                .then_with(|| a.name.cmp(&b.name))
+                .cmp(&a.relay.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
+                .then_with(|| a.relay.name.cmp(&b.relay.name))
         });
 
         if let Some(primary) = refreshed_relays.first() {
