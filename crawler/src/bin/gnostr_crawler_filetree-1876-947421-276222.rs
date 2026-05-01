@@ -330,6 +330,26 @@ impl BucketedCrawlerTree {
         buckets
     }
 
+    fn bucket_for_real<'a>(&'a self, path: &'a Path) -> Option<&'a str> {
+        let relative = path.strip_prefix(&self.root).ok()?;
+        relative
+            .components()
+            .next()
+            .and_then(|component| component.as_os_str().to_str())
+    }
+
+    fn bucket_is_favorited(&self, bucket: &str) -> bool {
+        self.favorites.iter().any(|path| {
+            let path = Path::new(path);
+            let relative = path.strip_prefix(&self.root).unwrap_or(path);
+            relative
+                .components()
+                .next()
+                .and_then(|component| component.as_os_str().to_str())
+                == Some(bucket)
+        })
+    }
+
     fn filtered_entries(&self) -> Vec<FileEntry> {
         self.entries
             .iter()
@@ -379,11 +399,11 @@ impl BucketedCrawlerTree {
                 let favorite = if item.kind().is_path() {
                     " "
                 } else {
-                    let key = self
+                    let bucket = self
                         .virtual_to_real
                         .get(item.info().full_path())
-                        .map(|path| path.display().to_string());
-                    if key.as_ref().is_some_and(|key| self.favorites.contains(key)) {
+                        .and_then(|path| self.bucket_for_real(path));
+                    if bucket.is_some_and(|bucket| self.bucket_is_favorited(bucket)) {
                         "♥"
                     } else {
                         " "
@@ -887,15 +907,7 @@ fn favorite_rank(name: &str) -> usize {
 }
 
 fn sort_entries_for_tree(entries: &mut [FileEntry]) {
-    entries.sort_by(|a, b| {
-        a.bucket
-            .cmp(&b.bucket)
-            .then_with(|| favorite_rank(a.real.file_name().and_then(|name| name.to_str()).unwrap_or_default()).cmp(
-                &favorite_rank(b.real.file_name().and_then(|name| name.to_str()).unwrap_or_default()),
-            ))
-            .then_with(|| a.real.file_name().cmp(&b.real.file_name()))
-            .then_with(|| a.real.cmp(&b.real))
-    });
+    entries.sort_by(|a, b| a.virtual_path.cmp(&b.virtual_path));
 }
 
 fn build_tree(entries: &[FileEntry]) -> Result<FileTree> {
