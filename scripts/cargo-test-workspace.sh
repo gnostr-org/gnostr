@@ -16,7 +16,8 @@ TEST_FLAGS=()
 FEATURES=()
 PACKAGES=()
 TARGET_DIR=""
-TARGET_TMPDIR=""
+TARGET_TMPDIR=false
+TARGET_TMPDIR_CLEAN=false
 ALL_FEATURES=false
 NO_DEFAULT_FEATURES=false
 VENDORED=false
@@ -47,10 +48,10 @@ Options:
   --target-dir=VALUE   Set Cargo's target directory
   --target_dir VALUE   Set Cargo's target directory
   --target_dir=VALUE   Set Cargo's target directory
-  --target-tmpdir VALUE Set the vendored temp directory base
-  --target-tmpdir=VALUE Set the vendored temp directory base
-  --target_tmpdir VALUE Set the vendored temp directory base
-  --target_tmpdir=VALUE Set the vendored temp directory base
+  --target-tmpdir      Use the shared vendored temp directory
+  --target_tmpdir      Use the shared vendored temp directory
+  --target-tmpdir-clean Remove the shared vendored temp directory first
+  --target_tmpdir-clean Remove the shared vendored temp directory first
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --quiet              Pass --quiet to cargo test
@@ -126,12 +127,10 @@ while [[ $# -gt 0 ]]; do
       TARGET_DIR="${1#*=}"
       ;;
     --target-tmpdir|--target_tmpdir)
-      shift
-      [[ $# -gt 0 ]] || { echo "--target-tmpdir requires a value" >&2; exit 1; }
-      TARGET_TMPDIR="$1"
+      TARGET_TMPDIR=true
       ;;
-    --target-tmpdir=*|--target_tmpdir=*)
-      TARGET_TMPDIR="${1#*=}"
+    --target-tmpdir-clean|--target_tmpdir-clean)
+      TARGET_TMPDIR_CLEAN=true
       ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
@@ -195,8 +194,12 @@ if [[ "$VENDORED" == true ]]; then
     VENDORED_FLAGS+=(--target-dir "$TARGET_DIR")
   fi
 
-  if [[ -n "$TARGET_TMPDIR" ]]; then
-    VENDORED_FLAGS+=(--target-tmpdir "$TARGET_TMPDIR")
+  if [[ "$TARGET_TMPDIR" == true ]]; then
+    VENDORED_FLAGS+=(--target-tmpdir)
+  fi
+
+  if [[ "$TARGET_TMPDIR_CLEAN" == true ]]; then
+    VENDORED_FLAGS+=(--target-tmpdir-clean)
   fi
 
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
@@ -233,8 +236,8 @@ if [[ -n "$TARGET_DIR" ]]; then
   CARGO_FLAGS+=(--target-dir "$TARGET_DIR")
 fi
 
-if [[ -n "$TARGET_TMPDIR" ]]; then
-  echo "--target-tmpdir is only supported with vendored mode" >&2
+if [[ "$TARGET_TMPDIR" == true || "$TARGET_TMPDIR_CLEAN" == true ]]; then
+  echo "--target-tmpdir and --target-tmpdir-clean are only supported with vendored mode" >&2
   exit 1
 fi
 
