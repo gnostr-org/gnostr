@@ -335,6 +335,7 @@ fn chat_blossom_server_args(args: &ChatSubCommands) -> Result<Vec<String>> {
 }
 
 /// Start the Blossom server that backs chat file transfer and clone support.
+#[cfg(feature = "blossom")]
 fn start_chat_blossom_server(args: &ChatSubCommands) -> Result<()> {
     crate::server::run_with_args(chat_blossom_server_args(args)?)
         .map_err(|e| anyhow!(e.to_string()))
@@ -431,7 +432,10 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
         return Ok(());
     }
 
+    #[cfg(feature = "blossom")]
     start_chat_blossom_server(&args)?;
+    #[cfg(not(feature = "blossom"))]
+    tracing::debug!("blossom support is not compiled in; skipping chat server startup");
 
     // Send NIP-01 metadata event
     let name = args
