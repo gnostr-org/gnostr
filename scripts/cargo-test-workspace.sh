@@ -19,7 +19,7 @@ NO_DEFAULT_FEATURES=false
 
 usage() {
   cat <<'EOF'
-Usage: cargo-test-workspace.sh [variant] [--features VALUE] [--ignored] [--nocapture]
+Usage: cargo-test-workspace.sh [variant] [--features VALUE] [--ignored] [--nocapture] [--quiet]
 
 Variants:
   default              cargo test --workspace
@@ -35,6 +35,7 @@ Options:
   --features=VALUE     Add a Cargo feature
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
+  --quiet              Pass --quiet to cargo test
   --help               Show this help
 EOF
 }
@@ -82,6 +83,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --nocapture)
       TEST_FLAGS+=(--nocapture)
+      ;;
+    --quiet)
+      TEST_FLAGS+=(--quiet)
       ;;
     --help|-h)
       usage
