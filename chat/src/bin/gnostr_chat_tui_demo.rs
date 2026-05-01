@@ -24,7 +24,7 @@ use gnostr_asyncgit::{
         ChannelCreationEvent, ChannelMessageEvent, EventKind, EventReference, EventV3, Filter,
         Id, IdHex, Metadata, NAddr, Nip19, Nip19Profile, Profile, PublicKey, PublicKeyHex,
         RelayInformationDocument, RelayList, RelayListUsage, RelayMessage, RelayUrl, RepoRef,
-        RepoState, Tag, Unixtime, UncheckedUrl, Url, RelayUsageSet,
+        RepoState, Signature, Tag, Unixtime, UncheckedUrl, Url, RelayUsageSet,
     },
 };
 use gnostr_crawler::Relay as CrawlerRelay;
@@ -101,7 +101,7 @@ impl App {
     async fn new() -> anyhow::Result<Self> {
         let data = Arc::new(RwLock::new(DemoData::load_real()?));
         DemoData::spawn_refresh(Arc::clone(&data));
-        Self {
+        Ok(Self {
             pages: vec![
                 Page::Overview,
                 Page::Relays,
@@ -468,9 +468,16 @@ struct DemoData {
     channel_creation: ChannelCreationEvent,
     channel_message: ChannelMessageEvent,
     relay_message: RelayMessage,
-    crawler_relays: Vec<CrawlerRelay>,
+    crawler_relays: Vec<LoadedRelay>,
     filter: Filter,
     updated_at: Unixtime,
+}
+
+#[derive(Clone, Debug)]
+struct LoadedRelay {
+    url: String,
+    relay: CrawlerRelay,
+    pubkey_hex: Option<String>,
 }
 
 impl DemoData {
@@ -577,7 +584,7 @@ impl DemoData {
         let id_hex = IdHex::from(git.state_id);
         filter.add_id(&id_hex);
         filter.add_author(&PublicKeyHex::from(primary_pubkey));
-        filter.add_event_kind(EventKind::RepoState);
+        filter.add_event_kind(EventKind::GitRepoAnnouncement);
         filter.add_event_kind(EventKind::TextNote);
         filter.add_tag_value('e', git.state_id.as_hex_string());
         filter.add_tag_value('p', primary_pubkey.as_hex_string());
@@ -645,7 +652,7 @@ impl DemoData {
         }
 
         let bodies = gnostr_crawler::fetch_relay_texts(relay_urls, client, "chat demo").await;
-        let mut refreshed_relays = Vec::new();
+        let mut refreshed_relays: Vec<LoadedRelay> = Vec::new();
         for item in bodies {
             let (url, json_string, ping_ms) = match item {
                 Ok(tuple) => tuple,
@@ -659,16 +666,33 @@ impl DemoData {
                 }
             };
 
-            if let Ok(mut relay) = gnostr_crawler::parse_relay_metadata(&json_string) {
-                relay.ping_ms = Some(ping_ms);
-                refreshed_relays.push(relay);
-                if let Ok(mut state) = data.write() {
-                    state.relay_message = RelayMessage::Notice(format!(
-                        "refreshed {} from the network",
-                        url
-                    ));
-                    state.updated_at = Unixtime::now();
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_string) {
+                let pubkey_hex = value
+                    .get("pubkey")
+                    .and_then(|value| value.as_str())
+                    .map(ToString::to_string);
+                if let Ok(mut relay) = serde_json::from_value::<CrawlerRelay>(value) {
+                    relay.ping_ms = Some(ping_ms);
+                    refreshed_relays.push(LoadedRelay {
+                        url: url.clone(),
+                        relay,
+                        pubkey_hex,
+                    });
                 }
+            } else if let Ok(mut relay) = gnostr_crawler::parse_relay_metadata(&json_string) {
+                relay.ping_ms = Some(ping_ms);
+                refreshed_relays.push(LoadedRelay {
+                    url: url.clone(),
+                    relay,
+                    pubkey_hex: None,
+                });
+            }
+            if let Ok(mut state) = data.write() {
+                state.relay_message = RelayMessage::Notice(format!(
+                    "refreshed {} from the network",
+                    url
+                ));
+                state.updated_at = Unixtime::now();
             }
         }
 
@@ -769,7 +793,7 @@ impl DemoData {
             let id_hex = IdHex::from(git.state_id);
             filter.add_id(&id_hex);
             filter.add_author(&PublicKeyHex::from(primary_pubkey));
-            filter.add_event_kind(EventKind::RepoState);
+            filter.add_event_kind(EventKind::GitRepoAnnouncement);
             filter.add_event_kind(EventKind::TextNote);
             filter.add_tag_value('e', git.state_id.as_hex_string());
             filter.add_tag_value('p', primary_pubkey.as_hex_string());
@@ -811,10 +835,10 @@ impl DemoData {
                 format!(
                     "{}. {} | ping={}ms | nips={:?} | {}",
                     idx + 1,
-                    relay.name.as_deref().unwrap_or("unknown"),
-                    relay.ping_ms.unwrap_or_default(),
-                    relay.supported_nips.clone().unwrap_or_default(),
-                    relay.description.as_deref().unwrap_or("")
+                    relay.relay.name.as_deref().unwrap_or("unknown"),
+                    relay.relay.ping_ms.unwrap_or_default(),
+                    relay.relay.supported_nips.clone().unwrap_or_default(),
+                    relay.relay.description.as_deref().unwrap_or("")
                 )
             })
             .collect::<Vec<_>>()
@@ -835,8 +859,8 @@ struct GitSnapshot {
     coordinate: NAddr,
 }
 
-fn load_crawler_relays(config_dir: &Path) -> Result<Vec<CrawlerRelay>> {
-    let mut discovered: BTreeMap<String, CrawlerRelay> = BTreeMap::new();
+fn load_crawler_relays(config_dir: &Path) -> Result<Vec<LoadedRelay>> {
+    let mut discovered: BTreeMap<String, LoadedRelay> = BTreeMap::new();
 
     for nip_entry in fs::read_dir(config_dir).with_context(|| {
         format!("reading crawler relay cache directory {}", config_dir.display())
@@ -859,26 +883,49 @@ fn load_crawler_relays(config_dir: &Path) -> Result<Vec<CrawlerRelay>> {
             }
 
             let content = fs::read_to_string(relay_entry.path())?;
-            let relay: CrawlerRelay = serde_json::from_str(&content)
+            let value: serde_json::Value = serde_json::from_str(&content)
+                .with_context(|| format!("parsing {}", relay_entry.path().display()))?;
+            let pubkey_hex = value
+                .get("pubkey")
+                .and_then(|value| value.as_str())
+                .map(ToString::to_string);
+            let relay: CrawlerRelay = serde_json::from_value(value)
                 .with_context(|| format!("parsing {}", relay_entry.path().display()))?;
             let host = file_name.trim_end_matches(".json");
-            discovered
-                .entry(format!("wss://{}", host))
-                .and_modify(|existing| merge_relay(existing, relay.clone()))
-                .or_insert(relay);
+            let url = format!("wss://{}", host);
+            match discovered.entry(url.clone()) {
+                std::collections::btree_map::Entry::Occupied(mut entry) => {
+                    merge_loaded_relay(entry.get_mut(), relay, pubkey_hex);
+                }
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    entry.insert(LoadedRelay {
+                        url,
+                        relay,
+                        pubkey_hex,
+                    });
+                }
+            }
         }
     }
 
-    let mut relays: Vec<CrawlerRelay> = discovered.into_values().collect();
+    let mut relays: Vec<LoadedRelay> = discovered.into_values().collect();
     relays.sort_by(|a, b| {
-        b.supported_nips
+        b.relay
+            .supported_nips
             .as_ref()
             .map(|v| v.len())
             .unwrap_or(0)
-            .cmp(&a.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
-            .then_with(|| a.name.cmp(&b.name))
+            .cmp(&a.relay.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
+            .then_with(|| a.relay.name.cmp(&b.relay.name))
     });
     Ok(relays)
+}
+
+fn merge_loaded_relay(existing: &mut LoadedRelay, incoming: CrawlerRelay, incoming_pubkey: Option<String>) {
+    if existing.pubkey_hex.is_none() {
+        existing.pubkey_hex = incoming_pubkey;
+    }
+    merge_relay(&mut existing.relay, incoming);
 }
 
 fn merge_relay(existing: &mut CrawlerRelay, incoming: CrawlerRelay) {
@@ -927,7 +974,7 @@ fn merge_relay(existing: &mut CrawlerRelay, incoming: CrawlerRelay) {
     };
 }
 
-fn load_relay_urls(config_dir: &Path, relays: &[CrawlerRelay]) -> Result<Vec<String>> {
+fn load_relay_urls(config_dir: &Path, relays: &[LoadedRelay]) -> Result<Vec<String>> {
     let relays_yaml = config_dir.join("relays.yaml");
     if let Ok(content) = fs::read_to_string(&relays_yaml) {
         let relays: Vec<String> = serde_yaml::from_str(&content)
@@ -937,40 +984,69 @@ fn load_relay_urls(config_dir: &Path, relays: &[CrawlerRelay]) -> Result<Vec<Str
         }
     }
 
-    Ok(relays
-        .iter()
-        .filter_map(|relay| relay.name.as_deref())
-        .map(|name| format!("wss://{}", name))
-        .collect())
+    let mut urls = Vec::new();
+    for nip_entry in fs::read_dir(config_dir)
+        .with_context(|| format!("reading {}", config_dir.display()))?
+    {
+        let nip_entry = nip_entry?;
+        if !nip_entry.file_type()?.is_dir() {
+            continue;
+        }
+
+        let nip_name = nip_entry.file_name().to_string_lossy().to_string();
+        if nip_name.parse::<i32>().is_err() {
+            continue;
+        }
+
+        for relay_entry in fs::read_dir(nip_entry.path())? {
+            let relay_entry = relay_entry?;
+            let file_name = relay_entry.file_name().to_string_lossy().to_string();
+            if !file_name.ends_with(".json") || file_name == "relays.json" {
+                continue;
+            }
+            urls.push(format!("wss://{}", file_name.trim_end_matches(".json")));
+        }
+    }
+
+    if urls.is_empty() {
+        for relay in relays {
+            urls.push(relay.url.clone());
+        }
+    }
+
+    urls.sort();
+    urls.dedup();
+    Ok(urls)
 }
 
-fn relay_pubkey(relay: &CrawlerRelay) -> Result<PublicKey> {
+fn relay_pubkey(relay: &LoadedRelay) -> Result<PublicKey> {
     let pubkey = relay
-        .pubkey
+        .pubkey_hex
         .as_deref()
         .context("relay metadata missing pubkey")?;
     PublicKey::try_from_hex_string(pubkey, true)
         .with_context(|| format!("parsing relay pubkey {pubkey}"))
 }
 
-fn relay_document_from_relay(relay: &CrawlerRelay, pubkey: PublicKey) -> Result<RelayInformationDocument> {
+fn relay_document_from_relay(relay: &LoadedRelay, pubkey: PublicKey) -> Result<RelayInformationDocument> {
     Ok(RelayInformationDocument {
-        name: relay.name.clone(),
-        description: relay.description.clone(),
+        name: relay.relay.name.clone(),
+        description: relay.relay.description.clone(),
         banner: None,
         icon: None,
         pubkey: Some(pubkey.into()),
         self_pubkey: Some(pubkey.into()),
-        contact: relay.contact.clone(),
+        contact: relay.relay.contact.clone(),
         supported_nips: relay
+            .relay
             .supported_nips
             .clone()
             .unwrap_or_default()
             .into_iter()
             .map(|nip| nip as u32)
             .collect(),
-        software: relay.software.clone(),
-        version: relay.version.clone(),
+        software: relay.relay.software.clone(),
+        version: relay.relay.version.clone(),
         limitation: None,
         retention: vec![],
         relay_countries: vec![],
@@ -983,25 +1059,25 @@ fn relay_document_from_relay(relay: &CrawlerRelay, pubkey: PublicKey) -> Result<
     })
 }
 
-fn metadata_from_relay(relay: &CrawlerRelay) -> Metadata {
+fn metadata_from_relay(relay: &LoadedRelay) -> Metadata {
     let mut other = serde_json::Map::new();
-    if let Some(software) = relay.software.clone() {
+    if let Some(software) = relay.relay.software.clone() {
         other.insert("software".to_string(), serde_json::Value::String(software));
     }
-    if let Some(version) = relay.version.clone() {
+    if let Some(version) = relay.relay.version.clone() {
         other.insert("version".to_string(), serde_json::Value::String(version));
     }
-    if let Some(nips) = relay.supported_nips.clone() {
+    if let Some(nips) = relay.relay.supported_nips.clone() {
         other.insert(
             "supported_nips".to_string(),
             serde_json::Value::Array(nips.into_iter().map(|nip| serde_json::Value::from(nip)).collect()),
         );
     }
     Metadata {
-        name: relay.name.clone(),
-        about: relay.description.clone(),
+        name: relay.relay.name.clone(),
+        about: relay.relay.description.clone(),
         picture: None,
-        nip05: relay.contact.clone(),
+        nip05: relay.relay.contact.clone(),
         other,
     }
 }
@@ -1079,7 +1155,7 @@ fn load_git_snapshot(
         id: state_id,
         pubkey: public_key,
         created_at,
-        kind: EventKind::RepoState,
+        kind: EventKind::GitRepoAnnouncement,
         sig: Signature::zeroes(),
         content: String::new(),
         tags,
@@ -1087,7 +1163,7 @@ fn load_git_snapshot(
     let coordinate = NAddr {
         d: identifier.clone(),
         relays: vec![unchecked_relay.clone()],
-        kind: EventKind::RepoState,
+        kind: EventKind::GitRepoAnnouncement,
         author: public_key,
     };
 
