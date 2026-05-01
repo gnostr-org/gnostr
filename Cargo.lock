@@ -6349,13 +6349,13 @@ dependencies = [
  "bech32 0.11.1",
  "blossom-rs",
  "crossbeam-channel 0.5.15",
- "crossterm 0.28.1",
+ "crossterm 0.29.0",
  "futures-util",
  "gnostr-asyncgit",
  "gnostr-filetreelist",
  "hex",
  "open",
- "ratatui 0.29.0",
+ "ratatui 0.30.0",
  "reqwest 0.12.28",
  "secp256k1 0.29.1",
  "serde",
@@ -6378,7 +6378,7 @@ dependencies = [
  "libp2p",
  "once_cell",
  "parking_lot 0.12.3",
- "ratatui 0.29.0",
+ "ratatui 0.30.0",
  "serde",
  "serde_json",
  "terminal_size 0.4.4",
@@ -13361,27 +13361,6 @@ dependencies = [
  "unicode-segmentation",
  "unicode-truncate 1.1.0",
  "unicode-width 0.1.14",
-]
-
-[[package]]
-name = "ratatui"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eabd94c2f37801c20583fc49dd5cd6b0ba68c716787c2dd6ed18571e1e63117b"
-dependencies = [
- "bitflags 2.11.1",
- "cassowary",
- "compact_str 0.8.1",
- "crossterm 0.28.1",
- "indoc",
- "instability",
- "itertools 0.13.0",
- "lru 0.12.5",
- "paste",
- "strum 0.26.3",
- "unicode-segmentation",
- "unicode-truncate 1.1.0",
- "unicode-width 0.2.0",
 ]
 
 [[package]]
