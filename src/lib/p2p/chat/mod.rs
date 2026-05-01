@@ -611,7 +611,7 @@ pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Erro
 
         let mut app = ui::App {
             topic: args.topic.clone().unwrap_or_else(|| commit_id.to_string()),
-            ..Default::default()
+            on_submit: None,
         };
 
         let (peer_tx, mut peer_rx) = tokio::sync::mpsc::channel::<InternalEvent>(100);
