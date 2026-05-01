@@ -26,10 +26,7 @@ impl Prompt {
         self.state.focus();
     }
 
-    pub(crate) fn reset<B: Backend<Error = std::io::Error>>(
-        &mut self,
-        terminal: &mut Terminal<B>,
-    ) -> Res<()> {
+    pub(crate) fn reset<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Res<()> {
         self.data = None;
         self.state = TextState::new();
         terminal.hide_cursor().map_err(Error::Term)?;
