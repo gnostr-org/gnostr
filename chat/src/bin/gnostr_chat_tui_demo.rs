@@ -30,11 +30,11 @@ use ratatui::{
 };
 
 fn main() -> anyhow::Result<()> {
-    let mut terminal = setup_terminal()?;
+    let mut terminal = TerminalGuard::enter()?;
     let mut app = App::new();
 
     loop {
-        terminal.draw(|frame| app.draw(frame))?;
+        terminal.terminal.draw(|frame| app.draw(frame))?;
 
         if event::poll(Duration::from_millis(250))? {
             match event::read()? {
@@ -54,23 +54,31 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    restore_terminal(&mut terminal)?;
     Ok(())
 }
 
-fn setup_terminal() -> anyhow::Result<Terminal<CrosstermBackend<io::Stdout>>> {
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    Ok(Terminal::new(backend)?)
+struct TerminalGuard {
+    terminal: Terminal<CrosstermBackend<io::Stdout>>,
 }
 
-fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> anyhow::Result<()> {
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
-    Ok(())
+impl TerminalGuard {
+    fn enter() -> anyhow::Result<Self> {
+        enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, EnterAlternateScreen)?;
+        let backend = CrosstermBackend::new(stdout);
+        Ok(Self {
+            terminal: Terminal::new(backend)?,
+        })
+    }
+}
+
+impl Drop for TerminalGuard {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(self.terminal.backend_mut(), LeaveAlternateScreen);
+        let _ = self.terminal.show_cursor();
+    }
 }
 
 struct App {
@@ -364,7 +372,11 @@ impl Page {
                 );
                 let right = Layout::default()
                     .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .constraints([
+                        Constraint::Percentage(34),
+                        Constraint::Percentage(33),
+                        Constraint::Percentage(33),
+                    ])
                     .split(chunks[1]);
                 frame.render_widget(
                     RepoStateWidget::new(&data.repo_state)
