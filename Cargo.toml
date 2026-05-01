@@ -747,8 +747,8 @@ tree-sitter-language = "0.1.6"
 #tree-sitter-language = "0.1.6"
 #tree-sitter-language = "0.1"
 trust-dns-resolver = "0.23" # Use the latest version
-tui-input = "0.10.1"
-tui-textarea = "0.6"
+tui-input = "0.15.3"
+tui-textarea = "0.7.0"
 #tungstenite = { version = "0.28", features = [ "rustls-tls-webpki-roots" ] }
 two-face = { version = "0.4.0", default-features = false }
 ##
