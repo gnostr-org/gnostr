@@ -25,6 +25,17 @@ RELEASE=false
 LOCKED=false
 OFFLINE=false
 
+TMPDIR_VALUE="$(gnostr --weeble 2>/dev/null || true)"
+TMP_VALUE="$(gnostr --blockheight 2>/dev/null || true)"
+TEMP_VALUE="$(gnostr --wobble 2>/dev/null || true)"
+TMPDIR_VALUE="${TMPDIR_VALUE:-0}"
+TMP_VALUE="${TMP_VALUE:-0}"
+TEMP_VALUE="${TEMP_VALUE:-0}"
+export TMPDIR="/var/tmp/${TMPDIR_VALUE}"
+export TMP="${TMPDIR}/cargo-test-workspace/${TMP_VALUE}"
+export TEMP="${TMP}/debug/${TEMP_VALUE}"
+TARGET_ROOT="${TEMP}"
+
 usage() {
   cat <<'EOF'
 Usage: cargo-test-workspace.sh [variant] [--features VALUE] [--package VALUE] [--ignored] [--nocapture] [--quiet] [--release] [--locked] [--offline] [--test-threads VALUE]
@@ -234,6 +245,8 @@ fi
 
 if [[ -n "$TARGET_DIR" ]]; then
   CARGO_FLAGS+=(--target-dir "$TARGET_DIR")
+elif [[ -n "$TARGET_ROOT" ]]; then
+  CARGO_FLAGS+=(--target-dir "$TARGET_ROOT")
 fi
 
 if [[ "$TARGET_TMPDIR" == true || "$TARGET_TMPDIR_CLEAN" == true ]]; then
