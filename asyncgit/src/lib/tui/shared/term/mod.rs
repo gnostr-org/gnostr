@@ -13,7 +13,7 @@ use ratatui::{
     prelude::{backend::WindowSize, buffer::Cell, Position},
     Terminal,
 };
-use std::{convert::Infallible, io, stderr, Stderr};
+use std::{convert::Infallible, io::{self, stderr, Stderr}};
 use std::{fmt::Display, time::Duration};
 
 ///
