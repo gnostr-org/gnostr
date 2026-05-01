@@ -160,16 +160,24 @@ pub fn diff_staged(repo: &Repository) -> Res<Diff> {
 }
 
 pub fn show(repo: &Repository, reference: &str) -> Res<Diff> {
+    let commit = repo
+        .revparse_single(reference)
+        .map_err(Error::GitShowMeta)?
+        .peel_to_commit()
+        .map_err(Error::GitShowMeta)?;
+    let reference = commit.id().to_string();
+
     let text = String::from_utf8(
         Command::new("git")
             // TODO What if bare repo?
             .current_dir(repo.workdir().expect("Bare repos unhandled"))
-            .args(["show", reference])
+            .args(["show", "--no-notes", &reference])
             .output()
             .map_err(Error::GitShow)?
             .stdout,
     )
     .map_err(Error::GitShowUtf8)?;
+    let text = text.trim_end().to_string();
 
     Ok(Diff {
         file_diffs: gitu_diff::Parser::new(&text).parse_commit().unwrap().diff,

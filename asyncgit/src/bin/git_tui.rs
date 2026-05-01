@@ -1,6 +1,7 @@
 use clap::Parser;
 use gnostr_asyncgit::tui::git::{cli::Args, gitui_error::Error, term, Res};
 use log::LevelFilter;
+use git2::Repository;
 use ratatui::Terminal;
 use simple_logger::SimpleLogger;
 use std::{backtrace::Backtrace, panic};
@@ -23,6 +24,14 @@ pub fn main() -> Res<()> {
             .with_level(LevelFilter::Debug)
             .init()
             .map_err(Error::LoggerInit)?;
+    }
+
+    if matches!(
+        args.command,
+        Some(gnostr_asyncgit::tui::git::cli::Commands::Notes)
+    ) {
+        inspect_notes()?;
+        return Ok(());
     }
 
     panic::set_hook(Box::new(|panic_info| {
@@ -52,4 +61,41 @@ fn setup_term_and_run(args: &Args) -> Res<()> {
 
     log::debug!("Starting app");
     gnostr_asyncgit::tui::git::run(args, &mut terminal)
+}
+
+fn inspect_notes() -> Res<()> {
+    let repo = Repository::open_from_env().map_err(Error::OpenRepo)?;
+    let mut found = false;
+
+    let notes_refs = repo.references_glob("refs/notes/*").map_err(Error::ListGitReferences)?;
+    for reference in notes_refs {
+        let reference = reference.map_err(Error::ListGitReferences)?;
+        let Some(ref_name) = reference.name() else {
+            continue;
+        };
+
+        found = true;
+        println!("== {ref_name} ==");
+
+        let notes = repo.notes(Some(ref_name)).map_err(Error::ReadGitConfig)?;
+        for note in notes {
+            let (_note_oid, object_oid) = note.map_err(Error::ReadOid)?;
+            let note = repo.find_note(Some(ref_name), object_oid).map_err(Error::ReadOid)?;
+
+            println!("-- object: {object_oid}");
+            if let Some(message) = note.message() {
+                print!("{message}");
+                if !message.ends_with('\n') {
+                    println!();
+                }
+            }
+            println!();
+        }
+    }
+
+    if !found {
+        println!("No git notes refs found.");
+    }
+
+    Ok(())
 }

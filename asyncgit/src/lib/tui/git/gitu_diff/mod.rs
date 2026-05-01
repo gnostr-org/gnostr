@@ -330,10 +330,11 @@ impl<'a> Parser<'a> {
             self.consume_until(Self::newline)?;
         }
 
-        if self.peek("index") {
-        } else if self.peek("old mode") || self.peek("new mode") {
+        while self.peek("old mode") || self.peek("new mode") {
             self.consume_until(Self::newline)?;
-        } else if self.peek("deleted file mode") {
+        }
+
+        if self.peek("deleted file mode") {
             diff_type = Status::Deleted;
             self.consume_until(Self::newline)?;
         } else if self.peek("new file mode") {
@@ -935,6 +936,24 @@ mod tests {
         let mut parser = Parser::new(input);
         let commit = parser.parse_commit().unwrap();
         assert_eq!(commit.diff.len(), 3);
+    }
+
+    #[test]
+    fn mode_change_file() {
+        let input = "diff --git a/script.sh b/script.sh\n\
+            old mode 100644\n\
+            new mode 100755\n\
+            index 47c4f17..1307966 100644\n\
+            --- a/script.sh\n\
+            +++ b/script.sh\n\
+            @@ -1 +1 @@\n\
+            -echo old\n\
+            +echo new\n";
+
+        let mut parser = Parser::new(input);
+        let diffs = parser.parse_diff().unwrap();
+        assert_eq!(diffs.len(), 1);
+        assert_eq!(diffs[0].header.status, Status::Modified);
     }
 
     #[test]

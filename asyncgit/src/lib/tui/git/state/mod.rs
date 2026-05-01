@@ -88,7 +88,7 @@ impl State {
                     reference.clone(),
                 )?]
             }
-            None => vec![
+            Some(cli::Commands::Notes) | None => vec![
                 screen::gnostr::create(Rc::clone(&config), size)?,
                 screen::status::create(Rc::clone(&config), Rc::clone(&repo), size)?,
             ],
