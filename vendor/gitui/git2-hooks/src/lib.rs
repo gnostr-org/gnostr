@@ -332,10 +332,24 @@ pub fn hooks_prepare_commit_msg(
 
 #[cfg(test)]
 mod tests {
+	use std::process::Command;
+
 	use super::*;
 	use git2_testing::{repo_init, repo_init_bare};
 	use pretty_assertions::assert_eq;
 	use tempfile::TempDir;
+
+	#[cfg(not(windows))]
+	fn python_interpreter() -> Option<&'static str> {
+		["python3", "python"]
+			.into_iter()
+			.find(|candidate| {
+				Command::new(candidate)
+					.arg("--version")
+					.output()
+					.is_ok()
+			})
+	}
 
 	fn branch_update(
 		repo: &Repository,
@@ -696,16 +710,25 @@ exit 1
 
 		// mirror how python pre-commit sets itself up
 		#[cfg(not(windows))]
-		let hook = b"#!/usr/bin/env python
+		let Some(python) = python_interpreter() else {
+			return;
+		};
+		#[cfg(not(windows))]
+		let hook = format!(
+			"#!/usr/bin/env {python}\n\
 import sys
 sys.exit(0)
-        ";
+        "
+		);
 		#[cfg(windows)]
 		let hook = b"#!/bin/env python.exe
 import sys
 sys.exit(0)
         ";
 
+		#[cfg(not(windows))]
+		create_hook(&repo, HOOK_PRE_COMMIT, hook.as_bytes());
+		#[cfg(windows)]
 		create_hook(&repo, HOOK_PRE_COMMIT, hook);
 		let res = hooks_pre_commit(&repo, None).unwrap();
 		assert!(res.is_successful(), "{res:?}");
@@ -717,16 +740,25 @@ sys.exit(0)
 
 		// mirror how python pre-commit sets itself up
 		#[cfg(not(windows))]
-		let hook = b"#!/usr/bin/env python
+		let Some(python) = python_interpreter() else {
+			return;
+		};
+		#[cfg(not(windows))]
+		let hook = format!(
+			"#!/usr/bin/env {python}\n\
 import sys
 sys.exit(1)
-        ";
+        "
+		);
 		#[cfg(windows)]
 		let hook = b"#!/bin/env python.exe
 import sys
 sys.exit(1)
         ";
 
+		#[cfg(not(windows))]
+		create_hook(&repo, HOOK_PRE_COMMIT, hook.as_bytes());
+		#[cfg(windows)]
 		create_hook(&repo, HOOK_PRE_COMMIT, hook);
 		let res = hooks_pre_commit(&repo, None).unwrap();
 		assert!(!res.is_successful());
