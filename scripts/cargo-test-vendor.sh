@@ -31,9 +31,6 @@ case "$OS_NAME" in
     fi
     VENDOR_ROOT="$TARGET_DIR/vendor"
     cp -R "$ROOT_DIR/vendor" "$VENDOR_ROOT"
-    if [[ -f "$VENDOR_ROOT/actix-http-test/Cargo.toml" ]]; then
-      perl -0pi -e 's/\[dependencies\.actix-rt\]\nversion = "2\.2"\n/\[dependencies\.actix-rt\]\nversion = "2.2"\n\n[dependencies.actix-http]\nversion = "3"\n/' "$VENDOR_ROOT/actix-http-test/Cargo.toml"
-    fi
     trap '[[ -n "${TARGET_DIR:-}" && -d "$TARGET_DIR" ]] && rm -rf "$TARGET_DIR"' EXIT
     ;;
 esac
