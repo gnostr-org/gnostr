@@ -386,7 +386,7 @@ impl RevisionFilesComponent {
 		Ok(title)
 	}
 
-	fn request_files(&self, commit: CommitId) {
+	fn request_files(&mut self, commit: CommitId) {
 		self.async_treefiles.spawn(AsyncTreeFilesJob::new(
 			self.repo.borrow().clone(),
 			commit,

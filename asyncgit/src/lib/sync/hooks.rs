@@ -1,9 +1,10 @@
+use std::cell::Ref;
+
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 
-pub use crate::upstream_sync::{hooks_pre_push, PrePushTarget};
 use super::{repository::repo, RepoPath};
-use crate::error::Result;
+use crate::error::{Error, Result};
 //use crate::sync::utils;
 
 ///
@@ -13,6 +14,20 @@ pub enum HookResult {
     Ok,
     /// Hook returned error
     NotOk(String),
+}
+
+///
+#[derive(Debug, PartialEq, Eq)]
+pub enum PrePushTarget<'a> {
+    /// Push a single branch.
+    Branch {
+        /// Local branch name being pushed.
+        branch: &'a str,
+        /// Whether this is a delete push.
+        delete: bool,
+    },
+    /// Push tags.
+    Tags,
 }
 
 impl From<git2_hooks::HookResult> for HookResult {
@@ -25,6 +40,70 @@ impl From<git2_hooks::HookResult> for HookResult {
             }
         }
     }
+}
+
+impl From<crate::upstream_sync::HookResult> for HookResult {
+    fn from(v: crate::upstream_sync::HookResult) -> Self {
+        match v {
+            crate::upstream_sync::HookResult::Ok => Self::Ok,
+            crate::upstream_sync::HookResult::NotOk(msg) => Self::NotOk(msg),
+        }
+    }
+}
+
+fn to_upstream_repo_path(repo_path: &RepoPath) -> crate::upstream_sync::RepoPath {
+    match repo_path {
+        RepoPath::Path(path) => crate::upstream_sync::RepoPath::Path(path.clone()),
+        RepoPath::Workdir { gitdir, workdir } => {
+            crate::upstream_sync::RepoPath::Workdir {
+                gitdir: gitdir.clone(),
+                workdir: workdir.clone(),
+            }
+        }
+    }
+}
+
+fn to_upstream_target<'a>(
+    push: &'a PrePushTarget<'a>,
+) -> crate::upstream_sync::PrePushTarget<'a> {
+    match push {
+        PrePushTarget::Branch { branch, delete } => {
+            crate::upstream_sync::PrePushTarget::Branch {
+                branch,
+                delete: *delete,
+            }
+        }
+        PrePushTarget::Tags => crate::upstream_sync::PrePushTarget::Tags,
+    }
+}
+
+///
+pub fn hooks_pre_push(
+    repo_path: &Ref<'_, RepoPath>,
+    remote: &str,
+    push: &PrePushTarget<'_>,
+    basic_credential: Option<crate::sync::cred::BasicAuthCredential>,
+) -> Result<HookResult> {
+    scope_time!("hooks_pre_push");
+
+    let repo_path = &**repo_path;
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    let upstream_cred = basic_credential.map(|cred| {
+        crate::upstream_sync::cred::BasicAuthCredential::new(
+            cred.username,
+            cred.password,
+        )
+    });
+
+    let result = crate::upstream_sync::hooks_pre_push(
+        &upstream_repo_path,
+        remote,
+        &to_upstream_target(push),
+        upstream_cred,
+    )
+    .map_err(|e| Error::Generic(e.to_string()))?;
+
+    Ok(result.into())
 }
 
 /// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>

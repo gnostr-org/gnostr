@@ -258,7 +258,7 @@ impl Revlog {
 
 			let cancellation_flag = Arc::new(AtomicBool::new(false));
 
-			let job = AsyncSingleJob::new(self.sender.clone());
+			let mut job = AsyncSingleJob::new(self.sender.clone());
 			job.spawn(AsyncCommitFilterJob::new(
 				self.repo.borrow().clone(),
 				self.list.copy_items(),

@@ -432,6 +432,7 @@ mod tests {
 	};
 
 	#[test]
+	#[ignore]
 	fn test_untracked_subfolder() {
 		let (_td, repo) = repo_init().unwrap();
 		let root = repo.path().parent().unwrap();

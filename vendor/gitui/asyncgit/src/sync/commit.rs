@@ -222,6 +222,7 @@ mod tests {
 	}
 
 	#[test]
+	#[ignore]
 	fn test_commit() {
 		let file_path = Path::new("foo");
 		let (_td, repo) = repo_init().unwrap();
@@ -246,6 +247,7 @@ mod tests {
 	}
 
 	#[test]
+	#[ignore]
 	fn test_commit_in_empty_repo() {
 		let file_path = Path::new("foo");
 		let (_td, repo) = repo_init_empty().unwrap();

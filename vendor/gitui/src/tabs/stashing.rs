@@ -69,7 +69,7 @@ impl Stashing {
 	}
 
 	///
-	pub fn update(&self) -> Result<()> {
+	pub fn update(&mut self) -> Result<()> {
 		if self.is_visible() {
 			self.git_status
 				//TODO: support options

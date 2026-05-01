@@ -451,7 +451,7 @@ impl Status {
 		Ok(())
 	}
 
-	pub fn get_files_changes(&self) -> Result<Vec<StatusItem>> {
+	pub fn get_files_changes(&mut self) -> Result<Vec<StatusItem>> {
 		Ok(self.git_status_stage.last()?.items)
 	}
 
