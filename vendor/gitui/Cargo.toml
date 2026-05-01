@@ -63,6 +63,9 @@ timing = ["scopetime/enabled"]
 trace-libgit = ["asyncgit/trace-libgit"]
 vendor-openssl = ["asyncgit/vendor-openssl"]
 
+[lib]
+path = "src/lib.rs"
+
 [[bin]]
 name = "gitui"
 path = "src/main.rs"
@@ -236,3 +239,5 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 strip = "debuginfo"
+
+[workspace]
