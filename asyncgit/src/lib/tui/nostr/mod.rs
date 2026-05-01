@@ -4,3 +4,6 @@ pub use crate::types::{
     Profile, PublicKey, PublicKeyHex, RelayInformationDocument, RelayList, RelayMessage, RelayUrl,
     RelayUsage, RelayUsageSet, Tag, Unixtime, UncheckedUrl, Url,
 };
+
+pub mod widgets;
+pub use widgets::*;
