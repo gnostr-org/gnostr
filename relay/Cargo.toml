@@ -16,7 +16,7 @@ categories = ["network-programming", "web-programming"]
 
 [dependencies]
 actix-web = { workspace = true }
-actix-http = { workspace = true }
+actix-http = { version = "3.9.0" }
 anyhow = { workspace = true }
 clap = { workspace = true }
 nostr-relay = { version = "0.4.8", default-features = false }
