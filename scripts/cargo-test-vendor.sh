@@ -17,6 +17,7 @@ RELEASE=false
 LOCKED=false
 OFFLINE=false
 TARGET_DIR=""
+VENDOR_ROOT="$ROOT_DIR/vendor"
 
 OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
 case "$OS_NAME" in
@@ -28,6 +29,8 @@ case "$OS_NAME" in
       TARGET_DIR="${TMP_BASE%/}/cargo-test-vendor.$$"
       mkdir -p "$TARGET_DIR"
     fi
+    VENDOR_ROOT="$TARGET_DIR/vendor"
+    cp -R "$ROOT_DIR/vendor" "$VENDOR_ROOT"
     trap '[[ -n "${TARGET_DIR:-}" && -d "$TARGET_DIR" ]] && rm -rf "$TARGET_DIR"' EXIT
     ;;
 esac
@@ -92,7 +95,7 @@ done
 MANIFESTS=()
 while IFS= read -r manifest; do
   MANIFESTS+=("$manifest")
-done < <(find vendor -path '*/Cargo.toml' -print | sort)
+done < <(find "$VENDOR_ROOT" -path '*/Cargo.toml' -print | sort)
 
 if [[ ${#MANIFESTS[@]} -eq 0 ]]; then
   echo "No vendored Cargo.toml files found under ./vendor" >&2
