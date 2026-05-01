@@ -107,6 +107,7 @@ auth-git2 = { version = "0.5.8" }
 axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
 axum-core = "0.4.5"
 actix-web = { version = "4.9.0" }
+actix-http = { version = "3.9.0" }
 base64 = "0.22.1"
 bech32 = "0.11"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }

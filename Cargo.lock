@@ -7439,6 +7439,7 @@ dependencies = [
 name = "gnostr-relay"
 version = "1876.947437.254765"
 dependencies = [
+ "actix-http",
  "actix-web",
  "anyhow",
  "clap 4.6.1",
