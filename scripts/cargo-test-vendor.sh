@@ -89,7 +89,10 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-mapfile -t MANIFESTS < <(find vendor -path '*/Cargo.toml' -print | sort)
+MANIFESTS=()
+while IFS= read -r manifest; do
+  MANIFESTS+=("$manifest")
+done < <(find vendor -path '*/Cargo.toml' -print | sort)
 
 if [[ ${#MANIFESTS[@]} -eq 0 ]]; then
   echo "No vendored Cargo.toml files found under ./vendor" >&2
