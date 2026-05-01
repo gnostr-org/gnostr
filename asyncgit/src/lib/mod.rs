@@ -69,7 +69,7 @@ pub mod filehash;
 pub mod types;
 
 /// Terminal UI entry points.
-#[cfg(feature = "gitui")]
+#[cfg(feature = "tui")]
 pub mod tui;
 
 mod notes;

@@ -22,13 +22,13 @@ path = "src/lib/mod.rs"
 [[bin]]
 name = "git-tui"
 path = "src/bin/git_tui.rs"
-required-features = ["gitui"]
+required-features = ["tui"]
 
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
 gnostr_web = []
-gitui = []
+tui = []
 speedy = []
 nostr = []
 vendored-openssl = ["openssl-sys"]
@@ -233,10 +233,10 @@ tokio = { version = "1", features = ["full"] }
 [[example]]
 name = "git_tui"
 path = "examples/git_tui.rs"
-required-features = ["gitui"]
+required-features = ["tui"]
 
 [[bench]]
 name = "show"
 path = "benches/show.rs"
 harness = false
-required-features = ["gitui"]
+required-features = ["tui"]
