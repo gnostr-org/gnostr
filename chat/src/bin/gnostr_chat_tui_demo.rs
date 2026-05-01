@@ -3,8 +3,16 @@
 //! The screen layout mirrors the JS app's main sections: home, relays, settings,
 //! NIP explorer, NIP-34, and search.
 
-use std::{collections::HashMap, io, time::Duration};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fs,
+    io,
+    path::{Path, PathBuf},
+    sync::{Arc, RwLock},
+    time::Duration,
+};
 
+use anyhow::{Context, Result};
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
@@ -28,10 +36,12 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
     Frame, Terminal,
 };
+use sha2::{Digest, Sha256};
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let mut terminal = TerminalGuard::enter()?;
-    let mut app = App::new();
+    let mut app = App::new().await?;
 
     loop {
         terminal.terminal.draw(|frame| app.draw(frame))?;
@@ -84,11 +94,13 @@ impl Drop for TerminalGuard {
 struct App {
     pages: Vec<Page>,
     selected: usize,
-    data: DemoData,
+    data: Arc<RwLock<DemoData>>,
 }
 
 impl App {
-    fn new() -> Self {
+    async fn new() -> anyhow::Result<Self> {
+        let data = Arc::new(RwLock::new(DemoData::load_real()?));
+        DemoData::spawn_refresh(Arc::clone(&data));
         Self {
             pages: vec![
                 Page::Overview,
@@ -99,8 +111,8 @@ impl App {
                 Page::Search,
             ],
             selected: 0,
-            data: DemoData::sample(),
-        }
+            data,
+        })
     }
 
     fn next(&mut self) {
@@ -120,6 +132,7 @@ impl App {
     }
 
     fn draw(&self, frame: &mut Frame) {
+        let data = self.data.read().expect("demo state poisoned");
         let root = frame.area();
         let layout = Layout::default()
             .direction(Direction::Vertical)
@@ -146,10 +159,10 @@ impl App {
             .split(layout[1]);
 
         self.draw_nav(frame, content[0]);
-        self.draw_page(frame, content[1], self.pages[self.selected]);
+        self.draw_page(frame, content[1], self.pages[self.selected], &data);
 
         frame.render_widget(
-            Paragraph::new(self.status_line())
+            Paragraph::new(self.status_line(&data))
                 .wrap(Wrap { trim: true })
                 .block(Block::default().title("status").borders(Borders::ALL)),
             layout[2],
@@ -180,25 +193,30 @@ impl App {
         );
     }
 
-    fn draw_page(&self, frame: &mut Frame, area: Rect, page: Page) {
+    fn draw_page(&self, frame: &mut Frame, area: Rect, page: Page, data: &DemoData) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Length(9), Constraint::Min(0)])
             .split(area);
 
         frame.render_widget(
-            Paragraph::new(page.summary(&self.data))
+            Paragraph::new(page.summary(data))
                 .wrap(Wrap { trim: true })
                 .block(Block::default().title(page.title()).borders(Borders::ALL)),
             chunks[0],
         );
 
-        page.render(frame, chunks[1], &self.data);
+        page.render(frame, chunks[1], data);
     }
 
-    fn status_line(&self) -> String {
+    fn status_line(&self, data: &DemoData) -> String {
         let page = self.pages[self.selected].title();
-        format!("selected view: {page} | crawler relays: {} | relay entries: {}", self.data.crawler_relays.len(), self.data.relay_list.0.len())
+        format!(
+            "selected view: {page} | crawler relays: {} | relay entries: {} | updated: {}",
+            data.crawler_relays.len(),
+            data.relay_list.0.len(),
+            data.updated_at
+        )
     }
 }
 
