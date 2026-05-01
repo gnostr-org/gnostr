@@ -28,7 +28,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use ratatui::crossterm::{
@@ -321,31 +321,21 @@ impl App {
         let root = frame.area();
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
+            .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(3)])
             .split(root);
 
+        let tabs = self
+            .pages
+            .iter()
+            .map(|page| Line::from(Span::raw(page.title())))
+            .collect::<Vec<_>>();
         frame.render_widget(
-            Paragraph::new(Line::from(vec![
-                Span::styled(
-                    "gnostr ",
-                    Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
-                ),
-                Span::raw("chat TUI demo "),
-                Span::styled(self.preset.title(), Style::default().fg(Color::Cyan)),
-                Span::raw(" "),
-                Span::styled("q", Style::default().fg(Color::Yellow)),
-                Span::raw(" quit  "),
-                Span::styled("/", Style::default().fg(Color::Yellow)),
-                Span::raw(" search  "),
-                Span::styled("?", Style::default().fg(Color::Yellow)),
-                Span::raw(" help  "),
-                Span::styled("1-8", Style::default().fg(Color::Yellow)),
-                Span::raw(" jump  "),
-                Span::styled("j/k", Style::default().fg(Color::Yellow)),
-                Span::raw(" move  "),
-                Span::raw(self.preset.banner()),
-            ]))
-            .block(Block::default().title("gnostr").borders(Borders::ALL)),
+            Tabs::new(tabs)
+                .select(self.selected)
+                .style(Style::default().fg(Color::Gray))
+                .highlight_style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD))
+                .divider(Span::raw(" | "))
+                .block(Block::default().title("tabs").borders(Borders::ALL)),
             layout[0],
         );
 
@@ -362,7 +352,16 @@ impl App {
         }
 
         frame.render_widget(
-            Paragraph::new(self.status_lines(&data))
+            Paragraph::new(vec![
+                Line::from(vec![
+                    Span::styled("user: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(self.user_line(&data)),
+                ]),
+                Line::from(vec![
+                    Span::styled("status: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(self.status_message(&data)),
+                ]),
+            ])
                 .wrap(Wrap { trim: true })
                 .block(Block::default().title("status").borders(Borders::ALL)),
             layout[2],
@@ -470,11 +469,15 @@ impl App {
         page.render(frame, chunks[1], data, self.gallery_layout);
     }
 
-    fn status_lines(&self, data: &DemoData) -> String {
+    fn user_line(&self, data: &DemoData) -> String {
+        let name = data.metadata.name.as_deref().unwrap_or("unknown");
+        format!("{name} / {}", data.public_key)
+    }
+
+    fn status_message(&self, data: &DemoData) -> String {
         let page = self.pages[self.selected].title();
         format!(
-            "preset: {} | selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {}\n\
-             search: / focus | ?: help | F1 overlay | enter accept | esc exit | arrows/jkhl navigate | tab cycle",
+            "preset: {} | selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {} | search: / focus | ?: help | F1 overlay | enter accept | esc exit",
             self.preset.title(),
             if self.search_query().is_empty() { "<empty>" } else { self.search_query() },
             data.crawler_relays.len(),
