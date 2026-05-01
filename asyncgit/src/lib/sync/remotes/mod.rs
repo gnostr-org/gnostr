@@ -6,7 +6,7 @@ pub(crate) mod tags;
 
 pub use callbacks::Callbacks;
 use crossbeam_channel::Sender;
-use git2::{BranchType, FetchOptions, ProxyOptions, Repository};
+use git2::{BranchType, FetchOptions, ProxyOptions, Remote, Repository};
 use scopetime::scope_time;
 pub use tags::tags_missing_remote;
 use utils::bytes2string;
