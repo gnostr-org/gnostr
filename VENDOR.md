@@ -51,6 +51,10 @@ helper now sets `SO_REUSEADDR` before bind, `actix-test` enables the
 `actix-web` `macros` feature for its doctests, and `actix-http` keeps its test
 targets trimmed to the upstream manifest shape.
 
+`vendor/actix-web` keeps `tests/test_server.rs` disabled because it keeps
+failing in this workspace, but `tests/test_server_openssl.rs` provides a much
+smaller OpenSSL-backed smoke test for the server setup.
+
 ## cargo-test scripts
 
 `scripts/cargo-test-vendor.sh` and `scripts/cargo-test-workspace.sh` now accept
