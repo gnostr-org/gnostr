@@ -1,0 +1,69 @@
+[package]
+name = "actix"
+version = "0.13.5"
+authors = [
+    "Nikolay Kim <fafhrd91@gmail.com>",
+]
+description = "Actor framework for Rust"
+keywords = ["actor", "futures", "actix", "async", "tokio"]
+repository = "https://github.com/actix/actix"
+categories = ["network-programming", "asynchronous"]
+license = "MIT OR Apache-2.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[badges]
+maintenance.status = "passively-maintained"
+
+[lib]
+name = "actix"
+path = "src/lib.rs"
+
+[features]
+default = ["macros"]
+
+# Re-exports derive macros from actix-derive and enables `#[actix::main]`.
+macros = ["actix-macros", "actix_derive"]
+
+# Adds assertion to prevent processing too many messages on event loop
+mailbox_assert = []
+
+[dependencies]
+actix-macros = { version = "0.2", optional = true }
+actix-rt = { version = "2", default-features = false }
+actix_derive = { version = "0.6", optional = true }
+
+bitflags = "2"
+bytes = "1"
+crossbeam-channel = "0.5"
+futures-core = { version = "0.3.22", default-features = false }
+futures-sink = { version = "0.3.22", default-features = false }
+futures-task = { version = "0.3.22", default-features = false }
+futures-util = { version = "0.3.22", default-features = false }
+log = "0.4"
+once_cell = "1.5"
+parking_lot = "0.12"
+pin-project-lite = "0.2"
+smallvec = "1.6.1"
+tokio = { version = "1", features = ["io-util", "sync"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+
+[dev-dependencies]
+doc-comment = "0.3"
+futures-util = { version = "0.3.22", default-features = false, features = ["alloc"] }
+
+[[example]]
+name = "fibonacci"
+required-features = ["macros"]
+
+[[example]]
+name = "ping"
+required-features = ["macros"]
+
+[[example]]
+name = "weak_addr"
+required-features = ["macros"]
+
+[[example]]
+name = "weak_recipient"
+required-features = ["macros"]
