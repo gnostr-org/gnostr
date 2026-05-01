@@ -163,10 +163,14 @@ struct App {
 impl App {
     async fn new() -> Result<Self> {
         let types = build_type_items();
+        let selected_type = types
+            .iter()
+            .position(|item| matches!(item.feed, FeedKind::RelayMetadata))
+            .unwrap_or(0);
         let (tx, rx) = mpsc::channel();
         let mut app = Self {
             types,
-            selected_type: 0,
+            selected_type,
             selected_event: 0,
             detail_scroll: 0,
             focus: Focus::Types,
