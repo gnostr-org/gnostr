@@ -100,6 +100,7 @@ struct App {
     show_help: bool,
     page_scroll: u16,
     gallery_layout: usize,
+    toast: Option<String>,
     data: Arc<RwLock<DemoData>>,
 }
 
@@ -115,6 +116,7 @@ impl App {
             show_help: false,
             page_scroll: 0,
             gallery_layout: 0,
+            toast: Some("awesome-ratatui ideas loaded".to_string()),
             preset,
             pages,
             data,
@@ -143,6 +145,10 @@ impl App {
 
     fn select_page(&mut self, idx: usize) {
         self.selected = idx.min(self.pages.len().saturating_sub(1));
+    }
+
+    fn notify(&mut self, message: impl Into<String>) {
+        self.toast = Some(message.into());
     }
 
     fn handle_key(&mut self, key: KeyEvent) -> bool {
@@ -188,47 +194,63 @@ impl App {
                 KeyCode::Char('q') | KeyCode::Esc => true,
                 KeyCode::Char('1') => {
                     self.select_page(0);
+                    self.notify("home");
                     false
                 }
                 KeyCode::Char('2') => {
                     self.select_page(1);
+                    self.notify("gallery");
                     false
                 }
                 KeyCode::Char('3') => {
                     self.select_page(2);
+                    self.notify("ideas");
                     false
                 }
                 KeyCode::Char('4') => {
                     self.select_page(3);
+                    self.notify("relays");
                     false
                 }
                 KeyCode::Char('5') => {
                     self.select_page(4);
+                    self.notify("settings");
                     false
                 }
                 KeyCode::Char('6') => {
                     self.select_page(5);
+                    self.notify("nip explorer");
                     false
                 }
                 KeyCode::Char('7') => {
                     self.select_page(6);
+                    self.notify("nip34");
                     false
                 }
                 KeyCode::Char('8') => {
                     self.select_page(7);
+                    self.notify("search");
+                    false
+                }
+                KeyCode::Char('9') => {
+                    self.select_page(8);
+                    self.notify("help");
                     false
                 }
                 KeyCode::Char('/') => {
                     self.input_mode = InputMode::Search;
                     self.page_scroll = 0;
+                    self.notify("search input focused");
                     false
                 }
                 KeyCode::Char('?') => {
                     self.show_help = true;
+                    self.notify("help overlay opened");
                     false
                 }
                 KeyCode::F(1) => {
                     self.show_help = true;
+                    self.notify("help overlay opened");
                     false
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
@@ -360,6 +382,10 @@ impl App {
                 Line::from(vec![
                     Span::styled("status: ", Style::default().fg(Color::Magenta)),
                     Span::raw(self.status_message(&data)),
+                ]),
+                Line::from(vec![
+                    Span::styled("toast: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(self.toast.as_deref().unwrap_or("ready")),
                 ]),
             ])
                 .wrap(Wrap { trim: true })
@@ -534,6 +560,7 @@ impl App {
 enum Page {
     Overview,
     Gallery,
+    Ideas,
     Relays,
     Settings,
     Explorer,
@@ -547,6 +574,7 @@ impl Page {
         match self {
             Page::Overview => "home",
             Page::Gallery => "gallery",
+            Page::Ideas => "ideas",
             Page::Relays => "relays",
             Page::Settings => "settings",
             Page::Explorer => "nip explorer",
@@ -566,6 +594,7 @@ impl Page {
                 "Widget gallery mixes asyncgit type widgets in multiple Ratatui layouts.\n\nLayout variants: {}",
                 DemoPreset::gallery_layout_count()
             ),
+            Page::Ideas => "Awesome Ratatui ideas page.\n\nBorrowed patterns: tabs, popups, scroll views, text areas, tree browsers, and toasts.\n\nUse [ and ] to rotate gallery layouts; watch the toast line for feedback.".to_string(),
             Page::Relays => format!(
                 "Relay views combine crawler discovery data and relay metadata.\n\nCrawler discovery source: {} entries\nRelay list entries: {}",
                 data.crawler_relays.len(),
@@ -619,6 +648,7 @@ impl Page {
                 );
             }
             Page::Gallery => render_gallery(frame, area, data, gallery_layout),
+            Page::Ideas => render_ideas(frame, area, data),
             Page::Relays => {
                 let chunks = Layout::default()
                     .direction(Direction::Horizontal)
@@ -1024,6 +1054,7 @@ impl DemoPreset {
             DemoPreset::Full => vec![
                 Page::Overview,
                 Page::Gallery,
+                Page::Ideas,
                 Page::Relays,
                 Page::Settings,
                 Page::Explorer,
@@ -1036,6 +1067,7 @@ impl DemoPreset {
                 Page::Help,
                 Page::Overview,
                 Page::Gallery,
+                Page::Ideas,
                 Page::Explorer,
                 Page::Relays,
                 Page::Nip34,
@@ -1047,6 +1079,7 @@ impl DemoPreset {
                 Page::Help,
                 Page::Overview,
                 Page::Gallery,
+                Page::Ideas,
                 Page::Settings,
                 Page::Explorer,
                 Page::Search,
@@ -1056,6 +1089,7 @@ impl DemoPreset {
                 Page::Search,
                 Page::Overview,
                 Page::Gallery,
+                Page::Ideas,
                 Page::Relays,
                 Page::Explorer,
                 Page::Nip34,
