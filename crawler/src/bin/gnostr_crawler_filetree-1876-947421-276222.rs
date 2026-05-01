@@ -473,12 +473,12 @@ fn draw(
 
     let tree_area = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(5), Constraint::Length(3), Constraint::Min(0)])
+        .constraints([Constraint::Length(3), Constraint::Length(5), Constraint::Min(0)])
         .split(body[0]);
-    frame.render_widget(favorites_panel(tree), tree_area[0]);
     frame.render_widget(search_box(input_mode, search_query, tree.best_completion(search_query).as_deref()).block(
         Block::default().borders(Borders::ALL).title("tree search"),
-    ), tree_area[1]);
+    ), tree_area[0]);
+    frame.render_widget(favorites_panel(tree), tree_area[1]);
     frame.render_widget(tree_panel_list(tree, tree_area[2]), tree_area[2]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree, status_message), root[2]);
