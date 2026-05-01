@@ -6299,6 +6299,7 @@ name = "gnostr-chat"
 version = "1876.947089.686958"
 dependencies = [
  "anyhow",
+ "clap 4.6.1",
  "futures",
  "git2",
  "gnostr-asyncgit",
@@ -6314,6 +6315,7 @@ dependencies = [
  "textwrap 0.16.2",
  "tokio",
  "tracing",
+ "tracing-subscriber",
  "ureq",
 ]
 
