@@ -76,9 +76,6 @@ pub mod tui;
 
 mod notes;
 
-/// gnostr command helpers.
-pub mod gnostr;
-
 pub mod asyncjob;
 mod blame;
 mod branches;
