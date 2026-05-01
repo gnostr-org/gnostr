@@ -470,157 +470,126 @@ struct DemoData {
     relay_message: RelayMessage,
     crawler_relays: Vec<CrawlerRelay>,
     filter: Filter,
+    updated_at: Unixtime,
 }
 
 impl DemoData {
-    fn sample() -> Self {
-        let public_key = PublicKey::try_from_hex_string(
-            "b0635d6a9851d3aed0cd6c495b282167acf761729078d975fc341b22650b07b9",
-            true,
-        )
-        .expect("valid demo public key");
-        let id = Id::try_from_hex_string(
-            "5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6",
-        )
-        .expect("valid demo event id");
-        let relay_url = RelayUrl::try_from_str("wss://relay.example.com").expect("valid relay url");
-        let unchecked_relay = UncheckedUrl::from_str("wss://relay.example.com");
+    fn load_real() -> Result<Self> {
+        let config_dir = gnostr_crawler::relays::get_config_dir_path();
+        let crawler_relays = load_crawler_relays(&config_dir)?;
+        anyhow::ensure!(
+            !crawler_relays.is_empty(),
+            "no crawler relay metadata found in {}",
+            config_dir.display()
+        );
+
+        let relay_urls = load_relay_urls(&config_dir, &crawler_relays)?;
+        anyhow::ensure!(!relay_urls.is_empty(), "no relay URLs available for demo");
+
+        let primary = crawler_relays
+            .first()
+            .cloned()
+            .context("missing primary crawler relay")?;
+        let primary_pubkey = relay_pubkey(&primary)?;
+        let primary_url = relay_urls
+            .first()
+            .cloned()
+            .context("missing primary relay URL")?;
+        let relay_url = RelayUrl::try_from_str(&primary_url)?;
+        let unchecked_relay = UncheckedUrl::from_str(&primary_url);
+        let relay_list = relay_list_from_urls(&relay_urls)?;
+        let relay_document = relay_document_from_relay(&primary, primary_pubkey)?;
         let profile = Profile {
-            pubkey: public_key,
-            relays: vec![UncheckedUrl::from_str("wss://relay.example.com")],
+            pubkey: primary_pubkey,
+            relays: relay_urls
+                .iter()
+                .map(|url| UncheckedUrl::from_str(url))
+                .collect(),
         };
-        let metadata = Metadata {
-            name: Some("gnostr demo".to_string()),
-            about: Some("chat TUI view that mirrors the JS app".to_string()),
-            picture: Some("https://example.com/avatar.png".to_string()),
-            nip05: Some("demo@example.com".to_string()),
-            other: serde_json::Map::new(),
-        };
-        let event = EventV3::new_dummy();
-        let relay_document = RelayInformationDocument {
-            name: Some("demo relay".to_string()),
-            description: Some("relay panel data from the chat demo".to_string()),
-            banner: Some(Url::try_from_str("https://example.com/banner.png").expect("valid url")),
-            icon: Some(Url::try_from_str("https://example.com/icon.png").expect("valid url")),
-            pubkey: Some((&public_key).into()),
-            self_pubkey: Some((&public_key).into()),
-            contact: Some("mailto:relay@example.com".to_string()),
-            supported_nips: vec![1, 11, 28, 34, 50],
-            software: Some("gnostr-relay".to_string()),
-            version: Some("0.1.0".to_string()),
-            limitation: None,
-            retention: vec![],
-            relay_countries: vec!["US".to_string()],
-            language_tags: vec!["en".to_string()],
-            tags: vec!["nostr".to_string(), "relay".to_string()],
-            posting_policy: None,
-            payments_url: None,
-            fees: None,
-            other: serde_json::Map::new(),
-        };
-        let mut relay_list = RelayList::default();
-        relay_list.0.insert(relay_url.clone(), RelayListUsage::Both);
-        let relay_usage = RelayUsageSet::new_all();
+        let metadata = metadata_from_relay(&primary);
+        let relay_usage = RelayUsageSet::new_empty();
         let nip19 = Nip19::Profile(Nip19Profile {
-            public_key,
+            public_key: primary_pubkey,
             relays: vec![relay_url.clone()],
         });
+
+        let git = load_git_snapshot(primary_pubkey, &relay_url, &unchecked_relay)?;
         let naddr = NAddr {
-            d: "gnostr-demo".to_string(),
+            d: git.identifier.clone(),
             relays: vec![unchecked_relay.clone()],
             kind: EventKind::LongFormContent,
-            author: public_key,
+            author: primary_pubkey,
         };
         let event_reference = EventReference::Id {
-            id,
-            author: Some(public_key),
+            id: git.state_id,
+            author: Some(primary_pubkey),
             relays: vec![relay_url.clone()],
             marker: Some("root".to_string()),
         };
-        let tag = Tag::new_event(id, Some(unchecked_relay.clone()), Some("root".to_string()));
+        let tag = Tag::new_event(git.state_id, Some(unchecked_relay.clone()), Some("root".to_string()));
+
+        let mut repo_events = HashMap::new();
+        repo_events.insert(git.coordinate.clone(), git.state_event.clone());
         let repo_ref = RepoRef {
-            name: "gnostr".to_string(),
-            description: "repository announcement in the demo".to_string(),
-            identifier: "gnostr".to_string(),
-            root_commit: "0123456789abcdef0123456789abcdef01234567".to_string(),
-            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
-            web: vec!["https://gnostr.org".to_string()],
+            name: git.repo_name.clone(),
+            description: git.description.clone(),
+            identifier: git.identifier.clone(),
+            root_commit: git.root_commit.clone(),
+            git_server: git.git_servers.clone(),
+            web: git.web.clone(),
             relays: vec![unchecked_relay.clone()],
-            hashtags: vec!["gnostr".to_string(), "nostr".to_string()],
-            maintainers: vec![public_key],
-            trusted_maintainer: public_key,
-            events: HashMap::new(),
+            hashtags: vec![git.repo_name.clone(), "crawler".to_string()],
+            maintainers: vec![primary_pubkey],
+            trusted_maintainer: primary_pubkey,
+            events: repo_events,
         };
-        let mut repo_state_map = HashMap::new();
-        repo_state_map.insert(
-            "HEAD".to_string(),
-            "ref: refs/heads/main".to_string(),
-        );
-        repo_state_map.insert(
-            "refs/heads/main".to_string(),
-            "0123456789abcdef0123456789abcdef01234567".to_string(),
-        );
         let repo_state = RepoState {
-            identifier: "gnostr".to_string(),
-            state: repo_state_map,
-            event: event.clone(),
+            identifier: git.identifier.clone(),
+            state: git.state.clone(),
+            event: git.state_event.clone(),
         };
         let channel_creation = ChannelCreationEvent {
-            channel_id: "gnostr-demo".to_string(),
-            channel_name: Some("gnostr demo".to_string()),
-            channel_description: Some("A chat panel that mirrors the JS relays and crawler views".to_string()),
-            channel_picture: Some("https://example.com/channel.png".to_string()),
-            relay_url: Some(UncheckedUrl::from_str("wss://relay.example.com")),
-            pubkey: public_key,
+            channel_id: git.identifier.clone(),
+            channel_name: Some(git.repo_name.clone()),
+            channel_description: Some(git.description.clone()),
+            channel_picture: None,
+            relay_url: Some(unchecked_relay.clone()),
+            pubkey: primary_pubkey,
         };
         let channel_message = ChannelMessageEvent {
-            channel_id: "gnostr-demo".to_string(),
-            message: "relay, crawler, and chat panes are aligned now".to_string(),
-            reply_to: Some(id),
-            root_message: Some(id),
-            pubkey: public_key,
-            relay_url: Some(UncheckedUrl::from_str("wss://relay.example.com")),
+            channel_id: git.identifier.clone(),
+            message: format!(
+                "{} crawler relays loaded from {}",
+                crawler_relays.len(),
+                config_dir.display()
+            ),
+            reply_to: Some(git.state_id),
+            root_message: Some(git.state_id),
+            pubkey: primary_pubkey,
+            relay_url: Some(unchecked_relay.clone()),
         };
-        let relay_message = RelayMessage::Notice("relay message demo".to_string());
-        let crawler_relays = vec![
-            CrawlerRelay {
-                contact: Some("relay@example.com".to_string()),
-                description: Some("crawler-discovered relay".to_string()),
-                name: Some("Relay One".to_string()),
-                ping_ms: Some(17),
-                software: Some("nostr-rs-relay".to_string()),
-                supported_nips: Some(vec![1, 11, 34]),
-                supported_nip_extensions: Some(vec!["nip50".to_string()]),
-                version: Some("1.0".to_string()),
-            },
-            CrawlerRelay {
-                contact: None,
-                description: Some("backup relay".to_string()),
-                name: Some("Relay Two".to_string()),
-                ping_ms: Some(42),
-                software: Some("gnostr-relay".to_string()),
-                supported_nips: Some(vec![1, 28, 50]),
-                supported_nip_extensions: Some(vec!["search".to_string()]),
-                version: Some("0.9".to_string()),
-            },
-        ];
+        let relay_message = RelayMessage::Notice(format!(
+            "loaded {} relay records from {}",
+            crawler_relays.len(),
+            config_dir.display()
+        ));
         let mut filter = Filter::new();
-        let id_hex = IdHex::from(id);
+        let id_hex = IdHex::from(git.state_id);
         filter.add_id(&id_hex);
-        filter.add_author(&PublicKeyHex::from(public_key));
+        filter.add_author(&PublicKeyHex::from(primary_pubkey));
+        filter.add_event_kind(EventKind::RepoState);
         filter.add_event_kind(EventKind::TextNote);
-        filter.add_event_kind(EventKind::ChannelCreation);
-        filter.add_tag_value('e', id.as_hex_string());
-        filter.add_tag_value('p', public_key.as_hex_string());
-        filter.since = Some(Unixtime(1_668_572_286));
-        filter.until = Some(Unixtime(1_789_000_000));
+        filter.add_tag_value('e', git.state_id.as_hex_string());
+        filter.add_tag_value('p', primary_pubkey.as_hex_string());
+        filter.since = Some(Unixtime::now());
+        filter.until = Some(Unixtime::now());
         filter.limit = Some(20);
 
-        Self {
-            public_key,
+        Ok(Self {
+            public_key: primary_pubkey,
             profile,
             metadata,
-            event,
+            event: git.state_event.clone(),
             relay_document,
             relay_list,
             relay_usage,
@@ -635,7 +604,203 @@ impl DemoData {
             relay_message,
             crawler_relays,
             filter,
+            updated_at: Unixtime::now(),
+        })
+    }
+
+    fn spawn_refresh(data: Arc<RwLock<Self>>) {
+        tokio::spawn(async move {
+            let client = reqwest::Client::new();
+            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            loop {
+                interval.tick().await;
+                if let Err(err) = Self::refresh_from_network(&client, &data).await {
+                    if let Ok(mut state) = data.write() {
+                        state.relay_message = RelayMessage::Notice(format!(
+                            "network refresh failed: {err}"
+                        ));
+                        state.updated_at = Unixtime::now();
+                    }
+                }
+            }
+        });
+    }
+
+    async fn refresh_from_network(
+        client: &reqwest::Client,
+        data: &Arc<RwLock<Self>>,
+    ) -> Result<()> {
+        let relay_urls = {
+            let state = data.read().expect("demo state poisoned");
+            state
+                .relay_list
+                .0
+                .keys()
+                .map(|relay| relay.to_string())
+                .collect::<Vec<_>>()
+        };
+
+        if relay_urls.is_empty() {
+            return Ok(());
         }
+
+        let bodies = gnostr_crawler::fetch_relay_texts(relay_urls, client, "chat demo").await;
+        let mut refreshed_relays = Vec::new();
+        for item in bodies {
+            let (url, json_string, ping_ms) = match item {
+                Ok(tuple) => tuple,
+                Err(err) => {
+                    if let Ok(mut state) = data.write() {
+                        state.relay_message = RelayMessage::Notice(format!(
+                            "relay refresh request failed: {err}"
+                        ));
+                    }
+                    continue;
+                }
+            };
+
+            if let Ok(mut relay) = gnostr_crawler::parse_relay_metadata(&json_string) {
+                relay.ping_ms = Some(ping_ms);
+                refreshed_relays.push(relay);
+                if let Ok(mut state) = data.write() {
+                    state.relay_message = RelayMessage::Notice(format!(
+                        "refreshed {} from the network",
+                        url
+                    ));
+                    state.updated_at = Unixtime::now();
+                }
+            }
+        }
+
+        refreshed_relays.sort_by(|a, b| {
+            b.supported_nips
+                .as_ref()
+                .map(|v| v.len())
+                .unwrap_or(0)
+                .cmp(&a.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
+                .then_with(|| a.name.cmp(&b.name))
+        });
+
+        if let Some(primary) = refreshed_relays.first() {
+            let primary_pubkey = relay_pubkey(primary)?;
+            let relay_urls = {
+                let state = data.read().expect("demo state poisoned");
+                state
+                    .relay_list
+                    .0
+                    .keys()
+                    .map(|relay| relay.to_string())
+                    .collect::<Vec<_>>()
+            };
+            let primary_url = relay_urls
+                .first()
+                .cloned()
+                .context("missing primary relay URL")?;
+            let relay_url = RelayUrl::try_from_str(&primary_url)?;
+            let unchecked_relay = UncheckedUrl::from_str(&primary_url);
+            let relay_document = relay_document_from_relay(primary, primary_pubkey)?;
+            let profile = Profile {
+                pubkey: primary_pubkey,
+                relays: relay_urls
+                    .iter()
+                    .map(|url| UncheckedUrl::from_str(url))
+                    .collect(),
+            };
+            let metadata = metadata_from_relay(primary);
+
+            let git = load_git_snapshot(primary_pubkey, &relay_url, &unchecked_relay)?;
+            let nip19 = Nip19::Profile(Nip19Profile {
+                public_key: primary_pubkey,
+                relays: vec![relay_url.clone()],
+            });
+            let naddr = NAddr {
+                d: git.identifier.clone(),
+                relays: vec![unchecked_relay.clone()],
+                kind: EventKind::LongFormContent,
+                author: primary_pubkey,
+            };
+            let event_reference = EventReference::Id {
+                id: git.state_id,
+                author: Some(primary_pubkey),
+                relays: vec![relay_url.clone()],
+                marker: Some("root".to_string()),
+            };
+            let tag = Tag::new_event(git.state_id, Some(unchecked_relay.clone()), Some("root".to_string()));
+            let mut repo_events = HashMap::new();
+            repo_events.insert(git.coordinate.clone(), git.state_event.clone());
+            let repo_ref = RepoRef {
+                name: git.repo_name.clone(),
+                description: git.description.clone(),
+                identifier: git.identifier.clone(),
+                root_commit: git.root_commit.clone(),
+                git_server: git.git_servers.clone(),
+                web: git.web.clone(),
+                relays: vec![unchecked_relay.clone()],
+                hashtags: vec![git.repo_name.clone(), "crawler".to_string()],
+                maintainers: vec![primary_pubkey],
+                trusted_maintainer: primary_pubkey,
+                events: repo_events,
+            };
+            let repo_state = RepoState {
+                identifier: git.identifier.clone(),
+                state: git.state.clone(),
+                event: git.state_event.clone(),
+            };
+            let channel_creation = ChannelCreationEvent {
+                channel_id: git.identifier.clone(),
+                channel_name: Some(git.repo_name.clone()),
+                channel_description: Some(git.description.clone()),
+                channel_picture: None,
+                relay_url: Some(unchecked_relay.clone()),
+                pubkey: primary_pubkey,
+            };
+            let channel_message = ChannelMessageEvent {
+                channel_id: git.identifier.clone(),
+                message: format!(
+                    "{} crawler relays refreshed from the network",
+                    refreshed_relays.len()
+                ),
+                reply_to: Some(git.state_id),
+                root_message: Some(git.state_id),
+                pubkey: primary_pubkey,
+                relay_url: Some(unchecked_relay.clone()),
+            };
+            let mut filter = Filter::new();
+            let id_hex = IdHex::from(git.state_id);
+            filter.add_id(&id_hex);
+            filter.add_author(&PublicKeyHex::from(primary_pubkey));
+            filter.add_event_kind(EventKind::RepoState);
+            filter.add_event_kind(EventKind::TextNote);
+            filter.add_tag_value('e', git.state_id.as_hex_string());
+            filter.add_tag_value('p', primary_pubkey.as_hex_string());
+            filter.since = Some(Unixtime::now());
+            filter.until = Some(Unixtime::now());
+            filter.limit = Some(20);
+
+            let mut state = data.write().expect("demo state poisoned");
+            state.public_key = primary_pubkey;
+            state.profile = profile;
+            state.metadata = metadata;
+            state.event = git.state_event.clone();
+            state.relay_document = relay_document;
+            state.nip19 = nip19;
+            state.naddr = naddr;
+            state.event_reference = event_reference;
+            state.tag = tag;
+            state.repo_ref = repo_ref;
+            state.repo_state = repo_state;
+            state.channel_creation = channel_creation;
+            state.channel_message = channel_message;
+            state.relay_message = RelayMessage::Notice(format!(
+                "refreshed {} relay records from the network",
+                refreshed_relays.len()
+            ));
+            state.crawler_relays = refreshed_relays;
+            state.filter = filter;
+            state.updated_at = Unixtime::now();
+        }
+
+        Ok(())
     }
 
     fn crawler_relays_text(&self) -> String {
@@ -655,4 +820,289 @@ impl DemoData {
             .collect::<Vec<_>>()
             .join("\n")
     }
+}
+
+struct GitSnapshot {
+    repo_name: String,
+    description: String,
+    identifier: String,
+    root_commit: String,
+    git_servers: Vec<String>,
+    web: Vec<String>,
+    state: HashMap<String, String>,
+    state_event: EventV3,
+    state_id: Id,
+    coordinate: NAddr,
+}
+
+fn load_crawler_relays(config_dir: &Path) -> Result<Vec<CrawlerRelay>> {
+    let mut discovered: BTreeMap<String, CrawlerRelay> = BTreeMap::new();
+
+    for nip_entry in fs::read_dir(config_dir).with_context(|| {
+        format!("reading crawler relay cache directory {}", config_dir.display())
+    })? {
+        let nip_entry = nip_entry?;
+        if !nip_entry.file_type()?.is_dir() {
+            continue;
+        }
+
+        let nip_name = nip_entry.file_name().to_string_lossy().to_string();
+        if nip_name.parse::<i32>().is_err() {
+            continue;
+        }
+
+        for relay_entry in fs::read_dir(nip_entry.path())? {
+            let relay_entry = relay_entry?;
+            let file_name = relay_entry.file_name().to_string_lossy().to_string();
+            if !file_name.ends_with(".json") || file_name == "relays.json" {
+                continue;
+            }
+
+            let content = fs::read_to_string(relay_entry.path())?;
+            let relay: CrawlerRelay = serde_json::from_str(&content)
+                .with_context(|| format!("parsing {}", relay_entry.path().display()))?;
+            let host = file_name.trim_end_matches(".json");
+            discovered
+                .entry(format!("wss://{}", host))
+                .and_modify(|existing| merge_relay(existing, relay.clone()))
+                .or_insert(relay);
+        }
+    }
+
+    let mut relays: Vec<CrawlerRelay> = discovered.into_values().collect();
+    relays.sort_by(|a, b| {
+        b.supported_nips
+            .as_ref()
+            .map(|v| v.len())
+            .unwrap_or(0)
+            .cmp(&a.supported_nips.as_ref().map(|v| v.len()).unwrap_or(0))
+            .then_with(|| a.name.cmp(&b.name))
+    });
+    Ok(relays)
+}
+
+fn merge_relay(existing: &mut CrawlerRelay, incoming: CrawlerRelay) {
+    if existing.contact.is_none() {
+        existing.contact = incoming.contact;
+    }
+    if existing.description.is_none() {
+        existing.description = incoming.description;
+    }
+    if existing.name.is_none() {
+        existing.name = incoming.name;
+    }
+    if existing.ping_ms.is_none() {
+        existing.ping_ms = incoming.ping_ms;
+    }
+    if existing.software.is_none() {
+        existing.software = incoming.software;
+    }
+    if existing.version.is_none() {
+        existing.version = incoming.version;
+    }
+    existing.supported_nips = match (existing.supported_nips.take(), incoming.supported_nips) {
+        (Some(mut left), Some(mut right)) => {
+            left.append(&mut right);
+            left.sort();
+            left.dedup();
+            Some(left)
+        }
+        (Some(left), None) => Some(left),
+        (None, Some(right)) => Some(right),
+        (None, None) => None,
+    };
+    existing.supported_nip_extensions = match (
+        existing.supported_nip_extensions.take(),
+        incoming.supported_nip_extensions,
+    ) {
+        (Some(mut left), Some(mut right)) => {
+            left.append(&mut right);
+            left.sort();
+            left.dedup();
+            Some(left)
+        }
+        (Some(left), None) => Some(left),
+        (None, Some(right)) => Some(right),
+        (None, None) => None,
+    };
+}
+
+fn load_relay_urls(config_dir: &Path, relays: &[CrawlerRelay]) -> Result<Vec<String>> {
+    let relays_yaml = config_dir.join("relays.yaml");
+    if let Ok(content) = fs::read_to_string(&relays_yaml) {
+        let relays: Vec<String> = serde_yaml::from_str(&content)
+            .with_context(|| format!("parsing {}", relays_yaml.display()))?;
+        if !relays.is_empty() {
+            return Ok(relays);
+        }
+    }
+
+    Ok(relays
+        .iter()
+        .filter_map(|relay| relay.name.as_deref())
+        .map(|name| format!("wss://{}", name))
+        .collect())
+}
+
+fn relay_pubkey(relay: &CrawlerRelay) -> Result<PublicKey> {
+    let pubkey = relay
+        .pubkey
+        .as_deref()
+        .context("relay metadata missing pubkey")?;
+    PublicKey::try_from_hex_string(pubkey, true)
+        .with_context(|| format!("parsing relay pubkey {pubkey}"))
+}
+
+fn relay_document_from_relay(relay: &CrawlerRelay, pubkey: PublicKey) -> Result<RelayInformationDocument> {
+    Ok(RelayInformationDocument {
+        name: relay.name.clone(),
+        description: relay.description.clone(),
+        banner: None,
+        icon: None,
+        pubkey: Some(pubkey.into()),
+        self_pubkey: Some(pubkey.into()),
+        contact: relay.contact.clone(),
+        supported_nips: relay
+            .supported_nips
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|nip| nip as u32)
+            .collect(),
+        software: relay.software.clone(),
+        version: relay.version.clone(),
+        limitation: None,
+        retention: vec![],
+        relay_countries: vec![],
+        language_tags: vec![],
+        tags: vec![],
+        posting_policy: None,
+        payments_url: None,
+        fees: None,
+        other: serde_json::Map::new(),
+    })
+}
+
+fn metadata_from_relay(relay: &CrawlerRelay) -> Metadata {
+    let mut other = serde_json::Map::new();
+    if let Some(software) = relay.software.clone() {
+        other.insert("software".to_string(), serde_json::Value::String(software));
+    }
+    if let Some(version) = relay.version.clone() {
+        other.insert("version".to_string(), serde_json::Value::String(version));
+    }
+    if let Some(nips) = relay.supported_nips.clone() {
+        other.insert(
+            "supported_nips".to_string(),
+            serde_json::Value::Array(nips.into_iter().map(|nip| serde_json::Value::from(nip)).collect()),
+        );
+    }
+    Metadata {
+        name: relay.name.clone(),
+        about: relay.description.clone(),
+        picture: None,
+        nip05: relay.contact.clone(),
+        other,
+    }
+}
+
+fn relay_list_from_urls(urls: &[String]) -> Result<RelayList> {
+    let mut relay_list = RelayList::default();
+    for url in urls {
+        relay_list
+            .0
+            .insert(RelayUrl::try_from_str(url)?, RelayListUsage::Both);
+    }
+    Ok(relay_list)
+}
+
+fn load_git_snapshot(
+    public_key: PublicKey,
+    relay_url: &RelayUrl,
+    unchecked_relay: &UncheckedUrl,
+) -> Result<GitSnapshot> {
+    let repo = git2::Repository::discover(".").context("discovering git repository")?;
+    let workdir = repo
+        .workdir()
+        .context("missing git workdir")?;
+    let repo_name = workdir
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("gnostr")
+        .to_string();
+    let head = repo.head().context("reading git HEAD")?;
+    let head_commit = head.peel_to_commit().context("reading HEAD commit")?;
+    let root_commit = head_commit.id().to_string();
+    let mut state = HashMap::new();
+
+    if let Some(head_name) = head.name() {
+        state.insert("HEAD".to_string(), format!("ref: {head_name}"));
+    } else {
+        state.insert("HEAD".to_string(), root_commit.clone());
+    }
+
+    for reference in repo.references().context("listing git references")? {
+        let reference = reference?;
+        let Some(name) = reference.name() else {
+            continue;
+        };
+        if !(name.starts_with("refs/heads/") || name.starts_with("refs/tags/")) {
+            continue;
+        }
+        if let Some(target) = reference.target() {
+            state.insert(name.to_string(), target.to_string());
+        }
+    }
+
+    let description = format!("{} on {}", repo_name, head_commit.id());
+    let identifier = repo_name.clone();
+    let git_servers = repo
+        .find_remote("origin")
+        .ok()
+        .and_then(|remote| remote.url().map(|url| vec![url.to_string()]))
+        .unwrap_or_default();
+    let web = git_servers.clone();
+    let state_serialized = serde_json::to_string(&state)?;
+    let state_hash = Sha256::digest(state_serialized.as_bytes());
+    let state_id = Id::try_from_bytes(&state_hash)?;
+    let created_at = Unixtime(head_commit.time().seconds());
+    let tags = {
+        let mut tags = vec![Tag::new(&["d", &identifier])];
+        let mut keys: Vec<_> = state.keys().cloned().collect();
+        keys.sort();
+        for key in keys {
+            tags.push(Tag::from_strings(vec![key.clone(), state[&key].clone()]));
+        }
+        tags
+    };
+    let state_event = EventV3 {
+        id: state_id,
+        pubkey: public_key,
+        created_at,
+        kind: EventKind::RepoState,
+        sig: Signature::zeroes(),
+        content: String::new(),
+        tags,
+    };
+    let coordinate = NAddr {
+        d: identifier.clone(),
+        relays: vec![unchecked_relay.clone()],
+        kind: EventKind::RepoState,
+        author: public_key,
+    };
+
+    let _ = relay_url;
+
+    Ok(GitSnapshot {
+        repo_name,
+        description,
+        identifier,
+        root_commit,
+        git_servers,
+        web,
+        state,
+        state_event,
+        state_id,
+        coordinate,
+    })
 }
