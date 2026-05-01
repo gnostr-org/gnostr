@@ -321,8 +321,8 @@ tree-sitter-grammar-repository = { path = "grammar", version = "1876.947089.6869
 tree-sitter-highlight = "0.23.2"
 tree-sitter-language = "0.1.6"
 trust-dns-resolver = "0.23.2"
-tui-input = "0.10.1"
-tui-textarea = "0.6.1"
+tui-input = "0.15.3"
+tui-textarea = "0.7.0"
 two-face = { version = "0.4.5", default-features = false }
 unicode-normalization = "0.1.25"
 unicode-segmentation = "1.12.0"
