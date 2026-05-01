@@ -454,7 +454,7 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Re
 
 fn check_commits_are_suitable_for_proposal(
     cli: &Cli,
-    first_commit_ahead: &[Sha1Hash],
+    _first_commit_ahead: &[Sha1Hash],
     commits: &[Sha1Hash],
     behind: &[Sha1Hash],
     main_branch_name: &str,
