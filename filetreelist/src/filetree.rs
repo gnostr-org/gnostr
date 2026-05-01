@@ -87,6 +87,40 @@ impl FileTree {
         })
     }
 
+    /// Search forward from the current selection and jump to the next
+    /// item whose full path or leaf path contains `query`.
+    pub fn search_next(&mut self, query: &str) -> bool {
+        let needle = query.trim();
+        if needle.is_empty() || self.items.len() == 0 {
+            return false;
+        }
+
+        let needle = needle.to_ascii_lowercase();
+        let start = self.selection.map_or(0, |selection| {
+            if selection + 1 >= self.items.len() {
+                0
+            } else {
+                selection + 1
+            }
+        });
+
+        for offset in 0..self.items.len() {
+            let index = (start + offset) % self.items.len();
+            let item = &self.items.tree_items[index];
+            let full_path = item.info().full_path_str().to_ascii_lowercase();
+            let leaf_path = item.info().path_str().to_ascii_lowercase();
+
+            if full_path.contains(&needle) || leaf_path.contains(&needle) {
+                self.selection = Some(index);
+                self.items.show_element(index);
+                self.visual_selection = self.calc_visual_selection();
+                return true;
+            }
+        }
+
+        false
+    }
+
     ///
     pub fn collapse_recursive(&mut self) {
         if let Some(selection) = self.selection {
