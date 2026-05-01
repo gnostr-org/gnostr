@@ -3,6 +3,7 @@ use std::{
     fs,
     io,
     path::{Path, PathBuf},
+    collections::HashSet,
     time::Duration,
 };
 
@@ -110,6 +111,13 @@ pub fn run() -> Result<()> {
                         status_message = None;
                         tree.move_selection(MoveSelection::Down);
                     }
+                    KeyCode::Char(' ') => {
+                        status_message = match tree.toggle_selected_favorite()? {
+                            Some(true) => Some(String::from("favorited selected row")),
+                            Some(false) => Some(String::from("unfavorited selected row")),
+                            None => Some(String::from("select a file row to favorite")),
+                        };
+                    }
                     KeyCode::Up | KeyCode::Char('k') => {
                         status_message = None;
                         tree.move_selection(MoveSelection::Up);
@@ -175,6 +183,8 @@ struct BucketedCrawlerTree {
     virtual_to_real: HashMap<PathBuf, PathBuf>,
     buckets: Vec<BucketSummary>,
     active_filter: Option<String>,
+    favorites: HashSet<String>,
+    favorites_path: PathBuf,
 }
 
 impl BucketedCrawlerTree {
@@ -188,6 +198,8 @@ impl BucketedCrawlerTree {
             .iter()
             .map(|entry| (entry.virtual_path.clone(), entry.real.clone()))
             .collect::<HashMap<_, _>>();
+        let favorites_path = root.join("filetree-favorites.txt");
+        let favorites = load_favorites(&favorites_path)?;
 
         Ok(Self {
             root,
@@ -196,6 +208,8 @@ impl BucketedCrawlerTree {
             virtual_to_real,
             buckets,
             active_filter: None,
+            favorites,
+            favorites_path,
         })
     }
 
@@ -242,6 +256,23 @@ impl BucketedCrawlerTree {
             .selected_file()
             .and_then(|info| self.virtual_to_real.get(info.full_path()))
             .map(PathBuf::as_path)
+    }
+
+    fn toggle_selected_favorite(&mut self) -> Result<Option<bool>> {
+        let Some(path) = self.selected_path() else {
+            return Ok(None);
+        };
+
+        let key = path.display().to_string();
+        let favored = if self.favorites.contains(&key) {
+            self.favorites.remove(&key);
+            false
+        } else {
+            self.favorites.insert(key);
+            true
+        };
+        save_favorites(&self.favorites_path, &self.favorites)?;
+        Ok(Some(favored))
     }
 
     fn sorted_buckets(&self) -> Vec<BucketSummary> {
@@ -296,7 +327,20 @@ impl BucketedCrawlerTree {
                 } else {
                     " "
                 };
-                let label = format!("{indent}{icon} {}", item.info().path_str());
+                let favorite = if item.kind().is_path() {
+                    " "
+                } else {
+                    let key = self
+                        .virtual_to_real
+                        .get(item.info().full_path())
+                        .map(|path| path.display().to_string());
+                    if key.as_ref().is_some_and(|key| self.favorites.contains(key)) {
+                        "♥"
+                    } else {
+                        " "
+                    }
+                };
+                let label = format!("{indent}{icon} {favorite} {}", item.info().path_str());
                 let style = if selected {
                     Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD)
                 } else {
@@ -569,6 +613,8 @@ fn footer(
             Span::raw("  "),
             Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
             Span::raw("  "),
+            Span::styled("space favorite", Style::default().fg(Color::DarkGray)),
+            Span::raw("  "),
             Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
         ]),
         Line::from(vec![
@@ -632,6 +678,30 @@ fn fuzzy_score(candidate: &str, query: &str) -> Option<usize> {
 
     score += candidate.len().saturating_sub(search_from);
     Some(score)
+}
+
+fn load_favorites(path: &Path) -> Result<HashSet<String>> {
+    if !path.exists() {
+        return Ok(HashSet::new());
+    }
+
+    let content = fs::read_to_string(path)?;
+    Ok(content
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(ToOwned::to_owned)
+        .collect())
+}
+
+fn save_favorites(path: &Path, favorites: &HashSet<String>) -> Result<()> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let mut values = favorites.iter().cloned().collect::<Vec<_>>();
+    values.sort();
+    fs::write(path, values.join("\n"))?;
+    Ok(())
 }
 
 fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {

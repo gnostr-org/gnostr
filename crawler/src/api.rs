@@ -586,8 +586,13 @@ pub(crate) async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Respons
                                 )
                             })
                             .unwrap_or_else(|| format!("<pre>{}</pre>", escape_html(&content)));
+                        let relay_url = name
+                            .strip_suffix(".json")
+                            .map(|host| format!("wss://{}", host))
+                            .unwrap_or_else(|| name.clone());
                         relay_cards.push(format!(
-                            "<li><details><summary><a href=\"/{}/{}\">{}</a></summary>{}</details></li>",
+                            "<li><details class=\"relay-favorite-card\" tabindex=\"0\" data-relay-url=\"{}\"><summary><span class=\"relay-favorite-heart\" aria-hidden=\"true\"></span><a href=\"/{}/{}\">{}</a></summary>{}</details></li>",
+                            escape_html(&relay_url),
                             nip_lower,
                             name,
                             escape_html(&name),
@@ -626,15 +631,50 @@ pub(crate) async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Respons
     let body = format!(
         "{}\
           <section><p><a href=\"/\">&larr; back to home</a></p>\
-           <h2>NIP {}</h2><ul>{}</ul></section>",
+            <h2>NIP {}</h2><ul>{}</ul></section>",
         query_form,
         nip_lower,
         entries.join("")
     );
+    let favorite_script = r#"<script>
+    (() => {
+      const key = "gnostr-crawler-favorite-relays";
+      const load = () => {
+        try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
+        catch (_) { return new Set(); }
+      };
+      const save = (values) => localStorage.setItem(key, JSON.stringify([...values]));
+      const favorites = load();
+      const update = (card) => {
+        const url = card.dataset.relayUrl;
+        const heart = card.querySelector(".relay-favorite-heart");
+        const favorite = favorites.has(url);
+        card.classList.toggle("is-favorite", favorite);
+        if (heart) heart.textContent = favorite ? "❤" : "";
+      };
+      const cards = document.querySelectorAll("[data-relay-url]");
+      cards.forEach((card) => update(card));
+      document.addEventListener("keydown", (ev) => {
+        if (ev.code !== "Space") return;
+        const card = ev.target.closest("[data-relay-url]");
+        if (!card) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const url = card.dataset.relayUrl;
+        if (favorites.has(url)) {
+          favorites.delete(url);
+        } else {
+          favorites.add(url);
+        }
+        save(favorites);
+        update(card);
+      });
+    })();
+    </script>"#;
     let html = crate::relays::render_page_shell(
         &format!("gnostr crawler / NIP {}", nip_lower),
         &nav,
-        &body,
+        &format!("{}{}", body, favorite_script),
     );
 
     Response::builder()
