@@ -63,6 +63,12 @@ impl CrawlerDiskTree {
         &self.buckets
     }
 
+    pub fn sorted_buckets(&self) -> Vec<BucketSummary> {
+        let mut buckets = self.buckets.clone();
+        buckets.sort_by(|a, b| a.name.cmp(&b.name));
+        buckets
+    }
+
     pub fn root(&self) -> &Path {
         &self.root
     }
@@ -108,11 +114,11 @@ pub struct CrawlerFileTreeWidget<'a> {
 impl<'a> Widget for CrawlerFileTreeWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut rows = Vec::new();
-        let bucket_line = if self.tree.buckets.is_empty() {
+        let buckets = self.tree.sorted_buckets();
+        let bucket_line = if buckets.is_empty() {
             String::from("no buckets")
         } else {
-            self.tree
-                .buckets
+            buckets
                 .iter()
                 .map(|bucket| format!("{}:{}", bucket.name, bucket.files))
                 .collect::<Vec<_>>()
