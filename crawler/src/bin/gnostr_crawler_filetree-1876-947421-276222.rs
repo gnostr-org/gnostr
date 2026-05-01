@@ -846,11 +846,17 @@ fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
         let meta = entry.metadata()?;
         if meta.is_dir() {
             walk(&path, files)?;
-        } else if meta.is_file() {
+        } else if meta.is_file() && is_json_file(&path) {
             files.push(path);
         }
     }
     Ok(())
+}
+
+fn is_json_file(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
 }
 
 fn build_entries(root: &Path, files: &[PathBuf]) -> Result<Vec<FileEntry>> {
