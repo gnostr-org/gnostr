@@ -7,14 +7,14 @@ use std::{
     collections::{BTreeMap, HashMap},
     fs,
     io,
-    path::{Path, PathBuf},
+    path::Path,
     sync::{Arc, RwLock},
     time::Duration,
 };
 
 use anyhow::{Context, Result};
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -24,7 +24,7 @@ use gnostr_asyncgit::{
         ChannelCreationEvent, ChannelMessageEvent, EventKind, EventReference, EventV3, Filter,
         Id, IdHex, Metadata, NAddr, Nip19, Nip19Profile, Profile, PublicKey, PublicKeyHex,
         RelayInformationDocument, RelayList, RelayListUsage, RelayMessage, RelayUrl, RepoRef,
-        RepoState, Signature, Tag, Unixtime, UncheckedUrl, Url, RelayUsageSet,
+        RepoState, Signature, Tag, Unixtime, UncheckedUrl, RelayUsageSet,
     },
 };
 use gnostr_crawler::Relay as CrawlerRelay;
@@ -48,16 +48,11 @@ async fn main() -> anyhow::Result<()> {
 
         if event::poll(Duration::from_millis(250))? {
             match event::read()? {
-                Event::Key(key) => match key.code {
-                    KeyCode::Char('q') | KeyCode::Esc => break,
-                    KeyCode::Down | KeyCode::Char('j') => app.next(),
-                    KeyCode::Up | KeyCode::Char('k') => app.previous(),
-                    KeyCode::Left | KeyCode::Char('h') => app.previous(),
-                    KeyCode::Right | KeyCode::Char('l') => app.next(),
-                    KeyCode::Home => app.select(0),
-                    KeyCode::End => app.select(app.pages.len().saturating_sub(1)),
-                    _ => {}
-                },
+                Event::Key(key) => {
+                    if app.handle_key(key) {
+                        break;
+                    }
+                }
                 Event::Resize(_, _) => {}
                 _ => {}
             }
@@ -94,6 +89,8 @@ impl Drop for TerminalGuard {
 struct App {
     pages: Vec<Page>,
     selected: usize,
+    search_query: String,
+    input_mode: InputMode,
     data: Arc<RwLock<DemoData>>,
 }
 
@@ -111,24 +108,187 @@ impl App {
                 Page::Search,
             ],
             selected: 0,
+            search_query: String::new(),
+            input_mode: InputMode::Navigate,
             data,
         })
     }
 
     fn next(&mut self) {
-        self.selected = (self.selected + 1) % self.pages.len();
+        let data = self.data.read().expect("demo state poisoned");
+        let visible = self.visible_pages(&data);
+        self.selected = self.advance_selection(&visible, 1);
     }
 
     fn previous(&mut self) {
-        self.selected = if self.selected == 0 {
-            self.pages.len() - 1
-        } else {
-            self.selected - 1
-        };
+        let data = self.data.read().expect("demo state poisoned");
+        let visible = self.visible_pages(&data);
+        self.selected = self.advance_selection(&visible, -1);
     }
 
-    fn select(&mut self, idx: usize) {
+    fn select_visible(&mut self, idx: usize) {
+        let data = self.data.read().expect("demo state poisoned");
+        let visible = self.visible_pages(&data);
+        if let Some(page_idx) = visible.get(idx).copied() {
+            self.selected = page_idx;
+        }
+    }
+
+    fn select_page(&mut self, idx: usize) {
         self.selected = idx.min(self.pages.len().saturating_sub(1));
+    }
+
+    fn handle_key(&mut self, key: KeyEvent) -> bool {
+        match self.input_mode {
+            InputMode::Search => match key.code {
+                KeyCode::Esc => {
+                    self.input_mode = InputMode::Navigate;
+                    false
+                }
+                KeyCode::Enter => {
+                    self.input_mode = InputMode::Navigate;
+                    false
+                }
+                KeyCode::Backspace => {
+                    self.search_query.pop();
+                    self.sync_selection();
+                    false
+                }
+                KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.search_query.clear();
+                    self.sync_selection();
+                    false
+                }
+                KeyCode::Char(ch) if key.modifiers.is_empty() => {
+                    self.search_query.push(ch);
+                    self.sync_selection();
+                    false
+                }
+                _ => false,
+            },
+            InputMode::Navigate => match key.code {
+                _ if key.modifiers.contains(KeyModifiers::CONTROL)
+                    && matches!(key.code, KeyCode::Char('c')) =>
+                {
+                    true
+                }
+                KeyCode::Char('q') | KeyCode::Esc => true,
+                KeyCode::Char('1') => {
+                    self.select_page(0);
+                    false
+                }
+                KeyCode::Char('2') => {
+                    self.select_page(1);
+                    false
+                }
+                KeyCode::Char('3') => {
+                    self.select_page(2);
+                    false
+                }
+                KeyCode::Char('4') => {
+                    self.select_page(3);
+                    false
+                }
+                KeyCode::Char('5') => {
+                    self.select_page(4);
+                    false
+                }
+                KeyCode::Char('6') => {
+                    self.select_page(5);
+                    false
+                }
+                KeyCode::Char('/') => {
+                    self.input_mode = InputMode::Search;
+                    false
+                }
+                KeyCode::Char('?') => {
+                    self.selected = 5;
+                    self.input_mode = InputMode::Search;
+                    false
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    self.next();
+                    false
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    self.previous();
+                    false
+                }
+                KeyCode::Left | KeyCode::Char('h') | KeyCode::BackTab => {
+                    self.previous();
+                    false
+                }
+                KeyCode::Right | KeyCode::Char('l') | KeyCode::Tab => {
+                    self.next();
+                    false
+                }
+                KeyCode::Home => {
+                    self.select_visible(0);
+                    false
+                }
+                KeyCode::End => {
+                    let data = self.data.read().expect("demo state poisoned");
+                    let visible = self.visible_pages(&data);
+                    if let Some(last) = visible.len().checked_sub(1) {
+                        drop(data);
+                        self.select_visible(last);
+                    }
+                    false
+                }
+                KeyCode::PageDown => {
+                    for _ in 0..3 {
+                        self.next();
+                    }
+                    false
+                }
+                KeyCode::PageUp => {
+                    for _ in 0..3 {
+                        self.previous();
+                    }
+                    false
+                }
+                _ => false,
+            },
+        }
+    }
+
+    fn visible_pages(&self, data: &DemoData) -> Vec<usize> {
+        if self.search_query.trim().is_empty() {
+            return (0..self.pages.len()).collect();
+        }
+
+        let query = self.search_query.to_lowercase();
+        self.pages
+            .iter()
+            .enumerate()
+            .filter(|(_, page)| page.matches(data, &query))
+            .map(|(idx, _)| idx)
+            .collect()
+    }
+
+    fn advance_selection(&self, visible: &[usize], delta: isize) -> usize {
+        if visible.is_empty() {
+            return self.selected;
+        }
+
+        match visible.iter().position(|idx| *idx == self.selected) {
+            Some(position) => {
+                let len = visible.len() as isize;
+                let next = (position as isize + delta).rem_euclid(len) as usize;
+                visible[next]
+            }
+            None => visible[0],
+        }
+    }
+
+    fn sync_selection(&mut self) {
+        let data = self.data.read().expect("demo state poisoned");
+        let visible = self.visible_pages(&data);
+        if let Some(page_idx) = visible.first().copied() {
+            if !visible.contains(&self.selected) {
+                self.selected = page_idx;
+            }
+        }
     }
 
     fn draw(&self, frame: &mut Frame) {
@@ -145,6 +305,10 @@ impl App {
                 Span::raw("chat TUI demo "),
                 Span::styled("q", Style::default().fg(Color::Yellow)),
                 Span::raw(" quit  "),
+                Span::styled("/", Style::default().fg(Color::Yellow)),
+                Span::raw(" search  "),
+                Span::styled("1-6", Style::default().fg(Color::Yellow)),
+                Span::raw(" jump  "),
                 Span::styled("j/k", Style::default().fg(Color::Yellow)),
                 Span::raw(" move  "),
                 Span::raw("mirror of the JS app"),
@@ -162,7 +326,7 @@ impl App {
         self.draw_page(frame, content[1], self.pages[self.selected], &data);
 
         frame.render_widget(
-            Paragraph::new(self.status_line(&data))
+            Paragraph::new(self.status_lines(&data))
                 .wrap(Wrap { trim: true })
                 .block(Block::default().title("status").borders(Borders::ALL)),
             layout[2],
@@ -170,26 +334,68 @@ impl App {
     }
 
     fn draw_nav(&self, frame: &mut Frame, area: Rect) {
-        let items = self
-            .pages
-            .iter()
-            .enumerate()
-            .map(|(idx, page)| {
-                let style = if idx == self.selected {
-                    Style::default()
-                        .fg(Color::Black)
-                        .bg(Color::Magenta)
-                        .add_modifier(Modifier::BOLD)
-                } else {
-                    Style::default()
-                };
-                ListItem::new(page.title()).style(style)
-            })
-            .collect::<Vec<_>>();
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(6), Constraint::Min(0)])
+            .split(area);
+
+        let data = self.data.read().expect("demo state poisoned");
+        let visible = self.visible_pages(&data);
+        let search_text = if self.search_query.is_empty() {
+            "<empty>".to_string()
+        } else {
+            self.search_query.clone()
+        };
+
+        frame.render_widget(
+            Paragraph::new(vec![
+                Line::from(vec![
+                    Span::styled("query: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(search_text),
+                ]),
+                Line::from(vec![
+                    Span::styled("mode: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(match self.input_mode {
+                        InputMode::Navigate => "navigate",
+                        InputMode::Search => "search",
+                    }),
+                ]),
+                Line::from(vec![
+                    Span::styled("keys: ", Style::default().fg(Color::Magenta)),
+                    Span::raw("/ search, ? search+help, enter accept, esc exit"),
+                ]),
+                Line::from(vec![
+                    Span::raw("j/k or arrows move, tab cycles pages, 1-6 jump"),
+                ]),
+            ])
+            .wrap(Wrap { trim: true })
+            .block(Block::default().title("search").borders(Borders::ALL)),
+            layout[0],
+        );
+
+        let items = if visible.is_empty() && !self.search_query.trim().is_empty() {
+            vec![ListItem::new("no matching views")]
+        } else {
+            visible
+                .into_iter()
+                .map(|idx| {
+                    let page = self.pages[idx];
+                    let style = if idx == self.selected {
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(Color::Magenta)
+                            .add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default()
+                    };
+                    ListItem::new(page.title()).style(style)
+                })
+                .collect::<Vec<_>>()
+        };
 
         frame.render_widget(
             List::new(items).block(Block::default().title("views").borders(Borders::ALL)),
-            area,
+            layout[1],
         );
     }
 
@@ -209,10 +415,12 @@ impl App {
         page.render(frame, chunks[1], data);
     }
 
-    fn status_line(&self, data: &DemoData) -> String {
+    fn status_lines(&self, data: &DemoData) -> String {
         let page = self.pages[self.selected].title();
         format!(
-            "selected view: {page} | crawler relays: {} | relay entries: {} | updated: {}",
+            "selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {}\n\
+             search: / focus | enter accept | esc exit | arrows/jkhl navigate | tab cycle",
+            if self.search_query.is_empty() { "<empty>" } else { &self.search_query },
             data.crawler_relays.len(),
             data.relay_list.0.len(),
             data.updated_at
@@ -273,6 +481,12 @@ impl Page {
                 data.filter.tags.len()
             ),
         }
+    }
+
+    fn matches(self, data: &DemoData, query: &str) -> bool {
+        let title = self.title().to_lowercase();
+        let summary = self.summary(data).to_lowercase();
+        title.contains(query) || summary.contains(query)
     }
 
     fn render(self, frame: &mut Frame, area: Rect, data: &DemoData) {
@@ -449,6 +663,12 @@ impl Page {
             }
         }
     }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum InputMode {
+    Navigate,
+    Search,
 }
 
 struct DemoData {
