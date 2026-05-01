@@ -277,10 +277,11 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
             let tracking_ref_name = nostr_ref_name
                 .strip_prefix("refs/heads/")
                 .or_else(|| nostr_ref_name.strip_prefix("refs/tags/"))
+                .or_else(|| nostr_ref_name.strip_prefix("refs/notes/"))
                 .unwrap_or(nostr_ref_name.as_str());
             if invalid_nostr_state_ref(nostr_ref_name) {
-                // ensure nostr_state only supports refs/heads and refs/tags/
-                // and not refs/heads/prs/*
+                // ensure nostr_state only supports refs/heads, refs/tags,
+                // and refs/notes/ (and not refs/heads/prs/*)
             } else if let Some(remote_ref_value) = remote_state.get(nostr_ref_name) {
                 // update ref
                 let force_required = {
@@ -402,7 +403,9 @@ pub async fn launch(args: &SubCommandArgs) -> Result<()> {
 fn invalid_nostr_state_ref(ref_name: &str) -> bool {
     ref_name.ends_with("^{}")
         || ref_name.starts_with("refs/heads/pr/")
-        || (!ref_name.starts_with("refs/heads/") && !ref_name.starts_with("refs/tags/"))
+        || (!ref_name.starts_with("refs/heads/")
+            && !ref_name.starts_with("refs/tags/")
+            && !ref_name.starts_with("refs/notes/"))
 }
 
 fn identify_missing_refs(git_repo: &Repo, state: &HashMap<String, String>) -> Vec<String> {
@@ -530,16 +533,16 @@ mod tests {
     }
 
     #[test]
-    fn arbitrary_non_heads_non_tags_ref_is_invalid() {
+    fn notes_refs_are_valid() {
         assert!(
-            invalid_nostr_state_ref("refs/notes/commits"),
-            "refs outside heads/tags must be invalid"
+            !invalid_nostr_state_ref("refs/notes/commits"),
+            "notes refs must be valid"
         );
         assert!(invalid_nostr_state_ref("HEAD"), "HEAD must be invalid");
     }
 
     #[test]
-    fn normal_branch_and_tag_refs_are_valid() {
+    fn normal_branch_tag_and_notes_refs_are_valid() {
         assert!(
             !invalid_nostr_state_ref("refs/heads/main"),
             "normal branch must be valid"
@@ -555,6 +558,10 @@ mod tests {
         assert!(
             !invalid_nostr_state_ref("refs/tags/v2.0.0-rc1"),
             "release-candidate tag must be valid"
+        );
+        assert!(
+            !invalid_nostr_state_ref("refs/notes/commits"),
+            "notes ref must be valid"
         );
     }
 }

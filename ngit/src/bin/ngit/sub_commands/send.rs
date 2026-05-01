@@ -244,6 +244,8 @@ pub async fn launch(cli_args: &Cli, args: &SubCommandArgs, no_fetch: bool) -> Re
         false
     } else if args.force_pr {
         true
+    } else if args.no_cover_letter {
+        false
     } else {
         should_be_pr
     };

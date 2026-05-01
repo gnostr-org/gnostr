@@ -27,7 +27,7 @@ impl RepoState {
                 // "<commit-oid> refs/tags/v1.0.0^{}" in the list output so
                 // it can resolve the tag to a commit. without the ^{} line
                 // git fetch --prune deletes the tag as unresolvable.
-                if ["refs/heads/", "refs/tags", "HEAD"]
+                if ["refs/heads/", "refs/tags", "refs/notes/", "HEAD"]
                     .iter()
                     .any(|s| name.starts_with(*s))
                 {
