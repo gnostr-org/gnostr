@@ -35,41 +35,86 @@ pub fn run() -> Result<()> {
     fs::create_dir_all(&root)?;
     let mut tree = BucketedCrawlerTree::discover(root)?;
     let mut selected = SelectedFileView::default();
+    let mut input_mode = InputMode::Normal;
+    let mut search_query = String::new();
+    let mut status_message: Option<String> = None;
     selected.sync(tree.selected_path())?;
 
     loop {
         selected.sync(tree.selected_path())?;
-        terminal.terminal.draw(|frame| draw(frame, &tree, &selected))?;
+        terminal
+            .terminal
+            .draw(|frame| draw(frame, &tree, &selected, input_mode, &search_query, status_message.as_deref()))?;
 
         if event::poll(Duration::from_millis(150))? {
             match event::read()? {
                 Event::Key(key) => match key.code {
-                    KeyCode::Char('q') => break,
+                    KeyCode::Char('q') if matches!(input_mode, InputMode::Normal) => break,
+                    KeyCode::Char('/') if matches!(input_mode, InputMode::Normal) => {
+                        input_mode = InputMode::Search;
+                        search_query.clear();
+                        status_message = None;
+                    }
+                    _ if matches!(input_mode, InputMode::Search) => match key.code {
+                        KeyCode::Esc => {
+                            input_mode = InputMode::Normal;
+                            search_query.clear();
+                            status_message = None;
+                        }
+                        KeyCode::Enter => {
+                            if search_query.is_empty() {
+                                input_mode = InputMode::Normal;
+                                status_message = None;
+                            } else if tree.search_next(&search_query) {
+                                input_mode = InputMode::Normal;
+                                status_message = None;
+                                selected.sync(tree.selected_path())?;
+                            } else {
+                                status_message = Some(format!("no match for /{}", search_query));
+                            }
+                        }
+                        KeyCode::Backspace => {
+                            search_query.pop();
+                        }
+                        KeyCode::Char(c) if !c.is_control() => {
+                            search_query.push(c);
+                        }
+                        _ => {}
+                    },
                     KeyCode::Down | KeyCode::Char('j') => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::Down);
                     }
                     KeyCode::Up | KeyCode::Char('k') => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::Up);
                     }
                     KeyCode::Left | KeyCode::Char('h') => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::Left);
                     }
                     KeyCode::Right | KeyCode::Char('l') => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::Right);
                     }
                     KeyCode::Home => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::Top);
                     }
                     KeyCode::End => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::End);
                     }
                     KeyCode::PageDown => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::PageDown);
                     }
                     KeyCode::PageUp => {
+                        status_message = None;
                         tree.move_selection(MoveSelection::PageUp);
                     }
                     KeyCode::Char('r') => {
+                        status_message = None;
                         tree.refresh()?;
                         selected.sync(tree.selected_path())?;
                     }
@@ -138,6 +183,10 @@ impl BucketedCrawlerTree {
 
     fn move_selection(&mut self, dir: MoveSelection) -> bool {
         self.tree.move_selection(dir)
+    }
+
+    fn search_next(&mut self, query: &str) -> bool {
+        self.tree.search_next(query)
     }
 
     fn selected_path(&self) -> Option<&Path> {
@@ -263,7 +312,14 @@ impl Drop for TerminalGuard {
     }
 }
 
-fn draw(frame: &mut Frame, tree: &BucketedCrawlerTree, selected: &SelectedFileView) {
+fn draw(
+    frame: &mut Frame,
+    tree: &BucketedCrawlerTree,
+    selected: &SelectedFileView,
+    input_mode: InputMode,
+    search_query: &str,
+    status_message: Option<&str>,
+) {
     let root = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
@@ -277,7 +333,7 @@ fn draw(frame: &mut Frame, tree: &BucketedCrawlerTree, selected: &SelectedFileVi
     frame.render_widget(header(tree), root[0]);
     frame.render_widget(tree_panel(tree, body[0]), body[0]);
     render_selected(frame, body[1], selected);
-    frame.render_widget(footer(tree), root[2]);
+    frame.render_widget(footer(tree, input_mode, search_query, status_message), root[2]);
 }
 
 fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
@@ -362,8 +418,19 @@ fn render_selected(frame: &mut Frame, area: ratatui::layout::Rect, selected: &Se
     }
 }
 
-fn footer(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
-    Paragraph::new(Line::from(vec![
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum InputMode {
+    Normal,
+    Search,
+}
+
+fn footer(
+    tree: &BucketedCrawlerTree,
+    input_mode: InputMode,
+    search_query: &str,
+    status_message: Option<&str>,
+) -> Paragraph<'static> {
+    let mut segments = vec![
         Span::styled("q quit", Style::default().fg(Color::DarkGray)),
         Span::raw("  "),
         Span::styled("hjkl/arrows move", Style::default().fg(Color::DarkGray)),
@@ -379,7 +446,27 @@ fn footer(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
             ),
             Style::default().fg(Color::Green),
         ),
-    ]))
+    ];
+
+    if let Some(message) = status_message {
+        segments.push(Span::raw("  "));
+        segments.push(Span::styled(message.to_string(), Style::default().fg(Color::Red)));
+    }
+
+    if matches!(input_mode, InputMode::Search) {
+        segments.push(Span::raw("  "));
+        segments.push(Span::styled(
+            format!("/{}", search_query),
+            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+        ));
+        segments.push(Span::raw("  "));
+        segments.push(Span::styled("enter search esc cancel", Style::default().fg(Color::DarkGray)));
+    } else {
+        segments.push(Span::raw("  "));
+        segments.push(Span::styled("/ search", Style::default().fg(Color::DarkGray)));
+    }
+
+    Paragraph::new(Line::from(segments))
     .block(Block::default().borders(Borders::ALL))
 }
 
