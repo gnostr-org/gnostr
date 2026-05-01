@@ -48,6 +48,7 @@ version = "2.2"
 
 [dependencies.actix-http]
 version = "3"
+features = ["http2", "ws"]
 
 [dependencies.actix-server]
 version = "2"
@@ -101,6 +102,12 @@ package = "openssl"
 [dependencies.tokio]
 version = "1.24.2"
 features = ["sync"]
+
+[dev-dependencies.h2]
+version = "0.3.27"
+
+[dev-dependencies.rand]
+version = "0.10.1"
 
 [features]
 default = []
