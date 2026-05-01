@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "1876.947437.254765"
+version = "1876.947501.164727"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -15,8 +15,8 @@ categories = ["network-programming", "web-programming"]
 ## search = ["nostr-relay/search"]
 
 [dependencies]
-actix-web = { workspace = true }
 actix-http = { version = "3.9.0" }
+actix-web = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 nostr-relay = { version = "0.4.8", default-features = false }

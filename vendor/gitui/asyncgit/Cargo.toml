@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "asyncgit"
-version = "0.28.1"
+version = "1876.947501.164727"
 authors = ["extrawurst <mail@rusticorn.com>"]
 build = false
 autolib = false
@@ -24,10 +24,7 @@ description = "allow using git2 in a asynchronous context"
 homepage = "https://github.com/gitui-org/gitui"
 readme = "README.md"
 keywords = ["git"]
-categories = [
-    "asynchronous",
-    "concurrency",
-]
+categories = ["asynchronous", "concurrency"]
 license = "MIT"
 repository = "https://github.com/gitui-org/gitui"
 
@@ -63,12 +60,7 @@ version = "0.7"
 
 [dependencies.gix]
 version = "0.78.0"
-features = [
-    "mailmap",
-    "max-performance",
-    "revision",
-    "status",
-]
+features = ["mailmap", "max-performance", "revision", "status"]
 default-features = false
 
 [dependencies.log]
@@ -94,10 +86,7 @@ features = ["derive"]
 
 [dependencies.ssh-key]
 version = "0.6.7"
-features = [
-    "crypto",
-    "encryption",
-]
+features = ["crypto", "encryption"]
 
 [dependencies.thiserror]
 version = "2.0"
