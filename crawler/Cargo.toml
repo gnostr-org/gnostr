@@ -25,6 +25,10 @@ path = "src/lib.rs"
 name = "gnostr_crawler"
 path = "src/bin/gnostr_crawler.rs"
 
+[[bin]]
+name = "gnostr_crawler_filetree-285805"
+path = "src/bin/gnostr_crawler_filetree-285805.rs"
+
 [dependencies]
 ## TODO align with workspace deps
 anyhow = "1.0.100"
@@ -45,6 +49,7 @@ gnostr-asyncgit = { version = "1876.947089.686958", path = "../asyncgit", featur
 indicatif = "0.14.0"
 log = "0.4.24"
 nostr-sdk = { version = "0.44.1" }
+gnostr-filetreelist = { path = "../filetreelist", package = "gnostr-filetreelist", version = "1876.947089.686958" }
 predicates = "3.1.3"
 rand = "0.7.3"
 regex = "1.11.1"

@@ -1,4 +1,15 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{ListItem, ListState};
+
+mod widgets;
+pub mod gnostr_crawler_filetree;
+
+pub use widgets::{DetailPanel, ListPanel};
+pub use gnostr_crawler_filetree::{
+    BucketSummary, CrawlerDiskTree, CrawlerFileTreeWidget, MoveSelection,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PaneFocus {
@@ -123,4 +134,23 @@ pub fn title_case(value: &str) -> String {
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
         None => String::new(),
     }
+}
+
+pub fn list_state(selected: Option<usize>) -> ListState {
+    let mut state = ListState::default();
+    state.select(selected);
+    state
+}
+
+pub fn list_items<'a>(items: impl IntoIterator<Item = (String, String)> + 'a) -> Vec<ListItem<'a>> {
+    items
+        .into_iter()
+        .map(|(primary, secondary)| {
+            ListItem::new(Line::from(vec![
+                Span::raw(primary),
+                Span::raw("  "),
+                Span::styled(secondary, Style::default().fg(Color::DarkGray)),
+            ]))
+        })
+        .collect()
 }
