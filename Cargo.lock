@@ -5862,7 +5862,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -6125,7 +6125,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "aes",
  "anyhow",
@@ -6272,7 +6272,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-blossom-tui"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "arboard",
  "bech32 0.11.1",
@@ -6296,7 +6296,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-chat"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "clap 4.6.1",
@@ -6327,7 +6327,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6368,7 +6368,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "actix-web",
  "gnostr-relay",
@@ -6379,7 +6379,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -6387,7 +6387,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git-helpers"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "bech32 0.11.1",
@@ -6409,7 +6409,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "git2",
  "gnostr-git2-testing",
@@ -6422,7 +6422,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "env_logger 0.11.10",
  "git2",
@@ -6432,7 +6432,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "cc",
@@ -6451,11 +6451,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 
 [[package]]
 name = "gnostr-js"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -6486,7 +6486,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "argparse",
  "chrono",
@@ -6503,7 +6503,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-ngit"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -6547,7 +6547,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-p2p"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -6570,7 +6570,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -6583,14 +6583,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "log",
 ]
 
 [[package]]
 name = "gnostr-web"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -6655,7 +6655,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_filehash_core"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "csv",
  "frost-secp256k1-tr",
@@ -6675,7 +6675,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_qr"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "hex",
  "image",
@@ -16087,7 +16087,7 @@ checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "test_utils"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 dependencies = [
  "anyhow",
  "assert_cmd",

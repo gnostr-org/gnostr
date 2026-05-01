@@ -1,6 +1,6 @@
 [package]
 name = "gnostr_filehash_core"
-version = "1876.947089.686958"
+version = "1876.947437.254765"
 edition = "2021"
 description = "gnostr filehash core"
 license = "MIT"
@@ -10,8 +10,32 @@ repository = "https://github.com/gnostr-org/gnostr"
 authors = ["gnostr <admin@gnostr.org>"]
 
 [features]
-nostr = ["dep:nostr", "dep:nostr-sdk", "dep:serde_json", "dep:sha2", "dep:hex", "dep:reqwest", "dep:tokio", "dep:csv", "dep:url", "dep:frost-secp256k1-tr", "dep:rand"]
-frost = ["dep:nostr", "dep:nostr-sdk", "dep:serde_json", "dep:sha2", "dep:hex", "dep:reqwest", "dep:tokio", "dep:csv", "dep:url", "dep:frost-secp256k1-tr", "dep:rand"]
+nostr = [
+  "dep:nostr",
+  "dep:nostr-sdk",
+  "dep:serde_json",
+  "dep:sha2",
+  "dep:hex",
+  "dep:reqwest",
+  "dep:tokio",
+  "dep:csv",
+  "dep:url",
+  "dep:frost-secp256k1-tr",
+  "dep:rand",
+]
+frost = [
+  "dep:nostr",
+  "dep:nostr-sdk",
+  "dep:serde_json",
+  "dep:sha2",
+  "dep:hex",
+  "dep:reqwest",
+  "dep:tokio",
+  "dep:csv",
+  "dep:url",
+  "dep:frost-secp256k1-tr",
+  "dep:rand",
+]
 
 [dependencies]
 sha2 = { version = "0.10.9", optional = true }
@@ -45,4 +69,7 @@ log = "0.4"
 
 [build-dependencies]
 reqwest = { version = "0.12.0", features = ["json"], optional = true }
-tokio = { version = "1", features = ["macros", "rt-multi-thread"], optional = true }
+tokio = { version = "1", features = [
+  "macros",
+  "rt-multi-thread",
+], optional = true }

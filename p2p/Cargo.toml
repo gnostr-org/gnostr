@@ -19,11 +19,55 @@ path = "src/lib.rs"
 anyhow = "1.0.98"
 ansi_term = "0.12"
 async-std = { version = "1.12", features = ["attributes"] }
-clap = { version = "4.5.41", features = ["std", "cargo", "derive", "help", "usage", "env"] }
+clap = { version = "4.5.41", features = [
+  "std",
+  "cargo",
+  "derive",
+  "help",
+  "usage",
+  "env",
+] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1876.947089.686958", default-features = false }
-libp2p = { version = "0.54.1", features = ["full", "autonat", "cbor", "dcutr", "dns", "ecdsa", "ed25519", "floodsub", "gossipsub", "identify", "json", "kad", "macros", "mdns", "memory-connection-limits", "metrics", "noise", "ping", "plaintext", "pnet", "quic", "relay", "rendezvous", "request-response", "rsa", "secp256k1", "serde", "tcp", "tls", "tokio", "uds", "upnp", "wasm-bindgen", "websocket", "webtransport-websys", "yamux"] }
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1876.947437.254765", default-features = false }
+libp2p = { version = "0.54.1", features = [
+  "full",
+  "autonat",
+  "cbor",
+  "dcutr",
+  "dns",
+  "ecdsa",
+  "ed25519",
+  "floodsub",
+  "gossipsub",
+  "identify",
+  "json",
+  "kad",
+  "macros",
+  "mdns",
+  "memory-connection-limits",
+  "metrics",
+  "noise",
+  "ping",
+  "plaintext",
+  "pnet",
+  "quic",
+  "relay",
+  "rendezvous",
+  "request-response",
+  "rsa",
+  "secp256k1",
+  "serde",
+  "tcp",
+  "tls",
+  "tokio",
+  "uds",
+  "upnp",
+  "wasm-bindgen",
+  "websocket",
+  "webtransport-websys",
+  "yamux",
+] }
 log = "0.4.29"
 rand = "0.8.5"
 serde = { version = "1.0.219", features = ["derive"] }
@@ -31,5 +75,10 @@ serde_json = "1.0.140"
 thiserror = "1.0.69"
 tokio = { version = "1.46.1", features = ["full"] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.22", default-features = false, features = ["env-filter", "smallvec", "parking_lot", "fmt"] }
+tracing-subscriber = { version = "0.3.22", default-features = false, features = [
+  "env-filter",
+  "smallvec",
+  "parking_lot",
+  "fmt",
+] }
 warp = { workspace = true }
