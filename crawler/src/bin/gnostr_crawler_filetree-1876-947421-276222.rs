@@ -9,6 +9,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use gnostr_crawler::{relays::get_config_dir_path, tui::JsonPanel};
+use gnostr_crawler::tui::gnostr_crawler_filetree::is_json_file;
 use gnostr_filetreelist::{FileTree, MoveSelection};
 use ratatui::{
     backend::CrosstermBackend,
@@ -851,12 +852,6 @@ fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn is_json_file(path: &Path) -> bool {
-    path.extension()
-        .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
 }
 
 fn build_entries(root: &Path, files: &[PathBuf]) -> Result<Vec<FileEntry>> {
