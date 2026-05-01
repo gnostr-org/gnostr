@@ -9,6 +9,8 @@ vendor/*/**
 !vendor/curve25519-dalek
 !vendor/ed25519-dalek
 !vendor/gitui
+!vendor/gitui/*
+!vendor/gitui/*/**
 
 index.html
 !web/templates/index.html
