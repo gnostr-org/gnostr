@@ -177,7 +177,6 @@ pub fn show(repo: &Repository, reference: &str) -> Res<Diff> {
             .stdout,
     )
     .map_err(Error::GitShowUtf8)?;
-    let text = text.trim_end().to_string();
 
     Ok(Diff {
         file_diffs: gitu_diff::Parser::new(&text).parse_commit().unwrap().diff,
