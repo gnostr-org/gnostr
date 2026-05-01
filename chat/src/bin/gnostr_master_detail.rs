@@ -776,7 +776,7 @@ async fn load_feed(feed: FeedKind) -> Result<Vec<EventItem>> {
 }
 
 async fn load_query_events(label: &'static str, kinds: &'static [u32]) -> Result<Vec<EventItem>> {
-    let relays = load_relays_or_bootstrap();
+    let relays = load_relays_or_bootstrap().into_iter().take(6).collect::<Vec<_>>();
     let urls = relays
         .into_iter()
         .map(|relay| {
@@ -825,12 +825,15 @@ async fn load_query_events(label: &'static str, kinds: &'static [u32]) -> Result
 }
 
 async fn load_relay_metadata() -> Result<Vec<EventItem>> {
-    let relays = load_relays_or_bootstrap();
+    let relays = load_relays_or_bootstrap().into_iter().take(12).collect::<Vec<_>>();
     if relays.is_empty() {
         return Err(anyhow!("no bootstrap relays available"));
     }
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(8))
+        .build()
+        .context("failed to build reqwest client")?;
     let responses = fetch_relay_texts(relays, &client, "master-detail").await;
     let mut events = Vec::new();
     let mut seen = HashSet::new();
