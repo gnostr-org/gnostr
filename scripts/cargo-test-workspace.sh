@@ -17,6 +17,7 @@ FEATURES=()
 PACKAGES=()
 ALL_FEATURES=false
 NO_DEFAULT_FEATURES=false
+VENDORED=false
 RELEASE=false
 LOCKED=false
 OFFLINE=false
@@ -28,6 +29,7 @@ Usage: cargo-test-workspace.sh [variant] [--features VALUE] [--package VALUE] [-
 Variants:
   default              cargo test --workspace
   workspace            Alias for default
+  vendored             Run cargo tests for every vendored manifest
   ignored              Run ignored workspace tests
   long-tests           Enable the long_tests feature
   long-tests-ignored   Enable long_tests and run ignored tests
@@ -69,6 +71,9 @@ join_features() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
     default|workspace)
+      ;;
+    vendored)
+      VENDORED=true
       ;;
     ignored)
       TEST_FLAGS+=(--ignored)
@@ -139,6 +144,34 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+if [[ "$VENDORED" == true ]]; then
+  if [[ "$ALL_FEATURES" == true || "$NO_DEFAULT_FEATURES" == true || ${#FEATURES[@]} -gt 0 || ${#PACKAGES[@]} -gt 0 ]]; then
+    echo "vendored mode does not support --features, --package, all-features, or no-default-features" >&2
+    exit 1
+  fi
+
+  VENDORED_FLAGS=()
+
+  if [[ "$RELEASE" == true ]]; then
+    VENDORED_FLAGS+=(--release)
+  fi
+
+  if [[ "$LOCKED" == true ]]; then
+    VENDORED_FLAGS+=(--locked)
+  fi
+
+  if [[ "$OFFLINE" == true ]]; then
+    VENDORED_FLAGS+=(--offline)
+  fi
+
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}" "${TEST_FLAGS[@]}"
+  else
+    ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}"
+  fi
+  exit $?
+fi
 
 declare -a CARGO_FLAGS=(test --workspace -j"$NPROC")
 
