@@ -6300,9 +6300,11 @@ version = "1876.947089.686958"
 dependencies = [
  "anyhow",
  "clap 4.6.1",
+ "crossterm 0.29.0",
  "futures",
  "git2",
  "gnostr-asyncgit",
+ "gnostr-crawler",
  "gnostr-p2p",
  "hostname",
  "libp2p",

@@ -20,7 +20,8 @@ path = "src/lib.rs"
 anyhow = "1.0.98"
 clap = { version = "4.5.41", features = ["derive"] }
 futures = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1876.947089.686958", default-features = false }
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1876.947089.686958", default-features = false, features = ["tui"] }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "1876.947089.686958" }
 gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "1876.947089.686958" }
 git2 = "0.20.2"
 hostname = "0.3.1"
@@ -28,6 +29,7 @@ libp2p = { version = "0.54.1", features = ["full", "autonat", "cbor", "dcutr", "
 once_cell = "1.21.3"
 parking_lot = "0.12.3"
 ratatui = { version = "0.29", default-features = false, features = ["crossterm"] }
+crossterm = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 terminal_size = "0.4.3"
