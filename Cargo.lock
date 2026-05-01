@@ -6152,7 +6152,7 @@ dependencies = [
  "constant_time_eq 0.1.5",
  "criterion",
  "crossbeam-channel 0.5.15",
- "crossterm 0.29.0",
+ "crossterm 0.28.1",
  "derive_more 0.99.20",
  "dirs 5.0.1",
  "easy-cast",

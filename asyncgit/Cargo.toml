@@ -73,7 +73,7 @@ const-hex = "1.12"
 const_format = "0.2"
 constant_time_eq = { workspace = true }
 crossbeam-channel = "0.5"
-crossterm = "0.29"
+crossterm = "0.28.1"
 derive_more = { workspace = true }
 dirs = "5.0.1"
 easy-cast = "0.5"
