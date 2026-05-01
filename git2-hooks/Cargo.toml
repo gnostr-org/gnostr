@@ -13,6 +13,7 @@ categories = ["development-tools"]
 keywords = ["git"]
 
 [dependencies]
+gitui_git2_hooks = { package = "git2-hooks", path = "../vendor/gitui/git2-hooks" }
 git2 = "^0.20"
 log = "0.4"
 shellexpand = "3.1"
