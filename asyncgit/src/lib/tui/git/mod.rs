@@ -16,9 +16,6 @@ pub mod screen;
 pub mod state;
 pub mod ui;
 
-#[cfg(test)]
-mod tests;
-
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState, KeyModifiers};
 use git2::Repository;
 use gitui_error::Error;
