@@ -37,7 +37,7 @@ use gnostr_asyncgit::{
 };
 use sha2::{Digest, Sha256};
 
-// pub mod ui; // disabled while ratatui/crossterm are being aligned
+pub mod ui;
 
 fn to_transport_event(event: InternalEvent) -> Option<ChatEvent> {
     match event {
