@@ -17,7 +17,8 @@ path = "src/lib.rs"
 
 [features]
 default = []
-enabled = []
+enabled = ["gitui_scopetime/enabled"]
 
 [dependencies]
+gitui_scopetime = { package = "scopetime", path = "../vendor/gitui/scopetime" }
 log = "0.4"
