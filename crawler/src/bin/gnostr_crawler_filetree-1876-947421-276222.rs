@@ -61,25 +61,36 @@ pub fn run() -> Result<()> {
                             status_message = None;
                         }
                         KeyCode::Enter => {
-                            tree.apply_filter(Some(&search_query))?;
-                            if search_query.trim().is_empty() {
-                                status_message = Some(String::from("filter cleared"));
-                                input_mode = InputMode::Normal;
+                            input_mode = InputMode::Normal;
+                            status_message = if search_query.trim().is_empty() {
+                                Some(String::from("filter cleared"))
                             } else {
-                                status_message = Some(format!(
+                                Some(format!(
                                     "filter: {} ({} paths)",
                                     search_query,
                                     tree.visible_count()
-                                ));
-                                input_mode = InputMode::Normal;
-                            }
-                            selected.sync(tree.selected_path())?;
+                                ))
+                            };
                         }
                         KeyCode::Backspace => {
                             search_query.pop();
+                            tree.apply_filter(Some(&search_query))?;
+                            selected.sync(tree.selected_path())?;
+                            status_message = Some(format!(
+                                "filter: {} ({} paths)",
+                                search_query,
+                                tree.visible_count()
+                            ));
                         }
                         KeyCode::Char(c) if !c.is_control() => {
                             search_query.push(c);
+                            tree.apply_filter(Some(&search_query))?;
+                            selected.sync(tree.selected_path())?;
+                            status_message = Some(format!(
+                                "filter: {} ({} paths)",
+                                search_query,
+                                tree.visible_count()
+                            ));
                         }
                         _ => {}
                     },
@@ -516,7 +527,7 @@ fn footer(
             Span::styled("r refresh", Style::default().fg(Color::DarkGray)),
         ]),
         Line::from(vec![
-            Span::styled("enter apply", Style::default().fg(Color::Cyan)),
+            Span::styled("type filters live", Style::default().fg(Color::Cyan)),
             Span::raw("  "),
             Span::styled("esc cancel", Style::default().fg(Color::Cyan)),
         ]),
