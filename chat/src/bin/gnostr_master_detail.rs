@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use crawler::{
+use gnostr_crawler::{
     build_gnostr_query, fetch_relay_texts, load_relays_or_bootstrap, parse_relay_metadata, send,
     Relay,
 };
@@ -373,7 +373,7 @@ impl App {
         frame.render_widget(self.left_detail(), left[1]);
 
         frame.render_stateful_widget(self.events_list(), main[1], &mut self.event_state());
-        frame.render_widget(self.event_detail(frame.area(), main[2]), main[2]);
+        frame.render_widget(self.event_detail(), main[2]);
 
         frame.render_widget(self.status_bar(), root[2]);
 
@@ -418,7 +418,7 @@ impl App {
                     Span::styled(item.name.clone(), Style::default().fg(Color::White)),
                     Span::raw("  "),
                     Span::styled(
-                        item.feed.label(),
+                        item.summary.clone(),
                         Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC),
                     ),
                 ]))
@@ -500,6 +500,10 @@ impl App {
                     Span::styled("kind: ", Style::default().fg(Color::Green)),
                     Span::raw(event.kind_label.clone()),
                 ]),
+                Line::from(vec![
+                    Span::styled("detail: ", Style::default().fg(Color::Green)),
+                    Span::raw(shorten(&event.detail, 72)),
+                ]),
             ]);
         } else {
             lines.push(Line::from("no event selected"));
@@ -510,7 +514,7 @@ impl App {
             .wrap(Wrap { trim: false })
     }
 
-    fn event_detail(&self, _area: Rect, detail_area: Rect) -> Paragraph<'_> {
+    fn event_detail(&self) -> Paragraph<'_> {
         let event = self.current_event();
         let mut lines = vec![
             Line::from(vec![
@@ -537,6 +541,10 @@ impl App {
                 Line::from(vec![
                     Span::styled("kind: ", Style::default().fg(Color::Green)),
                     Span::raw(event.kind_label.clone()),
+                ]),
+                Line::from(vec![
+                    Span::styled("detail: ", Style::default().fg(Color::Green)),
+                    Span::raw(event.detail.clone()),
                 ]),
                 Line::from(""),
                 Line::from(Span::styled(
@@ -791,9 +799,12 @@ async fn load_query_events(label: &'static str, kinds: &'static [u32]) -> Result
         None,
         Some(kinds_string.as_str()),
         None,
-    )?;
+    )
+    .map_err(|error| anyhow!(error.to_string()))?;
 
-    let messages = send(query, urls, Some(24)).await?;
+    let messages = send(query, urls, Some(24))
+        .await
+        .map_err(|error| anyhow!(error.to_string()))?;
     let mut seen = HashSet::new();
     let mut events = Vec::new();
 
