@@ -1,7 +1,10 @@
-use std::{io, path::PathBuf, time::Duration};
+use std::{fs, io, time::Duration};
 
 use anyhow::Result;
-use gnostr_crawler::tui::{CrawlerDiskTree, CrawlerFileTreeWidget, MoveSelection};
+use gnostr_crawler::{
+    relays::get_config_dir_path,
+    tui::{CrawlerDiskTree, CrawlerFileTreeWidget, MoveSelection},
+};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -23,7 +26,8 @@ async fn main() -> Result<()> {
 
 fn run() -> Result<()> {
     let mut terminal = TerminalGuard::enter()?;
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = get_config_dir_path();
+    fs::create_dir_all(&root)?;
     let mut tree = CrawlerDiskTree::discover(root)?;
 
     loop {
