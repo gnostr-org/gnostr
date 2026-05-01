@@ -19,7 +19,6 @@ use ratatui::crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use serde_json::Value;
-use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -31,7 +30,7 @@ pub fn run() -> Result<()> {
     let root = get_config_dir_path();
     fs::create_dir_all(&root)?;
     let mut tree = CrawlerDiskTree::discover(root)?;
-    let mut selected = SelectedJson::default();
+    let mut selected = SelectedFileView::default();
     selected.sync(tree.selected_path())?;
 
     loop {
@@ -81,38 +80,94 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
-#[derive(Default)]
-struct SelectedJson {
-    path: Option<PathBuf>,
-    value: Option<Value>,
-    error: Option<String>,
+enum SelectedFileView {
+    Empty,
+    RawText { text: String },
+    Json { value: Value },
 }
 
-impl SelectedJson {
+impl Default for SelectedFileView {
+    fn default() -> Self {
+        Self::Empty
+    }
+}
+
+impl SelectedFileView {
     fn sync(&mut self, path: Option<&std::path::Path>) -> Result<()> {
-        match path {
-            Some(path) if self.path.as_deref() != Some(path) => {
-                self.path = Some(path.to_path_buf());
-                let content = fs::read_to_string(path)?;
-                match serde_json::from_str::<Value>(&content) {
-                    Ok(value) => {
-                        self.value = Some(value);
-                        self.error = None;
-                    }
-                    Err(error) => {
-                        self.value = None;
-                        self.error = Some(error.to_string());
-                    }
+        let Some(path) = path else {
+            *self = Self::Empty;
+            return Ok(());
+        };
+
+        let content = fs::read_to_string(path)?;
+        let ext = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.to_ascii_lowercase());
+
+        match ext.as_deref() {
+            Some("txt") => {
+                *self = Self::RawText { text: content };
+            }
+            Some("yaml") | Some("yml") => {
+                let parsed: serde_yaml::Value = serde_yaml::from_str(&content)?;
+                let value = serde_json::to_value(parsed)?;
+                *self = Self::Json { value };
+            }
+            Some("json") => {
+                let value = serde_json::from_str::<Value>(&content)?;
+                *self = Self::Json { value };
+            }
+            _ => {
+                if let Ok(value) = serde_json::from_str::<Value>(&content) {
+                    *self = Self::Json { value };
+                } else if let Ok(parsed) = serde_yaml::from_str::<serde_yaml::Value>(&content) {
+                    let value = serde_json::to_value(parsed)?;
+                    *self = Self::Json { value };
+                } else {
+                    *self = Self::RawText { text: content };
                 }
             }
-            None => {
-                self.path = None;
-                self.value = None;
-                self.error = None;
-            }
-            _ => {}
         }
+
         Ok(())
+    }
+}
+
+fn render_selected(frame: &mut Frame, area: ratatui::layout::Rect, selected: &SelectedFileView) {
+    match selected {
+        SelectedFileView::Empty => {
+            frame.render_widget(
+                JsonPanel {
+                    title: "selected data",
+                    value: None,
+                    error: None,
+                    empty_message: "select a file to inspect its contents",
+                    scroll: (0, 0),
+                },
+                area,
+            );
+        }
+        SelectedFileView::RawText { text } => {
+            let lines = text.lines().map(Line::from).collect::<Vec<_>>();
+            frame.render_widget(
+                Paragraph::new(lines)
+                    .block(Block::default().borders(Borders::ALL).title("selected text")),
+                area,
+            );
+        }
+        SelectedFileView::Json { value } => {
+            frame.render_widget(
+                JsonPanel {
+                    title: "selected data",
+                    value: Some(value),
+                    error: None,
+                    empty_message: "",
+                    scroll: (0, 0),
+                },
+                area,
+            );
+        }
     }
 }
 
@@ -139,7 +194,7 @@ impl Drop for TerminalGuard {
     }
 }
 
-fn draw(frame: &mut Frame, tree: &CrawlerDiskTree, selected: &SelectedJson) {
+fn draw(frame: &mut Frame, tree: &CrawlerDiskTree, selected: &SelectedFileView) {
     let root = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
@@ -172,16 +227,7 @@ fn draw(frame: &mut Frame, tree: &CrawlerDiskTree, selected: &SelectedJson) {
         },
         body[0],
     );
-    frame.render_widget(
-        JsonPanel {
-            title: "selected json",
-            value: selected.value.as_ref(),
-            error: selected.error.as_deref(),
-            empty_message: "select a file to parse json",
-            scroll: (0, 0),
-        },
-        body[1],
-    );
+    render_selected(frame, body[1], selected);
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::styled("q quit", Style::default().fg(Color::DarkGray)),
