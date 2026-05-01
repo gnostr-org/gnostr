@@ -260,12 +260,34 @@ impl BucketedCrawlerTree {
     }
 
     fn favorite_items(&self) -> Vec<String> {
-        let mut items = self
-            .favorites
-            .iter()
-            .map(|path| self.favorite_label(path))
-            .collect::<Vec<_>>();
-        items.sort();
+        let mut buckets: BTreeMap<String, Vec<(usize, String, String)>> = BTreeMap::new();
+
+        for path in &self.favorites {
+            let path = Path::new(path);
+            let relative = path.strip_prefix(&self.root).unwrap_or(path);
+            let bucket = relative
+                .components()
+                .next()
+                .and_then(|component| component.as_os_str().to_str())
+                .unwrap_or("(root)")
+                .to_string();
+            let name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .or_else(|| path.file_stem().and_then(|stem| stem.to_str()))
+                .unwrap_or(path.to_str().unwrap_or_default())
+                .to_string();
+            buckets
+                .entry(bucket)
+                .or_default()
+                .push((favorite_rank(&name), name, self.favorite_label(path.to_str().unwrap_or_default())));
+        }
+
+        let mut items = Vec::new();
+        for (_, mut entries) in buckets {
+            entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
+            items.extend(entries.into_iter().map(|(_, _, label)| label));
+        }
         items
     }
 
