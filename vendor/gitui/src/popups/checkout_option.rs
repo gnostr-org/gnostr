@@ -88,7 +88,7 @@ impl CheckoutOptionPopup {
 	fn checkout(&self) -> Result<()> {
 		if let Some(branch) = &self.branch {
 			if branch.is_local() {
-				checkout_branch(&self.repo, &branch.name)?;
+                checkout_branch(&self.repo, &branch.name, false)?;
 			} else {
 				checkout_remote_branch(&self.repo, branch)?;
 			}

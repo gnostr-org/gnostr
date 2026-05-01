@@ -87,6 +87,7 @@ fuzzy-matcher = "0.3"
 git-version = "0.3.9"
 git2 = { version = "^0.20", default-features = false }
 git2-hooks = { workspace = true } ##{ package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1878.945649.607219" }
+gitui_asyncgit = { package = "asyncgit", path = "../vendor/gitui/asyncgit", default-features = false }
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
   "tracing",

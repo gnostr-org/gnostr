@@ -592,10 +592,11 @@ impl BranchListPopup {
 		let selected_branch = &self.branches[self.selection as usize];
 		if status.is_empty() {
 			if self.local {
-				checkout_branch(
-					&self.repo.borrow(),
-					&selected_branch.name,
-				)?;
+                checkout_branch(
+                    &self.repo.borrow(),
+                    &selected_branch.name,
+                    false,
+                )?;
 				self.hide();
 			} else {
 				checkout_remote_branch(

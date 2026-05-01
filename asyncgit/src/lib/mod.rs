@@ -41,6 +41,8 @@ use tracing::debug;
 use tracing::error;
 use ureq::Agent;
 
+pub(crate) use gitui_asyncgit::sync as upstream_sync;
+
 /// Deterministic helper utilities.
 pub mod weeble;
 

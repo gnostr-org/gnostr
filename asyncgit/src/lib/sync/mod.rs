@@ -57,8 +57,8 @@ pub use config::{get_config_string, untracked_files_config, ShowUntrackedFilesCo
 pub use diff::get_diff_commit;
 pub use git2::{BranchType, ResetType};
 pub use hooks::{
-    hooks_commit_msg, hooks_post_commit, hooks_pre_commit, hooks_prepare_commit_msg, HookResult,
-    PrepareCommitMsgSource,
+    hooks_commit_msg, hooks_post_commit, hooks_pre_commit, hooks_pre_push,
+    hooks_prepare_commit_msg, HookResult, PrePushTarget, PrepareCommitMsgSource,
 };
 pub use hunks::{reset_hunk, stage_hunk, unstage_hunk};
 pub use ignore::add_to_ignore;
@@ -73,8 +73,9 @@ pub use notes::{
 };
 pub use rebase::rebase_branch;
 pub use remotes::{
-    get_default_remote, get_default_remote_for_fetch, get_default_remote_for_push, get_remotes,
-    push::AsyncProgress, tags::PushTagsProgress,
+    add_remote, delete_remote, get_default_remote, get_default_remote_for_fetch,
+    get_default_remote_for_push, get_remote_url, get_remotes, rename_remote, update_remote_url,
+    validate_remote_name, push::AsyncProgress, tags::PushTagsProgress,
 };
 pub(crate) use repository::repo;
 pub use repository::{resolve_repo_path, RepoPath, RepoPathRef};

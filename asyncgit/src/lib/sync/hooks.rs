@@ -1,6 +1,7 @@
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 
+pub use crate::upstream_sync::{hooks_pre_push, PrePushTarget};
 use super::{repository::repo, RepoPath};
 use crate::error::Result;
 //use crate::sync::utils;

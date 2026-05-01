@@ -8,7 +8,9 @@ pub mod gitu_diff;
 pub mod gitui_error;
 mod highlight;
 pub mod items;
-mod key_parser;
+pub mod key_parser;
+#[cfg(test)]
+mod tests;
 pub mod menu;
 pub mod ops;
 mod prompt;
