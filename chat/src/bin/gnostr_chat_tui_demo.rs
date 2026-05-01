@@ -423,10 +423,10 @@ impl App {
                 ]),
                 Line::from(vec![
                     Span::styled("keys: ", Style::default().fg(Color::Magenta)),
-                    Span::raw("/ search, ? help, enter accept, esc exit"),
+                    Span::raw("/ search, ? help, F1 overlay, enter accept, esc exit"),
                 ]),
                 Line::from(vec![
-                    Span::raw("j/k or arrows move, tab cycles pages, 1-8 jump"),
+                    Span::raw("j/k or arrows move, tab cycles pages, 1-9 jump"),
                 ]),
                 Line::from(vec![
                     Span::raw("ctrl-u clears search query"),
@@ -526,7 +526,7 @@ impl App {
                 Line::from("/ focus search input"),
                 Line::from("? toggle help overlay"),
                 Line::from("F1 toggle help overlay"),
-                Line::from("1-8 jump presets, tab cycles pages"),
+                        Line::from("1-9 jump presets, tab cycles pages"),
                 Line::from("ctrl-u clears search, pgup/pgdn scroll"),
             ])
             .wrap(Wrap { trim: true })
@@ -619,7 +619,7 @@ impl Page {
                 data.filter.kinds,
                 data.filter.tags.len()
             ),
-            Page::Help => "Keyboard help and interaction hints.\n\nUse / to focus the search input, ? to open this help view, and 1-8 to jump between page presets.".to_string(),
+            Page::Help => "Keyboard help and interaction hints.\n\nUse / to focus the search input, ? to open this help view, and 1-9 to jump between page presets.".to_string(),
         }
     }
 
@@ -813,7 +813,7 @@ impl Page {
                         Line::from("q / esc quit"),
                         Line::from("/ search input"),
                         Line::from("? open help"),
-                        Line::from("1-8 jump pages"),
+                        Line::from("1-9 jump pages"),
                         Line::from("j/k or arrows move"),
                         Line::from("tab / shift-tab cycle"),
                         Line::from("ctrl-u clears search"),
@@ -1022,12 +1022,67 @@ fn render_gallery(frame: &mut Frame, area: Rect, data: &DemoData, gallery_layout
     }
 }
 
+fn render_ideas(frame: &mut Frame, area: Rect, data: &DemoData) {
+    let cols = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(45), Constraint::Percentage(55)])
+        .split(area);
+
+    let left = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(8), Constraint::Min(0)])
+        .split(cols[0]);
+    frame.render_widget(
+        Paragraph::new(vec![
+            Line::from("awesome-ratatui ideas"),
+            Line::from("tabs"),
+            Line::from("popups"),
+            Line::from("scroll views"),
+            Line::from("text areas"),
+            Line::from("tree browsers"),
+            Line::from("toasts"),
+        ])
+        .wrap(Wrap { trim: true })
+        .block(Block::default().title("patterns").borders(Borders::ALL)),
+        left[0],
+    );
+    frame.render_widget(
+        Paragraph::new(data.crawler_relays_text())
+            .wrap(Wrap { trim: true })
+            .block(Block::default().title("live relay data").borders(Borders::ALL)),
+        left[1],
+    );
+
+    let right = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(cols[1]);
+    frame.render_widget(
+        Paragraph::new(vec![
+            Line::from("design cues"),
+            Line::from("• top tabs for navigation"),
+            Line::from("• popup help and overlays"),
+            Line::from("• scrollable content panes"),
+            Line::from("• bottom toast/status feedback"),
+        ])
+        .wrap(Wrap { trim: true })
+        .block(Block::default().title("layout").borders(Borders::ALL)),
+        right[0],
+    );
+    frame.render_widget(
+        TagWidget::new(&data.tag)
+            .block(Block::default().title("tag").borders(Borders::ALL)),
+        right[1],
+    );
+}
+
 #[derive(Clone, Copy)]
 pub enum DemoPreset {
     Full,
     SearchFirst,
     RelaysFirst,
     HelpFirst,
+    RelayIo,
 }
 
 impl DemoPreset {
@@ -1037,6 +1092,7 @@ impl DemoPreset {
             DemoPreset::SearchFirst => "search-first",
             DemoPreset::RelaysFirst => "relays-first",
             DemoPreset::HelpFirst => "help-first",
+            DemoPreset::RelayIo => "relay-io",
         }
     }
 
@@ -1046,6 +1102,7 @@ impl DemoPreset {
             DemoPreset::SearchFirst => "search-first view",
             DemoPreset::RelaysFirst => "relay-first view",
             DemoPreset::HelpFirst => "help-first view",
+            DemoPreset::RelayIo => "relay I/O view",
         }
     }
 
@@ -1095,6 +1152,17 @@ impl DemoPreset {
                 Page::Nip34,
                 Page::Settings,
             ],
+            DemoPreset::RelayIo => vec![
+                Page::Relays,
+                Page::Ideas,
+                Page::Search,
+                Page::Help,
+                Page::Overview,
+                Page::Gallery,
+                Page::Explorer,
+                Page::Nip34,
+                Page::Settings,
+            ],
         }
     }
 
@@ -1104,6 +1172,7 @@ impl DemoPreset {
             DemoPreset::SearchFirst => Page::Search,
             DemoPreset::RelaysFirst => Page::Relays,
             DemoPreset::HelpFirst => Page::Help,
+            DemoPreset::RelayIo => Page::Relays,
         };
         pages.iter().position(|page| *page == wanted).unwrap_or(0)
     }
@@ -1111,6 +1180,7 @@ impl DemoPreset {
     fn initial_query(self) -> &'static str {
         match self {
             DemoPreset::SearchFirst => "relay",
+            DemoPreset::RelayIo => "relay",
             _ => "",
         }
     }
@@ -1118,6 +1188,7 @@ impl DemoPreset {
     fn initial_input_mode(self) -> InputMode {
         match self {
             DemoPreset::SearchFirst => InputMode::Search,
+            DemoPreset::RelayIo => InputMode::Navigate,
             _ => InputMode::Navigate,
         }
     }
@@ -1128,6 +1199,7 @@ impl DemoPreset {
             DemoPreset::SearchFirst => 34,
             DemoPreset::RelaysFirst => 32,
             DemoPreset::HelpFirst => 30,
+            DemoPreset::RelayIo => 34,
         }
     }
 
@@ -1137,6 +1209,7 @@ impl DemoPreset {
             DemoPreset::SearchFirst => 10,
             DemoPreset::RelaysFirst => 9,
             DemoPreset::HelpFirst => 11,
+            DemoPreset::RelayIo => 10,
         }
     }
 
