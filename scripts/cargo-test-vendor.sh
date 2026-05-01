@@ -24,8 +24,16 @@ VENDOR_ROOT="$ROOT_DIR/vendor"
 OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
 case "$OS_NAME" in
   Darwin|Linux|FreeBSD|OpenBSD|NetBSD|DragonFly|CYGWIN*|MINGW*|MSYS*)
-    TMP_BASE="${TMPDIR:-${TMP:-${TEMP:-/tmp}}}"
-    TARGET_ROOT="${TMP_BASE%/}/cargo-test-vendor"
+    TMPDIR_VALUE="$(gnostr --weeble 2>/dev/null || true)"
+    TMP_VALUE="$(gnostr --blockheight 2>/dev/null || true)"
+    TEMP_VALUE="$(gnostr --wobble 2>/dev/null || true)"
+    TMPDIR_VALUE="${TMPDIR_VALUE:-0}"
+    TMP_VALUE="${TMP_VALUE:-0}"
+    TEMP_VALUE="${TEMP_VALUE:-0}"
+    export TMPDIR="/var/tmp/${TMPDIR_VALUE}"
+    export TMP="${TMPDIR}/cargo-test-vendor/${TMP_VALUE}"
+    export TEMP="${TMP}/debug/${TEMP_VALUE}"
+    TARGET_ROOT="${TEMP}"
     ;;
 esac
 
@@ -107,6 +115,9 @@ if [[ -n "$TARGET_ROOT" ]]; then
     rm -rf "$TARGET_ROOT"
   fi
   mkdir -p "$TARGET_ROOT"
+  export TMPDIR="$TARGET_ROOT"
+  export TMP="$TARGET_ROOT"
+  export TEMP="$TARGET_ROOT"
   VENDOR_ROOT="$TARGET_ROOT/vendor"
   rm -rf "$VENDOR_ROOT"
   cp -R "$ROOT_DIR/vendor" "$VENDOR_ROOT"
