@@ -312,8 +312,8 @@ impl Drop for TestServer {
 pub fn unused_addr() -> net::SocketAddr {
     let addr: net::SocketAddr = "127.0.0.1:0".parse().unwrap();
     let socket = Socket::new(Domain::IPV4, Type::STREAM, Some(Protocol::TCP)).unwrap();
-    socket.bind(&addr.into()).unwrap();
     socket.set_reuse_address(true).unwrap();
+    socket.bind(&addr.into()).unwrap();
     let tcp = net::TcpListener::from(socket);
     tcp.local_addr().unwrap()
 }
