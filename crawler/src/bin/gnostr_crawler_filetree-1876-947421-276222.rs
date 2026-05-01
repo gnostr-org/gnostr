@@ -550,6 +550,7 @@ fn draw(
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(48), Constraint::Percentage(52)])
         .split(root[1]);
+    let favorites_height = favorites_panel_height(tree.favorite_items().len(), body[0].height);
 
     frame.render_widget(header(tree), top[0]);
     frame.render_widget(
@@ -559,7 +560,11 @@ fn draw(
 
     let tree_area = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Length(5), Constraint::Min(0)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Length(favorites_height),
+            Constraint::Min(0),
+        ])
         .split(body[0]);
     frame.render_widget(search_box(input_mode, search_query, tree.best_completion(search_query).as_deref()).block(
         Block::default().borders(Borders::ALL).title("tree search"),
@@ -641,6 +646,18 @@ fn favorites_panel(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
     };
 
     Paragraph::new(lines).block(Block::default().borders(Borders::ALL).title("favorites"))
+}
+
+fn favorites_panel_height(favorites_len: usize, available_height: u16) -> u16 {
+    let content_height = if favorites_len == 0 {
+        1
+    } else {
+        favorites_len.saturating_add(1)
+    } as u16;
+    let required = content_height.saturating_add(2);
+    let cap = available_height.saturating_mul(60).saturating_div(100).max(3);
+
+    required.max(3).min(cap)
 }
 
 fn tree_panel_list(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
