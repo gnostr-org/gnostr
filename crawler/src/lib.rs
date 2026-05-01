@@ -10,6 +10,7 @@ pub mod query;
 pub mod relay_manager;
 pub mod relays;
 pub mod stats;
+pub mod tui;
 mod api_cache;
 mod api_routes;
 mod git_helpers;

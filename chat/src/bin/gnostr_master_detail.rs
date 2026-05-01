@@ -10,9 +10,11 @@ use gnostr_crawler::{
     build_gnostr_query, fetch_relay_texts, load_relays_or_bootstrap, parse_relay_metadata, send,
     Relay,
 };
+use gnostr_crawler::tui::{
+    centered_rect, clamp_index, preview_text, title_case, MasterDetailLayout, PaneFocus,
+};
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -92,13 +94,6 @@ impl Drop for TerminalGuard {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Focus {
-    Types,
-    Events,
-    Detail,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FeedKind {
     RelayMetadata,
     Query { label: &'static str, kinds: &'static [u32] },
@@ -149,7 +144,7 @@ struct App {
     selected_type: usize,
     selected_event: Option<usize>,
     detail_scroll: u16,
-    focus: Focus,
+    focus: PaneFocus,
     help_open: bool,
     loading: bool,
     status: String,
@@ -173,7 +168,7 @@ impl App {
             selected_type,
             selected_event: None,
             detail_scroll: 0,
-            focus: Focus::Types,
+            focus: PaneFocus::Types,
             help_open: false,
             loading: false,
             status: String::from("select a type to load real crawler data"),
@@ -271,12 +266,12 @@ impl App {
         match key.code {
             KeyCode::Char('q') => return Ok(true),
             KeyCode::Char('?') => self.help_open = true,
-            KeyCode::Tab => self.focus = next_focus(self.focus),
-            KeyCode::BackTab => self.focus = prev_focus(self.focus),
+            KeyCode::Tab => self.focus = self.focus.next(),
+            KeyCode::BackTab => self.focus = self.focus.prev(),
             KeyCode::Enter => match self.focus {
-                Focus::Types => self.refresh(),
-                Focus::Events => self.focus = Focus::Detail,
-                Focus::Detail => {}
+                PaneFocus::Types => self.refresh(),
+                PaneFocus::Events => self.focus = PaneFocus::Detail,
+                PaneFocus::Detail => {}
             },
             KeyCode::Char('r') => self.refresh(),
             KeyCode::Char('g') if key.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -285,47 +280,47 @@ impl App {
                 self.refresh();
             }
             KeyCode::Home => match self.focus {
-                Focus::Types => {
+                PaneFocus::Types => {
                     self.selected_type = 0;
                     self.selected_event = None;
                     self.refresh();
                 }
-                Focus::Events => {
+                PaneFocus::Events => {
                     self.selected_event = None;
                     self.detail_scroll = 0;
                 }
-                Focus::Detail => self.detail_scroll = 0,
+                PaneFocus::Detail => self.detail_scroll = 0,
             },
             KeyCode::End => match self.focus {
-                Focus::Types => {
+                PaneFocus::Types => {
                     if !self.types.is_empty() {
                         self.selected_type = self.types.len() - 1;
                         self.selected_event = None;
                         self.refresh();
                     }
                 }
-                Focus::Events => {
+                PaneFocus::Events => {
                     if !self.events.is_empty() {
                         self.selected_event = Some(self.events.len() - 1);
                         self.detail_scroll = 0;
                     }
                 }
-                Focus::Detail => self.detail_scroll = u16::MAX / 2,
+                PaneFocus::Detail => self.detail_scroll = u16::MAX / 2,
             },
             KeyCode::PageUp => {
-                if matches!(self.focus, Focus::Detail) {
+                if matches!(self.focus, PaneFocus::Detail) {
                     self.detail_scroll = self.detail_scroll.saturating_sub(8);
                 }
             }
             KeyCode::PageDown => {
-                if matches!(self.focus, Focus::Detail) {
+                if matches!(self.focus, PaneFocus::Detail) {
                     self.detail_scroll = self.detail_scroll.saturating_add(8);
                 }
             }
             KeyCode::Up | KeyCode::Char('k') => self.move_selection(-1),
             KeyCode::Down | KeyCode::Char('j') => self.move_selection(1),
-            KeyCode::Left | KeyCode::Char('h') => self.focus = prev_focus(self.focus),
-            KeyCode::Right | KeyCode::Char('l') => self.focus = next_focus(self.focus),
+            KeyCode::Left | KeyCode::Char('h') => self.focus = self.focus.prev(),
+            KeyCode::Right | KeyCode::Char('l') => self.focus = self.focus.next(),
             _ => {}
         }
 
@@ -334,12 +329,12 @@ impl App {
 
     fn move_selection(&mut self, delta: i32) {
         match self.focus {
-            Focus::Types => {
+            PaneFocus::Types => {
                 self.selected_type = clamp_index(self.selected_type, self.types.len(), delta);
                 self.selected_event = None;
                 self.refresh();
             }
-            Focus::Events => {
+            PaneFocus::Events => {
                 if self.events.is_empty() {
                     self.selected_event = None;
                 } else {
@@ -348,7 +343,7 @@ impl App {
                 }
                 self.detail_scroll = 0;
             }
-            Focus::Detail => {
+            PaneFocus::Detail => {
                 if delta < 0 {
                     self.detail_scroll = self.detail_scroll.saturating_sub(delta.unsigned_abs() as u16);
                 } else {
@@ -359,33 +354,14 @@ impl App {
     }
 
     fn draw(&self, frame: &mut Frame) {
-        let root = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
-            .split(frame.area());
+        let layout = MasterDetailLayout::new(frame.area());
 
-        frame.render_widget(self.header(), root[0]);
-
-        let main = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Percentage(32),
-                Constraint::Percentage(34),
-                Constraint::Percentage(34),
-            ])
-            .split(root[1]);
-
-        let left = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(10), Constraint::Length(9)])
-            .split(main[0]);
-        frame.render_stateful_widget(self.types_list(), left[0], &mut self.type_state());
-        frame.render_widget(self.left_detail(), left[1]);
-
-        frame.render_stateful_widget(self.events_list(), main[1], &mut self.event_state());
-        frame.render_widget(self.event_detail(), main[2]);
-
-        frame.render_widget(self.status_bar(), root[2]);
+        frame.render_widget(self.header(), layout.header);
+        frame.render_stateful_widget(self.types_list(), layout.left, &mut self.type_state());
+        frame.render_widget(self.left_detail(), layout.left_detail);
+        frame.render_stateful_widget(self.events_list(), layout.middle, &mut self.event_state());
+        frame.render_widget(self.event_detail(), layout.right);
+        frame.render_widget(self.status_bar(), layout.footer);
 
         if self.help_open {
             self.draw_help(frame);
@@ -394,9 +370,9 @@ impl App {
 
     fn header(&self) -> Paragraph<'_> {
         let focus = match self.focus {
-            Focus::Types => "types",
-            Focus::Events => "events",
-            Focus::Detail => "detail",
+            PaneFocus::Types => "types",
+            PaneFocus::Events => "events",
+            PaneFocus::Detail => "detail",
         };
         let mut title = vec![
             Span::styled("master-detail", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
@@ -500,11 +476,11 @@ impl App {
                 ]),
                 Line::from(vec![
                     Span::styled("source: ", Style::default().fg(Color::Green)),
-                    Span::raw(shorten(&event.source, 48)),
+                    Span::raw(preview_text(&event.source, 48)),
                 ]),
                 Line::from(vec![
                     Span::styled("summary: ", Style::default().fg(Color::Green)),
-                    Span::raw(shorten(&event.subtitle, 52)),
+                    Span::raw(preview_text(&event.subtitle, 52)),
                 ]),
                 Line::from(vec![
                     Span::styled("kind: ", Style::default().fg(Color::Green)),
@@ -512,7 +488,7 @@ impl App {
                 ]),
                 Line::from(vec![
                     Span::styled("detail: ", Style::default().fg(Color::Green)),
-                    Span::raw(shorten(&event.detail, 72)),
+                    Span::raw(preview_text(&event.detail, 72)),
                 ]),
             ]);
         } else {
@@ -873,7 +849,7 @@ fn parse_event_message(message: &str, label: &str) -> Option<EventItem> {
     let raw = serde_json::to_string_pretty(&value).ok()?;
     let subtitle = format!(
         "{} · {} · {} tags",
-        shorten(pubkey, 12),
+        preview_text(pubkey, 12),
         created_at,
         tags
     );
@@ -883,7 +859,7 @@ fn parse_event_message(message: &str, label: &str) -> Option<EventItem> {
         source: String::from("nostr relay event"),
         kind_label: format!("kind {}", kind),
         raw,
-        detail: shorten(content, 160),
+        detail: preview_text(content, 160),
     })
 }
 
@@ -912,73 +888,6 @@ fn relay_to_event_item(url: String, ping_ms: u64, relay: Relay, body: String) ->
         raw,
         detail: relay.description.unwrap_or_default(),
     })
-}
-
-fn next_focus(focus: Focus) -> Focus {
-    match focus {
-        Focus::Types => Focus::Events,
-        Focus::Events => Focus::Detail,
-        Focus::Detail => Focus::Types,
-    }
-}
-
-fn prev_focus(focus: Focus) -> Focus {
-    match focus {
-        Focus::Types => Focus::Detail,
-        Focus::Events => Focus::Types,
-        Focus::Detail => Focus::Events,
-    }
-}
-
-fn clamp_index(current: usize, len: usize, delta: i32) -> usize {
-    if len == 0 {
-        return 0;
-    }
-    let next = if delta.is_negative() {
-        current.saturating_sub(delta.unsigned_abs() as usize)
-    } else {
-        current.saturating_add(delta as usize)
-    };
-    next.min(len - 1)
-}
-
-fn shorten(value: &str, max: usize) -> String {
-    let value = value.trim();
-    let mut chars = value.chars();
-    let prefix = chars.by_ref().take(max).collect::<String>();
-    if chars.next().is_some() {
-        format!("{}…", prefix)
-    } else {
-        prefix
-    }
-}
-
-fn title_case(value: &str) -> String {
-    let mut chars = value.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-        None => String::new(),
-    }
-}
-
-fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
-    let vertical = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(area);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(vertical[1])[1]
 }
 
 const ASYNCGIT_TYPES_MOD: &str = include_str!(concat!(
