@@ -2,11 +2,13 @@
 relay_db/
 relay_policy.db
 
-vendor/
+vendor/*
+vendor/*/**
 !vendor/actix-web-actors
 !vendor/asn1-rs
 !vendor/curve25519-dalek
 !vendor/ed25519-dalek
+!vendor/gitui
 
 index.html
 !web/templates/index.html

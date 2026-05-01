@@ -352,6 +352,7 @@ asn1-rs = { path = "vendor/asn1-rs" }
 actix-web-actors = { path = "vendor/actix-web-actors" }
 curve25519-dalek = { path = "vendor/curve25519-dalek" }
 ed25519-dalek = { path = "vendor/ed25519-dalek" }
+gitui = { path = "vendor/gitui" }
 
 [[bin]]
 name = "gnostr-server"
@@ -784,6 +785,7 @@ portable-pty = "0.8.1"
 ##
 vt100 = "^0.15"
 gnostr-crawler = { version = "1876.947437.254765", path = "crawler" }
+gitui = "0.28.1"
 # = { workspace = true }
 # = { workspace = true }
 # = { workspace = true }

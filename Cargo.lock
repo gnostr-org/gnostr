@@ -2275,6 +2275,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e93abca9e28e0a1b9877922aacb20576e05d4679ffa78c3d6dc22a26a216659"
 
 [[package]]
+name = "bytesize"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bd91ee7b2422bcb158d90ef4d14f75ef67f340943fc4149891dcce8f8b972a3"
+
+[[package]]
 name = "bytestring"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4531,6 +4537,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "filetreelist"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8157b5b28b1be91ed7a62eaa605af15c40dda26aef94d91eea18ca4b9afb8bf7"
+dependencies = [
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5159,6 +5174,52 @@ dependencies = [
  "openssl-probe 0.1.6",
  "openssl-sys",
  "url",
+]
+
+[[package]]
+name = "gitui"
+version = "0.28.1"
+dependencies = [
+ "anyhow",
+ "backtrace",
+ "base64 0.22.1",
+ "bitflags 2.11.1",
+ "bugreport",
+ "bwrap",
+ "bytesize 2.3.1",
+ "chrono",
+ "clap 4.6.1",
+ "crossbeam-channel 0.5.15",
+ "crossterm 0.28.1",
+ "dirs 6.0.0",
+ "easy-cast",
+ "filetreelist",
+ "fuzzy-matcher",
+ "gh-emoji",
+ "gnostr-asyncgit",
+ "indexmap 2.14.0",
+ "itertools 0.14.0",
+ "log",
+ "notify 8.2.0",
+ "notify-debouncer-mini 0.7.0",
+ "once_cell",
+ "parking_lot_core 0.9.9",
+ "ratatui",
+ "rayon-core",
+ "ron 0.12.1",
+ "scopeguard",
+ "scopetime",
+ "serde",
+ "shellexpand",
+ "simplelog",
+ "struct-patch 0.10.5",
+ "syntect",
+ "tui-textarea",
+ "two-face",
+ "unicode-segmentation",
+ "unicode-truncate 2.0.1",
+ "unicode-width 0.2.0",
+ "which 8.0.2",
 ]
 
 [[package]]
@@ -5896,7 +5957,7 @@ dependencies = [
  "bugreport",
  "bwrap",
  "bytes",
- "bytesize",
+ "bytesize 1.3.3",
  "bytestring",
  "cbc",
  "cc",
@@ -5940,6 +6001,7 @@ dependencies = [
  "gag",
  "getopts",
  "gh-emoji",
+ "gitui",
  "gix",
  "globset",
  "gnostr-asyncgit",
@@ -6006,7 +6068,7 @@ dependencies = [
  "nostr-signer 0.34.0",
  "nostr-sqlite",
  "notify 6.1.1",
- "notify-debouncer-mini",
+ "notify-debouncer-mini 0.4.1",
  "num-bigint",
  "num_cpus",
  "once_cell",
@@ -6036,7 +6098,7 @@ dependencies = [
  "rkyv 0.8.16",
  "rocket",
  "rocksdb",
- "ron",
+ "ron 0.8.1",
  "rpassword",
  "rsass",
  "russh",
@@ -6063,7 +6125,7 @@ dependencies = [
  "speedy",
  "ssh-key",
  "strip-ansi-escapes",
- "struct-patch",
+ "struct-patch 0.4.1",
  "structopt",
  "syn 2.0.117",
  "syntect",
@@ -6102,7 +6164,7 @@ dependencies = [
  "two-face",
  "unicode-normalization",
  "unicode-segmentation",
- "unicode-truncate",
+ "unicode-truncate 1.1.0",
  "unicode-width 0.1.14",
  "unix_mode",
  "ureq",
@@ -6256,7 +6318,7 @@ dependencies = [
  "tui-prompts",
  "unicode-normalization",
  "unicode-segmentation",
- "unicode-truncate",
+ "unicode-truncate 1.1.0",
  "unicode-width 0.1.14",
  "unix_mode",
  "ureq",
@@ -7842,6 +7904,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fdd168d97690d0b8c412d6b6c10360277f4d7ee495c5d0d5d5fe0854923255cc"
 dependencies = [
  "bitflags 1.3.2",
+ "inotify-sys",
+ "libc",
+]
+
+[[package]]
+name = "inotify"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd5b3eaf1a28b758ac0faa5a4254e8ab2705605496f1b1f3fbbc3988ad73d199"
+dependencies = [
+ "bitflags 2.11.1",
  "inotify-sys",
  "libc",
 ]
@@ -11150,9 +11223,27 @@ dependencies = [
  "libc",
  "log",
  "mio 1.2.0",
- "notify-types",
+ "notify-types 1.0.1",
  "walkdir",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "notify"
+version = "8.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3"
+dependencies = [
+ "bitflags 2.11.1",
+ "fsevent-sys",
+ "inotify 0.11.1",
+ "kqueue",
+ "libc",
+ "log",
+ "mio 1.2.0",
+ "notify-types 2.1.0",
+ "walkdir",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -11167,12 +11258,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "notify-debouncer-mini"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17849edfaabd9a5fef1c606d99cfc615a8e99f7ac4366406d86c7942a3184cf2"
+dependencies = [
+ "log",
+ "notify 8.2.0",
+ "notify-types 2.1.0",
+ "tempfile",
+]
+
+[[package]]
 name = "notify-types"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "585d3cb5e12e01aed9e8a1f70d5c6b5e86fe2a6e48fc8cd0b3e0b8df6f6eb174"
 dependencies = [
  "instant",
+]
+
+[[package]]
+name = "notify-types"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42b8cfee0e339a0337359f3c88165702ac6e600dc01c0cc9579a92d62b08477a"
+dependencies = [
+ "bitflags 2.11.1",
 ]
 
 [[package]]
@@ -13238,7 +13350,7 @@ dependencies = [
  "serde",
  "strum 0.26.3",
  "unicode-segmentation",
- "unicode-truncate",
+ "unicode-truncate 1.1.0",
  "unicode-width 0.2.0",
 ]
 
@@ -13865,6 +13977,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ron"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4147b952f3f819eca0e99527022f7d6a8d05f111aeb0a62960c74eb283bec8fc"
+dependencies = [
+ "bitflags 2.11.1",
+ "once_cell",
+ "serde",
+ "serde_derive",
+ "typeid",
+ "unicode-ident",
+]
+
+[[package]]
 name = "rpassword"
 version = "7.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14384,6 +14510,15 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
+
+[[package]]
+name = "scopetime"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66ede25039a47a961bb7123d925b56922914c7c8059ffee266e2006aba56f3d9"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "scrypt"
@@ -15627,7 +15762,16 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c52ef523e89b3172242bbabefd8a92493ae5571224c29ed2f00185c39b395c2"
 dependencies = [
- "struct-patch-derive",
+ "struct-patch-derive 0.4.1",
+]
+
+[[package]]
+name = "struct-patch"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16d4caaaccd69c9b56c5f5b33d4dca462464d3275230e4d2d3739ba6d4bf5bcb"
+dependencies = [
+ "struct-patch-derive 0.10.5",
 ]
 
 [[package]]
@@ -15635,6 +15779,17 @@ name = "struct-patch-derive"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f14a349c27ebe59faba22f933c9c734d428da7231e88a247e9d8c61eea964ddb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "struct-patch-derive"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1671c6f0992b1b4cb4f5f8ea4a58f9a5f7f895a7638ef9690633dcec0aa67944"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -17258,6 +17413,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
 
 [[package]]
+name = "typeid"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c"
+
+[[package]]
 name = "typenum"
 version = "1.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -17372,6 +17533,17 @@ dependencies = [
  "itertools 0.13.0",
  "unicode-segmentation",
  "unicode-width 0.1.14",
+]
+
+[[package]]
+name = "unicode-truncate"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16b380a1238663e5f8a691f9039c73e1cdae598a30e9855f541d29b08b53e9a5"
+dependencies = [
+ "itertools 0.14.0",
+ "unicode-segmentation",
+ "unicode-width 0.2.0",
 ]
 
 [[package]]
@@ -18043,6 +18215,15 @@ dependencies = [
  "home",
  "rustix 0.38.44",
  "winsafe",
+]
+
+[[package]]
+name = "which"
+version = "8.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81995fafaaaf6ae47a7d0cc83c67caf92aeb7e5331650ae6ff856f7c0c60c459"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
