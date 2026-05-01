@@ -13,11 +13,6 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
 use gnostr_asyncgit::{
     tui::nostr::widgets::*,
     types::{
@@ -33,10 +28,16 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
     Frame, Terminal,
 };
+use ratatui::crossterm::{
+    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use sha2::{Digest, Sha256};
+use tui_input::{backend::crossterm::EventHandler, Input};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -94,8 +95,10 @@ struct App {
     preset: DemoPreset,
     pages: Vec<Page>,
     selected: usize,
-    search_query: String,
+    search_input: Input,
     input_mode: InputMode,
+    show_help: bool,
+    page_scroll: u16,
     data: Arc<RwLock<DemoData>>,
 }
 
@@ -106,8 +109,10 @@ impl App {
         let pages = preset.pages();
         Ok(Self {
             selected: preset.default_page_index(&pages),
-            search_query: preset.initial_query().to_string(),
+            search_input: Input::new(preset.initial_query().to_string()),
             input_mode: preset.initial_input_mode(),
+            show_help: false,
+            page_scroll: 0,
             preset,
             pages,
             data,
@@ -139,32 +144,38 @@ impl App {
     }
 
     fn handle_key(&mut self, key: KeyEvent) -> bool {
+        if self.show_help {
+            match key.code {
+                KeyCode::Esc | KeyCode::Char('?') | KeyCode::F(1) => {
+                    self.show_help = false;
+                }
+                _ => {}
+            }
+            return false;
+        }
+
         match self.input_mode {
             InputMode::Search => match key.code {
                 KeyCode::Esc => {
                     self.input_mode = InputMode::Navigate;
+                    self.page_scroll = 0;
                     false
                 }
                 KeyCode::Enter => {
                     self.input_mode = InputMode::Navigate;
-                    false
-                }
-                KeyCode::Backspace => {
-                    self.search_query.pop();
-                    self.sync_selection();
+                    self.page_scroll = 0;
                     false
                 }
                 KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                    self.search_query.clear();
+                    self.search_input.reset();
                     self.sync_selection();
                     false
                 }
-                KeyCode::Char(ch) if key.modifiers.is_empty() => {
-                    self.search_query.push(ch);
+                _ => {
+                    self.search_input.handle_event(&Event::Key(key));
                     self.sync_selection();
                     false
                 }
-                _ => false,
             },
             InputMode::Navigate => match key.code {
                 _ if key.modifiers.contains(KeyModifiers::CONTROL)
@@ -197,15 +208,25 @@ impl App {
                     self.select_page(5);
                     false
                 }
+                KeyCode::Char('7') => {
+                    self.select_page(6);
+                    false
+                }
+                KeyCode::Char('8') => {
+                    self.select_page(7);
+                    false
+                }
                 KeyCode::Char('/') => {
                     self.input_mode = InputMode::Search;
+                    self.page_scroll = 0;
                     false
                 }
                 KeyCode::Char('?') => {
-                    if let Some(index) = self.pages.iter().position(|page| *page == Page::Help) {
-                        self.selected = index;
-                    }
-                    self.input_mode = InputMode::Navigate;
+                    self.show_help = true;
+                    false
+                }
+                KeyCode::F(1) => {
+                    self.show_help = true;
                     false
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
@@ -238,15 +259,11 @@ impl App {
                     false
                 }
                 KeyCode::PageDown => {
-                    for _ in 0..3 {
-                        self.next();
-                    }
+                    self.page_scroll = self.page_scroll.saturating_add(3);
                     false
                 }
                 KeyCode::PageUp => {
-                    for _ in 0..3 {
-                        self.previous();
-                    }
+                    self.page_scroll = self.page_scroll.saturating_sub(3);
                     false
                 }
                 _ => false,
@@ -255,17 +272,21 @@ impl App {
     }
 
     fn visible_pages(&self, data: &DemoData) -> Vec<usize> {
-        if self.search_query.trim().is_empty() {
+        if self.search_query().trim().is_empty() {
             return (0..self.pages.len()).collect();
         }
 
-        let query = self.search_query.to_lowercase();
+        let query = self.search_query().to_lowercase();
         self.pages
             .iter()
             .enumerate()
             .filter(|(_, page)| page.matches(data, &query))
             .map(|(idx, _)| idx)
             .collect()
+    }
+
+    fn search_query(&self) -> &str {
+        self.search_input.value()
     }
 
     fn advance_selection(&self, visible: &[usize], delta: isize) -> usize {
@@ -334,6 +355,10 @@ impl App {
         self.draw_nav(frame, content[0]);
         self.draw_page(frame, content[1], self.pages[self.selected], &data);
 
+        if self.show_help {
+            self.draw_help_overlay(frame, root);
+        }
+
         frame.render_widget(
             Paragraph::new(self.status_lines(&data))
                 .wrap(Wrap { trim: true })
@@ -345,15 +370,15 @@ impl App {
     fn draw_nav(&self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(7), Constraint::Min(0)])
+            .constraints([Constraint::Length(8), Constraint::Min(0)])
             .split(area);
 
         let data = self.data.read().expect("demo state poisoned");
         let visible = self.visible_pages(&data);
-        let search_text = if self.search_query.is_empty() {
+        let search_text = if self.search_query().is_empty() {
             "<empty>".to_string()
         } else {
-            self.search_query.clone()
+            self.search_query().to_string()
         };
 
         frame.render_widget(
@@ -379,13 +404,14 @@ impl App {
                 Line::from(vec![
                     Span::raw("ctrl-u clears search query"),
                 ]),
+                Line::from("F1 opens help overlay"),
             ])
             .wrap(Wrap { trim: true })
             .block(Block::default().title("search").borders(Borders::ALL)),
             layout[0],
         );
 
-        let items = if visible.is_empty() && !self.search_query.trim().is_empty() {
+        let items = if visible.is_empty() && !self.search_query().trim().is_empty() {
             vec![ListItem::new("no matching views")]
         } else {
             visible
@@ -409,6 +435,20 @@ impl App {
             List::new(items).block(Block::default().title("views").borders(Borders::ALL)),
             layout[1],
         );
+
+        if self.input_mode == InputMode::Search {
+            let input = Paragraph::new(self.search_query())
+                .style(Style::default().fg(Color::Cyan))
+                .scroll((0, self.search_input.visual_scroll(layout[0].width.saturating_sub(4) as usize) as u16))
+                .block(Block::default().title("search input").borders(Borders::ALL));
+            frame.render_widget(input, layout[0]);
+            let cursor = self.search_input.visual_cursor();
+            let scroll = self.search_input.visual_scroll(layout[0].width.saturating_sub(4) as usize);
+            frame.set_cursor_position((
+                layout[0].x + 1 + (cursor.max(scroll) - scroll) as u16,
+                layout[0].y + 1,
+            ));
+        }
     }
 
     fn draw_page(&self, frame: &mut Frame, area: Rect, page: Page, data: &DemoData) {
@@ -420,6 +460,7 @@ impl App {
         frame.render_widget(
             Paragraph::new(page.summary(data))
                 .wrap(Wrap { trim: true })
+                .scroll((self.page_scroll, 0))
                 .block(Block::default().title(page.title()).borders(Borders::ALL)),
             chunks[0],
         );
@@ -431,13 +472,56 @@ impl App {
         let page = self.pages[self.selected].title();
         format!(
             "preset: {} | selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {}\n\
-             search: / focus | ?: help | enter accept | esc exit | arrows/jkhl navigate | tab cycle",
+             search: / focus | ?: help | F1 overlay | enter accept | esc exit | arrows/jkhl navigate | tab cycle",
             self.preset.title(),
-            if self.search_query.is_empty() { "<empty>" } else { &self.search_query },
+            if self.search_query().is_empty() { "<empty>" } else { self.search_query() },
             data.crawler_relays.len(),
             data.relay_list.0.len(),
             data.updated_at
         )
+    }
+
+    fn draw_help_overlay(&self, frame: &mut Frame, area: Rect) {
+        let popup = centered_rect(68, 72, area);
+        frame.render_widget(Clear, popup);
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(7), Constraint::Min(0)])
+            .split(popup);
+
+        frame.render_widget(
+            Paragraph::new(vec![
+                Line::from("q / esc quit or close overlay"),
+                Line::from("/ focus search input"),
+                Line::from("? toggle help overlay"),
+                Line::from("F1 toggle help overlay"),
+                Line::from("1-6 jump presets, tab cycles pages"),
+                Line::from("ctrl-u clears search, pgup/pgdn scroll"),
+            ])
+            .wrap(Wrap { trim: true })
+            .block(Block::default().title("ratatui help").borders(Borders::ALL)),
+            chunks[0],
+        );
+
+        let visible_count = {
+            let data = self.data.read().expect("demo state poisoned");
+            self.visible_pages(&data).len()
+        };
+        frame.render_widget(
+            Paragraph::new(format!(
+                "search query: {}\nselected page: {}\nvisible pages: {}",
+                if self.search_query().is_empty() {
+                    "<empty>"
+                } else {
+                    self.search_query()
+                },
+                self.pages[self.selected].title(),
+                visible_count
+            ))
+            .wrap(Wrap { trim: true })
+            .block(Block::default().title("state").borders(Borders::ALL)),
+            chunks[1],
+        );
     }
 }
 
@@ -470,6 +554,10 @@ impl Page {
             Page::Overview => format!(
                 "The home view shows the core profile/event shapes that the JS app keeps in its timeline and header panels.\n\nProfile: {}\nEvent id: {}",
                 data.profile.pubkey, data.event.id
+            ),
+            Page::Gallery => format!(
+                "Widget gallery mixes asyncgit type widgets in multiple Ratatui layouts.\n\nLayout variants: {}",
+                DemoPreset::gallery_layout_count()
             ),
             Page::Relays => format!(
                 "Relay views combine crawler discovery data and relay metadata.\n\nCrawler discovery source: {} entries\nRelay list entries: {}",
@@ -523,6 +611,7 @@ impl Page {
                     chunks[1],
                 );
             }
+            Page::Gallery => self.render_gallery(frame, area, data),
             Page::Relays => {
                 let chunks = Layout::default()
                     .direction(Direction::Horizontal)
@@ -714,6 +803,186 @@ impl Page {
             }
         }
     }
+
+    fn render_gallery(&self, frame: &mut Frame, area: Rect, data: &DemoData) {
+        match self.gallery_layout % DemoPreset::gallery_layout_count() {
+            0 => {
+                let rows = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(40), Constraint::Percentage(30), Constraint::Percentage(30)])
+                    .split(area);
+                let top = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(rows[0]);
+                frame.render_widget(
+                    EventV3Widget::new(&data.event)
+                        .block(Block::default().title("event v3").borders(Borders::ALL)),
+                    top[0],
+                );
+                frame.render_widget(
+                    MetadataWidget::new(&data.metadata)
+                        .block(Block::default().title("metadata").borders(Borders::ALL)),
+                    top[1],
+                );
+                let middle = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(rows[1]);
+                frame.render_widget(
+                    RelayInformationDocumentWidget::new(&data.relay_document)
+                        .block(Block::default().title("relay info").borders(Borders::ALL)),
+                    middle[0],
+                );
+                frame.render_widget(
+                    ProfileWidget::new(&data.profile)
+                        .block(Block::default().title("profile").borders(Borders::ALL)),
+                    middle[1],
+                );
+                let bottom = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(rows[2]);
+                frame.render_widget(
+                    RepoRefWidget::new(&data.repo_ref)
+                        .block(Block::default().title("repo ref").borders(Borders::ALL)),
+                    bottom[0],
+                );
+                frame.render_widget(
+                    FilterWidget::new(&data.filter)
+                        .block(Block::default().title("filter").borders(Borders::ALL)),
+                    bottom[1],
+                );
+            }
+            1 => {
+                let cols = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Length(34), Constraint::Min(0)])
+                    .split(area);
+                frame.render_widget(
+                    RelayListWidget::new(&data.relay_list)
+                        .block(Block::default().title("relay list").borders(Borders::ALL)),
+                    cols[0],
+                );
+                let right = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(25),
+                    ])
+                    .split(cols[1]);
+                frame.render_widget(
+                    RepoStateWidget::new(&data.repo_state)
+                        .block(Block::default().title("repo state").borders(Borders::ALL)),
+                    right[0],
+                );
+                frame.render_widget(
+                    ChannelCreationEventWidget::new(&data.channel_creation)
+                        .block(Block::default().title("channel creation").borders(Borders::ALL)),
+                    right[1],
+                );
+                frame.render_widget(
+                    ChannelMessageEventWidget::new(&data.channel_message)
+                        .block(Block::default().title("channel message").borders(Borders::ALL)),
+                    right[2],
+                );
+                frame.render_widget(
+                    RelayMessageWidget::new(&data.relay_message)
+                        .block(Block::default().title("relay message").borders(Borders::ALL)),
+                    right[3],
+                );
+            }
+            2 => {
+                let cols = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(33), Constraint::Percentage(34), Constraint::Percentage(33)])
+                    .split(area);
+                frame.render_widget(
+                    Nip19Widget::new(&data.nip19)
+                        .block(Block::default().title("nip19").borders(Borders::ALL)),
+                    cols[0],
+                );
+                let center = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(cols[1]);
+                frame.render_widget(
+                    NAddrWidget::new(&data.naddr)
+                        .block(Block::default().title("naddr").borders(Borders::ALL)),
+                    center[0],
+                );
+                frame.render_widget(
+                    EventReferenceWidget::new(&data.event_reference)
+                        .block(Block::default().title("event ref").borders(Borders::ALL)),
+                    center[1],
+                );
+                let right = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(cols[2]);
+                frame.render_widget(
+                    PublicKeyWidget::new(&data.public_key)
+                        .block(Block::default().title("pubkey").borders(Borders::ALL)),
+                    right[0],
+                );
+                frame.render_widget(
+                    TagWidget::new(&data.tag)
+                        .block(Block::default().title("tag").borders(Borders::ALL)),
+                    right[1],
+                );
+            }
+            _ => {
+                let rows = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Length(8), Constraint::Min(0)])
+                    .split(area);
+                frame.render_widget(
+                    Paragraph::new(vec![
+                        Line::from("gallery layout 3"),
+                        Line::from("mixes overview and repo widgets"),
+                        Line::from("press [ or ] to rotate layouts"),
+                    ])
+                    .wrap(Wrap { trim: true })
+                    .block(Block::default().title("gallery").borders(Borders::ALL)),
+                    rows[0],
+                );
+                let grid = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(rows[1]);
+                let left = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(grid[0]);
+                frame.render_widget(
+                    EventV3Widget::new(&data.event)
+                        .block(Block::default().title("event").borders(Borders::ALL)),
+                    left[0],
+                );
+                frame.render_widget(
+                    MetadataWidget::new(&data.metadata)
+                        .block(Block::default().title("metadata").borders(Borders::ALL)),
+                    left[1],
+                );
+                let right = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(grid[1]);
+                frame.render_widget(
+                    RepoRefWidget::new(&data.repo_ref)
+                        .block(Block::default().title("repo ref").borders(Borders::ALL)),
+                    right[0],
+                );
+                frame.render_widget(
+                    RepoStateWidget::new(&data.repo_state)
+                        .block(Block::default().title("repo state").borders(Borders::ALL)),
+                    right[1],
+                );
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -832,6 +1101,26 @@ impl DemoPreset {
 enum InputMode {
     Navigate,
     Search,
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(area);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
 
 struct DemoData {
