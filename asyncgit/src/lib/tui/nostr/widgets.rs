@@ -8,7 +8,8 @@ use ratatui::{
 use super::{
     Event, EventKind, EventReference, Id, IdHex, Metadata, NAddr, NEvent, NostrBech32,
     NostrUrl, Profile, PublicKey, PublicKeyHex, RelayInformationDocument, RelayList,
-    RelayMessage, RelayUrl, RelayUsage, RelayUsageSet, Tag, Unixtime, UncheckedUrl, Url,
+    RelayListUsage, RelayMessage, RelayOrigin, RelayUrl, RelayUsage, RelayUsageSet, Tag, Unixtime,
+    UncheckedUrl, Url,
 };
 
 macro_rules! debug_widget {
@@ -66,7 +67,9 @@ debug_widget!(PublicKeyWidget, PublicKey);
 debug_widget!(PublicKeyHexWidget, PublicKeyHex);
 debug_widget!(RelayInformationDocumentWidget, RelayInformationDocument);
 debug_widget!(RelayListWidget, RelayList);
+debug_widget!(RelayListUsageWidget, RelayListUsage);
 debug_widget!(RelayMessageWidget, RelayMessage);
+debug_widget!(RelayOriginWidget, RelayOrigin);
 debug_widget!(RelayUrlWidget, RelayUrl);
 debug_widget!(RelayUsageWidget, RelayUsage);
 debug_widget!(RelayUsageSetWidget, RelayUsageSet);
