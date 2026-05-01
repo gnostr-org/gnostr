@@ -368,18 +368,24 @@ fn draw(
         .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(5)])
         .split(frame.area());
 
+    let top = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(0), Constraint::Length(26)])
+        .split(root[0]);
+
     let body = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(48), Constraint::Percentage(52)])
         .split(root[1]);
 
-    frame.render_widget(header(tree, input_mode, search_query), root[0]);
+    frame.render_widget(header(tree), top[0]);
+    frame.render_widget(search_box(input_mode, search_query), top[1]);
     frame.render_widget(tree_panel(tree, body[0]), body[0]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree, status_message), root[2]);
 }
 
-fn header(tree: &BucketedCrawlerTree, input_mode: InputMode, search_query: &str) -> Paragraph<'static> {
+fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
     let bucket_line = tree
         .sorted_buckets()
         .into_iter()
@@ -390,15 +396,8 @@ fn header(tree: &BucketedCrawlerTree, input_mode: InputMode, search_query: &str)
         .active_filter()
         .map(|filter| format!("filter: {filter}"))
         .unwrap_or_else(|| String::from("filter: all"));
-    let search_label = if matches!(input_mode, InputMode::Search) {
-        format!("/{}", search_query)
-    } else {
-        String::from("/ search")
-    };
 
     Paragraph::new(Line::from(vec![
-        Span::styled(search_label, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::raw("  "),
         Span::styled("crawler file buckets", Style::default().fg(Color::Cyan)),
         Span::raw("  "),
         Span::styled(filter_label, Style::default().fg(Color::Magenta)),
@@ -408,6 +407,20 @@ fn header(tree: &BucketedCrawlerTree, input_mode: InputMode, search_query: &str)
         Span::styled(bucket_line, Style::default().fg(Color::DarkGray)),
     ]))
     .block(Block::default().borders(Borders::ALL).title("gnostr"))
+}
+
+fn search_box(input_mode: InputMode, search_query: &str) -> Paragraph<'static> {
+    let label = if matches!(input_mode, InputMode::Search) {
+        format!("/{}", search_query)
+    } else {
+        String::from("/ search")
+    };
+
+    Paragraph::new(Line::from(vec![Span::styled(
+        label,
+        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+    )]))
+    .block(Block::default().borders(Borders::ALL).title("search"))
 }
 
 fn tree_panel(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
