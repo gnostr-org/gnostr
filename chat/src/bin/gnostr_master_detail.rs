@@ -147,7 +147,7 @@ enum LoadMessage {
 struct App {
     types: Vec<TypeItem>,
     selected_type: usize,
-    selected_event: usize,
+    selected_event: Option<usize>,
     detail_scroll: u16,
     focus: Focus,
     help_open: bool,
@@ -171,7 +171,7 @@ impl App {
         let mut app = Self {
             types,
             selected_type,
-            selected_event: 0,
+            selected_event: None,
             detail_scroll: 0,
             focus: Focus::Types,
             help_open: false,
@@ -192,7 +192,7 @@ impl App {
     }
 
     fn current_event(&self) -> Option<&EventItem> {
-        self.events.get(self.selected_event)
+        self.selected_event.and_then(|index| self.events.get(index))
     }
 
     fn refresh(&mut self) {
@@ -234,7 +234,7 @@ impl App {
                 } if request_id == self.active_request && feed == self.current_type().feed => {
                     self.loading = false;
                     self.events = events;
-                    self.selected_event = 0;
+                    self.selected_event = None;
                     self.detail_scroll = 0;
                     self.status = format!(
                         "loaded {} real events for {}",
@@ -249,7 +249,7 @@ impl App {
                 } if request_id == self.active_request && feed == self.current_type().feed => {
                     self.loading = false;
                     self.events.clear();
-                    self.selected_event = 0;
+                    self.selected_event = None;
                     self.detail_scroll = 0;
                     self.status = format!("failed to load {}: {}", self.current_type().name, error);
                 }
@@ -281,17 +281,17 @@ impl App {
             KeyCode::Char('r') => self.refresh(),
             KeyCode::Char('g') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.selected_type = 0;
-                self.selected_event = 0;
+                self.selected_event = None;
                 self.refresh();
             }
             KeyCode::Home => match self.focus {
                 Focus::Types => {
                     self.selected_type = 0;
-                    self.selected_event = 0;
+                    self.selected_event = None;
                     self.refresh();
                 }
                 Focus::Events => {
-                    self.selected_event = 0;
+                    self.selected_event = None;
                     self.detail_scroll = 0;
                 }
                 Focus::Detail => self.detail_scroll = 0,
@@ -300,12 +300,13 @@ impl App {
                 Focus::Types => {
                     if !self.types.is_empty() {
                         self.selected_type = self.types.len() - 1;
+                        self.selected_event = None;
                         self.refresh();
                     }
                 }
                 Focus::Events => {
                     if !self.events.is_empty() {
-                        self.selected_event = self.events.len() - 1;
+                        self.selected_event = Some(self.events.len() - 1);
                         self.detail_scroll = 0;
                     }
                 }
@@ -335,11 +336,16 @@ impl App {
         match self.focus {
             Focus::Types => {
                 self.selected_type = clamp_index(self.selected_type, self.types.len(), delta);
-                self.selected_event = 0;
+                self.selected_event = None;
                 self.refresh();
             }
             Focus::Events => {
-                self.selected_event = clamp_index(self.selected_event, self.events.len(), delta);
+                if self.events.is_empty() {
+                    self.selected_event = None;
+                } else {
+                    let current = self.selected_event.unwrap_or(0);
+                    self.selected_event = Some(clamp_index(current, self.events.len(), delta));
+                }
                 self.detail_scroll = 0;
             }
             Focus::Detail => {
@@ -520,20 +526,8 @@ impl App {
 
     fn event_detail(&self) -> Paragraph<'_> {
         let event = self.current_event();
-        let mut lines = vec![
-            Line::from(vec![
-                Span::styled("detail: ", Style::default().fg(Color::Green)),
-                Span::raw(self.current_type().name.clone()),
-            ]),
-            Line::from(vec![
-                Span::styled("feed: ", Style::default().fg(Color::Green)),
-                Span::raw(self.current_type().feed.label()),
-            ]),
-        ];
-
         if let Some(event) = event {
-            lines.extend_from_slice(&[
-                Line::from(""),
+            let mut lines = vec![
                 Line::from(vec![
                     Span::styled("title: ", Style::default().fg(Color::Green)),
                     Span::raw(event.title.clone()),
@@ -555,22 +549,17 @@ impl App {
                     "raw event data",
                     Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
                 )),
-            ]);
-            let raw = event.raw.clone();
-            return Paragraph::new({
-                let mut full = lines;
-                full.push(Line::from(raw));
-                full
-            })
-            .block(Block::default().borders(Borders::ALL).title("event data"))
-            .wrap(Wrap { trim: false })
-            .scroll((self.detail_scroll, 0));
+                Line::from(event.raw.clone()),
+            ];
+            return Paragraph::new(lines)
+                .block(Block::default().borders(Borders::ALL).title("event data"))
+                .wrap(Wrap { trim: false })
+                .scroll((self.detail_scroll, 0));
         }
 
-        Paragraph::new(lines)
+        Paragraph::new(Line::from("select an event summary to reveal raw crawler data"))
             .block(Block::default().borders(Borders::ALL).title("event data"))
             .wrap(Wrap { trim: false })
-            .scroll((self.detail_scroll, 0))
     }
 
     fn status_bar(&self) -> Paragraph<'_> {
@@ -620,7 +609,7 @@ impl App {
 
     fn event_state(&self) -> ListState {
         let mut state = ListState::default();
-        state.select(Some(self.selected_event));
+        state.select(self.selected_event);
         state
     }
 }
