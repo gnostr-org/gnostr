@@ -16,6 +16,21 @@ QUIET=false
 RELEASE=false
 LOCKED=false
 OFFLINE=false
+TARGET_DIR=""
+
+OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
+case "$OS_NAME" in
+  Darwin|Linux|FreeBSD|OpenBSD|NetBSD|DragonFly|CYGWIN*|MINGW*|MSYS*)
+    TMP_BASE="${TMPDIR:-${TMP:-${TEMP:-/tmp}}}"
+    if command -v mktemp >/dev/null 2>&1; then
+      TARGET_DIR="$(mktemp -d "${TMP_BASE%/}/cargo-test-vendor.XXXXXX")"
+    else
+      TARGET_DIR="${TMP_BASE%/}/cargo-test-vendor.$$"
+      mkdir -p "$TARGET_DIR"
+    fi
+    trap '[[ -n "${TARGET_DIR:-}" && -d "$TARGET_DIR" ]] && rm -rf "$TARGET_DIR"' EXIT
+    ;;
+esac
 
 usage() {
   cat <<'EOF'
@@ -83,6 +98,10 @@ fi
 
 for manifest in "${MANIFESTS[@]}"; do
   cargo_args=(test --manifest-path "$manifest")
+
+  if [[ -n "$TARGET_DIR" ]]; then
+    cargo_args+=(--target-dir "$TARGET_DIR")
+  fi
 
   if [[ "$QUIET" == true ]]; then
     cargo_args+=(--quiet)
