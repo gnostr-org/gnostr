@@ -1133,7 +1133,7 @@ dependencies = [
  "env_logger 0.11.10",
  "fuzzy-matcher",
  "git2",
- "git2-hooks",
+ "git2-hooks 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gix 0.78.0",
  "invalidstring",
  "log",
@@ -5218,6 +5218,20 @@ dependencies = [
 [[package]]
 name = "git2-hooks"
 version = "0.7.0"
+dependencies = [
+ "git2",
+ "gix-path 0.11.2",
+ "gnostr-git2-testing",
+ "log",
+ "pretty_assertions",
+ "shellexpand",
+ "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "git2-hooks"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e21a2c5eee3085f2b622805d4f4c878d9519bf70fa76bed0923b82a25f24199"
 dependencies = [
@@ -7270,13 +7284,7 @@ dependencies = [
 name = "gnostr-git2-hooks"
 version = "1876.947437.254765"
 dependencies = [
- "git2",
- "gnostr-git2-testing",
- "log",
- "pretty_assertions",
- "shellexpand",
- "tempfile",
- "thiserror 1.0.69",
+ "git2-hooks 0.7.0",
 ]
 
 [[package]]
