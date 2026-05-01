@@ -260,7 +260,7 @@ impl BucketedCrawlerTree {
     }
 
     fn favorite_items(&self) -> Vec<String> {
-        let mut buckets: BTreeMap<String, Vec<(usize, String, String)>> = BTreeMap::new();
+        let mut buckets: BTreeMap<String, Vec<(usize, String)>> = BTreeMap::new();
 
         for path in &self.favorites {
             let path = Path::new(path);
@@ -272,39 +272,24 @@ impl BucketedCrawlerTree {
                 .unwrap_or("(root)")
                 .to_string();
             let name = path
-                .file_name()
+                .file_stem()
                 .and_then(|name| name.to_str())
-                .or_else(|| path.file_stem().and_then(|stem| stem.to_str()))
                 .unwrap_or(path.to_str().unwrap_or_default())
                 .to_string();
             buckets
                 .entry(bucket)
                 .or_default()
-                .push((favorite_rank(&name), name, self.favorite_label(path.to_str().unwrap_or_default())));
+                .push((favorite_rank(&name), name));
         }
 
         let mut items = Vec::new();
-        for (_, mut entries) in buckets {
+        for (bucket, mut entries) in buckets {
             entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
-            items.extend(entries.into_iter().map(|(_, _, label)| label));
+            if let Some((_, name)) = entries.into_iter().next() {
+                items.push(format!("{name} ({bucket})"));
+            }
         }
         items
-    }
-
-    fn favorite_label(&self, path: &str) -> String {
-        let path = Path::new(path);
-        let relative = path.strip_prefix(&self.root).unwrap_or(path);
-        let name = path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .or_else(|| path.file_stem().and_then(|stem| stem.to_str()))
-            .unwrap_or(path.to_str().unwrap_or_default());
-        let bucket = relative
-            .components()
-            .next()
-            .and_then(|component| component.as_os_str().to_str())
-            .unwrap_or("(root)");
-        format!("{name} ({bucket})")
     }
 
     fn toggle_selected_favorite(&mut self) -> Result<Option<bool>> {
