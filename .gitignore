@@ -8,6 +8,9 @@ vendor/*/**
 !vendor/asn1-rs
 !vendor/curve25519-dalek
 !vendor/ed25519-dalek
+!vendor/actix*
+!vendor/actix*/*
+!vendor/actix-*/*
 !vendor/actix-codec
 !vendor/actix-codec/*
 !vendor/actix-codec/*/**
