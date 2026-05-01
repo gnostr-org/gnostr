@@ -1,7 +1,7 @@
 //! Chat TUI demo for the asyncgit Nostr widgets.
 //!
-//! The screen layout mirrors the JS app's main sections: home, relays, settings,
-//! NIP explorer, NIP-34, and search.
+//! The presets mirror the JS app's main sections with different navigation and
+//! help-focus layouts.
 
 use std::{
     collections::{BTreeMap, HashMap},
@@ -40,8 +40,12 @@ use sha2::{Digest, Sha256};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    run(DemoPreset::Full).await
+}
+
+pub async fn run(preset: DemoPreset) -> anyhow::Result<()> {
     let mut terminal = TerminalGuard::enter()?;
-    let mut app = App::new().await?;
+    let mut app = App::new(preset).await?;
 
     loop {
         terminal.terminal.draw(|frame| app.draw(frame))?;
@@ -87,6 +91,7 @@ impl Drop for TerminalGuard {
 }
 
 struct App {
+    preset: DemoPreset,
     pages: Vec<Page>,
     selected: usize,
     search_query: String,
@@ -95,21 +100,16 @@ struct App {
 }
 
 impl App {
-    async fn new() -> anyhow::Result<Self> {
+    async fn new(preset: DemoPreset) -> anyhow::Result<Self> {
         let data = Arc::new(RwLock::new(DemoData::load_real()?));
         DemoData::spawn_refresh(Arc::clone(&data));
+        let pages = preset.pages();
         Ok(Self {
-            pages: vec![
-                Page::Overview,
-                Page::Relays,
-                Page::Settings,
-                Page::Explorer,
-                Page::Nip34,
-                Page::Search,
-            ],
-            selected: 0,
-            search_query: String::new(),
-            input_mode: InputMode::Navigate,
+            selected: preset.default_page_index(&pages),
+            search_query: preset.initial_query().to_string(),
+            input_mode: preset.initial_input_mode(),
+            preset,
+            pages,
             data,
         })
     }
@@ -202,8 +202,10 @@ impl App {
                     false
                 }
                 KeyCode::Char('?') => {
-                    self.selected = 5;
-                    self.input_mode = InputMode::Search;
+                    if let Some(index) = self.pages.iter().position(|page| *page == Page::Help) {
+                        self.selected = index;
+                    }
+                    self.input_mode = InputMode::Navigate;
                     false
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
@@ -301,17 +303,24 @@ impl App {
 
         frame.render_widget(
             Paragraph::new(Line::from(vec![
-                Span::styled("gnostr ", Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "gnostr ",
+                    Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
+                ),
                 Span::raw("chat TUI demo "),
+                Span::styled(self.preset.title(), Style::default().fg(Color::Cyan)),
+                Span::raw(" "),
                 Span::styled("q", Style::default().fg(Color::Yellow)),
                 Span::raw(" quit  "),
                 Span::styled("/", Style::default().fg(Color::Yellow)),
                 Span::raw(" search  "),
+                Span::styled("?", Style::default().fg(Color::Yellow)),
+                Span::raw(" help  "),
                 Span::styled("1-6", Style::default().fg(Color::Yellow)),
                 Span::raw(" jump  "),
                 Span::styled("j/k", Style::default().fg(Color::Yellow)),
                 Span::raw(" move  "),
-                Span::raw("mirror of the JS app"),
+                Span::raw(self.preset.banner()),
             ]))
             .block(Block::default().title("gnostr").borders(Borders::ALL)),
             layout[0],
@@ -319,7 +328,7 @@ impl App {
 
         let content = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Length(28), Constraint::Min(0)])
+            .constraints([Constraint::Length(self.preset.nav_width()), Constraint::Min(0)])
             .split(layout[1]);
 
         self.draw_nav(frame, content[0]);
@@ -336,7 +345,7 @@ impl App {
     fn draw_nav(&self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(6), Constraint::Min(0)])
+            .constraints([Constraint::Length(7), Constraint::Min(0)])
             .split(area);
 
         let data = self.data.read().expect("demo state poisoned");
@@ -362,10 +371,13 @@ impl App {
                 ]),
                 Line::from(vec![
                     Span::styled("keys: ", Style::default().fg(Color::Magenta)),
-                    Span::raw("/ search, ? search+help, enter accept, esc exit"),
+                    Span::raw("/ search, ? help, enter accept, esc exit"),
                 ]),
                 Line::from(vec![
                     Span::raw("j/k or arrows move, tab cycles pages, 1-6 jump"),
+                ]),
+                Line::from(vec![
+                    Span::raw("ctrl-u clears search query"),
                 ]),
             ])
             .wrap(Wrap { trim: true })
@@ -402,7 +414,7 @@ impl App {
     fn draw_page(&self, frame: &mut Frame, area: Rect, page: Page, data: &DemoData) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(9), Constraint::Min(0)])
+            .constraints([Constraint::Length(self.preset.summary_height()), Constraint::Min(0)])
             .split(area);
 
         frame.render_widget(
@@ -418,8 +430,9 @@ impl App {
     fn status_lines(&self, data: &DemoData) -> String {
         let page = self.pages[self.selected].title();
         format!(
-            "selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {}\n\
-             search: / focus | enter accept | esc exit | arrows/jkhl navigate | tab cycle",
+            "preset: {} | selected view: {page} | query: {} | crawler relays: {} | relay entries: {} | updated: {}\n\
+             search: / focus | ?: help | enter accept | esc exit | arrows/jkhl navigate | tab cycle",
+            self.preset.title(),
             if self.search_query.is_empty() { "<empty>" } else { &self.search_query },
             data.crawler_relays.len(),
             data.relay_list.0.len(),
@@ -428,7 +441,7 @@ impl App {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Page {
     Overview,
     Relays,
@@ -436,6 +449,7 @@ enum Page {
     Explorer,
     Nip34,
     Search,
+    Help,
 }
 
 impl Page {
@@ -447,6 +461,7 @@ impl Page {
             Page::Explorer => "nip explorer",
             Page::Nip34 => "nip34",
             Page::Search => "search",
+            Page::Help => "help",
         }
     }
 
@@ -480,6 +495,7 @@ impl Page {
                 data.filter.kinds,
                 data.filter.tags.len()
             ),
+            Page::Help => "Keyboard help and interaction hints.\n\nUse / to focus the search input, ? to open this help view, and 1-6 to jump between page presets.".to_string(),
         }
     }
 
@@ -661,8 +677,155 @@ impl Page {
                     right[2],
                 );
             }
+            Page::Help => {
+                let chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(area);
+                frame.render_widget(
+                    Paragraph::new(vec![
+                        Line::from("q / esc quit"),
+                        Line::from("/ search input"),
+                        Line::from("? open help"),
+                        Line::from("1-6 jump pages"),
+                        Line::from("j/k or arrows move"),
+                        Line::from("tab / shift-tab cycle"),
+                        Line::from("ctrl-u clears search"),
+                    ])
+                    .wrap(Wrap { trim: true })
+                    .block(Block::default().title("help").borders(Borders::ALL)),
+                    chunks[0],
+                );
+                let help_summary = if data.filter.kinds.is_empty() {
+                    "search filter is empty".to_string()
+                } else {
+                    format!(
+                        "active kinds: {:?}\nactive tags: {}",
+                        data.filter.kinds,
+                        data.filter.tags.len()
+                    )
+                };
+                frame.render_widget(
+                    Paragraph::new(help_summary)
+                        .wrap(Wrap { trim: true })
+                        .block(Block::default().title("interaction").borders(Borders::ALL)),
+                    chunks[1],
+                );
+            }
         }
     }
+}
+
+#[derive(Clone, Copy)]
+pub enum DemoPreset {
+    Full,
+    SearchFirst,
+    RelaysFirst,
+    HelpFirst,
+}
+
+impl DemoPreset {
+    fn title(self) -> &'static str {
+        match self {
+            DemoPreset::Full => "full",
+            DemoPreset::SearchFirst => "search-first",
+            DemoPreset::RelaysFirst => "relays-first",
+            DemoPreset::HelpFirst => "help-first",
+        }
+    }
+
+    fn banner(self) -> &'static str {
+        match self {
+            DemoPreset::Full => "mirror of the JS app",
+            DemoPreset::SearchFirst => "search-first view",
+            DemoPreset::RelaysFirst => "relay-first view",
+            DemoPreset::HelpFirst => "help-first view",
+        }
+    }
+
+    fn pages(self) -> Vec<Page> {
+        match self {
+            DemoPreset::Full => vec![
+                Page::Overview,
+                Page::Relays,
+                Page::Settings,
+                Page::Explorer,
+                Page::Nip34,
+                Page::Search,
+                Page::Help,
+            ],
+            DemoPreset::SearchFirst => vec![
+                Page::Search,
+                Page::Help,
+                Page::Overview,
+                Page::Explorer,
+                Page::Relays,
+                Page::Nip34,
+                Page::Settings,
+            ],
+            DemoPreset::RelaysFirst => vec![
+                Page::Relays,
+                Page::Nip34,
+                Page::Help,
+                Page::Overview,
+                Page::Settings,
+                Page::Explorer,
+                Page::Search,
+            ],
+            DemoPreset::HelpFirst => vec![
+                Page::Help,
+                Page::Search,
+                Page::Overview,
+                Page::Relays,
+                Page::Explorer,
+                Page::Nip34,
+                Page::Settings,
+            ],
+        }
+    }
+
+    fn default_page_index(self, pages: &[Page]) -> usize {
+        let wanted = match self {
+            DemoPreset::Full => Page::Overview,
+            DemoPreset::SearchFirst => Page::Search,
+            DemoPreset::RelaysFirst => Page::Relays,
+            DemoPreset::HelpFirst => Page::Help,
+        };
+        pages.iter().position(|page| *page == wanted).unwrap_or(0)
+    }
+
+    fn initial_query(self) -> &'static str {
+        match self {
+            DemoPreset::SearchFirst => "relay",
+            _ => "",
+        }
+    }
+
+    fn initial_input_mode(self) -> InputMode {
+        match self {
+            DemoPreset::SearchFirst => InputMode::Search,
+            _ => InputMode::Navigate,
+        }
+    }
+
+    fn nav_width(self) -> u16 {
+        match self {
+            DemoPreset::Full => 28,
+            DemoPreset::SearchFirst => 34,
+            DemoPreset::RelaysFirst => 32,
+            DemoPreset::HelpFirst => 30,
+        }
+    }
+
+    fn summary_height(self) -> u16 {
+        match self {
+            DemoPreset::Full => 9,
+            DemoPreset::SearchFirst => 10,
+            DemoPreset::RelaysFirst => 9,
+            DemoPreset::HelpFirst => 11,
+        }
+    }
+
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
