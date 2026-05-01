@@ -153,8 +153,8 @@ impl BucketedCrawlerTree {
         buckets
     }
 
-    fn render_items(&self) -> Vec<ListItem<'static>> {
-        let total = self.tree.iterate(0, self.tree.iterate(0, usize::MAX).count());
+    fn render_items(&self, start: usize, max: usize) -> Vec<ListItem<'static>> {
+        let total = self.tree.iterate(start, max);
         total
             .map(|(item, selected)| {
                 let indent = "  ".repeat(item.info().indent() as usize);
@@ -275,7 +275,7 @@ fn draw(frame: &mut Frame, tree: &BucketedCrawlerTree, selected: &SelectedFileVi
         .split(root[1]);
 
     frame.render_widget(header(tree), root[0]);
-    frame.render_widget(tree_panel(tree), body[0]);
+    frame.render_widget(tree_panel(tree, body[0]), body[0]);
     render_selected(frame, body[1], selected);
     frame.render_widget(footer(tree), root[2]);
 }
@@ -298,13 +298,29 @@ fn header(tree: &BucketedCrawlerTree) -> Paragraph<'static> {
     .block(Block::default().borders(Borders::ALL).title("gnostr"))
 }
 
-fn tree_panel(tree: &BucketedCrawlerTree) -> List<'static> {
+fn tree_panel(tree: &BucketedCrawlerTree, area: ratatui::layout::Rect) -> List<'static> {
     let mut items = vec![ListItem::new(Line::from(vec![
         Span::styled("crawler", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
         Span::raw("  "),
         Span::styled("bucket/json|text|yaml", Style::default().fg(Color::DarkGray)),
     ]))];
-    items.extend(tree.render_items());
+    let view_height = area.height.saturating_sub(2).max(1) as usize;
+    let (start, count) = tree
+        .tree
+        .visual_selection()
+        .map(|selection| {
+            let half = view_height / 2;
+            let start = selection.index.saturating_sub(half);
+            let start = start.min(selection.count.saturating_sub(view_height).max(0));
+            (start, selection.count)
+        })
+        .unwrap_or((0, 0));
+    let visible = if count == 0 {
+        vec![ListItem::new(Line::from("no files found"))]
+    } else {
+        tree.render_items(start, view_height)
+    };
+    items.extend(visible);
 
     List::new(items).block(Block::default().borders(Borders::ALL).title("crawler tree"))
 }
