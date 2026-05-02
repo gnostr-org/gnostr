@@ -138,7 +138,7 @@ regex = "1.11.1"
 rkyv = "0.8"
 
 rocksdb = { workspace = true, optional = true }
-russh = { version = "0.37.1", features = ["openssl"] }
+russh = { version = "0.37.1" }
 russh-keys = { version = "0.37.1" }
 rust-ini = "0.21.1"
 scopetime = { workspace = true }                             #{ package = "gnostr-scopetime", path = "../scopetime", version = "1878.945649.607219" }
