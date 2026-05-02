@@ -124,12 +124,15 @@ if [[ "$TARGET_TMPDIR" == true ]]; then
   fi
 fi
 
-if [[ -n "$TARGET_DIR" ]]; then
-  CARGO_COMMON_FLAGS+=(--target-dir "$TARGET_DIR")
-fi
-
 run_cargo() {
-  cargo "${CARGO_COMMON_FLAGS[@]}" "$@"
+  local cmd="$1"
+  shift
+
+  if [[ -n "$TARGET_DIR" ]]; then
+    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" --target-dir "$TARGET_DIR" "$@"
+  else
+    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "$@"
+  fi
 }
 
 VECTOR_FILE="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
