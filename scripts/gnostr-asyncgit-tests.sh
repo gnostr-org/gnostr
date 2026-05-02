@@ -15,6 +15,8 @@ TEST_FLAGS=()
 TARGET_DIR=""
 TARGET_TMPDIR=false
 TARGET_TMPDIR_CLEAN=false
+TARGET_TREE_ROOT=""
+PRUNE_LIMIT_SPEC="20G"
 QUIET=false
 RELEASE=false
 LOCKED=false
@@ -32,10 +34,40 @@ Options:
   --target-dir VALUE   Set Cargo's target directory
   --target-tmpdir      Use the shared asyncgit temp directory
   --target-tmpdir-clean Remove the shared asyncgit temp directory first
+  --prune-limit VALUE  Prune oldest dirs once the tree reaches VALUE (default 20G)
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --help               Show this help
 EOF
+}
+
+parse_prune_limit_kib() {
+  local raw="${1^^}"
+  local value unit
+
+  if [[ "$raw" =~ ^([0-9]+)([KMG])?$ ]]; then
+    value="${BASH_REMATCH[1]}"
+    unit="${BASH_REMATCH[2]}"
+    case "$unit" in
+      "")
+        echo "$value"
+        ;;
+      K)
+        echo "$value"
+        ;;
+      M)
+        echo $((value * 1024))
+        ;;
+      G)
+        echo $((value * 1024 * 1024))
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  else
+    return 1
+  fi
 }
 
 report_target_dir_size() {
@@ -50,6 +82,59 @@ report_target_dir_size() {
   if [[ -n "$size" ]]; then
     printf 'target dir size: %s (%s)\n' "$size" "$target_path"
   fi
+}
+
+target_dir_size_kib() {
+  local target_path="$1"
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    echo 0
+    return
+  fi
+
+  du -sk "$target_path" 2>/dev/null | awk '{print $1+0}'
+}
+
+oldest_child_dir() {
+  local prune_root="$1"
+  local os_name
+
+  os_name="$(uname -s 2>/dev/null || echo unknown)"
+  find "$prune_root" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r child; do
+    case "$os_name" in
+      Darwin|FreeBSD|OpenBSD|NetBSD|DragonFly)
+        stat -f '%m\t%N' "$child" 2>/dev/null || true
+        ;;
+      *)
+        stat -c '%Y\t%n' "$child" 2>/dev/null || true
+        ;;
+    esac
+  done | sort -n | head -1 | awk -F'\t' '{print $2}'
+}
+
+prune_target_tree() {
+  local prune_root="$1"
+  local current_size
+  local oldest
+
+  if [[ -z "$prune_root" || ! -d "$prune_root" ]]; then
+    return 0
+  fi
+
+  while :; do
+    current_size="$(target_dir_size_kib "$prune_root")"
+    if (( current_size <= TARGET_SIZE_LIMIT_KIB )); then
+      break
+    fi
+
+    oldest="$(oldest_child_dir "$prune_root")"
+    if [[ -z "$oldest" ]]; then
+      break
+    fi
+
+    printf 'pruning oldest target dir: %s\n' "$oldest"
+    rm -rf "$oldest"
+  done
 }
 
 while [[ $# -gt 0 ]]; do
@@ -81,6 +166,14 @@ while [[ $# -gt 0 ]]; do
       TARGET_TMPDIR=true
       TARGET_TMPDIR_CLEAN=true
       ;;
+    --prune-limit)
+      shift
+      [[ $# -gt 0 ]] || { echo "--prune-limit requires a value" >&2; exit 1; }
+      PRUNE_LIMIT_SPEC="$1"
+      ;;
+    --prune-limit=*)
+      PRUNE_LIMIT_SPEC="${1#*=}"
+      ;;
     --nocapture)
       TEST_FLAGS+=(--nocapture)
       ;;
@@ -98,6 +191,11 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+TARGET_SIZE_LIMIT_KIB="$(parse_prune_limit_kib "$PRUNE_LIMIT_SPEC")" || {
+  echo "Invalid --prune-limit value: $PRUNE_LIMIT_SPEC" >&2
+  exit 1
+}
 
 CARGO_COMMON_FLAGS=()
 CARGO_SUBCOMMAND_FLAGS=()
@@ -137,6 +235,8 @@ if [[ "$TARGET_TMPDIR" == true ]]; then
   if [[ -z "$TARGET_DIR" ]]; then
     TARGET_DIR="$TARGET_ROOT"
   fi
+  TARGET_TREE_ROOT="$(dirname "$TARGET_DIR")"
+  prune_target_tree "$TARGET_TREE_ROOT"
 fi
 
 run_cargo() {
@@ -275,6 +375,9 @@ if [[ -z "$CLIENT_DM_EVENT_ID" ]]; then
 fi
 
 report_target_dir_size "$TARGET_DIR"
+if [[ -n "$TARGET_TREE_ROOT" ]]; then
+  prune_target_tree "$TARGET_TREE_ROOT"
+fi
 
 if run_cargo run --bin gnostr -- query -i "$CLIENT_DM_EVENT_ID" | grep -F '["EOSE","gnostr-query"]'; then
   send_chat_update "asyncgit client direct message query successful"
