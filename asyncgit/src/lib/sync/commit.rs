@@ -211,6 +211,22 @@ pub fn commit(repo_path: &RepoPath, msg: &str) -> Result<CommitId> {
 pub fn padded_commit_id(commit_id: String) -> String {
     format!("{:0>64}", commit_id)
 }
+
+/// Pad a note id string to sha256 length and return a String.
+pub fn padded_note_id(note_id: String) -> String {
+    format!("{:0>64}", note_id)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{padded_commit_id, padded_note_id};
+
+    #[test]
+    fn padded_note_id_matches_commit_padding() {
+        let id = "abc123";
+        assert_eq!(padded_note_id(id.to_string()), padded_commit_id(id.to_string()));
+    }
+}
 /// Tag a commit.
 ///
 /// This function will return an `Err(…)` variant if the tag’s name is
