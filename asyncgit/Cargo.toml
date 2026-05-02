@@ -31,7 +31,7 @@ gnostr_web = []
 tui = []
 speedy = []
 nostr = []
-vendored-openssl = ["openssl-sys"]
+vendored-openssl = ["openssl-sys/vendored"]
 vendor-openssl = ["vendored-openssl"]
 
 [target.'cfg(not(windows))'.dependencies]
@@ -206,7 +206,6 @@ zeroize = { workspace = true }
 anyhow = "1.0.100"
 rsass = "0.28.0"
 sha2 = { workspace = true }
-warp = "0.3"
 
 ## [[bench]]
 ## name = "show"
