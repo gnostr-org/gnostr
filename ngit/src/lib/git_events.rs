@@ -1255,6 +1255,7 @@ mod tests {
             let signer: Arc<dyn NostrSigner> = Arc::new(nostr_sdk::Keys::generate());
 
             let event = generate_git_note_event(&note, &signer).await?;
+            println!("git note event: {event:#?}");
 
             assert_eq!(event.kind, Kind::TextNote);
             assert_eq!(event.content, note.message);
