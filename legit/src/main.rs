@@ -51,7 +51,7 @@ fn main() -> io::Result<()> {
 
     parse_args_or_exit(&mut opts);
 
-    let _state = repo::state();
+    let _state = repo::state(&opts.repo);
 
     let mut miner = match Gitminer::new(opts) {
         Ok(m) => m,
@@ -83,9 +83,7 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     ap.set_description("Generate git commit sha with a custom prefix");
 
     ap.refer(&mut opts.repo)
-        //.add_argument("repository-path", Store, "Path to your git repository (required)");
-        .add_argument("repository-path", Store, "Path to your git repository");
-    //.required();
+        .add_option(&["--repo"], Store, "Path to your git repository");
 
     ap.refer(&mut opts.target).add_option(
         &["-p", "--prefix"],
