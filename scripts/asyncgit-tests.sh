@@ -103,10 +103,10 @@ if [[ "$TARGET_TMPDIR" == true ]]; then
   TMPDIR_VALUE="${TMPDIR_VALUE:-0}"
   TMP_VALUE="${TMP_VALUE:-0}"
   TEMP_VALUE="${TEMP_VALUE:-0}"
-  TARGET_ROOT="/var/tmp/1876/cargo/test/asyncgit/${TMPDIR_VALUE}"
-  export TMPDIR="$TARGET_ROOT"
-  export TMP="$TARGET_ROOT/${TMP_VALUE}"
-  export TEMP="$TMP/debug/${TEMP_VALUE}"
+  export TMPDIR="/var/tmp/${TMPDIR_VALUE}/cargo/test/asyncgit/${TMPDIR_VALUE}"
+  export TMP="${TMPDIR}/${TMP_VALUE}"
+  export TEMP="${TMP}/debug/${TEMP_VALUE}"
+  TARGET_ROOT="$TEMP"
   if [[ "$TARGET_TMPDIR_CLEAN" == true && -d "$TARGET_ROOT" ]]; then
     rm -rf "$TARGET_ROOT"
   fi
