@@ -17,6 +17,7 @@ chrono = "0.4.40"
 clap = { workspace = true }
 comrak = { version = "0.28.0", default-features = false }
 const-hex = "1.12"
+const_format = { workspace = true }
 flate2 = "1"
 futures = "0.3"
 futures-util = "0.3.31"

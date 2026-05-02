@@ -128,6 +128,7 @@ clap = { version = "4.5.41", features = [
   "env",
 ] }
 console = { version = "0.16.0" }
+const_format = "0.2"
 constant_time_eq = "0.1"
 crossbeam-channel = "0.5.15"
 crossterm = "0.29"

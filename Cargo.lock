@@ -7472,6 +7472,7 @@ dependencies = [
  "clap 4.6.1",
  "comrak",
  "const-hex",
+ "const_format",
  "flate2",
  "futures",
  "futures-util",
