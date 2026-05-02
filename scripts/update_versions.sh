@@ -8,6 +8,23 @@ if ! bash -n "${BASH_SOURCE[0]}"; then
   exit 1
 fi
 
+DRY_RUN=false
+POSITIONAL_ARGS=()
+while (($#)); do
+    case "$1" in
+        -n|--dry-run)
+            DRY_RUN=true
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        *)
+            POSITIONAL_ARGS+=("$1")
+            ;;
+    esac
+    shift
+done
+
 ensure_taplo_installed() {
     if ! command -v taplo >/dev/null 2>&1; then
         echo "taplo-cli not found. Installing it..."
@@ -71,9 +88,14 @@ paths = {
     or os.path.abspath(pkg["manifest_path"]) == root
 }
 
+paths = {
+    path for path in paths
+    if "/vendor/" not in os.path.abspath(path).replace("\\", "/")
+}
+
 for rel_path in ["crawler/Cargo.toml"]:
     manifest_path = os.path.abspath(rel_path)
-    if os.path.isfile(manifest_path):
+    if os.path.isfile(manifest_path) and "/vendor/" not in manifest_path.replace("\\", "/"):
         paths.add(manifest_path)
 
 for path in sorted(paths):
@@ -237,8 +259,6 @@ if changed:
 PY
 }
 
-ensure_taplo_installed
-
 ROOT_CARGO_TOML="./Cargo.toml"
 if [ ! -f "$ROOT_CARGO_TOML" ]; then
     echo "Error: $ROOT_CARGO_TOML not found."
@@ -252,6 +272,28 @@ if [ -z "$WORKSPACE_VERSION" ]; then
 fi
 
 echo "Workspace version found: $WORKSPACE_VERSION"
+
+if [ "$DRY_RUN" = true ]; then
+    echo "Dry run: would synchronize workspace package versions and local path dependency versions."
+    while read -r manifest; do
+        echo "  would update package versions in $manifest"
+        while IFS=$'\t' read -r dep_name dep_path; do
+            [ -z "$dep_name" ] && continue
+            if dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
+                dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
+                echo "    would sync $dep_name -> $dep_version"
+            else
+                echo "    would warn: dependency Cargo.toml not found for $dep_name (path: $dep_path)"
+            fi
+        done < <(versioned_path_dependencies "$manifest")
+    done < <(managed_manifests)
+    echo "  would run cargo update --workspace"
+    echo "  would create version commit/tag and publish crates"
+    exit 0
+fi
+
+ensure_taplo_installed
+
 sync_root_package_to_workspace
 
 while read -r manifest; do
