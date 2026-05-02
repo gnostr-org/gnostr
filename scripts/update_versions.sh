@@ -48,6 +48,12 @@ manifest_version() {
     grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}'
 }
 
+manifest_package_name() {
+    local manifest="$1"
+
+    perl -0ne 'print "$1\n" and exit if /\[package\].*?^name\s*=\s*"([^"]+)"/ms' "$manifest"
+}
+
 cargo_paths() {
     while IFS= read -r -d '' path; do
         case "$path" in
@@ -93,7 +99,7 @@ paths = {
     if "/vendor/" not in os.path.abspath(path).replace("\\", "/")
 }
 
-for rel_path in ["crawler/Cargo.toml"]:
+for rel_path in ["crawler/Cargo.toml", "asyncgit/src/lib/filehash/core/Cargo.toml"]:
     manifest_path = os.path.abspath(rel_path)
     if os.path.isfile(manifest_path) and "/vendor/" not in manifest_path.replace("\\", "/"):
         paths.add(manifest_path)
@@ -281,7 +287,12 @@ if [ "$DRY_RUN" = true ]; then
             [ -z "$dep_name" ] && continue
             if dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
                 dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
-                echo "    would sync $dep_name -> $dep_version"
+                dep_package="$(manifest_package_name "$dep_manifest")"
+                if [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
+                    echo "    would sync $dep_name ($dep_package) -> $dep_version"
+                else
+                    echo "    would sync $dep_name -> $dep_version"
+                fi
             else
                 echo "    would warn: dependency Cargo.toml not found for $dep_name (path: $dep_path)"
             fi
@@ -317,13 +328,18 @@ while read -r manifest; do
         fi
 
         dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
+        dep_package="$(manifest_package_name "$dep_manifest")"
         if [ -z "$dep_version" ]; then
             echo "    Warning: Could not determine version for $dep_name from $dep_manifest."
             continue
         fi
 
         sync_dependency_version "$manifest" "$dep_name" "$dep_version"
-        echo "    Synchronized $dep_name in $manifest to $dep_version"
+        if [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
+            echo "    Synchronized $dep_name ($dep_package) in $manifest to $dep_version"
+        else
+            echo "    Synchronized $dep_name in $manifest to $dep_version"
+        fi
     done < <(versioned_path_dependencies "$manifest")
 
     taplo format "$manifest"
@@ -335,6 +351,7 @@ SORT_CRATES=(
     git2-hooks
     grammar
     filetreelist
+    asyncgit/src/lib/filehash/core
     scopetime
     asyncgit
     tui
@@ -357,6 +374,7 @@ PUBLISH_CRATES=(
     git2-hooks
     grammar
     filetreelist
+    asyncgit/src/lib/filehash/core
     scopetime
     asyncgit
     tui
