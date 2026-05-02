@@ -7,6 +7,11 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
+use gnostr_asyncgit::{
+    blockheight::blockheight_sync,
+    weeble::weeble_sync,
+    wobble::wobble_sync,
+};
 use gnostr_asyncgit::sync::{commit::padded_note_id, default_notes_ref, list_notes, NoteInfo, RepoPath};
 use nostr::{
     event::UnsignedEvent,
@@ -100,8 +105,20 @@ pub fn git_note_event_id(commit_id: &str) -> Result<EventId> {
 }
 
 /// Build the NIP-34 tags for a git note event.
+fn git_note_runtime_values() -> Result<(String, f64, f64)> {
+    let blockheight = blockheight_sync();
+    let weeble =
+        weeble_sync().map_err(|err| anyhow::anyhow!("failed to calculate weeble: {err:?}"))?;
+    let wobble =
+        wobble_sync().map_err(|err| anyhow::anyhow!("failed to calculate wobble: {err:?}"))?;
+
+    Ok((blockheight, weeble, wobble))
+}
+
+/// Build the NIP-34 tags for a git note event.
 pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<Tag>> {
     let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+    let (blockheight, weeble, wobble) = git_note_runtime_values()?;
 
     let mut tags = vec![
         Tag::from_standardized(TagStandard::Event {
@@ -123,6 +140,19 @@ pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<Tag>> {
             vec![notes_ref.clone()],
         ));
     }
+
+    tags.push(Tag::custom(
+        TagKind::Custom(Cow::Borrowed("weeble")),
+        vec![weeble.to_string()],
+    ));
+    tags.push(Tag::custom(
+        TagKind::Custom(Cow::Borrowed("blockheight")),
+        vec![blockheight],
+    ));
+    tags.push(Tag::custom(
+        TagKind::Custom(Cow::Borrowed("wobble")),
+        vec![wobble.to_string()],
+    ));
 
     Ok(tags)
 }
@@ -1231,6 +1261,9 @@ mod tests {
             let commit_id = note.annotated_id.to_string();
             let padded_commit_id = format!("{:0>64}", commit_id);
             let tags = git_note_tags(&note)?;
+            let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+            let weeble_str = weeble.to_string();
+            let wobble_str = wobble.to_string();
 
             let e_tag = tags
                 .iter()
@@ -1247,6 +1280,18 @@ mod tests {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("notes-ref")
                     && tag.as_slice().get(1).map(|s| s.as_str())
                         == Some("refs/notes/commits")
+            }));
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(weeble_str.as_str())
+            }));
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("blockheight")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(blockheight.as_str())
+            }));
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
             }));
             Ok(())
         }
@@ -1268,6 +1313,21 @@ mod tests {
                 .tags
                 .iter()
                 .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
+            let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+            let weeble_str = weeble.to_string();
+            let wobble_str = wobble.to_string();
+            assert!(event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(weeble_str.as_str())
+            }));
+            assert!(event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("blockheight")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(blockheight.as_str())
+            }));
+            assert!(event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
+            }));
             Ok(())
         }
 

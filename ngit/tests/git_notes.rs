@@ -58,7 +58,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
         git_note_event_id(&head.to_string())?.to_hex(),
         format!("{:0>64}", head)
     );
-    assert_eq!(git_note_tags(&note)?.len(), 3);
+    assert_eq!(git_note_tags(&note)?.len(), 6);
 
     remove_note(repo_path, head, Some(notes_ref.as_str()))?;
     println!("notes removed: annotated_id={head}");
