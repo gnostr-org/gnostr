@@ -1,16 +1,17 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use gnostr_asyncgit::sync::{add_note, default_notes_ref, list_notes, show_note, RepoPath};
-use ngit::git_events::{generate_git_note_event, git_note_event_id, git_note_tags};
+use gnostr_asyncgit::sync::{add_note, default_notes_ref, list_notes, remove_note, show_note, RepoPath};
+use gnostr_ngit::git_events::{generate_git_note_event, git_note_event_id, git_note_tags};
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
+#[allow(unused_imports)]
 use test_utils::{git::GitTestRepo, *};
 
 #[tokio::test]
 #[serial]
 async fn real_repo_git_note_workflow_creates_signed_event() -> Result<()> {
-    let mut repo = GitTestRepo::new("main")?;
+    let repo = GitTestRepo::new("main")?;
     repo.populate()?;
 
     let head = repo.git_repo.head()?.target().unwrap();
@@ -49,6 +50,10 @@ async fn real_repo_git_note_workflow_creates_signed_event() -> Result<()> {
         format!("{:0>64}", head)
     );
     assert_eq!(git_note_tags(&note)?.len(), 3);
+
+    remove_note(repo_path, head, None)?;
+    println!("notes removed: annotated_id={head}");
+    assert!(show_note(repo_path, head, None)?.is_none());
 
     Ok(())
 }
