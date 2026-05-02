@@ -133,15 +133,7 @@ jobs:
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
-          if [ -f target/debug/gnostr ]; then
-            chmod +x ./target/debug/gnostr
-            GNOSTR_CMD=./target/debug/gnostr
-          elif [ -f ~/.cargo/bin/gnostr ]; then
-            chmod +x "$HOME/.cargo/bin/gnostr"
-            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
-          else
-            GNOSTR_CMD="cargo run --bin gnostr --"
-          fi
+          GNOSTR_CMD="cargo run --bin gnostr --"
 
           $GNOSTR_CMD --help
       - run: |
