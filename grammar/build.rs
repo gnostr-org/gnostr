@@ -460,7 +460,7 @@ fn build_language_registry(
 
 fn build_grammar_registry(names: impl Iterator<Item = String>) -> proc_macro2::TokenStream {
     let (ids, plain, camel, snake) = names
-        .filter(|name| !is_blacklisted(name.as_str()))
+        .filter(|name| !is_blacklisted(name))
         .enumerate()
         .fold(
             (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
