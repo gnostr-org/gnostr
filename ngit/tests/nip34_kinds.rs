@@ -11,11 +11,15 @@ use gnostr_ngit::{
     },
     repo_ref::RepoRef,
 };
-use nostr_sdk::{Keys, NostrSigner};
+use gnostr_asyncgit::DEFAULT_GNOSTR_PRIVATE_KEY;
+use nostr_sdk::{Keys, NostrSigner, SecretKey};
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
 
-fn seeded_keys_from_oid(oid: &git2::Oid) -> Result<Keys> {
-    Ok(Keys::parse(&format!("{:0>64}", oid))?)
+fn default_test_keys() -> Keys {
+    Keys::new(
+        SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
+            .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid"),
+    )
 }
 
 fn repo_fixture() -> Result<(GitTestRepo, Repo)> {
@@ -32,7 +36,7 @@ fn repo_ref_fixture() -> Result<RepoRef> {
 #[tokio::test]
 async fn repo_announcement_round_trips_through_repo_ref() -> Result<()> {
     let repo_ref = repo_ref_fixture()?;
-    let signer_keys = Keys::generate();
+    let signer_keys = default_test_keys();
     let signer: Arc<dyn NostrSigner> = Arc::new(signer_keys.clone());
 
     let event = repo_ref.to_event(&signer).await?;
@@ -52,9 +56,9 @@ async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
     let head = git_repo.git_repo.head()?.peel_to_commit()?.id();
     let parent = git_repo.git_repo.find_commit(head)?.parent(0)?.id();
     let root_commit = oid_to_sha1(&parent);
+    let root_commit_str = root_commit.to_string();
     let commit = oid_to_sha1(&head);
-    let keys = seeded_keys_from_oid(&head)?;
-    let signer: Arc<dyn NostrSigner> = Arc::new(keys.clone());
+    let signer: Arc<dyn NostrSigner> = Arc::new(default_test_keys());
 
     let events = generate_cover_letter_and_patch_events(
         Some(("example title".to_string(), "example description".to_string())),
@@ -75,20 +79,26 @@ async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
     assert!(event_is_patch_set_root(&events[0]));
     assert_eq!(events[1].kind, nostr_sdk::Kind::GitPatch);
     assert!(!event_is_cover_letter(&events[1]));
-    assert!(event_is_patch_set_root(&events[1]));
+    assert!(!event_is_patch_set_root(&events[1]));
+    assert!(!event_is_revision_root(&events[1]));
     assert!(patch_supports_commit_ids(&events[1]));
 
-    let patch_root = events[1]
+    let cover_letter_id = events[0].id;
+    let patch_parent = events[1]
         .tags
         .iter()
         .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
-        .expect("patch root tag");
-    assert_eq!(patch_root.as_slice()[1], format!("{:0>64}", root_commit));
+        .expect("patch reply tag");
+    assert_eq!(patch_parent.as_slice()[1], cover_letter_id.to_string());
+    assert!(events[1].tags.iter().any(|tag| {
+        tag.as_slice().first().map(|s| s.as_str()) == Some("r")
+            && tag.as_slice().get(1).map(|s| s.as_str()) == Some(root_commit_str.as_str())
+    }));
     Ok(())
 }
 
 #[tokio::test]
-async fn pull_request_and_update_events_use_commit_seeded_signer() -> Result<()> {
+async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
     let (git_repo, repo) = repo_fixture()?;
     git_repo.create_branch("feature")?;
     git_repo.checkout("feature")?;
@@ -97,17 +107,29 @@ async fn pull_request_and_update_events_use_commit_seeded_signer() -> Result<()>
 
     let head = git_repo.git_repo.head()?.peel_to_commit()?.id();
     let commit = oid_to_sha1(&head);
-    let keys = seeded_keys_from_oid(&head)?;
+    let keys = default_test_keys();
     let signer: Arc<dyn NostrSigner> = Arc::new(keys.clone());
     let repo_ref = repo_ref_fixture()?;
     let clone_url = git_repo.dir.to_str().unwrap().to_string();
     let clone_hints = vec![clone_url.as_str()];
 
+    let patch_events = generate_cover_letter_and_patch_events(
+        Some(("example title".to_string(), "example description".to_string())),
+        &repo,
+        &[commit],
+        &signer,
+        &repo_ref,
+        &None,
+        &[],
+    )
+    .await?;
+
+    let patch_root = patch_events[0].clone();
     let unsigned_pr = generate_unsigned_pr_or_update_event(
         &repo,
         &repo_ref,
         &keys.public_key(),
-        None,
+        Some(&patch_root),
         &None,
         &commit,
         &commit,
@@ -120,7 +142,11 @@ async fn pull_request_and_update_events_use_commit_seeded_signer() -> Result<()>
 
     assert_eq!(pr_event.kind, KIND_PULL_REQUEST);
     assert!(event_is_valid_pr_or_pr_update(&pr_event));
-    assert!(!event_is_revision_root(&pr_event));
+    assert!(event_is_revision_root(&pr_event));
+    assert!(pr_event
+        .tags
+        .iter()
+        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
 
     let unsigned_update = generate_unsigned_pr_or_update_event(
         &repo,
@@ -139,6 +165,14 @@ async fn pull_request_and_update_events_use_commit_seeded_signer() -> Result<()>
 
     assert_eq!(update_event.kind, KIND_PULL_REQUEST_UPDATE);
     assert!(event_is_valid_pr_or_pr_update(&update_event));
-    assert!(event_is_revision_root(&update_event));
+    assert!(!event_is_revision_root(&update_event));
+    assert!(update_event
+        .tags
+        .iter()
+        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("E")));
+    assert!(update_event
+        .tags
+        .iter()
+        .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P")));
     Ok(())
 }
