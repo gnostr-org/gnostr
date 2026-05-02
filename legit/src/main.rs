@@ -30,7 +30,6 @@ fn main() -> io::Result<()> {
 
     let start = Instant::now();
     //println!("{}", datetime.format("%d/%m/%Y %T"));
-    let _state = repo::state();
 
     let count = thread::available_parallelism()?.get();
     assert!(count >= 1_usize);
@@ -51,6 +50,8 @@ fn main() -> io::Result<()> {
     };
 
     parse_args_or_exit(&mut opts);
+
+    let _state = repo::state();
 
     let mut miner = match Gitminer::new(opts) {
         Ok(m) => m,
@@ -102,7 +103,7 @@ fn parse_args_or_exit(opts: &mut gitminer::Options) {
     ap.refer(&mut opts.message).add_option(
         &["-m", "--message"],
         argparse::Collect,
-        "Commit message to use (required)",
+        "Commit message to use (optional)",
     );
     //.required();
 

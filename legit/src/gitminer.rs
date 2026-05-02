@@ -78,16 +78,10 @@ impl Gitminer {
         for i in 0..self.opts.threads {
             let target = self.opts.target.clone();
             let author = self.author.clone();
-            let msg = if self.opts.message.len() > 1 {
-                format!(
-                    "{}
-
-{}",
-                    self.opts.message[0],
-                    self.opts.message[1..].join("\n")
-                )
-            } else {
-                self.opts.message[0].clone()
+            let msg = match self.opts.message.as_slice() {
+                [] => String::new(),
+                [one] => one.clone(),
+                [first, rest @ ..] => format!("{first}\n\n{}", rest.join("\n")),
             };
             let wtx = tx.clone();
             let ts = self.opts.timestamp.clone();
