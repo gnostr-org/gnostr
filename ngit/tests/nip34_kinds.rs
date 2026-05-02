@@ -1,6 +1,7 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use anyhow::Result;
+use gnostr_asyncgit::git2::Oid;
 use gnostr_ngit::{
     git::{oid_to_sha1, Repo},
     git_events::{
@@ -11,15 +12,11 @@ use gnostr_ngit::{
     },
     repo_ref::RepoRef,
 };
-use gnostr_asyncgit::DEFAULT_GNOSTR_PRIVATE_KEY;
-use nostr_sdk::{Keys, NostrSigner, SecretKey};
+use nostr_sdk::{Keys, NostrSigner};
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
 
-fn default_test_keys() -> Keys {
-    Keys::new(
-        SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
-            .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid"),
-    )
+fn seeded_keys_from_oid(oid: &Oid) -> Result<Keys> {
+    Ok(Keys::parse(&format!("{:0>64}", oid))?)
 }
 
 fn repo_fixture() -> Result<(GitTestRepo, Repo)> {
@@ -36,7 +33,7 @@ fn repo_ref_fixture() -> Result<RepoRef> {
 #[tokio::test]
 async fn repo_announcement_round_trips_through_repo_ref() -> Result<()> {
     let repo_ref = repo_ref_fixture()?;
-    let signer_keys = default_test_keys();
+    let signer_keys = seeded_keys_from_oid(&Oid::from_str(&repo_ref.root_commit)?)?;
     let signer: Arc<dyn NostrSigner> = Arc::new(signer_keys.clone());
 
     let event = repo_ref.to_event(&signer).await?;
@@ -58,7 +55,7 @@ async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
     let root_commit = oid_to_sha1(&parent);
     let root_commit_str = root_commit.to_string();
     let commit = oid_to_sha1(&head);
-    let signer: Arc<dyn NostrSigner> = Arc::new(default_test_keys());
+    let signer: Arc<dyn NostrSigner> = Arc::new(seeded_keys_from_oid(&head)?);
 
     let events = generate_cover_letter_and_patch_events(
         Some(("example title".to_string(), "example description".to_string())),
@@ -107,7 +104,7 @@ async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
 
     let head = git_repo.git_repo.head()?.peel_to_commit()?.id();
     let commit = oid_to_sha1(&head);
-    let keys = default_test_keys();
+    let keys = seeded_keys_from_oid(&head)?;
     let signer: Arc<dyn NostrSigner> = Arc::new(keys.clone());
     let repo_ref = repo_ref_fixture()?;
     let clone_url = git_repo.dir.to_str().unwrap().to_string();
