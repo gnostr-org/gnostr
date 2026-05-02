@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "scopetime"
-version = "1876.947512.152205"
+version = "1876.947513.150500"
 authors = ["Stephan Dilly <dilly.stephan@gmail.com>"]
 description = "log runtime of arbitrary scope"
 homepage = "https://gitui.org"

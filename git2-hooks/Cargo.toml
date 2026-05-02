@@ -13,4 +13,4 @@ categories = ["development-tools"]
 keywords = ["git"]
 
 [dependencies]
-gitui_git2_hooks = { package = "git2-hooks", path = "../vendor/gitui/git2-hooks" }
+gitui_git2_hooks = { workspace = true }
