@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "git2-hooks"
-version = "1876.947513.150500"
+version = "0.7.0"
 authors = ["extrawurst <mail@rusticorn.com>"]
 build = false
 autolib = false
