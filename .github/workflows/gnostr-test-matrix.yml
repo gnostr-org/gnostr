@@ -370,9 +370,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: |
-            target
-            ~/.cargo/bin/gnostr
+          path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-install
 
       - name: 🚀 src/bin/git-remote-nostr test
