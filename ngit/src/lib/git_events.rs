@@ -1270,5 +1270,28 @@ mod tests {
                 .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
             Ok(())
         }
+
+        #[tokio::test]
+        async fn padded_commit_hex_can_seed_the_git_note_signer() -> Result<()> {
+            let note = note_fixture();
+            let padded_commit = format!("{:0>64}", note.annotated_id);
+            let signer: Arc<dyn NostrSigner> = Arc::new(nostr_sdk::Keys::parse(&padded_commit)?);
+
+            let event = generate_git_note_event(&note, &signer).await?;
+            println!("git note event seeded from padded commit: {event:#?}");
+
+            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.content, note.message);
+            assert_eq!(
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+                    .expect("e tag")
+                    .as_slice()[1],
+                padded_commit
+            );
+            Ok(())
+        }
     }
 }
