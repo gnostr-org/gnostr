@@ -15,6 +15,7 @@ TEST_FLAGS=()
 FEATURES=""
 ALL_FEATURES=false
 NO_DEFAULT_FEATURES=false
+RELEASE=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --nocapture)
@@ -28,6 +29,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-default-features)
       NO_DEFAULT_FEATURES=true
+      ;;
+    --release)
+      RELEASE=true
       ;;
     --features)
       shift
@@ -65,6 +69,10 @@ else
   else
     CARGO_FLAGS+=(--features nostr)
   fi
+fi
+
+if [[ "$RELEASE" == true ]]; then
+  CARGO_FLAGS+=(--release)
 fi
 
 if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then

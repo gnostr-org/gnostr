@@ -14,16 +14,18 @@ cd "$ROOT_DIR"
 LIST_ONLY=false
 TEST_NAME=""
 TEST_FLAGS=()
+RELEASE=false
 
 usage() {
   cat <<'EOF'
-Usage: gnostr-tests.sh [--workspace] [--list] [--test <name>] [--ignored] [--help]
+Usage: gnostr-tests.sh [--workspace] [--list] [--test <name>] [--ignored] [--release] [--help]
 
 Options:
   --workspace   Run workspace tests (default)
   --list        List all workspace tests
   --test NAME   Run one exact test by name
   --ignored     Run ignored tests
+  --release     Run tests in release mode
   --nocapture   Print test output
   --help        Show this help
 
@@ -94,6 +96,9 @@ while [[ $# -gt 0 ]]; do
     --ignored)
       TEST_FLAGS+=(--ignored)
       ;;
+    --release)
+      RELEASE=true
+      ;;
     --help|-h)
       usage
       exit 0
@@ -114,15 +119,23 @@ fi
 check_nip44_vectors
 
 if [[ "$LIST_ONLY" == true ]]; then
-  cargo test --workspace --all-targets -- --list
+  if [[ "$RELEASE" == true ]]; then
+    cargo test --workspace --all-targets --release -- --list
+  else
+    cargo test --workspace --all-targets -- --list
+  fi
   exit 0
 fi
 
 if [[ -n "$TEST_NAME" ]]; then
+  cargo_cmd=(cargo test --workspace --all-targets)
+  if [[ "$RELEASE" == true ]]; then
+    cargo_cmd+=(--release)
+  fi
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    cargo_cmd=(cargo test --workspace --all-targets "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}")
+    cargo_cmd+=("$TEST_NAME" -- --exact "${TEST_FLAGS[@]}")
   else
-    cargo_cmd=(cargo test --workspace --all-targets "$TEST_NAME" -- --exact)
+    cargo_cmd+=("$TEST_NAME" -- --exact)
   fi
   if "${cargo_cmd[@]}"; then
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} successful" >/dev/null 2>&1 || true
@@ -131,10 +144,12 @@ if [[ -n "$TEST_NAME" ]]; then
     exit 1
   fi
 else
+  cargo_cmd=(cargo test --workspace --all-targets)
+  if [[ "$RELEASE" == true ]]; then
+    cargo_cmd+=(--release)
+  fi
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    cargo_cmd=(cargo test --workspace --all-targets -- "${TEST_FLAGS[@]}")
-  else
-    cargo_cmd=(cargo test --workspace --all-targets --)
+    cargo_cmd+=(-- "${TEST_FLAGS[@]}")
   fi
   if "${cargo_cmd[@]}"; then
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true
