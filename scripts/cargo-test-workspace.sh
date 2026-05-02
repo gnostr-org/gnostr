@@ -57,12 +57,8 @@ Options:
   --package=VALUE      Select a Cargo package
   --target-dir VALUE   Set Cargo's target directory
   --target-dir=VALUE   Set Cargo's target directory
-  --target_dir VALUE   Set Cargo's target directory
-  --target_dir=VALUE   Set Cargo's target directory
-  --target-tmpdir      Use the shared vendored temp directory
-  --target_tmpdir      Use the shared vendored temp directory
-  --target-tmpdir-clean Remove the shared vendored temp directory first
-  --target_tmpdir-clean Remove the shared vendored temp directory first
+  --target-tmpdir      Use the shared temp directory
+  --target-tmpdir-clean Remove the shared temp directory first
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --quiet              Pass --quiet to cargo test
