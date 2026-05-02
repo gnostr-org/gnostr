@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use gnostr_asyncgit::sync::{add_note, default_notes_ref, list_notes, remove_note, show_note, RepoPath};
 use gnostr_asyncgit::git2::Oid;
+use gnostr_legit::gitminer::{Gitminer, Options as LegitOptions};
 use gnostr_ngit::{
     git::{oid_to_sha1, Repo},
     git_events::{
@@ -16,6 +17,7 @@ use gnostr_ngit::{
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
+use time::OffsetDateTime;
 
 fn seeded_keys_from_oid(oid: &Oid) -> Result<Keys> {
     Ok(Keys::parse(&format!("{:0>64}", oid))?)
@@ -24,7 +26,9 @@ fn seeded_keys_from_oid(oid: &Oid) -> Result<Keys> {
 fn repo_fixture() -> Result<(GitTestRepo, Repo)> {
     let git_repo = GitTestRepo::new("main")?;
     git_repo.populate_minus_1()?;
+    let mined_hash = mine_pow_commit(&git_repo)?;
     let repo = Repo::from_path(&git_repo.dir)?;
+    println!("pow commit mined for fixture: {mined_hash}");
     Ok((git_repo, repo))
 }
 
@@ -32,11 +36,30 @@ fn repo_ref_fixture() -> Result<RepoRef> {
     Ok(RepoRef::try_from((generate_repo_ref_event(), None))?)
 }
 
+fn mine_pow_commit(repo: &GitTestRepo) -> Result<String> {
+    let mut config = repo.git_repo.config()?;
+    config.set_str("user.name", "randymcmillan")?;
+    config.set_str("user.email", "randymcmillan@example.com")?;
+
+    let opts = LegitOptions {
+        threads: 1,
+        target: "00".to_string(),
+        message: vec!["proof-of-work commit".to_string()],
+        repo: repo.dir.to_str().unwrap().to_string(),
+        timestamp: OffsetDateTime::now_utc(),
+        kind: None,
+    };
+
+    let mut miner = Gitminer::new(opts).map_err(anyhow::Error::msg)?;
+    miner.mine().map_err(anyhow::Error::msg)
+}
+
 #[tokio::test]
 #[serial]
 async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
+    let mined_hash = mine_pow_commit(&repo)?;
 
     let head = repo.git_repo.head()?.target().unwrap();
     let repo_path_owned: RepoPath = repo.dir.as_os_str().to_str().unwrap().into();
@@ -57,6 +80,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     println!(
         "notes created: note_id={note_id} annotated_id={head} notes_ref={notes_ref} message={note_text}"
     );
+    println!("pow commit mined: {mined_hash}");
 
     let note = show_note(repo_path, head, Some(notes_ref.as_str()))?.expect("note exists");
     println!("notes show: {note:#?}");

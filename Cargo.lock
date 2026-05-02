@@ -7408,6 +7408,7 @@ dependencies = [
  "serde_yaml",
  "serial_test 3.4.0",
  "test_utils",
+ "time 0.3.47",
  "tokio",
  "tokio-tungstenite 0.26.2",
  "urlencoding",
