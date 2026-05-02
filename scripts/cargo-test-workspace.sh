@@ -181,7 +181,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [[ "$VENDORED" == true ]]; then
+  if [[ "$VENDORED" == true ]]; then
   if [[ "$ALL_FEATURES" == true || "$NO_DEFAULT_FEATURES" == true || ${#FEATURES[@]} -gt 0 || ${#PACKAGES[@]} -gt 0 ]]; then
     echo "vendored mode does not support --features, --package, all-features, or no-default-features" >&2
     exit 1
@@ -221,6 +221,11 @@ if [[ "$VENDORED" == true ]]; then
   exit $?
 fi
 
+if [[ "$TARGET_TMPDIR_CLEAN" == true && -d "$TARGET_ROOT" ]]; then
+  rm -rf "$TARGET_ROOT"
+fi
+mkdir -p "$TARGET_ROOT"
+
 declare -a CARGO_FLAGS=(test --workspace -j"$NPROC")
 
 if [[ "$ALL_FEATURES" == true ]]; then
@@ -247,11 +252,6 @@ if [[ -n "$TARGET_DIR" ]]; then
   CARGO_FLAGS+=(--target-dir "$TARGET_DIR")
 elif [[ -n "$TARGET_ROOT" ]]; then
   CARGO_FLAGS+=(--target-dir "$TARGET_ROOT")
-fi
-
-if [[ "$TARGET_TMPDIR" == true || "$TARGET_TMPDIR_CLEAN" == true ]]; then
-  echo "--target-tmpdir and --target-tmpdir-clean are only supported with vendored mode" >&2
-  exit 1
 fi
 
 if [[ ${#PACKAGES[@]} -gt 0 ]]; then
