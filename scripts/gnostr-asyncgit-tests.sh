@@ -86,13 +86,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 CARGO_COMMON_FLAGS=()
+CARGO_SUBCOMMAND_FLAGS=()
 
 if [[ "$QUIET" == true ]]; then
   CARGO_COMMON_FLAGS+=(--quiet)
 fi
 
 if [[ "$RELEASE" == true ]]; then
-  CARGO_COMMON_FLAGS+=(--release)
+  CARGO_SUBCOMMAND_FLAGS+=(--release)
 fi
 
 if [[ "$LOCKED" == true ]]; then
@@ -129,9 +130,9 @@ run_cargo() {
   shift
 
   if [[ -n "$TARGET_DIR" ]]; then
-    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" --target-dir "$TARGET_DIR" "$@"
+    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}" --target-dir "$TARGET_DIR" "$@"
   else
-    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "$@"
+    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}" "$@"
   fi
 }
 
