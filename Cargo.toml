@@ -399,7 +399,7 @@ expensive_tests = ["long_tests"]                     # Backward-compatible alias
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
 ghemoji = ["dep:gh-emoji"]
-gnostr-web = ["dep:gnostr-web"]
+gnostr-web = []
 # regex-* features are mutually exclusive.
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
 regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
@@ -532,7 +532,7 @@ gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
 gnostr_qr = { workspace = true }
-gnostr-web = { path = "web", version = "1876.947630.6535", default-features = false, optional = true }
+gnostr-web = { path = "web", version = "1876.947630.6535", default-features = false }
 #gnostr-crawler = { workspace = true } ##version = "1878.945649.607219", path = "crawler" }
 #gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
 #gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
