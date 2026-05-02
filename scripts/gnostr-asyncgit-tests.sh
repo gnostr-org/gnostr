@@ -11,7 +11,6 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-BOOTSTRAP_ARGS=("$@")
 TEST_FLAGS=()
 TARGET_DIR=""
 TARGET_TMPDIR=false
@@ -201,7 +200,7 @@ run_cargo_capture_step() {
   fi
 }
 
-if bash ./scripts/asyncgit-tests.sh "${BOOTSTRAP_ARGS[@]}"; then
+if bash ./scripts/asyncgit-tests.sh; then
   send_chat_update "asyncgit bootstrap successful"
 else
   send_chat_update "asyncgit bootstrap fail"
