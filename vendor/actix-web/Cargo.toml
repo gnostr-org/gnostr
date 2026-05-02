@@ -241,10 +241,6 @@ required-features = [
 ]
 
 [[test]]
-name = "test_server_streaming"
-path = "tests/test_server_streaming.rs"
-
-[[test]]
 name = "test_streaming_response"
 path = "tests/test_streaming_response.rs"
 
