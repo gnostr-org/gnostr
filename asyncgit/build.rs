@@ -5,12 +5,6 @@ use sha2::{Digest, Sha256};
 
 const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
 
-#[derive(Copy, Clone)]
-pub struct Paths<'a> {
-    statics_in_dir: &'a Path,
-    statics_out_dir: &'a Path,
-}
-
 fn main() {
     if let Err(e) = run() {
         eprintln!("An error occurred within the rgit build script:\n\n{:?}", e);
