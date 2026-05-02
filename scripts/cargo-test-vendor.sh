@@ -61,8 +61,10 @@ EOF
 }
 
 parse_prune_limit_kib() {
-  local raw="${1^^}"
+  local raw
   local value unit
+
+  raw="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')"
 
   if [[ "$raw" =~ ^([0-9]+)([KMG])?$ ]]; then
     value="${BASH_REMATCH[1]}"
