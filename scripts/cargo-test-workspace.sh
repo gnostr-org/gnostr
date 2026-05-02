@@ -177,7 +177,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-  if [[ "$VENDORED" == true ]]; then
+if [[ "$VENDORED" == true ]]; then
   if [[ "$ALL_FEATURES" == true || "$NO_DEFAULT_FEATURES" == true || ${#FEATURES[@]} -gt 0 || ${#PACKAGES[@]} -gt 0 ]]; then
     echo "vendored mode does not support --features, --package, all-features, or no-default-features" >&2
     exit 1
