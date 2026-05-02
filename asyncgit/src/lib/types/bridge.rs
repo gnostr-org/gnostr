@@ -31,8 +31,7 @@ mod tests {
     }
 
     #[test]
-    fn js_assets_are_available() {
-        assert!(get_js_assets().contains_key("core.js"));
-        assert!(get_js_assets().contains_key("ui/state.js"));
+    fn js_assets_are_not_embedded_here() {
+        assert!(get_js_assets().is_empty());
     }
 }
