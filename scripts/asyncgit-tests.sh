@@ -217,7 +217,7 @@ if [[ "$TARGET_TMPDIR" == true ]]; then
   TMPDIR_VALUE="${TMPDIR_VALUE:-0}"
   TMP_VALUE="${TMP_VALUE:-0}"
   TEMP_VALUE="${TEMP_VALUE:-0}"
-  export TMPDIR="/var/tmp/${TMPDIR_VALUE}/cargo/test/asyncgit/${TMPDIR_VALUE}"
+  export TMPDIR="/var/tmp/cargo/test/asyncgit/${TMPDIR_VALUE}"
   export TMP="${TMPDIR}/${TMP_VALUE}"
   export TEMP="${TMP}/debug/${TEMP_VALUE}"
   TARGET_ROOT="$TEMP"
