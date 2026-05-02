@@ -66,7 +66,7 @@ impl Gitminer {
 
     pub fn mine(&mut self) -> Result<String, &'static str> {
         debug!("Starting mining process with options: {:?}", self.opts);
-        let (tree, _parent) = match Gitminer::prepare_tree(&mut self.repo) {
+        let (tree, parent) = match Gitminer::prepare_tree(&mut self.repo) {
             Ok((t, p)) => (t, p),
             Err(e) => {
                 error!("Failed to prepare tree: {}", e);
@@ -178,7 +178,8 @@ impl Gitminer {
     }
 
     fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
-        let keys = Keys::parse(format!("{:0>64}", head)).map_err(|_| "Failed to derive Nostr keys from mined commit")?;
+        let padded_head = format!("{:0>64}", head);
+        let keys = Keys::parse(&padded_head).map_err(|_| "Failed to derive Nostr keys from mined commit")?;
         let relay_urls = get_relay_urls();
         let patch_content = self.patch_content_for_commit(head)?;
         let repo_name = Path::new(&self.opts.repo)

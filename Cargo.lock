@@ -7361,12 +7361,15 @@ dependencies = [
  "clap 4.6.1",
  "env_logger 0.10.2",
  "git2",
+ "gnostr_filehash_core",
  "hex",
  "log",
+ "nostr-sdk 0.44.1",
  "reqwest 0.11.27",
  "rust-crypto",
  "sha2 0.10.9",
  "time 0.3.47",
+ "tokio",
 ]
 
 [[package]]
