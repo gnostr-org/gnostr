@@ -71,6 +71,20 @@ Options:
 EOF
 }
 
+report_target_dir_size() {
+  local target_path="$1"
+  local size
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    return 0
+  fi
+
+  size="$(du -sh "$target_path" 2>/dev/null | awk '{print $1}')"
+  if [[ -n "$size" ]]; then
+    printf 'target dir size: %s (%s)\n' "$size" "$target_path"
+  fi
+}
+
 add_feature() {
   local feature="$1"
   FEATURES+=("$feature")
@@ -260,4 +274,10 @@ if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
   cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
 else
   cargo "${CARGO_FLAGS[@]}"
+fi
+
+if [[ -n "$TARGET_DIR" ]]; then
+  report_target_dir_size "$TARGET_DIR"
+elif [[ -n "$TARGET_ROOT" ]]; then
+  report_target_dir_size "$TARGET_ROOT"
 fi

@@ -38,6 +38,20 @@ Options:
 EOF
 }
 
+report_target_dir_size() {
+  local target_path="$1"
+  local size
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    return 0
+  fi
+
+  size="$(du -sh "$target_path" 2>/dev/null | awk '{print $1}')"
+  if [[ -n "$size" ]]; then
+    printf 'target dir size: %s (%s)\n' "$size" "$target_path"
+  fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --quiet)
@@ -259,6 +273,8 @@ if [[ -z "$CLIENT_DM_EVENT_ID" ]]; then
   send_chat_update "asyncgit client direct message test fail"
   exit 1
 fi
+
+report_target_dir_size "$TARGET_DIR"
 
 if run_cargo run --bin gnostr -- query -i "$CLIENT_DM_EVENT_ID" | grep -F '["EOSE","gnostr-query"]'; then
   send_chat_update "asyncgit client direct message query successful"
