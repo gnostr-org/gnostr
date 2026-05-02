@@ -97,10 +97,7 @@ impl Gitminer {
         info!("Received hash {} from a worker.", hash);
 
         match self.write_commit(&hash, &blob) {
-            Ok(_) => {
-                print!("Mined commit hash: {}", hash);
-                Ok(hash)
-            }
+            Ok(_) => Ok(hash),
             Err(e) => {
                 error!("Failed to write commit: {}", e);
                 Err(e)
