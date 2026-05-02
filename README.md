@@ -70,7 +70,8 @@ The repo keeps a few shell wrappers for the most common test paths:
 
 ```bash
 ./scripts/gnostr-tests.sh [--list] [--test <name>] [--ignored] [--nocapture]
-./scripts/gnostr-asyncgit-tests.sh [--ignored] [--nocapture]
+./scripts/asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir <dir>] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
+./scripts/gnostr-asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir <dir>] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
 ./scripts/gnostr-ngit-tests.sh [--features <list>] [--all-features] [--no-default-features] [--ignored] [--nocapture]
 ./scripts/cargo-install-feature-variants.sh [--features <list>] [--allow-all] [--no-default-features]
 ```

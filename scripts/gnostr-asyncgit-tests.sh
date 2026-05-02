@@ -75,7 +75,7 @@ run_cargo_capture_step() {
   fi
 }
 
-if bash ./scripts/asyncgit-tests.sh; then
+if bash ./scripts/asyncgit-tests.sh "$@"; then
   send_chat_update "asyncgit bootstrap successful"
 else
   send_chat_update "asyncgit bootstrap fail"
