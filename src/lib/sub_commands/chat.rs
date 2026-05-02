@@ -7,7 +7,7 @@
 use anyhow::Result;
 use gnostr_chat::{chat as chat_impl, run as chat_run, ChatSubCommands as ChatCommandSubCommands};
 
-use crate::p2p::chat::ChatSubCommands;
+use gnostr_chat::ChatSubCommands;
 
 /// chat
 ///

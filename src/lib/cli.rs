@@ -238,7 +238,7 @@ pub enum GnostrCommands {
     /// Broadcast events from file
     BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
     /// Chat sub commands
-    Chat(crate::p2p::chat::ChatSubCommands),
+    Chat(gnostr_chat::ChatSubCommands),
     /// Convert key from bech32 to hex or hex to bech32
     ConvertKey(convert_key::ConvertKeySubCommand),
     /// Create a new badge

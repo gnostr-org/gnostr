@@ -50,7 +50,7 @@ impl NostrClient {
     fn spawn_listener_task(&self, url: UncheckedUrl, mut stream: WsStream) {
         let queue_tx_clone = self.queue_tx.clone();
 
-        let _ = crate::p2p::chat::global_rt().spawn(async move {
+        let _ = gnostr_chat::global_rt().spawn(async move {
             while let Some(message_result) = stream.next().await {
                 match message_result {
                     Ok(tokio_tungstenite::tungstenite::Message::Text(text)) => {

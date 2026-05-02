@@ -7,7 +7,6 @@ pub use gnostr_p2p::{
     args, behaviour, command_handler, event_handler, git_integration, git_publisher, kvs, lookup,
     network_config, opt, swarm_builder, utils,
 };
-pub mod chat;
 
 use std::{
     env,
@@ -36,12 +35,12 @@ use ureq::Agent;
 
 use crate::{
     blockhash_async, blockheight_async,
-    p2p::chat::{
-        msg::{Msg, MsgKind},
-        ChatSubCommands,
-    },
     p2p::network_config::Network,
     types::Event,
+};
+use gnostr_chat::{
+    msg::{Msg, MsgKind},
+    ChatSubCommands,
 };
 
 //const TOPIC: &str = "gnostr";

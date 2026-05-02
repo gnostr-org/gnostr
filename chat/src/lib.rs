@@ -8,4 +8,4 @@ pub mod tests;
 
 pub use event::ChatEvent;
 pub use command::{chat, run, ChatSubCommands};
-pub use p2p::evt_loop;
+pub use p2p::{evt_loop, global_rt};

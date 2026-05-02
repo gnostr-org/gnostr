@@ -15,6 +15,7 @@ use libp2p::{
     tcp, yamux, StreamProtocol,
 };
 use parking_lot::Mutex;
+use once_cell::sync::OnceCell;
 use terminal_size::{terminal_size, Height, Width};
 use textwrap::{self, Options};
 use tokio::{io, select};
@@ -26,6 +27,12 @@ use crate::{
     msg::{Msg, MsgKind},
 };
 use gnostr_p2p::kvs::{FileRequest, FileResponse};
+
+/// Shared Tokio runtime for background chat tasks.
+pub fn global_rt() -> &'static tokio::runtime::Runtime {
+    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
+    RT.get_or_init(|| tokio::runtime::Runtime::new().expect("failed to create chat runtime"))
+}
 
 /// Buffer and reassemble chunked chat messages by message ID.
 pub struct MessageReassembler {

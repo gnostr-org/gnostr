@@ -119,7 +119,7 @@ pub enum InternalEvent {
     /// Command to interact with Nostr
     NostrCommand(NostrCommand),
     /// ChatMessage
-    ChatMessage(crate::p2p::chat::msg::Msg),
+    ChatMessage(gnostr_chat::msg::Msg),
     /// ConfirmAction
     ConfirmAction(Action),
     /// ComfirmedAction

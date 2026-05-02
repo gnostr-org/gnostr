@@ -25,7 +25,7 @@ use ratatui::{
 };
 use tui_input::{backend::crossterm::EventHandler, Input};
 
-use crate::p2p::chat::msg;
+use gnostr_chat::msg;
 
 pub struct TerminalCleanup;
 
