@@ -1,13 +1,20 @@
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    convert::TryFrom,
+    str::FromStr,
+    sync::Arc,
+};
 
 use anyhow::{Context, Result, bail};
+use gnostr_asyncgit::sync::{commit::padded_commit_id, default_notes_ref, list_notes, NoteInfo, RepoPath};
 use nostr::{
     event::UnsignedEvent,
     nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
 };
 use nostr_sdk::{
     Event, EventBuilder, EventId, FromBech32, Kind, NostrSigner, PublicKey, Tag, TagKind,
-    TagStandard, hashes::sha1::Hash as Sha1Hash,
+    TagStandard, Timestamp, hashes::sha1::Hash as Sha1Hash,
 };
 
 use crate::{
@@ -83,6 +90,61 @@ pub fn status_kinds() -> Vec<Kind> {
         Kind::GitStatusClosed,
         Kind::GitStatusDraft,
     ]
+}
+
+/// Build the deterministic note-link event id for a commit.
+pub fn git_note_event_id(commit_id: &str) -> Result<EventId> {
+    let padded_commit_id = padded_commit_id(commit_id.to_string());
+    Ok(EventId::from_hex(&padded_commit_id)
+        .context("failed to convert padded commit id into event id")?)
+}
+
+/// Build the NIP-34 tags for a git note event.
+pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<Tag>> {
+    let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+
+    let mut tags = vec![
+        Tag::from_standardized(TagStandard::Event {
+            event_id,
+            relay_url: None,
+            marker: Some(Marker::Root),
+            public_key: None,
+            uppercase: false,
+        }),
+        Tag::custom(
+            TagKind::Custom(Cow::Borrowed("commit")),
+            vec![note.annotated_id.to_string()],
+        ),
+    ];
+
+    if let Some(notes_ref) = &note.notes_ref {
+        tags.push(Tag::custom(
+            TagKind::Custom(Cow::Borrowed("notes-ref")),
+            vec![notes_ref.clone()],
+        ));
+    }
+
+    Ok(tags)
+}
+
+/// Build and sign a text-note event carrying git note content.
+pub async fn generate_git_note_event(
+    note: &NoteInfo,
+    signer: &Arc<dyn NostrSigner>,
+) -> Result<Event> {
+    let created_at = Timestamp::from(
+        u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
+    );
+
+    sign_event(
+        EventBuilder::new(Kind::TextNote, note.message.clone())
+            .tags(git_note_tags(note)?)
+            .custom_created_at(created_at),
+        signer,
+        "git note".to_string(),
+    )
+    .await
+    .context("failed to sign git note event")
 }
 
 pub const KIND_PULL_REQUEST: Kind = Kind::Custom(1618);
@@ -625,6 +687,13 @@ pub async fn generate_cover_letter_and_patch_events(
     let root_commit = git_repo
         .get_root_commit()
         .context("failed to get root commit of the repository")?;
+    let repo_path = RepoPath::Path(git_repo.get_path()?.to_path_buf());
+    let notes_ref = default_notes_ref(&repo_path)?;
+    let notes = list_notes(&repo_path, Some(notes_ref.as_str()))?;
+    let notes_by_commit = notes
+        .into_iter()
+        .map(|note| (note.annotated_id.to_string(), note))
+        .collect::<HashMap<_, _>>();
 
     let mut events = vec![];
 
@@ -738,6 +807,10 @@ pub async fn generate_cover_letter_and_patch_events(
             .await
             .context("failed to generate patch event")?,
         );
+
+        if let Some(note) = notes_by_commit.get(&commit.to_string()) {
+            events.push(generate_git_note_event(note, signer).await?);
+        }
     }
     Ok(events)
 }
@@ -1117,6 +1190,79 @@ mod tests {
                 );
                 Ok(())
             }
+        }
+    }
+
+    mod git_notes {
+        use super::*;
+        use std::sync::Arc;
+
+        fn note_fixture() -> NoteInfo {
+            NoteInfo {
+                note_id: git2::Oid::from_str("89abcdef0123456789abcdef0123456789abcdef")
+                    .expect("valid note id"),
+                annotated_id: git2::Oid::from_str("0123456789abcdef0123456789abcdef01234567")
+                    .expect("valid commit id"),
+                notes_ref: Some("refs/notes/commits".to_string()),
+                message: "git notes text".to_string(),
+                author: "author".to_string(),
+                committer: "committer".to_string(),
+                committer_time: 1_717_171_717,
+            }
+        }
+
+        #[test]
+        fn padded_commit_hash_becomes_the_link_event_id() -> Result<()> {
+            let note = note_fixture();
+            let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+
+            assert_eq!(
+                event_id.to_hex(),
+                format!("{:0>64}", note.annotated_id.to_string())
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn git_note_tags_reference_commit_and_notes_ref() -> Result<()> {
+            let note = note_fixture();
+            let commit_id = note.annotated_id.to_string();
+            let padded_commit_id = format!("{:0>64}", commit_id);
+            let tags = git_note_tags(&note)?;
+
+            let e_tag = tags
+                .iter()
+                .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+                .context("missing e tag")?;
+            assert_eq!(e_tag.as_slice()[1], padded_commit_id);
+            assert!(e_tag.is_root());
+
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("commit")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(commit_id.as_str())
+            }));
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("notes-ref")
+                    && tag.as_slice().get(1).map(|s| s.as_str())
+                        == Some("refs/notes/commits")
+            }));
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn generate_git_note_event_uses_the_note_message() -> Result<()> {
+            let note = note_fixture();
+            let signer: Arc<dyn NostrSigner> = Arc::new(nostr_sdk::Keys::generate());
+
+            let event = generate_git_note_event(&note, &signer).await?;
+
+            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.content, note.message);
+            assert!(event
+                .tags
+                .iter()
+                .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
+            Ok(())
         }
     }
 }
