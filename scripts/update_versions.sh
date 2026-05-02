@@ -418,7 +418,7 @@ if [ -n "${VERSION_TAG:-}" ]; then
     cargo update --workspace
     stage_cargo_files
 
-    git checkout -b "$VERSION_TAG"
+    git checkout -b "release/$VERSION_TAG"
 
     gnostr legit -m "$VERSION_TAG"
     git tag -f "$VERSION_TAG" HEAD
