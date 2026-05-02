@@ -7386,6 +7386,7 @@ dependencies = [
  "directories",
  "futures",
  "gnostr-asyncgit",
+ "gnostr-legit",
  "indicatif 0.18.4",
  "mailparse",
  "mockall 0.13.1",
