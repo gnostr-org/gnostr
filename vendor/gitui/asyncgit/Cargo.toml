@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "asyncgit"
-version = "1876.947514.148827"
+version = "0.28.1"
 authors = ["extrawurst <mail@rusticorn.com>"]
 build = false
 autolib = false
