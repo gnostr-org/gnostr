@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[cfg(gnostr_workspace_assets)]
 macro_rules! asset {
     ($assets:ident, $name:literal, $path:literal) => {
         $assets.insert(
@@ -10,6 +11,7 @@ macro_rules! asset {
     };
 }
 
+#[cfg(gnostr_workspace_assets)]
 pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
     asset!(assets, "db.js", "db.js");
@@ -43,4 +45,9 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     asset!(assets, "ui/state.js", "ui/state.js");
     asset!(assets, "ui/util.js", "ui/util.js");
     assets
+}
+
+#[cfg(not(gnostr_workspace_assets))]
+pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
+    HashMap::new()
 }

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[cfg(gnostr_workspace_assets)]
 pub fn get_images_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
 
@@ -257,4 +258,9 @@ pub fn get_images_assets() -> HashMap<String, &'static [u8]> {
             as &'static [u8],
     );
     assets
+}
+
+#[cfg(not(gnostr_workspace_assets))]
+pub fn get_images_assets() -> HashMap<String, &'static [u8]> {
+    HashMap::new()
 }

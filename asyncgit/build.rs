@@ -22,6 +22,8 @@ fn main() {
 }
 
 fn run() -> anyhow::Result<()> {
+    println!("cargo:rustc-check-cfg=cfg(gnostr_workspace_assets)");
+
     let manifest_dir =
         PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
     let statics_in_dir = manifest_dir;
@@ -34,13 +36,32 @@ fn run() -> anyhow::Result<()> {
         statics_out_dir: &statics_out_dir,
     };
 
-    build_scss(paths).context("Failed to build CSS stylesheets")?;
-    build_js(paths).context("Failed to build JS bundle")?;
+    if workspace_assets_available(&statics_in_dir) {
+        println!("cargo:rustc-cfg=gnostr_workspace_assets");
+        build_scss(paths).context("Failed to build CSS stylesheets")?;
+        build_js(paths).context("Failed to build JS bundle")?;
+    }
     verify_nip44_vectors(&statics_in_dir).context("Failed to verify NIP-44 test vectors")?;
     export_filehash_envs(&statics_in_dir).context("Failed to export filehash build envs")?;
 
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
+}
+
+fn workspace_assets_available(manifest_dir: &Path) -> bool {
+    if !manifest_dir.join("../.git").exists() {
+        return false;
+    }
+
+    let required = [
+        manifest_dir.join("../web/src/sass/style.scss"),
+        manifest_dir.join("../web/src/sass/nostr-styles.scss"),
+        manifest_dir.join("../web/src/css/styles.css"),
+        manifest_dir.join("../web/src/images/gnostr.svg"),
+        manifest_dir.join("../js/src/js/main.js"),
+    ];
+
+    required.iter().all(|path| path.exists())
 }
 
 fn export_filehash_envs(manifest_dir: &Path) -> anyhow::Result<()> {
