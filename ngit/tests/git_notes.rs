@@ -20,15 +20,17 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     let notes_ref = default_notes_ref(repo_path)?;
     println!("notes default ref: {notes_ref}");
 
+    let note_text = "nip34:git note protocol example:deterministically linked git note";
+
     let note_id = add_note(
         repo_path,
         head,
-        "real repo git notes text",
+        note_text,
         Some(notes_ref.as_str()),
         false,
     )?;
     println!(
-        "notes created: note_id={note_id} annotated_id={head} notes_ref={notes_ref} message=real repo git notes text"
+        "notes created: note_id={note_id} annotated_id={head} notes_ref={notes_ref} message={note_text}"
     );
 
     let note = show_note(repo_path, head, Some(notes_ref.as_str()))?.expect("note exists");
@@ -42,7 +44,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     println!("git note event: {event:#?}");
 
     assert_eq!(event.kind, nostr_sdk::Kind::TextNote);
-    assert_eq!(event.content, "real repo git notes text");
+    assert_eq!(event.content, note_text);
     assert_eq!(
         event
             .tags
