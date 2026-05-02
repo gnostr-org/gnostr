@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::Parser;
 use gnostr_asyncgit::types::PrivateKey;
 use libp2p::gossipsub;

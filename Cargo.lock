@@ -7183,6 +7183,7 @@ dependencies = [
  "libp2p",
  "once_cell",
  "parking_lot 0.12.5",
+ "proctitle",
  "ratatui",
  "reqwest 0.12.28",
  "serde",
