@@ -1206,7 +1206,7 @@ mod tests {
                 annotated_id: git2::Oid::from_str("0123456789abcdef0123456789abcdef01234567")
                     .expect("valid commit id"),
                 notes_ref: Some("refs/notes/commits".to_string()),
-                message: "git notes text".to_string(),
+                message: "nip34:git note protocol example:deterministically linked git note".to_string(),
                 author: "author".to_string(),
                 committer: "committer".to_string(),
                 committer_time,
@@ -1260,7 +1260,10 @@ mod tests {
             println!("git note event: {event:#?}");
 
             assert_eq!(event.kind, Kind::TextNote);
-            assert_eq!(event.content, note.message);
+            assert_eq!(
+                event.content,
+                "nip34:git note protocol example:deterministically linked git note"
+            );
             assert!(event
                 .tags
                 .iter()
