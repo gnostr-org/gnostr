@@ -833,7 +833,6 @@ prettyplease = "0.2.37"
 proc-macro2 = { workspace = true }
 quote = { workspace = true }
 regex = { workspace = true }
-reqwest = { workspace = true, features = ["blocking"] }
 rsass = "0.28.10"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
