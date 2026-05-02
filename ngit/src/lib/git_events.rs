@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use gnostr_asyncgit::sync::{commit::padded_commit_id, default_notes_ref, list_notes, NoteInfo, RepoPath};
+use gnostr_asyncgit::sync::{commit::padded_note_id, default_notes_ref, list_notes, NoteInfo, RepoPath};
 use nostr::{
     event::UnsignedEvent,
     nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
@@ -94,7 +94,7 @@ pub fn status_kinds() -> Vec<Kind> {
 
 /// Build the deterministic note-link event id for a commit.
 pub fn git_note_event_id(commit_id: &str) -> Result<EventId> {
-    let padded_commit_id = padded_commit_id(commit_id.to_string());
+    let padded_commit_id = padded_note_id(commit_id.to_string());
     Ok(EventId::from_hex(&padded_commit_id)
         .context("failed to convert padded commit id into event id")?)
 }
