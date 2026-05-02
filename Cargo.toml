@@ -399,32 +399,7 @@ expensive_tests = ["long_tests"]                     # Backward-compatible alias
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
 ghemoji = ["dep:gh-emoji"]
-## gnostr-web = [
-##   "askama",
-##   "httparse",
-##   "flate2",
-##   "moka",
-##   "proc-macro2",
-##   "rust-ini",
-##   "tar",
-##   "timeago",
-##   "tokio-stream",
-##   "tower-layer",
-##   "tower-service",
-##   "actix-cors",
-##   "actix-http",
-##   "actix-web",
-##   "actix-web-actors",
-##   "rocket",
-##   "dep:gnostr-web",
-##   "gnostr-asyncgit/gnostr_web",
-##   "gnostr-js",
-##   "handlebars",
-##   "warp",
-##   "tiny_http",
-##   "webbrowser",
-##   "pretty_env_logger",
-## ]
+gnostr-web = ["dep:gnostr-web"]
 # regex-* features are mutually exclusive.
 regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
 regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
@@ -557,7 +532,7 @@ gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
 gnostr_qr = { workspace = true }
-gnostr-web = { path = "web", version = "1876.947527.130335", default-features = false }
+gnostr-web = { path = "web", version = "1876.947527.130335", default-features = false, optional = true }
 #gnostr-crawler = { workspace = true } ##version = "1878.945649.607219", path = "crawler" }
 #gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
 #gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
