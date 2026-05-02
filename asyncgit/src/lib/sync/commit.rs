@@ -309,6 +309,7 @@ mod tests {
     #[test]
     fn padded_note_id_matches_commit_padding() {
         let id = "abc123";
+        println!("padded_note_id: {}", padded_note_id(id.to_string()));
         assert_eq!(padded_note_id(id.to_string()), padded_commit_id(id.to_string()));
     }
 

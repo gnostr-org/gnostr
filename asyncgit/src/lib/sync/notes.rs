@@ -257,19 +257,24 @@ mod tests {
         let head = repo.head()?.target().unwrap();
 
         let notes_ref = default_notes_ref(repo_path)?;
+        println!("notes default ref: {notes_ref}");
         assert_eq!(notes_ref, "refs/notes/commits");
 
-        add_note(repo_path, head, "hello notes", None, false)?;
+        let note_id = add_note(repo_path, head, "hello notes", None, false)?;
+        println!("notes created: note_id={note_id} annotated_id={head} message=hello notes");
 
         let note = show_note(repo_path, head, None)?.expect("note exists");
+        println!("notes show: {note:#?}");
         assert_eq!(note.message, "hello notes");
         assert_eq!(note.annotated_id, head);
 
         let notes = list_notes(repo_path, None)?;
+        println!("notes list: {notes:#?}");
         assert_eq!(notes.len(), 1);
         assert_eq!(notes[0].message, "hello notes");
 
         remove_note(repo_path, head, None)?;
+        println!("notes removed: annotated_id={head}");
         assert!(show_note(repo_path, head, None)?.is_none());
         assert!(list_notes(repo_path, None)?.is_empty());
 
@@ -284,18 +289,26 @@ mod tests {
         let repo_path: &RepoPath = &repo_path_owned;
         let head = repo.head()?.target().unwrap();
 
-        add_note(
+        let note_id = add_note(
             repo_path,
             head,
             "hello custom notes",
             Some("refs/notes/reviews"),
             false,
         )?;
+        println!(
+            "custom notes created: note_id={note_id} annotated_id={head} notes_ref=refs/notes/reviews message=hello custom notes"
+        );
 
         let note = show_note(repo_path, head, Some("refs/notes/reviews"))?.expect("note exists");
+        println!("custom notes show: {note:#?}");
         assert_eq!(note.message, "hello custom notes");
-        assert!(list_notes(repo_path, None)?.is_empty());
-        assert_eq!(list_notes(repo_path, Some("refs/notes/reviews"))?.len(), 1);
+        let default_notes = list_notes(repo_path, None)?;
+        println!("custom default notes list: {default_notes:#?}");
+        assert!(default_notes.is_empty());
+        let review_notes = list_notes(repo_path, Some("refs/notes/reviews"))?;
+        println!("custom notes list: {review_notes:#?}");
+        assert_eq!(review_notes.len(), 1);
 
         Ok(())
     }
@@ -337,6 +350,8 @@ mod tests {
             NotesCommandResult::NoteId(_)
         ));
 
+        println!("notes command add created note for head={head}");
+
         assert!(matches!(
             run_notes_command(
                 repo_path,
@@ -344,6 +359,8 @@ mod tests {
             )?,
             NotesCommandResult::Notes(notes) if notes.len() == 1
         ));
+
+        println!("notes command list returned 1 note for head={head}");
 
         assert!(matches!(
             run_notes_command(
@@ -355,6 +372,8 @@ mod tests {
             )?,
             NotesCommandResult::Removed
         ));
+
+        println!("notes command remove cleared note for head={head}");
 
         Ok(())
     }
