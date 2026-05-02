@@ -1198,6 +1198,8 @@ mod tests {
         use std::sync::Arc;
 
         fn note_fixture() -> NoteInfo {
+            let committer_time = nostr_sdk::Timestamp::now().as_u64() as i64;
+
             NoteInfo {
                 note_id: git2::Oid::from_str("89abcdef0123456789abcdef0123456789abcdef")
                     .expect("valid note id"),
@@ -1207,7 +1209,7 @@ mod tests {
                 message: "git notes text".to_string(),
                 author: "author".to_string(),
                 committer: "committer".to_string(),
-                committer_time: 1_717_171_717,
+                committer_time,
             }
         }
 

@@ -5,12 +5,11 @@ use gnostr_asyncgit::sync::{add_note, default_notes_ref, list_notes, remove_note
 use gnostr_ngit::git_events::{generate_git_note_event, git_note_event_id, git_note_tags};
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
-#[allow(unused_imports)]
-use test_utils::{git::GitTestRepo, *};
+use test_utils::git::GitTestRepo;
 
 #[tokio::test]
 #[serial]
-async fn real_repo_git_note_workflow_creates_signed_event() -> Result<()> {
+async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
 
@@ -21,13 +20,21 @@ async fn real_repo_git_note_workflow_creates_signed_event() -> Result<()> {
     let notes_ref = default_notes_ref(repo_path)?;
     println!("notes default ref: {notes_ref}");
 
-    let note_id = add_note(repo_path, head, "real repo git notes text", None, false)?;
-    println!("notes created: note_id={note_id} annotated_id={head} message=real repo git notes text");
+    let note_id = add_note(
+        repo_path,
+        head,
+        "real repo git notes text",
+        Some(notes_ref.as_str()),
+        false,
+    )?;
+    println!(
+        "notes created: note_id={note_id} annotated_id={head} notes_ref={notes_ref} message=real repo git notes text"
+    );
 
-    let note = show_note(repo_path, head, None)?.expect("note exists");
+    let note = show_note(repo_path, head, Some(notes_ref.as_str()))?.expect("note exists");
     println!("notes show: {note:#?}");
 
-    let notes = list_notes(repo_path, None)?;
+    let notes = list_notes(repo_path, Some(notes_ref.as_str()))?;
     println!("notes list: {notes:#?}");
 
     let signer: Arc<dyn NostrSigner> = Arc::new(Keys::generate());
@@ -51,9 +58,9 @@ async fn real_repo_git_note_workflow_creates_signed_event() -> Result<()> {
     );
     assert_eq!(git_note_tags(&note)?.len(), 3);
 
-    remove_note(repo_path, head, None)?;
+    remove_note(repo_path, head, Some(notes_ref.as_str()))?;
     println!("notes removed: annotated_id={head}");
-    assert!(show_note(repo_path, head, None)?.is_none());
+    assert!(show_note(repo_path, head, Some(notes_ref.as_str()))?.is_none());
 
     Ok(())
 }
