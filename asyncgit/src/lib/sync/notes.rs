@@ -402,6 +402,10 @@ mod tests {
                 pow_the_event,
                 event.nonce_data()
             );
+            println!(
+                "matrix case event json: {}",
+                serde_json::to_string_pretty(&event).expect("serialize matrix event")
+            );
 
             assert_eq!(event.kind, EventKind::TextNote);
             assert_eq!(event.content, note_message);
