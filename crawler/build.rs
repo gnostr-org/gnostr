@@ -9,7 +9,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use url::Url;
 
-// build.rs - This file will generate src/relays.yaml
+// build.rs - This file generates relays.yaml in Cargo's OUT_DIR for compile-time consumption.
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct CachedHashes {
