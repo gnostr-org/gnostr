@@ -3,7 +3,6 @@
 //! This macro allows you to compute the SHA-256 hash of a file at compile time,
 //! embedding the resulting hash string directly into your Rust executable.
 
-use csv::ReaderBuilder;
 use url::Url;
 
 pub use gnostr_filehash_core::get_file_hash;
@@ -39,29 +38,25 @@ pub const GIT_BRANCH: &str = env!("GIT_BRANCH");
 
 pub fn get_relay_urls() -> Vec<String> {
     let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
-    let mut rdr = ReaderBuilder::new()
-        .has_headers(true)
-        .from_reader(content.as_bytes());
-
-    rdr.records()
-        .filter_map(|result| match result {
-            Ok(record) => record.get(0).and_then(|url_str| {
-                let full_url_str = if url_str.contains("://") {
-                    url_str.to_string()
-                } else {
-                    format!("wss://{}", url_str)
-                };
-                match Url::parse(&full_url_str) {
-                    Ok(url) if url.scheme() == "wss" => Some(url.to_string()),
-                    _ => {
-                        eprintln!("Warning: Invalid or unsupported relay URL scheme: {}", full_url_str);
-                        None
-                    }
+    content
+        .lines()
+        .skip(1)
+        .filter_map(|line| {
+            let url_str = line.split(',').next()?.trim();
+            if url_str.is_empty() {
+                return None;
+            }
+            let full_url_str = if url_str.contains("://") {
+                url_str.to_string()
+            } else {
+                format!("wss://{}", url_str)
+            };
+            match Url::parse(&full_url_str) {
+                Ok(url) if url.scheme() == "wss" => Some(url.to_string()),
+                _ => {
+                    eprintln!("Warning: Invalid or unsupported relay URL scheme: {}", full_url_str);
+                    None
                 }
-            }),
-            Err(e) => {
-                eprintln!("Error reading CSV record: {}", e);
-                None
             }
         })
         .collect()

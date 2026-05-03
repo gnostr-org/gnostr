@@ -2,8 +2,6 @@
 
 use std::{path::PathBuf, process::Command};
 
-use sha2::{Digest, Sha256};
-
 pub fn should_remove_relay(error_msg: &str) -> bool {
     error_msg.contains("relay not connected")
         || error_msg.contains("not in web of trust")
@@ -47,9 +45,9 @@ pub fn get_git_tracked_files(dir: &PathBuf) -> Vec<String> {
 macro_rules! get_file_hash {
     ($file_path:expr) => {{
         let bytes = include_bytes!($file_path);
-        let mut hasher = Sha256::new();
-        hasher.update(bytes);
-        let result = hasher.finalize();
+        let mut hasher = sha2::Sha256::new();
+        sha2::Digest::update(&mut hasher, bytes);
+        let result = sha2::Digest::finalize(hasher);
 
         result
             .iter()
@@ -61,6 +59,7 @@ macro_rules! get_file_hash {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sha2::{Digest, Sha256};
     use std::{fs::File, io::Write};
     use tempfile::tempdir;
 
