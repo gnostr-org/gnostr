@@ -344,8 +344,11 @@ mod tests {
         let private_key = PrivateKey::generate();
         let client_keys = Keys::new(private_key.clone());
         let relay_urls = vec![
-            "wss://relay.damus.io".to_string(),
-            "wss://nos.lol".to_string(),
+            "wss://nostr-kyomu-haskell.onrender.com/".to_string(),
+            "wss://nostr-relay.amethyst.name/".to_string(),
+            "wss://relay.bitcoindistrict.org/".to_string(),
+            "wss://nos.lol/".to_string(),
+            "wss://relay.damus.io/".to_string(),
         ];
         let mut client = Client::new(&client_keys, Options::new());
         client
