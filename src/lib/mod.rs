@@ -4,6 +4,46 @@
 
 extern crate gnostr_asyncgit as git2;
 
+#[macro_export]
+macro_rules! chat_oneshot {
+    ($topic:expr, $message:expr) => {
+        gnostr_chat::ChatSubCommands {
+            nsec: None,
+            password: None,
+            name: None,
+            topic: Some($topic.into()),
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+            headless: false,
+            workdir: None,
+            gitdir: None,
+            oneshot: Some($message.into()),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! chat_oneshot_named {
+    ($topic:expr, $message:expr) => {{
+        $crate::chat_oneshot!(
+            $topic,
+            format!("{}::{} {}", module_path!(), function_name!(), $message)
+        )
+    }};
+}
+
+#[macro_export]
+macro_rules! chat_debug {
+    ($message:expr) => {{
+        gnostr_chat::msg::Msg::default()
+            .set_content($crate::introspection_debug!($message), 0)
+            .set_kind(gnostr_chat::msg::MsgKind::Debug)
+    }};
+}
+
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
 pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>

@@ -217,6 +217,33 @@ static BLACKLISTED_MODULES: &[&str] = &[
     "circom",
 ];
 
+/// Grammars that fail to compile on macOS (beyond the always-blacklisted set above).
+static MACOS_BLACKLISTED: &[&str] = &[];
+
+/// Grammars that fail to compile on musl-libc targets (statically linked Linux).
+static MUSL_BLACKLISTED: &[&str] = &[];
+
+/// Grammars that fail to compile on Windows targets.
+static WINDOWS_BLACKLISTED: &[&str] = &[
+    // tree_sitter_hcl has unresolved externals on Windows
+    "hcl",
+];
+
+/// Returns true if the grammar should be skipped for the current build target.
+fn is_blacklisted(name: &str) -> bool {
+    if BLACKLISTED_MODULES.contains(&name) {
+        return true;
+    }
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
+    match target_os.as_str() {
+        "macos" if MACOS_BLACKLISTED.contains(&name) => true,
+        "windows" if WINDOWS_BLACKLISTED.contains(&name) => true,
+        _ if target_env == "musl" && MUSL_BLACKLISTED.contains(&name) => true,
+        _ => false,
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     //println!("cargo:warning=DEBUG: gnostr-grammar build.rs is executing.");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
@@ -243,7 +270,7 @@ fn main() -> anyhow::Result<()> {
         println!("cargo::rustc-link-search=native={}", root.display());
 
         for grammar in &config.grammar {
-            if BLACKLISTED_MODULES.contains(&grammar.name.as_str()) {
+            if is_blacklisted(&grammar.name) {
                 continue;
             }
 
@@ -321,7 +348,7 @@ fn build_language_registry(
     let mut regex_to_camel = Vec::new();
 
     for language in &language_definition {
-        if BLACKLISTED_MODULES.contains(&language.name.as_str()) {
+        if is_blacklisted(&language.name) {
             continue;
         }
 
@@ -436,7 +463,7 @@ fn build_language_registry(
 
 fn build_grammar_registry(names: impl Iterator<Item = String>) -> proc_macro2::TokenStream {
     let (ids, plain, camel, snake) = names
-        .filter(|name| !BLACKLISTED_MODULES.contains(&name.as_str()))
+        .filter(|name| !is_blacklisted(name))
         .enumerate()
         .fold(
             (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
@@ -492,7 +519,7 @@ fn build_language_module(
     name: &str,
     query_path: &Path,
 ) -> anyhow::Result<Option<proc_macro2::TokenStream>> {
-    if BLACKLISTED_MODULES.contains(&name) {
+    if is_blacklisted(name) {
         return Ok(None);
     }
 
@@ -564,7 +591,7 @@ fn fetch_and_build_grammar(
     let pool = ThreadPool::new(std::thread::available_parallelism()?.get());
 
     for grammar in grammars {
-        if BLACKLISTED_MODULES.contains(&grammar.name.as_str()) {
+        if is_blacklisted(&grammar.name) {
             continue;
         }
 

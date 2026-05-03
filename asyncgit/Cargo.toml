@@ -31,7 +31,7 @@ gnostr_web = []
 tui = []
 speedy = []
 nostr = []
-vendored-openssl = ["openssl-sys"]
+vendored-openssl = ["openssl-sys/vendored"]
 vendor-openssl = ["vendored-openssl"]
 
 [target.'cfg(not(windows))'.dependencies]
@@ -97,7 +97,7 @@ gix = { version = "0.66", default-features = false, features = [
 ] }
 ##tree-sitter-language = "0.1" ##check version
 gnostr-grammar = { workspace = true }
-gnostr_filehash_core = { package = "gnostr_filehash_core", version = "1876.947527.130335", path = "src/lib/filehash/core" }
+gnostr_filehash_core = { package = "gnostr_filehash_core", version = "1876.947630.6535", path = "src/lib/filehash/core" }
 handlebars = { workspace = true }
 #anyhow = "1.0"
 hex = { workspace = true }
@@ -138,7 +138,7 @@ regex = "1.11.1"
 rkyv = "0.8"
 
 rocksdb = { workspace = true, optional = true }
-russh = { version = "0.37.1", features = ["openssl"] }
+russh = { version = "0.37.1" }
 russh-keys = { version = "0.37.1" }
 rust-ini = "0.21.1"
 scopetime = { workspace = true }                             #{ package = "gnostr-scopetime", path = "../scopetime", version = "1878.945649.607219" }
@@ -206,7 +206,6 @@ zeroize = { workspace = true }
 anyhow = "1.0.100"
 rsass = "0.28.0"
 sha2 = { workspace = true }
-warp = "0.3"
 
 ## [[bench]]
 ## name = "show"

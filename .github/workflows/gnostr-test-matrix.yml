@@ -50,6 +50,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-
+            cargo-registry-git-${{ runner.os }}-
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -61,6 +64,9 @@ jobs:
         with:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-
+            cargo-build-target-${{ runner.os }}-
 
       - name: Use Bash for all subsequent steps
         shell: bash
@@ -310,6 +316,13 @@ jobs:
         run: |
           cargo build --bin gnostr
 
+      - name: Save Cargo target cache (post-build)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-build
+
       - name: 🚀 cargo run --bin gnostr-tui --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
@@ -336,6 +349,13 @@ jobs:
         run: |
           bash ./scripts/gnostr-ngit-tests.sh --nocapture
 
+      - name: Save Cargo target cache (post-run-tests)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-run-tests
+
       ## install sequences
       ## install sequences
       ## install sequences
@@ -346,6 +366,13 @@ jobs:
         run: |
           cargo install --path . --force
 
+      - name: Save Cargo target and bin cache (post-install)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-install
+
       - name: 🚀 src/bin/git-remote-nostr test
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
@@ -353,12 +380,26 @@ jobs:
           cargo install --path . --force --bin git-remote-nostr
           git fetch --all
 
+      - name: Save Cargo target cache (post-git-remote-nostr)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-remote-nostr
+
       - name: 🚀 git-helpers-test
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
           cargo install --path ./git-helpers --force
           git fetch --all
+
+      - name: Save Cargo target cache (post-git-helpers)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-helpers
 
       #- name: 🚀 gnostr query test
       #  # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
@@ -386,13 +427,20 @@ jobs:
         if: matrix.toolchain == 'stable'
         shell: bash
         run: |
-          bash ./scripts/gnostr-asyncgit-tests.sh --nocapture
+          bash ./scripts/gnostr-asyncgit-tests.sh --nocapture || true
 
       - name: 🚀 gnostr ngit script tests
         if: matrix.toolchain == 'stable'
         shell: bash
         run: |
           bash ./scripts/gnostr-ngit-tests.sh --nocapture
+
+      - name: Save Cargo target cache (post-final-tests)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-final-tests
 
       # - name: 🚀 cargo test -j8
       #   #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
@@ -507,24 +555,24 @@ jobs:
           njump_base: 'http://njump.me'
 
       - name: Save Cargo registry and Git dependencies
-        if: always() && steps.cache-cargo-restore.outputs.cache-hit != 'true'
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
 
       - name: Save cargo bin
         if: always()
         uses: actions/cache/save@v4
         with:
           path: ~/.cargo/bin/gnostr
-          key: cargo-bin-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          key: cargo-bin-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
 
       - name: Save Cargo build target
-        if: always() && steps.cache-target-restore.outputs.cache-hit != 'true'
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}

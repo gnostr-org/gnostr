@@ -19,6 +19,8 @@ OFFLINE=false
 TARGET_DIR=""
 CLEAN_TARGET_TMPDIR=false
 TARGET_ROOT=""
+TARGET_TREE_ROOT=""
+PRUNE_LIMIT_SPEC="20G"
 VENDOR_ROOT="$ROOT_DIR/vendor"
 
 OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
@@ -30,7 +32,7 @@ case "$OS_NAME" in
     TMPDIR_VALUE="${TMPDIR_VALUE:-0}"
     TMP_VALUE="${TMP_VALUE:-0}"
     TEMP_VALUE="${TEMP_VALUE:-0}"
-    export TMPDIR="/var/tmp/1876/cargo/test/vendor/${TMPDIR_VALUE}"
+    export TMPDIR="/var/tmp/cargo/test/vendor/${TMPDIR_VALUE}"
     export TMP="${TMPDIR}/${TMP_VALUE}"
     export TEMP="${TMP}/debug/${TEMP_VALUE}"
     TARGET_ROOT="${TEMP}"
@@ -49,12 +51,111 @@ Options:
   --target-dir VALUE   Set Cargo's target directory
   --target-tmpdir      Use the shared vendored temp directory
   --target-tmpdir-clean Remove the shared vendored temp directory first
+  --prune-limit VALUE  Prune oldest dirs once the tree reaches VALUE (default 20G)
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --test-threads VALUE Pass --test-threads VALUE to the test harness
   --test-threads=VALUE Pass --test-threads VALUE to the test harness
   --help               Show this help
 EOF
+}
+
+parse_prune_limit_kib() {
+  local raw
+  local value unit
+
+  raw="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')"
+
+  if [[ "$raw" =~ ^([0-9]+)([KMG])?$ ]]; then
+    value="${BASH_REMATCH[1]}"
+    unit="${BASH_REMATCH[2]}"
+    case "$unit" in
+      "")
+        echo "$value"
+        ;;
+      K)
+        echo "$value"
+        ;;
+      M)
+        echo $((value * 1024))
+        ;;
+      G)
+        echo $((value * 1024 * 1024))
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  else
+    return 1
+  fi
+}
+
+report_target_dir_size() {
+  local target_path="$1"
+  local size
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    return 0
+  fi
+
+  size="$(du -sh "$target_path" 2>/dev/null | awk '{print $1}')"
+  if [[ -n "$size" ]]; then
+    printf 'target dir size: %s (%s)\n' "$size" "$target_path"
+  fi
+}
+
+target_dir_size_kib() {
+  local target_path="$1"
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    echo 0
+    return
+  fi
+
+  du -sk "$target_path" 2>/dev/null | awk '{print $1+0}'
+}
+
+oldest_child_dir() {
+  local prune_root="$1"
+  local os_name
+
+  os_name="$(uname -s 2>/dev/null || echo unknown)"
+  find "$prune_root" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r child; do
+    case "$os_name" in
+      Darwin|FreeBSD|OpenBSD|NetBSD|DragonFly)
+        stat -f '%m\t%N' "$child" 2>/dev/null || true
+        ;;
+      *)
+        stat -c '%Y\t%n' "$child" 2>/dev/null || true
+        ;;
+    esac
+  done | sort -n | head -1 | awk -F'\t' '{print $2}'
+}
+
+prune_target_tree() {
+  local prune_root="$1"
+  local current_size
+  local oldest
+
+  if [[ -z "$prune_root" || ! -d "$prune_root" ]]; then
+    return 0
+  fi
+
+  while :; do
+    current_size="$(target_dir_size_kib "$prune_root")"
+    if (( current_size <= TARGET_SIZE_LIMIT_KIB )); then
+      break
+    fi
+
+    oldest="$(oldest_child_dir "$prune_root")"
+    if [[ -z "$oldest" ]]; then
+      break
+    fi
+
+    printf 'pruning oldest target dir: %s\n' "$oldest"
+    rm -rf "$oldest"
+  done
 }
 
 while [[ $# -gt 0 ]]; do
@@ -84,6 +185,14 @@ while [[ $# -gt 0 ]]; do
     --target-tmpdir-clean|--target_tmpdir-clean|--target_tmpdir_clean)
       CLEAN_TARGET_TMPDIR=true
       ;;
+    --prune-limit)
+      shift
+      [[ $# -gt 0 ]] || { echo "--prune-limit requires a value" >&2; exit 1; }
+      PRUNE_LIMIT_SPEC="$1"
+      ;;
+    --prune-limit=*)
+      PRUNE_LIMIT_SPEC="${1#*=}"
+      ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
       ;;
@@ -109,6 +218,11 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+TARGET_SIZE_LIMIT_KIB="$(parse_prune_limit_kib "$PRUNE_LIMIT_SPEC")" || {
+  echo "Invalid --prune-limit value: $PRUNE_LIMIT_SPEC" >&2
+  exit 1
+}
 
 if [[ -n "$TARGET_ROOT" ]]; then
   if [[ "$CLEAN_TARGET_TMPDIR" == true && -d "$TARGET_ROOT" ]]; then
@@ -142,6 +256,12 @@ for manifest in "${MANIFESTS[@]}"; do
     cargo_args+=(--target-dir "$TARGET_ROOT")
   fi
 
+  if [[ -n "$TARGET_DIR" ]]; then
+    TARGET_TREE_ROOT="$(dirname "$TARGET_DIR")"
+  elif [[ -n "$TARGET_ROOT" ]]; then
+    TARGET_TREE_ROOT="$(dirname "$TARGET_ROOT")"
+  fi
+
   if [[ "$QUIET" == true ]]; then
     cargo_args+=(--quiet)
   fi
@@ -165,3 +285,8 @@ for manifest in "${MANIFESTS[@]}"; do
     cargo "${cargo_args[@]}"
   fi
 done
+
+if [[ -n "$TARGET_TREE_ROOT" ]]; then
+  prune_target_tree "$TARGET_TREE_ROOT"
+  report_target_dir_size "$TARGET_TREE_ROOT"
+fi

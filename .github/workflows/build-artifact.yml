@@ -213,6 +213,10 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-
+          cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-
+          cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-
 
     - name: Install Linux system dependencies
       if: runner.os == 'Linux'
@@ -300,27 +304,21 @@ jobs:
       env:
         CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
         CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
-        CC_aarch64_unknown_linux_musl: aarch64-linux-gnu-gcc
-        CXX_aarch64_unknown_linux_musl: aarch64-linux-gnu-g++
       run: |
         cargo generate-lockfile && git diff
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
-        fi
-        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
+        elif [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
           rustup target add ${{ matrix.target }} || true
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
-        fi
-        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
+        elif [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
           rustup target add ${{ matrix.target }} || true
           rustup target add x86_64-unknown-linux-musl || true
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features || \
           cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
-        fi
-        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+        elif [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
           rustup target add ${{ matrix.target }} || true
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features || \
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
         else
           rustup target add ${{ matrix.target }} || true

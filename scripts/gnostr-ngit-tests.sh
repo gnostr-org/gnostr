@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
-BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
-BASH_MINOR="${BASH_VERSINFO[1]:-0}"
 if ! bash -n "${BASH_SOURCE[0]}"; then
   exit 1
 fi
@@ -11,23 +8,39 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-TEST_FLAGS=()
+MODE="notes"
 FEATURES=""
 ALL_FEATURES=false
 NO_DEFAULT_FEATURES=false
+RELEASE=false
+NOCAPTURE=true
+TEST_FLAGS=()
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --nocapture)
-      TEST_FLAGS+=(--nocapture)
+    --all)
+      MODE="all"
+      ;;
+    --notes)
+      MODE="notes"
       ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
+      ;;
+    --nocapture)
+      NOCAPTURE=true
+      ;;
+    --capture)
+      NOCAPTURE=false
       ;;
     --all-features)
       ALL_FEATURES=true
       ;;
     --no-default-features)
       NO_DEFAULT_FEATURES=true
+      ;;
+    --release)
+      RELEASE=true
       ;;
     --features)
       shift
@@ -51,24 +64,79 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-declare -a CARGO_FLAGS=(test -p gnostr-ngit --lib)
-if [[ "$ALL_FEATURES" == true ]]; then
-  CARGO_FLAGS+=(--all-features)
-elif [[ "$NO_DEFAULT_FEATURES" == true ]]; then
-  CARGO_FLAGS+=(--no-default-features)
-  if [[ -n "$FEATURES" ]]; then
-    CARGO_FLAGS+=(--features "$FEATURES")
-  fi
-else
-  if [[ -n "$FEATURES" ]]; then
-    CARGO_FLAGS+=(--features "$FEATURES")
+build_cargo_flags() {
+  local -a cargo_flags=(test -p gnostr-ngit)
+  if [[ "$ALL_FEATURES" == true ]]; then
+    cargo_flags+=(--all-features)
+  elif [[ "$NO_DEFAULT_FEATURES" == true ]]; then
+    cargo_flags+=(--no-default-features)
+    if [[ -n "$FEATURES" ]]; then
+      cargo_flags+=(--features "$FEATURES")
+    fi
   else
-    CARGO_FLAGS+=(--features nostr)
+    if [[ -n "$FEATURES" ]]; then
+      cargo_flags+=(--features "$FEATURES")
+    else
+      cargo_flags+=(--features nostr)
+    fi
   fi
-fi
+  if [[ "$RELEASE" == true ]]; then
+    cargo_flags+=(--release)
+  fi
+  printf '%s\n' "${cargo_flags[@]}"
+}
 
-if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-  cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
-else
-  cargo "${CARGO_FLAGS[@]}"
-fi
+run_cargo() {
+  local -a cargo_flags=()
+  cargo_flags=($(build_cargo_flags))
+  cargo "${cargo_flags[@]}" "$@"
+}
+
+run_notes_suite() {
+  local -a test_args=()
+  if [[ "$NOCAPTURE" == true ]]; then
+    test_args+=(--nocapture)
+  fi
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    test_args+=("${TEST_FLAGS[@]}")
+  fi
+
+  if [[ ${#test_args[@]} -gt 0 ]]; then
+    run_cargo --lib repo_state::tests::notes_refs_round_trip_through_repo_state -- "${test_args[@]}"
+    run_cargo --test git_notes -- "${test_args[@]}"
+  else
+    run_cargo --lib repo_state::tests::notes_refs_round_trip_through_repo_state
+    run_cargo --test git_notes
+  fi
+}
+
+run_all_suite() {
+  local -a test_args=()
+  if [[ "$NOCAPTURE" == true ]]; then
+    test_args+=(--nocapture)
+  fi
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    test_args+=("${TEST_FLAGS[@]}")
+  fi
+
+  if [[ ${#test_args[@]} -gt 0 ]]; then
+    run_cargo --lib -- "${test_args[@]}"
+    run_cargo --tests -- "${test_args[@]}"
+  else
+    run_cargo --lib
+    run_cargo --tests
+  fi
+}
+
+case "$MODE" in
+  notes)
+    run_notes_suite
+    ;;
+  all)
+    run_all_suite
+    ;;
+  *)
+    echo "Unsupported mode: $MODE" >&2
+    exit 1
+    ;;
+esac
