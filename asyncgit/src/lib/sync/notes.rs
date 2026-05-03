@@ -345,16 +345,21 @@ mod tests {
         ];
 
         for (label, mine_the_commit, pow_the_event) in cases {
+            println!(
+                "matrix case start: label={label} mine_commit={mine_the_commit} pow_event={pow_the_event}"
+            );
             let (_td, repo) = repo_init_empty()?;
             let root = repo.path().parent().unwrap();
             let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
             let repo_path: &RepoPath = &repo_path_owned;
             let file_path = Path::new("matrix.txt");
             File::create(root.join(file_path))?.write_all(label.as_bytes())?;
+            println!("matrix case file written: path={}", file_path.display());
             stage_add_file(repo_path, file_path)?;
+            println!("matrix case staged: label={label}");
 
             let commit_id = if mine_the_commit {
-                mine_commit(
+                let mined = mine_commit(
                     repo_path,
                     CommitMineOptions {
                         threads: 1,
@@ -362,14 +367,22 @@ mod tests {
                         message: vec![format!("{label} commit")],
                         timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
                     },
-                )?
+                )?;
+                println!("matrix case mined commit: {mined}");
+                mined
             } else {
-                commit::commit(repo_path, &format!("{label} commit"))?
+                let committed = commit::commit(repo_path, &format!("{label} commit"))?;
+                println!("matrix case committed: {committed}");
+                committed
             };
 
             let note_message = format!("{label} note");
             let note_id = add_note(repo_path, commit_id, &note_message, None, false)?;
             let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+            println!(
+                "matrix case note created: note_id={note_id} annotated_id={} message={}",
+                note.annotated_id, note.message
+            );
 
             assert_eq!(note.note_id, note_id);
             assert_eq!(note.annotated_id, commit_id.into());
@@ -382,6 +395,13 @@ mod tests {
                 generate_git_note_event(&note, &private_key)
                     .map_err(|err| crate::error::Error::Generic(err.to_string()))?
             };
+            println!(
+                "matrix case event built: kind={:?} id={} pow={} nonce={:?}",
+                event.kind,
+                event.id,
+                pow_the_event,
+                event.nonce_data()
+            );
 
             assert_eq!(event.kind, EventKind::TextNote);
             assert_eq!(event.content, note_message);
@@ -399,6 +419,8 @@ mod tests {
                 assert!(event.nonce_data().is_none());
                 assert!(!event.tags.iter().any(|tag| tag.tagname() == "nonce"));
             }
+
+            println!("matrix case done: label={label}");
         }
 
         Ok(())
