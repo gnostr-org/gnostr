@@ -183,6 +183,7 @@ fn matrix_relay_urls() -> Vec<String> {
 async fn publish_and_query_git_note_case(
     label: &str,
     mine_commit_flag: bool,
+    mine_note_flag: bool,
     pow_event_flag: bool,
 ) -> anyhow::Result<()> {
     let repo_dir = unique_temp_dir("gnostr-crawler-pow-matrix");
@@ -207,12 +208,34 @@ async fn publish_and_query_git_note_case(
         commit::commit(&repo_path, &format!("{label} commit"))?
     };
 
-    let note_message = format!("{label} note");
-    let note_id = add_note(&repo_path, commit_id, &note_message, None, false)?;
-    let note: NoteInfo = show_note(&repo_path, commit_id, None)?.expect("note exists");
-    assert_eq!(note.note_id, note_id);
+    let note_base_message = format!("{label} note");
+    let note: NoteInfo = if mine_note_flag {
+        let mut nonce = 0u32;
+        loop {
+            let candidate_message = format!("{note_base_message} #{nonce}");
+            let note_id = add_note(&repo_path, commit_id, &candidate_message, None, true)?;
+            let note = show_note(&repo_path, commit_id, None)?.expect("note exists");
+            eprintln!(
+                "note mining attempt for {label}: nonce={nonce} note_id={} annotated_id={} message={}",
+                note_id, note.annotated_id, note.message
+            );
+            if note.note_id.to_string().starts_with('0') {
+                assert_eq!(note.note_id, note_id);
+                break note;
+            }
+            nonce = nonce.wrapping_add(1);
+        }
+    } else {
+        let note_id = add_note(&repo_path, commit_id, &note_base_message, None, false)?;
+        let note = show_note(&repo_path, commit_id, None)?.expect("note exists");
+        eprintln!(
+            "note created for {label}: note_id={note_id} annotated_id={} message={}",
+            note.annotated_id, note.message
+        );
+        note
+    };
     assert_eq!(note.annotated_id, commit_id.into());
-    assert_eq!(note.message, note_message);
+    assert!(note.message.starts_with(&note_base_message));
 
     let private_key = AsyncPrivateKey::generate();
     let keys = AsyncKeys::new(private_key.clone());
@@ -239,7 +262,7 @@ async fn publish_and_query_git_note_case(
     );
 
     assert_eq!(event.kind, EventKind::TextNote);
-    assert_eq!(event.content, note_message);
+    assert_eq!(event.content, note.message);
     assert_eq!(
         event.created_at,
         gnostr_asyncgit::types::Unixtime(note.committer_time)
@@ -462,13 +485,17 @@ fn stats_and_pubkeys_track_counts() {
 
 #[tokio::test]
 async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()> {
-    for (label, mine_commit_flag, pow_event_flag) in [
-        ("plain-commit/plain-event", false, false),
-        ("plain-commit/pow-event", false, true),
-        ("mined-commit/plain-event", true, false),
-        ("mined-commit/pow-event", true, true),
+    for (label, mine_commit_flag, mine_note_flag, pow_event_flag) in [
+        ("plain-commit/plain-note/plain-event", false, false, false),
+        ("plain-commit/plain-note/pow-event", false, false, true),
+        ("plain-commit/mined-note/plain-event", false, true, false),
+        ("plain-commit/mined-note/pow-event", false, true, true),
+        ("mined-commit/plain-note/plain-event", true, false, false),
+        ("mined-commit/plain-note/pow-event", true, false, true),
+        ("mined-commit/mined-note/plain-event", true, true, false),
+        ("mined-commit/mined-note/pow-event", true, true, true),
     ] {
-        publish_and_query_git_note_case(label, mine_commit_flag, pow_event_flag).await?;
+        publish_and_query_git_note_case(label, mine_commit_flag, mine_note_flag, pow_event_flag).await?;
     }
 
     Ok(())
