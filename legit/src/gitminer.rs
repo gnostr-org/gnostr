@@ -195,7 +195,7 @@ impl Gitminer {
         // inside a Tokio runtime (e.g. during #[tokio::test]).
         std::thread::spawn(move || {
             let runtime = tokio::runtime::Runtime::new()
-                .expect("Failed to create async runtime");
+                .unwrap_or_else(|e| panic!("Failed to create async runtime: {e}"));
             runtime.block_on(async move {
                 publish_patch_event(
                     &keys,
