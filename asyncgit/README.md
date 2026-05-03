@@ -23,7 +23,7 @@ Run the full asyncgit test suite, including the Nostr event paths and the full N
 ./scripts/gnostr-asyncgit-tests.sh --nocapture
 ```
 
-That matrix now covers plain/mined commits, plain/mined notes, and plain/PoW events.
+That matrix now covers plain/mined commits, plain/mined notes, and plain/PoW events, and each case is also replayed as a NIP-44 DM to the shared default recipient key.
 
 Note: `nostr_sdk` is only used in test code here; production asyncgit paths stay on the repo's own types.
 
