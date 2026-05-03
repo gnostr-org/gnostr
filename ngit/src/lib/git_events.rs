@@ -192,7 +192,10 @@ pub async fn generate_git_note_event_with_pow(
 
     loop {
         let mut tags = base_tags.clone();
-        tags.push(Tag::POW { nonce, difficulty });
+        tags.push(Tag::custom(
+            TagKind::Custom(Cow::Borrowed("nonce")),
+            vec![nonce.to_string(), difficulty.to_string()],
+        ));
 
         let event = EventBuilder::new(Kind::TextNote, note.message.clone())
             .tags(tags)
