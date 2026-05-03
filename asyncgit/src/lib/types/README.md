@@ -40,7 +40,7 @@ The module includes specific implementations and types related to various Nostr 
 - **NIP-15 (`nip15`)**: End of Stored Events Notice.
 - **NIP-26 (`nip26`)**: Delegation.
 - **NIP-28 (`nip28`)**: Public Chat Channels (includes `ChannelCreationEvent`, `ChannelMetadataEvent`, `create_channel`, `set_channel_metadata`, `create_channel_message`, `hide_message`, `mute_user` and their parsing counterparts).
-- **NIP-34 (`nip34`)**: Git notes integration.
+- **NIP-34 (`nip34`)**: Git notes integration, including padded commit/note IDs, mined-note discovery, and PoW-signed note events.
 - **NIP-44 (`nip44`)**: Encrypted content for secure direct messages.
 
 ### Utility Types
