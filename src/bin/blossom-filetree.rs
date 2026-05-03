@@ -1,16 +1,22 @@
 //! gnostr blossom-tui binary entry point.
 
+#[cfg(feature = "blossom-tui")]
 use std::io;
 
+#[cfg(feature = "blossom-tui")]
 use blossom_tui::{crossterm, load_state, ratatui, run_loop, save_state, App, AppMsg};
+#[cfg(feature = "blossom-tui")]
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+#[cfg(feature = "blossom-tui")]
 use ratatui::{backend::CrosstermBackend, Terminal};
+#[cfg(feature = "blossom-tui")]
 use tokio::sync::mpsc;
 
+#[cfg(feature = "blossom-tui")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let saved = load_state();
@@ -50,6 +56,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     result
 }
 
+#[cfg(not(feature = "blossom-tui"))]
+fn main() {
+    eprintln!("blossom-filetree requires the `blossom-tui` feature");
+}
+
+#[cfg(feature = "blossom-tui")]
 fn parse_args(
     saved: &blossom_tui::TuiState,
 ) -> Result<(String, Option<String>), Box<dyn std::error::Error>> {
@@ -100,6 +112,7 @@ fn parse_args(
     Ok((server, secret_key))
 }
 
+#[cfg(feature = "blossom-tui")]
 fn print_usage() {
     println!("gnostr blossom-tui — Terminal UI for Blossom blob storage\n");
     println!("USAGE:");
