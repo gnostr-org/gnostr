@@ -187,11 +187,25 @@ pub async fn generate_git_note_event_with_pow(
         u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
     );
 
-    EventBuilder::new(Kind::TextNote, note.message.clone())
-        .tags(git_note_tags(note)?)
-        .custom_created_at(created_at)
-        .to_pow_event(keys, difficulty)
-        .context("failed to sign pow git note event")
+    let base_tags = git_note_tags(note)?;
+    let mut nonce: u128 = 0;
+
+    loop {
+        let mut tags = base_tags.clone();
+        tags.push(Tag::POW { nonce, difficulty });
+
+        let event = EventBuilder::new(Kind::TextNote, note.message.clone())
+            .tags(tags)
+            .custom_created_at(created_at)
+            .sign_with_keys(keys)
+            .context("failed to sign pow git note event")?;
+
+        if event.id.to_hex().starts_with('0') {
+            return Ok(event);
+        }
+
+        nonce = nonce.wrapping_add(1);
+    }
 }
 
 pub const KIND_PULL_REQUEST: Kind = Kind::Custom(1618);
