@@ -6,8 +6,5 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
       libclang-dev \
       llvm-dev \
       pkg-config \
-      libssl-dev \
-      perl \
-      make \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
