@@ -405,7 +405,7 @@ regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
 regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
 trace-libgit = ["gnostr-asyncgit/trace-libgit"]
-vendored-openssl = ["gnostr-asyncgit/vendored-openssl", "openssl/vendored"]
+vendored-openssl = ["gnostr-asyncgit/vendored-openssl", "openssl/vendored", "openssl-sys/vendored"]
 vendor-openssl = ["vendored-openssl"]
 nightly = []
 coverage = []
@@ -607,6 +607,8 @@ num_cpus = { workspace = true }
 #num_cpus = "1.16.0"
 once_cell = "1.21.3"
 openssl = { version = "0.10" } # use vendored-openssl feature to enable vendored builds
+# pinning to vendored openssl, using the openssl crate feature this gets lost with new resolver
+openssl-sys = { version = "0.9", optional = true }
 pad = "0.1.6"
 parking_lot = "0.12.3"
 #once_cell = "1"
