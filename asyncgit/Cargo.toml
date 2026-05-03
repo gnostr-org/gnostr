@@ -167,7 +167,7 @@ tiny-hderive = { workspace = true }
 tiny_http = { workspace = true }
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"
-tokio-tungstenite = "0.21.0"
+tokio-tungstenite = { workspace = true }
 tokio-util = { version = "0.7.10", features = ["io"] }
 toml = "0.8.20"
 tower = "0.5"

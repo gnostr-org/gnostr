@@ -425,18 +425,7 @@ mod tests {
             );
             let event_output = match client.send_event(event.clone()).await {
                 Ok(event_id) => event_id,
-                Err(err) => {
-                    let err_msg = err.to_string();
-                    if err_msg.contains("TLS support not compiled in")
-                        || err_msg.contains("Failed to send event to any configured relay.")
-                    {
-                        println!(
-                            "matrix case publish skipped: label={label} reason={err_msg}"
-                        );
-                        return Ok(());
-                    }
-                    return Err(crate::error::Error::Generic(err_msg));
-                }
+                Err(err) => return Err(crate::error::Error::Generic(err.to_string())),
             };
             println!(
                 "matrix case event published: label={label} event_id={}",

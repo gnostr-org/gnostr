@@ -7049,7 +7049,7 @@ dependencies = [
  "tiny_http",
  "tokio",
  "tokio-stream",
- "tokio-tungstenite 0.21.0",
+ "tokio-tungstenite 0.26.2",
  "tokio-util",
  "toml",
  "tower 0.5.3",
