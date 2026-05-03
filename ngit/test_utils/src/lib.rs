@@ -1152,13 +1152,13 @@ where
     cmd.env("RUST_BACKTRACE", "0");
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
+    Ok(rexpect::session::spawn_with_options(
         cmd,
         Options {
             timeout_ms: Some(timeout_ms),
             strip_ansi_escape_codes: true,
         },
-    )
+    )?)
 }
 
 #[cfg(windows)]
@@ -1188,13 +1188,13 @@ where
     cmd.current_dir(dir);
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
+    Ok(rexpect::session::spawn_with_options(
         cmd,
         Options {
             timeout_ms: Some(timeout_ms),
             strip_ansi_escape_codes: true,
         },
-    )
+    )?)
 }
 
 #[cfg(windows)]
@@ -1225,13 +1225,13 @@ pub fn remote_helper_rexpect_with_from_dir(
     cmd.current_dir(dir);
     cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
+    Ok(rexpect::session::spawn_with_options(
         cmd,
         Options {
             timeout_ms: Some(timeout_ms),
             strip_ansi_escape_codes: true,
         },
-    )
+    )?)
 }
 
 #[cfg(windows)]
@@ -1287,14 +1287,13 @@ where
     cmd.current_dir(dir);
     cmd.args(args);
     // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    rexpect::session::spawn_with_options(
+    Ok(rexpect::session::spawn_with_options(
         cmd,
         Options {
             timeout_ms: Some(timeout_ms),
             strip_ansi_escape_codes: true,
         },
-    )
-    .context("spawning failed")
+    )?)
 }
 
 #[cfg(windows)]
