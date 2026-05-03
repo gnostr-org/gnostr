@@ -65,3 +65,4 @@ gnostr <subcommand> --help
 
 - Keep the command descriptions aligned with the live CLI output.
 - Do not rely on stale subcommand names when a help run shows a different surface.
+- Drill-down docs live in `commands/<subcommand>/SKILL.md`.
