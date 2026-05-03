@@ -9,7 +9,6 @@ use git2::Oid;
 use gnostr_asyncgit::sync::CommitId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use textwrap::{wrap, Options};
 
 use gnostr_asyncgit::types::Event;
 

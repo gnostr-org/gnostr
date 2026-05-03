@@ -36,6 +36,5 @@ async fn main() {
 
 #[cfg(not(all(not(debug_assertions), feature = "nostr")))]
 fn main() {
-    // Placeholder for when the nostr feature is not enabled or in debug mode
-    println!("cargo:warning=Skipping online_relays_gps.csv download (nostr feature not enabled or debug mode)");
+    // Placeholder for when the nostr feature is not enabled or in debug mode.
 }

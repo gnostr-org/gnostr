@@ -8,15 +8,13 @@ use std::{
     sync::Arc,
 };
 
-use crate::theme::*;
-pub use crate::app::git::Content;
 pub use crate::app::git::TreeItem;
+#[allow(unused_imports)]
 use crate::app::methods::filters;
 use crate::app::{
-    git::{FileWithContent, PathDestination, TreeItem as GitTreeItem},
+    git::{FileWithContent, PathDestination},
     into_response,
-    layers::*,
-    Git, ResponseEither, *,
+    Git, ResponseEither,
 };
 
 use crate::app::methods::repo::ChildPath;

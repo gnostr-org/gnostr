@@ -3,6 +3,8 @@
 //! The presets mirror the JS app's main sections with different navigation and
 //! help-focus layouts.
 
+#![allow(dead_code)]
+
 use std::{
     collections::{BTreeMap, HashMap},
     fs,

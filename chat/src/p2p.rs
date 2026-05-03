@@ -16,10 +16,10 @@ use libp2p::{
 };
 use parking_lot::Mutex;
 use once_cell::sync::OnceCell;
-use terminal_size::{terminal_size, Height, Width};
+use terminal_size::{terminal_size, Width};
 use textwrap::{self, Options};
-use tokio::{io, select};
-use tracing::{debug, warn};
+use tokio::select;
+use tracing::debug;
 use ureq::Agent;
 
 use crate::{

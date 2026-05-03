@@ -1,3 +1,9 @@
+#![allow(dead_code)]
+
+#![allow(dead_code)]
+
+#![allow(dead_code)]
+
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     fs,

@@ -503,7 +503,7 @@ impl App {
     fn event_detail(&self) -> Paragraph<'_> {
         let event = self.current_event();
         if let Some(event) = event {
-            let mut lines = vec![
+            let lines = vec![
                 Line::from(vec![
                     Span::styled("title: ", Style::default().fg(Color::Green)),
                     Span::raw(event.title.clone()),

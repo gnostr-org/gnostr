@@ -26,6 +26,7 @@ struct FileEntry {
     real: PathBuf,
     virtual_path: PathBuf,
     bucket: String,
+    #[allow(dead_code)]
     format: String,
 }
 
