@@ -17,9 +17,62 @@ use nostr_database::NostrDatabase;
 use nostr_lmdb::NostrLMDB;
 use nostr_sdk::{Client, Event, NostrSigner, TagStandard, serde_json};
 use once_cell::sync::Lazy;
-use rexpect::session::{Options, PtySession};
 use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
+
+#[cfg(not(windows))]
+use rexpect::session::{Options, PtySession};
+
+#[cfg(windows)]
+mod rexpect_compat {
+    use anyhow::{anyhow, Result};
+
+    pub struct Options {
+        pub timeout_ms: Option<u64>,
+        pub strip_ansi_escape_codes: bool,
+    }
+
+    pub struct Process;
+
+    impl Process {
+        pub fn exit(&mut self) -> Result<()> {
+            Err(anyhow!("rexpect is not supported on Windows"))
+        }
+    }
+
+    pub struct PtySession {
+        pub process: Process,
+    }
+
+    impl PtySession {
+        pub fn send_line(&mut self, _line: &str) -> Result<()> {
+            Err(anyhow!("rexpect is not supported on Windows"))
+        }
+
+        pub fn send(&mut self, _s: &str) -> Result<()> {
+            Err(anyhow!("rexpect is not supported on Windows"))
+        }
+
+        pub fn flush(&mut self) -> Result<()> {
+            Err(anyhow!("rexpect is not supported on Windows"))
+        }
+
+        pub fn exp_string(&mut self, _message: &str) -> Result<String> {
+            Err(anyhow!("rexpect is not supported on Windows"))
+        }
+
+        pub fn exp_eof(&mut self) -> Result<String> {
+            Err(anyhow!("rexpect is not supported on Windows"))
+        }
+    }
+
+    pub fn spawn_with_options(_cmd: std::process::Command, _options: Options) -> Result<PtySession> {
+        Err(anyhow!("rexpect is not supported on Windows"))
+    }
+}
+
+#[cfg(windows)]
+use rexpect_compat::{spawn_with_options, Options, PtySession};
 
 pub mod git;
 pub mod relay;
@@ -1087,8 +1140,9 @@ fn sanatize(s: String) -> String {
         .collect::<String>()
 }
 
+#[cfg(not(windows))]
 #[allow(deprecated)]
-pub fn rexpect_with<I, S>(args: I, timeout_ms: u64) -> Result<PtySession, rexpect::error::Error>
+pub fn rexpect_with<I, S>(args: I, timeout_ms: u64) -> Result<PtySession>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<std::ffi::OsStr>,
@@ -1107,12 +1161,23 @@ where
     )
 }
 
+#[cfg(windows)]
+#[allow(deprecated)]
+pub fn rexpect_with<I, S>(_args: I, _timeout_ms: u64) -> Result<PtySession>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    Err(anyhow::anyhow!("rexpect is not supported on Windows"))
+}
+
+#[cfg(not(windows))]
 #[allow(deprecated)]
 pub fn rexpect_with_from_dir<I, S>(
     dir: &PathBuf,
     args: I,
     timeout_ms: u64,
-) -> Result<PtySession, rexpect::error::Error>
+) -> Result<PtySession>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<std::ffi::OsStr>,
@@ -1132,12 +1197,27 @@ where
     )
 }
 
+#[cfg(windows)]
+#[allow(deprecated)]
+pub fn rexpect_with_from_dir<I, S>(
+    _dir: &PathBuf,
+    _args: I,
+    _timeout_ms: u64,
+) -> Result<PtySession>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    Err(anyhow::anyhow!("rexpect is not supported on Windows"))
+}
+
+#[cfg(not(windows))]
 #[allow(deprecated)]
 pub fn remote_helper_rexpect_with_from_dir(
     dir: &PathBuf,
     nostr_remote_url: &str,
     timeout_ms: u64,
-) -> Result<PtySession, rexpect::error::Error> {
+) -> Result<PtySession> {
     let mut cmd = std::process::Command::new(assert_cmd::cargo::cargo_bin("git-remote-nostr"));
     cmd.env("NGITTEST", "TRUE");
     cmd.env("GIT_DIR", dir);
@@ -1154,6 +1234,17 @@ pub fn remote_helper_rexpect_with_from_dir(
     )
 }
 
+#[cfg(windows)]
+#[allow(deprecated)]
+pub fn remote_helper_rexpect_with_from_dir(
+    _dir: &PathBuf,
+    _nostr_remote_url: &str,
+    _timeout_ms: u64,
+) -> Result<PtySession> {
+    Err(anyhow::anyhow!("rexpect is not supported on Windows"))
+}
+
+#[cfg(not(windows))]
 #[allow(deprecated)]
 pub fn git_with_remote_helper_rexpect_with_from_dir<I, S>(
     dir: &PathBuf,
@@ -1204,6 +1295,20 @@ where
         },
     )
     .context("spawning failed")
+}
+
+#[cfg(windows)]
+#[allow(deprecated)]
+pub fn git_with_remote_helper_rexpect_with_from_dir<I, S>(
+    _dir: &PathBuf,
+    _args: I,
+    _timeout_ms: u64,
+) -> Result<PtySession>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    Err(anyhow::anyhow!("rexpect is not supported on Windows"))
 }
 
 /** copied from client.rs */
