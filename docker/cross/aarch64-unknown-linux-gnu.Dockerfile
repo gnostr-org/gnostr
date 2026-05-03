@@ -8,7 +8,9 @@ RUN dpkg --add-architecture arm64 \
       llvm-dev \
       pkg-config \
       gcc-aarch64-linux-gnu \
+      libssl-dev \
       libssl-dev:arm64 \
+      zlib1g-dev \
       zlib1g-dev:arm64 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
