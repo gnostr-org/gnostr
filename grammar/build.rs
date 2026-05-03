@@ -228,7 +228,10 @@ static MACOS_BLACKLISTED: &[&str] = &["git_rebase", "gitattributes", "qmljs", "x
 static MUSL_BLACKLISTED: &[&str] = &[];
 
 /// Grammars that fail to compile on Windows targets.
-static WINDOWS_BLACKLISTED: &[&str] = &[];
+static WINDOWS_BLACKLISTED: &[&str] = &[
+    // tree_sitter_hcl has unresolved externals on Windows
+    "hcl",
+];
 
 /// Returns true if the grammar should be skipped for the current build target.
 fn is_blacklisted(name: &str) -> bool {
