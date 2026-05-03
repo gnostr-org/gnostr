@@ -20,11 +20,11 @@ path = "src/lib.rs"
 anyhow = "1.0.98"
 clap = { version = "4.5.41", features = ["derive"] }
 futures = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947794.738830", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947794.738999", default-features = false, features = [
   "tui",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "1875.947794.738830" }
-gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "1875.947794.738830" }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "1875.947794.738999" }
+gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "1875.947794.738999" }
 git2 = "0.20.2"
 hostname = "0.3.1"
 libp2p = { version = "0.54.1", features = [
