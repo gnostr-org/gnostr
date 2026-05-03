@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use anyhow::Context;
 use sha2::{Digest, Sha256};
@@ -19,6 +20,7 @@ fn run() -> anyhow::Result<()> {
         PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
     verify_nip44_vectors(&manifest_dir).context("Failed to verify NIP-44 test vectors")?;
     export_filehash_envs(&manifest_dir).context("Failed to export filehash build envs")?;
+    export_git_envs(&manifest_dir).context("Failed to export git build envs")?;
 
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
@@ -36,6 +38,32 @@ fn export_filehash_envs(manifest_dir: &Path) -> anyhow::Result<()> {
     println!("cargo:rustc-env=BUILD_HASH={}", hash_file(&build_rs)?);
     println!("cargo:rustc-env=CARGO_TOML_HASH={}", hash_file(&cargo_toml)?);
     println!("cargo:rustc-env=LIB_HASH={}", hash_file(&lib_mod)?);
+    Ok(())
+}
+
+fn export_git_envs(manifest_dir: &Path) -> anyhow::Result<()> {
+    println!("cargo:rerun-if-changed={}", manifest_dir.join(".git/HEAD").display());
+
+    let git_commit_hash = Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .current_dir(manifest_dir)
+        .output()
+        .ok()
+        .and_then(|output| output.status.success().then_some(output.stdout))
+        .map(|stdout| String::from_utf8_lossy(&stdout).trim().to_string())
+        .unwrap_or_default();
+
+    let git_branch = Command::new("git")
+        .args(["branch", "--show-current"])
+        .current_dir(manifest_dir)
+        .output()
+        .ok()
+        .and_then(|output| output.status.success().then_some(output.stdout))
+        .map(|stdout| String::from_utf8_lossy(&stdout).trim().to_string())
+        .unwrap_or_default();
+
+    println!("cargo:rustc-env=GIT_COMMIT_HASH={}", git_commit_hash);
+    println!("cargo:rustc-env=GIT_BRANCH={}", git_branch);
     Ok(())
 }
 
