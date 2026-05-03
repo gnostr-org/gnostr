@@ -3,7 +3,16 @@
 //! This macro allows you to compute the SHA-256 hash of a file at compile time,
 //! embedding the resulting hash string directly into your Rust executable.
 
+use csv::ReaderBuilder;
+use url::Url;
+
 pub use gnostr_filehash_core::get_file_hash;
+pub use gnostr_filehash_core::get_git_tracked_files;
+pub use gnostr_filehash_core::should_remove_relay;
+
+use crate::types::{Client, Error, EventBuilder, EventKind, Id, Keys, Options, Tag};
+
+const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("core/src/online_relays_gps.csv");
 
 /// The SHA-256 hash of this crate's `build.rs` at the time of compilation.
 pub const BUILD_HASH: &str = env!("BUILD_HASH");
@@ -27,6 +36,64 @@ pub const GIT_COMMIT_HASH: &str = env!("GIT_COMMIT_HASH");
 #[cfg(feature = "nostr")]
 /// The git branch of the repository at the time of compilation.
 pub const GIT_BRANCH: &str = env!("GIT_BRANCH");
+
+pub fn get_relay_urls() -> Vec<String> {
+    let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
+    let mut rdr = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(content.as_bytes());
+
+    rdr.records()
+        .filter_map(|result| match result {
+            Ok(record) => record.get(0).and_then(|url_str| {
+                let full_url_str = if url_str.contains("://") {
+                    url_str.to_string()
+                } else {
+                    format!("wss://{}", url_str)
+                };
+                match Url::parse(&full_url_str) {
+                    Ok(url) if url.scheme() == "wss" => Some(url.to_string()),
+                    _ => {
+                        eprintln!("Warning: Invalid or unsupported relay URL scheme: {}", full_url_str);
+                        None
+                    }
+                }
+            }),
+            Err(e) => {
+                eprintln!("Error reading CSV record: {}", e);
+                None
+            }
+        })
+        .collect()
+}
+
+pub async fn publish_patch_event(
+    keys: &Keys,
+    relay_urls: &[String],
+    d_tag_value: &str,
+    commit_id: &str,
+    patch_content: &str,
+    build_manifest_event_id: Option<&Id>,
+) -> Result<Id, Error> {
+    let mut client = Client::new(keys, Options::new());
+    client.add_relays(relay_urls.to_vec()).await?;
+    client.connect().await;
+
+    let mut tags = vec![
+        Tag::new_identifier(d_tag_value.to_string()),
+        Tag::new_tag("commit", commit_id),
+    ];
+
+    if let Some(event_id) = build_manifest_event_id {
+        tags.push(Tag::new_event(*event_id, None, None));
+    }
+
+    let event = EventBuilder::new(EventKind::Patches, patch_content.to_string(), tags)
+        .to_event(&keys.secret_key()?)?;
+
+    let event_id = client.send_event(event).await?;
+    Ok(event_id)
+}
 
 #[cfg(test)]
 mod tests {

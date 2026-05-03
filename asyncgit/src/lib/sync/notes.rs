@@ -251,6 +251,8 @@ mod tests {
         path::Path,
     };
 
+    use nostr::Event as NostrEvent;
+    use nostr_sdk::{Client, Keys};
     use time::OffsetDateTime;
 
     use crate::{
@@ -334,9 +336,24 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn git_note_event_matrix_covers_commit_and_pow_variants() -> Result<()> {
-        let private_key = PrivateKey::mock();
+    #[tokio::test]
+    #[serial]
+    async fn git_note_event_matrix_covers_commit_and_pow_variants() -> Result<()> {
+        let private_key = PrivateKey::generate();
+        let client_keys = Keys::generate();
+        let relay_urls = vec![
+            "wss://relay.damus.io".to_string(),
+            "wss://nos.lol".to_string(),
+        ];
+        let mut client = Client::new(&client_keys);
+        for relay_url in &relay_urls {
+            client
+                .add_relay(relay_url)
+                .await
+                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        }
+        client.connect().await;
+
         let cases = [
             ("plain-commit/plain-event", false, false),
             ("plain-commit/pow-event", false, true),
@@ -405,6 +422,24 @@ mod tests {
             println!(
                 "matrix case event json: {}",
                 serde_json::to_string_pretty(&event).expect("serialize matrix event")
+            );
+            let live_event = NostrEvent::from_json(
+                &serde_json::to_string(&event).expect("serialize matrix event"),
+            )
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            let event_output = client
+                .send_event(&live_event)
+                .await
+                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            println!(
+                "matrix case event published: label={label} event_id={} successes={:?} failures={:?}",
+                event_output.val,
+                event_output.success,
+                event_output.failed
+            );
+            assert!(
+                !event_output.success.is_empty(),
+                "matrix case {label} was not accepted by any relay"
             );
 
             assert_eq!(event.kind, EventKind::TextNote);

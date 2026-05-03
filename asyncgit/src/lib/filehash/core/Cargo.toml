@@ -65,8 +65,8 @@ env_logger = { workspace = true }
 frost-secp256k1-tr = "3.0.0-rc.0"
 hex = "0.4.2"
 nostr = "0.44.2"
-## remove nostr-sdk deps
-## and use gnostr-asyncgit nostr impls
+## Live publish helpers still use nostr-sdk here; asyncgit's PoW matrix keeps
+## nostr-sdk usage in test code only.
 ## nostr-sdk = { version = "0.44.0", optional = true }
 serde_json = "1.0"
 serial_test = { version = "3.4.0", features = ["test_logging"] }
