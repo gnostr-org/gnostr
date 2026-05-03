@@ -1,6 +1,6 @@
 use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use axum::{
     body::Body,
     http::{self, HeaderValue},
@@ -46,6 +46,7 @@ use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
 
+#[cfg(unix)]
 async fn run_as_service() -> Result<(), anyhow::Error> {
     info!("Starting gnostr-gnit in daemon mode...");
 
@@ -78,7 +79,7 @@ async fn run_as_service() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(unix)]
 fn build_daemon_args() -> Vec<String> {
     let mut daemon_args = Vec::new();
 
