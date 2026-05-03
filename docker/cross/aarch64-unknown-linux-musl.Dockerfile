@@ -6,5 +6,6 @@ RUN apt-get update \
       libclang-dev \
       llvm-dev \
       pkg-config \
+      libssl-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
