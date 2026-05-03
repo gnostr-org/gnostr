@@ -1,9 +1,7 @@
 use std::collections::HashSet;
-use std::fs::{self, File};
-use std::io::Write;
+use std::fs;
 use std::path::PathBuf;
 use anyhow::Result;
-use directories::ProjectDirs;
 use reqwest::Client;
 use tokio;
 use sha2::{Sha256, Digest};
@@ -91,18 +89,14 @@ async fn main() -> Result<()> {
         }
     }
 
-    let config_dir = ProjectDirs::from("org", "gnostr", "gnostr/crawler")
-        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
-        .unwrap_or_else(|| PathBuf::from("."));
-    fs::create_dir_all(&config_dir)?;
-
-    // Write combined and deduplicated relays to the user config directory.
-    let generated_relays_path = config_dir.join("relays.yaml");
-    let mut file = File::create(&generated_relays_path)?;
-
-    for relay_url in &all_relays {
-        writeln!(file, "{}", relay_url)?;
+    let generated_relays_path = out_dir.join("relays.yaml");
+    let mut sorted_relays: Vec<_> = all_relays.into_iter().collect();
+    sorted_relays.sort_unstable();
+    let mut relays_content = sorted_relays.join("\n");
+    if !relays_content.is_empty() {
+        relays_content.push('\n');
     }
+    fs::write(&generated_relays_path, relays_content)?;
 
     // Tell Cargo the path to the generated file
     // Tell Cargo to rerun if build.rs itself changes
