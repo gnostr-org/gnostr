@@ -99,7 +99,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
         .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
-        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
+        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap())
+        .add_directive("tokio_tungstenite=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(

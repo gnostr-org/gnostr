@@ -54,10 +54,11 @@ async fn main() -> anyhow::Result<()> {
         LevelFilter::OFF
     };
 
-    let filter = EnvFilter::builder()
+    let mut filter = EnvFilter::builder()
         .with_default_directive(base_level.into())
         .from_env() // This reads RUST_LOG and builds the filter
         .expect("Failed to build EnvFilter from environment");
+    filter = filter.add_directive("tokio_tungstenite=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
