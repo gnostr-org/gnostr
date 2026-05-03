@@ -44,6 +44,15 @@ Options:
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --help               Show this help
+
+Notes:
+  This runs the full asyncgit suite with --features nostr so event-producing
+  tests, including the PoW matrix, are compiled and exercised.
+
+Examples:
+  ./scripts/gnostr-asyncgit-tests.sh --nocapture
+  ./scripts/gnostr-asyncgit-tests.sh --ignored --nocapture
+  cargo test -p gnostr-asyncgit --all-targets --features nostr -- --nocapture
 EOF
 }
 

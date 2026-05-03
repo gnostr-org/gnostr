@@ -41,6 +41,10 @@ Examples:
   ./scripts/gnostr-tests.sh --ignored
   ./scripts/gnostr-tests.sh --workspace --ignored
   ./scripts/gnostr-tests.sh --test blossom_remote_push_list_and_fetch_round_trip -- --nocapture
+
+Related runners:
+  ./scripts/gnostr-asyncgit-tests.sh --nocapture
+  ./scripts/gnostr-ngit-tests.sh --notes --nocapture
 EOF
 }
 

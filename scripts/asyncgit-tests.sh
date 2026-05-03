@@ -46,6 +46,14 @@ Options:
   --test-threads VALUE Pass --test-threads VALUE to the test harness
   --test-threads=VALUE Pass --test-threads VALUE to the test harness
   --help               Show this help
+
+Notes:
+  This helper runs the asyncgit library smoke slice used by the full runner.
+  Use ./scripts/gnostr-asyncgit-tests.sh --nocapture for the full event suite.
+
+Examples:
+  ./scripts/asyncgit-tests.sh --nocapture
+  ./scripts/asyncgit-tests.sh --ignored --nocapture
 EOF
 }
 

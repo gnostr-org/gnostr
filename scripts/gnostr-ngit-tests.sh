@@ -22,6 +22,30 @@ RELEASE=false
 NOCAPTURE=true
 TEST_FLAGS=()
 
+usage() {
+  cat <<'EOF'
+Usage: gnostr-ngit-tests.sh [--all] [--notes] [--ignored] [--nocapture] [--capture] [--all-features] [--no-default-features] [--release] [--features VALUE]
+
+Modes:
+  --notes          Run the notes-focused ngit slice (default)
+  --all            Run the full ngit suite
+
+Options:
+  --features VALUE        Add a Cargo feature (repeatable)
+  --all-features          Run with all features enabled
+  --no-default-features   Run with default features disabled
+  --ignored               Run ignored tests
+  --nocapture             Print test output
+  --capture               Silence test output
+  --release               Run tests in release mode
+  --help                  Show this help
+
+Examples:
+  ./scripts/gnostr-ngit-tests.sh --notes --nocapture
+  ./scripts/gnostr-ngit-tests.sh --all --nocapture
+EOF
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --all)
@@ -47,6 +71,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --release)
       RELEASE=true
+      ;;
+    --help|-h)
+      usage
+      exit 0
       ;;
     --features)
       shift
