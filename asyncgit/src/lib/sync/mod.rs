@@ -271,6 +271,10 @@ mod tests {
             .parse_default_env()
             .is_test(true)
             .filter_module("ureq", log::LevelFilter::Off)
+            .filter_module("serial_test", log::LevelFilter::Off)
+            .filter_module("mio", log::LevelFilter::Off)
+            .filter_module("tungstenite", log::LevelFilter::Off)
+            .filter_module("tokio_tungstenite", log::LevelFilter::Off)
             .filter_module("rustls", log::LevelFilter::Warn)
             .filter_level(log::LevelFilter::Trace)
             .try_init();
