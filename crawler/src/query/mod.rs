@@ -138,18 +138,20 @@ pub async fn send(
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     //println!("query_string=\n{}\n", query_string);
     //println!("relay_url=\nsrc/lib.rs:139:{:?}\n", relay_url);
-    //println!("limit=\n{}\n", limit.unwrap());
     //log::info!("query_string=\n{query_string}\n");
     //log::debug!("relay_url:\n{relay_url:?}\n");
-    //log::info!("\n{}\n", limit.unwrap());
-    let (ws_stream, _) = connect_async(relay_url[0].as_str()).await?;
+    let relay_url = relay_url.first().ok_or_else(|| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, "relay_url must not be empty")
+    })?;
+    let limit = limit.unwrap_or(i32::MAX);
+    let (ws_stream, _) = connect_async(relay_url.as_str()).await?;
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string.into())).await?;
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
     while let Some(message) = read.next().await {
         let data = message?;
-        if count >= limit.unwrap() {
+        if count >= limit {
             //std::process::exit(0);
             return Ok(vec_result);
         }
