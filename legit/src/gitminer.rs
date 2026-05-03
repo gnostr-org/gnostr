@@ -6,8 +6,10 @@ use std::sync::mpsc::channel;
 use std::thread;
 // use git2::*;
 use super::worker::Worker;
-use gnostr_filehash_core::{get_relay_urls, publish_patch_event};
-use nostr_sdk::Keys;
+use gnostr_asyncgit::{
+    filehash::{get_relay_urls, publish_patch_event},
+    types::Keys,
+};
 use time_0_3::OffsetDateTime;
 //TODO use gnostr_asyncgit::types for event creation and injection during the mining loop
 #[derive(Clone, Debug)]
@@ -188,7 +190,8 @@ impl Gitminer {
     fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
         info!("Preparing NIP-34 patch event for mined commit {}", head);
         let padded_head = format!("{:0>64}", head);
-        let keys = Keys::parse(&padded_head).map_err(|_| "Failed to derive Nostr keys from mined commit")?;
+        let keys = Keys::parse(padded_head.clone())
+            .ok_or("Failed to derive Nostr keys from mined commit")?;
         let relay_urls = get_relay_urls();
         let patch_content = self.patch_content_for_commit(head)?;
         info!(
@@ -224,7 +227,9 @@ impl Gitminer {
                     &patch_content,
                     None,
                 )
-                .await;
+                .await
+                .map_err(|err| error!("Failed to publish NIP-34 patch event: {}", err))
+                .ok();
                 info!("Finished publishing NIP-34 patch event for {}", head_hash);
             });
         })

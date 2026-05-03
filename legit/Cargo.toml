@@ -30,8 +30,7 @@ clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 env_logger = "0.10.0"
 git2 = "^0.20"
 log = "0.4"
-gnostr_filehash_core = { package = "gnostr_filehash_core", path = "../asyncgit/src/lib/filehash/core", features = ["nostr"] }
-nostr-sdk = { workspace = true }
+gnostr_asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit" }
 rust-crypto = "^0.2"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 time-0-3 = { package = "time", version = "0.3.34", features = [
