@@ -93,7 +93,7 @@ impl HookPaths {
         let hook = self.hook.clone();
 
         let arg_str = format!("{} {}", hook.display(), args.join(" "));
-        let bash_args = vec!["-c".to_string(), arg_str];
+        let bash_args = vec!["-l".to_string(), "-c".to_string(), arg_str];
 
         log::trace!("run hook '{}' in '{}'", hook.display(), self.pwd.display());
         let git_bash = find_bash_executable().unwrap_or_else(|| PathBuf::from("bash"));
