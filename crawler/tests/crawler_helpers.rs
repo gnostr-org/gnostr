@@ -276,15 +276,23 @@ async fn publish_and_query_git_note_case(
 
     let mut found = None;
     for attempt in 0..5 {
+        eprintln!(
+            "query attempt {attempt} start for {label}: {} relays",
+            query_relays.len()
+        );
         for relay in &query_relays {
+            eprintln!("query attempt {attempt} for {label} via {relay}: send");
             match crawler::send(query.clone(), vec![relay.clone()], Some(1)).await {
                 Ok(messages) => {
                     if let Some(message) = messages
                         .into_iter()
                         .find(|message| relay_response_contains_event_id(message, &event_id))
                     {
+                        eprintln!("query attempt {attempt} for {label} via {relay}: hit");
                         found = Some(message);
                         break;
+                    } else {
+                        eprintln!("query attempt {attempt} for {label} via {relay}: empty");
                     }
                 }
                 Err(err) => {
@@ -308,6 +316,8 @@ async fn publish_and_query_git_note_case(
         );
         return Ok(());
     }
+
+    eprintln!("best effort query matched: event {event_id} returned by crawler query relay");
 
     Ok(())
 }
