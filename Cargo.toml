@@ -395,7 +395,7 @@ path = "src/bin/blossom-filetree.rs"
 required-features = ["blossom-tui"]
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit"]
+default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom", "blossom-tui"]
 long_tests = []
 expensive_tests = ["long_tests"]                     # Backward-compatible alias.
 blossom = []
