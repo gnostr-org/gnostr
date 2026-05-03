@@ -977,10 +977,20 @@ pub async fn publish_pr_update_event(
 
     match client.send_event_builder(event_builder).await {
         Ok(event_id) => {
-            println!("cargo:warning=Published NIP-34 PR Update event for PR {} (raw: {:?}). Event ID (raw): {:?}, Event ID (bech32): {}", pr_event_id.to_bech32().unwrap(), pr_event_id, event_id, event_id.to_bech32().unwrap());
+            log::info!(
+                "Published NIP-34 PR Update event for PR {} (raw: {:?}). Event ID (raw): {:?}, Event ID (bech32): {}",
+                pr_event_id.to_bech32().unwrap(),
+                pr_event_id,
+                event_id,
+                event_id.to_bech32().unwrap()
+            );
         }
         Err(e) => {
-            println!("cargo:warning=Failed to publish NIP-34 PR Update event for PR {}: {}", pr_event_id.to_string(), e);
+            log::warn!(
+                "Failed to publish NIP-34 PR Update event for PR {}: {}",
+                pr_event_id.to_string(),
+                e
+            );
         }
     }
 }
@@ -1124,6 +1134,20 @@ pub fn generate_frost_keys(
     }
 #[cfg(test)]
 mod tests {
+    use std::sync::Once;
+
+    fn init_test_log() {
+        static INIT: Once = Once::new();
+
+        INIT.call_once(|| {
+            let _ = env_logger::builder()
+                .is_test(true)
+                .parse_default_env()
+                .filter_level(log::LevelFilter::Warn)
+                .try_init();
+        });
+    }
+
     #[cfg(feature = "nostr")]
     use serial_test::serial;
     #[cfg(feature = "nostr")]
@@ -1309,6 +1333,7 @@ mod tests {
     #[cfg(feature = "nostr")]
     #[tokio::test]
     async fn test_publish_patch_event_tr() {
+        init_test_log();
         use super::{get_relay_urls, DEFAULT_PICTURE_URL, DEFAULT_BANNER_URL};
         use nostr_sdk::Keys;
 
@@ -1382,6 +1407,7 @@ mod tests {
     #[cfg(feature = "nostr")]
     #[tokio::test]
     async fn test_publish_pr_update_event_tr() {
+        init_test_log();
         use super::get_relay_urls;
         use nostr_sdk::{Keys, EventId};
         use std::str::FromStr;
@@ -1618,6 +1644,7 @@ mod tests {
     #[cfg(feature = "nostr")]
     #[tokio::test]
     async fn test_publish_patch_event() {
+        init_test_log();
         use super::get_relay_urls;
         use nostr_sdk::Keys;
 
@@ -1691,6 +1718,7 @@ mod tests {
     #[cfg(feature = "nostr")]
     #[tokio::test]
     async fn test_publish_pr_update_event() {
+        init_test_log();
         use super::get_relay_urls;
         use nostr_sdk::{Keys, EventId};
         use std::str::FromStr;
