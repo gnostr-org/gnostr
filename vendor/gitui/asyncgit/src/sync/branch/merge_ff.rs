@@ -54,7 +54,10 @@ mod test {
 	use super::*;
 	use crate::sync::{
 		remotes::{fetch, push::push_branch},
-		tests::{get_commit_ids, repo_clone, repo_init_bare, write_commit_file},
+		tests::{
+			debug_cmd_print, get_commit_ids, repo_clone,
+			repo_init_bare, write_commit_file,
+		},
 	};
 
 	#[test]
@@ -84,18 +87,10 @@ mod test {
 		.unwrap();
 
 		// clone2
-		fetch(
+		debug_cmd_print(
 			&clone2_dir.path().to_str().unwrap().into(),
-			"master",
-			None,
-			None,
-		)
-		.unwrap();
-		branch_merge_upstream_fastforward(
-			&clone2_dir.path().to_str().unwrap().into(),
-			"master",
-		)
-		.unwrap();
+			"git pull --ff",
+		);
 
 		let commit2 = write_commit_file(
 			&clone2,
