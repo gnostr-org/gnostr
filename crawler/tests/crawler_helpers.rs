@@ -4,16 +4,35 @@ use std::fs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
+use std::time::Duration;
 
 use axum::{http::StatusCode, routing::get, Router};
 use futures::{SinkExt, StreamExt};
 use git2::Signature;
+use gnostr_asyncgit::{
+    filehash::get_relay_urls,
+    sync::{
+        add_note,
+        commit::{self, mine_commit, CommitMineOptions},
+        show_note,
+        stage_add_file,
+        NoteInfo,
+        RepoPath,
+    },
+    types::{
+        generate_git_note_event, generate_git_note_event_with_pow, Client as AsyncClient,
+        EventKind, Keys as AsyncKeys, Options as AsyncOptions, PrivateKey as AsyncPrivateKey,
+    },
+    types::nip13::NIP13Event,
+};
 use gnostr_crawler as crawler;
 use gnostr_crawler::query::{build_gnostr_query, ConfigBuilder};
 use gnostr_crawler::relays::{self, Relays};
 use nostr_sdk::prelude::{Keys, ToBech32};
 use tokio::net::TcpListener;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
+use time::OffsetDateTime;
+use url::Url;
 
 static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -118,6 +137,165 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
     });
 
     format!("ws://{}", addr)
+}
+
+fn relay_response_contains_event_id(message: &str, event_id: &str) -> bool {
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(message) {
+        if let Some(array) = value.as_array() {
+            if let Some(event) = array.get(2) {
+                if event
+                    .get("id")
+                    .and_then(|id| id.as_str())
+                    .is_some_and(|id| id == event_id)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    message.contains(event_id)
+}
+
+fn leading_zero_bits(bytes: &[u8]) -> u8 {
+    let mut count = 0_u8;
+    for byte in bytes {
+        if *byte == 0 {
+            count += 8;
+            continue;
+        }
+        count += byte.leading_zeros() as u8;
+        break;
+    }
+    count
+}
+
+async fn publish_and_query_git_note_case(
+    label: &str,
+    mine_commit_flag: bool,
+    pow_event_flag: bool,
+) -> anyhow::Result<()> {
+    let repo_dir = unique_temp_dir("gnostr-crawler-pow-matrix");
+    let _repo = git2::Repository::init(&repo_dir)?;
+    let repo_path: RepoPath = repo_dir.as_os_str().to_str().unwrap().into();
+    let file_path = Path::new("matrix.txt");
+
+    fs::write(repo_dir.join(file_path), label.as_bytes())?;
+    stage_add_file(&repo_path, file_path)?;
+
+    let commit_id = if mine_commit_flag {
+        mine_commit(
+            &repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!("{label} commit")],
+                timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?
+    } else {
+        commit::commit(&repo_path, &format!("{label} commit"))?
+    };
+
+    let note_message = format!("{label} note");
+    let note_id = add_note(&repo_path, commit_id, &note_message, None, false)?;
+    let note: NoteInfo = show_note(&repo_path, commit_id, None)?.expect("note exists");
+    assert_eq!(note.note_id, note_id);
+    assert_eq!(note.annotated_id, commit_id.into());
+    assert_eq!(note.message, note_message);
+
+    let private_key = AsyncPrivateKey::generate();
+    let keys = AsyncKeys::new(private_key.clone());
+    let event = if pow_event_flag {
+        generate_git_note_event_with_pow(&note, &private_key, 4)?
+    } else {
+        generate_git_note_event(&note, &private_key)?
+    };
+
+    let relay_urls = get_relay_urls();
+    assert!(
+        !relay_urls.is_empty(),
+        "expected at least one relay URL for crawler syndication"
+    );
+
+    let publish_relays = relay_urls.iter().take(3).cloned().collect::<Vec<_>>();
+    let mut client = AsyncClient::new(&keys, AsyncOptions::new());
+    client.add_relays(publish_relays.clone()).await?;
+    let published_id = client.send_event(event.clone()).await?;
+    assert_eq!(published_id, event.id);
+
+    let query_relays = publish_relays
+        .iter()
+        .filter_map(|relay| Url::parse(relay).ok())
+        .collect::<Vec<_>>();
+    let event_id = event.id.to_string();
+    let query = build_gnostr_query(
+        None,
+        Some(event_id.as_str()),
+        Some(1),
+        None,
+        None,
+        None,
+        None,
+        Some("1"),
+        None,
+    )
+    .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+
+    let mut found = None;
+    for attempt in 0..3 {
+        for relay in &query_relays {
+            match crawler::send(query.clone(), vec![relay.clone()], Some(1)).await {
+                Ok(messages) => {
+                    if let Some(message) = messages
+                        .into_iter()
+                        .find(|message| relay_response_contains_event_id(message, &event_id))
+                    {
+                        found = Some(message);
+                        break;
+                    }
+                }
+                Err(err) => {
+                    eprintln!("query relay failed for {label} via {relay}: {err}");
+                }
+            }
+        }
+
+        if found.is_some() {
+            break;
+        }
+
+        if attempt < 2 {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+    }
+
+    assert!(
+        found.is_some(),
+        "event {event_id} was not returned by any crawler query relay"
+    );
+
+    assert_eq!(event.kind, EventKind::TextNote);
+    assert_eq!(event.content, note_message);
+    assert_eq!(
+        event.created_at,
+        gnostr_asyncgit::types::Unixtime(note.committer_time)
+    );
+    assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+    assert!(event.tags.iter().any(|tag| {
+        tag.tagname() == "commit" && tag.value() == commit_id.to_string()
+    }));
+
+    if pow_event_flag {
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+        assert!(event.nonce_data().is_some());
+        assert!(leading_zero_bits(&event.id.0) >= 4);
+    } else {
+        assert!(event.nonce_data().is_none());
+        assert!(!event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+    }
+
+    Ok(())
 }
 
 #[test]
@@ -244,6 +422,20 @@ fn stats_and_pubkeys_track_counts() {
     assert_eq!(pubkeys.add(&public_key), 0);
     assert_eq!(pubkeys.add(&public_key), 0);
     assert_eq!(pubkeys.add_str(&public_key.to_bech32().unwrap()), 0);
+}
+
+#[tokio::test]
+async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()> {
+    for (label, mine_commit_flag, pow_event_flag) in [
+        ("plain-commit/plain-event", false, false),
+        ("plain-commit/pow-event", false, true),
+        ("mined-commit/plain-event", true, false),
+        ("mined-commit/pow-event", true, true),
+    ] {
+        publish_and_query_git_note_case(label, mine_commit_flag, pow_event_flag).await?;
+    }
+
+    Ok(())
 }
 
 #[test]
