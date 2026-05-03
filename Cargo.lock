@@ -7535,6 +7535,7 @@ name = "gnostr_filehash_core"
 version = "1876.947630.6535"
 dependencies = [
  "csv",
+ "env_logger 0.11.10",
  "frost-secp256k1-tr",
  "hex",
  "log",
