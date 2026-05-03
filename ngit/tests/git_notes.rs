@@ -25,8 +25,9 @@ fn init_test_log() {
 
     INIT.call_once(|| {
         let _ = env_logger::builder()
-            .is_test(true)
             .parse_default_env()
+            .is_test(true)
+            .filter_module("ureq", log::LevelFilter::Off)
             .filter_level(log::LevelFilter::Info)
             .try_init();
     });
