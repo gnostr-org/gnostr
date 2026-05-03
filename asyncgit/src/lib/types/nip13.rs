@@ -2,11 +2,12 @@
 //! https://github.com/nostr-protocol/nips/blob/master/13.md
 
 use anyhow::Result;
+use std::convert::TryFrom;
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::types::{
     event::{Event, UnsignedEvent},
-    Id, PublicKey, Signature, Tag, Unixtime,
+    EventKind, Id, PublicKey, Signature, Tag, Unixtime,
 };
 
 /// The name of the nonce tag.
@@ -62,6 +63,7 @@ impl NIP13Event for Event {
 
 /// Generate a Proof of Work event
 pub fn generate_pow_event(
+    kind: EventKind,
     content: String,
     mut tags: Vec<Tag>, // Change to Vec<Tag>
     difficulty: u8,
@@ -76,7 +78,7 @@ pub fn generate_pow_event(
 
         let unsigned_event = UnsignedEvent::new(
             public_key,
-            1,
+            u16::try_from(u32::from(kind)).expect("event kind must fit in u16"),
             tags.iter().map(|tag| tag.0.clone()).collect(), // Convert Vec<Tag> to Vec<Vec<String>>
             content.clone(),
         );
@@ -91,7 +93,9 @@ pub fn generate_pow_event(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EventKind, Id, PublicKey, Signature, Unixtime};
+    use secp256k1::{Keypair, Secp256k1};
+
+    use crate::types::{Id, PublicKey, Signature, Unixtime};
 
     // Helper to create a dummy event for testing
     fn create_dummy_event_with_nonce(nonce_value: u64, difficulty: u8) -> Event {
@@ -179,6 +183,27 @@ mod tests {
             sig: Signature::zeroes(),
         };
         assert_eq!(event3.nonce_data(), None);
+    }
+
+    #[test]
+    fn generate_pow_event_uses_requested_kind() {
+        let secp = Secp256k1::new();
+        let private_key = SecretKey::from_slice(&[2u8; 32]).unwrap();
+        let keypair = Keypair::from_secret_key(&secp, &private_key);
+        let (public_key, _) = XOnlyPublicKey::from_keypair(&keypair);
+
+        let event = generate_pow_event(
+            EventKind::ContactList,
+            "kind-check".to_string(),
+            vec![],
+            0,
+            &public_key,
+            &private_key,
+        );
+
+        assert_eq!(event.kind, EventKind::ContactList);
+        assert_eq!(event.content, "kind-check");
+        assert_eq!(event.nonce_data(), Some((0, 0)));
     }
 
     #[test]
