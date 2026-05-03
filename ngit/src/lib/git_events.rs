@@ -18,7 +18,7 @@ use nostr::{
     nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
 };
 use nostr_sdk::{
-    Event, EventBuilder, EventId, FromBech32, Kind, NostrSigner, PublicKey, Tag, TagKind,
+    Event, EventBuilder, EventId, FromBech32, Kind, Keys, NostrSigner, PublicKey, Tag, TagKind,
     TagStandard, Timestamp, hashes::sha1::Hash as Sha1Hash,
 };
 
@@ -175,6 +175,23 @@ pub async fn generate_git_note_event(
     )
     .await
     .context("failed to sign git note event")
+}
+
+/// Build, mine, and sign a text-note event carrying git note content.
+pub async fn generate_git_note_event_with_pow(
+    note: &NoteInfo,
+    keys: &Keys,
+    difficulty: u8,
+) -> Result<Event> {
+    let created_at = Timestamp::from(
+        u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
+    );
+
+    EventBuilder::new(Kind::TextNote, note.message.clone())
+        .tags(git_note_tags(note)?)
+        .custom_created_at(created_at)
+        .to_pow_event(keys, difficulty)
+        .context("failed to sign pow git note event")
 }
 
 pub const KIND_PULL_REQUEST: Kind = Kind::Custom(1618);
