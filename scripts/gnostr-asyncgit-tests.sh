@@ -11,6 +11,8 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=warn"
+
 TEST_FLAGS=()
 TARGET_DIR=""
 TARGET_TMPDIR=false
