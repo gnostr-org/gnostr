@@ -16,6 +16,8 @@ full asyncgit suite, including the Nostr event pipeline and PoW matrix, run:
 ./scripts/gnostr-asyncgit-tests.sh --nocapture
 ```
 
+`nostr_sdk` is reserved for test-only event publishing and validation in this tree.
+
 For narrower runs:
 
 ```sh
