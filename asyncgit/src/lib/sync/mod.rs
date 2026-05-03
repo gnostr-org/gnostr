@@ -44,7 +44,7 @@ pub use branch::{
     merge_rebase::merge_upstream_rebase, rename::rename_branch, validate_branch_name,
     BranchCompare, BranchDetails, BranchInfo,
 };
-pub use commit::{amend, commit, tag_commit};
+pub use commit::{amend, commit, mine_commit, tag_commit, CommitMineOptions};
 pub use commit_details::{get_commit_details, CommitDetails, CommitMessage, CommitSignature};
 pub use commit_files::get_commit_files;
 pub use commit_filter::{
