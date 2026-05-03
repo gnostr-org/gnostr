@@ -166,6 +166,7 @@ mod tests {
     use std::{fs::File, io::Write, path::Path};
 
     use super::{get_commit_details, CommitMessage};
+    use crate::types::{EventBuilder, EventKind, Metadata};
     use crate::{
         error::Result,
         sync::{commit, stage_add_file, tests::repo_init_empty, RepoPath},
@@ -185,6 +186,18 @@ mod tests {
         let id = commit(repo_path, msg.as_str()).unwrap();
 
         let res = get_commit_details(repo_path, id).unwrap();
+        let keys = res.keys.as_ref().unwrap();
+        let mut metadata = Metadata::new();
+        metadata.name = Some("commit-details-test".to_string());
+        let metadata_event = EventBuilder::new(
+            EventKind::Metadata,
+            serde_json::to_string(&metadata).unwrap(),
+            Vec::new(),
+        )
+        .to_event(&keys.secret_key().unwrap())
+        .unwrap();
+        println!("metadata event: {metadata_event:#?}");
+        assert_eq!(metadata_event.kind, EventKind::Metadata);
 
         assert_eq!(
             res.message
