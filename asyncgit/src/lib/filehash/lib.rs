@@ -13,7 +13,10 @@ pub use gnostr_filehash_core::should_remove_relay;
 
 use crate::types::{Client, Error, EventBuilder, EventKind, Id, Keys, Options, Tag};
 
-const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("core/src/online_relays_gps.csv");
+const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/filehash/core/src/online_relays_gps.csv"
+));
 
 /// The SHA-256 hash of this crate's `build.rs` at the time of compilation.
 pub const BUILD_HASH: &str = env!("BUILD_HASH");
