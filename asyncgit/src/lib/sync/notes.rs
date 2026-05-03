@@ -458,6 +458,27 @@ mod tests {
             );
             assert_eq!(event_output, event.id);
 
+            let mut dm_recipient_private_key = crate::types::PrivateKey(
+                crate::default_gnostr_private_key(),
+                crate::types::KeySecurity::Weak,
+            );
+            let dm_recipient_pubkey = dm_recipient_private_key.public_key();
+            let dm_content = format!(
+                "matrix case replay: label={label} commit_id={commit_id} note_id={} event_id={}\n{}",
+                note.note_id,
+                event.id,
+                serde_json::to_string_pretty(&event).expect("serialize matrix event")
+            );
+            println!("matrix case dm content: {dm_content}");
+            let dm_output = client
+                .nip44_direct_message(dm_recipient_pubkey, dm_content.clone())
+                .await
+                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            println!(
+                "matrix case dm published: label={label} event_id={} recipient={}",
+                dm_output, dm_recipient_pubkey
+            );
+
             assert_eq!(event.kind, EventKind::TextNote);
             assert_eq!(event.content, note.message);
             assert_eq!(event.created_at, Unixtime(note.committer_time));
