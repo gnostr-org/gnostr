@@ -2,7 +2,9 @@ use futures::{SinkExt, StreamExt};
 use log::{debug, info};
 use serde_json::{json, Map};
 use std::io;
+use std::time::Duration;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
+use tokio::time::timeout;
 use url::Url;
 
 pub mod cli;
@@ -185,14 +187,36 @@ async fn send_to_relay(
     query_string: &str,
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let (ws_stream, _) = connect_async(relay.as_str()).await?;
+    let relay_timeout = Duration::from_secs(1);
+    let (ws_stream, _) = match timeout(relay_timeout, connect_async(relay.as_str())).await {
+        Ok(Ok(result)) => result,
+        Ok(Err(err)) => return Err(Box::new(err)),
+        Err(_) => {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::TimedOut,
+                format!("timed out connecting to relay {}", relay),
+            )));
+        }
+    };
     let (mut write, mut read) = ws_stream.split();
     write.send(Message::Text(query_string.into())).await?;
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
     let limit = limit.unwrap_or(i32::MAX);
 
-    while let Some(message) = read.next().await {
+    loop {
+        let message = match timeout(relay_timeout, read.next()).await {
+            Ok(message) => message,
+            Err(_) => {
+                debug!("Timed out waiting for relay {} response; moving on", relay);
+                break;
+            }
+        };
+
+        let Some(message) = message else {
+            break;
+        };
+
         let data = message?;
         if count >= limit {
             return Ok(vec_result);
