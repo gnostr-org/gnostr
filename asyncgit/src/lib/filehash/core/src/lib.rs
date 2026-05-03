@@ -1143,6 +1143,7 @@ mod tests {
             let _ = env_logger::builder()
                 .is_test(true)
                 .parse_default_env()
+                .filter_module("ureq", log::LevelFilter::Off)
                 .filter_level(log::LevelFilter::Warn)
                 .try_init();
         });
