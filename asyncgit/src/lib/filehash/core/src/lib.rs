@@ -153,15 +153,23 @@ pub fn write_event_json_to_file(
     let file_path = output_dir.join(filename);
     if let Some(parent) = file_path.parent() {
         if let Err(e) = fs::create_dir_all(parent) {
-            println!("cargo:warning=Failed to create parent directories for {}: {}", file_path.display(), e);
+            log::warn!(
+                "Failed to create parent directories for {}: {}",
+                file_path.display(),
+                e
+            );
             return None;
         }
     }
     if let Err(e) = fs::File::create(&file_path).and_then(|mut file| write!(file, "{}", event.as_json())) {
-        println!("cargo:warning=Failed to write event JSON to file {}: {}", file_path.display(), e);
+        log::warn!(
+            "Failed to write event JSON to file {}: {}",
+            file_path.display(),
+            e
+        );
         None
     } else {
-        println!("Successfully wrote event JSON to {}", file_path.display());
+        log::info!("Successfully wrote event JSON to {}", file_path.display());
         Some(())
     }
 }
@@ -816,10 +824,19 @@ pub async fn publish_repository_announcement_event(
 
     match client.send_event_builder(event_builder).await {
         Ok(event_id) => {
-            println!("cargo:warning=Published NIP-34 Repository Announcement for {}. Event ID (raw): {:?}, Event ID (bech32): {}", project_name, event_id, event_id.to_bech32().unwrap());
+            log::info!(
+                "Published NIP-34 Repository Announcement for {}. Event ID (raw): {:?}, Event ID (bech32): {}",
+                project_name,
+                event_id,
+                event_id.to_bech32().unwrap()
+            );
         }
         Err(e) => {
-            println!("cargo:warning=Failed to publish NIP-34 Repository Announcement for {}: {}", project_name, e);
+            log::warn!(
+                "Failed to publish NIP-34 Repository Announcement for {}: {}",
+                project_name,
+                e
+            );
         }
     }
 }
@@ -858,10 +875,19 @@ pub async fn publish_patch_event(
 
     match client.send_event_builder(event_builder).await {
         Ok(event_id) => {
-            println!("cargo:warning=\nPublished NIP-34 Patch event for commit {}.\nEvent ID (raw): {:?},\nEvent ID (bech32): {}", commit_id, event_id, event_id.to_bech32().unwrap());
+            log::info!(
+                "Published NIP-34 Patch event for commit {}. Event ID (raw): {:?}, Event ID (bech32): {}",
+                commit_id,
+                event_id,
+                event_id.to_bech32().unwrap()
+            );
         }
         Err(e) => {
-            println!("cargo:warning=Failed to publish NIP-34 Patch event for commit {}: {}", commit_id, e);
+            log::warn!(
+                "Failed to publish NIP-34 Patch event for commit {}: {}",
+                commit_id,
+                e
+            );
         }
     }
 }
