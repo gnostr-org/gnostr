@@ -13,6 +13,7 @@ use chacha20poly1305::{
     XChaCha20Poly1305,
 };
 use futures_util::{SinkExt, StreamExt};
+use futures::stream;
 use hkdf::Hkdf;
 use k256::{
     ecdsa::SigningKey,
@@ -340,7 +341,7 @@ impl Client {
 
         let relay_timeout = self.options.send_timeout.unwrap_or(Duration::from_secs(1));
 
-        let results = join_all(relay_urls.into_iter().map(|ws_url| {
+        let results = stream::iter(relay_urls.into_iter().map(|ws_url| {
             let message_json = message_json.clone();
             let event_id = event.id;
             async move {
@@ -382,6 +383,8 @@ impl Client {
                 }
             }
         }))
+        .buffer_unordered(8)
+        .collect::<Vec<bool>>()
         .await;
 
         if results.into_iter().any(|sent| sent) {
