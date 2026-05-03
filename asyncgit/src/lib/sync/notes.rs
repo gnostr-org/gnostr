@@ -355,15 +355,19 @@ mod tests {
         client.connect().await;
 
         let cases = [
-            ("plain-commit/plain-event", false, false),
-            ("plain-commit/pow-event", false, true),
-            ("mined-commit/plain-event", true, false),
-            ("mined-commit/pow-event", true, true),
+            ("plain-commit/plain-note/plain-event", false, false, false),
+            ("plain-commit/plain-note/pow-event", false, false, true),
+            ("plain-commit/mined-note/plain-event", false, true, false),
+            ("plain-commit/mined-note/pow-event", false, true, true),
+            ("mined-commit/plain-note/plain-event", true, false, false),
+            ("mined-commit/plain-note/pow-event", true, false, true),
+            ("mined-commit/mined-note/plain-event", true, true, false),
+            ("mined-commit/mined-note/pow-event", true, true, true),
         ];
 
-        for (label, mine_the_commit, pow_the_event) in cases {
+        for (label, mine_the_commit, mine_the_note, pow_the_event) in cases {
             println!(
-                "matrix case start: label={label} mine_commit={mine_the_commit} pow_event={pow_the_event}"
+                "matrix case start: label={label} mine_commit={mine_the_commit} mine_note={mine_the_note} pow_event={pow_the_event}"
             );
             let (_td, repo) = repo_init_empty()?;
             let root = repo.path().parent().unwrap();
@@ -393,17 +397,35 @@ mod tests {
                 committed
             };
 
-            let note_message = format!("{label} note");
-            let note_id = add_note(repo_path, commit_id, &note_message, None, false)?;
-            let note = show_note(repo_path, commit_id, None)?.expect("note exists");
-            println!(
-                "matrix case note created: note_id={note_id} annotated_id={} message={}",
-                note.annotated_id, note.message
-            );
+            let note_base_message = format!("{label} note");
+            let note = if mine_the_note {
+                let mut nonce = 0u32;
+                loop {
+                    let candidate_message = format!("{note_base_message} #{nonce}");
+                    let note_id = add_note(repo_path, commit_id, &candidate_message, None, true)?;
+                    let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+                    println!(
+                        "matrix case note attempt: label={label} nonce={nonce} note_id={} annotated_id={} message={}",
+                        note_id, note.annotated_id, note.message
+                    );
+                    if note.note_id.to_string().starts_with('0') {
+                        assert_eq!(note.note_id, note_id);
+                        break note;
+                    }
+                    nonce = nonce.wrapping_add(1);
+                }
+            } else {
+                let note_id = add_note(repo_path, commit_id, &note_base_message, None, false)?;
+                let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+                println!(
+                    "matrix case note created: note_id={note_id} annotated_id={} message={}",
+                    note.annotated_id, note.message
+                );
+                note
+            };
 
-            assert_eq!(note.note_id, note_id);
             assert_eq!(note.annotated_id, commit_id.into());
-            assert_eq!(note.message, note_message);
+            assert!(note.message.starts_with(&note_base_message));
 
             let event = if pow_the_event {
                 generate_git_note_event_with_pow(&note, &private_key, 4)
@@ -434,7 +456,7 @@ mod tests {
             assert_eq!(event_output, event.id);
 
             assert_eq!(event.kind, EventKind::TextNote);
-            assert_eq!(event.content, note_message);
+            assert_eq!(event.content, note.message);
             assert_eq!(event.created_at, Unixtime(note.committer_time));
             assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
             assert!(event.tags.iter().any(|tag| {
