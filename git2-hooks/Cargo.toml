@@ -14,3 +14,7 @@ keywords = ["git"]
 
 [dependencies]
 gitui_git2_hooks = { package = "git2-hooks", path = "../vendor/gitui/git2-hooks", version = "0.7.0" }
+
+[features]
+vendored-openssl = ["gitui_git2_hooks/vendored-openssl"]
+vendor-openssl = ["vendored-openssl"]
