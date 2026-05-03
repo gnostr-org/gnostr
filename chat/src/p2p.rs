@@ -400,8 +400,11 @@ pub async fn evt_loop(
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
                         swarm.behaviour_mut().autonat.add_server(peer_id, Some(multiaddr.clone()));
-                        // let m = Msg::default().set_content(format!("discovered new peer: {peer_id}"), 0).set_kind(MsgKind::System);
-                        // recv.send(ChatEvent::ShowInfoMsg(m.to_string())).await?;
+                        recv
+                            .send(ChatEvent::ShowInfoMsg(format!(
+                                "Discovered peer {peer_id} at {multiaddr}"
+                            )))
+                            .await?;
                     }
                 },
                 SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
@@ -421,6 +424,13 @@ pub async fn evt_loop(
                 }
                 SwarmEvent::Behaviour(MyBehaviourEvent::Relay(event)) => {
                     debug!("Relay event: {event:?}");
+                }
+                SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
+                    recv
+                        .send(ChatEvent::ShowInfoMsg(format!(
+                            "Connected to peer {peer_id} via {endpoint:?}"
+                        )))
+                        .await?;
                 }
                 SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
@@ -456,8 +466,11 @@ pub async fn evt_loop(
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");
-                    // let m = Msg::default().set_content(format!("Local node is listening on {address}"), 0).set_kind(MsgKind::System);
-                    // recv.send(ChatEvent::ShowInfoMsg(m.to_string())).await?;
+                    recv
+                        .send(ChatEvent::ShowInfoMsg(format!(
+                            "Local node is listening on {address}"
+                        )))
+                        .await?;
                 }
                 _ => {}
             }
