@@ -270,6 +270,7 @@ mod tests {
         let _ = env_logger::builder()
             .is_test(true)
             .filter_level(log::LevelFilter::Trace)
+            .filter_module("rustls", log::LevelFilter::Warn)
             .try_init();
     }
 
