@@ -245,6 +245,27 @@ pub fn run_notes_command(
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        fs::File,
+        io::Write,
+        path::Path,
+    };
+
+    use time::OffsetDateTime;
+
+    use crate::{
+        sync::{
+            commit::{self, mine_commit, CommitMineOptions},
+            stage_add_file,
+            tests::repo_init_empty,
+        },
+        types::{
+            generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits,
+            EventKind, PrivateKey, Unixtime,
+        },
+        types::nip13::NIP13Event,
+    };
+
     use super::*;
     use crate::sync::tests::repo_init;
 
@@ -309,6 +330,76 @@ mod tests {
         let review_notes = list_notes(repo_path, Some("refs/notes/reviews"))?;
         println!("custom notes list: {review_notes:#?}");
         assert_eq!(review_notes.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn git_note_event_matrix_covers_commit_and_pow_variants() -> Result<()> {
+        let private_key = PrivateKey::mock();
+        let cases = [
+            ("plain-commit/plain-event", false, false),
+            ("plain-commit/pow-event", false, true),
+            ("mined-commit/plain-event", true, false),
+            ("mined-commit/pow-event", true, true),
+        ];
+
+        for (label, mine_the_commit, pow_the_event) in cases {
+            let (_td, repo) = repo_init_empty()?;
+            let root = repo.path().parent().unwrap();
+            let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+            let repo_path: &RepoPath = &repo_path_owned;
+            let file_path = Path::new("matrix.txt");
+            File::create(root.join(file_path))?.write_all(label.as_bytes())?;
+            stage_add_file(repo_path, file_path)?;
+
+            let commit_id = if mine_the_commit {
+                mine_commit(
+                    repo_path,
+                    CommitMineOptions {
+                        threads: 1,
+                        target: "0".to_string(),
+                        message: vec![format!("{label} commit")],
+                        timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+                    },
+                )?
+            } else {
+                commit::commit(repo_path, &format!("{label} commit"))?
+            };
+
+            let note_message = format!("{label} note");
+            let note_id = add_note(repo_path, commit_id, &note_message, None, false)?;
+            let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+
+            assert_eq!(note.note_id, note_id);
+            assert_eq!(note.annotated_id, commit_id.into());
+            assert_eq!(note.message, note_message);
+
+            let event = if pow_the_event {
+                generate_git_note_event_with_pow(&note, &private_key, 4)
+                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?
+            } else {
+                generate_git_note_event(&note, &private_key)
+                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?
+            };
+
+            assert_eq!(event.kind, EventKind::TextNote);
+            assert_eq!(event.content, note_message);
+            assert_eq!(event.created_at, Unixtime(note.committer_time));
+            assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+            assert!(event.tags.iter().any(|tag| {
+                tag.tagname() == "commit" && tag.value() == commit_id.to_string()
+            }));
+
+            if pow_the_event {
+                assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+                assert!(event.nonce_data().is_some());
+                assert!(get_leading_zero_bits(&event.id.0) >= 4);
+            } else {
+                assert!(event.nonce_data().is_none());
+                assert!(!event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+            }
+        }
 
         Ok(())
     }
