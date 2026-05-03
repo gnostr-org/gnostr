@@ -268,9 +268,11 @@ mod tests {
     // init log
     fn init_log() {
         let _ = env_logger::builder()
+            .parse_default_env()
             .is_test(true)
-            .filter_level(log::LevelFilter::Trace)
+            .filter_module("ureq", log::LevelFilter::Off)
             .filter_module("rustls", log::LevelFilter::Warn)
+            .filter_level(log::LevelFilter::Trace)
             .try_init();
     }
 
