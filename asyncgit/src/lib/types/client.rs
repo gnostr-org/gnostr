@@ -29,7 +29,8 @@ use secp256k1::{
 }; // Import secp256k1 types for ECDH and Parity
 use serde_json::json;
 use sha2::Sha256;
-use tokio::{net::TcpStream, sync::mpsc};
+use futures::future::join_all;
+use tokio::{net::TcpStream, sync::mpsc, time::timeout};
 use tokio_tungstenite::{
     connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
 };
@@ -331,40 +332,59 @@ impl Client {
         let message_json =
             serde_json::to_string(&client_message).map_err(|e| Error::Custom(e.into()))?;
 
-        let mut success = false;
+        let relay_urls: Vec<String> = self
+            .relays
+            .iter()
+            .map(|relay_url| relay_url.as_str().to_string())
+            .collect();
 
-        // REAL IMPLEMENTATION: Connect to relays and send event
-        for relay_url in self.relays.iter() {
-            let ws_url = relay_url.as_str().to_string();
-            info!("Connecting to relay: {}", ws_url);
+        let relay_timeout = self.options.send_timeout.unwrap_or(Duration::from_secs(1));
 
-            match connect_async(&ws_url).await {
-                Ok((ws_stream, _)) => {
-                    let (mut ws_write, _) = ws_stream.split();
+        let results = join_all(relay_urls.into_iter().map(|ws_url| {
+            let message_json = message_json.clone();
+            let event_id = event.id;
+            async move {
+                info!("Connecting to relay: {}", ws_url);
 
-                    // Send EVENT message
-                    if let Err(e) = ws_write
-                        .send(WsMessage::Text(message_json.clone().into()))
-                        .await
-                    {
-                        warn!("Failed to send event to {}: {}", relay_url, e);
-                        // Do not set success to true, continue to next relay
-                    } else {
-                        info!("Event {} sent to relay {}", event.id, relay_url);
-                        success = true; // Event sent successfully to at least one relay
+                match timeout(relay_timeout, async {
+                    match connect_async(&ws_url).await {
+                        Ok((ws_stream, _)) => {
+                            let (mut ws_write, _) = ws_stream.split();
+
+                            if let Err(e) = ws_write
+                                .send(WsMessage::Text(message_json.clone().into()))
+                                .await
+                            {
+                                warn!("Failed to send event to {}: {}", ws_url, e);
+                                false
+                            } else {
+                                info!("Event {} sent to relay {}", event_id, ws_url);
+                                true
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Failed to connect to relay {}: {}", ws_url, e);
+                            false
+                        }
                     }
-
-                    // Keep connection open briefly for response
-                    tokio::time::sleep(Duration::from_secs(2)).await;
-                }
-                Err(e) => {
-                    warn!("Failed to connect to relay {}: {}", relay_url, e);
-                    // Do not set success to true, continue to next relay
+                })
+                .await
+                {
+                    Ok(sent) => sent,
+                    Err(_) => {
+                        warn!(
+                            "Timed out sending event to relay {} after {}s",
+                            ws_url,
+                            relay_timeout.as_secs_f32()
+                        );
+                        false
+                    }
                 }
             }
-        }
+        }))
+        .await;
 
-        if success {
+        if results.into_iter().any(|sent| sent) {
             Ok(event.id)
         } else {
             Err(Error::Custom(

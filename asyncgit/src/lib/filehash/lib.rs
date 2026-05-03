@@ -3,6 +3,8 @@
 //! This macro allows you to compute the SHA-256 hash of a file at compile time,
 //! embedding the resulting hash string directly into your Rust executable.
 
+use std::time::Duration;
+
 use url::Url;
 
 pub use gnostr_filehash_core::get_file_hash;
@@ -70,7 +72,7 @@ pub async fn publish_patch_event(
     patch_content: &str,
     build_manifest_event_id: Option<&Id>,
 ) -> Result<Id, Error> {
-    let mut client = Client::new(keys, Options::new());
+    let mut client = Client::new(keys, Options::new().send_timeout(Some(Duration::from_secs(1))));
     client.add_relays(relay_urls.to_vec()).await?;
     client.connect().await;
 
