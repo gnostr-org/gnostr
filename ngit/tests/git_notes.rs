@@ -28,6 +28,10 @@ fn init_test_log() {
             .parse_default_env()
             .is_test(true)
             .filter_module("ureq", log::LevelFilter::Off)
+            .filter_module("serial_test", log::LevelFilter::Off)
+            .filter_module("mio", log::LevelFilter::Off)
+            .filter_module("tungstenite", log::LevelFilter::Off)
+            .filter_module("tokio_tungstenite", log::LevelFilter::Off)
             .filter_level(log::LevelFilter::Info)
             .try_init();
     });
