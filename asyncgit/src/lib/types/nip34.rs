@@ -6,10 +6,16 @@ use std::{
 
 use git2::Oid;
 use serde::{Deserialize, Serialize};
+use crate::{
+    blockheight::blockheight_sync,
+    sync::{commit::padded_note_id, NoteInfo},
+    weeble::weeble_sync,
+    wobble::wobble_sync,
+};
 
 use super::{
-    Error, EventKind, EventV3, Id, NAddr, NEvent, Nip19, PreEventV3, PrivateKey, PublicKey,
-    TagV3, Unixtime, UncheckedUrl,
+    Error, EventKind, EventV3, Id, KeySigner, NAddr, NEvent, Nip19, PreEventV3, PrivateKey,
+    PublicKey, Signer, TagV3, Unixtime, UncheckedUrl,
 };
 
 /// NIP-34 repository announcement kind.
@@ -71,6 +77,82 @@ pub fn status_kinds() -> Vec<EventKind> {
         EventKind::GitStatusClosed,
         EventKind::GitStatusDraft,
     ]
+}
+
+fn git_note_event_id(commit_id: &str) -> Result<Id, Error> {
+    Id::try_from_hex_string(&padded_note_id(commit_id.to_string()))
+}
+
+fn git_note_runtime_values() -> Result<(String, f64, f64), Error> {
+    let blockheight = blockheight_sync();
+    let weeble = weeble_sync().map_err(|_| Error::InvalidOperation)?;
+    let wobble = wobble_sync().map_err(|_| Error::InvalidOperation)?;
+
+    Ok((blockheight, weeble, wobble))
+}
+
+/// Build the NIP-34 tags for a git note event.
+pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<TagV3>, Error> {
+    let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+    let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+
+    let mut tags = vec![
+        TagV3::new_event(event_id, None, Some("root".to_string())),
+        TagV3::new_tag("commit", &note.annotated_id.to_string()),
+    ];
+
+    if let Some(notes_ref) = &note.notes_ref {
+        tags.push(TagV3::new_tag("notes-ref", notes_ref));
+    }
+
+    tags.push(TagV3::new_tag("weeble", &weeble.to_string()));
+    tags.push(TagV3::new_tag("blockheight", &blockheight));
+    tags.push(TagV3::new_tag("wobble", &wobble.to_string()));
+
+    Ok(tags)
+}
+
+fn git_note_preevent(note: &NoteInfo, pubkey: PublicKey) -> Result<PreEventV3, Error> {
+    if note.committer_time < 0 {
+        return Err(Error::InvalidOperation);
+    }
+
+    Ok(PreEventV3 {
+        pubkey,
+        created_at: Unixtime(note.committer_time),
+        kind: EventKind::TextNote,
+        tags: git_note_tags(note)?,
+        content: note.message.clone(),
+    })
+}
+
+/// Build and sign a text-note event carrying git note content.
+pub fn generate_git_note_event(note: &NoteInfo, private_key: &PrivateKey) -> Result<EventV3, Error> {
+    git_note_sign(note, private_key, None)
+}
+
+/// Build, mine, and sign a text-note event carrying git note content.
+pub fn generate_git_note_event_with_pow(
+    note: &NoteInfo,
+    private_key: &PrivateKey,
+    difficulty: u8,
+) -> Result<EventV3, Error> {
+    git_note_sign(note, private_key, Some(difficulty))
+}
+
+fn git_note_sign(
+    note: &NoteInfo,
+    private_key: &PrivateKey,
+    difficulty: Option<u8>,
+) -> Result<EventV3, Error> {
+    let preevent = git_note_preevent(note, private_key.public_key())?;
+    match difficulty {
+        Some(zero_bits) if zero_bits > 0 => {
+            let signer = KeySigner::from_private_key(private_key.clone(), "", 1)?;
+            signer.sign_event_with_pow(preevent, zero_bits, None)
+        }
+        _ => EventV3::sign_with_private_key(preevent, private_key),
+    }
 }
 
 /// Return a tag value by name.
@@ -576,6 +658,9 @@ fn add_head(state: &mut HashMap<String, String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::get_leading_zero_bits;
+    use crate::types::nip13::NIP13Event;
+    use git2::Oid;
     use std::sync::Arc;
     use std::str::FromStr;
 
@@ -934,6 +1019,54 @@ mod tests {
             Some(&"89abcdef0123456789abcdef0123456789abcdef".to_string())
         );
         assert_eq!(parsed.event.kind, repo_state_kind());
+    }
+
+    fn note_fixture() -> NoteInfo {
+        NoteInfo {
+            note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
+            annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
+            notes_ref: Some("refs/notes/commits".to_string()),
+            message: "nip34:git note protocol example:deterministically linked git note".to_string(),
+            author: "randymcmillan".to_string(),
+            committer: "randymcmillan".to_string(),
+            committer_time: 1777759186,
+        }
+    }
+
+    #[test]
+    fn git_note_tags_reference_commit_and_notes_ref() {
+        let note = note_fixture();
+        let tags = git_note_tags(&note).unwrap();
+
+        assert!(tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+        assert!(tags.iter().any(|tag| tag.tagname() == "commit" && tag.value() == note.annotated_id.to_string()));
+        assert!(tags.iter().any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits"));
+        assert!(tags.iter().any(|tag| tag.tagname() == "weeble"));
+        assert!(tags.iter().any(|tag| tag.tagname() == "blockheight"));
+        assert!(tags.iter().any(|tag| tag.tagname() == "wobble"));
+    }
+
+    #[test]
+    fn generate_git_note_event_uses_the_note_message() {
+        let note = note_fixture();
+        let private_key = PrivateKey::mock();
+        let event = generate_git_note_event(&note, &private_key).unwrap();
+
+        assert_eq!(event.kind, EventKind::TextNote);
+        assert_eq!(event.content, note.message);
+        assert_eq!(event.created_at, Unixtime(note.committer_time));
+    }
+
+    #[test]
+    fn generate_git_note_event_with_pow_adds_nonce() {
+        let note = note_fixture();
+        let private_key = PrivateKey::mock();
+        let event = generate_git_note_event_with_pow(&note, &private_key, 4).unwrap();
+
+        assert_eq!(event.kind, EventKind::TextNote);
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+        assert!(event.nonce_data().is_some());
+        assert!(get_leading_zero_bits(&event.id.0) >= 4);
     }
 
     #[test]
