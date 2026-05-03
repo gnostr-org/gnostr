@@ -233,6 +233,10 @@ async fn publish_and_query_git_note_case(
     client.add_relays(publish_relays.clone()).await?;
     let published_id = client.send_event(event.clone()).await?;
     assert_eq!(published_id, event.id);
+    eprintln!(
+        "published event for {label}:\n{}",
+        serde_json::to_string_pretty(&event)?
+    );
 
     assert_eq!(event.kind, EventKind::TextNote);
     assert_eq!(event.content, note_message);
@@ -271,6 +275,7 @@ async fn publish_and_query_git_note_case(
         None,
     )
     .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+    eprintln!("query string for {label}:\n{query}");
 
     tokio::time::sleep(Duration::from_secs(2)).await;
 
@@ -289,6 +294,9 @@ async fn publish_and_query_git_note_case(
                         .find(|message| relay_response_contains_event_id(message, &event_id))
                     {
                         eprintln!("query attempt {attempt} for {label} via {relay}: hit");
+                        eprintln!(
+                            "query hit relay response for {label} via {relay}:\n{message}"
+                        );
                         found = Some(message);
                         break;
                     } else {
@@ -317,7 +325,11 @@ async fn publish_and_query_git_note_case(
         return Ok(());
     }
 
-    eprintln!("best effort query matched: event {event_id} returned by crawler query relay");
+    if let Some(message) = &found {
+        eprintln!(
+            "best effort query matched: event {event_id} returned by crawler query relay\n{message}"
+        );
+    }
 
     Ok(())
 }
