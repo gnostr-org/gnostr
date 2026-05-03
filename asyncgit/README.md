@@ -23,6 +23,8 @@ Run the full asyncgit test suite, including the Nostr event paths and PoW matrix
 ./scripts/gnostr-asyncgit-tests.sh --nocapture
 ```
 
+Note: `nostr_sdk` is only used in test code here; production asyncgit paths stay on the repo's own types.
+
 Useful variants:
 
 ```sh
