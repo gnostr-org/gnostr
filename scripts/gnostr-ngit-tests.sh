@@ -8,7 +8,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,tokio_tungstenite=off"
 
 MODE="notes"
 FEATURES=""
