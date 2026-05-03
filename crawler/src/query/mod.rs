@@ -1,5 +1,5 @@
 use futures::{SinkExt, StreamExt};
-use log::info;
+use log::{debug, info};
 use serde_json::{json, Map};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
@@ -250,7 +250,7 @@ pub fn build_gnostr_query(
         filt.insert(field.trim().to_string(), json!(value.trim()));
     }
 
-    println!("{:?}", filt);
+    debug!("filt={:?}", filt);
     let q = json!(["REQ", "gnostr-query", filt]);
     info!("q={}", q);
     info!("{}", serde_json::to_string(&q)?);
