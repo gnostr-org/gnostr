@@ -29,7 +29,7 @@ clap = { version = "4.5.41", features = [
 ] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947760.785153", default-features = false }
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947760.785297", default-features = false }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",
