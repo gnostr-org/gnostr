@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
@@ -10,7 +11,6 @@ use axum::{http::StatusCode, routing::get, Router};
 use futures::{SinkExt, StreamExt};
 use git2::Signature;
 use gnostr_asyncgit::{
-    filehash::get_relay_urls,
     sync::{
         add_note,
         commit::{self, mine_commit, CommitMineOptions},
@@ -31,7 +31,7 @@ use gnostr_crawler::relays::{self, Relays};
 use nostr_sdk::prelude::{Keys, ToBech32};
 use tokio::net::TcpListener;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
-use time::OffsetDateTime;
+use time_03::OffsetDateTime;
 use url::Url;
 
 static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -170,6 +170,16 @@ fn leading_zero_bits(bytes: &[u8]) -> u8 {
     count
 }
 
+fn matrix_relay_urls() -> Vec<String> {
+    vec![
+        "wss://nostr-kyomu-haskell.onrender.com/".to_string(),
+        "wss://nostr-relay.amethyst.name/".to_string(),
+        "wss://relay.bitcoindistrict.org/".to_string(),
+        "wss://nos.lol/".to_string(),
+        "wss://relay.damus.io/".to_string(),
+    ]
+}
+
 async fn publish_and_query_git_note_case(
     label: &str,
     mine_commit_flag: bool,
@@ -212,7 +222,7 @@ async fn publish_and_query_git_note_case(
         generate_git_note_event(&note, &private_key)?
     };
 
-    let relay_urls = get_relay_urls();
+    let relay_urls = matrix_relay_urls();
     assert!(
         !relay_urls.is_empty(),
         "expected at least one relay URL for crawler syndication"

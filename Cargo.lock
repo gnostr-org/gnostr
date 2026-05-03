@@ -7165,6 +7165,7 @@ dependencies = [
  "serde_yaml",
  "sha2 0.10.9",
  "time 0.1.45",
+ "time 0.3.47",
  "tokio",
  "tokio-tungstenite 0.26.2",
  "tower-http 0.5.2",
