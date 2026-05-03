@@ -18,6 +18,19 @@ use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
 use time::OffsetDateTime;
+use std::sync::Once;
+
+fn init_test_log() {
+    static INIT: Once = Once::new();
+
+    INIT.call_once(|| {
+        let _ = env_logger::builder()
+            .is_test(true)
+            .parse_default_env()
+            .filter_level(log::LevelFilter::Info)
+            .try_init();
+    });
+}
 
 fn seeded_keys_from_oid(oid: &Oid) -> Result<Keys> {
     Ok(Keys::parse(&format!("{:0>64}", oid))?)
@@ -57,6 +70,7 @@ fn mine_pow_commit(repo: &GitTestRepo) -> Result<String> {
 #[tokio::test]
 #[serial]
 async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
+    init_test_log();
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
     let mined_hash = mine_pow_commit(&repo)?;
@@ -119,6 +133,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
 #[tokio::test]
 #[serial]
 async fn nip34_examples_for_all_kinds() -> Result<()> {
+    init_test_log();
     let repo_ref = repo_ref_fixture()?;
     let (git_repo, repo) = repo_fixture()?;
     let head = git_repo.git_repo.head()?.peel_to_commit()?.id();

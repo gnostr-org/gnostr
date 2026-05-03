@@ -51,8 +51,11 @@ impl Worker {
 
         let mut value = 0u32;
         loop {
-            if value % 100000 == 0 {
-                debug!("[Worker {}] Current iteration value: {}", self.id, value);
+            if value % 50000 == 0 {
+                info!(
+                    "[Worker {}] Still mining; iteration value {} for target {}",
+                    self.id, value, self.target
+                );
             }
             let (raw, blob) = self.generate_blob(value, &tstamp);
             let result = self.calculate(&blob);

@@ -66,6 +66,10 @@ impl Gitminer {
 
     pub fn mine(&mut self) -> Result<String, &'static str> {
         debug!("Starting mining process with options: {:?}", self.opts);
+        info!(
+            "Mining commit in {} with target {} using {} thread(s)",
+            self.opts.repo, self.opts.target, self.opts.threads
+        );
         let (tree, parent) = match Gitminer::prepare_tree(&mut self.repo) {
             Ok((t, p)) => (t, p),
             Err(e) => {
@@ -74,6 +78,7 @@ impl Gitminer {
             }
         };
         debug!("Tree: {}, Parent: {}", tree, parent);
+        info!("Prepared tree {} and parent {}", tree, parent);
 
         let (tx, rx) = channel();
 
@@ -90,11 +95,13 @@ impl Gitminer {
             let (wtree, wparent) = (tree.clone(), parent.clone());
 
             debug!("Spawning worker {}", i);
+            info!("Spawning worker {} for target {}", i, target);
             thread::spawn(move || {
                 Worker::new(i, target, wtree, wparent, author, msg, ts, wtx).work();
             });
         }
 
+        info!("Waiting for a worker to find a valid commit hash...");
         let (_, blob, hash) = rx.recv().unwrap();
         info!("Received hash {} from a worker.", hash);
 
@@ -113,6 +120,7 @@ impl Gitminer {
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
         Gitminer::ensure_gnostr_dirs_exist(Path::new(&self.opts.repo))?;
         debug!("Writing commit for hash: {}", hash);
+        info!("Writing mined commit {}", hash);
         /* repo.blob() generates a blob, not a commit.
          * don't know if there's a way to do this with libgit2. */
         let tmpfile = format!("/tmp/{}.tmp", hash);
@@ -178,10 +186,16 @@ impl Gitminer {
     }
 
     fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
+        info!("Preparing NIP-34 patch event for mined commit {}", head);
         let padded_head = format!("{:0>64}", head);
         let keys = Keys::parse(&padded_head).map_err(|_| "Failed to derive Nostr keys from mined commit")?;
         let relay_urls = get_relay_urls();
         let patch_content = self.patch_content_for_commit(head)?;
+        info!(
+            "Fetched patch content for {} ({} bytes)",
+            head,
+            patch_content.len()
+        );
         let repo_name = Path::new(&self.opts.repo)
             .file_name()
             .and_then(|name| name.to_str())
@@ -197,6 +211,11 @@ impl Gitminer {
             let runtime = tokio::runtime::Runtime::new()
                 .expect("Failed to create async runtime");
             runtime.block_on(async move {
+                info!(
+                    "Publishing NIP-34 patch event for {} to {} relay(s)",
+                    repo_name,
+                    relay_urls.len()
+                );
                 publish_patch_event(
                     &keys,
                     &relay_urls,
@@ -206,6 +225,7 @@ impl Gitminer {
                     None,
                 )
                 .await;
+                info!("Finished publishing NIP-34 patch event for {}", head_hash);
             });
         })
         .join()
