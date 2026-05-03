@@ -392,7 +392,6 @@ required-features = ["blossom-tui"]
 [[bin]]
 name = "blossom-filetree"
 path = "src/bin/blossom-filetree.rs"
-required-features = ["blossom-tui"]
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom", "blossom-tui"]
