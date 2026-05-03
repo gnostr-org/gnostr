@@ -333,7 +333,7 @@ else
   exit 1
 fi
 
-run_cargo_test_step "asyncgit full test suite" test -p gnostr-asyncgit --all-targets
+run_cargo_test_step "asyncgit full test suite" test -p gnostr-asyncgit --all-targets --features nostr
 
 report_target_dir_size "$TARGET_DIR"
 if [[ -n "$TARGET_TREE_ROOT" ]]; then
