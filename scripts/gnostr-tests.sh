@@ -11,7 +11,11 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=warn"
+if [[ "${RUST_LOG:-}" == *trace* ]]; then
+  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=trace"
+else
+  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
+fi
 
 LIST_ONLY=false
 TEST_NAME=""
