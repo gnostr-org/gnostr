@@ -44,6 +44,7 @@ Options:
 Notes:
   This runs the full asyncgit suite with --features nostr so event-producing
   tests, including the PoW matrix, are compiled and exercised.
+  `nostr_sdk` is only used from asyncgit test code.
   ureq logging is always silenced here.
 
 Examples:

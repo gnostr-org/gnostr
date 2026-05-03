@@ -45,6 +45,7 @@ Options:
 
 Notes:
   This helper runs the asyncgit library smoke slice used by the full runner.
+  `nostr_sdk` belongs to test-only event coverage in asyncgit.
   ureq logging is always silenced here.
 
 Examples:
