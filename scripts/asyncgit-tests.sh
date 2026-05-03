@@ -11,11 +11,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if [[ "${RUST_LOG:-}" == *trace* ]]; then
-  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=trace"
-else
-  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
-fi
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
 
 TEST_FLAGS=()
 QUIET=false
@@ -49,7 +45,7 @@ Options:
 
 Notes:
   This helper runs the asyncgit library smoke slice used by the full runner.
-  Use ./scripts/gnostr-asyncgit-tests.sh --nocapture for the full event suite.
+  ureq logging is always silenced here.
 
 Examples:
   ./scripts/asyncgit-tests.sh --nocapture

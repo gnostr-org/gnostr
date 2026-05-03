@@ -8,11 +8,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if [[ "${RUST_LOG:-}" == *trace* ]]; then
-  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=trace"
-else
-  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
-fi
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
 
 MODE="notes"
 FEATURES=""

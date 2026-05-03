@@ -11,11 +11,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if [[ "${RUST_LOG:-}" == *trace* ]]; then
-  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=trace"
-else
-  export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
-fi
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off"
 
 NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
 TEST_FLAGS=()
