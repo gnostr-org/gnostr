@@ -32,6 +32,7 @@ exclude = [
   "test_screenshots/**",
   "wix/**",
   "xcode/**",
+  "vendor/gitui/**",
   "CHANGELOG.md",
   "CODECOV.md",
   "Contrapuntal_Network_Topology.md",
