@@ -15,9 +15,9 @@ nostr-lmdb = "0.44.0"
 nostr-sdk = "0.44.1"
 once_cell = "1.21.3"
 rand = "0.9"
-rexpect = { path = "../../vendor/rexpect" }
+rexpect = { path = "../../vendor/rexpect", version = "0.5.0" }
 
-simple-websockets = { path = "../../vendor/simple-websockets" }
+simple-websockets = { path = "../../vendor/simple-websockets", version = "0.1.6" }
 strip-ansi-escapes = "0.2.1"
 tokio = { version = "1.46.1", features = ["full"] }
 tungstenite = "0.28.0"
