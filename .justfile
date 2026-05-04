@@ -82,15 +82,6 @@ cargo-report:
 cargo-run:
   @make cargo-run
 
-cargo-dist:
-  @make cargo-dist
-
-cargo-dist-build:
-  @make cargo-dist-build
-
-cargo-dist-manifest:
-  @make cargo-dist-manifest
-
 cargo-git-cliff-changelog:
   @make cargo-git-cliff-changelog
 
@@ -153,3 +144,4 @@ gnostr-bot-macos:
 
 gnostr-bot-macos-intel:
   @make gnostr-bot-macos-intel
+

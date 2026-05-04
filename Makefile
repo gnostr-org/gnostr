@@ -137,9 +137,9 @@ dep-graph: 	### 	dep-graph
 
 gnostr-chat: 	## 	gnostr-chat
 	cargo b -vv -j $(NPROC) --bin gnostr
-	cargo run --bin gnostr -- chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr --oneshot "testing-1876/947084/692522" -n "1421ff611c93756cbc675b827ea48e8f3ef11c922b0046364c3953d936ef9394"
-	cargo run --bin gnostr -- chat --topic gnostr --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1875/947872/640460" -n "af9d0081b52194599da95da40beac2d1ce5a2ae2d894c6c08dca0c019277aa10"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
 	cargo  -j $(NPROC) install --bin gnostr-fetch-by-id --path .
