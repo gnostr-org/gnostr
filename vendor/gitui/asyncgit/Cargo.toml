@@ -29,8 +29,6 @@ license = "MIT"
 repository = "https://github.com/gitui-org/gitui"
 exclude = ["Cargo.toml.orig", ".cargo_vcs_info.json"]
 
-[workspace]
-
 [features]
 default = ["trace-libgit"]
 trace-libgit = []

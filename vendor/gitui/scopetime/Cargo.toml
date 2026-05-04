@@ -20,8 +20,6 @@ homepage = "https://gitui.org"
 license = "MIT"
 exclude = ["Cargo.toml.orig"]
 
-[workspace]
-
 [dependencies.log]
 version = "0.4"
 
