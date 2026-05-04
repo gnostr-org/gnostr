@@ -7366,6 +7366,7 @@ dependencies = [
  "futures",
  "futures-util",
  "gnostr-asyncgit",
+ "gnostr-crawler",
  "libp2p",
  "log",
  "rand 0.8.6",
