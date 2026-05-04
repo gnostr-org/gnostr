@@ -78,33 +78,20 @@ stage_cargo_files() {
 
 managed_manifests() {
     python3 - <<'PY'
-import json
 import os
-import subprocess
 
 root = os.path.abspath(".")
-data = json.loads(subprocess.check_output(
-    ["cargo", "metadata", "--no-deps", "--format-version", "1"],
-    text=True,
-))
-paths = {
-    pkg["manifest_path"]
-    for pkg in data["packages"]
-    if os.path.abspath(pkg["manifest_path"]).startswith(root + os.sep)
-    or os.path.abspath(pkg["manifest_path"]) == root
-}
 
-paths = {
-    path for path in paths
-    if "/vendor/" not in os.path.abspath(path).replace("\\", "/")
-}
+paths = []
+for dirpath, dirnames, filenames in os.walk(root):
+    dirpath_norm = os.path.abspath(dirpath).replace("\\", "/")
+    dirnames[:] = [name for name in dirnames if name != "vendor"]
+    if "/vendor/" in dirpath_norm:
+        continue
+    if "Cargo.toml" in filenames:
+        paths.append(os.path.join(dirpath, "Cargo.toml"))
 
-for rel_path in ["crawler/Cargo.toml", "asyncgit/src/lib/filehash/core/Cargo.toml"]:
-    manifest_path = os.path.abspath(rel_path)
-    if os.path.isfile(manifest_path) and "/vendor/" not in manifest_path.replace("\\", "/"):
-        paths.add(manifest_path)
-
-for path in sorted(paths):
+for path in sorted(set(paths)):
     print(path)
 PY
 }
