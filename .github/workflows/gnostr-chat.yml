@@ -219,12 +219,12 @@ jobs:
           echo "Pushing oneshot chat messages for 2 minutes..."
           while [ "$SECONDS" -lt "$END_AT" ]; do
             COUNT=$((COUNT + 1))
-            MESSAGE="Hello from github-ci-sender #${COUNT} at $(date +%s)"
+            MESSAGE="Hello from gnostr-chat.ymlr #${COUNT} at $(date +%s)"
             $GNOSTR_CMD chat \
               --debug \
               --name sender \
               --hash "$SENDER_HASH" \
-              --topic gnostr \
+              --topic gnostr-dev \
               --oneshot "$MESSAGE"
             sleep 5
           done
