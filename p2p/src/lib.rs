@@ -23,6 +23,7 @@ pub mod opt;
 pub mod bridge;
 pub mod js;
 pub mod message;
+pub mod relay_bridge;
 pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
@@ -78,6 +79,7 @@ mod tests {
 pub mod p2p {
     pub use crate::{
         args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
-        keypair_from_seed, lookup, message, network_config, opt, swarm_builder, utils,
+        keypair_from_seed, lookup, message, network_config, opt, relay_bridge, swarm_builder,
+        utils,
     };
 }
