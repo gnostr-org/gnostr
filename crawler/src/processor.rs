@@ -3,6 +3,7 @@ use crate::relays::get_config_dir_path;
 use crate::relays::record_live_kind;
 use crate::stats::Stats;
 use log::debug;
+use std::collections::HashSet;
 use std::fs;
 
 use nostr_sdk::prelude::{Event, Kind, TagStandard, Timestamp};
@@ -11,17 +12,34 @@ use std::sync::LazyLock;
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
 
 fn load_bootstrap_relays() -> Vec<String> {
-    let relays_path = get_config_dir_path().join("relays.yaml");
-    let relays_yaml_content = fs::read_to_string(&relays_path).unwrap_or_else(|_| {
-        let relays_yaml_bytes = include_bytes!("relays.yaml");
-        String::from_utf8_lossy(relays_yaml_bytes).into_owned()
-    });
+    let mut relays = Vec::new();
+    let mut seen = HashSet::new();
 
-    relays_yaml_content
-        .lines()
-        .filter(|line: &&str| !line.trim().is_empty())
-        .map(|line: &str| String::from(line))
-        .collect()
+    let push_unique = |relay: String, relays: &mut Vec<String>, seen: &mut HashSet<String>| {
+        if seen.insert(relay.clone()) {
+            relays.push(relay);
+        }
+    };
+
+    let embedded_relays = include_bytes!("relays.yaml");
+    for line in String::from_utf8_lossy(embedded_relays).lines() {
+        let relay = line.trim();
+        if !relay.is_empty() {
+            push_unique(relay.to_string(), &mut relays, &mut seen);
+        }
+    }
+
+    let relays_path = get_config_dir_path().join("relays.yaml");
+    if let Ok(relays_yaml_content) = fs::read_to_string(&relays_path) {
+        for line in relays_yaml_content.lines() {
+            let relay = line.trim();
+            if !relay.is_empty() {
+                push_unique(relay.to_string(), &mut relays, &mut seen);
+            }
+        }
+    }
+
+    relays
 }
 
 pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(load_bootstrap_relays);
