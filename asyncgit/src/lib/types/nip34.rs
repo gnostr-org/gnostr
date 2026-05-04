@@ -80,7 +80,8 @@ pub fn status_kinds() -> Vec<EventKind> {
 }
 
 fn git_note_event_id(commit_id: &str) -> Result<Id, Error> {
-    Id::try_from_hex_string(&padded_note_id(commit_id.to_string()))
+    let private_key = PrivateKey::try_from_hex_string(&padded_note_id(commit_id.to_string()))?;
+    Id::try_from_hex_string(&private_key.public_key().as_hex_string())
 }
 
 fn git_note_runtime_values() -> Result<(String, f64, f64), Error> {
@@ -1037,8 +1038,11 @@ mod tests {
     fn git_note_tags_reference_commit_and_notes_ref() {
         let note = note_fixture();
         let tags = git_note_tags(&note).unwrap();
+        let expected_root = git_note_event_id(&note.annotated_id.to_string())
+            .unwrap()
+            .as_hex_string();
 
-        assert!(tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+        assert!(tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root" && tag.value() == expected_root));
         assert!(tags.iter().any(|tag| tag.tagname() == "commit" && tag.value() == note.annotated_id.to_string()));
         assert!(tags.iter().any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits"));
         assert!(tags.iter().any(|tag| tag.tagname() == "weeble"));
