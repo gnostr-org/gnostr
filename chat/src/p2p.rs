@@ -401,6 +401,7 @@ pub async fn evt_loop(
                         pending_crawler_search.insert(query_id, nip);
                         recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
                     }
+                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) => {}
                 }
             }
             event = swarm.select_next_some() => match event {
