@@ -40,7 +40,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        os: [ubuntu-latest] # macos, ubuntu, windows
+        os: [ubuntu-latest, macos-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
       fail-fast: false
     runs-on: ${{ matrix.os }}
