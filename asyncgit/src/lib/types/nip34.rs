@@ -46,6 +46,11 @@ pub type Nip34Kind = EventKind;
 pub type Nip34Event = EventV3;
 pub type Nip34UnsignedEvent = PreEventV3;
 
+fn print_banner(label: &str) {
+    println!();
+    println!("==================== {label} ====================");
+}
+
 fn repo_announcement_kind() -> EventKind {
     EventKind::from(REPO_ANNOUNCEMENT_KIND)
 }
@@ -152,6 +157,7 @@ fn git_note_sign(
     private_key: &PrivateKey,
     difficulty: Option<u8>,
 ) -> Result<EventV3, Error> {
+    print_banner("nip34 git note event");
     println!(
         "building git note event as kind Patches; NIP-34 metadata is carried in tags for commit {}",
         note.annotated_id
@@ -1482,6 +1488,7 @@ mod tests {
     }
 
     fn log_event_summary(label: &str, event: &EventV3) {
+        print_banner(label);
         let nonce = event.nonce_data();
         let kind_number = u32::from(event.kind);
         let kind_label = match kind_number {
@@ -1516,4 +1523,5 @@ mod tests {
             println!("  - {tag}");
         }
     }
+
 }
