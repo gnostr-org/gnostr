@@ -5,7 +5,7 @@ use std::{
 };
 
 use libp2p::{
-    autonat, dcutr, gossipsub, identify, identity,
+    autonat, dcutr, gossipsub, identify, identity, relay,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -76,8 +76,14 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(local_peer_id);
 
+            let relay_server = relay::Behaviour::new(local_peer_id, Default::default());
+            let rendezvous_client = rendezvous::client::Behaviour::new(key.clone());
+            let rendezvous_server =
+                rendezvous::server::Behaviour::new(rendezvous::server::Config::default());
+
             Ok(Behaviour {
-                relay: relay_client,
+                relay_client,
+                relay_server,
                 autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
                 dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
@@ -91,9 +97,8 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                     "/yamux/1.0.0".to_string(),
                     key.public(),
                 )),
-                rendezvous: rendezvous::server::Behaviour::new(
-                    rendezvous::server::Config::default(),
-                ),
+                rendezvous_client,
+                rendezvous: rendezvous_server,
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(60)),
                 ),

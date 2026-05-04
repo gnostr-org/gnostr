@@ -1,4 +1,7 @@
-use libp2p::{autonat, gossipsub, kad, mdns, relay, swarm::SwarmEvent};
+use libp2p::{
+    autonat, gossipsub, identify, kad, mdns, multiaddr::Protocol, relay, rendezvous,
+    swarm::SwarmEvent, Multiaddr,
+};
 use tracing::{debug, info, trace, warn};
 
 use super::behaviour::BehaviourEvent;
@@ -30,6 +33,17 @@ pub async fn handle_swarm_event(
                 swarm.behaviour_mut().autonat.remove_server(&peer_id);
             }
         }
+        SwarmEvent::Behaviour(BehaviourEvent::Identify(identify::Event::Received {
+            peer_id,
+            info: identify::Info {
+                observed_addr,
+                ..
+            },
+            ..
+        })) => {
+            info!("Observed external address from {peer_id}: {observed_addr}");
+            swarm.add_external_address(observed_addr.clone());
+        }
         SwarmEvent::Behaviour(BehaviourEvent::Autonat(event)) => match event {
             autonat::Event::StatusChanged { old, new } => {
                 info!("AutoNAT status changed: {old:?} -> {new:?}");
@@ -41,7 +55,7 @@ pub async fn handle_swarm_event(
         SwarmEvent::Behaviour(BehaviourEvent::Dcutr(event)) => {
             debug!("DCUtR event: {event:?}");
         }
-        SwarmEvent::Behaviour(BehaviourEvent::Relay(event)) => match event {
+        SwarmEvent::Behaviour(BehaviourEvent::RelayClient(event)) => match event {
             relay::client::Event::ReservationReqAccepted { relay_peer_id, .. } => {
                 info!("Relay reservation accepted by {relay_peer_id}");
             }
@@ -52,6 +66,59 @@ pub async fn handle_swarm_event(
                 info!("Inbound relay circuit established from {src_peer_id}");
             }
         },
+        SwarmEvent::Behaviour(BehaviourEvent::RelayServer(event)) => {
+            debug!("Relay server event: {event:?}");
+        }
+        SwarmEvent::Behaviour(BehaviourEvent::RendezvousClient(event)) => match event {
+            rendezvous::client::Event::Registered {
+                namespace,
+                ttl,
+                rendezvous_node,
+            } => {
+                info!(
+                    "Registered namespace '{}' at rendezvous node {} for {}s",
+                    namespace, rendezvous_node, ttl
+                );
+            }
+            rendezvous::client::Event::RegisterFailed {
+                rendezvous_node,
+                namespace,
+                error,
+            } => {
+                warn!(
+                    "Failed to register namespace '{}' at {}: {:?}",
+                    namespace, rendezvous_node, error
+                );
+            }
+            rendezvous::client::Event::Discovered {
+                registrations,
+                cookie: _,
+                ..
+            } => {
+                for registration in registrations {
+                    for address in registration.record.addresses() {
+                        let peer = registration.record.peer_id();
+                        let p2p_suffix = Protocol::P2p(peer);
+                        let address_with_p2p = if address.ends_with(&Multiaddr::empty().with(p2p_suffix.clone())) {
+                            address.clone()
+                        } else {
+                            address.clone().with(p2p_suffix)
+                        };
+
+                        info!("Rendezvous discovered peer {peer} at {address_with_p2p}");
+                        if let Err(error) = swarm.dial(address_with_p2p) {
+                            warn!("Failed to dial rendezvous peer {peer}: {error:?}");
+                        }
+                    }
+                }
+            }
+            other => {
+                debug!("Rendezvous client event: {other:?}");
+            }
+        },
+        SwarmEvent::Behaviour(BehaviourEvent::Rendezvous(event)) => {
+            debug!("Rendezvous server event: {event:?}");
+        }
         SwarmEvent::Behaviour(BehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
             result,
             ..
