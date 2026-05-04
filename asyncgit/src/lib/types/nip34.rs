@@ -32,6 +32,10 @@ pub const REPO_STATE_KIND: u32 = 30618;
 pub const PULL_REQUEST_KIND: u32 = 1618;
 /// NIP-34 pull request update kind.
 pub const PULL_REQUEST_UPDATE_KIND: u32 = 1619;
+/// NIP-34 issue kind.
+pub const GIT_ISSUE_KIND: u32 = 1621;
+/// NIP-34 reply kind.
+pub const GIT_REPLY_KIND: u32 = 1622;
 /// NIP-34 user grasp list kind.
 pub const USER_GRASP_LIST_KIND: u32 = 10317;
 
@@ -1236,6 +1240,38 @@ mod tests {
             ],
             1_777_759_188,
         );
+        let issue_event = signed_event(
+            &private_key,
+            EventKind::from(GIT_ISSUE_KIND),
+            "please provide feedback\nthis is an asyncgit issue used to exercise NIP-34".to_string(),
+            vec![
+                TagV3::new_tag("r", &root_commit),
+                TagV3::from_strings(vec![
+                    "a".to_string(),
+                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    repo_url.clone(),
+                    "root".to_string(),
+                ]),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_188,
+        );
+        let reply_event = signed_event(
+            &private_key,
+            EventKind::from(GIT_REPLY_KIND),
+            "replying to the asyncgit issue".to_string(),
+            vec![
+                TagV3::new_event(issue_event.id, None, Some("root".to_string())),
+                TagV3::from_strings(vec![
+                    "a".to_string(),
+                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    repo_url.clone(),
+                    "reply".to_string(),
+                ]),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_188,
+        );
 
         let status_open = signed_event(
             &private_key,
@@ -1314,6 +1350,8 @@ mod tests {
                 pr_update_event.clone(),
                 EventKind::from(PULL_REQUEST_UPDATE_KIND),
             ),
+            ("issue", issue_event, EventKind::from(GIT_ISSUE_KIND)),
+            ("reply", reply_event, EventKind::from(GIT_REPLY_KIND)),
             ("status open", status_open, EventKind::GitStatusOpen),
             ("status applied", status_applied, EventKind::GitStatusApplied),
             ("status draft", status_draft, EventKind::GitStatusDraft),
@@ -1347,6 +1385,15 @@ mod tests {
                 "pull request update" => {
                     assert!(event_is_valid_pr_or_pr_update(&carrier_event));
                     assert!(!event_is_revision_root(&carrier_event));
+                }
+                "issue" => {
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "a"));
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "p"));
+                }
+                "reply" => {
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "e"));
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "a"));
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "p"));
                 }
                 "status closed" => {
                     assert!(carrier_event
@@ -1525,6 +1572,8 @@ mod tests {
             1617 => "Patches",
             1618 => "PullRequest",
             1619 => "PullRequestUpdate",
+            1621 => "Issue",
+            1622 => "Reply",
             10317 => "UserGraspList",
             30617 => "RepositoryAnnouncement",
             30618 => "RepositoryState",
