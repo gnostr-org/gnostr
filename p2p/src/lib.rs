@@ -5,6 +5,7 @@
 extern crate gnostr_asyncgit as git2;
 
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 
 use libp2p::identity;
 use sha2::{Digest, Sha256};
@@ -66,6 +67,21 @@ fn seed_bytes(seed: &str) -> [u8; 32] {
 pub use bridge::{asset_content_type, asset_response, shell_html};
 pub use js::get_js_assets;
 pub use template_html::{get_template_assets, TemplateHtml};
+
+pub fn spawn_detached_current_exe<I, S>(args: I) -> Result<u32, Box<dyn std::error::Error>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    let current_exe = std::env::current_exe()?;
+    let mut command = Command::new(current_exe);
+    command.args(args);
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+    let child = command.spawn()?;
+    Ok(child.id())
+}
 
 #[cfg(test)]
 mod tests {
