@@ -123,6 +123,7 @@ impl ChatTui {
                 ChatEvent::ShowInfoMsg(text) => {
                     self.status = text;
                 }
+                ChatEvent::CrawlerSearch { .. } => {}
             }
         }
     }

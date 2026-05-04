@@ -395,6 +395,7 @@ pub async fn evt_loop(
                             recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
                         }
                     }
+                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::CrawlerSearch { .. } => {}
                     ChatEvent::CrawlerSearch { nip } => {
                         let key = kad::RecordKey::new(&format!("gnostr/relay-buckets/{nip}"));
                         let query_id = swarm.behaviour_mut().kademlia.get_providers(key);
