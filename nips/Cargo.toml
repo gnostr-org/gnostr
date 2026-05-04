@@ -22,7 +22,7 @@ rust-embed = { workspace = true, features = [
   "debug-embed",
   "include-exclude",
 ] }
-ratatui = { workspace = true, features = ["macros"] }
+ratatui = { workspace = true, features = ["macros", "crossterm"] }
 crossterm = { workspace = true }
 sha2 = { workspace = true }
 termimad = { workspace = true }

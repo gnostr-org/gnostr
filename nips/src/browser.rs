@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fs,
-    io::{stdout, Write},
+    io::stdout,
     path::{Path, PathBuf},
 };
 
@@ -11,6 +11,7 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
+    backend::CrosstermBackend,
     prelude::*,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
 };
@@ -103,7 +104,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
-        .split(frame.size());
+        .split(frame.area());
 
     let title = Paragraph::new("Nostr NIPs Browser")
         .alignment(Alignment::Center)
@@ -146,7 +147,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         );
     }
 
-    let mut content_text = String::new();
+    let content_text;
     let mut title_text = "Content".to_string();
     if let Some(selected_nip_path) = app.nips.get(app.selected_nip_index) {
         title_text = selected_nip_path
