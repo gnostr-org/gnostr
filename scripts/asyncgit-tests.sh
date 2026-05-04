@@ -44,7 +44,8 @@ Options:
   --help               Show this help
 
 Notes:
-  This helper runs the asyncgit library smoke slice used by the full runner.
+  This helper runs the asyncgit slice: repo announcement/state, all NIP-34
+  event kinds, and the 1617 git-note/PoW matrix.
   `nostr_sdk` belongs to test-only event coverage in asyncgit.
   ureq logging is always silenced here.
 
@@ -285,6 +286,7 @@ run_cargo_test_step "types::nip34::tests::repo_ref_defaults_identifier_from_root
 run_cargo_test_step "types::nip34::tests::repo_ref_coordinates_include_relay_hint_and_all_maintainers"
 run_cargo_test_step "types::nip34::tests::repo_url_vector_matches_ngit_coordinate"
 run_cargo_test_step "types::nip34::tests::event_tag_from_nip19_or_hex_accepts_npub_when_allowed"
+run_cargo_test_step "types::nip34::tests::nip34_event_matrix_covers_all_kinds_and_git_notes"
 run_cargo_test_step "types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions"
 
 report_target_dir_size "$TARGET_DIR"

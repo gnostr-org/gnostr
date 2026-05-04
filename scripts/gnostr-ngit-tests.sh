@@ -132,10 +132,10 @@ run_notes_suite() {
   fi
 
   if [[ ${#test_args[@]} -gt 0 ]]; then
-    run_cargo --lib repo_state::tests::notes_refs_round_trip_through_repo_state -- "${test_args[@]}"
+    run_cargo --test nip34_kinds -- "${test_args[@]}"
     run_cargo --test git_notes -- "${test_args[@]}"
   else
-    run_cargo --lib repo_state::tests::notes_refs_round_trip_through_repo_state
+    run_cargo --test nip34_kinds
     run_cargo --test git_notes
   fi
 }
