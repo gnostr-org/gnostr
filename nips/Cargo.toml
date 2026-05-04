@@ -6,8 +6,8 @@ authors = [
   "randymcmillan <randymcmillan@protonmail.com>",
   "The nostr-protocol/nips Contributors",
 ]
-repository = "https://github.com/gnostr-org/gnostr-nips.git"
-homepage = "https://github.com/gnostr-org/gnostr-nips"
+repository = "https://github.com/gnostr-org/gnostr.git"
+homepage = "https://github.com/gnostr-org/gnostr"
 description = "nips: a nostr-protocol/nips server"
 license = "MIT"
 
