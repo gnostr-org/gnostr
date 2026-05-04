@@ -16,6 +16,9 @@ exclude.workspace = true
 name = "gnostr_chat"
 path = "src/lib.rs"
 
+[features]
+long_tests = []
+
 [dependencies]
 anyhow = "1.0.98"
 clap = { version = "4.5.41", features = ["derive"] }
