@@ -9,6 +9,8 @@ pub use crate::git2::types::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
+    use std::str::FromStr;
 
     #[test]
     fn exports_core_nostr_types() {
@@ -42,5 +44,25 @@ mod tests {
             _id,
             _signature,
         );
+    }
+
+    #[test]
+    fn builds_git_note_nostr_event() {
+        let note = NoteInfo {
+            note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
+            annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
+            notes_ref: Some("refs/notes/commits".to_string()),
+            message: "p2p git note".to_string(),
+            author: "p2p".to_string(),
+            committer: "p2p".to_string(),
+            committer_time: 1777759186,
+        };
+        let private_key = PrivateKey::generate();
+
+        let event = generate_git_note_event(&note, &private_key).expect("git note event");
+
+        assert_eq!(event.kind, EventKind::Patches);
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "commit"));
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "notes-ref"));
     }
 }
