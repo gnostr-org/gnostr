@@ -30,7 +30,7 @@ gix = { version = "0.66", default-features = false, features = [
 ] }
 gnostr-asyncgit = { workspace = true }
 gnostr-grammar = { workspace = true }
-gnostr-js = { path = "../js", package = "gnostr-js", version = "<=1875.947930.564886" }
+gnostr-js = { workspace = true }
 handlebars = { workspace = true }
 httparse = "1.7"
 humantime = "2.1"
@@ -80,5 +80,6 @@ yoke = { version = "0.7.1", features = ["derive"] }
 
 [build-dependencies]
 anyhow = "1.0.100"
+gnostr-js = { workspace = true }
 rsass = "0.28.0"
 sha2 = { workspace = true }
