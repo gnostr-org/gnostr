@@ -9,7 +9,6 @@ pub use gnostr_asyncgit::types::*;
 mod tests {
     use super::*;
     use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
-    use std::str::FromStr;
 
     #[test]
     fn exports_nostr_and_git_note_types() {
