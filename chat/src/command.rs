@@ -11,6 +11,7 @@ use crate::{
     event::ChatEvent,
     msg::{Msg, MsgKind},
     p2p::evt_loop,
+    tui::run_chat_tui,
 };
 
 #[derive(Debug, Clone, Parser)]
@@ -68,6 +69,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
     } else {
         None
     };
+
+    let username_for_session = username_to_set
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string());
 
     if let Some(user_name) = username_to_set {
         if !user_name.is_empty() {
@@ -191,7 +196,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         return Ok(());
     }
 
-    run_chat_session(sub_command_args).await
+    run_chat_session(sub_command_args, username_for_session).await
 }
 
 fn chat_topic(sub_command_args: &ChatSubCommands) -> gossipsub::IdentTopic {
@@ -203,38 +208,19 @@ fn chat_topic(sub_command_args: &ChatSubCommands) -> gossipsub::IdentTopic {
     )
 }
 
-async fn run_chat_session(sub_command_args: &ChatSubCommands) -> Result<()> {
+async fn run_chat_session(sub_command_args: &ChatSubCommands, username: String) -> Result<()> {
+    let topic_name = sub_command_args
+        .topic
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string());
     let topic = chat_topic(sub_command_args);
     let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-    let (output_tx, mut output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+    let (output_tx, output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
 
     tokio::spawn(async move {
         let _ = evt_loop(input_rx, output_tx, topic).await;
     });
 
-    use tokio::io::AsyncBufReadExt;
-    let mut stdin = tokio::io::BufReader::new(tokio::io::stdin()).lines();
-
-    loop {
-        tokio::select! {
-            line = stdin.next_line() => {
-                let Some(line) = line? else { break; };
-                if line.is_empty() {
-                    continue;
-                }
-
-                let msg = Msg::default().set_content(line, 0).set_kind(MsgKind::Chat);
-                input_tx.send(ChatEvent::ChatMessage(msg)).await?;
-            }
-            Some(event) = output_rx.recv() => {
-                match event {
-                    ChatEvent::ChatMessage(msg) => println!("{msg}"),
-                    ChatEvent::ShowErrorMsg(text) => eprintln!("{text}"),
-                    ChatEvent::ShowInfoMsg(text) => println!("{text}"),
-                }
-            }
-        }
-    }
-
+    run_chat_tui(topic_name, username, input_tx, output_rx)?;
     Ok(())
 }
