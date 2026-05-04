@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "1875.947930.564886"
+version = "1875.947931.563698"
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
@@ -97,7 +97,7 @@ gix = { version = "0.66", default-features = false, features = [
 ] }
 ##tree-sitter-language = "0.1" ##check version
 gnostr-grammar = { workspace = true }
-gnostr_filehash_core = { package = "gnostr_filehash_core", version = "<=1875.947930.564886", path = "src/lib/filehash/core" }
+gnostr_filehash_core = { package = "gnostr_filehash_core", version = "<=1875.947931.563698", path = "src/lib/filehash/core" }
 handlebars = { workspace = true }
 #anyhow = "1.0"
 hex = { workspace = true }
