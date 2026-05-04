@@ -438,15 +438,31 @@ mod tests {
                     .map_err(|err| crate::error::Error::Generic(err.to_string()))?
             };
             println!(
-                "matrix case event built: kind={:?} id={} pow={} nonce={:?}",
+                "matrix case nip34 note event built: kind={:?} id={} pow={} nonce={:?}",
                 event.kind,
                 event.id,
                 pow_the_event,
                 event.nonce_data()
             );
             println!(
-                "matrix case event json: {}",
+                "matrix case nip34 note event json: {}",
                 serde_json::to_string_pretty(&event).expect("serialize matrix event")
+            );
+            println!(
+                "matrix case nip34 note event e tag: {:?}",
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.tagname() == "e")
+                    .map(|tag| &tag.0)
+            );
+            println!(
+                "matrix case nip34 note event commit tag: {:?}",
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.tagname() == "commit")
+                    .map(|tag| &tag.0)
             );
             let event_output = match client.send_event(event.clone()).await {
                 Ok(event_id) => event_id,
