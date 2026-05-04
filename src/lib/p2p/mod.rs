@@ -191,7 +191,7 @@ pub async fn evt_loop(
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(local_peer_id);
             Ok(crate::p2p::behaviour::Behaviour {
-                relay: relay_client,
+                relay_client,
                 autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
                 dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
@@ -295,8 +295,8 @@ pub async fn evt_loop(
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Dcutr(event)) => {
                     debug!("DCUtR event: {event:?}");
                 }
-                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Relay(event)) => {
-                    debug!("Relay event: {event:?}");
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::RelayClient(event)) => {
+                    debug!("Relay client event: {event:?}");
                 }
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
@@ -366,7 +366,7 @@ pub async fn advertise_service(
     service_url: String,
 ) -> Result<(), Box<dyn Error>> {
     let keypair = identity::Keypair::generate_ed25519();
-    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair)?;
+    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair).await?;
     let peer_id = *swarm.local_peer_id();
 
     let bootstrap_addr: Multiaddr = "/dnsaddr/bootstrap.libp2p.io".parse()?;
