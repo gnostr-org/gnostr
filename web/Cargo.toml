@@ -30,7 +30,7 @@ gix = { version = "0.66", default-features = false, features = [
   "revision",
 ] }
 gnostr-grammar = { workspace = true }
-gnostr-js = { path = "../js", package = "gnostr-js", version = "1875.947912.589750" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = "<=1875.947912.589750" }
 handlebars = { workspace = true }
 humantime = "2.1"
 httparse = "1.7"
