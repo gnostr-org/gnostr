@@ -1276,16 +1276,16 @@ mod tests {
             1_777_759_193,
         );
 
-        println!("[asyncgit] repo announcement event: {repo_announcement:#?}");
-        println!("[asyncgit] repo state event: {:#?}", repo_state.event);
-        println!("[asyncgit] repo patch root: {root_patch:#?}");
-        println!("[asyncgit] pull request event: {pr_event:#?}");
-        println!("[asyncgit] pull request update event: {pr_update_event:#?}");
-        println!("[asyncgit] status open event: {status_open:#?}");
-        println!("[asyncgit] status applied event: {status_applied:#?}");
-        println!("[asyncgit] status draft event: {status_draft:#?}");
-        println!("[asyncgit] status closed event: {status_closed:#?}");
-        println!("[asyncgit] user grasp list event: {grasp_list:#?}");
+        log_event_summary("repo announcement", &repo_announcement);
+        log_event_summary("repo state", &repo_state.event);
+        log_event_summary("repo patch root", &root_patch);
+        log_event_summary("pull request", &pr_event);
+        log_event_summary("pull request update", &pr_update_event);
+        log_event_summary("status open", &status_open);
+        log_event_summary("status applied", &status_applied);
+        log_event_summary("status draft", &status_draft);
+        log_event_summary("status closed", &status_closed);
+        log_event_summary("user grasp list", &grasp_list);
 
         assert_eq!(repo_announcement.kind, repo_announcement_kind());
         assert_eq!(parsed_repo_state.identifier, "gnostr");
@@ -1416,5 +1416,22 @@ mod tests {
             private_key,
         )
         .unwrap()
+    }
+
+    fn log_event_summary(label: &str, event: &EventV3) {
+        let nonce = event.nonce_data();
+        let tag_names = event
+            .tags
+            .iter()
+            .map(|tag| tag.tagname().to_string())
+            .collect::<Vec<_>>();
+        println!(
+            "[asyncgit] {label}: kind={:?} id={} created_at={} nonce={:?} tags=[{}]",
+            event.kind,
+            event.id.as_hex_string(),
+            event.created_at,
+            nonce,
+            tag_names.join(", ")
+        );
     }
 }
