@@ -234,6 +234,19 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          PEER_HASH="$(printf '%s' peer | sha256sum | cut -d' ' -f1)"
+          $GNOSTR_CMD \
+            --debug \
+            --name peer \
+            --hash "$PEER_HASH" \
+            --topic "$CHAT_TOPIC" \
+            --headless \
+            >/tmp/gnostr-chat-peer.log 2>&1 &
+          PEER_PID=$!
+          trap 'kill "$PEER_PID" 2>/dev/null || true' EXIT
+
+          sleep 5
+
           echo "Pushing oneshot chat messages for 2 minutes..."
           while [ "$SECONDS" -lt "$END_AT" ]; do
             COUNT=$((COUNT + 1))
