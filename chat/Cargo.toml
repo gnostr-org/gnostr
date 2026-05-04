@@ -4,9 +4,9 @@ version.workspace = true
 edition = "2021"
 description = "gnostr chat transport crate"
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "0xtr <oxtrr@protonmail.com>",
-  "TODO <add_more@gnostr.org>",
+    "gnostr <admin@gnostr.org>",
+    "0xtr <oxtrr@protonmail.com>",
+    "TODO <add_more@gnostr.org>",
 ]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
@@ -23,13 +23,14 @@ long_tests = []
 [dependencies]
 anyhow = "1.0.98"
 clap = { version = "4.5.41", features = ["derive"] }
+crossterm = { workspace = true }
 futures = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947917.583327", default-features = false, features = [
+git2 = "0.20.2"
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947921.576750", default-features = false, features = [
   "tui",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "<=1875.947917.583327" }
-gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "<=1875.947917.583327" }
-git2 = "0.20.2"
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "<=1875.947921.576750" }
+gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "<=1875.947921.576750" }
 hostname = "0.3.1"
 libp2p = { version = "0.54.1", features = [
   "full",
@@ -75,7 +76,6 @@ proctitle = "0.1.1"
 ratatui = { version = "0.29", default-features = false, features = [
   "crossterm",
 ] }
-crossterm = { workspace = true }
 reqwest = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -83,7 +83,6 @@ serde_yaml = { workspace = true }
 sha2 = { workspace = true }
 terminal_size = "0.4.3"
 textwrap = "0.16.0"
-tui-input = "0.14.0"
 tokio = { version = "1.46.1", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
@@ -91,4 +90,5 @@ tracing-subscriber = { version = "0.3.22", default-features = false, features = 
   "fmt",
   "parking_lot",
 ] }
+tui-input = "0.14.0"
 ureq = { version = "2.12.1", features = ["json", "charset"] }

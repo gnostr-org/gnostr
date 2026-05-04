@@ -4,9 +4,9 @@ version.workspace = true
 edition = "2021"
 description = "gnostr p2p crate"
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "0xtr <oxtrr@protonmail.com>",
-  "TODO <add_more@gnostr.org>",
+    "gnostr <admin@gnostr.org>",
+    "0xtr <oxtrr@protonmail.com>",
+    "TODO <add_more@gnostr.org>",
 ]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
@@ -17,8 +17,8 @@ name = "gnostr_p2p"
 path = "src/lib.rs"
 
 [dependencies]
-anyhow = "1.0.98"
 ansi_term = "0.12"
+anyhow = "1.0.98"
 async-std = { version = "1.12", features = ["attributes"] }
 clap = { version = "4.5.41", features = [
   "std",
@@ -30,7 +30,7 @@ clap = { version = "4.5.41", features = [
 ] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947917.583327", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947921.576750", default-features = false, features = [
   "nostr",
 ] }
 gnostr-crawler = { workspace = true }
@@ -78,10 +78,10 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 serde_yaml = "0.9"
 sha2 = { workspace = true }
+tempfile = { workspace = true }
 thiserror = "1.0.69"
 tokio = { version = "1.46.1", features = ["full"] }
 tokio-tungstenite = { workspace = true }
-tempfile = { workspace = true }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
   "env-filter",

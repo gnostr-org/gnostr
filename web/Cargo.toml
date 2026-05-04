@@ -7,8 +7,8 @@ build = "build.rs"
 
 [dependencies]
 actix-http = { version = "3.9.0" }
-arc-swap = "1.7"
 anyhow = "1.0.100"
+arc-swap = "1.7"
 askama = { version = "0.12.0", default-features = false }
 axum = { version = "0.7", features = ["query", "tokio", "http1", "ws"] }
 base64 = { workspace = true }
@@ -21,7 +21,6 @@ const_format = { workspace = true }
 flate2 = "1"
 futures = "0.3"
 futures-util = "0.3.31"
-gnostr-asyncgit = { workspace = true }
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
   "tracing",
@@ -29,34 +28,39 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
+gnostr-asyncgit = { workspace = true }
 gnostr-grammar = { workspace = true }
-gnostr-js = { path = "../js", package = "gnostr-js", version = "<=1875.947917.583327" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = "<=1875.947921.576750" }
 handlebars = { workspace = true }
-humantime = "2.1"
 httparse = "1.7"
-md5 = "0.7"
+humantime = "2.1"
 ini = { package = "rust-ini", version = "0.21.1" }
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 log = "0.4"
+md5 = "0.7"
 moka = { version = "0.12.0", features = ["future"] }
 path-clean = "1.0.1"
-rkyv = "0.8"
 rand = "0.8.5"
 regex = "1.11.1"
+rkyv = "0.8"
 rocksdb = { workspace = true }
 serde = { version = "1.0.203", features = ["derive", "rc"] }
 serde_json = "1.0.117"
 sha2 = { workspace = true }
 simdutf8 = "0.1.5"
+tar = { version = "0.4", default-features = false }
+tempfile = { workspace = true }
+time = { version = "0.3", features = ["serde", "formatting"] }
+timeago = { version = "0.4.2", default-features = false }
 tokio = { workspace = true }
 tokio-stream = "0.1.17"
 tokio-util = { version = "0.7.10", features = ["io"] }
 toml = "0.8.20"
-tempfile = { workspace = true }
-tar = { version = "0.4", default-features = false }
-time = { version = "0.3", features = ["serde", "formatting"] }
-timeago = { version = "0.4.2", default-features = false }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "timeout", "fs"] }
+tower-layer = "0.3"
+tower-service = "0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "env-filter",
@@ -65,10 +69,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "fmt",
 ] }
 tree-sitter-highlight = "0.23"
-tower = "0.5"
-tower-service = "0.3"
-tower-http = { version = "0.6", features = ["cors", "timeout", "fs"] }
-tower-layer = "0.3"
+unix_mode = "0.1"
 url = { workspace = true }
 uuid = { version = "1.7", features = ["v4"] }
 v_htmlescape = { version = "0.15", features = ["bytes-buf"] }
@@ -76,7 +77,6 @@ warp = { workspace = true }
 webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
-unix_mode = "0.1"
 
 [build-dependencies]
 anyhow = "1.0.100"
