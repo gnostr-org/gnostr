@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use std::ffi::{OsStr, OsString};
 use libp2p::{multiaddr::Protocol, swarm::NetworkBehaviour, Multiaddr};
 
 use crate::network_config::Network;
@@ -22,6 +23,10 @@ pub struct NodeOpts {
     /// Seed used to generate a deterministic Ed25519 identity.
     #[arg(long)]
     pub secret_key_seed: Option<String>,
+
+    /// Run the service in the background and exit the parent process.
+    #[arg(long)]
+    pub detach: bool,
 
     /// Bind to a specific listen address instead of the default TCP and QUIC sockets.
     #[arg(long, value_name = "ADDR")]
@@ -81,6 +86,21 @@ pub fn init_tracing() {
     let _ = tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .try_init();
+}
+
+pub fn current_args_without_detach() -> Vec<OsString> {
+    args_without_detach(std::env::args_os().skip(1))
+}
+
+pub fn args_without_detach<I, S>(args: I) -> Vec<OsString>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    args.into_iter()
+        .filter(|arg| arg.as_ref() != "--detach")
+        .map(|arg| arg.as_ref().to_os_string())
+        .collect()
 }
 
 pub fn listen_default_addresses(
@@ -170,6 +190,18 @@ mod tests {
         );
         assert_eq!(opts.port, 4001);
         assert!(opts.use_ipv6);
+    }
+
+    #[test]
+    fn node_opts_parses_detach() {
+        let opts = NodeOpts::parse_from(["gnostr-p2p", "--detach"]);
+        assert!(opts.detach);
+    }
+
+    #[test]
+    fn args_without_detach_strips_the_flag() {
+        let args = args_without_detach(["--port", "0", "--detach", "--network", "ipfs"]);
+        assert_eq!(args, vec!["--port", "0", "--network", "ipfs"]);
     }
 
     #[test]
