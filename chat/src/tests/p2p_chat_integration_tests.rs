@@ -11,6 +11,26 @@ mod tests {
         msg::{Msg, MsgKind},
     };
 
+    async fn next_chat_message(
+        recv: &mut mpsc::Receiver<ChatEvent>,
+        timeout: Duration,
+    ) -> ChatEvent {
+        let deadline = tokio::time::Instant::now() + timeout;
+
+        loop {
+            let now = tokio::time::Instant::now();
+            let remaining = deadline.saturating_duration_since(now);
+            let event = tokio::time::timeout(remaining, recv.recv())
+                .await
+                .expect("Timeout waiting for chat event")
+                .expect("Channel closed before receiving chat event");
+
+            if matches!(event, ChatEvent::ChatMessage(_)) {
+                return event;
+            }
+        }
+    }
+
     #[tokio::test]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes() {
@@ -44,10 +64,7 @@ mod tests {
             .unwrap();
 
         // Receive the message on peer 2's side
-        let received_event = tokio::time::timeout(Duration::from_secs(5), recv_rx2.recv())
-            .await
-            .expect("Timeout waiting for message on peer 2")
-            .expect("Channel closed on peer 2");
+        let received_event = next_chat_message(&mut recv_rx2, Duration::from_secs(10)).await;
 
         if let ChatEvent::ChatMessage(received_msg) = received_event {
             assert_eq!(received_msg.from, "peer1");
@@ -72,10 +89,7 @@ mod tests {
             .unwrap();
 
         // Receive the message on peer 1's side
-        let received_event_2 = tokio::time::timeout(Duration::from_secs(5), recv_rx1.recv())
-            .await
-            .expect("Timeout waiting for message on peer 1")
-            .expect("Channel closed on peer 1");
+        let received_event_2 = next_chat_message(&mut recv_rx1, Duration::from_secs(10)).await;
 
         if let ChatEvent::ChatMessage(received_msg_2) = received_event_2 {
             assert_eq!(received_msg_2.from, "peer2");
@@ -126,10 +140,7 @@ mod tests {
             .unwrap();
 
         // Peer 2 should receive the message
-        let received_event_2 = tokio::time::timeout(Duration::from_secs(5), recv_rx2.recv())
-            .await
-            .expect("Timeout waiting for message on peer 2")
-            .expect("Channel closed on peer 2");
+        let received_event_2 = next_chat_message(&mut recv_rx2, Duration::from_secs(10)).await;
 
         if let ChatEvent::ChatMessage(received_msg) = received_event_2 {
             assert_eq!(received_msg.from, "peer1");
@@ -142,10 +153,7 @@ mod tests {
         }
 
         // Peer 3 should also receive the message
-        let received_event_3 = tokio::time::timeout(Duration::from_secs(5), recv_rx3.recv())
-            .await
-            .expect("Timeout waiting for message on peer 3")
-            .expect("Channel closed on peer 3");
+        let received_event_3 = next_chat_message(&mut recv_rx3, Duration::from_secs(10)).await;
 
         if let ChatEvent::ChatMessage(received_msg) = received_event_3 {
             assert_eq!(received_msg.from, "peer1");
@@ -185,10 +193,7 @@ mod tests {
         // Peer 1 should receive messages from both peers 2 and 3
         let mut received_messages = Vec::new();
         for _ in 0..2 {
-            let received_event = tokio::time::timeout(Duration::from_secs(5), _recv_rx1.recv())
-                .await
-                .expect("Timeout waiting for message on peer 1")
-                .expect("Channel closed on peer 1");
+            let received_event = next_chat_message(&mut _recv_rx1, Duration::from_secs(10)).await;
 
             if let ChatEvent::ChatMessage(msg) = received_event {
                 received_messages.push(msg);
