@@ -1,5 +1,5 @@
 ---
-name: Gnostr Chat
+name: gnostr-chat.yml
 
 on:
   workflow_run:
