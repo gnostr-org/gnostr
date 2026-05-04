@@ -142,7 +142,6 @@ struct FileEntry {
     real: PathBuf,
     virtual_path: PathBuf,
     bucket: String,
-    format: String,
 }
 
 struct BucketedCrawlerTree {
@@ -583,7 +582,6 @@ fn build_entry(root: &Path, real: &Path) -> Result<FileEntry> {
         real: real.to_path_buf(),
         virtual_path,
         bucket,
-        format,
     })
 }
 
