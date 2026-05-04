@@ -73,7 +73,7 @@ members = [
 exclude = ["vendor/gitui/**"]
 
 [workspace.package]
-version = "1875.947914.587786"
+version = "1875.947914.588032"
 
 exclude = [
   ".git/",
@@ -116,7 +116,7 @@ base64 = "0.22.1"
 bech32 = "0.11"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
-blossom_tui = { package = "gnostr-blossom-tui", version = "<=1875.947914.587786", path = "tui" }
+blossom_tui = { package = "gnostr-blossom-tui", version = "<=1875.947914.588032", path = "tui" }
 bytes = "1.11.0"
 include_dir = { version = "0.7.4", features = ["glob", "metadata"] }
 #urlencoding = "2.1.3"
@@ -143,24 +143,24 @@ directories = { version = "6.0.0" }
 env_logger = "0.11"
 expectrl = "0.8.0"
 function_name = "0.3.0"
-filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = "<=1875.947914.587786" }
+filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = "<=1875.947914.588032" }
 flate2 = "1.1.8"
 futures = { version = "0.3.31" }
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "asyncgit", version = "<=1875.947914.587786", default-features = false }
-gnostr-chat = { path = "chat", version = "<=1875.947914.587786" }
-gnostr-crawler = { path = "crawler", version = "<=1875.947914.587786" }
-gnostr-p2p = { path = "p2p", version = "<=1875.947914.587786" }
+gnostr-asyncgit = { path = "asyncgit", version = "<=1875.947914.588032", default-features = false }
+gnostr-chat = { path = "chat", version = "<=1875.947914.588032" }
+gnostr-crawler = { path = "crawler", version = "<=1875.947914.588032" }
+gnostr-p2p = { path = "p2p", version = "<=1875.947914.588032" }
 #gh = { path = "gh", package = "gh-rs" }
-git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "<=1875.947914.587786" }
-git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = "<=1875.947914.587786" }
+git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "<=1875.947914.588032" }
+git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = "<=1875.947914.588032" }
 
-gnostr-extensions = { path = "relay/extensions", version = "<=1875.947914.587786", default-features = false }
-gnostr-grammar = { path = "grammar", version = "<=1875.947914.587786" }
+gnostr-extensions = { path = "relay/extensions", version = "<=1875.947914.588032", default-features = false }
+gnostr-grammar = { path = "grammar", version = "<=1875.947914.588032" }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { path = "legit", version = "<=1875.947914.587786" }
-gnostr-relay = { path = "relay", version = "<=1875.947914.587786", default-features = false }
-gnostr_qr = { path = "qr", version = "<=1875.947914.587786" }
+gnostr-legit = { path = "legit", version = "<=1875.947914.588032" }
+gnostr-relay = { path = "relay", version = "<=1875.947914.588032", default-features = false }
+gnostr_qr = { path = "qr", version = "<=1875.947914.588032" }
 handlebars = { version = "6.3.2" }
 #zeroize = "1.6.0"
 
@@ -171,7 +171,7 @@ http = "1.1"
 httparse = "1.10.1"
 humantime = "2.1.3"
 indicatif = { version = "0.18.0" }
-invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = "<=1875.947914.587786" }
+invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = "<=1875.947914.588032" }
 itertools = "0.14.0"
 k256 = { version = "0.13", features = ["schnorr", "ecdh"] }
 kanal = "0.1.1"
@@ -268,7 +268,7 @@ ron = "0.8.1"
 russh = { version = "0.37.1", features = ["openssl"] }
 russh-keys = "0.37.1"
 rust-ini = "0.21.3"
-scopetime = { path = "scopetime", package = "gnostr-scopetime", version = "<=1875.947914.587786" }
+scopetime = { path = "scopetime", package = "gnostr-scopetime", version = "<=1875.947914.588032" }
 scrypt = { version = "0.11.0" }
 secp256k1 = { version = "0.29.1", features = [
   "hashes",
@@ -436,7 +436,7 @@ coverage = []
 actix-cors = { version = "0.7.0", optional = true }
 actix-web = { version = "4.9.0", optional = true }
 actix-web-actors = { version = "4.3.1", optional = true }
-gnostr-js = { path = "js", version = "<=1875.947914.587786", default-features = false, optional = true }
+gnostr-js = { path = "js", version = "<=1875.947914.588032", default-features = false, optional = true }
 ## TYPES DEPS
 actix-http = { workspace = true }
 aes = { workspace = true }
@@ -546,14 +546,14 @@ globset = "0.4"
 
 ##gitui
 gnostr-asyncgit = { workspace = true, features = ["tui"] }
-gnostr_chat = { package = "gnostr-chat", path = "chat", version = "<=1875.947914.587786" }
-gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = "<=1875.947914.587786" }
-gnostr-git-helpers = { version = "<=1875.947914.587786", path = "git-helpers" }
+gnostr_chat = { package = "gnostr-chat", path = "chat", version = "<=1875.947914.588032" }
+gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = "<=1875.947914.588032" }
+gnostr-git-helpers = { version = "<=1875.947914.588032", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
 gnostr_qr = { workspace = true }
-gnostr-web = { path = "web", version = "<=1875.947914.587786", default-features = false }
+gnostr-web = { path = "web", version = "<=1875.947914.588032", default-features = false }
 #gnostr-crawler = { workspace = true } ##version = "1878.945649.607219", path = "crawler" }
 #gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
 #gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
@@ -592,7 +592,7 @@ log = "0.4.24"
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
-ngit = { package = "gnostr-ngit", version = "<=1875.947914.587786", path = "ngit", features = [
+ngit = { package = "gnostr-ngit", version = "<=1875.947914.588032", path = "ngit", features = [
   "vendored-openssl",
 ] }
 nostr = { workspace = true }
@@ -783,7 +783,7 @@ nostr-relay = { version = "0.4.8", default-features = false }
 portable-pty = "0.8.1"
 ##
 vt100 = "^0.15"
-gnostr-crawler = { version = "<=1875.947914.587786", path = "crawler" }
+gnostr-crawler = { version = "<=1875.947914.588032", path = "crawler" }
 gitui = "0.28.1"
 # = { workspace = true }
 # = { workspace = true }
