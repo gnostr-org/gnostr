@@ -354,6 +354,10 @@ SORT_CRATES=(
     qr
     relay
     relay/extensions
+    js
+    chat
+    p2p
+    web
 )
 
 for crate in "${SORT_CRATES[@]}"; do
@@ -391,6 +395,10 @@ tag_package_versions() {
         commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
         git tag -f "$tag" "$commit"
     done
+
+    tag="gnostr/v$version"
+    commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
+    git tag -f "$tag" "$commit"
 }
 
 manifest_paths=()
@@ -438,6 +446,8 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
 done
 
+sleep 1 && cargo publish -j8 -p gnostr || true
+
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
@@ -448,3 +458,4 @@ fi
 for crate in "${PUBLISH_CRATES[@]}"; do
     git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
 done
+git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION"
