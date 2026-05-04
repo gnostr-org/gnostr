@@ -287,6 +287,7 @@ run_cargo() {
   local cmd="$1"
   shift
   local -a argv=(cargo)
+  # Build argv incrementally so empty arrays never trip `set -u`.
   if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
     argv+=("${CARGO_COMMON_FLAGS[@]}")
   fi
@@ -306,6 +307,7 @@ print_cargo_command() {
   local cmd="$1"
   shift
   local -a argv=(cargo)
+  # Mirror the exact cargo invocation before we run it.
   if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
     argv+=("${CARGO_COMMON_FLAGS[@]}")
   fi
@@ -395,12 +397,14 @@ run_cargo_capture_step() {
 }
 
 run_nip34_suite() {
+  # Keep the note-related cases together so `notes` stays predictable.
   run_cargo_test_step "asyncgit nip34 note message" test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message
   run_cargo_test_step "asyncgit nip34 pow nonce" test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce
   run_cargo_test_step "asyncgit nip34 matrix" test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants
 }
 
 list_tests() {
+  # Print runnable commands, not just labels, so the matrix is copy-pasteable.
   printf '%s\n' \
     "./scripts/gnostr-asyncgit-tests.sh matrix --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture" \
