@@ -466,4 +466,4 @@ for crate in "${PUBLISH_CRATES[@]}"; do
 done
 git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION"
 echo;
-git push origin --tag  "v$WORKSPACE_VERSION"
+git push origin v$WORKSPACE_VERSION:v$WORKSPACE_VERSION
