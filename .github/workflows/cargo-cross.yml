@@ -10,20 +10,6 @@ on:
         description: "Git tag to release"
         required: true
         type: string
-      os:
-        description: "OS / target to build (select \"all\" to build every target)"
-        required: false
-        default: all
-        type: choice
-        options:
-          - all
-          - linux-x64
-          - linux-x64-musl
-          - linux-arm64
-          - linux-arm64-musl
-          - windows-x64
-          - macos-x64
-          - macos-arm64
       toolchain:
         description: "Rust toolchain to use"
         required: false
@@ -44,49 +30,49 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       release_tag: ${{ steps.set-matrix.outputs.release_tag }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - id: set-matrix
         shell: python3 {0}
         env:
-          SELECTED_OS: ${{ inputs.os || 'all' }}
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-          SELECTED_TOOLCHAIN: ${{ inputs.toolchain || 'stable' }}
         run: |
           import json
           import os
+          import subprocess
 
-          all_targets = [
-              {"build": "linux-x64", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-gnu", "native": True},
-              {"build": "linux-x64-musl", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-musl", "native": False},
-              {"build": "linux-arm64", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-gnu", "native": False},
-              {"build": "linux-arm64-musl", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-musl", "native": False},
-              {"build": "windows-x64", "os": "windows-latest", "target": "x86_64-pc-windows-msvc", "native": True},
-              {"build": "macos-x64", "os": "macos-15-intel", "target": "x86_64-apple-darwin", "native": True},
-              {"build": "macos-arm64", "os": "macos-latest", "target": "aarch64-apple-darwin", "native": True},
-          ]
+          metadata = json.loads(subprocess.check_output(
+              ["cargo", "metadata", "--no-deps", "--format-version", "1"],
+              text=True,
+          ))
 
-          selected = os.environ["SELECTED_OS"] or "all"
-          toolchain = os.environ["SELECTED_TOOLCHAIN"] or "stable"
-          release_tag = os.environ["RELEASE_TAG"]
-          targets = all_targets if selected == "all" else [target for target in all_targets if target["build"] == selected]
-          matrix = {
-              "build": [target["build"] for target in targets],
-              "include": [{**target, "toolchain": toolchain} for target in targets],
-          }
+          packages = []
+          for package in metadata["packages"]:
+              packages.append({
+                  "name": package["name"],
+                  "version": package["version"],
+                  "manifest_path": package["manifest_path"],
+              })
+
+          packages.sort(key=lambda item: item["name"])
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"matrix={json.dumps(matrix)}\n")
-              output.write(f"release_tag={release_tag}\n")
+              output.write(f"release_tag={os.environ['RELEASE_TAG']}\n")
+              output.write(f"matrix={json.dumps({'include': packages})}\n")
 
-  build-artifacts:
+  package-crates:
     needs: setup
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     env:
-      BUILD_NAME: gnostr-${{ needs.setup.outputs.release_tag }}-${{ matrix.toolchain }}-${{ matrix.target }}
+      BUILD_NAME: ${{ matrix.name }}-${{ matrix.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -94,84 +80,34 @@ jobs:
           fetch-depth: 50
           ref: ${{ needs.setup.outputs.release_tag }}
 
-      - name: Fetch tags
-        run: git fetch --tags --force
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: ${{ inputs.toolchain || 'stable' }}
 
-      - name: Install cross
-        if: runner.os == 'Linux'
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cross
-
-      - name: Set Clang environment variables
-        if: runner.os == 'Linux'
+      - name: Package crate
         shell: bash
         run: |
-          if command -v llvm-config >/dev/null 2>&1; then
-            lib_dir="$(llvm-config --libdir)"
-          else
-            so_path="$(find /usr /usr/local -name 'libclang.so*' 2>/dev/null | sort -V | tail -n 1)"
-            lib_dir="$(dirname "$so_path")"
-          fi
+          set -euo pipefail
 
-          if [ -n "${lib_dir:-}" ] && [ -d "$lib_dir" ]; then
-            clang_resource_dir="$(clang -print-resource-dir)"
-            gcc_include_dir="$(gcc -print-file-name=include)"
-            echo "LIBCLANG_PATH=$lib_dir" >> "$GITHUB_ENV"
-            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${clang_resource_dir}/include -isystem ${gcc_include_dir}" >> "$GITHUB_ENV"
-          fi
+          cargo package \
+            --allow-dirty \
+            --no-verify \
+            --locked \
+            --manifest-path "${{ matrix.manifest_path }}"
 
-      - name: Build release binary
-        shell: bash
-        run: |
-          args=(
-            --target "${{ matrix.target }}"
-            --package gnostr
-            --all-features
-            --verbose
-          )
-
-          ./scripts/cross.sh "${args[@]}"
-
-      - name: Bundle release
-        shell: bash
-        run: |
-          mkdir -p "$BUILD_NAME"
-          cp README.md LICENSE "$BUILD_NAME/"
-
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp "target/${{ matrix.target }}/release/gnostr-blossom.exe" "$BUILD_NAME/"
-            cp "target/${{ matrix.target }}/release/gnostr-server.exe" "$BUILD_NAME/"
-          else
-            cp "target/${{ matrix.target }}/release/gnostr-blossom" "$BUILD_NAME/"
-            cp "target/${{ matrix.target }}/release/gnostr-server" "$BUILD_NAME/"
-          fi
-
-      - name: Smoke test
-        if: matrix.native == true
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            "$BUILD_NAME/gnostr-blossom.exe" --version
-            "$BUILD_NAME/gnostr-server.exe" --version
-          else
-            "$BUILD_NAME/gnostr-blossom" --version
-            "$BUILD_NAME/gnostr-server" --version
-          fi
+          mkdir -p "artifacts/$BUILD_NAME"
+          cp "target/package/${{ matrix.name }}-${{ matrix.version }}.crate" "artifacts/$BUILD_NAME/"
+          (cd "artifacts/$BUILD_NAME" && sha256sum *.crate > SHA256SUMS)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BUILD_NAME }}
-          path: ${{ env.BUILD_NAME }}
+          path: artifacts/${{ env.BUILD_NAME }}
 
   create-github-release:
-    needs: [setup, build-artifacts]
+    needs: [setup, package-crates]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -189,15 +125,6 @@ jobs:
         with:
           path: artifacts
 
-      - name: Package release artifacts
-        shell: bash
-        run: |
-          cd artifacts
-          for bundle in */; do
-            bundle="${bundle%/}"
-            zip -r "${bundle}.zip" "$bundle"
-          done
-
       - name: Create GitHub release
         shell: bash
         run: |
@@ -213,4 +140,5 @@ jobs:
             --title "$release_tag" \
             --generate-notes \
             $prerelease_flag \
-            artifacts/*.zip
+            artifacts/*/*.crate \
+            artifacts/*/SHA256SUMS
