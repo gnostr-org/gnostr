@@ -172,7 +172,7 @@ pub async fn generate_git_note_event(
         "building git note event as kind 1 TextNote; NIP-34 metadata is carried in tags for commit {}",
         note.annotated_id
     );
-    sign_event(
+    let event = sign_event(
         EventBuilder::new(Kind::TextNote, note.message.clone())
             .tags(git_note_tags(note)?)
             .custom_created_at(created_at),
@@ -180,7 +180,23 @@ pub async fn generate_git_note_event(
         "git note".to_string(),
     )
     .await
-    .context("failed to sign git note event")
+    .context("failed to sign git note event")?;
+
+    println!(
+        "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce_tag={:?}",
+        event.kind,
+        event.id,
+        event.pubkey,
+        event.created_at,
+        event
+            .tags
+            .iter()
+            .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("nonce"))
+            .map(|tag| tag.as_slice().to_vec())
+    );
+    println!("nip34 git note event payload: {event:#?}");
+
+    Ok(event)
 }
 
 /// Build, mine, and sign a text-note event carrying git note content.
@@ -210,6 +226,19 @@ pub async fn generate_git_note_event_with_pow(
             .context("failed to sign pow git note event")?;
 
         if event.id.to_hex().starts_with('0') {
+            println!(
+                "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce_tag={:?}",
+                event.kind,
+                event.id,
+                event.pubkey,
+                event.created_at,
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("nonce"))
+                    .map(|tag| tag.as_slice().to_vec())
+            );
+            println!("nip34 git note event payload: {event:#?}");
             return Ok(event);
         }
 
