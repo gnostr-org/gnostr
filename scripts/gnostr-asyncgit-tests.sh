@@ -27,12 +27,12 @@ MODE="full"
 
 usage() {
   cat <<'EOF'
-Usage: gnostr-asyncgit-tests.sh <notes|matrix|full|list> [flags]
+Usage: gnostr-asyncgit-tests.sh <nip34|matrix|full|list> [flags]
 
 Commands:
-  notes   Run the NIP-34 note tests
+  nip34   Run the NIP-34 note tests
   matrix  Run only the PoW matrix test
-  full    Run notes plus the full asyncgit suite
+  full    Run nip34 plus the full asyncgit suite
   list    Print the exact runnable commands and exit
 
 Flags:
@@ -49,7 +49,7 @@ Flags:
   --help                Show this help
 
 Notes:
-  `notes` runs:
+  `nip34` runs:
     cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture
     cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture
     cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture
@@ -61,7 +61,7 @@ Notes:
   ureq logging is always silenced here.
 
 Examples:
-  ./scripts/gnostr-asyncgit-tests.sh notes --nocapture
+  ./scripts/gnostr-asyncgit-tests.sh nip34 --nocapture
   ./scripts/gnostr-asyncgit-tests.sh matrix --nocapture
   ./scripts/gnostr-asyncgit-tests.sh full --nocapture
   ./scripts/gnostr-asyncgit-tests.sh list
@@ -168,7 +168,7 @@ prune_target_tree() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    notes|matrix|full|list)
+    nip34|matrix|full|list)
       MODE="$1"
       ;;
     --quiet)
@@ -183,8 +183,8 @@ while [[ $# -gt 0 ]]; do
     --offline)
       OFFLINE=true
       ;;
-    --notes)
-      MODE="notes"
+    --nip34|--notes)
+      MODE="nip34"
       ;;
     --matrix)
       MODE="matrix"
@@ -397,7 +397,7 @@ run_cargo_capture_step() {
 }
 
 run_nip34_suite() {
-  # Keep the note-related cases together so `notes` stays predictable.
+  # Keep the note-related cases together so `nip34` stays predictable.
   run_cargo_test_step "asyncgit nip34 note message" test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message
   run_cargo_test_step "asyncgit nip34 pow nonce" test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce
   run_cargo_test_step "asyncgit nip34 matrix" test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants
@@ -408,11 +408,11 @@ list_tests() {
   printf '%s\n' \
     "./scripts/gnostr-asyncgit-tests.sh matrix --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture" \
-    "./scripts/gnostr-asyncgit-tests.sh notes --nocapture" \
+    "./scripts/gnostr-asyncgit-tests.sh nip34 --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture"
-  if [[ "$MODE" != "notes" ]]; then
+  if [[ "$MODE" != "nip34" ]]; then
     printf '%s\n' \
       "./scripts/gnostr-asyncgit-tests.sh full --nocapture" \
       "  cargo test -p gnostr-asyncgit --all-targets --features nostr -- --nocapture"
@@ -425,7 +425,7 @@ if [[ "$MODE" == "list" ]]; then
 fi
 
 case "$MODE" in
-  notes)
+  nip34)
     run_nip34_suite
     ;;
   matrix)
