@@ -81,27 +81,33 @@ jobs:
         os:
           - runner: windows-latest
             arch: x64
+            cargo_jobs: 1
             # Use the vendored OpenSSL feature on Windows.
             cargo_test_args: '--features vendor-openssl'
           - runner: windows-11-arm
             arch: arm64
+            cargo_jobs: 1
             # Use the vendored OpenSSL feature on Windows.
             cargo_test_args: '--features vendor-openssl'
           - runner: ubuntu-latest
             arch: x64
-            # All features supported on x64 Windows.
+            cargo_jobs: 8
+            # Validate all features on Linux x64.
             cargo_test_args: '--all-features'
           - runner: ubuntu-latest
             arch: arm64
-            # All features supported on x64 Windows.
+            cargo_jobs: 8
+            # Validate all features on Linux arm64.
             cargo_test_args: '--all-features'
           - runner: macos-latest
             arch: x64
-            # All features supported on x64 Windows.
+            cargo_jobs: 8
+            # Validate all features on macOS x64.
             cargo_test_args: '--all-features'
           - runner: macos-latest
             arch: arm64
-            # All features supported on x64 Windows.
+            cargo_jobs: 8
+            # Validate all features on macOS arm64.
             cargo_test_args: '--all-features'
           # - runner: macos-15-intel
           #   arch: x64
@@ -149,9 +155,9 @@ jobs:
       #    key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
       - run: which cargo || true
       - run: cargo clean
-      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - run: cargo test -j${{ matrix.os.cargo_jobs }} ${{ matrix.os.cargo_test_args }}
       - run: cargo generate-lockfile && git diff
-      - run: cargo test -j8 ${{ matrix.os.cargo_test_args }}
+      - run: cargo test -j${{ matrix.os.cargo_jobs }} ${{ matrix.os.cargo_test_args }}
 
   build-artifacts:
     needs: setup
@@ -296,16 +302,25 @@ jobs:
         fi
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
           rustup target add ${{ matrix.target }} || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+          # Build musl targets with cross to avoid host linker/toolchain mismatches.
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
           rustup target add ${{ matrix.target }} || true
-          rustup target add x86_64-unknown-linux-musl || true
-          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
-          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+          # Build musl targets with cross to avoid host linker/toolchain mismatches.
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
         fi
         if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-apple-darwin" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "aarch64-apple-darwin" ]]; then
           rustup target add ${{ matrix.target }} || true
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features || \
           cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --bins --all-features
