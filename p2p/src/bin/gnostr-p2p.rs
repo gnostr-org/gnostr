@@ -31,6 +31,13 @@ async fn main() -> anyhow::Result<()> {
     cli::init_tracing();
 
     let opt = Opt::parse();
+    if opt.node.detach {
+        let pid = gnostr_p2p::spawn_detached_current_exe(cli::current_args_without_detach())
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        println!("started background p2p daemon (pid: {pid})");
+        return Ok(());
+    }
+
     let keypair = gnostr_p2p::keypair_from_seed(opt.node.secret_key_seed);
     let mut swarm = build_swarm(keypair)
         .await
