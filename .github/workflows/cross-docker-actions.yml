@@ -1,0 +1,229 @@
+name: cross-docker-actions
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Target to build"
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - linux-x64
+          - linux-x64-musl
+          - linux-arm64
+          - linux-arm64-musl
+      toolchain:
+        description: "Rust toolchain to use"
+        required: false
+        default: stable
+        type: choice
+        options:
+          - stable
+          - nightly
+      profile:
+        description: "Cargo profile"
+        required: false
+        default: release
+        type: string
+      package:
+        description: "Cargo package to build when workspace is false"
+        required: false
+        default: gnostr
+        type: string
+      workspace:
+        description: "Build the entire workspace"
+        required: false
+        default: false
+        type: boolean
+      all_features:
+        description: "Pass --all-features"
+        required: false
+        default: false
+        type: boolean
+      no_default_features:
+        description: "Pass --no-default-features"
+        required: false
+        default: false
+        type: boolean
+      features:
+        description: "Comma-separated features"
+        required: false
+        default: ""
+        type: string
+      unlocked:
+        description: "Do not pass --locked"
+        required: false
+        default: false
+        type: boolean
+      verbose:
+        description: "Pass --verbose"
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: "Print commands without executing them"
+        required: false
+        default: false
+        type: boolean
+      install_method:
+        description: "How to install gnostr before running workflow actions"
+        required: false
+        default: latest-release
+        type: choice
+        options:
+          - latest-release
+          - cargo-binstall
+      notify:
+        description: "Send gnostr status notifications"
+        required: false
+        default: true
+        type: boolean
+      calculate_odd_even:
+        description: "Resolve the current UTC odd/even hour"
+        required: false
+        default: true
+        type: boolean
+      resolve_weeble_wobble:
+        description: "Resolve weeble, blockheight, and wobble"
+        required: false
+        default: true
+        type: boolean
+      cleanup:
+        description: "Stop lingering gnostr processes at the end"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  cross-docker-actions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ inputs.toolchain }}
+
+      - name: Install cross
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Show tool versions
+        shell: bash
+        run: |
+          rustc -vV
+          cargo --version
+          cross --version
+          docker version
+
+      - name: Set build name
+        uses: ./.github/actions/set-build-name
+        with:
+          toolchain: ${{ inputs.toolchain }}
+          target: ${{ inputs.target }}
+
+      - name: Calculate odd/even hour
+        if: ${{ inputs.calculate_odd_even == 'true' }}
+        id: odd_even
+        uses: ./.github/actions/calculate-odd-even
+
+      - name: Install gnostr via latest release
+        if: ${{ inputs.install_method == 'latest-release' }}
+        uses: ./.github/actions/get-latest
+        with:
+          repository: gnostr-org/gnostr
+          asset_name: gnostr-installer.sh
+          install: 'true'
+          fallback_to_binstall: 'false'
+
+      - name: Install gnostr via cargo-binstall
+        if: ${{ inputs.install_method == 'cargo-binstall' }}
+        uses: ./.github/actions/cargo-binstall-gnostr
+
+      - name: Resolve weeble, blockheight, and wobble
+        if: ${{ inputs.resolve_weeble_wobble == 'true' }}
+        uses: ./.github/actions/gnostr-weeble-wobble
+
+      - name: Notify build start
+        if: ${{ inputs.notify == 'true' }}
+        uses: ./.github/actions/gnostr-notify
+        with:
+          content: >-
+            cross-docker-actions started for ${{ inputs.target }} on ${{ inputs.toolchain }}
+          tags: cross-docker-actions,start
+
+      - name: Run cross build script
+        id: cross_build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=()
+
+          if [[ "${{ inputs.target }}" != "all" ]]; then
+            args+=(--target "${{ inputs.target }}")
+          fi
+
+          if [[ "${{ inputs.profile }}" != "" ]]; then
+            args+=(--profile "${{ inputs.profile }}")
+          fi
+
+          if [[ "${{ inputs.workspace }}" == "true" ]]; then
+            args+=(--workspace)
+          else
+            args+=(--package "${{ inputs.package }}")
+          fi
+
+          if [[ "${{ inputs.all_features }}" == "true" ]]; then
+            args+=(--all-features)
+          fi
+
+          if [[ "${{ inputs.no_default_features }}" == "true" ]]; then
+            args+=(--no-default-features)
+          fi
+
+          if [[ "${{ inputs.features }}" != "" ]]; then
+            args+=(--features "${{ inputs.features }}")
+          fi
+
+          if [[ "${{ inputs.unlocked }}" == "true" ]]; then
+            args+=(--unlocked)
+          fi
+
+          if [[ "${{ inputs.verbose }}" == "true" ]]; then
+            args+=(--verbose)
+          fi
+
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+
+          printf 'Running: ./scripts/cross.sh'
+          printf ' %q' "${args[@]}"
+          printf '\n'
+
+          ./scripts/cross.sh "${args[@]}"
+
+      - name: Notify build result
+        if: ${{ always() && inputs.notify == 'true' }}
+        uses: ./.github/actions/gnostr-notify
+        with:
+          content: >-
+            cross-docker-actions ${{ steps.cross_build.outcome }} for ${{ inputs.target }} on ${{ inputs.toolchain }}
+          tags: cross-docker-actions,${{ steps.cross_build.outcome }}
+
+      - name: Cleanup lingering gnostr processes
+        if: ${{ always() && inputs.cleanup == 'true' }}
+        uses: ./.github/actions/gnostr-cleanup
