@@ -31,6 +31,15 @@ gnostr dm --help
 gnostr nip34 --help
 ```
 
+## Repository checks
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+./scripts/gnostr-tests.sh --test <exact_test_name> -- --nocapture
+```
+
 ## Subcommands
 
 See `.github/skills/gnostr/commands/SKILL.md` for the full top-level command list.
@@ -42,6 +51,7 @@ See `.github/skills/gnostr/commands/SKILL.md` for the full top-level command lis
 - Use `--relays` to keep relay selection explicit in tests and manual runs.
 - Keep updates short when using `gnostr chat`; status first, details second.
 - Use `--command` when you need to drive a subcommand from a scripted invocation.
+- Use the test wrappers for exact single-test runs instead of guessing cargo flags.
 
 ## Good examples
 
