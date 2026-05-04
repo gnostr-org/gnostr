@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::Context;
+use std::collections::BTreeMap;
 
 #[derive(Copy, Clone)]
 struct Paths<'a> {
@@ -68,59 +69,47 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
 }
 
 fn build_js(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("../js/src/js");
-    let ui_in_dir = in_dir.join("ui");
     let out_dir = paths.statics_out_dir.join("src/lib/js");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
 
-    println!("cargo:rerun-if-changed={}", in_dir.display());
-    println!("cargo:rerun-if-changed={}", ui_in_dir.display());
-
-    let mut all_js_content = String::new();
-
-    let util_js_path = in_dir.join("util.js");
-    println!("cargo:rerun-if-changed={}", util_js_path.display());
-    let util_js_content = std::fs::read_to_string(&util_js_path).context(format!(
-        "Failed to read JS file: {}",
-        util_js_path.display()
-    ))?;
-    all_js_content.push_str(&util_js_content);
-    all_js_content.push_str("\n");
-
-    let mut js_files: Vec<PathBuf> = std::fs::read_dir(&in_dir)
-        .context("Failed to read statics/js directory")?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.is_file()
-                && path.extension().is_some_and(|ext| ext == "js")
-                && *path != util_js_path
-        })
-        .collect();
-    js_files.sort();
-
-    for path in js_files {
-        println!("cargo:rerun-if-changed={}", path.display());
-        let content = std::fs::read_to_string(&path)
-            .context(format!("Failed to read JS file: {}", path.display()))?;
-        all_js_content.push_str(&content);
-        all_js_content.push_str("\n");
+    let assets = gnostr_js::get_js_assets();
+    let mut ordered_assets: BTreeMap<String, &'static [u8]> = BTreeMap::new();
+    for (name, bytes) in assets {
+        ordered_assets.insert(name, bytes);
     }
 
-    let mut ui_js_files: Vec<PathBuf> = std::fs::read_dir(&ui_in_dir)
-        .context("Failed to read statics/js/ui directory")?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| path.is_file() && path.extension().is_some_and(|ext| ext == "js"))
+    let mut all_js_content = String::new();
+    let mut append_asset = |name: &str| -> anyhow::Result<()> {
+        let content = ordered_assets
+            .get(name)
+            .copied()
+            .with_context(|| format!("Missing JS asset: {name}"))?;
+        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        all_js_content.push_str(content);
+        all_js_content.push('\n');
+        Ok(())
+    };
+
+    append_asset("util.js")?;
+
+    let mut root_js_files: Vec<String> = ordered_assets
+        .keys()
+        .filter(|name| name.ends_with(".js") && !name.contains('/') && name.as_str() != "util.js")
+        .cloned()
+        .collect();
+    root_js_files.sort();
+    for name in root_js_files {
+        append_asset(&name)?;
+    }
+
+    let mut ui_js_files: Vec<String> = ordered_assets
+        .keys()
+        .filter(|name| name.starts_with("ui/") && name.ends_with(".js"))
+        .cloned()
         .collect();
     ui_js_files.sort();
-
-    for path in ui_js_files {
-        println!("cargo:rerun-if-changed={}", path.display());
-        let content = std::fs::read_to_string(&path)
-            .context(format!("Failed to read JS file: {}", path.display()))?;
-        all_js_content.push_str(&content);
-        all_js_content.push_str("\n");
+    for name in ui_js_files {
+        append_asset(&name)?;
     }
 
     let output_file = out_dir.join("bundle.js");
