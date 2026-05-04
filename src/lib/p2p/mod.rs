@@ -211,9 +211,7 @@ pub async fn evt_loop(
                     key.public(),
                 )),
                 rendezvous_client,
-                rendezvous: rendezvous::server::Behaviour::new(
-                    rendezvous::server::Config::default(),
-                ),
+                rendezvous: rendezvous_server,
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(60)),
                 ),
