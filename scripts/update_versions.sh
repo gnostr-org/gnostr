@@ -380,6 +380,10 @@ PUBLISH_CRATES=(
     qr
     relay
     relay/extensions
+    js
+    chat
+    p2p
+    web
 )
 
 tag_package_versions() {
