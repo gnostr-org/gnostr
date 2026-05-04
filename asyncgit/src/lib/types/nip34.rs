@@ -17,6 +17,7 @@ use super::{
     Error, EventKind, EventV3, Id, KeySigner, NAddr, NEvent, Nip19, PreEventV3, PrivateKey,
     PublicKey, Signer, TagV3, Unixtime, UncheckedUrl,
 };
+use crate::types::nip13::NIP13Event;
 
 /// NIP-34 repository announcement kind.
 pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
@@ -151,17 +152,29 @@ fn git_note_sign(
         note.annotated_id
     );
     let preevent = git_note_preevent(note, private_key.public_key())?;
-    match difficulty {
+    let event = match difficulty {
         Some(zero_bits) if zero_bits > 0 => {
             println!(
                 "mining git note event with proof-of-work difficulty {}; event kind remains TextNote",
                 zero_bits
             );
             let signer = KeySigner::from_private_key(private_key.clone(), "", 1)?;
-            signer.sign_event_with_pow(preevent, zero_bits, None)
+            signer.sign_event_with_pow(preevent, zero_bits, None)?
         }
-        _ => EventV3::sign_with_private_key(preevent, private_key),
-    }
+        _ => EventV3::sign_with_private_key(preevent, private_key)?,
+    };
+
+    println!(
+        "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce={:?}",
+        event.kind,
+        event.id,
+        event.pubkey,
+        event.created_at,
+        event.nonce_data()
+    );
+    println!("nip34 git note event payload: {event:#?}");
+
+    Ok(event)
 }
 
 /// Return a tag value by name.
