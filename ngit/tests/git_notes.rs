@@ -100,6 +100,7 @@ fn mine_git_note(
 #[tokio::test]
 #[serial]
 async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
+    println!("[ngit] real_repo_git_notes_workflow_creates_signed_event");
     init_test_log();
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
@@ -180,6 +181,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
 #[tokio::test]
 #[serial]
 async fn nip34_examples_for_all_kinds() -> Result<()> {
+    println!("[ngit] nip34_examples_for_all_kinds");
     init_test_log();
     let repo_ref = repo_ref_fixture()?;
     let (git_repo, repo) = repo_fixture()?;
@@ -279,6 +281,7 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
 #[tokio::test]
 #[serial]
 async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> {
+    println!("[ngit] nip34_event_matrix_covers_commit_note_and_pow_variants");
     init_test_log();
 
     let cases = [

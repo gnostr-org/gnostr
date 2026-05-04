@@ -79,6 +79,7 @@ fn mine_git_note(
 
 #[tokio::test]
 async fn repo_announcement_round_trips_through_repo_ref() -> Result<()> {
+    println!("[ngit] repo_announcement_round_trips_through_repo_ref");
     let repo_ref = repo_ref_fixture()?;
     let signer_keys = seeded_keys_from_oid(&Oid::from_str(&repo_ref.root_commit)?)?;
     let signer: Arc<dyn NostrSigner> = Arc::new(signer_keys.clone());
@@ -95,6 +96,7 @@ async fn repo_announcement_round_trips_through_repo_ref() -> Result<()> {
 
 #[tokio::test]
 async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
+    println!("[ngit] cover_letter_and_patch_events_use_git_patch_kind");
     let (git_repo, repo) = repo_fixture()?;
     let repo_ref = repo_ref_fixture()?;
     let head = git_repo.git_repo.head()?.peel_to_commit()?.id();
@@ -143,6 +145,7 @@ async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
 
 #[tokio::test]
 async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
+    println!("[ngit] pull_request_and_update_events_use_default_signer");
     let (git_repo, repo) = repo_fixture()?;
     git_repo.create_branch("feature")?;
     git_repo.checkout("feature")?;
@@ -223,6 +226,7 @@ async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
 
 #[tokio::test]
 async fn nip34_event_matrix_with_git_notes_attached() -> Result<()> {
+    println!("[ngit] nip34_event_matrix_with_git_notes_attached");
     let cases = [
         ("plain-commit/plain-note/plain-event", false, false, false),
         ("plain-commit/plain-note/pow-event", false, false, true),
