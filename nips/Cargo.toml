@@ -29,8 +29,3 @@ include_dir = { workspace = true, features = ["glob", "metadata"] }
 [[bin]]
 name = "nips"
 path = "src/main.rs"
-
-# The profile that 'dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
