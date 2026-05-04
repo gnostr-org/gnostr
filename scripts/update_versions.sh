@@ -456,6 +456,11 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
 
+##git notes
+git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
+git notes add -m "v$WORKSPACE_VERSION" v$WORKSPACE_VERSION
+git push origin refs/notes/*
+
 for crate in "${PUBLISH_CRATES[@]}"; do
     git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
 done
