@@ -21,7 +21,7 @@ use strip_ansi_escapes::strip_str;
 use tokio::runtime::Handle;
 
 #[cfg(not(windows))]
-use rexpect::session::{Options, PtySession};
+use rexpect::session::PtySession;
 
 #[cfg(windows)]
 mod rexpect_compat {
@@ -1151,14 +1151,7 @@ where
     cmd.env("NGITTEST", "TRUE");
     cmd.env("RUST_BACKTRACE", "0");
     cmd.args(args);
-    // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    Ok(rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )?)
+    Ok(rexpect::session::spawn_command(cmd, Some(timeout_ms))?)
 }
 
 #[cfg(windows)]
@@ -1187,14 +1180,7 @@ where
     cmd.env("RUST_BACKTRACE", "0");
     cmd.current_dir(dir);
     cmd.args(args);
-    // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    Ok(rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )?)
+    Ok(rexpect::session::spawn_command(cmd, Some(timeout_ms))?)
 }
 
 #[cfg(windows)]
@@ -1224,14 +1210,7 @@ pub fn remote_helper_rexpect_with_from_dir(
     cmd.env("RUST_BACKTRACE", "0");
     cmd.current_dir(dir);
     cmd.args([dir.as_os_str().to_str().unwrap(), nostr_remote_url]);
-    // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    Ok(rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )?)
+    Ok(rexpect::session::spawn_command(cmd, Some(timeout_ms))?)
 }
 
 #[cfg(windows)]
@@ -1286,14 +1265,7 @@ where
     cmd.env("RUST_BACKTRACE", "0");
     cmd.current_dir(dir);
     cmd.args(args);
-    // using branch for PR https://github.com/rust-cli/rexpect/pull/103 to strip ansi escape codes
-    Ok(rexpect::session::spawn_with_options(
-        cmd,
-        Options {
-            timeout_ms: Some(timeout_ms),
-            strip_ansi_escape_codes: true,
-        },
-    )?)
+    Ok(rexpect::session::spawn_command(cmd, Some(timeout_ms))?)
 }
 
 #[cfg(windows)]
