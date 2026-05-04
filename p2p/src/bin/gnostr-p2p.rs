@@ -1,51 +1,50 @@
-use clap::Parser;
 use futures::StreamExt;
-use gnostr_p2p::{
-    command_handler, event_handler,
-    network_config::Network,
-    swarm_builder::build_swarm,
-};
-use libp2p::{identity, kad, multiaddr::Protocol, Multiaddr};
+
+use clap::Parser;
+use gnostr_p2p::{cli, command_handler, event_handler, swarm_builder::build_swarm};
+use libp2p::kad;
 use tokio::io::AsyncBufReadExt;
-use tracing_subscriber::EnvFilter;
 
 #[derive(Debug, Parser)]
-#[command(author, version, about = "gnostr p2p service daemon")]
+#[command(
+    author,
+    version,
+    about = "Run the main gnostr p2p daemon.",
+    long_about = "Run the libp2p swarm used by gnostr chat and related services.\n\nThis daemon owns discovery, DHT bootstrap, gossipsub traffic, relay handling, and stdin command processing.",
+    help_template = cli::HELP_TEMPLATE,
+    next_line_help = true,
+    disable_help_subcommand = true,
+    after_help = "Use the sibling relay and rendezvous binaries when you want a dedicated infrastructure role."
+)]
 struct Opt {
-    #[arg(long)]
-    secret_key_seed: Option<u8>,
+    #[command(flatten)]
+    node: cli::NodeOpts,
 
-    #[arg(long)]
-    network: Option<Network>,
-
-    #[arg(long)]
-    listen_address: Option<Multiaddr>,
-
-    #[arg(long, default_value_t = 0)]
-    port: u16,
-
-    #[arg(long)]
-    use_ipv6: bool,
+    #[command(flatten)]
+    network: cli::NetworkOpts,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .try_init();
+    cli::init_tracing();
 
     let opt = Opt::parse();
-    let keypair = keypair_from_seed(opt.secret_key_seed);
-    let mut swarm = build_swarm(keypair)?;
+    let keypair = cli::keypair_from_seed(opt.node.secret_key_seed);
+    let mut swarm = build_swarm(keypair).map_err(|e| anyhow::anyhow!(e.to_string()))?;
     swarm.behaviour_mut().kademlia.set_mode(Some(kad::Mode::Server));
 
-    if let Some(network) = opt.network {
+    if let Some(network) = opt.network.network {
         for (addr, peer_id) in network.bootnodes() {
             swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
         }
     }
 
-    listen_default_addresses(&mut swarm, opt.listen_address, opt.port, opt.use_ipv6)?;
+    cli::listen_default_addresses(
+        &mut swarm,
+        opt.node.listen_address,
+        opt.node.port,
+        opt.node.use_ipv6,
+    )?;
 
     let mut stdin = tokio::io::BufReader::new(tokio::io::stdin()).lines();
     loop {
@@ -62,49 +61,5 @@ async fn main() -> anyhow::Result<()> {
             }
         }
     }
-
-    Ok(())
-}
-
-fn keypair_from_seed(secret_key_seed: Option<u8>) -> identity::Keypair {
-    match secret_key_seed {
-        Some(seed) => {
-            let mut bytes = [0u8; 32];
-            bytes[0] = seed;
-            identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length")
-        }
-        None => identity::Keypair::generate_ed25519(),
-    }
-}
-
-fn listen_default_addresses(
-    swarm: &mut libp2p::Swarm<gnostr_p2p::behaviour::Behaviour>,
-    listen_address: Option<Multiaddr>,
-    port: u16,
-    use_ipv6: bool,
-) -> anyhow::Result<()> {
-    if let Some(addr) = listen_address {
-        swarm.listen_on(addr)?;
-        return Ok(());
-    }
-
-    let ip = if use_ipv6 {
-        Protocol::from(std::net::Ipv6Addr::UNSPECIFIED)
-    } else {
-        Protocol::from(std::net::Ipv4Addr::UNSPECIFIED)
-    };
-
-    let tcp = Multiaddr::empty().with(ip).with(Protocol::Tcp(port));
-    let quic = Multiaddr::empty()
-        .with(if use_ipv6 {
-            Protocol::from(std::net::Ipv6Addr::UNSPECIFIED)
-        } else {
-            Protocol::from(std::net::Ipv4Addr::UNSPECIFIED)
-        })
-        .with(Protocol::Udp(port))
-        .with(Protocol::QuicV1);
-
-    swarm.listen_on(tcp)?;
-    swarm.listen_on(quic)?;
     Ok(())
 }

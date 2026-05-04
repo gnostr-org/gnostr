@@ -1,15 +1,13 @@
 use clap::Parser;
-use libp2p::{Multiaddr, PeerId};
-use gnostr_p2p::{args::Args, lookup::LookupClient};
-use tracing_subscriber::EnvFilter;
+use gnostr_p2p::cli;
+use gnostr_p2p::lookup::LookupClient;
+use libp2p::PeerId;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .try_init();
+    cli::init_tracing();
 
-    let args = Args::parse();
+    let args = cli::LookupOpts::parse();
     let client = LookupClient::new(args.network);
 
     let peer = match (args.multiaddr, args.peer) {
@@ -18,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
             let peer_id: PeerId = peer.parse()?;
             client.lookup_on_dht(peer_id).await?
         }
-        (None, None) => anyhow::bail!("provide either --multiaddr or --peer"),
+        (None, None) => unreachable!("clap enforces lookup-target"),
     };
 
     println!("{peer}");

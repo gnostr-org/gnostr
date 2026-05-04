@@ -7,6 +7,7 @@ extern crate gnostr_asyncgit as git2;
 use std::path::PathBuf;
 
 pub mod args;
+pub mod cli;
 pub mod behaviour;
 pub mod command_handler;
 pub mod event_handler;
@@ -47,7 +48,7 @@ mod tests {
 /// Compatibility namespace for the legacy `crate::p2p::...` module paths.
 pub mod p2p {
     pub use crate::{
-        args, behaviour, command_handler, event_handler, git_integration, git_publisher, kvs,
+        args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
         lookup, network_config, opt, swarm_builder, utils,
     };
 }
