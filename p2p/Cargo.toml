@@ -30,7 +30,7 @@ clap = { version = "4.5.41", features = [
 ] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947921.576750", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947921.576806", default-features = false, features = [
   "nostr",
 ] }
 gnostr-crawler = { workspace = true }
