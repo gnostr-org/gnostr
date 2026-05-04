@@ -218,6 +218,7 @@ pub async fn evt_loop(
     topic: gossipsub::IdentTopic,
 ) -> Result<()> {
     let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
+    let mut pending_crawler_search: HashMap<kad::QueryId, i32> = HashMap::new();
 
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
@@ -384,13 +385,21 @@ pub async fn evt_loop(
     loop {
         select! {
             Some(event) = send.recv() => {
-                if let ChatEvent::ChatMessage(m) = event {
-                    if let Err(e) = swarm
-                        .behaviour_mut().gossipsub
-                        .publish(topic.clone(), serde_json::to_vec(&m)?) {
-                        debug!("Publish error: {e:?}");
-                        let m = Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(MsgKind::System);
-                        recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
+                match event {
+                    ChatEvent::ChatMessage(m) => {
+                        if let Err(e) = swarm
+                            .behaviour_mut().gossipsub
+                            .publish(topic.clone(), serde_json::to_vec(&m)?) {
+                            debug!("Publish error: {e:?}");
+                            let m = Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(MsgKind::System);
+                            recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
+                        }
+                    }
+                    ChatEvent::CrawlerSearch { nip } => {
+                        let key = kad::RecordKey::new(&format!("gnostr/relay-buckets/{nip}"));
+                        let query_id = swarm.behaviour_mut().kademlia.get_providers(key);
+                        pending_crawler_search.insert(query_id, nip);
+                        recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
                     }
                 }
             }
@@ -418,6 +427,42 @@ pub async fn evt_loop(
                 },
                 SwarmEvent::Behaviour(MyBehaviourEvent::Autonat(event)) => {
                     debug!("AutoNAT event: {event:?}");
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FoundProviders { providers, .. })),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        let provider_list = providers.iter().map(|peer| peer.to_string()).collect::<Vec<_>>().join(", ");
+                        let message = if provider_list.is_empty() {
+                            format!("crawler bucket {nip} has no providers")
+                        } else {
+                            format!("crawler bucket {nip} providers: {provider_list}")
+                        };
+                        recv.send(ChatEvent::ShowInfoMsg(message)).await?;
+                        if let Some(query) = swarm.behaviour_mut().kademlia.query_mut(&id) {
+                            query.finish();
+                        }
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FinishedWithNoAdditionalRecord { .. })),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        recv.send(ChatEvent::ShowInfoMsg(format!("crawler bucket {nip} has no providers"))).await?;
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Err(err)),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        recv.send(ChatEvent::ShowErrorMsg(format!("crawler bucket {nip} lookup failed: {err}"))).await?;
+                    }
                 }
                 SwarmEvent::Behaviour(MyBehaviourEvent::Dcutr(event)) => {
                     debug!("DCUtR event: {event:?}");

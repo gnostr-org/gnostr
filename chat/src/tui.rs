@@ -163,6 +163,15 @@ impl ChatTui {
                     return Ok(false);
                 }
 
+                if let Some(nip) = parse_crawler_search_command(&text) {
+                    input_tx
+                        .blocking_send(ChatEvent::CrawlerSearch { nip })
+                        .map_err(|e| anyhow::anyhow!("failed to queue crawler search: {e}"))?;
+                    self.input.reset();
+                    self.status = format!("searching crawler bucket {nip}");
+                    return Ok(false);
+                }
+
                 let msg = Msg::default()
                     .set_kind(MsgKind::Chat)
                     .set_content(text, 0);
@@ -390,6 +399,7 @@ impl ChatTui {
             Line::from("q or Ctrl-c quit"),
             Line::from("tab switch between timeline and composer"),
             Line::from("enter send the current message from the composer"),
+            Line::from("/crawler <nip> search crawler bucket providers"),
             Line::from("j/k or arrows move through the timeline"),
             Line::from("home/end and pgup/pgdn jump in the timeline"),
             Line::from("? or F1 open and close this overlay"),
@@ -404,6 +414,14 @@ impl ChatTui {
     fn selected_message(&self) -> Option<&Msg> {
         self.messages.get(self.selected)
     }
+}
+
+fn parse_crawler_search_command(input: &str) -> Option<i32> {
+    let trimmed = input.trim();
+    let nip = trimmed
+        .strip_prefix("/crawler ")
+        .or_else(|| trimmed.strip_prefix("/search crawler "))?;
+    nip.trim().parse().ok()
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
