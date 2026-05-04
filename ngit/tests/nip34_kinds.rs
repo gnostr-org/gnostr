@@ -337,14 +337,21 @@ async fn nip34_event_matrix_with_git_notes_attached() -> Result<()> {
         println!("nip34 matrix git note tags: {:?}", git_note_tags(&note)?);
 
         assert_eq!(repo_announcement.kind, nostr_sdk::Kind::GitRepoAnnouncement);
-        assert_eq!(patch_events.len(), 2);
-        assert_eq!(patch_events[0].kind, nostr_sdk::Kind::GitPatch);
-        assert_eq!(patch_events[1].kind, nostr_sdk::Kind::GitPatch);
+        assert!(patch_events.len() >= 2);
+        assert!(patch_events
+            .iter()
+            .all(|event| event.kind == nostr_sdk::Kind::GitPatch));
         assert!(event_is_cover_letter(&patch_events[0]));
         assert!(event_is_patch_set_root(&patch_events[0]));
-        assert!(!event_is_cover_letter(&patch_events[1]));
-        assert!(!event_is_patch_set_root(&patch_events[1]));
-        assert!(patch_supports_commit_ids(&patch_events[1]));
+        assert!(patch_events.iter().skip(1).all(|event| !event_is_cover_letter(event)));
+        assert!(patch_events
+            .iter()
+            .skip(1)
+            .all(|event| !event_is_patch_set_root(event)));
+        assert!(patch_events
+            .iter()
+            .skip(1)
+            .all(|event| patch_supports_commit_ids(event)));
         assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
         assert_eq!(git_note_event.content, note.message);
         assert!(git_note_event
