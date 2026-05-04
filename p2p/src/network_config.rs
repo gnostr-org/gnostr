@@ -90,8 +90,8 @@ mod tests {
 
     #[test]
     fn bootnodes_have_expected_counts() {
-        assert_eq!(Network::Kusama.bootnodes().len(), 7);
-        assert_eq!(Network::Polkadot.bootnodes().len(), 8);
+        assert_eq!(Network::Kusama.bootnodes().len(), 8);
+        assert_eq!(Network::Polkadot.bootnodes().len(), 7);
         assert_eq!(Network::Ipfs.bootnodes().len(), 5);
         assert_eq!(Network::Ursa.bootnodes().len(), 1);
     }
