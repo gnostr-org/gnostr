@@ -122,7 +122,7 @@ fn git_note_preevent(note: &NoteInfo, pubkey: PublicKey) -> Result<PreEventV3, E
     Ok(PreEventV3 {
         pubkey,
         created_at: Unixtime(note.committer_time),
-        kind: EventKind::TextNote,
+        kind: EventKind::Patches,
         tags: git_note_tags(note)?,
         content: note.message.clone(),
     })
@@ -148,14 +148,14 @@ fn git_note_sign(
     difficulty: Option<u8>,
 ) -> Result<EventV3, Error> {
     println!(
-        "building git note event as kind 1 TextNote; NIP-34 metadata is carried in tags for commit {}",
+        "building git note event as kind Patches; NIP-34 metadata is carried in tags for commit {}",
         note.annotated_id
     );
     let preevent = git_note_preevent(note, private_key.public_key())?;
     let event = match difficulty {
         Some(zero_bits) if zero_bits > 0 => {
             println!(
-                "mining git note event with proof-of-work difficulty {}; event kind remains TextNote",
+                "mining git note event with proof-of-work difficulty {}; event kind remains Patches",
                 zero_bits
             );
             let signer = KeySigner::from_private_key(private_key.clone(), "", 1)?;
@@ -1085,7 +1085,7 @@ mod tests {
         let private_key = PrivateKey::mock();
         let event = generate_git_note_event(&note, &private_key).unwrap();
 
-        assert_eq!(event.kind, EventKind::TextNote);
+        assert_eq!(event.kind, EventKind::Patches);
         assert_eq!(event.content, note.message);
         assert_eq!(event.created_at, Unixtime(note.committer_time));
     }
@@ -1096,7 +1096,7 @@ mod tests {
         let private_key = PrivateKey::mock();
         let event = generate_git_note_event_with_pow(&note, &private_key, 4).unwrap();
 
-        assert_eq!(event.kind, EventKind::TextNote);
+        assert_eq!(event.kind, EventKind::Patches);
         assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
         assert!(event.nonce_data().is_some());
         assert!(get_leading_zero_bits(&event.id.0) >= 4);
