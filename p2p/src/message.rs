@@ -16,9 +16,13 @@ mod tests {
         let _filter = Filter::default();
         let _client_message = ClientMessage::Req(_subscription_id.clone(), vec![_filter.clone()]);
         let _relay_message = RelayMessage::Notice("ok".to_string());
-        let _public_key = PublicKey::mock_deterministic();
+        let _public_key = PublicKey::try_from_hex_string(
+            "ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49",
+            true,
+        )
+        .expect("valid public key");
         let _private_key = PrivateKey::generate();
-        let _tag = Tag::from_strings(vec!["e".to_string(), "abc".to_string()]);
+        let _tag = Tag::new(&["e", "abc"]);
         let _id = Id::try_from_hex_string(
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         )
