@@ -40,8 +40,8 @@ actix-web = "4"
 anyhow = { workspace = true }
 clap = { workspace = true }
 futures-util = "0.3.31"
-gnostr-crawler = { version = "<=1875.947933.560846", path = "../crawler" }
-gnostr-relay = { version = "<=1875.947933.560846", path = "../relay" }
+gnostr-crawler = { version = "<=1875.947934.559157", path = "../crawler" }
+gnostr-relay = { version = "<=1875.947934.559157", path = "../relay" }
 handlebars = "6.3.2"
 lazy_static = "1.5.0"
 libc = { workspace = true }
@@ -62,6 +62,6 @@ webbrowser = "0.8"
 
 [build-dependencies]
 chrono = { workspace = true, features = ["clock"] }
-gnostr-asyncgit = { path = "../asyncgit", version = "<=1875.947933.560846" }
+gnostr-asyncgit = { path = "../asyncgit", version = "<=1875.947934.559157" }
 serde_json = "1.0.140"
 tokio = { version = "1", features = ["rt-multi-thread"] }

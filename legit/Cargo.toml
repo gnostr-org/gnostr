@@ -29,7 +29,7 @@ argparse = "0.2.2"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 env_logger = "0.10.0"
 git2 = "^0.20"
-gnostr_asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", version = "<=1875.947933.560846" }
+gnostr_asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", version = "<=1875.947934.559157" }
 log = "0.4"
 rust-crypto = "^0.2"
 time-0-3 = { package = "time", version = "0.3.34", features = [
