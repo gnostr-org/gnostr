@@ -6,7 +6,7 @@ use std::{
 };
 
 use libp2p::{
-    kad::{self, Quorum, Record, RecordKey},
+    kad::{Quorum, Record, RecordKey},
     swarm::Swarm,
 };
 use serde::{Deserialize, Serialize};
