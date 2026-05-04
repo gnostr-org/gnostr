@@ -185,7 +185,7 @@ jobs:
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
-            -k 1 \
+            --kind 1 \
             -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
             -t "a|blah" \
             -t "a|$(date +%s)" \
