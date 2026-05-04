@@ -1,0 +1,36 @@
+[package]
+name = "nips" #gnostr-nips
+version = "0.0.39"
+edition = "2021"
+authors = ["randymcmillan <randymcmillan@protonmail.com>", "The nostr-protocol/nips Contributors"]
+repository = "https://github.com/gnostr-org/gnostr-nips.git"
+homepage = "https://github.com/gnostr-org/gnostr-nips"
+description = "nips: a nostr-protocol/nips server"
+license = "MIT"
+
+[dependencies]
+axum = "0.7"
+bytes = "1.10.1"
+clap = { version = "4.4", features = ["derive"] }
+mime_guess = "2.0.5"
+pulldown-cmark = "0.13.0"
+rust-embed = { version = "8.6.0", features = ["axum", "debug-embed", "include-exclude"] }
+ratatui = { version = "0.26.1", features = ["macros"] }
+crossterm = "0.27.0"
+sha2 = "0.10.8"
+termimad = "0.31.2"
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.5.2", features = ["full"] }
+tower-http = { version = "0.6.2", features = ["full"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+include_dir = { version = "0.7.4", features = ["glob", "metadata"] }
+
+[[bin]]
+name = "nips"
+path = "src/main.rs"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
