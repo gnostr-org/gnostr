@@ -267,7 +267,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "1875.947910.591712"
+version = "1875.947912.590567"
 dependencies = [
  "env_logger",
  "git2",
