@@ -1120,7 +1120,8 @@ mod tests {
 
         let private_key = PrivateKey::mock();
         let trusted_maintainer = private_key.public_key();
-        let root_commit = "abcdef1234567890abcdef1234567890abcdef12".to_string();
+        let note_base = note_fixture();
+        let root_commit = note_base.annotated_id.to_string();
         let repo_url = "https://github.com/gnostr-org/gnostr.git".to_string();
 
         let repo_ref = RepoRef {
@@ -1276,36 +1277,95 @@ mod tests {
             1_777_759_193,
         );
 
-        log_event_summary("repo announcement", &repo_announcement);
-        log_event_summary("repo state", &repo_state.event);
-        log_event_summary("repo patch root", &root_patch);
-        log_event_summary("pull request", &pr_event);
-        log_event_summary("pull request update", &pr_update_event);
-        log_event_summary("status open", &status_open);
-        log_event_summary("status applied", &status_applied);
-        log_event_summary("status draft", &status_draft);
-        log_event_summary("status closed", &status_closed);
-        log_event_summary("user grasp list", &grasp_list);
+        let carriers = vec![
+            ("repo announcement", repo_announcement, repo_announcement_kind()),
+            ("repo state", repo_state.event.clone(), repo_state_kind()),
+            ("repo patch root", root_patch, EventKind::Patches),
+            ("pull request", pr_event.clone(), EventKind::from(PULL_REQUEST_KIND)),
+            (
+                "pull request update",
+                pr_update_event.clone(),
+                EventKind::from(PULL_REQUEST_UPDATE_KIND),
+            ),
+            ("status open", status_open, EventKind::GitStatusOpen),
+            ("status applied", status_applied, EventKind::GitStatusApplied),
+            ("status draft", status_draft, EventKind::GitStatusDraft),
+            ("status closed", status_closed, EventKind::GitStatusClosed),
+            ("user grasp list", grasp_list, EventKind::from(USER_GRASP_LIST_KIND)),
+        ];
 
-        assert_eq!(repo_announcement.kind, repo_announcement_kind());
+        let note_variants = [("plain git note", false), ("pow git note", true)];
+
         assert_eq!(parsed_repo_state.identifier, "gnostr");
         assert_eq!(parsed_repo_state.state.get("HEAD"), Some(&"ref: refs/heads/main".to_string()));
-        assert_eq!(root_patch.kind, EventKind::Patches);
-        assert!(event_is_patch_set_root(&root_patch));
-        assert!(patch_supports_commit_ids(&root_patch));
-        assert!(event_is_valid_pr_or_pr_update(&pr_event));
-        assert!(event_is_revision_root(&pr_event));
-        assert_eq!(pr_event.kind, EventKind::from(PULL_REQUEST_KIND));
-        assert_eq!(pr_update_event.kind, EventKind::from(PULL_REQUEST_UPDATE_KIND));
-        assert!(event_is_valid_pr_or_pr_update(&pr_update_event));
-        assert!(!event_is_revision_root(&pr_update_event));
-        assert_eq!(status_open.kind, EventKind::GitStatusOpen);
-        assert_eq!(status_applied.kind, EventKind::GitStatusApplied);
-        assert_eq!(status_draft.kind, EventKind::GitStatusDraft);
-        assert_eq!(status_closed.kind, EventKind::GitStatusClosed);
-        assert_eq!(grasp_list.kind, EventKind::from(USER_GRASP_LIST_KIND));
-        assert_eq!(grasp_list.content, "");
-        assert!(grasp_list.tags.iter().any(|tag| tag.tagname() == "g"));
+
+        for (carrier_label, carrier_event, expected_kind) in carriers {
+            log_event_summary(carrier_label, &carrier_event);
+            assert_eq!(carrier_event.kind, expected_kind);
+
+            match carrier_label {
+                "repo patch root" => {
+                    assert!(event_is_patch_set_root(&carrier_event));
+                    assert!(patch_supports_commit_ids(&carrier_event));
+                }
+                "pull request" => {
+                    assert!(event_is_valid_pr_or_pr_update(&carrier_event));
+                    assert!(event_is_revision_root(&carrier_event));
+                }
+                "pull request update" => {
+                    assert!(event_is_valid_pr_or_pr_update(&carrier_event));
+                    assert!(!event_is_revision_root(&carrier_event));
+                }
+                "status closed" => {
+                    assert!(carrier_event
+                        .tags
+                        .iter()
+                        .any(|tag| tag.tagname() == "alt"));
+                }
+                "user grasp list" => {
+                    assert_eq!(carrier_event.content, "");
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "g"));
+                }
+                _ => {}
+            }
+
+            for (note_label, use_pow) in note_variants {
+                let mut note = note_base.clone();
+                note.message = format!("{carrier_label}: {note_label}");
+                let git_note_event = if use_pow {
+                    generate_git_note_event_with_pow(&note, &private_key, 4).unwrap()
+                } else {
+                    generate_git_note_event(&note, &private_key).unwrap()
+                };
+
+                log_event_summary(
+                    &format!("{carrier_label} / {note_label}"),
+                    &git_note_event,
+                );
+                assert_eq!(git_note_event.kind, EventKind::Patches);
+                assert_eq!(git_note_event.content, note.message);
+                assert_eq!(git_note_event.created_at, Unixtime(note.committer_time));
+                assert!(git_note_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "commit" && tag.value() == root_commit));
+                assert!(git_note_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits"));
+                assert!(git_note_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+
+                if use_pow {
+                    assert!(git_note_event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+                    assert!(git_note_event.nonce_data().is_some());
+                } else {
+                    assert!(git_note_event.nonce_data().is_none());
+                }
+            }
+        }
     }
 
     #[test]
@@ -1420,18 +1480,23 @@ mod tests {
 
     fn log_event_summary(label: &str, event: &EventV3) {
         let nonce = event.nonce_data();
-        let tag_names = event
+        let tags = event
             .tags
             .iter()
-            .map(|tag| tag.tagname().to_string())
+            .map(|tag| tag.0.join(":"))
             .collect::<Vec<_>>();
         println!(
-            "[asyncgit] {label}: kind={:?} id={} created_at={} nonce={:?} tags=[{}]",
+            "[asyncgit] {label}: kind={:?} id={} pubkey={} created_at={} nonce={:?} content={}",
             event.kind,
             event.id.as_hex_string(),
+            event.pubkey.as_hex_string(),
             event.created_at,
             nonce,
-            tag_names.join(", ")
+            event.content
+        );
+        println!(
+            "[asyncgit] {label}: tags=[{}]",
+            tags.join(" | ")
         );
     }
 }
