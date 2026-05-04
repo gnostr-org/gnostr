@@ -25,6 +25,7 @@ use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
 pub mod path;
+pub mod browser;
 
 #[derive(Embed)]
 #[folder = "."]
