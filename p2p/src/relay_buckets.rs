@@ -57,7 +57,7 @@ pub fn collect_local_snapshots() -> std::io::Result<Vec<RelayBucketSnapshot>> {
 }
 
 pub fn bucket_record_key(bucket: &str) -> RecordKey {
-    RecordKey::new(format!("{BUCKET_KEY_PREFIX}/{bucket}"))
+    RecordKey::new(&format!("{BUCKET_KEY_PREFIX}/{bucket}"))
 }
 
 pub async fn publish_local_snapshots(
