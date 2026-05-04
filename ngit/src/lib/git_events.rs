@@ -185,8 +185,8 @@ pub async fn generate_git_note_event(
     println!(
         "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce_tag={:?}",
         event.kind,
-        event.id,
-        event.pubkey,
+        event.id.to_hex(),
+        event.pubkey.to_hex(),
         event.created_at,
         event
             .tags
@@ -194,7 +194,15 @@ pub async fn generate_git_note_event(
             .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("nonce"))
             .map(|tag| tag.as_slice().to_vec())
     );
-    println!("nip34 git note event payload: {event:#?}");
+    println!(
+        "nip34 git note event payload: kind={:?} id={} pubkey={} created_at={} content={}",
+        event.kind,
+        event.id.to_hex(),
+        event.pubkey.to_hex(),
+        event.created_at,
+        event.content
+    );
+    println!("nip34 git note event tags: {:?}", event.tags);
 
     Ok(event)
 }
@@ -229,8 +237,8 @@ pub async fn generate_git_note_event_with_pow(
             println!(
                 "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce_tag={:?}",
                 event.kind,
-                event.id,
-                event.pubkey,
+                event.id.to_hex(),
+                event.pubkey.to_hex(),
                 event.created_at,
                 event
                     .tags
@@ -238,7 +246,15 @@ pub async fn generate_git_note_event_with_pow(
                     .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("nonce"))
                     .map(|tag| tag.as_slice().to_vec())
             );
-            println!("nip34 git note event payload: {event:#?}");
+            println!(
+                "nip34 git note event payload: kind={:?} id={} pubkey={} created_at={} content={}",
+                event.kind,
+                event.id.to_hex(),
+                event.pubkey.to_hex(),
+                event.created_at,
+                event.content
+            );
+            println!("nip34 git note event tags: {:?}", event.tags);
             return Ok(event);
         }
 
