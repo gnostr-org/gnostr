@@ -23,11 +23,11 @@ long_tests = []
 anyhow = "1.0.98"
 clap = { version = "4.5.41", features = ["derive"] }
 futures = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947893.611524", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947910.591712", default-features = false, features = [
   "tui",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "1875.947893.611524" }
-gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "1875.947893.611524" }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "1875.947910.591712" }
+gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "1875.947910.591712" }
 git2 = "0.20.2"
 hostname = "0.3.1"
 libp2p = { version = "0.54.1", features = [

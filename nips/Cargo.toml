@@ -1,8 +1,11 @@
 [package]
 name = "nips" #gnostr-nips
-version = "0.0.39"
+version = "1875.947910.591712"
 edition = "2021"
-authors = ["randymcmillan <randymcmillan@protonmail.com>", "The nostr-protocol/nips Contributors"]
+authors = [
+  "randymcmillan <randymcmillan@protonmail.com>",
+  "The nostr-protocol/nips Contributors",
+]
 repository = "https://github.com/gnostr-org/gnostr-nips.git"
 homepage = "https://github.com/gnostr-org/gnostr-nips"
 description = "nips: a nostr-protocol/nips server"
@@ -14,7 +17,11 @@ bytes = { workspace = true }
 clap = { workspace = true }
 mime_guess = { workspace = true }
 pulldown-cmark = { workspace = true }
-rust-embed = { workspace = true, features = ["axum", "debug-embed", "include-exclude"] }
+rust-embed = { workspace = true, features = [
+  "axum",
+  "debug-embed",
+  "include-exclude",
+] }
 ratatui = { workspace = true, features = ["macros"] }
 crossterm = { workspace = true }
 sha2 = { workspace = true }
