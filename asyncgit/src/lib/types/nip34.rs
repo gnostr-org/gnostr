@@ -167,12 +167,20 @@ fn git_note_sign(
     println!(
         "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce={:?}",
         event.kind,
-        event.id,
-        event.pubkey,
+        event.id.as_hex_string(),
+        event.pubkey.as_hex_string(),
         event.created_at,
         event.nonce_data()
     );
-    println!("nip34 git note event payload: {event:#?}");
+    println!(
+        "nip34 git note event payload: kind={:?} id={} pubkey={} created_at={} content={}",
+        event.kind,
+        event.id.as_hex_string(),
+        event.pubkey.as_hex_string(),
+        event.created_at,
+        event.content
+    );
+    println!("nip34 git note event tags: {:?}", event.tags);
 
     Ok(event)
 }
