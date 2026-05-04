@@ -66,7 +66,7 @@ members = [
   "scopetime",
   "web",
   "chat",
-  "nips",
+  "nips", "bins",
 ]
 
 [workspace.package]

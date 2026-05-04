@@ -1,0 +1,7 @@
+[package]
+name = "gnostr-bins"
+edition = "2024"
+version.workspace = true
+exclude.workspace = true
+
+[dependencies]
