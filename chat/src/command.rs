@@ -193,7 +193,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         });
 
         let _ = input_tx;
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        tracing::info!("Headless mode is running; waiting for shutdown.");
+        tokio::signal::ctrl_c().await?;
         return Ok(());
     }
 
