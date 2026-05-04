@@ -190,8 +190,13 @@ pub async fn evt_loop(
             let mut ipfs_cfg = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(local_peer_id);
+            let relay_server = relay::Behaviour::new(local_peer_id, Default::default());
+            let rendezvous_client = rendezvous::client::Behaviour::new(key.clone());
+            let rendezvous_server =
+                rendezvous::server::Behaviour::new(rendezvous::server::Config::default());
             Ok(crate::p2p::behaviour::Behaviour {
                 relay_client,
+                relay_server,
                 autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
                 dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
@@ -205,6 +210,7 @@ pub async fn evt_loop(
                     "/yamux/1.0.0".to_string(),
                     key.public(),
                 )),
+                rendezvous_client,
                 rendezvous: rendezvous::server::Behaviour::new(
                     rendezvous::server::Config::default(),
                 ),
