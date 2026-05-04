@@ -169,11 +169,11 @@ pub async fn generate_git_note_event(
     );
 
     println!(
-        "building git note event as kind 1 TextNote; NIP-34 metadata is carried in tags for commit {}",
+        "building git note event as kind GitPatch; NIP-34 metadata is carried in tags for commit {}",
         note.annotated_id
     );
     let event = sign_event(
-        EventBuilder::new(Kind::TextNote, note.message.clone())
+        EventBuilder::new(Kind::GitPatch, note.message.clone())
             .tags(git_note_tags(note)?)
             .custom_created_at(created_at),
         signer,
@@ -227,7 +227,7 @@ pub async fn generate_git_note_event_with_pow(
             vec![nonce.to_string(), difficulty.to_string()],
         ));
 
-        let event = EventBuilder::new(Kind::TextNote, note.message.clone())
+        let event = EventBuilder::new(Kind::GitPatch, note.message.clone())
             .tags(tags)
             .custom_created_at(created_at)
             .sign_with_keys(keys)
@@ -1389,7 +1389,7 @@ mod tests {
             let event = generate_git_note_event(&note, &signer).await?;
             println!("git note event: {event:#?}");
 
-            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.kind, Kind::GitPatch);
             assert_eq!(
                 event.content,
                 "nip34:git note protocol example:deterministically linked git note"
@@ -1425,7 +1425,7 @@ mod tests {
             let event = generate_git_note_event(&note, &signer).await?;
             println!("git note event seeded from padded commit: {event:#?}");
 
-            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.kind, Kind::GitPatch);
             assert_eq!(event.content, note.message);
             assert_eq!(
                 event
