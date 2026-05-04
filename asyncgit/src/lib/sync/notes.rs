@@ -341,6 +341,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn git_note_event_matrix_covers_commit_and_pow_variants() -> Result<()> {
+        println!("[asyncgit] git_note_event_matrix_covers_commit_and_pow_variants");
         let private_key = PrivateKey::generate();
         let client_keys = Keys::new(private_key.clone());
         let relay_urls = vec![

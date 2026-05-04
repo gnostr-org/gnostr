@@ -831,6 +831,7 @@ mod tests {
 
     #[tokio::test]
     async fn repo_announcement_event_matches_ngit() {
+        println!("[asyncgit] repo_announcement_event_matches_ngit");
         let private_key = PrivateKey::mock();
         let trusted_maintainer = private_key.public_key();
         let trusted_maintainer_hex = trusted_maintainer.as_hex_string();
@@ -886,6 +887,7 @@ mod tests {
 
     #[tokio::test]
     async fn repo_state_parsing_matches_ngit() {
+        println!("[asyncgit] repo_state_parsing_matches_ngit");
         let private_key = PrivateKey::mock();
         let mut state = HashMap::new();
         let _ = state.insert(
@@ -1021,6 +1023,7 @@ mod tests {
 
     #[test]
     fn repo_state_round_trip_adds_head() {
+        println!("[asyncgit] repo_state_round_trip_adds_head");
         let private_key = PrivateKey::mock();
         let mut state = HashMap::new();
         let _ = state.insert(
@@ -1081,6 +1084,7 @@ mod tests {
 
     #[test]
     fn generate_git_note_event_uses_the_note_message() {
+        println!("[asyncgit] generate_git_note_event_uses_the_note_message");
         let note = note_fixture();
         let private_key = PrivateKey::mock();
         let event = generate_git_note_event(&note, &private_key).unwrap();
@@ -1092,6 +1096,7 @@ mod tests {
 
     #[test]
     fn generate_git_note_event_with_pow_adds_nonce() {
+        println!("[asyncgit] generate_git_note_event_with_pow_adds_nonce");
         let note = note_fixture();
         let private_key = PrivateKey::mock();
         let event = generate_git_note_event_with_pow(&note, &private_key, 4).unwrap();
