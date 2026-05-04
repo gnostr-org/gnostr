@@ -98,11 +98,23 @@ pub async fn handle_input_line(
                 eprintln!("Failed to store record locally: {:?}", e);
             }
         }
+        Some("CRAWLER_BUCKETS") => {
+            match crate::crawler_broadcast::broadcast_crawler_relay_buckets(swarm).await {
+                Ok(count) => {
+                    println!("broadcasted {count} crawler relay bucket(s)");
+                }
+                Err(err) => {
+                    eprintln!("Failed to broadcast crawler relay buckets: {err}");
+                }
+            }
+        }
         Some("QUIT") | Some("Q") | Some("EXIT") => {
             std::process::exit(0);
         }
         _ => {
-            eprintln!("Commands: TOPIC, GET, GET_PROVIDERS, PUT, PUT_PROVIDER, QUIT");
+            eprintln!(
+                "Commands: TOPIC, GET, GET_PROVIDERS, PUT, PUT_PROVIDER, CRAWLER_BUCKETS, QUIT"
+            );
         }
     }
 }
