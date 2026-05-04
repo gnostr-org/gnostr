@@ -24,7 +24,7 @@ use libp2p::{
         store::{MemoryStore, MemoryStoreConfig},
         Config as KadConfig, Mode, Quorum, Record, RecordKey,
     },
-    mdns, noise, ping, rendezvous,
+    mdns, noise, ping, relay, rendezvous,
     swarm::SwarmEvent,
     tcp, yamux, Multiaddr, PeerId,
 };
