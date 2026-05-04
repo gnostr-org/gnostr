@@ -134,7 +134,23 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
 
     let signer: Arc<dyn NostrSigner> = Arc::new(Keys::generate());
     let event = generate_git_note_event(&note, &signer).await?;
-    println!("git note event: {event:#?}");
+    println!("nip34 git note event: {event:#?}");
+    println!(
+        "nip34 git note event root e tag: {:?}",
+        event
+            .tags
+            .iter()
+            .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+            .map(|tag| tag.as_slice().to_vec())
+    );
+    println!(
+        "nip34 git note event commit tag: {:?}",
+        event
+            .tags
+            .iter()
+            .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("commit"))
+            .map(|tag| tag.as_slice().to_vec())
+    );
     let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
 
     assert_eq!(event.kind, nostr_sdk::Kind::TextNote);
