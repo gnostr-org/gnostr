@@ -147,10 +147,12 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          GNOSTR_HASH="$(gnostr --hash "")"
+
           $GNOSTR_CMD \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
-            --nsec "$(gnostr-sha256)" \
+            --nsec "$GNOSTR_HASH" \
             set-metadata \
             -n gnostr \
             -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
@@ -167,7 +169,7 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
-          $GNOSTR_CMD ngit --nsec $(gnostr-sha256) fetch
+          $GNOSTR_CMD ngit --nsec "$(gnostr --hash "")" fetch
       - run: |
           if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
@@ -180,7 +182,7 @@ jobs:
           fi
 
           EVENT=$($GNOSTR_CMD \
-            --nsec $(gnostr-sha256) \
+            --nsec "$(gnostr --hash "")" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
