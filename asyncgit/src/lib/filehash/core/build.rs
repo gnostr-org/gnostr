@@ -5,7 +5,7 @@ async fn main() {
     use std::path::PathBuf;
 
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let crate_src_path = manifest_dir.join("src").join("online_relays_gps.csv");
+    let crate_src_path = manifest_dir.join("..").join("online_relays_gps.csv");
 
     // Only download if the file doesn't exist or is empty
     if !crate_src_path.exists() || fs::metadata(&crate_src_path).map(|m| m.len() == 0).unwrap_or(true) {
