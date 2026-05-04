@@ -458,7 +458,7 @@ mod tests {
             );
             assert_eq!(event_output, event.id);
 
-            let mut dm_recipient_private_key = crate::types::PrivateKey(
+            let dm_recipient_private_key = crate::types::PrivateKey(
                 crate::default_gnostr_private_key(),
                 crate::types::KeySecurity::Weak,
             );
