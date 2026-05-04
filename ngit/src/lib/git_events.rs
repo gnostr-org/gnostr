@@ -168,6 +168,10 @@ pub async fn generate_git_note_event(
         u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
     );
 
+    println!(
+        "building git note event as kind 1 TextNote; NIP-34 metadata is carried in tags for commit {}",
+        note.annotated_id
+    );
     sign_event(
         EventBuilder::new(Kind::TextNote, note.message.clone())
             .tags(git_note_tags(note)?)
