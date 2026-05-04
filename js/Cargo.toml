@@ -57,11 +57,11 @@ tokio-stream = "0.1.17"
 walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
-gnostr-relay = { version = "<=1875.947916.585001", path = "../relay" }
-gnostr-crawler = { version = "<=1875.947916.585001", path = "../crawler" }
+gnostr-relay = { version = "<=1875.947917.583327", path = "../relay" }
+gnostr-crawler = { version = "<=1875.947917.583327", path = "../crawler" }
 
 [build-dependencies]
 chrono = { workspace = true, features = ["clock"] }
-gnostr-asyncgit = { path = "../asyncgit", version = "<=1875.947916.585001" }
+gnostr-asyncgit = { path = "../asyncgit", version = "<=1875.947917.583327" }
 serde_json = "1.0.140"
 tokio = { version = "1", features = ["rt-multi-thread"] }
