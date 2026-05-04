@@ -67,6 +67,11 @@ pub async fn broadcast_crawler_relay_buckets(
     swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
 ) -> Result<usize, Box<dyn Error>> {
     let buckets = load_crawler_relay_buckets()?;
+    if swarm.connected_peers().next().is_none() {
+        info!("skipping crawler relay bucket broadcast: no connected peers");
+        return Ok(0);
+    }
+
     let mut published = 0usize;
 
     for bucket in buckets {
