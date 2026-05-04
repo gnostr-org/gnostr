@@ -18,6 +18,7 @@ authors = ["Stephan Dilly <dilly.stephan@gmail.com>"]
 description = "log runtime of arbitrary scope"
 homepage = "https://gitui.org"
 license = "MIT"
+exclude = ["Cargo.toml.orig"]
 
 [workspace]
 
