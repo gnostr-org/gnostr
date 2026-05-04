@@ -14,6 +14,11 @@ on:
         required: false
         default: gnostr-dev
         type: string
+      detect_tag_as_topic:
+        description: "Use the current Git tag as the chat topic"
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [run-gnostr-chat-workflow]
   push:
@@ -31,6 +36,7 @@ jobs:
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
       TOPIC: ${{ inputs.topic || 'gnostr-dev' }}
+      DETECT_TAG_AS_TOPIC: ${{ inputs.detect_tag_as_topic || 'false' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
@@ -48,6 +54,7 @@ jobs:
           echo DAMUS=${{ env.DAMUS }}
           echo NOS=${{ env.NOS }}
           echo TOPIC=${{ env.TOPIC }}
+          echo DETECT_TAG_AS_TOPIC=${{ env.DETECT_TAG_AS_TOPIC }}
           printenv
         env:
           MEMPOOL: "mempool"
@@ -208,6 +215,14 @@ jobs:
           SENDER_HASH="$(printf '%s' sender | sha256sum | cut -d' ' -f1)"
           END_AT=$((SECONDS + 120))
           COUNT=0
+          CHAT_TOPIC="$TOPIC"
+
+          if [[ "$DETECT_TAG_AS_TOPIC" == "true" ]]; then
+            TAG_TOPIC="$(git tag --points-at HEAD | head -n 1 || true)"
+            if [[ -n "$TAG_TOPIC" ]]; then
+              CHAT_TOPIC="$TAG_TOPIC"
+            fi
+          fi
 
           if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
@@ -227,7 +242,7 @@ jobs:
               --debug \
               --name sender \
               --hash "$SENDER_HASH" \
-              --topic "${{ env.TOPIC }}" \
+              --topic "$CHAT_TOPIC" \
               --oneshot "$MESSAGE"
             sleep 5
           done
