@@ -286,18 +286,33 @@ fi
 run_cargo() {
   local cmd="$1"
   shift
+  local -a argv=(cargo)
+  if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_COMMON_FLAGS[@]}")
+  fi
+  argv+=("$cmd")
+  if [[ ${#CARGO_SUBCOMMAND_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_SUBCOMMAND_FLAGS[@]}")
+  fi
 
   if [[ -n "$TARGET_DIR" ]]; then
-    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}" --target-dir "$TARGET_DIR" "$@"
-  else
-    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}" "$@"
+    argv+=(--target-dir "$TARGET_DIR")
   fi
+  argv+=("$@")
+  "${argv[@]}"
 }
 
 print_cargo_command() {
   local cmd="$1"
   shift
-  local -a argv=(cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}")
+  local -a argv=(cargo)
+  if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_COMMON_FLAGS[@]}")
+  fi
+  argv+=("$cmd")
+  if [[ ${#CARGO_SUBCOMMAND_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_SUBCOMMAND_FLAGS[@]}")
+  fi
   if [[ -n "$TARGET_DIR" ]]; then
     argv+=(--target-dir "$TARGET_DIR")
   fi
@@ -387,6 +402,8 @@ run_nip34_suite() {
 
 list_tests() {
   printf '%s\n' \
+    "./scripts/gnostr-asyncgit-tests.sh matrix --nocapture" \
+    "  cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture" \
     "./scripts/gnostr-asyncgit-tests.sh notes --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture" \
@@ -403,13 +420,6 @@ if [[ "$MODE" == "list" ]]; then
   exit 0
 fi
 
-if bash ./scripts/asyncgit-tests.sh; then
-  send_chat_update "asyncgit bootstrap successful"
-else
-  send_chat_update "asyncgit bootstrap fail"
-  exit 1
-fi
-
 case "$MODE" in
   notes)
     run_nip34_suite
@@ -418,6 +428,12 @@ case "$MODE" in
     run_cargo_test_step "asyncgit nip34 matrix" test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants
     ;;
   full)
+    if bash ./scripts/asyncgit-tests.sh; then
+      send_chat_update "asyncgit bootstrap successful"
+    else
+      send_chat_update "asyncgit bootstrap fail"
+      exit 1
+    fi
     run_nip34_suite
     run_cargo_test_step "asyncgit full test suite" test -p gnostr-asyncgit --all-targets --features nostr
     ;;
