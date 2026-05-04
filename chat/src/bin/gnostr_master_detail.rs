@@ -892,9 +892,9 @@ fn relay_to_event_item(url: String, ping_ms: u64, relay: Relay, body: String) ->
 
 const ASYNCGIT_TYPES_MOD: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../asyncgit/src/lib/types/mod.rs"
+    "/src/bin/asyncgit_types_mod.snapshot.txt"
 ));
 const ASYNCGIT_VERSIONED_MOD: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../asyncgit/src/lib/types/versioned/mod.rs"
+    "/src/bin/asyncgit_versioned_mod.snapshot.txt"
 ));
