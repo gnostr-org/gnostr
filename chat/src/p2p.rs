@@ -395,7 +395,6 @@ pub async fn evt_loop(
                             recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
                         }
                     }
-                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::CrawlerSearch { .. } => {}
                     ChatEvent::CrawlerSearch { nip } => {
                         let key = kad::RecordKey::new(&format!("gnostr/relay-buckets/{nip}"));
                         let query_id = swarm.behaviour_mut().kademlia.get_providers(key);
@@ -442,7 +441,7 @@ pub async fn evt_loop(
                             format!("crawler bucket {nip} providers: {provider_list}")
                         };
                         recv.send(ChatEvent::ShowInfoMsg(message)).await?;
-                        if let Some(query) = swarm.behaviour_mut().kademlia.query_mut(&id) {
+                        if let Some(mut query) = swarm.behaviour_mut().kademlia.query_mut(&id) {
                             query.finish();
                         }
                     }

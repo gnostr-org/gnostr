@@ -129,7 +129,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         tracing::info!("Oneshot mode: sending message '{}'", message_input);
         let topic = chat_topic(sub_command_args);
         let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-        let (output_tx, output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+        let (output_tx, mut output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
 
         tokio::spawn(async move {
             let _ = evt_loop(input_rx, output_tx, topic).await;
