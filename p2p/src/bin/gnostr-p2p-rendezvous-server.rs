@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     cli::init_tracing();
 
     let opt = Opt::parse();
-    let keypair = cli::keypair_from_seed(opt.node.secret_key_seed);
+    let keypair = gnostr_p2p::keypair_from_seed(opt.node.secret_key_seed);
 
     let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()

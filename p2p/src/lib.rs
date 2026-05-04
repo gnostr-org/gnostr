@@ -6,6 +6,9 @@ extern crate gnostr_asyncgit as git2;
 
 use std::path::PathBuf;
 
+use libp2p::identity;
+use sha2::{Digest, Sha256};
+
 pub mod args;
 pub mod cli;
 pub mod behaviour;
@@ -31,6 +34,31 @@ pub fn js_source_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/js")
 }
 
+/// Build a deterministic libp2p keypair from an optional secret seed string.
+///
+/// Hex SHA-256 seeds are used directly; any other input is hashed into a 32-byte seed.
+pub fn keypair_from_seed(secret_key_seed: Option<String>) -> identity::Keypair {
+    match secret_key_seed {
+        Some(seed) => identity::Keypair::ed25519_from_bytes(seed_bytes(&seed))
+            .expect("only errors on wrong length"),
+        None => identity::Keypair::generate_ed25519(),
+    }
+}
+
+fn seed_bytes(seed: &str) -> [u8; 32] {
+    if seed.len() == 64 && seed.chars().all(|c| c.is_ascii_hexdigit()) {
+        let mut bytes = [0u8; 32];
+        for (idx, chunk) in seed.as_bytes().chunks_exact(2).enumerate() {
+            bytes[idx] = u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16)
+                .expect("validated hex digest");
+        }
+        return bytes;
+    }
+
+    let digest = Sha256::digest(seed.as_bytes());
+    digest.into()
+}
+
 pub use bridge::{asset_content_type, asset_response, shell_html};
 pub use js::get_js_assets;
 pub use template_html::{get_template_assets, TemplateHtml};
@@ -49,6 +77,6 @@ mod tests {
 pub mod p2p {
     pub use crate::{
         args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
-        lookup, network_config, opt, swarm_builder, utils,
+        keypair_from_seed, lookup, network_config, opt, swarm_builder, utils,
     };
 }

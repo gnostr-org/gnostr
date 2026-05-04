@@ -1,7 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use libp2p::{identity, multiaddr::Protocol, swarm::NetworkBehaviour, Multiaddr};
-use sha2::{Digest, Sha256};
+use libp2p::{multiaddr::Protocol, swarm::NetworkBehaviour, Multiaddr};
 
 use crate::network_config::Network;
 
@@ -84,28 +83,6 @@ pub fn init_tracing() {
         .try_init();
 }
 
-pub fn keypair_from_seed(secret_key_seed: Option<String>) -> identity::Keypair {
-    match secret_key_seed {
-        Some(seed) => identity::Keypair::ed25519_from_bytes(seed_bytes(&seed))
-            .expect("only errors on wrong length"),
-        None => identity::Keypair::generate_ed25519(),
-    }
-}
-
-fn seed_bytes(seed: &str) -> [u8; 32] {
-    if seed.len() == 64 && seed.chars().all(|c| c.is_ascii_hexdigit()) {
-        let mut bytes = [0u8; 32];
-        for (idx, chunk) in seed.as_bytes().chunks_exact(2).enumerate() {
-            bytes[idx] = u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16)
-                .expect("validated hex digest");
-        }
-        return bytes;
-    }
-
-    let digest = Sha256::digest(seed.as_bytes());
-    digest.into()
-}
-
 pub fn listen_default_addresses(
     swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
     listen_address: Option<Multiaddr>,
@@ -171,8 +148,8 @@ mod tests {
     #[test]
     fn keypair_from_seed_is_deterministic() {
         let seed = Some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string());
-        let left = keypair_from_seed(seed.clone());
-        let right = keypair_from_seed(seed);
+        let left = crate::keypair_from_seed(seed.clone());
+        let right = crate::keypair_from_seed(seed);
         assert_eq!(left.public().to_peer_id(), right.public().to_peer_id());
     }
 

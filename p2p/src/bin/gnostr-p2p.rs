@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     cli::init_tracing();
 
     let opt = Opt::parse();
-    let keypair = cli::keypair_from_seed(opt.node.secret_key_seed);
+    let keypair = gnostr_p2p::keypair_from_seed(opt.node.secret_key_seed);
     let mut swarm = build_swarm(keypair)
         .await
         .map_err(|e| anyhow::anyhow!(e.to_string()))?;
