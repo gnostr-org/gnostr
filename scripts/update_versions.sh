@@ -457,8 +457,8 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
 fi
 
 if [ -n "${VERSION_TAG:-}" ]; then
-  ##git push origin "$VERSION_TAG:$VERSION_TAG"
-  echo "let cargo-cross.yml publish"
+  git push origin "$VERSION_TAG:$VERSION_TAG"
+  ##echo "let cargo-cross.yml publish"
 fi
 for crate in "${PUBLISH_CRATES[@]}"; do
     git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
