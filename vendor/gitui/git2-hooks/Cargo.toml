@@ -28,6 +28,9 @@ keywords = ["git"]
 categories = ["development-tools"]
 license = "MIT"
 repository = "https://github.com/gitui-org/gitui"
+exclude = ["Cargo.toml.orig", ".cargo_vcs_info.json"]
+
+[workspace]
 
 [lib]
 name = "git2_hooks"
