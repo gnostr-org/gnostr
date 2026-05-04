@@ -408,7 +408,8 @@ timing = ["scopetime/enabled"]
 trace-libgit = ["gnostr-asyncgit/trace-libgit"]
 vendored-openssl = [
   "gnostr-asyncgit/vendored-openssl",
-  "git2-hooks/vendored-openssl",
+  "dep:git2",
+  "git2/vendored-openssl",
   "openssl/vendored",
 ]
 vendor-openssl = ["vendored-openssl"]
@@ -756,6 +757,7 @@ zeroize = { workspace = true }
 qrcode = { workspace = true }
 nostr-connect = { workspace = true }
 auth-git2 = { workspace = true }
+git2 = { version = "0.20.4", default-features = false, optional = true }
 nostr-lmdb = { workspace = true }
 nostr-relay-pool = { workspace = true }
 nostr-database = { workspace = true }

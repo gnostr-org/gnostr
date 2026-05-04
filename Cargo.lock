@@ -6745,6 +6745,7 @@ dependencies = [
  "gag",
  "getopts",
  "gh-emoji",
+ "git2",
  "gitui",
  "gix 0.66.0",
  "globset",
