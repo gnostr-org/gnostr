@@ -1480,14 +1480,28 @@ mod tests {
 
     fn log_event_summary(label: &str, event: &EventV3) {
         let nonce = event.nonce_data();
+        let kind_number = u32::from(event.kind);
+        let kind_label = match kind_number {
+            1617 => "Patches",
+            1618 => "PullRequest",
+            1619 => "PullRequestUpdate",
+            10317 => "UserGraspList",
+            30617 => "RepositoryAnnouncement",
+            30618 => "RepositoryState",
+            1630 => "StatusOpen",
+            1631 => "StatusApplied",
+            1632 => "StatusClosed",
+            1633 => "StatusDraft",
+            _ => "Other",
+        };
         let tags = event
             .tags
             .iter()
             .map(|tag| tag.0.join(":"))
             .collect::<Vec<_>>();
         println!(
-            "[asyncgit] {label}: kind={:?} id={} pubkey={} created_at={} nonce={:?} content={}",
-            event.kind,
+            "[asyncgit] {label}: kind={}({kind_number}) id={} pubkey={} created_at={} nonce={:?} content={}",
+            kind_label,
             event.id.as_hex_string(),
             event.pubkey.as_hex_string(),
             event.created_at,
