@@ -348,9 +348,13 @@ send_chat_update() {
 run_cargo_test_step() {
   local test_name="$1"
   shift
-  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    print_cargo_command "$@" -- "${TEST_FLAGS[@]}"
-    if run_cargo "$@" -- "${TEST_FLAGS[@]}"; then
+  local -a test_flags=("${TEST_FLAGS[@]}")
+  if [[ ! " ${test_flags[*]} " =~ " --nocapture " ]]; then
+    test_flags+=(--nocapture)
+  fi
+  if [[ ${#test_flags[@]} -gt 0 ]]; then
+    print_cargo_command "$@" -- "${test_flags[@]}"
+    if run_cargo "$@" -- "${test_flags[@]}"; then
       send_chat_update "$test_name successful"
     else
       send_chat_update "$test_name fail"
@@ -371,9 +375,13 @@ run_cargo_capture_step() {
   local test_name="$1"
   shift
   local output
-  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    print_cargo_command "$@" -- "${TEST_FLAGS[@]}"
-    if output="$(run_cargo "$@" -- "${TEST_FLAGS[@]}" 2>&1)"; then
+  local -a test_flags=("${TEST_FLAGS[@]}")
+  if [[ ! " ${test_flags[*]} " =~ " --nocapture " ]]; then
+    test_flags+=(--nocapture)
+  fi
+  if [[ ${#test_flags[@]} -gt 0 ]]; then
+    print_cargo_command "$@" -- "${test_flags[@]}"
+    if output="$(run_cargo "$@" -- "${test_flags[@]}" 2>&1)"; then
       printf '%s\n' "$output"
       send_chat_update "$test_name successful"
     else
