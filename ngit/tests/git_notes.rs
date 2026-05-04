@@ -135,6 +135,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     let signer: Arc<dyn NostrSigner> = Arc::new(Keys::generate());
     let event = generate_git_note_event(&note, &signer).await?;
     println!("git note event: {event:#?}");
+    let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
 
     assert_eq!(event.kind, nostr_sdk::Kind::TextNote);
     assert_eq!(event.content, note_text);
@@ -145,11 +146,11 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
             .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
             .expect("e tag")
             .as_slice()[1],
-        format!("{:0>64}", head)
+        expected_root
     );
     assert_eq!(
         git_note_event_id(&head.to_string())?.to_hex(),
-        format!("{:0>64}", head)
+        expected_root
     );
     assert_eq!(git_note_tags(&note)?.len(), 6);
 
@@ -320,6 +321,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
         } else {
             generate_git_note_event(&note, &signer).await?
         };
+        let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
 
         println!(
             "matrix case event built: kind={:?} id={} pow={} tags={:?}",
@@ -338,7 +340,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
                 .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
                 .expect("e tag")
                 .as_slice()[1],
-            format!("{:0>64}", head)
+            expected_root
         );
         if pow_event_flag {
             assert!(event.tags.iter().any(|tag| {

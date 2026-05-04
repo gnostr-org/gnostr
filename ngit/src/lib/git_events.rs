@@ -100,8 +100,10 @@ pub fn status_kinds() -> Vec<Kind> {
 /// Build the deterministic note-link event id for a commit.
 pub fn git_note_event_id(commit_id: &str) -> Result<EventId> {
     let padded_commit_id = padded_note_id(commit_id.to_string());
-    Ok(EventId::from_hex(&padded_commit_id)
-        .context("failed to convert padded commit id into event id")?)
+    let keys = Keys::parse(&padded_commit_id)
+        .context("failed to derive keys from padded commit id")?;
+    Ok(EventId::from_hex(&keys.public_key().to_string())
+        .context("failed to convert derived public key into event id")?)
 }
 
 /// Build the NIP-34 tags for a git note event.
