@@ -146,9 +146,17 @@ fn git_note_sign(
     private_key: &PrivateKey,
     difficulty: Option<u8>,
 ) -> Result<EventV3, Error> {
+    println!(
+        "building git note event as kind 1 TextNote; NIP-34 metadata is carried in tags for commit {}",
+        note.annotated_id
+    );
     let preevent = git_note_preevent(note, private_key.public_key())?;
     match difficulty {
         Some(zero_bits) if zero_bits > 0 => {
+            println!(
+                "mining git note event with proof-of-work difficulty {}; event kind remains TextNote",
+                zero_bits
+            );
             let signer = KeySigner::from_private_key(private_key.clone(), "", 1)?;
             signer.sign_event_with_pow(preevent, zero_bits, None)
         }
