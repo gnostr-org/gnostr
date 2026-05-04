@@ -99,7 +99,7 @@ jobs:
 
           mkdir -p "artifacts/$BUILD_NAME"
           cp "target/package/${{ matrix.name }}-${{ matrix.version }}.crate" "artifacts/$BUILD_NAME/"
-          (cd "artifacts/$BUILD_NAME" && sha256sum *.crate > SHA256SUMS)
+          (cd "artifacts/$BUILD_NAME" && sha256sum *.crate > "${BUILD_NAME}-SHA256SUMS")
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -140,6 +140,13 @@ jobs:
             --target "$release_commit" \
             --title "$release_tag" \
             --generate-notes \
-            $prerelease_flag \
+            $prerelease_flag
+
+      - name: Upload release assets
+        shell: bash
+        run: |
+          release_tag="${{ needs.setup.outputs.release_tag }}"
+          gh release upload "$release_tag" \
             artifacts/*/*.crate \
-            artifacts/*/SHA256SUMS
+            artifacts/*/*-SHA256SUMS \
+            --clobber
