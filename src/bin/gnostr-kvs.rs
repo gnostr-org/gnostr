@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let peer_id = PeerId::from_public_key(&public_key);
     warn!("Local PeerId: {}", peer_id);
 
-    let mut swarm = swarm_builder::build_swarm(keypair)?;
+    let mut swarm = swarm_builder::build_swarm(keypair).await?;
 
     for peer in &IPFS_BOOTNODES {
         swarm
