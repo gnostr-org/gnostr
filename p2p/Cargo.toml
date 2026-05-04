@@ -10,6 +10,7 @@ authors = [
 ]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
+readme = "README.md"
 
 [lib]
 name = "gnostr_p2p"
