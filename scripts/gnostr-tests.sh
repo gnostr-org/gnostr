@@ -157,6 +157,10 @@ else
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
     cargo_cmd+=(-- "${TEST_FLAGS[@]}")
   fi
+  if ! ./scripts/gnostr-ngit-tests.sh --notes "${TEST_FLAGS[@]}"; then
+    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr notes test suite fail" >/dev/null 2>&1 || true
+    exit 1
+  fi
   if "${cargo_cmd[@]}"; then
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true
   else
