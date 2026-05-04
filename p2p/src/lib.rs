@@ -66,6 +66,7 @@ fn seed_bytes(seed: &str) -> [u8; 32] {
 
 pub use bridge::{asset_content_type, asset_response, shell_html};
 pub use js::get_js_assets;
+pub use message::*;
 pub use template_html::{get_template_assets, TemplateHtml};
 
 pub fn spawn_detached_current_exe<I, S>(args: I) -> Result<u32, Box<dyn std::error::Error>>
