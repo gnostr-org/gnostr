@@ -75,3 +75,30 @@ pub const IPFS_BOOTNODES: [&str; 6] = [
     "12D3KooWFhXabKDwALpzqMbto94sB7rvmZ6M28hs9Y9xSopDKwQr",
 ];
 pub const IPFS_PROTO_NAME: StreamProtocol = StreamProtocol::new("/ipfs/kad/1.0.0");
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn network_protocols_match_expected_values() {
+        assert_eq!(Network::Kusama.protocol().as_deref(), Some("/ksmcc3/kad"));
+        assert_eq!(Network::Polkadot.protocol().as_deref(), Some("/dot/kad"));
+        assert_eq!(Network::Ipfs.protocol(), None);
+        assert_eq!(Network::Ursa.protocol().as_deref(), Some("/ursa/kad/0.0.1"));
+    }
+
+    #[test]
+    fn bootnodes_have_expected_counts() {
+        assert_eq!(Network::Kusama.bootnodes().len(), 7);
+        assert_eq!(Network::Polkadot.bootnodes().len(), 8);
+        assert_eq!(Network::Ipfs.bootnodes().len(), 5);
+        assert_eq!(Network::Ursa.bootnodes().len(), 1);
+    }
+
+    #[test]
+    fn ipfs_bootnodes_include_bootstrap_nodes() {
+        let bootnodes = Network::Ipfs.bootnodes();
+        assert!(bootnodes.iter().any(|(_, peer)| peer.to_string() == "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"));
+    }
+}

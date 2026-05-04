@@ -149,3 +149,69 @@ pub fn listen_default_addresses_relay<B: NetworkBehaviour>(
     swarm.listen_on(quic)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::Parser;
+    use libp2p::Multiaddr;
+
+    #[test]
+    fn keypair_from_seed_is_deterministic() {
+        let left = keypair_from_seed(Some(7));
+        let right = keypair_from_seed(Some(7));
+        assert_eq!(left.public().to_peer_id(), right.public().to_peer_id());
+    }
+
+    #[test]
+    fn node_opts_parses_with_explicit_address() {
+        let opts = NodeOpts::parse_from([
+            "gnostr-p2p",
+            "--listen-address",
+            "/ip4/127.0.0.1/tcp/4001",
+            "--port",
+            "4001",
+            "--use-ipv6",
+        ]);
+
+        assert_eq!(
+            opts.listen_address,
+            Some("/ip4/127.0.0.1/tcp/4001".parse::<Multiaddr>().unwrap())
+        );
+        assert_eq!(opts.port, 4001);
+        assert!(opts.use_ipv6);
+    }
+
+    #[test]
+    fn lookup_opts_rejects_missing_target_and_both_targets() {
+        assert!(LookupOpts::try_parse_from(["gnostr-p2p-client"]).is_err());
+
+        assert!(LookupOpts::try_parse_from([
+            "gnostr-p2p-client",
+            "--peer",
+            "12D3KooWQKqane1SqWJNWMQkbia9qiMWXkcHtAdfW5eVF8hbwEDw",
+            "--multiaddr",
+            "/ip4/127.0.0.1/tcp/4001",
+        ])
+        .is_err());
+    }
+
+    #[test]
+    fn lookup_opts_parses_single_target() {
+        let opts = LookupOpts::try_parse_from([
+            "gnostr-p2p-client",
+            "--peer",
+            "12D3KooWQKqane1SqWJNWMQkbia9qiMWXkcHtAdfW5eVF8hbwEDw",
+            "--network",
+            "ipfs",
+        ])
+        .expect("lookup opts");
+
+        assert_eq!(
+            opts.peer.as_deref(),
+            Some("12D3KooWQKqane1SqWJNWMQkbia9qiMWXkcHtAdfW5eVF8hbwEDw")
+        );
+        assert!(opts.multiaddr.is_none());
+        assert!(matches!(opts.network, Some(Network::Ipfs)));
+    }
+}

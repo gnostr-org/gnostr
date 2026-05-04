@@ -20,7 +20,7 @@ use tracing::info;
 
 use crate::p2p::{behaviour::Behaviour, network_config::IPFS_PROTO_NAME};
 
-pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
+pub async fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
     let peer_id = PeerId::from(keypair.public());
     info!("Local PeerId: {}", peer_id);
 
@@ -57,6 +57,8 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         )?
         .with_quic()
         .with_dns()?
+        .with_websocket(noise::Config::new, yamux::Config::default)
+        .await?
         .with_relay_client(noise::Config::new, yamux::Config::default)?
         .with_behaviour(move |key, relay_client| {
             let local_peer_id = key.public().to_peer_id();

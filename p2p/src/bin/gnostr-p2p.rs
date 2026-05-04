@@ -30,7 +30,9 @@ async fn main() -> anyhow::Result<()> {
 
     let opt = Opt::parse();
     let keypair = cli::keypair_from_seed(opt.node.secret_key_seed);
-    let mut swarm = build_swarm(keypair).map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    let mut swarm = build_swarm(keypair)
+        .await
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
     swarm.behaviour_mut().kademlia.set_mode(Some(kad::Mode::Server));
 
     if let Some(network) = opt.network.network {
