@@ -10,7 +10,6 @@ pub use crate::git2::types::*;
 mod tests {
     use super::*;
     use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
-    use std::str::FromStr;
 
     #[test]
     fn exports_core_nostr_types() {
