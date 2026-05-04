@@ -36,7 +36,7 @@ fn main() {
         env!("CARGO_PKG_VERSION").to_string()
     } else {
         format!(
-            "gnostr-{} {} ({})",
+            "gnostr@{} {} ({})",
             env!("CARGO_PKG_VERSION"),
             build_date,
             get_git_hash()
