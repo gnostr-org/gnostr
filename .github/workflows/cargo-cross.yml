@@ -43,37 +43,30 @@ jobs:
         run: |
           import json
           import os
-          import subprocess
-
-          metadata = json.loads(subprocess.check_output(
-              ["cargo", "metadata", "--no-deps", "--format-version", "1"],
-              text=True,
-          ))
-
-          packages = []
-          for package in metadata["packages"]:
-              packages.append({
-                  "name": package["name"],
-                  "version": package["version"],
-                  "manifest_path": package["manifest_path"],
-              })
-
-          packages.sort(key=lambda item: item["name"])
+          targets = [
+              {"build": "linux-x64", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-gnu", "native": True, "features": ""},
+              {"build": "linux-x64-musl", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-musl", "native": False, "features": "vendored-openssl"},
+              {"build": "linux-arm64", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-gnu", "native": False, "features": "vendored-openssl"},
+              {"build": "linux-arm64-musl", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-musl", "native": False, "features": "vendored-openssl"},
+              {"build": "windows-x64", "os": "windows-latest", "target": "x86_64-pc-windows-msvc", "native": True, "features": ""},
+              {"build": "macos-x64", "os": "macos-13", "target": "x86_64-apple-darwin", "native": True, "features": ""},
+              {"build": "macos-arm64", "os": "macos-latest", "target": "aarch64-apple-darwin", "native": True, "features": ""},
+          ]
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"release_tag={os.environ['RELEASE_TAG']}\n")
-              output.write(f"matrix={json.dumps({'include': packages})}\n")
+              output.write(f"matrix={json.dumps({'include': targets})}\n")
 
-  package-crates:
+  build-binaries:
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     env:
-      BUILD_NAME: ${{ matrix.name }}-${{ matrix.version }}
+      BUILD_NAME: gnostr-${{ needs.setup.outputs.release_tag }}-${{ matrix.target }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -86,20 +79,83 @@ jobs:
         with:
           toolchain: ${{ inputs.toolchain || 'stable' }}
 
-      - name: Package crate
+      - name: Install cross
+        if: runner.os == 'Linux'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Set Clang environment variables
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          if command -v llvm-config >/dev/null 2>&1; then
+            lib_dir="$(llvm-config --libdir)"
+          else
+            so_path="$(find /usr /usr/local -name 'libclang.so*' 2>/dev/null | sort -V | tail -n 1)"
+            lib_dir="$(dirname "$so_path")"
+          fi
+
+          if [ -n "${lib_dir:-}" ] && [ -d "$lib_dir" ]; then
+            clang_resource_dir="$(clang -print-resource-dir)"
+            gcc_include_dir="$(gcc -print-file-name=include)"
+            echo "LIBCLANG_PATH=$lib_dir" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${clang_resource_dir}/include -isystem ${gcc_include_dir}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build release binaries
         shell: bash
         run: |
           set -euo pipefail
 
-          cargo package \
-            --allow-dirty \
-            --no-verify \
-            --locked \
-            --manifest-path "${{ matrix.manifest_path }}"
+          args=(
+            --target "${{ matrix.target }}"
+            --all-features
+            --verbose
+          )
+
+          if [ -n "${{ matrix.features }}" ]; then
+            args+=(--features "${{ matrix.features }}")
+          fi
+
+          ./scripts/cross.sh "${args[@]}"
+
+      - name: Bundle release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          bins=(
+            gnostr-server
+            git-remote-nostr
+            git-remote-gnostr-node
+            gnostr-shell
+            gnostr-blossom
+            blossom-filetree
+          )
+          exe_suffix=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            exe_suffix=".exe"
+          fi
 
           mkdir -p "artifacts/$BUILD_NAME"
-          cp "target/package/${{ matrix.name }}-${{ matrix.version }}.crate" "artifacts/$BUILD_NAME/"
-          (cd "artifacts/$BUILD_NAME" && sha256sum *.crate > "${BUILD_NAME}-SHA256SUMS")
+          cp README.md LICENSE "artifacts/$BUILD_NAME/"
+          for bin in "${bins[@]}"; do
+            cp "target/${{ matrix.target }}/release/${bin}${exe_suffix}" "artifacts/$BUILD_NAME/"
+          done
+          (cd "artifacts/$BUILD_NAME" && sha256sum * > "${BUILD_NAME}-SHA256SUMS")
+
+      - name: Smoke test
+        if: matrix.native == true
+        shell: bash
+        run: |
+          exe_suffix=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            exe_suffix=".exe"
+          fi
+
+          "./artifacts/$BUILD_NAME/gnostr-server${exe_suffix}" --version
+          "./artifacts/$BUILD_NAME/gnostr-blossom${exe_suffix}" --version
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -108,7 +164,7 @@ jobs:
           path: artifacts/${{ env.BUILD_NAME }}
 
   create-github-release:
-    needs: [setup, package-crates]
+    needs: [setup, build-binaries]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -142,11 +198,20 @@ jobs:
             --generate-notes \
             $prerelease_flag
 
+      - name: Zip release bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd artifacts
+          for dir in */; do
+            [ -d "$dir" ] || continue
+            zip -r "${dir%/}.zip" "$dir" >/dev/null
+          done
+
       - name: Upload release assets
         shell: bash
         run: |
           release_tag="${{ needs.setup.outputs.release_tag }}"
           gh release upload "$release_tag" \
-            artifacts/*/*.crate \
-            artifacts/*/*-SHA256SUMS \
+            artifacts/*.zip \
             --clobber
