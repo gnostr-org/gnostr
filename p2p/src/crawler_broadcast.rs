@@ -86,6 +86,12 @@ pub async fn broadcast_crawler_relay_buckets(
     Ok(published)
 }
 
+pub async fn publish_local_snapshots(
+    swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
+) -> Result<usize, Box<dyn Error>> {
+    broadcast_crawler_relay_buckets(swarm).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
