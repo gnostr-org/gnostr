@@ -702,6 +702,7 @@ fn add_head(state: &mut HashMap<String, String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::{Client, Keys, Options};
     use crate::types::get_leading_zero_bits;
     use crate::types::nip13::NIP13Event;
     use git2::Oid;
@@ -1124,7 +1125,7 @@ mod tests {
 
     #[tokio::test]
     #[serial]
-    async fn nip34_event_matrix_covers_all_kinds_and_git_notes() {
+    async fn nip34_event_matrix_covers_all_kinds_and_git_notes() -> crate::error::Result<()> {
         println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
 
         let private_key = PrivateKey::mock();
@@ -1132,6 +1133,23 @@ mod tests {
         let note_base = note_fixture();
         let root_commit = note_base.annotated_id.to_string();
         let repo_url = "https://github.com/gnostr-org/gnostr.git".to_string();
+        let relay_urls = vec![
+            "wss://nostr-kyomu-haskell.onrender.com/".to_string(),
+            "wss://nostr-relay.amethyst.name/".to_string(),
+            "wss://relay.bitcoindistrict.org/".to_string(),
+            "wss://nos.lol/".to_string(),
+            "wss://relay.damus.io/".to_string(),
+        ];
+        print_banner("asyncgit NIP-34 relay targets");
+        for relay in &relay_urls {
+            println!("  - {relay}");
+        }
+        let mut client = Client::new(&Keys::new(private_key.clone()), Options::new().wait_for_send(true));
+        client
+            .add_relays(relay_urls)
+            .await
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        client.connect().await;
 
         let repo_ref = RepoRef {
             name: "gnostr".to_string(),
@@ -1310,6 +1328,11 @@ mod tests {
 
         for (carrier_label, carrier_event, expected_kind) in carriers {
             log_event_summary(carrier_label, &carrier_event);
+            let published = client
+                .send_event(carrier_event.clone())
+                .await
+                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            assert_eq!(published, carrier_event.id);
             assert_eq!(carrier_event.kind, expected_kind);
 
             match carrier_label {
@@ -1351,6 +1374,11 @@ mod tests {
                     &format!("{carrier_label} / {note_label}"),
                     &git_note_event,
                 );
+                let published = client
+                    .send_event(git_note_event.clone())
+                    .await
+                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+                assert_eq!(published, git_note_event.id);
                 assert_eq!(git_note_event.kind, EventKind::Patches);
                 assert_eq!(git_note_event.content, note.message);
                 assert_eq!(git_note_event.created_at, Unixtime(note.committer_time));
@@ -1375,6 +1403,8 @@ mod tests {
                 }
             }
         }
+
+        Ok(())
     }
 
     #[test]

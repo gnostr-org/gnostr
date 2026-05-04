@@ -356,14 +356,17 @@ impl Client {
                                 .send(WsMessage::Text(message_json.clone().into()))
                                 .await
                             {
+                                println!("broadcast failed: relay={ws_url} error={e}");
                                 warn!("Failed to send event to {}: {}", ws_url, e);
                                 false
                             } else {
+                                println!("broadcast succeeded: relay={ws_url} event={event_id}");
                                 info!("Event {} sent to relay {}", event_id, ws_url);
                                 true
                             }
                         }
                         Err(e) => {
+                            println!("broadcast failed: relay={ws_url} error={e}");
                             warn!("Failed to connect to relay {}: {}", ws_url, e);
                             false
                         }
@@ -373,6 +376,10 @@ impl Client {
                 {
                     Ok(sent) => sent,
                     Err(_) => {
+                        println!(
+                            "broadcast failed: relay={ws_url} timeout={}s",
+                            relay_timeout.as_secs_f32()
+                        );
                         warn!(
                             "Timed out sending event to relay {} after {}s",
                             ws_url,
