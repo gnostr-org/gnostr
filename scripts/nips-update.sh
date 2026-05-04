@@ -23,7 +23,8 @@ trap cleanup EXIT
 
 shopt -s nullglob
 
-git clone --quiet --depth 1 "$UPSTREAM_URL" "$TMP_DIR/nips"
+mkdir -p "$TMP_DIR/git-template"
+GIT_TEMPLATE_DIR="$TMP_DIR/git-template" git clone --quiet --depth 1 "$UPSTREAM_URL" "$TMP_DIR/nips"
 
 for upstream_file in "$TMP_DIR"/nips/*.md; do
   cp "$upstream_file" "$NIPS_DIR/"
