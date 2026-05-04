@@ -456,11 +456,8 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
 
-if [ -n "${VERSION_TAG:-}" ]; then
-  git push origin "$VERSION_TAG:$VERSION_TAG"
-  ##echo "let cargo-cross.yml publish"
-fi
 for crate in "${PUBLISH_CRATES[@]}"; do
     git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
 done
 git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION"
+git push origin "v$WORKSPACE_VERSION:v$WORKSPACE_VERSION"
