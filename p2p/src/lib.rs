@@ -28,6 +28,7 @@ pub mod relay_bridge;
 pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
+pub use crawler_broadcast as relay_buckets;
 
 /// Crate name.
 pub const PACKAGE_NAME: &str = "gnostr-p2p";
