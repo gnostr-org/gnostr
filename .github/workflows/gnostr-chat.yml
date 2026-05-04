@@ -8,6 +8,12 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      topic:
+        description: "Chat topic"
+        required: false
+        default: gnostr-dev
+        type: string
   repository_dispatch:
     types: [run-gnostr-chat-workflow]
   push:
@@ -24,6 +30,7 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
+      TOPIC: ${{ inputs.topic || 'gnostr-dev' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
@@ -40,6 +47,7 @@ jobs:
           echo POW=${{ env.POW }}
           echo DAMUS=${{ env.DAMUS }}
           echo NOS=${{ env.NOS }}
+          echo TOPIC=${{ env.TOPIC }}
           printenv
         env:
           MEMPOOL: "mempool"
@@ -219,7 +227,7 @@ jobs:
               --debug \
               --name sender \
               --hash "$SENDER_HASH" \
-              --topic gnostr-dev \
+              --topic "${{ env.TOPIC }}" \
               --oneshot "$MESSAGE"
             sleep 5
           done
