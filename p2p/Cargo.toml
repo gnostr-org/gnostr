@@ -29,7 +29,9 @@ clap = { version = "4.5.41", features = [
 ] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947798.733008", default-features = false, features = ["nostr"] }
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1875.947893.611524", default-features = false, features = [
+  "nostr",
+] }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",
@@ -84,4 +86,4 @@ tracing-subscriber = { version = "0.3.22", default-features = false, features = 
   "fmt",
 ] }
 warp = { workspace = true }
-gnostr-crawler = { version = "1875.947798.733008", path = "../crawler" }
+gnostr-crawler = { version = "1875.947893.611524", path = "../crawler" }
