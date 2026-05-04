@@ -170,7 +170,7 @@ fn git_note_sign(
     };
 
     println!(
-        "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce={:?}",
+        "nip34 git note event created:\n  kind={:?}\n  id={}\n  pubkey={}\n  created_at={}\n  nonce={:?}",
         event.kind,
         event.id.as_hex_string(),
         event.pubkey.as_hex_string(),
@@ -178,14 +178,17 @@ fn git_note_sign(
         event.nonce_data()
     );
     println!(
-        "nip34 git note event payload: kind={:?} id={} pubkey={} created_at={} content={}",
+        "nip34 git note event payload:\n  kind={:?}\n  id={}\n  pubkey={}\n  created_at={}\n  content={}",
         event.kind,
         event.id.as_hex_string(),
         event.pubkey.as_hex_string(),
         event.created_at,
         event.content
     );
-    println!("nip34 git note event tags: {:?}", event.tags);
+    println!("nip34 git note event tags:");
+    for tag in &event.tags {
+        println!("  - {}", tag.0.join(":"));
+    }
 
     Ok(event)
 }
@@ -1500,7 +1503,7 @@ mod tests {
             .map(|tag| tag.0.join(":"))
             .collect::<Vec<_>>();
         println!(
-            "[asyncgit] {label}: kind={}({kind_number}) id={} pubkey={} created_at={} nonce={:?} content={}",
+            "[asyncgit] {label}:\n  kind={}({kind_number})\n  id={}\n  pubkey={}\n  created_at={}\n  nonce={:?}\n  content={}",
             kind_label,
             event.id.as_hex_string(),
             event.pubkey.as_hex_string(),
@@ -1508,9 +1511,9 @@ mod tests {
             nonce,
             event.content
         );
-        println!(
-            "[asyncgit] {label}: tags=[{}]",
-            tags.join(" | ")
-        );
+        println!("[asyncgit] {label}: tags:");
+        for tag in tags {
+            println!("  - {tag}");
+        }
     }
 }
