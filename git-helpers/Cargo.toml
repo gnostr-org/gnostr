@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-git-helpers"
-version = "1875.947922.575642"
+version = "1875.947923.574437"
 edition = "2021"
 description = "git-remote helpers for Blossom, Nostr NIP-34, IPFS, PKARR, and Tor"
 license = "MIT"
