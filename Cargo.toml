@@ -146,6 +146,7 @@ futures = { version = "0.3.31" }
 futures-util = "0.3.31"
 gnostr-asyncgit = { path = "asyncgit", version = "1875.947893.611524", default-features = false }
 gnostr-chat = { path = "chat", version = "1875.947893.611524" }
+gnostr-crawler = { path = "crawler", version = "1875.947893.611524" }
 gnostr-p2p = { path = "p2p", version = "1875.947893.611524" }
 #gh = { path = "gh", package = "gh-rs" }
 git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = "1875.947893.611524" }

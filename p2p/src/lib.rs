@@ -20,6 +20,7 @@ pub mod kvs;
 pub mod lookup;
 pub mod network_config;
 pub mod opt;
+pub mod relay_buckets;
 pub mod bridge;
 pub mod js;
 pub mod message;
@@ -79,7 +80,7 @@ mod tests {
 pub mod p2p {
     pub use crate::{
         args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
-        keypair_from_seed, lookup, message, network_config, opt, relay_bridge, swarm_builder,
-        utils,
+        keypair_from_seed, lookup, message, network_config, opt, relay_buckets, relay_bridge,
+        swarm_builder, utils,
     };
 }

@@ -1,7 +1,9 @@
 use futures::StreamExt;
 
 use clap::Parser;
-use gnostr_p2p::{cli, command_handler, event_handler, swarm_builder::build_swarm};
+use gnostr_p2p::{
+    cli, command_handler, event_handler, relay_buckets, swarm_builder::build_swarm,
+};
 use libp2p::kad;
 use tokio::io::AsyncBufReadExt;
 
@@ -39,6 +41,10 @@ async fn main() -> anyhow::Result<()> {
         for (addr, peer_id) in network.bootnodes() {
             swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
         }
+    }
+
+    if let Err(error) = relay_buckets::publish_local_snapshots(&mut swarm).await {
+        eprintln!("failed to publish local relay buckets: {error}");
     }
 
     cli::listen_default_addresses(
