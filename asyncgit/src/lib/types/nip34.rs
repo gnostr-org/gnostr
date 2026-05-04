@@ -4,6 +4,11 @@ use std::{
     str::FromStr,
 };
 
+// Asyncgit's NIP-34 surface lives here.
+//
+// This module owns repo announcement/state plus the PR, update, status, and
+// grasp kinds. `sync::notes` owns the 1617 git-note/PoW permutations.
+
 use git2::Oid;
 use serde::{Deserialize, Serialize};
 use crate::{
@@ -691,6 +696,7 @@ mod tests {
     use crate::types::get_leading_zero_bits;
     use crate::types::nip13::NIP13Event;
     use git2::Oid;
+    use serial_test::serial;
     use std::sync::Arc;
     use std::str::FromStr;
 
@@ -1107,6 +1113,201 @@ mod tests {
         assert!(get_leading_zero_bits(&event.id.0) >= 4);
     }
 
+    #[tokio::test]
+    #[serial]
+    async fn nip34_event_matrix_covers_all_kinds_and_git_notes() {
+        println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
+
+        let private_key = PrivateKey::mock();
+        let trusted_maintainer = private_key.public_key();
+        let root_commit = "abcdef1234567890abcdef1234567890abcdef12".to_string();
+        let repo_url = "https://github.com/gnostr-org/gnostr.git".to_string();
+
+        let repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: root_commit.clone(),
+            git_server: vec![repo_url.clone()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+
+        let repo_announcement = repo_ref.to_event(&private_key).unwrap();
+        let mut state = HashMap::new();
+        let _ = state.insert(
+            "refs/heads/main".to_string(),
+            "0123456789abcdef0123456789abcdef01234567".to_string(),
+        );
+        let _ = state.insert(
+            "refs/tags/v0.1.0".to_string(),
+            "89abcdef0123456789abcdef0123456789abcdef".to_string(),
+        );
+        let repo_state = RepoState::build("gnostr".to_string(), state, &private_key).unwrap();
+        let parsed_repo_state = RepoState::try_from(vec![repo_state.event.clone()]).unwrap();
+
+        let root_patch = {
+            let root_reference = Id::try_from_hex_string(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            )
+            .unwrap();
+            signed_event(
+                &private_key,
+                EventKind::Patches,
+                "From 0123456789abcdef0123456789abcdef01234567 Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/1] example title\n\nexample description",
+                vec![
+                    TagV3::new_event(root_reference, None, Some("root".to_string())),
+                    TagV3::new_tag("commit", &root_commit),
+                    TagV3::new_tag("clone", &repo_url),
+                    TagV3::new_tag("description", "example description"),
+                ],
+                1_777_759_186,
+            )
+        };
+
+        let pr_event = signed_event(
+            &private_key,
+            EventKind::from(PULL_REQUEST_KIND),
+            "example description",
+            vec![
+                TagV3::new_event(root_patch.id, None, Some("root".to_string())),
+                TagV3::new_tag("subject", "example title"),
+                TagV3::new_tag("alt", "git Pull Request: example title"),
+                TagV3::new_tag("branch-name", "feature/nip34"),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::from_strings(vec![
+                    "r".to_string(),
+                    root_commit.clone(),
+                    "euc".to_string(),
+                ]),
+            ],
+            1_777_759_187,
+        );
+
+        let pr_update_event = signed_event(
+            &private_key,
+            EventKind::from(PULL_REQUEST_UPDATE_KIND),
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git Pull Request Update"),
+                TagV3::from_strings(vec!["E".to_string(), pr_event.id.as_hex_string()]),
+                TagV3::from_strings(vec!["P".to_string(), pr_event.pubkey.as_hex_string()]),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::from_strings(vec![
+                    "r".to_string(),
+                    root_commit.clone(),
+                    "euc".to_string(),
+                ]),
+            ],
+            1_777_759_188,
+        );
+
+        let status_open = signed_event(
+            &private_key,
+            EventKind::GitStatusOpen,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: open"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_189,
+        );
+        let status_applied = signed_event(
+            &private_key,
+            EventKind::GitStatusApplied,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: applied"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_190,
+        );
+        let status_draft = signed_event(
+            &private_key,
+            EventKind::GitStatusDraft,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: draft"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_191,
+        );
+        let status_closed = signed_event(
+            &private_key,
+            EventKind::GitStatusClosed,
+            String::new(),
+            vec![
+                TagV3::new_tag(
+                    "alt",
+                    "Git patch closed as forthcoming update is too large. Replacing with Pull Request",
+                ),
+                TagV3::new_event(pr_event.id, None, Some("root".to_string())),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_192,
+        );
+
+        let grasp_list = signed_event(
+            &private_key,
+            EventKind::from(USER_GRASP_LIST_KIND),
+            String::new(),
+            vec![
+                TagV3::from_strings(vec!["g".to_string(), "wss://grasp.example.com".to_string()]),
+                TagV3::from_strings(vec![
+                    "g".to_string(),
+                    "wss://another-grasp.example.com".to_string(),
+                ]),
+            ],
+            1_777_759_193,
+        );
+
+        println!("[asyncgit] repo announcement event: {repo_announcement:#?}");
+        println!("[asyncgit] repo state event: {:#?}", repo_state.event);
+        println!("[asyncgit] repo patch root: {root_patch:#?}");
+        println!("[asyncgit] pull request event: {pr_event:#?}");
+        println!("[asyncgit] pull request update event: {pr_update_event:#?}");
+        println!("[asyncgit] status open event: {status_open:#?}");
+        println!("[asyncgit] status applied event: {status_applied:#?}");
+        println!("[asyncgit] status draft event: {status_draft:#?}");
+        println!("[asyncgit] status closed event: {status_closed:#?}");
+        println!("[asyncgit] user grasp list event: {grasp_list:#?}");
+
+        assert_eq!(repo_announcement.kind, repo_announcement_kind());
+        assert_eq!(parsed_repo_state.identifier, "gnostr");
+        assert_eq!(parsed_repo_state.state.get("HEAD"), Some(&"ref: refs/heads/main".to_string()));
+        assert_eq!(root_patch.kind, EventKind::Patches);
+        assert!(event_is_patch_set_root(&root_patch));
+        assert!(patch_supports_commit_ids(&root_patch));
+        assert!(event_is_valid_pr_or_pr_update(&pr_event));
+        assert!(event_is_revision_root(&pr_event));
+        assert_eq!(pr_event.kind, EventKind::from(PULL_REQUEST_KIND));
+        assert_eq!(pr_update_event.kind, EventKind::from(PULL_REQUEST_UPDATE_KIND));
+        assert!(event_is_valid_pr_or_pr_update(&pr_update_event));
+        assert!(!event_is_revision_root(&pr_update_event));
+        assert_eq!(status_open.kind, EventKind::GitStatusOpen);
+        assert_eq!(status_applied.kind, EventKind::GitStatusApplied);
+        assert_eq!(status_draft.kind, EventKind::GitStatusDraft);
+        assert_eq!(status_closed.kind, EventKind::GitStatusClosed);
+        assert_eq!(grasp_list.kind, EventKind::from(USER_GRASP_LIST_KIND));
+        assert_eq!(grasp_list.content, "");
+        assert!(grasp_list.tags.iter().any(|tag| tag.tagname() == "g"));
+    }
+
     #[test]
     fn repo_ref_requires_repo_kind() {
         let event = EventV3::new_dummy();
@@ -1195,5 +1396,25 @@ mod tests {
             ..EventV3::new_dummy()
         };
         assert!(get_event_root(&root_event).is_ok());
+    }
+
+    fn signed_event(
+        private_key: &PrivateKey,
+        kind: EventKind,
+        content: impl Into<String>,
+        tags: Vec<TagV3>,
+        created_at: i64,
+    ) -> EventV3 {
+        EventV3::sign_with_private_key(
+            PreEventV3 {
+                pubkey: private_key.public_key(),
+                created_at: Unixtime(created_at),
+                kind,
+                tags,
+                content: content.into(),
+            },
+            private_key,
+        )
+        .unwrap()
     }
 }
