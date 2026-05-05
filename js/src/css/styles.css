@@ -5,6 +5,7 @@
 	outline: none;
 }
 
+html,
 body {
 	background: var(--clrBg);
 	color: var(--clrText);
@@ -12,6 +13,8 @@ body {
 	font-size: var(--fsNormal);
 	margin: 0;
 	padding: 0;
+	height: 100%;
+	overflow: hidden;
 }
 
 a {
@@ -94,8 +97,10 @@ th, td {
 #app-main {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Ensure it takes full viewport height */
+    height: 100vh; /* Keep the shell fixed to the viewport */
     padding-top: var(--header-height); /* Account for fixed header */
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 #global-header {
