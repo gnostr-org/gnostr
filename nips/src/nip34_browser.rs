@@ -88,7 +88,6 @@ const ALL_TABS: &[Nip34Tab] = &[
     Nip34Tab::GraspList,
 ];
 
-const LOCAL_RELAY: &str = "ws://127.0.0.1:8080";
 const INITIAL_POLL_INTERVAL: Duration = Duration::from_secs(2);
 const POLL_INTERVAL: Duration = Duration::from_secs(15);
 
@@ -393,16 +392,5 @@ fn load_nip34_tabs(relay_urls: Vec<String>, timeout: Duration) -> Result<Vec<Nip
 }
 
 fn browser_relay_urls() -> Vec<String> {
-    let mut relays = vec![LOCAL_RELAY.to_string()];
-
-    for relay in get_relay_urls() {
-        if relay.contains("0.0.0.0:8080") || relay == LOCAL_RELAY {
-            continue;
-        }
-        if !relays.contains(&relay) {
-            relays.push(relay);
-        }
-    }
-
-    relays
+    get_relay_urls()
 }
