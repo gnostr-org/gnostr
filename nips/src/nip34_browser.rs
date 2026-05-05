@@ -5,17 +5,21 @@ use std::{
     time::Duration,
 };
 
+use futures::{future::join_all, SinkExt, StreamExt};
 use crossterm::event::{KeyCode, KeyEvent};
 use gnostr_asyncgit::{
     default_gnostr_private_key,
-    filehash::get_relay_urls,
-    types::{Client, Event, EventKind, Filter, KeySecurity, Keys, Options, PrivateKey},
+    types::{
+        local_relay_urls, Client, ClientMessage, Event, EventKind, Filter, KeySecurity, Keys,
+        Options, PrivateKey, RelayMessage, SubscriptionId, Unixtime,
+    },
 };
 use ratatui::{
     prelude::*,
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap},
 };
+use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Nip34Tab {
@@ -88,8 +92,8 @@ const ALL_TABS: &[Nip34Tab] = &[
     Nip34Tab::GraspList,
 ];
 
-const INITIAL_POLL_INTERVAL: Duration = Duration::from_secs(2);
-const POLL_INTERVAL: Duration = Duration::from_secs(15);
+const INITIAL_POLL_INTERVAL: Duration = Duration::from_millis(750);
+const RECONNECT_INTERVAL: Duration = Duration::from_secs(2);
 
 #[derive(Clone)]
 struct Nip34TabData {
@@ -110,10 +114,36 @@ impl Nip34TabData {
     fn selected_event(&self) -> Option<&Event> {
         self.events.get(self.selected)
     }
+
+    fn upsert_event(&mut self, event: Event) {
+        if self.events.iter().any(|existing| existing.id == event.id) {
+            return;
+        }
+
+        let selected_id = self.selected_event().map(|event| event.id);
+        self.events.push(event);
+        self.events.sort_by(|a, b| {
+            b.created_at
+                .cmp(&a.created_at)
+                .then_with(|| b.id.cmp(&a.id))
+        });
+        self.events.truncate(20);
+
+        if let Some(selected_id) = selected_id {
+            self.selected = self
+                .events
+                .iter()
+                .position(|event| event.id == selected_id)
+                .unwrap_or(0);
+        } else {
+            self.selected = 0;
+        }
+    }
 }
 
 enum Nip34Update {
     Loaded(Result<Vec<Nip34TabData>, String>),
+    Event(Event),
 }
 
 pub struct Nip34Browser {
@@ -128,26 +158,43 @@ impl Nip34Browser {
     pub fn spawn() -> Self {
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
-            let initial = load_nip34_tabs(browser_relay_urls(), INITIAL_POLL_INTERVAL);
+            let initial = load_nip34_tabs(local_relay_urls(), INITIAL_POLL_INTERVAL);
             if tx.send(Nip34Update::Loaded(initial)).is_err() {
                 return;
             }
 
-            loop {
-                let result = load_nip34_tabs(browser_relay_urls(), POLL_INTERVAL);
-                if tx.send(Nip34Update::Loaded(result)).is_err() {
-                    break;
+            let relay_urls = local_relay_urls();
+            let runtime = match tokio::runtime::Runtime::new() {
+                Ok(runtime) => runtime,
+                Err(err) => {
+                    let _ = tx.send(Nip34Update::Loaded(Err(err.to_string())));
+                    return;
+                }
+            };
+
+            runtime.block_on(async move {
+                let since = Unixtime::now();
+                let filters = nip34_subscription_filters(since);
+                let mut handles = Vec::new();
+
+                for relay_url in relay_urls {
+                    let tx = tx.clone();
+                    let filters = filters.clone();
+                    let subscription_id = SubscriptionId(format!("nips-nip34-{relay_url}"));
+                    handles.push(tokio::spawn(async move {
+                        subscribe_nip34_updates(relay_url, subscription_id, filters, tx).await;
+                    }));
                 }
 
-                thread::sleep(POLL_INTERVAL);
-            }
+                let _ = join_all(handles).await;
+            });
         });
 
         Self {
             receiver: rx,
             tabs: ALL_TABS.iter().copied().map(|tab| Nip34TabData::new(tab, Vec::new())).collect(),
             active_tab: 0,
-            loading: true,
+            loading: false,
             error: None,
         }
     }
@@ -159,11 +206,20 @@ impl Nip34Browser {
                     self.tabs = tabs;
                     self.loading = false;
                     self.error = None;
-                    self.active_tab = 0;
+                    self.active_tab = self.active_tab.min(self.tabs.len().saturating_sub(1));
                 }
                 Nip34Update::Loaded(Err(err)) => {
                     self.loading = false;
                     self.error = Some(err);
+                }
+                Nip34Update::Event(event) => {
+                    self.loading = false;
+                    self.error = None;
+                    for tab in &mut self.tabs {
+                        if tab.tab.kind() == event.kind {
+                            tab.upsert_event(event.clone());
+                        }
+                    }
                 }
             }
         }
@@ -197,12 +253,7 @@ impl Nip34Browser {
             .constraints([Constraint::Min(0), Constraint::Length(3)])
             .split(inner);
 
-        if self.loading {
-            let loading = Paragraph::new("Loading live nip34 events...")
-                .alignment(Alignment::Center)
-                .wrap(Wrap { trim: false });
-            frame.render_widget(loading, chunks[0]);
-        } else if let Some(err) = &self.error {
+        if let Some(err) = &self.error {
             let err = Paragraph::new(err.clone())
                 .block(Block::default().borders(Borders::ALL).title("Error"))
                 .wrap(Wrap { trim: false });
@@ -360,7 +411,7 @@ fn load_nip34_tabs(relay_urls: Vec<String>, timeout: Duration) -> Result<Vec<Nip
     let runtime = tokio::runtime::Runtime::new().map_err(|err| err.to_string())?;
     runtime.block_on(async {
         if relay_urls.is_empty() {
-            return Err(String::from("no relay URLs configured"));
+            return Err(String::from("no local relay endpoint configured"));
         }
 
         let keys = Keys::new(PrivateKey(
@@ -374,23 +425,91 @@ fn load_nip34_tabs(relay_urls: Vec<String>, timeout: Duration) -> Result<Vec<Nip
             .map_err(|err| err.to_string())?;
         client.connect().await;
 
-        let mut tabs = Vec::new();
-        for tab in ALL_TABS.iter().copied() {
-            let mut filter = Filter::new();
-            filter.add_event_kind(tab.kind());
-            filter.limit = Some(20);
-            let mut events = client
-                .get_events_of(vec![filter], Some(timeout))
-                .await
-                .map_err(|err| err.to_string())?;
-            events.sort_by_key(|event| Reverse(event.created_at));
-            tabs.push(Nip34TabData::new(tab, events));
-        }
+        let tabs = join_all(ALL_TABS.iter().copied().map(|tab| {
+            let client = client.clone();
+            async move {
+                let mut filter = Filter::new();
+                filter.add_event_kind(tab.kind());
+                filter.limit = Some(20);
+                let mut events = client
+                    .get_events_of(vec![filter], Some(timeout))
+                    .await
+                    .map_err(|err| err.to_string())?;
+                events.sort_by_key(|event| Reverse(event.created_at));
+                Ok::<Nip34TabData, String>(Nip34TabData::new(tab, events))
+            }
+        }))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
         Ok(tabs)
     })
 }
 
-fn browser_relay_urls() -> Vec<String> {
-    get_relay_urls()
+fn nip34_subscription_filters(since: Unixtime) -> Vec<Filter> {
+    let mut filter = Filter::new();
+    for tab in ALL_TABS {
+        filter.add_event_kind(tab.kind());
+    }
+    filter.since = Some(since);
+    vec![filter]
+}
+
+async fn subscribe_nip34_updates(
+    relay_url: String,
+    subscription_id: SubscriptionId,
+    filters: Vec<Filter>,
+    tx: std::sync::mpsc::Sender<Nip34Update>,
+) {
+    loop {
+        match connect_async(&relay_url).await {
+            Ok((stream, _response)) => {
+                let (mut write, mut read) = stream.split();
+                let request = ClientMessage::Req(subscription_id.clone(), filters.clone());
+                let request = match serde_json::to_string(&request) {
+                    Ok(request) => request,
+                    Err(_) => return,
+                };
+
+                if let Err(_err) = write.send(WsMessage::Text(request.into())).await {
+                    tokio::time::sleep(RECONNECT_INTERVAL).await;
+                    continue;
+                }
+
+                while let Some(message) = read.next().await {
+                    match message {
+                        Ok(WsMessage::Text(text)) => match serde_json::from_str::<RelayMessage>(&text)
+                        {
+                            Ok(RelayMessage::Event(_, event)) => {
+                                if tx.send(Nip34Update::Event(*event)).is_err() {
+                                    return;
+                                }
+                            }
+                            Ok(RelayMessage::Notice(_))
+                            | Ok(RelayMessage::Notify(_))
+                            | Ok(RelayMessage::Eose(_))
+                            | Ok(RelayMessage::Ok(_, _, _))
+                            | Ok(RelayMessage::Auth(_))
+                            | Ok(RelayMessage::Closed(_, _)) => {}
+                            Err(_) => {}
+                        },
+                        Ok(WsMessage::Ping(payload)) => {
+                            if write.send(WsMessage::Pong(payload)).await.is_err() {
+                                break;
+                            }
+                        }
+                        Ok(WsMessage::Close(_)) => break,
+                        Ok(WsMessage::Binary(_))
+                        | Ok(WsMessage::Pong(_))
+                        | Ok(WsMessage::Frame(_)) => {}
+                        Err(_) => break,
+                    }
+                }
+            }
+            Err(_) => {}
+        }
+
+        tokio::time::sleep(RECONNECT_INTERVAL).await;
+    }
 }

@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
     sync::mpsc::{self, Receiver},
+    sync::OnceLock,
     thread,
     time::Duration,
 };
@@ -24,8 +25,11 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
+use gnostr_relay::App as RelayApp;
 
 use crate::{nip34_browser, upstream, workflow};
+
+static LOCAL_RELAY_BOOTSTRAPPED: OnceLock<()> = OnceLock::new();
 
 pub fn collect_checkout_paths(dir: impl AsRef<Path>) -> io::Result<Vec<PathBuf>> {
     let output = Command::new("git")
@@ -290,6 +294,9 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
 
     let lines = vec![
         Line::from(vec![
+            Span::styled(&app.status_line, Style::default().fg(Color::White)),
+        ]),
+        Line::from(vec![
             Span::styled("Context: ", Style::default().fg(Color::Gray)),
             Span::styled(context, context_style),
         ]),
@@ -301,8 +308,7 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
             toolbar_action("n", "new branch", true),
             Span::raw("  "),
             toolbar_action("c", "checkout", true),
-        ]),
-        Line::from(vec![
+            Span::raw("  "),
             toolbar_action("P", "nip34 browser", true),
             Span::raw("  "),
             toolbar_action("g", "git ui", true),
@@ -406,13 +412,59 @@ fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser
     browser.render(frame, area);
 }
 
+fn bootstrap_local_relay() -> io::Result<()> {
+    LOCAL_RELAY_BOOTSTRAPPED.get_or_init(|| {
+        thread::spawn(|| {
+            let runtime = match tokio::runtime::Runtime::new() {
+                Ok(runtime) => runtime,
+                Err(err) => {
+                    eprintln!("relay runtime error: {err}");
+                    return;
+                }
+            };
+
+            runtime.block_on(async move {
+                match RelayApp::create(Some("config/gnostr.toml"), true, Some("NOSTR".to_owned()), None) {
+                    Ok(mut app_data) => {
+                        app_data.setting.write().add_nip(34);
+                        if let Err(err) = gnostr_relay::run_app_with_endpoint(app_data).await {
+                            eprintln!("relay startup error: {err}");
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!("relay config error: {err}");
+                    }
+                }
+            });
+        });
+    });
+
+    wait_for_local_relay(Duration::from_secs(10))
+}
+
+fn wait_for_local_relay(timeout: Duration) -> io::Result<()> {
+    let started = std::time::Instant::now();
+    loop {
+        if !gnostr_asyncgit::types::local_relay_urls().is_empty() {
+            return Ok(());
+        }
+        if started.elapsed() >= timeout {
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "local relay did not publish an endpoint",
+            ));
+        }
+        thread::sleep(Duration::from_millis(100));
+    }
+}
+
 fn ui(frame: &mut Frame, app: &mut App) {
     let mut constraints = vec![Constraint::Length(5), Constraint::Min(0)];
-    if app.show_toolbar {
-        constraints.push(Constraint::Length(3));
-    }
     if app.proposal_task.is_some() {
         constraints.push(Constraint::Length(7));
+    }
+    if app.show_toolbar {
+        constraints.push(Constraint::Length(3));
     }
 
     let chunks = Layout::default()
@@ -443,10 +495,6 @@ fn ui(frame: &mut Frame, app: &mut App) {
 
     frame.render_widget(content, body[if app.show_tree { 1 } else { 0 }]);
 
-    if app.show_toolbar {
-        render_toolbar(frame, app, chunks[2]);
-    }
-
     if app.show_help {
         render_help(frame);
     }
@@ -456,8 +504,12 @@ fn ui(frame: &mut Frame, app: &mut App) {
     }
 
     if app.proposal_task.is_some() {
-        let logger_index = if app.show_toolbar { 3 } else { 2 };
-        render_proposal_popup(frame, app, chunks[logger_index]);
+        render_proposal_popup(frame, app, chunks[2]);
+    }
+
+    if app.show_toolbar {
+        let toolbar_index = if app.proposal_task.is_some() { 3 } else { 2 };
+        render_toolbar(frame, app, chunks[toolbar_index]);
     }
 }
 
@@ -532,6 +584,7 @@ fn start_proposal_task(app: &mut App) {
 }
 
 pub fn run_default() -> Result<(), Box<dyn Error>> {
+    bootstrap_local_relay()?;
     let checkout_dir = upstream::ensure_checkout()?;
     let mut app = App::new(checkout_dir.clone(), collect_checkout_paths(&checkout_dir)?)?;
     if upstream::worktree_dirty(&checkout_dir)? {
