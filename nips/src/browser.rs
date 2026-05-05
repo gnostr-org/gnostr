@@ -301,11 +301,12 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
             toolbar_action("n", "new branch", true),
             Span::raw("  "),
             toolbar_action("c", "checkout", true),
-            Span::raw("  "),
-            toolbar_action("P", "nip34 browser", true),
-            toolbar_action("g", "git ui", true),
         ]),
         Line::from(vec![
+            toolbar_action("P", "nip34 browser", true),
+            Span::raw("  "),
+            toolbar_action("g", "git ui", true),
+            Span::raw("  "),
             toolbar_action("Enter", "toggle tree", true),
             Span::raw("  "),
             toolbar_action("r", "refresh", true),
@@ -316,9 +317,7 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
         ]),
     ];
 
-    let toolbar = Paragraph::new(Text::from(lines))
-        .block(Block::default().borders(Borders::ALL).title("Task Bar"))
-        .wrap(Wrap { trim: false });
+    let toolbar = Paragraph::new(Text::from(lines)).wrap(Wrap { trim: false });
     frame.render_widget(toolbar, area);
 }
 
@@ -410,7 +409,7 @@ fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser
 fn ui(frame: &mut Frame, app: &mut App) {
     let mut constraints = vec![Constraint::Length(5), Constraint::Min(0)];
     if app.show_toolbar {
-        constraints.push(Constraint::Length(5));
+        constraints.push(Constraint::Length(3));
     }
     if app.proposal_task.is_some() {
         constraints.push(Constraint::Length(7));

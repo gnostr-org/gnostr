@@ -88,6 +88,8 @@ const ALL_TABS: &[Nip34Tab] = &[
     Nip34Tab::GraspList,
 ];
 
+const LOCAL_RELAY: &str = "ws://127.0.0.1:8080";
+const INITIAL_POLL_INTERVAL: Duration = Duration::from_secs(2);
 const POLL_INTERVAL: Duration = Duration::from_secs(15);
 
 #[derive(Clone)]
@@ -127,8 +129,13 @@ impl Nip34Browser {
     pub fn spawn() -> Self {
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
+            let initial = load_nip34_tabs(vec![LOCAL_RELAY.to_string()], INITIAL_POLL_INTERVAL);
+            if tx.send(Nip34Update::Loaded(initial)).is_err() {
+                return;
+            }
+
             loop {
-                let result = load_nip34_tabs();
+                let result = load_nip34_tabs(browser_relay_urls(), POLL_INTERVAL);
                 if tx.send(Nip34Update::Loaded(result)).is_err() {
                     break;
                 }
@@ -350,10 +357,9 @@ fn render_event_detail(event: &Event) -> String {
     )
 }
 
-fn load_nip34_tabs() -> Result<Vec<Nip34TabData>, String> {
+fn load_nip34_tabs(relay_urls: Vec<String>, timeout: Duration) -> Result<Vec<Nip34TabData>, String> {
     let runtime = tokio::runtime::Runtime::new().map_err(|err| err.to_string())?;
     runtime.block_on(async {
-        let relay_urls = browser_relay_urls();
         if relay_urls.is_empty() {
             return Err(String::from("no relay URLs configured"));
         }
@@ -375,7 +381,7 @@ fn load_nip34_tabs() -> Result<Vec<Nip34TabData>, String> {
             filter.add_event_kind(tab.kind());
             filter.limit = Some(20);
             let mut events = client
-                .get_events_of(vec![filter], Some(Duration::from_secs(8)))
+                .get_events_of(vec![filter], Some(timeout))
                 .await
                 .map_err(|err| err.to_string())?;
             events.sort_by_key(|event| Reverse(event.created_at));
@@ -387,10 +393,10 @@ fn load_nip34_tabs() -> Result<Vec<Nip34TabData>, String> {
 }
 
 fn browser_relay_urls() -> Vec<String> {
-    let mut relays = vec![String::from("ws://127.0.0.1:8080")];
+    let mut relays = vec![LOCAL_RELAY.to_string()];
 
     for relay in get_relay_urls() {
-        if relay.contains("0.0.0.0:8080") {
+        if relay.contains("0.0.0.0:8080") || relay == LOCAL_RELAY {
             continue;
         }
         if !relays.contains(&relay) {
