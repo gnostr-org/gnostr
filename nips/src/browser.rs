@@ -409,7 +409,11 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                         if let Some(file_path) = editor_target(&app) {
                             app.status_line = String::from("publishing proposal...");
                             terminal.draw(|f| ui(f, &mut app))?;
+                            disable_raw_mode()?;
+                            stdout().execute(LeaveAlternateScreen)?;
                             let result = workflow::submit_proposal(&app.checkout_dir, &file_path);
+                            stdout().execute(EnterAlternateScreen)?;
+                            enable_raw_mode()?;
                             app.status_line = match result {
                                 Ok(hash) => format!("submitted proposal {hash}"),
                                 Err(err) => format!("proposal failed: {err}"),
