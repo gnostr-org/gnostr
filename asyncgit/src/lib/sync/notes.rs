@@ -496,7 +496,7 @@ mod tests {
                 dm_output, dm_recipient_pubkey
             );
 
-            assert_eq!(event.kind, EventKind::TextNote);
+            assert_eq!(event.kind, EventKind::Patches);
             assert_eq!(event.content, note.message);
             assert_eq!(event.created_at, Unixtime(note.committer_time));
             assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
