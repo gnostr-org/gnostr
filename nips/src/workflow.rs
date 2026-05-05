@@ -44,6 +44,46 @@ pub fn launch_editor(file_path: &Path) -> Result<(), Box<dyn Error>> {
     }
 }
 
+pub fn current_branch(repo_dir: &Path) -> Result<String, Box<dyn Error>> {
+    let output = Command::new("git")
+        .args(["branch", "--show-current"])
+        .current_dir(repo_dir)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(std::io::Error::other("failed to read current branch").into());
+    }
+
+    let branch = String::from_utf8(output.stdout)?;
+    Ok(branch.trim().to_string())
+}
+
+pub fn checkout_branch(repo_dir: &Path, branch: &str) -> Result<(), Box<dyn Error>> {
+    let status = Command::new("git")
+        .args(["checkout", branch])
+        .current_dir(repo_dir)
+        .status()?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::other(format!("git checkout {branch} failed")).into())
+    }
+}
+
+pub fn create_branch(repo_dir: &Path, branch: &str) -> Result<(), Box<dyn Error>> {
+    let status = Command::new("git")
+        .args(["checkout", "-b", branch])
+        .current_dir(repo_dir)
+        .status()?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::other(format!("git checkout -b {branch} failed")).into())
+    }
+}
+
 pub fn launch_git_tui(repo_dir: &Path) -> Result<(), Box<dyn Error>> {
     let current_dir = env::current_dir()?;
     env::set_current_dir(repo_dir)?;

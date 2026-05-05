@@ -3,6 +3,7 @@ use std::{
     error::Error,
     fs,
     io,
+    io::Write,
     io::stdout,
     path::{Path, PathBuf},
     process::Command,
@@ -17,7 +18,7 @@ use filetreelist::{FileTree, MoveSelection};
 use ratatui::{
     backend::CrosstermBackend,
     prelude::*,
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
 
 use crate::{upstream, workflow};
@@ -61,17 +62,22 @@ struct App {
     tree: FileTree,
     content_scroll: u16,
     show_tree: bool,
+    show_help: bool,
     status_line: String,
 }
 
 impl App {
     fn new(checkout_dir: PathBuf, paths: Vec<PathBuf>) -> io::Result<Self> {
+        let branch = workflow::current_branch(&checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
         Ok(Self {
             checkout_dir,
             tree: build_tree(&paths)?,
             content_scroll: 0,
             show_tree: true,
-            status_line: String::from("e: edit  p: propose  g: git ui  r: refresh  q: quit"),
+            show_help: false,
+            status_line: format!(
+                "{branch}  e: edit  p: propose  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  q: quit"
+            ),
         })
     }
 
@@ -83,6 +89,10 @@ impl App {
             let _ = self.tree.select_file(selected.as_path());
         }
         self.content_scroll = 0;
+        let branch = workflow::current_branch(&self.checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
+        self.status_line = format!(
+            "{branch}  e: edit  p: propose  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  q: quit"
+        );
         Ok(())
     }
 
@@ -173,6 +183,49 @@ fn render_tree(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(list, area);
 }
 
+fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(area);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}
+
+fn render_help(frame: &mut Frame) {
+    let area = centered_rect(70, 60, frame.area());
+    frame.render_widget(Clear, area);
+    let text = [
+        "nips help",
+        "",
+        "e  edit selected file in $EDITOR",
+        "p  stage + commit + publish nip34 proposal",
+        "g  open asyncgit's full git TUI",
+        "n  create and checkout a new branch",
+        "c  checkout an existing branch",
+        "r  refresh the upstream checkout",
+        "\\  toggle this help",
+        "q  quit",
+    ]
+    .join("\n");
+
+    let help = Paragraph::new(text)
+        .block(Block::default().borders(Borders::ALL).title("Help"))
+        .wrap(Wrap { trim: false });
+    frame.render_widget(help, area);
+}
+
 fn ui(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -209,10 +262,40 @@ fn ui(frame: &mut Frame, app: &mut App) {
         .scroll((app.content_scroll, 0));
 
     frame.render_widget(content, body[if app.show_tree { 1 } else { 0 }]);
+
+    if app.show_help {
+        render_help(frame);
+    }
 }
 
 fn editor_target(app: &App) -> Option<PathBuf> {
     app.selected_file_path()
+}
+
+fn prompt_input(prompt: &str) -> io::Result<Option<String>> {
+    disable_raw_mode()?;
+    stdout().execute(LeaveAlternateScreen)?;
+
+    let result = (|| -> io::Result<Option<String>> {
+        print!("{prompt}: ");
+        stdout().flush()?;
+        let mut input = String::new();
+        let read = io::stdin().read_line(&mut input)?;
+        if read == 0 {
+            return Ok(None);
+        }
+
+        let trimmed = input.trim().to_string();
+        if trimmed.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(trimmed))
+        }
+    })();
+
+    stdout().execute(EnterAlternateScreen)?;
+    enable_raw_mode()?;
+    result
 }
 
 pub fn run_default() -> Result<(), Box<dyn Error>> {
@@ -239,6 +322,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
 
                 match key.code {
                     KeyCode::Char('q') => break,
+                    KeyCode::Char('\\') => app.show_help = !app.show_help,
                     KeyCode::Esc | KeyCode::Enter => app.show_tree = !app.show_tree,
                     KeyCode::Left => {
                         app.move_selection(MoveSelection::Left);
@@ -275,6 +359,38 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             };
                         } else {
                             app.status_line = String::from("select a file to edit");
+                        }
+                    }
+                    KeyCode::Char('n') => {
+                        if let Some(branch) = prompt_input("Create and checkout branch")? {
+                            disable_raw_mode()?;
+                            stdout().execute(LeaveAlternateScreen)?;
+                            let branch_result = workflow::create_branch(&app.checkout_dir, &branch);
+                            stdout().execute(EnterAlternateScreen)?;
+                            enable_raw_mode()?;
+                            app.status_line = match branch_result {
+                                Ok(_) => {
+                                    let _ = app.reload();
+                                    format!("created branch {branch}")
+                                }
+                                Err(err) => format!("create branch failed: {err}"),
+                            };
+                        }
+                    }
+                    KeyCode::Char('c') => {
+                        if let Some(branch) = prompt_input("Checkout branch")? {
+                            disable_raw_mode()?;
+                            stdout().execute(LeaveAlternateScreen)?;
+                            let branch_result = workflow::checkout_branch(&app.checkout_dir, &branch);
+                            stdout().execute(EnterAlternateScreen)?;
+                            enable_raw_mode()?;
+                            app.status_line = match branch_result {
+                                Ok(_) => {
+                                    let _ = app.reload();
+                                    format!("checked out {branch}")
+                                }
+                                Err(err) => format!("checkout failed: {err}"),
+                            };
                         }
                     }
                     KeyCode::Char('g') => {
