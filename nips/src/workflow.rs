@@ -94,7 +94,7 @@ pub fn launch_git_tui(repo_dir: &Path) -> Result<(), Box<dyn Error>> {
         .ok_or_else(|| io::Error::other("failed to resolve workspace root"))?;
     let pty_system = native_pty_system();
     let (cols, rows) = crossterm::terminal::size().unwrap_or((120, 30));
-    let mut pair = pty_system.openpty(PtySize {
+    let pair = pty_system.openpty(PtySize {
         rows,
         cols,
         pixel_width: 0,

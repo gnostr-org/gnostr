@@ -18,6 +18,7 @@ use filetreelist::{FileTree, MoveSelection};
 use ratatui::{
     backend::CrosstermBackend,
     prelude::*,
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
 
@@ -62,6 +63,7 @@ struct App {
     tree: FileTree,
     content_scroll: u16,
     show_tree: bool,
+    show_toolbar: bool,
     show_help: bool,
     status_line: String,
 }
@@ -74,10 +76,9 @@ impl App {
             tree: build_tree(&paths)?,
             content_scroll: 0,
             show_tree: true,
+            show_toolbar: true,
             show_help: false,
-            status_line: format!(
-                "{branch}  e: edit  p: propose  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  q: quit"
-            ),
+            status_line: status_for_branch(&branch),
         })
     }
 
@@ -90,9 +91,7 @@ impl App {
         }
         self.content_scroll = 0;
         let branch = workflow::current_branch(&self.checkout_dir).unwrap_or_else(|_| String::from("HEAD"));
-        self.status_line = format!(
-            "{branch}  e: edit  p: propose  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  q: quit"
-        );
+        self.status_line = status_for_branch(&branch);
         Ok(())
     }
 
@@ -128,6 +127,12 @@ impl App {
         }
         self.content_scroll = 0;
     }
+}
+
+fn status_for_branch(branch: &str) -> String {
+    format!(
+        "{branch}  e: edit  p: propose  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  .: toolbar  q: quit"
+    )
 }
 
 fn content_for_selection(app: &App) -> (String, String) {
@@ -183,6 +188,73 @@ fn render_tree(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(list, area);
 }
 
+fn toolbar_context(app: &App) -> (String, Style) {
+    if let Some(file_path) = app.selected_file_path() {
+        let rel = file_path
+            .strip_prefix(&app.checkout_dir)
+            .unwrap_or(file_path.as_path())
+            .display()
+            .to_string();
+        return (format!("file: {rel}"), Style::default().fg(Color::Green));
+    }
+
+    if let Some(entry_path) = app.selected_entry_path() {
+        let rel = entry_path
+            .strip_prefix(&app.checkout_dir)
+            .unwrap_or(entry_path.as_path())
+            .display()
+            .to_string();
+        return (format!("directory: {rel}"), Style::default().fg(Color::Yellow));
+    }
+
+    (String::from("no selection"), Style::default().fg(Color::DarkGray))
+}
+
+fn toolbar_action(key: &str, label: &str, enabled: bool) -> Span<'static> {
+    let style = if enabled {
+        Style::default().fg(Color::White).add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    Span::styled(format!("{key} {label}"), style)
+}
+
+fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
+    let (context, context_style) = toolbar_context(app);
+    let file_selected = app.selected_file_path().is_some();
+
+    let lines = vec![
+        Line::from(vec![
+            Span::styled("Context: ", Style::default().fg(Color::Gray)),
+            Span::styled(context, context_style),
+        ]),
+        Line::from(vec![
+            toolbar_action("Enter", "toggle tree", true),
+            Span::raw("  "),
+            toolbar_action("e", "edit", file_selected),
+            Span::raw("  "),
+            toolbar_action("p", "propose", file_selected),
+            Span::raw("  "),
+            toolbar_action("g", "git ui", true),
+            Span::raw("  "),
+            toolbar_action("n", "new branch", true),
+            Span::raw("  "),
+            toolbar_action("c", "checkout", true),
+            Span::raw("  "),
+            toolbar_action("r", "refresh", true),
+            Span::raw("  "),
+            toolbar_action("\\", "help", true),
+            Span::raw("  "),
+            toolbar_action(".", "toolbar", true),
+        ]),
+    ];
+
+    let toolbar = Paragraph::new(Text::from(lines))
+        .block(Block::default().borders(Borders::ALL).title("Tool Bar"))
+        .wrap(Wrap { trim: false });
+    frame.render_widget(toolbar, area);
+}
+
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -216,6 +288,7 @@ fn render_help(frame: &mut Frame) {
         "c  checkout an existing branch",
         "r  refresh the upstream checkout",
         "\\  toggle this help",
+        ".  toggle the tool bar",
         "q  quit",
     ]
     .join("\n");
@@ -227,9 +300,15 @@ fn render_help(frame: &mut Frame) {
 }
 
 fn ui(frame: &mut Frame, app: &mut App) {
+    let mut constraints = vec![Constraint::Length(3), Constraint::Length(1)];
+    if app.show_toolbar {
+        constraints.push(Constraint::Length(3));
+    }
+    constraints.push(Constraint::Min(0));
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Length(1), Constraint::Min(0)])
+        .constraints(constraints)
         .split(frame.area());
 
     let title = Paragraph::new("Nostr NIPs Browser")
@@ -242,6 +321,10 @@ fn ui(frame: &mut Frame, app: &mut App) {
         .alignment(Alignment::Left);
     frame.render_widget(status, chunks[1]);
 
+    if app.show_toolbar {
+        render_toolbar(frame, app, chunks[2]);
+    }
+
     let body = Layout::default()
         .direction(Direction::Horizontal)
         .constraints(if app.show_tree {
@@ -249,7 +332,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         } else {
             vec![Constraint::Percentage(100)]
         })
-        .split(chunks[2]);
+        .split(chunks[if app.show_toolbar { 3 } else { 2 }]);
 
     if app.show_tree {
         render_tree(frame, app, body[0]);
@@ -323,6 +406,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                 match key.code {
                     KeyCode::Char('q') => break,
                     KeyCode::Char('\\') => app.show_help = !app.show_help,
+                    KeyCode::Char('.') => app.show_toolbar = !app.show_toolbar,
                     KeyCode::Esc | KeyCode::Enter => app.show_tree = !app.show_tree,
                     KeyCode::Left => {
                         app.move_selection(MoveSelection::Left);
