@@ -408,8 +408,7 @@ fn render_help(frame: &mut Frame) {
 }
 
 fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser) {
-    let area = centered_rect(86, 78, frame.area());
-    browser.render(frame, area);
+    browser.render(frame, frame.area());
 }
 
 fn bootstrap_local_relay() -> io::Result<()> {
