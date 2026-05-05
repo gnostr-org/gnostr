@@ -2,7 +2,8 @@ use futures::StreamExt;
 
 use clap::Parser;
 use gnostr_p2p::{
-    cli, command_handler, event_handler, relay_buckets, swarm_builder::build_swarm,
+    args::Args as GitArgs, cli, command_handler, event_handler, git_publisher, relay_buckets,
+    swarm_builder::build_swarm,
 };
 use libp2p::kad;
 use tokio::io::AsyncBufReadExt;
@@ -52,6 +53,11 @@ async fn main() -> anyhow::Result<()> {
 
     if let Err(error) = relay_buckets::publish_local_snapshots(&mut swarm).await {
         eprintln!("failed to publish local relay buckets: {error}");
+    }
+
+    let repo_args = GitArgs::parse_from(["gnostr-p2p", "--git-dir", "nips"]);
+    if let Err(error) = git_publisher::run_git_publisher(&repo_args, &mut swarm).await {
+        eprintln!("failed to publish nips repo data: {error}");
     }
 
     cli::listen_default_addresses(
