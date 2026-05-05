@@ -223,7 +223,7 @@ fn render_tree(frame: &mut Frame, app: &App, area: Rect) {
                     "▾ "
                 }
             } else {
-                "• "
+                "  "
             };
             let label = format!("{indent}{marker}{}", item.info().path_str());
             let style = if selected {
