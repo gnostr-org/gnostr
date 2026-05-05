@@ -17,6 +17,7 @@ use ratatui::{
 };
 
 use crate::upstream;
+use crate::workflow;
 
 pub fn collect_markdown_files(dir: impl AsRef<Path>) -> std::io::Result<Vec<PathBuf>> {
     let mut nips: Vec<PathBuf> = fs::read_dir(dir)?
@@ -44,6 +45,7 @@ struct App {
     selected_nip_index: usize,
     content_scroll: u16,
     show_nip_list: bool,
+    status_line: String,
 }
 
 impl App {
@@ -53,6 +55,7 @@ impl App {
             selected_nip_index: 0,
             content_scroll: 0,
             show_nip_list: true,
+            status_line: String::from("e: edit  p: propose  q: quit"),
         }
     }
 
@@ -105,13 +108,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> Result<(), B
 fn ui(frame: &mut Frame, app: &mut App) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0)])
+        .constraints([Constraint::Length(3), Constraint::Length(1), Constraint::Min(0)])
         .split(frame.area());
 
     let title = Paragraph::new("Nostr NIPs Browser")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
     frame.render_widget(title, main_chunks[0]);
+
+    let status = Paragraph::new(app.status_line.clone())
+        .style(Style::default().fg(Color::Gray))
+        .alignment(Alignment::Left);
+    frame.render_widget(status, main_chunks[1]);
 
     let main_layout = Layout::default()
         .direction(Direction::Horizontal)
@@ -120,7 +128,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         } else {
             vec![Constraint::Percentage(100)]
         })
-        .split(main_chunks[1]);
+        .split(main_chunks[2]);
 
     if app.show_nip_list {
         let items: Vec<ListItem> = app
@@ -142,11 +150,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
             .highlight_style(Style::default().add_modifier(Modifier::BOLD))
             .highlight_symbol(">> ");
 
-        frame.render_stateful_widget(
-            list,
-            main_layout[0],
-            &mut ListState::default().with_selected(Some(app.selected_nip_index)),
-        );
+        frame.render_stateful_widget(list, main_layout[0], &mut ListState::default().with_selected(Some(app.selected_nip_index)));
     }
 
     let content_text;
@@ -192,7 +196,78 @@ pub fn run_with_files(nips: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn editor_target(app: &App) -> Option<PathBuf> {
+    app.nips.get(app.selected_nip_index).cloned()
+}
+
 pub fn run_default() -> Result<(), Box<dyn Error>> {
     let checkout_dir = upstream::ensure_checkout()?;
-    run_with_files(collect_markdown_files(checkout_dir)?)
+    let mut app = App::new(collect_markdown_files(checkout_dir.clone())?);
+
+    stdout().execute(EnterAlternateScreen)?;
+    enable_raw_mode()?;
+
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    terminal.clear()?;
+
+    let result = (|| -> Result<(), Box<dyn Error>> {
+        loop {
+            terminal.draw(|f| ui(f, &mut app))?;
+
+            if let Event::Key(key) = event::read()? {
+                if key.kind != KeyEventKind::Press {
+                    continue;
+                }
+
+                match key.code {
+                    KeyCode::Char('q') => break,
+                    KeyCode::Esc | KeyCode::Enter => app.show_nip_list = !app.show_nip_list,
+                    KeyCode::Left => {
+                        app.previous_nip();
+                        app.show_nip_list = false;
+                    }
+                    KeyCode::Right => {
+                        app.next_nip();
+                        app.show_nip_list = false;
+                    }
+                    KeyCode::Down | KeyCode::Char('j') => app.next_nip(),
+                    KeyCode::Up | KeyCode::Char('k') => app.previous_nip(),
+                    KeyCode::PageDown => app.content_scroll = app.content_scroll.saturating_add(10),
+                    KeyCode::PageUp => app.content_scroll = app.content_scroll.saturating_sub(10),
+                    KeyCode::Char('e') => {
+                        if let Some(file_path) = editor_target(&app) {
+                            disable_raw_mode()?;
+                            stdout().execute(LeaveAlternateScreen)?;
+                            let editor_result = workflow::launch_editor(&file_path);
+                            stdout().execute(EnterAlternateScreen)?;
+                            enable_raw_mode()?;
+                            app.status_line = match editor_result {
+                                Ok(_) => format!("edited {}", file_path.display()),
+                                Err(err) => format!("editor error: {err}"),
+                            };
+                        }
+                    }
+                    KeyCode::Char('p') => {
+                        if let Some(file_path) = editor_target(&app) {
+                            app.status_line = String::from("publishing proposal...");
+                            terminal.draw(|f| ui(f, &mut app))?;
+                            let result = workflow::submit_proposal(&checkout_dir, &file_path);
+                            app.status_line = match result {
+                                Ok(hash) => format!("submitted proposal {hash}"),
+                                Err(err) => format!("proposal failed: {err}"),
+                            };
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(())
+    })();
+
+    stdout().execute(LeaveAlternateScreen)?;
+    disable_raw_mode()?;
+    terminal.show_cursor()?;
+
+    result
 }

@@ -32,6 +32,7 @@ tower-http = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 include_dir = { workspace = true, features = ["glob", "metadata"] }
+gnostr-asyncgit = { workspace = true }
 
 [[bin]]
 name = "nips"
