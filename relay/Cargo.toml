@@ -21,6 +21,7 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 directories = { workspace = true }
 nostr-relay = { version = "0.4.8", default-features = false }
+num_cpus = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
