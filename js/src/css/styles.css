@@ -114,7 +114,7 @@ th, td {
     justify-content: flex-start; /* Align items to the start */
 }
 
-#global-header #header-tools {
+#view #header-tools {
     margin-left: auto;
 }
 

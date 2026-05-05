@@ -242,7 +242,7 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 	if (mode !== VM_USER && mode !== VM_DM_THREAD && mode !== VM_NIP34_DETAIL && mode !== VM_NIP_KIND) {
 		name = name.charAt(0).toUpperCase() + name.slice(1);
 	}
-		find_node("#global-header #app-title").innerText = name;
+		find_node("#view #app-title").innerText = name;
 		view_update_navs(mode);
 		find_node("#view [role='profile-info']").classList.toggle("hide", mode != VM_USER);
 		const timeline_el = find_node("#timeline");
@@ -254,14 +254,14 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 		find_node("#dms").classList.toggle("hide", mode != VM_DM);
 		find_node("#dm-post").classList.toggle("hide", mode != VM_DM_THREAD);
 		find_node("#new-note-mobile").classList.toggle("hide", mode == VM_DM_THREAD);
-		find_node("#global-header #header-tools button[action='mark-all-read']")
+		find_node("#view #header-tools button[action='mark-all-read']")
 			.classList.toggle("hide", mode != VM_DM);
 
 		// Show/hide different profile image in header
 		const show_mypfp = mode != VM_DM_THREAD && mode != VM_USER;
-		const el_their_pfp = find_node("#global-header img.pfp[role='their-pfp']");
+		const el_their_pfp = find_node("#view img.pfp[role='their-pfp']");
 		el_their_pfp.classList.toggle("hide", show_mypfp);
-		find_node("#global-header img.pfp[role='my-pfp']")
+		find_node("#view img.pfp[role='my-pfp']")
 			.classList.toggle("hide", !show_mypfp);
 
 		view_timeline_refresh(model, mode, opts);
