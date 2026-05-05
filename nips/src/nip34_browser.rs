@@ -245,17 +245,12 @@ impl Nip34Browser {
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         frame.render_widget(Clear, area);
-        frame.render_widget(Block::default().borders(Borders::ALL).title("nip34 browser"), area);
-
-        let inner = area.inner(Margin { vertical: 1, horizontal: 1 });
 
         if let Some(err) = &self.error {
-            let err = Paragraph::new(err.clone())
-                .block(Block::default().borders(Borders::ALL).title("Error"))
-                .wrap(Wrap { trim: false });
-            frame.render_widget(err, inner);
+            let err = Paragraph::new(err.clone()).wrap(Wrap { trim: false });
+            frame.render_widget(err, area);
         } else {
-            self.render_events(frame, inner);
+            self.render_events(frame, area);
         }
     }
 
@@ -290,7 +285,6 @@ impl Nip34Browser {
             .collect();
 
         let list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title(tab.tab.title()))
             .highlight_symbol(">");
         frame.render_widget(list, body[0]);
 
@@ -298,9 +292,7 @@ impl Nip34Browser {
             .selected_event()
             .map(render_event_detail)
             .unwrap_or_else(|| String::from("No event selected"));
-        let detail = Paragraph::new(detail)
-            .block(Block::default().borders(Borders::ALL).title("Event"))
-            .wrap(Wrap { trim: false });
+        let detail = Paragraph::new(detail).wrap(Wrap { trim: false });
         frame.render_widget(detail, body[1]);
     }
 
