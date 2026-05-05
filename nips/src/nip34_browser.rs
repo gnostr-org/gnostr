@@ -129,7 +129,7 @@ impl Nip34Browser {
     pub fn spawn() -> Self {
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
-            let initial = load_nip34_tabs(vec![LOCAL_RELAY.to_string()], INITIAL_POLL_INTERVAL);
+            let initial = load_nip34_tabs(browser_relay_urls(), INITIAL_POLL_INTERVAL);
             if tx.send(Nip34Update::Loaded(initial)).is_err() {
                 return;
             }
