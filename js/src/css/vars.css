@@ -1,0 +1,57 @@
+:root {
+  --header-height: 80px;
+  --master-pane-top: var(--header-height);
+  --master-pane-width: 180px;
+
+  --clrBg: #fdf6e3;
+  --clrPanel: #eee8d5;
+  --clrBorder: #93a1a1;
+  --clrBtn: #073642;
+  --clrText: #073642;
+  --clrTextLight: #586e75;
+  --clrTextLighter: #657b83;
+  --clrHeart: #dc322f;
+  --clrWarn: #cb4b16;
+  --clrLink: #268bd2;
+  --clrLinkVisited: #6c71c4;
+  --clrNotification: #cb4b16;
+  --clrChatBlue: #268bd2;
+  --clrEvMsg: #eee8d5;
+  --clrTextEvMsg: #586e75;
+  --clrBgAction: #eee8d5;
+  --clrTextAction: #073642;
+
+  --fsSmall: 12px;
+  --fsReduced: 14px;
+  --fsNormal: 16px;
+  --fsEnlarged: 18px;
+  --fsLarge: 22px;
+
+  --ffDefault: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  --zDefault: 0;
+  --zPFP: 1;
+  --zHeader: 20;
+  --zGlobal: 30;
+  --zModal: 40;
+
+  --iconSize: 24px;
+  --iconSizeSmall: 15px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --clrBg: #002b36;
+    --clrPanel: #073642;
+    --clrBorder: #586e75;
+    --clrBtn: #839496;
+    --clrText: #839496;
+    --clrTextLight: #93a1a1;
+    --clrTextLighter: #aab2b3;
+    --clrEvMsg: #073642;
+    --clrTextEvMsg: #839496;
+    --clrBgAction: #586e75;
+    --clrTextAction: #839496;
+  }
+}
