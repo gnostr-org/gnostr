@@ -148,24 +148,11 @@ function render_settings_profile(model) {
     }
 
     const profile = model_get_profile(model, model.pubkey);
-    const name = fmt_name(profile);
     const image = find_node("img[name='settings-profile-image']", el);
-    image.src = get_profile_pic(profile);
-    image.classList.toggle("hide", !profile.data.picture);
-
-    find_node("[name='settings-profile-name']", el).textContent = name;
-
-    const nip05_el = find_node("[name='settings-profile-nip05']", el);
-    nip05_el.textContent = profile.data.nip05 || "";
-    nip05_el.classList.toggle("hide", !profile.data.nip05);
-
-    const about_el = find_node("[name='settings-profile-about']", el);
-    about_el.innerHTML = newlines_to_br(linkify(profile.data.about || ""));
-    about_el.classList.toggle("hide", !profile.data.about);
-
-    const pubkey_el = find_node("[name='settings-profile-pubkey']", el);
-    pubkey_el.textContent = model.pubkey;
-    pubkey_el.style.minHeight = "2.4em";
+    if (image) {
+        image.src = get_profile_pic(profile);
+        image.classList.toggle("hide", !profile.data.picture);
+    }
 }
 
 function ensure_nip89_app_metadata_card(
