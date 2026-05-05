@@ -182,10 +182,20 @@ th, td {
     left: var(--master-pane-width);
     right: 0;
     bottom: 0;
+    display: flex;
+    flex-direction: column;
 	z-index: var(--zHeader);
 	background: var(--clrBg);
 	border-top: 1px solid var(--clrBorder);
 	box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+}
+#view footer > .footer-links,
+#view footer > .footer-build,
+#view footer > .nav.mobile {
+    order: 1;
+}
+#view footer > #dm-post {
+    order: 0;
 }
 #view {
 	padding-bottom: 150px;
@@ -1335,6 +1345,8 @@ code {
 	padding: 15px;
 	background: var(--clrBg);
 	border-top: 1px solid var(--clrBorder);
+	width: 100%;
+	box-sizing: border-box;
 }
 .dm-group {
 	display: flex;

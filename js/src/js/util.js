@@ -252,8 +252,12 @@ function get_qs(loc=location.href) {
 }
 
 function get_profile_pic(profile) {
-	if (profile && profile.data && profile.data.picture)
-		return html`${profile.data.picture}`;
+	if (profile && profile.data) {
+		const picture = profile.data.picture || profile.data.image;
+		if (picture) {
+			return html`${picture}`;
+		}
+	}
 	return IMG_NO_USER;
 }
 
@@ -314,4 +318,3 @@ async function decrypt_dms(model) {
 	}
 	return true;
 }
-

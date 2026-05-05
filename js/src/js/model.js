@@ -64,7 +64,7 @@ function model_process_event(model, relay, ev) {
             break;
 	}
 	if (fn)
-		fn(model, ev, !!relay);
+		fn(model, ev, !!relay, relay);
 
 	if (ev.kind === KIND_DM) {
 		sync_dm_event_to_local_relay(ev);
@@ -211,7 +211,7 @@ function model_fetch_next_profile(model, relay) {
 /* model_process_event_profile updates the matching profile with the contents found 
  * in the event.
  */
-function model_process_event_metadata(model, ev, update_view) {
+function model_process_event_metadata(model, ev, update_view, relay=null) {
 	const profile = model_get_profile(model, ev.pubkey);
 	const evs = model.all_events;
 	if (profile.evid && 
@@ -220,8 +220,10 @@ function model_process_event_metadata(model, ev, update_view) {
 	profile.evid = ev.id;
 	profile.data = safe_parse_json(ev.content, "profile contents");
 	local_relay_send_event(ev);
-	if (ev.pubkey == model.pubkey) {
-		sync_active_user_metadata_to_local_relay(model);
+	if (!relay || relay.url === local_relay_url) {
+		if (typeof broadcast_event === "function") {
+			broadcast_event(ev);
+		}
 	}
 	const timeline_el = view_get_timeline_el();
 	if (ev.pubkey == model.pubkey && typeof view_update_cached_active_pfp === "function") {
@@ -233,7 +235,8 @@ function model_process_event_metadata(model, ev, update_view) {
 	if (ev.pubkey == model.pubkey && timeline_el && timeline_el.dataset.mode == VM_SETTINGS && typeof render_nip89_app_metadata === "function") {
 		render_nip89_app_metadata(model);
 	}
-	if (update_view)
+	const is_viewed_profile = timeline_el && timeline_el.dataset.mode == VM_USER && timeline_el.dataset.pubkey == profile.pubkey;
+	if (update_view || is_viewed_profile)
 		view_timeline_update_profiles(model, profile.pubkey); 
 	// If it's my pubkey let's redraw my pfp that is not located in the view
 	// This has to happen regardless of update_view because of the it's not 

@@ -68,14 +68,7 @@ function on_pool_open(relay) {
 		limit: 5000,
 	}]);
 
-	relay.subscribe(SID_DMS_IN, [{
-		kinds: [KIND_DM],
-		"#p": [pubkey],
-	}]);
-	relay.subscribe(SID_DMS_OUT, [{
-		kinds: [KIND_DM],
-		authors: [pubkey],
-	}]);
+	refresh_dm_subscriptions(model);
 }
 
 function on_pool_notice(relay, notice) {
@@ -186,4 +179,40 @@ function fetch_friends_history(friends, pool, relay) {
 		limit: 5000,
 	}], relay);
 	log_debug(`fetching friends history`);
+}
+
+function refresh_dm_subscriptions(model) {
+    if (!model || !model.pool || !Array.isArray(model.pool.relays) || !model.pubkey) {
+        return;
+    }
+
+    const relays = model.pool.relays.slice().sort((left, right) => {
+        const left_local = relay_is_local(left.url) ? 0 : 1;
+        const right_local = relay_is_local(right.url) ? 0 : 1;
+        if (left_local !== right_local) {
+            return left_local - right_local;
+        }
+        const left_ping = relay_ping_sort_value(model, left.url);
+        const right_ping = relay_ping_sort_value(model, right.url);
+        if (left_ping !== right_ping) {
+            return left_ping - right_ping;
+        }
+        return left.url.localeCompare(right.url);
+    });
+
+    for (const relay of relays) {
+        if (!relay || typeof relay.subscribe !== "function") {
+            continue;
+        }
+        relay.subscribe(SID_DMS_IN, [{
+            kinds: [KIND_DM],
+            "#p": [model.pubkey],
+            limit: 5000,
+        }]);
+        relay.subscribe(SID_DMS_OUT, [{
+            kinds: [KIND_DM],
+            authors: [model.pubkey],
+            limit: 5000,
+        }]);
+    }
 }
