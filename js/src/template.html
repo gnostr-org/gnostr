@@ -11,8 +11,8 @@
 		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
 		<link rel="stylesheet" href="/css/vars.css?v=1">
 		<link rel="stylesheet" href="/css/utils.css?v=1">
-		<link rel="stylesheet" href="/css/styles.css?v=24">
-		<link rel="stylesheet" href="/css/responsive.css?v=11">
+		<link rel="stylesheet" href="/css/styles.css?v=25">
+		<link rel="stylesheet" href="/css/responsive.css?v=12">
 		<script defer src="/js/util.js?v=5"></script>
 		<script defer src="/js/ui/safe-html.js?v=1"></script>
 		<script defer src="/js/ui/util.js?v=8"></script>
@@ -57,30 +57,6 @@
 
 		<!-- Main application wrapper -->
 		<div id="app-main" class="hide">
-			<!-- Global Header (e.g., for app title or global actions) -->
-			<header id="global-header">
-				<button id="global-header-gnostr-btn" action="open-view" data-view="nip" class="nav icon active"
-				        title="gnostr.org">
-					<!-- <img class="icon svg inactive" src="/images/logo-inverted.svg"/> -->
-					<img class="icon svg active" src="/images/logo.svg"/>
-				</button>
-				<header>
-					<label id="app-title"></label>
-				</header>
-				<div id="header-tools">
-					<input type="search" id="main-search" placeholder="Search..."/>
-					<button class="action small hide"
-					        disabled action="mark-all-read">
-						Mark All Read
-					</button>
-					<img class="pfp hide" role="their-pfp" data-pubkey=""
-					        src="/images/no-user.svg"/>
-					<img class="pfp hide" role="my-pfp" data-pubkey=""
-					        src="/images/no-user.svg"/>
-				</div>
-				<!-- Potentially add global actions here -->
-			</header>
-
 			<!-- List-Detail Container -->
 			<div id="list-detail-container">
 				<!-- Master Pane (e.g., main navigation, list of items) -->
@@ -129,6 +105,28 @@
 
 				<!-- Detail Pane (e.g., content for selected item/view) -->
 				<div id="detail-pane">
+					<header id="global-header">
+						<button id="global-header-gnostr-btn" action="open-view" data-view="nip" class="nav icon active"
+						        title="gnostr.org">
+							<!-- <img class="icon svg inactive" src="/images/logo-inverted.svg"/> -->
+							<img class="icon svg active" src="/images/logo.svg"/>
+						</button>
+						<header>
+							<label id="app-title"></label>
+						</header>
+						<div id="header-tools">
+							<input type="search" id="main-search" placeholder="Search..."/>
+							<button class="action small hide"
+							        disabled action="mark-all-read">
+								Mark All Read
+							</button>
+							<img class="pfp hide" role="their-pfp" data-pubkey=""
+							        src="/images/no-user.svg"/>
+							<img class="pfp hide" role="my-pfp" data-pubkey=""
+							        src="/images/no-user.svg"/>
+						</div>
+						<!-- Potentially add global actions here -->
+					</header>
 					<div id="view">
 						<div id="gnostr-nip34-feed" class="events hide"></div>
 						<div id="profile-info" role="profile-info" class="bottom-border hide">

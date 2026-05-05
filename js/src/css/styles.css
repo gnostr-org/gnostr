@@ -98,15 +98,13 @@ th, td {
     display: flex;
     flex-direction: column;
     height: 100vh; /* Keep the shell fixed to the viewport */
-    padding-top: var(--header-height); /* Account for fixed header */
     box-sizing: border-box;
     overflow: hidden;
 }
 
 #global-header {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
     width: 100%;
     height: var(--header-height);
     background-color: var(--clrBg);
@@ -164,9 +162,8 @@ th, td {
     border-right: 1px solid var(--clrBorder);
     background-color: var(--clrBg);
     overflow-y: auto;
-    height: calc(100vh - var(--header-height));
+    height: 100%;
     min-height: 0;
-    top: var(--header-height);
     position: sticky;
     align-self: flex-start;
 }
@@ -177,7 +174,7 @@ th, td {
     display: flex;
     flex-direction: column;
     position: relative;
-    height: calc(100vh - var(--header-height));
+    height: 100%;
     overflow: hidden;
 }
 
