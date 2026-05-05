@@ -13,7 +13,7 @@ use std::{
 };
 
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -285,6 +285,8 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
             Span::raw("  "),
             toolbar_action("p", "propose", file_selected),
             Span::raw("  "),
+            toolbar_action("P", "nip34 browser", true),
+            Span::raw("  "),
             toolbar_action("g", "git ui", true),
             Span::raw("  "),
             toolbar_action("n", "new branch", true),
@@ -368,6 +370,7 @@ fn render_help(frame: &mut Frame) {
         "",
         "e  edit selected file in $EDITOR",
         "p  stage + commit + publish nip34 proposal",
+        "P  open live nip34 browser",
         "g  open asyncgit's full git TUI",
         "n  create and checkout a new branch",
         "c  checkout an existing branch",
@@ -534,6 +537,10 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
 
     let result = (|| -> Result<(), Box<dyn Error>> {
         loop {
+            if let Some(browser) = app.nip34_browser.as_mut() {
+                browser.drain();
+            }
+
             if let Some(task) = app.proposal_task.as_mut() {
                 if let Some(result) = task.drain() {
                     app.status_line = match result {
@@ -556,6 +563,23 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
 
             if let Event::Key(key) = event::read()? {
                 if key.kind != KeyEventKind::Press {
+                    continue;
+                }
+
+                if let Some(browser) = app.nip34_browser.as_mut() {
+                    if browser.handle_key(key) {
+                        app.nip34_browser = None;
+                        app.force_full_repaint = true;
+                    }
+                    continue;
+                }
+
+                let shift_p = matches!(key.code, KeyCode::Char('P'))
+                    || (matches!(key.code, KeyCode::Char('p'))
+                        && key.modifiers.contains(KeyModifiers::SHIFT));
+                if shift_p {
+                    app.nip34_browser = Some(nip34_browser::Nip34Browser::spawn());
+                    app.force_full_repaint = true;
                     continue;
                 }
 

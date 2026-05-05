@@ -5,10 +5,11 @@ use std::{
     time::Duration,
 };
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use gnostr_asyncgit::{
+    default_gnostr_private_key,
     filehash::get_relay_urls,
-    types::{Client, Event, EventKind, Filter, Keys, Options},
+    types::{Client, Event, EventKind, Filter, KeySecurity, Keys, Options, PrivateKey},
 };
 use ratatui::{
     prelude::*,
@@ -348,7 +349,10 @@ fn load_nip34_tabs() -> Result<Vec<Nip34TabData>, String> {
             return Err(String::from("no relay URLs configured"));
         }
 
-        let keys = Keys::generate();
+        let keys = Keys::new(PrivateKey(
+            default_gnostr_private_key(),
+            KeySecurity::Weak,
+        ));
         let mut client = Client::new(&keys, Options::new());
         client
             .add_relays(relay_urls)
