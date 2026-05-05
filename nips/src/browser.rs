@@ -1,8 +1,11 @@
 use std::{
+    collections::BTreeSet,
     error::Error,
     fs,
+    io,
     io::stdout,
     path::{Path, PathBuf},
+    process::Command,
 };
 
 use crossterm::{
@@ -10,114 +13,168 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use filetreelist::{FileTree, MoveSelection};
 use ratatui::{
     backend::CrosstermBackend,
     prelude::*,
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
 };
 
-use crate::upstream;
-use crate::workflow;
+use crate::{upstream, workflow};
 
-pub fn collect_markdown_files(dir: impl AsRef<Path>) -> std::io::Result<Vec<PathBuf>> {
-    let mut nips: Vec<PathBuf> = fs::read_dir(dir)?
-        .filter_map(|entry| {
-            let path = entry.ok()?.path();
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "md") {
-                Some(path)
-            } else {
-                None
-            }
-        })
+pub fn collect_checkout_paths(dir: impl AsRef<Path>) -> io::Result<Vec<PathBuf>> {
+    let output = Command::new("git")
+        .args(["ls-files", "--cached", "--others", "--exclude-standard"])
+        .current_dir(dir)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(io::Error::other(format!(
+            "git ls-files failed with exit code {:?}\nstdout: {}\nstderr: {}",
+            output.status.code(),
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+
+    let mut paths: Vec<PathBuf> = String::from_utf8(output.stdout)
+        .map_err(io::Error::other)?
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(PathBuf::from)
         .collect();
 
-    nips.sort_by(|a, b| {
-        let a_name = a.file_name().unwrap().to_string_lossy();
-        let b_name = b.file_name().unwrap().to_string_lossy();
-        a_name.cmp(&b_name)
-    });
+    paths.sort();
+    paths.dedup();
+    Ok(paths)
+}
 
-    Ok(nips)
+fn build_tree(paths: &[PathBuf]) -> io::Result<FileTree> {
+    let path_refs: Vec<&Path> = paths.iter().map(PathBuf::as_path).collect();
+    let collapsed: BTreeSet<&String> = BTreeSet::new();
+    filetreelist::FileTree::new(&path_refs, &collapsed).map_err(|err| io::Error::other(err.to_string()))
 }
 
 struct App {
-    nips: Vec<PathBuf>,
-    selected_nip_index: usize,
-    content_scroll: u16,
-    show_nip_list: bool,
-    status_line: String,
     checkout_dir: PathBuf,
+    tree: FileTree,
+    content_scroll: u16,
+    show_tree: bool,
+    status_line: String,
 }
 
 impl App {
-    fn new(checkout_dir: PathBuf, nips: Vec<PathBuf>) -> Self {
-        Self {
-            nips,
-            selected_nip_index: 0,
-            content_scroll: 0,
-            show_nip_list: true,
-            status_line: String::from("e: edit  p: propose  g: git ui  r: refresh  q: quit"),
+    fn new(checkout_dir: PathBuf, paths: Vec<PathBuf>) -> io::Result<Self> {
+        Ok(Self {
             checkout_dir,
-        }
+            tree: build_tree(&paths)?,
+            content_scroll: 0,
+            show_tree: true,
+            status_line: String::from("e: edit  p: propose  g: git ui  r: refresh  q: quit"),
+        })
     }
 
-    fn reload(&mut self) -> std::io::Result<()> {
-        self.nips = collect_markdown_files(&self.checkout_dir)?;
-        if self.selected_nip_index >= self.nips.len() {
-            self.selected_nip_index = self.nips.len().saturating_sub(1);
+    fn reload(&mut self) -> io::Result<()> {
+        let selected = self.selected_entry_path();
+        let paths = collect_checkout_paths(&self.checkout_dir)?;
+        self.tree = build_tree(&paths)?;
+        if let Some(selected) = selected {
+            let _ = self.tree.select_file(selected.as_path());
         }
         self.content_scroll = 0;
         Ok(())
     }
 
-    fn next_nip(&mut self) {
-        if !self.nips.is_empty() {
-            self.selected_nip_index = (self.selected_nip_index + 1) % self.nips.len();
+    fn selected_entry_path(&self) -> Option<PathBuf> {
+        let visible = self.tree.visual_selection().map(|v| v.count).unwrap_or(0).max(1);
+        self.tree
+            .iterate(0, visible)
+            .find(|(_, selected)| *selected)
+            .map(|(item, _)| item.info().full_path().to_path_buf())
+    }
+
+    fn selected_file_path(&self) -> Option<PathBuf> {
+        self.tree
+            .selected_file()
+            .map(|info| self.checkout_dir.join(info.full_path()))
+    }
+
+    fn move_selection(&mut self, direction: MoveSelection) {
+        if self.tree.move_selection(direction) {
             self.content_scroll = 0;
         }
     }
 
-    fn previous_nip(&mut self) {
-        if !self.nips.is_empty() {
-            self.selected_nip_index =
-                (self.selected_nip_index + self.nips.len() - 1) % self.nips.len();
-            self.content_scroll = 0;
+    fn page_move(&mut self, down: bool) {
+        for _ in 0..10 {
+            if !self.tree.move_selection(if down {
+                MoveSelection::Down
+            } else {
+                MoveSelection::Up
+            }) {
+                break;
+            }
         }
+        self.content_scroll = 0;
     }
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> Result<(), Box<dyn Error>> {
-    loop {
-        terminal.draw(|f| ui(f, &mut app))?;
-
-        if let Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press {
-                match key.code {
-                    KeyCode::Char('q') => return Ok(()),
-                    KeyCode::Esc | KeyCode::Enter => {
-                        app.show_nip_list = !app.show_nip_list;
-                    }
-                    KeyCode::Left => {
-                        app.previous_nip();
-                        app.show_nip_list = false;
-                    }
-                    KeyCode::Right => {
-                        app.next_nip();
-                        app.show_nip_list = false;
-                    }
-                    KeyCode::Down | KeyCode::Char('j') => app.next_nip(),
-                    KeyCode::Up | KeyCode::Char('k') => app.previous_nip(),
-                    KeyCode::PageDown => app.content_scroll = app.content_scroll.saturating_add(10),
-                    KeyCode::PageUp => app.content_scroll = app.content_scroll.saturating_sub(10),
-                    _ => {}
-                }
-            }
-        }
+fn content_for_selection(app: &App) -> (String, String) {
+    if let Some(selected_file) = app.selected_file_path() {
+        let title = selected_file
+            .strip_prefix(&app.checkout_dir)
+            .unwrap_or(selected_file.as_path())
+            .display()
+            .to_string();
+        let content = fs::read_to_string(&selected_file)
+            .unwrap_or_else(|_| format!("Error reading file: {}", selected_file.display()));
+        return (title, content);
     }
+
+    if let Some(selected_entry) = app.selected_entry_path() {
+        let title = selected_entry.display().to_string();
+        return (title.clone(), format!("Directory selected: {title}"));
+    }
+
+    (String::from("Content"), String::from("No file selected."))
+}
+
+fn render_tree(frame: &mut Frame, app: &App, area: Rect) {
+    let visible = app.tree.visual_selection().map(|v| v.count).unwrap_or(0).max(1);
+    let items: Vec<ListItem> = app
+        .tree
+        .iterate(0, visible)
+        .map(|(item, selected)| {
+            let indent = "  ".repeat(item.info().indent() as usize);
+            let marker = if item.kind().is_path() {
+                if item.kind().is_path_collapsed() {
+                    "▸ "
+                } else {
+                    "▾ "
+                }
+            } else {
+                "• "
+            };
+            let label = format!("{indent}{marker}{}", item.info().path_str());
+            let style = if selected {
+                Style::default().fg(Color::Black).bg(Color::LightGreen)
+            } else if item.kind().is_path() {
+                Style::default().fg(Color::Yellow)
+            } else {
+                Style::default()
+            };
+
+            ListItem::new(label).style(style)
+        })
+        .collect();
+
+    let list = List::new(items).block(Block::default().borders(Borders::ALL).title("Files"));
+    frame.render_widget(list, area);
 }
 
 fn ui(frame: &mut Frame, app: &mut App) {
-    let main_chunks = Layout::default()
+    let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Length(1), Constraint::Min(0)])
         .split(frame.area());
@@ -125,95 +182,42 @@ fn ui(frame: &mut Frame, app: &mut App) {
     let title = Paragraph::new("Nostr NIPs Browser")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
-    frame.render_widget(title, main_chunks[0]);
+    frame.render_widget(title, chunks[0]);
 
     let status = Paragraph::new(app.status_line.clone())
         .style(Style::default().fg(Color::Gray))
         .alignment(Alignment::Left);
-    frame.render_widget(status, main_chunks[1]);
+    frame.render_widget(status, chunks[1]);
 
-    let main_layout = Layout::default()
+    let body = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints(if app.show_nip_list {
-            vec![Constraint::Percentage(30), Constraint::Percentage(70)]
+        .constraints(if app.show_tree {
+            vec![Constraint::Percentage(35), Constraint::Percentage(65)]
         } else {
             vec![Constraint::Percentage(100)]
         })
-        .split(main_chunks[2]);
+        .split(chunks[2]);
 
-    if app.show_nip_list {
-        let items: Vec<ListItem> = app
-            .nips
-            .iter()
-            .enumerate()
-            .map(|(i, path)| {
-                let content = path.file_name().unwrap().to_string_lossy().into_owned();
-                ListItem::new(content).style(if i == app.selected_nip_index {
-                    Style::default().fg(Color::Black).bg(Color::LightGreen)
-                } else {
-                    Style::default()
-                })
-            })
-            .collect();
-
-        let list = List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("NIPs"))
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-            .highlight_symbol(">> ");
-
-        frame.render_stateful_widget(list, main_layout[0], &mut ListState::default().with_selected(Some(app.selected_nip_index)));
+    if app.show_tree {
+        render_tree(frame, app, body[0]);
     }
 
-    let content_text;
-    let mut title_text = "Content".to_string();
-    if let Some(selected_nip_path) = app.nips.get(app.selected_nip_index) {
-        title_text = selected_nip_path
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .into_owned();
-        content_text = fs::read_to_string(selected_nip_path)
-            .unwrap_or_else(|_| format!("Error reading file: {}", selected_nip_path.display()));
-    } else {
-        content_text = "No NIP selected.".to_string();
-    }
-
-    let paragraph = Paragraph::new(content_text)
-        .block(Block::default().borders(Borders::ALL).title(title_text))
+    let (content_title, content_text) = content_for_selection(app);
+    let content = Paragraph::new(content_text)
+        .block(Block::default().borders(Borders::ALL).title(content_title))
         .wrap(Wrap { trim: false })
         .scroll((app.content_scroll, 0));
 
-    frame.render_widget(paragraph, main_layout[if app.show_nip_list { 1 } else { 0 }]);
-}
-
-pub fn run_with_files(nips: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
-    stdout().execute(EnterAlternateScreen)?;
-    enable_raw_mode()?;
-
-    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
-    terminal.clear()?;
-
-    let app = App::new(PathBuf::from("."), nips);
-    let res = run_app(&mut terminal, app);
-
-    stdout().execute(LeaveAlternateScreen)?;
-    disable_raw_mode()?;
-    terminal.show_cursor()?;
-
-    if let Err(err) = res {
-        println!("{err:?}");
-    }
-
-    Ok(())
+    frame.render_widget(content, body[if app.show_tree { 1 } else { 0 }]);
 }
 
 fn editor_target(app: &App) -> Option<PathBuf> {
-    app.nips.get(app.selected_nip_index).cloned()
+    app.selected_file_path()
 }
 
 pub fn run_default() -> Result<(), Box<dyn Error>> {
     let checkout_dir = upstream::ensure_checkout()?;
-    let mut app = App::new(checkout_dir.clone(), collect_markdown_files(checkout_dir.clone())?);
+    let mut app = App::new(checkout_dir.clone(), collect_checkout_paths(&checkout_dir)?)?;
     if upstream::worktree_dirty(&checkout_dir)? {
         app.status_line = String::from("dirty checkout: fetch only, local edits preserved");
     }
@@ -235,19 +239,19 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
 
                 match key.code {
                     KeyCode::Char('q') => break,
-                    KeyCode::Esc | KeyCode::Enter => app.show_nip_list = !app.show_nip_list,
+                    KeyCode::Esc | KeyCode::Enter => app.show_tree = !app.show_tree,
                     KeyCode::Left => {
-                        app.previous_nip();
-                        app.show_nip_list = false;
+                        app.move_selection(MoveSelection::Left);
+                        app.show_tree = false;
                     }
                     KeyCode::Right => {
-                        app.next_nip();
-                        app.show_nip_list = false;
+                        app.move_selection(MoveSelection::Right);
+                        app.show_tree = false;
                     }
-                    KeyCode::Down | KeyCode::Char('j') => app.next_nip(),
-                    KeyCode::Up | KeyCode::Char('k') => app.previous_nip(),
-                    KeyCode::PageDown => app.content_scroll = app.content_scroll.saturating_add(10),
-                    KeyCode::PageUp => app.content_scroll = app.content_scroll.saturating_sub(10),
+                    KeyCode::Down | KeyCode::Char('j') => app.move_selection(MoveSelection::Down),
+                    KeyCode::Up | KeyCode::Char('k') => app.move_selection(MoveSelection::Up),
+                    KeyCode::PageDown => app.page_move(true),
+                    KeyCode::PageUp => app.page_move(false),
                     KeyCode::Char('r') => match upstream::ensure_checkout() {
                         Ok(_) => match app.reload() {
                             Ok(_) => app.status_line = String::from("refreshed upstream checkout"),
@@ -263,9 +267,14 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             stdout().execute(EnterAlternateScreen)?;
                             enable_raw_mode()?;
                             app.status_line = match editor_result {
-                                Ok(_) => format!("edited {}", file_path.display()),
+                                Ok(_) => match app.reload() {
+                                    Ok(_) => format!("edited {}", file_path.display()),
+                                    Err(err) => format!("edited {}; reload failed: {err}", file_path.display()),
+                                },
                                 Err(err) => format!("editor error: {err}"),
                             };
+                        } else {
+                            app.status_line = String::from("select a file to edit");
                         }
                     }
                     KeyCode::Char('g') => {
@@ -278,6 +287,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             Ok(_) => String::from("returned from asyncgit TUI"),
                             Err(err) => format!("git ui error: {err}"),
                         };
+                        let _ = app.reload();
                     }
                     KeyCode::Char('p') => {
                         if let Some(file_path) = editor_target(&app) {
@@ -288,6 +298,9 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                                 Ok(hash) => format!("submitted proposal {hash}"),
                                 Err(err) => format!("proposal failed: {err}"),
                             };
+                            let _ = app.reload();
+                        } else {
+                            app.status_line = String::from("select a file to propose");
                         }
                     }
                     _ => {}

@@ -23,10 +23,6 @@ fn repo_path(repo_dir: &Path) -> Result<RepoPath, Box<dyn Error>> {
     Ok(repo_dir.into())
 }
 
-fn relative_path(repo_dir: &Path, file_path: &Path) -> Result<PathBuf, Box<dyn Error>> {
-    Ok(file_path.strip_prefix(repo_dir)?.to_path_buf())
-}
-
 pub fn launch_editor(file_path: &Path) -> Result<(), Box<dyn Error>> {
     let editor = env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
     let mut parts = editor.split_whitespace();
@@ -85,9 +81,8 @@ fn patch_content(repo_dir: &Path, commit_id: &str) -> Result<String, Box<dyn Err
 
 pub fn submit_proposal(repo_dir: &Path, file_path: &Path) -> Result<String, Box<dyn Error>> {
     let repo = repo_path(repo_dir)?;
-    let rel_path = relative_path(repo_dir, file_path)?;
-
-    stage_add_file(&repo, &rel_path)?;
+    let rel_path = file_path.strip_prefix(repo_dir)?;
+    stage_add_file(&repo, rel_path)?;
 
     let subject = rel_path
         .file_name()
