@@ -86,6 +86,9 @@ function init_relays(model) {
 	const rlist = find_node("#relay-list tbody", el);
 	rlist.innerHTML = ''; // Clear existing relays to prevent duplicates
 	model.relays.forEach((str) => {
+		if (str === local_relay_url) {
+			return;
+		}
 		rlist.appendChild(new_relay_item(str));
 	});
 
@@ -595,6 +598,10 @@ function on_click_add_discovered_relay(ev) {
 
 function add_relay_address(address, label) {
 	const model = GNOSTR;
+	if (address === local_relay_url) {
+		log_info(`Skipping duplicate local relay entry: ${address}`);
+		return;
+	}
 
 	if (model.relays.has(address)) {
 		log_info(`Relay ${address} is already in the active list.`);
