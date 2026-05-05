@@ -11364,6 +11364,7 @@ dependencies = [
  "clap 4.6.1",
  "crossterm 0.29.0",
  "gnostr-asyncgit",
+ "gnostr-filetreelist",
  "include_dir",
  "mime_guess",
  "pulldown-cmark 0.13.3",
