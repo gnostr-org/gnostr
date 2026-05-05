@@ -301,14 +301,7 @@
 									<label>NIP-89 App Metadata</label>
 								</header>
 								<template id="nip89-app-template">
-									<details id="nip89-app-card" class="settings-profile nip89-app-profile" open>
-										<summary class="nip89-app-summary">
-											<img name="nip89-app-summary-image" class="pfp hide" />
-											<span class="nip89-app-summary-text">
-												<span name="nip89-app-summary-name"></span>
-												<span name="nip89-app-summary-subtitle"></span>
-											</span>
-										</summary>
+									<div id="nip89-app-card" class="settings-profile nip89-app-profile">
 										<div class="nip89-app-body">
 											<div class="settings-profile-top">
 												<img name="nip89-app-image" class="pfp jumbo hide"/>
@@ -316,6 +309,7 @@
 													<label name="nip89-app-name"></label>
 													<label name="nip89-app-kinds"></label>
 													<p name="nip89-app-about"></p>
+													<code name="nip89-app-pubkey"></code>
 												</div>
 											</div>
 											<div class="nip89-app-links">
@@ -327,7 +321,7 @@
 												</dl>
 											</div>
 										</div>
-									</details>
+									</div>
 								</template>
 								<div id="nip89-app-mount"></div>
 							</section>
