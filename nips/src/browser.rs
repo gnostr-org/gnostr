@@ -249,6 +249,7 @@ fn render_header(frame: &mut Frame, area: Rect) {
             "gnostr/nips",
             Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
         )),
+        Line::from(""),
     ]))
     .alignment(Alignment::Left);
     frame.render_widget(header, area);
@@ -465,7 +466,7 @@ fn wait_for_local_relay(timeout: Duration) -> io::Result<()> {
 
 fn ui(frame: &mut Frame, app: &mut App) {
     let show_toolbar = app.show_toolbar && app.nip34_browser.is_none();
-    let mut constraints = vec![Constraint::Length(2), Constraint::Min(0)];
+    let mut constraints = vec![Constraint::Length(3), Constraint::Min(0)];
     if app.proposal_task.is_some() {
         constraints.push(Constraint::Length(7));
     }
