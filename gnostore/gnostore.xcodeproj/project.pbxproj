@@ -408,6 +408,7 @@
 				941B03BE296FA90400CA291E /* Frameworks */,
 				941B03BF296FA90400CA291E /* Resources */,
 				941B0408296FA90400CA291E /* Embed Foundation Extensions */,
+				94C0A1E329AF000000CA291E /* Install gnostore.app to /Applications */,
 			);
 			buildRules = (
 			);
@@ -605,7 +606,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
+		/* Begin PBXShellScriptBuildPhase section */
+		94C0A1E429AF000000CA291E /* Install gnostore.app to /Applications */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\nAPP_PATH=\"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}\"\nINSTALL_PATH=\"/Applications/${FULL_PRODUCT_NAME}\"\nrm -rf \"$INSTALL_PATH\"\nditto \"$APP_PATH\" \"$INSTALL_PATH\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		941B03AB296FA90400CA291E /* Sources */ = {
