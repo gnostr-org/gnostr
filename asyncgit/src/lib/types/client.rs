@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::HashSet, time::Duration};
 
 #[allow(unused)]
 // Working Nostr Client Implementation with proper interface
@@ -39,8 +39,8 @@ use tracing::{debug, info, warn};
 
 use crate::types::{
     private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
-    EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayUrl, SubscriptionId, Tag,
-    UncheckedUrl, Unixtime,
+    EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayMessage, RelayUrl,
+    SubscriptionId, Tag, UncheckedUrl, Unixtime,
 };
 
 /// Filter behavior for relay subscriptions.
@@ -134,18 +134,41 @@ impl Client {
     /// Fetch events matching filters with explicit options.
     pub async fn get_events_of_with_opts(
         &self,
-        _filters: Vec<Filter>,
+        filters: Vec<Filter>,
         timeout: Option<Duration>,
         _opts: FilterOptions,
     ) -> Result<Vec<Event>, Error> {
-        debug!("Getting events with {} filters", _filters.len());
+        debug!("Getting events with {} filters", filters.len());
 
-        if let Some(timeout) = timeout {
-            tokio::time::sleep(timeout).await;
+        let timeout = timeout.unwrap_or(Duration::from_secs(10));
+        let relay_urls: Vec<String> = self
+            .relays
+            .iter()
+            .map(|relay| relay.as_str().to_string())
+            .collect();
+
+        if relay_urls.is_empty() {
+            return Ok(Vec::new());
         }
 
-        // Return empty vector for now - in real implementation this would query relays
-        Ok(Vec::new())
+        let results = join_all(relay_urls.into_iter().map(|relay_url| {
+            let filters = filters.clone();
+            async move { fetch_events_from_relay(&relay_url, filters, timeout).await }
+        }))
+        .await;
+
+        let mut seen = HashSet::new();
+        let mut events = Vec::new();
+
+        for result in results {
+            for event in result? {
+                if seen.insert(event.id) {
+                    events.push(event);
+                }
+            }
+        }
+
+        Ok(events)
     }
 
     /// Fetch events matching filters.
@@ -402,6 +425,68 @@ impl Client {
             ))
         }
     }
+}
+
+async fn fetch_events_from_relay(
+    relay_url: &str,
+    filters: Vec<Filter>,
+    timeout: Duration,
+) -> Result<Vec<Event>, Error> {
+    let (websocket, _) = tokio::time::timeout(timeout, connect_async(relay_url))
+        .await
+        .map_err(|_| Error::Custom(format!("connection timeout for relay {relay_url}").into()))?
+        .map_err(|e| Error::Custom(e.into()))?;
+
+    let (mut ws_write, mut ws_read) = websocket.split();
+    let subscription_id = SubscriptionId(format!("nips-{}", rand::random::<u64>()));
+    let request = ClientMessage::Req(subscription_id.clone(), filters);
+    let request_json = serde_json::to_string(&request).map_err(|e| Error::Custom(e.into()))?;
+    ws_write
+        .send(WsMessage::Text(request_json.into()))
+        .await
+        .map_err(|e| Error::Custom(e.into()))?;
+
+    let mut events = Vec::new();
+    loop {
+        let message = match tokio::time::timeout(timeout, ws_read.next()).await {
+            Ok(Some(Ok(message))) => message,
+            Ok(Some(Err(e))) => return Err(Error::Custom(e.into())),
+            Ok(None) => break,
+            Err(_) => break,
+        };
+
+        match message {
+            WsMessage::Text(text) => {
+                let relay_message: RelayMessage =
+                    serde_json::from_str(&text).map_err(|e| Error::Custom(e.into()))?;
+                match relay_message {
+                    RelayMessage::Event(_, event) => events.push(*event),
+                    RelayMessage::Eose(_) => break,
+                    RelayMessage::Closed(_, message) => {
+                        warn!("relay {relay_url} closed subscription: {message}");
+                        break;
+                    }
+                    RelayMessage::Notice(message) => {
+                        debug!("relay {relay_url} notice: {message}");
+                    }
+                    RelayMessage::Notify(message) => {
+                        debug!("relay {relay_url} notify: {message}");
+                    }
+                    RelayMessage::Ok(_, _, _) | RelayMessage::Auth(_) => {}
+                }
+            }
+            WsMessage::Ping(payload) => {
+                ws_write
+                    .send(WsMessage::Pong(payload))
+                    .await
+                    .map_err(|e| Error::Custom(e.into()))?;
+            }
+            WsMessage::Close(_) => break,
+            WsMessage::Binary(_) | WsMessage::Pong(_) | WsMessage::Frame(_) => {}
+        }
+    }
+
+    Ok(events)
 }
 
 impl std::fmt::Display for Client {
