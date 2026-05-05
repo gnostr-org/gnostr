@@ -7447,6 +7447,7 @@ dependencies = [
  "clap 4.6.1",
  "directories",
  "nostr-relay",
+ "num_cpus",
  "tokio",
  "tracing",
  "tracing-subscriber",
