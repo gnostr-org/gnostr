@@ -8,6 +8,10 @@ use std::{
 
 use gnostr_asyncgit::{
     filehash::{get_relay_urls, publish_patch_event},
+    tui::{
+        git::{self, cli::Args as GitTuiArgs},
+        shared::term::{backend as asyncgit_backend, Term},
+    },
     sync::{commit::commit, stage_add_file, RepoPath},
     types::Keys,
 };
@@ -42,6 +46,21 @@ pub fn launch_editor(file_path: &Path) -> Result<(), Box<dyn Error>> {
         ))
         .into())
     }
+}
+
+pub fn launch_git_tui(repo_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let current_dir = env::current_dir()?;
+    env::set_current_dir(repo_dir)?;
+
+    let result = (|| -> Result<(), Box<dyn Error>> {
+        let mut term = Term::new(asyncgit_backend())?;
+        let args = GitTuiArgs::default();
+        git::run(&args, &mut term)?;
+        Ok(())
+    })();
+
+    env::set_current_dir(current_dir)?;
+    result
 }
 
 fn patch_content(repo_dir: &Path, commit_id: &str) -> Result<String, Box<dyn Error>> {

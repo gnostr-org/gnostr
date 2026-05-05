@@ -46,17 +46,28 @@ struct App {
     content_scroll: u16,
     show_nip_list: bool,
     status_line: String,
+    checkout_dir: PathBuf,
 }
 
 impl App {
-    fn new(nips: Vec<PathBuf>) -> Self {
+    fn new(checkout_dir: PathBuf, nips: Vec<PathBuf>) -> Self {
         Self {
             nips,
             selected_nip_index: 0,
             content_scroll: 0,
             show_nip_list: true,
-            status_line: String::from("e: edit  p: propose  q: quit"),
+            status_line: String::from("e: edit  p: propose  g: git ui  r: refresh  q: quit"),
+            checkout_dir,
         }
+    }
+
+    fn reload(&mut self) -> std::io::Result<()> {
+        self.nips = collect_markdown_files(&self.checkout_dir)?;
+        if self.selected_nip_index >= self.nips.len() {
+            self.selected_nip_index = self.nips.len().saturating_sub(1);
+        }
+        self.content_scroll = 0;
+        Ok(())
     }
 
     fn next_nip(&mut self) {
@@ -182,7 +193,7 @@ pub fn run_with_files(nips: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
     terminal.clear()?;
 
-    let app = App::new(nips);
+    let app = App::new(PathBuf::from("."), nips);
     let res = run_app(&mut terminal, app);
 
     stdout().execute(LeaveAlternateScreen)?;
@@ -202,7 +213,7 @@ fn editor_target(app: &App) -> Option<PathBuf> {
 
 pub fn run_default() -> Result<(), Box<dyn Error>> {
     let checkout_dir = upstream::ensure_checkout()?;
-    let mut app = App::new(collect_markdown_files(checkout_dir.clone())?);
+    let mut app = App::new(checkout_dir.clone(), collect_markdown_files(checkout_dir.clone())?);
 
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
@@ -234,6 +245,13 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                     KeyCode::Up | KeyCode::Char('k') => app.previous_nip(),
                     KeyCode::PageDown => app.content_scroll = app.content_scroll.saturating_add(10),
                     KeyCode::PageUp => app.content_scroll = app.content_scroll.saturating_sub(10),
+                    KeyCode::Char('r') => match upstream::ensure_checkout() {
+                        Ok(_) => match app.reload() {
+                            Ok(_) => app.status_line = String::from("refreshed upstream checkout"),
+                            Err(err) => app.status_line = format!("refresh failed: {err}"),
+                        },
+                        Err(err) => app.status_line = format!("refresh failed: {err}"),
+                    },
                     KeyCode::Char('e') => {
                         if let Some(file_path) = editor_target(&app) {
                             disable_raw_mode()?;
@@ -247,11 +265,22 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             };
                         }
                     }
+                    KeyCode::Char('g') => {
+                        disable_raw_mode()?;
+                        stdout().execute(LeaveAlternateScreen)?;
+                        let git_result = workflow::launch_git_tui(&app.checkout_dir);
+                        stdout().execute(EnterAlternateScreen)?;
+                        enable_raw_mode()?;
+                        app.status_line = match git_result {
+                            Ok(_) => String::from("returned from asyncgit TUI"),
+                            Err(err) => format!("git ui error: {err}"),
+                        };
+                    }
                     KeyCode::Char('p') => {
                         if let Some(file_path) = editor_target(&app) {
                             app.status_line = String::from("publishing proposal...");
                             terminal.draw(|f| ui(f, &mut app))?;
-                            let result = workflow::submit_proposal(&checkout_dir, &file_path);
+                            let result = workflow::submit_proposal(&app.checkout_dir, &file_path);
                             app.status_line = match result {
                                 Ok(hash) => format!("submitted proposal {hash}"),
                                 Err(err) => format!("proposal failed: {err}"),
