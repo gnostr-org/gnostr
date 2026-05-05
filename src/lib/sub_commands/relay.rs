@@ -119,11 +119,9 @@ async fn run_local_relay(setting_path: Option<String>) -> Result<()> {
             let app_data =
                 gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), None)
                     .map_err(anyhow::Error::from)?;
-            let data_path = app_data.setting.read().data.path.clone();
-            let server = app_data.web_server().map_err(anyhow::Error::from)?;
-            gnostr_relay::write_listen_endpoint(&data_path, &server.addrs())
-                .map_err(anyhow::Error::from)?;
-            server.await.map_err(anyhow::Error::from)
+            gnostr_relay::run_app_with_endpoint(app_data)
+                .await
+                .map_err(anyhow::Error::from)
         })
         .await?;
 
