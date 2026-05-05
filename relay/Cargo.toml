@@ -19,6 +19,7 @@ actix-http = { version = "3.9.0" }
 actix-web = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
+directories = { workspace = true }
 nostr-relay = { version = "0.4.8", default-features = false }
 tokio = { workspace = true }
 tracing = { workspace = true }

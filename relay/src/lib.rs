@@ -20,10 +20,25 @@ pub fn write_listen_endpoint(data_path: &Path, addrs: &[SocketAddr]) -> std::io:
         addr.ip().to_string()
     };
     let endpoint = format!("ws://{host}:{}", addr.port());
-    let endpoint_path = data_path.join("relay-endpoint");
-
     fs::create_dir_all(data_path)?;
+    let endpoint_path = data_path.join("relay-endpoint");
     fs::write(&endpoint_path, format!("{endpoint}\n"))?;
+    if let Some(shared_path) = shared_endpoint_path() {
+        if let Some(parent) = shared_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(shared_path, format!("{endpoint}\n"))?;
+    }
 
     Ok(endpoint_path)
+}
+
+fn shared_endpoint_path() -> Option<PathBuf> {
+    let dirs = directories::ProjectDirs::from("org", "gnostr", "gnostr")?;
+    let path = dirs.data_local_dir().join("relay-endpoint");
+    if path.to_string_lossy().is_empty() {
+        None
+    } else {
+        Some(path)
+    }
 }
