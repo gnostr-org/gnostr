@@ -1254,7 +1254,7 @@ code {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
 }
 #relays .add-discovered-relay {
-	padding: 6px;
+	padding: 6px 12px 6px 6px;
 	background: color-mix(in srgb, var(--clrSuccess) 18%, transparent);
 }
 #relays .add-discovered-relay:disabled {
