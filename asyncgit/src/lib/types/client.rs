@@ -186,16 +186,31 @@ impl Client {
 
         let mut seen = HashSet::new();
         let mut events = Vec::new();
+        let mut first_error: Option<Error> = None;
 
         for result in results {
-            for event in result? {
-                if seen.insert(event.id) {
-                    events.push(event);
+            match result {
+                Ok(relay_events) => {
+                    for event in relay_events {
+                        if seen.insert(event.id) {
+                            events.push(event);
+                        }
+                    }
+                }
+                Err(err) => {
+                    warn!("relay fetch failed: {err}");
+                    if first_error.is_none() {
+                        first_error = Some(err);
+                    }
                 }
             }
         }
 
-        Ok(events)
+        if !events.is_empty() || first_error.is_none() {
+            Ok(events)
+        } else {
+            Err(first_error.expect("checked above"))
+        }
     }
 
     /// Fetch events matching filters.
