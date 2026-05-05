@@ -294,19 +294,19 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled(context, context_style),
         ]),
         Line::from(vec![
-            toolbar_action("Enter", "toggle tree", true),
-            Span::raw("  "),
             toolbar_action("e", "edit", file_selected),
             Span::raw("  "),
             toolbar_action("p", "propose", file_selected),
             Span::raw("  "),
-            toolbar_action("P", "nip34 browser", true),
-            Span::raw("  "),
-            toolbar_action("g", "git ui", true),
-            Span::raw("  "),
             toolbar_action("n", "new branch", true),
             Span::raw("  "),
             toolbar_action("c", "checkout", true),
+            Span::raw("  "),
+            toolbar_action("P", "nip34 browser", true),
+            toolbar_action("g", "git ui", true),
+        ]),
+        Line::from(vec![
+            toolbar_action("Enter", "toggle tree", true),
             Span::raw("  "),
             toolbar_action("r", "refresh", true),
             Span::raw("  "),
@@ -410,7 +410,7 @@ fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser
 fn ui(frame: &mut Frame, app: &mut App) {
     let mut constraints = vec![Constraint::Length(5), Constraint::Min(0)];
     if app.show_toolbar {
-        constraints.push(Constraint::Length(3));
+        constraints.push(Constraint::Length(5));
     }
     if app.proposal_task.is_some() {
         constraints.push(Constraint::Length(7));
