@@ -241,15 +241,24 @@ fn patch_content(repo_dir: &Path, commit_id: &str) -> Result<String, Box<dyn Err
     Ok(String::from_utf8(output.stdout)?)
 }
 
-pub fn submit_proposal(repo_dir: &Path, file_path: &Path) -> Result<String, Box<dyn Error>> {
+pub fn submit_proposal_with_log<F>(
+    repo_dir: &Path,
+    file_path: &Path,
+    mut log: F,
+) -> Result<String, Box<dyn Error>>
+where
+    F: FnMut(String),
+{
     let repo = repo_path(repo_dir)?;
     let rel_path = file_path.strip_prefix(repo_dir)?;
+    log(format!("staging {}", rel_path.display()));
     stage_add_file(&repo, rel_path)?;
 
     let subject = rel_path
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or("nips update");
+    log(format!("committing update {subject}"));
     let commit_id = commit(&repo, &format!("update {subject}"))?;
     let commit_hash = commit_id.to_string();
     let keys = Keys::parse(format!("{:0>64}", commit_hash))
@@ -262,10 +271,20 @@ pub fn submit_proposal(repo_dir: &Path, file_path: &Path) -> Result<String, Box<
         .unwrap_or("nips")
         .to_string();
 
+    log(format!(
+        "publishing patch to {} relay{}",
+        relay_urls.len(),
+        if relay_urls.len() == 1 { "" } else { "s" }
+    ));
     let runtime = tokio::runtime::Runtime::new()?;
     runtime.block_on(async {
         publish_patch_event(&keys, &relay_urls, &repo_name, &commit_hash, &patch, None).await
     })?;
 
+    log(format!("proposal published {commit_hash}"));
     Ok(commit_hash)
+}
+
+pub fn submit_proposal(repo_dir: &Path, file_path: &Path) -> Result<String, Box<dyn Error>> {
+    submit_proposal_with_log(repo_dir, file_path, |_| {})
 }

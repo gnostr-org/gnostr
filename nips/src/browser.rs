@@ -7,6 +7,9 @@ use std::{
     io::stdout,
     path::{Path, PathBuf},
     process::Command,
+    sync::mpsc::{self, Receiver},
+    thread,
+    time::Duration,
 };
 
 use crossterm::{
@@ -66,7 +69,42 @@ struct App {
     show_toolbar: bool,
     show_help: bool,
     force_full_repaint: bool,
+    proposal_task: Option<ProposalTask>,
     status_line: String,
+}
+
+enum ProposalUpdate {
+    Log(String),
+    Done(Result<String, String>),
+}
+
+struct ProposalTask {
+    receiver: Receiver<ProposalUpdate>,
+    logs: Vec<String>,
+    result: Option<Result<String, String>>,
+}
+
+impl ProposalTask {
+    fn new(receiver: Receiver<ProposalUpdate>) -> Self {
+        Self {
+            receiver,
+            logs: Vec::new(),
+            result: None,
+        }
+    }
+
+    fn drain(&mut self) {
+        while let Ok(update) = self.receiver.try_recv() {
+            match update {
+                ProposalUpdate::Log(line) => self.logs.push(line),
+                ProposalUpdate::Done(result) => self.result = Some(result),
+            }
+        }
+    }
+
+    fn is_active(&self) -> bool {
+        self.result.is_none()
+    }
 }
 
 impl App {
@@ -80,6 +118,7 @@ impl App {
             show_toolbar: true,
             show_help: false,
             force_full_repaint: true,
+            proposal_task: None,
             status_line: status_for_branch(&branch),
         })
     }
@@ -257,6 +296,41 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(toolbar, area);
 }
 
+fn render_proposal_popup(frame: &mut Frame, app: &App, area: Rect) {
+    let mut lines = Vec::new();
+    lines.push(Line::from(vec![
+        Span::styled("Proposal log: ", Style::default().fg(Color::Gray)),
+        Span::styled(
+            match app.proposal_task.as_ref().and_then(|task| task.result.as_ref()) {
+                None => "running".to_string(),
+                Some(Ok(hash)) => format!("done {hash}"),
+                Some(Err(err)) => format!("failed {err}"),
+            },
+            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+        ),
+    ]));
+
+    if let Some(task) = app.proposal_task.as_ref() {
+        let start = task.logs.len().saturating_sub(3);
+        for line in task.logs.iter().skip(start) {
+            lines.push(Line::from(Span::raw(line.clone())));
+        }
+    }
+
+    lines.push(Line::from(vec![
+        Span::styled("Esc", Style::default().fg(Color::Yellow)),
+        Span::raw(" dismiss  "),
+        Span::styled("p", Style::default().fg(Color::Yellow)),
+        Span::raw(" submit"),
+    ]));
+
+    let popup = Paragraph::new(Text::from(lines))
+        .block(Block::default().borders(Borders::ALL).title("Push"))
+        .wrap(Wrap { trim: false });
+    frame.render_widget(Clear, area);
+    frame.render_widget(popup, area);
+}
+
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -350,10 +424,31 @@ fn ui(frame: &mut Frame, app: &mut App) {
     if app.show_help {
         render_help(frame);
     }
+
+    if app.proposal_task.is_some() {
+        let area = bottom_rect(100, 7, frame.area());
+        render_proposal_popup(frame, app, area);
+    }
 }
 
 fn editor_target(app: &App) -> Option<PathBuf> {
     app.selected_file_path()
+}
+
+fn bottom_rect(percent_x: u16, height: u16, area: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(0), Constraint::Length(height)])
+        .split(area);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
 
 fn prompt_input(prompt: &str) -> io::Result<Option<String>> {
@@ -380,6 +475,30 @@ fn prompt_input(prompt: &str) -> io::Result<Option<String>> {
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
     result
+}
+
+fn start_proposal_task(app: &mut App) {
+    if app.proposal_task.as_ref().is_some_and(ProposalTask::is_active) {
+        app.status_line = String::from("proposal already running");
+        return;
+    }
+
+    if let Some(file_path) = editor_target(app) {
+        let (tx, rx) = mpsc::channel();
+        let checkout_dir = app.checkout_dir.clone();
+        app.proposal_task = Some(ProposalTask::new(rx));
+        app.status_line = String::from("pushing proposal...");
+        thread::spawn(move || {
+            let result = workflow::submit_proposal_with_log(&checkout_dir, &file_path, |line| {
+                let _ = tx.send(ProposalUpdate::Log(line));
+            })
+            .map_err(|err| err.to_string());
+
+            let _ = tx.send(ProposalUpdate::Done(result));
+        });
+    } else {
+        app.status_line = String::from("select a file to propose");
+    }
 }
 
 pub fn run_default() -> Result<(), Box<dyn Error>> {
