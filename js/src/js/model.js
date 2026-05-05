@@ -68,6 +68,9 @@ function model_process_event(model, relay, ev) {
 
 	if (ev.kind === KIND_DM) {
 		sync_dm_event_to_local_relay(ev);
+		if (relay || ev.pubkey === model.pubkey) {
+			void model_save_event(ev);
+		}
 	}
 
 	if (
@@ -620,6 +623,25 @@ async function model_save_events(model) {
 		}
 	}
 	return dbcall(_events_save);
+}
+
+async function model_save_event(ev) {
+	function _event_save(req, resolve, reject) {
+		const db = req.target.result;
+		const tx = db.transaction("events", "readwrite");
+		const store = tx.objectStore("events");
+		tx.oncomplete = () => {
+			db.close();
+			resolve();
+		};
+		tx.onerror = (error) => {
+			db.close();
+			log_error("failed to save event");
+			reject(error);
+		};
+		store.put(ev);
+	}
+	return dbcall(_event_save);
 }
 
 async function model_load_events(model, fn) {
