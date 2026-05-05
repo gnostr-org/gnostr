@@ -88,6 +88,8 @@ const ALL_TABS: &[Nip34Tab] = &[
     Nip34Tab::GraspList,
 ];
 
+const POLL_INTERVAL: Duration = Duration::from_secs(15);
+
 #[derive(Clone)]
 struct Nip34TabData {
     tab: Nip34Tab,
@@ -125,8 +127,14 @@ impl Nip34Browser {
     pub fn spawn() -> Self {
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
-            let result = load_nip34_tabs();
-            let _ = tx.send(Nip34Update::Loaded(result));
+            loop {
+                let result = load_nip34_tabs();
+                if tx.send(Nip34Update::Loaded(result)).is_err() {
+                    break;
+                }
+
+                thread::sleep(POLL_INTERVAL);
+            }
         });
 
         Self {
@@ -344,7 +352,7 @@ fn render_event_detail(event: &Event) -> String {
 fn load_nip34_tabs() -> Result<Vec<Nip34TabData>, String> {
     let runtime = tokio::runtime::Runtime::new().map_err(|err| err.to_string())?;
     runtime.block_on(async {
-        let relay_urls = get_relay_urls();
+        let relay_urls = browser_relay_urls();
         if relay_urls.is_empty() {
             return Err(String::from("no relay URLs configured"));
         }
@@ -375,4 +383,19 @@ fn load_nip34_tabs() -> Result<Vec<Nip34TabData>, String> {
 
         Ok(tabs)
     })
+}
+
+fn browser_relay_urls() -> Vec<String> {
+    let mut relays = vec![String::from("ws://127.0.0.1:8080")];
+
+    for relay in get_relay_urls() {
+        if relay.contains("0.0.0.0:8080") {
+            continue;
+        }
+        if !relays.contains(&relay) {
+            relays.push(relay);
+        }
+    }
+
+    relays
 }
