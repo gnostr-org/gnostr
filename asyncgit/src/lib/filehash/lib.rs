@@ -3,7 +3,12 @@
 //! This macro allows you to compute the SHA-256 hash of a file at compile time,
 //! embedding the resulting hash string directly into your Rust executable.
 
-use std::time::Duration;
+use std::{
+    env,
+    fs,
+    path::PathBuf,
+    time::Duration,
+};
 
 use url::Url;
 
@@ -42,8 +47,14 @@ pub const GIT_COMMIT_HASH: &str = env!("GIT_COMMIT_HASH");
 pub const GIT_BRANCH: &str = env!("GIT_BRANCH");
 
 pub fn get_relay_urls() -> Vec<String> {
+    let mut relays = Vec::new();
+
+    if let Some(local_relay) = local_relay_url() {
+        relays.push(local_relay);
+    }
+
     let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
-    content
+    for relay in content
         .lines()
         .skip(1)
         .filter_map(|line| {
@@ -64,7 +75,64 @@ pub fn get_relay_urls() -> Vec<String> {
                 }
             }
         })
-        .collect()
+    {
+        if !relays.contains(&relay) {
+            relays.push(relay);
+        }
+    }
+
+    relays
+}
+
+fn local_relay_url() -> Option<String> {
+    if let Ok(value) = env::var("GNOSTR_RELAY_URL") {
+        if let Some(url) = normalize_relay_url(&value) {
+            return Some(url);
+        }
+    }
+
+    for path in local_relay_endpoint_paths() {
+        if let Ok(contents) = fs::read_to_string(path) {
+            if let Some(url) = normalize_relay_url(contents.trim()) {
+                return Some(url);
+            }
+        }
+    }
+
+    None
+}
+
+fn local_relay_endpoint_paths() -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+
+    if let Ok(path) = env::var("GNOSTR_RELAY_ENDPOINT_FILE") {
+        if !path.trim().is_empty() {
+            paths.push(PathBuf::from(path));
+        }
+    }
+
+    paths.push(PathBuf::from("data/relay-endpoint"));
+    paths.push(PathBuf::from(".gnostr/relay/relay-endpoint"));
+
+    paths
+}
+
+fn normalize_relay_url(value: &str) -> Option<String> {
+    let value = value.trim();
+    if value.is_empty() {
+        return None;
+    }
+
+    let candidate = if value.contains("://") {
+        value.to_string()
+    } else {
+        format!("ws://{value}")
+    };
+
+    match Url::parse(&candidate) {
+        Ok(url) if url.scheme() == "ws" || url.scheme() == "wss" => Some(url.to_string()),
+        _ => None,
+    }
 }
 
 pub async fn publish_patch_event(
