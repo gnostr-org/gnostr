@@ -26,6 +26,7 @@ use tokio::io::AsyncWriteExt;
 
 pub mod path;
 pub mod browser;
+pub mod nip34_browser;
 pub mod upstream;
 pub mod workflow;
 

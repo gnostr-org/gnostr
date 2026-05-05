@@ -25,7 +25,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
 
-use crate::{upstream, workflow};
+use crate::{nip34_browser, upstream, workflow};
 
 pub fn collect_checkout_paths(dir: impl AsRef<Path>) -> io::Result<Vec<PathBuf>> {
     let output = Command::new("git")
@@ -69,6 +69,7 @@ struct App {
     show_toolbar: bool,
     show_help: bool,
     force_full_repaint: bool,
+    nip34_browser: Option<nip34_browser::Nip34Browser>,
     proposal_task: Option<ProposalTask>,
     status_line: String,
 }
@@ -125,6 +126,7 @@ impl App {
             show_toolbar: true,
             show_help: false,
             force_full_repaint: true,
+            nip34_browser: None,
             proposal_task: None,
             status_line: status_for_branch(&branch),
         })
@@ -179,7 +181,7 @@ impl App {
 
 fn status_for_branch(branch: &str) -> String {
     format!(
-        "{branch}  e: edit  p: propose  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  .: toolbar  q: quit"
+        "{branch}  e: edit  p: propose  P: nip34 browser  g: git ui  n: new branch  c: checkout  r: refresh  \\: help  .: toolbar  q: quit"
     )
 }
 
@@ -382,6 +384,11 @@ fn render_help(frame: &mut Frame) {
     frame.render_widget(help, area);
 }
 
+fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser) {
+    let area = centered_rect(86, 78, frame.area());
+    browser.render(frame, area);
+}
+
 fn ui(frame: &mut Frame, app: &mut App) {
     let mut constraints = vec![Constraint::Length(3), Constraint::Length(1), Constraint::Min(0)];
     if app.show_toolbar {
@@ -430,6 +437,10 @@ fn ui(frame: &mut Frame, app: &mut App) {
 
     if app.show_help {
         render_help(frame);
+    }
+
+    if let Some(browser) = app.nip34_browser.as_ref() {
+        render_nip34_browser(frame, browser);
     }
 
     if app.proposal_task.is_some() {
