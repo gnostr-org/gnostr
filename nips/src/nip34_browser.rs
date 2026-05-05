@@ -248,49 +248,15 @@ impl Nip34Browser {
         frame.render_widget(Block::default().borders(Borders::ALL).title("nip34 browser"), area);
 
         let inner = area.inner(Margin { vertical: 1, horizontal: 1 });
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(0), Constraint::Length(3)])
-            .split(inner);
 
         if let Some(err) = &self.error {
             let err = Paragraph::new(err.clone())
                 .block(Block::default().borders(Borders::ALL).title("Error"))
                 .wrap(Wrap { trim: false });
-            frame.render_widget(err, chunks[0]);
+            frame.render_widget(err, inner);
         } else {
-            self.render_events(frame, chunks[0]);
+            self.render_events(frame, inner);
         }
-
-        let bottom = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Length(1), Constraint::Length(2)])
-            .split(chunks[1]);
-
-        let titles = self
-            .tabs
-            .iter()
-            .map(|tab| Line::from(Span::styled(tab.tab.title(), Style::default())))
-            .collect::<Vec<_>>();
-        let tabs = Tabs::new(titles)
-            .select(self.active_tab)
-            .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
-            .style(Style::default().fg(Color::Gray));
-        frame.render_widget(tabs, bottom[0]);
-
-        let footer = Paragraph::new(Text::from(vec![
-            Line::from(vec![
-                Span::styled("Esc", Style::default().fg(Color::Yellow)),
-                Span::raw(" close  "),
-                Span::styled("←/→", Style::default().fg(Color::Yellow)),
-                Span::raw(" tabs  "),
-                Span::styled("j/k", Style::default().fg(Color::Yellow)),
-                Span::raw(" move  "),
-                Span::styled("r", Style::default().fg(Color::Yellow)),
-                Span::raw(" reload"),
-            ]),
-        ]));
-        frame.render_widget(footer, bottom[1]);
     }
 
     fn render_events(&self, frame: &mut Frame, area: Rect) {
