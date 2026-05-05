@@ -407,8 +407,8 @@ fn render_help(frame: &mut Frame) {
     frame.render_widget(help, area);
 }
 
-fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser) {
-    browser.render(frame, frame.area());
+fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser, area: Rect) {
+    browser.render(frame, area);
 }
 
 fn bootstrap_local_relay() -> io::Result<()> {
@@ -467,11 +467,12 @@ fn wait_for_local_relay(timeout: Duration) -> io::Result<()> {
 }
 
 fn ui(frame: &mut Frame, app: &mut App) {
+    let show_toolbar = app.show_toolbar && app.nip34_browser.is_none();
     let mut constraints = vec![Constraint::Length(5), Constraint::Min(0)];
     if app.proposal_task.is_some() {
         constraints.push(Constraint::Length(7));
     }
-    if app.show_toolbar {
+    if show_toolbar {
         constraints.push(Constraint::Length(3));
     }
 
@@ -508,14 +509,15 @@ fn ui(frame: &mut Frame, app: &mut App) {
     }
 
     if let Some(browser) = app.nip34_browser.as_ref() {
-        render_nip34_browser(frame, browser);
+        render_nip34_browser(frame, browser, chunks[1]);
     }
 
     if app.proposal_task.is_some() {
-        render_proposal_popup(frame, app, chunks[2]);
+        let popup_index = if show_toolbar { 2 } else { 2 };
+        render_proposal_popup(frame, app, chunks[popup_index]);
     }
 
-    if app.show_toolbar {
+    if show_toolbar {
         let toolbar_index = if app.proposal_task.is_some() { 3 } else { 2 };
         render_toolbar(frame, app, chunks[toolbar_index]);
     }
