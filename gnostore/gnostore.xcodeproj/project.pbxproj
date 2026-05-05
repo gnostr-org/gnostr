@@ -408,7 +408,7 @@
 				941B03BE296FA90400CA291E /* Frameworks */,
 				941B03BF296FA90400CA291E /* Resources */,
 				941B0408296FA90400CA291E /* Embed Foundation Extensions */,
-				94C0A1E329AF000000CA291E /* Install gnostore.app to /Applications */,
+				94C0A1E429AF000000CA291E /* Install gnostore.app to /Applications */,
 			);
 			buildRules = (
 			);
