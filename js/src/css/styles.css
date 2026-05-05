@@ -173,7 +173,8 @@ th, td {
     flex-direction: column;
     position: relative;
     height: calc(100vh - var(--header-height));
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Navigation */
@@ -289,9 +290,9 @@ button.nav > img.icon {
 	flex-direction: column;
 	flex-grow: 1; /* Allow #view to grow and take available space */
 	width: 100%;
-	min-height: 0; /* Allow content to shrink within the sticky pane */
-    height: 100%; /* Explicitly set height */
-    overflow-y: auto;
+	min-height: 100%; /* Fill the detail pane from the top */
+    height: auto;
+    overflow: visible;
     position: relative;
 }
 #view header {
@@ -306,10 +307,9 @@ button.nav > img.icon {
     justify-content: space-between; /* Distribute items horizontally */
 }
 #view > header > label {
-    position: sticky;
-    top: 0;
+    position: relative;
     background-color: var(--clrBg); /* Ensure it has a background */
-	pa_dding: 15px;
+	padding: 15px;
 	font-size: 22px;
 	font-weight: 800;
 	display: block;
