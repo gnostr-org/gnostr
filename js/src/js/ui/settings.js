@@ -242,8 +242,6 @@ function render_nip89_app_metadata(
 	const kinds_label = [...new Set(kinds.map((kind) => String(kind).trim()).filter(Boolean))].join(", ");
 	const handlers_label = [...new Set(handlers.map((handler) => handler.trim()).filter(Boolean))].join(" • ");
 	const has_data = !!(name || description || pubkey || website || kinds_label || handlers_label || picture);
-	const summary_name = name || pubkey || "NIP-89 App";
-	const summary_subtitle = website || kinds_label || description || handlers_label || "";
 
 	find_node("[name='nip89-app-name']", card).textContent = name;
 	find_node("[name='nip89-app-name']", card).classList.toggle("hide", !name);
@@ -278,31 +276,12 @@ function render_nip89_app_metadata(
 		handlers_el.textContent = handlers_label;
 		handlers_el.classList.toggle("hide", !handlers_label);
 	}
-	const summary_image = find_node("[name='nip89-app-summary-image']", card);
-	if (summary_image) {
-		if (picture) {
-			summary_image.src = picture;
-			summary_image.classList.remove("hide");
-		} else {
-			summary_image.classList.add("hide");
-		}
-	}
-	const summary_name_el = find_node("[name='nip89-app-summary-name']", card);
-	if (summary_name_el) {
-		summary_name_el.textContent = summary_name;
-	}
-	const summary_subtitle_el = find_node("[name='nip89-app-summary-subtitle']", card);
-	if (summary_subtitle_el) {
-		summary_subtitle_el.textContent = summary_subtitle;
-		summary_subtitle_el.classList.toggle("hide", !summary_subtitle);
-	}
 
 	mount.classList.toggle("hide", !has_data);
 	const section = mount.closest("#nip89-app-section");
 	if (section) {
 		section.classList.toggle("hide", !has_data);
 	}
-	card.open = false;
 }
 
 async function load_nip89_app_metadata(
