@@ -408,9 +408,9 @@ fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser
 }
 
 fn ui(frame: &mut Frame, app: &mut App) {
-    let mut constraints = vec![Constraint::Length(3), Constraint::Length(1), Constraint::Min(0)];
+    let mut constraints = vec![Constraint::Length(5), Constraint::Min(0), Constraint::Length(3)];
     if app.show_toolbar {
-        constraints.push(Constraint::Length(3));
+        constraints.push(Constraint::Length(7));
     }
 
     let chunks = Layout::default()
@@ -418,15 +418,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         .constraints(constraints)
         .split(frame.area());
 
-    let title = Paragraph::new("Nostr NIPs Browser")
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD));
-    frame.render_widget(title, chunks[0]);
-
-    let status = Paragraph::new(app.status_line.clone())
-        .style(Style::default().fg(Color::Gray))
-        .alignment(Alignment::Left);
-    frame.render_widget(status, chunks[1]);
+    render_header(frame, chunks[0]);
 
     let body = Layout::default()
         .direction(Direction::Horizontal)
@@ -435,7 +427,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         } else {
             vec![Constraint::Percentage(100)]
         })
-        .split(chunks[2]);
+        .split(chunks[1]);
 
     if app.show_tree {
         render_tree(frame, app, body[0]);
@@ -450,7 +442,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
     frame.render_widget(content, body[if app.show_tree { 1 } else { 0 }]);
 
     if app.show_toolbar {
-        render_toolbar(frame, app, chunks[3]);
+        render_toolbar(frame, app, chunks[2]);
     }
 
     if app.show_help {
@@ -462,8 +454,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
     }
 
     if app.proposal_task.is_some() {
-        let area = bottom_rect(100, 7, frame.area());
-        render_proposal_popup(frame, app, area);
+        render_proposal_popup(frame, app, chunks[3]);
     }
 }
 
