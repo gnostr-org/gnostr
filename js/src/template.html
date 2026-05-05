@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="theme-color" content="#0f0f0f"/>
+		<meta http-equiv="Content-Security-Policy"
+		      content="default-src *; manifest-src *; connect-src * ws: wss:; script-src * 'unsafe-inline' 'unsafe-eval'; script-src-elem * 'unsafe-inline'; script-src-attr * 'unsafe-inline' 'unsafe-hashes'; style-src * 'unsafe-inline' 'unsafe-hashes'; img-src * data:; media-src *; font-src *; child-src *;"/>
+		<title>gnostr</title>
+		<link rel="manifest" href="/pwa/manifest.json"/>
+		<link rel="icon" href="/images/icon.svg" type="image/svg+xml"/>
+		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
+		<link rel="stylesheet" href="/css/vars.css?v=1">
+		<link rel="stylesheet" href="/css/utils.css?v=1">
+		<link rel="stylesheet" href="/css/styles.css?v=23">
+		<link rel="stylesheet" href="/css/responsive.css?v=10">
+		<script defer src="/js/util.js?v=5"></script>
+		<script defer src="/js/ui/safe-html.js?v=1"></script>
+		<script defer src="/js/ui/util.js?v=8"></script>
+		<script defer src="/js/ui/render.js?v=15"></script>
+		<script defer src="/js/ui/state.js?v=1"></script>
+		<script defer src="/js/ui/fmt.js?v=1"></script>
+		<script defer src="/js/ui/profile.js?v=1"></script>
+		<script defer src="/js/ui/settings.js?v=2"></script>
+		<script defer src="/js/ui/dm.js?v=1"></script>
+		<script defer src="/js/nostr.js?v=7"></script>
+		<script defer src="/js/nip/34.js?v=1"></script>
+		<script defer src="/js/core.js?v=2"></script>
+		<script defer src="/js/postbox.js?v=1"></script>
+		<script defer src="/js/model.js?v=1"></script>
+		<script defer src="/js/contacts.js?v=1"></script>
+		<script defer src="/js/event.js?v=1"></script>
+		<script defer src="/js/lib.js?v=1"></script>
+		<script defer src="/js/main.js?v=1"></script>
+		<script defer src="/js/startup.js?v=1"></script>
+		<script defer src="/js/db.js?v=1"></script>
+		<script defer src="/js/relay.js?v=1"></script>
+		<script defer src="/js/timers.js?v=1"></script>
+		<script defer src="/js/bootstrap.js?v=1"></script>
+	</head>
+	<body>
+		<div id="container-busy">
+			<div class="loader" title="Loading...">
+				<img class="dark-invert" src="/images/loader-fragment.svg"/>
+			</div>
+		</div>
+
+		<div id="container-welcome" class="hide">
+			<div class="hero-box">
+				<div class="padded">
+					<h1>
+						gnostr
+						<img class="icon svg" src="/images/logo-inverted.svg"/>
+					</h1>
+					<p>Please access with a nos2x compatible browser.</p>
+				</div>
+			</div>
+		</div>
+
+		<div id="app-main" class="hide">
+			<header id="global-header">
+				<button id="global-header-gnostr-btn" action="open-view" data-view="nip" class="nav icon active"
+				        title="gnostr.org">
+					<img class="icon svg active" src="/images/logo.svg"/>
+					<span id="app-title-btn-label">gnostr</span>
+					<label id="app-title"></label>
+				</button>
+			</header>
+
+			<div id="list-detail-container">
+				<div id="master-pane">
+					<nav id="nav" class="nav full flex-noshrink">
+						<div>
+							<button action="open-view" data-view="nip" class="nav icon" title="NIP explorer">
+								<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
+								<img class="icon svg active" src="/images/logo.svg"/>
+							</button>
+							<button action="open-view" data-view="nip34-view-friends" class="nav icon" title="NIP-34">
+								<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
+								<img class="icon svg active" src="/images/logo.svg"/>
+							</button>
+							<button action="open-view" data-view="dm" class="nav icon" title="Direct Messages">
+								<img class="icon svg inactive" src="/images/messages.svg"/>
+								<img class="icon svg active" src="/images/messages-active.svg"/>
+								<div class="new-notifications hide" role="dm"></div>
+							</button>
+							<button action="open-view" data-view="notifications" class="nav icon" title="Notifications">
+								<img class="icon svg inactive" src="/images/notifications.svg"/>
+								<img class="icon svg active" src="/images/notifications-active.svg"/>
+								<div class="new-notifications hide" role="activity"></div>
+							</button>
+							<button action="open-view" data-view="settings" title="Settings" class="nav icon">
+								<img class="icon svg inactive" src="/images/settings.svg"/>
+								<img class="icon svg active" src="/images/settings-active.svg"/>
+							</button>
+							<button action="new-note" title="New Note" class="nav icon new-note">
+								<img class="icon svg invert" src="/images/new-note.svg"/>
+							</button>
+						</div>
+					</nav>
+				</div>
+
+				<div id="detail-pane">
+					<div id="view">
+						<header>
+							<label id="app-title"></label>
+							<div id="header-tools">
+								<input type="search" id="main-search" placeholder="Search..."/>
+								<button class="action small hide" disabled action="mark-all-read">
+									Mark All Read
+								</button>
+								<img class="pfp hide" role="their-pfp" data-pubkey="" src="/images/no-user.svg"/>
+								<img class="pfp hide" role="my-pfp" data-pubkey="" src="/images/no-user.svg"/>
+							</div>
+						</header>
+
+						<div id="gnostr-nip34-feed" class="events hide"></div>
+						<div id="profile-info" role="profile-info" class="bottom-border hide">
+							<div class="profile-banner" name="profile-banner"></div>
+							<div class="flex">
+								<img name="profile-image" class="pfp jumbo hide"/>
+								<label name="profile-nip05"></label>
+								<div class="profile-tools">
+									<button class="icon link hide" name="profile-website" action="open-link">
+										<img class="icon svg" src="/images/profile-website.svg"/>
+									</button>
+									<button class="icon link hide" title="Copy Lightning Address" name="profile-lud06" action="open-lud06">
+										<img class="icon svg" src="/images/profile-zap.svg"/>
+									</button>
+									<button class="icon" name="message-user" title="Directly Message">
+										<img class="icon svg" src="/images/message-user.svg"/>
+									</button>
+									<button class="icon" name="copy-pk" data-pk="" title="Copy Public Key">
+										<img class="icon svg" src="/images/pubkey.svg"/>
+									</button>
+									<button class="action" name="follow-user" data-pk="">Follow</button>
+									<button class="action" name="edit-profile" title="Update Profile">Update</button>
+								</div>
+							</div>
+							<div>
+								<p name="profile-about"></p>
+							</div>
+						</div>
+						<div id="dms" class="hide"></div>
+						<div id="show-new" class="show-new hide" action="show-timeline-new">
+							<button>Show <span>0</span> new notes</button>
+						</div>
+						<div id="timeline" class="events"></div>
+						<div id="show-more" class="show-more">
+							<button action="show-timeline-more">Show More</button>
+							<button action="show-nip34-more" class="hide">Show More NIP-34</button>
+						</div>
+						<div class="loading-events">
+							<div class="loader" title="Loading...">
+								<img class="dark-invert" src="/images/loader-fragment.svg"/>
+							</div>
+						</div>
+						<div id="settings-profile" class="settings-profile hide">
+							<div class="settings-profile-top">
+								<img name="settings-profile-image" class="pfp jumbo hide"/>
+							</div>
+						</div>
+						<div id="relays" class="hide">
+							<details class="relay-section" open>
+								<summary><label>Relays</label></summary>
+								<template id="local-relay-header-card-template">
+									<details id="local-relay-header-card" class="local-relay-card relay-active-card">
+										<summary class="relay-active-summary relay-summary local-relay-summary">
+											<img class="local-relay-summary-logo local-relay-summary-logo-light relay-summary-icon icon svg small" src="/images/logo.svg" alt="Local Relay"/>
+											<img class="local-relay-summary-logo local-relay-summary-logo-dark relay-summary-icon icon svg small" src="/images/logo-inverted.svg" alt="Local Relay"/>
+											<span class="relay-active-summary-text relay-summary-text">
+												<span class="relay-active-summary-name relay-summary-name">Local Relay</span>
+												<span class="relay-active-summary-address relay-summary-address" data-field="url"></span>
+												<span class="relay-active-summary-ping relay-summary-ping" data-field="status"></span>
+											</span>
+											<span class="local-relay-summary-action-spacer relay-summary-action-spacer" aria-hidden="true"></span>
+										</summary>
+										<div class="local-relay-card-body">
+											<div id="relays-profile" class="settings-profile local-relay-profile">
+												<div class="settings-profile-top">
+													<img role="my-pfp" class="pfp jumbo clickable" src="/images/icon.svg" alt="gnostr"/>
+													<div class="settings-profile-meta">
+														<div id="local-relay-info" class="local-relay-card-meta"></div>
+													</div>
+												</div>
+											</div>
+											<div class="local-relay-card-actions">
+												<button id="local-relay-start" class="btn-text">Start</button>
+												<button id="local-relay-stop" class="btn-text">Stop</button>
+												<button id="add-relay" class="btn-text">
+													<img class="svg icon small" src="/images/add-relay.svg"/>
+												</button>
+											</div>
+											<div class="local-relay-card-stats">
+												<span><strong>Net IO:</strong> <span data-field="net_io"></span></span>
+												<span><strong>Disk:</strong> <span data-field="disk_usage"></span></span>
+											</div>
+										</div>
+									</details>
+								</template>
+								<div id="local-relay-header-card-mount"></div>
+								<template id="relay-card-template">
+									<tr class="relay-card">
+										<td colspan="2">
+											<details class="relay-active-card">
+												<summary class="relay-active-summary relay-summary">
+													<!-- Shared master/detail relay row: icon, stacked relay data, trailing action. -->
+													<img class="relay-active-summary-nip34 relay-active-summary-nip34-light relay-summary-icon icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+													<img class="relay-active-summary-nip34 relay-active-summary-nip34-dark relay-summary-icon icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+													<span class="relay-active-summary-text relay-summary-text">
+														<span class="relay-active-summary-name relay-summary-name" data-relay-name></span>
+														<span class="relay-active-summary-address relay-summary-address" data-relay-address></span>
+														<span class="relay-active-summary-ping relay-summary-ping" data-relay-ping></span>
+													</span>
+													<button class="remove-relay btn-text relay-summary-action" data-address="" role="remove-relay">
+														<img class="icon svg small" src="/images/event-delete.svg"/>
+													</button>
+												</summary>
+												<div class="relay-info">
+													<div class="relay-info-line relay-info-name" data-relay-name></div>
+													<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
+													<div class="relay-info-line relay-info-software hide" data-relay-software></div>
+													<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
+													<div class="relay-info-line relay-info-description hide" data-relay-description></div>
+												</div>
+											</details>
+										</td>
+									</tr>
+								</template>
+								<template id="relay-discovery-template">
+									<details class="relay-card relay-discovery-card">
+										<summary class="relay-discovery-summary relay-summary">
+											<!-- Discovery cards reuse the same master/detail row as active cards. -->
+											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-light relay-summary-icon icon svg small hide" src="/images/logo.svg" alt="NIP-34"/>
+											<img class="relay-discovery-nip34 relay-active-summary-nip34 relay-discovery-nip34-dark relay-summary-icon icon svg small hide" src="/images/logo-inverted.svg" alt="NIP-34"/>
+											<span class="relay-active-summary-text relay-summary-text">
+												<span class="relay-active-summary-name relay-summary-name" data-relay-name></span>
+												<span class="relay-active-summary-address relay-summary-address" data-relay-address></span>
+												<span class="relay-active-summary-ping relay-summary-ping" data-relay-ping></span>
+											</span>
+											<button class="add-discovered-relay btn-text relay-summary-action" data-address="" role="add-discovered-relay" aria-label="Add relay" title="Add relay">
+												<img class="icon svg small relay-add-icon" src="/images/add-relay.svg"/>
+											</button>
+										</summary>
+										<div class="relay-discovery-body">
+											<div class="relay-info">
+												<div class="relay-info-line relay-info-name" data-relay-name></div>
+												<div class="relay-info-line relay-info-ping hide" data-relay-ping></div>
+												<div class="relay-info-line relay-info-software hide" data-relay-software></div>
+												<div class="relay-info-line relay-info-nips hide" data-relay-nips></div>
+												<div class="relay-info-line relay-info-description hide" data-relay-description></div>
+											</div>
+										</div>
+									</details>
+								</template>
+								<table id="relay-list" class="row">
+									<thead>
+										<tr>
+											<td class="column-address">Address</td>
+											<td class="column-action"></td>
+										</tr>
+									</thead>
+									<tbody>
+										<!-- Dynamically generated rows should have <td> with classes: column-address, column-action -->
+									</tbody>
+								</table>
+							</details>
+
+							<details class="relay-section" open>
+								<summary><label>Crawler Relay Discovery</label></summary>
+								<div id="relay-discovery-list" class="relay-discovery-list"></div>
+							</details>
+						</div>
+
+						<div id="settings" class="hide">
+							<section id="nip89-app-section" class="hide">
+								<header>
+									<label>NIP-89 App Metadata</label>
+								</header>
+								<template id="nip89-app-template">
+									<div id="nip89-app-card" class="settings-profile nip89-app-profile">
+										<div class="nip89-app-body">
+											<div class="settings-profile-top">
+												<img name="nip89-app-image" class="pfp jumbo hide"/>
+												<div class="settings-profile-meta">
+													<label name="nip89-app-name"></label>
+													<label name="nip89-app-kinds"></label>
+													<p name="nip89-app-about"></p>
+													<code name="nip89-app-pubkey"></code>
+												</div>
+											</div>
+											<div class="nip89-app-links">
+												<dl>
+													<dt>Website</dt>
+													<dd data-field="nip89-app-website"></dd>
+													<dt>Handlers</dt>
+													<dd data-field="nip89-app-handlers"></dd>
+												</dl>
+											</div>
+										</div>
+									</div>
+								</template>
+								<div id="nip89-app-mount"></div>
+							</section>
+
+							<section>
+								<header><label>Info</label></header>
+								<div class="settings-actions">
+									<button action="open-view" data-view="relays" class="nav icon" title="Relays">
+										<img class="icon svg" src="/images/settings.svg"/>
+									</button>
+									<button action="open-view" data-view="relays" class="action" title="Open Relays">
+										Relays
+									</button>
+								</div>
+							</section>
+						</div>
+
+						<footer>
+							<div class="footer-links">
+								<a href="https://github.com/gnostr-org/gnostr">Source Code</a>
+								<a href="https://github.com/gnostr-org/gnostr/issues">Bug Tracker</a>
+								<a href="mailto:admin@gnostr.org">Email Me</a>
+							</div>
+							<div class="footer-build">Build: __BUILD_NAME__</div>
+							<div id="dm-post" class="hide">
+								<textarea class="post-input dm" name="message"></textarea>
+								<div class="post-tools">
+									<button name="send-dm" class="action">Send</button>
+								</div>
+							</div>
+							<nav class="nav mobile">
+								<button action="open-view" data-view="friends" class="icon" title="__228Home__">
+									<img class="icon svg inactive" src="/images/home.svg"/>
+									<img class="icon svg active" src="/images/home-active.svg"/>
+								</button>
+								<button action="open-view" data-view="dm" class="icon" title="Direct Messages">
+									<img class="icon svg inactive" src="/images/messages.svg"/>
+									<img class="icon svg active" src="/images/messages-active.svg"/>
+									<div class="new-notifications hide" role="dm"></div>
+								</button>
+								<button action="open-view" data-view="notifications" class="icon" title="Notifications">
+									<img class="icon svg inactive" src="/images/notifications.svg"/>
+									<img class="icon svg active" src="/images/notifications-active.svg"/>
+									<div class="new-notifications hide" role="activity"></div>
+								</button>
+								<button action="open-view" data-view="settings" title="Settings" class="icon">
+									<img class="icon svg inactive" src="/images/settings.svg"/>
+									<img class="icon svg active" src="/images/settings-active.svg"/>
+								</button>
+								<button id="new-note-mobile" action="new-note" title="New Note" class="nav icon new-note">
+									<img class="icon svg invert" src="/images/new-note.svg"/>
+								</button>
+							</nav>
+						</footer>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<dialog id="media-preview" action="close-media">
+			<img action="close-media" src=""/>
+		</dialog>
+		<dialog id="reply-modal">
+			<div class="container">
+				<header>
+					<label>Reply To</label>
+					<button class="icon" action="close-modal">
+						<img class="icon svg" src="/images/close-modal.svg"/>
+					</button>
+				</header>
+				<div id="replying-to"></div>
+				<div id="replybox">
+					<textarea id="reply-content" class="post-input" placeholder="Reply..."></textarea>
+					<div class="post-tools new">
+						<button class="action" role="send" name="send">Send</button>
+					</div>
+					<div class="post-tools reply">
+						<button class="action" name="reply-all" data-all="1">Reply All</button>
+						<button class="action" name="reply">Reply</button>
+					</div>
+				</div>
+			</div>
+		</dialog>
+		<dialog id="profile-editor">
+			<div class="container">
+				<header>
+					<label>Update Profile</label>
+					<button class="icon" action="close-modal">
+						<img class="icon svg" src="/images/close-modal.svg"/>
+					</button>
+				</header>
+				<div>
+					<input type="text" class="block w100" name="name" placeholder="Name"/>
+					<input type="text" class="block w100" name="display_name" placeholder="Display Name"/>
+					<input type="text" class="block w100" name="picture" placeholder="Picture URL"/>
+					<input type="text" class="block w100" name="banner" placeholder="Banner URL"/>
+					<input type="text" class="block w100" name="website" placeholder="Website"/>
+					<input type="text" class="block w100" name="lud06" placeholder="lud06"/>
+					<input type="text" class="block w100" name="nip05" placeholder="nip05"/>
+					<textarea name="about" class="block w100" placeholder="A bit about you."></textarea>
+					<button class="action float-right" action="open-profile-editor">Update</button>
+				</div>
+			</div>
+		</dialog>
+		<dialog id="event-details">
+			<div class="container">
+				<header>
+					<label>Event Details</label>
+					<button class="icon modal-floating-close-btn" action="close-modal">
+						<img class="icon svg" src="/images/close-modal.svg"/>
+					</button>
+				</header>
+				<div class="max-content">
+					<pre><code></code></pre>
+				</div>
+			</div>
+		</dialog>
+	</body>
+</html>
