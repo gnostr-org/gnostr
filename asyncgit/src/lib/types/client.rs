@@ -1,4 +1,10 @@
-use std::{collections::HashSet, time::Duration};
+use std::{
+    collections::HashSet,
+    fs::{self, OpenOptions},
+    io::Write,
+    path::PathBuf,
+    time::Duration,
+};
 
 #[allow(unused)]
 // Working Nostr Client Implementation with proper interface
@@ -42,6 +48,27 @@ use crate::types::{
     EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayMessage, RelayUrl,
     SubscriptionId, Tag, UncheckedUrl, Unixtime,
 };
+
+fn broadcast_log_path() -> Result<PathBuf, Error> {
+    let dirs = directories::ProjectDirs::from("org", "gnostr", "gnostr")
+        .ok_or_else(|| Error::Custom("failed to resolve gnostr app data directory".into()))?;
+    Ok(dirs.data_local_dir().join("asyncgit/broadcast.log"))
+}
+
+fn append_broadcast_log(line: &str) {
+    let path = match broadcast_log_path() {
+        Ok(path) => path,
+        Err(_) => return,
+    };
+
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
+        let _ = writeln!(file, "{line}");
+    }
+}
 
 /// Filter behavior for relay subscriptions.
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
@@ -341,15 +368,19 @@ impl Client {
 
     /// Serialize and send an event to each configured relay.
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
-        debug!("Sending event {} to {} relays", event.id, self.relays.len());
+        append_broadcast_log(&format!(
+            "sending event {} to {} relays",
+            event.id,
+            self.relays.len()
+        ));
 
         // Serialize event to JSON
         let _event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
-        debug!(
-            "Sending event {} to {} relays",
-            _event_json,
+        append_broadcast_log(&format!(
+            "serialized event {} for {} relays",
+            event.id,
             self.relays.len()
-        );
+        ));
 
         // Create client message
         let client_message = ClientMessage::Event(Box::new(event.clone()));
@@ -368,7 +399,7 @@ impl Client {
             let message_json = message_json.clone();
             let event_id = event.id;
             async move {
-                info!("Connecting to relay: {}", ws_url);
+                append_broadcast_log(&format!("connecting relay {ws_url}"));
 
                 match timeout(relay_timeout, async {
                     match connect_async(&ws_url).await {
@@ -379,18 +410,21 @@ impl Client {
                                 .send(WsMessage::Text(message_json.clone().into()))
                                 .await
                             {
-                                println!("broadcast failed: relay={ws_url} error={e}");
-                                warn!("Failed to send event to {}: {}", ws_url, e);
+                                append_broadcast_log(&format!(
+                                    "broadcast failed relay={ws_url} error={e}"
+                                ));
                                 false
                             } else {
-                                println!("broadcast succeeded: relay={ws_url} event={event_id}");
-                                info!("Event {} sent to relay {}", event_id, ws_url);
+                                append_broadcast_log(&format!(
+                                    "broadcast succeeded relay={ws_url} event={event_id}"
+                                ));
                                 true
                             }
                         }
                         Err(e) => {
-                            println!("broadcast failed: relay={ws_url} error={e}");
-                            warn!("Failed to connect to relay {}: {}", ws_url, e);
+                            append_broadcast_log(&format!(
+                                "broadcast failed relay={ws_url} error={e}"
+                            ));
                             false
                         }
                     }
@@ -399,15 +433,10 @@ impl Client {
                 {
                     Ok(sent) => sent,
                     Err(_) => {
-                        println!(
-                            "broadcast failed: relay={ws_url} timeout={}s",
+                        append_broadcast_log(&format!(
+                            "broadcast failed relay={ws_url} timeout={}s",
                             relay_timeout.as_secs_f32()
-                        );
-                        warn!(
-                            "Timed out sending event to relay {} after {}s",
-                            ws_url,
-                            relay_timeout.as_secs_f32()
-                        );
+                        ));
                         false
                     }
                 }
