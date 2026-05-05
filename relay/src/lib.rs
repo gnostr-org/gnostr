@@ -4,6 +4,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use actix_web::{web, HttpServer};
+
 pub mod cli;
 pub mod launcher;
 
@@ -31,6 +33,31 @@ pub fn write_listen_endpoint(data_path: &Path, addrs: &[SocketAddr]) -> std::io:
     }
 
     Ok(endpoint_path)
+}
+
+pub async fn run_app_with_endpoint(app_data: nostr_relay::App) -> std::io::Result<()> {
+    let data_path = app_data.setting.read().data.path.clone();
+    let settings = app_data.setting.read();
+    let host = settings.network.host.clone();
+    let port = settings.network.port;
+    let num = if settings.thread.http == 0 {
+        num_cpus::get()
+    } else {
+        settings.thread.http
+    };
+    drop(settings);
+
+    let listener = std::net::TcpListener::bind((host.as_str(), port))?;
+    let addr = listener.local_addr()?;
+    let data = web::Data::new(app_data);
+
+    write_listen_endpoint(&data_path, &[addr])?;
+
+    HttpServer::new(move || create_web_app(data.clone()))
+        .workers(num)
+        .listen(listener)?
+        .run()
+        .await
 }
 
 fn shared_endpoint_path() -> Option<PathBuf> {
