@@ -9,4 +9,4 @@
 
 ## gnostore export
 
-Run `./export-gnostore.sh ../gnostore` to copy the app icon catalogs and Safari extension icons into the matching `gnostore` asset paths.
+Run `./scripts/export-gnostore.sh ../gnostore` to copy the app icon catalogs, app bundle icon resources, and Safari extension icons into the matching `gnostore` paths.

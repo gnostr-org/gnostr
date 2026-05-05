@@ -18,6 +18,8 @@ EXT_ICON_SOURCE="$SCRIPT_DIR/../app/gnostr.png"
 
 APPICON_DEST="$GNOSTORE_ROOT/Shared (App)/Assets.xcassets/AppIcon.appiconset"
 BIGICON_DEST="$GNOSTORE_ROOT/Shared (App)/Assets.xcassets/bigicon.imageset"
+APP_ICON_DEST="$GNOSTORE_ROOT/Shared (App)/Resources/Icon.png"
+APP_ICON_SET_DEST="$GNOSTORE_ROOT/Shared (App)/Resources/icons"
 EXT_IMAGE_DEST="$GNOSTORE_ROOT/Shared (Extension)/Resources/images"
 
 sync_asset_dir() {
@@ -55,8 +57,14 @@ sync_asset_dir "$APPICON_SOURCE" "$APPICON_DEST"
 echo "Exporting bigicon to gnostore..."
 sync_asset_dir "$BIGICON_SOURCE" "$BIGICON_DEST"
 
+echo "Exporting app resource icons to gnostore..."
+mkdir -p "$APP_ICON_SET_DEST"
+render_png "$EXT_ICON_SOURCE" 512 "$APP_ICON_DEST"
+render_sizes "$EXT_ICON_SOURCE" "$APP_ICON_SET_DEST" Icon 16 32 64 128 256 512 1024
+render_png "$EXT_ICON_SOURCE" 1024 "$APP_ICON_SET_DEST/iOS-Icon-1024.png"
+
 echo "Exporting extension icons to gnostore..."
 render_sizes "$EXT_ICON_SOURCE" "$EXT_IMAGE_DEST" toolbar 16 19 32 38 48 72
-render_sizes "$EXT_ICON_SOURCE" "$EXT_IMAGE_DEST" icon 48 96 128 256 512
+render_sizes "$EXT_ICON_SOURCE" "$EXT_IMAGE_DEST" icon 48 64 96 128 256 512
 
 echo "Export complete."
