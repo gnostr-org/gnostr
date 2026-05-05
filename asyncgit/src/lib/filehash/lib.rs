@@ -16,7 +16,7 @@ pub use gnostr_filehash_core::get_file_hash;
 pub use gnostr_filehash_core::get_git_tracked_files;
 pub use gnostr_filehash_core::should_remove_relay;
 
-use crate::types::{Client, Error, EventBuilder, EventKind, Id, Keys, Options, Tag};
+use crate::types::{local_relay_urls, Client, Error, EventBuilder, EventKind, Id, Keys, Options, Tag};
 
 const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -47,9 +47,7 @@ pub const GIT_COMMIT_HASH: &str = env!("GIT_COMMIT_HASH");
 pub const GIT_BRANCH: &str = env!("GIT_BRANCH");
 
 pub fn get_relay_urls() -> Vec<String> {
-    let mut relays = Vec::new();
-
-    relays.extend(local_relay_urls());
+    let mut relays = local_relay_urls();
 
     let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
     for relay in content
@@ -80,94 +78,6 @@ pub fn get_relay_urls() -> Vec<String> {
     }
 
     relays
-}
-
-fn local_relay_urls() -> Vec<String> {
-    let mut relays = Vec::new();
-
-    if let Ok(value) = env::var("GNOSTR_RELAY_URL") {
-        if let Some(url) = normalize_relay_url(&value) {
-            relays.push(url);
-        }
-    }
-
-    for path in local_relay_endpoint_paths() {
-        relays.extend(load_relay_urls_from_file(&path));
-    }
-
-    relays.sort();
-    relays.dedup();
-    relays
-}
-
-fn local_relay_endpoint_paths() -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-
-    if let Ok(path) = env::var("GNOSTR_RELAY_ENDPOINT_FILE") {
-        if !path.trim().is_empty() {
-            paths.push(PathBuf::from(path));
-        }
-    }
-
-    if let Some(dirs) = directories::ProjectDirs::from("org", "gnostr", "gnostr") {
-        paths.push(dirs.data_local_dir().join("relay-endpoint"));
-    }
-    if let Some(dirs) = directories::ProjectDirs::from("org", "gnostr", "gnostr/crawler") {
-        paths.push(dirs.config_dir().join("relays.yaml"));
-    }
-    paths.push(PathBuf::from("data/relay-endpoint"));
-    paths.push(PathBuf::from(".gnostr/relay/relay-endpoint"));
-
-    paths
-}
-
-fn load_relay_urls_from_file(path: &PathBuf) -> Vec<String> {
-    let Ok(contents) = fs::read_to_string(path) else {
-        return Vec::new();
-    };
-
-    contents
-        .lines()
-        .map(normalize_candidate_relay_url)
-        .flatten()
-        .collect()
-}
-
-fn normalize_candidate_relay_url(value: &str) -> Option<String> {
-    let value = preprocess_relay_line(value);
-    normalize_relay_url(&value)
-}
-
-fn preprocess_relay_line(line: &str) -> String {
-    let mut trimmed = line.trim().to_string();
-    if let Some(stripped) = trimmed.strip_prefix("- ") {
-        trimmed = stripped.trim().to_string();
-    } else if let Some(stripped) = trimmed.strip_prefix('-') {
-        trimmed = stripped.trim().to_string();
-    }
-    if let Some(comma_idx) = trimmed.find(',') {
-        trimmed.truncate(comma_idx);
-        trimmed = trimmed.trim().to_string();
-    }
-    trimmed
-}
-
-fn normalize_relay_url(value: &str) -> Option<String> {
-    let value = value.trim();
-    if value.is_empty() {
-        return None;
-    }
-
-    let candidate = if value.contains("://") {
-        value.to_string()
-    } else {
-        format!("ws://{value}")
-    };
-
-    match Url::parse(&candidate) {
-        Ok(url) if url.scheme() == "ws" || url.scheme() == "wss" => Some(url.to_string()),
-        _ => None,
-    }
 }
 
 pub async fn publish_patch_event(

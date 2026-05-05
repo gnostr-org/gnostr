@@ -198,7 +198,7 @@ pub use nip19::*;
 pub mod keys;
 pub use keys::Keys;
 pub mod client;
-pub use client::{Client, FilterOptions, Options};
+pub use client::{local_relay_urls, Client, FilterOptions, Options};
 pub mod image_dimensions;
 // Re-export bitcoin_hashes for use throughout the codebase
 pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
