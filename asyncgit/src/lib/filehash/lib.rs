@@ -49,9 +49,7 @@ pub const GIT_BRANCH: &str = env!("GIT_BRANCH");
 pub fn get_relay_urls() -> Vec<String> {
     let mut relays = Vec::new();
 
-    if let Some(local_relay) = local_relay_url() {
-        relays.push(local_relay);
-    }
+    relays.extend(local_relay_urls());
 
     let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
     for relay in content
@@ -84,22 +82,22 @@ pub fn get_relay_urls() -> Vec<String> {
     relays
 }
 
-fn local_relay_url() -> Option<String> {
+fn local_relay_urls() -> Vec<String> {
+    let mut relays = Vec::new();
+
     if let Ok(value) = env::var("GNOSTR_RELAY_URL") {
         if let Some(url) = normalize_relay_url(&value) {
-            return Some(url);
+            relays.push(url);
         }
     }
 
     for path in local_relay_endpoint_paths() {
-        if let Ok(contents) = fs::read_to_string(path) {
-            if let Some(url) = normalize_relay_url(contents.trim()) {
-                return Some(url);
-            }
-        }
+        relays.extend(load_relay_urls_from_file(&path));
     }
 
-    None
+    relays.sort();
+    relays.dedup();
+    relays
 }
 
 fn local_relay_endpoint_paths() -> Vec<PathBuf> {
@@ -111,10 +109,47 @@ fn local_relay_endpoint_paths() -> Vec<PathBuf> {
         }
     }
 
+    if let Some(dirs) = directories::ProjectDirs::from("org", "gnostr", "gnostr") {
+        paths.push(dirs.data_local_dir().join("relay-endpoint"));
+    }
+    if let Some(dirs) = directories::ProjectDirs::from("org", "gnostr", "gnostr/crawler") {
+        paths.push(dirs.config_dir().join("relays.yaml"));
+    }
     paths.push(PathBuf::from("data/relay-endpoint"));
     paths.push(PathBuf::from(".gnostr/relay/relay-endpoint"));
 
     paths
+}
+
+fn load_relay_urls_from_file(path: &PathBuf) -> Vec<String> {
+    let Ok(contents) = fs::read_to_string(path) else {
+        return Vec::new();
+    };
+
+    contents
+        .lines()
+        .map(normalize_candidate_relay_url)
+        .flatten()
+        .collect()
+}
+
+fn normalize_candidate_relay_url(value: &str) -> Option<String> {
+    let value = preprocess_relay_line(value);
+    normalize_relay_url(&value)
+}
+
+fn preprocess_relay_line(line: &str) -> String {
+    let mut trimmed = line.trim().to_string();
+    if let Some(stripped) = trimmed.strip_prefix("- ") {
+        trimmed = stripped.trim().to_string();
+    } else if let Some(stripped) = trimmed.strip_prefix('-') {
+        trimmed = stripped.trim().to_string();
+    }
+    if let Some(comma_idx) = trimmed.find(',') {
+        trimmed.truncate(comma_idx);
+        trimmed = trimmed.trim().to_string();
+    }
+    trimmed
 }
 
 fn normalize_relay_url(value: &str) -> Option<String> {
