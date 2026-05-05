@@ -1,10 +1,14 @@
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const storage = browser.storage.local;
+
+const LOCAL_RELAYS = [new URL('ws://127.0.0.1:8080')];
+
 export const RECOMMENDED_RELAYS = [
     new URL('wss://relay.damus.io'),
     new URL('wss://nos.lol'),
     new URL('wss://brb.io'),
     new URL('wss://nostr.orangepill.dev'),
+    ...LOCAL_RELAYS,
 ];
 // prettier-ignore
 export const KINDS = [
@@ -98,6 +102,23 @@ async function migrate(version, goal) {
         await storage.set({ profiles });
         return version + 1;
     }
+
+    if (version === 3) {
+        console.log('Migrating to version 4.');
+        let profiles = await getProfiles();
+        profiles.forEach(profile => {
+            let relays = Array.isArray(profile.relays) ? profile.relays : [];
+            let urls = new Set(relays.map(relay => relay.url));
+            LOCAL_RELAYS.forEach(relay => {
+                if (!urls.has(relay.href)) {
+                    relays.push({ url: relay.href, read: true, write: true });
+                }
+            });
+            profile.relays = relays;
+        });
+        await storage.set({ profiles });
+        return version + 1;
+    }
 }
 
 export async function getProfiles() {
@@ -154,7 +175,11 @@ export async function generateProfile(name = 'Default') {
         name,
         privKey: await generatePrivateKey(),
         hosts: {},
-        relays: [],
+        relays: LOCAL_RELAYS.map(relay => ({
+            url: relay.href,
+            read: true,
+            write: true,
+        })),
         delegate: false,
         relayReminder: true,
     };
@@ -205,6 +230,17 @@ export async function saveRelays(profileIndex, relays) {
     let profile = profiles[profileIndex];
     profile.relays = fixedRelays;
     await storage.set({ profiles });
+}
+
+export function isLocalRelayUrl(url) {
+    return (
+        url.protocol === 'ws:' &&
+        ['127.0.0.1', 'localhost'].includes(url.hostname)
+    );
+}
+
+export function isSupportedRelayUrl(url) {
+    return url.protocol === 'wss:' || isLocalRelayUrl(url);
 }
 
 export async function get(item) {
