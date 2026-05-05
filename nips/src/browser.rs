@@ -238,6 +238,21 @@ fn render_tree(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(list, area);
 }
 
+fn render_header(frame: &mut Frame, area: Rect) {
+    let header = Paragraph::new(Text::from(vec![
+        Line::from(""),
+        Line::from(Span::styled(
+            "gnostr/nips",
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+        Line::from(""),
+        Line::from(""),
+    ]))
+    .alignment(Alignment::Center);
+    frame.render_widget(header, area);
+}
+
 fn toolbar_context(app: &App) -> (String, Style) {
     if let Some(file_path) = app.selected_file_path() {
         let rel = file_path
@@ -336,7 +351,7 @@ fn render_proposal_popup(frame: &mut Frame, app: &App, area: Rect) {
     ]));
 
     let popup = Paragraph::new(Text::from(lines))
-        .block(Block::default().borders(Borders::ALL).title("Push"))
+        .block(Block::default().borders(Borders::ALL).title("Console Logger"))
         .wrap(Wrap { trim: false });
     frame.render_widget(Clear, area);
     frame.render_widget(popup, area);
