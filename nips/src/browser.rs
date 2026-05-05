@@ -93,12 +93,19 @@ impl ProposalTask {
         }
     }
 
-    fn drain(&mut self) {
+    fn drain(&mut self) -> Option<Result<String, String>> {
+        let was_finished = self.result.is_some();
         while let Ok(update) = self.receiver.try_recv() {
             match update {
                 ProposalUpdate::Log(line) => self.logs.push(line),
                 ProposalUpdate::Done(result) => self.result = Some(result),
             }
+        }
+
+        if !was_finished {
+            self.result.clone()
+        } else {
+            None
         }
     }
 
@@ -516,14 +523,39 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
 
     let result = (|| -> Result<(), Box<dyn Error>> {
         loop {
+            if let Some(task) = app.proposal_task.as_mut() {
+                if let Some(result) = task.drain() {
+                    app.status_line = match result {
+                        Ok(hash) => format!("submitted proposal {hash}"),
+                        Err(err) => format!("proposal failed: {err}"),
+                    };
+                    app.force_full_repaint = true;
+                }
+            }
+
             if app.force_full_repaint {
                 terminal.clear()?;
                 app.force_full_repaint = false;
             }
             terminal.draw(|f| ui(f, &mut app))?;
 
+            if !event::poll(Duration::from_millis(100))? {
+                continue;
+            }
+
             if let Event::Key(key) = event::read()? {
                 if key.kind != KeyEventKind::Press {
+                    continue;
+                }
+
+                if matches!(key.code, KeyCode::Esc)
+                    && app
+                        .proposal_task
+                        .as_ref()
+                        .is_some_and(|task| task.result.is_some())
+                {
+                    app.proposal_task = None;
+                    app.force_full_repaint = true;
                     continue;
                 }
 
@@ -618,23 +650,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                         let _ = app.reload();
                     }
                     KeyCode::Char('p') => {
-                        if let Some(file_path) = editor_target(&app) {
-                            app.status_line = String::from("publishing proposal...");
-                            terminal.draw(|f| ui(f, &mut app))?;
-                            disable_raw_mode()?;
-                            stdout().execute(LeaveAlternateScreen)?;
-                            let result = workflow::submit_proposal(&app.checkout_dir, &file_path);
-                            stdout().execute(EnterAlternateScreen)?;
-                            enable_raw_mode()?;
-                            app.force_full_repaint = true;
-                            app.status_line = match result {
-                                Ok(hash) => format!("submitted proposal {hash}"),
-                                Err(err) => format!("proposal failed: {err}"),
-                            };
-                            let _ = app.reload();
-                        } else {
-                            app.status_line = String::from("select a file to propose");
-                        }
+                        start_proposal_task(&mut app);
                     }
                     _ => {}
                 }
