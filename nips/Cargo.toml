@@ -34,6 +34,7 @@ tracing-subscriber = { workspace = true, features = ["env-filter"] }
 include_dir = { workspace = true, features = ["glob", "metadata"] }
 gnostr-asyncgit = { workspace = true, features = ["tui"] }
 filetreelist = { workspace = true }
+portable-pty = "0.8.1"
 
 [[bin]]
 name = "nips"

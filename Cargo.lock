@@ -11367,6 +11367,7 @@ dependencies = [
  "gnostr-filetreelist",
  "include_dir",
  "mime_guess",
+ "portable-pty",
  "pulldown-cmark 0.13.3",
  "ratatui",
  "rust-embed",
