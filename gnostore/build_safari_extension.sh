@@ -8,7 +8,6 @@ DESTINATION="platform=macOS"
 
 echo "Building Xcode project: $PROJECT, Scheme: $SCHEME, Configuration: $CONFIGURATION"
 
-npm install;
 npm run build;
 npm run watch-tailwind &
 sleep 5
