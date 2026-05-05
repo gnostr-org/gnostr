@@ -65,6 +65,7 @@ struct App {
     show_tree: bool,
     show_toolbar: bool,
     show_help: bool,
+    force_full_repaint: bool,
     status_line: String,
 }
 
@@ -78,6 +79,7 @@ impl App {
             show_tree: true,
             show_toolbar: true,
             show_help: false,
+            force_full_repaint: true,
             status_line: status_for_branch(&branch),
         })
     }
@@ -300,11 +302,10 @@ fn render_help(frame: &mut Frame) {
 }
 
 fn ui(frame: &mut Frame, app: &mut App) {
-    let mut constraints = vec![Constraint::Length(3), Constraint::Length(1)];
+    let mut constraints = vec![Constraint::Length(3), Constraint::Length(1), Constraint::Min(0)];
     if app.show_toolbar {
         constraints.push(Constraint::Length(3));
     }
-    constraints.push(Constraint::Min(0));
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -321,10 +322,6 @@ fn ui(frame: &mut Frame, app: &mut App) {
         .alignment(Alignment::Left);
     frame.render_widget(status, chunks[1]);
 
-    if app.show_toolbar {
-        render_toolbar(frame, app, chunks[2]);
-    }
-
     let body = Layout::default()
         .direction(Direction::Horizontal)
         .constraints(if app.show_tree {
@@ -332,7 +329,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         } else {
             vec![Constraint::Percentage(100)]
         })
-        .split(chunks[if app.show_toolbar { 3 } else { 2 }]);
+        .split(chunks[2]);
 
     if app.show_tree {
         render_tree(frame, app, body[0]);
@@ -345,6 +342,10 @@ fn ui(frame: &mut Frame, app: &mut App) {
         .scroll((app.content_scroll, 0));
 
     frame.render_widget(content, body[if app.show_tree { 1 } else { 0 }]);
+
+    if app.show_toolbar {
+        render_toolbar(frame, app, chunks[3]);
+    }
 
     if app.show_help {
         render_help(frame);
@@ -396,6 +397,10 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
 
     let result = (|| -> Result<(), Box<dyn Error>> {
         loop {
+            if app.force_full_repaint {
+                terminal.clear()?;
+                app.force_full_repaint = false;
+            }
             terminal.draw(|f| ui(f, &mut app))?;
 
             if let Event::Key(key) = event::read()? {
@@ -434,6 +439,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             let editor_result = workflow::launch_editor(&file_path);
                             stdout().execute(EnterAlternateScreen)?;
                             enable_raw_mode()?;
+                            app.force_full_repaint = true;
                             app.status_line = match editor_result {
                                 Ok(_) => match app.reload() {
                                     Ok(_) => format!("edited {}", file_path.display()),
@@ -452,6 +458,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             let branch_result = workflow::create_branch(&app.checkout_dir, &branch);
                             stdout().execute(EnterAlternateScreen)?;
                             enable_raw_mode()?;
+                            app.force_full_repaint = true;
                             app.status_line = match branch_result {
                                 Ok(_) => {
                                     let _ = app.reload();
@@ -468,6 +475,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             let branch_result = workflow::checkout_branch(&app.checkout_dir, &branch);
                             stdout().execute(EnterAlternateScreen)?;
                             enable_raw_mode()?;
+                            app.force_full_repaint = true;
                             app.status_line = match branch_result {
                                 Ok(_) => {
                                     let _ = app.reload();
@@ -483,6 +491,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                         let git_result = workflow::launch_git_tui(&app.checkout_dir);
                         stdout().execute(EnterAlternateScreen)?;
                         enable_raw_mode()?;
+                        app.force_full_repaint = true;
                         app.status_line = match git_result {
                             Ok(_) => String::from("returned from asyncgit TUI"),
                             Err(err) => format!("git ui error: {err}"),
@@ -498,6 +507,7 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                             let result = workflow::submit_proposal(&app.checkout_dir, &file_path);
                             stdout().execute(EnterAlternateScreen)?;
                             enable_raw_mode()?;
+                            app.force_full_repaint = true;
                             app.status_line = match result {
                                 Ok(hash) => format!("submitted proposal {hash}"),
                                 Err(err) => format!("proposal failed: {err}"),
