@@ -188,12 +188,27 @@ impl Nip34Browser {
         let inner = area.inner(Margin { vertical: 1, horizontal: 1 });
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(3),
-                Constraint::Min(0),
-                Constraint::Length(3),
-            ])
+            .constraints([Constraint::Min(0), Constraint::Length(3)])
             .split(inner);
+
+        if self.loading {
+            let loading = Paragraph::new("Loading live nip34 events...")
+                .alignment(Alignment::Center)
+                .wrap(Wrap { trim: false });
+            frame.render_widget(loading, chunks[0]);
+        } else if let Some(err) = &self.error {
+            let err = Paragraph::new(err.clone())
+                .block(Block::default().borders(Borders::ALL).title("Error"))
+                .wrap(Wrap { trim: false });
+            frame.render_widget(err, chunks[0]);
+        } else {
+            self.render_events(frame, chunks[0]);
+        }
+
+        let bottom = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(1), Constraint::Length(2)])
+            .split(chunks[1]);
 
         let titles = self
             .tabs
@@ -204,21 +219,7 @@ impl Nip34Browser {
             .select(self.active_tab)
             .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
             .style(Style::default().fg(Color::Gray));
-        frame.render_widget(tabs, chunks[0]);
-
-        if self.loading {
-            let loading = Paragraph::new("Loading live nip34 events...")
-                .alignment(Alignment::Center)
-                .wrap(Wrap { trim: false });
-            frame.render_widget(loading, chunks[1]);
-        } else if let Some(err) = &self.error {
-            let err = Paragraph::new(err.clone())
-                .block(Block::default().borders(Borders::ALL).title("Error"))
-                .wrap(Wrap { trim: false });
-            frame.render_widget(err, chunks[1]);
-        } else {
-            self.render_events(frame, chunks[1]);
-        }
+        frame.render_widget(tabs, bottom[0]);
 
         let footer = Paragraph::new(Text::from(vec![
             Line::from(vec![
@@ -232,7 +233,7 @@ impl Nip34Browser {
                 Span::raw(" reload"),
             ]),
         ]));
-        frame.render_widget(footer, chunks[2]);
+        frame.render_widget(footer, bottom[1]);
     }
 
     fn render_events(&self, frame: &mut Frame, area: Rect) {
