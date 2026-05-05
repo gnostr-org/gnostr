@@ -1195,6 +1195,10 @@ code {
 	height: 24px;
 	flex: 0 0 auto;
 }
+#relays .relay-active-summary-nip34 {
+	width: 28px;
+	height: 28px;
+}
 #relays .relay-summary-action-spacer {
 	width: 56px;
 	min-height: 36px;
@@ -1254,13 +1258,17 @@ code {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
 }
 #relays .add-discovered-relay {
-	padding: 6px 12px 6px 6px;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 8px 14px 8px 8px;
 	background: color-mix(in srgb, var(--clrSuccess) 18%, transparent);
 }
 #relays .add-discovered-relay:disabled {
 	opacity: 0.7;
 }
 #relays .add-discovered-relay .relay-add-icon {
+	width: 18px;
+	height: 18px;
 	filter: invert(46%) sepia(98%) saturate(1040%) hue-rotate(88deg) brightness(92%) contrast(94%);
 }
 #relays table.row tbody tr {
