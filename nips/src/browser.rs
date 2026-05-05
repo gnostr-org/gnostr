@@ -317,7 +317,7 @@ fn render_toolbar(frame: &mut Frame, app: &App, area: Rect) {
     ];
 
     let toolbar = Paragraph::new(Text::from(lines))
-        .block(Block::default().borders(Borders::ALL).title("Tool Bar"))
+        .block(Block::default().borders(Borders::ALL).title("Task Bar"))
         .wrap(Wrap { trim: false });
     frame.render_widget(toolbar, area);
 }
