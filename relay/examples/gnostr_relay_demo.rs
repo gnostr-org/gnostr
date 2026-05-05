@@ -12,7 +12,10 @@ async fn main() -> gnostr_relay::Result<()> {
         Some("NOSTR".to_owned()),
         None,
     )?;
-    app_data.web_server()?.await?;
+    let data_path = app_data.setting.read().data.path.clone();
+    let server = app_data.web_server()?;
+    gnostr_relay::write_listen_endpoint(&data_path, &server.addrs())?;
+    server.await?;
     info!("Relay server shutdown");
     Ok(())
 }
