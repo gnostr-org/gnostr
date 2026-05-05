@@ -214,6 +214,9 @@ fn editor_target(app: &App) -> Option<PathBuf> {
 pub fn run_default() -> Result<(), Box<dyn Error>> {
     let checkout_dir = upstream::ensure_checkout()?;
     let mut app = App::new(checkout_dir.clone(), collect_markdown_files(checkout_dir.clone())?);
+    if upstream::worktree_dirty(&checkout_dir)? {
+        app.status_line = String::from("dirty checkout: fetch only, local edits preserved");
+    }
 
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;

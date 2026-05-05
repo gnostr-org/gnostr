@@ -47,6 +47,24 @@ pub fn ensure_checkout() -> io::Result<PathBuf> {
     Ok(dir)
 }
 
+pub fn worktree_dirty(dir: &Path) -> io::Result<bool> {
+    let output = Command::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(dir)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(io::Error::other(format!(
+            "git status failed with exit code {:?}\nstdout: {}\nstderr: {}",
+            output.status.code(),
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+
+    Ok(!output.stdout.is_empty())
+}
+
 fn clone_checkout(dir: &Path) -> io::Result<()> {
     if let Some(parent) = dir.parent() {
         fs::create_dir_all(parent)?;
@@ -62,6 +80,10 @@ fn sync_checkout(dir: &Path) -> io::Result<()> {
         None,
     )?;
     run_git(&["fetch", "--prune", "origin"], Some(dir), None)?;
+    if worktree_dirty(dir)? {
+        return Ok(());
+    }
+
     run_git(&["pull", "--ff-only", "--prune"], Some(dir), None)
 }
 
