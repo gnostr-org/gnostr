@@ -2,7 +2,7 @@ use std::{
     env,
     error::Error,
     ffi::OsStr,
-    path::{Path, PathBuf},
+    path::Path,
     process::Command,
 };
 
@@ -86,7 +86,7 @@ pub fn submit_proposal(repo_dir: &Path, file_path: &Path) -> Result<String, Box<
 
     let subject = rel_path
         .file_name()
-        .and_then(OsStr::to_str)
+        .and_then(|name| name.to_str())
         .unwrap_or("nips update");
     let commit_id = commit(&repo, &format!("update {subject}"))?;
     let commit_hash = commit_id.to_string();
