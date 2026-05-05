@@ -26,6 +26,7 @@ use tokio::io::AsyncWriteExt;
 
 pub mod path;
 pub mod browser;
+pub mod upstream;
 
 #[derive(Embed)]
 #[folder = "."]

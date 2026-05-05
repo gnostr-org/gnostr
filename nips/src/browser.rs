@@ -16,6 +16,8 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
 };
 
+use crate::upstream;
+
 pub fn collect_markdown_files(dir: impl AsRef<Path>) -> std::io::Result<Vec<PathBuf>> {
     let mut nips: Vec<PathBuf> = fs::read_dir(dir)?
         .filter_map(|entry| {
@@ -191,5 +193,6 @@ pub fn run_with_files(nips: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn run_default() -> Result<(), Box<dyn Error>> {
-    run_with_files(collect_markdown_files("." )?)
+    let checkout_dir = upstream::ensure_checkout()?;
+    run_with_files(collect_markdown_files(checkout_dir)?)
 }
