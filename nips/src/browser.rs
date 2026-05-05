@@ -408,7 +408,10 @@ fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser
 }
 
 fn ui(frame: &mut Frame, app: &mut App) {
-    let mut constraints = vec![Constraint::Length(5), Constraint::Min(0), Constraint::Length(3)];
+    let mut constraints = vec![Constraint::Length(5), Constraint::Min(0)];
+    if app.show_toolbar {
+        constraints.push(Constraint::Length(3));
+    }
     if app.proposal_task.is_some() {
         constraints.push(Constraint::Length(7));
     }
@@ -454,7 +457,8 @@ fn ui(frame: &mut Frame, app: &mut App) {
     }
 
     if app.proposal_task.is_some() {
-        render_proposal_popup(frame, app, chunks[3]);
+        let logger_index = if app.show_toolbar { 3 } else { 2 };
+        render_proposal_popup(frame, app, chunks[logger_index]);
     }
 }
 
