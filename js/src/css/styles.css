@@ -211,7 +211,7 @@ th, td {
 }
 .nav.full > div > * {
 	margin-bottom: 20px;
-	padding: 10px;
+	padding: 14px;
 	position: relative;
 }
 .nav.mobile {
@@ -255,12 +255,12 @@ th, td {
 	display: block;
 }
 button.nav > img.icon {
-	width: 28px;
-	height: 28px;
+	width: 36px;
+	height: 36px;
 }
 .nav button.new-note {
 	background: var(--clrBgAction);
-	height: 56px;
+	height: 64px;
 	border-radius: 38px;
 }
 /* REMOVED: .nav button[data-view="gnostr"] styles as button is moved to global-header */
