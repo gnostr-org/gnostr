@@ -246,7 +246,7 @@ fn render_header(frame: &mut Frame, area: Rect) {
     let header = Paragraph::new(Text::from(vec![
         Line::from(""),
         Line::from(Span::styled(
-            "gnostr/nips",
+            " gnostr/nips",
             Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
