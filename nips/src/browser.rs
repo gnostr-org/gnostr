@@ -413,6 +413,10 @@ fn render_nip34_browser(frame: &mut Frame, browser: &nip34_browser::Nip34Browser
 }
 
 fn bootstrap_local_relay() -> io::Result<()> {
+    if !gnostr_asyncgit::types::local_relay_urls().is_empty() {
+        return Ok(());
+    }
+
     LOCAL_RELAY_BOOTSTRAPPED.get_or_init(|| {
         thread::spawn(|| {
             let runtime = match tokio::runtime::Runtime::new() {
@@ -424,7 +428,12 @@ fn bootstrap_local_relay() -> io::Result<()> {
             };
 
             runtime.block_on(async move {
-                match RelayApp::create(Some("config/gnostr.toml"), true, Some("NOSTR".to_owned()), None) {
+                match RelayApp::create(
+                    Some("relay/extensions/demo.toml"),
+                    true,
+                    Some("NOSTR".to_owned()),
+                    None,
+                ) {
                     Ok(mut app_data) => {
                         app_data.setting.write().add_nip(34);
                         if let Err(err) = gnostr_relay::run_app_with_endpoint(app_data).await {
@@ -641,6 +650,12 @@ pub fn run_default() -> Result<(), Box<dyn Error>> {
                         && key.modifiers.contains(KeyModifiers::SHIFT));
                 if shift_p {
                     app.nip34_browser = Some(nip34_browser::Nip34Browser::spawn());
+                    app.force_full_repaint = true;
+                    continue;
+                }
+
+                if app.show_help && matches!(key.code, KeyCode::Esc) {
+                    app.show_help = false;
                     app.force_full_repaint = true;
                     continue;
                 }
