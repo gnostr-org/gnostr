@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>gnostore</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>x86_64</string>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>2</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>B6FE7A416E3F3B47DA96599635FBA6150AE64D4A</string>
+				<key>dateExpires</key>
+				<string>8/25/26</string>
+				<key>type</key>
+				<string>Apple Development</string>
+			</dict>
+			<key>embeddedBinaries</key>
+			<array>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>x86_64</string>
+						<string>arm64</string>
+					</array>
+					<key>buildNumber</key>
+					<string>2</string>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>B6FE7A416E3F3B47DA96599635FBA6150AE64D4A</string>
+						<key>dateExpires</key>
+						<string>8/25/26</string>
+						<key>type</key>
+						<string>Apple Development</string>
+					</dict>
+					<key>entitlements</key>
+					<dict>
+						<key>com.apple.security.app-sandbox</key>
+						<true/>
+						<key>com.apple.security.files.user-selected.read-only</key>
+						<true/>
+					</dict>
+					<key>name</key>
+					<string>gnostore Extension.appex</string>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>M684FYCYG6</string>
+						<key>name</key>
+						<string>Randy McMillan</string>
+					</dict>
+					<key>versionNumber</key>
+					<string>1.0.1</string>
+				</dict>
+			</array>
+			<key>entitlements</key>
+			<dict>
+				<key>com.apple.security.app-sandbox</key>
+				<true/>
+				<key>com.apple.security.files.user-selected.read-only</key>
+				<true/>
+				<key>com.apple.security.network.client</key>
+				<true/>
+			</dict>
+			<key>name</key>
+			<string>gnostore.app</string>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>M684FYCYG6</string>
+				<key>name</key>
+				<string>Randy McMillan</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0.1</string>
+		</dict>
+	</array>
+</dict>
+</plist>

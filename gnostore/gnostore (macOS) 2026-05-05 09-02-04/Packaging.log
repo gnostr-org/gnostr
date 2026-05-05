@@ -1,0 +1,306 @@
+2026-05-05 13:01:42 +0000  Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0x32a1a8360; archive(resolved)="<IDEArchive: 0x60000b261ab0>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team(resolved)="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	Chain (12, self inclusive):
+	<IDEDistributionProcessingPipelineContext: 0x32a1a8360; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionProcessingPipelineContext: 0x32d5516a0; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x13f036620; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x12a879430; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x32d96c4b0; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x1588cea30; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x1588c40d0; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x13ef2c6b0; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="<IDEProvisioningDisambiguatableBasicTeam: 0x600000c957c0; teamID='M684FYCYG6', teamName='Randy McMillan', teamType='Individual', username='randymcmillan1@mac.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0x13ef2ac20; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="(null)">
+	<IDEDistributionContext: 0x32a034b30; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="<IDEDistributionMethodDevelopmentSignedMac: 0x600005bd8c80>", team="(null)">
+	<IDEDistributionContext: 0x13f00e2e0; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="(null)", team="(null)">
+	<IDEDistributionContext: 0x13f0a6db0; archive = "<IDEArchive: 0x60000b261ab0>", distributionMethod="(null)", team="(null)">
+</IDEDistributionProcessingPipelineContext: 0x32a1a8360>
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionCreateDestRootStep
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionCopyItemStep
+2026-05-05 13:01:42 +0000  Running /usr/bin/ditto '-V' '/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app' '/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app'
+2026-05-05 13:01:42 +0000  >>> Copying /Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app 
+2026-05-05 13:01:42 +0000  copying file ./Contents/_CodeSignature/CodeResources ... 
+2026-05-05 13:01:42 +0000  6394 bytes for ./Contents/_CodeSignature/CodeResources
+2026-05-05 13:01:42 +0000  copying file ./Contents/MacOS/gnostore ... 
+2026-05-05 13:01:42 +0000  250992 bytes for ./Contents/MacOS/gnostore
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/_CodeSignature/CodeResources ... 
+2026-05-05 13:01:42 +0000  14416 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/_CodeSignature/CodeResources
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension ... 
+2026-05-05 13:01:42 +0000  174288 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/experimental/experimental.js ... 
+2026-05-05 13:01:42 +0000  1027 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/experimental/experimental.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/experimental/experimental.html ... 
+2026-05-05 13:01:42 +0000  1133 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/experimental/experimental.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/experimental/experimental.build.js ... 
+2026-05-05 13:01:42 +0000  311179 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/experimental/experimental.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-16.png ... 
+2026-05-05 13:01:42 +0000  631 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-16.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.js ... 
+2026-05-05 13:01:42 +0000  2701 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-256.png ... 
+2026-05-05 13:01:42 +0000  13912 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-256.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/iOS-Icon-1024.png ... 
+2026-05-05 13:01:42 +0000  99022 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/iOS-Icon-1024.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/background.js ... 
+2026-05-05 13:01:42 +0000  8097 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/background.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-256.png ... 
+2026-05-05 13:01:42 +0000  16778 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-256.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-32.png ... 
+2026-05-05 13:01:42 +0000  1470 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-32.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-48.png ... 
+2026-05-05 13:01:42 +0000  2525 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-48.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-19.png ... 
+2026-05-05 13:01:42 +0000  966 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-19.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-64.png ... 
+2026-05-05 13:01:42 +0000  3454 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-64.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-96.png ... 
+2026-05-05 13:01:42 +0000  5315 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-96.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-38.png ... 
+2026-05-05 13:01:42 +0000  1778 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-38.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-16.png ... 
+2026-05-05 13:01:42 +0000  810 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-16.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-72.png ... 
+2026-05-05 13:01:42 +0000  3385 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-72.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-128.png ... 
+2026-05-05 13:01:42 +0000  7344 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-128.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-512.png ... 
+2026-05-05 13:01:42 +0000  14941 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/icon-512.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-48.png ... 
+2026-05-05 13:01:42 +0000  2301 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/images/toolbar-48.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.html ... 
+2026-05-05 13:01:42 +0000  2365 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.js ... 
+2026-05-05 13:01:42 +0000  8483 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-1024.png ... 
+2026-05-05 13:01:42 +0000  82621 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-1024.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/nostr.js ... 
+2026-05-05 13:01:42 +0000  1589 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/nostr.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-64.png ... 
+2026-05-05 13:01:42 +0000  2928 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-64.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.build.js ... 
+2026-05-05 13:01:42 +0000  370894 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.build.css ... 
+2026-05-05 13:01:42 +0000  25264 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.build.css
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/content.build.js ... 
+2026-05-05 13:01:42 +0000  2536 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/content.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/background.build.js ... 
+2026-05-05 13:01:42 +0000  794692 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/background.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/event_history/event_history.build.js ... 
+2026-05-05 13:01:42 +0000  390140 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/event_history/event_history.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/event_history/event_history.js ... 
+2026-05-05 13:01:42 +0000  3763 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/event_history/event_history.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/event_history/event_history.html ... 
+2026-05-05 13:01:42 +0000  5013 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/event_history/event_history.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/manifest.json ... 
+2026-05-05 13:01:42 +0000  2081 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/manifest.json
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.html ... 
+2026-05-05 13:01:42 +0000  6965 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/background.html ... 
+2026-05-05 13:01:42 +0000  44 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/background.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.css ... 
+2026-05-05 13:01:42 +0000  300 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.css
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/_locales/en/messages.json ... 
+2026-05-05 13:01:42 +0000  294 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/_locales/en/messages.json
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/content.js ... 
+2026-05-05 13:01:42 +0000  689 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/content.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/nostr.build.js ... 
+2026-05-05 13:01:42 +0000  5357 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/nostr.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/wizards/delegation/delegation.build.js ... 
+2026-05-05 13:01:42 +0000  1026814 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/wizards/delegation/delegation.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/wizards/delegation/delegation.js ... 
+2026-05-05 13:01:42 +0000  2240 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/wizards/delegation/delegation.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/wizards/delegation/delegation.html ... 
+2026-05-05 13:01:42 +0000  2024 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/wizards/delegation/delegation.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/permission/permission.js ... 
+2026-05-05 13:01:42 +0000  2730 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/permission/permission.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/permission/permission.html ... 
+2026-05-05 13:01:42 +0000  1466 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/permission/permission.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/permission/permission.build.js ... 
+2026-05-05 13:01:42 +0000  351007 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/permission/permission.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-128.png ... 
+2026-05-05 13:01:42 +0000  6310 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-128.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-32.png ... 
+2026-05-05 13:01:42 +0000  1335 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-32.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.css ... 
+2026-05-05 13:01:42 +0000  1105 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/options.css
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.build.js ... 
+2026-05-05 13:01:42 +0000  340113 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/popup.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-512.png ... 
+2026-05-05 13:01:42 +0000  33225 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Resources/Icon-512.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/PlugIns/gnostore Extension.appex/Contents/Info.plist ... 
+2026-05-05 13:01:42 +0000  1666 bytes for ./Contents/PlugIns/gnostore Extension.appex/Contents/Info.plist
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/experimental/experimental.js ... 
+2026-05-05 13:01:42 +0000  1027 bytes for ./Contents/Resources/experimental/experimental.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/experimental/experimental.html ... 
+2026-05-05 13:01:42 +0000  1133 bytes for ./Contents/Resources/experimental/experimental.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/experimental/experimental.build.js ... 
+2026-05-05 13:01:42 +0000  311179 bytes for ./Contents/Resources/experimental/experimental.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/Icon.png ... 
+2026-05-05 13:01:42 +0000  41231 bytes for ./Contents/Resources/Icon.png
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/AppIcon.icns ... 
+2026-05-05 13:01:42 +0000  28069 bytes for ./Contents/Resources/AppIcon.icns
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/Base.lproj/Main.html ... 
+2026-05-05 13:01:42 +0000  1057 bytes for ./Contents/Resources/Base.lproj/Main.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/Script.js ... 
+2026-05-05 13:01:42 +0000  1340 bytes for ./Contents/Resources/Script.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/Assets.car ... 
+2026-05-05 13:01:42 +0000  812376 bytes for ./Contents/Resources/Assets.car
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/Style.css ... 
+2026-05-05 13:01:42 +0000  954 bytes for ./Contents/Resources/Style.css
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/wizards/delegation/delegation.build.js ... 
+2026-05-05 13:01:42 +0000  1026814 bytes for ./Contents/Resources/wizards/delegation/delegation.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/wizards/delegation/delegation.js ... 
+2026-05-05 13:01:42 +0000  2240 bytes for ./Contents/Resources/wizards/delegation/delegation.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/wizards/delegation/delegation.html ... 
+2026-05-05 13:01:42 +0000  2024 bytes for ./Contents/Resources/wizards/delegation/delegation.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/permission/permission.js ... 
+2026-05-05 13:01:42 +0000  2730 bytes for ./Contents/Resources/permission/permission.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/permission/permission.html ... 
+2026-05-05 13:01:42 +0000  1466 bytes for ./Contents/Resources/permission/permission.html
+2026-05-05 13:01:42 +0000  copying file ./Contents/Resources/permission/permission.build.js ... 
+2026-05-05 13:01:42 +0000  351007 bytes for ./Contents/Resources/permission/permission.build.js
+2026-05-05 13:01:42 +0000  copying file ./Contents/Info.plist ... 
+2026-05-05 13:01:42 +0000  1665 bytes for ./Contents/Info.plist
+2026-05-05 13:01:42 +0000  copying file ./Contents/PkgInfo ... 
+2026-05-05 13:01:42 +0000  8 bytes for ./Contents/PkgInfo
+2026-05-05 13:01:42 +0000  /usr/bin/ditto exited with 0
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionEmbedProfileStep
+2026-05-05 13:01:42 +0000  Skipping profile for item: <IDEDistributionItem: 0x60000f3e1e60; bundleID='org.gnostr.gnostore.Extension', path='<DVTFilePath:0x60000aacfe70:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600017a4a5d0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c94240; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore.Extension', executablePath='<DVTFilePath:0x60000743b800:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension'>', hardenedRuntime='1'>'>
+2026-05-05 13:01:42 +0000  Skipping profile for item: <IDEDistributionItem: 0x60000f3e1f80; bundleID='org.gnostr.gnostore', path='<DVTFilePath:0x60000fc8b0c0:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600013a47ed0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c940c0; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+    "com.apple.security.network.client" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore', executablePath='<DVTFilePath:0x60000fc8ba20:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/MacOS/gnostore'>', hardenedRuntime='1'>'>
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionInfoPlistStep
+2026-05-05 13:01:42 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-05 13:01:42 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionAppThinningPlistStep
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionSymbolsStep
+2026-05-05 13:01:42 +0000  Skipping step: IDEDistributionSymbolsStep because it said so
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionAppThinningStep
+2026-05-05 13:01:42 +0000  Skipping step: IDEDistributionAppThinningStep because it said so
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionArchThinningStep
+2026-05-05 13:01:42 +0000  Item /Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex doesn't have the entitlement com.apple.developer.web-browser-engine.host enabled, returning ["arm64e"]
+2026-05-05 13:01:42 +0000  Archs to thin for item /Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex are ["arm64e"]
+2026-05-05 13:01:42 +0000  Running /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo '/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension' '-verify_arch' 'arm64e'
+2026-05-05 13:01:42 +0000  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo exited with 1
+2026-05-05 13:01:42 +0000  Skipping architecture thinning for item "gnostore Extension" because arch "arm64e" wasn't found
+2026-05-05 13:01:42 +0000  Item /Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app doesn't have the entitlement com.apple.developer.web-browser-engine.host enabled, returning ["arm64e"]
+2026-05-05 13:01:42 +0000  Archs to thin for item /Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app are ["arm64e"]
+2026-05-05 13:01:42 +0000  Running /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo '/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/MacOS/gnostore' '-verify_arch' 'arm64e'
+2026-05-05 13:01:42 +0000  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo exited with 1
+2026-05-05 13:01:42 +0000  Skipping architecture thinning for item "gnostore" because arch "arm64e" wasn't found
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionODRStep
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionStripXattrsStep
+2026-05-05 13:01:42 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-05 13:01:42 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-05-05 13:01:42 +0000  Processing step: IDEDistributionCodesignStep
+2026-05-05 13:01:42 +0000  Entitlements for <IDEDistributionItem: 0x60000f3e1e60; bundleID='org.gnostr.gnostore.Extension', path='<DVTFilePath:0x60000aacfe70:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600017a4a5d0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c970c0; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore.Extension', executablePath='<DVTFilePath:0x60000743b800:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension'>', hardenedRuntime='1'>'>: {
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+}
+2026-05-05 13:01:42 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-05 13:01:42 +0000  Entitlements for <IDEDistributionItem: 0x60000f3e1e60; bundleID='org.gnostr.gnostore.Extension', path='<DVTFilePath:0x60000aacfe70:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600017a4a5d0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c94240; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore.Extension', executablePath='<DVTFilePath:0x60000743b800:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension'>', hardenedRuntime='1'>'> are: {
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+}
+2026-05-05 13:01:42 +0000  Writing entitlements for <IDEDistributionItem: 0x60000f3e1e60; bundleID='org.gnostr.gnostore.Extension', path='<DVTFilePath:0x60000aacfe70:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600017a4a5d0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c940c0; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore.Extension', executablePath='<DVTFilePath:0x60000743b800:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/MacOS/gnostore Extension'>', hardenedRuntime='1'>'> to: /var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/entitlements~~~I7GCPh
+2026-05-05 13:01:42 +0000  invoking codesign: <NSConcreteTask: 0x600013a1c370; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    B6FE7A416E3F3B47DA96599635FBA6150AE64D4A,
+    "--entitlements",
+    "/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/entitlements~~~I7GCPh",
+    "--preserve-metadata=identifier,flags,runtime",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex"
+)'>
+2026-05-05 13:01:43 +0000  codesign output: /var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex: replacing existing signature
+/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex: signed bundle with Mach-O universal (x86_64 arm64) [org.gnostr.gnostore.Extension]
+2026-05-05 13:01:43 +0000  Entitlements for <IDEDistributionItem: 0x60000f3e1f80; bundleID='org.gnostr.gnostore', path='<DVTFilePath:0x60000fc8b0c0:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600013a47ed0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c41980; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+    "com.apple.security.network.client" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore', executablePath='<DVTFilePath:0x60000fc8ba20:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/MacOS/gnostore'>', hardenedRuntime='1'>'>: {
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+    "com.apple.security.network.client" = 1;
+}
+2026-05-05 13:01:43 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-05-05 13:01:43 +0000  Entitlements for <IDEDistributionItem: 0x60000f3e1f80; bundleID='org.gnostr.gnostore', path='<DVTFilePath:0x60000fc8b0c0:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600013a47ed0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c940c0; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+    "com.apple.security.network.client" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore', executablePath='<DVTFilePath:0x60000fc8ba20:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/MacOS/gnostore'>', hardenedRuntime='1'>'> are: {
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+    "com.apple.security.network.client" = 1;
+}
+2026-05-05 13:01:43 +0000  Writing entitlements for <IDEDistributionItem: 0x60000f3e1f80; bundleID='org.gnostr.gnostore', path='<DVTFilePath:0x60000fc8b0c0:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x600013a47ed0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x600006c47840; name='Apple Development: Randy McMillan (J53T3P2E45)', hash='B6FE7A416E3F3B47DA96599635FBA6150AE64D4A', serialNumber='6244E241EB7AE36CEE38F1F8C4CB80F7', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2025-08-26 00:26:48 +0000''>', entitlements='{
+    "com.apple.security.app-sandbox" = 1;
+    "com.apple.security.files.user-selected.read-only" = 1;
+    "com.apple.security.network.client" = 1;
+}', teamID='M684FYCYG6', identifier='org.gnostr.gnostore', executablePath='<DVTFilePath:0x60000fc8ba20:'/Users/git/Library/Developer/Xcode/Archives/2026-05-05/gnostore (macOS) 5-5-26, 08.49.20.xcarchive/Products/Applications/gnostore.app/Contents/MacOS/gnostore'>', hardenedRuntime='1'>'> to: /var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/entitlements~~~kKRmoQ
+2026-05-05 13:01:43 +0000  invoking codesign: <NSConcreteTask: 0x600013a1e850; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    B6FE7A416E3F3B47DA96599635FBA6150AE64D4A,
+    "--entitlements",
+    "/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/entitlements~~~kKRmoQ",
+    "--preserve-metadata=identifier,flags,runtime",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app"
+)'>
+2026-05-05 13:01:43 +0000  codesign output: /var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app: replacing existing signature
+/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app: signed app bundle with Mach-O universal (x86_64 arm64) [org.gnostr.gnostore]
+2026-05-05 13:01:43 +0000  Processing step: IDEDistributionZipODRItemStep
+2026-05-05 13:01:43 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-05 13:01:43 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-05-05 13:01:43 +0000  Processing step: IDEDistributionSkipPackagingStep
+2026-05-05 13:01:43 +0000  Processing step: IDEDistributionAppStoreInformationStep
+2026-05-05 13:01:43 +0000  Skipping step: IDEDistributionAppStoreInformationStep because it said so
+2026-05-05 13:01:43 +0000  Processing step: IDEDistributionGenerateProcessedDistributionItems
+2026-05-05 13:01:43 +0000  IDEDistributionItem init <DVTFilePath:0x60000a9e6f40:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex'>
+2026-05-05 13:01:43 +0000  [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x60000a9e6f40:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x60000b00dd50:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x60000b00dd50:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/PlugIns/gnostore Extension.appex/Contents/embedded.provisionprofile'>}
+2026-05-05 13:01:43 +0000  IDEDistributionItem init <DVTFilePath:0x60000f3e47e0:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app'>
+2026-05-05 13:01:43 +0000  [OPTIONAL] Didn't find embedded provisioning profile for <DVTFilePath:0x60000f3e47e0:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app'>: Error Domain=NSCocoaErrorDomain Code=4 "No file at <DVTFilePath:0x60000b00e220:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/embedded.provisionprofile'>" UserInfo={NSLocalizedDescription=No file at <DVTFilePath:0x60000b00e220:'/var/folders/h8/zm77yc3n1tn214q45txq4c280000gn/T/XcodeDistPipeline.~~~MOFnox/Root/Applications/gnostore.app/Contents/embedded.provisionprofile'>}
+2026-05-05 13:01:43 +0000  Processing step: IDEDistributionCreateManifestStep
+2026-05-05 13:01:43 +0000  Skipping step: IDEDistributionCreateManifestStep because it said so
