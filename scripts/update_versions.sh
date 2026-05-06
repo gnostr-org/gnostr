@@ -41,14 +41,14 @@ manifest_version() {
     local fallback="$2"
 
     if grep -q '^version\.workspace = true' "$manifest"; then
-        printf '<=%s\n' "$fallback"
+        printf '>=%s\n' "$fallback"
         return
     fi
 
     local version
     version="$(grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}')"
     if [ -n "$version" ]; then
-        printf '<=%s\n' "$version"
+        printf '>=%s\n' "$version"
     fi
 }
 
