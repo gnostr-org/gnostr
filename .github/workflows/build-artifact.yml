@@ -97,7 +97,7 @@ jobs:
     permissions:
       contents: read
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     steps:
       - name: Checkout repository
