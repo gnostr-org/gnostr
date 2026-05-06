@@ -19,11 +19,6 @@ keywords = ["git"]
 name = "gnostr_asyncgit"
 path = "src/lib/mod.rs"
 
-[[bin]]
-name = "git-tui"
-path = "src/bin/git_tui.rs"
-required-features = ["tui"]
-
 [features]
 default = ["trace-libgit"]
 trace-libgit = []
