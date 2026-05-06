@@ -18,68 +18,68 @@ vendored-openssl = ["vendor-openssl"]
 
 [dependencies]
 actix-web = { workspace = true }
-async-std = { version = "1.12", features = ["attributes"] }
 anyhow = { workspace = true }
+async-std = { version = "1.12", features = ["attributes"] }
 axum = { workspace = true }
+blossom_tui = { workspace = true, optional = true }
 chrono = "0.4"
 clap = { workspace = true }
 const_format = "0.2"
 crossterm = "0.29"
+env_logger = "0.11"
 futures = { workspace = true }
 futures-util = { workspace = true }
 git-version = "0.3.9"
 git2 = { version = "0.20.4", default-features = false }
-blossom_tui = { workspace = true, optional = true }
-gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist" }
+gnostr = { path = ".." }
 gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = [
   "tui",
   "vendor-openssl",
 ] }
-gnostr = { path = ".." }
 gnostr-chat = { package = "gnostr-chat", path = "../chat" }
 gnostr-crawler = { package = "gnostr-crawler", path = "../crawler" }
+gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers" }
 gnostr-js = { package = "gnostr-js", path = "../js" }
 gnostr-legit = { package = "gnostr-legit", path = "../legit" }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p" }
-gnostr_qr = { path = "../qr" }
 gnostr-relay = { package = "gnostr-relay", path = "../relay" }
-gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions" }
 gnostr-web = { package = "gnostr-web", path = "../web" }
+gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist" }
+gnostr_qr = { path = "../qr" }
 libp2p = { workspace = true }
 log = { workspace = true }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
-nostr = { workspace = true }
 nips = { path = "../nips" }
+nostr = { workspace = true }
 pretty_env_logger = "0.5.0"
 proctitle = "0.1.1"
 ratatui = { workspace = true, default-features = false, features = [
   "crossterm",
 ] }
+regex = { workspace = true }
 reqwest = { workspace = true }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 secp256k1 = { workspace = true }
-serial_test = "2.0.0"
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
-regex = { workspace = true }
-rustls = { version = "0.23", default-features = false, features = ["ring"] }
+serial_test = "2.0.0"
 sha2 = { workspace = true }
 sha256 = "1.6.0"
 simple_logger = { workspace = true }
 tempfile = { workspace = true }
-tokio = { workspace = true }
-tracing-core = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-url = { workspace = true }
 time = { workspace = true }
-tui-input = "0.14.0"
-warp = "0.3"
-walkdir = { workspace = true }
-env_logger = "0.11"
+tokio = { workspace = true }
 tokio-stream = "0.1.18"
-webbrowser = "0.8"
 toml = { workspace = true }
-tower-layer = { workspace = true }
 tower-http = { workspace = true }
+tower-layer = { workspace = true }
+tracing = { workspace = true }
+tracing-core = { workspace = true }
+tracing-subscriber = { workspace = true }
+tui-input = "0.14.0"
+url = { workspace = true }
+walkdir = { workspace = true }
+warp = "0.3"
+webbrowser = "0.8"
