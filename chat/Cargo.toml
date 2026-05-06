@@ -19,7 +19,7 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "gnostr-chat"
-path = "src/bin/gnostr-chat.rs"
+path = "../bins/src/bin/gnostr-chat.rs"
 
 [features]
 long_tests = []
