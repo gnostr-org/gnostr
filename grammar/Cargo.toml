@@ -15,6 +15,7 @@ tree-sitter-language = "0.1"
 [build-dependencies]
 anyhow = "1.0"
 cc = "1.1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 heck = "0.5"
 prettyplease = "0.2"
 proc-macro2 = "1.0"
