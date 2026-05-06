@@ -36,26 +36,26 @@ futures = { workspace = true }
 futures-util = { workspace = true }
 git-version = "0.3.9"
 git2 = { version = "0.20.4", default-features = false }
-gnostr = { path = "..", version = ">=948226.1875.184393" }
+gnostr = { path = "..", version = ">=948227.1875.182618" }
 gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = [
   "tui",
   "vendor-openssl",
-], version = ">=948226.1875.184393" }
-gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948226.1875.184393" }
-gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948226.1875.184393" }
-gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948226.1875.184393" }
-gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948226.1875.184393" }
-gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948226.1875.184393" }
-gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948226.1875.184393" }
-gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948226.1875.184393" }
-gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948226.1875.184393" }
-gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948226.1875.184393" }
-gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948226.1875.184393" }
-gnostr_qr = { path = "../qr", version = ">=948226.1875.184393" }
+], version = ">=948227.1875.182618" }
+gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948227.1875.182618" }
+gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948227.1875.182618" }
+gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948227.1875.182618" }
+gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948227.1875.182618" }
+gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948227.1875.182618" }
+gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948227.1875.182618" }
+gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948227.1875.182618" }
+gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948227.1875.182618" }
+gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948227.1875.182618" }
+gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948227.1875.182618" }
+gnostr_qr = { path = "../qr", version = ">=948227.1875.182618" }
 libp2p = { workspace = true }
 log = { workspace = true }
-ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948226.1875.184393" }
-nips = { path = "../nips", version = ">=948226.1875.184393" }
+ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948227.1875.182618" }
+nips = { path = "../nips", version = ">=948227.1875.182618" }
 nostr = { workspace = true }
 pretty_env_logger = "0.5.0"
 proctitle = "0.1.1"
