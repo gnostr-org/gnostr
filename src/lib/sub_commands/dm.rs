@@ -71,6 +71,25 @@ mod dm_tests {
         println!("{label} relays: {}", relays.join(", "));
     }
 
+    struct FailingDmClient;
+
+    #[async_trait]
+    impl DmClientTrait for FailingDmClient {
+        async fn add_relays(&mut self, _relays: Vec<String>) -> Result<(), Error> {
+            Ok(())
+        }
+
+        async fn nip44_direct_message(
+            &self,
+            _recipient_pubkey: PublicKey,
+            _message: String,
+        ) -> Result<Id, Error> {
+            Err(Error::Custom(
+                "Failed to send event to any configured relay.".into(),
+            ))
+        }
+    }
+
     #[tokio::test]
     #[ignore]
     #[serial]
@@ -153,28 +172,6 @@ mod dm_tests {
     #[tokio::test]
     #[serial]
     async fn test_dm_command_failure() {
-        // Setup real client (we expect nip44_direct_message to potentially fail for
-        // other reasons)
-        let sender_privkey = PrivateKey::try_from_hex_string(
-            "0000000000000000000000000000000000000000000000000000000000000001",
-        )
-        .unwrap();
-        let sender_keys = Keys::new(sender_privkey);
-        let mut client = Client::new(&sender_keys, Options::new());
-
-        // Add intentional ws:// and wss:// mistakes
-        log_relays(
-            "test_dm_command_failure",
-            &["ws://relay.damus.io", "wss://localhost:8080"],
-        );
-        client
-            .add_relays(vec![
-                "ws://relay.damus.io".to_string(),
-                "wss://localhost:8080".to_string(),
-            ])
-            .await
-            .unwrap();
-
         let recipient_pubkey = PublicKey::try_from_hex_string(
             "edfa27d49d2af37ee331e1225bb6ed1912c6d999281b36d8018ad99bc3573c29",
             false,
@@ -183,11 +180,8 @@ mod dm_tests {
 
         let message_content = "gnostr dm sub_command test may fail to encrypt!".to_string();
 
+        let client = FailingDmClient;
         let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
-
-        //assert!(result.is_ok());
-
-        // Assertions - we now expect a real error from the client's operations
         assert!(result.is_err());
         let actual_error = result.unwrap_err();
         eprintln!("Actual error: {}", actual_error);
