@@ -1,4 +1,4 @@
-use time_0_3::{format_description, OffsetDateTime};
+use time::{format_description, OffsetDateTime};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Resolve 'now_local' error by falling back to UTC (if 'local-offset' feature is missing).

@@ -1,4 +1,4 @@
-use time_0_3::{format_description, OffsetDateTime};
+use time::{format_description, OffsetDateTime};
 
 // The format that Git typically uses is:
 // Thu Oct 30 15:54:33 2025 -0400
