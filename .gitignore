@@ -93,6 +93,8 @@ cmake_install.cmake
 db/
 drives/
 example
+!bins/example/
+!bins/example/**
 ext/
 ffi/
 get-relays/
