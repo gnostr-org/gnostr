@@ -91,7 +91,7 @@ th, td {
 :root {
     --header-height: 80px; /* Define a CSS variable for header height */
     --master-pane-top: 80px; /* Define a CSS variable for header height */
-    --master-pane-width: 220px;
+    --master-pane-width: 180px;
 }
 
 #app-main {
@@ -150,7 +150,7 @@ th, td {
 
 #list-detail-container {
     display: grid;
-    grid-template-columns: minmax(220px, var(--master-pane-width)) minmax(0, 1fr);
+    grid-template-columns: minmax(180px, var(--master-pane-width)) minmax(0, 1fr);
     flex: 1;
     width: 100%;
     min-height: 0;
