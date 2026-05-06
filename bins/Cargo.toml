@@ -37,6 +37,7 @@ gnostr-legit = { package = "gnostr-legit", path = "../legit" }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p" }
 gnostr_qr = { path = "../qr" }
 gnostr-relay = { package = "gnostr-relay", path = "../relay" }
+gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions" }
 gnostr-web = { package = "gnostr-web", path = "../web" }
 libp2p = { workspace = true }
 log = { workspace = true }
