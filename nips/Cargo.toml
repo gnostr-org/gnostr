@@ -11,6 +11,9 @@ homepage = "https://github.com/gnostr-org/gnostr"
 description = "nips: a nostr-protocol/nips server"
 license = "MIT"
 
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
 axum = { workspace = true }
 bytes = { workspace = true }
@@ -39,7 +42,3 @@ gnostr-relay = { workspace = true }
 portable-pty = "0.8.1"
 serde_json = { workspace = true }
 tokio-tungstenite = { workspace = true }
-
-[[bin]]
-name = "nips"
-path = "src/main.rs"
