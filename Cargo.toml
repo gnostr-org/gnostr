@@ -68,7 +68,7 @@ members = [
   "web",
   "chat",
   "nips",
-  ## "bins",
+  "bins",
 ]
 exclude = ["vendor/gitui/**"]
 
@@ -504,14 +504,6 @@ gitui = { path = "vendor/gitui" }
 ## [[bin]]
 ## name = "server-toml"
 ## path = "bins/src/bin/server-toml.rs"
-
-[[bin]]
-name = "git-remote-gnostr-node"
-path = "src/lib/node/remote_helper.rs"
-
-[[bin]]
-name = "gnostr-shell"
-path = "src/lib/node/git_shell.rs"
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom", "blossom-tui"]
