@@ -29,7 +29,7 @@ gnostr-relay = { package = "gnostr-relay", path = "../relay" }
 gnostr-web = { package = "gnostr-web", path = "../web" }
 libp2p = { workspace = true }
 log = { workspace = true }
-ngit = { workspace = true }
+ngit = { package = "gnostr-ngit", path = "../ngit" }
 nostr = { workspace = true }
 proctitle = "0.1.1"
 ratatui = { workspace = true, default-features = false, features = ["crossterm"] }
@@ -39,9 +39,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 regex = { workspace = true }
-rustls = { workspace = true }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 sha2 = { workspace = true }
-sha256 = "1"
+sha256 = "1.6.0"
 simple_logger = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true }
