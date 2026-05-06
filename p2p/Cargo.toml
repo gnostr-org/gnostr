@@ -32,7 +32,7 @@ futures = "0.3.31"
 futures-util = "0.3.31"
 gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947943.545331", default-features = false, features = [
   "nostr",
-  "vendored-openssl",
+  "vendor-openssl",
 ] }
 gnostr-crawler = { workspace = true }
 gnostr-js = { path = "../js", package = "gnostr-js", version = "<=1875.947943.545331" }
