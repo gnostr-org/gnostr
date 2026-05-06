@@ -62,6 +62,6 @@ webbrowser = "0.8"
 
 [build-dependencies]
 chrono = { workspace = true, features = ["clock"] }
-gnostr-asyncgit = { path = "../asyncgit", version = "<=1875.947943.545331" }
+gnostr-asyncgit = { path = "../asyncgit", version = "<=1875.947943.545331", features = ["vendored-openssl"] }
 serde_json = "1.0.140"
 tokio = { version = "1", features = ["rt-multi-thread"] }
