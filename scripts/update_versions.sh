@@ -424,7 +424,7 @@ if [ -n "${VERSION_TAG:-}" ]; then
 
     git checkout -b "release/$VERSION_TAG"
 
-    gnostr legit -m "$VERSION_TAG"
+    gnostr legit -m "$VERSION_TAG" --prefix 000000
     git tag -f "$VERSION_TAG" HEAD
     tag_package_versions "$WORKSPACE_VERSION"
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then

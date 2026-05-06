@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "gnostr-crawler"
-version = "948233.1875.173496"
+version = "948234.1875.171866"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
 build = true                                        ##false
 autolib = false
@@ -35,10 +35,10 @@ dns-lookup = "2.0.4"
 env_logger = "0.11"
 futures = "0.3.25"
 git2 = "0.20.1"
-gnostr-asyncgit = { version = ">=948233.1875.173496", path = "../asyncgit", features = [
+gnostr-asyncgit = { version = ">=948234.1875.171866", path = "../asyncgit", features = [
   "vendored-openssl",
 ] }
-gnostr-filetreelist = { path = "../filetreelist", package = "gnostr-filetreelist", version = ">=948233.1875.173496" }
+gnostr-filetreelist = { path = "../filetreelist", package = "gnostr-filetreelist", version = ">=948234.1875.171866" }
 indicatif = "0.14.0"
 log = "0.4.24"
 nostr-sdk = { version = "0.44.1" }
