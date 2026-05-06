@@ -106,7 +106,8 @@ fn export_git_envs(manifest_dir: &Path) -> anyhow::Result<()> {
         .ok()
         .and_then(|output| output.status.success().then_some(output.stdout))
         .map(|stdout| String::from_utf8_lossy(&stdout).trim().to_string())
-        .unwrap_or_default();
+        .filter(|branch| !branch.is_empty())
+        .unwrap_or_else(|| "HEAD".to_string());
 
     println!("cargo:rustc-env=GIT_COMMIT_HASH={}", git_commit_hash);
     println!("cargo:rustc-env=GIT_BRANCH={}", git_branch);
