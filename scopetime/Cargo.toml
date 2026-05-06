@@ -20,5 +20,5 @@ default = []
 enabled = ["gitui_scopetime/enabled"]
 
 [dependencies]
-gitui_scopetime = { package = "scopetime", version = "<=0.1.0", path = "../vendor/gitui/scopetime" }
+gitui_scopetime = { package = "scopetime", version = ">=0.1.0", path = "../vendor/gitui/scopetime" }
 log = "0.4"
