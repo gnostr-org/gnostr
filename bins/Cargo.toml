@@ -9,8 +9,11 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-web = { workspace = true }
+async-std = { version = "1.12", features = ["attributes"] }
 anyhow = { workspace = true }
+axum = { workspace = true }
 clap = { workspace = true }
+const_format = "0.2"
 futures = { workspace = true }
 futures-util = { workspace = true }
 git-version = "0.3.9"
@@ -31,6 +34,8 @@ libp2p = { workspace = true }
 log = { workspace = true }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
 nostr = { workspace = true }
+nips = { path = "../nips" }
+pretty_env_logger = "0.5.0"
 proctitle = "0.1.1"
 ratatui = { workspace = true, default-features = false, features = ["crossterm"] }
 reqwest = { workspace = true }
@@ -45,9 +50,16 @@ sha256 = "1.6.0"
 simple_logger = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true }
-tracing = { workspace = true }
 tracing-core = { workspace = true }
+tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
 time = { workspace = true }
+tui-input = "0.14.0"
+warp = "0.3"
 walkdir = { workspace = true }
+env_logger = "0.11"
+tokio-stream = "0.1.18"
+webbrowser = "0.8"
+toml = { workspace = true }
+tower-layer = { workspace = true }
