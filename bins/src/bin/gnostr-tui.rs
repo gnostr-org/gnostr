@@ -191,12 +191,19 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
         Some(GnostrCommands::Ngit(sub_command_args)) => ngit::run_cli(sub_command_args)
             .await
             .map_err(|e| anyhow!("Error in ngit subcommand: {}", e)),
-        #[cfg(feature = "blossom")]
         Some(GnostrCommands::Server(sub_command_args)) => {
-            debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::server::server(sub_command_args)
-                .await
-                .map_err(|e| anyhow!("Error in server subcommand: {}", e))
+            #[cfg(feature = "blossom")]
+            {
+                debug!("sub_command_args:{:?}", sub_command_args);
+                sub_commands::server::server(sub_command_args)
+                    .await
+                    .map_err(|e| anyhow!("Error in server subcommand: {}", e))
+            }
+            #[cfg(not(feature = "blossom"))]
+            {
+                let _ = sub_command_args;
+                Err(anyhow!("server subcommand is not enabled in this build"))
+            }
         }
         Some(GnostrCommands::Query(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
