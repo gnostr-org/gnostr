@@ -80,6 +80,7 @@ yoke = { version = "0.7.1", features = ["derive"] }
 
 [build-dependencies]
 anyhow = "1.0.100"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 gnostr-js = { workspace = true }
 rsass = "0.28.0"
 sha2 = { workspace = true }
