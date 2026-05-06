@@ -147,7 +147,9 @@ filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version
 flate2 = "1.1.8"
 futures = { version = "0.3.31" }
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "asyncgit", version = "<=1875.947943.545331", default-features = false }
+gnostr-asyncgit = { path = "asyncgit", version = "<=1875.947943.545331", default-features = false, features = [
+  "vendor-openssl",
+] }
 gnostr-chat = { path = "chat", version = "<=1875.947943.545331" }
 gnostr-crawler = { path = "crawler", version = "<=1875.947943.545331" }
 gnostr-p2p = { path = "p2p", version = "<=1875.947943.545331" }
@@ -422,13 +424,13 @@ regex-fancy = ["syntect/regex-fancy", "two-face/syntect-fancy"]
 regex-onig = ["syntect/regex-onig", "two-face/syntect-onig"]
 timing = ["scopetime/enabled"]
 trace-libgit = ["gnostr-asyncgit/trace-libgit"]
-vendored-openssl = [
-  "gnostr-asyncgit/vendored-openssl",
+vendor-openssl = [
+  "gnostr-asyncgit/vendor-openssl",
   "dep:git2",
   "git2/vendored-openssl",
   "openssl/vendored",
 ]
-vendor-openssl = ["vendored-openssl"]
+vendored-openssl = ["vendor-openssl"]
 nightly = []
 coverage = []
 [dependencies]
@@ -594,7 +596,7 @@ md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
 ngit = { package = "gnostr-ngit", version = "<=1875.947943.545331", path = "ngit", features = [
-  "vendored-openssl",
+  "vendor-openssl",
 ] }
 nostr = { workspace = true }
 
