@@ -1403,14 +1403,20 @@ mod tests {
             let (blockheight, weeble, wobble) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
             let wobble_str = wobble.to_string();
+
+            // unlikely to change
             assert!(event.tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
                     && tag.as_slice().get(1).map(|s| s.as_str()) == Some(weeble_str.as_str())
             }));
+
+            // unlikely to change
             assert!(event.tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("blockheight")
                     && tag.as_slice().get(1).map(|s| s.as_str()) == Some(blockheight.as_str())
             }));
+
+            // will change
             //assert!(event.tags.iter().any(|tag| {
             //    tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
             //        && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
