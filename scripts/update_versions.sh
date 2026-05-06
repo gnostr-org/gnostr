@@ -385,7 +385,6 @@ PUBLISH_CRATES=(
     chat
     p2p
     web
-    bins
 )
 
 tag_package_versions() {
