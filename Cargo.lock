@@ -7172,6 +7172,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "serial_test 2.0.0",
  "sha2 0.10.9",
  "sha256",
  "simple_logger",
