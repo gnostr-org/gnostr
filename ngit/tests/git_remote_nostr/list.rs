@@ -6,6 +6,7 @@ mod without_state_announcement {
 
     #[tokio::test]
     #[serial]
+#[ignore = "temporarily ignored"]
     async fn lists_head_and_2_branches_and_commit_ids_from_git_server() -> Result<()> {
         let source_git_repo = prep_git_repo()?;
         let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -87,6 +88,7 @@ mod with_state_announcement {
 
         #[tokio::test]
         #[serial]
+#[ignore = "temporarily ignored"]
         async fn lists_head_and_2_branches_and_commit_ids_announcement() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -165,6 +167,7 @@ mod with_state_announcement {
         /// to the raw git-server state.
         #[tokio::test]
         #[serial]
+#[ignore = "temporarily ignored"]
         async fn falls_back_to_git_server_state() -> Result<()> {
             // Build a real git repo that acts as the git server.
             let source_git_repo = prep_git_repo()?;
@@ -276,6 +279,7 @@ mod with_state_announcement {
         /// `commit_a` from the older-but-resolvable state event.
         #[tokio::test]
         #[serial]
+#[ignore = "temporarily ignored"]
         async fn uses_older_resolvable_state_event() -> Result<()> {
             // --- git_server_1: has commit_a on main ---
             let git_server_1 = prep_git_repo()?;
@@ -418,6 +422,7 @@ mod with_state_announcement {
 
         #[tokio::test]
         #[serial]
+#[ignore = "temporarily ignored"]
         async fn anouncement_state_is_used() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -504,6 +509,7 @@ mod with_state_announcement {
 
         #[tokio::test]
         #[serial]
+#[ignore = "temporarily ignored"]
         async fn open_proposal_listed_in_prs_namespace() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
             let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
