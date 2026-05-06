@@ -13,18 +13,18 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
-git2 = { workspace = true }
-gnostr-asyncgit = { workspace = true, features = ["tui", "vendor-openssl"] }
-gnostr-chat = { workspace = true }
-gnostr-crawler = { workspace = true }
-gnostr-filetreelist = { workspace = true }
+git2 = { version = "0.20.4", default-features = false }
+filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist" }
+gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = ["tui", "vendor-openssl"] }
+gnostr-chat = { package = "gnostr-chat", path = "../chat" }
+gnostr-crawler = { package = "gnostr-crawler", path = "../crawler" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers" }
-gnostr-js = { workspace = true }
-gnostr-legit = { workspace = true }
-gnostr-p2p = { workspace = true }
-gnostr-qr = { workspace = true }
-gnostr-relay = { workspace = true }
-gnostr-web = { workspace = true }
+gnostr-js = { package = "gnostr-js", path = "../js" }
+gnostr-legit = { package = "gnostr-legit", path = "../legit" }
+gnostr-p2p = { package = "gnostr-p2p", path = "../p2p" }
+gnostr_qr = { path = "../qr" }
+gnostr-relay = { package = "gnostr-relay", path = "../relay" }
+gnostr-web = { package = "gnostr-web", path = "../web" }
 libp2p = { workspace = true }
 log = { workspace = true }
 nostr = { workspace = true }
