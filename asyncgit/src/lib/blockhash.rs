@@ -1,5 +1,7 @@
 use std::env;
 
+use log::debug;
+
 use crate::{ureq_async, ureq_sync};
 
 pub fn blockhash() -> Result<String, ascii::AsciiChar> {
@@ -7,6 +9,7 @@ pub fn blockhash() -> Result<String, ascii::AsciiChar> {
         Ok(val) => val,
         Err(_) => "0".to_string(),
     };
+    debug!("blockhash: {}", blockhash);
     unsafe { env::set_var("BLOCKHASH", blockhash.clone()) };
     Ok(blockhash)
 }
@@ -17,12 +20,15 @@ pub async fn blockhash_async() -> String {
         Ok(val) => val.to_string(),
         Err(_) => "0".to_string(),
     };
+    debug!("blockhash_async: {}", blockhash);
     unsafe { env::set_var("BLOCKHASH", blockhash.clone()) };
     blockhash
 }
 pub fn blockhash_sync() -> String {
-    match ureq_sync("https://mempool.space/api/blocks/tip/hash".to_string()) {
+    let blockhash = match ureq_sync("https://mempool.space/api/blocks/tip/hash".to_string()) {
         Ok(val) => val.to_string(),
         Err(_) => String::new(),
-    }
+    };
+    debug!("blockhash_sync: {}", blockhash);
+    blockhash
 }

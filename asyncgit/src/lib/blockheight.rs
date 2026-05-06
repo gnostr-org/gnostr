@@ -1,5 +1,7 @@
 use std::env;
 
+use log::debug;
+
 use crate::{ureq_async, ureq_sync};
 
 pub fn check_curl() {
@@ -13,6 +15,7 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
         Err(_) => 0.0,
     };
 
+    debug!("blockheight: {}", blockheight);
     unsafe { env::set_var("BLOCKHEIGHT", blockheight.to_string()) };
     Ok(blockheight)
 }
@@ -23,6 +26,7 @@ pub async fn blockheight_async() -> String {
             Ok(val) => val.to_string(),
             Err(_) => "0".to_string(),
         };
+    debug!("blockheight_async: {}", blockheight);
     unsafe { env::set_var("BLOCKHEIGHT", blockheight.clone()) };
     blockheight
 }
@@ -31,6 +35,7 @@ pub fn blockheight_sync() -> String {
         Ok(val) => val.to_string(),
         Err(_) => "0".to_string(),
     };
+    debug!("blockheight_sync: {}", blockheight);
     unsafe { env::set_var("BLOCKHEIGHT", blockheight.clone()) };
     blockheight
 }
