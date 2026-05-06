@@ -19,6 +19,10 @@ pub fn weeble_sync() -> Result<f64, ascii::AsciiChar> {
     debug!("now millis: {}", seconds * 1000 + subsec_millis);
     let blockheight = blockheight_sync();
     let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
+    if tmp_u64 == 0 {
+        unsafe { env::set_var("WEEBLE", "0") };
+        return Ok(0.0);
+    }
     let weeble = seconds as f64 / tmp_u64 as f64;
     unsafe { env::set_var("WEEBLE", weeble.to_string()) };
     Ok(weeble.floor())
@@ -68,7 +72,12 @@ pub async fn weeble_millis_async() -> Result<f64, ascii::AsciiChar> {
     debug!("now millis: {}", seconds * 1000 + subsec_millis);
     let blockheight = blockheight_async().await;
     let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
+    if tmp_u64 == 0 {
+        unsafe { env::set_var("WEEBLE_MILLIS", "0") };
+        return Ok(0.0);
+    }
     //gnostr-chat uses millis
     let weeble = now_millis as f64 / tmp_u64 as f64;
+    unsafe { env::set_var("WEEBLE_MILLIS", weeble.to_string()) };
     Ok(weeble.floor())
 }
