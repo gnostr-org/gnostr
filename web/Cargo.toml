@@ -28,7 +28,7 @@ gix = { version = "0.66", default-features = false, features = [
   "blob-diff",
   "revision",
 ] }
-gnostr-asyncgit = { workspace = true }
+gnostr-asyncgit = { workspace = true, features = ["vendored-openssl"] }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true }
 handlebars = { workspace = true }
