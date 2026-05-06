@@ -11,6 +11,8 @@ path = "src/lib.rs"
 default = ["blossom", "blossom-tui"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
+metrics = []
+rate_limiter = []
 
 [dependencies]
 actix-web = { workspace = true }
