@@ -3415,6 +3415,7 @@ name = "curve25519-dalek"
 version = "5.0.0-pre.1"
 dependencies = [
  "cfg-if 1.0.4",
+ "chrono",
  "cpufeatures 0.2.17",
  "curve25519-dalek-derive",
  "digest 0.11.0-rc.10",
@@ -7355,6 +7356,7 @@ version = "1875.947943.545331"
 dependencies = [
  "anyhow",
  "cc",
+ "chrono",
  "globset",
  "heck 0.5.0",
  "prettyplease",
@@ -7594,6 +7596,7 @@ dependencies = [
 name = "gnostr_filehash_core"
 version = "1875.947943.545331"
 dependencies = [
+ "chrono",
  "sha2 0.10.9",
  "tempfile",
 ]
