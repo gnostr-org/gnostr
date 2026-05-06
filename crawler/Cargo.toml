@@ -21,34 +21,6 @@ repository = "https://github.com/gnostr-org/gnostr"
 name = "gnostr_crawler"
 path = "src/lib.rs"
 
-[[bin]]
-name = "gnostr_crawler"
-path = "src/bin/gnostr_crawler.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876"
-path = "src/bin/gnostr_crawler_filetree-1876.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-285805"
-path = "src/bin/gnostr_crawler_filetree-285805.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-285805-1876"
-path = "src/bin/gnostr_crawler_filetree-285805-1876.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876947415284713-947415-284728"
-path = "src/bin/gnostr_crawler_filetree-1876947415284713-947415-284728.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876-947418-280051"
-path = "src/bin/gnostr_crawler_filetree-1876-947418-280051.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876-947421-276222"
-path = "src/bin/gnostr_crawler_filetree-1876-947421-276222.rs"
-
 [dependencies]
 ## TODO align with workspace deps
 anyhow = "1.0.100"
