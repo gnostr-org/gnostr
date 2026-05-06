@@ -21,8 +21,8 @@ Linux cross targets use Docker-backed images configured in `Cross.toml`.
 
 - `Cross.toml`: target-specific `cross` configuration
 - `docker/cross/*.Dockerfile`: custom images for Linux cross targets
-- `scripts/cross.sh`: convenience wrapper that builds every target the current
-  host can realistically attempt
+- `scripts/cross.sh`: convenience wrapper that builds the `gnostr-bins`
+  package for every target the current host can realistically attempt
 
 ## Prerequisites
 
