@@ -162,17 +162,29 @@ async fn main() -> anyhow::Result<()> {
     }
     if gnostr_cli_args.weeble {
         let result = weeble::weeble();
+        let status = blockheight::blockheight_status();
         print!("{}", result.unwrap());
+        if status > 0 {
+            eprintln!("weeble: blockheight fallback status={status}");
+        }
         std::process::exit(0);
     }
     if gnostr_cli_args.wobble {
         let result = wobble::wobble();
+        let status = blockheight::blockheight_status();
         print!("{}", result.unwrap());
+        if status > 0 {
+            eprintln!("wobble: blockheight fallback status={status}");
+        }
         std::process::exit(0);
     }
     if gnostr_cli_args.blockheight {
         let result = blockheight::blockheight();
+        let status = blockheight::blockheight_status();
         print!("{}", result.unwrap());
+        if status > 0 {
+            eprintln!("blockheight: fallback status={status}");
+        }
         std::process::exit(0);
     }
     if gnostr_cli_args.blockhash {
