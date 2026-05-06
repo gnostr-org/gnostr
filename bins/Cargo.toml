@@ -13,6 +13,8 @@ blossom = []
 blossom-tui = ["dep:blossom_tui"]
 metrics = []
 rate_limiter = []
+vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
+vendored-openssl = ["vendor-openssl"]
 
 [dependencies]
 actix-web = { workspace = true }
