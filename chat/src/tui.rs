@@ -1,6 +1,7 @@
 use std::{io, time::Duration};
 
 use anyhow::Result;
+use anyhow::Context;
 use ratatui::crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
@@ -15,6 +16,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
+use tracing::debug;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tui_input::{backend::crossterm::EventHandler, Input};
 
@@ -30,6 +32,7 @@ pub fn run_chat_tui(
     mut output_rx: Receiver<ChatEvent>,
 ) -> Result<()> {
     let _ = set_title(&format!("gnostr-chat-{topic}"));
+    debug!("run_chat_tui: starting topic={topic} username={username}");
 
     let mut terminal = TerminalGuard::enter()?;
     let mut app = ChatTui::new(topic, username);
@@ -38,10 +41,12 @@ pub fn run_chat_tui(
         app.drain_incoming(&mut output_rx);
         terminal.terminal.draw(|frame| app.draw(frame))?;
 
-        if event::poll(Duration::from_millis(75))? {
-            match event::read()? {
+        if event::poll(Duration::from_millis(75)).context("chat tui poll failed")? {
+            match event::read().context("chat tui read failed")? {
                 Event::Key(key) => {
+                    debug!("run_chat_tui: key={key:?} focus={:?}", app.focus);
                     if app.handle_key(key, &input_tx)? {
+                        debug!("run_chat_tui: exit requested by key={key:?}");
                         break;
                     }
                 }
@@ -51,6 +56,7 @@ pub fn run_chat_tui(
         }
     }
 
+    debug!("run_chat_tui: exiting normally");
     Ok(())
 }
 
@@ -138,6 +144,7 @@ impl ChatTui {
         }
 
         if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Char('c')) {
+            debug!("handle_key: ctrl-c exit requested");
             return Ok(true);
         }
 
@@ -199,7 +206,10 @@ impl ChatTui {
                 self.focus = Focus::Composer;
                 self.status = "composer focused".to_string();
             }
-            KeyCode::Char('q') => return Ok(true),
+            KeyCode::Char('q') => {
+                debug!("handle_timeline_key: q exit requested");
+                return Ok(true);
+            }
             KeyCode::Char('?') | KeyCode::F(1) => self.show_help = true,
             KeyCode::Up | KeyCode::Char('k') => {
                 self.selected = self.selected.saturating_sub(1);

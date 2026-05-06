@@ -92,8 +92,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         Level::WARN
     };
 
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
+    let filter = EnvFilter::builder()
+        .with_default_directive(level.into())
+        .from_env()
+        .expect("Failed to build EnvFilter from environment")
         .add_directive("nostr_sdk=off".parse().unwrap())
         .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::client=off".parse().unwrap())
@@ -116,6 +118,13 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         .with(filter);
 
     let _ = subscriber.try_init();
+    tracing::debug!(
+        "chat startup: topic={:?} headless={} oneshot={:?} gitdir={:?}",
+        sub_command_args.topic,
+        sub_command_args.headless,
+        sub_command_args.oneshot,
+        sub_command_args.gitdir
+    );
     tracing::trace!("\n{:?}\n", &sub_command_args);
     tracing::debug!("\n{:?}\n", &sub_command_args);
     tracing::info!("\n{:?}\n", &sub_command_args);
@@ -147,6 +156,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         });
 
         println!("Initializing network and discovering peers...");
+        tracing::debug!("chat oneshot: waiting for event loop warmup");
         tokio::time::sleep(Duration::from_secs(3)).await;
 
         let mut msg_kind = MsgKind::OneShot;
@@ -195,6 +205,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         let _ = input_tx;
         tracing::info!("Headless mode is running; waiting for shutdown.");
         tokio::signal::ctrl_c().await?;
+        tracing::debug!("headless chat received ctrl-c and is exiting");
         return Ok(());
     }
 
