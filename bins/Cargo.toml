@@ -31,7 +31,10 @@ git-version = "0.3.9"
 git2 = { version = "0.20.4", default-features = false }
 blossom_tui = { workspace = true, optional = true }
 gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist" }
-gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = ["tui", "vendor-openssl"] }
+gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = [
+  "tui",
+  "vendor-openssl",
+] }
 gnostr = { path = ".." }
 gnostr-chat = { package = "gnostr-chat", path = "../chat" }
 gnostr-crawler = { package = "gnostr-crawler", path = "../crawler" }
@@ -50,7 +53,9 @@ nostr = { workspace = true }
 nips = { path = "../nips" }
 pretty_env_logger = "0.5.0"
 proctitle = "0.1.1"
-ratatui = { workspace = true, default-features = false, features = ["crossterm"] }
+ratatui = { workspace = true, default-features = false, features = [
+  "crossterm",
+] }
 reqwest = { workspace = true }
 secp256k1 = { workspace = true }
 serial_test = "2.0.0"

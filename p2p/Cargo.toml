@@ -4,9 +4,9 @@ version.workspace = true
 edition = "2021"
 description = "gnostr p2p crate"
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "0xtr <oxtrr@protonmail.com>",
-  "TODO <add_more@gnostr.org>",
+    "gnostr <admin@gnostr.org>",
+    "0xtr <oxtrr@protonmail.com>",
+    "TODO <add_more@gnostr.org>",
 ]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
@@ -30,12 +30,12 @@ clap = { version = "4.5.41", features = [
 ] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947943.545331", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=948220.1875.192743", default-features = false, features = [
   "nostr",
   "vendor-openssl",
 ] }
 gnostr-crawler = { workspace = true }
-gnostr-js = { path = "../js", package = "gnostr-js", version = "<=1875.947943.545331" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = "<=948220.1875.192743" }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",
