@@ -4,9 +4,9 @@ version.workspace = true
 edition = "2021"
 description = "gnostr chat transport crate"
 authors = [
-    "gnostr <admin@gnostr.org>",
-    "0xtr <oxtrr@protonmail.com>",
-    "TODO <add_more@gnostr.org>",
+  "gnostr <admin@gnostr.org>",
+  "0xtr <oxtrr@protonmail.com>",
+  "TODO <add_more@gnostr.org>",
 ]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
@@ -28,6 +28,7 @@ futures = "0.3.31"
 git2 = "0.20.2"
 gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "<=1875.947943.545331", default-features = false, features = [
   "tui",
+  "vendor-openssl",
 ] }
 gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "<=1875.947943.545331" }
 gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "<=1875.947943.545331" }
