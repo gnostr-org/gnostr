@@ -279,17 +279,18 @@ fn main() {
     let build_date = now.date_naive();
 
     let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!("{}-{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
         format!(
-            "{} {} ({})",
+            "{}-{} {} ({})",
+            env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION"),
             build_date,
             get_git_hash()
         )
-    } else {
-        format!("gnostr-legit@{} ({})", get_git_hash(), build_date)
     };
 
-    println!("cargo:warning=buildname '{}'", build_name);
+    println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={}", build_name);
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH not set");
