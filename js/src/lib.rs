@@ -91,11 +91,6 @@ pub static TEMPLATE_HTML_BYTES: &[u8] = include_bytes!("template.html");
 						<img class=\"icon svg inactive\" src=\"/images/logo-inverted.svg\"/>
 						<img class=\"icon svg active\" src=\"/images/logo.svg\"/>
 					</button>
-					<button action=\"open-view\" data-view=\"friends\" class=\"nav icon\"
-						title=\"Home\">
-						<img class=\"icon svg inactive\" src=\"/images/home.svg\"/>
-						<img class=\"icon svg active\" src=\"/images/home-active.svg\"/>
-					</button>
 					<button action=\"open-view\" data-view=\"dm\" class=\"nav icon\"
 						title=\"Direct Messages\">
 						<img class=\"icon svg inactive\" src=\"/images/messages.svg\"/>
