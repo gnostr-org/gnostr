@@ -314,7 +314,7 @@ jobs:
       - name: Build gnostr binary
         shell: bash
         run: |
-          cargo build --bin gnostr
+          cargo build -p gnostr-bins
 
       - name: Save Cargo target cache (post-build)
         if: always()
@@ -323,17 +323,17 @@ jobs:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-build
 
-      - name: 🚀 cargo run --bin gnostr-tui --
+      - name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr-tui -- --version
-          cargo run --bin gnostr-tui -- --help
+          cargo run -p gnostr-bins --bin gnostr-tui -- --version
+          cargo run -p gnostr-bins --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
         run: |
-          cargo build --bin gnostr
+          cargo build -p gnostr-bins --bin gnostr
           ./target/debug/gnostr query --help
           GNOSTR_BIN=./target/debug/gnostr bash ./scripts/gnostr-nested-query.sh && echo "✅"
 
@@ -377,7 +377,7 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path . --force --bin git-remote-nostr
+          cargo install --path ./bins --force --bin git-remote-nostr
           git fetch --all
 
       - name: Save Cargo target cache (post-git-remote-nostr)
@@ -410,12 +410,12 @@ jobs:
       #    $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw) \
       #    --limit 100 | jq
 
-      - name: 🚀 cargo run --bin gnostr-tui --
+      - name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr-tui -- --version
-          cargo run --bin gnostr-tui -- --help
+          cargo run -p gnostr-bins --bin gnostr-tui -- --version
+          cargo run -p gnostr-bins --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
