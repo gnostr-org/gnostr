@@ -10,8 +10,8 @@ cargo add gnostr-relay actix-web tracing-subscriber
 
 ```
 
-See [demo](./examples/demo.rs)
+See [demo](../bins/examples/gnostr_relay_demo.rs)
 
 ### Custom extensions
 
-See [extensions demo](../extensions/examples/demo.rs)
+See [extensions demo](../bins/examples/gnostr_relay_ext_demo.rs)
