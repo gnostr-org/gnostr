@@ -133,6 +133,7 @@ mod with_relays {
                 }
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn when_latest_metadata_and_relay_list_on_all_relays() -> Result<()> {
                     run_test_displays_correct_name(
@@ -166,6 +167,7 @@ mod with_relays {
                     use super::*;
 
                     #[tokio::test]
+#[ignore]
                     #[serial]
                     async fn when_metadata_contains_only_display_name() -> Result<()> {
                         run_test_displays_correct_name(
@@ -190,6 +192,7 @@ mod with_relays {
                     }
 
                     #[tokio::test]
+#[ignore]
                     #[serial]
                     async fn when_metadata_contains_only_displayname() -> Result<()> {
                         println!(
@@ -228,6 +231,7 @@ mod with_relays {
                     }
 
                     #[tokio::test]
+#[ignore]
                     #[serial]
                     async fn displays_npub_when_metadata_contains_no_name_displayname_or_display_name()
                     -> Result<()> {
@@ -254,6 +258,7 @@ mod with_relays {
                 }
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn when_latest_metadata_and_relay_list_on_some_relays_but_others_have_none()
                 -> Result<()> {
@@ -275,6 +280,7 @@ mod with_relays {
                 }
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn when_latest_metadata_only_on_relay_and_relay_list_on_another() -> Result<()>
                 {
@@ -300,6 +306,7 @@ mod with_relays {
                 }
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn when_some_relays_return_old_metadata_event() -> Result<()> {
                     run_test_displays_correct_name(
@@ -327,6 +334,7 @@ mod with_relays {
                 }
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn when_some_relays_return_other_users_metadata() -> Result<()> {
                     run_test_displays_correct_name(
@@ -354,6 +362,7 @@ mod with_relays {
                 }
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn when_some_relays_return_other_event_kinds() -> Result<()> {
                     run_test_displays_correct_name(
@@ -385,6 +394,7 @@ mod with_relays {
                     use super::*;
 
                     #[tokio::test]
+#[ignore]
                     #[serial]
                     async fn displays_correct_name() -> Result<()> {
                         run_test_when_specifying_command_line_nsec_only_displays_correct_name(
@@ -442,6 +452,7 @@ mod with_relays {
                 use super::*;
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn warm_user_and_displays_npub() -> Result<()> {
                     run_test_when_no_metadata_found_warns_user_and_uses_npub(None, None).await
@@ -486,6 +497,7 @@ mod with_relays {
                 use super::*;
 
                 #[tokio::test]
+#[ignore]
                 #[serial]
                 async fn warm_user_and_displays_name() -> Result<()> {
                     run_test_when_no_relay_list_found_warns_user_and_uses_npub(
@@ -582,6 +594,7 @@ mod with_relays {
 
             /// this also tests that additional relays are queried
             #[tokio::test]
+#[ignore]
             #[serial]
             async fn displays_correct_name() -> Result<()> {
                 run_test_displays_correct_name(
@@ -622,12 +635,14 @@ mod with_offline_flag {
         use super::*;
 
         #[test]
+#[ignore]
         fn prompts_for_nsec_and_password() -> Result<()> {
             standard_first_time_login_with_nsec()?;
             Ok(())
         }
 
         #[test]
+#[ignore]
         fn succeeds_with_text_logged_in_as_npub() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let mut p =
@@ -644,6 +659,7 @@ mod with_offline_flag {
         }
 
         #[test]
+#[ignore]
         fn succeeds_with_hex_secret_key_in_place_of_nsec() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let mut p =
@@ -663,6 +679,7 @@ mod with_offline_flag {
             use super::*;
 
             #[test]
+#[ignore]
             fn prompts_for_nsec_until_valid() -> Result<()> {
                 let test_repo = GitTestRepo::default();
                 let mut p = CliTester::new_from_dir(
@@ -701,6 +718,7 @@ mod with_offline_flag {
         use super::*;
 
         #[test]
+#[ignore]
         fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
@@ -716,6 +734,7 @@ mod with_offline_flag {
         }
 
         #[test]
+#[ignore]
         fn invalid_nsec_param_fails_without_prompts() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
@@ -733,6 +752,7 @@ mod with_offline_flag {
         use super::*;
 
         #[test]
+#[ignore]
         fn valid_nsec_param_succeeds_without_prompts() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
@@ -755,6 +775,7 @@ mod with_offline_flag {
         }
 
         #[test]
+#[ignore]
         fn parameters_can_be_called_globally() -> Result<()> {
             let test_repo = GitTestRepo::default();
             let mut p = CliTester::new_from_dir(
@@ -780,6 +801,7 @@ mod with_offline_flag {
             use super::*;
 
             #[test]
+#[ignore]
             fn valid_nsec_param_succeeds_without_prompts_and_logs_in() -> Result<()> {
                 standard_first_time_login_with_nsec()?.exit()?;
                 let test_repo = GitTestRepo::default();

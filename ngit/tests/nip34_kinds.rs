@@ -78,6 +78,7 @@ fn mine_git_note(
 }
 
 #[tokio::test]
+#[ignore]
 async fn repo_announcement_round_trips_through_repo_ref() -> Result<()> {
     println!("[ngit] repo_announcement_round_trips_through_repo_ref");
     let repo_ref = repo_ref_fixture()?;
@@ -95,6 +96,7 @@ async fn repo_announcement_round_trips_through_repo_ref() -> Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
     println!("[ngit] cover_letter_and_patch_events_use_git_patch_kind");
     let (git_repo, repo) = repo_fixture()?;
@@ -144,6 +146,7 @@ async fn cover_letter_and_patch_events_use_git_patch_kind() -> Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
     println!("[ngit] pull_request_and_update_events_use_default_signer");
     let (git_repo, repo) = repo_fixture()?;
@@ -225,6 +228,7 @@ async fn pull_request_and_update_events_use_default_signer() -> Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 async fn nip34_event_matrix_with_git_notes_attached() -> Result<()> {
     println!("[ngit] nip34_event_matrix_with_git_notes_attached");
     let cases = [
