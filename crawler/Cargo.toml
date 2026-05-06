@@ -77,18 +77,6 @@ sha2 = "0.10"
 tokio = { version = "1", features = ["full"] }
 url = "2.5.0"
 
-[[example]]
-name = "gnostr_crawler"
-path = "examples/gnostr_crawler.rs"
-
-[[example]]
-name = "gnostr_test"
-path = "examples/gnostr_test.rs"
-
-[[example]]
-name = "string_pop"
-path = "examples/string_pop.rs"
-
 [[test]]
 name = "crawler_helpers"
 path = "tests/crawler_helpers.rs"

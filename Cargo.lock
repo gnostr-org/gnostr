@@ -7150,6 +7150,7 @@ dependencies = [
  "gnostr-blossom-tui",
  "gnostr-chat",
  "gnostr-crawler",
+ "gnostr-extensions",
  "gnostr-filetreelist",
  "gnostr-git-helpers",
  "gnostr-js",
