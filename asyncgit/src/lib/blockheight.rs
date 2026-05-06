@@ -13,9 +13,11 @@ fn synthetic_blockheight() -> u64 {
     std::cmp::max(1, seconds / 600)
 }
 
-const BLOCKHEIGHT_URLS: [&str; 2] = [
+const BLOCKHEIGHT_URLS: [&str; 4] = [
     "https://bitcoin.gob.sv/api/blocks/tip/height",
     "https://mempool.space/api/blocks/tip/height",
+    "https://blockstream.info/api/blocks/tip/height",
+    "https://blockchain.info/q/getblockcount",
 ];
 
 fn fetch_blockheight_sync() -> (Option<String>, u8) {
