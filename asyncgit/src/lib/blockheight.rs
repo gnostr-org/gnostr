@@ -18,28 +18,28 @@ const BLOCKHEIGHT_URLS: [&str; 2] = [
     "https://mempool.space/api/blocks/tip/height",
 ];
 
-fn fetch_blockheight_sync() -> Option<String> {
-    for url in BLOCKHEIGHT_URLS {
-        match ureq_sync(url.to_string()) {
-            Ok(val) => return Some(val),
+fn fetch_blockheight_sync() -> (Option<String>, u8) {
+    for (index, url) in BLOCKHEIGHT_URLS.iter().enumerate() {
+        match ureq_sync((*url).to_string()) {
+            Ok(val) => return (Some(val), index as u8),
             Err(err) => {
                 debug!("blockheight_sync: failed to fetch from {}: {:?}", url, err);
             }
         }
     }
-    None
+    (None, BLOCKHEIGHT_URLS.len() as u8)
 }
 
-async fn fetch_blockheight_async() -> Option<String> {
-    for url in BLOCKHEIGHT_URLS {
-        match ureq_async(url.to_string()).await {
-            Ok(val) => return Some(val),
+async fn fetch_blockheight_async() -> (Option<String>, u8) {
+    for (index, url) in BLOCKHEIGHT_URLS.iter().enumerate() {
+        match ureq_async((*url).to_string()).await {
+            Ok(val) => return (Some(val), index as u8),
             Err(err) => {
                 debug!("blockheight_async: failed to fetch from {}: {:?}", url, err);
             }
         }
     }
-    None
+    (None, BLOCKHEIGHT_URLS.len() as u8)
 }
 
 pub fn check_curl() {
@@ -48,7 +48,9 @@ pub fn check_curl() {
 }
 
 pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
-    let blockheight = fetch_blockheight_sync()
+    let (raw_blockheight, status) = fetch_blockheight_sync();
+    unsafe { env::set_var("BLOCKHEIGHT_STATUS", status.to_string()) };
+    let blockheight = raw_blockheight
         .and_then(|val| val.parse::<u64>().ok())
         .unwrap_or_else(synthetic_blockheight) as f64;
 
@@ -58,8 +60,9 @@ pub fn blockheight() -> Result<f64, ascii::AsciiChar> {
 }
 
 pub async fn blockheight_async() -> String {
-    let blockheight = fetch_blockheight_async()
-        .await
+    let (raw_blockheight, status) = fetch_blockheight_async().await;
+    unsafe { env::set_var("BLOCKHEIGHT_STATUS", status.to_string()) };
+    let blockheight = raw_blockheight
         .and_then(|val| val.parse::<u64>().ok())
         .unwrap_or_else(synthetic_blockheight)
         .to_string();
@@ -68,11 +71,20 @@ pub async fn blockheight_async() -> String {
     blockheight
 }
 pub fn blockheight_sync() -> String {
-    let blockheight = fetch_blockheight_sync()
+    let (raw_blockheight, status) = fetch_blockheight_sync();
+    unsafe { env::set_var("BLOCKHEIGHT_STATUS", status.to_string()) };
+    let blockheight = raw_blockheight
         .and_then(|val| val.parse::<u64>().ok())
         .unwrap_or_else(synthetic_blockheight)
         .to_string();
     debug!("blockheight_sync: {}", blockheight);
     unsafe { env::set_var("BLOCKHEIGHT", blockheight.clone()) };
     blockheight
+}
+
+pub fn blockheight_status() -> u8 {
+    env::var("BLOCKHEIGHT_STATUS")
+        .ok()
+        .and_then(|status| status.parse::<u8>().ok())
+        .unwrap_or(0)
 }
