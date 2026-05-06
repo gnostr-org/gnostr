@@ -7128,6 +7128,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnostr-bins"
+version = "1875.947943.545331"
+dependencies = [
+ "actix-web",
+ "anyhow",
+ "clap 4.6.1",
+ "futures",
+ "futures-util",
+ "git2",
+ "gnostr-asyncgit",
+ "gnostr-chat",
+ "gnostr-crawler",
+ "gnostr-filetreelist",
+ "gnostr-git-helpers",
+ "gnostr-js",
+ "gnostr-legit",
+ "gnostr-p2p",
+ "gnostr-relay",
+ "gnostr-web",
+ "gnostr_qr",
+ "libp2p",
+ "log",
+ "nostr 0.44.2",
+ "proctitle",
+ "ratatui",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "simple_logger",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
 name = "gnostr-blossom-tui"
 version = "1875.947943.545331"
 dependencies = [
