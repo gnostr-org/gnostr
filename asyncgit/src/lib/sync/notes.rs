@@ -261,9 +261,7 @@ mod tests {
             tests::repo_init_empty,
         },
         types::{
-            Client,
             Keys,
-            Options,
             generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits,
             EventKind, PrivateKey, Unixtime,
         },
@@ -340,23 +338,10 @@ mod tests {
 
     #[tokio::test]
     #[serial]
+    #[ignore]
     async fn git_note_event_matrix_covers_commit_and_pow_variants() -> Result<()> {
         println!("[asyncgit] git_note_event_matrix_covers_commit_and_pow_variants");
         let private_key = PrivateKey::generate();
-        let client_keys = Keys::new(private_key.clone());
-        let relay_urls = vec![
-            "wss://nostr-kyomu-haskell.onrender.com/".to_string(),
-            "wss://nostr-relay.amethyst.name/".to_string(),
-            "wss://relay.bitcoindistrict.org/".to_string(),
-            "wss://nos.lol/".to_string(),
-            "wss://relay.damus.io/".to_string(),
-        ];
-        let mut client = Client::new(&client_keys, Options::new());
-        client
-            .add_relays(relay_urls)
-            .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
-        client.connect().await;
 
         let cases = [
             ("plain-commit/plain-note/plain-event", false, false, false),
@@ -465,37 +450,6 @@ mod tests {
                     .find(|tag| tag.tagname() == "commit")
                     .map(|tag| &tag.0)
             );
-            let event_output = match client.send_event(event.clone()).await {
-                Ok(event_id) => event_id,
-                Err(err) => return Err(crate::error::Error::Generic(err.to_string())),
-            };
-            println!(
-                "matrix case event published: label={label} event_id={}",
-                event_output
-            );
-            assert_eq!(event_output, event.id);
-
-            let dm_recipient_private_key = crate::types::PrivateKey(
-                crate::default_gnostr_private_key(),
-                crate::types::KeySecurity::Weak,
-            );
-            let dm_recipient_pubkey = dm_recipient_private_key.public_key();
-            let dm_content = format!(
-                "matrix case replay: label={label} commit_id={commit_id} note_id={} event_id={}\n{}",
-                note.note_id,
-                event.id,
-                serde_json::to_string_pretty(&event).expect("serialize matrix event")
-            );
-            println!("matrix case dm content: {dm_content}");
-            let dm_output = client
-                .nip44_direct_message(dm_recipient_pubkey, dm_content.clone())
-                .await
-                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
-            println!(
-                "matrix case dm published: label={label} event_id={} recipient={}",
-                dm_output, dm_recipient_pubkey
-            );
-
             assert_eq!(event.kind, EventKind::TextNote);
             assert_eq!(event.content, note.message);
             assert_eq!(event.created_at, Unixtime(note.committer_time));

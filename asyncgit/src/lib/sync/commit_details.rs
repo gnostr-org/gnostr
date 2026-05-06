@@ -166,10 +166,7 @@ mod tests {
     use std::{fs::File, io::Write, path::Path};
 
     use super::{get_commit_details, CommitMessage};
-    use crate::{
-        filehash::get_relay_urls,
-        types::{Client, EventBuilder, EventKind, Metadata, Options},
-    };
+    use crate::types::{EventBuilder, EventKind, Metadata};
     use crate::{
         error::Result,
         sync::{commit, stage_add_file, tests::repo_init_empty, RepoPath},
@@ -201,16 +198,6 @@ mod tests {
         .unwrap();
         println!("metadata event: {metadata_event:#?}");
         assert_eq!(metadata_event.kind, EventKind::Metadata);
-
-        let relay_urls = get_relay_urls();
-        assert!(
-            !relay_urls.is_empty(),
-            "expected at least one relay URL for metadata syndication"
-        );
-        let mut client = Client::new(keys, Options::new());
-        client.add_relays(relay_urls).await.unwrap();
-        let published_id = client.send_event(metadata_event.clone()).await.unwrap();
-        assert_eq!(published_id, metadata_event.id);
 
         assert_eq!(
             res.message

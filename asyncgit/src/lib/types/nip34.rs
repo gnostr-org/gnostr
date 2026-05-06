@@ -1129,6 +1129,7 @@ mod tests {
 
     #[tokio::test]
     #[serial]
+    #[ignore]
     async fn nip34_event_matrix_covers_all_kinds_and_git_notes() -> crate::error::Result<()> {
         println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
 

@@ -26,7 +26,7 @@ path = "src/bin/git_remote_nostr/main.rs"
 [features]
 default = []
 nostr = []
-vendored-openssl = ["gnostr-asyncgit/vendored-openssl"]
+vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
 
 [dependencies]
 anyhow = "1.0.98"
@@ -40,7 +40,7 @@ console = "0.16.0"
 dialoguer = "0.12.0"
 directories = "6.0.0"
 futures = "0.3.31"
-gnostr-asyncgit = { workspace = true }
+gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
 gnostr-legit = { version = "<=1875.947943.545331", path = "../legit" }
 indicatif = "0.18.0"
 mailparse = "0.16.1"

@@ -32,7 +32,7 @@ tower-http = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 include_dir = { workspace = true, features = ["glob", "metadata"] }
-gnostr-asyncgit = { workspace = true, features = ["tui"] }
+gnostr-asyncgit = { workspace = true, features = ["tui", "vendor-openssl"] }
 filetreelist = { workspace = true }
 futures = { workspace = true }
 gnostr-relay = { workspace = true }

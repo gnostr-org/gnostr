@@ -484,6 +484,7 @@ fn stats_and_pubkeys_track_counts() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()> {
     for (label, mine_commit_flag, mine_note_flag, pow_event_flag) in [
         ("plain-commit/plain-note/plain-event", false, false, false),

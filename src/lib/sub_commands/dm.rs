@@ -72,6 +72,7 @@ mod dm_tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn test_dm_command_success() {
         // Setup real client

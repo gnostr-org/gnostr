@@ -7128,10 +7128,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnostr-bins"
-version = "1875.947943.545331"
-
-[[package]]
 name = "gnostr-blossom-tui"
 version = "1875.947943.545331"
 dependencies = [

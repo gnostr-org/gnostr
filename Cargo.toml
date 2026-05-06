@@ -68,7 +68,7 @@ members = [
   "web",
   "chat",
   "nips",
-  "bins",
+  ## "bins",
 ]
 exclude = ["vendor/gitui/**"]
 
@@ -375,24 +375,135 @@ curve25519-dalek = { path = "vendor/curve25519-dalek" }
 ed25519-dalek = { path = "vendor/ed25519-dalek" }
 gitui = { path = "vendor/gitui" }
 
-[[bin]]
-name = "gnostr-server"
-path = "src/bin/gnostr-server.rs"
-required-features = ["blossom"]
-
-[[bin]]
-name = "git-remote-nostr"
-path = "src/bin/git-remote-nostr/mod.rs"
-
 ## [[bin]]
-## name = "gnostr-gnit"
-## path = "src/bin/gnostr-gnit.rs"
-## required-features = ["gnostr-web"]
+## name = "capture_tui"
+## path = "bins/src/bin/capture_tui.rs"
 ## 
 ## [[bin]]
-## name = "gnostr-web"
-## path = "src/bin/gnostr-web.rs"
-## required-features = ["gnostr-web"]
+## name = "generate-server-config"
+## path = "bins/src/bin/generate-server-config.rs"
+## 
+## [[bin]]
+## name = "git-legit"
+## path = "bins/src/bin/git-legit.rs"
+## 
+## [[bin]]
+## name = "git-remote-blossom"
+## path = "bins/src/bin/git-remote-blossom.rs"
+## 
+## [[bin]]
+## name = "git-remote-gnostr"
+## path = "bins/src/bin/git-remote-gnostr/main.rs"
+## 
+## [[bin]]
+## name = "git-remote-ipfs"
+## path = "bins/src/bin/git-remote-ipfs.rs"
+## 
+## [[bin]]
+## name = "git-remote-nostr"
+## path = "bins/src/bin/git-remote-nostr/mod.rs"
+## 
+## [[bin]]
+## name = "git-remote-pkarr"
+## path = "bins/src/bin/git-remote-pkarr.rs"
+## 
+## [[bin]]
+## name = "git-remote-tor"
+## path = "bins/src/bin/git-remote-tor.rs"
+## 
+## [[bin]]
+## name = "git-tag"
+## path = "bins/src/bin/git-tag.rs"
+## 
+## [[bin]]
+## name = "git-tag-pr"
+## path = "bins/src/bin/git-tag-pr.rs"
+## 
+## [[bin]]
+## name = "git-tag-version"
+## path = "bins/src/bin/git-tag-version.rs"
+## 
+## [[bin]]
+## name = "git-tui"
+## path = "bins/src/bin/git-tui.rs"
+## 
+## [[bin]]
+## name = "gnostr-blossom"
+## path = "bins/src/bin/gnostr-blossom.rs"
+## required-features = ["blossom-tui"]
+## 
+## [[bin]]
+## name = "gnostr-client"
+## path = "bins/src/bin/gnostr-client.rs"
+## 
+## [[bin]]
+## name = "gnostr-dashboard"
+## path = "bins/src/bin/gnostr-dashboard.rs"
+## 
+## [[bin]]
+## name = "gnostr-functions"
+## path = "bins/src/bin/gnostr-functions.rs"
+## 
+## [[bin]]
+## name = "gnostr-genssh"
+## path = "bins/src/bin/gnostr-genssh.rs"
+## 
+## [[bin]]
+## name = "gnostr-gnit"
+## path = "bins/src/bin/gnostr-gnit.rs"
+## 
+## [[bin]]
+## name = "gnostr-kvs"
+## path = "bins/src/bin/gnostr-kvs.rs"
+## 
+## [[bin]]
+## name = "gnostr-legit"
+## path = "bins/src/bin/gnostr-legit.rs"
+## 
+## [[bin]]
+## name = "gnostr-lookup"
+## path = "bins/src/bin/gnostr-lookup.rs"
+## 
+## [[bin]]
+## name = "gnostr-nip34"
+## path = "bins/src/bin/gnostr-nip34.rs"
+## 
+## [[bin]]
+## name = "gnostr-repo-flattener"
+## path = "bins/src/bin/gnostr-repo-flattener.rs"
+## 
+## [[bin]]
+## name = "gnostr-server"
+## path = "bins/src/bin/gnostr-server.rs"
+## required-features = ["blossom"]
+## 
+## [[bin]]
+## name = "gnostr-sha256"
+## path = "bins/src/bin/gnostr-sha256.rs"
+## 
+## [[bin]]
+## name = "gnostr-sniper"
+## path = "bins/src/bin/gnostr-sniper.rs"
+## 
+## [[bin]]
+## name = "gnostr-test"
+## path = "bins/src/bin/gnostr-test.rs"
+## 
+## [[bin]]
+## name = "gnostr-tui"
+## path = "bins/src/bin/gnostr-tui.rs"
+## 
+## [[bin]]
+## name = "blossom-filetree"
+## path = "bins/src/bin/blossom-filetree.rs"
+## 
+## [[bin]]
+## name = "screenshot"
+## path = "bins/src/bin/screenshot.rs"
+## 
+## [[bin]]
+## name = "server-toml"
+## path = "bins/src/bin/server-toml.rs"
 
 [[bin]]
 name = "git-remote-gnostr-node"
@@ -401,15 +512,6 @@ path = "src/lib/node/remote_helper.rs"
 [[bin]]
 name = "gnostr-shell"
 path = "src/lib/node/git_shell.rs"
-
-[[bin]]
-name = "gnostr-blossom"
-path = "src/bin/gnostr-blossom.rs"
-required-features = ["blossom-tui"]
-
-[[bin]]
-name = "blossom-filetree"
-path = "src/bin/blossom-filetree.rs"
 
 [features]
 default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom", "blossom-tui"]
