@@ -2,6 +2,9 @@
 relay_db/
 relay_policy.db
 
+!icons
+!icons/**
+
 vendor/*
 vendor/*/**
 !vendor/actix-web-actors
