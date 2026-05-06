@@ -6,7 +6,6 @@ use super::*;
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn new_branch_when_no_state_event_exists() -> Result<()> {
     generate_repo_with_state_event().await?;
     Ok(())
@@ -136,7 +135,6 @@ mod two_branches_in_batch_one_added_one_updated {
     #[rstest]
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn updates_branch_on_git_server(#[future] scenario: TwoBranchesScenario) -> Result<()> {
         let s = scenario.await;
         assert!(
@@ -153,7 +151,6 @@ mod two_branches_in_batch_one_added_one_updated {
     #[rstest]
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn remote_refs_updated_in_local_git(
         #[future] scenario: TwoBranchesScenario,
     ) -> Result<()> {
@@ -171,7 +168,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn prints_git_helper_ok_respose() -> Result<()> {
         let git_repo = prep_git_repo()?;
         let source_git_repo = GitTestRepo::recreate_as_bare(&git_repo)?;
@@ -243,7 +239,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn when_no_existing_state_event_state_on_git_server_published_in_nostr_state_event()
     -> Result<()> {
         let git_repo = prep_git_repo()?;
@@ -332,7 +327,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn notes_refs_are_pushed_and_tracked() -> Result<()> {
         use console::Term;
         use gnostr_ngit::push::push_to_remote_url;
@@ -385,7 +379,6 @@ mod two_branches_in_batch_one_added_one_updated {
 
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn existing_state_event_published_in_nostr_state_event() -> Result<()> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -607,7 +600,6 @@ mod delete_one_branch {
     #[rstest]
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn deletes_branch_on_git_server(#[future] scenario: DeleteBranchScenario) -> Result<()> {
         let s = scenario.await;
         assert!(
@@ -621,7 +613,6 @@ mod delete_one_branch {
     #[rstest]
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn remote_refs_updated_in_local_git(
         #[future] scenario: DeleteBranchScenario,
     ) -> Result<()> {
@@ -637,7 +628,6 @@ mod delete_one_branch {
     #[rstest]
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn verify_commit_id_captured(#[future] scenario: DeleteBranchScenario) -> Result<()> {
         let s = scenario.await;
         assert_eq!(
@@ -653,7 +643,6 @@ mod delete_one_branch {
 
         #[tokio::test]
         #[serial]
-#[ignore = "temporarily ignored"]
         async fn state_event_updated_and_branch_deleted_and_ok_printed() -> Result<()> {
             let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -738,7 +727,6 @@ mod delete_one_branch {
 
             #[tokio::test]
             #[serial]
-#[ignore = "temporarily ignored"]
             async fn existing_state_event_updated_and_ok_printed() -> Result<()> {
                 let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
 
@@ -830,7 +818,6 @@ mod delete_one_branch {
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let second_source_git_repo = GitTestRepo::duplicate(&source_git_repo)?;
@@ -908,7 +895,6 @@ async fn pushes_to_all_git_servers_listed_and_ok_printed() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn proposal_three_way_merge_commit_pushed_to_main_leads_to_status_event_issued() -> Result<()>
 {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
@@ -1064,7 +1050,6 @@ async fn proposal_three_way_merge_commit_pushed_to_main_leads_to_status_event_is
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn proposal_fast_forward_merge_commits_pushed_to_main_leads_to_status_event_issued()
 -> Result<()> {
     //
@@ -1247,7 +1232,6 @@ async fn proposal_fast_forward_merge_commits_pushed_to_main_leads_to_status_even
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn proposal_commits_applied_and_pushed_to_main_leads_to_status_event_issued() -> Result<()> {
     //
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
@@ -1418,7 +1402,6 @@ async fn proposal_commits_applied_and_pushed_to_main_leads_to_status_event_issue
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn push_2_commits_to_existing_proposal() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1564,7 +1547,6 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn force_push_creates_proposal_revision() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1723,7 +1705,6 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn push_new_pr_branch_creates_proposal() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let _source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -1848,7 +1829,6 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn push_new_pr_branch_with_title_description_options_creates_pr_with_custom_title_description()
 -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
@@ -1969,7 +1949,6 @@ async fn push_new_pr_branch_with_title_description_options_creates_pr_with_custo
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn push_with_escaped_newlines_in_description_creates_pr_with_multiline_description()
 -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
@@ -2078,7 +2057,6 @@ async fn push_with_escaped_newlines_in_description_creates_pr_with_multiline_des
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn force_push_to_existing_patch_series_with_title_description_options_creates_patches_with_custom_cover_letter()
 -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
@@ -2198,7 +2176,6 @@ async fn force_push_to_existing_patch_series_with_title_description_options_crea
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn push_new_pr_branch_with_multiple_commits_sets_merge_base_to_main_tip() -> Result<()> {
     let (events, source_git_repo) = prep_source_repo_and_events_including_proposals().await?;
     let _source_path = source_git_repo.dir.to_str().unwrap().to_string();

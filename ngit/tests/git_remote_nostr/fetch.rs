@@ -2,7 +2,6 @@ use super::*;
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn fetch_downloads_speficied_commits_from_git_server() -> Result<()> {
     let source_git_repo = prep_git_repo()?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -73,7 +72,6 @@ mod when_first_git_server_fails_ {
 
     #[tokio::test]
     #[serial]
-#[ignore = "temporarily ignored"]
     async fn fetch_downloads_speficied_commits_from_second_git_server() -> Result<()> {
         let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
         // let source_path = source_git_repo.dir.to_str().unwrap().to_string();
@@ -141,7 +139,6 @@ mod when_first_git_server_fails_ {
 
 #[tokio::test]
 #[serial]
-#[ignore = "temporarily ignored"]
 async fn creates_commits_from_open_proposal_with_no_warnings_printed() -> Result<()> {
     let (events, _) = prep_source_repo_and_events_including_proposals().await?;
 
