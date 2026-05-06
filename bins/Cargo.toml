@@ -13,9 +13,11 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
+git-version = "0.3.9"
 git2 = { version = "0.20.4", default-features = false }
-filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist" }
+gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist" }
 gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = ["tui", "vendor-openssl"] }
+gnostr = { path = ".." }
 gnostr-chat = { package = "gnostr-chat", path = "../chat" }
 gnostr-crawler = { package = "gnostr-crawler", path = "../crawler" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers" }
@@ -27,15 +29,25 @@ gnostr-relay = { package = "gnostr-relay", path = "../relay" }
 gnostr-web = { package = "gnostr-web", path = "../web" }
 libp2p = { workspace = true }
 log = { workspace = true }
+ngit = { workspace = true }
 nostr = { workspace = true }
 proctitle = "0.1.1"
 ratatui = { workspace = true, default-features = false, features = ["crossterm"] }
 reqwest = { workspace = true }
+secp256k1 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
+regex = { workspace = true }
+rustls = { workspace = true }
+sha2 = { workspace = true }
+sha256 = "1"
 simple_logger = { workspace = true }
+tempfile = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
+tracing-core = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
+time = { workspace = true }
+walkdir = { workspace = true }
