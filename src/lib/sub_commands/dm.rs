@@ -71,6 +71,10 @@ mod dm_tests {
         println!("{label} relays: {}", relays.join(", "));
     }
 
+    fn install_rustls_crypto_provider() {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    }
+
     struct FailingDmClient;
 
     #[async_trait]
@@ -94,6 +98,7 @@ mod dm_tests {
     #[ignore]
     #[serial]
     async fn test_dm_command_success() {
+        install_rustls_crypto_provider();
         // Setup real client
         let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
@@ -130,6 +135,7 @@ mod dm_tests {
     #[tokio::test]
     #[serial]
     async fn test_dm_command_success_bech32_recipient() {
+        install_rustls_crypto_provider();
         // Setup real client
         let sender_privkey = PrivateKey::try_from_hex_string(
             "0000000000000000000000000000000000000000000000000000000000000001",
@@ -172,6 +178,7 @@ mod dm_tests {
     #[tokio::test]
     #[serial]
     async fn test_dm_command_failure() {
+        install_rustls_crypto_provider();
         let recipient_pubkey = PublicKey::try_from_hex_string(
             "edfa27d49d2af37ee331e1225bb6ed1912c6d999281b36d8018ad99bc3573c29",
             false,
