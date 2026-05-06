@@ -30,6 +30,7 @@ fn main() {
         )
     };
 
+    println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
     write_nip89_app_asset(&build_name);
     emit_patch_event(&build_name);
