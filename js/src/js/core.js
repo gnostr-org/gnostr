@@ -62,6 +62,22 @@ function broadcast_event(ev) {
 	GNOSTR.pool.send(["EVENT", ev])
 }
 
+function broadcast_dm_event(ev) {
+	if (!GNOSTR.pool) {
+		return;
+	}
+
+	const remote_relays = GNOSTR.pool.relays.filter((relay) => {
+		return !(typeof relay_is_local === "function" && relay_is_local(relay.url));
+	});
+	if (remote_relays.length) {
+		GNOSTR.pool.send(["EVENT", ev], remote_relays);
+	}
+	if (typeof local_relay_send_event === "function") {
+		local_relay_send_event(ev);
+	}
+}
+
 async function share(evid) {
 	const model = GNOSTR;
 	const e = model.all_events[evid];

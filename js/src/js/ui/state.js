@@ -1394,7 +1394,7 @@ async function onclick_send_dm(ev) {
 	};
 	post.id = await nostrjs.calculate_id(post);
 	post = await sign_event(post);
-	broadcast_event(post);
+	broadcast_dm_event(post);
 	model_process_event(GNOSTR, null, post);
 
 	el_input.value = "";

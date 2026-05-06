@@ -18,7 +18,7 @@ async function send_note(content) {
 	}
 
 	const post = await create_note(pubkey, content);
-	broadcast_event(post);
+	broadcast_dm_event(post);
 	model_process_event(GNOSTR, null, post);
 	view_timeline_update(GNOSTR);
 	view_timeline_show_new(GNOSTR);
