@@ -31,8 +31,8 @@ gnostr_web = []
 tui = []
 speedy = []
 nostr = []
-vendored-openssl = ["openssl-sys/vendored"]
-vendor-openssl = ["vendored-openssl"]
+vendor-openssl = ["openssl-sys/vendored"]
+vendored-openssl = ["vendor-openssl"]
 
 [target.'cfg(not(windows))'.dependencies]
 sd-notify = "0.4.1"
