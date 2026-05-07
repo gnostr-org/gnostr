@@ -627,7 +627,8 @@ async fn main() -> anyhow::Result<()> {
                 .map_err(|e| anyhow!("Error building DM inbox query: {}", e))?;
 
                 let explicit_relays = parse_relay_urls(&sub_command_args.relay)?;
-                let crawler_relays = parse_relay_urls(&gnostr::crawler::load_relays_or_bootstrap())?;
+                let crawler_relays =
+                    parse_relay_urls(&gnostr::crawler::load_relays_or_bootstrap())?;
                 let fallback_relays = parse_relay_urls(&gnostr_cli_args.relays)?;
                 let relays_to_use = build_dm_inbox_relays(explicit_relays, crawler_relays, fallback_relays);
 
@@ -878,5 +879,37 @@ mod tests {
                 url::Url::parse("ws://127.0.0.1:8080").unwrap(),
             ]
         );
+    }
+
+    #[test]
+    fn decrypt_query_frame_decrypts_kind_44_when_nsec_is_available() -> anyhow::Result<()> {
+        let sender_privkey = PrivateKey(
+            secp256k1::SecretKey::from_slice(&[7_u8; 32]).unwrap(),
+            gnostr::types::KeySecurity::Weak,
+        );
+        let recipient_privkey = PrivateKey(
+            gnostr_asyncgit::default_gnostr_private_key(),
+            gnostr::types::KeySecurity::Weak,
+        );
+        let recipient_pubkey = recipient_privkey.public_key();
+        let ciphertext = sender_privkey.encrypt(
+            &recipient_pubkey,
+            "secret inbox message",
+            gnostr::types::ContentEncryptionAlgorithm::Nip44v2,
+        )?;
+        let frame = serde_json::json!([
+            "EVENT",
+            "gnostr-query",
+            {
+                "kind": 44,
+                "pubkey": sender_privkey.public_key().as_hex_string(),
+                "content": ciphertext,
+            }
+        ]);
+
+        let decrypted = decrypt_query_frame(serde_json::to_string(&frame)?, Some(&recipient_privkey))?;
+        let value: serde_json::Value = serde_json::from_str(&decrypted)?;
+        assert_eq!(value[2]["content"], serde_json::json!("secret inbox message"));
+        Ok(())
     }
 }
