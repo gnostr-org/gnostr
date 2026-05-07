@@ -629,10 +629,6 @@ impl Client {
                 {
                     Ok(sent) => sent,
                     Err(_) => {
-                        eprintln!(
-                            "send_event: relay {ws_url} timed out for event {event_id} after {}s",
-                            relay_timeout.as_secs_f32()
-                        );
                         debug!(
                             "send_event: relay {ws_url} timed out for event {event_id} after {}s",
                             relay_timeout.as_secs_f32()
@@ -654,7 +650,6 @@ impl Client {
             debug!("send_event: success id={}", event.id);
             Ok(event.id)
         } else {
-            eprintln!("send_event: failure event={}", event.id);
             debug!("send_event: failure id={}", event.id);
             Err(Error::Custom(
                 "Failed to send event to any configured relay.".into(),
