@@ -312,17 +312,20 @@ pub enum GnostrCommands {
 
 /// DmArgs
 #[derive(Parser, Debug, Clone)]
-#[command(author, version, about = "Send a NIP-44 direct message", long_about = None)]
+#[command(author, version, about = "Send or list NIP-44 direct messages", long_about = None)]
 pub struct DmArgs {
     /// Public key of the recipient (hex or bech32)
     #[arg(long, help = "Recipient's public key (hex or bech32)")]
     pub recipient: String,
     /// Message content
-    #[arg(short, long, help = "The message to send")]
-    pub message: String,
+    #[arg(short, long, help = "The message to send; omit to list DMs for the recipient")]
+    pub message: Option<String>,
     /// Relay to send the DM to (can be used multiple times)
     #[arg(short, long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
     pub relay: Vec<String>,
+    /// Limit when listing DMs for a recipient
+    #[arg(short, long, help = "Limit when listing DMs for the recipient")]
+    pub limit: Option<i32>,
     /// Print the event before sending
     #[arg(short = 'v', long = "verbose", action = clap::ArgAction::Count, help = "Print the event before sending")]
     pub verbose: u8,
@@ -401,8 +404,50 @@ mod tests {
         match cli.command {
             Some(GnostrCommands::Dm(args)) => {
                 assert_eq!(args.recipient, recipient);
-                assert_eq!(args.message, "hello");
+                assert_eq!(args.message, Some("hello".to_string()));
                 assert_eq!(args.relay, vec!["wss://relay.damus.io".to_string()]);
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+
+    #[test]
+    fn dm_subcommand_allows_missing_message_for_inbox_mode() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(args.recipient, recipient);
+                assert_eq!(args.message, None);
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+
+    #[test]
+    fn dm_subcommand_parses_limit_for_inbox_mode() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+            "--limit",
+            "25",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(args.recipient, recipient);
+                assert_eq!(args.limit, Some(25));
             }
             _ => panic!("expected dm command"),
         }
