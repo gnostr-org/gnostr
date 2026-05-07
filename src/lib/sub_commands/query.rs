@@ -370,11 +370,12 @@ mod tests {
     }
 
     fn live_test_message(prefix: &str) -> anyhow::Result<String> {
+        let blockheight = crate::get_blockheight_sync().map_err(anyhow::Error::msg)?;
+        let weeble = crate::get_weeble_sync().map_err(anyhow::Error::msg)?;
+        let wobble = crate::get_wobble_sync().map_err(anyhow::Error::msg)?;
         Ok(format!(
             "{prefix}@{}/{}/{}",
-            crate::get_blockheight_sync()?,
-            crate::get_weeble_sync()?,
-            crate::get_wobble_sync()?
+            blockheight, weeble, wobble
         ))
     }
 
@@ -762,7 +763,7 @@ mod tests {
         let plaintext = live_test_message("nip4_test_message")?;
         let encrypted = sender_privkey.encrypt(
             &recipient_pubkey,
-            plaintext,
+            &plaintext,
             crate::types::ContentEncryptionAlgorithm::Nip04,
         )?;
         let event = crate::types::EventBuilder::new(
@@ -775,7 +776,7 @@ mod tests {
         let event_id = client.send_event(event).await?;
         let frame = wait_for_event_frame(&event_id.to_string(), &relays).await?;
         let decrypted = decrypt_result_frame(frame, &sender_privkey)?;
-        assert!(decrypted.contains(plaintext));
+        assert!(decrypted.contains(&plaintext));
         assert!(decrypted.contains("\"kind\":4"));
         Ok(())
     }
@@ -801,7 +802,7 @@ mod tests {
         let plaintext = live_test_message("nip44_test_message")?;
         let encrypted = sender_privkey.encrypt(
             &recipient_pubkey,
-            plaintext,
+            &plaintext,
             crate::types::ContentEncryptionAlgorithm::Nip44v2,
         )?;
         let event = crate::types::EventBuilder::new(
@@ -814,7 +815,7 @@ mod tests {
         let event_id = client.send_event(event).await?;
         let frame = wait_for_event_frame(&event_id.to_string(), &relays).await?;
         let decrypted = decrypt_result_frame(frame, &sender_privkey)?;
-        assert!(decrypted.contains(plaintext));
+        assert!(decrypted.contains(&plaintext));
         assert!(decrypted.contains("\"kind\":44"));
         Ok(())
     }
