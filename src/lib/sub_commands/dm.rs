@@ -2,11 +2,15 @@ use std::time::Duration;
 
 use anyhow::Result;
 use async_trait::async_trait;
+use serde_json::Value;
 use tracing::{debug, error, info};
+use std::fmt::Write as _;
+use url::Url;
 
+use crate::query::build_gnostr_query;
 use crate::types::{
-    Client, Error, Event, EventKind, Filter, Id, Keys, PublicKey, PublicKeyHex, RelayList,
-    RelayListUsage,
+    Client, ContentEncryptionAlgorithm, Error, Event, EventKind, Filter, Id, Keys, PrivateKey,
+    PublicKey, PublicKeyHex, RelayList, RelayListUsage,
 };
 
 #[cfg(test)]
@@ -177,6 +181,52 @@ pub async fn recipient_preferred_relays(
     Ok(relays)
 }
 
+pub async fn dm_inbox_command(
+    nsec: Option<String>,
+    recipient_pubkey: PublicKey,
+    relay_args: Vec<String>,
+    fallback_relay_args: Vec<String>,
+    limit: Option<i32>,
+    json: bool,
+) -> anyhow::Result<()> {
+    let inbox_limit = limit.unwrap_or(100);
+    let recipient_pubkey_hex = recipient_pubkey.as_hex_string();
+    let query_string = build_gnostr_query(
+        None,
+        None,
+        Some(inbox_limit),
+        None,
+        None,
+        Some(&recipient_pubkey_hex),
+        None,
+        Some("4,44"),
+        None,
+    )
+    .map_err(|e| anyhow::anyhow!("Error building DM inbox query: {}", e))?;
+
+    let explicit_relays = parse_relay_urls(&relay_args)?;
+    let crawler_relays = parse_relay_urls(&crate::crawler::load_relays_or_bootstrap())?;
+    let fallback_relays = parse_relay_urls(&fallback_relay_args)?;
+    let relays_to_use = build_dm_inbox_relays(explicit_relays, crawler_relays, fallback_relays);
+
+    debug!("DM inbox query relays: {:?}", relays_to_use);
+    println!("DM inbox query relays:");
+    for relay in &relays_to_use {
+        println!("  {relay}");
+    }
+
+    let results = crate::query::send(query_string, relays_to_use, Some(inbox_limit))
+        .await
+        .map_err(|e| anyhow::anyhow!("Error in dm inbox query: {}", e))?;
+
+    let private_key = parse_private_key(nsec)?;
+    for result in results {
+        println!("{}", format_query_frame(result, private_key.as_ref(), json)?);
+    }
+
+    Ok(())
+}
+
 fn relay_list_to_preferred_urls(relay_list: &RelayList) -> Vec<String> {
     let mut all_relays = Vec::new();
     let mut write_relays = Vec::new();
@@ -197,6 +247,159 @@ fn relay_list_to_preferred_urls(relay_list: &RelayList) -> Vec<String> {
     relays.sort();
     relays.dedup();
     relays
+}
+
+fn parse_private_key(nsec: Option<String>) -> anyhow::Result<Option<PrivateKey>> {
+    match nsec {
+        Some(value) if !value.trim().is_empty() => {
+            if value.trim().starts_with("nsec") {
+                Ok(Some(PrivateKey::try_from_bech32_string(&value)?))
+            } else {
+                Ok(Some(PrivateKey::try_from_hex_string(&value)?))
+            }
+        }
+        _ => Ok(None),
+    }
+}
+
+fn parse_relay_urls(relays: &[String]) -> anyhow::Result<Vec<Url>> {
+    relays
+        .iter()
+        .map(|relay| Url::parse(relay).map_err(anyhow::Error::from))
+        .collect()
+}
+
+fn build_dm_inbox_relays(
+    explicit_relays: Vec<Url>,
+    crawler_relays: Vec<Url>,
+    fallback_relays: Vec<Url>,
+) -> Vec<Url> {
+    let mut relays = Vec::new();
+    let local_relay = Url::parse("ws://127.0.0.1:8080").ok();
+
+    if explicit_relays.is_empty() {
+        if let Some(local_relay) = local_relay.clone() {
+            relays.push(local_relay);
+        }
+    }
+
+    for relay in explicit_relays
+        .into_iter()
+        .chain(crawler_relays)
+        .chain(fallback_relays)
+    {
+        if !relays.iter().any(|existing| existing == &relay) {
+            relays.push(relay);
+        }
+    }
+
+    if let Some(local_relay) = local_relay {
+        if !relays.iter().any(|existing| existing == &local_relay) {
+            relays.push(local_relay);
+        }
+    }
+
+    relays
+}
+
+fn format_query_frame(
+    result: String,
+    private_key: Option<&PrivateKey>,
+    json: bool,
+) -> anyhow::Result<String> {
+    let Some(private_key) = private_key else {
+        return Ok(result);
+    };
+
+    let mut frame: Value = serde_json::from_str(&result)?;
+    let Some(items) = frame.as_array_mut() else {
+        return Ok(result);
+    };
+
+    if items.len() < 3 || items.first().and_then(Value::as_str) != Some("EVENT") {
+        return Ok(result);
+    }
+
+    let Some(event) = items.get_mut(2).and_then(Value::as_object_mut) else {
+        return Ok(result);
+    };
+
+    let kind = event.get("kind").and_then(Value::as_u64);
+    if !matches!(kind, Some(4) | Some(44)) {
+        return Ok(result);
+    }
+
+    let Some(sender_pubkey_hex) = event.get("pubkey").and_then(Value::as_str) else {
+        return Ok(result);
+    };
+    let Some(content) = event.get("content").and_then(Value::as_str) else {
+        return Ok(result);
+    };
+
+    let sender_pubkey = PublicKey::try_from_hex_string(sender_pubkey_hex, true)?;
+    match private_key.decrypt(&sender_pubkey, content) {
+        Ok(decrypted) => {
+            if json {
+                event.insert("content".to_string(), Value::String(decrypted));
+                Ok(serde_json::to_string_pretty(&frame)?)
+            } else {
+                Ok(format_decrypted_event(event, kind.unwrap_or_default(), &decrypted))
+            }
+        }
+        Err(_) => Ok(result),
+    }
+}
+
+fn format_decrypted_event(
+    event: &serde_json::Map<String, Value>,
+    kind: u64,
+    decrypted: &str,
+) -> String {
+    let id = event.get("id").and_then(Value::as_str).unwrap_or("(unknown)");
+    let pubkey = event
+        .get("pubkey")
+        .and_then(Value::as_str)
+        .unwrap_or("(unknown)");
+    let created_at = event
+        .get("created_at")
+        .and_then(Value::as_i64)
+        .unwrap_or_default();
+    let recipients: Vec<String> = event
+        .get("tags")
+        .and_then(Value::as_array)
+        .map(|tags| {
+            let mut recipients = Vec::new();
+            for tag in tags {
+                let Some(tag_items) = tag.as_array() else {
+                    continue;
+                };
+                if tag_items.first().and_then(Value::as_str) == Some("p") {
+                    if let Some(recipient) = tag_items.get(1).and_then(Value::as_str) {
+                        recipients.push(recipient.to_string());
+                    }
+                }
+            }
+            recipients
+        })
+        .unwrap_or_default();
+
+    let mut out = String::new();
+    let _ = writeln!(out, "DM event kind {kind}");
+    let _ = writeln!(out, "id: {id}");
+    let _ = writeln!(out, "from: {pubkey}");
+    let _ = writeln!(
+        out,
+        "to: {}",
+        if recipients.is_empty() {
+            "(unknown)".to_string()
+        } else {
+            recipients.join(", ")
+        }
+    );
+    let _ = writeln!(out, "created_at: {created_at}");
+    let _ = writeln!(out, "content:");
+    let _ = writeln!(out, "{decrypted}");
+    out
 }
 
 #[cfg(test)]
@@ -284,6 +487,111 @@ mod dm_tests {
                 "ws://localhost:8055".to_string(),
             ]
         );
+    }
+
+    #[test]
+    fn build_dm_inbox_relays_puts_explicit_relays_first() {
+        let relays = build_dm_inbox_relays(
+            vec![Url::parse("wss://explicit.example").unwrap()],
+            vec![Url::parse("wss://crawler.example").unwrap()],
+            vec![Url::parse("wss://fallback.example").unwrap()],
+        );
+
+        assert_eq!(
+            relays,
+            vec![
+                Url::parse("wss://explicit.example").unwrap(),
+                Url::parse("wss://crawler.example").unwrap(),
+                Url::parse("wss://fallback.example").unwrap(),
+                Url::parse("ws://127.0.0.1:8080").unwrap(),
+            ]
+        );
+    }
+
+    #[test]
+    fn build_dm_inbox_relays_preserves_explicit_relay_order() {
+        let relays = build_dm_inbox_relays(
+            vec![
+                Url::parse("wss://first.example").unwrap(),
+                Url::parse("wss://second.example").unwrap(),
+            ],
+            vec![Url::parse("wss://crawler.example").unwrap()],
+            vec![Url::parse("wss://fallback.example").unwrap()],
+        );
+
+        assert_eq!(
+            &relays[..2],
+            &[
+                Url::parse("wss://first.example").unwrap(),
+                Url::parse("wss://second.example").unwrap(),
+            ]
+        );
+    }
+
+    #[test]
+    fn format_query_frame_decrypts_kind_44_when_nsec_is_available() -> anyhow::Result<()> {
+        let sender_privkey = PrivateKey(
+            secp256k1::SecretKey::from_slice(&[7_u8; 32]).unwrap(),
+            crate::types::KeySecurity::Weak,
+        );
+        let recipient_privkey = PrivateKey(
+            crate::git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::Weak,
+        );
+        let recipient_pubkey = recipient_privkey.public_key();
+        let ciphertext = sender_privkey.encrypt(
+            &recipient_pubkey,
+            "secret inbox message",
+            ContentEncryptionAlgorithm::Nip44v2,
+        )?;
+        let frame = serde_json::json!([
+            "EVENT",
+            "gnostr-query",
+            {
+                "kind": 44,
+                "pubkey": sender_privkey.public_key().as_hex_string(),
+                "content": ciphertext,
+            }
+        ]);
+
+        let decrypted = format_query_frame(serde_json::to_string(&frame)?, Some(&recipient_privkey), false)?;
+        assert!(decrypted.contains("DM event kind 44"));
+        assert!(decrypted.contains("secret inbox message"));
+        assert!(decrypted.contains("to:"));
+        Ok(())
+    }
+
+    #[test]
+    fn format_query_frame_decrypts_kind_44_as_json_when_requested() -> anyhow::Result<()> {
+        let sender_privkey = PrivateKey(
+            secp256k1::SecretKey::from_slice(&[8_u8; 32]).unwrap(),
+            crate::types::KeySecurity::Weak,
+        );
+        let recipient_privkey = PrivateKey(
+            crate::git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::Weak,
+        );
+        let recipient_pubkey = recipient_privkey.public_key();
+        let ciphertext = sender_privkey.encrypt(
+            &recipient_pubkey,
+            "json inbox message",
+            ContentEncryptionAlgorithm::Nip44v2,
+        )?;
+        let frame = serde_json::json!([
+            "EVENT",
+            "gnostr-query",
+            {
+                "kind": 4,
+                "pubkey": sender_privkey.public_key().as_hex_string(),
+                "content": ciphertext,
+            }
+        ]);
+
+        let decrypted = format_query_frame(serde_json::to_string(&frame)?, Some(&recipient_privkey), true)?;
+        let parsed: Value = serde_json::from_str(&decrypted)?;
+        assert_eq!(parsed[2]["content"], "json inbox message");
+        assert_eq!(parsed[2]["kind"], 4);
+        Ok(())
     }
 
     struct FailingDmClient;
