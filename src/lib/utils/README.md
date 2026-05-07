@@ -40,7 +40,14 @@ Functions for handling Nostr-related keys and identifiers:
 
 - **`parse_private_key(private_key: Option<String>, print_keys: bool)`**: Parses a private key from a bech32 or hex string, or generates a new one if none is provided. It can also optionally print the generated keys.
 - **`create_client(keys: &Keys, relays: Vec<String>, difficulty: u8)`**: Creates and configures a Nostr client with specified keys, relays, and difficulty settings.
-- **`parse_key_or_id_to_hex_string(input: String)`**: Converts various Nostr identifiers (like `npub`, `nsec`, `note`, `nprofile`) into their hexadecimal string representations.
+- **`parse_key_or_id_to_hex_string(input: String)`**: Converts various Nostr identifiers (like `npub`, `nsec`, `note`, `nprofile`) and `nostr://...` URLs into their hexadecimal string representations.
+- **`ensure_crawler_serve_running()`**: Starts the local crawler relay on `ws://127.0.0.1:8080` when it is not already listening.
+
+### Query Relay Behavior
+
+- `gnostr query` now prefers the live crawler relay when no explicit `-r/--relay` is passed.
+- Query filters accept `note1...`, `npub1...`, `nprofile1...`, and `nostr://...` inputs and normalize them to hex before sending.
+- Relay-using subcommands fall back to the crawler-managed relay list instead of the static bootstrap list when no relays are supplied.
 
 ### String Manipulation
 
