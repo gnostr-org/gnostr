@@ -339,7 +339,7 @@ if [[ "$TARGET_TMPDIR" == true || -z "$TARGET_DIR" ]]; then
   prune_target_tree "$TARGET_TREE_ROOT"
 fi
 
-declare -a CARGO_FLAGS=(test --workspace -j"$NPROC")
+declare -a CARGO_FLAGS=(test --workspace -j"$(cargo_jobs)")
 
 if [[ "$ALL_FEATURES" == true ]]; then
   CARGO_FLAGS+=(--all-features)
