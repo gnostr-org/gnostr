@@ -1,4 +1,5 @@
 use crate::query::ConfigBuilder;
+use crate::utils::parse_key_or_id_to_hex_string;
 use anyhow::{anyhow, bail};
 use log::{debug, error};
 use serde_json::{json, to_string, Value};
@@ -82,16 +83,13 @@ fn build_filter_map(
         debug!("Applying authors filter: {}", authors);
         filt.insert(
             "authors".to_string(),
-            json!(authors.split(',').collect::<Vec<&str>>()),
+            json!(normalize_key_list(authors)?),
         );
     }
 
     if let Some(ids) = &args.ids {
         debug!("Applying IDs filter: {}", ids);
-        filt.insert(
-            "ids".to_string(),
-            json!(ids.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("ids".to_string(), json!(normalize_key_list(ids)?));
     }
 
     if let Some(generic_vec) = &args.generic {
@@ -113,18 +111,12 @@ fn build_filter_map(
 
     if let Some(mentions) = &args.mentions {
         debug!("Applying mentions filter: {}", mentions);
-        filt.insert(
-            "#p".to_string(),
-            json!(mentions.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("#p".to_string(), json!(normalize_key_list(mentions)?));
     }
 
     if let Some(references) = &args.references {
         debug!("Applying references filter: {}", references);
-        filt.insert(
-            "#e".to_string(),
-            json!(references.split(',').collect::<Vec<&str>>()),
-        );
+        filt.insert("#e".to_string(), json!(normalize_key_list(references)?));
     }
 
     if let Some(kinds) = &args.kinds {
@@ -150,6 +142,15 @@ fn search_term(args: &QuerySubCommand) -> Option<String> {
         .and_then(|search_vec| search_vec.first())
         .cloned()
         .filter(|search| !search.is_empty())
+}
+
+fn normalize_key_list(values: &str) -> anyhow::Result<Vec<String>> {
+    values
+        .split(',')
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(|value| parse_key_or_id_to_hex_string(value.to_string()))
+        .collect()
 }
 
 fn filter_query_results(results: Vec<String>, search_term: &str) -> Vec<String> {
@@ -511,6 +512,25 @@ mod tests {
         assert_eq!(limit_check, 1); // Default limit
         assert_eq!(filt.get("authors").unwrap(), &json!([expected_hex_pubkey]));
         assert_eq!(filt.get("limit").unwrap(), &json!(1));
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_converts_note_and_npub_prefixes() -> anyhow::Result<()> {
+        let note_id = "note1h445ule4je70k7kvddate8kpsh2fd6n77esevww5hmgda2qwssjsw957wk";
+        let npub = "npub1ktt8phjnkfmfrsxrgqpztdjuxk3x6psf80xyray0l3c7pyrln49qhkyhz0";
+
+        let args = create_query_subcommand(&["--ids", note_id, "--authors", npub]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(
+            filt.get("ids").unwrap(),
+            &json!(["bd6b4e7f35967cfb7acc6b7abc9ec185d496ea7ef6619639d4bed0dea80e8425"])
+        );
+        assert_eq!(
+            filt.get("authors").unwrap(),
+            &json!(["b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a"])
+        );
         Ok(())
     }
 
