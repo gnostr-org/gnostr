@@ -423,6 +423,7 @@ stage_cargo_files
 if [ -n "${VERSION_TAG:-}" ]; then
     cargo update --workspace
     stage_cargo_files
+    git add -- Cargo.lock
 
     git checkout -b "release/$VERSION_TAG"
 
@@ -433,8 +434,7 @@ elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 
     cargo update --workspace
     stage_cargo_files
-
-
+    git add -- Cargo.lock
 
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
     tag_package_versions "$WORKSPACE_VERSION"
