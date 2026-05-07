@@ -7,7 +7,7 @@ pub async fn run_watch(
     shitlist_path: Option<String>,
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    debug!("lib::run_watch");
+    info!("run_watch: start shitlist_path={shitlist_path:?}");
     let app_secret_key = SecretKey::from_bech32(crate::processor::APP_SECRET_KEY)?;
     let app_keys = Keys::new(app_secret_key);
     let processor = crate::processor::Processor::new();
@@ -74,5 +74,6 @@ pub async fn run_watch(
         crate::commands::sniper::refresh_nip_bucket(nip);
     }
 
+    info!("run_watch: done");
     Ok(())
 }

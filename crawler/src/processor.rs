@@ -81,8 +81,12 @@ impl Processor {
 
     pub fn handle_event(&mut self, event: &Event) {
         //TODO: forward (proxy)
-        debug!("{:?}", event.id);
-        //println!("{:}", event.as_json());
+        debug!(
+            "processor::handle_event start id={:?} kind={:?} pubkey={:?}",
+            event.id,
+            event.kind,
+            event.pubkey
+        );
         debug!(
             "age {:?}  created_at {:?}",
             Self::age(event.created_at),
@@ -198,6 +202,7 @@ impl Processor {
                 println!("processing...");
             }
         }
+        debug!("processor::handle_event done id={:?}", event.id);
     }
 
     // fn print_summary(&self) {

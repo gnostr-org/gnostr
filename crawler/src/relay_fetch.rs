@@ -16,6 +16,11 @@ pub async fn fetch_relay_texts(
     client: &reqwest::Client,
     context: &str,
 ) -> Vec<Result<(String, String, u64), reqwest::Error>> {
+    debug!(
+        "{}: fetching relay metadata from {} relays",
+        context,
+        relays.len()
+    );
     stream::iter(relays)
         .map(|url| {
             let client = client.clone();
@@ -23,12 +28,14 @@ pub async fn fetch_relay_texts(
             async move {
                 let started = Instant::now();
                 let http_url = websocket_http_url(&url);
+                debug!("{}: GET {}", context, http_url);
                 let resp = client
                     .get(&http_url)
                     .header(ACCEPT, "application/nostr+json")
                     .send()
                     .await?;
                 let ping_ms = started.elapsed().as_millis() as u64;
+                debug!("{}: {} responded in {}ms", context, url, ping_ms);
 
                 if !resp.status().is_success() {
                     warn!("{}: skipping {} due to HTTP {}", context, url, resp.status());
@@ -37,6 +44,12 @@ pub async fn fetch_relay_texts(
 
                 let text = resp.text().await?;
                 let ping_ms = started.elapsed().as_millis() as u64;
+                debug!(
+                    "{}: {} body received ({} bytes)",
+                    context,
+                    url,
+                    text.len()
+                );
                 Ok((url, text, ping_ms))
             }
         })

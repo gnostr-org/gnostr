@@ -36,7 +36,7 @@ pub async fn run_sniper(
     shitlist_path: Option<String>,
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    info!("lib::run_sniper");
+    info!("run_sniper: start nip={nip_lower} shitlist_path={shitlist_path:?}");
 
     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     info!("run_sniper: Finished initial sleep.");
@@ -143,6 +143,7 @@ pub async fn run_sniper(
     }
 
     refresh_nip_bucket(nip_lower);
+    info!("run_sniper: done nip={nip_lower}");
 
     Ok(())
 }

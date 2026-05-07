@@ -39,6 +39,7 @@ pub struct RelayManager {
 
 impl RelayManager {
     pub async fn new(app_keys: Keys, processor: Processor) -> Self {
+        debug!("relay_manager::new");
         let relay_client = Client::new(app_keys);
         let relays_instance = load_relay_sources().await;
 
@@ -74,7 +75,10 @@ impl RelayManager {
     }
 
     pub async fn run(&mut self, bootstrap_relays: Vec<&str>) -> Result<()> {
-        debug!("relay_manager::run");
+        info!(
+            "relay_manager::run: start bootstrap_relays={}",
+            bootstrap_relays.len()
+        );
         self.add_bootstrap_relays_if_needed(bootstrap_relays);
         self.add_some_relays().await?;
 
@@ -94,6 +98,7 @@ impl RelayManager {
         }
         self.connect().await?;
         self.wait_and_handle_messages().await?;
+        info!("relay_manager::run: finished message loop");
         debug!("relay_manager::run::self.relays.dump_list()");
         self.relays.dump_list(); //TODO convert relays.dump_list to relays.yaml write operation
                                  //self.relays.print();
@@ -129,7 +134,7 @@ impl RelayManager {
     }
 
     async fn connect(&mut self) -> Result<()> {
-        debug!("relay_manager::connect");
+        debug!("relay_manager::connect: start");
         let relays = self.relay_client.relays().await;
         info!("Connecting to {} relays ...", relays.len());
         for u in relays.keys() {
@@ -200,6 +205,11 @@ impl RelayManager {
     }
 
     async fn subscribe(&mut self, time_start: Timestamp, time_end: Timestamp) -> Result<()> {
+        debug!(
+            "relay_manager::subscribe start since={} until={}",
+            time_start,
+            time_end
+        );
         self.relay_client
             .subscribe(
                 Filter::new()
@@ -249,6 +259,7 @@ impl RelayManager {
     }
 
     async fn wait_and_handle_messages(&mut self) -> Result<()> {
+        info!("relay_manager::wait_and_handle_messages: start");
         // Keep track of relays with EOSE sent
         let mut eose_relays = HashSet::new();
 
@@ -327,6 +338,7 @@ impl RelayManager {
         }
         self.unsubscribe().await?;
         self.disconnect().await?;
+        info!("relay_manager::wait_and_handle_messages: done");
         Ok(())
     }
 

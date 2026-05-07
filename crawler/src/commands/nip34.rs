@@ -1,10 +1,14 @@
+use log::{debug, info};
+
 use crate::{fetch_relay_texts, load_relays_or_bootstrap, load_shitlist, parse_relay_metadata};
 
 pub async fn run_nip34(
     shitlist_path: Option<String>,
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    info!("run_nip34: start shitlist_path={shitlist_path:?}");
     let relays = load_relays_or_bootstrap();
+    debug!("run_nip34: loaded {} relays", relays.len());
 
     let shitlist = if let Some(path) = shitlist_path {
         match load_shitlist(&path) {
@@ -32,6 +36,7 @@ pub async fn run_nip34(
         .collect();
 
     let bodies = fetch_relay_texts(filtered_relays, client, "run_nip34").await;
+    debug!("run_nip34: fetched relay metadata bodies");
 
     for b in bodies {
         if let Ok((url, json_string, _ping_ms)) = b {
@@ -49,5 +54,6 @@ pub async fn run_nip34(
         }
     }
 
+    info!("run_nip34: done");
     Ok(())
 }

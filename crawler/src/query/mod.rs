@@ -139,6 +139,8 @@ pub async fn send(
     relay_url: Vec<Url>,
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    info!("send: start relays={} limit={limit:?}", relay_url.len());
+    debug!("send: query={query_string}");
     if relay_url.is_empty() {
         return Err(Box::new(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -150,6 +152,7 @@ pub async fn send(
     let mut empty_result: Option<Vec<String>> = None;
 
     for relay in relay_url {
+        debug!("send: trying relay {}", relay);
         match send_to_relay(&relay, &query_string, limit).await {
             Ok(result) => {
                 if result.is_empty() {
@@ -188,6 +191,7 @@ async fn send_to_relay(
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let relay_timeout = Duration::from_secs(1);
+    debug!("send_to_relay: connecting {}", relay);
     let (ws_stream, _) = match timeout(relay_timeout, connect_async(relay.as_str())).await {
         Ok(Ok(result)) => result,
         Ok(Err(err)) => return Err(Box::new(err)),
@@ -199,7 +203,9 @@ async fn send_to_relay(
         }
     };
     let (mut write, mut read) = ws_stream.split();
+    debug!("send_to_relay: connected {}", relay);
     write.send(Message::Text(query_string.into())).await?;
+    debug!("send_to_relay: sent request {}", relay);
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
     let limit = limit.unwrap_or(i32::MAX);
@@ -224,12 +230,18 @@ async fn send_to_relay(
         if let Message::Text(text) = data {
             vec_result.push(text.to_string());
             count += 1;
+            debug!("send_to_relay: {} result count={}", relay, count);
             if count >= limit {
                 return Ok(vec_result);
             }
         }
     }
 
+    debug!(
+        "send_to_relay: done {} results={}",
+        relay,
+        vec_result.len()
+    );
     Ok(vec_result)
 }
 

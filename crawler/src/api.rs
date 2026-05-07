@@ -26,6 +26,10 @@ pub(crate) async fn collect_supported_relays_for_nip(
     nip_lower: i32,
     client: &reqwest::Client,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    debug!(
+        "collect_supported_relays_for_nip: start nip={}",
+        nip_lower
+    );
     let relays = load_relays_or_bootstrap();
     info!(
         "collect_supported_relays_for_nip: checking {} relays for NIP {}",
@@ -177,8 +181,10 @@ pub(crate) async fn refresh_nip_relays_files(
     nip_lower: i32,
     client: &reqwest::Client,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    debug!("refresh_nip_relays_files: start nip={}", nip_lower);
     let relays = collect_supported_relays_for_nip(nip_lower, client).await?;
     let dir = crate::relays::write_nip_relays_serve_files(nip_lower, &relays)?;
+    debug!("refresh_nip_relays_files: done nip={} dir={}", nip_lower, dir.display());
     Ok(dir)
 }
 
