@@ -20,6 +20,9 @@ use serde_json::{self, Result as SerdeJsonResult, Value};
 use ureq::Agent;
 
 use crate::types::{Client, Filter, Id, Keys, Nip19Profile, Options, PrivateKey, PublicKey};
+use crate::utils::detach::{
+    capture_detached_pid, relay_port_is_listening, spawn_detached_current_exe_named,
+};
 
 /// install_rustls_crypto_provider
 pub fn install_rustls_crypto_provider() {
@@ -152,6 +155,19 @@ pub fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowErro
     };
 
     Ok(hex_key_or_id)
+}
+
+pub fn ensure_crawler_serve_running() -> Result<(), AnyhowError> {
+    if relay_port_is_listening(8080) {
+        return Ok(());
+    }
+
+    let pid = spawn_detached_current_exe_named(
+        Some("gnostr-crawler"),
+        ["crawler", "serve", "--port", "8080"],
+    )?;
+    capture_detached_pid("gnostr-crawler", pid)?;
+    Ok(())
 }
 
 pub fn truncate_chars(s: &str, max_chars: usize) -> String {
