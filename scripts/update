@@ -54,11 +54,11 @@ stage_cargo_files() {
     local paths=()
     while IFS= read -r -d '' path; do
         case "$path" in
-            ./vendor/*|vendor/*) continue ;;
+            ./vendor/*|vendor/*|./Cargo.lock|Cargo.lock) continue ;;
         esac
         paths+=("$path")
     done < <(
-        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+        find . \( -path './vendor' -o -path './target' \) -prune -o -name Cargo.toml -print0
     )
 
     if [ "${#paths[@]}" -gt 0 ]; then
