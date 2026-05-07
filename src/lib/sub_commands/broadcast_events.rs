@@ -20,7 +20,7 @@ pub async fn broadcast_events(
     sub_command_args: &BroadcastEventsSubCommand,
 ) -> Result<(), AnyhowError> {
     if relays.is_empty() {
-        relays = crate::load_relays_or_bootstrap()
+        relays = crate::crawler::load_relays_or_bootstrap()
     }
 
     let keys = if nsec.is_none() {
