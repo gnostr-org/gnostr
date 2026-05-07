@@ -65,7 +65,7 @@ cargo_paths() {
         esac
         printf '%s\0' "$path"
     done < <(
-        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
     )
 }
 
@@ -89,8 +89,10 @@ root = os.path.abspath(".")
 paths = []
 for dirpath, dirnames, filenames in os.walk(root):
     dirpath_norm = os.path.abspath(dirpath).replace("\\", "/")
-    dirnames[:] = [name for name in dirnames if name != "vendor"]
+    dirnames[:] = [name for name in dirnames if name not in {"vendor", "target"}]
     if "/vendor/" in dirpath_norm:
+        continue
+    if "/target/" in dirpath_norm:
         continue
     if "Cargo.toml" in filenames:
         paths.append(os.path.join(dirpath, "Cargo.toml"))

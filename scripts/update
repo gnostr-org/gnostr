@@ -58,7 +58,7 @@ stage_cargo_files() {
         esac
         paths+=("$path")
     done < <(
-        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
     )
 
     if [ "${#paths[@]}" -gt 0 ]; then
