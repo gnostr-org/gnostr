@@ -46,14 +46,14 @@ pub async fn launch(args: &QuerySubCommand, private_key: Option<String>) -> anyh
         .filter_map(|s| Url::parse(s).ok())
         .collect();
 
-    println!("Query explicit relays:");
+    debug!("Query explicit relays:");
     for relay in &explicit_relays {
-        println!("  {relay}");
+        debug!("  {relay},");
     }
 
-    println!("Query crawler relays:");
+    debug!("Query crawler relays:");
     for relay in &crawler_relays {
-        println!("  {relay}");
+        debug!("  {relay},");
     }
 
     let mut relays = explicit_relays;
@@ -63,9 +63,9 @@ pub async fn launch(args: &QuerySubCommand, private_key: Option<String>) -> anyh
         }
     }
     let relays = prepend_local_relay(relays);
-    println!("Query final relays:");
+    debug!("Query final relays:");
     for relay in &relays {
-        println!("  {relay}");
+        debug!("  {relay},");
     }
     debug!("Using query relays: {:?}", relays);
     if relays.is_empty() {
@@ -367,6 +367,15 @@ mod tests {
         }
     }
 
+    fn default_test_npub() -> String {
+        crate::types::PrivateKey(
+            crate::git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::NotTracked,
+        )
+        .public_key()
+        .as_bech32_string()
+    }
+
     fn default_test_private_key() -> anyhow::Result<crate::types::PrivateKey> {
         Ok(crate::types::PrivateKey(
             secp256k1::SecretKey::from_slice(&crate::git2::DEFAULT_GNOSTR_PRIVATE_KEY)?,
@@ -638,6 +647,19 @@ mod tests {
             filt.get("kinds").unwrap(),
             &json!([1630, 1632, 1621, 30618, 1633, 1631, 1617, 30617])
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_build_filter_map_with_kind_10002_and_default_npub_author() -> anyhow::Result<()> {
+        let recipient_npub = default_test_npub();
+        let expected_hex = crate::types::PublicKey::try_from_bech32_string(&recipient_npub, false)?
+            .as_hex_string();
+        let args = create_query_subcommand(&["-k", "10002", "-a", &recipient_npub]);
+        let (filt, _) = build_filter_map(&args)?;
+
+        assert_eq!(filt.get("kinds").unwrap(), &json!([10002]));
+        assert_eq!(filt.get("authors").unwrap(), &json!([expected_hex]));
         Ok(())
     }
 
