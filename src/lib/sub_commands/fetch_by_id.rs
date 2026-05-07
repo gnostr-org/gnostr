@@ -34,7 +34,7 @@ pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn s
     };
     let relay_url = match args.relay.clone() {
         Some(u) => u,
-        None => crate::load_relays_or_bootstrap()
+        None => crate::crawler::load_relays_or_bootstrap()
             .first()
             .cloned()
             .unwrap_or_else(|| "wss://relay.damus.io".to_string()),
