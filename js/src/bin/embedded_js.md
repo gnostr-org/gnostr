@@ -17,7 +17,7 @@ This program serves an HTML page with embedded JavaScript assets using `warp`.
    - `index_html_content` embeds those tags into the page template.
 
 4. **Route definition**
-   - `index_html_route` serves the root page (`/`).
+   - `index_html_route` serves the root page at `/`.
    - `js_route` serves files from `/js/<filename>`.
    - If a file is missing, the route returns `warp::reject::not_found()`.
 
@@ -25,3 +25,10 @@ This program serves an HTML page with embedded JavaScript assets using `warp`.
    - `routes` combines the index and JS routes.
    - The server listens on `127.0.0.1:3030`.
    - `warp::serve(routes).run(addr).await;` starts the server.
+
+## Key identifiers
+
+- `get_js_assets()` returns the in-memory asset map.
+- `Arc<HashMap<String, &'static [u8]>>` keeps assets shareable across route handlers.
+- `warp::path::end()` handles the index route.
+- `warp::path!("js" / String)` handles static JS asset lookup.
