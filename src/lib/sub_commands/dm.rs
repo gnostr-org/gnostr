@@ -1,8 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
-use crate::types::{Client, Error, Id, Keys, PublicKey};
+use crate::types::{Client, Error, Event, Id, Keys, PublicKey};
 
 #[cfg(test)]
 const REAL_DM_RELAYS: &[&str] = &["wss://relay.damus.io", "wss://blossom.gnostr.cloud"];
@@ -10,6 +10,12 @@ const REAL_DM_RELAYS: &[&str] = &["wss://relay.damus.io", "wss://blossom.gnostr.
 #[async_trait]
 pub trait DmClientTrait {
     async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error>;
+    fn build_nip44_direct_message_event(
+        &self,
+        recipient_pubkey: PublicKey,
+        message: String,
+    ) -> Result<Event, Error>;
+    async fn send_event(&self, event: Event) -> Result<Id, Error>;
     async fn nip44_direct_message(
         &self,
         recipient_pubkey: PublicKey,
@@ -21,6 +27,18 @@ pub trait DmClientTrait {
 impl DmClientTrait for Client {
     async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error> {
         self.add_relays(relays).await
+    }
+
+    fn build_nip44_direct_message_event(
+        &self,
+        recipient_pubkey: PublicKey,
+        message: String,
+    ) -> Result<Event, Error> {
+        Client::build_nip44_direct_message_event(self, recipient_pubkey, message)
+    }
+
+    async fn send_event(&self, event: Event) -> Result<Id, Error> {
+        self.send_event(event).await
     }
 
     async fn nip44_direct_message(
@@ -36,21 +54,64 @@ pub async fn dm_command(
     client: &impl DmClientTrait,
     recipient_pubkey: PublicKey,
     message: String,
+    verbose: bool,
 ) -> Result<(), Error> {
     info!(
         "Sending NIP-44 direct message to {}",
         recipient_pubkey.as_hex_string()
     );
+    debug!(
+        recipient = %recipient_pubkey.as_hex_string(),
+        message_len = message.len(),
+        verbose,
+        "dm command start"
+    );
 
-    match client.nip44_direct_message(recipient_pubkey, message).await {
-        Ok(event_id) => {
-            info!("Direct message sent successfully! Event ID: {}", event_id);
-            println!("Direct message event id: {}", event_id);
-            Ok(())
+    if verbose {
+        debug!("building dm event for verbose output");
+        let event = client.build_nip44_direct_message_event(recipient_pubkey, message)?;
+        debug!(
+            event_id = %event.id,
+            kind = u32::from(event.kind),
+            content_len = event.content.len(),
+            tags_len = event.tags.len(),
+            "dm event built"
+        );
+        let event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
+        debug!(%event_json, "dm event json");
+        println!("{}", event_json);
+        debug!("sending verbose dm event");
+        match client.send_event(event).await {
+            Ok(event_id) => {
+                debug!(event_id = %event_id, "dm send result: success");
+                info!("Direct message sent successfully! Event ID: {}", event_id);
+                println!("DM send result: success");
+                println!("Direct message event id: {}", event_id);
+                Ok(())
+            }
+            Err(e) => {
+                debug!(error = %e, "dm send result: failure");
+                error!("Failed to send direct message: {}", e);
+                eprintln!("DM send result: failure: {}", e);
+                Err(e)
+            }
         }
-        Err(e) => {
-            error!("Failed to send direct message: {}", e);
-            Err(e)
+    } else {
+        debug!("sending dm through client.nip44_direct_message");
+        match client.nip44_direct_message(recipient_pubkey, message).await {
+            Ok(event_id) => {
+                debug!(event_id = %event_id, "dm send result: success");
+                info!("Direct message sent successfully! Event ID: {}", event_id);
+                println!("DM send result: success");
+                println!("Direct message event id: {}", event_id);
+                Ok(())
+            }
+            Err(e) => {
+                debug!(error = %e, "dm send result: failure");
+                error!("Failed to send direct message: {}", e);
+                eprintln!("DM send result: failure: {}", e);
+                Err(e)
+            }
         }
     }
 }
@@ -75,12 +136,32 @@ mod dm_tests {
         let _ = rustls::crypto::ring::default_provider().install_default();
     }
 
+    fn default_test_npub() -> String {
+        let recipient = PrivateKey(
+            crate::git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::Weak,
+        );
+        recipient.public_key().as_bech32_string()
+    }
+
     struct FailingDmClient;
 
     #[async_trait]
     impl DmClientTrait for FailingDmClient {
         async fn add_relays(&mut self, _relays: Vec<String>) -> Result<(), Error> {
             Ok(())
+        }
+
+        fn build_nip44_direct_message_event(
+            &self,
+            _recipient_pubkey: PublicKey,
+            _message: String,
+        ) -> Result<Event, Error> {
+            Err(Error::Custom("build not implemented for mock".into()))
+        }
+
+        async fn send_event(&self, _event: Event) -> Result<Id, Error> {
+            Err(Error::Custom("send not implemented for mock".into()))
         }
 
         async fn nip44_direct_message(
@@ -125,7 +206,13 @@ mod dm_tests {
 
         // Call the function under test (this will now use the real
         // nip44_direct_message)
-        let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
+        let result = dm_command(
+            &client,
+            recipient_pubkey.clone(),
+            message_content.clone(),
+            false,
+        )
+        .await;
 
         // Assertions
         assert!(result.is_ok());
@@ -151,16 +238,19 @@ mod dm_tests {
             .unwrap();
 
         // Create recipient public key from bech32 string
-        let recipient_pubkey = PublicKey::try_from_bech32_string(
-            "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy",
-            false,
-        )
-        .unwrap();
+        let recipient_pubkey = PublicKey::try_from_bech32_string(&default_test_npub(), false)
+            .unwrap();
 
         let message_content = "gnostr dm sub_command test with bech32 recipient!".to_string();
 
         // Call the function under test
-        let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
+        let result = dm_command(
+            &client,
+            recipient_pubkey.clone(),
+            message_content.clone(),
+            false,
+        )
+        .await;
 
         // Assertions
         assert!(result.is_ok());
@@ -188,7 +278,13 @@ mod dm_tests {
         let message_content = "gnostr dm sub_command test may fail to encrypt!".to_string();
 
         let client = FailingDmClient;
-        let result = dm_command(&client, recipient_pubkey.clone(), message_content.clone()).await;
+        let result = dm_command(
+            &client,
+            recipient_pubkey.clone(),
+            message_content.clone(),
+            false,
+        )
+        .await;
         assert!(result.is_err());
         let actual_error = result.unwrap_err();
         eprintln!("Actual error: {}", actual_error);
