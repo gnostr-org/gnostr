@@ -149,7 +149,6 @@ pub async fn send(
     }
 
     let mut last_error: Option<String> = None;
-    let mut combined_result: Vec<String> = Vec::new();
 
     for relay in relay_url {
         debug!("send: trying relay {}", relay);
@@ -159,17 +158,13 @@ pub async fn send(
                     debug!("relay {} returned no results; trying next relay", relay);
                     continue;
                 }
-                combined_result.extend(result);
+                return Ok(result);
             }
             Err(err) => {
                 debug!("relay {} failed: {}", relay, err);
                 last_error = Some(format!("{}: {}", relay, err));
             }
         }
-    }
-
-    if !combined_result.is_empty() {
-        return Ok(combined_result);
     }
 
     Err(Box::new(io::Error::new(
@@ -208,9 +203,8 @@ async fn send_to_relay(
     write.send(Message::Text(query_string.into())).await?;
     debug!("send_to_relay: sent request {}", relay);
     println!("query relay sent request: {relay}");
-    let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
-    let limit = limit.unwrap_or(i32::MAX);
+    let _limit = limit.unwrap_or(i32::MAX);
 
     loop {
         let message = match timeout(relay_timeout, read.next()).await {
@@ -226,16 +220,16 @@ async fn send_to_relay(
         };
 
         let data = message?;
-        if count >= limit {
-            return Ok(vec_result);
-        }
         if let Message::Text(text) = data {
             println!("query relay frame from {relay}: {text}");
-            vec_result.push(text.to_string());
-            count += 1;
-            debug!("send_to_relay: {} result count={}", relay, count);
-            if count >= limit {
+            if is_event_frame(&text) {
+                vec_result.push(text.to_string());
+                debug!("send_to_relay: {} event received", relay);
                 return Ok(vec_result);
+            }
+            if is_eose_frame(&text) {
+                debug!("send_to_relay: {} eose received; continuing", relay);
+                continue;
             }
         }
     }
@@ -246,6 +240,14 @@ async fn send_to_relay(
         vec_result.len()
     );
     Ok(vec_result)
+}
+
+fn is_event_frame(frame: &str) -> bool {
+    frame.starts_with("[\"EVENT\"")
+}
+
+fn is_eose_frame(frame: &str) -> bool {
+    frame.starts_with("[\"EOSE\"")
 }
 
 #[allow(clippy::too_many_arguments)]
