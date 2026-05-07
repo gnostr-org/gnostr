@@ -220,7 +220,7 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Query(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::query::launch(sub_command_args)
+            sub_commands::query::launch(sub_command_args, gnostr_cli_args.nsec.clone())
                 .await
                 .map_err(|e| anyhow!("Error in query subcommand: {}", e))
         }
