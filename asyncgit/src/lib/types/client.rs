@@ -223,8 +223,12 @@ impl Client {
     /// Add relay URLs to the client.
     pub async fn add_relays(&mut self, relays: Vec<String>) -> Result<(), Error> {
         for relay_str in relays {
+            debug!("add_relays: adding {relay_str}");
             match RelayUrl::try_from_str(&relay_str) {
-                Ok(url) => self.relays.push(url),
+                Ok(url) => {
+                    debug!("add_relays: accepted {}", url);
+                    self.relays.push(url)
+                }
                 Err(e) => return Err(Error::Custom(e.into())),
             }
         }
@@ -463,6 +467,17 @@ impl Client {
 
     /// Serialize and send an event to each configured relay.
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
+        println!(
+            "send_event: start event={} relays={}",
+            event.id,
+            self.relays.len()
+        );
+        debug!(
+            "send_event: start id={} kind={:?} relays={}",
+            event.id,
+            event.kind,
+            self.relays.len()
+        );
         append_broadcast_log(&format!(
             "sending event {} to {} relays",
             event.id,
@@ -470,7 +485,8 @@ impl Client {
         ));
 
         // Serialize event to JSON
-        let _event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
+        let event_json = serde_json::to_string(&event).map_err(|e| Error::Custom(e.into()))?;
+        debug!("send_event: event_json={}", event_json);
         append_broadcast_log(&format!(
             "serialized event {} for {} relays",
             event.id,
@@ -494,22 +510,38 @@ impl Client {
             let message_json = message_json.clone();
             let event_id = event.id;
             async move {
+                println!("send_event: trying relay {ws_url} for event {event_id}");
+                debug!("send_event: trying relay {ws_url} for event {event_id}");
                 append_broadcast_log(&format!("connecting relay {ws_url}"));
 
                 match timeout(relay_timeout, async {
                     match connect_async(&ws_url).await {
                         Ok((ws_stream, _)) => {
+                            println!("send_event: connected relay {ws_url} for event {event_id}");
+                            debug!("send_event: connected relay {ws_url} for event {event_id}");
                             let (mut ws_write, _) = ws_stream.split();
 
                             if let Err(e) = ws_write
                                 .send(WsMessage::Text(message_json.clone().into()))
                                 .await
                             {
+                                eprintln!(
+                                    "send_event: relay {ws_url} failed for event {event_id}: {e}"
+                                );
+                                debug!(
+                                    "send_event: relay {ws_url} failed for event {event_id}: {e}"
+                                );
                                 append_broadcast_log(&format!(
                                     "broadcast failed relay={ws_url} error={e}"
                                 ));
                                 false
                             } else {
+                                println!(
+                                    "send_event: relay {ws_url} succeeded for event {event_id}"
+                                );
+                                debug!(
+                                    "send_event: relay {ws_url} succeeded for event {event_id}"
+                                );
                                 append_broadcast_log(&format!(
                                     "broadcast succeeded relay={ws_url} event={event_id}"
                                 ));
@@ -517,6 +549,12 @@ impl Client {
                             }
                         }
                         Err(e) => {
+                            eprintln!(
+                                "send_event: relay {ws_url} connect failed for event {event_id}: {e}"
+                            );
+                            debug!(
+                                "send_event: relay {ws_url} connect failed for event {event_id}: {e}"
+                            );
                             append_broadcast_log(&format!(
                                 "broadcast failed relay={ws_url} error={e}"
                             ));
@@ -528,6 +566,14 @@ impl Client {
                 {
                     Ok(sent) => sent,
                     Err(_) => {
+                        eprintln!(
+                            "send_event: relay {ws_url} timed out for event {event_id} after {}s",
+                            relay_timeout.as_secs_f32()
+                        );
+                        debug!(
+                            "send_event: relay {ws_url} timed out for event {event_id} after {}s",
+                            relay_timeout.as_secs_f32()
+                        );
                         append_broadcast_log(&format!(
                             "broadcast failed relay={ws_url} timeout={}s",
                             relay_timeout.as_secs_f32()
@@ -542,8 +588,12 @@ impl Client {
         .await;
 
         if results.into_iter().any(|sent| sent) {
+            println!("send_event: success event={}", event.id);
+            debug!("send_event: success id={}", event.id);
             Ok(event.id)
         } else {
+            eprintln!("send_event: failure event={}", event.id);
+            debug!("send_event: failure id={}", event.id);
             Err(Error::Custom(
                 "Failed to send event to any configured relay.".into(),
             ))
