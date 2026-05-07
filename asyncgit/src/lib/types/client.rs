@@ -538,7 +538,7 @@ impl Client {
 
     /// Serialize and send an event to each configured relay.
     pub async fn send_event(&self, event: Event) -> Result<Id, Error> {
-        println!(
+        debug!(
             "send_event: start event={} relays={}",
             event.id,
             self.relays.len()
@@ -581,14 +581,12 @@ impl Client {
             let message_json = message_json.clone();
             let event_id = event.id;
             async move {
-                println!("send_event: trying relay {ws_url} for event {event_id}");
                 debug!("send_event: trying relay {ws_url} for event {event_id}");
                 append_broadcast_log(&format!("connecting relay {ws_url}"));
 
                 match timeout(relay_timeout, async {
                     match connect_async(&ws_url).await {
                         Ok((ws_stream, _)) => {
-                            println!("send_event: connected relay {ws_url} for event {event_id}");
                             debug!("send_event: connected relay {ws_url} for event {event_id}");
                             let (mut ws_write, _) = ws_stream.split();
 
@@ -608,9 +606,6 @@ impl Client {
                                 ));
                                 false
                             } else {
-                                println!(
-                                    "send_event: relay {ws_url} succeeded for event {event_id}"
-                                );
                                 debug!(
                                     "send_event: relay {ws_url} succeeded for event {event_id}"
                                 );
@@ -662,7 +657,6 @@ impl Client {
         .await;
 
         if results.into_iter().any(|sent| sent) {
-            println!("send_event: success event={}", event.id);
             debug!("send_event: success id={}", event.id);
             Ok(event.id)
         } else {
