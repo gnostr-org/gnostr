@@ -149,7 +149,7 @@ pub async fn send(
     }
 
     let mut last_error: Option<String> = None;
-    let mut empty_result: Option<Vec<String>> = None;
+    let mut combined_result: Vec<String> = Vec::new();
 
     for relay in relay_url {
         debug!("send: trying relay {}", relay);
@@ -157,10 +157,9 @@ pub async fn send(
             Ok(result) => {
                 if result.is_empty() {
                     debug!("relay {} returned no results; trying next relay", relay);
-                    empty_result = Some(result);
                     continue;
                 }
-                return Ok(result);
+                combined_result.extend(result);
             }
             Err(err) => {
                 debug!("relay {} failed: {}", relay, err);
@@ -169,8 +168,8 @@ pub async fn send(
         }
     }
 
-    if let Some(result) = empty_result {
-        return Ok(result);
+    if !combined_result.is_empty() {
+        return Ok(combined_result);
     }
 
     Err(Box::new(io::Error::new(
@@ -191,6 +190,7 @@ async fn send_to_relay(
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let relay_timeout = Duration::from_secs(1);
+    println!("query relay: {relay}");
     debug!("send_to_relay: connecting {}", relay);
     let (ws_stream, _) = match timeout(relay_timeout, connect_async(relay.as_str())).await {
         Ok(Ok(result)) => result,
@@ -204,8 +204,10 @@ async fn send_to_relay(
     };
     let (mut write, mut read) = ws_stream.split();
     debug!("send_to_relay: connected {}", relay);
+    println!("query relay connected: {relay}");
     write.send(Message::Text(query_string.into())).await?;
     debug!("send_to_relay: sent request {}", relay);
+    println!("query relay sent request: {relay}");
     let mut count: i32 = 0;
     let mut vec_result: Vec<String> = vec![];
     let limit = limit.unwrap_or(i32::MAX);
@@ -228,6 +230,7 @@ async fn send_to_relay(
             return Ok(vec_result);
         }
         if let Message::Text(text) = data {
+            println!("query relay frame from {relay}: {text}");
             vec_result.push(text.to_string());
             count += 1;
             debug!("send_to_relay: {} result count={}", relay, count);
