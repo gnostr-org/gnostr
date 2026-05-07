@@ -185,7 +185,7 @@ async fn send_to_relay(
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let relay_timeout = Duration::from_secs(1);
-    println!("query relay: {relay}");
+    debug!("query relay: {relay}");
     debug!("send_to_relay: connecting {}", relay);
     let (ws_stream, _) = match timeout(relay_timeout, connect_async(relay.as_str())).await {
         Ok(Ok(result)) => result,
@@ -204,7 +204,7 @@ async fn send_to_relay(
     debug!("send_to_relay: sent request {}", relay);
     println!("query relay sent request: {relay}");
     let mut vec_result: Vec<String> = vec![];
-    let _limit = limit.unwrap_or(i32::MAX);
+    let limit = limit.unwrap_or(i32::MAX);
 
     loop {
         let message = match timeout(relay_timeout, read.next()).await {
@@ -224,12 +224,19 @@ async fn send_to_relay(
             println!("query relay frame from {relay}: {text}");
             if is_event_frame(&text) {
                 vec_result.push(text.to_string());
-                debug!("send_to_relay: {} event received", relay);
-                return Ok(vec_result);
+                debug!(
+                    "send_to_relay: {} event received count={}",
+                    relay,
+                    vec_result.len()
+                );
+                if vec_result.len() as i32 >= limit {
+                    return Ok(vec_result);
+                }
+                continue;
             }
             if is_eose_frame(&text) {
                 debug!("send_to_relay: {} eose received; continuing", relay);
-                continue;
+                return Ok(vec_result);
             }
         }
     }
