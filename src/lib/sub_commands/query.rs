@@ -314,7 +314,9 @@ fn parse_relays(relay_args: &[String]) -> anyhow::Result<Vec<Url>> {
 mod tests {
     use clap::{Parser, Subcommand};
     use serde_json::json;
+    use std::time::Duration;
     use std::sync::Once;
+    use serial_test::serial;
 
     use super::*;
 
@@ -347,6 +349,49 @@ mod tests {
         match cli.command {
             Commands::Query(query_subcommand) => query_subcommand,
         }
+    }
+
+    fn default_test_private_key() -> anyhow::Result<crate::types::PrivateKey> {
+        Ok(crate::types::PrivateKey(
+            secp256k1::SecretKey::from_slice(&crate::git2::DEFAULT_GNOSTR_PRIVATE_KEY)?,
+            crate::types::KeySecurity::NotTracked,
+        ))
+    }
+
+    fn real_network_relays() -> Vec<Url> {
+        [
+            "wss://relay.damus.io",
+            "wss://nos.lol",
+            "wss://blossom.gnostr.cloud",
+        ]
+        .iter()
+        .filter_map(|relay| Url::parse(relay).ok())
+        .collect()
+    }
+
+    async fn wait_for_event_frame(event_id: &str, relays: &[Url]) -> anyhow::Result<String> {
+        let query = serde_json::json!([
+            "REQ",
+            "gnostr-query",
+            {
+                "ids": [event_id],
+                "limit": 1
+            }
+        ])
+        .to_string();
+
+        for _ in 0..8 {
+            let frames = crate::query::send(query.clone(), relays.to_vec(), Some(1)).await?;
+            if let Some(frame) = frames
+                .into_iter()
+                .find(|frame| frame.starts_with("[\"EVENT\"") && frame.contains(event_id))
+            {
+                return Ok(frame);
+            }
+            tokio::time::sleep(Duration::from_secs(2)).await;
+        }
+
+        Err(anyhow::anyhow!("event {event_id} was not observed on the network"))
     }
 
     // Helper function to launch a query with a specific relay
@@ -682,6 +727,84 @@ mod tests {
         let decrypted = decrypt_result_frame(serde_json::to_string(&frame)?, &recipient_privkey)?;
         let value: serde_json::Value = serde_json::from_str(&decrypted)?;
         assert_eq!(value[2]["content"], serde_json::json!("secret note 44"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore]
+    #[serial]
+    async fn test_real_network_roundtrip_kind4_with_default_key() -> anyhow::Result<()> {
+        setup_rustls();
+        let sender_privkey = default_test_private_key()?;
+        let recipient_pubkey = sender_privkey.public_key();
+        let relays = real_network_relays();
+        let mut client = crate::types::Client::new(
+            &crate::types::Keys::new(sender_privkey.clone()),
+            crate::types::Options::new()
+                .send_timeout(Some(Duration::from_secs(15)))
+                .wait_for_send(true),
+        );
+        client
+            .add_relays(relays.iter().map(|relay| relay.as_str().to_string()).collect())
+            .await?;
+
+        let plaintext = "real kind 4 roundtrip";
+        let encrypted = sender_privkey.encrypt(
+            &recipient_pubkey,
+            plaintext,
+            crate::types::ContentEncryptionAlgorithm::Nip04,
+        )?;
+        let event = crate::types::EventBuilder::new(
+            crate::types::EventKind::EncryptedDirectMessage,
+            encrypted,
+            vec![crate::types::Tag::new_pubkey(recipient_pubkey, None, None)],
+        )
+        .to_event(&sender_privkey)?;
+
+        let event_id = client.send_event(event).await?;
+        let frame = wait_for_event_frame(&event_id.to_string(), &relays).await?;
+        let decrypted = decrypt_result_frame(frame, &sender_privkey)?;
+        assert!(decrypted.contains(plaintext));
+        assert!(decrypted.contains("\"kind\":4"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore]
+    #[serial]
+    async fn test_real_network_roundtrip_kind44_with_default_key() -> anyhow::Result<()> {
+        setup_rustls();
+        let sender_privkey = default_test_private_key()?;
+        let recipient_pubkey = sender_privkey.public_key();
+        let relays = real_network_relays();
+        let mut client = crate::types::Client::new(
+            &crate::types::Keys::new(sender_privkey.clone()),
+            crate::types::Options::new()
+                .send_timeout(Some(Duration::from_secs(15)))
+                .wait_for_send(true),
+        );
+        client
+            .add_relays(relays.iter().map(|relay| relay.as_str().to_string()).collect())
+            .await?;
+
+        let plaintext = "real kind 44 roundtrip";
+        let encrypted = sender_privkey.encrypt(
+            &recipient_pubkey,
+            plaintext,
+            crate::types::ContentEncryptionAlgorithm::Nip44v2,
+        )?;
+        let event = crate::types::EventBuilder::new(
+            crate::types::EventKind::ChannelMuteUser,
+            encrypted,
+            vec![crate::types::Tag::new_pubkey(recipient_pubkey, None, None)],
+        )
+        .to_event(&sender_privkey)?;
+
+        let event_id = client.send_event(event).await?;
+        let frame = wait_for_event_frame(&event_id.to_string(), &relays).await?;
+        let decrypted = decrypt_result_frame(frame, &sender_privkey)?;
+        assert!(decrypted.contains(plaintext));
+        assert!(decrypted.contains("\"kind\":44"));
         Ok(())
     }
 
