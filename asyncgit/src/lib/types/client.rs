@@ -63,6 +63,12 @@ fn crawler_shitlist_path() -> Result<PathBuf, Error> {
     Ok(dirs.config_dir().join("shitlist.yaml"))
 }
 
+fn crawler_recent_path() -> Result<PathBuf, Error> {
+    let dirs = directories::ProjectDirs::from("org", "gnostr", "gnostr/crawler")
+        .ok_or_else(|| Error::Custom("failed to resolve gnostr crawler config directory".into()))?;
+    Ok(dirs.config_dir().join("recent").join("relays.txt"))
+}
+
 fn append_broadcast_log(line: &str) {
     let path = match broadcast_log_path() {
         Ok(path) => path,
@@ -102,6 +108,35 @@ fn append_relay_to_crawler_shitlist(relay_url: &str) -> Result<(), Error> {
         relays.dedup();
         fs::write(&path, relays.join("\n")).map_err(|e| Error::Custom(e.into()))?;
         debug!("appended relay to crawler shitlist: {}", relay_url);
+    }
+
+    Ok(())
+}
+
+fn append_relay_to_crawler_recent(relay_url: &str) -> Result<(), Error> {
+    let relay_url = Url::parse(relay_url).map_err(|e| Error::Custom(e.into()))?;
+    let path = crawler_recent_path()?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| Error::Custom(e.into()))?;
+    }
+
+    let mut relays: Vec<String> = match fs::read_to_string(&path) {
+        Ok(contents) => contents
+            .split_whitespace()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+
+    let relay_text = relay_url.to_string();
+    if !relays.iter().any(|entry| entry == &relay_text) {
+        relays.push(relay_text);
+        relays.sort();
+        relays.dedup();
+        fs::write(&path, relays.join("\n")).map_err(|e| Error::Custom(e.into()))?;
+        debug!("appended relay to crawler recent list: {}", relay_url);
     }
 
     Ok(())
@@ -579,6 +614,7 @@ impl Client {
                                 debug!(
                                     "send_event: relay {ws_url} succeeded for event {event_id}"
                                 );
+                                let _ = append_relay_to_crawler_recent(&ws_url);
                                 append_broadcast_log(&format!(
                                     "broadcast succeeded relay={ws_url} event={event_id}"
                                 ));
