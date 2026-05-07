@@ -527,87 +527,98 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let sender_keys = Keys::new(PrivateKey::try_from_hex_string(
-                &gnostr_cli_args
-                    .nsec
-                    .ok_or_else(|| anyhow!("nsec not provided"))?,
-            )?);
-            let mut client = gnostr::types::client::Client::new(
-                &sender_keys,
-                gnostr::types::client::Options::new(),
-            );
             // Try to parse the recipient string as a PublicKey
             let recipient_pubkey =
                 PublicKey::try_from_bech32_string(&sub_command_args.recipient, false)
                     .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
                     .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
-            let bootstrap_relays = gnostr::crawler::bootstrap_relays();
-            println!("DM bootstrap relays:");
-            for relay in &bootstrap_relays {
-                println!("  {relay}");
-            }
-            debug!("DM bootstrap relays: {:?}", bootstrap_relays);
-            debug!(
-                "DM querying bootstrap relays for recipient NIP-65 relay list: {}",
-                recipient_pubkey.as_hex_string()
-            );
-            let preferred_relays = match sub_commands::dm::recipient_preferred_relays(
-                &sender_keys,
-                recipient_pubkey,
-                bootstrap_relays,
-            )
-            .await
-            {
-                Ok(relays) => relays,
-                Err(err) => {
-                    eprintln!("DM preferred relay lookup failed: {err}");
-                    debug!("DM preferred relay lookup failed: {err}");
-                    Vec::new()
-                }
-            };
-            println!("DM recipient preferred relays:");
-            if preferred_relays.is_empty() {
-                println!("  (none found)");
-            } else {
-                for relay in &preferred_relays {
+            if let Some(message) = sub_command_args.message.clone() {
+                let sender_keys = Keys::new(PrivateKey::try_from_hex_string(
+                    &gnostr_cli_args
+                        .nsec
+                        .ok_or_else(|| anyhow!("nsec not provided"))?,
+                )?);
+                let mut client = gnostr::types::client::Client::new(
+                    &sender_keys,
+                    gnostr::types::client::Options::new(),
+                );
+
+                let bootstrap_relays = gnostr::crawler::bootstrap_relays();
+                println!("DM bootstrap relays:");
+                for relay in &bootstrap_relays {
                     println!("  {relay}");
                 }
-            }
+                debug!("DM bootstrap relays: {:?}", bootstrap_relays);
+                debug!(
+                    "DM querying bootstrap relays for recipient NIP-65 relay list: {}",
+                    recipient_pubkey.as_hex_string()
+                );
+                let preferred_relays = match sub_commands::dm::recipient_preferred_relays(
+                    &sender_keys,
+                    recipient_pubkey,
+                    bootstrap_relays,
+                )
+                .await
+                {
+                    Ok(relays) => relays,
+                    Err(err) => {
+                        eprintln!("DM preferred relay lookup failed: {err}");
+                        debug!("DM preferred relay lookup failed: {err}");
+                        Vec::new()
+                    }
+                };
+                println!("DM recipient preferred relays:");
+                if preferred_relays.is_empty() {
+                    println!("  (none found)");
+                } else {
+                    for relay in &preferred_relays {
+                        println!("  {relay}");
+                    }
+                }
 
-            debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
-            debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
-            println!("DM explicit relays:");
-            for relay in &sub_command_args.relay {
-                println!("  {relay}");
-            }
-            let crawler_relays = gnostr::crawler::load_relays_or_bootstrap();
-            println!("DM crawler relays:");
-            for relay in &crawler_relays {
-                println!("  {relay}");
-            }
-            let relays_to_use = merge_dm_relays(
-                preferred_relays,
-                sub_command_args.relay.clone(),
-                crawler_relays,
-                gnostr_cli_args.relays.clone(),
-            );
-            println!("DM final relays:");
-            for relay in &relays_to_use {
-                println!("  {relay}");
-            }
-            debug!("relays_to_use: {:?}", relays_to_use);
+                debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
+                debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
+                println!("DM explicit relays:");
+                for relay in &sub_command_args.relay {
+                    println!("  {relay}");
+                }
+                let crawler_relays = gnostr::crawler::load_relays_or_bootstrap();
+                println!("DM crawler relays:");
+                for relay in &crawler_relays {
+                    println!("  {relay}");
+                }
+                let relays_to_use = merge_dm_relays(
+                    preferred_relays,
+                    sub_command_args.relay.clone(),
+                    crawler_relays,
+                    gnostr_cli_args.relays.clone(),
+                );
+                println!("DM final relays:");
+                for relay in &relays_to_use {
+                    println!("  {relay}");
+                }
+                debug!("relays_to_use: {:?}", relays_to_use);
 
-            client.add_relays(relays_to_use).await?;
+                client.add_relays(relays_to_use).await?;
 
-            sub_commands::dm::dm_command(
-                &client,
-                recipient_pubkey,
-                sub_command_args.message.clone(),
-                sub_command_args.verbose > 0,
-            )
-            .await
-            .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
+                sub_commands::dm::dm_command(&client, recipient_pubkey, message, sub_command_args.verbose > 0)
+                    .await
+                    .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
+            } else {
+                debug!(
+                    recipient = %recipient_pubkey.as_hex_string(),
+                    "DM no message supplied; switching to inbox query mode"
+                );
+                let mut query_args = gnostr::query::cli::QuerySubCommand::default();
+                query_args.relay = sub_command_args.relay.clone();
+                query_args.mentions = Some(recipient_pubkey.as_hex_string());
+                query_args.kinds = Some("4,44".to_string());
+                query_args.limit = Some(sub_command_args.limit.unwrap_or(100));
+                sub_commands::query::launch(&query_args, gnostr_cli_args.nsec.clone())
+                    .await
+                    .map_err(|e| anyhow!("Error in dm inbox query: {}", e))
+            }
         }
         Some(GnostrCommands::PrivkeyToBech32(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
