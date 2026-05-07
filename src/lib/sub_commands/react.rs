@@ -32,7 +32,7 @@ pub async fn react_to_event(
     sub_command_args: &ReactionSubCommand,
 ) -> Result<(), Error> {
     if relays.is_empty() {
-        relays = crate::load_relays_or_bootstrap();
+        relays = crate::crawler::load_relays_or_bootstrap();
     }
 
     let keys = parse_private_key(private_key, false).await?;
