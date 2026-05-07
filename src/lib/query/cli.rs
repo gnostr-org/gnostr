@@ -39,7 +39,7 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
             Arg::new("kinds")
                 .short('k')
                 .long("kinds")
-                .default_value("1630,1632,1621,30618,1633,1631,1617,30617")
+                .default_value("4,44,1630,1632,1621,30618,1633,1631,1617,30617")
                 .help("Comma-separated list of kinds (integers)"),
         )
         .arg(
@@ -94,7 +94,7 @@ pub struct QuerySubCommand {
     #[arg(
         short = 'k',
         long,
-        default_value = "1630,1632,1621,30618,1633,1631,1617,30617"
+        default_value = "4,44,1630,1632,1621,30618,1633,1631,1617,30617"
     )]
     pub kinds: Option<String>,
     #[arg(short, long)]
