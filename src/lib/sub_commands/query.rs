@@ -8,7 +8,8 @@ use url::Url;
 pub use crate::query::cli::QuerySubCommand;
 
 /// Handles the 'query' subcommand functionality.
-/// It takes the parsed command-line arguments and executes the query.
+/// It takes the parsed command-line arguments, normalizes NIP-19 ids to hex,
+/// and queries the live crawler relay when no explicit relay is supplied.
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     crate::utils::ensure_crawler_serve_running()?;
     let (filt, limit_check) = build_filter_map(args)?;
