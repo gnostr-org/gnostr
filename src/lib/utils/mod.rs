@@ -129,6 +129,7 @@ pub async fn create_client(
     Ok(client)
 }
 
+/// Convert NIP-19 ids or nostr URLs into hex, preserving raw hex inputs.
 pub fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowError> {
     let input = input.trim();
     let input = if let Some(rest) = input.strip_prefix("nostr://") {
@@ -157,6 +158,7 @@ pub fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowErro
     Ok(hex_key_or_id)
 }
 
+/// Ensure the local crawler relay is running on `ws://127.0.0.1:8080`.
 pub fn ensure_crawler_serve_running() -> Result<(), AnyhowError> {
     if relay_port_is_listening(8080) {
         return Ok(());
