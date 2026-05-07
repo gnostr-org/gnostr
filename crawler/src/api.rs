@@ -947,7 +947,7 @@ pub(crate) async fn get_nip_query(
     let kinds = params
         .get("kinds")
         .map(String::as_str)
-        .or(Some("1630,1632,1621,30618,1633,1631,1617,30617"));
+        .or(Some("4,44,1630,1632,1621,30618,1633,1631,1617,30617"));
     let search = params
         .get("search")
         .map(String::as_str)

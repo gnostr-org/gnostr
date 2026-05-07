@@ -178,14 +178,20 @@ pub fn append_recent_relay(relay: &str) -> std::io::Result<PathBuf> {
 
     let relay = match Url::parse(relay) {
         Ok(url) => url.to_string(),
-        Err(_) => return Ok(config_dir),
+        Err(_) => {
+            debug!("append_recent_relay: skipping invalid relay={relay}");
+            return Ok(config_dir);
+        }
     };
 
     if !relays.iter().any(|existing| existing == &relay) {
+        debug!("append_recent_relay: appending relay={} bucket=recent", relay);
         relays.push(relay);
         relays.sort();
         relays.dedup();
         write_bucket_serve_files("recent", &relays)?;
+    } else {
+        debug!("append_recent_relay: relay already present bucket=recent relay={relay}");
     }
 
     Ok(config_dir)
