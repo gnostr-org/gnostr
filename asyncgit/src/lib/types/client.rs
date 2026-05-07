@@ -43,6 +43,7 @@ use tokio_tungstenite::{
     connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
 };
 use tracing::{debug, info, warn};
+use url::Url;
 
 use crate::types::{
     private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
@@ -54,6 +55,12 @@ fn broadcast_log_path() -> Result<PathBuf, Error> {
     let dirs = directories::ProjectDirs::from("org", "gnostr", "gnostr")
         .ok_or_else(|| Error::Custom("failed to resolve gnostr app data directory".into()))?;
     Ok(dirs.data_local_dir().join("asyncgit/broadcast.log"))
+}
+
+fn crawler_shitlist_path() -> Result<PathBuf, Error> {
+    let dirs = directories::ProjectDirs::from("org", "gnostr", "gnostr/crawler")
+        .ok_or_else(|| Error::Custom("failed to resolve gnostr crawler config directory".into()))?;
+    Ok(dirs.config_dir().join("shitlist.yaml"))
 }
 
 fn append_broadcast_log(line: &str) {
@@ -69,6 +76,35 @@ fn append_broadcast_log(line: &str) {
     if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
         let _ = writeln!(file, "{line}");
     }
+}
+
+fn append_relay_to_crawler_shitlist(relay_url: &str) -> Result<(), Error> {
+    let relay_url = Url::parse(relay_url).map_err(|e| Error::Custom(e.into()))?;
+    let path = crawler_shitlist_path()?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| Error::Custom(e.into()))?;
+    }
+
+    let mut relays: Vec<String> = match fs::read_to_string(&path) {
+        Ok(contents) => contents
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+
+    let relay_text = relay_url.to_string();
+    if !relays.iter().any(|entry| entry == &relay_text) {
+        relays.push(relay_text);
+        relays.sort();
+        relays.dedup();
+        fs::write(&path, relays.join("\n")).map_err(|e| Error::Custom(e.into()))?;
+        debug!("appended relay to crawler shitlist: {}", relay_url);
+    }
+
+    Ok(())
 }
 
 /// Return locally configured relay endpoints for this machine.
@@ -531,6 +567,7 @@ impl Client {
                                 debug!(
                                     "send_event: relay {ws_url} failed for event {event_id}: {e}"
                                 );
+                                let _ = append_relay_to_crawler_shitlist(&ws_url);
                                 append_broadcast_log(&format!(
                                     "broadcast failed relay={ws_url} error={e}"
                                 ));
@@ -555,6 +592,7 @@ impl Client {
                             debug!(
                                 "send_event: relay {ws_url} connect failed for event {event_id}: {e}"
                             );
+                            let _ = append_relay_to_crawler_shitlist(&ws_url);
                             append_broadcast_log(&format!(
                                 "broadcast failed relay={ws_url} error={e}"
                             ));
