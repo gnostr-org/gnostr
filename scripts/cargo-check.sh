@@ -11,7 +11,15 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
+cargo_jobs() {
+  local jobs
+  jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+  jobs=$((jobs - 1))
+  if [ "$jobs" -lt 1 ]; then
+    jobs=1
+  fi
+  printf '%s\n' "$jobs"
+}
 LIST_ONLY=false
 RUN_ALL=true
 FEATURES=()
@@ -74,7 +82,7 @@ run_check() {
   shift
 
   printf '==> %s\n' "$label"
-  cargo check -j"$NPROC" "$@"
+  cargo check -j"$(cargo_jobs)" "$@"
 }
 
 add_package() {

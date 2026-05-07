@@ -13,7 +13,15 @@ cd "$ROOT_DIR"
 
 export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
 
-NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
+cargo_jobs() {
+  local jobs
+  jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+  jobs=$((jobs - 1))
+  if [ "$jobs" -lt 1 ]; then
+    jobs=1
+  fi
+  printf '%s\n' "$jobs"
+}
 TEST_FLAGS=()
 FEATURES=()
 PACKAGES=()
