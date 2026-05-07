@@ -395,7 +395,7 @@ mod tests {
                 assert_eq!(args.message, "hello");
                 assert_eq!(args.relay, vec!["wss://relay.damus.io".to_string()]);
             }
-            other => panic!("expected dm command, got {other:?}"),
+            _ => panic!("expected dm command"),
         }
     }
 }
