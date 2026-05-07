@@ -1,8 +1,13 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use async_trait::async_trait;
 use tracing::{debug, error, info};
 
-use crate::types::{Client, Error, Event, Id, Keys, PublicKey};
+use crate::types::{
+    Client, Error, Event, EventKind, Filter, Id, Keys, PublicKey, PublicKeyHex, RelayList,
+    RelayListUsage,
+};
 
 #[cfg(test)]
 const REAL_DM_RELAYS: &[&str] = &["wss://relay.damus.io", "wss://blossom.gnostr.cloud"];
@@ -116,16 +121,96 @@ pub async fn dm_command(
     }
 }
 
+pub async fn recipient_preferred_relays(
+    keys: &Keys,
+    recipient_pubkey: PublicKey,
+    bootstrap_relays: Vec<String>,
+) -> Result<Vec<String>, Error> {
+    if bootstrap_relays.is_empty() {
+        debug!(
+            recipient = %recipient_pubkey.as_hex_string(),
+            "DM bootstrap relay list is empty; skipping NIP-65 relay lookup"
+        );
+        return Ok(Vec::new());
+    }
+
+    debug!(
+        recipient = %recipient_pubkey.as_hex_string(),
+        bootstrap_relays = ?bootstrap_relays,
+        "DM querying bootstrap relays for recipient NIP-65 relay list"
+    );
+
+    let mut client = Client::new(keys, crate::types::client::Options::new());
+    client.add_relays(bootstrap_relays).await?;
+
+    let recipient_pubkey_hex: PublicKeyHex = recipient_pubkey.into();
+    let mut filter = Filter::new();
+    filter.add_author(&recipient_pubkey_hex);
+    filter.add_event_kind(EventKind::RelayList);
+    filter.limit = Some(1);
+
+    let events = client
+        .get_events_of(vec![filter], Some(Duration::from_secs(10)))
+        .await?;
+
+    debug!(
+        recipient = %recipient_pubkey_hex,
+        event_count = events.len(),
+        "DM bootstrap query completed"
+    );
+
+    let Some(event) = events.into_iter().max_by_key(|event| event.created_at) else {
+        debug!(
+            recipient = %recipient_pubkey_hex,
+            "DM bootstrap query returned no NIP-65 relay list events"
+        );
+        return Ok(Vec::new());
+    };
+
+    let relay_list = RelayList::from_event(&event);
+    let relays = relay_list_to_preferred_urls(&relay_list);
+    debug!(
+        recipient = %recipient_pubkey_hex,
+        relays = ?relays,
+        "DM extracted preferred relays from NIP-65 relay list"
+    );
+    Ok(relays)
+}
+
+fn relay_list_to_preferred_urls(relay_list: &RelayList) -> Vec<String> {
+    let mut all_relays = Vec::new();
+    let mut write_relays = Vec::new();
+
+    for (relay_url, usage) in &relay_list.0 {
+        let relay = relay_url.as_str().to_string();
+        all_relays.push(relay.clone());
+        if matches!(usage, RelayListUsage::Outbox | RelayListUsage::Both) {
+            write_relays.push(relay);
+        }
+    }
+
+    let mut relays = if write_relays.is_empty() {
+        all_relays
+    } else {
+        write_relays
+    };
+    relays.sort();
+    relays.dedup();
+    relays
+}
+
 #[cfg(test)]
 mod dm_tests {
     use base64::Engine;
+    use std::collections::HashMap;
     use serial_test::serial;
     use tokio;
 
     use super::*;
     use crate::types::{
         client::{Client, Options},
-        ContentEncryptionAlgorithm, Keys, PrivateKey,
+        ContentEncryptionAlgorithm, EventBuilder, EventKind, Keys, PrivateKey, RelayList,
+        RelayListUsage, Tag, UncheckedUrl,
     };
 
     fn log_relays(label: &str, relays: &[&str]) {
@@ -142,6 +227,63 @@ mod dm_tests {
             crate::types::KeySecurity::Weak,
         );
         recipient.public_key().as_bech32_string()
+    }
+
+    #[test]
+    fn test_relay_list_to_preferred_urls_prefers_write_relays() {
+        let signing_key = PrivateKey::try_from_hex_string(crate::test_utils::TEST_KEY_1_SK_HEX)
+            .unwrap();
+        let relay_list = RelayList::from_event(
+            &EventBuilder::new(
+                EventKind::RelayList,
+                "".to_string(),
+                vec![
+                    Tag::new_relay(UncheckedUrl("ws://localhost:8053".to_string()), None),
+                    Tag::new_relay(
+                        UncheckedUrl("ws://localhost:8054".to_string()),
+                        Some("read".to_string()),
+                    ),
+                    Tag::new_relay(
+                        UncheckedUrl("ws://localhost:8055".to_string()),
+                        Some("write".to_string()),
+                    ),
+                ],
+            )
+            .to_event(&signing_key)
+            .unwrap(),
+        );
+        let relays = relay_list_to_preferred_urls(&relay_list);
+
+        assert_eq!(
+            relays,
+            vec![
+                "ws://localhost:8053".to_string(),
+                "ws://localhost:8055".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_relay_list_to_preferred_urls_falls_back_to_all_relays() {
+        let mut relays = HashMap::new();
+        relays.insert(
+            crate::types::RelayUrl::try_from_str("ws://localhost:8054").unwrap(),
+            RelayListUsage::Inbox,
+        );
+        relays.insert(
+            crate::types::RelayUrl::try_from_str("ws://localhost:8055").unwrap(),
+            RelayListUsage::Inbox,
+        );
+        let relay_list = RelayList(relays);
+        let urls = relay_list_to_preferred_urls(&relay_list);
+
+        assert_eq!(
+            urls,
+            vec![
+                "ws://localhost:8054".to_string(),
+                "ws://localhost:8055".to_string(),
+            ]
+        );
     }
 
     struct FailingDmClient;
