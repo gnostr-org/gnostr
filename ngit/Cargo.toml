@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-ngit"
-version = "948360.1875.10265"
+version = "948361.1875.8771"
 edition = "2021"
 description = "nostr plugin for git"
 authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
@@ -41,7 +41,7 @@ dialoguer = "0.12.0"
 directories = "6.0.0"
 futures = "0.3.31"
 gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
-gnostr-legit = { version = ">=948360.1875.10265", path = "../legit" }
+gnostr-legit = { version = ">=948361.1875.8771", path = "../legit" }
 indicatif = "0.18.0"
 mailparse = "0.16.1"
 nostr = { workspace = true, features = ["nip04", "nip44", "nip49"] }
