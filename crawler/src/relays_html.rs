@@ -36,11 +36,15 @@ pub fn write_index_html() -> std::io::Result<PathBuf> {
     };
     let nav = [
         ("/", "gnostr/crawler"),
+        ("/recent", "recent"),
         ("/relays.json", "relays.json"),
         ("/relays.yaml", "relays.yaml"),
         ("/relays.txt", "relays.txt"),
     ];
-    let body = format!("<section><h2>NIPs</h2><ul>{}</ul></section>", nip_links);
+    let body = format!(
+        "<section><h2>Recent</h2><ul><li><a href=\"/recent\">recent</a> - <a href=\"/recent/relays.json\">json</a> <a href=\"/recent/relays.yaml\">yaml</a> <a href=\"/recent/relays.txt\">txt</a></li></ul></section><section><h2>NIPs</h2><ul>{}</ul></section>",
+        nip_links
+    );
     let html = render_page_shell_with_header_right(
         "gnostr crawler",
         &nav,

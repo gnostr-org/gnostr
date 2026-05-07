@@ -135,6 +135,34 @@ fn sanitize_relay_entry(line: &str) -> Option<String> {
     }
 }
 
+fn write_bucket_serve_files(bucket_name: &str, relays: &[String]) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(bucket_name);
+    fs::create_dir_all(&config_dir)?;
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    debug!(
+        "write_bucket_serve_files: writing {}",
+        yaml_path.display()
+    );
+    let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    debug!(
+        "write_bucket_serve_files: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!("write_bucket_serve_files: writing {}", txt_path.display());
+    fs::write(&txt_path, relays.join(" "))?;
+
+    Ok(config_dir)
+}
+
 pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
     let config_dir = get_config_dir_path();
     let yaml_path = config_dir.join("relays.yaml");
@@ -190,7 +218,24 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     )?;
     debug!("write_relays_serve_files: writing {}", txt_path.display());
     fs::write(&txt_path, relays.join(" "))?;
+    let _ = write_recent_relays_serve_files();
     Ok(())
+}
+
+pub fn write_recent_relays_serve_files() -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path();
+    let yaml_source = config_dir.join("relays.yaml");
+    debug!(
+        "write_recent_relays_serve_files: reading {}",
+        yaml_source.display()
+    );
+
+    let relays: Vec<String> = match fs::read_to_string(&yaml_source) {
+        Ok(content) => content.lines().filter_map(sanitize_relay_entry).collect(),
+        Err(_) => BOOTSTRAP_RELAYS.clone(),
+    };
+
+    write_bucket_serve_files("recent", &relays)
 }
 
 pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Result<PathBuf> {

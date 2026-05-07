@@ -332,6 +332,180 @@ pub(crate) async fn get_relays_txt() -> Response {
     }
 }
 
+pub(crate) async fn get_recent_relays_yaml() -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join("recent");
+    let file_path = config_dir.join("relays.yaml");
+    debug!(
+        "Attempting to serve recent relays.yaml from: {}",
+        file_path.display()
+    );
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_recent_relays_serve_files() {
+            error!("Failed to create recent relays.yaml: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/x-yaml")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build recent relays.yaml response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!(
+                "Failed to read recent relays.yaml: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read recent relays.yaml: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) async fn get_recent_relays_json() -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join("recent");
+    let file_path = config_dir.join("relays.json");
+    debug!(
+        "Attempting to serve recent relays.json from: {}",
+        file_path.display()
+    );
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_recent_relays_serve_files() {
+            error!("Failed to create recent relays.json: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build recent relays.json response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!(
+                "Failed to read recent relays.json: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read recent relays.json: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) async fn get_recent_relays_txt() -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join("recent");
+    let file_path = config_dir.join("relays.txt");
+    debug!(
+        "Attempting to serve recent relays.txt from: {}",
+        file_path.display()
+    );
+
+    if !file_path.exists() {
+        if let Err(e) = crate::relays::write_recent_relays_serve_files() {
+            error!("Failed to create recent relays.txt: {}", e);
+        }
+    }
+
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/plain")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build recent relays.txt response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!(
+                "Failed to read recent relays.txt: {}. Path: {}",
+                e,
+                file_path.display()
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to read recent relays.txt: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) async fn get_recent_index() -> Response {
+    let config_dir = crate::relays::get_config_dir_path().join("recent");
+    let file_path = config_dir.join("relays.txt");
+    if !file_path.exists() {
+        let _ = crate::relays::write_recent_relays_serve_files();
+    }
+
+    let relays = match fs::read_to_string(&file_path).await {
+        Ok(content) => content
+            .split_whitespace()
+            .map(str::to_string)
+            .collect::<Vec<_>>(),
+        Err(_) => Vec::new(),
+    };
+
+    let items = if relays.is_empty() {
+        "<li>No recent relays yet.</li>".to_string()
+    } else {
+        relays
+            .into_iter()
+            .map(|relay| format!("<li><code>{}</code></li>", relay))
+            .collect::<Vec<_>>()
+            .join("")
+    };
+
+    let nav = vec![
+        ("/", "gnostr/crawler"),
+        ("/recent/relays.json", "relays.json"),
+        ("/recent/relays.yaml", "relays.yaml"),
+        ("/recent/relays.txt", "relays.txt"),
+    ];
+    let body = format!("<section><h2>recent</h2><ul>{}</ul></section>", items);
+    let html = crate::relays::render_page_shell("gnostr crawler / recent", &nav, &body);
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "text/html")
+        .body(Body::from(html))
+        .unwrap_or_else(|e| {
+            error!("Failed to build recent index response: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Internal Server Error"),
+            )
+                .into_response()
+        })
+}
+
 pub(crate) async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
     let config_dir = crate::relays::get_config_dir_path().join(nip_lower.to_string());
     let file_path = config_dir.join("relays.yaml");
@@ -1350,6 +1524,51 @@ mod tests {
     }
 
     #[tokio::test(flavor = "current_thread")]
+    async fn recent_bucket_is_served() {
+        let _guard = isolate_config_dir();
+        let config_dir = crate::relays::get_config_dir_path();
+        let recent_dir = config_dir.join("recent");
+        fs::create_dir_all(&recent_dir).unwrap();
+        fs::write(
+            recent_dir.join("relays.yaml"),
+            "wss://relay.example.com/\n",
+        )
+        .unwrap();
+        fs::write(
+            recent_dir.join("relays.json"),
+            "[\"wss://relay.example.com/\"]",
+        )
+        .unwrap();
+        fs::write(recent_dir.join("relays.txt"), "wss://relay.example.com/").unwrap();
+
+        let yaml = get_recent_relays_yaml().await;
+        assert_eq!(yaml.status(), StatusCode::OK);
+        assert_eq!(
+            yaml.headers().get(CONTENT_TYPE).unwrap(),
+            "application/x-yaml"
+        );
+        assert!(response_text(yaml).await.contains("relay.example.com"));
+
+        let json = get_recent_relays_json().await;
+        assert_eq!(json.status(), StatusCode::OK);
+        assert_eq!(
+            json.headers().get(CONTENT_TYPE).unwrap(),
+            "application/json"
+        );
+        assert!(response_text(json).await.contains("relay.example.com"));
+
+        let txt = get_recent_relays_txt().await;
+        assert_eq!(txt.status(), StatusCode::OK);
+        assert_eq!(txt.headers().get(CONTENT_TYPE).unwrap(), "text/plain");
+        assert!(response_text(txt).await.contains("relay.example.com"));
+
+        let index = get_recent_index().await;
+        assert_eq!(index.status(), StatusCode::OK);
+        assert_eq!(index.headers().get(CONTENT_TYPE).unwrap(), "text/html");
+        assert!(response_text(index).await.contains("/recent/relays.json"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
     async fn nip_files_and_index_are_served_from_disk() {
         let _guard = isolate_config_dir();
         let config_dir = crate::relays::get_config_dir_path();
@@ -1434,6 +1653,9 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     if let Err(e) = crate::relays::write_relays_serve_files() {
         warn!("Failed to prepare relay serve files: {}", e);
     }
+    if let Err(e) = crate::relays::write_recent_relays_serve_files() {
+        warn!("Failed to prepare recent relay serve files: {}", e);
+    }
     crate::relays::prime_live_kinds_from_disk();
     if let Err(e) = crate::relays::write_kinds_serve_files() {
         warn!("Failed to prepare kinds serve files: {}", e);
@@ -1460,6 +1682,10 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
+        .route("/recent", get(get_recent_index))
+        .route("/recent/relays.yaml", get(get_recent_relays_yaml))
+        .route("/recent/relays.json", get(get_recent_relays_json))
+        .route("/recent/relays.txt", get(get_recent_relays_txt))
         .route("/:nip", get(get_nip_index))
         .route("/:nip/query", get(get_nip_query))
         .route("/:nip/relays.yaml", get(get_nip_relays_yaml))
