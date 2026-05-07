@@ -313,3 +313,25 @@ pub async fn ureq_async(url: String) -> Result<String> {
     s.await
         .map_err(|e| Error::Generic(format!("Asynchronous task failed: {}", e)))?
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_gnostr_private_key_roundtrip_bech32() {
+        let mut private_key = types::PrivateKey(
+            default_gnostr_private_key(),
+            types::KeySecurity::NotTracked,
+        );
+
+        let bech32 = private_key.as_bech32_string();
+        assert_eq!(bech32, DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+
+        let parsed = types::PrivateKey::try_from_bech32_string(&bech32).unwrap();
+        assert_eq!(parsed.as_secret_key().secret_bytes(), DEFAULT_GNOSTR_PRIVATE_KEY);
+
+        let mut parsed_roundtrip = parsed.clone();
+        assert_eq!(parsed_roundtrip.as_bech32_string(), DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+    }
+}
