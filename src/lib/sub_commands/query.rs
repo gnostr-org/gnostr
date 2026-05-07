@@ -381,7 +381,9 @@ mod tests {
         .to_string();
 
         for _ in 0..8 {
-            let frames = crate::query::send(query.clone(), relays.to_vec(), Some(1)).await?;
+            let frames = crate::query::send(query.clone(), relays.to_vec(), Some(1))
+                .await
+                .map_err(|e| anyhow::anyhow!(e.to_string()))?;
             if let Some(frame) = frames
                 .into_iter()
                 .find(|frame| frame.starts_with("[\"EVENT\"") && frame.contains(event_id))
