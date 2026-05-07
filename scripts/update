@@ -28,7 +28,11 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ROOT_CARGO_TOML="$REPO_ROOT/Cargo.toml"
-CHECK_TARGET_DIR="$REPO_ROOT/target/update-check"
+CHECK_TARGET_DIR="$(mktemp -d /tmp/gnostr-update-check.XXXXXX)"
+cleanup() {
+    rm -rf "$CHECK_TARGET_DIR"
+}
+trap cleanup EXIT
 
 set_workspace_version() {
     local manifest="$1"
@@ -74,7 +78,7 @@ if [ "$DRY_RUN" = true ]; then
         "  gnostr git tag create" \
         "  update workspace package versions" \
         "  taplo format Cargo.toml and manifests" \
-        "  cargo check -p gnostr-bins --locked --target-dir target/update-check" \
+        "  cargo check -p gnostr-bins --locked --target-dir /tmp/gnostr-update-check.<tmp>" \
         "  cargo update --workspace" \
         "  gnostr legit -m \"v${WORKSPACE_VERSION}\" --prefix 000000" \
         "  cargo publish -j8"
