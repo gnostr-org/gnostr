@@ -18,6 +18,7 @@ This module contains various subcommands for interacting with the Nostr protocol
 - **`list_events`**: Fetches and lists Nostr events based on various filters (IDs, authors, kinds, tags, time ranges).
 - **`list`**: Lists Nostr proposals and allows interaction with them (checkout, apply patches, etc.).
 - **`login`**: Handles user login, potentially using NSEC keys, passwords, or Bunker integration.
+- **`dm`**: Sends a NIP-44 direct message, or lists/decrypts inbox messages when no message is provided.
 - **`mute_publickey`**: Mutes a public key by publishing a mute event.
 - **`nip34`**: Handles NIP-34 git-related events.
 - **`note`**: Publishes a Nostr text note (NIP-01) with optional subject, tags, and expiration.
