@@ -185,7 +185,7 @@ pub fn append_recent_relay(relay: &str) -> std::io::Result<PathBuf> {
         relays.push(relay);
         relays.sort();
         relays.dedup();
-        let _ = write_bucket_serve_files("recent", &relays)?;
+        write_bucket_serve_files("recent", &relays)?;
     }
 
     Ok(config_dir)
