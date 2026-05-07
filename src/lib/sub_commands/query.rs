@@ -359,14 +359,10 @@ mod tests {
     }
 
     fn real_network_relays() -> Vec<Url> {
-        [
-            "wss://relay.damus.io",
-            "wss://nos.lol",
-            "wss://blossom.gnostr.cloud",
-        ]
-        .iter()
-        .filter_map(|relay| Url::parse(relay).ok())
-        .collect()
+        crate::crawler::load_relays_or_bootstrap()
+            .iter()
+            .filter_map(|relay| Url::parse(relay).ok())
+            .collect()
     }
 
     fn live_test_message(prefix: &str) -> anyhow::Result<String> {
@@ -404,6 +400,50 @@ mod tests {
         }
 
         Err(anyhow::anyhow!("event {event_id} was not observed on the network"))
+    }
+
+    async fn publish_roundtrip_event(
+        sender_privkey: &crate::types::PrivateKey,
+        recipient_pubkey: crate::types::PublicKey,
+        plaintext: &str,
+        encryption: crate::types::ContentEncryptionAlgorithm,
+        event_kind: crate::types::EventKind,
+        relays: &[Url],
+    ) -> anyhow::Result<(String, Url)> {
+        for relay in relays {
+            let mut client = crate::types::Client::new(
+                &crate::types::Keys::new(sender_privkey.clone()),
+                crate::types::Options::new()
+                    .send_timeout(Some(Duration::from_secs(15)))
+                    .wait_for_send(true),
+            );
+            if let Err(err) = client
+                .add_relays(vec![relay.as_str().to_string()])
+                .await
+            {
+                debug!("relay {} could not be added for test: {:?}", relay, err);
+                continue;
+            }
+
+            let encrypted = sender_privkey.encrypt(&recipient_pubkey, plaintext, encryption)?;
+            let event = crate::types::EventBuilder::new(
+                event_kind,
+                encrypted,
+                vec![crate::types::Tag::new_pubkey(recipient_pubkey, None, None)],
+            )
+            .to_event(sender_privkey)?;
+
+            match client.send_event(event).await {
+                Ok(event_id) => return Ok((event_id.to_string(), relay.clone())),
+                Err(err) => {
+                    debug!("relay {} rejected test event: {:?}", relay, err);
+                }
+            }
+        }
+
+        Err(anyhow::anyhow!(
+            "failed to connect to any relay for live roundtrip"
+        ))
     }
 
     // Helper function to launch a query with a specific relay
@@ -750,31 +790,17 @@ mod tests {
         let sender_privkey = default_test_private_key()?;
         let recipient_pubkey = sender_privkey.public_key();
         let relays = real_network_relays();
-        let mut client = crate::types::Client::new(
-            &crate::types::Keys::new(sender_privkey.clone()),
-            crate::types::Options::new()
-                .send_timeout(Some(Duration::from_secs(15)))
-                .wait_for_send(true),
-        );
-        client
-            .add_relays(relays.iter().map(|relay| relay.as_str().to_string()).collect())
-            .await?;
-
         let plaintext = live_test_message("nip4_test_message")?;
-        let encrypted = sender_privkey.encrypt(
-            &recipient_pubkey,
+        let (event_id, relay) = publish_roundtrip_event(
+            &sender_privkey,
+            recipient_pubkey,
             &plaintext,
             crate::types::ContentEncryptionAlgorithm::Nip04,
-        )?;
-        let event = crate::types::EventBuilder::new(
             crate::types::EventKind::EncryptedDirectMessage,
-            encrypted,
-            vec![crate::types::Tag::new_pubkey(recipient_pubkey, None, None)],
+            &relays,
         )
-        .to_event(&sender_privkey)?;
-
-        let event_id = client.send_event(event).await?;
-        let frame = wait_for_event_frame(&event_id.to_string(), &relays).await?;
+        .await?;
+        let frame = wait_for_event_frame(&event_id, &[relay]).await?;
         let decrypted = decrypt_result_frame(frame, &sender_privkey)?;
         assert!(decrypted.contains(&plaintext));
         assert!(decrypted.contains("\"kind\":4"));
@@ -789,31 +815,17 @@ mod tests {
         let sender_privkey = default_test_private_key()?;
         let recipient_pubkey = sender_privkey.public_key();
         let relays = real_network_relays();
-        let mut client = crate::types::Client::new(
-            &crate::types::Keys::new(sender_privkey.clone()),
-            crate::types::Options::new()
-                .send_timeout(Some(Duration::from_secs(15)))
-                .wait_for_send(true),
-        );
-        client
-            .add_relays(relays.iter().map(|relay| relay.as_str().to_string()).collect())
-            .await?;
-
         let plaintext = live_test_message("nip44_test_message")?;
-        let encrypted = sender_privkey.encrypt(
-            &recipient_pubkey,
+        let (event_id, relay) = publish_roundtrip_event(
+            &sender_privkey,
+            recipient_pubkey,
             &plaintext,
             crate::types::ContentEncryptionAlgorithm::Nip44v2,
-        )?;
-        let event = crate::types::EventBuilder::new(
             crate::types::EventKind::ChannelMuteUser,
-            encrypted,
-            vec![crate::types::Tag::new_pubkey(recipient_pubkey, None, None)],
+            &relays,
         )
-        .to_event(&sender_privkey)?;
-
-        let event_id = client.send_event(event).await?;
-        let frame = wait_for_event_frame(&event_id.to_string(), &relays).await?;
+        .await?;
+        let frame = wait_for_event_frame(&event_id, &[relay]).await?;
         let decrypted = decrypt_result_frame(frame, &sender_privkey)?;
         assert!(decrypted.contains(&plaintext));
         assert!(decrypted.contains("\"kind\":44"));
