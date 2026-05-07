@@ -143,10 +143,16 @@ pub use crate::{
 };
 
 /// Default deterministic private key material used by tests and fixtures.
+/// e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 pub const DEFAULT_GNOSTR_PRIVATE_KEY: [u8; 32] = [
     0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
     0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
 ];
+
+
+/// Default deterministic private key material in bech32 form.
+pub const DEFAULT_GNOSTR_PRIVATE_KEY_BECH32: &str =
+    "nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36";
 
 /// Returns the shared deterministic private key as a `SecretKey`.
 pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
