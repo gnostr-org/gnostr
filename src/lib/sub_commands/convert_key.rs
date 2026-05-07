@@ -25,7 +25,7 @@ pub struct ConvertKeySubCommand {
 pub async fn convert_key(sub_command_args: &ConvertKeySubCommand) -> anyhow::Result<()> {
     if sub_command_args.to_hex {
         // Input is bech32 encoded so we find the hex value
-        let hex_key_or_id = parse_key_or_id_to_hex_string(sub_command_args.key.clone()).await?;
+        let hex_key_or_id = parse_key_or_id_to_hex_string(sub_command_args.key.clone())?;
         print!("{hex_key_or_id}");
     } else {
         // Input is hex so we bech32 encode it based on the provided prefix value
