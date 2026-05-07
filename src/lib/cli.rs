@@ -326,6 +326,9 @@ pub struct DmArgs {
     /// Limit when listing DMs for a recipient
     #[arg(short, long, help = "Limit when listing DMs for the recipient")]
     pub limit: Option<i32>,
+    /// Print decrypted inbox events as JSON
+    #[arg(long, help = "Print decrypted inbox events as JSON")]
+    pub json: bool,
     /// Print the event before sending
     #[arg(short = 'v', long = "verbose", action = clap::ArgAction::Count, help = "Print the event before sending")]
     pub verbose: u8,
@@ -448,6 +451,26 @@ mod tests {
             Some(GnostrCommands::Dm(args)) => {
                 assert_eq!(args.recipient, recipient);
                 assert_eq!(args.limit, Some(25));
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+
+    #[test]
+    fn dm_subcommand_parses_json_flag_for_inbox_mode() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+            "--json",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert!(args.json);
             }
             _ => panic!("expected dm command"),
         }
