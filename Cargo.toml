@@ -73,7 +73,7 @@ members = [
 exclude = ["vendor/gitui/**"]
 
 [workspace.package]
-version = "948363.1875.7190"
+version = "948368.1875.1623"
 
 exclude = [
   ".git/",
