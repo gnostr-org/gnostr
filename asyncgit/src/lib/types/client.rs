@@ -440,7 +440,7 @@ impl Client {
     }
 
     /// Build an encrypted NIP-44 direct message event.
-    fn build_nip44_direct_message_event(
+    pub fn build_nip44_direct_message_event(
         &self,
         recipient_pubkey: PublicKey,
         content: String,
