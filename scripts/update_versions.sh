@@ -61,11 +61,11 @@ manifest_package_name() {
 cargo_paths() {
     while IFS= read -r -d '' path; do
         case "$path" in
-            ./vendor/*|vendor/*) continue ;;
+            ./vendor/*|vendor/*|./Cargo.lock|Cargo.lock) continue ;;
         esac
         printf '%s\0' "$path"
     done < <(
-        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+        find . \( -path './vendor' -o -path './target' \) -prune -o -name Cargo.toml -print0
     )
 }
 
