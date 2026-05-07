@@ -25,7 +25,7 @@ argparse = "0.2.2"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 env_logger = "0.10.0"
 git2 = "^0.20"
-gnostr_asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", version = ">=948373.1874.945180", features = [
+gnostr_asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", version = ">=948375.1874.943145", features = [
   "vendor-openssl",
 ] }
 log = "0.4"
