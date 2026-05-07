@@ -315,13 +315,13 @@ pub enum GnostrCommands {
 #[command(author, version, about = "Send a NIP-44 direct message", long_about = None)]
 pub struct DmArgs {
     /// Public key of the recipient (hex or bech32)
-    #[arg(short, long, help = "Recipient's public key (hex or bech32)")]
+    #[arg(long, help = "Recipient's public key (hex or bech32)")]
     pub recipient: String,
     /// Message content
     #[arg(short, long, help = "The message to send")]
     pub message: String,
     /// Relay to send the DM to (can be used multiple times)
-    #[arg(long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
+    #[arg(short, long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
     pub relay: Vec<String>,
 }
 
@@ -370,5 +370,32 @@ mod tests {
     fn server_subcommand_parses_with_blossom() {
         let cli = GnostrCli::try_parse_from(["gnostr", "server"]).expect("server subcommand");
         assert!(matches!(cli.command, Some(GnostrCommands::Server(_))));
+    }
+
+    #[test]
+    fn dm_subcommand_uses_short_r_for_relays() {
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy",
+            "--message",
+            "hello",
+            "-r",
+            "wss://relay.damus.io",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(
+                    args.recipient,
+                    "npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy"
+                );
+                assert_eq!(args.message, "hello");
+                assert_eq!(args.relay, vec!["wss://relay.damus.io".to_string()]);
+            }
+            other => panic!("expected dm command, got {other:?}"),
+        }
     }
 }
