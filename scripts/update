@@ -78,7 +78,7 @@ if [ "$DRY_RUN" = true ]; then
         "  gnostr git tag create" \
         "  update workspace package versions" \
         "  taplo format Cargo.toml and manifests" \
-        "  cargo check -p gnostr-bins --locked --target-dir /tmp/gnostr-update-check.<tmp>" \
+        "  cargo check -p gnostr-bins --offline --target-dir /tmp/gnostr-update-check.<tmp>" \
         "  cargo update --workspace" \
         "  gnostr legit -m \"v${WORKSPACE_VERSION}\" --prefix 000000" \
         "  cargo publish -j8"
@@ -92,7 +92,7 @@ fi
 git add scripts
 stage_cargo_files
 
-cargo check -p gnostr-bins --locked --target-dir "$CHECK_TARGET_DIR"
+cargo check -p gnostr-bins --offline --target-dir "$CHECK_TARGET_DIR"
 
 NEW_TAG="$(gnostr git tag create)"
 NEW_VERSION="${NEW_TAG#v}"
