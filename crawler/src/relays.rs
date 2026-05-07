@@ -163,6 +163,34 @@ fn write_bucket_serve_files(bucket_name: &str, relays: &[String]) -> std::io::Re
     Ok(config_dir)
 }
 
+pub fn append_recent_relay(relay: &str) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join("recent");
+    fs::create_dir_all(&config_dir)?;
+    let txt_path = config_dir.join("relays.txt");
+
+    let mut relays: Vec<String> = match fs::read_to_string(&txt_path) {
+        Ok(content) => content
+            .split_whitespace()
+            .filter_map(|relay| Url::parse(relay).ok().map(|url| url.to_string()))
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+
+    let relay = match Url::parse(relay) {
+        Ok(url) => url.to_string(),
+        Err(_) => return Ok(config_dir),
+    };
+
+    if !relays.iter().any(|existing| existing == &relay) {
+        relays.push(relay);
+        relays.sort();
+        relays.dedup();
+        let _ = write_bucket_serve_files("recent", &relays)?;
+    }
+
+    Ok(config_dir)
+}
+
 pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
     let config_dir = get_config_dir_path();
     let yaml_path = config_dir.join("relays.yaml");
@@ -218,24 +246,7 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     )?;
     debug!("write_relays_serve_files: writing {}", txt_path.display());
     fs::write(&txt_path, relays.join(" "))?;
-    let _ = write_recent_relays_serve_files();
     Ok(())
-}
-
-pub fn write_recent_relays_serve_files() -> std::io::Result<PathBuf> {
-    let config_dir = get_config_dir_path();
-    let yaml_source = config_dir.join("relays.yaml");
-    debug!(
-        "write_recent_relays_serve_files: reading {}",
-        yaml_source.display()
-    );
-
-    let relays: Vec<String> = match fs::read_to_string(&yaml_source) {
-        Ok(content) => content.lines().filter_map(sanitize_relay_entry).collect(),
-        Err(_) => BOOTSTRAP_RELAYS.clone(),
-    };
-
-    write_bucket_serve_files("recent", &relays)
 }
 
 pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Result<PathBuf> {
