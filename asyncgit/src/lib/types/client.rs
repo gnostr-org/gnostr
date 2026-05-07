@@ -594,9 +594,6 @@ impl Client {
                                 .send(WsMessage::Text(message_json.clone().into()))
                                 .await
                             {
-                                eprintln!(
-                                    "send_event: relay {ws_url} failed for event {event_id}: {e}"
-                                );
                                 debug!(
                                     "send_event: relay {ws_url} failed for event {event_id}: {e}"
                                 );
