@@ -9,9 +9,11 @@ pub use crate::query::cli::QuerySubCommand;
 
 /// Handles the 'query' subcommand functionality.
 /// It takes the parsed command-line arguments, normalizes NIP-19 ids to hex,
-/// and queries the live crawler relay when no explicit relay is supplied.
-pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
+/// decrypts kind 4/44 events when a private key is available, and queries the
+/// live crawler relay when no explicit relay is supplied.
+pub async fn launch(args: &QuerySubCommand, private_key: Option<String>) -> anyhow::Result<()> {
     crate::utils::ensure_crawler_serve_running()?;
+    let private_key = parse_private_key(private_key)?;
     let (filt, limit_check) = build_filter_map(args)?;
     let search_term = search_term(args);
     let _config = ConfigBuilder::new()
@@ -62,10 +64,11 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
         })?;
     debug!("Received query result.");
 
+    let json_result = decrypt_query_results(vec_result, private_key.as_ref())?;
     let json_result = if let Some(search_term) = search_term {
-        filter_query_results(vec_result, &search_term)
+        filter_query_results(json_result, &search_term)
     } else {
-        vec_result
+        json_result
     };
 
     for element in json_result {
@@ -164,6 +167,77 @@ fn normalize_key_list(values: &str) -> anyhow::Result<Vec<String>> {
         .filter(|value| !value.is_empty())
         .map(|value| parse_key_or_id_to_hex_string(value.to_string()))
         .collect()
+}
+
+fn parse_private_key(private_key: Option<String>) -> anyhow::Result<Option<crate::types::PrivateKey>> {
+    match private_key {
+        Some(value) if !value.trim().is_empty() => {
+            let hex_or_bech32 = parse_key_or_id_to_hex_string(value.clone())?;
+            let key = if value.trim().starts_with("nsec") {
+                crate::types::PrivateKey::try_from_bech32_string(&value)?
+            } else {
+                crate::types::PrivateKey::try_from_hex_string(&hex_or_bech32)?
+            };
+            Ok(Some(key))
+        }
+        _ => Ok(None),
+    }
+}
+
+fn decrypt_query_results(
+    results: Vec<String>,
+    private_key: Option<&crate::types::PrivateKey>,
+) -> anyhow::Result<Vec<String>> {
+    let Some(private_key) = private_key else {
+        return Ok(results);
+    };
+
+    results
+        .into_iter()
+        .map(|result| decrypt_result_frame(result, private_key))
+        .collect()
+}
+
+fn decrypt_result_frame(
+    result: String,
+    private_key: &crate::types::PrivateKey,
+) -> anyhow::Result<String> {
+    let mut frame: Value = serde_json::from_str(&result)?;
+    let Some(items) = frame.as_array_mut() else {
+        return Ok(result);
+    };
+
+    if items.len() < 3 || items.first().and_then(Value::as_str) != Some("EVENT") {
+        return Ok(result);
+    }
+
+    let Some(event) = items.get_mut(2).and_then(Value::as_object_mut) else {
+        return Ok(result);
+    };
+
+    let kind = event.get("kind").and_then(Value::as_u64);
+    if !matches!(kind, Some(4) | Some(44)) {
+        return Ok(result);
+    }
+
+    let Some(sender_pubkey_hex) = event.get("pubkey").and_then(Value::as_str) else {
+        return Ok(result);
+    };
+    let Some(content) = event.get("content").and_then(Value::as_str) else {
+        return Ok(result);
+    };
+
+    let sender_pubkey = crate::types::PublicKey::try_from_hex_string(sender_pubkey_hex, true)?;
+    match private_key.decrypt(&sender_pubkey, content) {
+        Ok(decrypted) => {
+            event.insert("content".to_string(), Value::String(decrypted));
+            Ok(serde_json::to_string(&frame)?)
+        }
+        Err(err) => {
+            debug!("Failed to decrypt event content for kind {}: {}", kind.unwrap_or_default(), err);
+            Ok(result)
+        }
+    }
 }
 
 fn filter_query_results(results: Vec<String>, search_term: &str) -> Vec<String> {
@@ -279,7 +353,7 @@ mod tests {
     async fn launch_with_relay(args: &QuerySubCommand, relay_url: &str) -> anyhow::Result<()> {
         let mut modified_args = args.clone();
         modified_args.relay = vec![relay_url.to_string()];
-        launch(&modified_args).await
+        launch(&modified_args, None).await
     }
 
     #[test]
@@ -544,6 +618,66 @@ mod tests {
             filt.get("authors").unwrap(),
             &json!(["b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a"])
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_decrypt_result_frame_nip04() -> anyhow::Result<()> {
+        let sender_privkey = crate::types::PrivateKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000001",
+        )?;
+        let recipient_privkey = crate::types::PrivateKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000002",
+        )?;
+        let recipient_pubkey = recipient_privkey.public_key();
+        let content = sender_privkey.encrypt(
+            &recipient_pubkey,
+            "secret note",
+            crate::types::ContentEncryptionAlgorithm::Nip04,
+        )?;
+        let frame = serde_json::json!([
+            "EVENT",
+            "gnostr-query",
+            {
+                "kind": 4,
+                "pubkey": sender_privkey.public_key().as_hex_string(),
+                "content": content,
+            }
+        ]);
+
+        let decrypted = decrypt_result_frame(serde_json::to_string(&frame)?, &recipient_privkey)?;
+        let value: serde_json::Value = serde_json::from_str(&decrypted)?;
+        assert_eq!(value[2]["content"], serde_json::json!("secret note"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_decrypt_result_frame_nip44() -> anyhow::Result<()> {
+        let sender_privkey = crate::types::PrivateKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000003",
+        )?;
+        let recipient_privkey = crate::types::PrivateKey::try_from_hex_string(
+            "0000000000000000000000000000000000000000000000000000000000000004",
+        )?;
+        let recipient_pubkey = recipient_privkey.public_key();
+        let content = sender_privkey.encrypt(
+            &recipient_pubkey,
+            "secret note 44",
+            crate::types::ContentEncryptionAlgorithm::Nip44v2,
+        )?;
+        let frame = serde_json::json!([
+            "EVENT",
+            "gnostr-query",
+            {
+                "kind": 44,
+                "pubkey": sender_privkey.public_key().as_hex_string(),
+                "content": content,
+            }
+        ]);
+
+        let decrypted = decrypt_result_frame(serde_json::to_string(&frame)?, &recipient_privkey)?;
+        let value: serde_json::Value = serde_json::from_str(&decrypted)?;
+        assert_eq!(value[2]["content"], serde_json::json!("secret note 44"));
         Ok(())
     }
 
