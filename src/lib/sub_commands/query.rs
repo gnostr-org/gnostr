@@ -39,7 +39,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
 
     let relays = if args.relay.is_empty() {
         debug!("Using crawler relays.");
-        crate::load_relays_or_bootstrap()
+        crate::crawler::load_relays_or_bootstrap()
             .iter()
             .filter_map(|s| Url::parse(s).ok())
             .collect()
