@@ -12,6 +12,7 @@ use gnostr::{
 use gnostr_asyncgit::sync::{repo_open_error, resolve_repo_path, RepoPath};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
+use std::fmt::Write as _;
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
@@ -785,12 +786,58 @@ fn decrypt_query_frame(
     let sender_pubkey = PublicKey::try_from_hex_string(sender_pubkey_hex, true)
         .map_err(|e| anyhow!("Error parsing sender pubkey: {}", e))?;
     match private_key.decrypt(&sender_pubkey, content) {
-        Ok(decrypted) => {
-            event.insert("content".to_string(), Value::String(decrypted));
-            Ok(serde_json::to_string(&frame)?)
-        }
+        Ok(decrypted) => Ok(format_decrypted_event(event, &decrypted)),
         Err(_) => Ok(result),
     }
+}
+
+fn format_decrypted_event(event: &serde_json::Map<String, Value>, decrypted: &str) -> String {
+    let id = event.get("id").and_then(Value::as_str).unwrap_or("(unknown)");
+    let pubkey = event
+        .get("pubkey")
+        .and_then(Value::as_str)
+        .unwrap_or("(unknown)");
+    let kind = event.get("kind").and_then(Value::as_u64).unwrap_or_default();
+    let created_at = event
+        .get("created_at")
+        .and_then(Value::as_i64)
+        .unwrap_or_default();
+    let recipients: Vec<String> = event
+        .get("tags")
+        .and_then(Value::as_array)
+        .map(|tags| {
+            let mut recipients = Vec::new();
+            for tag in tags {
+                let Some(tag_items) = tag.as_array() else {
+                    continue;
+                };
+                if tag_items.first().and_then(Value::as_str) == Some("p") {
+                    if let Some(recipient) = tag_items.get(1).and_then(Value::as_str) {
+                        recipients.push(recipient.to_string());
+                    }
+                }
+            }
+            recipients
+        })
+        .unwrap_or_default();
+
+    let mut out = String::new();
+    let _ = writeln!(out, "DM event kind {kind}");
+    let _ = writeln!(out, "id: {id}");
+    let _ = writeln!(out, "from: {pubkey}");
+    let _ = writeln!(
+        out,
+        "to: {}",
+        if recipients.is_empty() {
+            "(unknown)".to_string()
+        } else {
+            recipients.join(", ")
+        }
+    );
+    let _ = writeln!(out, "created_at: {created_at}");
+    let _ = writeln!(out, "content:");
+    let _ = writeln!(out, "{decrypted}");
+    out
 }
 
 #[cfg(test)]
@@ -908,8 +955,10 @@ mod tests {
         ]);
 
         let decrypted = decrypt_query_frame(serde_json::to_string(&frame)?, Some(&recipient_privkey))?;
-        let value: serde_json::Value = serde_json::from_str(&decrypted)?;
-        assert_eq!(value[2]["content"], serde_json::json!("secret inbox message"));
+        assert!(decrypted.contains("DM event kind 44"));
+        assert!(decrypted.contains("from:"));
+        assert!(decrypted.contains("to:"));
+        assert!(decrypted.contains("secret inbox message"));
         Ok(())
     }
 }
