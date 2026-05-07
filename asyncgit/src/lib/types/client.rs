@@ -614,9 +614,6 @@ impl Client {
                             }
                         }
                         Err(e) => {
-                            eprintln!(
-                                "send_event: relay {ws_url} connect failed for event {event_id}: {e}"
-                            );
                             debug!(
                                 "send_event: relay {ws_url} connect failed for event {event_id}: {e}"
                             );
