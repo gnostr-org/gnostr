@@ -527,12 +527,13 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
+            let sender_keys = Keys::new(PrivateKey::try_from_hex_string(
+                &gnostr_cli_args
+                    .nsec
+                    .ok_or_else(|| anyhow!("nsec not provided"))?,
+            )?);
             let mut client = gnostr::types::client::Client::new(
-                &Keys::new(PrivateKey::try_from_hex_string(
-                    &gnostr_cli_args
-                        .nsec
-                        .ok_or_else(|| anyhow!("nsec not provided"))?,
-                )?),
+                &sender_keys,
                 gnostr::types::client::Options::new(),
             );
             // Try to parse the recipient string as a PublicKey
@@ -541,7 +542,39 @@ async fn main() -> anyhow::Result<()> {
                     .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
                     .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
-            // Use dm-specific relays first, then append crawler relays as fallback.
+            let bootstrap_relays = gnostr::crawler::bootstrap_relays();
+            println!("DM bootstrap relays:");
+            for relay in &bootstrap_relays {
+                println!("  {relay}");
+            }
+            debug!("DM bootstrap relays: {:?}", bootstrap_relays);
+            debug!(
+                "DM querying bootstrap relays for recipient NIP-65 relay list: {}",
+                recipient_pubkey.as_hex_string()
+            );
+            let preferred_relays = match sub_commands::dm::recipient_preferred_relays(
+                &sender_keys,
+                recipient_pubkey,
+                bootstrap_relays,
+            )
+            .await
+            {
+                Ok(relays) => relays,
+                Err(err) => {
+                    eprintln!("DM preferred relay lookup failed: {err}");
+                    debug!("DM preferred relay lookup failed: {err}");
+                    Vec::new()
+                }
+            };
+            println!("DM recipient preferred relays:");
+            if preferred_relays.is_empty() {
+                println!("  (none found)");
+            } else {
+                for relay in &preferred_relays {
+                    println!("  {relay}");
+                }
+            }
+
             debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
             debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
             println!("DM explicit relays:");
@@ -553,16 +586,12 @@ async fn main() -> anyhow::Result<()> {
             for relay in &crawler_relays {
                 println!("  {relay}");
             }
-            let mut relays_to_use = if !sub_command_args.relay.is_empty() {
-                sub_command_args.relay.clone()
-            } else {
-                Vec::new()
-            };
-            for relay in crawler_relays {
-                if !relays_to_use.contains(&relay) {
-                    relays_to_use.push(relay);
-                }
-            }
+            let relays_to_use = merge_dm_relays(
+                preferred_relays,
+                sub_command_args.relay.clone(),
+                crawler_relays,
+                gnostr_cli_args.relays.clone(),
+            );
             println!("DM final relays:");
             for relay in &relays_to_use {
                 println!("  {relay}");
@@ -605,6 +634,28 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
+fn merge_dm_relays(
+    preferred_relays: Vec<String>,
+    explicit_relays: Vec<String>,
+    crawler_relays: Vec<String>,
+    fallback_relays: Vec<String>,
+) -> Vec<String> {
+    let mut relays = Vec::new();
+
+    for relay in preferred_relays
+        .into_iter()
+        .chain(explicit_relays)
+        .chain(crawler_relays)
+        .chain(fallback_relays)
+    {
+        if !relays.contains(&relay) {
+            relays.push(relay);
+        }
+    }
+
+    relays
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -631,5 +682,46 @@ mod tests {
         assert!(!cli.trace);
         assert!(!cli.info);
         assert!(!cli.warn);
+    }
+
+    #[test]
+    fn merge_dm_relays_keeps_cli_defaults_when_others_are_empty() {
+        let relays = merge_dm_relays(
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://nos.lol".to_string(),
+            ],
+        );
+
+        assert_eq!(
+            relays,
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://nos.lol".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn merge_dm_relays_deduplicates_in_priority_order() {
+        let relays = merge_dm_relays(
+            vec!["wss://preferred.example".to_string()],
+            vec!["wss://explicit.example".to_string()],
+            vec!["wss://preferred.example".to_string(), "wss://crawler.example".to_string()],
+            vec!["wss://explicit.example".to_string(), "wss://fallback.example".to_string()],
+        );
+
+        assert_eq!(
+            relays,
+            vec![
+                "wss://preferred.example".to_string(),
+                "wss://explicit.example".to_string(),
+                "wss://crawler.example".to_string(),
+                "wss://fallback.example".to_string(),
+            ]
+        );
     }
 }
