@@ -1,6 +1,6 @@
 use crate::relay_metadata::Relay;
 use futures::{stream, StreamExt};
-use log::warn;
+use log::{debug, warn};
 use reqwest::header::ACCEPT;
 use std::time::Instant;
 
