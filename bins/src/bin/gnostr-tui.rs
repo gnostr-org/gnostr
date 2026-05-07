@@ -514,40 +514,54 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let mut client = gnostr::types::client::Client::new(
-                &Keys::new(PrivateKey::try_from_hex_string(
-                    &gnostr_cli_args
-                        .nsec
-                        .ok_or_else(|| anyhow!("nsec not provided"))?,
-                )?),
-                gnostr::types::client::Options::new(),
-            );
             // Try to parse the recipient string as a PublicKey
             let recipient_pubkey =
                 PublicKey::try_from_bech32_string(&sub_command_args.recipient, false)
                     .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
                     .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
-            // Use dm-specific relays if provided, otherwise fall back to global relays
-            debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
-            debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
-            let relays_to_use = if !sub_command_args.relay.is_empty() {
-                sub_command_args.relay.clone()
+            if let Some(message) = sub_command_args.message.clone() {
+                let mut client = gnostr::types::client::Client::new(
+                    &Keys::new(PrivateKey::try_from_hex_string(
+                        &gnostr_cli_args
+                            .nsec
+                            .ok_or_else(|| anyhow!("nsec not provided"))?,
+                    )?),
+                    gnostr::types::client::Options::new(),
+                );
+
+                // Use dm-specific relays if provided, otherwise fall back to global relays
+                debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
+                debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
+                let relays_to_use = if !sub_command_args.relay.is_empty() {
+                    sub_command_args.relay.clone()
+                } else {
+                    gnostr_cli_args.relays.clone()
+                };
+                debug!("relays_to_use: {:?}", relays_to_use);
+
+                client.add_relays(relays_to_use).await?;
+
+                sub_commands::dm::dm_command(
+                    &client,
+                    recipient_pubkey,
+                    message,
+                    sub_command_args.verbose > 0,
+                )
+                .await
+                .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
             } else {
-                gnostr_cli_args.relays.clone()
-            };
-            debug!("relays_to_use: {:?}", relays_to_use);
-
-            client.add_relays(relays_to_use).await?;
-
-            sub_commands::dm::dm_command(
-                &client,
-                recipient_pubkey,
-                sub_command_args.message.clone(),
-                sub_command_args.verbose > 0,
-            )
-            .await
-            .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
+                sub_commands::dm::dm_inbox_command(
+                    gnostr_cli_args.nsec.clone(),
+                    recipient_pubkey,
+                    sub_command_args.relay.clone(),
+                    gnostr_cli_args.relays.clone(),
+                    sub_command_args.limit,
+                    sub_command_args.json,
+                )
+                .await
+                .map_err(|e| anyhow!("Error in dm inbox query: {}", e))
+            }
         }
         Some(GnostrCommands::PrivkeyToBech32(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
