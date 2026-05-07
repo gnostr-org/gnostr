@@ -48,6 +48,7 @@ Functions for handling Nostr-related keys and identifiers:
 - `gnostr query` now prefers the live crawler relay when no explicit `-r/--relay` is passed.
 - Query filters accept `note1...`, `npub1...`, `nprofile1...`, and `nostr://...` inputs and normalize them to hex before sending.
 - Relay-using subcommands fall back to the crawler-managed relay list instead of the static bootstrap list when no relays are supplied.
+- `gnostr query` decrypts kind 4 and kind 44 event content when a matching `nsec`/private key is available.
 
 ### String Manipulation
 
