@@ -10,6 +10,7 @@ use gnostr::{
     weeble, wobble,
 };
 use gnostr_asyncgit::sync::{repo_open_error, resolve_repo_path, RepoPath};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
@@ -610,14 +611,53 @@ async fn main() -> anyhow::Result<()> {
                     recipient = %recipient_pubkey.as_hex_string(),
                     "DM no message supplied; switching to inbox query mode"
                 );
-                let mut query_args = gnostr::query::cli::QuerySubCommand::default();
-                query_args.relay = sub_command_args.relay.clone();
-                query_args.mentions = Some(recipient_pubkey.as_hex_string());
-                query_args.kinds = Some("4,44".to_string());
-                query_args.limit = Some(sub_command_args.limit.unwrap_or(100));
-                sub_commands::query::launch(&query_args, gnostr_cli_args.nsec.clone())
+                let inbox_limit = sub_command_args.limit.unwrap_or(100);
+                let recipient_pubkey_hex = recipient_pubkey.as_hex_string();
+                let query_string = gnostr::query::build_gnostr_query(
+                    None,
+                    None,
+                    Some(inbox_limit),
+                    None,
+                    None,
+                    Some(&recipient_pubkey_hex),
+                    None,
+                    Some("4,44"),
+                    None,
+                )
+                .map_err(|e| anyhow!("Error building DM inbox query: {}", e))?;
+
+                let explicit_relays = parse_relay_urls(&sub_command_args.relay)?;
+                let crawler_relays = parse_relay_urls(&gnostr::crawler::load_relays_or_bootstrap())?;
+                let fallback_relays = parse_relay_urls(&gnostr_cli_args.relays)?;
+                let relays_to_use = build_dm_inbox_relays(explicit_relays, crawler_relays, fallback_relays);
+
+                debug!("DM inbox query relays:");
+                for relay in &relays_to_use {
+                    debug!("  {relay},");
+                }
+                debug!("DM inbox query relays: {:?}", relays_to_use);
+
+                let results = gnostr::query::send(query_string, relays_to_use, Some(inbox_limit))
                     .await
-                    .map_err(|e| anyhow!("Error in dm inbox query: {}", e))
+                    .map_err(|e| anyhow!("Error in dm inbox query: {}", e))?;
+
+                let private_key = gnostr_cli_args
+                    .nsec
+                    .as_ref()
+                    .map(|value| {
+                        if value.trim().starts_with("nsec") {
+                            PrivateKey::try_from_bech32_string(value)
+                        } else {
+                            PrivateKey::try_from_hex_string(value)
+                        }
+                    })
+                    .transpose()
+                    .map_err(|e| anyhow!("Error parsing private key for DM inbox query: {}", e))?;
+
+                for result in results {
+                    println!("{}", decrypt_query_frame(result, private_key.as_ref())?);
+                }
+                Ok(())
             }
         }
         Some(GnostrCommands::PrivkeyToBech32(sub_command_args)) => {
@@ -653,9 +693,9 @@ fn merge_dm_relays(
 ) -> Vec<String> {
     let mut relays = Vec::new();
 
-    for relay in preferred_relays
+    for relay in explicit_relays
         .into_iter()
-        .chain(explicit_relays)
+        .chain(preferred_relays)
         .chain(crawler_relays)
         .chain(fallback_relays)
     {
@@ -665,6 +705,91 @@ fn merge_dm_relays(
     }
 
     relays
+}
+
+fn build_dm_inbox_relays(
+    explicit_relays: Vec<url::Url>,
+    crawler_relays: Vec<url::Url>,
+    fallback_relays: Vec<url::Url>,
+) -> Vec<url::Url> {
+    let mut relays = Vec::new();
+    let local_relay = url::Url::parse("ws://127.0.0.1:8080").ok();
+
+    if explicit_relays.is_empty() {
+        if let Some(local_relay) = local_relay.clone() {
+            relays.push(local_relay);
+        }
+    }
+
+    for relay in explicit_relays
+        .into_iter()
+        .chain(crawler_relays)
+        .chain(fallback_relays)
+    {
+        if !relays.iter().any(|existing| existing == &relay) {
+            relays.push(relay);
+        }
+    }
+
+    if let Some(local_relay) = local_relay {
+        if !relays.iter().any(|existing| existing == &local_relay) {
+            relays.push(local_relay);
+        }
+    }
+
+    relays
+}
+
+fn parse_relay_urls(relays: &[String]) -> anyhow::Result<Vec<url::Url>> {
+    let mut parsed = Vec::new();
+    for relay in relays {
+        parsed.push(url::Url::parse(relay)?);
+    }
+    Ok(parsed)
+}
+
+fn decrypt_query_frame(
+    result: String,
+    private_key: Option<&PrivateKey>,
+) -> anyhow::Result<String> {
+    let Some(private_key) = private_key else {
+        return Ok(result);
+    };
+
+    let mut frame: Value = serde_json::from_str(&result)?;
+    let Some(items) = frame.as_array_mut() else {
+        return Ok(result);
+    };
+
+    if items.len() < 3 || items.first().and_then(Value::as_str) != Some("EVENT") {
+        return Ok(result);
+    }
+
+    let Some(event) = items.get_mut(2).and_then(Value::as_object_mut) else {
+        return Ok(result);
+    };
+
+    let kind = event.get("kind").and_then(Value::as_u64);
+    if !matches!(kind, Some(4) | Some(44)) {
+        return Ok(result);
+    }
+
+    let Some(sender_pubkey_hex) = event.get("pubkey").and_then(Value::as_str) else {
+        return Ok(result);
+    };
+    let Some(content) = event.get("content").and_then(Value::as_str) else {
+        return Ok(result);
+    };
+
+    let sender_pubkey = PublicKey::try_from_hex_string(sender_pubkey_hex, true)
+        .map_err(|e| anyhow!("Error parsing sender pubkey: {}", e))?;
+    match private_key.decrypt(&sender_pubkey, content) {
+        Ok(decrypted) => {
+            event.insert("content".to_string(), Value::String(decrypted));
+            Ok(serde_json::to_string(&frame)?)
+        }
+        Err(_) => Ok(result),
+    }
 }
 
 #[cfg(test)]
@@ -728,10 +853,29 @@ mod tests {
         assert_eq!(
             relays,
             vec![
-                "wss://preferred.example".to_string(),
                 "wss://explicit.example".to_string(),
+                "wss://preferred.example".to_string(),
                 "wss://crawler.example".to_string(),
                 "wss://fallback.example".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn build_dm_inbox_relays_puts_explicit_relays_first() {
+        let relays = build_dm_inbox_relays(
+            vec![url::Url::parse("wss://explicit.example").unwrap()],
+            vec![url::Url::parse("wss://crawler.example").unwrap()],
+            vec![url::Url::parse("wss://fallback.example").unwrap()],
+        );
+
+        assert_eq!(
+            relays,
+            vec![
+                url::Url::parse("wss://explicit.example").unwrap(),
+                url::Url::parse("wss://crawler.example").unwrap(),
+                url::Url::parse("wss://fallback.example").unwrap(),
+                url::Url::parse("ws://127.0.0.1:8080").unwrap(),
             ]
         );
     }
