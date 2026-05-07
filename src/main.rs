@@ -541,13 +541,13 @@ async fn main() -> anyhow::Result<()> {
                     .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
                     .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
-            // Use dm-specific relays if provided, otherwise fall back to global relays
+            // Use dm-specific relays if provided, otherwise fall back to the crawler relay list.
             debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
             debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
             let relays_to_use = if !sub_command_args.relay.is_empty() {
                 sub_command_args.relay.clone()
             } else {
-                gnostr_cli_args.relays.clone()
+                gnostr::crawler::load_relays_or_bootstrap()
             };
             debug!("relays_to_use: {:?}", relays_to_use);
 
