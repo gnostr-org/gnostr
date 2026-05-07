@@ -277,12 +277,6 @@ fn build_dm_inbox_relays(
     let mut relays = Vec::new();
     let local_relay = Url::parse("ws://127.0.0.1:8080").ok();
 
-    if explicit_relays.is_empty() {
-        if let Some(local_relay) = local_relay.clone() {
-            relays.push(local_relay);
-        }
-    }
-
     for relay in explicit_relays
         .into_iter()
         .chain(crawler_relays)
