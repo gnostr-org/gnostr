@@ -315,14 +315,17 @@ pub enum GnostrCommands {
 #[command(author, version, about = "Send a NIP-44 direct message", long_about = None)]
 pub struct DmArgs {
     /// Public key of the recipient (hex or bech32)
-    #[arg(short, long, help = "Recipient's public key (hex or bech32)")]
+    #[arg(long, help = "Recipient's public key (hex or bech32)")]
     pub recipient: String,
     /// Message content
     #[arg(short, long, help = "The message to send")]
     pub message: String,
     /// Relay to send the DM to (can be used multiple times)
-    #[arg(long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
+    #[arg(short, long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
     pub relay: Vec<String>,
+    /// Print the event before sending
+    #[arg(short = 'v', long = "verbose", action = clap::ArgAction::Count, help = "Print the event before sending")]
+    pub verbose: u8,
 }
 
 /// get_app_cache_path
@@ -359,6 +362,14 @@ mod tests {
 
     use super::*;
 
+    fn default_test_npub() -> String {
+        let sender = crate::types::PrivateKey(
+            crate::git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::Weak,
+        );
+        sender.public_key().as_bech32_string()
+    }
+
     #[test]
     #[cfg(not(feature = "blossom"))]
     fn server_subcommand_is_hidden_without_blossom() {
@@ -370,5 +381,30 @@ mod tests {
     fn server_subcommand_parses_with_blossom() {
         let cli = GnostrCli::try_parse_from(["gnostr", "server"]).expect("server subcommand");
         assert!(matches!(cli.command, Some(GnostrCommands::Server(_))));
+    }
+
+    #[test]
+    fn dm_subcommand_uses_short_r_for_relays() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+            "--message",
+            "hello",
+            "-r",
+            "wss://relay.damus.io",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(args.recipient, recipient);
+                assert_eq!(args.message, "hello");
+                assert_eq!(args.relay, vec!["wss://relay.damus.io".to_string()]);
+            }
+            _ => panic!("expected dm command"),
+        }
     }
 }
