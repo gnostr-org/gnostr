@@ -1,4 +1,3 @@
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use crate::{
@@ -35,7 +34,10 @@ pub async fn run_fetch_by_id(args: &FetchByIdSubCommand) -> Result<(), Box<dyn s
     };
     let relay_url = match args.relay.clone() {
         Some(u) => u,
-        None => BOOTSTRAP_RELAYS[0].to_string(),
+        None => crate::load_relays_or_bootstrap()
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "wss://relay.damus.io".to_string()),
     };
 
     let (to_probe, from_main) = tokio::sync::mpsc::channel::<Command>(100);
