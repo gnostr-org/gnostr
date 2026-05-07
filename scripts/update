@@ -28,11 +28,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ROOT_CARGO_TOML="$REPO_ROOT/Cargo.toml"
-CHECK_TARGET_DIR="$(mktemp -d /tmp/gnostr-update-check.XXXXXX)"
-cleanup() {
-    rm -rf "$CHECK_TARGET_DIR"
-}
-trap cleanup EXIT
+CHECK_TARGET_DIR="/tmp/gnostr-update-check.$(gnostr --blockheight 2>/dev/null || echo 0)"
 
 cargo_jobs() {
     local jobs
