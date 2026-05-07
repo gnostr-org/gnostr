@@ -10,6 +10,7 @@ pub use crate::query::cli::QuerySubCommand;
 /// Handles the 'query' subcommand functionality.
 /// It takes the parsed command-line arguments and executes the query.
 pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
+    crate::utils::ensure_crawler_serve_running()?;
     let (filt, limit_check) = build_filter_map(args)?;
     let search_term = search_term(args);
     let _config = ConfigBuilder::new()
@@ -37,8 +38,8 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
     debug!("{}", query_string);
 
     let relays = if args.relay.is_empty() {
-        debug!("Using bootstrap relays.");
-        crate::crawler::bootstrap_relays()
+        debug!("Using crawler relays.");
+        crate::load_relays_or_bootstrap()
             .iter()
             .filter_map(|s| Url::parse(s).ok())
             .collect()
@@ -47,6 +48,7 @@ pub async fn launch(args: &QuerySubCommand) -> anyhow::Result<()> {
         debug!("Using specified relays: {:?}", relays);
         relays
     };
+    let relays = prepend_local_relay(relays);
     if relays.is_empty() {
         return Err(anyhow!("No valid relay URLs available"));
     }
@@ -142,6 +144,16 @@ fn search_term(args: &QuerySubCommand) -> Option<String> {
         .and_then(|search_vec| search_vec.first())
         .cloned()
         .filter(|search| !search.is_empty())
+}
+
+fn prepend_local_relay(mut relays: Vec<Url>) -> Vec<Url> {
+    let local_relay = Url::parse("ws://127.0.0.1:8080").ok();
+    if let Some(local_relay) = local_relay {
+        if !relays.iter().any(|relay| relay == &local_relay) {
+            relays.insert(0, local_relay);
+        }
+    }
+    relays
 }
 
 fn normalize_key_list(values: &str) -> anyhow::Result<Vec<String>> {
