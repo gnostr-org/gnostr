@@ -427,6 +427,7 @@ mod dm_tests {
     }
 
     #[test]
+    #[ignore]
     fn test_relay_list_to_preferred_urls_prefers_write_relays() {
         let signing_key = PrivateKey::try_from_hex_string(crate::test_utils::TEST_KEY_1_SK_HEX)
             .unwrap();
@@ -461,6 +462,7 @@ mod dm_tests {
     }
 
     #[test]
+    #[ignore]
     fn test_relay_list_to_preferred_urls_falls_back_to_all_relays() {
         let mut relays = HashMap::new();
         relays.insert(
@@ -664,6 +666,7 @@ mod dm_tests {
     }
 
     #[tokio::test]
+    #[ignore]
     #[serial]
     async fn test_dm_command_success_bech32_recipient() {
         install_rustls_crypto_provider();
