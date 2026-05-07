@@ -541,14 +541,32 @@ async fn main() -> anyhow::Result<()> {
                     .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
                     .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
-            // Use dm-specific relays if provided, otherwise fall back to global relays
+            // Use dm-specific relays first, then append crawler relays as fallback.
             debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
             debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
-            let relays_to_use = if !sub_command_args.relay.is_empty() {
+            println!("DM explicit relays:");
+            for relay in &sub_command_args.relay {
+                println!("  {relay}");
+            }
+            let crawler_relays = gnostr::crawler::load_relays_or_bootstrap();
+            println!("DM crawler relays:");
+            for relay in &crawler_relays {
+                println!("  {relay}");
+            }
+            let mut relays_to_use = if !sub_command_args.relay.is_empty() {
                 sub_command_args.relay.clone()
             } else {
-                gnostr_cli_args.relays.clone()
+                Vec::new()
             };
+            for relay in crawler_relays {
+                if !relays_to_use.contains(&relay) {
+                    relays_to_use.push(relay);
+                }
+            }
+            println!("DM final relays:");
+            for relay in &relays_to_use {
+                println!("  {relay}");
+            }
             debug!("relays_to_use: {:?}", relays_to_use);
 
             client.add_relays(relays_to_use).await?;
@@ -557,6 +575,7 @@ async fn main() -> anyhow::Result<()> {
                 &client,
                 recipient_pubkey,
                 sub_command_args.message.clone(),
+                sub_command_args.verbose > 0,
             )
             .await
             .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
