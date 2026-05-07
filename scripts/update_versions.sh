@@ -382,8 +382,8 @@ PUBLISH_CRATES=(
     relay
     relay/extensions
     js
-    chat
     p2p
+    chat
     web
 )
 
