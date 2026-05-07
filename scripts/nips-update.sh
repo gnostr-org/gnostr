@@ -15,7 +15,7 @@ if [ ! -d "$NIPS_DIR" ]; then
   mkdir -p "$NIPS_DIR"
 fi
 
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/nips-update.XXXXXX")"
+TMP_DIR="${TMPDIR:-/tmp}/nips-update.$(gnostr --blockheight 2>/dev/null || echo 0)"
 cleanup() {
   rm -rf "$TMP_DIR"
 }

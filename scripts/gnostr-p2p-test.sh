@@ -13,7 +13,7 @@ if ! command -v gnostr >/dev/null 2>&1; then
   exit 1
 fi
 
-workdir="$(mktemp -d "${TMPDIR:-/tmp}/gnostr-p2p-test.XXXXXX")"
+workdir="${TMPDIR:-/tmp}/gnostr-p2p-test.$(gnostr --blockheight 2>/dev/null || echo 0)"
 logs_dir="$workdir/logs"
 mkdir -p "$logs_dir"
 
