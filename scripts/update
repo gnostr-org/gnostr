@@ -34,6 +34,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
+cargo_jobs() {
+    local jobs
+    jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+    jobs=$((jobs - 1))
+    if [ "$jobs" -lt 1 ]; then
+        jobs=1
+    fi
+    printf '%s\n' "$jobs"
+}
+
 set_workspace_version() {
     local manifest="$1"
     local version="$2"
@@ -79,9 +89,9 @@ if [ "$DRY_RUN" = true ]; then
         "  update workspace package versions" \
         "  taplo format Cargo.toml and manifests" \
         "  cargo update --workspace" \
-        "  cargo check -p gnostr-bins --offline --target-dir /tmp/gnostr-update-check.<tmp>" \
+        "  cargo check -j$(cargo_jobs) -p gnostr-bins --offline --target-dir /tmp/gnostr-update-check.<tmp>" \
         "  gnostr legit -m \"v${WORKSPACE_VERSION}\" --prefix 000000" \
-        "  cargo publish -j8"
+        "  cargo publish -j$(cargo_jobs)"
     if [ "${#POSITIONAL_ARGS[@]}" -gt 0 ]; then
         exec "$SCRIPT_DIR/update_versions.sh" --dry-run "${POSITIONAL_ARGS[@]}"
     else
@@ -101,7 +111,7 @@ taplo format "$ROOT_CARGO_TOML"
 stage_cargo_files
 git add "$ROOT_CARGO_TOML"
 
-cargo check -p gnostr-bins --offline --target-dir "$CHECK_TARGET_DIR"
+cargo check -j"$(cargo_jobs)" -p gnostr-bins --offline --target-dir "$CHECK_TARGET_DIR"
 
 if [ "${#POSITIONAL_ARGS[@]}" -gt 0 ]; then
     SKIP_VERSION_COMMIT=1 VERSION_TAG="$NEW_TAG" exec "$SCRIPT_DIR/update_versions.sh" "${POSITIONAL_ARGS[@]}"

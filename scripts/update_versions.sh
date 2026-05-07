@@ -25,6 +25,16 @@ while (($#)); do
     shift
 done
 
+cargo_jobs() {
+    local jobs
+    jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+    jobs=$((jobs - 1))
+    if [ "$jobs" -lt 1 ]; then
+        jobs=1
+    fi
+    printf '%s\n' "$jobs"
+}
+
 ensure_taplo_installed() {
     if ! command -v taplo >/dev/null 2>&1; then
         echo "taplo-cli not found. Installing it..."
@@ -450,10 +460,10 @@ fi
 export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
-    sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
+    sleep 1 && pushd "$crate" >/dev/null && cargo publish -j"$(cargo_jobs)" || true && popd >/dev/null
 done
 
-sleep 1 && cargo publish -j8 -p gnostr || true
+sleep 1 && cargo publish -j"$(cargo_jobs)" -p gnostr || true
 
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
