@@ -85,7 +85,7 @@ if [ "$DRY_RUN" = true ]; then
         "  update workspace package versions" \
         "  taplo format Cargo.toml and manifests" \
         "  cargo update --workspace" \
-        "  cargo check -j$(cargo_jobs) -p gnostr-bins --offline --target-dir /tmp/gnostr-update-check.<tmp>" \
+        "  cargo check -j$(cargo_jobs) -p gnostr-bins --offline --target-dir /tmp/gnostr-update-check.<blockheight>" \
         "  gnostr legit -m \"v${WORKSPACE_VERSION}\" --prefix 000000" \
         "  cargo publish -j$(cargo_jobs)"
     if [ "${#POSITIONAL_ARGS[@]}" -gt 0 ]; then

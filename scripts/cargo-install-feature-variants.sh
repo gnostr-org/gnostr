@@ -45,7 +45,8 @@ run_install() {
   shift
 
   local build_dir
-  build_dir="$(mktemp -d "${TMPDIR:-/tmp}/gnostr-install-${label//[^A-Za-z0-9]/_}.XXXXXX")"
+  build_dir="${TMPDIR:-/tmp}/gnostr-install-${label//[^A-Za-z0-9]/_}.$(gnostr --blockheight 2>/dev/null || echo 0)"
+  mkdir -p "$build_dir"
   printf '==> %s\n' "$label"
   CARGO_TARGET_DIR="$build_dir" cargo install --path . --locked --force "$@"
   rm -rf "$build_dir"

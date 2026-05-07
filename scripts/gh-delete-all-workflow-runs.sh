@@ -141,7 +141,8 @@ else
       THREADS="$delete_through_page"
     fi
 
-    tmpdir="$(mktemp -d)"
+    tmpdir="${TMPDIR:-/tmp}/gh-delete-all-workflow-runs.$(gnostr --blockheight 2>/dev/null || echo 0)"
+    mkdir -p "$tmpdir"
 
     for thread in $(seq 1 "$THREADS"); do
       (
