@@ -623,12 +623,14 @@ mod tests {
 
     #[test]
     fn test_decrypt_result_frame_nip04() -> anyhow::Result<()> {
-        let sender_privkey = crate::types::PrivateKey::try_from_hex_string(
-            "0000000000000000000000000000000000000000000000000000000000000001",
-        )?;
-        let recipient_privkey = crate::types::PrivateKey::try_from_hex_string(
-            "0000000000000000000000000000000000000000000000000000000000000002",
-        )?;
+        let sender_privkey = crate::types::PrivateKey(
+            git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::NotTracked,
+        );
+        let recipient_privkey = crate::types::PrivateKey(
+            git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::NotTracked,
+        );
         let recipient_pubkey = recipient_privkey.public_key();
         let content = sender_privkey.encrypt(
             &recipient_pubkey,
@@ -653,12 +655,14 @@ mod tests {
 
     #[test]
     fn test_decrypt_result_frame_nip44() -> anyhow::Result<()> {
-        let sender_privkey = crate::types::PrivateKey::try_from_hex_string(
-            "0000000000000000000000000000000000000000000000000000000000000003",
-        )?;
-        let recipient_privkey = crate::types::PrivateKey::try_from_hex_string(
-            "0000000000000000000000000000000000000000000000000000000000000004",
-        )?;
+        let sender_privkey = crate::types::PrivateKey(
+            git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::NotTracked,
+        );
+        let recipient_privkey = crate::types::PrivateKey(
+            git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::NotTracked,
+        );
         let recipient_pubkey = recipient_privkey.public_key();
         let content = sender_privkey.encrypt(
             &recipient_pubkey,
