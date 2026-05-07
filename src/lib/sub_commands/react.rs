@@ -1,6 +1,5 @@
 use std::{process::exit, time::Duration};
 
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use clap::Args;
 use tracing::debug;
 
@@ -33,7 +32,7 @@ pub async fn react_to_event(
     sub_command_args: &ReactionSubCommand,
 ) -> Result<(), Error> {
     if relays.is_empty() {
-        relays = BOOTSTRAP_RELAYS.to_vec();
+        relays = crate::load_relays_or_bootstrap();
     }
 
     let keys = parse_private_key(private_key, false).await?;
