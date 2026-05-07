@@ -12,7 +12,7 @@ Use `gnostr` for repo-local git+nostr workflows, relay actions, chat updates, an
 - `gnostr -V` prints the installed version and should be checked when behavior differs across environments.
 - `gnostr legit` is the git/nostr workflow entrypoint.
 - `gnostr chat` is for short status updates and oneshot messages.
-- `gnostr dm` sends NIP-44 direct messages.
+- `gnostr dm` sends NIP-44 direct messages and can list/decrypt inbox messages when `--message` is omitted.
 - `gnostr note` sends a text note.
 - `gnostr ngit` is the passthrough for ngit subcommands.
 - `gnostr nip34` exposes the NIP-34 helpers used by this repo.

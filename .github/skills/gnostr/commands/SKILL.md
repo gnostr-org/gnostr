@@ -26,7 +26,7 @@ Use this skill as the index for the top-level `gnostr` subcommands.
 - `custom-event` — create custom event
 - `delete-event` — delete an event
 - `delete-profile` — delete a profile
-- `dm` — send a NIP-44 direct message
+- `dm` — send a NIP-44 direct message or list/decrypt inbox messages
 - `fetch-by-id` — fetch an event by ID
 - `generate-keypair` — generate a new keypair
 - `git` — git subcommands
