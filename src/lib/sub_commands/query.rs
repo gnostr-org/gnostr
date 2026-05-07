@@ -369,6 +369,15 @@ mod tests {
         .collect()
     }
 
+    fn live_test_message(prefix: &str) -> anyhow::Result<String> {
+        Ok(format!(
+            "{prefix}@{}/{}/{}",
+            crate::get_blockheight_sync()?,
+            crate::get_weeble_sync()?,
+            crate::get_wobble_sync()?
+        ))
+    }
+
     async fn wait_for_event_frame(event_id: &str, relays: &[Url]) -> anyhow::Result<String> {
         let query = serde_json::json!([
             "REQ",
@@ -750,7 +759,7 @@ mod tests {
             .add_relays(relays.iter().map(|relay| relay.as_str().to_string()).collect())
             .await?;
 
-        let plaintext = "real kind 4 roundtrip";
+        let plaintext = live_test_message("nip4_test_message")?;
         let encrypted = sender_privkey.encrypt(
             &recipient_pubkey,
             plaintext,
@@ -789,7 +798,7 @@ mod tests {
             .add_relays(relays.iter().map(|relay| relay.as_str().to_string()).collect())
             .await?;
 
-        let plaintext = "real kind 44 roundtrip";
+        let plaintext = live_test_message("nip44_test_message")?;
         let encrypted = sender_privkey.encrypt(
             &recipient_pubkey,
             plaintext,
