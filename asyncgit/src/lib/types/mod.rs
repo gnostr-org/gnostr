@@ -3,7 +3,10 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-//! This crate provides types for nostr protocol handling.
+//! This crate provides the canonical Nostr protocol types.
+//!
+//! `gnostr-p2p` re-exports these types, and `gnostr-chat` consumes them through
+//! the p2p facade so the shared chain stays `asyncgit -> p2p -> chat`.
 
 #![allow(missing_docs)]
 #![deny(
