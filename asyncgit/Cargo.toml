@@ -26,6 +26,8 @@ gnostr_web = []
 tui = []
 speedy = []
 nostr = []
+long_tests = []
+expensive_tests = ["long_tests"]
 vendor-openssl = ["openssl-sys/vendored"]
 vendored-openssl = ["vendor-openssl"]
 

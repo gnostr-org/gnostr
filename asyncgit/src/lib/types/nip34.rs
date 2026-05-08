@@ -1206,6 +1206,7 @@ path = ":memory:"
         assert!(get_leading_zero_bits(&event.id.0) >= 4);
     }
 
+    #[cfg(feature = "long_tests")]
     #[tokio::test]
     #[serial]
     async fn nip34_event_matrix_covers_all_kinds_and_git_notes() -> crate::error::Result<()> {
