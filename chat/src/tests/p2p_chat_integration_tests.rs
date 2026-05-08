@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use std::collections::BTreeMap;
     use std::time::Duration;
 
     use libp2p::{
@@ -17,11 +16,10 @@ mod tests {
     use crate::{
         event::ChatEvent,
         evt_loop,
-        message::{ClientMessage, EventKind, Filter, GitNote, IdHex, PublicKeyHex, RelayMessage, SubscriptionId, Unixtime},
+        message::{ClientMessage, EventKind, Filter, GitNote, RelayMessage, SubscriptionId},
         msg::{Msg, MsgKind},
         p2p::spawn_local_p2p_relay_service_async,
     };
-    use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
     use gnostr_p2p::keypair_from_seed;
     use libp2p::relay::client::Event as RelayClientEvent;
 
@@ -136,56 +134,20 @@ mod tests {
     }
 
     fn relay_probe_git_note(message: &str) -> GitNote {
-        GitNote {
-            note: NoteInfo {
-                note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
-                annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
-                notes_ref: Some("refs/notes/commits".to_string()),
-                message: message.to_string(),
-                author: "chat".to_string(),
-                committer: "chat".to_string(),
-                committer_time: 1777759186,
-            },
-        }
+        gnostr_asyncgit::GitNote::trace(message).into()
     }
 
     fn relay_trace_envelopes() -> Vec<RelayTraceEnvelope> {
-        let mut tags = BTreeMap::new();
-        tags.insert(
-            'e',
-            vec!["5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6".to_string()],
-        );
-        tags.insert(
-            'p',
-            vec!["221115830ced1ca94352002485fcc7a75dcfe30d1b07f5f6fbe9c0407cfa59a1".to_string()],
-        );
-
-        let filter = Filter {
-            ids: vec![IdHex::try_from_str(
-                "3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084",
-            )
-            .expect("valid trace id")],
-            authors: vec![PublicKeyHex::try_from_str(
-                "ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49",
-            )
-            .expect("valid trace pubkey")],
-            kinds: vec![EventKind::TextNote, EventKind::Metadata],
-            tags,
-            since: Some(Unixtime(1668572286)),
-            until: None,
-            limit: None,
-        };
+        let filter = Filter::trace();
+        let subscription_id = SubscriptionId::trace();
 
         vec![
             RelayTraceEnvelope::EventKind(EventKind::TextNote),
             RelayTraceEnvelope::RelayMessage(RelayMessage::Notice(
                 "relay notice over nocapture".to_string(),
             )),
-            RelayTraceEnvelope::SubscriptionId(SubscriptionId("lk234js09".to_string())),
-            RelayTraceEnvelope::ClientMessage(ClientMessage::Req(
-                SubscriptionId("lk234js09".to_string()),
-                vec![filter],
-            )),
+            RelayTraceEnvelope::SubscriptionId(subscription_id.clone()),
+            RelayTraceEnvelope::ClientMessage(ClientMessage::Req(subscription_id, vec![filter])),
             RelayTraceEnvelope::GitNote(relay_probe_git_note("hello over relay")),
         ]
     }
