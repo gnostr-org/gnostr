@@ -366,17 +366,14 @@ mod tests {
     fn test_git_test_repo_new() -> Result<()> {
         let repo_main = GitTestRepo::new("main")?;
         assert!(repo_main.dir.exists());
-        assert_eq!(
-            repo_main.git_repo.head().err().unwrap().code(),
-            git2::ErrorCode::UnbornBranch
-        );
+        assert_eq!(repo_main.git_repo.head()?.shorthand(), Some("main"));
         assert_eq!(repo_main.get_checked_out_branch_name()?, "main");
 
         let repo_dev = GitTestRepo::new("development")?;
         assert!(repo_dev.dir.exists());
         assert_eq!(
-            repo_dev.git_repo.head().err().unwrap().code(),
-            git2::ErrorCode::UnbornBranch
+            repo_dev.git_repo.head()?.shorthand(),
+            Some("development")
         );
         assert_eq!(repo_dev.get_checked_out_branch_name()?, "development");
 
