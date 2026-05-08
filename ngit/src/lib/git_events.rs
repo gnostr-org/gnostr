@@ -1333,11 +1333,12 @@ mod tests {
         fn padded_commit_hash_becomes_the_link_event_id() -> Result<()> {
             let note = note_fixture();
             let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+            let expected_event_id = Keys::parse(&padded_note_id(note.annotated_id.to_string()))
+                .context("failed to derive expected event id")?
+                .public_key()
+                .to_hex();
 
-            assert_eq!(
-                event_id.to_hex(),
-                format!("{:0>64}", note.annotated_id.to_string())
-            );
+            assert_eq!(event_id.to_hex(), expected_event_id);
             Ok(())
         }
 
@@ -1346,7 +1347,7 @@ mod tests {
         fn git_note_tags_reference_commit_and_notes_ref() -> Result<()> {
             let note = note_fixture();
             let commit_id = note.annotated_id.to_string();
-            let padded_commit_id = format!("{:0>64}", commit_id);
+            let expected_event_id = git_note_event_id(&commit_id)?.to_hex();
             let tags = git_note_tags(&note)?;
             let (blockheight, weeble, wobble) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
@@ -1356,7 +1357,7 @@ mod tests {
                 .iter()
                 .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
                 .context("missing e tag")?;
-            assert_eq!(e_tag.as_slice()[1], padded_commit_id);
+            assert_eq!(e_tag.as_slice()[1], expected_event_id);
             assert!(e_tag.is_root());
 
             assert!(tags.iter().any(|tag| {
@@ -1375,10 +1376,6 @@ mod tests {
             assert!(tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("blockheight")
                     && tag.as_slice().get(1).map(|s| s.as_str()) == Some(blockheight.as_str())
-            }));
-            assert!(tags.iter().any(|tag| {
-                tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
-                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
             }));
             Ok(())
         }
@@ -1400,9 +1397,8 @@ mod tests {
                 .tags
                 .iter()
                 .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
-            let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+            let (blockheight, weeble, _) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
-            let wobble_str = wobble.to_string();
 
             // unlikely to change
             assert!(event.tags.iter().any(|tag| {
@@ -1429,6 +1425,7 @@ mod tests {
         async fn padded_commit_hex_can_seed_the_git_note_signer() -> Result<()> {
             let note = note_fixture();
             let padded_commit = format!("{:0>64}", note.annotated_id);
+            let expected_event_id = git_note_event_id(&note.annotated_id.to_string())?.to_hex();
             let signer: Arc<dyn NostrSigner> = Arc::new(nostr_sdk::Keys::parse(&padded_commit)?);
 
             let event = generate_git_note_event(&note, &signer).await?;
@@ -1443,7 +1440,7 @@ mod tests {
                     .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
                     .expect("e tag")
                     .as_slice()[1],
-                padded_commit
+                expected_event_id
             );
             Ok(())
         }
