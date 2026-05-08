@@ -455,8 +455,8 @@ mod dm_tests {
         assert_eq!(
             relays,
             vec![
-                "ws://localhost:8053".to_string(),
-                "ws://localhost:8055".to_string(),
+                "ws://localhost:8053/".to_string(),
+                "ws://localhost:8055/".to_string(),
             ]
         );
     }
@@ -479,8 +479,8 @@ mod dm_tests {
         assert_eq!(
             urls,
             vec![
-                "ws://localhost:8054".to_string(),
-                "ws://localhost:8055".to_string(),
+                "ws://localhost:8054/".to_string(),
+                "ws://localhost:8055/".to_string(),
             ]
         );
     }
