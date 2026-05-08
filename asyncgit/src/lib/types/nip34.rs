@@ -736,7 +736,12 @@ fn add_head(state: &mut HashMap<String, String>) {
 #[cfg(test)]
 mod tests {
     use actix_test::start;
+    use std::{env, fs, io::Write, path::Path, path::PathBuf, str::FromStr, sync::Arc};
     use super::*;
+    use crate::{
+        sync::{add_note, commit, default_notes_ref, show_note, stage_add_file, RepoPath},
+        types::generate_git_note_event,
+    };
     use crate::types::get_leading_zero_bits;
     use crate::types::{Client, Keys, Options};
     use crate::types::nip13::NIP13Event;
@@ -744,9 +749,7 @@ mod tests {
     use gnostr_crawler::{load_relays_or_bootstrap, relays::get_config_dir_path, run_nip34 as crawler_run_nip34};
     use gnostr_relay::App as GnostrRelayApp;
     use serial_test::serial;
-    use std::str::FromStr;
-    use std::{env, fs, path::PathBuf, sync::Arc};
-    use tempfile::TempDir;
+    use tempfile::{tempdir, TempDir};
 
     use ngit::{client::STATE_KIND as NGIT_STATE_KIND, git_events as ngit_git_events};
 
@@ -1204,6 +1207,61 @@ path = ":memory:"
         assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
         assert!(event.nonce_data().is_some());
         assert!(get_leading_zero_bits(&event.id.0) >= 4);
+    }
+
+    #[test]
+    #[serial]
+    fn real_repo_git_note_event_roundtrip() {
+        let temp_dir = tempdir().expect("temp repo");
+        let repo = git2::Repository::init(temp_dir.path()).expect("init repo");
+        {
+            let mut config = repo.config().expect("repo config");
+            config.set_str("user.name", "gnostr-trace").expect("user name");
+            config
+                .set_str("user.email", "trace@gnostr.org")
+                .expect("user email");
+        }
+
+        let repo_path: RepoPath = temp_dir
+            .path()
+            .to_str()
+            .expect("repo path")
+            .into();
+
+        let trace_file = temp_dir.path().join("trace.txt");
+        fs::write(&trace_file, "real asyncgit trace").expect("write trace file");
+        stage_add_file(&repo_path, Path::new("trace.txt")).expect("stage trace file");
+
+        let commit_id = commit(&repo_path, "real trace commit").expect("commit");
+        let notes_ref = default_notes_ref(&repo_path).expect("default notes ref");
+        let note_id = add_note(
+            &repo_path,
+            commit_id,
+            "real asyncgit note",
+            Some(&notes_ref),
+            false,
+        )
+        .expect("add note");
+
+        let note = show_note(&repo_path, commit_id, Some(&notes_ref))
+            .expect("show note")
+            .expect("note exists");
+        assert_eq!(note.note_id, note_id);
+        assert_eq!(note.annotated_id, commit_id.into());
+        assert_eq!(note.notes_ref.as_deref(), Some(notes_ref.as_str()));
+
+        let git_note = GitNote::from(&note);
+        let private_key = PrivateKey::generate();
+        let event = generate_git_note_event(&git_note, &private_key).expect("git note event");
+
+        assert_eq!(event.kind, EventKind::Patches);
+        assert_eq!(event.content, note.message);
+        assert_eq!(event.pubkey, private_key.public_key());
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "commit" && tag.value() == commit_id.to_string()));
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "notes-ref" && tag.value() == notes_ref));
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "weeble"));
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "blockheight"));
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "wobble"));
     }
 
     #[cfg(feature = "long_tests")]
