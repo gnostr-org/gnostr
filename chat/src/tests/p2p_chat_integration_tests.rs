@@ -1,7 +1,13 @@
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::collections::BTreeMap;
+    use std::fs;
+    use std::io::Write;
+    use std::path::Path;
+    use std::path::PathBuf;
     use std::time::Duration;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     use libp2p::{
         autonat, dcutr, gossipsub, identify, noise, ping, relay, request_response,
@@ -19,6 +25,11 @@ mod tests {
         message::{ClientMessage, EventKind, Filter, GitNote, RelayMessage, SubscriptionId},
         msg::{Msg, MsgKind},
         p2p::spawn_local_p2p_relay_service_async,
+    };
+    use gnostr_asyncgit::{
+        sync::{add_note, commit, show_note, stage_add_file, RepoPath},
+        types::{generate_git_note_event, Event, PrivateKey},
+        GitNote as AsyncGitNote,
     };
     use gnostr_p2p::keypair_from_seed;
     use libp2p::relay::client::Event as RelayClientEvent;
@@ -133,22 +144,89 @@ mod tests {
             .with(libp2p::multiaddr::Protocol::P2p(target))
     }
 
-    fn relay_probe_git_note(message: &str) -> GitNote {
-        gnostr_asyncgit::GitNote::trace(message).into()
+    fn init_trace_repo() -> (PathBuf, RepoPath, git2::Oid) {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("gnostr-chat-trace-{}-{unique}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create trace repo root");
+
+        let repo = git2::Repository::init(&root).expect("init trace repo");
+        {
+            let mut config = repo.config().expect("trace config");
+            config.set_str("user.name", "gnostr-trace").expect("set trace user");
+            config
+                .set_str("user.email", "trace@gnostr.org")
+                .expect("set trace email");
+        }
+
+        let repo_path: RepoPath = root
+            .to_str()
+            .expect("trace repo path")
+            .into();
+
+        let trace_file = root.join("trace.txt");
+        let mut file = fs::File::create(&trace_file).expect("trace file");
+        writeln!(file, "trace repo {}", root.display())
+        .expect("write trace file");
+
+        stage_add_file(&repo_path, Path::new("trace.txt")).expect("stage trace file");
+        let commit_id = commit(&repo_path, "trace commit").expect("trace commit");
+        (root, repo_path, commit_id.into())
+    }
+
+    fn trace_filter_from_event(event: &Event) -> Filter {
+        let mut tags = BTreeMap::new();
+        for tag in &event.tags {
+            let tagname = tag.tagname();
+            if let Some(letter) = tagname.chars().next() {
+                tags.entry(letter)
+                    .or_insert_with(Vec::new)
+                    .push(tag.value().to_string());
+            }
+        }
+
+        let mut filter = Filter::default();
+        filter.ids = vec![event.id.into()];
+        filter.authors = vec![event.pubkey.into()];
+        filter.kinds = vec![event.kind];
+        filter.tags = tags;
+        filter.since = Some(event.created_at);
+        filter.until = Some(event.created_at);
+        filter.limit = Some(event.tags.len());
+        filter
     }
 
     fn relay_trace_envelopes() -> Vec<RelayTraceEnvelope> {
-        let filter = Filter::trace();
-        let subscription_id = SubscriptionId::trace();
+        let (_root, repo_path, commit_id) = init_trace_repo();
+        let _note_id = add_note(
+            &repo_path,
+            commit_id,
+            &format!("trace note for {commit_id}"),
+            None,
+            false,
+        )
+        .expect("trace note");
+        let note = show_note(&repo_path, commit_id, None)
+            .expect("show trace note")
+            .expect("trace note exists");
+        let git_note: AsyncGitNote = (&note).into();
+        let private_key = PrivateKey::generate();
+        let event = generate_git_note_event(&git_note, &private_key).expect("git note event");
+        let subscription_id = SubscriptionId(event.id.as_hex_string());
+        let filter = trace_filter_from_event(&event);
 
         vec![
-            RelayTraceEnvelope::EventKind(EventKind::TextNote),
-            RelayTraceEnvelope::RelayMessage(RelayMessage::Notice(
-                "relay notice over nocapture".to_string(),
+            RelayTraceEnvelope::EventKind(event.kind),
+            RelayTraceEnvelope::RelayMessage(RelayMessage::Event(
+                subscription_id.clone(),
+                Box::new(event.clone()),
             )),
             RelayTraceEnvelope::SubscriptionId(subscription_id.clone()),
             RelayTraceEnvelope::ClientMessage(ClientMessage::Req(subscription_id, vec![filter])),
-            RelayTraceEnvelope::GitNote(relay_probe_git_note("hello over relay")),
+            RelayTraceEnvelope::GitNote(git_note),
         ]
     }
 
