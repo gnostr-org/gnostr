@@ -6716,7 +6716,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -7130,7 +7130,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7221,7 +7221,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-chat"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "anyhow",
  "clap 4.6.1",
@@ -7336,14 +7336,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "git2-hooks 0.7.0",
 ]
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "env_logger 0.11.10",
  "git2",
@@ -7373,11 +7373,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 
 [[package]]
 name = "gnostr-js"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7408,7 +7408,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "argparse",
  "chrono",
@@ -7475,7 +7475,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-p2p"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -7520,7 +7520,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "log",
  "scopetime 0.1.0",
@@ -7528,7 +7528,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-web"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "actix-http",
  "anyhow",
@@ -7604,7 +7604,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_qr"
-version = "948375.1874.943145"
+version = "948456.1874.836734"
 dependencies = [
  "hex",
  "image",
