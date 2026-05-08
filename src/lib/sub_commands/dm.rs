@@ -210,9 +210,8 @@ pub async fn dm_inbox_command(
     let relays_to_use = build_dm_inbox_relays(explicit_relays, crawler_relays, fallback_relays);
 
     debug!("DM inbox query relays: {:?}", relays_to_use);
-    println!("DM inbox query relays:");
     for relay in &relays_to_use {
-        println!("  {relay}");
+        debug!("  {relay}");
     }
 
     let results = crate::query::send(query_string, relays_to_use, Some(inbox_limit))
