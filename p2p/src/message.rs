@@ -8,8 +8,27 @@ pub use crate::git2::types::*;
 
 #[cfg(test)]
 mod tests {
-        use super::*;
-        use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
+    use super::*;
+    use gnostr_asyncgit::{git2::Oid, sync::NoteInfo, types as async_types};
+
+    #[test]
+    fn reexports_asyncgit_nostr_types() {
+        let _event_kind: EventKind = async_types::EventKind::TextNote;
+        let _relay_message: RelayMessage = async_types::RelayMessage::Notice("ok".to_string());
+        let _git_note: GitNote = async_types::GitNote {
+            note: NoteInfo {
+                note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
+                annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
+                notes_ref: Some("refs/notes/commits".to_string()),
+                message: "p2p git note".to_string(),
+                author: "p2p".to_string(),
+                committer: "p2p".to_string(),
+                committer_time: 1777759186,
+            },
+        };
+
+        let _ = (_event_kind, _relay_message, _git_note);
+    }
 
     #[test]
     fn exports_core_nostr_types() {
