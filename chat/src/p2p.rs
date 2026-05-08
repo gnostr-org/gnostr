@@ -16,7 +16,7 @@ use libp2p::{
     autonat, dcutr, gossipsub, identify, kad, mdns, noise, ping, relay,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, StreamProtocol,
+    tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
 use parking_lot::Mutex;
 use once_cell::sync::OnceCell;
@@ -30,12 +30,13 @@ use crate::{
     event::ChatEvent,
     msg::{Msg, MsgKind},
 };
-use gnostr_p2p::cli;
 use gnostr_p2p::kvs::{FileRequest, FileResponse};
 use libp2p::identity;
 
 /// Handle for the local p2p relay service started by chat.
 pub struct LocalP2pRelayService {
+    peer_id: PeerId,
+    listen_addr: Multiaddr,
     join_handle: tokio::task::JoinHandle<()>,
 }
 
@@ -45,19 +46,42 @@ impl Drop for LocalP2pRelayService {
     }
 }
 
+impl LocalP2pRelayService {
+    pub fn peer_id(&self) -> PeerId {
+        self.peer_id
+    }
+
+    pub fn listen_addr(&self) -> &Multiaddr {
+        &self.listen_addr
+    }
+}
+
 /// Start an in-process relay-capable peer for chat startup.
 pub fn spawn_local_p2p_relay_service() -> Result<LocalP2pRelayService> {
     let keypair = identity::Keypair::generate_ed25519();
+    let peer_id = keypair.public().to_peer_id();
+    let (listen_addr_tx, listen_addr_rx) = tokio::sync::oneshot::channel();
     let join_handle = tokio::spawn(async move {
-        if let Err(error) = run_local_p2p_relay_service(keypair).await {
+        if let Err(error) = run_local_p2p_relay_service(keypair, listen_addr_tx).await {
             tracing::warn!("local p2p relay service exited with error: {error}");
         }
     });
 
-    Ok(LocalP2pRelayService { join_handle })
+    let listen_addr = listen_addr_rx
+        .blocking_recv()
+        .map_err(|_| anyhow!("local p2p relay service did not report a listen address"))?;
+
+    Ok(LocalP2pRelayService {
+        peer_id,
+        listen_addr,
+        join_handle,
+    })
 }
 
-async fn run_local_p2p_relay_service(keypair: identity::Keypair) -> Result<()> {
+async fn run_local_p2p_relay_service(
+    keypair: identity::Keypair,
+    listen_addr_tx: tokio::sync::oneshot::Sender<Multiaddr>,
+) -> Result<()> {
     #[derive(NetworkBehaviour)]
     struct RelayBehaviour {
         relay: relay::Behaviour,
@@ -83,7 +107,8 @@ async fn run_local_p2p_relay_service(keypair: identity::Keypair) -> Result<()> {
         })?
         .build();
 
-    cli::listen_default_addresses_relay(&mut swarm, 0, false)?;
+    swarm.listen_on("/ip4/127.0.0.1/tcp/0".parse()?)?;
+    swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse()?)?;
 
     while let Some(event) = swarm.next().await {
         match event {
@@ -95,6 +120,7 @@ async fn run_local_p2p_relay_service(keypair: identity::Keypair) -> Result<()> {
             }
             SwarmEvent::Behaviour(event) => debug!("local p2p relay event: {event:?}"),
             SwarmEvent::NewListenAddr { address, .. } => {
+                let _ = listen_addr_tx.send(address.clone());
                 debug!("local p2p relay listening on {address}");
             }
             _ => {}
