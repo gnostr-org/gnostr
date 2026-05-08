@@ -1,7 +1,7 @@
 //! Shared p2p-backed message types for chat integrations.
 //!
-//! This module re-exports the p2p facade so chat consumes Nostr and git-note
-//! types through the same path as the rest of the stack.
+//! Chat consumes Nostr and git-note types through the p2p facade, keeping the
+//! protocol chain aligned as `asyncgit -> p2p -> chat`.
 
 pub use gnostr_p2p::message::*;
 
