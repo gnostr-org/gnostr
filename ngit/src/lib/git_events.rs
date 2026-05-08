@@ -1349,9 +1349,8 @@ mod tests {
             let commit_id = note.annotated_id.to_string();
             let expected_event_id = git_note_event_id(&commit_id)?.to_hex();
             let tags = git_note_tags(&note)?;
-            let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+            let (blockheight, weeble, _) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
-            let wobble_str = wobble.to_string();
 
             let e_tag = tags
                 .iter()
