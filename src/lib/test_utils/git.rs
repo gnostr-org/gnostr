@@ -165,7 +165,6 @@ impl GitTestRepo {
     }
 
     pub fn populate(&mut self) -> Result<Oid> {
-        self.initial_commit()?;
         fs::write(self.dir.join("t1.md"), "some content")?;
         self.stage_and_commit("add t1.md")?;
         fs::write(self.dir.join("t2.md"), "some content1")?;
@@ -173,7 +172,6 @@ impl GitTestRepo {
     }
 
     pub fn populate_minus_1(&mut self) -> Result<Oid> {
-        self.initial_commit()?;
         fs::write(self.dir.join("t1.md"), "some content")?;
         self.stage_and_commit("add t1.md")
     }
@@ -435,7 +433,6 @@ mod tests {
     #[ignore]
     fn test_get_local_branch_names() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
-        repo.initial_commit()?;
         let mut branches = repo.get_local_branch_names()?;
         branches.sort();
         assert_eq!(branches, vec!["main"]);
@@ -453,7 +450,6 @@ mod tests {
     #[ignore]
     fn test_get_checked_out_branch_name() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
-        repo.initial_commit()?;
         assert_eq!(repo.get_checked_out_branch_name()?, "main");
 
         repo.create_branch("feature")?;
