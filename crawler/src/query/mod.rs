@@ -172,6 +172,10 @@ pub async fn send(
         }
     }
 
+    if let Some(result) = last_success {
+        return Ok(result);
+    }
+
     Err(Box::new(io::Error::new(
         io::ErrorKind::Other,
         format!(
@@ -182,10 +186,6 @@ pub async fn send(
                 .unwrap_or_default()
         ),
     )))
-
-    .or_else(|err| {
-        last_success.ok_or(err)
-    })
 }
 
 async fn send_to_relay(
