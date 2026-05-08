@@ -1,4 +1,10 @@
-use std::env;
+use std::{
+    env,
+    fs::OpenOptions,
+    io,
+    io::Write as _,
+    sync::{Arc, Mutex},
+};
 
 use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
@@ -17,6 +23,57 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 
 fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
+struct SharedFileWriter(Arc<Mutex<std::fs::File>>);
+
+struct SharedFileGuard(Arc<Mutex<std::fs::File>>);
+
+impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for SharedFileWriter {
+    type Writer = SharedFileGuard;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        SharedFileGuard(self.0.clone())
+    }
+}
+
+impl io::Write for SharedFileGuard {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.lock().unwrap().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.0.lock().unwrap().flush()
+    }
+}
+
+fn init_logging(base_level: LevelFilter) -> anyhow::Result<()> {
+    let app_cache = get_app_cache_path()?;
+    let log_file_path = app_cache.join("gnostr.log");
+    let log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_file_path)
+        .map_err(|err| anyhow::anyhow!("failed to open log file {:?}: {}", log_file_path, err))?;
+
+    let file_writer = SharedFileWriter(Arc::new(Mutex::new(log_file)));
+    let mut filter = EnvFilter::builder()
+        .with_default_directive(base_level.into())
+        .from_env()
+        .expect("Failed to build EnvFilter from environment");
+    filter = filter.add_directive("tokio_tungstenite=off".parse().unwrap());
+
+    let subscriber = Registry::default()
+        .with(fmt::layer().with_writer(std::io::stderr))
+        .with(fmt::layer().with_ansi(false).with_writer(file_writer))
+        .with(filter);
+
+    if let Err(e) = subscriber.try_init() {
+        eprintln!("Failed to initialize tracing subscriber: {}", e);
+    }
+
+    trace!(?log_file_path, "logging captured to file");
+    Ok(())
 }
 
 #[cfg(debug_assertions)]
@@ -41,7 +98,6 @@ async fn main() -> anyhow::Result<()> {
     unsafe { env::set_var("WOBBLE", "0") };
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
-    // Setup tracing subscriber once and globally
     let base_level = if gnostr_cli_args.debug {
         LevelFilter::DEBUG
     } else if gnostr_cli_args.trace {
@@ -53,23 +109,7 @@ async fn main() -> anyhow::Result<()> {
     } else {
         LevelFilter::OFF
     };
-
-    let mut filter = EnvFilter::builder()
-        .with_default_directive(base_level.into())
-        .from_env() // This reads RUST_LOG and builds the filter
-        .expect("Failed to build EnvFilter from environment");
-    filter = filter.add_directive("tokio_tungstenite=off".parse().unwrap());
-
-    let subscriber = Registry::default()
-        .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
-        .with(filter);
-
-    if let Err(e) = subscriber.try_init() {
-        eprintln!("Failed to initialize tracing subscriber: {}", e);
-    }
-
-    let app_cache = get_app_cache_path();
-    trace!("{:?}", app_cache);
+    init_logging(base_level)?;
 
     let env_args: Vec<String> = env::args().collect();
     for arg in &env_args {
