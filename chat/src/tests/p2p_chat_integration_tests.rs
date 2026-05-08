@@ -157,7 +157,7 @@ mod tests {
         );
         tags.insert(
             'p',
-            vec!["ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49".to_string()],
+            vec!["221115830ced1ca94352002485fcc7a75dcfe30d1b07f5f6fbe9c0407cfa59a1".to_string()],
         );
 
         let filter = Filter {
@@ -169,11 +169,11 @@ mod tests {
                 "ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49",
             )
             .expect("valid trace pubkey")],
-            kinds: vec![EventKind::TextNote, EventKind::Patches],
+            kinds: vec![EventKind::TextNote, EventKind::Metadata],
             tags,
-            since: Some(Unixtime(1777759000)),
-            until: Some(Unixtime(1777759999)),
-            limit: Some(25),
+            since: Some(Unixtime(1668572286)),
+            until: None,
+            limit: None,
         };
 
         vec![
@@ -181,9 +181,9 @@ mod tests {
             RelayTraceEnvelope::RelayMessage(RelayMessage::Notice(
                 "relay notice over nocapture".to_string(),
             )),
-            RelayTraceEnvelope::SubscriptionId(SubscriptionId("trace-sub-1".to_string())),
+            RelayTraceEnvelope::SubscriptionId(SubscriptionId("lk234js09".to_string())),
             RelayTraceEnvelope::ClientMessage(ClientMessage::Req(
-                SubscriptionId("trace-sub-2".to_string()),
+                SubscriptionId("lk234js09".to_string()),
                 vec![filter],
             )),
             RelayTraceEnvelope::GitNote(relay_probe_git_note("hello over relay")),
