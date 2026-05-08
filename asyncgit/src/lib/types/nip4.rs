@@ -76,13 +76,17 @@ pub fn decrypt(
 mod tests {
     use super::*;
     use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+    use actix_test::start;
     use secp256k1::{Keypair, Secp256k1};
+    use std::{fs, time::Duration};
+    use tempfile::NamedTempFile;
 
     use crate::{
         default_gnostr_private_key,
         types::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
         types::ContentEncryptionAlgorithm,
     };
+    use gnostr_relay::App as GnostrRelayApp;
 
     fn test_keypair(seed: u8) -> (SecretKey, XOnlyPublicKey) {
         let secp = Secp256k1::new();
@@ -94,6 +98,32 @@ mod tests {
 
     fn test_private_key(seed: u8) -> PrivateKey {
         PrivateKey(SecretKey::from_slice(&[seed; 32]).unwrap(), KeySecurity::Weak)
+    }
+
+    fn create_test_relay_app() -> crate::error::Result<GnostrRelayApp> {
+        let config_file = NamedTempFile::with_suffix(".toml")
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        let config_path = config_file.path().to_owned();
+        fs::write(
+            &config_path,
+            r#"
+[server]
+port = 0
+host = "127.0.0.1"
+
+[database]
+path = ":memory:"
+"#,
+        )
+        .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+
+        GnostrRelayApp::create(
+            Some(config_path.to_str().expect("relay config path")),
+            true,
+            Some("NOSTR".to_owned()),
+            None,
+        )
+        .map_err(|err| crate::error::Error::Generic(err.to_string()))
     }
 
     #[test]
@@ -116,8 +146,14 @@ mod tests {
         assert!(err.to_string().contains("missing iv"));
     }
 
-    #[test]
-    fn encrypt_and_decrypt_real_dm_events_in_both_directions() {
+    #[tokio::test]
+    async fn encrypt_and_decrypt_real_dm_events_in_both_directions() -> crate::error::Result<()> {
+        let relay_srv = start(|| {
+            let app_data = create_test_relay_app().expect("failed to create relay app");
+            app_data.web_app()
+        });
+        let relay_url = relay_srv.url("/").replace("http", "ws");
+
         let sender = PrivateKey(default_gnostr_private_key(), KeySecurity::Weak);
         let recipient = test_private_key(2);
         let sender_pubkey = sender.public_key();
@@ -142,7 +178,28 @@ mod tests {
         outbound_event.verify(None).unwrap();
         assert_eq!(outbound_event.pubkey, sender_pubkey);
         assert_eq!(outbound_event.kind, EventKind::EncryptedDirectMessage);
-        assert_eq!(recipient.decrypt(&sender_pubkey, &outbound_event.content).unwrap(), outbound_message);
+        assert_eq!(
+            recipient
+                .decrypt(&sender_pubkey, &outbound_event.content)
+                .unwrap(),
+            outbound_message
+        );
+
+        let mut sender_client = crate::types::Client::new(
+            &crate::types::Keys::new(sender.clone()),
+            crate::types::Options::new().send_timeout(Some(Duration::from_secs(2))),
+        );
+        sender_client
+            .add_relays(vec![relay_url.clone()])
+            .await
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        assert_eq!(
+        sender_client
+            .send_event(outbound_event.clone())
+            .await
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?,
+            outbound_event.id
+        );
 
         let return_message = "and back again";
         let return_ciphertext = recipient
@@ -162,6 +219,29 @@ mod tests {
         println!("return dm event id: {}", return_event.id);
         return_event.verify(None).unwrap();
         assert_eq!(return_event.pubkey, recipient_pubkey);
-        assert_eq!(sender.decrypt(&recipient_pubkey, &return_event.content).unwrap(), return_message);
+        assert_eq!(
+            sender
+                .decrypt(&recipient_pubkey, &return_event.content)
+                .unwrap(),
+            return_message
+        );
+
+        let mut recipient_client = crate::types::Client::new(
+            &crate::types::Keys::new(recipient.clone()),
+            crate::types::Options::new().send_timeout(Some(Duration::from_secs(2))),
+        );
+        recipient_client
+            .add_relays(vec![relay_url])
+            .await
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        assert_eq!(
+        recipient_client
+            .send_event(return_event.clone())
+            .await
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?,
+            return_event.id
+        );
+
+        Ok(())
     }
 }
