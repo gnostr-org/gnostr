@@ -5,8 +5,14 @@
 
 //! This crate provides the canonical Nostr protocol types.
 //!
-//! `gnostr-p2p` re-exports these types, and `gnostr-chat` consumes them through
-//! the p2p facade so the shared chain stays `asyncgit -> p2p -> chat`.
+//! Workspace flow:
+//! - `gnostr-p2p` re-exports these types.
+//! - `gnostr-chat` consumes them through the p2p facade.
+//! - `gnostr-crawler` also uses these types directly for relay-query wiring.
+//!
+//! Keep the chain `asyncgit -> p2p -> chat` for shared wire types. Avoid making
+//! `crawler` depend on `p2p`, because `p2p` already depends on `crawler` for the
+//! relay bucket helpers and that would create a cycle.
 
 #![allow(missing_docs)]
 #![deny(
