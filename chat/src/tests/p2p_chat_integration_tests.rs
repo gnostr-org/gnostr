@@ -9,19 +9,29 @@ mod tests {
         tcp, yamux, Multiaddr, PeerId,
     };
     use futures::StreamExt;
+    use serde::{Deserialize, Serialize};
     use tokio::sync::mpsc;
     use tokio::sync::oneshot;
 
     use crate::{
         event::ChatEvent,
         evt_loop,
-        message::GitNote,
+        message::{ClientMessage, EventKind, Filter, GitNote, RelayMessage, SubscriptionId},
         msg::{Msg, MsgKind},
         p2p::spawn_local_p2p_relay_service_async,
     };
     use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
     use gnostr_p2p::keypair_from_seed;
     use libp2p::relay::client::Event as RelayClientEvent;
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    enum RelayTraceEnvelope {
+        EventKind(EventKind),
+        RelayMessage(RelayMessage),
+        SubscriptionId(SubscriptionId),
+        ClientMessage(ClientMessage),
+        GitNote(GitNote),
+    }
 
     #[derive(NetworkBehaviour)]
     struct RelayProbeBehaviour {
@@ -31,7 +41,7 @@ mod tests {
         gossipsub: gossipsub::Behaviour,
         identify: identify::Behaviour,
         ping: ping::Behaviour,
-        request_response: request_response::cbor::Behaviour<GitNote, GitNote>,
+        request_response: request_response::cbor::Behaviour<RelayTraceEnvelope, RelayTraceEnvelope>,
     }
 
     enum RelayProbeCommand {
@@ -46,8 +56,8 @@ mod tests {
         },
         Request {
             peer_id: PeerId,
-            message: GitNote,
-            sender: oneshot::Sender<Result<GitNote, String>>,
+            message: RelayTraceEnvelope,
+            sender: oneshot::Sender<Result<RelayTraceEnvelope, String>>,
         },
     }
 
@@ -82,7 +92,11 @@ mod tests {
                 .map_err(|_| "listen response channel closed".to_string())?
         }
 
-        async fn request(&mut self, peer_id: PeerId, message: GitNote) -> Result<GitNote, String> {
+        async fn request(
+            &mut self,
+            peer_id: PeerId,
+            message: RelayTraceEnvelope,
+        ) -> Result<RelayTraceEnvelope, String> {
             let (sender, receiver) = oneshot::channel();
             self.command_tx
                 .send(RelayProbeCommand::Request {
@@ -132,6 +146,21 @@ mod tests {
                 committer_time: 1777759186,
             },
         }
+    }
+
+    fn relay_trace_envelopes() -> Vec<RelayTraceEnvelope> {
+        vec![
+            RelayTraceEnvelope::EventKind(EventKind::TextNote),
+            RelayTraceEnvelope::RelayMessage(RelayMessage::Notice(
+                "relay notice over nocapture".to_string(),
+            )),
+            RelayTraceEnvelope::SubscriptionId(SubscriptionId("trace-sub-1".to_string())),
+            RelayTraceEnvelope::ClientMessage(ClientMessage::Req(
+                SubscriptionId("trace-sub-2".to_string()),
+                vec![Filter::default()],
+            )),
+            RelayTraceEnvelope::GitNote(relay_probe_git_note("hello over relay")),
+        ]
     }
 
     fn spawn_relay_probe_peer(seed: &str) -> RelayProbePeer {
@@ -190,7 +219,7 @@ mod tests {
             swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().expect("quic listen")).expect("listen quic");
 
             let mut pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), String>>> = HashMap::new();
-            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<GitNote, String>>> =
+            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<RelayTraceEnvelope, String>>> =
                 HashMap::new();
 
             loop {
@@ -252,7 +281,7 @@ mod tests {
                                     .expect("response channel to stay open");
                             }
                             request_response::Message::Response { request_id, response } => {
-                                println!("relay probe received gitnote response for request {request_id:?}");
+                                println!("relay probe received trace response for request {request_id:?}: {response:?}");
                                 if let Some(sender) = pending_request.remove(&request_id) {
                                     let _ = sender.send(Ok(response));
                                 }
@@ -507,14 +536,15 @@ mod tests {
             "peer one circuit status: {circuit_status}"
         );
 
-        let git_note = relay_probe_git_note("hello over relay");
-        println!("relay probe sending gitnote: {git_note:?}");
-        let response = peer_one
-            .request(peer_two.peer_id, git_note.clone())
-            .await
-            .expect("relay request to round-trip");
-        println!("relay probe received gitnote: {response:?}");
-        assert_eq!(response, git_note);
+        for (index, envelope) in relay_trace_envelopes().into_iter().enumerate() {
+            println!("relay probe sending trace #{index}: {envelope:?}");
+            let response = peer_one
+                .request(peer_two.peer_id, envelope.clone())
+                .await
+                .expect("relay request to round-trip");
+            println!("relay probe received trace #{index}: {response:?}");
+            assert_eq!(response, envelope);
+        }
 
         let punch_status = peer_two
             .wait_for_status_contains("InboundCircuitEstablished", Duration::from_secs(20))
