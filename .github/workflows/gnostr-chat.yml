@@ -157,7 +157,7 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
-          GNOSTR_HASH="$(gnostr --hash "")"
+          GNOSTR_HASH="$($GNOSTR_CMD --hash "")"
 
           $GNOSTR_CMD \
             -d ${{ env.POW }} \
@@ -165,7 +165,7 @@ jobs:
             --nsec "$GNOSTR_HASH" \
             set-metadata \
             -n gnostr \
-            -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+            -a gnostr://$($GNOSTR_CMD --weeble)/$($GNOSTR_CMD --blockheight) \
             -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
             -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
@@ -179,7 +179,7 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
-          $GNOSTR_CMD ngit --nsec "$(gnostr --hash "")" fetch
+          $GNOSTR_CMD ngit --nsec "$($GNOSTR_CMD --hash "")" fetch
       - run: |
           if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
@@ -191,19 +191,24 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          GNOSTR_HASH="$($GNOSTR_CMD --hash "")"
+          GNOSTR_WEEBLE="$($GNOSTR_CMD --weeble)"
+          GNOSTR_BLOCKHEIGHT="$($GNOSTR_CMD --blockheight)"
+          GNOSTR_WOBBLE="$($GNOSTR_CMD --wobble)"
+
           EVENT=$($GNOSTR_CMD \
-            --nsec "$(gnostr --hash "")" \
+            --nsec "$GNOSTR_HASH" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
             --kind 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+            -c "$GNOSTR_WEEBLE/$GNOSTR_BLOCKHEIGHT/$GNOSTR_WOBBLE" \
             -t "a|blah" \
             -t "a|$(date +%s)" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
+            -t "$GNOSTR_WEEBLE" \
+            -t "$GNOSTR_BLOCKHEIGHT" \
+            -t "$GNOSTR_WOBBLE" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$($GNOSTR_CMD convert-key -p note -k $EVENT || true) || true && \
