@@ -285,7 +285,7 @@ pub enum GnostrCommands {
     Query(QuerySubCommand),
     /// React to an event
     React(react::ReactionSubCommand),
-    /// Relay sub commands
+    /// Run the gnostr relay server
     Relay(relay::RelaySubCommand),
     #[cfg(feature = "blossom")]
     /// Run the Blossom server
