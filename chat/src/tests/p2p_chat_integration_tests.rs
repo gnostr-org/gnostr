@@ -9,6 +9,7 @@ mod tests {
         event::ChatEvent,
         evt_loop,
         msg::{Msg, MsgKind},
+        p2p::spawn_local_p2p_relay_service,
     };
 
     async fn next_chat_message(
@@ -98,6 +99,73 @@ mod tests {
         } else {
             panic!(
                 "Received wrong event type on peer 1: {:?}",
+                received_event_2
+            );
+        }
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "long_tests")]
+    #[ignore]
+    async fn test_p2p_connectivity_two_nodes_with_local_relay() {
+        let _relay = spawn_local_p2p_relay_service().expect("local p2p relay service");
+        tokio::time::sleep(Duration::from_secs(5)).await;
+
+        let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, mut recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
+
+        let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay");
+
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+
+        tokio::time::sleep(Duration::from_secs(8)).await;
+
+        let msg1_content = "Hello from relay-backed peer 1";
+        let msg1 = Msg {
+            from: "relay-peer1".to_string(),
+            ..Msg::default()
+        }
+        .set_content(msg1_content.to_string(), 0)
+        .set_kind(MsgKind::Chat);
+
+        send_tx1
+            .send(ChatEvent::ChatMessage(msg1))
+            .await
+            .unwrap();
+
+        let received_event = next_chat_message(&mut recv_rx2, Duration::from_secs(15)).await;
+        if let ChatEvent::ChatMessage(received_msg) = received_event {
+            assert_eq!(received_msg.from, "relay-peer1");
+            assert_eq!(received_msg.content[0], msg1_content);
+            assert_eq!(received_msg.kind, MsgKind::Chat);
+        } else {
+            panic!("Received wrong event type on relay-backed peer 2: {:?}", received_event);
+        }
+
+        let msg2_content = "Hello from relay-backed peer 2";
+        let msg2 = Msg {
+            from: "relay-peer2".to_string(),
+            ..Msg::default()
+        }
+        .set_content(msg2_content.to_string(), 0)
+        .set_kind(MsgKind::Chat);
+
+        send_tx2
+            .send(ChatEvent::ChatMessage(msg2))
+            .await
+            .unwrap();
+
+        let received_event_2 = next_chat_message(&mut recv_rx1, Duration::from_secs(15)).await;
+        if let ChatEvent::ChatMessage(received_msg_2) = received_event_2 {
+            assert_eq!(received_msg_2.from, "relay-peer2");
+            assert_eq!(received_msg_2.content[0], msg2_content);
+            assert_eq!(received_msg_2.kind, MsgKind::Chat);
+        } else {
+            panic!(
+                "Received wrong event type on relay-backed peer 1: {:?}",
                 received_event_2
             );
         }
