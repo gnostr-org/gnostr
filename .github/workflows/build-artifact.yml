@@ -129,6 +129,10 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
 
+      - name: Setup OpenSSL and Perl for Windows
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-openssl-perl-windows
+
       - name: Install cross
         if: runner.os == 'Linux'
         uses: taiki-e/install-action@v2
