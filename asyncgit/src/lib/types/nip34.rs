@@ -1243,7 +1243,7 @@ path = ":memory:"
 
         let relays = load_relays_or_bootstrap();
         assert!(relays.iter().any(|relay| relay == &relay_url));
-        crawler_run_nip34(None, &reqwest012::Client::new())
+        crawler_run_nip34(None, &reqwest::Client::new())
             .await
             .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
 

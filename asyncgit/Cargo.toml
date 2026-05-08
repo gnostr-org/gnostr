@@ -221,11 +221,10 @@ gnostr-relay = { workspace = true }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
 #supposed to be ngit re-export #REMOVE
 nostr = { workspace = true }
-reqwest012 = { workspace = true }
 #supposed to be ngit re-export #REMOVE
 nostr-sdk = { workspace = true }
 pretty_assertions = "1.4"
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { workspace = true, features = ["json"] }
 serial_test = "3.1"
 # pretty_assertions = "1.4.0"
 temp-dir = "0.1.13"
