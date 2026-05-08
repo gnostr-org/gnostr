@@ -18,6 +18,21 @@ on:
         options:
           - stable
           - nightly
+      all_features:
+        description: "Pass --all-features"
+        required: false
+        default: false
+        type: boolean
+      no_default_features:
+        description: "Pass --no-default-features"
+        required: false
+        default: false
+        type: boolean
+      features:
+        description: "Comma-separated features"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: write
@@ -114,9 +129,20 @@ jobs:
 
           args=(
             --target "${{ matrix.target }}"
-            --all-features
             --verbose
           )
+
+          if [[ "${{ inputs.all_features }}" == "true" ]]; then
+            args+=(--all-features)
+          fi
+
+          if [[ "${{ inputs.no_default_features }}" == "true" ]]; then
+            args+=(--no-default-features)
+          fi
+
+          if [ -n "${{ inputs.features }}" ]; then
+            args+=(--features "${{ inputs.features }}")
+          fi
 
           if [ -n "${{ matrix.features }}" ]; then
             args+=(--features "${{ matrix.features }}")
