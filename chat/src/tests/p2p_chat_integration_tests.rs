@@ -15,10 +15,12 @@ mod tests {
     use crate::{
         event::ChatEvent,
         evt_loop,
+        message::RelayMessage,
         msg::{Msg, MsgKind},
         p2p::spawn_local_p2p_relay_service,
     };
-    use gnostr_p2p::{keypair_from_seed, relay::client::Event as RelayClientEvent};
+    use gnostr_p2p::keypair_from_seed;
+    use libp2p::relay::client::Event as RelayClientEvent;
 
     #[derive(NetworkBehaviour)]
     struct RelayProbeBehaviour {
@@ -28,7 +30,7 @@ mod tests {
         gossipsub: gossipsub::Behaviour,
         identify: identify::Behaviour,
         ping: ping::Behaviour,
-        request_response: request_response::cbor::Behaviour<String, String>,
+        request_response: request_response::cbor::Behaviour<RelayMessage, RelayMessage>,
     }
 
     enum RelayProbeCommand {
@@ -39,8 +41,8 @@ mod tests {
         },
         Request {
             peer_id: PeerId,
-            message: String,
-            sender: oneshot::Sender<Result<String, String>>,
+            message: RelayMessage,
+            sender: oneshot::Sender<Result<RelayMessage, String>>,
         },
     }
 
@@ -64,7 +66,7 @@ mod tests {
             receiver.await.map_err(|_| "dial response channel closed".to_string())?
         }
 
-        async fn request(&mut self, peer_id: PeerId, message: String) -> Result<String, String> {
+        async fn request(&mut self, peer_id: PeerId, message: RelayMessage) -> Result<RelayMessage, String> {
             let (sender, receiver) = oneshot::channel();
             self.command_tx
                 .send(RelayProbeCommand::Request {
@@ -145,7 +147,12 @@ mod tests {
                         )),
                         ping: ping::Behaviour::new(ping::Config::new()),
                         request_response: request_response::cbor::Behaviour::new(
-                            [(String::from("/relay-probe/1"), request_response::ProtocolSupport::Full)],
+                            [
+                                (
+                                    libp2p::StreamProtocol::new("/relay-probe/1"),
+                                    request_response::ProtocolSupport::Full,
+                                ),
+                            ],
                             request_response::Config::default(),
                         ),
                     }
@@ -157,7 +164,7 @@ mod tests {
             swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().expect("quic listen")).expect("listen quic");
 
             let mut pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), String>>> = HashMap::new();
-            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<String, String>>> =
+            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<RelayMessage, String>>> =
                 HashMap::new();
 
             loop {
@@ -205,7 +212,7 @@ mod tests {
                                 swarm
                                     .behaviour_mut()
                                     .request_response
-                                    .send_response(channel, format!("echo:{request}"))
+                                    .send_response(channel, request.clone())
                                     .expect("response channel to stay open");
                             }
                             request_response::Message::Response { request_id, response } => {
@@ -457,10 +464,10 @@ mod tests {
         );
 
         let response = peer_one
-            .request(peer_two.peer_id, "hello over relay".to_string())
+            .request(peer_two.peer_id, RelayMessage::Notice("hello over relay".to_string()))
             .await
             .expect("relay request to round-trip");
-        assert_eq!(response, "echo:hello over relay");
+        assert_eq!(response, RelayMessage::Notice("hello over relay".to_string()));
 
         let punch_status = peer_two
             .wait_for_status_contains("InboundCircuitEstablished", Duration::from_secs(20))

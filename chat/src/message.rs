@@ -1,14 +1,14 @@
-//! Shared asyncgit-backed message types for chat integrations.
+//! Shared p2p-backed message types for chat integrations.
 //!
-//! This module mirrors the p2p message facade so broader chat flows can use the
-//! same Nostr and git-note types without introducing another model.
+//! This module re-exports the p2p facade so chat consumes Nostr and git-note
+//! types through the same path as the rest of the stack.
 
-pub use gnostr_asyncgit::types::*;
+pub use gnostr_p2p::message::*;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
+        use super::*;
+        use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
 
     #[test]
     fn exports_nostr_and_git_note_types() {
@@ -31,14 +31,16 @@ mod tests {
 
     #[test]
     fn builds_git_note_nostr_event() {
-        let note = NoteInfo {
-            note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
-            annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
-            notes_ref: Some("refs/notes/commits".to_string()),
-            message: "chat git note".to_string(),
-            author: "chat".to_string(),
-            committer: "chat".to_string(),
-            committer_time: 1777759186,
+        let note = GitNote {
+            note: NoteInfo {
+                note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
+                annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
+                notes_ref: Some("refs/notes/commits".to_string()),
+                message: "chat git note".to_string(),
+                author: "chat".to_string(),
+                committer: "chat".to_string(),
+                committer_time: 1777759186,
+            },
         };
         let private_key = PrivateKey::generate();
 

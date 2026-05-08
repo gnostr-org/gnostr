@@ -110,6 +110,8 @@ async fn run_local_p2p_relay_service(
     swarm.listen_on("/ip4/127.0.0.1/tcp/0".parse()?)?;
     swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse()?)?;
 
+    let mut listen_addr_tx = Some(listen_addr_tx);
+
     while let Some(event) = swarm.next().await {
         match event {
             SwarmEvent::Behaviour(RelayBehaviourEvent::Identify(identify::Event::Received {
@@ -120,7 +122,9 @@ async fn run_local_p2p_relay_service(
             }
             SwarmEvent::Behaviour(event) => debug!("local p2p relay event: {event:?}"),
             SwarmEvent::NewListenAddr { address, .. } => {
-                let _ = listen_addr_tx.send(address.clone());
+                if let Some(tx) = listen_addr_tx.take() {
+                    let _ = tx.send(address.clone());
+                }
                 debug!("local p2p relay listening on {address}");
             }
             _ => {}
