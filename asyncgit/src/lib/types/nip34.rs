@@ -55,7 +55,7 @@ pub type Nip34UnsignedEvent = PreEventV3;
 ///
 /// `sync::notes` keeps git-note persistence, while this type owns the NIP-34
 /// event contract and derived tag/event helpers.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GitNote {
     pub note: NoteInfo,
 }

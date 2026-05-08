@@ -1,5 +1,7 @@
 use git2::{ErrorCode, Oid, Signature};
 use scopetime::scope_time;
+use serde::{de::Error as DeError, Deserialize, Deserializer, Serialize, Serializer};
+use std::str::FromStr;
 
 use super::{repository::repo, RepoPath};
 use crate::error::Result;
@@ -20,6 +22,66 @@ pub struct NoteInfo {
     pub author: String,
     pub committer: String,
     pub committer_time: i64,
+}
+
+impl Serialize for NoteInfo {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        struct NoteInfoSerde<'a> {
+            note_id: String,
+            annotated_id: String,
+            notes_ref: Option<&'a str>,
+            message: &'a str,
+            author: &'a str,
+            committer: &'a str,
+            committer_time: i64,
+        }
+
+        NoteInfoSerde {
+            note_id: self.note_id.to_string(),
+            annotated_id: self.annotated_id.to_string(),
+            notes_ref: self.notes_ref.as_deref(),
+            message: &self.message,
+            author: &self.author,
+            committer: &self.committer,
+            committer_time: self.committer_time,
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for NoteInfo {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct NoteInfoSerde {
+            note_id: String,
+            annotated_id: String,
+            notes_ref: Option<String>,
+            message: String,
+            author: String,
+            committer: String,
+            committer_time: i64,
+        }
+
+        let note = NoteInfoSerde::deserialize(deserializer)?;
+        Ok(Self {
+            note_id: Oid::from_str(&note.note_id)
+                .map_err(|error| DeError::custom(format!("invalid note_id: {error}")))?,
+            annotated_id: Oid::from_str(&note.annotated_id)
+                .map_err(|error| DeError::custom(format!("invalid annotated_id: {error}")))?,
+            notes_ref: note.notes_ref,
+            message: note.message,
+            author: note.author,
+            committer: note.committer,
+            committer_time: note.committer_time,
+        })
+    }
 }
 
 /// Commands supported by the notes backend.

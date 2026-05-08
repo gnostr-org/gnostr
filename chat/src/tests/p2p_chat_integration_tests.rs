@@ -15,10 +15,11 @@ mod tests {
     use crate::{
         event::ChatEvent,
         evt_loop,
-        message::RelayMessage,
+        message::GitNote,
         msg::{Msg, MsgKind},
-        p2p::spawn_local_p2p_relay_service,
+        p2p::spawn_local_p2p_relay_service_async,
     };
+    use gnostr_asyncgit::{git2::Oid, sync::NoteInfo};
     use gnostr_p2p::keypair_from_seed;
     use libp2p::relay::client::Event as RelayClientEvent;
 
@@ -30,7 +31,7 @@ mod tests {
         gossipsub: gossipsub::Behaviour,
         identify: identify::Behaviour,
         ping: ping::Behaviour,
-        request_response: request_response::cbor::Behaviour<RelayMessage, RelayMessage>,
+        request_response: request_response::cbor::Behaviour<GitNote, GitNote>,
     }
 
     enum RelayProbeCommand {
@@ -39,10 +40,14 @@ mod tests {
             addr: Multiaddr,
             sender: oneshot::Sender<Result<(), String>>,
         },
+        ListenOn {
+            addr: Multiaddr,
+            sender: oneshot::Sender<Result<(), String>>,
+        },
         Request {
             peer_id: PeerId,
-            message: RelayMessage,
-            sender: oneshot::Sender<Result<RelayMessage, String>>,
+            message: GitNote,
+            sender: oneshot::Sender<Result<GitNote, String>>,
         },
     }
 
@@ -66,7 +71,18 @@ mod tests {
             receiver.await.map_err(|_| "dial response channel closed".to_string())?
         }
 
-        async fn request(&mut self, peer_id: PeerId, message: RelayMessage) -> Result<RelayMessage, String> {
+        async fn listen_on(&mut self, addr: Multiaddr) -> Result<(), String> {
+            let (sender, receiver) = oneshot::channel();
+            self.command_tx
+                .send(RelayProbeCommand::ListenOn { addr, sender })
+                .await
+                .expect("relay probe peer to stay alive");
+            receiver
+                .await
+                .map_err(|_| "listen response channel closed".to_string())?
+        }
+
+        async fn request(&mut self, peer_id: PeerId, message: GitNote) -> Result<GitNote, String> {
             let (sender, receiver) = oneshot::channel();
             self.command_tx
                 .send(RelayProbeCommand::Request {
@@ -104,8 +120,18 @@ mod tests {
             .with(libp2p::multiaddr::Protocol::P2p(target))
     }
 
-    fn build_relay_direct_addr(base: &Multiaddr, relay_peer_id: PeerId) -> Multiaddr {
-        base.clone().with(libp2p::multiaddr::Protocol::P2p(relay_peer_id))
+    fn relay_probe_git_note(message: &str) -> GitNote {
+        GitNote {
+            note: NoteInfo {
+                note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
+                annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
+                notes_ref: Some("refs/notes/commits".to_string()),
+                message: message.to_string(),
+                author: "chat".to_string(),
+                committer: "chat".to_string(),
+                committer_time: 1777759186,
+            },
+        }
     }
 
     fn spawn_relay_probe_peer(seed: &str) -> RelayProbePeer {
@@ -164,7 +190,7 @@ mod tests {
             swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().expect("quic listen")).expect("listen quic");
 
             let mut pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), String>>> = HashMap::new();
-            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<RelayMessage, String>>> =
+            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<GitNote, String>>> =
                 HashMap::new();
 
             loop {
@@ -178,6 +204,16 @@ mod tests {
                             match swarm.dial(addr.clone()) {
                                 Ok(()) => {
                                     pending_dial.insert(peer_id, sender);
+                                }
+                                Err(error) => {
+                                    let _ = sender.send(Err(error.to_string()));
+                                }
+                            }
+                        }
+                        RelayProbeCommand::ListenOn { addr, sender } => {
+                            match swarm.listen_on(addr.clone()) {
+                                Ok(_) => {
+                                    let _ = sender.send(Ok(()));
                                 }
                                 Err(error) => {
                                     let _ = sender.send(Err(error.to_string()));
@@ -216,6 +252,7 @@ mod tests {
                                     .expect("response channel to stay open");
                             }
                             request_response::Message::Response { request_id, response } => {
+                                println!("relay probe received gitnote response for request {request_id:?}");
                                 if let Some(sender) = pending_request.remove(&request_id) {
                                     let _ = sender.send(Ok(response));
                                 }
@@ -350,7 +387,9 @@ mod tests {
     #[cfg(feature = "long_tests")]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes_with_local_relay() {
-        let _relay = spawn_local_p2p_relay_service().expect("local p2p relay service");
+        let _relay = spawn_local_p2p_relay_service_async()
+            .await
+            .expect("local p2p relay service");
         tokio::time::sleep(Duration::from_secs(5)).await;
 
         let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
@@ -417,22 +456,27 @@ mod tests {
     #[cfg(feature = "long_tests")]
     #[ignore]
     async fn test_p2p_relay_reservation_and_circuit_round_trip() {
-        let relay = spawn_local_p2p_relay_service().expect("local p2p relay service");
+        let relay = spawn_local_p2p_relay_service_async()
+            .await
+            .expect("local p2p relay service");
         let relay_addr = relay.listen_addr().clone();
         let relay_peer_id = relay.peer_id();
-        let relay_multiaddr = build_relay_direct_addr(&relay_addr, relay_peer_id);
+        let peer_one_reservation_addr =
+            relay_addr.clone().with(libp2p::multiaddr::Protocol::P2p(relay_peer_id)).with(libp2p::multiaddr::Protocol::P2pCircuit);
+        let peer_two_reservation_addr =
+            relay_addr.clone().with(libp2p::multiaddr::Protocol::P2p(relay_peer_id)).with(libp2p::multiaddr::Protocol::P2pCircuit);
 
         let mut peer_one = spawn_relay_probe_peer("chat-relay-peer-one");
         let mut peer_two = spawn_relay_probe_peer("chat-relay-peer-two");
 
         peer_one
-            .dial(relay_peer_id, relay_multiaddr.clone())
+            .listen_on(peer_one_reservation_addr.clone())
             .await
-            .expect("peer one relay dial");
+            .expect("peer one relay listen");
         peer_two
-            .dial(relay_peer_id, relay_multiaddr.clone())
+            .listen_on(peer_two_reservation_addr.clone())
             .await
-            .expect("peer two relay dial");
+            .expect("peer two relay listen");
 
         let peer_one_status = peer_one
             .wait_for_status_contains("ReservationReqAccepted", Duration::from_secs(20))
@@ -463,11 +507,14 @@ mod tests {
             "peer one circuit status: {circuit_status}"
         );
 
+        let git_note = relay_probe_git_note("hello over relay");
+        println!("relay probe sending gitnote: {git_note:?}");
         let response = peer_one
-            .request(peer_two.peer_id, RelayMessage::Notice("hello over relay".to_string()))
+            .request(peer_two.peer_id, git_note.clone())
             .await
             .expect("relay request to round-trip");
-        assert_eq!(response, RelayMessage::Notice("hello over relay".to_string()));
+        println!("relay probe received gitnote: {response:?}");
+        assert_eq!(response, git_note);
 
         let punch_status = peer_two
             .wait_for_status_contains("InboundCircuitEstablished", Duration::from_secs(20))

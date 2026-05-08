@@ -58,6 +58,11 @@ impl LocalP2pRelayService {
 
 /// Start an in-process relay-capable peer for chat startup.
 pub fn spawn_local_p2p_relay_service() -> Result<LocalP2pRelayService> {
+    global_rt().block_on(spawn_local_p2p_relay_service_async())
+}
+
+/// Async variant for tests and other Tokio contexts.
+pub async fn spawn_local_p2p_relay_service_async() -> Result<LocalP2pRelayService> {
     let keypair = identity::Keypair::generate_ed25519();
     let peer_id = keypair.public().to_peer_id();
     let (listen_addr_tx, listen_addr_rx) = tokio::sync::oneshot::channel();
@@ -68,7 +73,7 @@ pub fn spawn_local_p2p_relay_service() -> Result<LocalP2pRelayService> {
     });
 
     let listen_addr = listen_addr_rx
-        .blocking_recv()
+        .await
         .map_err(|_| anyhow!("local p2p relay service did not report a listen address"))?;
 
     Ok(LocalP2pRelayService {
@@ -122,6 +127,7 @@ async fn run_local_p2p_relay_service(
             }
             SwarmEvent::Behaviour(event) => debug!("local p2p relay event: {event:?}"),
             SwarmEvent::NewListenAddr { address, .. } => {
+                swarm.add_external_address(address.clone());
                 if let Some(tx) = listen_addr_tx.take() {
                     let _ = tx.send(address.clone());
                 }
