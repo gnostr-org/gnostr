@@ -6,10 +6,6 @@
 
 use std::{
     collections::HashMap,
-    env,
-    fs::File,
-    path::PathBuf,
-    process::{Child, Command, Stdio},
     sync::Arc,
     time::Duration,
 };
@@ -34,72 +30,78 @@ use crate::{
     event::ChatEvent,
     msg::{Msg, MsgKind},
 };
+use gnostr_p2p::cli;
 use gnostr_p2p::kvs::{FileRequest, FileResponse};
+use libp2p::identity;
 
 /// Handle for the local p2p relay service started by chat.
 pub struct LocalP2pRelayService {
-    child: Child,
+    join_handle: tokio::task::JoinHandle<()>,
 }
 
 impl Drop for LocalP2pRelayService {
     fn drop(&mut self) {
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        self.join_handle.abort();
     }
 }
 
-/// Start the sibling `gnostr-p2p-relay-server` binary for chat startup.
+/// Start an in-process relay-capable peer for chat startup.
 pub fn spawn_local_p2p_relay_service() -> Result<LocalP2pRelayService> {
-    let binary_name = if cfg!(windows) {
-        "gnostr-p2p-relay-server.exe"
-    } else {
-        "gnostr-p2p-relay-server"
-    };
+    let keypair = identity::Keypair::generate_ed25519();
+    let join_handle = tokio::spawn(async move {
+        if let Err(error) = run_local_p2p_relay_service(keypair).await {
+            tracing::warn!("local p2p relay service exited with error: {error}");
+        }
+    });
 
-    let mut command = if let Some(path) = local_sibling_binary(binary_name) {
-        Command::new(path)
-    } else {
-        Command::new(binary_name)
-    };
-
-    let relay_seed = relay_seed_hex();
-    let log_path = env::temp_dir().join(format!(
-        "gnostr-chat-p2p-relay-{}.log",
-        std::process::id()
-    ));
-    let log_file = File::create(&log_path)
-        .map_err(|error| anyhow!("failed to create local p2p relay log {log_path:?}: {error}"))?;
-
-    command
-        .arg("--secret-key-seed")
-        .arg(relay_seed)
-        .arg("--port")
-        .arg("0")
-        .stdin(Stdio::null())
-        .stdout(log_file.try_clone().map_err(|error| {
-            anyhow!("failed to clone local p2p relay log handle {log_path:?}: {error}")
-        })?)
-        .stderr(log_file);
-
-    let child = command.spawn().map_err(|error| {
-        anyhow!("failed to start local p2p relay service {binary_name}: {error}")
-    })?;
-    debug!("started local p2p relay service {binary_name} with log {log_path:?}");
-    Ok(LocalP2pRelayService { child })
+    Ok(LocalP2pRelayService { join_handle })
 }
 
-fn local_sibling_binary(binary_name: &str) -> Option<PathBuf> {
-    let exe = env::current_exe().ok()?;
-    let dir = exe.parent()?;
-    let candidate = dir.join(binary_name);
-    candidate.is_file().then_some(candidate)
-}
+async fn run_local_p2p_relay_service(keypair: identity::Keypair) -> Result<()> {
+    #[derive(NetworkBehaviour)]
+    struct RelayBehaviour {
+        relay: relay::Behaviour,
+        ping: ping::Behaviour,
+        identify: identify::Behaviour,
+    }
 
-fn relay_seed_hex() -> String {
-    use sha2::{Digest, Sha256};
+    let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
+        .with_tokio()
+        .with_tcp(
+            tcp::Config::default(),
+            noise::Config::new,
+            yamux::Config::default,
+        )?
+        .with_quic()
+        .with_behaviour(|key| RelayBehaviour {
+            relay: relay::Behaviour::new(key.public().to_peer_id(), Default::default()),
+            ping: ping::Behaviour::new(ping::Config::new()),
+            identify: identify::Behaviour::new(identify::Config::new(
+                "/ipfs/id/1.0.0".to_string(),
+                key.public(),
+            )),
+        })?
+        .build();
 
-    let digest = Sha256::digest(b"gnostr-chat-p2p-relay-service");
-    digest.iter().map(|byte| format!("{byte:02x}")).collect()
+    cli::listen_default_addresses_relay(&mut swarm, 0, false)?;
+
+    while let Some(event) = swarm.next().await {
+        match event {
+            SwarmEvent::Behaviour(RelayBehaviourEvent::Identify(identify::Event::Received {
+                info: identify::Info { observed_addr, .. },
+                ..
+            })) => {
+                swarm.add_external_address(observed_addr);
+            }
+            SwarmEvent::Behaviour(event) => debug!("local p2p relay event: {event:?}"),
+            SwarmEvent::NewListenAddr { address, .. } => {
+                debug!("local p2p relay listening on {address}");
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
 }
 
 /// Shared Tokio runtime for background chat tasks.
