@@ -255,6 +255,11 @@ impl PublicKeyHex {
         PublicKey::mock_deterministic().into()
     }
 
+    /// Deterministic key used by protocol trace tests.
+    pub fn trace_deterministic() -> PublicKeyHex {
+        Self::mock_deterministic()
+    }
+
     /// Export as a bech32 encoded string
     pub fn as_bech32_string(&self) -> String {
         let vec: Vec<u8> = hex::decode(&self.0).unwrap();
