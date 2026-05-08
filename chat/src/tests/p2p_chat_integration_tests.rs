@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use std::time::Duration;
 
     use libp2p::{
@@ -16,7 +17,7 @@ mod tests {
     use crate::{
         event::ChatEvent,
         evt_loop,
-        message::{ClientMessage, EventKind, Filter, GitNote, RelayMessage, SubscriptionId},
+        message::{ClientMessage, EventKind, Filter, GitNote, IdHex, PublicKeyHex, RelayMessage, SubscriptionId, Unixtime},
         msg::{Msg, MsgKind},
         p2p::spawn_local_p2p_relay_service_async,
     };
@@ -149,6 +150,32 @@ mod tests {
     }
 
     fn relay_trace_envelopes() -> Vec<RelayTraceEnvelope> {
+        let mut tags = BTreeMap::new();
+        tags.insert(
+            'e',
+            vec!["5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6".to_string()],
+        );
+        tags.insert(
+            'p',
+            vec!["ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49".to_string()],
+        );
+
+        let filter = Filter {
+            ids: vec![IdHex::try_from_str(
+                "3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084",
+            )
+            .expect("valid trace id")],
+            authors: vec![PublicKeyHex::try_from_str(
+                "ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49",
+            )
+            .expect("valid trace pubkey")],
+            kinds: vec![EventKind::TextNote, EventKind::Patches],
+            tags,
+            since: Some(Unixtime(1777759000)),
+            until: Some(Unixtime(1777759999)),
+            limit: Some(25),
+        };
+
         vec![
             RelayTraceEnvelope::EventKind(EventKind::TextNote),
             RelayTraceEnvelope::RelayMessage(RelayMessage::Notice(
@@ -157,7 +184,7 @@ mod tests {
             RelayTraceEnvelope::SubscriptionId(SubscriptionId("trace-sub-1".to_string())),
             RelayTraceEnvelope::ClientMessage(ClientMessage::Req(
                 SubscriptionId("trace-sub-2".to_string()),
-                vec![Filter::default()],
+                vec![filter],
             )),
             RelayTraceEnvelope::GitNote(relay_probe_git_note("hello over relay")),
         ]
