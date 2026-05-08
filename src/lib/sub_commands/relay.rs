@@ -33,12 +33,12 @@ impl std::fmt::Display for LogLevel {
 #[derive(Parser, Debug, Clone)]
 #[command(
     about = "Run the gnostr relay server",
-    long_about = "Run the local gnostr relay. By default it loads config/gnostr.toml when present, stores data under .gnostr/relay, and writes logs to stderr and the gnostr log file. Use --detach on Unix-like systems to keep it running in the background."
+    long_about = "Run the local gnostr relay. By default it loads .gnostr/relay.toml when present, stores data under .gnostr/relay, and writes logs to stderr and the gnostr log file. Use --detach on Unix-like systems to keep it running in the background."
 )]
 pub struct RelaySubCommand {
     /// Path to the relay config file.
     ///
-    /// Defaults to config/gnostr.toml when present in the current directory.
+    /// Defaults to .gnostr/relay.toml when present in the current directory.
     #[arg(short, long)]
     pub config: Option<PathBuf>,
 
@@ -164,7 +164,7 @@ fn resolve_setting_path(args: &RelaySubCommand, current_dir: &Path) -> Option<Pa
         return Some(config.clone());
     }
 
-    let config_file_path = current_dir.join("config/gnostr.toml");
+    let config_file_path = current_dir.join(".gnostr/relay.toml");
     if config_file_path.exists() {
         return Some(config_file_path);
     }
@@ -242,7 +242,7 @@ mod tests {
         let tempdir = TempDir::new().expect("tempdir");
         std::fs::create_dir_all(tempdir.path().join("config")).expect("config dir");
         std::fs::write(
-            tempdir.path().join("config/gnostr.toml"),
+            tempdir.path().join(".gnostr/relay.toml"),
             "[server]\nport = 0\nhost = \"127.0.0.1\"\n",
         )
         .expect("write config");
@@ -257,7 +257,7 @@ mod tests {
 
         assert_eq!(
             resolve_setting_path(&args, tempdir.path()),
-            Some(tempdir.path().join("config/gnostr.toml"))
+            Some(tempdir.path().join(".gnostr/relay.toml"))
         );
     }
 
