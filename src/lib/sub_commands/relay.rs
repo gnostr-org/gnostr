@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn resolve_setting_path_uses_repo_config_when_present() {
         let tempdir = TempDir::new().expect("tempdir");
-        std::fs::create_dir_all(tempdir.path().join("config")).expect("config dir");
+        std::fs::create_dir_all(tempdir.path().join(".gnostr")).expect("config dir");
         std::fs::write(
             tempdir.path().join(".gnostr/relay.toml"),
             "[server]\nport = 0\nhost = \"127.0.0.1\"\n",
