@@ -1,11 +1,14 @@
 use futures::{SinkExt, StreamExt};
 use log::{debug, info};
-use serde_json::{json, Map};
 use std::io;
 use std::time::Duration;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use tokio::time::timeout;
 use url::Url;
+
+use crate::message::{
+    ClientMessage, EventKind, Filter, IdHex, PublicKeyHex, RelayMessage, SubscriptionId,
+};
 
 pub mod cli;
 pub mod forms;
@@ -149,6 +152,7 @@ pub async fn send(
     }
 
     let mut last_error: Option<String> = None;
+    let mut last_success: Option<Vec<String>> = None;
 
     for relay in relay_url {
         debug!("send: trying relay {}", relay);
@@ -156,6 +160,7 @@ pub async fn send(
             Ok(result) => {
                 if result.is_empty() {
                     debug!("relay {} returned no results; trying next relay", relay);
+                    last_success = Some(result);
                     continue;
                 }
                 return Ok(result);
@@ -177,6 +182,10 @@ pub async fn send(
                 .unwrap_or_default()
         ),
     )))
+
+    .or_else(|err| {
+        last_success.ok_or(err)
+    })
 }
 
 async fn send_to_relay(
@@ -222,21 +231,27 @@ async fn send_to_relay(
         let data = message?;
         if let Message::Text(text) = data {
             println!("query relay frame from {relay}: {text}");
-            if is_event_frame(&text) {
-                vec_result.push(text.to_string());
-                debug!(
-                    "send_to_relay: {} event received count={}",
-                    relay,
-                    vec_result.len()
-                );
-                if vec_result.len() as i32 >= limit {
+            match serde_json::from_str::<RelayMessage>(&text) {
+                Ok(RelayMessage::Event(_, _)) => {
+                    vec_result.push(text.to_string());
+                    debug!(
+                        "send_to_relay: {} event received count={}",
+                        relay,
+                        vec_result.len()
+                    );
+                    if vec_result.len() as i32 >= limit {
+                        return Ok(vec_result);
+                    }
+                    continue;
+                }
+                Ok(RelayMessage::Eose(_)) => {
+                    debug!("send_to_relay: {} eose received; continuing", relay);
                     return Ok(vec_result);
                 }
-                continue;
-            }
-            if is_eose_frame(&text) {
-                debug!("send_to_relay: {} eose received; continuing", relay);
-                return Ok(vec_result);
+                Ok(_) => continue,
+                Err(err) => {
+                    debug!("send_to_relay: {} ignoring non-relay frame: {}", relay, err);
+                }
             }
         }
     }
@@ -249,16 +264,7 @@ async fn send_to_relay(
     Ok(vec_result)
 }
 
-fn is_event_frame(frame: &str) -> bool {
-    frame.starts_with("[\"EVENT\"")
-}
-
-fn is_eose_frame(frame: &str) -> bool {
-    frame.starts_with("[\"EOSE\"")
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn build_gnostr_query(
+fn build_filter(
     authors: Option<&str>,
     ids: Option<&str>,
     limit: Option<i32>,
@@ -267,9 +273,7 @@ pub fn build_gnostr_query(
     mentions: Option<&str>,
     references: Option<&str>,
     kinds: Option<&str>,
-    _search: Option<(&str, &str)>,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let mut filt = Map::new();
+) -> Result<Filter, Box<dyn std::error::Error>> {
     let split_csv = |value: &str| {
         value
             .split(',')
@@ -292,63 +296,94 @@ pub fn build_gnostr_query(
         trimmed.to_string()
     };
 
+    let mut filter = Filter::default();
+
     if let Some(authors) = authors {
-        let _ = authors.len(); // Use the field to avoid dead_code warning
-        filt.insert("authors".to_string(), json!(split_csv(authors)));
+        let _ = authors.len();
+        filter.authors = split_csv(authors)
+            .into_iter()
+            .map(|author| PublicKeyHex::try_from_str(&author))
+            .collect::<Result<Vec<_>, _>>()?;
     }
 
     if let Some(ids) = ids {
-        filt.insert("ids".to_string(), json!(split_csv(ids)));
+        filter.ids = split_csv(ids)
+            .into_iter()
+            .map(|id| IdHex::try_from_str(&id))
+            .collect::<Result<Vec<_>, _>>()?;
     }
 
     if let Some(limit) = limit {
-        filt.insert("limit".to_string(), json!(limit));
+        filter.limit = Some(
+            usize::try_from(limit).map_err(|_| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "limit must be greater than or equal to zero",
+                )
+            })?,
+        );
     }
 
     if let Some((tag, val)) = generic {
-        let tag_with_hash = format!("#{}", tag.trim());
-        filt.insert(tag_with_hash, json!(split_csv(val.trim())));
+        if let Some(tag) = tag.trim().chars().next() {
+            filter.tags.insert(tag, split_csv(val.trim()));
+        }
     }
 
     if let Some(hashtag) = hashtag {
-        filt.insert("#t".to_string(), json!(split_csv(hashtag)));
+        filter.tags.insert('t', split_csv(hashtag));
     }
 
     if let Some(mentions) = mentions {
-        filt.insert("#p".to_string(), json!(split_csv(mentions)));
+        filter.tags.insert('p', split_csv(mentions));
     }
 
     if let Some(references) = references {
-        filt.insert("#e".to_string(), json!(split_csv(references)));
+        filter.tags.insert('e', split_csv(references));
     }
 
     if let Some(kinds) = kinds {
-        let kind_ints: Result<Vec<i64>, _> = kinds
+        let kind_ints: Result<Vec<u32>, _> = kinds
             .split(',')
             .map(str::trim)
             .filter(|s| !s.is_empty())
-            .map(|s| strip_kind_prefix(s).parse::<i64>())
+            .map(|s| strip_kind_prefix(s).parse::<u32>())
             .collect();
-        match kind_ints {
-            Ok(kind_ints) => {
-                filt.insert("kinds".to_string(), json!(kind_ints));
-            }
-            Err(_) => {
-                return Err("Error parsing kinds. Ensure they are integers.".into());
-            }
-        }
+        filter.kinds = kind_ints?
+            .into_iter()
+            .map(EventKind::from)
+            .collect();
     }
-    debug!("build_gnostr_query filter={:?}", filt);
-    let q = json!(["REQ", "gnostr-query", filt]);
-    info!("q={}", q);
-    info!("{}", serde_json::to_string(&q)?);
-    Ok(serde_json::to_string(&q)?)
+
+    Ok(filter)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_gnostr_query(
+    authors: Option<&str>,
+    ids: Option<&str>,
+    limit: Option<i32>,
+    generic: Option<(&str, &str)>,
+    hashtag: Option<&str>,
+    mentions: Option<&str>,
+    references: Option<&str>,
+    kinds: Option<&str>,
+    _search: Option<(&str, &str)>,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let filter = build_filter(authors, ids, limit, generic, hashtag, mentions, references, kinds)?;
+    let query = ClientMessage::Req(SubscriptionId("gnostr-query".to_string()), vec![filter]);
+    let wire = serde_json::to_string(&query)?;
+    debug!("build_gnostr_query wire={wire}");
+    info!("{wire}");
+    Ok(wire)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::build_filter;
     use super::build_gnostr_query;
     use super::send;
+    use crate::message::{EventBuilder, EventKind, PrivateKey, RelayMessage, SubscriptionId};
     use futures::{SinkExt, StreamExt};
     use tokio::net::TcpListener;
     use tokio_tungstenite::{accept_async, tungstenite::Message};
@@ -370,6 +405,8 @@ mod tests {
         .unwrap();
 
         let parsed: serde_json::Value = serde_json::from_str(&query).unwrap();
+        assert_eq!(parsed[0], serde_json::json!("REQ"));
+        assert_eq!(parsed[1], serde_json::json!("gnostr-query"));
         assert_eq!(parsed[2]["#t"], serde_json::json!(["gnostr"]));
         assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2, 3]));
     }
@@ -393,6 +430,27 @@ mod tests {
         assert!(parsed[2].get("search").is_none());
     }
 
+    #[test]
+    fn build_filter_uses_shared_types() {
+        let filter = build_filter(
+            Some("ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49"),
+            Some("3ab7b776cb547707a7497f209be799710ce7eb0801e13fd3c4e7b9261ac29084"),
+            Some(25),
+            None,
+            Some("gnostr"),
+            Some("ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49"),
+            Some("5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6"),
+            Some("kind:1,nip=1617"),
+        )
+        .unwrap();
+
+        assert_eq!(filter.ids.len(), 1);
+        assert_eq!(filter.authors.len(), 1);
+        assert_eq!(filter.limit, Some(25));
+        assert_eq!(filter.tags.get(&'t').unwrap(), &vec!["gnostr".to_string()]);
+        assert_eq!(filter.kinds, vec![EventKind::TextNote, EventKind::Patches]);
+    }
+
     #[tokio::test]
     async fn send_falls_back_to_later_relay() -> anyhow::Result<()> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
@@ -405,7 +463,28 @@ mod tests {
                 let message = message.unwrap();
                 assert!(matches!(message, Message::Text(_)));
                 websocket
-                    .send(Message::Text("{\"ok\":true}".to_string().into()))
+                    .send(Message::Text(
+                        serde_json::to_string(&RelayMessage::Event(
+                            SubscriptionId("sub-1".to_string()),
+                            Box::new(
+                                EventBuilder::text_note("hello relay".to_string())
+                                    .to_event(&PrivateKey::generate())
+                                    .unwrap(),
+                            ),
+                        ))
+                        .unwrap()
+                        .into(),
+                    ))
+                    .await
+                    .unwrap();
+                websocket
+                    .send(Message::Text(
+                        serde_json::to_string(&RelayMessage::Eose(SubscriptionId(
+                            "sub-1".to_string(),
+                        )))
+                        .unwrap()
+                        .into(),
+                    ))
                     .await
                     .unwrap();
             }
@@ -417,7 +496,8 @@ mod tests {
             .await
             .expect("query should fall back to the healthy relay");
 
-        assert_eq!(result, vec!["{\"ok\":true}".to_string()]);
+        assert_eq!(result.len(), 1);
+        assert!(result[0].starts_with("[\"EVENT\""));
         server.await.unwrap();
         Ok(())
     }
@@ -432,6 +512,16 @@ mod tests {
             if let Some(message) = websocket.next().await {
                 assert!(matches!(message.unwrap(), Message::Text(_)));
             }
+            websocket
+                .send(Message::Text(
+                    serde_json::to_string(&RelayMessage::Eose(SubscriptionId(
+                        "sub-1".to_string(),
+                    )))
+                    .unwrap()
+                    .into(),
+                ))
+                .await
+                .unwrap();
             websocket.close(None).await.unwrap();
         });
 
@@ -443,6 +533,16 @@ mod tests {
             if let Some(message) = websocket.next().await {
                 assert!(matches!(message.unwrap(), Message::Text(_)));
             }
+            websocket
+                .send(Message::Text(
+                    serde_json::to_string(&RelayMessage::Eose(SubscriptionId(
+                        "sub-1".to_string(),
+                    )))
+                    .unwrap()
+                    .into(),
+                ))
+                .await
+                .unwrap();
             websocket.close(None).await.unwrap();
         });
 
