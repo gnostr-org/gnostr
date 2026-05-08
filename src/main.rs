@@ -2,7 +2,6 @@ use std::{
     env,
     fs::OpenOptions,
     io,
-    io::Write as _,
     sync::{Arc, Mutex},
 };
 
