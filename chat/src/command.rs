@@ -10,7 +10,7 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 use crate::{
     event::ChatEvent,
     msg::{Msg, MsgKind},
-    p2p::evt_loop,
+    p2p::{evt_loop, spawn_local_p2p_relay_service},
     tui::run_chat_tui,
 };
 
@@ -128,6 +128,9 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
     tracing::trace!("\n{:?}\n", &sub_command_args);
     tracing::debug!("\n{:?}\n", &sub_command_args);
     tracing::info!("\n{:?}\n", &sub_command_args);
+
+    let _p2p_relay_service = spawn_local_p2p_relay_service()?;
+    tracing::info!("local p2p relay service started for chat");
 
     if let Some(message_input) = sub_command_args.oneshot.clone() {
         if sub_command_args.headless {
