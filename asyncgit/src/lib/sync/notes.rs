@@ -4,6 +4,12 @@ use scopetime::scope_time;
 use super::{repository::repo, RepoPath};
 use crate::error::Result;
 
+// This module owns git note storage. NIP-34 shaping lives in `types::nip34`.
+pub use crate::types::nip34::{
+    generate_git_note_event, generate_git_note_event_with_pow, git_note_event_id, git_note_tags,
+    GitNote,
+};
+
 /// A note attached to a git object.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct NoteInfo {
@@ -416,11 +422,12 @@ mod tests {
             assert_eq!(note.annotated_id, commit_id.into());
             assert!(note.message.starts_with(&note_base_message));
 
+            let git_note = GitNote::from(&note);
             let event = if pow_the_event {
-                generate_git_note_event_with_pow(&note, &private_key, 4)
+                generate_git_note_event_with_pow(&git_note, &private_key, 4)
                     .map_err(|err| crate::error::Error::Generic(err.to_string()))?
             } else {
-                generate_git_note_event(&note, &private_key)
+                generate_git_note_event(&git_note, &private_key)
                     .map_err(|err| crate::error::Error::Generic(err.to_string()))?
             };
             println!(

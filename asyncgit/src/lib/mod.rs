@@ -129,7 +129,7 @@ pub use crate::{
         remotes::push::PushType,
         remove_note, run_notes_command, show_note,
         status::{StatusItem, StatusItemType},
-        NoteInfo, NotesCommand, NotesCommandResult,
+        GitNote, NoteInfo, NotesCommand, NotesCommandResult,
     },
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,

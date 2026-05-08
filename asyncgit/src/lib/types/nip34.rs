@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     convert::TryFrom,
+    ops::Deref,
     str::FromStr,
 };
 
@@ -50,6 +51,35 @@ pub type Nip34Kind = EventKind;
 pub type Nip34Event = EventV3;
 pub type Nip34UnsignedEvent = PreEventV3;
 
+/// A deterministic NIP-34 git note wrapper around `NoteInfo`.
+///
+/// `sync::notes` keeps git-note persistence, while this type owns the NIP-34
+/// event contract and derived tag/event helpers.
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub struct GitNote {
+    pub note: NoteInfo,
+}
+
+impl From<NoteInfo> for GitNote {
+    fn from(note: NoteInfo) -> Self {
+        Self { note }
+    }
+}
+
+impl From<&NoteInfo> for GitNote {
+    fn from(note: &NoteInfo) -> Self {
+        Self { note: note.clone() }
+    }
+}
+
+impl Deref for GitNote {
+    type Target = NoteInfo;
+
+    fn deref(&self) -> &Self::Target {
+        &self.note
+    }
+}
+
 fn print_banner(label: &str) {
     println!();
     println!("==================== {label} ====================");
@@ -94,7 +124,7 @@ pub fn status_kinds() -> Vec<EventKind> {
     ]
 }
 
-fn git_note_event_id(commit_id: &str) -> Result<Id, Error> {
+pub fn git_note_event_id(commit_id: &str) -> Result<Id, Error> {
     let private_key = PrivateKey::try_from_hex_string(&padded_note_id(commit_id.to_string()))?;
     Id::try_from_hex_string(&private_key.public_key().as_hex_string())
 }
@@ -108,7 +138,7 @@ fn git_note_runtime_values() -> Result<(String, f64, f64), Error> {
 }
 
 /// Build the NIP-34 tags for a git note event.
-pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<TagV3>, Error> {
+pub fn git_note_tags(note: &GitNote) -> Result<Vec<TagV3>, Error> {
     let event_id = git_note_event_id(&note.annotated_id.to_string())?;
     let (blockheight, weeble, wobble) = git_note_runtime_values()?;
 
@@ -128,7 +158,7 @@ pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<TagV3>, Error> {
     Ok(tags)
 }
 
-fn git_note_preevent(note: &NoteInfo, pubkey: PublicKey) -> Result<PreEventV3, Error> {
+fn git_note_preevent(note: &GitNote, pubkey: PublicKey) -> Result<PreEventV3, Error> {
     if note.committer_time < 0 {
         return Err(Error::InvalidOperation);
     }
@@ -143,13 +173,13 @@ fn git_note_preevent(note: &NoteInfo, pubkey: PublicKey) -> Result<PreEventV3, E
 }
 
 /// Build and sign a text-note event carrying git note content.
-pub fn generate_git_note_event(note: &NoteInfo, private_key: &PrivateKey) -> Result<EventV3, Error> {
+pub fn generate_git_note_event(note: &GitNote, private_key: &PrivateKey) -> Result<EventV3, Error> {
     git_note_sign(note, private_key, None)
 }
 
 /// Build, mine, and sign a text-note event carrying git note content.
 pub fn generate_git_note_event_with_pow(
-    note: &NoteInfo,
+    note: &GitNote,
     private_key: &PrivateKey,
     difficulty: u8,
 ) -> Result<EventV3, Error> {
@@ -157,7 +187,7 @@ pub fn generate_git_note_event_with_pow(
 }
 
 fn git_note_sign(
-    note: &NoteInfo,
+    note: &GitNote,
     private_key: &PrivateKey,
     difficulty: Option<u8>,
 ) -> Result<EventV3, Error> {
@@ -1074,15 +1104,18 @@ mod tests {
         assert_eq!(parsed.event.kind, repo_state_kind());
     }
 
-    fn note_fixture() -> NoteInfo {
-        NoteInfo {
-            note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
-            annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
-            notes_ref: Some("refs/notes/commits".to_string()),
-            message: "nip34:git note protocol example:deterministically linked git note".to_string(),
-            author: "randymcmillan".to_string(),
-            committer: "randymcmillan".to_string(),
-            committer_time: 1777759186,
+    fn note_fixture() -> GitNote {
+        GitNote {
+            note: NoteInfo {
+                note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
+                annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
+                notes_ref: Some("refs/notes/commits".to_string()),
+                message:
+                    "nip34:git note protocol example:deterministically linked git note".to_string(),
+                author: "randymcmillan".to_string(),
+                committer: "randymcmillan".to_string(),
+                committer_time: 1777759186,
+            },
         }
     }
 
