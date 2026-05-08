@@ -42,7 +42,7 @@ Use this skill as the index for the top-level `gnostr` subcommands.
 - `publish-contact-list-csv` — publish contacts from a CSV file
 - `query` — query subcommand
 - `react` — react to an event
-- `relay` — relay subcommands
+- `relay` — run the gnostr relay server
 - `server` — run the Blossom server
 - `send-channel-message` — send a message to a public channel
 - `set-channel-metadata` — update channel metadata

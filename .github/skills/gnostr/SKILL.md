@@ -15,6 +15,7 @@ Use `gnostr` for repo-local git+nostr workflows, relay actions, chat updates, an
 - `gnostr dm` sends NIP-44 direct messages and can list/decrypt inbox messages when `--message` is omitted.
 - `gnostr note` sends a text note.
 - `gnostr ngit` is the passthrough for ngit subcommands.
+- `gnostr relay` runs the gnostr relay server.
 - `gnostr nip34` exposes the NIP-34 helpers used by this repo.
 - `gnostr server` runs the Blossom server.
 - Useful top-level flags include `--workdir`, `--gitdir`, `--nsec`, `--relays`, `--difficulty-target`, `--tab`, `--command`, and `--bugreport`.
@@ -28,6 +29,8 @@ gnostr <subcommand> --help
 gnostr legit --help
 gnostr chat --help
 gnostr dm --help
+gnostr relay --help
+gnostr server --help
 gnostr nip34 --help
 ```
 
