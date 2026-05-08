@@ -352,6 +352,31 @@ async fn nip34_event_matrix_with_git_notes_attached() -> Result<()> {
             .iter()
             .skip(1)
             .all(|event| !event_is_patch_set_root(event)));
+        let note_events = patch_events
+            .iter()
+            .filter(|event| {
+                event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("notes-ref"))
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(note_events.len(), 1);
+        assert_eq!(note_events[0].kind, nostr_sdk::Kind::GitPatch);
+        assert!(note_events[0]
+            .tags
+            .iter()
+            .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("commit")));
+        assert!(patch_events
+            .iter()
+            .skip(1)
+            .filter(|event| {
+                !event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("notes-ref"))
+            })
+            .all(|event| patch_supports_commit_ids(event)));
         assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
         assert_eq!(git_note_event.content, note.message);
         assert!(git_note_event
