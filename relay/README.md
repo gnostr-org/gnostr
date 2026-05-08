@@ -10,6 +10,19 @@ cargo add gnostr-relay actix-web tracing-subscriber
 
 ```
 
+## CLI
+
+```shell
+gnostr relay --help
+gnostr-relay --help
+```
+
+Defaults:
+
+- Config: `.gnostr/relay.toml`
+- Data: `.gnostr/relay`
+- Logs: stderr and `gnostr.log`
+
 See [demo](../bins/examples/gnostr_relay_demo.rs)
 
 ### Custom extensions
