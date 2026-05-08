@@ -1,9 +1,16 @@
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use std::time::Duration;
 
-    use libp2p::gossipsub;
+    use libp2p::{
+        autonat, dcutr, gossipsub, identify, noise, ping, relay, request_response,
+        swarm::{NetworkBehaviour, SwarmEvent},
+        tcp, yamux, Multiaddr, PeerId,
+    };
+    use futures::StreamExt;
     use tokio::sync::mpsc;
+    use tokio::sync::oneshot;
 
     use crate::{
         event::ChatEvent,
@@ -11,6 +18,234 @@ mod tests {
         msg::{Msg, MsgKind},
         p2p::spawn_local_p2p_relay_service,
     };
+    use gnostr_p2p::{keypair_from_seed, relay::client::Event as RelayClientEvent};
+
+    #[derive(NetworkBehaviour)]
+    struct RelayProbeBehaviour {
+        relay: relay::client::Behaviour,
+        autonat: autonat::Behaviour,
+        dcutr: dcutr::Behaviour,
+        gossipsub: gossipsub::Behaviour,
+        identify: identify::Behaviour,
+        ping: ping::Behaviour,
+        request_response: request_response::cbor::Behaviour<String, String>,
+    }
+
+    enum RelayProbeCommand {
+        Dial {
+            peer_id: PeerId,
+            addr: Multiaddr,
+            sender: oneshot::Sender<Result<(), String>>,
+        },
+        Request {
+            peer_id: PeerId,
+            message: String,
+            sender: oneshot::Sender<Result<String, String>>,
+        },
+    }
+
+    struct RelayProbePeer {
+        peer_id: PeerId,
+        command_tx: mpsc::Sender<RelayProbeCommand>,
+        status_rx: mpsc::Receiver<String>,
+    }
+
+    impl RelayProbePeer {
+        async fn dial(&mut self, peer_id: PeerId, addr: Multiaddr) -> Result<(), String> {
+            let (sender, receiver) = oneshot::channel();
+            self.command_tx
+                .send(RelayProbeCommand::Dial {
+                    peer_id,
+                    addr,
+                    sender,
+                })
+                .await
+                .expect("relay probe peer to stay alive");
+            receiver.await.map_err(|_| "dial response channel closed".to_string())?
+        }
+
+        async fn request(&mut self, peer_id: PeerId, message: String) -> Result<String, String> {
+            let (sender, receiver) = oneshot::channel();
+            self.command_tx
+                .send(RelayProbeCommand::Request {
+                    peer_id,
+                    message,
+                    sender,
+                })
+                .await
+                .expect("relay probe peer to stay alive");
+            receiver
+                .await
+                .map_err(|_| "request response channel closed".to_string())?
+        }
+
+        async fn wait_for_status_contains(&mut self, needle: &str, timeout: Duration) -> String {
+            let deadline = tokio::time::Instant::now() + timeout;
+
+            loop {
+                let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
+                let status = tokio::time::timeout(remaining, self.status_rx.recv())
+                    .await
+                    .expect("timeout waiting for relay status")
+                    .expect("status channel closed");
+                if status.contains(needle) {
+                    return status;
+                }
+            }
+        }
+    }
+
+    fn build_relay_circuit_addr(base: &Multiaddr, relay_peer_id: PeerId, target: PeerId) -> Multiaddr {
+        base.clone()
+            .with(libp2p::multiaddr::Protocol::P2p(relay_peer_id))
+            .with(libp2p::multiaddr::Protocol::P2pCircuit)
+            .with(libp2p::multiaddr::Protocol::P2p(target))
+    }
+
+    fn build_relay_direct_addr(base: &Multiaddr, relay_peer_id: PeerId) -> Multiaddr {
+        base.clone().with(libp2p::multiaddr::Protocol::P2p(relay_peer_id))
+    }
+
+    fn spawn_relay_probe_peer(seed: &str) -> RelayProbePeer {
+        let keypair = keypair_from_seed(Some(seed.to_string()));
+        let peer_id = keypair.public().to_peer_id();
+        let (command_tx, mut command_rx) = mpsc::channel::<RelayProbeCommand>(8);
+        let (status_tx, status_rx) = mpsc::channel::<String>(32);
+
+        tokio::spawn(async move {
+            let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
+                .with_tokio()
+                .with_tcp(
+                    tcp::Config::default(),
+                    noise::Config::new,
+                    yamux::Config::default,
+                )
+                .expect("tcp")
+                .with_quic()
+                .with_relay_client(noise::Config::new, yamux::Config::default)
+                .expect("relay client")
+                .with_behaviour(|key, relay_client| {
+                    let local_peer_id = key.public().to_peer_id();
+                    RelayProbeBehaviour {
+                        relay: relay_client,
+                        autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
+                        dcutr: dcutr::Behaviour::new(local_peer_id),
+                        gossipsub: gossipsub::Behaviour::new(
+                            gossipsub::MessageAuthenticity::Signed(key.clone()),
+                            gossipsub::ConfigBuilder::default()
+                                .heartbeat_interval(Duration::from_secs(10))
+                                .validation_mode(gossipsub::ValidationMode::Strict)
+                                .build()
+                                .expect("gossipsub config"),
+                        )
+                        .expect("gossipsub"),
+                        identify: identify::Behaviour::new(identify::Config::new(
+                            "/ipfs/id/1.0.0".to_string(),
+                            key.public(),
+                        )),
+                        ping: ping::Behaviour::new(ping::Config::new()),
+                        request_response: request_response::cbor::Behaviour::new(
+                            [(String::from("/relay-probe/1"), request_response::ProtocolSupport::Full)],
+                            request_response::Config::default(),
+                        ),
+                    }
+                })
+                .expect("behaviour")
+                .build();
+
+            swarm.listen_on("/ip4/127.0.0.1/tcp/0".parse().expect("tcp listen")).expect("listen tcp");
+            swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().expect("quic listen")).expect("listen quic");
+
+            let mut pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), String>>> = HashMap::new();
+            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<String, String>>> =
+                HashMap::new();
+
+            loop {
+                tokio::select! {
+                    Some(command) = command_rx.recv() => match command {
+                        RelayProbeCommand::Dial { peer_id, addr, sender } => {
+                            if pending_dial.contains_key(&peer_id) {
+                                let _ = sender.send(Err("peer already pending dial".to_string()));
+                                continue;
+                            }
+                            match swarm.dial(addr.clone()) {
+                                Ok(()) => {
+                                    pending_dial.insert(peer_id, sender);
+                                }
+                                Err(error) => {
+                                    let _ = sender.send(Err(error.to_string()));
+                                }
+                            }
+                        }
+                        RelayProbeCommand::Request { peer_id, message, sender } => {
+                            let request_id = swarm
+                                .behaviour_mut()
+                                .request_response
+                                .send_request(&peer_id, message);
+                            pending_request.insert(request_id, sender);
+                        }
+                    },
+                    event = swarm.select_next_some() => match event {
+                        SwarmEvent::Behaviour(RelayProbeBehaviourEvent::Relay(RelayClientEvent::ReservationReqAccepted { relay_peer_id, .. })) => {
+                            let _ = status_tx.send(format!("ReservationReqAccepted:{relay_peer_id}")).await;
+                        }
+                        SwarmEvent::Behaviour(RelayProbeBehaviourEvent::Relay(RelayClientEvent::OutboundCircuitEstablished { relay_peer_id, .. })) => {
+                            let _ = status_tx.send(format!("OutboundCircuitEstablished:{relay_peer_id}")).await;
+                        }
+                        SwarmEvent::Behaviour(RelayProbeBehaviourEvent::Relay(RelayClientEvent::InboundCircuitEstablished { src_peer_id, .. })) => {
+                            let _ = status_tx.send(format!("InboundCircuitEstablished:{src_peer_id}")).await;
+                        }
+                        SwarmEvent::Behaviour(RelayProbeBehaviourEvent::Dcutr(event)) => {
+                            let _ = status_tx.send(format!("DCUtR:{event:?}")).await;
+                        }
+                        SwarmEvent::Behaviour(RelayProbeBehaviourEvent::RequestResponse(
+                            request_response::Event::Message { message, .. },
+                        )) => match message {
+                            request_response::Message::Request { request, channel, .. } => {
+                                swarm
+                                    .behaviour_mut()
+                                    .request_response
+                                    .send_response(channel, format!("echo:{request}"))
+                                    .expect("response channel to stay open");
+                            }
+                            request_response::Message::Response { request_id, response } => {
+                                if let Some(sender) = pending_request.remove(&request_id) {
+                                    let _ = sender.send(Ok(response));
+                                }
+                            }
+                        },
+                        SwarmEvent::Behaviour(RelayProbeBehaviourEvent::RequestResponse(
+                            request_response::Event::OutboundFailure { request_id, error, .. },
+                        )) => {
+                            if let Some(sender) = pending_request.remove(&request_id) {
+                                let _ = sender.send(Err(error.to_string()));
+                            }
+                        }
+                        SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
+                            if endpoint.is_dialer() {
+                                if let Some(sender) = pending_dial.remove(&peer_id) {
+                                    let _ = sender.send(Ok(()));
+                                }
+                            }
+                        }
+                        SwarmEvent::OutgoingConnectionError { peer_id: Some(peer_id), error, .. } => {
+                            if let Some(sender) = pending_dial.remove(&peer_id) {
+                                let _ = sender.send(Err(error.to_string()));
+                            }
+                        }
+                        SwarmEvent::NewListenAddr { .. } => {}
+                        _ => {}
+                    }
+                }
+            }
+        });
+
+        RelayProbePeer {
+            peer_id,
+            command_tx,
+            status_rx,
+        }
+    }
 
     async fn next_chat_message(
         recv: &mut mpsc::Receiver<ChatEvent>,
@@ -169,6 +404,71 @@ mod tests {
                 received_event_2
             );
         }
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "long_tests")]
+    #[ignore]
+    async fn test_p2p_relay_reservation_and_circuit_round_trip() {
+        let relay = spawn_local_p2p_relay_service().expect("local p2p relay service");
+        let relay_addr = relay.listen_addr().clone();
+        let relay_peer_id = relay.peer_id();
+        let relay_multiaddr = build_relay_direct_addr(&relay_addr, relay_peer_id);
+
+        let mut peer_one = spawn_relay_probe_peer("chat-relay-peer-one");
+        let mut peer_two = spawn_relay_probe_peer("chat-relay-peer-two");
+
+        peer_one
+            .dial(relay_peer_id, relay_multiaddr.clone())
+            .await
+            .expect("peer one relay dial");
+        peer_two
+            .dial(relay_peer_id, relay_multiaddr.clone())
+            .await
+            .expect("peer two relay dial");
+
+        let peer_one_status = peer_one
+            .wait_for_status_contains("ReservationReqAccepted", Duration::from_secs(20))
+            .await;
+        let peer_two_status = peer_two
+            .wait_for_status_contains("ReservationReqAccepted", Duration::from_secs(20))
+            .await;
+        assert!(
+            peer_one_status.contains("ReservationReqAccepted"),
+            "peer one relay status: {peer_one_status}"
+        );
+        assert!(
+            peer_two_status.contains("ReservationReqAccepted"),
+            "peer two relay status: {peer_two_status}"
+        );
+
+        let peer_two_circuit = build_relay_circuit_addr(&relay_addr, relay_peer_id, peer_two.peer_id);
+        peer_one
+            .dial(peer_two.peer_id, peer_two_circuit.clone())
+            .await
+            .expect("peer one relay circuit dial");
+
+        let circuit_status = peer_one
+            .wait_for_status_contains("OutboundCircuitEstablished", Duration::from_secs(20))
+            .await;
+        assert!(
+            circuit_status.contains("OutboundCircuitEstablished"),
+            "peer one circuit status: {circuit_status}"
+        );
+
+        let response = peer_one
+            .request(peer_two.peer_id, "hello over relay".to_string())
+            .await
+            .expect("relay request to round-trip");
+        assert_eq!(response, "echo:hello over relay");
+
+        let punch_status = peer_two
+            .wait_for_status_contains("InboundCircuitEstablished", Duration::from_secs(20))
+            .await;
+        assert!(
+            punch_status.contains("InboundCircuitEstablished") || punch_status.contains("DCUtR"),
+            "peer two relay/punch status: {punch_status}"
+        );
     }
 
     #[tokio::test]
