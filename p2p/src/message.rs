@@ -1,8 +1,8 @@
-//! Shared nostr and git-note message types for p2p compatibility.
+//! Shared Nostr and git-note message types for the middle layer.
 //!
-//! These are re-exported from `gnostr_asyncgit` so `gnostr-p2p` can speak the
-//! same nostr event, relay, client, metadata, and NIP-34 git-note shapes
-//! without a second model.
+//! `gnostr-p2p` re-exports the canonical types from `gnostr_asyncgit`, and
+//! `gnostr-chat` re-exports this module so the chain stays
+//! `asyncgit -> p2p -> chat`.
 
 pub use crate::git2::types::*;
 
