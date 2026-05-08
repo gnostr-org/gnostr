@@ -155,7 +155,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     );
     let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
 
-    assert_eq!(event.kind, nostr_sdk::Kind::TextNote);
+    assert_eq!(event.kind, nostr_sdk::Kind::GitPatch);
     assert_eq!(event.content, note_text);
     assert_eq!(
         event
@@ -253,7 +253,7 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
     println!("pull request update event: {update_event:#?}");
 
     assert_eq!(repo_announcement.kind, nostr_sdk::Kind::GitRepoAnnouncement);
-    assert_eq!(git_note_event.kind, nostr_sdk::Kind::TextNote);
+    assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
     assert!(patch_events.len() >= 2);
     assert_eq!(patch_events[0].kind, nostr_sdk::Kind::GitPatch);
     assert!(event_is_cover_letter(&patch_events[0]));
@@ -353,7 +353,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
             event.tags
         );
 
-        assert_eq!(event.kind, nostr_sdk::Kind::TextNote);
+        assert_eq!(event.kind, nostr_sdk::Kind::GitPatch);
         assert_eq!(event.content, note.message);
         assert_eq!(
             event
