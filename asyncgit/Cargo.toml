@@ -209,12 +209,15 @@ sha2 = { workspace = true }
 ## harness = false
 
 [dev-dependencies]
+actix-test = "0.1.5"
 #cargo-insta = "1.43.1"
 criterion = "0.5.1"
 env_logger = "0.11"
 expectrl = "0.8.0"
 insta = "1.42.2"
 invalidstring = { workspace = true }                 #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1878.945649.607219" }
+gnostr-crawler = { package = "gnostr-crawler", path = "../crawler" }
+gnostr-relay = { package = "gnostr-relay", path = "../relay" }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
 #supposed to be ngit re-export #REMOVE
 nostr = { workspace = true }

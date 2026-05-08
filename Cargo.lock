@@ -6983,6 +6983,7 @@ dependencies = [
 name = "gnostr-asyncgit"
 version = "948467.1874.824272"
 dependencies = [
+ "actix-test",
  "aes",
  "anyhow",
  "arboard",
@@ -7025,10 +7026,12 @@ dependencies = [
  "git-version",
  "git2",
  "gix 0.66.0",
+ "gnostr-crawler",
  "gnostr-git2-hooks",
  "gnostr-grammar",
  "gnostr-invalidstring",
  "gnostr-ngit",
+ "gnostr-relay",
  "gnostr-scopetime",
  "gnostr_filehash_core",
  "handlebars",
