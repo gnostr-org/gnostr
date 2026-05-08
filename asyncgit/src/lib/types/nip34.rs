@@ -80,23 +80,6 @@ impl Deref for GitNote {
     }
 }
 
-impl GitNote {
-    /// Deterministic git note used by protocol trace tests.
-    pub fn trace(message: &str) -> Self {
-        Self {
-            note: NoteInfo {
-                note_id: Oid::from_str("b1d954d11c92c7386f040bba3937f24e64d8f9ec").unwrap(),
-                annotated_id: Oid::from_str("431b84edc0d2fa118d63faa3c2db9c73d630a5ae").unwrap(),
-                notes_ref: Some("refs/notes/commits".to_string()),
-                message: message.to_string(),
-                author: "chat".to_string(),
-                committer: "chat".to_string(),
-                committer_time: 1777759186,
-            },
-        }
-    }
-}
-
 fn print_banner(label: &str) {
     println!();
     println!("==================== {label} ====================");

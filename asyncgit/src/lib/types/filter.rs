@@ -220,13 +220,6 @@ impl Filter {
             ..Default::default()
         }
     }
-
-    /// Deterministic filter used by protocol trace tests.
-    pub fn trace() -> Filter {
-        let mut filter = Self::mock();
-        filter.authors = vec![PublicKeyHex::trace_deterministic()];
-        filter
-    }
 }
 
 impl fmt::Display for Filter {

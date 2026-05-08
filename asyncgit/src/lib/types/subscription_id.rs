@@ -16,11 +16,6 @@ impl SubscriptionId {
     pub(crate) fn mock() -> SubscriptionId {
         SubscriptionId("lk234js09".to_owned())
     }
-
-    /// Deterministic subscription id used by protocol trace tests.
-    pub fn trace() -> SubscriptionId {
-        Self::mock()
-    }
 }
 
 #[cfg(test)]
