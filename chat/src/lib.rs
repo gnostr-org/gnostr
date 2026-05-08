@@ -1,3 +1,9 @@
+//! `gnostr-chat` consumes the shared Nostr and git-note types through
+//! `gnostr-p2p` so the protocol chain stays `asyncgit -> p2p -> chat`.
+//!
+//! If chat needs a new wire type, expose it from `p2p` instead of importing
+//! `asyncgit` directly.
+ 
 pub mod event;
 pub mod command;
 pub mod message;
