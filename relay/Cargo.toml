@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "948375.1874.943145"
+version = "948467.1874.824272"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
