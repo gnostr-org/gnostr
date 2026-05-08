@@ -122,18 +122,19 @@ async fn run_local_relay(
     setting_path: Option<PathBuf>,
     data_path: Option<PathBuf>,
 ) -> Result<()> {
-    let setting_path = setting_path.as_deref();
-    let data_path = data_path.as_deref();
-    let local_set = tokio::task::LocalSet::new();
-
-    local_set
-        .run_until(async move {
+    tokio::task::spawn_blocking(move || {
+        let system = actix_web::rt::System::new();
+        system.block_on(async move {
+            let setting_path = setting_path.as_deref();
+            let data_path = data_path.as_deref();
             let app_data = create_relay_app(setting_path, data_path).await?;
             gnostr_relay::run_app_with_endpoint(app_data)
                 .await
                 .map_err(anyhow::Error::from)
         })
-        .await?;
+    })
+    .await
+    .context("failed to join relay runtime thread")??;
 
     info!("Relay server shutdown");
     Ok(())
