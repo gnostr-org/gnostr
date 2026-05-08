@@ -31,25 +31,28 @@ impl std::fmt::Display for LogLevel {
 }
 
 #[derive(Parser, Debug, Clone)]
-/// CLI arguments for `gnostr relay`.
-///
-/// The relay wrapper prefers a local `config/gnostr.toml` when present, uses
-/// the local relay crate defaults otherwise, and supports `--detach` on
-/// Unix-like systems.
+#[command(
+    about = "Run the gnostr relay server",
+    long_about = "Run the local gnostr relay. By default it loads config/gnostr.toml when present, stores data under .gnostr/relay, and writes logs to stderr and the gnostr log file. Use --detach on Unix-like systems to keep it running in the background."
+)]
 pub struct RelaySubCommand {
-    /// Path to configuration file.
+    /// Path to the relay config file.
+    ///
+    /// Defaults to config/gnostr.toml when present in the current directory.
     #[arg(short, long)]
     pub config: Option<PathBuf>,
 
-    /// Path to data directory.
+    /// Path to the relay data directory.
+    ///
+    /// The relay stores its LMDB database under <data>/events.
     #[arg(short, long, default_value = ".gnostr/relay")]
     pub data: Option<PathBuf>,
 
-    /// Watch for configuration file changes.
+    /// Watch the config file for changes and reload on update.
     #[arg(short, long)]
     pub watch: bool,
 
-    /// Set logging level.
+    /// Set the logging level written to stderr and gnostr.log.
     #[arg(long, value_enum, default_value_t = LogLevel::Info)]
     pub logging: LogLevel,
 
