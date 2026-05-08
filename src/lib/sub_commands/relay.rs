@@ -1,4 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -76,11 +80,15 @@ pub async fn relay(args: RelaySubCommand) -> Result<()> {
         debug!("relay --watch is accepted but handled by the local relay crate");
     }
     if args.data.is_some() {
-        debug!("relay --data is accepted but handled by the local relay crate defaults");
+        debug!("relay --data is forwarded to the relay app");
     }
 
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
-    run_local_relay(resolve_setting_path(&args, &current_dir)).await
+    run_local_relay(
+        resolve_setting_path(&args, &current_dir),
+        args.data.clone(),
+    )
+    .await
 }
 
 async fn run_detached(args: RelaySubCommand) -> Result<()> {
@@ -110,15 +118,17 @@ async fn run_detached(args: RelaySubCommand) -> Result<()> {
     Ok(())
 }
 
-async fn run_local_relay(setting_path: Option<String>) -> Result<()> {
+async fn run_local_relay(
+    setting_path: Option<PathBuf>,
+    data_path: Option<PathBuf>,
+) -> Result<()> {
     let setting_path = setting_path.as_deref();
+    let data_path = data_path.as_deref();
     let local_set = tokio::task::LocalSet::new();
 
     local_set
         .run_until(async move {
-            let app_data =
-                gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), None)
-                    .map_err(anyhow::Error::from)?;
+            let app_data = create_relay_app(setting_path, data_path).await?;
             gnostr_relay::run_app_with_endpoint(app_data)
                 .await
                 .map_err(anyhow::Error::from)
@@ -129,17 +139,77 @@ async fn run_local_relay(setting_path: Option<String>) -> Result<()> {
     Ok(())
 }
 
-fn resolve_setting_path(args: &RelaySubCommand, current_dir: &Path) -> Option<String> {
+async fn create_relay_app(
+    setting_path: Option<&Path>,
+    data_path: Option<&Path>,
+) -> Result<gnostr_relay::App> {
+    match gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), data_path) {
+        Ok(app) => Ok(app),
+        Err(err) if is_lmdb_version_mismatch(&err) => {
+            warn!("relay database version mismatch detected; backing up stale LMDB and recreating it");
+            backup_relay_events_dir(setting_path, data_path)?;
+            gnostr_relay::App::create(setting_path, true, Some("NOSTR".to_owned()), data_path)
+                .map_err(anyhow::Error::from)
+        }
+        Err(err) => Err(anyhow::Error::from(err)),
+    }
+}
+
+fn resolve_setting_path(args: &RelaySubCommand, current_dir: &Path) -> Option<PathBuf> {
     if let Some(config) = &args.config {
-        return Some(config.to_string_lossy().into_owned());
+        return Some(config.clone());
     }
 
     let config_file_path = current_dir.join("config/gnostr.toml");
     if config_file_path.exists() {
-        return Some(config_file_path.to_string_lossy().into_owned());
+        return Some(config_file_path);
     }
 
     None
+}
+
+fn is_lmdb_version_mismatch(err: &impl std::fmt::Display) -> bool {
+    let message = err.to_string();
+    message.contains("MDB_VERSION_MISMATCH")
+        || message.contains("Database environment version mismatch")
+}
+
+fn resolve_relay_data_path(
+    setting_path: Option<&Path>,
+    data_path: Option<&Path>,
+) -> Result<PathBuf> {
+    if let Some(data_path) = data_path {
+        return Ok(data_path.to_path_buf());
+    }
+
+    if let Some(setting_path) = setting_path {
+        return gnostr_relay::Setting::read(setting_path, Some("NOSTR".to_owned()))
+            .map(|setting| setting.data.path)
+            .map_err(anyhow::Error::from);
+    }
+
+    Ok(gnostr_relay::Setting::default().data.path)
+}
+
+fn backup_relay_events_dir(setting_path: Option<&Path>, data_path: Option<&Path>) -> Result<()> {
+    let relay_data_path = resolve_relay_data_path(setting_path, data_path)?;
+    let events_dir = relay_data_path.join("events");
+    if !events_dir.exists() {
+        return Ok(());
+    }
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .context("system time is before UNIX_EPOCH")?
+        .as_secs();
+    let backup_dir = relay_data_path.join(format!("events.mdb-version-mismatch-{timestamp}"));
+    fs::rename(&events_dir, &backup_dir).with_context(|| {
+        format!(
+            "failed to back up stale relay database from {:?} to {:?}",
+            events_dir, backup_dir
+        )
+    })?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -159,7 +229,7 @@ mod tests {
 
         assert_eq!(
             resolve_setting_path(&args, Path::new(".")),
-            Some(String::from("/tmp/custom.toml"))
+            Some(PathBuf::from("/tmp/custom.toml"))
         );
     }
 
@@ -183,13 +253,40 @@ mod tests {
 
         assert_eq!(
             resolve_setting_path(&args, tempdir.path()),
-            Some(
-                tempdir
-                    .path()
-                    .join("config/gnostr.toml")
-                    .to_string_lossy()
-                    .into_owned()
-            )
+            Some(tempdir.path().join("config/gnostr.toml"))
+        );
+    }
+
+    #[test]
+    fn resolve_relay_data_path_prefers_explicit_data_path() {
+        let tempdir = TempDir::new().expect("tempdir");
+        let explicit = tempdir.path().join("custom-data");
+
+        assert_eq!(
+            resolve_relay_data_path(None, Some(explicit.as_path())).expect("data path"),
+            explicit
+        );
+    }
+
+    #[test]
+    fn backup_relay_events_dir_renames_existing_database() {
+        let tempdir = TempDir::new().expect("tempdir");
+        let relay_data = tempdir.path().join("relay");
+        let events_dir = relay_data.join("events");
+        std::fs::create_dir_all(&events_dir).expect("events dir");
+        std::fs::write(events_dir.join("data.mdb"), b"old-db").expect("db file");
+
+        backup_relay_events_dir(None, Some(relay_data.as_path())).expect("backup");
+
+        assert!(!events_dir.exists());
+        let entries = std::fs::read_dir(&relay_data)
+            .expect("read relay dir")
+            .map(|entry| entry.expect("entry").file_name().to_string_lossy().into_owned())
+            .collect::<Vec<_>>();
+        assert!(
+            entries
+                .iter()
+                .any(|entry| entry.starts_with("events.mdb-version-mismatch-"))
         );
     }
 }
