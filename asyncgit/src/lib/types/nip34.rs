@@ -735,14 +735,18 @@ fn add_head(state: &mut HashMap<String, String>) {
 
 #[cfg(test)]
 mod tests {
+    use actix_test::start;
     use super::*;
-    use crate::types::{Client, Keys, Options};
     use crate::types::get_leading_zero_bits;
+    use crate::types::{Client, Keys, Options};
     use crate::types::nip13::NIP13Event;
     use git2::Oid;
+    use gnostr_crawler::{load_relays_or_bootstrap, relays::get_config_dir_path, run_nip34 as crawler_run_nip34};
+    use gnostr_relay::App as GnostrRelayApp;
     use serial_test::serial;
-    use std::sync::Arc;
     use std::str::FromStr;
+    use std::{env, fs, path::PathBuf, sync::Arc};
+    use tempfile::TempDir;
 
     use ngit::{client::STATE_KIND as NGIT_STATE_KIND, git_events as ngit_git_events};
 
@@ -764,6 +768,48 @@ mod tests {
             }
             other => panic!("unexpected ngit kind {other}"),
         }
+    }
+
+    struct EnvVarGuard {
+        key: &'static str,
+        value: Option<std::ffi::OsString>,
+    }
+
+    impl EnvVarGuard {
+        fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
+            let previous = env::var_os(key);
+            env::set_var(key, value);
+            Self {
+                key,
+                value: previous,
+            }
+        }
+    }
+
+    impl Drop for EnvVarGuard {
+        fn drop(&mut self) {
+            match &self.value {
+                Some(value) => env::set_var(self.key, value),
+                None => env::remove_var(self.key),
+            }
+        }
+    }
+
+    fn create_relay_config() -> crate::error::Result<(TempDir, PathBuf)> {
+        let config_dir = tempfile::tempdir()?;
+        let config_path = config_dir.path().join("relay.toml");
+        fs::write(
+            &config_path,
+            r#"
+[server]
+port = 0
+host = "127.0.0.1"
+
+[database]
+path = ":memory:"
+"#,
+        )?;
+        Ok((config_dir, config_path))
     }
 
     #[test]
@@ -1166,25 +1212,49 @@ mod tests {
     async fn nip34_event_matrix_covers_all_kinds_and_git_notes() -> crate::error::Result<()> {
         println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
 
+        let home_dir = tempfile::tempdir().map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        let _home_guard = EnvVarGuard::set("HOME", home_dir.path());
+        let _xdg_guard = EnvVarGuard::set("XDG_CONFIG_HOME", home_dir.path().join("config"));
+
+        let (_relay_config_dir, relay_config_path) =
+            create_relay_config().map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        let relay_config_path = relay_config_path.clone();
+        let relay_srv = start(move || {
+            let app_data = GnostrRelayApp::create(
+                Some(relay_config_path.to_str().expect("relay config path")),
+                true,
+                Some("NOSTR".to_owned()),
+                None,
+            )
+            .expect("failed to create relay app");
+            app_data.setting.write().add_nip(34);
+            app_data.web_app()
+        });
+        let mut relay_url = relay_srv.url("/");
+        relay_url = relay_url.replace("http", "ws");
+
+        let crawler_config_dir = get_config_dir_path();
+        fs::create_dir_all(&crawler_config_dir).map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        fs::write(
+            crawler_config_dir.join("relays.yaml"),
+            format!("- {relay_url}\n"),
+        )
+        .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+
+        let relays = load_relays_or_bootstrap();
+        assert!(relays.iter().any(|relay| relay == &relay_url));
+        crawler_run_nip34(None, &reqwest::Client::new())
+            .await
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+
         let private_key = PrivateKey::mock();
         let trusted_maintainer = private_key.public_key();
         let note_base = note_fixture();
         let root_commit = note_base.annotated_id.to_string();
         let repo_url = "https://github.com/gnostr-org/gnostr.git".to_string();
-        let relay_urls = vec![
-            "wss://nostr-kyomu-haskell.onrender.com/".to_string(),
-            "wss://nostr-relay.amethyst.name/".to_string(),
-            "wss://relay.bitcoindistrict.org/".to_string(),
-            "wss://nos.lol/".to_string(),
-            "wss://relay.damus.io/".to_string(),
-        ];
-        print_banner("asyncgit NIP-34 relay targets");
-        for relay in &relay_urls {
-            println!("  - {relay}");
-        }
         let mut client = Client::new(&Keys::new(private_key.clone()), Options::new().wait_for_send(true));
         client
-            .add_relays(relay_urls)
+            .add_relays(vec![relay_url.clone()])
             .await
             .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
         client.connect().await;
