@@ -1,4 +1,9 @@
-//! `gnostr-p2p` is the Rust crate that owns the P2P package namespace.
+//! `gnostr-p2p` owns the libp2p transport namespace.
+//!
+//! It re-exports the shared asyncgit-backed Nostr wire types for downstream
+//! crates, and it also depends on `gnostr-crawler` for relay bucket discovery.
+//! That means `crawler` must stay on the asyncgit side of the graph and should
+//! not depend on `p2p`, or the workspace will cycle.
 //!
 //! The browser-side pure JavaScript implementation lives under `src/js/`.
 
