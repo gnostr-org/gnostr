@@ -1444,7 +1444,7 @@ mod tests {
 
             for (note_label, use_pow) in note_variants {
                 let mut note = note_base.clone();
-                note.message = format!("{carrier_label}: {note_label}");
+                note.note.message = format!("{carrier_label}: {note_label}");
                 let git_note_event = if use_pow {
                     generate_git_note_event_with_pow(&note, &private_key, 4).unwrap()
                 } else {
