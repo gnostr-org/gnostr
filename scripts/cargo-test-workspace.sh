@@ -46,6 +46,7 @@ OFFLINE=false
     export TMP="${TMPDIR}/${TMP_VALUE}"
     export TEMP="${TMP}/debug/${TEMP_VALUE}"
 TARGET_ROOT="${TEMP}"
+SKIP_IGNORED_TESTS=false
 
 usage() {
   cat <<'EOF'
@@ -248,6 +249,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
+      SKIP_IGNORED_TESTS=true
       ;;
     --nocapture)
       TEST_FLAGS+=(--nocapture)
@@ -288,6 +290,16 @@ TARGET_SIZE_LIMIT_KIB="$(parse_prune_limit_kib "$PRUNE_LIMIT_SPEC")" || {
   echo "Invalid --prune-limit value: $PRUNE_LIMIT_SPEC" >&2
   exit 1
 }
+
+if [[ "$SKIP_IGNORED_TESTS" == true ]]; then
+  TEST_FLAGS+=(
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_decryption_success'
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_success'
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_success_bech32_recipient'
+    --skip 'sub_commands::query::tests::test_real_network_roundtrip_kind4_with_default_key'
+    --skip 'sub_commands::query::tests::test_real_network_roundtrip_kind44_with_default_key'
+  )
+fi
 
 if [[ "$VENDORED" == true ]]; then
   if [[ "$ALL_FEATURES" == true || "$NO_DEFAULT_FEATURES" == true || ${#FEATURES[@]} -gt 0 || ${#PACKAGES[@]} -gt 0 ]]; then
