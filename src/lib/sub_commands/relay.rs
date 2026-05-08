@@ -123,7 +123,7 @@ async fn run_local_relay(
     data_path: Option<PathBuf>,
 ) -> Result<()> {
     tokio::task::spawn_blocking(move || {
-        let system = actix_web::rt::System::new();
+        let system = actix_rt::System::new();
         system.block_on(async move {
             let setting_path = setting_path.as_deref();
             let data_path = data_path.as_deref();
