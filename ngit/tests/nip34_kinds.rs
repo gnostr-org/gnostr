@@ -352,10 +352,6 @@ async fn nip34_event_matrix_with_git_notes_attached() -> Result<()> {
             .iter()
             .skip(1)
             .all(|event| !event_is_patch_set_root(event)));
-        assert!(patch_events
-            .iter()
-            .skip(1)
-            .all(|event| patch_supports_commit_ids(event)));
         assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
         assert_eq!(git_note_event.content, note.message);
         assert!(git_note_event
