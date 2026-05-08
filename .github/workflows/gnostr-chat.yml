@@ -124,6 +124,8 @@ jobs:
           cache: true
 
       - run: rustup default ${{ matrix.rustup }}
+      - name: Build gnostr p2p binaries
+        run: cargo build -p gnostr-p2p --bins --quiet
       - name: Install cargo-binstall
         id: binstall
         continue-on-error: true
@@ -239,7 +241,22 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          if [ -f target/debug/gnostr-p2p ]; then
+            chmod +x ./target/debug/gnostr-p2p
+            GNOSTR_P2P_CMD=./target/debug/gnostr-p2p
+          else
+            GNOSTR_P2P_CMD="cargo run -p gnostr-p2p --bin gnostr-p2p --"
+          fi
+
           PEER_HASH="$(printf '%s' peer | sha256sum | cut -d' ' -f1)"
+          BOOTSTRAP_HASH="$(printf '%s' bootstrap | sha256sum | cut -d' ' -f1)"
+
+          $GNOSTR_P2P_CMD \
+            --secret-key-seed "$BOOTSTRAP_HASH" \
+            --port 0 \
+            >/tmp/gnostr-chat-bootstrap-peer.log 2>&1 &
+          BOOTSTRAP_PEER_PID=$!
+
           $GNOSTR_CMD \
             --debug \
             --name peer \
@@ -248,20 +265,33 @@ jobs:
             --headless \
             >/tmp/gnostr-chat-peer.log 2>&1 &
           PEER_PID=$!
-          trap 'kill "$PEER_PID" 2>/dev/null || true' EXIT
+          trap 'kill "$BOOTSTRAP_PEER_PID" "$PEER_PID" 2>/dev/null || true' EXIT
 
-          sleep 5
+          sleep 10
 
           echo "Pushing oneshot chat messages for 2 minutes..."
           while [ "$SECONDS" -lt "$END_AT" ]; do
             COUNT=$((COUNT + 1))
             MESSAGE="Hello from gnostr-chat.ymlr #${COUNT} at $(date +%s)"
-            $GNOSTR_CMD chat \
-              --debug \
-              --name sender \
-              --hash "$SENDER_HASH" \
-              --topic "$CHAT_TOPIC" \
-              --oneshot "$MESSAGE"
+            for attempt in 1 2 3 4 5 6; do
+              MESSAGE_OUTPUT="$($GNOSTR_CMD chat \
+                --debug \
+                --name sender \
+                --hash "$SENDER_HASH" \
+                --topic "$CHAT_TOPIC" \
+                --oneshot "$MESSAGE" 2>&1 || true)"
+              printf '%s\n' "$MESSAGE_OUTPUT"
+              if ! printf '%s\n' "$MESSAGE_OUTPUT" | grep -q 'publish error:'; then
+                break
+              fi
+              if ! printf '%s\n' "$MESSAGE_OUTPUT" | grep -q 'InsufficientPeers'; then
+                exit 1
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                exit 1
+              fi
+              sleep 5
+            done
             sleep 5
           done
 
