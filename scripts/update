@@ -28,17 +28,6 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ROOT_CARGO_TOML="$REPO_ROOT/Cargo.toml"
-CHECK_TARGET_DIR="/tmp/gnostr-update-check.$(gnostr --blockheight 2>/dev/null || echo 0)"
-
-cargo_jobs() {
-    local jobs
-    jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
-    jobs=$((jobs - 1))
-    if [ "$jobs" -lt 1 ]; then
-        jobs=1
-    fi
-    printf '%s\n' "$jobs"
-}
 
 set_workspace_version() {
     local manifest="$1"
@@ -60,11 +49,11 @@ stage_cargo_files() {
     local paths=()
     while IFS= read -r -d '' path; do
         case "$path" in
-            ./vendor/*|vendor/*|./target/*|target/*) continue ;;
+            ./vendor/*|vendor/*) continue ;;
         esac
         paths+=("$path")
     done < <(
-        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
     )
 
     if [ "${#paths[@]}" -gt 0 ]; then
@@ -85,9 +74,8 @@ if [ "$DRY_RUN" = true ]; then
         "  update workspace package versions" \
         "  taplo format Cargo.toml and manifests" \
         "  cargo update --workspace" \
-        "  cargo check -j$(cargo_jobs) -p gnostr-bins --offline --target-dir /tmp/gnostr-update-check.<blockheight>" \
         "  gnostr legit -m \"v${WORKSPACE_VERSION}\" --prefix 000000" \
-        "  cargo publish -j$(cargo_jobs)"
+        "  cargo publish -j8"
     if [ "${#POSITIONAL_ARGS[@]}" -gt 0 ]; then
         exec "$SCRIPT_DIR/update_versions.sh" --dry-run "${POSITIONAL_ARGS[@]}"
     else
@@ -106,8 +94,6 @@ taplo format "$ROOT_CARGO_TOML"
 
 stage_cargo_files
 git add "$ROOT_CARGO_TOML"
-
-cargo check -j"$(cargo_jobs)" -p gnostr-bins --offline --target-dir "$CHECK_TARGET_DIR"
 
 if [ "${#POSITIONAL_ARGS[@]}" -gt 0 ]; then
     SKIP_VERSION_COMMIT=1 VERSION_TAG="$NEW_TAG" exec "$SCRIPT_DIR/update_versions.sh" "${POSITIONAL_ARGS[@]}"
