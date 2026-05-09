@@ -508,7 +508,7 @@ export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
     if should_skip_verify "$crate"; then
-        sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 --no-verify -f || true && popd >/dev/null
+        sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 --no-verify || true && popd >/dev/null
     else
         sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
     fi
