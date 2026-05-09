@@ -1149,6 +1149,71 @@ mod tests {
                 panic!("received wrong event type on peer 2 for case {label}");
             }
         }
+
+        let zap_v1 = ZapDataV1 {
+            id: Id::try_from_hex_string(
+                "5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6",
+            )
+            .expect("zap v1 id"),
+            amount: MilliSatoshi(15423000),
+            pubkey: PublicKey::try_from_hex_string(
+                "ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49",
+                true,
+            )
+            .expect("zap v1 pubkey"),
+            provider_pubkey: PublicKey::try_from_hex_string(
+                "b0635d6a9851d3aed0cd6c495b282167acf761729078d975fc341b22650b07b9",
+                true,
+            )
+            .expect("zap v1 provider pubkey"),
+        };
+        let zap_v2_target = EventReference::Id {
+            id: Id::try_from_hex_string(
+                "4d5a0a2f0eb8447d97a6b0f8bbd5f8c9a4cce7c835d3c7d6f2fd2a9f2f5f3a01",
+            )
+            .expect("zap v2 target id"),
+            author: Some(PrivateKey::generate().public_key()),
+            relays: Vec::new(),
+            marker: Some("root".to_owned()),
+        };
+        let zap_v2 = ZapDataV2 {
+            zapped_event: zap_v2_target.clone(),
+            amount: MilliSatoshi(15423000),
+            payee: PrivateKey::generate().public_key(),
+            payer: PrivateKey::generate().public_key(),
+            provider_pubkey: PrivateKey::generate().public_key(),
+        };
+        let zap_alias: ZapData = zap_v2.clone();
+
+        let zap_cases = vec![
+            ("zap v1", serde_json::to_string(&zap_v1).expect("serialize zap v1")),
+            ("zap v2", serde_json::to_string(&zap_v2).expect("serialize zap v2")),
+            ("zap alias", serde_json::to_string(&zap_alias).expect("serialize zap alias")),
+        ];
+
+        for (label, json) in zap_cases {
+            println!("==================== chat stack {label} ====================");
+            println!("chat stack {label} json: {json}");
+            match label {
+                "zap v1" => {
+                    let decoded: ZapDataV1 = serde_json::from_str(&json).expect("deserialize zap v1");
+                    println!("chat stack {label} decoded: {:?}", decoded);
+                    assert_eq!(decoded, zap_v1);
+                }
+                "zap v2" => {
+                    let decoded: ZapDataV2 = serde_json::from_str(&json).expect("deserialize zap v2");
+                    println!("chat stack {label} decoded: {:?}", decoded);
+                    assert_eq!(decoded, zap_v2);
+                    assert_eq!(decoded.zapped_event, zap_v2_target);
+                }
+                "zap alias" => {
+                    let decoded: ZapData = serde_json::from_str(&json).expect("deserialize zap alias");
+                    println!("chat stack {label} decoded: {:?}", decoded);
+                    assert_eq!(decoded, zap_alias);
+                }
+                _ => unreachable!(),
+            }
+        }
     }
 
     #[tokio::test]
