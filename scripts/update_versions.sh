@@ -363,6 +363,10 @@ SORT_CRATES=(
     qr
     relay
     relay/extensions
+    js
+    p2p
+    chat
+    web
 )
 
 for crate in "${SORT_CRATES[@]}"; do
@@ -385,6 +389,10 @@ PUBLISH_CRATES=(
     qr
     relay
     relay/extensions
+    js
+    p2p
+    chat
+    web
 )
 
 tag_package_versions() {
