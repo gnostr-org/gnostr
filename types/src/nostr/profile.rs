@@ -4,7 +4,6 @@ use speedy::{Readable, Writable};
 
 use super::Error;
 #[cfg(test)]
-use crate::nostr::test_serde;
 use crate::nostr::{PublicKey, UncheckedUrl};
 
 /// A person's profile on nostr which consists of the data needed in order to
@@ -118,7 +117,7 @@ impl Profile {
 mod test {
     use super::*;
 
-    test_serde! {Profile, test_profile_serde}
+    crate::test_serde! {Profile, test_profile_serde}
 
     #[test]
     fn test_profile_bech32() {

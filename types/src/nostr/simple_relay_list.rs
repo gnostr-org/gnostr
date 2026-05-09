@@ -108,9 +108,8 @@ impl<'de> Visitor<'de> for SimpleRelayListVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {SimpleRelayList, test_simple_relay_list_serde}
+    crate::test_serde! {SimpleRelayList, test_simple_relay_list_serde}
 
     #[test]
     fn test_simple_relay_list_json() {

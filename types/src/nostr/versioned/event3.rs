@@ -1267,10 +1267,9 @@ impl TryFrom<PreEventV3> for RumorV3 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
     use crate::nostr::{DelegationConditions, Signer, UncheckedUrl};
 
-    test_serde! {EventV3, test_event_serde}
+    crate::test_serde! {EventV3, test_event_serde}
 
     #[test]
     fn test_event_new_and_verify() {

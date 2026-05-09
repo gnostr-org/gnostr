@@ -21,7 +21,6 @@ impl SubscriptionId {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {SubscriptionId, test_subscription_id_serde}
+    crate::test_serde! {SubscriptionId, test_subscription_id_serde}
 }

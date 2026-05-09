@@ -113,9 +113,8 @@ impl TryFrom<SignatureHex> for Signature {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {Signature, test_signature_serde}
+    crate::test_serde! {Signature, test_signature_serde}
 
     #[cfg(feature = "speedy")]
     #[test]

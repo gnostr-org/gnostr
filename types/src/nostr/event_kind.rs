@@ -9,7 +9,6 @@ use serde::{
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 #[cfg(test)]
-use crate::nostr::test_serde;
 
 macro_rules! define_event_kinds {
     ($($comment:expr, $name:ident = $value:expr),*) => {
@@ -507,7 +506,7 @@ pub enum EventKindOrRange {
 mod test {
     use super::*;
 
-    test_serde! {EventKind, test_event_kind_serde}
+    crate::test_serde! {EventKind, test_event_kind_serde}
 
     #[test]
     fn test_replaceable_ephemeral() {

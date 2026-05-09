@@ -1,41 +1,40 @@
 //! Real serde and contract coverage for the asyncgit Nostr type surface.
 
 use super::*;
-use crate::nostr::test_serde;
 
-test_serde! {DelegationConditions, test_delegation_conditions_serde}
-test_serde! {EventKind, test_event_kind_serde}
-test_serde! {Filter, test_filter_serde}
-test_serde! {Id, test_id_serde}
-test_serde! {IdHex, test_id_hex_serde}
-test_serde! {MilliSatoshi, test_milli_satoshi_serde}
-test_serde! {MetadataV1, test_metadata_v1_serde}
-test_serde! {NAddr, test_naddr_serde}
-test_serde! {NEvent, test_nevent_serde}
-test_serde! {Nip05V1, test_nip05_v1_serde}
-test_serde! {PayRequestData, test_pay_request_data_serde}
-test_serde! {PublicKey, test_public_key_serde}
-test_serde! {PublicKeyHex, test_public_key_hex_serde}
-test_serde! {RelayInformationDocumentV1, test_relay_information_document_v1_serde}
-test_serde! {RelayInformationDocumentV2, test_relay_information_document_v2_serde}
-test_serde! {RelayMessageV2, test_relay_message_v2_serde}
-test_serde! {RelayMessageV3, test_relay_message_v3_serde}
-test_serde! {RelayMessageV4, test_relay_message_v4_serde}
-test_serde! {RelayMessageV5, test_relay_message_v5_serde}
-test_serde! {Signature, test_signature_serde}
-test_serde! {SignatureHex, test_signature_hex_serde}
-test_serde! {SimpleRelayList, test_simple_relay_list_serde}
-test_serde! {SubscriptionId, test_subscription_id_serde}
-test_serde! {TagV1, test_tag_v1_serde}
-test_serde! {TagV2, test_tag_v2_serde}
-test_serde! {TagV3, test_tag_v3_serde}
-test_serde! {Unixtime, test_unixtime_serde}
-test_serde! {UncheckedUrl, test_unchecked_url_serde}
-test_serde! {Url, test_url_serde}
-test_serde! {ClientMessageV2, test_client_message_v2_serde}
-test_serde! {ClientMessageV3, test_client_message_v3_serde}
-test_serde! {EventV2, test_event_v2_serde}
-test_serde! {EventV3, test_event_v3_serde}
+crate::test_serde! {DelegationConditions, test_delegation_conditions_serde}
+crate::test_serde! {EventKind, test_event_kind_serde}
+crate::test_serde! {Filter, test_filter_serde}
+crate::test_serde! {Id, test_id_serde}
+crate::test_serde! {IdHex, test_id_hex_serde}
+crate::test_serde! {MilliSatoshi, test_milli_satoshi_serde}
+crate::test_serde! {MetadataV1, test_metadata_v1_serde}
+crate::test_serde! {NAddr, test_naddr_serde}
+crate::test_serde! {NEvent, test_nevent_serde}
+crate::test_serde! {Nip05V1, test_nip05_v1_serde}
+crate::test_serde! {PayRequestData, test_pay_request_data_serde}
+crate::test_serde! {PublicKey, test_public_key_serde}
+crate::test_serde! {PublicKeyHex, test_public_key_hex_serde}
+crate::test_serde! {RelayInformationDocumentV1, test_relay_information_document_v1_serde}
+crate::test_serde! {RelayInformationDocumentV2, test_relay_information_document_v2_serde}
+crate::test_serde! {RelayMessageV2, test_relay_message_v2_serde}
+crate::test_serde! {RelayMessageV3, test_relay_message_v3_serde}
+crate::test_serde! {RelayMessageV4, test_relay_message_v4_serde}
+crate::test_serde! {RelayMessageV5, test_relay_message_v5_serde}
+crate::test_serde! {Signature, test_signature_serde}
+crate::test_serde! {SignatureHex, test_signature_hex_serde}
+crate::test_serde! {SimpleRelayList, test_simple_relay_list_serde}
+crate::test_serde! {SubscriptionId, test_subscription_id_serde}
+crate::test_serde! {TagV1, test_tag_v1_serde}
+crate::test_serde! {TagV2, test_tag_v2_serde}
+crate::test_serde! {TagV3, test_tag_v3_serde}
+crate::test_serde! {Unixtime, test_unixtime_serde}
+crate::test_serde! {UncheckedUrl, test_unchecked_url_serde}
+crate::test_serde! {Url, test_url_serde}
+crate::test_serde! {ClientMessageV2, test_client_message_v2_serde}
+crate::test_serde! {ClientMessageV3, test_client_message_v3_serde}
+crate::test_serde! {EventV2, test_event_v2_serde}
+crate::test_serde! {EventV3, test_event_v3_serde}
 
 #[test]
 fn event_kind_mapping_covers_known_nip34_kinds() {

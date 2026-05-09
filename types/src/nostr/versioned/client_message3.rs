@@ -141,7 +141,6 @@ impl<'de> Visitor<'de> for ClientMessageVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
-    test_serde! {ClientMessageV3, test_client_message_serde}
+    crate::test_serde! {ClientMessageV3, test_client_message_serde}
 }

@@ -12,7 +12,6 @@ use speedy::{Context, Readable, Reader, Writable, Writer};
 
 use super::{Error, PrivateKey, Signature};
 #[cfg(test)]
-use crate::nostr::test_serde;
 
 /// This is a public key, which identifies an actor (usually a person) and is
 /// shared.
@@ -375,8 +374,8 @@ impl Visitor<'_> for PublicKeyHexVisitor {
 mod test {
     use super::*;
 
-    test_serde! {PublicKey, test_public_key_serde}
-    test_serde! {PublicKeyHex, test_public_key_hex_serde}
+    crate::test_serde! {PublicKey, test_public_key_serde}
+    crate::test_serde! {PublicKeyHex, test_public_key_hex_serde}
 
     #[test]
     fn test_pubkey_bech32() {

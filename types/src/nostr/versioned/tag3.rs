@@ -703,9 +703,8 @@ impl From<crate::nostr::versioned::tag2::TagV2> for TagV3 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
-    test_serde! {TagV3, test_tag_serde}
+    crate::test_serde! {TagV3, test_tag_serde}
 
     #[test]
     fn test_a_tag() {

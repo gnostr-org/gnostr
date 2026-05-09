@@ -603,9 +603,8 @@ impl<'de> Visitor<'de> for RidVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
-    test_serde! {RelayInformationDocumentV1, test_relay_information_document_serde}
+    crate::test_serde! {RelayInformationDocumentV1, test_relay_information_document_serde}
 
     #[test]
     fn test_to_json_only() {

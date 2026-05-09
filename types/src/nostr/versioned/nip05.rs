@@ -49,9 +49,8 @@ impl Nip05V1 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
-    test_serde! {Nip05V1, test_nip05_serde}
+    crate::test_serde! {Nip05V1, test_nip05_serde}
 
     #[test]
     fn test_nip05_example() {

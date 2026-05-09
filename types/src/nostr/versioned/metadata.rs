@@ -155,9 +155,8 @@ impl<'de> Visitor<'de> for MetadataV1Visitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
 
-    test_serde! {MetadataV1, test_metadata_serde}
+    crate::test_serde! {MetadataV1, test_metadata_serde}
 
     #[test]
     fn test_metadata_print_json() {

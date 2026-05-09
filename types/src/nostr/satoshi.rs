@@ -45,9 +45,8 @@ impl Add<MilliSatoshi> for MilliSatoshi {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {MilliSatoshi, test_millisatoshi_serde}
+    crate::test_serde! {MilliSatoshi, test_millisatoshi_serde}
 
     #[test]
     fn test_millisatoshi_math() {

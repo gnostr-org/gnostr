@@ -349,9 +349,8 @@ impl From<RelayOrigin> for RelayUrl {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {UncheckedUrl, test_unchecked_url_serde}
+    crate::test_serde! {UncheckedUrl, test_unchecked_url_serde}
 
     #[test]
     fn test_url_case() {

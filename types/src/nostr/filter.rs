@@ -295,9 +295,8 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {Filter, test_filters_serde}
+    crate::test_serde! {Filter, test_filters_serde}
 
     #[test]
     fn test_filter_mock() {

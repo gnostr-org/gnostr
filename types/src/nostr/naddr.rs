@@ -6,7 +6,6 @@ use speedy::{Readable, Writable};
 
 use super::Error;
 #[cfg(test)]
-use crate::nostr::test_serde;
 use crate::nostr::{EventKind, PublicKey, UncheckedUrl};
 
 fn read_tlv<'a>(data: &'a [u8], cursor: &mut usize) -> Result<(u8, &'a [u8]), Error> {
@@ -188,7 +187,7 @@ impl Hash for NAddr {
 mod test {
     use super::*;
 
-    test_serde! {NAddr, test_naddr_serde}
+    crate::test_serde! {NAddr, test_naddr_serde}
 
     #[test]
     fn test_profile_bech32() {

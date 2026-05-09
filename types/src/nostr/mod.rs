@@ -109,9 +109,6 @@ macro_rules! test_serde {
 }
 
 #[cfg(test)]
-pub use crate::test_serde;
-
-#[cfg(test)]
 pub mod nostr {
     pub use super::*;
 }

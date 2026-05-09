@@ -166,7 +166,7 @@ mod test {
         nostr::{KeySigner, PrivateKey, Signer, Tag},
     };
 
-    test_serde! {DelegationConditions, test_delegation_conditions_serde}
+    crate::test_serde! {DelegationConditions, test_delegation_conditions_serde}
 
     #[test]
     fn test_sign_delegation_verify_delegation_signature() {

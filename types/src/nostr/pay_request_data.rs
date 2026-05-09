@@ -162,7 +162,6 @@ impl<'de> Visitor<'de> for PayRequestDataVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::nostr::test_serde;
 
-    test_serde! {PayRequestData, test_pay_request_data_serde}
+    crate::test_serde! {PayRequestData, test_pay_request_data_serde}
 }

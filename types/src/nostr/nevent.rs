@@ -4,7 +4,6 @@ use speedy::{Readable, Writable};
 
 use super::{Error, EventKind, Id, PublicKey, UncheckedUrl};
 #[cfg(test)]
-use crate::nostr::test_serde;
 
 fn read_tlv<'a>(data: &'a [u8], cursor: &mut usize) -> Result<(u8, &'a [u8]), Error> {
     if *cursor + 2 > data.len() {
@@ -177,7 +176,7 @@ impl NEvent {
 mod test {
     use super::*;
 
-    test_serde! {NEvent, test_nevent_serde}
+    crate::test_serde! {NEvent, test_nevent_serde}
 
     #[test]
     fn test_profile_bech32() {
