@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::types::{EventReference, Id, MilliSatoshi, PublicKey};
 
 /// Data about a Zap
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ZapDataV2 {
     /// The event that was zapped. If missing we can't use the zap receipt
     /// event.
@@ -21,7 +23,7 @@ pub struct ZapDataV2 {
 }
 
 /// Data about a Zap
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ZapDataV1 {
     /// The event that was zapped
     pub id: Id,
