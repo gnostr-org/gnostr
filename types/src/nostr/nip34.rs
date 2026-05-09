@@ -782,7 +782,6 @@ mod tests {
         env,
         fs,
         path::PathBuf,
-        str::FromStr,
     };
 
     use actix_test::start;
