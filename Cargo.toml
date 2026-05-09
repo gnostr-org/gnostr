@@ -103,6 +103,7 @@ exclude = [
 [workspace.dependencies]
 actix-http = { version = "3.9.0" }
 actix-test = "0.1.5"
+serial_test = "2.0.0"
 actix-web = { version = "4.9.0" }
 aes = "0.8"
 anyhow = { version = "1.0.98" }

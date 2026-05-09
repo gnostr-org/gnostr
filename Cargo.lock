@@ -7532,6 +7532,7 @@ dependencies = [
 name = "gnostr-types"
 version = "948560.1874.701540"
 dependencies = [
+ "actix-test",
  "aes",
  "anyhow",
  "base64 0.22.1",
@@ -7593,6 +7594,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "serial_test 2.0.0",
  "sha2 0.10.9",
  "sha256",
  "shellexpand",

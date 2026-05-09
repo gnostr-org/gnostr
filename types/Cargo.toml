@@ -135,3 +135,7 @@ webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
+
+[dev-dependencies]
+actix-test = { workspace = true }
+serial_test = { workspace = true }
