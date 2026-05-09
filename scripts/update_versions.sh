@@ -75,8 +75,11 @@ version_requirement_for_dependency() {
             printf '>=%s\n' "$WORKSPACE_VERSION"
             return 0
             ;;
+        "$REPO_ROOT/crawler/Cargo.toml:gnostr-asyncgit")
+            printf '>=%s\n' "$WORKSPACE_VERSION"
+            return 0
+            ;;
         "$REPO_ROOT/asyncgit/Cargo.toml:gnostr-crawler"|\
-        "$REPO_ROOT/crawler/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/js/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/js/Cargo.toml:gnostr-crawler"|\
         "$REPO_ROOT/p2p/Cargo.toml:gnostr-asyncgit"|\
