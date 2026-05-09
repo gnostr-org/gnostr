@@ -29,9 +29,6 @@
 
 use ureq::Agent;
 
-/// internal
-pub mod internal;
-
 mod client_message;
 pub use client_message::ClientMessage;
 
@@ -208,8 +205,6 @@ macro_rules! test_serde {
     };
 }
 
-// mod types;
-
 pub mod versioned;
 pub use event_builder::EventBuilder;
 pub use versioned::{
@@ -241,6 +236,16 @@ pub(crate) fn get_leading_zero_bits(bytes: &[u8]) -> u8 {
 pub trait IntoVec<T> {
     /// Convert into a Vec<T>
     fn into_vec(self) -> Vec<T>;
+}
+
+pub const DEFAULT_GNOSTR_PRIVATE_KEY: [u8; 32] = [
+    0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
+    0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
+];
+
+pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
+    secp256k1::SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
+        .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid")
 }
 
 impl<T> IntoVec<T> for Option<T> {
