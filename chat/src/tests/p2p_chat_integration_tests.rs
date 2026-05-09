@@ -616,8 +616,8 @@ mod tests {
     async fn test_p2p_connectivity_two_nodes() {
         // Create channels for two chat instances
         let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
-        let (recv_tx1, _recv_rx1) = mpsc::channel::<ChatEvent>(100);
-        let (_send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
         let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes");
@@ -693,8 +693,8 @@ mod tests {
         tokio::time::sleep(Duration::from_secs(5)).await;
 
         let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
-        let (recv_tx1, mut recv_rx1) = mpsc::channel::<ChatEvent>(100);
-        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, _recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (_send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
         let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay");
