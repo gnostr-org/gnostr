@@ -38,6 +38,8 @@ workspace_version() {
 
 blockheight_dependency_version() {
     local blockheight
+    # gnostr semver: blockheight = major, weeble = minor, wobble = patch.
+    # This helper feeds the version bump used for path dependency rewriting.
 
     if blockheight="$(gnostr --blockheight 2>/dev/null)"; then
         printf '^%s.0\n' "$blockheight"
