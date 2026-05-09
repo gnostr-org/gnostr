@@ -1,6 +1,6 @@
 //! asyncgit compatibility surface for the shared Nostr types.
 
-pub use gnostr_types::types::*;
+pub use gnostr_types::nostr::*;
 
 pub mod nip34;
 
