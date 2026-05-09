@@ -116,4 +116,42 @@ mod tests {
         assert!(filter.kinds.contains(&event.kind));
         assert_eq!(subscription_id.0, event.id.as_hex_string());
     }
+
+    #[test]
+    fn reexports_nip34_kinds_and_aliases_through_p2p() {
+        let _nip34_kind: Nip34Kind = Nip34Kind::from(crate::git2::types::nip34::REPO_ANNOUNCEMENT_KIND);
+        let _nip34_event: Option<Nip34Event> = None;
+        let _nip34_unsigned: Option<Nip34UnsignedEvent> = None;
+
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::REPO_ANNOUNCEMENT_KIND),
+            EventKind::RepositoryAnnouncement
+        );
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::REPO_STATE_KIND),
+            EventKind::GitRepoAnnouncement
+        );
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::PULL_REQUEST_KIND),
+            EventKind::Other(1618)
+        );
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::PULL_REQUEST_UPDATE_KIND),
+            EventKind::Other(1619)
+        );
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::GIT_ISSUE_KIND),
+            EventKind::GitIssue
+        );
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::GIT_REPLY_KIND),
+            EventKind::GitReply
+        );
+        assert_eq!(
+            Nip34Kind::from(crate::git2::types::nip34::USER_GRASP_LIST_KIND),
+            EventKind::Replaceable(10317)
+        );
+
+        let _ = (_nip34_kind, _nip34_event, _nip34_unsigned);
+    }
 }
