@@ -137,10 +137,10 @@ pub mod sub_commands;
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
 pub mod test_utils;
-///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/internal/index.html>
-pub use gnostr_asyncgit::types::internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/index.html>
 pub use gnostr_asyncgit::types;
+///  <https://docs.rs/gnostr/latest/gnostr/internal/index.html>
+pub mod internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -395,7 +395,7 @@ pub fn print_event(event: &Event) {
     );
 }
 
-use gnostr_asyncgit::types::internal::*;
+use crate::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
 pub mod weeble { pub use gnostr_asyncgit::weeble::*; }
