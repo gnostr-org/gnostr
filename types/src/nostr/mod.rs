@@ -248,6 +248,10 @@ pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
         .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid")
 }
 
+pub async fn ureq_async(url: String) -> Result<String, reqwest::Error> {
+    reqwest::get(url).await?.text().await
+}
+
 impl<T> IntoVec<T> for Option<T> {
     fn into_vec(self) -> Vec<T> {
         match self {

@@ -9,10 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 // TODO fix circular dep use gnostr::utils::ureq_async;
-use crate::nostr::{
-    nostr::event::{Event, UnsignedEvent},
-    ureq_async,
-};
+use crate::nostr::{event::{Event, UnsignedEvent}, ureq_async};
 
 /// A Nip05 record
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
