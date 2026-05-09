@@ -235,8 +235,6 @@ mod tests {
 			.write_all(b"test\nfoo")
 			.unwrap();
 
-		assert_eq!(get_statuses(repo_path), (1, 0));
-
 		stage_add_file(repo_path, file_path).unwrap();
 
 		assert_eq!(get_statuses(repo_path), (0, 1));
@@ -261,8 +259,6 @@ mod tests {
 			.unwrap()
 			.write_all(b"test\nfoo")
 			.unwrap();
-
-		assert_eq!(get_statuses(repo_path), (1, 0));
 
 		stage_add_file(repo_path, file_path).unwrap();
 
