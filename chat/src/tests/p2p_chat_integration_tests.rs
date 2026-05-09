@@ -453,7 +453,7 @@ mod tests {
         let private_key = PrivateKey::generate();
         let event = generate_git_note_event(&git_note, &private_key).expect("git note event");
         let msg = Msg {
-            from: git_note.note.author.clone(),
+            from: git_note.author.clone(),
             ..Msg::default()
         }
         .set_nostr_event(event.clone());
