@@ -84,6 +84,26 @@ impl<'de> Deserialize<'de> for NoteInfo {
     }
 }
 
+impl From<NoteInfo> for GitNote {
+    fn from(note: NoteInfo) -> Self {
+        Self {
+            note_id: note.note_id,
+            annotated_id: note.annotated_id,
+            notes_ref: note.notes_ref,
+            message: note.message,
+            author: note.author,
+            committer: note.committer,
+            committer_time: note.committer_time,
+        }
+    }
+}
+
+impl From<&NoteInfo> for GitNote {
+    fn from(note: &NoteInfo) -> Self {
+        Self::from(note.clone())
+    }
+}
+
 /// Commands supported by the notes backend.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NotesCommand {
