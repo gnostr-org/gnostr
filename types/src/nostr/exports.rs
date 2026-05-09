@@ -34,6 +34,7 @@ pub(crate) mod core {
         tag::Tag,
         unixtime::Unixtime,
         url::{RelayOrigin, RelayUrl, UncheckedUrl, Url},
+        image_dimensions::ImageDimensions,
     };
     pub use secp256k1::XOnlyPublicKey;
 }
