@@ -44,6 +44,39 @@ mod tests {
         let _nip34_event: Option<Nip34Event> = None;
         let _nip34_unsigned: Option<Nip34UnsignedEvent> = None;
 
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::REPO_ANNOUNCEMENT_KIND),
+            EventKind::RepositoryAnnouncement
+        );
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::REPO_STATE_KIND),
+            EventKind::GitRepoAnnouncement
+        );
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::PULL_REQUEST_KIND),
+            EventKind::Other(1618)
+        );
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::PULL_REQUEST_UPDATE_KIND),
+            EventKind::Other(1619)
+        );
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::GIT_ISSUE_KIND),
+            EventKind::GitIssue
+        );
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::GIT_REPLY_KIND),
+            EventKind::GitReply
+        );
+        assert_eq!(
+            Nip34Kind::from(gnostr_asyncgit::types::nip34::USER_GRASP_LIST_KIND),
+            EventKind::Replaceable(10317)
+        );
+        assert_eq!(
+            status_kinds().into_iter().map(u32::from).collect::<Vec<_>>(),
+            vec![1630, 1631, 1632, 1633]
+        );
+
         let _ = (
             _event_kind,
             _repo_ref,

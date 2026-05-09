@@ -598,7 +598,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "long_tests")]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes_with_local_relay_nip34_event() {
         let _relay = spawn_local_p2p_relay_service_async()
