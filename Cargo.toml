@@ -67,7 +67,7 @@ members = [
   "qr",
   "relay",
   "relay/extensions",
-  "scopetime",
+  "scopetime", "types",
   "web",
 ]
 exclude = ["vendor/gitui/**"]
