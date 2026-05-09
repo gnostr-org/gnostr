@@ -1313,7 +1313,7 @@ mod tests {
         use std::sync::Arc;
 
         fn note_fixture() -> NoteInfo {
-            let committer_time = nostr_sdk::Timestamp::now().as_u64() as i64;
+            let committer_time = nostr_sdk::Timestamp::now().as_secs() as i64;
 
             NoteInfo {
                 note_id: git2::Oid::from_str("89abcdef0123456789abcdef0123456789abcdef")
@@ -1351,7 +1351,6 @@ mod tests {
             let tags = git_note_tags(&note)?;
             let (blockheight, weeble, wobble) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
-            let wobble_str = wobble.to_string();
 
             let e_tag = tags
                 .iter()
