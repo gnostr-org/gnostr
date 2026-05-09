@@ -2,6 +2,7 @@
 
 pub use gnostr_types::nostr::*;
 
+pub mod internal;
 pub mod nip34;
 
 pub use nip34::{
