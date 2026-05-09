@@ -35,7 +35,7 @@ gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version =
   "vendor-openssl",
 ] }
 gnostr-crawler = { workspace = true }
-gnostr-js = { path = "../js", package = "gnostr-js", version = ">=948552.1874.711094" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = ">=948552.1874.711231" }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",
