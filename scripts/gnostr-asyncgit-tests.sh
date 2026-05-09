@@ -55,7 +55,7 @@ Notes:
     cargo test -p gnostr-asyncgit --lib repo_state_round_trip_adds_head -- --nocapture
     cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture
     cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture
-    cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture
+    cargo test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes -- --nocapture
   `matrix` runs:
     cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture
   `full` runs notes plus:
@@ -411,7 +411,7 @@ run_nip34_suite() {
   # Keep the note-related cases together so `nip34` stays predictable.
   run_cargo_test_step "asyncgit nip34 note message" test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message
   run_cargo_test_step "asyncgit nip34 pow nonce" test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce
-  run_cargo_test_step "asyncgit nip34 matrix" test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants
+  run_cargo_test_step "types nip34 matrix" test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes
   run_cargo_test_step "asyncgit nip34 repo announcement" test -p gnostr-asyncgit --lib repo_announcement_event_matches_ngit
   run_cargo_test_step "asyncgit nip34 repo state" test -p gnostr-asyncgit --lib repo_state_parsing_matches_ngit
   run_cargo_test_step "asyncgit nip34 repo state round trip" test -p gnostr-asyncgit --lib repo_state_round_trip_adds_head
@@ -421,11 +421,11 @@ list_tests() {
   # Print runnable commands, not just labels, so the matrix is copy-pasteable.
   printf '%s\n' \
     "./scripts/gnostr-asyncgit-tests.sh matrix --nocapture" \
-    "  cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture" \
+    "  cargo test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes -- --nocapture" \
     "./scripts/gnostr-asyncgit-tests.sh nip34 --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture" \
-    "  cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture" \
+    "  cargo test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib repo_announcement_event_matches_ngit -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib repo_state_parsing_matches_ngit -- --nocapture" \
     "  cargo test -p gnostr-asyncgit --lib repo_state_round_trip_adds_head -- --nocapture"

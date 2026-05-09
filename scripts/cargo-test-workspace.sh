@@ -301,7 +301,7 @@ if [[ "$SKIP_IGNORED_TESTS" == true ]]; then
     --skip 'sub_commands::query::tests::test_launch_no_panic_with_all_bootstrap_relays'
     --skip 'tui::shared::syntax_parser::tests::test_highlight'
     --skip 'sync::notes::tests::git_note_event_matrix_covers_commit_and_pow_variants'
-    --skip 'types::nip34::tests::nip34_event_matrix_covers_all_kinds_and_git_notes'
+    --skip 'nip34_event_matrix_covers_all_kinds_and_git_notes'
     --skip 'pow_matrix_events_publish_and_query_from_relays'
   )
 fi
