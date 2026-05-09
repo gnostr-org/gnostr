@@ -150,7 +150,7 @@ flate2 = "1.1.8"
 function_name = "0.3.0"
 futures = { version = "0.3.31" }
 futures-util = "0.3.31"
-#gh = { path = "gh", package = "gh-rs" }
+git2 = { version = "^0.20", default-features = false }
 git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = ">=948560.1874.701540" }
 git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = ">=948560.1874.701540" }
   # Keep the root workspace dependency on the current local asyncgit version during publish.
@@ -628,7 +628,7 @@ futures-util = "0.3"
 fuzzy-matcher = "0.3"
 getopts = "0.2.21"
 gh-emoji = { version = "1.0", optional = true }
-git2 = { version = "0.20.4", default-features = false, optional = true }
+git2 = { workspace = true, optional = true }
 #gh = { workspace = true }
 git2-hooks = { workspace = true }
 gitui = "0.28.1"
