@@ -11,44 +11,18 @@ use std::{
 // Working Nostr Client Implementation with proper interface
 use anyhow::Result;
 // NIP-44 related imports
-use base64::{
-    engine::general_purpose::{GeneralPurpose, STANDARD},
-    Engine,
-};
-use chacha20poly1305::{
-    aead::{Aead, KeyInit, OsRng},
-    XChaCha20Poly1305,
-};
 use futures_util::{SinkExt, StreamExt};
 use futures::stream;
-use hkdf::Hkdf;
-use k256::{
-    ecdsa::SigningKey,
-    elliptic_curve::{
-        sec1::{FromEncodedPoint, ToEncodedPoint},
-        FieldBytes, SecretKey,
-    },
-    schnorr::Signature,
-};
-use rand::RngCore;
-use secp256k1::ecdh::shared_secret_point; // Use secp256k1's shared_secret_point
-use secp256k1::{
-    Parity, SecretKey as Secp256k1SecretKey, XOnlyPublicKey as Secp256k1XOnlyPublicKey,
-}; // Import secp256k1 types for ECDH and Parity
-use serde_json::json;
-use sha2::Sha256;
 use futures::future::join_all;
-use tokio::{net::TcpStream, sync::mpsc, time::timeout};
-use tokio_tungstenite::{
-    connect_async, tungstenite::Message as WsMessage, MaybeTlsStream, WebSocketStream,
-};
+use tokio::time::timeout;
+use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage};
 use tracing::{debug, info, warn};
 use url::Url;
 
 use crate::nostr::{
     private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
     EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayMessage, RelayUrl,
-    SubscriptionId, Tag, UncheckedUrl, Unixtime,
+    SubscriptionId, Tag,
 };
 
 fn broadcast_log_path() -> Result<PathBuf, Error> {
