@@ -155,7 +155,7 @@ gnostr-asyncgit = { path = "asyncgit", version = ">=948548.1874.716849", default
   "vendor-openssl",
 ] }
 gnostr-chat = { path = "chat", version = ">=948548.1874.716849" }
-gnostr-crawler = { path = "crawler", version = "^948548.0" }
+gnostr-crawler = { path = "crawler", version = "^0.0" }
 
 gnostr-extensions = { path = "relay/extensions", version = ">=948548.1874.716849", default-features = false }
 gnostr-grammar = { path = "grammar", version = ">=948548.1874.716849" }
@@ -639,7 +639,7 @@ globset = "0.4"
 
 ##gitui
 gnostr-asyncgit = { workspace = true, features = ["tui"] }
-gnostr-crawler = { version = "^948548.0", path = "crawler" }
+gnostr-crawler = { version = "^0.0", path = "crawler" }
 gnostr-git-helpers = { version = ">=948548.1874.716849", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true, default-features = false, optional = true }
@@ -649,9 +649,6 @@ gnostr-web = { path = "web", version = ">=948548.1874.716849", default-features 
 gnostr_chat = { package = "gnostr-chat", path = "chat", version = ">=948548.1874.716849" }
 gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = ">=948548.1874.716849" }
 gnostr_qr = { workspace = true }
-#gnostr-crawler = { workspace = true } ##version = "1878.945649.607219", path = "crawler" }
-#gnostr-grammar = { workspace = true } ##version = "1894.934224.276199", path = "grammar" }
-#gnostr-query = { workspace = true } ##version = "1894.934224.276199", path = "query" }
 handlebars = { workspace = true, optional = true }
 hex = { workspace = true }
 hkdf = { workspace = true }
@@ -710,7 +707,6 @@ nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 ## TODO remove and upgrade
 nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 
-## aligned with ./crawler
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
 ## REF: https://docs.rs/nostr-sdk/0.37.0/nostr_sdk/
@@ -944,7 +940,6 @@ env_logger = { workspace = true }
 expectrl = { workspace = true }
 futures-util = { workspace = true }
 gag = "1.0.0"
-#gnostr-crawler = "1875.947794.739257"
 grcov = "0.10.5"
 mockall = "0.11.4"
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" } # Kept for now, will remove later
