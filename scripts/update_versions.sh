@@ -49,6 +49,24 @@ blockheight_dependency_version() {
     printf '^%s.0\n' "${WORKSPACE_VERSION%%.*}"
 }
 
+version_requirement_for_dependency() {
+    local manifest="$1"
+    local dep_name="$2"
+
+    case "$manifest:$dep_name" in
+        "$REPO_ROOT/Cargo.toml:gnostr-crawler"|\
+        "$REPO_ROOT/Cargo.toml:gnostr-asyncgit"|\
+        "$REPO_ROOT/js/Cargo.toml:gnostr-asyncgit"|\
+        "$REPO_ROOT/p2p/Cargo.toml:gnostr-asyncgit"|\
+        "$REPO_ROOT/chat/Cargo.toml:gnostr-asyncgit")
+            blockheight_dependency_version
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
 manifest_version() {
     local manifest="$1"
     local fallback="$2"
@@ -303,6 +321,8 @@ if [ -z "$WORKSPACE_VERSION" ]; then
     exit 1
 fi
 
+REPO_ROOT="$(pwd)"
+
 echo "Workspace version found: $WORKSPACE_VERSION"
 
 if [ "$DRY_RUN" = true ]; then
@@ -311,9 +331,8 @@ if [ "$DRY_RUN" = true ]; then
         echo "  would update package versions in $manifest"
         while IFS=$'\t' read -r section dep_name dep_path; do
             [ -z "$dep_name" ] && continue
-            if [ "$manifest" = "$(pwd)/Cargo.toml" ] && [ "$dep_name" = "gnostr-crawler" ]; then
-                dep_version="$(blockheight_dependency_version)"
-                echo "    would sync $dep_name (workspace source for asyncgit dev) -> $dep_version"
+            if dep_version="$(version_requirement_for_dependency "$manifest" "$dep_name")"; then
+                echo "    would sync $dep_name (blockheight version) -> $dep_version"
             elif dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
                 dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
                 dep_package="$(manifest_package_name "$dep_manifest")"
@@ -351,9 +370,8 @@ echo "Package versions synchronized."
         while IFS=$'\t' read -r section dep_name dep_path; do
             [ -z "$dep_name" ] && continue
 
-            if [ "$manifest" = "$(pwd)/Cargo.toml" ] && [ "$dep_name" = "gnostr-crawler" ]; then
-                dep_version="$(blockheight_dependency_version)"
-                dep_package="workspace dependency source for asyncgit dev-dependencies"
+            if dep_version="$(version_requirement_for_dependency "$manifest" "$dep_name")"; then
+                dep_package="blockheight version requirement"
             else
                 if ! dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
                     echo "    Warning: Dependency Cargo.toml not found for $dep_name (path: $dep_path)."
@@ -370,8 +388,8 @@ echo "Package versions synchronized."
             fi
 
             sync_dependency_version "$manifest" "$dep_name" "$dep_version"
-            if [ "$manifest" = "$(pwd)/Cargo.toml" ] && [ "$dep_name" = "gnostr-crawler" ]; then
-                echo "    Synchronized $dep_name in the workspace source for asyncgit dev-dependencies to $dep_version"
+            if [ "$dep_package" = "blockheight version requirement" ]; then
+                echo "    Synchronized $dep_name in $manifest to $dep_version"
             elif [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
                 echo "    Synchronized $dep_name ($dep_package) in $manifest to $dep_version"
             else
