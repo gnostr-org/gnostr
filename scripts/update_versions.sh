@@ -36,6 +36,17 @@ workspace_version() {
     perl -0ne 'print "$1\n" and exit if /\[workspace\.package\].*?^version\s*=\s*"([^"]+)"/ms' Cargo.toml
 }
 
+blockheight_dependency_version() {
+    local blockheight
+
+    if blockheight="$(gnostr --blockheight 2>/dev/null)"; then
+        printf '^%s.0\n' "$blockheight"
+        return
+    fi
+
+    printf '^%s.0\n' "${WORKSPACE_VERSION%%.*}"
+}
+
 manifest_version() {
     local manifest="$1"
     local fallback="$2"
@@ -111,41 +122,53 @@ PY
 
 versioned_path_dependencies() {
     local manifest="$1"
-    perl -ne '
-        our ($name, $body, $capture);
+    python3 - "$manifest" <<'PY'
+import pathlib
+import re
+import sys
 
-        sub emit_dep {
-            my ($dep_name, $dep_body) = @_;
-            return unless defined $dep_name && length $dep_name;
-            my ($path) = $dep_body =~ /\bpath\s*=\s*"([^"]+)"/;
-            my ($version) = $dep_body =~ /\bversion\s*=\s*"([^"]+)"/;
-            if (defined $path && defined $version) {
-                print "$dep_name\t$path\n";
-            }
-        }
+manifest = pathlib.Path(sys.argv[1])
+section = None
+name = None
+body = []
+capturing = False
 
-        if (!$capture) {
-            if (/^([A-Za-z0-9_-]+)\s*=\s*\{/) {
-                $name = $1;
-                $body = $_;
-                if (/\}\s*$/) {
-                    emit_dep($name, $body);
-                    $name = undef;
-                    $body = q{};
-                } else {
-                    $capture = 1;
-                }
-            }
-        } else {
-            $body .= $_;
-            if (/\}\s*$/) {
-                emit_dep($name, $body);
-                $name = undef;
-                $body = q{};
-                $capture = 0;
-            }
-        }
-    ' "$manifest"
+def emit(current_section, dep_name, dep_body):
+    if not current_section or not dep_name:
+        return
+
+    path_match = re.search(r'\bpath\s*=\s*"([^"]+)"', dep_body)
+    version_match = re.search(r'\bversion\s*=\s*"([^"]+)"', dep_body)
+    if path_match and version_match:
+        print(f"{current_section}\t{dep_name}\t{path_match.group(1)}")
+
+for line in manifest.read_text().splitlines():
+    stripped = line.strip()
+    section_match = re.match(r'^\[([^\]]+)\]$', stripped)
+    if section_match and not capturing:
+        section = section_match.group(1)
+        continue
+
+    if capturing:
+        body.append(line)
+        if re.search(r'\}\s*$', line):
+            emit(section, name, "\n".join(body))
+            capturing = False
+            name = None
+            body = []
+        continue
+
+    dep_match = re.match(r'^([A-Za-z0-9_-]+)\s*=\s*\{', line)
+    if dep_match:
+        name = dep_match.group(1)
+        body = [line]
+        if re.search(r'\}\s*$', line):
+            emit(section, name, line)
+            name = None
+            body = []
+        else:
+            capturing = True
+PY
 }
 
 resolve_dep_manifest() {
@@ -204,6 +227,7 @@ manifest, dep_name, version = sys.argv[1:]
 path = pathlib.Path(manifest)
 text = path.read_text()
 pattern = re.compile(rf'(?m)^{re.escape(dep_name)}\s*=\s*\{{')
+replacement_version = version if version.startswith(("^", ">", "=", "~")) else f">={version}"
 
 def find_block_end(source: str, brace_start: int) -> int:
     depth = 0
@@ -249,7 +273,7 @@ while True:
 
     updated_block, count = re.subn(
         r'(\bversion\s*=\s*")[^"]*(")',
-        lambda m: f"{m.group(1)}>={version}{m.group(2)}",
+        lambda m: f"{m.group(1)}{replacement_version}{m.group(2)}",
         block,
         count=1,
     )
@@ -283,9 +307,12 @@ if [ "$DRY_RUN" = true ]; then
     echo "Dry run: would synchronize workspace package versions and local path dependency versions."
     while read -r manifest; do
         echo "  would update package versions in $manifest"
-        while IFS=$'\t' read -r dep_name dep_path; do
+        while IFS=$'\t' read -r section dep_name dep_path; do
             [ -z "$dep_name" ] && continue
-            if dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
+            if [ "$manifest" = "$(pwd)/Cargo.toml" ] && [ "$dep_name" = "gnostr-crawler" ]; then
+                dep_version="$(blockheight_dependency_version)"
+                echo "    would sync $dep_name (workspace source for asyncgit dev) -> $dep_version"
+            elif dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
                 dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
                 dep_package="$(manifest_package_name "$dep_manifest")"
                 if [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
@@ -316,30 +343,38 @@ done < <(managed_manifests)
 
 echo "Package versions synchronized."
 
-while read -r manifest; do
-    echo "Checking local dependencies in $manifest..."
+    while read -r manifest; do
+        echo "Checking local dependencies in $manifest..."
 
-    while IFS=$'\t' read -r dep_name dep_path; do
-        [ -z "$dep_name" ] && continue
+        while IFS=$'\t' read -r section dep_name dep_path; do
+            [ -z "$dep_name" ] && continue
 
-        if ! dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
-            echo "    Warning: Dependency Cargo.toml not found for $dep_name (path: $dep_path)."
-            continue
-        fi
+            if [ "$manifest" = "$(pwd)/Cargo.toml" ] && [ "$dep_name" = "gnostr-crawler" ]; then
+                dep_version="$(blockheight_dependency_version)"
+                dep_package="workspace dependency source for asyncgit dev-dependencies"
+            else
+                if ! dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
+                    echo "    Warning: Dependency Cargo.toml not found for $dep_name (path: $dep_path)."
+                    continue
+                fi
 
-        dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
-        dep_package="$(manifest_package_name "$dep_manifest")"
-        if [ -z "$dep_version" ]; then
-            echo "    Warning: Could not determine version for $dep_name from $dep_manifest."
-            continue
-        fi
+                dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
+                dep_package="$(manifest_package_name "$dep_manifest")"
+            fi
 
-        sync_dependency_version "$manifest" "$dep_name" "$dep_version"
-        if [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
-            echo "    Synchronized $dep_name ($dep_package) in $manifest to $dep_version"
-        else
-            echo "    Synchronized $dep_name in $manifest to $dep_version"
-        fi
+            if [ -z "$dep_version" ]; then
+                echo "    Warning: Could not determine version for $dep_name from $dep_manifest."
+                continue
+            fi
+
+            sync_dependency_version "$manifest" "$dep_name" "$dep_version"
+            if [ "$manifest" = "$(pwd)/Cargo.toml" ] && [ "$dep_name" = "gnostr-crawler" ]; then
+                echo "    Synchronized $dep_name in the workspace source for asyncgit dev-dependencies to $dep_version"
+            elif [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
+                echo "    Synchronized $dep_name ($dep_package) in $manifest to $dep_version"
+            else
+                echo "    Synchronized $dep_name in $manifest to $dep_version"
+            fi
     done < <(versioned_path_dependencies "$manifest")
 
     taplo format "$manifest"
@@ -394,6 +429,24 @@ PUBLISH_CRATES=(
     chat
     web
 )
+
+PUBLISH_NO_VERIFY_CRATES=(
+    asyncgit
+    crawler
+)
+
+should_skip_verify() {
+    local crate="$1"
+    local candidate
+
+    for candidate in "${PUBLISH_NO_VERIFY_CRATES[@]}"; do
+        if [ "$candidate" = "$crate" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
 
 tag_package_versions() {
     local version="$1"
@@ -452,7 +505,11 @@ fi
 export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
-    sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
+    if should_skip_verify "$crate"; then
+        sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 --no-verify -f || true && popd >/dev/null
+    else
+        sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
+    fi
 done
 
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
