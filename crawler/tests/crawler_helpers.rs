@@ -239,10 +239,11 @@ async fn publish_and_query_git_note_case(
 
     let private_key = AsyncPrivateKey::generate();
     let keys = AsyncKeys::new(private_key.clone());
+    let git_note = gnostr_asyncgit::types::GitNote::from(&note);
     let event = if pow_event_flag {
-        generate_git_note_event_with_pow(&note, &private_key, 4)?
+        generate_git_note_event_with_pow(&git_note, &private_key, 4)?
     } else {
-        generate_git_note_event(&note, &private_key)?
+        generate_git_note_event(&git_note, &private_key)?
     };
 
     let relay_urls = matrix_relay_urls();
