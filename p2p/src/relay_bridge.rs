@@ -112,7 +112,6 @@ mod tests {
     use std::{
         env,
         fs,
-        path::PathBuf,
         sync::{Mutex, OnceLock},
     };
     use tokio::net::TcpListener;
