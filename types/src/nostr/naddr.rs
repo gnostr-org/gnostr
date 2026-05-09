@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use super::Error;
-#[cfg(test)]
 use crate::nostr::{EventKind, PublicKey, UncheckedUrl};
 
 fn read_tlv<'a>(data: &'a [u8], cursor: &mut usize) -> Result<(u8, &'a [u8]), Error> {

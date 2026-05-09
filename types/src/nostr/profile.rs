@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use super::Error;
-#[cfg(test)]
 use crate::nostr::{PublicKey, UncheckedUrl};
 
 /// A person's profile on nostr which consists of the data needed in order to

@@ -7,7 +7,13 @@ use serde::{
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use super::{Error, EventKind, PublicKey, Signature, Unixtime};
+use super::{
+    error::Error,
+    event_kind::EventKind,
+    public_key::PublicKey,
+    signature::Signature,
+    unixtime::Unixtime,
+};
 
 /// Delegation information for an Event
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -162,7 +168,6 @@ impl Visitor<'_> for DelegationConditionsVisitor {
 mod test {
     use super::*;
     use crate::nostr::{
-        test_serde,
         nostr::{KeySigner, PrivateKey, Signer, Tag},
     };
 

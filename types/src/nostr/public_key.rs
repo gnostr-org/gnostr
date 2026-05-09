@@ -11,7 +11,6 @@ use serde::{
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 use super::{Error, PrivateKey, Signature};
-#[cfg(test)]
 
 /// This is a public key, which identifies an actor (usually a person) and is
 /// shared.

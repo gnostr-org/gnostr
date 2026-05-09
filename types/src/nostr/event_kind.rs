@@ -8,8 +8,6 @@ use serde::{
 #[cfg(feature = "speedy")]
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
-#[cfg(test)]
-
 macro_rules! define_event_kinds {
     ($($comment:expr, $name:ident = $value:expr),*) => {
         /// A kind of Event

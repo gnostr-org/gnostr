@@ -705,7 +705,6 @@ mod test {
 
     use super::*;
     use crate::nostr::{
-        test_serde,
         nostr::{
             Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey, PublicKeyHex,
             Signer, TagV3, UncheckedUrl, Unixtime,
