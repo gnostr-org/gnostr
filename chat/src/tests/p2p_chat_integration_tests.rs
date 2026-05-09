@@ -407,13 +407,62 @@ mod tests {
         }
     }
 
+    fn real_nip34_message() -> (Msg, Event, git2::Oid) {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!(
+            "gnostr-chat-nip34-{}-{unique}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).expect("create nip34 repo root");
+
+        let repo = git2::Repository::init(&root).expect("init nip34 repo");
+        {
+            let mut config = repo.config().expect("nip34 config");
+            config
+                .set_str("user.name", "gnostr-nip34")
+                .expect("set nip34 user");
+            config
+                .set_str("user.email", "nip34@gnostr.org")
+                .expect("set nip34 email");
+        }
+
+        let repo_path: RepoPath = root.to_str().expect("nip34 repo path").into();
+
+        let note_file = root.join("nip34.txt");
+        let mut file = fs::File::create(&note_file).expect("nip34 file");
+        writeln!(file, "real nip34 commit {}", root.display()).expect("write nip34 file");
+
+        stage_add_file(&repo_path, Path::new("nip34.txt")).expect("stage nip34 file");
+        let commit_id = commit(&repo_path, "real nip34 commit").expect("nip34 commit");
+
+        let note_body = format!("real note for {commit_id}");
+        add_note(&repo_path, commit_id, &note_body, None, false).expect("nip34 note");
+        let note = show_note(&repo_path, commit_id, None)
+            .expect("show nip34 note")
+            .expect("nip34 note exists");
+        let git_note: AsyncGitNote = (&note).into();
+        let private_key = PrivateKey::generate();
+        let event = generate_git_note_event(&git_note, &private_key).expect("git note event");
+        let msg = Msg {
+            from: git_note.note.author.clone(),
+            ..Msg::default()
+        }
+        .set_nostr_event(event.clone());
+
+        (msg, event, commit_id.into())
+    }
+
     #[tokio::test]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes() {
         // Create channels for two chat instances
         let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
-        let (recv_tx1, mut recv_rx1) = mpsc::channel::<ChatEvent>(100);
-        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, _recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (_send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
         let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
 
         let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes");
@@ -545,6 +594,60 @@ mod tests {
                 "Received wrong event type on relay-backed peer 1: {:?}",
                 received_event_2
             );
+        }
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "long_tests")]
+    #[ignore]
+    async fn test_p2p_connectivity_two_nodes_with_local_relay_nip34_event() {
+        let _relay = spawn_local_p2p_relay_service_async()
+            .await
+            .expect("local p2p relay service");
+        tokio::time::sleep(Duration::from_secs(5)).await;
+
+        let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, mut recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
+
+        let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay-nip34");
+
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+
+        tokio::time::sleep(Duration::from_secs(8)).await;
+
+        let (msg1, event1, commit1) = real_nip34_message();
+        send_tx1
+            .send(ChatEvent::ChatMessage(msg1.clone()))
+            .await
+            .expect("send real nip34 message from peer 1");
+
+        let received_event = next_chat_message(&mut recv_rx2, Duration::from_secs(15)).await;
+        if let ChatEvent::ChatMessage(received_msg) = received_event {
+            assert_eq!(received_msg.from, msg1.from);
+            assert_eq!(received_msg.kind, MsgKind::NostrEvent);
+
+            let received_nostr_event = received_msg
+                .nostr_event
+                .as_ref()
+                .expect("real nostr event to survive transport");
+            assert_eq!(received_nostr_event.kind, event1.kind);
+            assert_eq!(received_nostr_event.content, event1.content);
+            assert_eq!(received_nostr_event.id, event1.id);
+            assert!(
+                received_nostr_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "commit" && tag.value() == commit1.to_string())
+            );
+            assert_eq!(
+                received_msg.content.first(),
+                Some(&serde_json::to_string(received_nostr_event).expect("event json"))
+            );
+        } else {
+            panic!("received wrong event type on peer 2: {:?}", received_event);
         }
     }
 
