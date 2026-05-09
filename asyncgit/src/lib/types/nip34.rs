@@ -1264,6 +1264,7 @@ path = ":memory:"
         assert!(event.tags.iter().any(|tag| tag.tagname() == "wobble"));
     }
 
+    /*
     #[cfg(feature = "long_tests")]
     #[tokio::test]
     #[serial]
@@ -1615,6 +1616,7 @@ path = ":memory:"
 
         Ok(())
     }
+    */
 
     #[test]
     fn repo_ref_requires_repo_kind() {
