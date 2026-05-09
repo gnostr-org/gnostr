@@ -1,6 +1,6 @@
 [package]
 name = "nips" #gnostr-nips
-version = "948550.1874.714011"
+version = "948551.1874.712682"
 edition = "2021"
 authors = [
   "randymcmillan <randymcmillan@protonmail.com>",

@@ -435,6 +435,10 @@ PUBLISH_CRATES=(
 PUBLISH_NO_VERIFY_CRATES=(
     asyncgit
     crawler
+    js
+    p2p
+    chat
+    web
 )
 
 should_skip_verify() {
