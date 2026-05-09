@@ -9,6 +9,10 @@ license = "MIT"
 readme = "../README.md"
 exclude.workspace = true
 
+[build-dependencies]
+anyhow = "1.0.100"
+sha2 = { workspace = true }
+
 [dependencies]
 anyhow = "1.0.100"
 aes = "0.8"
