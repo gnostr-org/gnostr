@@ -219,7 +219,7 @@ pub use versioned::{
 mod tests;
 
 #[inline]
-pub(crate) fn get_leading_zero_bits(bytes: &[u8]) -> u8 {
+pub fn get_leading_zero_bits(bytes: &[u8]) -> u8 {
     let mut res = 0_u8;
     for b in bytes {
         if *b == 0 {
