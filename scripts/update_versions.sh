@@ -54,7 +54,6 @@ version_requirement_for_dependency() {
     local dep_name="$2"
 
     case "$manifest:$dep_name" in
-        "$REPO_ROOT/Cargo.toml:gnostr-crawler"|\
         "$REPO_ROOT/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/js/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/p2p/Cargo.toml:gnostr-asyncgit"|\
