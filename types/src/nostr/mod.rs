@@ -40,6 +40,7 @@ mod id;
 mod identity;
 pub mod key_signer;
 pub mod nip28;
+pub mod nip34;
 mod metadata;
 mod naddr;
 mod nevent;

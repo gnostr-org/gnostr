@@ -15,6 +15,7 @@ sha2 = { workspace = true }
 
 [dependencies]
 anyhow = "1.0.100"
+ascii = { workspace = true }
 aes = "0.8"
 base64 = { workspace = true }
 bech32 = { workspace = true }
@@ -35,6 +36,7 @@ easy-cast = "0.5"
 flate2 = "1"
 futures = { workspace = true }
 futures-util = { workspace = true }
+git2 = { workspace = true }
 gix = { version = "0.66", default-features = false, features = [
   "fast-sha1",
   "tracing",
