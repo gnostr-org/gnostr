@@ -354,8 +354,8 @@ SORT_CRATES=(
     asyncgit/src/lib/filehash/core
     scopetime
     asyncgit
-    tui
     crawler
+    tui
     git-helpers
     invalidstring
     legit
@@ -381,8 +381,8 @@ PUBLISH_CRATES=(
     asyncgit/src/lib/filehash/core
     scopetime
     asyncgit
-    tui
     crawler
+    tui
     git-helpers
     legit
     ngit
