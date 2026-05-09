@@ -249,7 +249,7 @@ while True:
 
     updated_block, count = re.subn(
         r'(\bversion\s*=\s*")[^"]*(")',
-        lambda m: f"{m.group(1)}{version}{m.group(2)}",
+        lambda m: f"{m.group(1)}>={version}{m.group(2)}",
         block,
         count=1,
     )
