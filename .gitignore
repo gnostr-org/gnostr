@@ -182,7 +182,6 @@ src/lib/ssh/site/site.md
 src/lib/ssh/ssh.md
 src/lib/sub_commands/sub_commands.md
 src/lib/tabs/tabs.md
-src/lib/types/nip44/nip44.md
 src/lib/types/private_key/private_key.md
 src/lib/types/types.md
 src/lib/types/versioned/versioned.md
