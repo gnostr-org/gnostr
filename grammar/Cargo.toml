@@ -1,7 +1,7 @@
 [package]
 name = "gnostr-grammar"
 description = "tree-sitter grammars built from Helix with support for dynamic linking"
-version = "948467.1874.824272"
+version = "948536.1874.733283"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"

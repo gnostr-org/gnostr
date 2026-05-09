@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "948467.1874.824272"
+version = "948536.1874.733283"
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
@@ -95,7 +95,7 @@ gix = { version = "0.66", default-features = false, features = [
 ] }
 ##tree-sitter-language = "0.1" ##check version
 gnostr-grammar = { workspace = true }
-gnostr_filehash_core = { package = "gnostr_filehash_core", version = ">=948467.1874.824272", path = "src/lib/filehash/core" }
+gnostr_filehash_core = { package = "gnostr_filehash_core", version = ">=948536.1874.733283", path = "src/lib/filehash/core" }
 handlebars = { workspace = true }
 #anyhow = "1.0"
 hex = { workspace = true }
@@ -216,10 +216,10 @@ actix-test = { workspace = true }
 criterion = "0.5.1"
 env_logger = "0.11"
 expectrl = "0.8.0"
-insta = "1.42.2"
-invalidstring = { workspace = true }                 #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1878.945649.607219" }
 gnostr-crawler = { workspace = true }
 gnostr-relay = { workspace = true }
+insta = "1.42.2"
+invalidstring = { workspace = true }                 #{ package = "gnostr-invalidstring", path = "../invalidstring", version = "1878.945649.607219" }
 ngit = { package = "gnostr-ngit", path = "../ngit" }
 #supposed to be ngit re-export #REMOVE
 nostr = { workspace = true }
