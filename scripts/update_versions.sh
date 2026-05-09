@@ -434,8 +434,8 @@ PUBLISH_CRATES=(
     filetreelist
     asyncgit/src/lib/filehash/core
     scopetime
-    asyncgit
     crawler
+    asyncgit
     tui
     git-helpers
     legit
