@@ -240,6 +240,9 @@ pub use versioned::{
     RelayRetentionV1, RumorV1, RumorV2, RumorV3, TagV1, TagV2, TagV3, Why, ZapDataV1, ZapDataV2,
 };
 
+#[cfg(test)]
+mod tests;
+
 #[inline]
 pub(crate) fn get_leading_zero_bits(bytes: &[u8]) -> u8 {
     let mut res = 0_u8;

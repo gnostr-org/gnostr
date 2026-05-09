@@ -1,116 +1,98 @@
-//! Comprehensive tests for the types module
-//!
-//! This module provides extensive test coverage for all types components,
-//! ensuring the reliability and correctness of core Nostr protocol types.
+//! Real serde and contract coverage for the asyncgit Nostr type surface.
 
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
+use super::*;
+use crate::test_serde;
 
-    // Test imports would go here based on the actual structure
-    // For now, I'll create test patterns that can be adapted
+test_serde! {DelegationConditions, test_delegation_conditions_serde}
+test_serde! {EventKind, test_event_kind_serde}
+test_serde! {Filter, test_filter_serde}
+test_serde! {Id, test_id_serde}
+test_serde! {IdHex, test_id_hex_serde}
+test_serde! {MilliSatoshi, test_milli_satoshi_serde}
+test_serde! {MetadataV1, test_metadata_v1_serde}
+test_serde! {NAddr, test_naddr_serde}
+test_serde! {NEvent, test_nevent_serde}
+test_serde! {Nip05V1, test_nip05_v1_serde}
+test_serde! {PayRequestData, test_pay_request_data_serde}
+test_serde! {PublicKey, test_public_key_serde}
+test_serde! {PublicKeyHex, test_public_key_hex_serde}
+test_serde! {RelayInformationDocumentV1, test_relay_information_document_v1_serde}
+test_serde! {RelayInformationDocumentV2, test_relay_information_document_v2_serde}
+test_serde! {RelayMessageV2, test_relay_message_v2_serde}
+test_serde! {RelayMessageV3, test_relay_message_v3_serde}
+test_serde! {RelayMessageV4, test_relay_message_v4_serde}
+test_serde! {RelayMessageV5, test_relay_message_v5_serde}
+test_serde! {Signature, test_signature_serde}
+test_serde! {SignatureHex, test_signature_hex_serde}
+test_serde! {SimpleRelayList, test_simple_relay_list_serde}
+test_serde! {SubscriptionId, test_subscription_id_serde}
+test_serde! {TagV1, test_tag_v1_serde}
+test_serde! {TagV2, test_tag_v2_serde}
+test_serde! {TagV3, test_tag_v3_serde}
+test_serde! {Unixtime, test_unixtime_serde}
+test_serde! {UncheckedUrl, test_unchecked_url_serde}
+test_serde! {Url, test_url_serde}
+test_serde! {ClientMessageV2, test_client_message_v2_serde}
+test_serde! {ClientMessageV3, test_client_message_v3_serde}
+test_serde! {EventV2, test_event_v2_serde}
+test_serde! {EventV3, test_event_v3_serde}
 
-    #[test]
-    fn test_error_creation() {
-        // Test the enhanced error handling
-        use crate::types::Error;
+#[test]
+fn event_kind_mapping_covers_known_nip34_kinds() {
+    assert_eq!(u32::from(EventKind::RepositoryAnnouncement), 30617);
+    assert_eq!(u32::from(EventKind::GitRepoAnnouncement), 30618);
+    assert_eq!(u32::from(EventKind::GitIssue), 1621);
+    assert_eq!(u32::from(EventKind::GitReply), 1622);
+    assert_eq!(u32::from(EventKind::GitStatusOpen), 1630);
+    assert_eq!(u32::from(EventKind::GitStatusApplied), 1631);
+    assert_eq!(u32::from(EventKind::GitStatusClosed), 1632);
+    assert_eq!(u32::from(EventKind::GitStatusDraft), 1633);
+    assert_eq!(EventKind::from(1618), EventKind::Other(1618));
+    assert_eq!(EventKind::from(1619), EventKind::Other(1619));
+    assert_eq!(EventKind::from(10317), EventKind::Replaceable(10317));
+}
 
-        let content_error = Error::content_validation("Content too long");
-        assert!(
-            content_error
-                .to_string()
-                .contains("Content validation failed")
-        );
+#[test]
+fn naddr_round_trips_through_bech32() {
+    let naddr = NAddr::mock();
+    let encoded = naddr.as_bech32_string();
+    let decoded = NAddr::try_from_bech32_string(&encoded).expect("naddr bech32");
+    assert_eq!(decoded.d, naddr.d);
+    assert_eq!(decoded.kind, naddr.kind);
+    assert_eq!(decoded.author, naddr.author);
+}
 
-        let tag_error = Error::tag_validation("Invalid tag format");
-        assert!(tag_error.to_string().contains("Tag validation failed"));
+#[test]
+fn nevent_round_trips_through_bech32() {
+    let mut nevent = NEvent::mock();
+    nevent.kind = Some(EventKind::Patches);
+    nevent.author = Some(PublicKey::mock_deterministic());
+    let encoded = nevent.as_bech32_string();
+    let decoded = NEvent::try_from_bech32_string(&encoded).expect("nevent bech32");
+    assert_eq!(decoded.id, nevent.id);
+    assert_eq!(decoded.relays, nevent.relays);
+    assert_eq!(decoded.kind, nevent.kind);
+    assert_eq!(decoded.author, nevent.author);
+}
 
-        let filter_error = Error::filter_validation("Invalid filter");
-        assert!(
-            filter_error
-                .to_string()
-                .contains("Filter validation failed")
-        );
+#[test]
+fn filter_matches_event_shape_after_roundtrip() {
+    let filter = Filter::mock();
+    let json = serde_json::to_string(&filter).expect("filter json");
+    let decoded: Filter = serde_json::from_str(&json).expect("filter roundtrip");
+    assert_eq!(decoded.ids, filter.ids);
+    assert_eq!(decoded.kinds, filter.kinds);
+    assert_eq!(decoded.tags, filter.tags);
+    assert_eq!(decoded.since, filter.since);
+}
 
-        let relay_error = Error::relay_connection("wss://relay.example.com", "Connection timeout");
-        assert!(relay_error.to_string().contains("relay.example.com"));
-        assert!(relay_error.to_string().contains("Connection timeout"));
-    }
-
-    #[test]
-    fn test_event_validation() {
-        use crate::types::{Error, EventKind, PrivateKey, PublicKey};
-
-        // This would test event validation logic
-        // For now, test the error creation pattern
-
-        let validation_error = Error::event_validation("id", "Invalid format");
-        assert!(
-            validation_error
-                .to_string()
-                .contains("Event validation failed")
-        );
-        assert!(validation_error.to_string().contains("id"));
-        assert!(validation_error.to_string().contains("Invalid format"));
-    }
-
-    #[test]
-    fn test_key_derivation_error() {
-        use crate::types::Error;
-
-        let derivation_error = Error::key_derivation("commit_hash", "Invalid length");
-        assert!(
-            derivation_error
-                .to_string()
-                .contains("Key derivation failed")
-        );
-        assert!(derivation_error.to_string().contains("commit_hash"));
-        assert!(derivation_error.to_string().contains("Invalid length"));
-    }
-
-    // Performance tests for type operations
-    #[test]
-    fn benchmark_error_creation() {
-        use std::time::Instant;
-
-        use crate::types::Error;
-
-        let start = Instant::now();
-
-        for _ in 0..10_000 {
-            let _error = Error::content_validation("Test error message");
-        }
-
-        let duration = start.elapsed();
-        println!("Error creation benchmark: {:?}", duration);
-        assert!(duration.as_millis() < 100); // Should be very fast
-    }
-
-    // Integration tests would go here
-    #[test]
-    fn test_type_serialization() {
-        // Test that types serialize/deserialize correctly
-        // This would depend on the actual type implementations
-    }
-
-    #[test]
-    fn test_type_validation() {
-        // Test that type validations work correctly
-        // This would depend on the actual validation implementations
-    }
-
-    // Property-based tests
-    #[test]
-    fn test_error_properties() {
-        use crate::types::Error;
-
-        let error = Error::content_validation("test");
-
-        // Properties that all errors should have
-        assert!(!error.to_string().is_empty());
-
-        // All errors should be Send + Sync
-        fn assert_send_sync<T: Send + Sync>() {}
-        assert_send_sync::<Error>();
-    }
+#[test]
+fn content_shattering_finds_nostr_references() {
+    let content = "note #[0] nostr:nevent1qqsqqqq9wh98g4u6e480vyp6p4w3ux2cd0mxn2rssq0w5cscsgzp2ksprpmhxue69uhkzapwdehhxarjwahhy6mn9e3k7mf0qyt8wumn8ghj7etyv4hzumn0wd68ytnvv9hxgtcpremhxue69uhkummnw3ez6ur4vgh8wetvd3hhyer9wghxuet59uq3kamnwvaz7tmwdaehgu3wd45kketyd9kxwetj9e3k7mf0qy2hwumn8ghj7mn0wd68ytn00p68ytnyv4mz7qgnwaehxw309ahkvenrdpskjm3wwp6kytcpz4mhxue69uhhyetvv9ujuerpd46hxtnfduhsz9mhwden5te0wfjkccte9ehx7um5wghxyctwvshszxthwden5te0wfjkccte9eekummjwsh8xmmrd9skctcnmzajy https://example.com";
+    let shattered = ShatteredContent::new(content.to_string());
+    assert!(!shattered.segments.is_empty());
+    assert!(shattered
+        .segments
+        .iter()
+        .any(|segment| matches!(segment, ContentSegment::TagReference(0))));
 }
