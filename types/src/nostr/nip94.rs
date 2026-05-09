@@ -179,7 +179,7 @@ impl NIP94Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nostr::{Id, PublicKey, Signature};
+    use crate::nostr::PublicKey;
 
     // Helper to create a dummy event for testing
     fn create_dummy_event(
