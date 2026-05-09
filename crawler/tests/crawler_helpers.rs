@@ -114,7 +114,7 @@ async fn start_http_server(body: &'static str, accept_head: bool) -> SocketAddr 
     addr
 }
 
-async fn start_ws_server(messages: Vec<&'static str>) -> String {
+async fn start_ws_server(messages: Vec<String>) -> String {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 
@@ -129,7 +129,7 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
         }
 
         for msg in messages {
-            ws.send(Message::Text(msg.to_string().into()))
+            ws.send(Message::Text(msg.into()))
                 .await
                 .unwrap();
         }
@@ -650,7 +650,26 @@ async fn fetch_online_relays_and_liveness_use_http_helpers() {
 
 #[tokio::test]
 async fn send_reads_messages_from_websocket() {
-    let relay = start_ws_server(vec!["one", "two", "three"]).await;
+    let make_frame = |content: &str| {
+        let event = EventBuilder::new(
+            EventKind::TextNote,
+            content.to_string(),
+            Vec::new(),
+        )
+        .to_event(&PrivateKey::mock())
+        .unwrap();
+        serde_json::to_string(&RelayMessage::Event(
+            SubscriptionId("gnostr-query".to_string()),
+            Box::new(event),
+        ))
+        .unwrap()
+    };
+    let relay = start_ws_server(vec![
+        make_frame("one"),
+        make_frame("two"),
+        make_frame("three"),
+    ])
+    .await;
     let results = crawler::query::send(
         r#"["REQ","gnostr-query",{}]"#.to_string(),
         vec![url::Url::parse(&relay).unwrap()],
@@ -659,5 +678,7 @@ async fn send_reads_messages_from_websocket() {
     .await
     .unwrap();
 
-    assert_eq!(results, vec!["one".to_string(), "two".to_string()]);
+    assert_eq!(results.len(), 2);
+    assert!(results[0].contains("\"content\":\"one\""));
+    assert!(results[1].contains("\"content\":\"two\""));
 }
