@@ -203,6 +203,16 @@ mod tests {
         let zap_v2_json = serde_json::to_string(&zap_v2).expect("serialize zap v2");
         let p2p_zap_json = serde_json::to_string(&p2p_zap).expect("serialize zap alias");
 
+        println!("==================== zap data v1 ====================");
+        println!("zap v1: {:?}", zap_v1);
+        println!("zap v1 json: {zap_v1_json}");
+        println!("==================== zap data v2 ====================");
+        println!("zap v2: {:?}", zap_v2);
+        println!("zap v2 json: {zap_v2_json}");
+        println!("==================== zap data alias ====================");
+        println!("p2p zap: {:?}", p2p_zap);
+        println!("p2p zap json: {p2p_zap_json}");
+
         assert_eq!(
             serde_json::from_str::<ZapDataV1>(&zap_v1_json).expect("deserialize zap v1"),
             zap_v1
