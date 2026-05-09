@@ -114,41 +114,65 @@ PY
 
 versioned_path_dependencies() {
     local manifest="$1"
-    perl -ne '
-        our ($name, $body, $capture);
+    local scope="${2:-release}"
+    python3 - "$manifest" "$scope" <<'PY'
+import pathlib
+import re
+import sys
 
-        sub emit_dep {
-            my ($dep_name, $dep_body) = @_;
-            return unless defined $dep_name && length $dep_name;
-            my ($path) = $dep_body =~ /\bpath\s*=\s*"([^"]+)"/;
-            my ($version) = $dep_body =~ /\bversion\s*=\s*"([^"]+)"/;
-            if (defined $path && defined $version) {
-                print "$dep_name\t$path\n";
-            }
-        }
+manifest = pathlib.Path(sys.argv[1])
+scope = sys.argv[2]
+current_section = None
+capturing = False
+dep_name = None
+dep_body = []
 
-        if (!$capture) {
-            if (/^([A-Za-z0-9_-]+)\s*=\s*\{/) {
-                $name = $1;
-                $body = $_;
-                if (/\}\s*$/) {
-                    emit_dep($name, $body);
-                    $name = undef;
-                    $body = q{};
-                } else {
-                    $capture = 1;
-                }
-            }
-        } else {
-            $body .= $_;
-            if (/\}\s*$/) {
-                emit_dep($name, $body);
-                $name = undef;
-                $body = q{};
-                $capture = 0;
-            }
-        }
-    ' "$manifest"
+
+def emit(name: str, body: list[str]) -> None:
+    text = "\n".join(body)
+    if "path" not in text or "version" not in text:
+        return
+    path_match = re.search(r'\bpath\s*=\s*"([^"]+)"', text)
+    version_match = re.search(r'\bversion\s*=\s*"([^"]+)"', text)
+    if path_match and version_match:
+        print(f"{name}\t{path_match.group(1)}")
+
+
+for line in manifest.read_text().splitlines():
+    section_match = re.match(r'^\[([^\]]+)\]\s*$', line)
+    if section_match:
+        current_section = section_match.group(1)
+        continue
+
+    if current_section is None:
+        continue
+
+    is_dev_section = current_section.endswith("dev-dependencies")
+    is_release_section = current_section.endswith("dependencies") and not is_dev_section
+    if (scope == "dev" and not is_dev_section) or (scope != "dev" and not is_release_section):
+        continue
+
+    if not capturing:
+        dep_match = re.match(r'^([A-Za-z0-9_-]+)\s*=\s*\{', line)
+        if not dep_match:
+            continue
+        dep_name = dep_match.group(1)
+        dep_body = [line]
+        if re.search(r'\}\s*(#.*)?$', line):
+            emit(dep_name, dep_body)
+            dep_name = None
+            dep_body = []
+        else:
+            capturing = True
+        continue
+
+    dep_body.append(line)
+    if re.search(r'\}\s*(#.*)?$', line):
+        emit(dep_name, dep_body)
+        dep_name = None
+        dep_body = []
+        capturing = False
+PY
 }
 
 resolve_dep_manifest() {
@@ -299,7 +323,27 @@ if [ "$DRY_RUN" = true ]; then
             else
                 echo "    would warn: dependency Cargo.toml not found for $dep_name (path: $dep_path)"
             fi
-        done < <(versioned_path_dependencies "$manifest")
+        done < <(versioned_path_dependencies "$manifest" release)
+    done < <(managed_manifests)
+    echo "  would run cargo update --workspace"
+    echo "  would publish crates"
+    echo "  would sync dev-dependencies"
+    while read -r manifest; do
+        echo "  would update dev dependencies in $manifest"
+        while IFS=$'\t' read -r dep_name dep_path; do
+            [ -z "$dep_name" ] && continue
+            if dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
+                dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
+                dep_package="$(manifest_package_name "$dep_manifest")"
+                if [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
+                    echo "    would sync $dep_name ($dep_package) -> $dep_version"
+                else
+                    echo "    would sync $dep_name -> $dep_version"
+                fi
+            else
+                echo "    would warn: dependency Cargo.toml not found for $dep_name (path: $dep_path)"
+            fi
+        done < <(versioned_path_dependencies "$manifest" dev)
     done < <(managed_manifests)
     echo "  would run cargo update --workspace"
     echo "  would create version commit/tag and publish crates"
@@ -343,13 +387,85 @@ while read -r manifest; do
         else
             echo "    Synchronized $dep_name in $manifest to $dep_version"
         fi
-    done < <(versioned_path_dependencies "$manifest")
+    done < <(versioned_path_dependencies "$manifest" release)
 
     taplo format "$manifest"
 done < <(managed_manifests)
 
-echo "Local path dependency versions synchronized."
+echo "Release dependency versions synchronized."
 
+cargo update --workspace
+stage_cargo_files
+git add -- Cargo.lock
+PUBLISH_CRATES=(
+    invalidstring
+    git2-hooks
+    grammar
+    filetreelist
+    asyncgit/src/lib/filehash/core
+    scopetime
+    asyncgit
+    tui
+    crawler
+    git-helpers
+    legit
+    ngit
+    qr
+    relay
+    relay/extensions
+    js
+    p2p
+    chat
+    web
+)
+
+if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
+    echo "Error: CARGO_REGISTRY_TOKEN is not set."
+    echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
+    echo "You can get one from https://crates.io/settings/tokens"
+    exit 1
+fi
+
+export CARGO_REGISTRY_TOKEN
+
+for crate in "${PUBLISH_CRATES[@]}"; do
+    sleep 1 && pushd "$crate" >/dev/null && cargo publish -j"$(cargo_jobs)" || true && popd >/dev/null
+done
+
+while read -r manifest; do
+    echo "Checking dev dependencies in $manifest..."
+
+    while IFS=$'\t' read -r dep_name dep_path; do
+        [ -z "$dep_name" ] && continue
+
+        if ! dep_manifest="$(resolve_dep_manifest "$manifest" "$dep_path")"; then
+            echo "    Warning: Dependency Cargo.toml not found for $dep_name (path: $dep_path)."
+            continue
+        fi
+
+        dep_version="$(manifest_version "$dep_manifest" "$WORKSPACE_VERSION")"
+        dep_package="$(manifest_package_name "$dep_manifest")"
+        if [ -z "$dep_version" ]; then
+            echo "    Warning: Could not determine version for $dep_name from $dep_manifest."
+            continue
+        fi
+
+        sync_dependency_version "$manifest" "$dep_name" "$dep_version"
+        if [ -n "$dep_package" ] && [ "$dep_package" != "$dep_name" ]; then
+            echo "    Synchronized $dep_name ($dep_package) in $manifest to $dep_version"
+        else
+            echo "    Synchronized $dep_name in $manifest to $dep_version"
+        fi
+    done < <(versioned_path_dependencies "$manifest" dev)
+
+    taplo format "$manifest"
+done < <(managed_manifests)
+
+echo "Dev dependency versions synchronized."
+
+cargo update --workspace
+stage_cargo_files
+git add -- Cargo.lock
 SORT_CRATES=(
     git2-hooks
     grammar
@@ -376,45 +492,6 @@ SORT_CRATES=(
 for crate in "${SORT_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo sort || true && popd >/dev/null
 done
-
-PUBLISH_CRATES=(
-    invalidstring
-    git2-hooks
-    grammar
-    filetreelist
-    asyncgit/src/lib/filehash/core
-    scopetime
-    asyncgit
-    tui
-    crawler
-    git-helpers
-    legit
-    ngit
-    qr
-    relay
-    relay/extensions
-    js
-    p2p
-    chat
-    web
-)
-
-PUBLISH_NO_VERIFY_CRATES=(
-    asyncgit
-)
-
-should_skip_verify() {
-    local crate="$1"
-    local candidate
-
-    for candidate in "${PUBLISH_NO_VERIFY_CRATES[@]}"; do
-        if [ "$candidate" = "$crate" ]; then
-            return 0
-        fi
-    done
-
-    return 1
-}
 
 tag_package_versions() {
     local version="$1"
@@ -448,41 +525,15 @@ git add -- "${manifest_paths[@]}"
 stage_cargo_files
 
 if [ -n "${VERSION_TAG:-}" ]; then
-    cargo update --workspace
-    stage_cargo_files
-    git add -- Cargo.lock
-
     git checkout -b "release/$VERSION_TAG"
 
     gnostr legit -m "$VERSION_TAG" --prefix 000000
     git tag -f "$VERSION_TAG" HEAD
     tag_package_versions "$WORKSPACE_VERSION"
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
-
-    cargo update --workspace
-    stage_cargo_files
-    git add -- Cargo.lock
-
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
     tag_package_versions "$WORKSPACE_VERSION"
 fi
-
-if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
-    echo "Error: CARGO_REGISTRY_TOKEN is not set."
-    echo "Please set the CARGO_REGISTRY_TOKEN environment variable before running this script."
-    echo "You can get one from https://crates.io/settings/tokens"
-    exit 1
-fi
-
-export CARGO_REGISTRY_TOKEN
-
-for crate in "${PUBLISH_CRATES[@]}"; do
-    publish_args=(-j"$(cargo_jobs)")
-    if should_skip_verify "$crate"; then
-        publish_args=(--no-verify "${publish_args[@]}")
-    fi
-    sleep 1 && pushd "$crate" >/dev/null && cargo publish "${publish_args[@]}" || true && popd >/dev/null
-done
 
 sleep 1 && cargo publish -j"$(cargo_jobs)" -p gnostr || true
 
