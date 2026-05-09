@@ -21,7 +21,8 @@ use gnostr_asyncgit::{
     },
     types::{
         generate_git_note_event, generate_git_note_event_with_pow, Client as AsyncClient,
-        EventKind, Keys as AsyncKeys, Options as AsyncOptions, PrivateKey as AsyncPrivateKey,
+        EventBuilder, EventKind, Keys as AsyncKeys, Options as AsyncOptions,
+        PrivateKey as AsyncPrivateKey, RelayMessage, SubscriptionId,
     },
     types::nip13::NIP13Event,
 };
@@ -656,7 +657,7 @@ async fn send_reads_messages_from_websocket() {
             content.to_string(),
             Vec::new(),
         )
-        .to_event(&PrivateKey::mock())
+        .to_event(&AsyncPrivateKey::mock())
         .unwrap();
         serde_json::to_string(&RelayMessage::Event(
             SubscriptionId("gnostr-query".to_string()),
