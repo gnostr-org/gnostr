@@ -155,7 +155,7 @@ gnostr-asyncgit = { path = "asyncgit", version = ">=948548.1874.716711", default
   "vendor-openssl",
 ] }
 gnostr-chat = { path = "chat", version = ">=948548.1874.716711" }
-gnostr-crawler = { path = "crawler", version = "^948548.0" }
+gnostr-crawler = { path = "crawler", version = "1111111.0" }
 
 gnostr-extensions = { path = "relay/extensions", version = ">=948548.1874.716711", default-features = false }
 gnostr-grammar = { path = "grammar", version = ">=948548.1874.716711" }
