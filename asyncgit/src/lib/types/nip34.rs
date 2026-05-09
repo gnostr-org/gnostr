@@ -850,7 +850,7 @@ path = ":memory:"
             u32::from(USER_GRASP_LIST_KIND),
             ngit_kind_number(ngit_git_events::KIND_USER_GRASP_LIST)
         );
-        assert!(matches!(EventKind::from(USER_GRASP_LIST_KIND), EventKind::Other(10317)));
+        assert!(matches!(EventKind::from(USER_GRASP_LIST_KIND), EventKind::Replaceable(10317)));
     }
 
     #[test]

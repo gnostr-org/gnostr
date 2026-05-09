@@ -216,6 +216,7 @@ actix-test = { workspace = true }
 criterion = "0.5.1"
 env_logger = "0.11"
 expectrl = "0.8.0"
+gnostr-crawler = { path = "../crawler", version = ">=948560.1874.701540" }
 # gnostr-crawler is parked here for the long NIP-34 matrix test in nip34.rs.
 # Keep the code commented out until we restore the crawler-backed fixture.
 # gnostr-crawler = { workspace = true }

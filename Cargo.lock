@@ -7026,6 +7026,7 @@ dependencies = [
  "git-version",
  "git2",
  "gix 0.66.0",
+ "gnostr-crawler",
  "gnostr-git2-hooks",
  "gnostr-grammar",
  "gnostr-invalidstring",
