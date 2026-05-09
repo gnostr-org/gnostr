@@ -327,7 +327,7 @@ print_cargo_command() {
   printf '\n'
 }
 
-VECTOR_FILE="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
+VECTOR_FILE="./types/src/nostr/nip44/nip44.vectors.json"
 EXPECTED_VECTOR_SHA256="269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040"
 if command -v shasum >/dev/null 2>&1; then
   ACTUAL_VECTOR_SHA256="$(shasum -a 256 "$VECTOR_FILE" | awk '{print $1}')"
