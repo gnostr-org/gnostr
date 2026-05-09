@@ -30,8 +30,9 @@ mod tests {
     use gnostr_asyncgit::{
         sync::{add_note, commit, show_note, stage_add_file, RepoPath},
         types::{
-            generate_git_note_event, Event, EventKind as AsyncEventKind, Id, PreEventV3,
-            PrivateKey, RepoRef, RepoState, TagV3, Unixtime, UncheckedUrl,
+            generate_git_note_event, Event, EventKind as AsyncEventKind, EventReference, Id,
+            MilliSatoshi, PreEventV3, PrivateKey, PublicKey, RepoRef, RepoState, TagV3, Unixtime,
+            UncheckedUrl, ZapData, ZapDataV1, ZapDataV2,
         },
         GitNote as AsyncGitNote,
     };
@@ -458,6 +459,79 @@ mod tests {
         .set_nostr_event(event.clone());
 
         (msg, event, commit_id.into())
+    }
+
+    #[test]
+    fn reexports_zap_data_and_serializes_through_chat_stack() {
+        let id = Id::try_from_hex_string(
+            "5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6",
+        )
+        .expect("zap v1 id");
+        let pubkey = PublicKey::try_from_hex_string(
+            "ee11a5dff40c19a555f41fe42b48f00e618c91225622ae37b6c2bb67b76c4e49",
+            true,
+        )
+        .expect("zap v1 pubkey");
+        let provider_pubkey = PublicKey::try_from_hex_string(
+            "b0635d6a9851d3aed0cd6c495b282167acf761729078d975fc341b22650b07b9",
+            true,
+        )
+        .expect("zap v1 provider pubkey");
+        let zap_v1 = ZapDataV1 {
+            id,
+            amount: MilliSatoshi(15423000),
+            pubkey,
+            provider_pubkey,
+        };
+
+        let zapped_event = EventReference::Id {
+            id: Id::try_from_hex_string(
+                "4d5a0a2f0eb8447d97a6b0f8bbd5f8c9a4cce7c835d3c7d6f2fd2a9f2f5f3a01",
+            )
+            .expect("zap v2 target id"),
+            author: Some(PrivateKey::generate().public_key()),
+            relays: Vec::new(),
+            marker: Some("root".to_owned()),
+        };
+        let payee = PrivateKey::generate().public_key();
+        let payer = PrivateKey::generate().public_key();
+        let provider_pubkey = PrivateKey::generate().public_key();
+        let zap_v2 = ZapDataV2 {
+            zapped_event: zapped_event.clone(),
+            amount: MilliSatoshi(15423000),
+            payee,
+            payer,
+            provider_pubkey,
+        };
+        let chat_zap: ZapData = zap_v2.clone();
+
+        let zap_v1_json = serde_json::to_string(&zap_v1).expect("serialize zap v1");
+        let zap_v2_json = serde_json::to_string(&zap_v2).expect("serialize zap v2");
+        let chat_zap_json = serde_json::to_string(&chat_zap).expect("serialize zap alias");
+
+        println!("==================== chat stack zap data v1 ====================");
+        println!("chat stack zap v1: {:?}", zap_v1);
+        println!("chat stack zap v1 json: {zap_v1_json}");
+        println!("==================== chat stack zap data v2 ====================");
+        println!("chat stack zap v2: {:?}", zap_v2);
+        println!("chat stack zap v2 json: {zap_v2_json}");
+        println!("==================== chat stack zap data alias ====================");
+        println!("chat stack zap alias: {:?}", chat_zap);
+        println!("chat stack zap alias json: {chat_zap_json}");
+
+        assert_eq!(
+            serde_json::from_str::<ZapDataV1>(&zap_v1_json).expect("deserialize zap v1"),
+            zap_v1
+        );
+        assert_eq!(
+            serde_json::from_str::<ZapDataV2>(&zap_v2_json).expect("deserialize zap v2"),
+            zap_v2
+        );
+        assert_eq!(
+            serde_json::from_str::<ZapData>(&chat_zap_json).expect("deserialize zap alias"),
+            chat_zap
+        );
+        assert_eq!(zap_v2.zapped_event, zapped_event);
     }
 
     fn sign_nip34_event(
