@@ -205,6 +205,14 @@ macro_rules! test_serde {
     };
 }
 
+#[cfg(test)]
+pub use crate::test_serde;
+
+#[cfg(test)]
+pub mod nostr {
+    pub use super::*;
+}
+
 pub mod versioned;
 pub use event_builder::EventBuilder;
 pub use versioned::{
