@@ -65,7 +65,7 @@ impl RelayMessageV3 {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> RelayMessageV3 {
+    pub fn mock() -> RelayMessageV3 {
         RelayMessageV3::Event(SubscriptionId::mock(), Box::new(EventV2::mock()))
     }
 }

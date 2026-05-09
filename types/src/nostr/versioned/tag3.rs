@@ -78,7 +78,7 @@ impl TagV3 {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> TagV3 {
+    pub fn mock() -> TagV3 {
         TagV3(vec!["e".to_string(), UncheckedUrl::mock().0])
     }
 

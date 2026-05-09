@@ -13,7 +13,7 @@ pub struct SubscriptionId(pub String);
 impl SubscriptionId {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> SubscriptionId {
+    pub fn mock() -> SubscriptionId {
         SubscriptionId("lk234js09".to_owned())
     }
 }

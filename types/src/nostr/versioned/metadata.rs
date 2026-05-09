@@ -49,7 +49,7 @@ impl MetadataV1 {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn mock() -> MetadataV1 {
+    pub fn mock() -> MetadataV1 {
         let mut map = Map::new();
         let _ = map.insert(
             "display_name".to_string(),

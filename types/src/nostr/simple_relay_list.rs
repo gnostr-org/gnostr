@@ -42,7 +42,7 @@ pub struct SimpleRelayList(pub HashMap<UncheckedUrl, SimpleRelayUsage>);
 
 impl SimpleRelayList {
     #[allow(dead_code)]
-    pub(crate) fn mock() -> SimpleRelayList {
+    pub fn mock() -> SimpleRelayList {
         let mut map: HashMap<UncheckedUrl, SimpleRelayUsage> = HashMap::new();
         let _ = map.insert(
             UncheckedUrl::from_str("wss://nostr.oxtr.dev"),

@@ -97,7 +97,7 @@ impl Profile {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Profile {
+    pub fn mock() -> Profile {
         let pubkey = PublicKey::try_from_hex_string(
             "b0635d6a9851d3aed0cd6c495b282167acf761729078d975fc341b22650b07b9",
             true,

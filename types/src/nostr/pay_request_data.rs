@@ -46,7 +46,7 @@ impl Default for PayRequestData {
 
 impl PayRequestData {
     #[allow(dead_code)]
-    pub(crate) fn mock() -> PayRequestData {
+    pub fn mock() -> PayRequestData {
         let mut map = Map::new();
         let _ = map.insert("tag".to_string(), Value::String("payRequest".to_owned()));
         let _ = map.insert(

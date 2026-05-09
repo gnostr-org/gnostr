@@ -29,7 +29,7 @@ pub struct MilliSatoshi(pub u64);
 impl MilliSatoshi {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> MilliSatoshi {
+    pub fn mock() -> MilliSatoshi {
         MilliSatoshi(15423000)
     }
 }

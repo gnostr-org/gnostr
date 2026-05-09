@@ -271,7 +271,7 @@ impl TagV2 {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> TagV2 {
+    pub fn mock() -> TagV2 {
         TagV2::Event {
             id: Id::mock(),
             recommended_relay_url: Some(UncheckedUrl::mock()),

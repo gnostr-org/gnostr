@@ -30,7 +30,7 @@ impl Signature {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Signature {
+    pub fn mock() -> Signature {
         let event = Event::mock();
         event.sig
     }
@@ -91,7 +91,7 @@ pub struct SignatureHex(pub String);
 impl SignatureHex {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> SignatureHex {
+    pub fn mock() -> SignatureHex {
         From::from(Signature::mock())
     }
 }

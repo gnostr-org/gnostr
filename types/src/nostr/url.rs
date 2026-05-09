@@ -61,7 +61,7 @@ impl UncheckedUrl {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> UncheckedUrl {
+    pub fn mock() -> UncheckedUrl {
         UncheckedUrl("http://localhost:6102".to_string())
     }
 }
@@ -150,7 +150,7 @@ impl Url {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Url {
+    pub fn mock() -> Url {
         Url("http://localhost:6102".to_string())
     }
 }
@@ -245,7 +245,7 @@ impl RelayUrl {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Url {
+    pub fn mock() -> Url {
         Url("wss://localhost:6102".to_string())
     }
 }

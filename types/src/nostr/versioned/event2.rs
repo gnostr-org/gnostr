@@ -186,7 +186,7 @@ impl EventV2 {
 
     /// Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> EventV2 {
+    pub fn mock() -> EventV2 {
         let signer = {
             let private_key = PrivateKey::mock();
             KeySigner::from_private_key(private_key, "", 1).unwrap()

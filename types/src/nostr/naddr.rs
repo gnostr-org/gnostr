@@ -151,7 +151,7 @@ impl NAddr {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> NAddr {
+    pub fn mock() -> NAddr {
         let d = "Test D Indentifier 1lkjf23".to_string();
 
         NAddr {

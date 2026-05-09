@@ -183,7 +183,7 @@ impl PrivateKey {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> PrivateKey {
+    pub fn mock() -> PrivateKey {
         PrivateKey::generate()
     }
 }

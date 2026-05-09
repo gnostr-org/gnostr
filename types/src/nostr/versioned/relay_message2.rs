@@ -33,7 +33,7 @@ pub enum RelayMessageV2 {
 impl RelayMessageV2 {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> RelayMessageV2 {
+    pub fn mock() -> RelayMessageV2 {
         RelayMessageV2::Event(SubscriptionId::mock(), Box::new(EventV2::mock()))
     }
 }

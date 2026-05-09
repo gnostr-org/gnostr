@@ -72,7 +72,7 @@ impl Id {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Id {
+    pub fn mock() -> Id {
         Id::try_from_hex_string("5df64b33303d62afc799bdc36d178c07b2e1f0d824f31b7dc812219440affab6")
             .unwrap()
     }
@@ -153,7 +153,7 @@ pub struct IdHex(String);
 impl IdHex {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> IdHex {
+    pub fn mock() -> IdHex {
         From::from(Id::mock())
     }
 

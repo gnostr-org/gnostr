@@ -200,7 +200,7 @@ impl Filter {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Filter {
+    pub fn mock() -> Filter {
         let mut map = BTreeMap::new();
         let _ = map.insert('e', vec![IdHex::mock().to_string()]);
         let _ = map.insert(

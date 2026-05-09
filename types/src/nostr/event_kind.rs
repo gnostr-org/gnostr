@@ -271,7 +271,7 @@ use EventKind::*;
 impl EventKind {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> EventKind {
+    pub fn mock() -> EventKind {
         TextNote
     }
 

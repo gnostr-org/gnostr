@@ -96,7 +96,7 @@ impl DelegationConditions {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn mock() -> DelegationConditions {
+    pub fn mock() -> DelegationConditions {
         let mut dc = DelegationConditions {
             kind: Some(EventKind::Repost),
             created_after: Some(Unixtime(1677700000)),

@@ -24,7 +24,7 @@ pub struct Nip05V1 {
 impl Nip05V1 {
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Nip05V1 {
+    pub fn mock() -> Nip05V1 {
         let pubkey = PublicKeyHex::try_from_str(
             "b0635d6a9851d3aed0cd6c495b282167acf761729078d975fc341b22650b07b9",
         )

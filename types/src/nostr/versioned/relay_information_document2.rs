@@ -229,7 +229,7 @@ impl RelayInformationDocumentV2 {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn mock() -> RelayInformationDocumentV2 {
+    pub fn mock() -> RelayInformationDocumentV2 {
         let mut m = Map::new();
         let _ = m.insert(
             "early_nips".to_string(),

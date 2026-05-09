@@ -40,7 +40,7 @@ impl Unixtime {
 
     // Mock data for testing
     #[allow(dead_code)]
-    pub(crate) fn mock() -> Unixtime {
+    pub fn mock() -> Unixtime {
         Unixtime(1668572286)
     }
 }
