@@ -89,7 +89,7 @@ shellwords = "1.1.0"
 simdutf8 = "0.1.5"
 simple_logger = { workspace = true }
 sled = "0.34.7"
-speedy = { version = "0.8.7" }
+speedy = { workspace = true, optional = true }
 ssh-key = { version = "0.6.7", features = ["crypto", "encryption"] }
 strip-ansi-escapes = "0.2.1"
 structopt = "0.3.26"
@@ -135,6 +135,8 @@ webbrowser = { workspace = true }
 xxhash-rust = { version = "0.8.12", features = ["const_xxh3"] }
 yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
+[features]
+speedy = ["dep:speedy"]
 
 [dev-dependencies]
 actix-test = { workspace = true }
