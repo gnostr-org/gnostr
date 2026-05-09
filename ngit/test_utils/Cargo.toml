@@ -1,6 +1,6 @@
 [package]
 name = "test_utils"
-version = "948549.1874.715419"
+version = "948549.1874.715533"
 edition = "2021"
 [dependencies]
 anyhow = "1.0.98"
