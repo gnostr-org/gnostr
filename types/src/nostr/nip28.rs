@@ -3,17 +3,12 @@
 // NIP-28: Public Chat Channels
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
-use std::{collections::HashSet, str::FromStr};
-
-use secp256k1::{SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
 
 use crate::nostr::{
-    event_kind::{EventKind, EventKindOrRange},
+    event_kind::EventKind,
     versioned::event3::{EventV3, PreEventV3},
-    Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
-    Signer, TagV3, UncheckedUrl, Unixtime,
+    Error, Id, Signer, TagV3, UncheckedUrl, Unixtime, PublicKey,
 };
 
 /// Event Kind 40: Create channel
@@ -697,19 +692,11 @@ pub fn mute_user(
 }
 
 #[cfg(test)]
+#[allow(unused_imports)]
 mod test {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    use secp256k1::{Keypair, Secp256k1, SecretKey, XOnlyPublicKey};
-    use sha2::{Digest, Sha256};
-
     use super::*;
-    use crate::nostr::{
-        nostr::{
-            Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey, PublicKeyHex,
-            Signer, TagV3, UncheckedUrl, Unixtime,
-        },
-    };
+    use crate::nostr::{Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey,
+        PublicKeyHex, Signer, TagV3, UncheckedUrl, Unixtime};
 
     #[test]
     fn test_nip28_event_kinds() {
