@@ -740,7 +740,7 @@ mod tests {
     use super::*;
     use crate::nostr::{
         sync::{add_note, commit, default_notes_ref, show_note, stage_add_file, RepoPath},
-        types::generate_git_note_event,
+        nostr::generate_git_note_event,
     };
     use crate::nostr::get_leading_zero_bits;
     use crate::nostr::{Client, Keys, Options};

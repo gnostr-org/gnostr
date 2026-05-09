@@ -163,7 +163,7 @@ mod test {
     use super::*;
     use crate::nostr::{
         test_serde,
-        types::{KeySigner, PrivateKey, Signer, Tag},
+        nostr::{KeySigner, PrivateKey, Signer, Tag},
     };
 
     test_serde! {DelegationConditions, test_delegation_conditions_serde}

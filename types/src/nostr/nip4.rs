@@ -83,8 +83,8 @@ mod tests {
 
     use crate::nostr::{
         default_gnostr_private_key,
-        types::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
-        types::ContentEncryptionAlgorithm,
+        nostr::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
+        nostr::ContentEncryptionAlgorithm,
     };
     use gnostr_relay::App as GnostrRelayApp;
 
