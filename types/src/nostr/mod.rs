@@ -28,140 +28,51 @@
 #![deny(clippy::string_slice)]
 
 mod client_message;
-pub use client_message::ClientMessage;
-
 mod content;
-pub use content::{ContentSegment, ShatteredContent, Span};
-
 mod delegation;
-pub use delegation::{DelegationConditions, EventDelegation};
-
 mod error;
-pub use error::Error;
-
 mod event;
 mod event_builder;
-pub use event::{Event, PreEvent, Rumor, ZapData};
-
-/// event_kind
 pub mod event_kind;
-pub use event_kind::{EventKind, EventKindIterator, EventKindOrRange};
-
-/// event_reference
 mod event_reference;
-pub use event_reference::EventReference;
-
-/// filter
 mod filter;
-pub use filter::Filter;
-
-/// id
 mod id;
-pub use id::{Id, IdHex};
-
-/// identity
 mod identity;
-pub use identity::Identity;
-
 pub mod key_signer;
-pub use key_signer::KeySigner;
-
-/// NIP-28: Public Chat Channels
 pub mod nip28;
-pub use nip28::*;
-
-/// metadata
-pub mod metadata;
-pub use metadata::Metadata;
-
-/// naddr
+mod metadata;
 mod naddr;
-pub use naddr::NAddr;
-
-/// nevent
 mod nevent;
-pub use nevent::NEvent;
-
-/// NIP-05: Mapping Nostr keys to DNS-based internet identifiers
 pub mod nip0;
 mod nip05;
-/// NIP-10: Text Notes and Threads
 pub mod nip10;
-/// NIP-13: Proof of Work
 pub mod nip13;
-/// NIP-15: End of Stored Events Notice
 pub mod nip15;
-/// NIP-18: Reposts
 pub mod nip18;
-/// NIP-02: Contact List and Petnames
 pub mod nip2;
-/// NIP-26: Delegation
 pub mod nip26;
-/// NIP-03: OpenTimestamps Attestations for Events
 pub mod nip3;
-/// NIP-04: Encrypted Direct Message
 pub mod nip4;
-/// NIP-59: Gift Wrap
 pub mod nip59;
-/// NIP-06: Basic key derivation from mnemonic seed phrase
 pub mod nip6;
-/// NIP-09: Event Deletion
 pub mod nip9;
-pub use nip05::Nip05;
-
 mod nostr_url;
-pub use nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl};
-
 mod pay_request_data;
-pub use pay_request_data::PayRequestData;
-
 mod private_key;
-pub use private_key::{ContentEncryptionAlgorithm, EncryptedPrivateKey, KeySecurity, PrivateKey};
-
 mod profile;
-pub use profile::Profile;
-
 mod public_key;
-pub use public_key::{PublicKey, PublicKeyHex};
-pub use secp256k1::XOnlyPublicKey;
-
 mod relay_information_document;
-pub use relay_information_document::{
-    Fee, RelayFees, RelayInformationDocument, RelayLimitation, RelayRetention,
-};
-
 mod relay_list;
-pub use relay_list::{RelayList, RelayListUsage};
-
 mod relay_message;
-pub use relay_message::RelayMessage;
-
 mod relay_usage;
-pub use relay_usage::{RelayUsage, RelayUsageSet};
-
 mod satoshi;
-pub use satoshi::MilliSatoshi;
-
 mod signature;
-pub use signature::{Signature, SignatureHex};
-
 mod signer;
-pub use signer::Signer;
-
 mod simple_relay_list;
-pub use simple_relay_list::{SimpleRelayList, SimpleRelayUsage};
-
 mod subscription_id;
-pub use subscription_id::SubscriptionId;
-
 mod tag;
-pub use tag::Tag;
-
 mod unixtime;
-pub use unixtime::Unixtime;
-
 mod url;
-pub use self::url::{RelayOrigin, RelayUrl, UncheckedUrl, Url};
 
 pub mod nip14;
 pub mod nip25;
@@ -170,22 +81,17 @@ pub mod nip32;
 pub mod nip36;
 pub mod nip38;
 pub mod nip40;
-/// NIP-44 related types and functionalities for secure direct messages.
 pub mod nip44;
 pub mod nip53;
 pub mod nip94;
-pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
-//pub use crate::nostr::nostr_client::*;
 pub mod nip19;
-pub use nip19::*;
 pub mod keys;
-pub use keys::Keys;
 pub mod client;
-pub use client::{local_relay_urls, Client, FilterOptions, Options};
 pub mod image_dimensions;
-// Re-export bitcoin_hashes for use throughout the codebase
-pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
-pub use image_dimensions::ImageDimensions;
+pub mod versioned;
+
+mod exports;
+pub use exports::{core::*, helpers::*, nips::*, versioned::*};
 
 #[cfg(test)]
 #[macro_export]
@@ -210,19 +116,6 @@ pub use crate::test_serde;
 pub mod nostr {
     pub use super::*;
 }
-
-pub mod versioned;
-pub use event_builder::EventBuilder;
-pub use versioned::{
-    ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
-    MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,
-    RelayInformationDocumentV1, RelayInformationDocumentV2, RelayLimitationV1, RelayLimitationV2,
-    RelayMessageV1, RelayMessageV2, RelayMessageV3, RelayMessageV4, RelayMessageV5,
-    RelayRetentionV1, RumorV1, RumorV2, RumorV3, TagV1, TagV2, TagV3, Why, ZapDataV1, ZapDataV2,
-};
-
-#[cfg(test)]
-mod tests;
 
 #[inline]
 pub fn get_leading_zero_bits(bytes: &[u8]) -> u8 {
@@ -310,7 +203,6 @@ pub fn add_event_to_tags(
     use_quote: bool,
 ) -> usize {
     if new_marker == "mention" && use_quote {
-        // NIP-18: "Quote reposts are kind 1 events with an embedded q tag..."
         let newtag = Tag::new_quote(new_id, new_hint);
 
         match existing_tags.iter().position(|existing_tag| {
@@ -366,7 +258,7 @@ pub fn add_addr_to_tags(
     }
 }
 
-/// Add an 'subject' tag to a set of tags if it doesn't already exist
+/// Add a 'subject' tag to a set of tags if it doesn't already exist
 pub fn add_subject_to_tags_if_missing(existing_tags: &mut Vec<Tag>, subject: String) {
     if !existing_tags.iter().any(|t| t.tagname() == "subject") {
         existing_tags.push(Tag::new_subject(subject));
