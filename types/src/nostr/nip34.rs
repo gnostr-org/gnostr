@@ -1,7 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
     convert::TryFrom,
-    str::FromStr,
 };
 
 // Asyncgit's NIP-34 surface lives here.
@@ -1036,6 +1035,7 @@ path = ":memory:"
         assert!(get_leading_zero_bits(&event.id.0) >= 4);
     }
 
+    #[tokio::test]
     #[serial]
     async fn nip34_event_matrix_covers_all_kinds_and_git_notes() {
         println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
