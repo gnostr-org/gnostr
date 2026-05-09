@@ -45,7 +45,7 @@ EOF
 }
 
 check_nip44_vectors() {
-  local vector_file="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
+  local vector_file="./types/src/nostr/nip44/nip44.vectors.json"
   local expected_vector_sha256="269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040"
   local actual_vector_sha256
 
