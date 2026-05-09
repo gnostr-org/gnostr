@@ -245,6 +245,7 @@ impl<'de> Visitor<'de> for RelayMessageVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {RelayMessageV5, test_relay_message_serde}
 }

@@ -412,6 +412,7 @@ impl fmt::Display for RelayInformationDocumentV2 {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {RelayInformationDocumentV2, test_relay_information_document_serde}
 

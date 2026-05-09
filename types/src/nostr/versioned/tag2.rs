@@ -924,6 +924,7 @@ impl<'de> Visitor<'de> for TagVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_serde;
 
     test_serde! {TagV2, test_tag_serde}
 
