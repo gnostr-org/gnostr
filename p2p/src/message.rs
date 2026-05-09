@@ -154,4 +154,50 @@ mod tests {
 
         let _ = (_nip34_kind, _nip34_event, _nip34_unsigned);
     }
+
+    #[test]
+    fn nip34_events_traverse_the_p2p_middle_layer() {
+        let (git_note, event, subscription_id, filter) = real_trace_fixture();
+        let asyncgit_event: gnostr_asyncgit::types::EventV3 = event.clone();
+        let p2p_event: Nip34Event = asyncgit_event.clone();
+        let unsigned_event: Nip34UnsignedEvent = Nip34UnsignedEvent {
+            pubkey: event.pubkey,
+            created_at: event.created_at,
+            kind: event.kind,
+            tags: event.tags.clone(),
+            content: event.content.clone(),
+        };
+
+        let relay_message = RelayMessage::Event(subscription_id.clone(), Box::new(p2p_event.clone()));
+        let client_message = ClientMessage::Req(subscription_id.clone(), vec![filter.clone()]);
+
+        assert_eq!(unsigned_event.hash().expect("unsigned hash"), event.id);
+        assert_eq!(asyncgit_event.kind, EventKind::Patches);
+        assert_eq!(git_note.note.message, asyncgit_event.content);
+
+        let event_json = serde_json::to_string(&p2p_event).expect("serialize p2p event");
+        let unsigned_json = serde_json::to_string(&unsigned_event).expect("serialize unsigned event");
+        let relay_json = serde_json::to_string(&relay_message).expect("serialize relay message");
+        let client_json = serde_json::to_string(&client_message).expect("serialize client message");
+
+        let decoded_event: Nip34Event = serde_json::from_str(&event_json).expect("deserialize p2p event");
+        let decoded_unsigned: Nip34UnsignedEvent =
+            serde_json::from_str(&unsigned_json).expect("deserialize unsigned event");
+        let decoded_relay: RelayMessage = serde_json::from_str(&relay_json).expect("deserialize relay message");
+        let decoded_client: ClientMessage = serde_json::from_str(&client_json).expect("deserialize client message");
+
+        let asyncgit_round_trip_event: gnostr_asyncgit::types::EventV3 = decoded_event.clone();
+
+        assert_eq!(decoded_event, p2p_event);
+        assert_eq!(decoded_unsigned, unsigned_event);
+        assert_eq!(asyncgit_round_trip_event, event);
+        match decoded_relay {
+            RelayMessage::Event(id, boxed_event) => {
+                assert_eq!(id, subscription_id);
+                assert_eq!(*boxed_event, p2p_event);
+            }
+            other => panic!("unexpected relay message: {:?}", other),
+        }
+        assert_eq!(decoded_client, client_message);
+    }
 }
