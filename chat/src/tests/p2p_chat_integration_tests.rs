@@ -16,6 +16,7 @@ mod tests {
     };
     use futures::StreamExt;
     use serde::{Deserialize, Serialize};
+    use serial_test::serial;
     use tokio::sync::mpsc;
     use tokio::sync::oneshot;
 
@@ -28,7 +29,10 @@ mod tests {
     };
     use gnostr_asyncgit::{
         sync::{add_note, commit, show_note, stage_add_file, RepoPath},
-        types::{generate_git_note_event, Event, PrivateKey},
+        types::{
+            generate_git_note_event, Event, EventKind as AsyncEventKind, Id, PreEventV3,
+            PrivateKey, RepoRef, RepoState, TagV3, Unixtime, UncheckedUrl,
+        },
         GitNote as AsyncGitNote,
     };
     use gnostr_p2p::keypair_from_seed;
@@ -456,6 +460,58 @@ mod tests {
         (msg, event, commit_id.into())
     }
 
+    fn sign_nip34_event(
+        private_key: &PrivateKey,
+        kind: AsyncEventKind,
+        content: impl Into<String>,
+        tags: Vec<TagV3>,
+        created_at: i64,
+    ) -> Event {
+        Event::sign_with_private_key(
+            PreEventV3 {
+                pubkey: private_key.public_key(),
+                created_at: Unixtime(created_at),
+                kind,
+                tags,
+                content: content.into(),
+            },
+            private_key,
+        )
+        .expect("sign nip34 event")
+    }
+
+    fn pull_received_event_into_local_repo(
+        repo_path: &RepoPath,
+        anchor_commit: git2::Oid,
+        notes_ref: &str,
+        event: &Event,
+    ) {
+        let event_json = serde_json::to_string(event).expect("serialize event");
+        add_note(repo_path, anchor_commit, &event_json, Some(notes_ref), false)
+            .expect("add fetched note");
+        let note = show_note(repo_path, anchor_commit, Some(notes_ref))
+            .expect("show fetched note")
+            .expect("fetched note exists");
+        assert_eq!(note.message, event_json);
+    }
+
+    #[derive(Clone, Copy)]
+    enum Nip34ProofExpectation {
+        RepoAnnouncement,
+        RepoState,
+        PatchRoot,
+        PullRequest,
+        PullRequestUpdate,
+        Issue,
+        Reply,
+        StatusOpen,
+        StatusApplied,
+        StatusDraft,
+        StatusClosed,
+        GraspList,
+        GitNote,
+    }
+
     #[tokio::test]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes() {
@@ -598,6 +654,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     #[ignore]
     async fn test_p2p_connectivity_two_nodes_with_local_relay_nip34_event() {
         let _relay = spawn_local_p2p_relay_service_async()
@@ -651,6 +708,377 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
+    #[ignore]
+    async fn test_p2p_connectivity_two_nodes_with_local_relay_nip34_matrix_and_repo_pull() {
+        let _relay = spawn_local_p2p_relay_service_async()
+            .await
+            .expect("local p2p relay service");
+        tokio::time::sleep(Duration::from_secs(5)).await;
+
+        let (send_tx1, send_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx1, _recv_rx1) = mpsc::channel::<ChatEvent>(100);
+        let (_send_tx2, send_rx2) = mpsc::channel::<ChatEvent>(100);
+        let (recv_tx2, mut recv_rx2) = mpsc::channel::<ChatEvent>(100);
+
+        let topic = gossipsub::IdentTopic::new("test-p2p-topic-two-nodes-relay-nip34-matrix");
+
+        tokio::spawn(evt_loop(send_rx1, recv_tx1, topic.clone()));
+        tokio::spawn(evt_loop(send_rx2, recv_tx2, topic.clone()));
+
+        tokio::time::sleep(Duration::from_secs(8)).await;
+
+        let (_trace_root, repo_path, anchor_commit) = init_trace_repo();
+        let private_key = PrivateKey::generate();
+        let trusted_maintainer = private_key.public_key();
+        let root_commit = anchor_commit.to_string();
+        let repo_url = "https://github.com/gnostr-org/gnostr.git".to_string();
+        let notes_prefix = "refs/notes/nip34";
+
+        let repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: root_commit.clone(),
+            git_server: vec![repo_url.clone()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+        let repo_announcement = repo_ref.to_event(&private_key).expect("repo announcement");
+
+        let mut state = HashMap::new();
+        state.insert("refs/heads/main".to_string(), root_commit.clone());
+        state.insert(
+            "refs/tags/v0.1.0".to_string(),
+            "89abcdef0123456789abcdef0123456789abcdef".to_string(),
+        );
+        let repo_state = RepoState::build("gnostr".to_string(), state, &private_key).expect("repo state");
+        let repo_state_event = repo_state.event.clone();
+
+        let root_patch = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::Patches,
+            "From 0123456789abcdef0123456789abcdef01234567 Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/1] example title\n\nexample description",
+            vec![
+                TagV3::new_event(
+                    Id::try_from_hex_string(
+                        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                    )
+                    .expect("root reference"),
+                    None,
+                    Some("root".to_string()),
+                ),
+                TagV3::new_tag("commit", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_tag("description", "example description"),
+            ],
+            1_777_759_186,
+        );
+        let pr_event = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::from(gnostr_asyncgit::types::nip34::PULL_REQUEST_KIND),
+            "example description",
+            vec![
+                TagV3::new_event(root_patch.id, None, Some("root".to_string())),
+                TagV3::new_tag("subject", "example title"),
+                TagV3::new_tag("alt", "git Pull Request: example title"),
+                TagV3::new_tag("branch-name", "feature/nip34"),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::from_strings(vec!["r".to_string(), root_commit.clone(), "euc".to_string()]),
+            ],
+            1_777_759_187,
+        );
+        let pr_update_event = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::from(gnostr_asyncgit::types::nip34::PULL_REQUEST_UPDATE_KIND),
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git Pull Request Update"),
+                TagV3::from_strings(vec!["E".to_string(), pr_event.id.as_hex_string()]),
+                TagV3::from_strings(vec!["P".to_string(), pr_event.pubkey.as_hex_string()]),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::from_strings(vec!["r".to_string(), root_commit.clone(), "euc".to_string()]),
+            ],
+            1_777_759_188,
+        );
+        let issue_event = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::from(gnostr_asyncgit::types::nip34::GIT_ISSUE_KIND),
+            "please provide feedback\nthis is an asyncgit issue used to exercise NIP-34",
+            vec![
+                TagV3::new_tag("r", &root_commit),
+                TagV3::from_strings(vec![
+                    "a".to_string(),
+                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    repo_url.clone(),
+                    "root".to_string(),
+                ]),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_188,
+        );
+        let reply_event = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::from(gnostr_asyncgit::types::nip34::GIT_REPLY_KIND),
+            "replying to the asyncgit issue",
+            vec![
+                TagV3::new_event(issue_event.id, None, Some("root".to_string())),
+                TagV3::from_strings(vec![
+                    "a".to_string(),
+                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    repo_url.clone(),
+                    "reply".to_string(),
+                ]),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_188,
+        );
+        let status_open = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::GitStatusOpen,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: open"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_189,
+        );
+        let status_applied = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::GitStatusApplied,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: applied"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_190,
+        );
+        let status_draft = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::GitStatusDraft,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: draft"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_191,
+        );
+        let status_closed = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::GitStatusClosed,
+            String::new(),
+            vec![
+                TagV3::new_tag(
+                    "alt",
+                    "Git patch closed as forthcoming update is too large. Replacing with Pull Request",
+                ),
+                TagV3::new_event(pr_event.id, None, Some("root".to_string())),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_192,
+        );
+        let grasp_list = sign_nip34_event(
+            &private_key,
+            AsyncEventKind::from(gnostr_asyncgit::types::nip34::USER_GRASP_LIST_KIND),
+            String::new(),
+            vec![
+                TagV3::from_strings(vec!["g".to_string(), "wss://grasp.example.com".to_string()]),
+                TagV3::from_strings(vec![
+                    "g".to_string(),
+                    "wss://another-grasp.example.com".to_string(),
+                ]),
+            ],
+            1_777_759_193,
+        );
+        let (_git_note_msg, git_note_event, _git_note_commit) = real_nip34_message();
+
+        let cases = vec![
+            ("repo announcement", repo_announcement, "repo-announcement", Nip34ProofExpectation::RepoAnnouncement),
+            ("repo state", repo_state_event, "repo-state", Nip34ProofExpectation::RepoState),
+            ("repo patch root", root_patch, "repo-patch-root", Nip34ProofExpectation::PatchRoot),
+            ("pull request", pr_event.clone(), "pull-request", Nip34ProofExpectation::PullRequest),
+            (
+                "pull request update",
+                pr_update_event.clone(),
+                "pull-request-update",
+                Nip34ProofExpectation::PullRequestUpdate,
+            ),
+            ("issue", issue_event.clone(), "issue", Nip34ProofExpectation::Issue),
+            ("reply", reply_event.clone(), "reply", Nip34ProofExpectation::Reply),
+            ("status open", status_open.clone(), "status-open", Nip34ProofExpectation::StatusOpen),
+            (
+                "status applied",
+                status_applied.clone(),
+                "status-applied",
+                Nip34ProofExpectation::StatusApplied,
+            ),
+            ("status draft", status_draft.clone(), "status-draft", Nip34ProofExpectation::StatusDraft),
+            ("status closed", status_closed.clone(), "status-closed", Nip34ProofExpectation::StatusClosed),
+            ("user grasp list", grasp_list.clone(), "user-grasp-list", Nip34ProofExpectation::GraspList),
+            ("git note", git_note_event.clone(), "git-note", Nip34ProofExpectation::GitNote),
+        ];
+
+        for (label, event, ref_suffix, expectation) in cases {
+            let msg = Msg {
+                from: trusted_maintainer.as_hex_string(),
+                ..Msg::default()
+            }
+            .set_nostr_event(event.clone());
+
+            send_tx1
+                .send(ChatEvent::ChatMessage(msg))
+                .await
+                .expect("send nip34 message from peer 1");
+
+            let received_event = next_chat_message(&mut recv_rx2, Duration::from_secs(15)).await;
+            if let ChatEvent::ChatMessage(received_msg) = received_event {
+                assert_eq!(received_msg.kind, MsgKind::NostrEvent, "case: {label}");
+
+                let received_nostr_event = received_msg
+                    .nostr_event
+                    .as_ref()
+                    .expect("real nostr event to survive transport");
+                assert_eq!(received_nostr_event.kind, event.kind, "case: {label}");
+
+                let notes_ref = format!("{notes_prefix}/{ref_suffix}");
+                pull_received_event_into_local_repo(
+                    &repo_path,
+                    anchor_commit,
+                    &notes_ref,
+                    received_nostr_event,
+                );
+
+                match expectation {
+                    Nip34ProofExpectation::RepoAnnouncement => {
+                        let parsed = RepoRef::try_from((
+                            received_nostr_event.clone(),
+                            Some(trusted_maintainer),
+                        ))
+                        .expect("parse repo announcement");
+                        assert_eq!(parsed.identifier, "gnostr");
+                        assert_eq!(parsed.root_commit, root_commit);
+                    }
+                    Nip34ProofExpectation::RepoState => {
+                        let parsed = RepoState::try_from(vec![received_nostr_event.clone()])
+                            .expect("parse repo state");
+                        assert_eq!(parsed.identifier, "gnostr");
+                        assert_eq!(
+                            parsed.state.get("HEAD"),
+                            Some(&"ref: refs/heads/main".to_string())
+                        );
+                    }
+                    Nip34ProofExpectation::PatchRoot => {
+                        assert!(gnostr_asyncgit::types::event_is_patch_set_root(
+                            received_nostr_event
+                        ));
+                        assert!(gnostr_asyncgit::types::patch_supports_commit_ids(
+                            received_nostr_event
+                        ));
+                    }
+                    Nip34ProofExpectation::PullRequest => {
+                        assert!(gnostr_asyncgit::types::event_is_valid_pr_or_pr_update(
+                            received_nostr_event
+                        ));
+                        assert!(gnostr_asyncgit::types::event_is_revision_root(
+                            received_nostr_event
+                        ));
+                    }
+                    Nip34ProofExpectation::PullRequestUpdate => {
+                        assert!(gnostr_asyncgit::types::event_is_valid_pr_or_pr_update(
+                            received_nostr_event
+                        ));
+                        assert!(!gnostr_asyncgit::types::event_is_revision_root(
+                            received_nostr_event
+                        ));
+                    }
+                    Nip34ProofExpectation::Issue => {
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "a"));
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "p"));
+                    }
+                    Nip34ProofExpectation::Reply => {
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "e"));
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "a"));
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "p"));
+                    }
+                    Nip34ProofExpectation::StatusOpen
+                    | Nip34ProofExpectation::StatusApplied
+                    | Nip34ProofExpectation::StatusDraft => {
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "alt"));
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "c"));
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "clone"));
+                    }
+                    Nip34ProofExpectation::StatusClosed => {
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "alt"));
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "e"));
+                    }
+                    Nip34ProofExpectation::GraspList => {
+                        assert_eq!(received_nostr_event.content, "");
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "g"));
+                    }
+                    Nip34ProofExpectation::GitNote => {
+                        assert_eq!(received_nostr_event.kind, AsyncEventKind::Patches);
+                        assert!(received_nostr_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "commit"));
+                    }
+                }
+            } else {
+                panic!("received wrong event type on peer 2 for case {label}");
+            }
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
     #[cfg(feature = "long_tests")]
     #[ignore]
     async fn test_p2p_relay_reservation_and_circuit_round_trip() {

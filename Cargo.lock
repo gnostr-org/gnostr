@@ -7244,6 +7244,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "serial_test 3.4.0",
  "sha2 0.10.9",
  "terminal_size 0.4.4",
  "textwrap 0.16.2",
