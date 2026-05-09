@@ -399,6 +399,23 @@ PUBLISH_CRATES=(
     web
 )
 
+PUBLISH_NO_VERIFY_CRATES=(
+    asyncgit
+)
+
+should_skip_verify() {
+    local crate="$1"
+    local candidate
+
+    for candidate in "${PUBLISH_NO_VERIFY_CRATES[@]}"; do
+        if [ "$candidate" = "$crate" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 tag_package_versions() {
     local version="$1"
     local crate
@@ -460,7 +477,11 @@ fi
 export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
-    sleep 1 && pushd "$crate" >/dev/null && cargo publish -j"$(cargo_jobs)" || true && popd >/dev/null
+    publish_args=(-j"$(cargo_jobs)")
+    if should_skip_verify "$crate"; then
+        publish_args=(--no-verify "${publish_args[@]}")
+    fi
+    sleep 1 && pushd "$crate" >/dev/null && cargo publish "${publish_args[@]}" || true && popd >/dev/null
 done
 
 sleep 1 && cargo publish -j"$(cargo_jobs)" -p gnostr || true
