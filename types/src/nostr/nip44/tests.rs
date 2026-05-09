@@ -5,7 +5,9 @@ use crate::nostr::*;
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 use sha2::{Digest, Sha256};
 
-use super::{calc_padding, decrypt, encrypt, encrypt_inner, get_conversation_key, Error};
+use super::{calc_padding, decrypt, encrypt_inner, get_conversation_key, Error};
+#[cfg(feature = "long_tests")]
+use super::encrypt;
 
 // We use the test vectors from Paul Miller's javascript so we don't accidently
 // mistype anything
