@@ -1,9 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     convert::TryFrom,
-    env,
     str::FromStr,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 // Asyncgit's NIP-34 surface lives here.
@@ -12,7 +10,6 @@ use std::{
 // grasp kinds. `sync::notes` owns the 1617 git-note/PoW permutations.
 
 use git2::Oid;
-use log::debug;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -172,109 +169,6 @@ pub fn git_note_event_id(commit_id: &str) -> Result<Id, Error> {
 
 fn padded_note_id(note_id: &str) -> String {
     format!("{:0>64}", note_id)
-}
-
-fn synthetic_blockheight() -> u64 {
-    let seconds = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_secs())
-        .unwrap_or(0);
-    std::cmp::max(1, seconds / 600)
-}
-
-const BLOCKHEIGHT_URLS: [&str; 4] = [
-    "https://bitcoin.gob.sv/api/blocks/tip/height",
-    "https://mempool.space/api/blocks/tip/height",
-    "https://blockstream.info/api/blocks/tip/height",
-    "https://blockchain.info/q/getblockcount",
-];
-
-const BLOCKHASH_URLS: [&str; 4] = [
-    "https://bitcoin.gob.sv/api/blocks/tip/hash",
-    "https://mempool.space/api/blocks/tip/hash",
-    "https://blockstream.info/api/blocks/tip/hash",
-    "https://blockchain.info/q/latesthash",
-];
-
-fn fetch_blockheight_sync() -> (Option<String>, u8) {
-    for (index, url) in BLOCKHEIGHT_URLS.iter().enumerate() {
-        match ureq::get(url).call() {
-            Ok(response) => match response.into_string() {
-                Ok(value) => return (Some(value), index as u8),
-                Err(err) => debug!("blockheight_sync: failed to read {}: {:?}", url, err),
-            },
-            Err(err) => debug!("blockheight_sync: failed to fetch from {}: {:?}", url, err),
-        }
-    }
-
-    (None, BLOCKHEIGHT_URLS.len() as u8)
-}
-
-fn fetch_blockhash_sync() -> Option<String> {
-    for url in BLOCKHASH_URLS.iter() {
-        match ureq::get(url).call() {
-            Ok(response) => match response.into_string() {
-                Ok(value) => return Some(value),
-                Err(err) => debug!("blockhash_sync: failed to read {}: {:?}", url, err),
-            },
-            Err(err) => debug!("blockhash_sync: failed to fetch from {}: {:?}", url, err),
-        }
-    }
-
-    None
-}
-
-fn blockheight_sync_local() -> String {
-    let (raw_blockheight, status) = fetch_blockheight_sync();
-    unsafe { env::set_var("BLOCKHEIGHT_STATUS", status.to_string()) };
-    let blockheight = raw_blockheight
-        .and_then(|val| val.parse::<u64>().ok())
-        .unwrap_or_else(synthetic_blockheight)
-        .to_string();
-    debug!("blockheight_sync: {}", blockheight);
-    unsafe { env::set_var("BLOCKHEIGHT", &blockheight) };
-    blockheight
-}
-
-fn blockhash_sync_local() -> String {
-    let blockhash = fetch_blockhash_sync().unwrap_or_default();
-    debug!("blockhash_sync: {}", blockhash);
-    unsafe { env::set_var("BLOCKHASH", &blockhash) };
-    blockhash
-}
-
-fn weeble_sync_local() -> Result<f64, Error> {
-    let seconds = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|_| Error::InvalidOperation)?
-        .as_secs();
-    let blockheight = blockheight_sync_local().parse::<u64>().unwrap_or(0);
-    if blockheight == 0 {
-        unsafe { env::set_var("WEEBLE", "0") };
-        return Ok(0.0);
-    }
-
-    let weeble = seconds as f64 / blockheight as f64;
-    debug!("weeble_sync: blockheight={}, weeble={}", blockheight, weeble);
-    unsafe { env::set_var("WEEBLE", weeble.to_string()) };
-    Ok(weeble.floor())
-}
-
-fn wobble_sync_local() -> Result<f64, Error> {
-    let seconds = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|_| Error::InvalidOperation)?
-        .as_secs();
-    let blockheight = blockheight_sync_local().parse::<u64>().unwrap_or(0);
-    if blockheight == 0 {
-        unsafe { env::set_var("WOBBLE", "0") };
-        return Ok(0.0);
-    }
-
-    let wobble = seconds as f64 % blockheight as f64;
-    debug!("wobble_sync: blockheight={}, wobble={}", blockheight, wobble);
-    unsafe { env::set_var("WOBBLE", wobble.to_string()) };
-    Ok(wobble.floor())
 }
 
 fn git_note_runtime_values() -> Result<(String, f64, f64), Error> {
