@@ -137,6 +137,7 @@ yoke = { version = "0.7.1", features = ["derive"] }
 zeroize = { workspace = true }
 [features]
 speedy = ["dep:speedy"]
+long_tests = []
 
 [dev-dependencies]
 actix-test = { workspace = true }

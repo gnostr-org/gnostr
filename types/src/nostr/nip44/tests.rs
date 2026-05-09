@@ -216,8 +216,8 @@ fn test_valid_encrypt_decrypt() {
     }
 }
 
+#[cfg(feature = "long_tests")]
 #[test]
-#[ignore]
 #[serial]
 fn test_valid_encrypt_decrypt_long_msg() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
@@ -277,8 +277,8 @@ fn test_valid_encrypt_decrypt_long_msg() {
     }
 }
 
+#[cfg(feature = "long_tests")]
 #[test]
-#[ignore]
 fn test_invalid_encrypt_msg_lengths() {
     let json: serde_json::Value = serde_json::from_str(JSON_VECTORS).unwrap();
 
@@ -443,8 +443,8 @@ fn test_invalid_decrypt_short_raw_payload() {
     assert_eq!(err, Error::InvalidLength);
 }
 
+#[cfg(feature = "long_tests")]
 #[test]
-#[ignore]
 fn bench_encryption_inner() {
     const SEC1HEX: &'static str =
         "dc4b57c5fe856584b01aab34dad7454b0f715bdfab091bf0dbbe12f65c778838";
