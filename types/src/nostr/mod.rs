@@ -27,8 +27,6 @@
 )]
 #![deny(clippy::string_slice)]
 
-use ureq::Agent;
-
 mod client_message;
 pub use client_message::ClientMessage;
 

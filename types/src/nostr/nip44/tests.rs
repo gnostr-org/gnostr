@@ -1,7 +1,6 @@
 #![allow(clippy::all)]
 #[rustfmt::skip]
 use base64::Engine;
-use crate::nostr::*;
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
 use sha2::{Digest, Sha256};
 
