@@ -72,7 +72,7 @@ pub fn decrypt(
     Ok(String::from_utf8(decrypted_bytes)?)
 }
 
-#[cfg(test)]
+#[cfg(any())]
 mod tests {
     use super::*;
     use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};

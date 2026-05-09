@@ -67,7 +67,8 @@ members = [
   "qr",
   "relay",
   "relay/extensions",
-  "scopetime", "types",
+  "scopetime",
+  "types",
   "web",
 ]
 exclude = ["vendor/gitui/**"]
@@ -151,10 +152,11 @@ futures-util = "0.3.31"
 #gh = { path = "gh", package = "gh-rs" }
 git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = ">=948560.1874.701540" }
 git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = ">=948560.1874.701540" }
-# Keep the root workspace dependency on the current local asyncgit version during publish.
-gnostr-asyncgit = { path = "asyncgit", version = ">=948560.1874.701540", default-features = false, features = [
+  # Keep the root workspace dependency on the current local asyncgit version during publish.
+  gnostr-asyncgit = { path = "asyncgit", version = ">=948560.1874.701540", default-features = false, features = [
   "vendor-openssl",
 ] }
+gnostr-types = { path = "types", version = ">=948560.1874.701540" }
 gnostr-chat = { path = "chat", version = ">=948560.1874.701540" }
 # Keep crawler aligned with the current workspace version here so the root package can package cleanly.
 gnostr-crawler = { path = "crawler", version = ">=948560.1874.701540" }

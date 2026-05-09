@@ -39,8 +39,8 @@ impl EventReference {
     /// Set the author
     pub fn set_author(&mut self, new_author: PublicKey) {
         match self {
-            EventReference::Id { ref mut author, .. } => *author = Some(new_author),
-            EventReference::Addr(ref mut naddr) => naddr.author = new_author,
+            EventReference::Id { author, .. } => *author = Some(new_author),
+            EventReference::Addr(naddr) => naddr.author = new_author,
         }
     }
 
@@ -62,8 +62,8 @@ impl EventReference {
         new_relays.extend(relays);
 
         match self {
-            EventReference::Id { ref mut relays, .. } => *relays = new_relays,
-            EventReference::Addr(ref mut naddr) => {
+            EventReference::Id { relays, .. } => *relays = new_relays,
+            EventReference::Addr(naddr) => {
                 naddr.relays = new_relays.iter().map(|r| r.to_unchecked_url()).collect()
             }
         }

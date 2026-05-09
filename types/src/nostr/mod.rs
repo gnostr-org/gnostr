@@ -3,16 +3,7 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-//! This crate provides the canonical Nostr protocol types.
-//!
-//! Workspace flow:
-//! - `gnostr-p2p` re-exports these types.
-//! - `gnostr-chat` consumes them through the p2p facade.
-//! - `gnostr-crawler` also uses these types directly for relay-query wiring.
-//!
-//! Keep the chain `asyncgit -> p2p -> chat` for shared wire types. Avoid making
-//! `crawler` depend on `p2p`, because `p2p` already depends on `crawler` for the
-//! relay bucket helpers and that would create a cycle.
+//! Canonical Nostr protocol types for the workspace.
 
 #![allow(missing_docs)]
 #![deny(
@@ -37,9 +28,6 @@
 #![deny(clippy::string_slice)]
 
 use ureq::Agent;
-
-// TODO /// nostr_sdk bridge
-pub mod bridge;
 
 /// internal
 pub mod internal;
@@ -116,14 +104,6 @@ pub mod nip2;
 pub mod nip26;
 /// NIP-03: OpenTimestamps Attestations for Events
 pub mod nip3;
-pub mod nip34;
-pub use nip34::{
-    event_is_patch_set_root, event_is_revision_root, event_is_valid_pr_or_pr_update,
-    event_tag_from_nip19_or_hex, get_commit_id_from_patch, get_event_root,
-    generate_git_note_event, generate_git_note_event_with_pow, git_note_tags, get_parent_commit_from_patch,
-    patch_supports_commit_ids, status_kinds, EventRefType, GitNote, Nip34Event, Nip34Kind,
-    Nip34UnsignedEvent, RepoRef, RepoState, REPO_ANNOUNCEMENT_KIND, REPO_STATE_KIND,
-};
 /// NIP-04: Encrypted Direct Message
 pub mod nip4;
 /// NIP-59: Gift Wrap

@@ -59,7 +59,7 @@ impl Identity {
 
     /// Unlock
     pub fn unlock(&mut self, password: &str) -> Result<(), Error> {
-        if let Identity::Signer(ref mut boxed_signer) = self {
+        if let Identity::Signer(boxed_signer) = self {
             boxed_signer.deref_mut().unlock(password)
         } else {
             Ok(())
@@ -68,7 +68,7 @@ impl Identity {
 
     /// Lock access to the private key
     pub fn lock(&mut self) {
-        if let Identity::Signer(ref mut boxed_signer) = self {
+        if let Identity::Signer(boxed_signer) = self {
             boxed_signer.deref_mut().lock()
         }
     }
