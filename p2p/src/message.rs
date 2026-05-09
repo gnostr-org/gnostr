@@ -98,7 +98,7 @@ mod tests {
         let note_json = serde_json::to_string(&typed_note).expect("serialize git note");
 
         assert_eq!(event_kind, EventKind::Patches);
-        assert_eq!(typed_note.note.message, event.content);
+        assert_eq!(typed_note.message, event.content);
         assert_eq!(
             serde_json::from_str::<RelayMessage>(&relay_json).expect("deserialize relay message"),
             relay_message
@@ -246,7 +246,7 @@ mod tests {
 
         assert_eq!(unsigned_event.hash().expect("unsigned hash"), event.id);
         assert_eq!(asyncgit_event.kind, EventKind::Patches);
-        assert_eq!(git_note.note.message, asyncgit_event.content);
+        assert_eq!(git_note.message, asyncgit_event.content);
 
         let event_json = serde_json::to_string(&p2p_event).expect("serialize p2p event");
         let unsigned_json = serde_json::to_string(&unsigned_event).expect("serialize unsigned event");
