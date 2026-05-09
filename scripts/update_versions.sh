@@ -72,7 +72,7 @@ version_requirement_for_dependency() {
     case "$manifest:$dep_name" in
         "$REPO_ROOT/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/Cargo.toml:gnostr-crawler")
-            previous_blockheight_dependency_version
+            printf '>=%s\n' "$WORKSPACE_VERSION"
             return 0
             ;;
         "$REPO_ROOT/asyncgit/Cargo.toml:gnostr-crawler"|\
