@@ -90,10 +90,9 @@ pub mod client;
 pub mod image_dimensions;
 pub mod versioned;
 
-mod exports;
+pub mod exports;
 pub use exports::{core::*, helpers::*, nips::*, versioned::*};
 
-#[cfg(test)]
 #[macro_export]
 /// A helper macro for testing `serde` serialization and deserialization.
 macro_rules! test_serde {
@@ -116,6 +115,9 @@ pub use crate::test_serde;
 pub mod nostr {
     pub use super::*;
 }
+
+#[cfg(test)]
+mod tests;
 
 #[inline]
 pub fn get_leading_zero_bits(bytes: &[u8]) -> u8 {

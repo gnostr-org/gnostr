@@ -1,4 +1,4 @@
-pub(crate) mod core {
+pub mod core {
     pub use super::super::{
         client_message::ClientMessage,
         content::{ContentSegment, ShatteredContent, Span},
@@ -12,7 +12,7 @@ pub(crate) mod core {
         id::{Id, IdHex},
         identity::Identity,
         key_signer::KeySigner,
-        metadata::Metadata,
+        metadata::{Metadata, DEFAULT_AVATAR, DEFAULT_BANNER},
         naddr::NAddr,
         nevent::NEvent,
         nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl},
@@ -39,7 +39,7 @@ pub(crate) mod core {
     pub use secp256k1::XOnlyPublicKey;
 }
 
-pub(crate) mod nips {
+pub mod nips {
     pub use super::super::{
         client::{local_relay_urls, Client, FilterOptions, Options},
         keys::Keys,
@@ -50,7 +50,7 @@ pub(crate) mod nips {
     };
 }
 
-pub(crate) mod helpers {
+pub mod helpers {
     pub use super::super::{
         default_gnostr_private_key, get_leading_zero_bits, ureq_async, DEFAULT_GNOSTR_PRIVATE_KEY,
         IntoVec,
@@ -58,7 +58,7 @@ pub(crate) mod helpers {
     pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
 }
 
-pub(crate) mod versioned {
+pub mod versioned {
     pub use super::super::versioned::{
         ClientMessageV1, ClientMessageV2, ClientMessageV3, EventV1, EventV2, EventV3, FeeV1,
         MetadataV1, Nip05V1, PreEventV1, PreEventV2, PreEventV3, RelayFeesV1,
