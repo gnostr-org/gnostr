@@ -9,7 +9,7 @@ use serde::{
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 #[cfg(test)]
-use crate::test_serde;
+use crate::nostr::test_serde;
 
 macro_rules! define_event_kinds {
     ($($comment:expr, $name:ident = $value:expr),*) => {

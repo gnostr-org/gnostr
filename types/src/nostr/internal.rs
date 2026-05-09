@@ -6,7 +6,7 @@ use tokio_tungstenite::{tungstenite, tungstenite::Message};
 use super::{
     ClientMessage, Event, EventV2, EventV3, Filter, RelayMessage, RelayMessageV5, SubscriptionId,
 };
-use crate::{blockheight::blockheight_sync, weeble::weeble_sync};
+use crate::nostr::{blockheight::blockheight_sync, weeble::weeble_sync};
 
 pub fn filters_to_wire(filters: Vec<Filter>) -> String {
     let message = ClientMessage::Req(

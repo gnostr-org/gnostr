@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use crate::types::{
+use crate::nostr::{
     DelegationConditions, Error, EventKind, Id, NAddr, PublicKey, Signature, UncheckedUrl,
 };
 
@@ -520,10 +520,10 @@ impl fmt::Display for TagV3 {
     }
 }
 
-impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
-    fn from(tag_v2: crate::types::versioned::tag2::TagV2) -> Self {
+impl From<crate::nostr::versioned::tag2::TagV2> for TagV3 {
+    fn from(tag_v2: crate::nostr::versioned::tag2::TagV2) -> Self {
         match tag_v2 {
-            crate::types::versioned::tag2::TagV2::Address {
+            crate::nostr::versioned::tag2::TagV2::Address {
                 kind,
                 pubkey,
                 d,
@@ -548,12 +548,12 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::ContentWarning { warning, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::ContentWarning { warning, trailing } => {
                 let mut vec = vec!["content-warning".to_owned(), warning];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Delegation {
+            crate::nostr::versioned::tag2::TagV2::Delegation {
                 pubkey,
                 conditions,
                 sig,
@@ -568,7 +568,7 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Event {
+            crate::nostr::versioned::tag2::TagV2::Event {
                 id,
                 recommended_relay_url,
                 marker,
@@ -588,12 +588,12 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Expiration { time, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Expiration { time, trailing } => {
                 let mut vec = vec!["expiration".to_owned(), time.to_string()];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Pubkey {
+            crate::nostr::versioned::tag2::TagV2::Pubkey {
                 pubkey,
                 recommended_relay_url,
                 petname,
@@ -613,12 +613,12 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Hashtag { hashtag, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Hashtag { hashtag, trailing } => {
                 let mut vec = vec!["t".to_owned(), hashtag];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Reference {
+            crate::nostr::versioned::tag2::TagV2::Reference {
                 url,
                 marker,
                 trailing,
@@ -632,22 +632,22 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Geohash { geohash, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Geohash { geohash, trailing } => {
                 let mut vec = vec!["g".to_owned(), geohash];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Identifier { d, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Identifier { d, trailing } => {
                 let mut vec = vec!["d".to_owned(), d];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Subject { subject, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Subject { subject, trailing } => {
                 let mut vec = vec!["subject".to_owned(), subject];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Nonce {
+            crate::nostr::versioned::tag2::TagV2::Nonce {
                 nonce,
                 target,
                 trailing,
@@ -661,23 +661,23 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Parameter { param, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Parameter { param, trailing } => {
                 let mut vec = vec!["parameter".to_owned(), param];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Title { title, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Title { title, trailing } => {
                 let mut vec = vec!["title".to_owned(), title];
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Other { tag, data } => {
+            crate::nostr::versioned::tag2::TagV2::Other { tag, data } => {
                 let mut vec = vec![tag];
                 vec.extend(data);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Empty => TagV3(vec![]),
-            crate::types::versioned::tag2::TagV2::EventParent {
+            crate::nostr::versioned::tag2::TagV2::Empty => TagV3(vec![]),
+            crate::nostr::versioned::tag2::TagV2::EventParent {
                 id,
                 recommended_relay_url,
                 trailing,
@@ -691,7 +691,7 @@ impl From<crate::types::versioned::tag2::TagV2> for TagV3 {
                 vec.extend(trailing);
                 TagV3(vec)
             }
-            crate::types::versioned::tag2::TagV2::Kind { kind, trailing } => {
+            crate::nostr::versioned::tag2::TagV2::Kind { kind, trailing } => {
                 let mut vec = vec!["k".to_owned(), format!("{}", Into::<u32>::into(kind))];
                 vec.extend(trailing);
                 TagV3(vec)

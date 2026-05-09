@@ -68,7 +68,7 @@ impl MetadataV1 {
     pub fn lnurl(&self) -> Option<String> {
         if let Some(Value::String(lud06)) = self.other.get("lud06") {
             if let Ok(data) = bech32::decode(lud06) {
-                if data.0 == *crate::types::HRP_LNURL {
+                if data.0 == *crate::nostr::HRP_LNURL {
                     return Some(String::from_utf8_lossy(&data.1).to_string());
                 }
             }

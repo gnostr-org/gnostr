@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::types::{EventReference, Id, MilliSatoshi, PublicKey};
+use crate::nostr::{EventReference, Id, MilliSatoshi, PublicKey};
 
 /// Data about a Zap
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]

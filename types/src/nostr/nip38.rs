@@ -9,7 +9,7 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{
+use crate::nostr::{
     event_kind::EventKind, signature::Signature, Event, Id, PreEvent, PublicKey, Tag, Unixtime,
 }; // Re-using existing types
 

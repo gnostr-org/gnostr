@@ -9,7 +9,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 
-use crate::types::{
+use crate::nostr::{
     event_kind::{EventKind, EventKindOrRange},
     versioned::event3::{EventV3, PreEventV3},
     Error, Id, KeySecurity, NAddr, NostrBech32, NostrUrl, PublicKey, PublicKeyHex, Signature,
@@ -704,7 +704,7 @@ mod test {
     use sha2::{Digest, Sha256};
 
     use super::*;
-    use crate::{
+    use crate::nostr::{
         test_serde,
         types::{
             Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey, PublicKeyHex,

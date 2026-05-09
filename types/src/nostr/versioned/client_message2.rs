@@ -8,7 +8,7 @@ use serde::{
 use speedy::{Readable, Writable};
 
 use super::EventV2;
-use crate::types::{Filter, SubscriptionId};
+use crate::nostr::{Filter, SubscriptionId};
 
 /// A message from a client to a relay
 #[derive(Clone, Debug, Eq, PartialEq)]

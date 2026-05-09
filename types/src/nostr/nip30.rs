@@ -9,7 +9,7 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Event, Tag};
+use crate::nostr::{Event, Tag};
 
 /// The name of the custom emoji tag.
 pub const CUSTOM_EMOJI_TAG_NAME: &str = "emoji";
@@ -54,7 +54,7 @@ impl NIP30Event for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{EventKind, Id, PublicKey, Signature, Unixtime};
+    use crate::nostr::{EventKind, Id, PublicKey, Signature, Unixtime};
 
     // Helper to create a dummy event for testing
     fn create_dummy_event_with_emojis(emojis: Vec<Emoji>) -> Event {

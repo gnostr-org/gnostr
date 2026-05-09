@@ -177,7 +177,7 @@ pub mod nip44;
 pub mod nip53;
 pub mod nip94;
 pub use nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error};
-//pub use crate::nostr_client::*;
+//pub use crate::nostr::nostr_client::*;
 pub mod nip19;
 pub use nip19::*;
 pub mod keys;
@@ -365,7 +365,7 @@ pub fn add_subject_to_tags_if_missing(existing_tags: &mut Vec<Tag>, subject: Str
 
 #[cfg(test)]
 mod test {
-    use crate::types::RelayMessage;
+    use crate::nostr::RelayMessage;
 
     #[test]
     fn test_real_messages() {

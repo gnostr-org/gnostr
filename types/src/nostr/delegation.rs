@@ -161,7 +161,7 @@ impl Visitor<'_> for DelegationConditionsVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{
+    use crate::nostr::{
         test_serde,
         types::{KeySigner, PrivateKey, Signer, Tag},
     };

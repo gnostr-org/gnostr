@@ -8,7 +8,7 @@ use serde::{
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use crate::types::UncheckedUrl;
+use crate::nostr::UncheckedUrl;
 
 /// When and how to use a Relay
 ///
@@ -108,7 +108,7 @@ impl<'de> Visitor<'de> for SimpleRelayListVisitor {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_serde;
+    use crate::nostr::test_serde;
 
     test_serde! {SimpleRelayList, test_simple_relay_list_serde}
 

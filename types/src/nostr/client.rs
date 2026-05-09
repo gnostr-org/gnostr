@@ -45,7 +45,7 @@ use tokio_tungstenite::{
 use tracing::{debug, info, warn};
 use url::Url;
 
-use crate::types::{
+use crate::nostr::{
     private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
     EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayMessage, RelayUrl,
     SubscriptionId, Tag, UncheckedUrl, Unixtime,
@@ -735,17 +735,17 @@ impl std::fmt::Display for Client {
 mod tests {
     use super::*;
 
-    fn test_private_key(seed: u8) -> crate::types::PrivateKey {
-        crate::types::PrivateKey(
+    fn test_private_key(seed: u8) -> crate::nostr::PrivateKey {
+        crate::nostr::PrivateKey(
             secp256k1::SecretKey::from_slice(&[seed; 32]).unwrap(),
-            crate::types::KeySecurity::Weak,
+            crate::nostr::KeySecurity::Weak,
         )
     }
 
     #[test]
     fn build_nip44_direct_message_event_uses_real_keys_and_recipient_tag() {
         let sender =
-            crate::types::PrivateKey(crate::default_gnostr_private_key(), crate::types::KeySecurity::Weak);
+            crate::nostr::PrivateKey(crate::nostr::default_gnostr_private_key(), crate::nostr::KeySecurity::Weak);
         let recipient = test_private_key(2);
         let client = Client::new(&Keys::new(sender.clone()), Options::new());
 

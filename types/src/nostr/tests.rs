@@ -1,7 +1,7 @@
 //! Real serde and contract coverage for the asyncgit Nostr type surface.
 
 use super::*;
-use crate::test_serde;
+use crate::nostr::test_serde;
 
 test_serde! {DelegationConditions, test_delegation_conditions_serde}
 test_serde! {EventKind, test_event_kind_serde}

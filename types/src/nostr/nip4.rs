@@ -81,7 +81,7 @@ mod tests {
     use std::{fs, time::Duration};
     use tempfile::NamedTempFile;
 
-    use crate::{
+    use crate::nostr::{
         default_gnostr_private_key,
         types::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
         types::ContentEncryptionAlgorithm,
@@ -100,9 +100,9 @@ mod tests {
         PrivateKey(SecretKey::from_slice(&[seed; 32]).unwrap(), KeySecurity::Weak)
     }
 
-    fn create_test_relay_app() -> crate::error::Result<GnostrRelayApp> {
+    fn create_test_relay_app() -> crate::nostr::error::Result<GnostrRelayApp> {
         let config_file = NamedTempFile::with_suffix(".toml")
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         let config_path = config_file.path().to_owned();
         fs::write(
             &config_path,
@@ -115,7 +115,7 @@ host = "127.0.0.1"
 path = ":memory:"
 "#,
         )
-        .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
 
         GnostrRelayApp::create(
             Some(config_path.to_str().expect("relay config path")),
@@ -123,7 +123,7 @@ path = ":memory:"
             Some("NOSTR".to_owned()),
             None,
         )
-        .map_err(|err| crate::error::Error::Generic(err.to_string()))
+        .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))
     }
 
     #[test]
@@ -147,7 +147,7 @@ path = ":memory:"
     }
 
     #[tokio::test]
-    async fn encrypt_and_decrypt_real_dm_events_in_both_directions() -> crate::error::Result<()> {
+    async fn encrypt_and_decrypt_real_dm_events_in_both_directions() -> crate::nostr::error::Result<()> {
         let relay_srv = start(|| {
             let app_data = create_test_relay_app().expect("failed to create relay app");
             app_data.web_app()
@@ -185,19 +185,19 @@ path = ":memory:"
             outbound_message
         );
 
-        let mut sender_client = crate::types::Client::new(
-            &crate::types::Keys::new(sender.clone()),
-            crate::types::Options::new().send_timeout(Some(Duration::from_secs(2))),
+        let mut sender_client = crate::nostr::Client::new(
+            &crate::nostr::Keys::new(sender.clone()),
+            crate::nostr::Options::new().send_timeout(Some(Duration::from_secs(2))),
         );
         sender_client
             .add_relays(vec![relay_url.clone()])
             .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         assert_eq!(
         sender_client
             .send_event(outbound_event.clone())
             .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?,
+            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?,
             outbound_event.id
         );
 
@@ -226,19 +226,19 @@ path = ":memory:"
             return_message
         );
 
-        let mut recipient_client = crate::types::Client::new(
-            &crate::types::Keys::new(recipient.clone()),
-            crate::types::Options::new().send_timeout(Some(Duration::from_secs(2))),
+        let mut recipient_client = crate::nostr::Client::new(
+            &crate::nostr::Keys::new(recipient.clone()),
+            crate::nostr::Options::new().send_timeout(Some(Duration::from_secs(2))),
         );
         recipient_client
             .add_relays(vec![relay_url])
             .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         assert_eq!(
         recipient_client
             .send_event(return_event.clone())
             .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?,
+            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?,
             return_event.id
         );
 

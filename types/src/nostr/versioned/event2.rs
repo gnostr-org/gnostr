@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use crate::types::{
+use crate::nostr::{
     id::{self, Id},
     Error, EventDelegation, EventKind, EventReference, IntoVec, KeySigner, MilliSatoshi, NAddr,
     NostrBech32, NostrUrl, PrivateKey, PublicKey, PublicKeyHex, RelayUrl, Signature, Signer, TagV2,
@@ -928,7 +928,7 @@ impl EventV2 {
     /// Get the proof-of-work count of leading bits
     pub fn pow(&self) -> u8 {
         // Count leading bits in the Id field
-        let zeroes: u8 = crate::types::get_leading_zero_bits(&self.id.0);
+        let zeroes: u8 = crate::nostr::get_leading_zero_bits(&self.id.0);
 
         // Check that they meant it
         let mut target_zeroes: u8 = 0;
@@ -1184,7 +1184,7 @@ impl TryFrom<PreEventV2> for RumorV2 {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::types::{DelegationConditions, Signer, UncheckedUrl};
+    use crate::nostr::{DelegationConditions, Signer, UncheckedUrl};
 
     test_serde! {EventV2, test_event_serde}
 

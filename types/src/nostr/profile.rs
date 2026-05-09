@@ -4,8 +4,8 @@ use speedy::{Readable, Writable};
 
 use super::Error;
 #[cfg(test)]
-use crate::test_serde;
-use crate::types::{PublicKey, UncheckedUrl};
+use crate::nostr::test_serde;
+use crate::nostr::{PublicKey, UncheckedUrl};
 
 /// A person's profile on nostr which consists of the data needed in order to
 /// follow someone.

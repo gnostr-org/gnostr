@@ -1,4 +1,4 @@
-pub use crate::js::js_bundle::get_js_assets;
+pub use crate::nostr::js::js_bundle::get_js_assets;
 
 /// Return the MIME type used for a static asset filename.
 pub fn asset_content_type(filename: &str) -> &'static str {

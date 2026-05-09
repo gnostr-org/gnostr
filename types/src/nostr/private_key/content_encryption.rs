@@ -81,7 +81,7 @@ impl PrivateKey {
     /// Decrypt NIP-44 only, version is detected
     pub fn decrypt_nip44(&self, other: &PublicKey, ciphertext: &str) -> Result<String, Error> {
         if ciphertext.as_bytes().first() == Some(&b'#') {
-            return Err(crate::types::nip44::Error::UnsupportedFutureVersion.into());
+            return Err(crate::nostr::nip44::Error::UnsupportedFutureVersion.into());
         };
 
         let algo = {
@@ -96,7 +96,7 @@ impl PrivateKey {
                 // Note: Nip44v1Padded cannot be detected, and there may be no events out there
                 // using it.
                 2 => ContentEncryptionAlgorithm::Nip44v2,
-                _ => return Err(crate::types::nip44::Error::UnknownVersion.into()),
+                _ => return Err(crate::nostr::nip44::Error::UnknownVersion.into()),
             }
         };
 

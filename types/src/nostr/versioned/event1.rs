@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use crate::types::{
+use crate::nostr::{
     id::{self, Id},
     Error, EventDelegation, EventKind, EventReference, IntoVec, MilliSatoshi, NAddr, NostrBech32,
     NostrUrl, PublicKey, PublicKeyHex, RelayUrl, Signature, TagV1, Unixtime, ZapDataV1,
@@ -866,7 +866,7 @@ impl EventV1 {
     /// Get the proof-of-work count of leading bits
     pub fn pow(&self) -> u8 {
         // Count leading bits in the Id field
-        let zeroes: u8 = crate::types::get_leading_zero_bits(&self.id.0);
+        let zeroes: u8 = crate::nostr::get_leading_zero_bits(&self.id.0);
 
         // Check that they meant it
         let mut target_zeroes: u8 = 0;
@@ -966,7 +966,7 @@ impl EventV1 {
         if bytes.len() < 32 {
             None
         } else if let Ok(arr) = <[u8; 32]>::try_from(&bytes[0..32]) {
-            use crate::types::id;
+            use crate::nostr::id;
 
             Some(unsafe { std::mem::transmute::<[u8; 32], id::Id>(arr) })
         } else {

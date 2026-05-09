@@ -7,7 +7,7 @@ use serde::{
 #[cfg(feature = "speedy")]
 use speedy::{Readable, Writable};
 
-use crate::types::{
+use crate::nostr::{
     DelegationConditions, Error, EventKind, Id, PublicKeyHex, SignatureHex, UncheckedUrl, Unixtime,
 };
 

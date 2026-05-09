@@ -11,7 +11,7 @@ use serde_json::{json, Map, Value};
 use speedy::{Readable, Writable};
 
 use super::{FeeV1, RelayFeesV1, RelayRetentionV1};
-use crate::types::{EventKind, EventKindOrRange, PublicKeyHex, Url};
+use crate::nostr::{EventKind, EventKindOrRange, PublicKeyHex, Url};
 
 /// Relay limitations
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]

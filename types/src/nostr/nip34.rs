@@ -12,7 +12,7 @@ use std::{
 
 use git2::Oid;
 use serde::{Deserialize, Serialize};
-use crate::{
+use crate::nostr::{
     blockheight::blockheight_sync,
     sync::{commit::padded_note_id, NoteInfo},
     weeble::weeble_sync,
@@ -23,7 +23,7 @@ use super::{
     Error, EventKind, EventV3, Id, KeySigner, NAddr, NEvent, Nip19, PreEventV3, PrivateKey,
     PublicKey, Signer, TagV3, Unixtime, UncheckedUrl,
 };
-use crate::types::nip13::NIP13Event;
+use crate::nostr::nip13::NIP13Event;
 
 /// NIP-34 repository announcement kind.
 pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
@@ -738,13 +738,13 @@ mod tests {
     use actix_test::start;
     use std::{env, fs, io::Write, path::Path, path::PathBuf, str::FromStr, sync::Arc};
     use super::*;
-    use crate::{
+    use crate::nostr::{
         sync::{add_note, commit, default_notes_ref, show_note, stage_add_file, RepoPath},
         types::generate_git_note_event,
     };
-    use crate::types::get_leading_zero_bits;
-    use crate::types::{Client, Keys, Options};
-    use crate::types::nip13::NIP13Event;
+    use crate::nostr::get_leading_zero_bits;
+    use crate::nostr::{Client, Keys, Options};
+    use crate::nostr::nip13::NIP13Event;
     use git2::Oid;
     use gnostr_crawler::{load_relays_or_bootstrap, relays::get_config_dir_path, run_nip34 as crawler_run_nip34};
     use gnostr_relay::App as GnostrRelayApp;
@@ -798,7 +798,7 @@ mod tests {
         }
     }
 
-    fn create_relay_config() -> crate::error::Result<(TempDir, PathBuf)> {
+    fn create_relay_config() -> crate::nostr::error::Result<(TempDir, PathBuf)> {
         let config_dir = tempfile::tempdir()?;
         let config_path = config_dir.path().join("relay.toml");
         fs::write(
@@ -1281,15 +1281,15 @@ path = ":memory:"
     #[cfg(feature = "long_tests")]
     #[tokio::test]
     #[serial]
-    async fn nip34_event_matrix_covers_all_kinds_and_git_notes() -> crate::error::Result<()> {
+    async fn nip34_event_matrix_covers_all_kinds_and_git_notes() -> crate::nostr::error::Result<()> {
         println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
 
-        let home_dir = tempfile::tempdir().map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        let home_dir = tempfile::tempdir().map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         let _home_guard = EnvVarGuard::set("HOME", home_dir.path());
         let _xdg_guard = EnvVarGuard::set("XDG_CONFIG_HOME", home_dir.path().join("config"));
 
         let (_relay_config_dir, relay_config_path) =
-            create_relay_config().map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            create_relay_config().map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         let relay_config_path = relay_config_path.clone();
         let relay_srv = start(move || {
             let app_data = GnostrRelayApp::create(
@@ -1306,18 +1306,18 @@ path = ":memory:"
         relay_url = relay_url.replace("http", "ws");
 
         // let crawler_config_dir = get_config_dir_path();
-        // fs::create_dir_all(&crawler_config_dir).map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        // fs::create_dir_all(&crawler_config_dir).map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         // fs::write(
         //     crawler_config_dir.join("relays.yaml"),
         //     format!("- {relay_url}\n"),
         // )
-        // .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        // .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
 
         // let relays = load_relays_or_bootstrap();
         // assert!(relays.iter().any(|relay| relay == &relay_url));
         // crawler_run_nip34(None, &reqwest::Client::new())
         //     .await
-        //     .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        //     .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
 
         let private_key = PrivateKey::mock();
         let trusted_maintainer = private_key.public_key();
@@ -1328,7 +1328,7 @@ path = ":memory:"
         client
             .add_relays(vec![relay_url.clone()])
             .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         client.connect().await;
 
         let repo_ref = RepoRef {
@@ -1545,7 +1545,7 @@ path = ":memory:"
             let published = client
                 .send_event(carrier_event.clone())
                 .await
-                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+                .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
             assert_eq!(published, carrier_event.id);
             assert_eq!(carrier_event.kind, expected_kind);
 
@@ -1600,7 +1600,7 @@ path = ":memory:"
                 let published = client
                     .send_event(git_note_event.clone())
                     .await
-                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+                    .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
                 assert_eq!(published, git_note_event.id);
                 assert_eq!(git_note_event.kind, EventKind::Patches);
                 assert_eq!(git_note_event.content, note.message);

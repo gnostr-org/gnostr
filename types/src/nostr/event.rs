@@ -1,4 +1,4 @@
-use crate::types::{
+use crate::nostr::{
     versioned::{
         event3::{EventV3, PreEventV3, RumorV3, UnsignedEventV3},
         zap_data::ZapDataV2,

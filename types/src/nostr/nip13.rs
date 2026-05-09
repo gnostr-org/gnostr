@@ -5,7 +5,7 @@ use anyhow::Result;
 use std::convert::TryFrom;
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
-use crate::types::{
+use crate::nostr::{
     event::{Event, UnsignedEvent},
     EventKind, Id, PublicKey, Signature, Tag, Unixtime,
 };
@@ -83,7 +83,7 @@ pub fn generate_pow_event(
             content.clone(),
         );
         let event = unsigned_event.sign(private_key).unwrap();
-        if crate::types::get_leading_zero_bits(&event.id.0) >= difficulty {
+        if crate::nostr::get_leading_zero_bits(&event.id.0) >= difficulty {
             return event;
         }
         nonce += 1;
@@ -95,7 +95,7 @@ mod tests {
     use super::*;
     use secp256k1::{Keypair, Secp256k1};
 
-    use crate::types::{Id, PublicKey, Signature, Unixtime};
+    use crate::nostr::{Id, PublicKey, Signature, Unixtime};
 
     // Helper to create a dummy event for testing
     fn create_dummy_event_with_nonce(nonce_value: u64, difficulty: u8) -> Event {
