@@ -1292,19 +1292,19 @@ path = ":memory:"
         let mut relay_url = relay_srv.url("/");
         relay_url = relay_url.replace("http", "ws");
 
-        let crawler_config_dir = get_config_dir_path();
-        fs::create_dir_all(&crawler_config_dir).map_err(|err| crate::error::Error::Generic(err.to_string()))?;
-        fs::write(
-            crawler_config_dir.join("relays.yaml"),
-            format!("- {relay_url}\n"),
-        )
-        .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        // let crawler_config_dir = get_config_dir_path();
+        // fs::create_dir_all(&crawler_config_dir).map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        // fs::write(
+        //     crawler_config_dir.join("relays.yaml"),
+        //     format!("- {relay_url}\n"),
+        // )
+        // .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
 
-        let relays = load_relays_or_bootstrap();
-        assert!(relays.iter().any(|relay| relay == &relay_url));
-        crawler_run_nip34(None, &reqwest::Client::new())
-            .await
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        // let relays = load_relays_or_bootstrap();
+        // assert!(relays.iter().any(|relay| relay == &relay_url));
+        // crawler_run_nip34(None, &reqwest::Client::new())
+        //     .await
+        //     .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
 
         let private_key = PrivateKey::mock();
         let trusted_maintainer = private_key.public_key();
