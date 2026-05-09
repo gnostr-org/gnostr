@@ -778,12 +778,71 @@ fn add_head(state: &mut HashMap<String, String>) {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, str::FromStr};
+    use std::{
+        collections::HashMap,
+        env,
+        fs,
+        path::PathBuf,
+        str::FromStr,
+    };
 
+    use actix_test::start;
     use git2::Oid;
+    use gnostr_relay::App as GnostrRelayApp;
+    use serial_test::serial;
+    use tempfile::tempdir;
 
     use super::*;
     use crate::get_leading_zero_bits;
+
+    struct EnvVarGuard {
+        key: &'static str,
+        value: Option<std::ffi::OsString>,
+    }
+
+    impl EnvVarGuard {
+        fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
+            let previous = env::var_os(key);
+            unsafe {
+                env::set_var(key, value);
+            }
+            Self {
+                key,
+                value: previous,
+            }
+        }
+    }
+
+    impl Drop for EnvVarGuard {
+        fn drop(&mut self) {
+            match &self.value {
+                Some(value) => unsafe {
+                    env::set_var(self.key, value);
+                },
+                None => unsafe {
+                    env::remove_var(self.key);
+                },
+            }
+        }
+    }
+
+    fn create_relay_config() -> (tempfile::TempDir, PathBuf) {
+        let config_dir = tempdir().expect("relay config dir");
+        let config_path = config_dir.path().join("relay.toml");
+        fs::write(
+            &config_path,
+            r#"
+[server]
+port = 0
+host = "127.0.0.1"
+
+[database]
+path = ":memory:"
+"#,
+        )
+        .expect("write relay config");
+        (config_dir, config_path)
+    }
 
     #[test]
     fn repo_ref_round_trip() {
@@ -975,6 +1034,338 @@ mod tests {
         assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
         assert!(event.nonce_data().is_some());
         assert!(get_leading_zero_bits(&event.id.0) >= 4);
+    }
+
+    #[serial]
+    async fn nip34_event_matrix_covers_all_kinds_and_git_notes() {
+        println!("[asyncgit] nip34_event_matrix_covers_all_kinds_and_git_notes");
+
+        let home_dir = tempdir().expect("home dir");
+        let _home_guard = EnvVarGuard::set("HOME", home_dir.path());
+        let _xdg_guard = EnvVarGuard::set("XDG_CONFIG_HOME", home_dir.path().join("config"));
+
+        let (_relay_config_dir, relay_config_path) = create_relay_config();
+        let relay_srv = start(move || {
+            let app_data = GnostrRelayApp::create(
+                Some(relay_config_path.to_str().expect("relay config path")),
+                true,
+                Some("NOSTR".to_owned()),
+                None,
+            )
+            .expect("failed to create relay app");
+            app_data.setting.write().add_nip(34);
+            app_data.web_app()
+        });
+        let mut relay_url = relay_srv.url("/");
+        relay_url = relay_url.replace("http", "ws");
+
+        let private_key = PrivateKey::mock();
+        let trusted_maintainer = private_key.public_key();
+        let note_base = note_fixture();
+        let root_commit = note_base.annotated_id.to_string();
+        let repo_url = "https://github.com/gnostr-org/gnostr.git".to_string();
+        let mut client = crate::nostr::Client::new(
+            &crate::nostr::Keys::new(private_key.clone()),
+            crate::nostr::Options::new().wait_for_send(true),
+        );
+        client
+            .add_relays(vec![relay_url.clone()])
+            .await
+            .expect("add relay");
+        client.connect().await;
+
+        let repo_ref = RepoRef {
+            name: "gnostr".to_string(),
+            description: "A git implementation on nostr".to_string(),
+            identifier: "gnostr".to_string(),
+            root_commit: root_commit.clone(),
+            git_server: vec![repo_url.clone()],
+            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
+            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
+            hashtags: vec!["gnostr".to_string()],
+            maintainers: vec![trusted_maintainer],
+            trusted_maintainer,
+            events: HashMap::new(),
+        };
+
+        let repo_announcement = repo_ref.to_event(&private_key).unwrap();
+        let mut state = HashMap::new();
+        let _ = state.insert(
+            "refs/heads/main".to_string(),
+            "0123456789abcdef0123456789abcdef01234567".to_string(),
+        );
+        let _ = state.insert(
+            "refs/tags/v0.1.0".to_string(),
+            "89abcdef0123456789abcdef0123456789abcdef".to_string(),
+        );
+        let repo_state = RepoState::build("gnostr".to_string(), state, &private_key).unwrap();
+        let parsed_repo_state = RepoState::try_from(vec![repo_state.event.clone()]).unwrap();
+
+        let root_patch = {
+            let root_reference = Id::try_from_hex_string(
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            )
+            .unwrap();
+            signed_event(
+                &private_key,
+                EventKind::Patches,
+                "From 0123456789abcdef0123456789abcdef01234567 Mon Sep 17 00:00:00 2001\nSubject: [PATCH 0/1] example title\n\nexample description",
+                vec![
+                    TagV3::new_event(root_reference, None, Some("root".to_string())),
+                    TagV3::new_tag("commit", &root_commit),
+                    TagV3::new_tag("clone", &repo_url),
+                    TagV3::new_tag("description", "example description"),
+                ],
+                1_777_759_186,
+            )
+        };
+
+        let pr_event = signed_event(
+            &private_key,
+            EventKind::from(PULL_REQUEST_KIND),
+            "example description",
+            vec![
+                TagV3::new_event(root_patch.id, None, Some("root".to_string())),
+                TagV3::new_tag("subject", "example title"),
+                TagV3::new_tag("alt", "git Pull Request: example title"),
+                TagV3::new_tag("branch-name", "feature/nip34"),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::from_strings(vec![
+                    "r".to_string(),
+                    root_commit.clone(),
+                    "euc".to_string(),
+                ]),
+            ],
+            1_777_759_187,
+        );
+
+        let pr_update_event = signed_event(
+            &private_key,
+            EventKind::from(PULL_REQUEST_UPDATE_KIND),
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git Pull Request Update"),
+                TagV3::from_strings(vec!["E".to_string(), pr_event.id.as_hex_string()]),
+                TagV3::from_strings(vec!["P".to_string(), pr_event.pubkey.as_hex_string()]),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::from_strings(vec![
+                    "r".to_string(),
+                    root_commit.clone(),
+                    "euc".to_string(),
+                ]),
+            ],
+            1_777_759_188,
+        );
+        let issue_event = signed_event(
+            &private_key,
+            EventKind::from(GIT_ISSUE_KIND),
+            "please provide feedback\nthis is an asyncgit issue used to exercise NIP-34".to_string(),
+            vec![
+                TagV3::new_tag("r", &root_commit),
+                TagV3::from_strings(vec![
+                    "a".to_string(),
+                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    repo_url.clone(),
+                    "root".to_string(),
+                ]),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_188,
+        );
+        let reply_event = signed_event(
+            &private_key,
+            EventKind::from(GIT_REPLY_KIND),
+            "replying to the asyncgit issue".to_string(),
+            vec![
+                TagV3::new_event(issue_event.id, None, Some("root".to_string())),
+                TagV3::from_strings(vec![
+                    "a".to_string(),
+                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    repo_url.clone(),
+                    "reply".to_string(),
+                ]),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_188,
+        );
+
+        let status_open = signed_event(
+            &private_key,
+            EventKind::GitStatusOpen,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: open"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_189,
+        );
+        let status_applied = signed_event(
+            &private_key,
+            EventKind::GitStatusApplied,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: applied"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_190,
+        );
+        let status_draft = signed_event(
+            &private_key,
+            EventKind::GitStatusDraft,
+            String::new(),
+            vec![
+                TagV3::new_tag("alt", "git proposal status: draft"),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_191,
+        );
+        let status_closed = signed_event(
+            &private_key,
+            EventKind::GitStatusClosed,
+            String::new(),
+            vec![
+                TagV3::new_tag(
+                    "alt",
+                    "Git patch closed as forthcoming update is too large. Replacing with Pull Request",
+                ),
+                TagV3::new_event(pr_event.id, None, Some("root".to_string())),
+                TagV3::new_tag("c", &root_commit),
+                TagV3::new_tag("clone", &repo_url),
+                TagV3::new_pubkey(trusted_maintainer, None, None),
+            ],
+            1_777_759_192,
+        );
+
+        let grasp_list = signed_event(
+            &private_key,
+            EventKind::from(USER_GRASP_LIST_KIND),
+            String::new(),
+            vec![
+                TagV3::from_strings(vec!["g".to_string(), "wss://grasp.example.com".to_string()]),
+                TagV3::from_strings(vec![
+                    "g".to_string(),
+                    "wss://another-grasp.example.com".to_string(),
+                ]),
+            ],
+            1_777_759_193,
+        );
+
+        let carriers = vec![
+            ("repo announcement", repo_announcement, repo_announcement_kind()),
+            ("repo state", repo_state.event.clone(), repo_state_kind()),
+            ("repo patch root", root_patch, EventKind::Patches),
+            ("pull request", pr_event.clone(), EventKind::from(PULL_REQUEST_KIND)),
+            (
+                "pull request update",
+                pr_update_event.clone(),
+                EventKind::from(PULL_REQUEST_UPDATE_KIND),
+            ),
+            ("issue", issue_event, EventKind::from(GIT_ISSUE_KIND)),
+            ("reply", reply_event, EventKind::from(GIT_REPLY_KIND)),
+            ("status open", status_open, EventKind::GitStatusOpen),
+            ("status applied", status_applied, EventKind::GitStatusApplied),
+            ("status draft", status_draft, EventKind::GitStatusDraft),
+            ("status closed", status_closed, EventKind::GitStatusClosed),
+            ("user grasp list", grasp_list, EventKind::from(USER_GRASP_LIST_KIND)),
+        ];
+
+        let note_variants = [("plain git note", false), ("pow git note", true)];
+
+        assert_eq!(parsed_repo_state.identifier, "gnostr");
+        assert_eq!(parsed_repo_state.state.get("HEAD"), Some(&"ref: refs/heads/main".to_string()));
+
+        for (carrier_label, carrier_event, expected_kind) in carriers {
+            log_event_summary(carrier_label, &carrier_event);
+            let published = client
+                .send_event(carrier_event.clone())
+                .await
+                .expect("publish carrier event");
+            assert_eq!(published, carrier_event.id);
+            assert_eq!(carrier_event.kind, expected_kind);
+
+            match carrier_label {
+                "repo patch root" => {
+                    assert!(event_is_patch_set_root(&carrier_event));
+                    assert!(patch_supports_commit_ids(&carrier_event));
+                }
+                "pull request" => {
+                    assert!(event_is_valid_pr_or_pr_update(&carrier_event));
+                    assert!(event_is_revision_root(&carrier_event));
+                }
+                "pull request update" => {
+                    assert!(event_is_valid_pr_or_pr_update(&carrier_event));
+                    assert!(!event_is_revision_root(&carrier_event));
+                }
+                "issue" => {
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "a"));
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "p"));
+                }
+                "reply" => {
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "e"));
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "a"));
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "p"));
+                }
+                "status closed" => {
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "alt"));
+                }
+                "user grasp list" => {
+                    assert_eq!(carrier_event.content, "");
+                    assert!(carrier_event.tags.iter().any(|tag| tag.tagname() == "g"));
+                }
+                _ => {}
+            }
+
+            for (note_label, use_pow) in note_variants {
+                let mut note = note_base.clone();
+                note.message = format!("{carrier_label}: {note_label}");
+                let git_note_event = if use_pow {
+                    generate_git_note_event_with_pow(&note, &private_key, 4).unwrap()
+                } else {
+                    generate_git_note_event(&note, &private_key).unwrap()
+                };
+
+                log_event_summary(
+                    &format!("{carrier_label} / {note_label}"),
+                    &git_note_event,
+                );
+                let published = client
+                    .send_event(git_note_event.clone())
+                    .await
+                    .expect("publish git note event");
+                assert_eq!(published, git_note_event.id);
+                assert_eq!(git_note_event.kind, EventKind::Patches);
+                assert_eq!(git_note_event.content, note.message);
+                assert_eq!(git_note_event.created_at, Unixtime(note.committer_time));
+                assert!(git_note_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "commit" && tag.value() == root_commit));
+                assert!(git_note_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits"));
+                assert!(git_note_event
+                    .tags
+                    .iter()
+                    .any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+
+                if use_pow {
+                    assert!(git_note_event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+                    assert!(git_note_event.nonce_data().is_some());
+                } else {
+                    assert!(git_note_event.nonce_data().is_none());
+                }
+            }
+        }
     }
 
     #[test]

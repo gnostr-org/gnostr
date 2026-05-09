@@ -147,4 +147,5 @@ long_tests = []
 
 [dev-dependencies]
 actix-test = { workspace = true }
+gnostr-relay = { workspace = true }
 serial_test = { workspace = true }
