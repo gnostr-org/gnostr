@@ -819,6 +819,8 @@ path = ":memory:"
     fn nip34_constants_match_ngit() {
         assert_eq!(u32::from(repo_announcement_kind()), 30617);
         assert_eq!(u32::from(repo_state_kind()), ngit_kind_number(NGIT_STATE_KIND));
+        assert_eq!(u32::from(EventKind::RepositoryAnnouncement), REPO_ANNOUNCEMENT_KIND);
+        assert_eq!(u32::from(EventKind::GitRepoAnnouncement), REPO_STATE_KIND);
         assert_eq!(
             status_kinds().into_iter().map(u32::from).collect::<Vec<_>>(),
             ngit_git_events::status_kinds()
@@ -826,18 +828,29 @@ path = ":memory:"
                 .map(ngit_kind_number)
                 .collect::<Vec<_>>()
         );
+        assert_eq!(u32::from(EventKind::GitStatusOpen), 1630);
+        assert_eq!(u32::from(EventKind::GitStatusApplied), 1631);
+        assert_eq!(u32::from(EventKind::GitStatusClosed), 1632);
+        assert_eq!(u32::from(EventKind::GitStatusDraft), 1633);
         assert_eq!(
             u32::from(PULL_REQUEST_KIND),
             ngit_kind_number(ngit_git_events::KIND_PULL_REQUEST)
         );
+        assert!(matches!(EventKind::from(PULL_REQUEST_KIND), EventKind::Other(1618)));
         assert_eq!(
             u32::from(PULL_REQUEST_UPDATE_KIND),
             ngit_kind_number(ngit_git_events::KIND_PULL_REQUEST_UPDATE)
         );
+        assert!(matches!(EventKind::from(PULL_REQUEST_UPDATE_KIND), EventKind::Other(1619)));
+        assert_eq!(u32::from(EventKind::GitIssue), GIT_ISSUE_KIND);
+        assert_eq!(u32::from(EventKind::GitReply), GIT_REPLY_KIND);
+        assert!(matches!(EventKind::from(GIT_ISSUE_KIND), EventKind::GitIssue));
+        assert!(matches!(EventKind::from(GIT_REPLY_KIND), EventKind::GitReply));
         assert_eq!(
             u32::from(USER_GRASP_LIST_KIND),
             ngit_kind_number(ngit_git_events::KIND_USER_GRASP_LIST)
         );
+        assert!(matches!(EventKind::from(USER_GRASP_LIST_KIND), EventKind::Other(10317)));
     }
 
     #[test]
