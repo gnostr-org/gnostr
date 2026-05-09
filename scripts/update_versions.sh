@@ -49,6 +49,22 @@ blockheight_dependency_version() {
     printf '^%s.0\n' "${WORKSPACE_VERSION%%.*}"
 }
 
+previous_blockheight_dependency_version() {
+    local blockheight
+    local previous
+
+    if blockheight="$(gnostr --blockheight 2>/dev/null)"; then
+        previous=$((blockheight - 1))
+        if [ "$previous" -lt 1 ]; then
+            previous=1
+        fi
+        printf '^%s.0\n' "$previous"
+        return
+    fi
+
+    printf '^%s.0\n' "${WORKSPACE_VERSION%%.*}"
+}
+
 version_requirement_for_dependency() {
     local manifest="$1"
     local dep_name="$2"
@@ -63,7 +79,7 @@ version_requirement_for_dependency() {
         "$REPO_ROOT/p2p/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/chat/Cargo.toml:gnostr-asyncgit"|\
         "$REPO_ROOT/chat/Cargo.toml:gnostr-crawler")
-            printf '*\n'
+            previous_blockheight_dependency_version
             return 0
             ;;
     esac
