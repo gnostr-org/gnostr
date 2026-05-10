@@ -12,8 +12,8 @@ use git2::Oid;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Error, EventKind, EventV3, Id, KeySigner, NAddr, NEvent, Nip19, PreEventV3, PrivateKey,
-    PublicKey, Signer, TagV3, Unixtime, UncheckedUrl,
+    Error, EventKind, EventV3, Id, KeySigner, NAddr, Nip19, PreEventV3, PrivateKey, PublicKey,
+    Signer, TagV3, Unixtime, UncheckedUrl,
 };
 use crate::{blockhash::blockhash_sync, blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
 use crate::nostr::nip13::NIP13Event;
@@ -792,6 +792,7 @@ mod tests {
 
     use super::*;
     use crate::get_leading_zero_bits;
+    use crate::nostr::NEvent;
 
     struct EnvVarGuard {
         key: &'static str,

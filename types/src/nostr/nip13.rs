@@ -1,7 +1,6 @@
 //! NIP-13: Proof of Work
 //! https://github.com/nostr-protocol/nips/blob/master/13.md
 
-use anyhow::Result;
 use std::convert::TryFrom;
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
