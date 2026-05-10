@@ -431,7 +431,7 @@ fn bootstrap_local_relay() -> io::Result<()> {
                     Some("NOSTR".to_owned()),
                     None,
                 ) {
-                    Ok(mut app_data) => {
+                    Ok(app_data) => {
                         app_data.setting.write().add_nip(34);
                         if let Err(err) = gnostr_relay::run_app_with_endpoint(app_data).await {
                             eprintln!("relay startup error: {err}");
@@ -525,6 +525,7 @@ fn editor_target(app: &App) -> Option<PathBuf> {
     app.selected_file_path()
 }
 
+#[allow(dead_code)]
 fn bottom_rect(percent_x: u16, height: u16, area: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
