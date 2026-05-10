@@ -8,9 +8,10 @@ runs:
       shell: pwsh
       run: |
         choco install strawberryperl -y
-        # Add Perl and C compiler (GCC) to PATH
-        echo "C:\Strawberry\perl\bin" >> $env:GITHUB_PATH
-        echo "C:\Strawberry\c\bin" >> $env:GITHUB_PATH
+        $strawberryPerl = "C:\Strawberry\perl\bin"
+        $strawberryC = "C:\Strawberry\c\bin"
+        echo "PATH=$strawberryPerl;$strawberryC;$env:PATH" >> $env:GITHUB_ENV
+        echo "PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
 
     - name: Install Perl modules
       if: runner.os == 'Windows'
