@@ -506,18 +506,25 @@ async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()>
 
 #[test]
 fn config_builder_and_query_builder_work() {
+    let author1 = "1111111111111111111111111111111111111111111111111111111111111111";
+    let author2 = "2222222222222222222222222222222222222222222222222222222222222222";
+    let id1 = "3333333333333333333333333333333333333333333333333333333333333333";
+    let id2 = "4444444444444444444444444444444444444444444444444444444444444444";
+    let event1 = "5555555555555555555555555555555555555555555555555555555555555555";
+    let event2 = "6666666666666666666666666666666666666666666666666666666666666666";
+
     let config = ConfigBuilder::new()
         .host("relay.example.com")
         .port(443)
         .use_tls(true)
         .retries(2)
-        .authors("author1,author2")
-        .ids("id1,id2")
+        .authors(&format!("{author1},{author2}"))
+        .ids(&format!("{id1},{id2}"))
         .limit(10)
         .generic("d", "value1,value2")
         .hashtag("tag1,tag2")
-        .mentions("pk1,pk2")
-        .references("event1,event2")
+        .mentions(&format!("{author1},{author2}"))
+        .references(&format!("{event1},{event2}"))
         .kinds("1,2")
         .search("content", "nostr")
         .build()
@@ -526,13 +533,13 @@ fn config_builder_and_query_builder_work() {
     let _ = config;
 
     let query = build_gnostr_query(
-        Some("author1,author2"),
-        Some("id1,id2"),
+        Some(&format!("{author1},{author2}")),
+        Some(&format!("{id1},{id2}")),
         Some(10),
         Some(("d", "value1,value2")),
         Some("tag1,tag2"),
-        Some("pk1,pk2"),
-        Some("event1,event2"),
+        Some(&format!("{author1},{author2}")),
+        Some(&format!("{event1},{event2}")),
         Some("1,2"),
         Some(("content", "nostr")),
     )
@@ -544,8 +551,8 @@ fn config_builder_and_query_builder_work() {
     assert_eq!(parsed[2]["limit"], 10);
     assert_eq!(parsed[2]["#d"], serde_json::json!(["value1", "value2"]));
     assert_eq!(parsed[2]["#t"], serde_json::json!(["tag1", "tag2"]));
-    assert_eq!(parsed[2]["#p"], serde_json::json!(["pk1", "pk2"]));
-    assert_eq!(parsed[2]["#e"], serde_json::json!(["event1", "event2"]));
+    assert_eq!(parsed[2]["#p"], serde_json::json!([author1, author2]));
+    assert_eq!(parsed[2]["#e"], serde_json::json!([event1, event2]));
     assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2]));
 }
 
