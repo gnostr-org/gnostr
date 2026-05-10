@@ -8,7 +8,7 @@ on:
     inputs:
       tag:
         description: "Git tag to release"
-        required: true
+        required: false
         type: string
       toolchain:
         description: "Rust toolchain to use"
