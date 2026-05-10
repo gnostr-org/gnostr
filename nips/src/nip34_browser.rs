@@ -14,11 +14,7 @@ use gnostr_asyncgit::{
         Options, PrivateKey, RelayMessage, SubscriptionId, Unixtime,
     },
 };
-use ratatui::{
-    prelude::*,
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Tabs, Wrap},
-};
+use ratatui::{prelude::*, widgets::{Clear, List, ListItem, Paragraph, Wrap}};
 use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -38,6 +34,7 @@ pub enum Nip34Tab {
 }
 
 impl Nip34Tab {
+    #[allow(dead_code)]
     fn title(self) -> &'static str {
         match self {
             Self::Patches => "patches",
