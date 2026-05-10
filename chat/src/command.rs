@@ -137,19 +137,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
             return Ok(());
         }
 
-        tracing::info!("Oneshot mode: sending message '{}'", message_input);
-        let printer = spawn_notification_printer(session.subscribe());
-        println!("Initializing network and discovering peers...");
-        tracing::debug!("chat oneshot: waiting for a connected peer");
-        session
-            .wait_for_connected(Duration::from_secs(30))
-            .await?;
-        session.send_text(message_input.clone()).await?;
-        println!("Oneshot message sent. Waiting for propagation...");
-
-        tokio::time::sleep(Duration::from_secs(2)).await;
-        drop(printer);
-        tracing::info!("Oneshot operation complete.");
+        run_oneshot(&mut session, message_input).await?;
         return Ok(());
     }
 
@@ -192,6 +180,21 @@ async fn run_chat_session(sub_command_args: &ChatSubCommands, username: String, 
     Ok(())
 }
 
+async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result<()> {
+    tracing::info!("Oneshot mode: sending message '{}'", message_input);
+    let printer = spawn_notification_printer(session.subscribe());
+    println!("Initializing network and discovering peers...");
+    tracing::debug!("chat oneshot: waiting for a connected peer");
+    session.wait_for_connected(Duration::from_secs(30)).await?;
+    session.send_text(message_input).await?;
+    println!("Oneshot message sent. Waiting for propagation...");
+
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    drop(printer);
+    tracing::info!("Oneshot operation complete.");
+    Ok(())
+}
+
 fn spawn_notification_printer(
     mut output_rx: tokio::sync::broadcast::Receiver<ChatNotification>,
 ) -> tokio::task::JoinHandle<()> {
@@ -207,4 +210,54 @@ fn spawn_notification_printer(
             }
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chat_topic_defaults_to_gnostr() {
+        let args = ChatSubCommands {
+            nsec: None,
+            password: None,
+            name: None,
+            topic: None,
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+            headless: false,
+            workdir: None,
+            gitdir: None,
+            oneshot: None,
+        };
+
+        assert_eq!(chat_topic(&args), "gnostr");
+    }
+
+    #[test]
+    fn chat_topic_uses_explicit_topic() {
+        let args = ChatSubCommands {
+            topic: Some("gnostr-dev".to_string()),
+            ..ChatSubCommands {
+                nsec: None,
+                password: None,
+                name: None,
+                topic: None,
+                hash: None,
+                disable_cli_spinners: false,
+                info: false,
+                debug: false,
+                trace: false,
+                headless: false,
+                workdir: None,
+                gitdir: None,
+                oneshot: None,
+            }
+        };
+
+        assert_eq!(chat_topic(&args), "gnostr-dev");
+    }
 }
