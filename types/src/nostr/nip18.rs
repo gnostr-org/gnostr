@@ -5,7 +5,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::nostr::{
     event::{Event, EventId, UnsignedEvent},
-    PublicKey, RelayUrl, Tag,
+    Tag,
 };
 
 /// Create a kind 6 repost event for a text note (kind 1).
