@@ -4,7 +4,7 @@
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::nostr::{
-    event::{Event, EventId, UnsignedEvent},
+    event::{Event, UnsignedEvent},
     Tag,
 };
 

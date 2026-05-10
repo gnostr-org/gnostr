@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use crate::nostr::{
-    id::{self, Id},
+    id::Id,
     Error, EventDelegation, EventKind, EventReference, IntoVec, MilliSatoshi, NAddr, NostrBech32,
     NostrUrl, PublicKey, PublicKeyHex, RelayUrl, Signature, TagV1, Unixtime, ZapDataV1,
 };

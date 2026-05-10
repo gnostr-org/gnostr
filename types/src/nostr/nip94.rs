@@ -5,10 +5,9 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/94.md
 
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::nostr::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
+use crate::nostr::{Event, EventKind, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-94 File Metadata Event Kind (Regular Event)
 pub const FILE_METADATA_KIND: u32 = 1063;

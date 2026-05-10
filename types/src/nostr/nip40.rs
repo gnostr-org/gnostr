@@ -6,8 +6,6 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/40.md
 
-use anyhow::Result;
-
 use crate::nostr::{Event, Tag, Unixtime};
 
 /// The name of the expiration tag.

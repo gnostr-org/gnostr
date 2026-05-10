@@ -3,8 +3,6 @@
 // NIP-28: Public Chat Channels
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
-use serde::{Deserialize, Serialize};
-
 use crate::nostr::{
     event_kind::EventKind,
     versioned::event3::{EventV3, PreEventV3},

@@ -6,11 +6,11 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/38.md
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::nostr::{
-    event_kind::EventKind, signature::Signature, Event, Id, PreEvent, PublicKey, Tag, Unixtime,
+    event_kind::EventKind, signature::Signature, Event, PreEvent, PublicKey, Tag, Unixtime,
 }; // Re-using existing types
 
 /// NIP-38 User Status Event Kind (Parameterized Replaceable Event)
