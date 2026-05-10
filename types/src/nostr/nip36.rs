@@ -6,8 +6,6 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/36.md
 
-use anyhow::Result;
-
 use crate::nostr::{Event, Tag};
 
 /// The name of the content-warning tag.
