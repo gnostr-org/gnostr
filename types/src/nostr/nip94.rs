@@ -5,10 +5,9 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/94.md
 
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::nostr::{Event, EventKind, PreEvent, PublicKey, Signature, Tag, Unixtime};
+use crate::nostr::{Error, Event, EventKind, PreEvent, PublicKey, Signature, Tag, Unixtime};
 
 /// NIP-94 File Metadata Event Kind (Regular Event)
 pub const FILE_METADATA_KIND: u32 = 1063;
@@ -49,7 +48,7 @@ pub trait NIP94Event {
         dimensions: Option<String>,
         blurhash: Option<String>,
         // Add other relevant NIP-94 tags as needed
-    ) -> Result<Event>;
+    ) -> Result<Event, Error>;
 }
 
 impl NIP94Event for Event {
@@ -133,7 +132,7 @@ impl NIP94Event for Event {
         file_size: Option<usize>,
         dimensions: Option<String>,
         blurhash: Option<String>,
-    ) -> Result<Event> {
+    ) -> Result<Event, Error> {
         let content = FileMetadataContent { description }.description;
         let mut tags: Vec<Tag> = vec![
             Tag::new(&["url", &url]),
