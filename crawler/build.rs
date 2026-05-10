@@ -93,13 +93,7 @@ async fn main() -> Result<()> {
         }
     }
 
-    let config_dir = ProjectDirs::from("org", "gnostr", "gnostr/crawler")
-        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
-        .unwrap_or_else(|| PathBuf::from("."));
-    fs::create_dir_all(&config_dir)?;
-
-    // Write combined and deduplicated relays to the user config directory.
-    let generated_relays_path = config_dir.join("relays.yaml");
+    let generated_relays_path = out_dir.join("relays.yaml");
     let mut file = File::create(&generated_relays_path)?;
 
     for relay_url in &all_relays {
@@ -109,6 +103,10 @@ async fn main() -> Result<()> {
     // Tell Cargo the path to the generated file
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
+    println!(
+        "cargo:rustc-env=GNOSTR_CRAWLER_RELAYS_YAML={}",
+        generated_relays_path.display()
+    );
 
     // Write updated hashes to cache file
     cached_hashes.hashes = new_hashes;
