@@ -272,6 +272,7 @@ mod tests {
         env,
         fs,
         sync::{Mutex, OnceLock},
+        time::Duration,
     };
     use tokio::net::TcpListener;
     use tempfile::tempdir;
@@ -373,6 +374,51 @@ mod tests {
             other => panic!("expected notice, got {other:?}"),
         }
 
+        handle.await.expect("relay task");
+    }
+
+    #[tokio::test]
+    async fn relay_bridge_session_streams_updates_from_the_mock_relay() {
+        let (url, handle) = spawn_mock_relay().await;
+        let session = RelayBridgeSession::connect(url.clone()).await.expect("connect session");
+        assert_eq!(session.relay_url(), url);
+        let mut updates = session.subscribe_updates();
+
+        let sub_id = SubscriptionId("sub-session".to_string());
+        session
+            .subscribe(sub_id.clone(), vec![Filter::default()])
+            .await
+            .expect("subscribe");
+
+        let mut seen = Vec::new();
+        while seen.len() < 3 {
+            let notification = tokio::time::timeout(Duration::from_secs(5), updates.recv())
+                .await
+                .expect("relay message timeout")
+                .expect("relay message channel");
+            seen.push(notification);
+        }
+
+        match &seen[0] {
+            RelayBridgeNotification::Message(RelayMessage::Event(id, event)) => {
+                assert_eq!(id, &sub_id);
+                assert_eq!(event.kind, EventKind::TextNote);
+                assert_eq!(event.content, "hello relay");
+            }
+            other => panic!("expected event notification, got {other:?}"),
+        }
+        match &seen[1] {
+            RelayBridgeNotification::Message(RelayMessage::Eose(id)) => assert_eq!(id, &sub_id),
+            other => panic!("expected eose notification, got {other:?}"),
+        }
+        match &seen[2] {
+            RelayBridgeNotification::Message(RelayMessage::Notice(msg)) => {
+                assert_eq!(msg, "subscribed")
+            }
+            other => panic!("expected notice notification, got {other:?}"),
+        }
+
+        drop(session);
         handle.await.expect("relay task");
     }
 
