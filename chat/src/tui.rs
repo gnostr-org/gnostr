@@ -172,9 +172,10 @@ impl ChatTui {
                 }
 
                 if let Some(nip) = parse_crawler_search_command(&text) {
-                    input_tx
-                        .blocking_send(ChatEvent::CrawlerSearch { nip })
-                        .map_err(|e| anyhow::anyhow!("failed to queue crawler search: {e}"))?;
+                    if let Err(e) = input_tx.try_send(ChatEvent::CrawlerSearch { nip }) {
+                        self.status = format!("failed to queue crawler search: {e}");
+                        return Ok(false);
+                    }
                     self.input.reset();
                     self.status = format!("searching crawler bucket {nip}");
                     return Ok(false);
@@ -183,9 +184,10 @@ impl ChatTui {
                 let msg = Msg::default()
                     .set_kind(MsgKind::Chat)
                     .set_content(text, 0);
-                input_tx
-                    .blocking_send(ChatEvent::ChatMessage(msg.clone()))
-                    .map_err(|e| anyhow::anyhow!("failed to queue chat message: {e}"))?;
+                if let Err(e) = input_tx.try_send(ChatEvent::ChatMessage(msg.clone())) {
+                    self.status = format!("failed to queue chat message: {e}");
+                    return Ok(false);
+                }
                 self.messages.push(msg);
                 self.selected = self.messages.len().saturating_sub(1);
                 self.input.reset();
