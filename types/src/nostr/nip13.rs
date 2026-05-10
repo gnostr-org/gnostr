@@ -6,7 +6,7 @@ use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::nostr::{
     event::{Event, UnsignedEvent},
-    EventKind, Id, PublicKey, Signature, Tag, Unixtime,
+    EventKind, Tag,
 };
 
 /// The name of the nonce tag.
