@@ -142,6 +142,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         let topic = chat_topic(sub_command_args);
         let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
         let (output_tx, mut output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+        let (peer_ready_tx, peer_ready_rx) = tokio::sync::oneshot::channel::<()>();
+        let mut peer_ready_tx = Some(peer_ready_tx);
 
         tokio::spawn(async move {
             let _ = evt_loop(input_rx, output_tx, topic).await;
@@ -149,6 +151,13 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
 
         tokio::spawn(async move {
             while let Some(event) = output_rx.recv().await {
+                if let Some(tx) = peer_ready_tx.take() {
+                    if matches!(&event, ChatEvent::ShowInfoMsg(text) if text.contains("Connected to peer")) {
+                        let _ = tx.send(());
+                    } else {
+                        peer_ready_tx = Some(tx);
+                    }
+                }
                 match event {
                     ChatEvent::ChatMessage(msg) => println!("{msg}"),
                     ChatEvent::ShowErrorMsg(text) => eprintln!("{text}"),
@@ -159,8 +168,18 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         });
 
         println!("Initializing network and discovering peers...");
-        tracing::debug!("chat oneshot: waiting for event loop warmup");
-        tokio::time::sleep(Duration::from_secs(3)).await;
+        tracing::debug!("chat oneshot: waiting for a connected peer");
+        match tokio::time::timeout(Duration::from_secs(30), peer_ready_rx).await {
+            Ok(Ok(())) => {}
+            Ok(Err(_)) => {
+                eprintln!("Failed to observe a connected peer before sending the oneshot message.");
+                return Ok(());
+            }
+            Err(_) => {
+                eprintln!("Timed out waiting for a connected peer before sending the oneshot message.");
+                return Ok(());
+            }
+        }
 
         let mut msg_kind = MsgKind::OneShot;
         if message_input.contains("diff --git")
