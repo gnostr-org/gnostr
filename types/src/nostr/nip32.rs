@@ -6,7 +6,7 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/32.md
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::nostr::{Event, EventKind, Id, PreEvent, PublicKey, Signature, Tag, Unixtime};
