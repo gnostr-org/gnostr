@@ -1,8 +1,11 @@
 [build.env]
 # Keep the environment that the current build scripts and bindgen setup already rely on.
+# NOTE: LIBCLANG_PATH and BINDGEN_EXTRA_CLANG_ARGS are intentionally NOT passed through.
+# Those are set on the host runner for native builds but point to host-side paths that
+# do not exist inside the cross Docker containers.  The containers install llvm-dev and
+# libclang-dev themselves, so clang-sys/bindgen will discover libclang via
+# `llvm-config --libdir` when LIBCLANG_PATH is absent.
 passthrough = [
-  "BINDGEN_EXTRA_CLANG_ARGS",
-  "LIBCLANG_PATH",
   "OPENSSL_DIR",
   "OPENSSL_INCLUDE_DIR",
   "OPENSSL_LIB_DIR",
