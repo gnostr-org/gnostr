@@ -585,6 +585,12 @@ pub async fn evt_loop(
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
                     recv
+                        .send(ChatEvent::PeerConnected {
+                            peer_id: peer_id.to_string(),
+                            endpoint: format!("{endpoint:?}"),
+                        })
+                        .await?;
+                    recv
                         .send(ChatEvent::ShowInfoMsg(format!(
                             "Connected to peer {peer_id} via {endpoint:?}"
                         )))
