@@ -136,3 +136,49 @@ async fn forward_updates(
         let _ = updates.send(notification);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::sync::{broadcast, mpsc, watch};
+
+    #[test]
+    fn infer_message_kind_detects_git_diff() {
+        assert_eq!(infer_message_kind("diff --git a/file b/file"), MsgKind::GitDiff);
+        assert_eq!(infer_message_kind("--- a/file\n+++ b/file"), MsgKind::GitDiff);
+    }
+
+    #[test]
+    fn infer_message_kind_defaults_to_chat() {
+        assert_eq!(infer_message_kind("hello world"), MsgKind::Chat);
+    }
+
+    #[tokio::test]
+    async fn forward_updates_turns_peer_connected_into_ready_notification() {
+        let (output_tx, output_rx) = mpsc::channel::<ChatEvent>(8);
+        let (updates, _) = broadcast::channel::<ChatNotification>(8);
+        let (ready_tx, mut ready_rx) = watch::channel(false);
+        let mut updates_rx = updates.subscribe();
+
+        tokio::spawn(forward_updates(output_rx, updates.clone(), ready_tx));
+
+        output_tx
+            .send(ChatEvent::PeerConnected {
+                peer_id: "peer-1".to_string(),
+                endpoint: "endpoint-1".to_string(),
+            })
+            .await
+            .expect("peer connected event");
+
+        let notification = updates_rx.recv().await.expect("connected notification");
+        assert_eq!(
+            notification,
+            ChatNotification::Connected {
+                peer_id: "peer-1".to_string(),
+                endpoint: "endpoint-1".to_string(),
+            }
+        );
+        ready_rx.changed().await.expect("ready flag updated");
+        assert!(*ready_rx.borrow());
+    }
+}
