@@ -1,4 +1,5 @@
 use std::{
+    collections::BTreeMap,
     io::Write,
     process::Command,
     path::{Path, PathBuf},
@@ -119,39 +120,42 @@ fn build_js(paths: Paths) -> anyhow::Result<()> {
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
 
     let mut all_js_content = String::new();
-    let js_dir = paths.statics_in_dir.join("../js/src/js");
-    let mut append_asset = |path: PathBuf| -> anyhow::Result<()> {
-        let content = std::fs::read(&path)
-            .with_context(|| format!("Failed to read JS asset {}", path.display()))?;
-        let content = std::str::from_utf8(&content)
-            .with_context(|| format!("JS asset {} is not UTF-8", path.display()))?;
-        all_js_content.push_str(content);
-        all_js_content.push('\n');
-        Ok(())
-    };
-
-    append_asset(js_dir.join("util.js"))?;
-
-    let mut root_js_files: Vec<PathBuf> = std::fs::read_dir(&js_dir)
-        .with_context(|| format!("Failed to read JS source dir {}", js_dir.display()))?
-        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
-        .filter(|path| path.is_file() && path.extension().and_then(|ext| ext.to_str()) == Some("js"))
-        .filter(|path| path.file_name().and_then(|name| name.to_str()) != Some("util.js"))
-        .collect();
-    root_js_files.sort();
-    for path in root_js_files {
-        append_asset(path)?;
+    let assets = gnostr_js::get_js_assets();
+    let mut ordered_assets: BTreeMap<String, &'static [u8]> = BTreeMap::new();
+    for (name, bytes) in assets {
+        ordered_assets.insert(name, bytes);
     }
 
-    let ui_dir = js_dir.join("ui");
-    let mut ui_js_files: Vec<PathBuf> = std::fs::read_dir(&ui_dir)
-        .with_context(|| format!("Failed to read UI JS dir {}", ui_dir.display()))?
-        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
-        .filter(|path| path.is_file() && path.extension().and_then(|ext| ext.to_str()) == Some("js"))
+    let mut root_js_files: Vec<String> = ordered_assets
+        .keys()
+        .filter(|name| name.ends_with(".js") && !name.contains('/') && name.as_str() != "util.js")
+        .cloned()
+        .collect();
+    root_js_files.sort();
+    for name in root_js_files {
+        let content = ordered_assets
+            .get(&name)
+            .copied()
+            .with_context(|| format!("Missing JS asset: {name}"))?;
+        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        all_js_content.push_str(content);
+        all_js_content.push('\n');
+    }
+
+    let mut ui_js_files: Vec<String> = ordered_assets
+        .keys()
+        .filter(|name| name.starts_with("ui/") && name.ends_with(".js"))
+        .cloned()
         .collect();
     ui_js_files.sort();
-    for path in ui_js_files {
-        append_asset(path)?;
+    for name in ui_js_files {
+        let content = ordered_assets
+            .get(&name)
+            .copied()
+            .with_context(|| format!("Missing JS asset: {name}"))?;
+        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        all_js_content.push_str(content);
+        all_js_content.push('\n');
     }
 
     let output_file = out_dir.join("bundle.js");
