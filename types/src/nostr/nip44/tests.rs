@@ -2,7 +2,6 @@
 #[rustfmt::skip]
 use base64::Engine;
 use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
-use sha2::{Digest, Sha256};
 
 use super::{calc_padding, decrypt, encrypt_inner, get_conversation_key, Error};
 #[cfg(feature = "long_tests")]
