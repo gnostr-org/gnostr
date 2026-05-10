@@ -1,6 +1,5 @@
 use chrono::TimeZone;
 use anyhow::Result;
-use directories::ProjectDirs;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
