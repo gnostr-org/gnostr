@@ -186,19 +186,6 @@ jobs:
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
 
-      - name: Install OpenSSL for macOS
-        run: |
-          if [ "$(uname -m)" = "arm64" ]; then
-            arch -arm64 brew install openssl@3
-          else
-            brew install openssl@3
-          fi
-          echo "$(brew --prefix openssl@3)/bin" >> $GITHUB_PATH
-          echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
-        if: runner.os == 'macos'
-
       - name: linuxbrew (with retries)
         run: |
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
