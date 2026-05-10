@@ -21,7 +21,7 @@ fn load_bootstrap_relays() -> Vec<String> {
         }
     };
 
-    let embedded_relays = include_bytes!("relays.yaml");
+    let embedded_relays = include_bytes!(env!("GNOSTR_CRAWLER_RELAYS_YAML"));
     for line in String::from_utf8_lossy(embedded_relays).lines() {
         let relay = line.trim();
         if !relay.is_empty() {
