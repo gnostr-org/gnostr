@@ -6,11 +6,11 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/38.md
 
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::nostr::{
-    event_kind::EventKind, signature::Signature, Event, PreEvent, PublicKey, Tag, Unixtime,
+    error::Error, event_kind::EventKind, signature::Signature, Event, PreEvent, PublicKey, Tag,
+    Unixtime,
 }; // Re-using existing types
 
 /// NIP-38 User Status Event Kind (Parameterized Replaceable Event)
@@ -67,7 +67,7 @@ pub trait NIP38Event {
         status_type: UserStatusType,
         expiration: Option<Unixtime>,
         // Other optional tags like r, p, e, a can be added here
-    ) -> Result<Event>; // Returns a full Event for now, can be an EventBuilder later.
+    ) -> Result<Event, Error>; // Returns a full Event for now, can be an EventBuilder later.
 }
 
 impl NIP38Event for Event {
@@ -97,7 +97,7 @@ impl NIP38Event for Event {
         status_type: UserStatusType,
         expiration: Option<Unixtime>,
         // Other optional tags like r, p, e, a can be added here
-    ) -> Result<Event> {
+    ) -> Result<Event, Error> {
         let content = UserStatusContent { message }.message; // Content is just the message string
 
         let mut tags: Vec<Tag> = vec![Tag::new(&["d", &status_type.to_string()])];
