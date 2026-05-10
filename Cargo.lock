@@ -7388,7 +7388,6 @@ dependencies = [
  "chrono",
  "clap 4.6.1",
  "futures-util",
- "gnostr-asyncgit",
  "gnostr-crawler",
  "gnostr-relay",
  "handlebars",
