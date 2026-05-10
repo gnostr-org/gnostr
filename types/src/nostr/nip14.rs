@@ -5,8 +5,6 @@
 //!
 //! https://github.com/nostr-protocol/nips/blob/master/14.md
 
-use anyhow::Result;
-
 use crate::nostr::{Event, Tag};
 
 /// The name of the subject tag.
