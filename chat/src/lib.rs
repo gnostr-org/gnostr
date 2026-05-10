@@ -9,6 +9,7 @@ pub mod command;
 pub mod message;
 pub mod msg;
 pub mod p2p;
+pub mod session;
 pub mod tui;
 
 #[cfg(test)]
@@ -18,4 +19,5 @@ pub use event::ChatEvent;
 pub use command::{chat, run, ChatSubCommands};
 pub use message::*;
 pub use p2p::{evt_loop, global_rt};
+pub use session::{ChatNotification, ChatSession};
 pub use tui::run_chat_tui;

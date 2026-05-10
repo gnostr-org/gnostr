@@ -513,7 +513,7 @@ pub async fn evt_loop(
                         pending_crawler_search.insert(query_id, nip);
                         recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
                     }
-                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) => {}
+                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::PeerConnected { .. } => {}
                 }
             }
             event = swarm.select_next_some() => match event {
@@ -584,6 +584,12 @@ pub async fn evt_loop(
                     debug!("Relay event: {event:?}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
+                    recv
+                        .send(ChatEvent::PeerConnected {
+                            peer_id: peer_id.to_string(),
+                            endpoint: format!("{endpoint:?}"),
+                        })
+                        .await?;
                     recv
                         .send(ChatEvent::ShowInfoMsg(format!(
                             "Connected to peer {peer_id} via {endpoint:?}"

@@ -17,23 +17,25 @@ use ratatui::{
     Frame, Terminal,
 };
 use tracing::debug;
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::{broadcast::Receiver, mpsc::Sender};
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{
     event::ChatEvent,
     msg::{Msg, MsgKind},
+    session::{ChatNotification, ChatSession},
 };
 
 pub fn run_chat_tui(
     topic: String,
     username: String,
-    input_tx: Sender<ChatEvent>,
-    mut output_rx: Receiver<ChatEvent>,
+    session: &ChatSession,
 ) -> Result<()> {
     let _ = set_title(&format!("gnostr-chat-{topic}"));
     debug!("run_chat_tui: starting topic={topic} username={username}");
 
+    let input_tx = session.command_sender();
+    let mut output_rx = session.subscribe();
     let mut terminal = TerminalGuard::enter()?;
     let mut app = ChatTui::new(topic, username);
 
@@ -115,21 +117,23 @@ impl ChatTui {
         }
     }
 
-    fn drain_incoming(&mut self, output_rx: &mut Receiver<ChatEvent>) {
+    fn drain_incoming(&mut self, output_rx: &mut Receiver<ChatNotification>) {
         while let Ok(event) = output_rx.try_recv() {
             match event {
-                ChatEvent::ChatMessage(msg) => {
+                ChatNotification::ChatMessage(msg) => {
                     self.messages.push(msg);
                     self.selected = self.messages.len().saturating_sub(1);
                     self.status = format!("received {} message(s)", self.messages.len());
                 }
-                ChatEvent::ShowErrorMsg(text) => {
+                ChatNotification::Error(text) => {
                     self.status = text;
                 }
-                ChatEvent::ShowInfoMsg(text) => {
+                ChatNotification::Info(text) => {
                     self.status = text;
                 }
-                ChatEvent::CrawlerSearch { .. } => {}
+                ChatNotification::Connected { peer_id, endpoint } => {
+                    self.status = format!("connected to peer {peer_id} via {endpoint}");
+                }
             }
         }
     }
