@@ -9,6 +9,17 @@ fn parse_public_key(hex_key: &str) -> Result<PublicKey, Error> {
 }
 
 /// Encrypt a DM using the canonical Nostr content-encryption implementation.
+///
+/// The sender key must be a 32-byte hex secret key, and the recipient key must
+/// be the recipient's x-only public key encoded as hex.
+///
+/// # Example
+/// ```ignore
+/// use gnostr_types::nostr::bridge::encrypt_dm;
+///
+/// let ciphertext = encrypt_dm(sender_sk_hex, recipient_pk_hex, "hello")?;
+/// # Ok::<_, gnostr_types::nostr::Error>(())
+/// ```
 pub fn encrypt_dm(
     sender_private_key_hex: &str,
     recipient_public_key_hex: &str,
@@ -23,6 +34,9 @@ pub fn encrypt_dm(
 }
 
 /// Encrypt a DM with an explicit content-encryption algorithm.
+///
+/// Use this when you need to force NIP-04 or NIP-44 v2 rather than relying on
+/// the default DM helper.
 pub fn encrypt_dm_with_algorithm(
     sender_private_key_hex: &str,
     recipient_public_key_hex: &str,
@@ -36,8 +50,19 @@ pub fn encrypt_dm_with_algorithm(
 
 /// Decrypt a DM using the canonical Nostr content-encryption implementation.
 ///
+/// The recipient key must be the recipient's 32-byte hex secret key, and the
+/// sender key must be the sender's x-only public key encoded as hex.
+///
 /// The cipher version is auto-detected by the underlying `PrivateKey::decrypt`
 /// implementation, so the caller only needs to provide the key pair.
+///
+/// # Example
+/// ```ignore
+/// use gnostr_types::nostr::bridge::decrypt_dm;
+///
+/// let plaintext = decrypt_dm(recipient_sk_hex, sender_pk_hex, &ciphertext)?;
+/// # Ok::<_, gnostr_types::nostr::Error>(())
+/// ```
 pub fn decrypt_dm(
     recipient_private_key_hex: &str,
     sender_public_key_hex: &str,
