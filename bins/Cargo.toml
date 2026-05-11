@@ -19,7 +19,7 @@ blossom-tui = ["dep:blossom_tui"]
 relay = ["dep:gnostr-relay"]
 git = ["dep:ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
-crawler = ["dep:gnostr-crawler"]
+crawler = ["dep:gnostr-crawler", "dep:gnostr_filetreelist"]
 metrics = []
 rate_limiter = []
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
@@ -54,7 +54,7 @@ gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=94856
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540" }
 gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540", optional = true }
 gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540" }
-gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948560.1874.701540" }
+gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948560.1874.701540", optional = true }
 gnostr_qr = { path = "../qr", version = ">=948560.1874.701540" }
 libp2p = { workspace = true }
 log = { workspace = true }
@@ -126,6 +126,36 @@ required-features = ["crawler"]
 [[bin]]
 name = "gnostr_master_detail"
 path = "src/bin/gnostr_master_detail.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876"
+path = "src/bin/gnostr_crawler_filetree-1876.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876-947418-280051"
+path = "src/bin/gnostr_crawler_filetree-1876-947418-280051.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876-947421-276222"
+path = "src/bin/gnostr_crawler_filetree-1876-947421-276222.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-285805"
+path = "src/bin/gnostr_crawler_filetree-285805.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-285805-1876"
+path = "src/bin/gnostr_crawler_filetree-285805-1876.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876947415284713-947415-284728"
+path = "src/bin/gnostr_crawler_filetree-1876947415284713-947415-284728.rs"
 required-features = ["crawler"]
 
 [[bin]]
