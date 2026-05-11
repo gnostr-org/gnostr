@@ -93,6 +93,8 @@ The current network loop applies synchronization after collecting a small peer s
 
 The approach is also informed by earlier work on optimal clock synchronization under different delay assumptions, which motivates bounded-correction designs that remain stable when peer timing uncertainty changes.
 
+It also relates to Byzantine quorum systems, which study how consensus-style quorums can tolerate faults while preserving availability and safety.
+
 ## 7. Conclusion
 
 We described a BFT time synchronization module for a libp2p peer-to-peer system. The design combines monotonic logical time, bounded correction, persistence, and consensus-based sample filtering to tolerate Byzantine outliers while maintaining a usable local clock. The resulting mechanism is small, inspectable, and suitable for integration into distributed chat and relay workflows.
@@ -102,5 +104,6 @@ We described a BFT time synchronization module for a libp2p peer-to-peer system.
 1. Castro, M. and Liskov, B. "Practical Byzantine Fault Tolerance."
 2. Attiya, H., Herzberg, A., and Rajsbaum, S. "Optimal Clock Synchronization Under Different Delay Assumptions." Proceedings of the twelfth annual ACM symposium on Principles of Distributed Computing, 1993.
 3. Barak, B., Halevi, S., Herzberg, A., and Naor, D. "Clock Synchronization with Faults and Recoveries." Proceedings of the nineteenth annual ACM symposium on Principles of Distributed Computing, 2000.
-4. libp2p project documentation.
-5. Distributed systems literature on logical clocks and time synchronization.
+4. Malkhi, D., and Reiter, M. K. "Byzantine Quorum Systems." Proceedings of the twenty-ninth annual ACM symposium on Theory of Computing, 1997.
+5. libp2p project documentation.
+6. Distributed systems literature on logical clocks and time synchronization.
