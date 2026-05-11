@@ -213,6 +213,18 @@ pub enum TimeSyncBehaviourEvent {
     Gossipsub(gossipsub::Event),
 }
 
+impl From<request_response::Event<SyncRequest, SyncResponse>> for TimeSyncBehaviourEvent {
+    fn from(event: request_response::Event<SyncRequest, SyncResponse>) -> Self {
+        Self::RequestResponse(event)
+    }
+}
+
+impl From<gossipsub::Event> for TimeSyncBehaviourEvent {
+    fn from(event: gossipsub::Event) -> Self {
+        Self::Gossipsub(event)
+    }
+}
+
 /// Combined network behaviour for time synchronization.
 #[derive(NetworkBehaviour)]
 #[behaviour(to_swarm = "TimeSyncBehaviourEvent")]
