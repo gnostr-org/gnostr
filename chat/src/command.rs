@@ -3,6 +3,7 @@ use std::time::Duration;
 use anyhow::Result;
 use clap::Parser;
 use gnostr_asyncgit::types::PrivateKey;
+use gnostr_p2p::time::{Clock, P2PClock};
 use proctitle::set_title;
 use tracing::Level;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
@@ -192,13 +193,39 @@ async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result
     println!("Initializing network and discovering peers...");
     tracing::debug!("chat oneshot: waiting for a connected peer");
     session.wait_for_connected(Duration::from_secs(30)).await?;
+    let p2p_timestamp = oneshot_p2p_timestamp(session.topic());
+    println!("p2p time timestamp: {p2p_timestamp}");
     session.send_text(message_input).await?;
-    println!("Oneshot message sent. Waiting for propagation...");
+    println!("Oneshot message sent at {p2p_timestamp}. Waiting for propagation...");
 
     tokio::time::sleep(Duration::from_secs(2)).await;
     drop(printer);
     tracing::info!("Oneshot operation complete.");
     Ok(())
+}
+
+fn oneshot_p2p_timestamp(topic: &str) -> String {
+    let clock = P2PClock::new(1, &oneshot_clock_path(topic));
+    clock.now_utc().to_rfc3339()
+}
+
+fn oneshot_clock_path(topic: &str) -> String {
+    let mut path = std::env::temp_dir();
+    path.push(format!("gnostr-chat-oneshot-{}.json", sanitize_for_filename(topic)));
+    path.to_string_lossy().into_owned()
+}
+
+fn sanitize_for_filename(value: &str) -> String {
+    value
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect()
 }
 
 fn spawn_notification_printer(
@@ -265,5 +292,16 @@ mod tests {
         };
 
         assert_eq!(chat_topic(&args), "gnostr-dev");
+    }
+
+    #[test]
+    fn sanitize_for_filename_replaces_topic_separators() {
+        assert_eq!(sanitize_for_filename("gnostr/chat oneshot"), "gnostr_chat_oneshot");
+    }
+
+    #[test]
+    fn oneshot_clock_path_uses_temp_dir() {
+        let path = oneshot_clock_path("gnostr/chat");
+        assert!(path.contains("gnostr-chat-oneshot-gnostr_chat.json"));
     }
 }
