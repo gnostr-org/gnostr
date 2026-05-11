@@ -17,7 +17,7 @@ use tokio::io::AsyncBufReadExt;
     help_template = cli::HELP_TEMPLATE,
     next_line_help = true,
     disable_help_subcommand = true,
-    after_help = "Use the sibling relay and rendezvous binaries when you want a dedicated infrastructure role."
+    after_help = "Examples:\n  gnostr-p2p --network ipfs\n  gnostr-p2p --detach --port 4001\n  gnostr-p2p --listen-address /ip4/0.0.0.0/tcp/4001\n\nUse the sibling relay and rendezvous binaries when you want a dedicated infrastructure role."
 )]
 struct Opt {
     #[command(flatten)]

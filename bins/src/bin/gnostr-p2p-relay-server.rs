@@ -15,7 +15,8 @@ use gnostr_p2p::cli;
     long_about = "Run a relay-capable peer for libp2p circuit relay traffic.\n\nThis node is useful for peers that need an intermediate hop when direct connectivity fails.",
     help_template = cli::HELP_TEMPLATE,
     next_line_help = true,
-    disable_help_subcommand = true
+    disable_help_subcommand = true,
+    after_help = "Examples:\n  gnostr-p2p-relay-server\n  gnostr-p2p-relay-server --port 4001\n  gnostr-p2p-relay-server --detach"
 )]
 struct Opt {
     #[command(flatten)]

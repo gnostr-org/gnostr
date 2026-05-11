@@ -109,6 +109,10 @@ fn print_usage() {
     println!("  -k, --key <KEY>      Secret key (hex or nsec1 bech32)");
     println!("  -h, --help           Print this help");
     println!("  -V, --version        Print version info\n");
+    println!("EXAMPLES:");
+    println!("  gnostr blossom-tui --server http://localhost:3000");
+    println!("  gnostr blossom-tui --server http://localhost:3000 --key nsec1...");
+    println!("  gnostr blossom-tui --key <hex-or-nsec1>\n");
     println!("ENV:");
     println!("  BLOSSOM_SERVER       Server URL (fallback when --server not set)");
     println!("  BLOSSOM_SECRET_KEY   Secret key (fallback when --key not set)\n");

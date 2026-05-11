@@ -15,7 +15,8 @@ use gnostr_p2p::cli;
     long_about = "Run a rendezvous point for peers that need discovery, registration, or hole-punch coordination.\n\nPeers can register namespaces and discover each other through this service.",
     help_template = cli::HELP_TEMPLATE,
     next_line_help = true,
-    disable_help_subcommand = true
+    disable_help_subcommand = true,
+    after_help = "Examples:\n  gnostr-p2p-rendezvous-server\n  gnostr-p2p-rendezvous-server --port 4001\n  gnostr-p2p-rendezvous-server --detach"
 )]
 struct Opt {
     #[command(flatten)]
