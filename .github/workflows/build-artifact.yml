@@ -17,7 +17,7 @@ on:
       os:
         description: "OS / target to build (select \"all\" to build every target)"
         required: false
-        default: 'macos-arm64
+        default: 'macos-arm64'
         type: string
       toolchain:
         description: "Rust toolchain to use"
