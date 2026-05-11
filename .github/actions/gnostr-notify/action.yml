@@ -59,10 +59,14 @@ runs:
           ,"$(gnostr --weeble)" \
           ,"$(gnostr --blockheight)" \
           ,"$(gnostr --wobble)" \
-          --hex || true) && \
-          export EVENT=$EVENT && \
-          NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-          export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-          gnostr query -i $EVENT -r ${{ inputs.damus }} || true && \
-          gnostr query -i $EVENT -r ${{ inputs.nos }} || true && \
-          echo "${{ inputs.njump_base }}/$NOTE"
+          --hex || true)
+        export EVENT
+
+        NOTE=$(gnostr convert-key -p note -k "$EVENT" || true)
+        export NOTE
+
+        echo "$NOTE"
+        echo "$EVENT"
+        gnostr query -i "$EVENT" -r "${{ inputs.damus }}" || true
+        gnostr query -i "$EVENT" -r "${{ inputs.nos }}" || true
+        echo "${{ inputs.njump_base }}/$NOTE"
