@@ -50,6 +50,10 @@ pub mod nips {
     };
 }
 
+pub mod bridge {
+    pub use super::super::bridge::{decrypt_dm, encrypt_dm, encrypt_dm_with_algorithm};
+}
+
 pub mod helpers {
     pub use super::super::{
         default_gnostr_private_key, get_leading_zero_bits, ureq_async, DEFAULT_GNOSTR_PRIVATE_KEY,
