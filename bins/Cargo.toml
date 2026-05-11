@@ -19,6 +19,7 @@ blossom-tui = ["dep:blossom_tui"]
 relay = ["dep:gnostr-relay"]
 git = ["dep:ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
+crawler = ["dep:gnostr-crawler"]
 metrics = []
 rate_limiter = []
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
@@ -45,7 +46,7 @@ gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features 
   "vendor-openssl",
 ], version = ">=948560.1874.701540" }
 gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948560.1874.701540" }
-gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948560.1874.701540" }
+gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948560.1874.701540", optional = true }
 gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948560.1874.701540" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948560.1874.701540" }
 gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540" }
@@ -116,6 +117,16 @@ required-features = ["git"]
 name = "gnostr_chat_tui_demo"
 path = "src/bin/gnostr_chat_tui_demo.rs"
 required-features = ["git"]
+
+[[bin]]
+name = "gnostr_crawler"
+path = "src/bin/gnostr_crawler.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_master_detail"
+path = "src/bin/gnostr_master_detail.rs"
+required-features = ["crawler"]
 
 [[bin]]
 name = "gnostr-legit"
