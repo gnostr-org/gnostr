@@ -84,7 +84,13 @@ pub enum LegitCommands {
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about,
+    long_about = None,
+    after_help = "Examples:\n  gnostr chat --topic gnostr-dev --name copilot --oneshot \"hello\"\n  gnostr dm --recipient npub1... --message \"hello\"\n  gnostr relay --detach --logging info\n  gnostr server --help"
+)]
 pub struct GnostrCli {
     /// command
     #[command(subcommand)]

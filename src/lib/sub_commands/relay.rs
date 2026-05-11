@@ -33,7 +33,8 @@ impl std::fmt::Display for LogLevel {
 #[derive(Parser, Debug, Clone)]
 #[command(
     about = "Run the gnostr relay server",
-    long_about = "Run the local gnostr relay. By default it loads .gnostr/relay.toml when present, stores data under .gnostr/relay, and writes logs to stderr and the gnostr log file. Use --detach on Unix-like systems to keep it running in the background."
+    long_about = "Run the local gnostr relay. By default it loads .gnostr/relay.toml when present, stores data under .gnostr/relay, and writes logs to stderr and the gnostr log file. Use --detach on Unix-like systems to keep it running in the background.",
+    after_help = "Examples:\n  gnostr relay\n  gnostr relay --watch\n  gnostr relay --detach --logging info\n  gnostr relay --config .gnostr/relay.toml --data .gnostr/relay"
 )]
 pub struct RelaySubCommand {
     /// Path to the relay config file.
