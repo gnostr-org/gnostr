@@ -317,12 +317,12 @@ pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Se
             }
 
             event = swarm.select_next_some() => match event {
-                SwarmEvent::Behaviour(TimeSyncBehaviourEvent::Gossipsub(gossipsub::Event::Message { message, .. })) => {
+                SwarmEvent::Behaviour(TimeSyncBehaviour::Gossipsub(gossipsub::Event::Message { message, .. })) => {
                     if let Ok(alert) = serde_json::from_slice::<HealthAlert>(&message.data) {
                         eprintln!(">>> EXTERNAL CLOCK ALERT: Peer {} is {}", alert.peer_id, alert.reason);
                     }
                 }
-                SwarmEvent::Behaviour(TimeSyncBehaviourEvent::RequestResponse(request_response::Event::Message { peer, message })) => {
+                SwarmEvent::Behaviour(TimeSyncBehaviour::RequestResponse(request_response::Event::Message { peer, message })) => {
                     match message {
                         request_response::Message::Request { request, channel, .. } => {
                             let t2 = p2p_clock.now_utc().timestamp_millis();
@@ -350,6 +350,7 @@ pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Se
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_sync_state_new() {
@@ -388,5 +389,55 @@ mod tests {
             Estimation { d: 0.02, a: 0.001 },
         ]);
         assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+    }
+
+    #[test]
+    fn test_multi_peer_time_consensus_with_outlier() {
+        let checkpoint = NamedTempFile::new().expect("temp checkpoint");
+        let checkpoint_path = checkpoint.path().to_string_lossy().to_string();
+        let mut state = SyncState::new(1, &checkpoint_path);
+
+        let peer_estimates = vec![
+            ("peer-alpha", Estimation { d: 0.010, a: 0.001 }),
+            ("peer-beta", Estimation { d: 0.011, a: 0.001 }),
+            ("peer-gamma", Estimation { d: 0.012, a: 0.001 }),
+            ("peer-delta", Estimation { d: 0.0105, a: 0.001 }),
+            ("peer-byzantine", Estimation { d: 0.250, a: 0.001 }),
+        ];
+
+        println!(
+            "before consensus: status={:?}, slew_rate={:.6}",
+            state.status, state.slew_rate
+        );
+        for (peer, estimate) in &peer_estimates {
+            println!(
+                "peer sample: {peer} -> d={:.6}s a={:.6}s",
+                estimate.d, estimate.a
+            );
+        }
+
+        let estimates: Vec<Estimation> = peer_estimates.iter().map(|(_, estimate)| *estimate).collect();
+        let mut d_overs: Vec<f64> = estimates.iter().map(|e| e.d + e.a).collect();
+        let mut d_unders: Vec<f64> = estimates.iter().map(|e| e.d - e.a).collect();
+        d_overs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        d_unders.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let m_min = d_overs[state.f];
+        let m_max = d_unders[estimates.len() - 1 - state.f];
+        println!(
+            "consensus window: m_min={:.6}s m_max={:.6}s",
+            m_min, m_max
+        );
+
+        state.apply_bft_sync(estimates);
+
+        println!(
+            "after consensus: status={:?}, slew_rate={:.6}, pending_alert={:?}",
+            state.status, state.slew_rate, state.pending_alert
+        );
+
+        assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+        assert!(state.pending_alert.is_none());
+        assert!((state.slew_rate - 1.0).abs() <= 0.005);
     }
 }
