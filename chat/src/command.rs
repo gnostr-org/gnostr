@@ -13,7 +13,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about,
+    long_about = None,
+    after_help = "Examples:\n  gnostr chat --topic gnostr-dev --name copilot\n  gnostr chat --topic gnostr-dev --name copilot --oneshot \"hello\"\n  gnostr chat --headless --topic gnostr-dev --nsec <hex-key>"
+)]
 #[command(propagate_version = true)]
 pub struct ChatSubCommands {
     #[arg(short, long, global = true)]
