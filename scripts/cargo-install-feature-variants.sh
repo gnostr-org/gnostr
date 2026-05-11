@@ -32,6 +32,10 @@ Options:
   --all-features         Alias for --allow-all
   --no-default-features  Keep the --no-default-features install variant enabled
   --help                 Show this help
+
+Examples:
+  ./scripts/cargo-install-feature-variants.sh
+  ./scripts/cargo-install-feature-variants.sh --features chat --features p2p --features blossom --features blossom-tui
 EOF
 }
 

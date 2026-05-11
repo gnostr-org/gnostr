@@ -28,8 +28,8 @@ find "$TARGET_DIR" -name "target" -prune -o -name "Cargo.toml" -print | while re
     # Using subshell ( ) to ensure we return to the original path automatically
     (
         cd "$project_dir" || exit
-        cargo sort;
-        if cargo generate-lockfile; then
+        bash ./scripts/with-system-rocksdb.sh cargo sort;
+        if bash ./scripts/with-system-rocksdb.sh cargo generate-lockfile; then
             echo "Successfully generated lockfile for $(basename "$project_dir")"
         else
             echo "Error: Failed to generate lockfile in $project_dir" >&2

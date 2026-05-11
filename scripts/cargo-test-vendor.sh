@@ -282,9 +282,9 @@ for manifest in "${MANIFESTS[@]}"; do
 
   printf '==> %s\n' "$manifest"
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    cargo "${cargo_args[@]}" -- "${TEST_FLAGS[@]}"
+    bash ./scripts/with-system-rocksdb.sh cargo "${cargo_args[@]}" -- "${TEST_FLAGS[@]}"
   else
-    cargo "${cargo_args[@]}"
+    bash ./scripts/with-system-rocksdb.sh cargo "${cargo_args[@]}"
   fi
 done
 

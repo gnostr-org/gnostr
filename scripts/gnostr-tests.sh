@@ -37,6 +37,8 @@ Examples:
   ./scripts/gnostr-tests.sh --ignored
   ./scripts/gnostr-tests.sh --workspace --ignored
   ./scripts/gnostr-tests.sh --test blossom_remote_push_list_and_fetch_round_trip -- --nocapture
+  ./scripts/gnostr-tests.sh --test dm_subcommand_uses_short_r_for_relays -- --nocapture
+  ./scripts/gnostr-tests.sh --test server_subcommand_parses_with_blossom -- --nocapture
 
 Related runners:
   ./scripts/gnostr-asyncgit-tests.sh --nocapture
