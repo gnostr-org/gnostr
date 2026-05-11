@@ -91,6 +91,8 @@ This design favors clarity and bounded correction over aggressive clock converge
 
 The current network loop applies synchronization after collecting a small peer sample set and uses a conservative slew-rate adjustment. That approach is robust for moderate drift, but it is not a substitute for a fully hardened production time service.
 
+The approach is also informed by earlier work on recovery-aware BFT clock synchronization, which studied how a distributed clock can remain usable in the presence of faults and recoveries.
+
 ## 7. Conclusion
 
 We described a BFT time synchronization module for a libp2p peer-to-peer system. The design combines monotonic logical time, bounded correction, persistence, and consensus-based sample filtering to tolerate Byzantine outliers while maintaining a usable local clock. The resulting mechanism is small, inspectable, and suitable for integration into distributed chat and relay workflows.
@@ -98,5 +100,6 @@ We described a BFT time synchronization module for a libp2p peer-to-peer system.
 ## References
 
 1. Castro, M. and Liskov, B. "Practical Byzantine Fault Tolerance."
-2. libp2p project documentation.
-3. Distributed systems literature on logical clocks and time synchronization.
+2. Barak, B., Halevi, S., Herzberg, A., and Naor, D. "Clock Synchronization with Faults and Recoveries." Proceedings of the nineteenth annual ACM symposium on Principles of Distributed Computing, 2000.
+3. libp2p project documentation.
+4. Distributed systems literature on logical clocks and time synchronization.
