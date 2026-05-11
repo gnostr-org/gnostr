@@ -1,6 +1,9 @@
+#[cfg(feature = "web")]
 use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
 
+#[cfg(feature = "web")]
 use anyhow::Context;
+#[cfg(feature = "web")]
 use axum::{
     body::Body,
     http::{self, HeaderValue},
@@ -8,11 +11,15 @@ use axum::{
     routing::get,
     Extension, Router,
 };
+#[cfg(feature = "web")]
 use clap::Parser;
+#[cfg(feature = "web")]
 use const_format::formatcp;
+#[cfg(feature = "web")]
 use gnostr_web::app::{
     git::Git, layers::logger::LoggingMiddleware, methods, syntax_highlight::prime_highlighters,
 };
+#[cfg(feature = "web")]
 use gnostr_web::app::{
     init_static_asset_hashes, /* build_asset_hash, */ open_database, run_indexer, Config,
     GnitArgs, ADD_RELAY_SVG, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG, CLOSE_MODAL_SVG_HASH,
@@ -38,14 +45,20 @@ use gnostr_web::app::{
     READ_MORE_SVG, READ_MORE_SVG_HASH, SETTINGS_ACTIVE_SVG, SETTINGS_ACTIVE_SVG_HASH, SETTINGS_SVG,
     SETTINGS_SVG_HASH, SIGN_OUT_SVG, SIGN_OUT_SVG_HASH,
 };
+#[cfg(feature = "web")]
 use tokio::net::TcpListener;
+#[cfg(feature = "web")]
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
+#[cfg(feature = "web")]
 use tower_layer::layer_fn;
+#[cfg(feature = "web")]
 use tracing::info;
+#[cfg(feature = "web")]
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
 
+#[cfg(feature = "web")]
 async fn run_as_service() -> Result<(), anyhow::Error> {
     info!("Starting gnostr-gnit in daemon mode...");
 
@@ -78,6 +91,7 @@ async fn run_as_service() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+#[cfg(feature = "web")]
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 fn build_daemon_args() -> Vec<String> {
     let mut daemon_args = Vec::new();
@@ -101,6 +115,7 @@ fn build_daemon_args() -> Vec<String> {
     daemon_args
 }
 
+#[cfg(feature = "web")]
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() -> Result<(), anyhow::Error> {
@@ -500,7 +515,12 @@ async fn main() -> Result<(), anyhow::Error> {
         res = indexer_wakeup_task => res.context("failed to run indexer"),
         _ = tokio::signal::ctrl_c() => {
             info!("Received ctrl-c, shutting down");
-            Ok(())
-        }
+    Ok(())
+}
+
+#[cfg(not(feature = "web"))]
+fn main() {
+    eprintln!("gnostr-gnit requires the `web` feature");
+}
     }
 }
