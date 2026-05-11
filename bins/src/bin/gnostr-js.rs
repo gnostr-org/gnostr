@@ -1,8 +1,12 @@
 use clap::{Parser, Subcommand};
-use gnostr_relay::cli::RelayCli;
-use gnostr_relay::launcher;
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
+use gnostr_relay::cli::RelayCli;
+#[cfg(all(feature = "relay", feature = "crawler"))]
+use gnostr_relay::launcher;
+#[cfg(all(feature = "relay", feature = "crawler"))]
 use gnostr_js::crawler_control;
+#[cfg(all(feature = "relay", feature = "crawler"))]
 use gnostr_js::utils::detach::{
     capture_detached_pid, existing_detached_pid, relay_port_is_listening,
     spawn_detached_current_exe_named,
@@ -11,6 +15,7 @@ use gnostr_js::utils::detach::{
 
 const DETACHED_ENV: &str = "GNOSTR_JS_RELAY_DETACHED";
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
     /// Run the embedded web app
@@ -41,6 +46,7 @@ enum Commands {
     },
 }
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -48,6 +54,7 @@ struct Args {
     command: Option<Commands>,
 }
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 async fn run_web(port: u16, detach: bool) {
     if detach {
         if let Some(pid) = existing_detached_pid("gnostr-js-web").expect("check detached web pid") {
@@ -65,6 +72,7 @@ async fn run_web(port: u16, detach: bool) {
     gnostr_js::web_app::run(port).await.expect("run web app");
 }
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 async fn run_relay(relay: RelayCli, detach: bool) {
     let is_detached_child = std::env::var_os(DETACHED_ENV).is_some();
 
@@ -109,6 +117,7 @@ async fn run_relay(relay: RelayCli, detach: bool) {
         .expect("run relay server");
 }
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 async fn run_crawler(port: u16, detach: bool) {
     if detach {
         match crawler_control::start_crawler(port) {
@@ -132,6 +141,7 @@ async fn run_crawler(port: u16, detach: bool) {
         .expect("run crawler server");
 }
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 #[actix_web::main]
 async fn main() {
     let args = Args::parse();
@@ -143,4 +153,10 @@ async fn main() {
         Commands::Relay { relay, detach } => run_relay(relay, detach).await,
         Commands::Crawler { port, detach } => run_crawler(port, detach).await,
     }
+}
+
+#[cfg(not(all(feature = "relay", feature = "crawler")))]
+fn main() {
+    eprintln!("gnostr-js requires the relay and crawler features");
+    std::process::exit(1);
 }
