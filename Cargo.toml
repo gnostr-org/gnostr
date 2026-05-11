@@ -732,8 +732,6 @@ num_cpus = { workspace = true }
 #num_cpus = "1.16.0"
 once_cell = "1.21.3"
 openssl = { version = "0.10", features = ["vendored"] }
-# pinning to vendored openssl, using the openssl crate feature this gets lost with new resolver
-openssl-sys = { version = "0.9", optional = true }
 pad = "0.1.6"
 parking_lot = "0.12.3"
 #once_cell = "1"
@@ -968,10 +966,6 @@ tmux_interface = "0.3.2"
 tokio-tungstenite = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
-
-[target.'cfg(not(windows))'.dev-dependencies]
-# signal-child uses POSIX kill() which is not available on Windows
-signal-child = "1.0.6"
 
 [patch.crates-io]
 asn1-rs = { path = "vendor/asn1-rs" }
