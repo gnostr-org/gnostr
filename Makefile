@@ -100,6 +100,8 @@ cargo-test-workspace: 	### 	cargo-test-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
 	bash ./scripts/with-system-rocksdb.sh cargo  test -j $(NPROC) --workspace
+
+test: cargo-test-workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. $(HOME)/.cargo/env
 	#@cargo test
@@ -121,6 +123,8 @@ cargo-clippy-workspace: 	### 	cargo-clippy-workspace
 cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
 	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
 	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
+
+clippy: cargo-clippy-workspace
 
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
