@@ -247,6 +247,10 @@ fn is_blacklisted(name: &str) -> bool {
 
 fn main() -> anyhow::Result<()> {
     report_build_name();
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+        // Tree-sitter grammars compiled from C++ sources need the C++ runtime on Darwin.
+        println!("cargo::rustc-link-lib=c++");
+    }
     //println!("cargo:warning=DEBUG: gnostr-grammar build.rs is executing.");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
     println!("out_dir={}", &out_dir.display());
