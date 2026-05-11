@@ -51,7 +51,7 @@ pub mod nips {
 }
 
 pub mod bridge {
-    pub use super::super::bridge::{decrypt_dm, encrypt_dm, encrypt_dm_with_algorithm};
+    pub use super::super::dm_bridge::{decrypt_dm, encrypt_dm, encrypt_dm_with_algorithm};
 }
 
 pub mod helpers {

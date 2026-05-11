@@ -60,6 +60,7 @@ pub mod nip9;
 mod nostr_url;
 mod pay_request_data;
 pub mod bridge;
+pub mod dm_bridge;
 mod private_key;
 mod profile;
 mod public_key;
