@@ -16,6 +16,7 @@ path = "src/lib.rs"
 default = ["blossom", "blossom-tui"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
+web = ["dep:gnostr-web"]
 relay = ["dep:gnostr-relay"]
 git = ["dep:gnostr_ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
@@ -51,11 +52,11 @@ gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948560.1
 gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948560.1874.701540", optional = true }
 gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948560.1874.701540" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948560.1874.701540" }
-gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540" }
+gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540", optional = true }
 gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948560.1874.701540", optional = true }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540", optional = true }
 gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540", optional = true }
-gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540" }
+gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540", optional = true }
 gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948560.1874.701540", optional = true }
 gnostr_qr = { path = "../qr", version = ">=948560.1874.701540" }
 libp2p = { workspace = true }
@@ -186,6 +187,16 @@ path = "src/bin/gnostr-p2p-rendezvous-server.rs"
 required-features = ["p2p"]
 
 [[bin]]
+name = "gnostr-org"
+path = "src/bin/gnostr-org.rs"
+required-features = ["web"]
+
+[[bin]]
+name = "gnostr-gnit"
+path = "src/bin/gnostr-gnit.rs"
+required-features = ["web"]
+
+[[bin]]
 name = "gnostr-lookup"
 path = "src/bin/gnostr-lookup.rs"
 required-features = ["p2p"]
@@ -244,6 +255,16 @@ required-features = ["legit"]
 name = "git_tui"
 path = "examples/git_tui.rs"
 required-features = ["git"]
+
+[[example]]
+name = "gnostr_relay_demo"
+path = "examples/gnostr_relay_demo.rs"
+required-features = ["relay"]
+
+[[example]]
+name = "gnostr_relay_ext_demo"
+path = "examples/gnostr_relay_ext_demo.rs"
+required-features = ["relay"]
 
 [[bin]]
 name = "gnostr-relay"
