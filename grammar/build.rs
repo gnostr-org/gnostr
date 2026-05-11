@@ -283,11 +283,7 @@ fn main() -> anyhow::Result<()> {
 
         let helix_root = sources.join("helix");
 
-        //TODO detect if available/internet connectivity else use existing
-        if !helix_root.exists() {
-            fetch_git_repository(GRAMMAR_REPOSITORY_URL, GRAMMAR_REPOSITORY_REF, &helix_root)
-                .context(GRAMMAR_REPOSITORY_URL)?;
-        }
+        ensure_helix_repository(&helix_root)?;
 
         let config: HelixLanguages = toml::from_str(
             &fs::read_to_string(helix_root.join(GRAMMAR_REPOSITORY_CONFIG_PATH))
@@ -355,6 +351,22 @@ fn report_build_name() {
 
     println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+}
+
+fn ensure_helix_repository(destination: &Path) -> anyhow::Result<()> {
+    if destination.join(GRAMMAR_REPOSITORY_CONFIG_PATH).exists() {
+        return Ok(());
+    }
+
+    match fetch_git_repository(GRAMMAR_REPOSITORY_URL, GRAMMAR_REPOSITORY_REF, destination) {
+        Ok(()) => Ok(()),
+        Err(err) => {
+            println!(
+                "cargo:warning=git fetch for helix failed ({err}); falling back to archive download"
+            );
+            fetch_helix_archive(destination).context(GRAMMAR_REPOSITORY_URL)
+        }
+    }
 }
 
 fn get_git_hash() -> String {
@@ -802,6 +814,50 @@ fn fetch_git_repository(url: &str, ref_: &str, destination: &Path) -> anyhow::Re
         bail!("git fetch failed with exit code {res}");
     }
 
+    Ok(())
+}
+
+fn fetch_helix_archive(destination: &Path) -> anyhow::Result<()> {
+    let archive_url = format!(
+        "https://codeload.github.com/helix-editor/helix/tar.gz/{}",
+        GRAMMAR_REPOSITORY_REF
+    );
+    let temp_root = std::env::temp_dir().join(format!(
+        "gnostr-grammar-helix-{}-{}",
+        std::process::id(),
+        chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+    ));
+    fs::create_dir_all(&temp_root)?;
+
+    let archive_path = temp_root.join("helix.tar.gz");
+    let download = Command::new("curl")
+        .args(["-fsSL", &archive_url, "-o"])
+        .arg(&archive_path)
+        .status()?;
+    if !download.success() {
+        bail!("curl failed with exit code {download}");
+    }
+
+    fs::create_dir_all(destination)?;
+
+    let extract = Command::new("tar")
+        .args([
+            "-xzf",
+            archive_path
+                .to_str()
+                .context("archive path is not valid UTF-8")?,
+            "-C",
+            destination
+                .to_str()
+                .context("destination path is not valid UTF-8")?,
+            "--strip-components=1",
+        ])
+        .status()?;
+    if !extract.success() {
+        bail!("tar extract failed with exit code {extract}");
+    }
+
+    let _ = fs::remove_dir_all(&temp_root);
     Ok(())
 }
 
