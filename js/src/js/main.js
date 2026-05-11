@@ -47,29 +47,18 @@ if (typeof window !== "undefined" && window.gnostrWebAutoStart !== false) {
 }
 
 async function gnostr_web_start() {
-	gnostr_web_init();
+	await gnostr_web_init();
 	document.addEventListener("click", onclick_any);
 }
 
 async function gnostr_web_init() {
-	let tries = 0;
-	const interval = 20;
-	function init() {
-		if (window.nostr) {
-			log_info("init after", tries);
-			gnostr_web_init_ready();
-			return;
-		}
-		// TODO if tries is too many say window.nostr not found.
-		tries++;
-		setTimeout(init, interval);
-	}
-	init();
+	await gnostrBrowserNostr.waitForProvider();
+	gnostr_web_init_ready();
 }
 
 async function gnostr_web_init_ready() {
 	const model = GNOSTR;
-	model.pubkey = await get_pubkey(false);
+	model.pubkey = await gnostrBrowserNostr.getPublicKey(false);
 
 	find_node("#container-busy").classList.add("hide");
 	if (!model.pubkey) {
@@ -83,7 +72,7 @@ async function gnostr_web_init_ready() {
 async function signin() {
 	const model = GNOSTR;
 	try {
-		model.pubkey = await get_pubkey();
+		model.pubkey = await gnostrBrowserNostr.getPublicKey();
 	} catch (err) {
 		window.alert("An error occured trying to get your public key.");
 		return;
