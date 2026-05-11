@@ -23,6 +23,8 @@ help:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo
 
+rm_cargo_lock: 	### 	rm_cargo_lock
+	rm /Users/git/.cache/cargo/debug/.cargo-lock 2>/dev/null || true
 ##
 ##===============================================================================
 ##all
@@ -141,7 +143,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948958/168218" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948963/159915" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id

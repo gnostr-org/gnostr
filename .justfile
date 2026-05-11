@@ -4,6 +4,9 @@ default:
 help:
   @make help
 
+rm_cargo_lock:
+  @make rm_cargo_lock
+
 all:
   @make all
 

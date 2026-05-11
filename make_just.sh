@@ -38,7 +38,8 @@ fi
 
 # Name of the Makefile to be converted
 MAKEFILE="Makefile"
-if [ ! -f "$MAKEFILE" ]; then
+## if [ ! -f "$MAKEFILE" ]; then
+rm $MAKEFILE || true
 touch $MAKEFILE
 tee -a $MAKEFILE <<EOF
 ACT_VERBOSE ?= 
@@ -66,6 +67,8 @@ help:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $\$1, $\$2}' \$(MAKEFILE_LIST)
 	@echo
 
+rm_cargo_lock: 	### 	rm_cargo_lock
+	rm $HOME/.cache/cargo/debug/.cargo-lock 2>/dev/null || true
 ##
 ##===============================================================================
 ##all
@@ -254,7 +257,7 @@ gnostr-bot-macos-intel: 	### 	gnostr-bot-macos
 # vim: set noexpandtab:
 # vim: set setfiletype make
 EOF
-fi
+## fi
 
 
 # Name of the output Justfile
