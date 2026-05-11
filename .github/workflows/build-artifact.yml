@@ -140,7 +140,7 @@ jobs:
           tool: cross
 
       - name: Set Clang environment variables
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && matrix.native == true
         shell: bash
         run: |
           if command -v llvm-config >/dev/null 2>&1; then
