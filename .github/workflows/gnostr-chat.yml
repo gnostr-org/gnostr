@@ -257,7 +257,7 @@ jobs:
             >/tmp/gnostr-chat-bootstrap-peer.log 2>&1 &
           BOOTSTRAP_PEER_PID=$!
 
-          $GNOSTR_CMD \
+          $GNOSTR_CMD chat \
             --debug \
             --name peer \
             --hash "$PEER_HASH" \
