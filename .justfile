@@ -61,6 +61,9 @@ cargo-test--ignored:
 cargo-test-workspace:
   @make cargo-test-workspace
 
+test:
+  @make test
+
 cargo-test-nightly:
   @make cargo-test-nightly
 
@@ -75,6 +78,9 @@ cargo-clippy-workspace:
 
 cargo-clippy-fix-workspace:
   @make cargo-clippy-fix-workspace
+
+clippy:
+  @make clippy
 
 cargo-report:
   @make cargo-report

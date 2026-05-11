@@ -40,7 +40,6 @@ fi
 MAKEFILE="Makefile"
 rm $MAKEFILE 2>/dev/null || true
 touch $MAKEFILE
-
 tee -a $MAKEFILE <<EOF
 ACT_VERBOSE ?= 
 ACT_BIND ?= --bind
@@ -75,7 +74,7 @@ all: 	bin### 	all
 ##bin
 ## 	cargo b -j \$(NPROC)
 bin: 	### 	bin
-	cargo b -j \$(NPROC)
+	bash ./scripts/with-system-rocksdb.sh cargo b -j \$(NPROC)
 
 ##
 ##===============================================================================
@@ -104,7 +103,7 @@ cargo-install-bins:### 	cargo-install-bins
 cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. \$(HOME)/.cargo/env
-	@RUST_BACKTRACE=all cargo b -j \$(NPROC) \$(QUIET)
+	@RUST_BACKTRACE=all bash ./scripts/with-system-rocksdb.sh cargo b -j \$(NPROC) \$(QUIET)
 cargo-install: 	###         cargo install --path . \$(FORCE)
 	@. \$(HOME)/.cargo/env
 	@cargo install -j \$(NPROC) --path ./bins \$(FORCE)
@@ -125,47 +124,47 @@ query: 	###     query
 cargo-build-release: 	### 	cargo-build-release
 ## 	cargo-build-release q=true
 	@. \$(HOME)/.cargo/env
-	@cargo b -r -j \$(NPROC) \$(QUIET)
+	@bash ./scripts/with-system-rocksdb.sh cargo b -r -j \$(NPROC) \$(QUIET)
 cargo-check: 	### 	cargo-check
 	@. \$(HOME)/.cargo/env
-	@cargo  c -j \$(NPROC)
+	@bash ./scripts/with-system-rocksdb.sh cargo  c -j \$(NPROC)
 cargo-bench: 	### 	cargo-bench
 	@. \$(HOME)/.cargo/env
-	@cargo bench -j \$(NPROC)
+	@bash ./scripts/with-system-rocksdb.sh cargo bench -j \$(NPROC)
 cargo-test: 	### 	cargo-test
 	@. \$(HOME)/.cargo/env
 	#@cargo test
-	cargo  test -j \$(NPROC)
+	bash ./scripts/with-system-rocksdb.sh cargo  test -j \$(NPROC)
 cargo-test--ignored: 	### 	cargo-test--ignored
 	@. \$(HOME)/.cargo/env
 	#@cargo test
-	cargo  test -j \$(NPROC) -- --ignored --nocapture
+	bash ./scripts/with-system-rocksdb.sh cargo  test -j \$(NPROC) -- --ignored --nocapture
 cargo-test-workspace: 	### 	cargo-test-workspace
 	@. \$(HOME)/.cargo/env
 	#@cargo test
-	cargo  test -j \$(NPROC) --workspace
+	bash ./scripts/with-system-rocksdb.sh cargo  test -j \$(NPROC) --workspace
 test: cargo-test-workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. \$(HOME)/.cargo/env
 	#@cargo test
-	cargo  +nightly test -j \$(NPROC)
+	bash ./scripts/with-system-rocksdb.sh cargo  +nightly test -j \$(NPROC)
 cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
 	@. \$(HOME)/.cargo/env
 	#@cargo test
-	cargo  +nightly test -j \$(NPROC) --workspace
+	bash ./scripts/with-system-rocksdb.sh cargo  +nightly test -j \$(NPROC) --workspace
 
 cargo-test-types-nip_three_four: 	### 	cargo-test-types-nip34
 	@. \$(HOME)/.cargo/env
 	#@cargo test
-	cargo test -j \$(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
+	bash ./scripts/with-system-rocksdb.sh cargo test -j \$(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
 
 cargo-clippy-workspace: 	### 	cargo-clippy-workspace
-	cargo +nightly clippy --workspace --all-targets -- -D warnings
-	cargo +nightly clippy --workspace --all-targets --all-features -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --workspace --all-targets -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --workspace --all-targets --all-features -- -D warnings
 
 cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
-	cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
-	cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
 clippy: cargo-clippy-workspace
 
 cargo-report: 	### 	cargo-report
@@ -173,7 +172,7 @@ cargo-report: 	### 	cargo-report
 	cargo report future-incompatibilities --id 1 -j \$(NPROC)
 cargo-run: 	### 	cargo-run
 	@. \$(HOME)/.cargo/env
-	cargo run -j \$(NPROC)  --bin gnostr -- -h
+	bash ./scripts/with-system-rocksdb.sh cargo run -j \$(NPROC)  --bin gnostr -- -h
 
 ##===============================================================================
 cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog

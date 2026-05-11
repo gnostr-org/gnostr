@@ -100,7 +100,6 @@ cargo-test-workspace: 	### 	cargo-test-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
 	bash ./scripts/with-system-rocksdb.sh cargo  test -j $(NPROC) --workspace
-
 test: cargo-test-workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. $(HOME)/.cargo/env
@@ -123,7 +122,6 @@ cargo-clippy-workspace: 	### 	cargo-clippy-workspace
 cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
 	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
 	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
-
 clippy: cargo-clippy-workspace
 
 cargo-report: 	### 	cargo-report
@@ -143,7 +141,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948863/295799" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948958/168218" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
