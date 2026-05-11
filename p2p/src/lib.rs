@@ -6,6 +6,7 @@
 //! not depend on `p2p`, or the workspace will cycle.
 //!
 //! The browser-side pure JavaScript implementation lives under `src/js/`.
+#![feature(trivial_bounds)]
 
 extern crate gnostr_asyncgit as git2;
 
