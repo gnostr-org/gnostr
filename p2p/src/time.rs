@@ -205,6 +205,15 @@ pub struct SyncResponse {
 }
 
 /// Combined network behaviour for time synchronization.
+#[derive(Debug)]
+pub enum TimeSyncBehaviourEvent {
+    /// Request-response events.
+    RequestResponse(request_response::Event<SyncRequest, SyncResponse>),
+    /// Gossipsub events.
+    Gossipsub(gossipsub::Event),
+}
+
+/// Combined network behaviour for time synchronization.
 #[derive(NetworkBehaviour)]
 #[behaviour(to_swarm = "TimeSyncBehaviourEvent")]
 pub struct TimeSyncBehaviour {
@@ -317,12 +326,12 @@ pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Se
             }
 
             event = swarm.select_next_some() => match event {
-                SwarmEvent::Behaviour(TimeSyncBehaviour::Gossipsub(gossipsub::Event::Message { message, .. })) => {
+                SwarmEvent::Behaviour(TimeSyncBehaviourEvent::Gossipsub(gossipsub::Event::Message { message, .. })) => {
                     if let Ok(alert) = serde_json::from_slice::<HealthAlert>(&message.data) {
                         eprintln!(">>> EXTERNAL CLOCK ALERT: Peer {} is {}", alert.peer_id, alert.reason);
                     }
                 }
-                SwarmEvent::Behaviour(TimeSyncBehaviour::RequestResponse(request_response::Event::Message { peer, message })) => {
+                SwarmEvent::Behaviour(TimeSyncBehaviourEvent::RequestResponse(request_response::Event::Message { peer, message })) => {
                     match message {
                         request_response::Message::Request { request, channel, .. } => {
                             let t2 = p2p_clock.now_utc().timestamp_millis();
