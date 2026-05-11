@@ -710,7 +710,6 @@ nostr-sdk = { workspace = true }
 nostr-sdk_0_19_1 = { package = "nostr-sdk", version = "0.19.1" }
 
 ## TODO remove and upgrade
-nostr-sdk_0_32_0 = { package = "nostr-sdk", version = "0.32.0" }
 
 nostr-sdk_0_34_0 = { package = "nostr-sdk", version = "0.34.0" }
 
