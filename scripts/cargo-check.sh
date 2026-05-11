@@ -82,7 +82,7 @@ run_check() {
   shift
 
   printf '==> %s\n' "$label"
-  cargo check -j"$(cargo_jobs)" "$@"
+  bash ./scripts/with-system-rocksdb.sh cargo check -j"$(cargo_jobs)" "$@"
 }
 
 add_package() {

@@ -40,7 +40,7 @@ EOF
 done
 
 if [[ -n "$TEST_NAME" ]]; then
-  cargo test -p gnostr-p2p "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}"
+  bash ./scripts/with-system-rocksdb.sh cargo test -p gnostr-p2p "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}"
 else
-  cargo test -p gnostr-p2p -- "${TEST_FLAGS[@]}"
+  bash ./scripts/with-system-rocksdb.sh cargo test -p gnostr-p2p -- "${TEST_FLAGS[@]}"
 fi
