@@ -98,7 +98,7 @@ webbrowser = "0.8"
 [[bin]]
 name = "gnostr-tui"
 path = "src/bin/gnostr-tui.rs"
-required-features = ["git"]
+required-features = ["blossom-tui"]
 
 [[bin]]
 name = "gnostr-nip34"
@@ -149,6 +149,21 @@ required-features = ["chat"]
 name = "gnostr_chat_tui_demo_search"
 path = "src/bin/gnostr_chat_tui_demo_search.rs"
 required-features = ["chat"]
+
+[[bin]]
+name = "gnostr-blossom"
+path = "src/bin/gnostr-blossom.rs"
+required-features = ["blossom-tui"]
+
+[[bin]]
+name = "blossom-filetree"
+path = "src/bin/blossom-filetree.rs"
+required-features = ["blossom-tui"]
+
+[[bin]]
+name = "git-remote-blossom"
+path = "src/bin/git-remote-blossom.rs"
+required-features = ["blossom"]
 
 [[bin]]
 name = "gnostr-p2p"
