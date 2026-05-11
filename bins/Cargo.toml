@@ -19,6 +19,8 @@ blossom-tui = ["dep:blossom_tui"]
 relay = ["dep:gnostr-relay"]
 git = ["dep:ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
+chat = ["dep:gnostr-chat"]
+p2p = ["dep:gnostr-p2p"]
 crawler = ["dep:gnostr-crawler", "dep:gnostr_filetreelist"]
 metrics = []
 rate_limiter = []
@@ -45,13 +47,13 @@ gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features 
   "tui",
   "vendor-openssl",
 ], version = ">=948560.1874.701540" }
-gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948560.1874.701540" }
+gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948560.1874.701540", optional = true }
 gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948560.1874.701540", optional = true }
 gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948560.1874.701540" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948560.1874.701540" }
 gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540" }
 gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948560.1874.701540", optional = true }
-gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540" }
+gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540", optional = true }
 gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540", optional = true }
 gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540" }
 gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948560.1874.701540", optional = true }
@@ -116,7 +118,62 @@ required-features = ["git"]
 [[bin]]
 name = "gnostr_chat_tui_demo"
 path = "src/bin/gnostr_chat_tui_demo.rs"
-required-features = ["git"]
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr-chat"
+path = "src/bin/gnostr-chat.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "websockets_chat"
+path = "src/bin/websockets_chat.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_relay_io"
+path = "src/bin/gnostr_relay_io.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo_help"
+path = "src/bin/gnostr_chat_tui_demo_help.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo_relays"
+path = "src/bin/gnostr_chat_tui_demo_relays.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo_search"
+path = "src/bin/gnostr_chat_tui_demo_search.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr-p2p"
+path = "src/bin/gnostr-p2p.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-p2p-client"
+path = "src/bin/gnostr-p2p-client.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-p2p-relay-server"
+path = "src/bin/gnostr-p2p-relay-server.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-p2p-rendezvous-server"
+path = "src/bin/gnostr-p2p-rendezvous-server.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-lookup"
+path = "src/bin/gnostr-lookup.rs"
+required-features = ["p2p"]
 
 [[bin]]
 name = "gnostr_crawler"
