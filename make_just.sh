@@ -107,6 +107,7 @@ cargo-build: 	## 	cargo build
 	@RUST_BACKTRACE=all cargo b -j \$(NPROC) \$(QUIET)
 cargo-install: 	###         cargo install --path . \$(FORCE)
 	@. \$(HOME)/.cargo/env
+	@cargo install -j \$(NPROC) --path ./bins \$(FORCE)
 	@cargo install -j \$(NPROC) --path . \$(FORCE)
 
 cargo-sort: 	cargo-sort

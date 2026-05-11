@@ -63,6 +63,7 @@ cargo-build: 	## 	cargo build
 	@RUST_BACKTRACE=all cargo b -j $(NPROC) $(QUIET)
 cargo-install: 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
+	@cargo install -j $(NPROC) --path ./bins $(FORCE)
 	@cargo install -j $(NPROC) --path . $(FORCE)
 
 cargo-sort: 	cargo-sort
@@ -138,7 +139,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1875/947876/635003" -n "af9d0081b52194599da95da40beac2d1ce5a2ae2d894c6c08dca0c019277aa10"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948848/319156" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
