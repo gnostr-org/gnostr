@@ -17,6 +17,8 @@ default = ["blossom", "blossom-tui"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
 relay = ["dep:gnostr-relay"]
+git = ["dep:ngit", "dep:git-version"]
+legit = ["dep:gnostr-legit"]
 metrics = []
 rate_limiter = []
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
@@ -35,7 +37,7 @@ crossterm = "0.29"
 env_logger = "0.11"
 futures = { workspace = true }
 futures-util = { workspace = true }
-git-version = "0.3.9"
+git-version = { version = "0.3.9", optional = true }
 git2 = { version = "0.20.4", default-features = false }
 gnostr = { path = "..", version = ">=948560.1874.701540" }
 gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = [
@@ -47,7 +49,7 @@ gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">
 gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948560.1874.701540" }
 gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948560.1874.701540" }
 gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540" }
-gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948560.1874.701540" }
+gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948560.1874.701540", optional = true }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540" }
 gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540", optional = true }
 gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540" }
@@ -55,7 +57,7 @@ gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist
 gnostr_qr = { path = "../qr", version = ">=948560.1874.701540" }
 libp2p = { workspace = true }
 log = { workspace = true }
-ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948560.1874.701540" }
+ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948560.1874.701540", optional = true }
 nips = { path = "../nips", version = ">=948560.1874.701540" }
 nostr = { workspace = true }
 pretty_env_logger = "0.5.0"
@@ -89,6 +91,46 @@ url = { workspace = true }
 walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
+
+[[bin]]
+name = "gnostr-tui"
+path = "src/bin/gnostr-tui.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "gnostr-nip34"
+path = "src/bin/gnostr-nip34.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "git-tui"
+path = "src/bin/git-tui.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "git_tui"
+path = "src/bin/git_tui.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo"
+path = "src/bin/gnostr_chat_tui_demo.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "gnostr-legit"
+path = "src/bin/gnostr-legit.rs"
+required-features = ["legit"]
+
+[[bin]]
+name = "git-legit"
+path = "src/bin/git-legit.rs"
+required-features = ["legit"]
+
+[[example]]
+name = "git_tui"
+path = "examples/git_tui.rs"
+required-features = ["git"]
 
 [[bin]]
 name = "gnostr-relay"
