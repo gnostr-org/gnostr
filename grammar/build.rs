@@ -1,8 +1,10 @@
 use std::{
     borrow::Cow,
+    collections::hash_map::DefaultHasher,
     ffi::OsStr,
     fmt::Write,
     fs,
+    hash::{Hash, Hasher},
     path::{Path, PathBuf},
     process::Command,
     sync::LazyLock,
@@ -18,6 +20,7 @@ use threadpool::ThreadPool;
 const GRAMMAR_REPOSITORY_URL: &str = "https://github.com/helix-editor/helix";
 const GRAMMAR_REPOSITORY_REF: &str = "82dd96369302f60a9c83a2d54d021458f82bcd36";
 const GRAMMAR_REPOSITORY_CONFIG_PATH: &str = "languages.toml";
+const GRAMMAR_CACHE_NAMESPACE: &str = "gnostr/grammar";
 
 static BLACKLISTED_MODULES: &[&str] = &[
     // these languages all don't have corresponding grammars
@@ -247,6 +250,8 @@ fn main() -> anyhow::Result<()> {
     //println!("cargo:warning=DEBUG: gnostr-grammar build.rs is executing.");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
     println!("out_dir={}", &out_dir.display());
+    println!("cargo::rerun-if-changed=build.rs");
+    println!("cargo::rerun-if-env-changed=GRAMMAR_REPOSITORY_REF");
 
     let root = std::env::var("TREE_SITTER_GRAMMAR_LIB_DIR").ok();
     println!("root={:?}", &root);
@@ -278,10 +283,14 @@ fn main() -> anyhow::Result<()> {
 
         (config, root.join("queries"))
     } else {
-        let sources = out_dir.join("sources");
-        fs::create_dir_all(&sources)?;
+        let cache_root = grammar_cache_root()?;
+        fs::create_dir_all(&cache_root)?;
 
-        let helix_root = sources.join("helix");
+        let grammar_ref = grammar_repository_ref();
+        let helix_root = cache_root.join("helix").join(&grammar_ref);
+        if let Some(parent) = helix_root.parent() {
+            fs::create_dir_all(parent)?;
+        }
 
         ensure_helix_repository(&helix_root)?;
 
@@ -291,7 +300,11 @@ fn main() -> anyhow::Result<()> {
         )
         .context("failed to parse helix languages.toml")?;
 
-        fetch_and_build_grammar(config.grammar.clone(), &sources)?;
+        let source_root = cache_root.join("sources").join(&grammar_ref);
+        let build_root = cache_root.join("build").join(target_triple()).join(&grammar_ref);
+        fs::create_dir_all(&source_root)?;
+        fs::create_dir_all(&build_root)?;
+        fetch_and_build_grammar(config.grammar.clone(), &source_root, &build_root)?;
 
         (config, helix_root.join("runtime/queries"))
     };
@@ -354,6 +367,9 @@ fn report_build_name() {
 }
 
 fn ensure_helix_repository(destination: &Path) -> anyhow::Result<()> {
+    if let Some(parent) = destination.parent() {
+        fs::create_dir_all(parent)?;
+    }
     if destination.join(GRAMMAR_REPOSITORY_CONFIG_PATH).exists() {
         return Ok(());
     }
@@ -364,9 +380,29 @@ fn ensure_helix_repository(destination: &Path) -> anyhow::Result<()> {
             println!(
                 "cargo:warning=git fetch for helix failed ({err}); falling back to archive download"
             );
+            if destination.exists() {
+                fs::remove_dir_all(destination)?;
+            }
             fetch_helix_archive(destination).context(GRAMMAR_REPOSITORY_URL)
         }
     }
+}
+
+fn grammar_repository_ref() -> String {
+    std::env::var("GRAMMAR_REPOSITORY_REF").unwrap_or_else(|_| GRAMMAR_REPOSITORY_REF.to_string())
+}
+
+fn grammar_cache_root() -> anyhow::Result<PathBuf> {
+    let cache_home = std::env::var_os("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".cache")))
+        .context("unable to determine cache directory")?;
+
+    Ok(cache_home.join(GRAMMAR_CACHE_NAMESPACE))
+}
+
+fn target_triple() -> String {
+    std::env::var("TARGET").unwrap_or_else(|_| "unknown-target".to_string())
 }
 
 fn get_git_hash() -> String {
@@ -642,6 +678,7 @@ fn read_local_query(query_path: &Path, language: &str, filename: &str) -> String
 fn fetch_and_build_grammar(
     grammars: Vec<GrammarDefinition>,
     source_dir: &Path,
+    build_root: &Path,
 ) -> anyhow::Result<()> {
     let pool = ThreadPool::new(std::thread::available_parallelism()?.get());
 
@@ -650,26 +687,28 @@ fn fetch_and_build_grammar(
             continue;
         }
 
-        let mut grammar_root = source_dir.join(&grammar.name);
+        let grammar_root = source_dir.join(&grammar.name);
+        let grammar_build_dir = grammar_cache_dir(build_root, &grammar)?;
 
         pool.execute(move || {
-            let grammar_root = match grammar.source {
+            let grammar_root = match &grammar.source {
                 GrammarSource::Git {
                     remote,
                     revision,
                     subpath,
                 } => {
-                    fetch_git_repository(&remote, &revision, &grammar_root)
+                    fetch_git_repository(remote, revision, &grammar_root)
                         .context(GRAMMAR_REPOSITORY_URL)
                         .expect("failed to fetch git repository");
 
+                    let mut grammar_root = grammar_root;
                     if let Some(subpath) = subpath {
                         grammar_root.push(subpath);
                     }
 
                     grammar_root
                 }
-                GrammarSource::Local { path } => path,
+                GrammarSource::Local { path } => path.clone(),
             };
 
             let grammar_src = grammar_root.join("src");
@@ -745,8 +784,26 @@ void {destroy_fn}(void *payload) {{
                 //println!("cargo:warning=DEBUG: Injected dummy scanner for {}.", grammar.name);
             }
 
+            if grammar_artifacts_ready(
+                &grammar_build_dir,
+                &grammar,
+                parser_file.is_some(),
+                actual_scanner_file.is_some(),
+            ) {
+                emit_cached_grammar_links(
+                    &grammar_build_dir,
+                    &grammar,
+                    parser_file.is_some(),
+                    actual_scanner_file.is_some(),
+                );
+                return;
+            }
+
+            fs::create_dir_all(&grammar_build_dir).unwrap();
+
             if let Some(parser_file) = parser_file {
                 cc::Build::new()
+                    .out_dir(&grammar_build_dir)
                     .cpp(parser_file.extension() == Some(OsStr::new("cc")))
                     .file(parser_file)
                     .flag_if_supported("-w")
@@ -758,6 +815,7 @@ void {destroy_fn}(void *payload) {{
             if let Some(scanner_file_path) = actual_scanner_file {
                 //println!("cargo:warning=DEBUG: Compiling scanner for {}: path={:?}", grammar.name, &scanner_file_path);
                 cc::Build::new()
+                    .out_dir(&grammar_build_dir)
                     .cpp(scanner_file_path.extension() == Some(OsStr::new("cc")))
                     .file(&scanner_file_path)
                     .flag_if_supported("-w")
@@ -765,11 +823,64 @@ void {destroy_fn}(void *payload) {{
                     .include(&grammar_src)
                     .compile(&format!("{}-scanner", grammar.name));
             }
+
+            emit_cache_marker(&grammar_build_dir, &grammar).unwrap();
         });
     }
 
     pool.join();
 
+    Ok(())
+}
+
+fn grammar_cache_dir(build_root: &Path, grammar: &GrammarDefinition) -> anyhow::Result<PathBuf> {
+    let mut hasher = DefaultHasher::new();
+    grammar.name.hash(&mut hasher);
+    grammar.source.hash(&mut hasher);
+    let key = format!("{:016x}", hasher.finish());
+    Ok(build_root.join(&grammar.name).join(key))
+}
+
+fn grammar_artifacts_ready(
+    build_dir: &Path,
+    grammar: &GrammarDefinition,
+    has_parser: bool,
+    has_scanner: bool,
+) -> bool {
+    build_dir.join("cache.marker").exists()
+        && (!has_parser || artifact_exists(build_dir, &format!("{}-parser", grammar.name)))
+        && (!has_scanner || artifact_exists(build_dir, &format!("{}-scanner", grammar.name)))
+}
+
+fn artifact_exists(build_dir: &Path, stem: &str) -> bool {
+    let unix = format!("lib{stem}.a");
+    let windows = format!("{stem}.lib");
+
+    fs::read_dir(build_dir)
+        .ok()
+        .into_iter()
+        .flat_map(|entries| entries.flatten())
+        .filter_map(|entry| entry.file_name().into_string().ok())
+        .any(|name| name == unix || name == windows)
+}
+
+fn emit_cached_grammar_links(
+    build_dir: &Path,
+    grammar: &GrammarDefinition,
+    has_parser: bool,
+    has_scanner: bool,
+) {
+    println!("cargo::rustc-link-search=native={}", build_dir.display());
+    if has_parser {
+        println!("cargo::rustc-link-lib=static={}-parser", grammar.name);
+    }
+    if has_scanner {
+        println!("cargo::rustc-link-lib=static={}-scanner", grammar.name);
+    }
+}
+
+fn emit_cache_marker(build_dir: &Path, grammar: &GrammarDefinition) -> anyhow::Result<()> {
+    fs::write(build_dir.join("cache.marker"), grammar.name.as_bytes())?;
     Ok(())
 }
 
@@ -897,6 +1008,27 @@ enum GrammarSource {
     Local {
         path: PathBuf,
     },
+}
+
+impl Hash for GrammarSource {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            GrammarSource::Git {
+                remote,
+                revision,
+                subpath,
+            } => {
+                "git".hash(state);
+                remote.hash(state);
+                revision.hash(state);
+                subpath.hash(state);
+            }
+            GrammarSource::Local { path } => {
+                "local".hash(state);
+                path.hash(state);
+            }
+        }
+    }
 }
 
 #[derive(Deserialize)]
