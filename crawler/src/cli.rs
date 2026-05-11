@@ -4,6 +4,7 @@ use crate::processor::BOOTSTRAP_RELAYS;
 use crate::processor::Processor;
 use crate::relay_manager::RelayManager;
 use clap::{Parser, Subcommand};
+use log::{debug, info};
 use nostr_sdk::prelude::*;
 
 #[derive(Parser, Debug)]
@@ -71,6 +72,7 @@ pub struct CliArgs {
 }
 
 pub async fn run(args: &CliArgs) -> Result<()> {
+    debug!("crawler::cli::run start args={args:?}");
     let _run_async = async {
         let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
         let relay_client = Client::new(app_keys);
@@ -83,12 +85,18 @@ pub async fn run(args: &CliArgs) -> Result<()> {
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor).await;
     let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
+    info!(
+        "crawler::cli::run bootstrap_relays={}",
+        bootstrap_relay_refs.len()
+    );
     let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
 
     if args.arg_dump {
+        debug!("crawler::cli::run dumping relay manager state");
         relay_manager.processor.dump();
     }
 
+    debug!("crawler::cli::run done");
     Ok(())
 }
 
@@ -96,6 +104,7 @@ pub async fn dispatch_cli_command(
     cli: Cli,
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("dispatch_cli_command start command={:?}", cli.command);
     match &cli.command {
         Commands::Sniper { nip, shitlist } => {
             run_sniper(*nip, shitlist.clone(), client).await?;
@@ -117,5 +126,6 @@ pub async fn dispatch_cli_command(
             }
         }
     }
+    debug!("dispatch_cli_command done");
     Ok(())
 }

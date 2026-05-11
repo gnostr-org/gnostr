@@ -1,16 +1,15 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use clap::Parser;
 use gnostr_asyncgit::types::PrivateKey;
-use libp2p::gossipsub;
 use proctitle::set_title;
-use std::time::Duration;
 use tracing::Level;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 use crate::{
-    event::ChatEvent,
-    msg::{Msg, MsgKind},
-    p2p::evt_loop,
+    session::{ChatNotification, ChatSession},
+    tui::run_chat_tui,
 };
 
 #[derive(Debug, Clone, Parser)]
@@ -69,6 +68,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         None
     };
 
+    let username_for_session = username_to_set
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string());
+
     if let Some(user_name) = username_to_set {
         if !user_name.is_empty() {
             use std::env;
@@ -87,8 +90,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         Level::WARN
     };
 
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
+    let filter = EnvFilter::builder()
+        .with_default_directive(level.into())
+        .from_env()
+        .expect("Failed to build EnvFilter from environment")
         .add_directive("nostr_sdk=off".parse().unwrap())
         .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::client=off".parse().unwrap())
@@ -99,7 +104,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
         .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
-        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
+        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap())
+        .add_directive("tokio_tungstenite=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(
@@ -110,9 +116,20 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         .with(filter);
 
     let _ = subscriber.try_init();
+    tracing::debug!(
+        "chat startup: topic={:?} headless={} oneshot={:?} gitdir={:?}",
+        sub_command_args.topic,
+        sub_command_args.headless,
+        sub_command_args.oneshot,
+        sub_command_args.gitdir
+    );
     tracing::trace!("\n{:?}\n", &sub_command_args);
     tracing::debug!("\n{:?}\n", &sub_command_args);
     tracing::info!("\n{:?}\n", &sub_command_args);
+
+    let topic_name = chat_topic(sub_command_args);
+    let mut session = ChatSession::connect(topic_name.clone()).await?;
+    tracing::info!("local p2p relay service started for chat");
 
     if let Some(message_input) = sub_command_args.oneshot.clone() {
         if sub_command_args.headless {
@@ -120,42 +137,11 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
             return Ok(());
         }
 
-        tracing::info!("Oneshot mode: sending message '{}'", message_input);
-        let topic = chat_topic(sub_command_args);
-        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-        let (output_tx, _output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-
-        tokio::spawn(async move {
-            let _ = evt_loop(input_rx, output_tx, topic).await;
-        });
-
-        println!("Initializing network and discovering peers...");
-        tokio::time::sleep(Duration::from_secs(3)).await;
-
-        let mut msg_kind = MsgKind::OneShot;
-        if message_input.contains("diff --git")
-            || (message_input.contains("--- a/") && message_input.contains("+++ b/"))
-        {
-            msg_kind = MsgKind::GitDiff;
-        }
-
-        let msg = Msg::default()
-            .set_kind(msg_kind)
-            .set_content(message_input.clone(), 0);
-
-        if input_tx.send(ChatEvent::ChatMessage(msg)).await.is_err() {
-            eprintln!("Failed to send message to event loop.");
-        } else {
-            println!("Oneshot message sent. Waiting for propagation...");
-        }
-
-        tokio::time::sleep(Duration::from_secs(2)).await;
-        tracing::info!("Oneshot operation complete.");
+        run_oneshot(&mut session, message_input).await?;
         return Ok(());
     }
 
     if sub_command_args.headless {
-        let topic = chat_topic(sub_command_args);
         let topic_name = sub_command_args
             .topic
             .clone()
@@ -166,64 +152,112 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         tracing::info!("running event loop in background.");
         tracing::info!("Process name set to: {}", process_title);
 
-        let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-        let (output_tx, _output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-
-        tokio::spawn(async move {
-            if let Err(e) = evt_loop(input_rx, output_tx, topic).await {
-                eprintln!("Headless p2p event loop error: {}", e);
-            }
-        });
-
-        let _ = input_tx;
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        let printer = spawn_notification_printer(session.subscribe());
+        tracing::info!("Headless mode is running; waiting for shutdown.");
+        tokio::signal::ctrl_c().await?;
+        tracing::debug!("headless chat received ctrl-c and is exiting");
+        drop(printer);
         return Ok(());
     }
 
-    run_chat_session(sub_command_args).await
+    run_chat_session(sub_command_args, username_for_session, &session).await
 }
 
-fn chat_topic(sub_command_args: &ChatSubCommands) -> gossipsub::IdentTopic {
-    gossipsub::IdentTopic::new(
-        sub_command_args
-            .topic
-            .clone()
-            .unwrap_or_else(|| "gnostr".to_string()),
-    )
+fn chat_topic(sub_command_args: &ChatSubCommands) -> String {
+    sub_command_args
+        .topic
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string())
 }
 
-async fn run_chat_session(sub_command_args: &ChatSubCommands) -> Result<()> {
-    let topic = chat_topic(sub_command_args);
-    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-    let (output_tx, mut output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+async fn run_chat_session(sub_command_args: &ChatSubCommands, username: String, session: &ChatSession) -> Result<()> {
+    let topic_name = sub_command_args
+        .topic
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string());
 
+    run_chat_tui(topic_name, username, session)?;
+    Ok(())
+}
+
+async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result<()> {
+    tracing::info!("Oneshot mode: sending message '{}'", message_input);
+    let printer = spawn_notification_printer(session.subscribe());
+    println!("Initializing network and discovering peers...");
+    tracing::debug!("chat oneshot: waiting for a connected peer");
+    session.wait_for_connected(Duration::from_secs(30)).await?;
+    session.send_text(message_input).await?;
+    println!("Oneshot message sent. Waiting for propagation...");
+
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    drop(printer);
+    tracing::info!("Oneshot operation complete.");
+    Ok(())
+}
+
+fn spawn_notification_printer(
+    mut output_rx: tokio::sync::broadcast::Receiver<ChatNotification>,
+) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
-        let _ = evt_loop(input_rx, output_tx, topic).await;
-    });
-
-    use tokio::io::AsyncBufReadExt;
-    let mut stdin = tokio::io::BufReader::new(tokio::io::stdin()).lines();
-
-    loop {
-        tokio::select! {
-            line = stdin.next_line() => {
-                let Some(line) = line? else { break; };
-                if line.is_empty() {
-                    continue;
-                }
-
-                let msg = Msg::default().set_content(line, 0).set_kind(MsgKind::Chat);
-                input_tx.send(ChatEvent::ChatMessage(msg)).await?;
-            }
-            Some(event) = output_rx.recv() => {
-                match event {
-                    ChatEvent::ChatMessage(msg) => println!("{msg}"),
-                    ChatEvent::ShowErrorMsg(text) => eprintln!("{text}"),
-                    ChatEvent::ShowInfoMsg(text) => println!("{text}"),
+        while let Ok(event) = output_rx.recv().await {
+            match event {
+                ChatNotification::ChatMessage(msg) => println!("{msg}"),
+                ChatNotification::Error(text) => eprintln!("{text}"),
+                ChatNotification::Info(text) => println!("{text}"),
+                ChatNotification::Connected { peer_id, endpoint } => {
+                    println!("Connected to peer {peer_id} via {endpoint}")
                 }
             }
         }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chat_topic_defaults_to_gnostr() {
+        let args = ChatSubCommands {
+            nsec: None,
+            password: None,
+            name: None,
+            topic: None,
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+            headless: false,
+            workdir: None,
+            gitdir: None,
+            oneshot: None,
+        };
+
+        assert_eq!(chat_topic(&args), "gnostr");
     }
 
-    Ok(())
+    #[test]
+    fn chat_topic_uses_explicit_topic() {
+        let args = ChatSubCommands {
+            topic: Some("gnostr-dev".to_string()),
+            ..ChatSubCommands {
+                nsec: None,
+                password: None,
+                name: None,
+                topic: None,
+                hash: None,
+                disable_cli_spinners: false,
+                info: false,
+                debug: false,
+                trace: false,
+                headless: false,
+                workdir: None,
+                gitdir: None,
+                oneshot: None,
+            }
+        };
+
+        assert_eq!(chat_topic(&args), "gnostr-dev");
+    }
 }

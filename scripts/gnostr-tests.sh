@@ -11,6 +11,8 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
+
 LIST_ONLY=false
 TEST_NAME=""
 TEST_FLAGS=()
@@ -35,11 +37,15 @@ Examples:
   ./scripts/gnostr-tests.sh --ignored
   ./scripts/gnostr-tests.sh --workspace --ignored
   ./scripts/gnostr-tests.sh --test blossom_remote_push_list_and_fetch_round_trip -- --nocapture
+
+Related runners:
+  ./scripts/gnostr-asyncgit-tests.sh --nocapture
+  ./scripts/gnostr-ngit-tests.sh --notes --nocapture
 EOF
 }
 
 check_nip44_vectors() {
-  local vector_file="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
+  local vector_file="./types/src/nostr/nip44/nip44.vectors.json"
   local expected_vector_sha256="269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040"
   local actual_vector_sha256
 
@@ -150,6 +156,10 @@ else
   fi
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
     cargo_cmd+=(-- "${TEST_FLAGS[@]}")
+  fi
+  if ! ./scripts/gnostr-ngit-tests.sh --notes "${TEST_FLAGS[@]}"; then
+    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr notes test suite fail" >/dev/null 2>&1 || true
+    exit 1
   fi
   if "${cargo_cmd[@]}"; then
     cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true

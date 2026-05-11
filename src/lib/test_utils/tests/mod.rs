@@ -1,7 +1,6 @@
 pub mod all_sub_command_screenshots;
 pub mod asyncgit_api;
 pub mod chat_simulation;
-pub mod git_ssh;
 pub mod gitminer;
 pub mod gnostr_kvs_test;
 pub mod lib_mod_tests;

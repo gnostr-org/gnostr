@@ -1,5 +1,5 @@
+use chrono::TimeZone;
 use anyhow::Result;
-use directories::ProjectDirs;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -10,6 +10,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use tokio;
 use url::Url;
+use std::process::Command;
 
 // build.rs - This file will generate src/relays.yaml
 
@@ -43,6 +44,7 @@ fn sanitize_relay_entry(line: &str) -> Option<String> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    report_build_name();
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let cache_path = out_dir.join("relay_hashes.json");
     let mut cached_hashes: CachedHashes = match fs::read_to_string(&cache_path) {
@@ -90,13 +92,7 @@ async fn main() -> Result<()> {
         }
     }
 
-    let config_dir = ProjectDirs::from("org", "gnostr", "gnostr/crawler")
-        .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
-        .unwrap_or_else(|| PathBuf::from("."));
-    fs::create_dir_all(&config_dir)?;
-
-    // Write combined and deduplicated relays to the user config directory.
-    let generated_relays_path = config_dir.join("relays.yaml");
+    let generated_relays_path = out_dir.join("relays.yaml");
     let mut file = File::create(&generated_relays_path)?;
 
     for relay_url in &all_relays {
@@ -106,6 +102,10 @@ async fn main() -> Result<()> {
     // Tell Cargo the path to the generated file
     // Tell Cargo to rerun if build.rs itself changes
     println!("cargo:rerun-if-changed=build.rs");
+    println!(
+        "cargo:rustc-env=GNOSTR_CRAWLER_RELAYS_YAML={}",
+        generated_relays_path.display()
+    );
 
     // Write updated hashes to cache file
     cached_hashes.hashes = new_hashes;
@@ -113,6 +113,50 @@ async fn main() -> Result<()> {
     fs::write(&cache_path, serialized)?;
 
     Ok(())
+}
+
+fn report_build_name() {
+    let now = match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(val) => chrono::Local
+            .timestamp_opt(val.parse::<i64>().unwrap(), 0)
+            .unwrap(),
+        Err(_) => chrono::Local::now(),
+    };
+    let build_date = now.date_naive();
+    let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!("{}-{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
+        format!(
+            "{}-{} {} ({})",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION"),
+            build_date,
+            get_git_hash()
+        )
+    };
+
+    println!("cargo:warning=buildname '{build_name}'");
+    println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+}
+
+fn get_git_hash() -> String {
+    if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
+        return commit[..7].to_string();
+    }
+
+    let commit = Command::new("git")
+        .arg("rev-parse")
+        .arg("--short=7")
+        .arg("--verify")
+        .arg("HEAD")
+        .output();
+
+    if let Ok(commit_output) = commit {
+        let commit_string = String::from_utf8_lossy(&commit_output.stdout);
+        return commit_string.lines().next().unwrap_or("").into();
+    }
+
+    panic!("Can not get git commit: {}", commit.unwrap_err());
 }
 
 async fn fetch_online_relays_build(url: &str) -> Result<(Vec<String>, String)> {

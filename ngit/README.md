@@ -33,6 +33,9 @@ The helper script `./scripts/gnostr-ngit-tests.sh` uses that feature by
 default, and also accepts `--features`, `--all-features`, and
 `--no-default-features` when you want to override the cargo feature set.
 
+The git-notes tests now cover the full NIP-34 matrix: plain/mined commits,
+plain/mined notes, and plain/PoW note events.
+
 ## contributions welcome!
 
 [gitworkshop.dev/danconwaydev.com/ngit](https://gitworkshop.dev/danconwaydev.com/ngit) to report issues and see PRs

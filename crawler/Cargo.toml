@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "gnostr-crawler"
-version = "1876.947630.6535"
+version = "948560.1874.701540"
 authors = ["gnostr <admin@gnostr.org>", "optout21"]
 build = true                                        ##false
 autolib = false
@@ -21,34 +21,6 @@ repository = "https://github.com/gnostr-org/gnostr"
 name = "gnostr_crawler"
 path = "src/lib.rs"
 
-[[bin]]
-name = "gnostr_crawler"
-path = "src/bin/gnostr_crawler.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876"
-path = "src/bin/gnostr_crawler_filetree-1876.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-285805"
-path = "src/bin/gnostr_crawler_filetree-285805.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-285805-1876"
-path = "src/bin/gnostr_crawler_filetree-285805-1876.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876947415284713-947415-284728"
-path = "src/bin/gnostr_crawler_filetree-1876947415284713-947415-284728.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876-947418-280051"
-path = "src/bin/gnostr_crawler_filetree-1876-947418-280051.rs"
-
-[[bin]]
-name = "gnostr_crawler_filetree-1876-947421-276222"
-path = "src/bin/gnostr_crawler_filetree-1876-947421-276222.rs"
-
 [dependencies]
 ## TODO align with workspace deps
 anyhow = "1.0.100"
@@ -63,10 +35,10 @@ dns-lookup = "2.0.4"
 env_logger = "0.11"
 futures = "0.3.25"
 git2 = "0.20.1"
-gnostr-asyncgit = { version = "1876.947630.6535", path = "../asyncgit", features = [
+gnostr-asyncgit = { version = ">=948560.1874.701540", path = "../asyncgit", features = [
   "vendored-openssl",
 ] }
-gnostr-filetreelist = { path = "../filetreelist", package = "gnostr-filetreelist", version = "1876.947630.6535" }
+gnostr-filetreelist = { path = "../filetreelist", package = "gnostr-filetreelist", version = ">=948560.1874.701540" }
 indicatif = "0.14.0"
 log = "0.4.24"
 nostr-sdk = { version = "0.44.1" }
@@ -81,6 +53,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
 time = "0.1.39"
+time_03 = { package = "time", version = "0.3" }
 tokio = { version = "1.0", features = ["full"] }
 tokio-tungstenite = { workspace = true }
 tower-http = { version = "0.5", features = ["full"] }
@@ -91,6 +64,7 @@ url = "2.5.0"
 
 [build-dependencies]
 anyhow = "1.0.100"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 directories = "6.0.0"
 pulldown-cmark = "0.10"
 reqwest = { version = "0.12.28", default-features = false, features = [
@@ -102,18 +76,6 @@ serde_json = "1"
 sha2 = "0.10"
 tokio = { version = "1", features = ["full"] }
 url = "2.5.0"
-
-[[example]]
-name = "gnostr_crawler"
-path = "examples/gnostr_crawler.rs"
-
-[[example]]
-name = "gnostr_test"
-path = "examples/gnostr_test.rs"
-
-[[example]]
-name = "string_pop"
-path = "examples/string_pop.rs"
 
 [[test]]
 name = "crawler_helpers"

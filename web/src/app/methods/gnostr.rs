@@ -1,13 +1,8 @@
-use axum::{
-    http::StatusCode,
-    response::{Html, IntoResponse, Redirect},
-};
+use axum::response::{IntoResponse, Redirect};
 
-use crate::app::layers::logger;
+#[allow(unused_imports)]
 use crate::app::methods::filters;
-#[allow(unused_imports)] //TODO If Error is truly not used, remove this line.
 use crate::app::methods::repo::Error;
-use crate::app::{CRATE_VERSION, GLOBAL_CSS_HASH, GNOSTR_SVG_HASH};
 use askama::Template;
 use tracing::debug;
 
@@ -20,12 +15,12 @@ pub struct View {
 //pub async fn handle() -> Result<Html<String>, Error> {
 //TODO debug!("Gnostr handler invoked");
 //TODO Ok(Html(View {}.render().expect("Failed to render template")))
-pub async fn handle() -> Result<impl IntoResponse, crate::app::methods::repo::Error> {
+pub async fn handle() -> Result<impl IntoResponse, Error> {
     debug!("Gnostr handler invoked, redirecting to root");
     Ok(Redirect::permanent("/"))
 }
 
-pub async fn handle_slash() -> Result<impl IntoResponse, crate::app::methods::repo::Error> {
+pub async fn handle_slash() -> Result<impl IntoResponse, Error> {
     debug!("Gnostr handler with trailing slash invoked, redirecting to root");
     Ok(Redirect::permanent("/"))
 }

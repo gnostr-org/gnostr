@@ -1,12 +1,22 @@
-//! `gnostr-p2p` is the Rust crate that owns the P2P package namespace.
+//! `gnostr-p2p` owns the libp2p transport namespace.
+//!
+//! It re-exports the shared asyncgit-backed Nostr wire types for downstream
+//! crates, and it also depends on `gnostr-crawler` for relay bucket discovery.
+//! That means `crawler` must stay on the asyncgit side of the graph and should
+//! not depend on `p2p`, or the workspace will cycle.
 //!
 //! The browser-side pure JavaScript implementation lives under `src/js/`.
 
 extern crate gnostr_asyncgit as git2;
 
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
+
+use libp2p::identity;
+use sha2::{Digest, Sha256};
 
 pub mod args;
+pub mod cli;
 pub mod behaviour;
 pub mod command_handler;
 pub mod event_handler;
@@ -18,9 +28,13 @@ pub mod network_config;
 pub mod opt;
 pub mod bridge;
 pub mod js;
+pub mod crawler_broadcast;
+pub mod message;
+pub mod relay_bridge;
 pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
+pub use crawler_broadcast as relay_buckets;
 
 /// Crate name.
 pub const PACKAGE_NAME: &str = "gnostr-p2p";
@@ -30,9 +44,51 @@ pub fn js_source_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/js")
 }
 
+/// Build a deterministic libp2p keypair from an optional secret seed string.
+///
+/// Hex SHA-256 seeds are used directly; any other input is hashed into a 32-byte seed.
+pub fn keypair_from_seed(secret_key_seed: Option<String>) -> identity::Keypair {
+    match secret_key_seed {
+        Some(seed) => identity::Keypair::ed25519_from_bytes(seed_bytes(&seed))
+            .expect("only errors on wrong length"),
+        None => identity::Keypair::generate_ed25519(),
+    }
+}
+
+fn seed_bytes(seed: &str) -> [u8; 32] {
+    if seed.len() == 64 && seed.chars().all(|c| c.is_ascii_hexdigit()) {
+        let mut bytes = [0u8; 32];
+        for (idx, chunk) in seed.as_bytes().chunks_exact(2).enumerate() {
+            bytes[idx] = u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16)
+                .expect("validated hex digest");
+        }
+        return bytes;
+    }
+
+    let digest = Sha256::digest(seed.as_bytes());
+    digest.into()
+}
+
 pub use bridge::{asset_content_type, asset_response, shell_html};
 pub use js::get_js_assets;
+pub use message::*;
+pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeSession, NostrRelayConnection};
 pub use template_html::{get_template_assets, TemplateHtml};
+
+pub fn spawn_detached_current_exe<I, S>(args: I) -> Result<u32, Box<dyn std::error::Error>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    let current_exe = std::env::current_exe()?;
+    let mut command = Command::new(current_exe);
+    command.args(args);
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+    let child = command.spawn()?;
+    Ok(child.id())
+}
 
 #[cfg(test)]
 mod tests {
@@ -47,7 +103,8 @@ mod tests {
 /// Compatibility namespace for the legacy `crate::p2p::...` module paths.
 pub mod p2p {
     pub use crate::{
-        args, behaviour, command_handler, event_handler, git_integration, git_publisher, kvs,
-        lookup, network_config, opt, swarm_builder, utils,
+        args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
+        keypair_from_seed, lookup, message, network_config, opt, relay_bridge,
+        crawler_broadcast, swarm_builder, utils,
     };
 }

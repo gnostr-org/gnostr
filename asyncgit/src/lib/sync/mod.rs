@@ -44,7 +44,7 @@ pub use branch::{
     merge_rebase::merge_upstream_rebase, rename::rename_branch, validate_branch_name,
     BranchCompare, BranchDetails, BranchInfo,
 };
-pub use commit::{amend, commit, tag_commit};
+pub use commit::{amend, commit, mine_commit, tag_commit, CommitMineOptions};
 pub use commit_details::{get_commit_details, CommitDetails, CommitMessage, CommitSignature};
 pub use commit_files::get_commit_files;
 pub use commit_filter::{
@@ -68,8 +68,9 @@ pub use merge::{
     merge_msg, mergehead_ids, rebase_progress,
 };
 pub use notes::{
-    add_note, default_notes_ref, list_notes, remove_note, run_notes_command, show_note, NoteInfo,
-    NotesCommand, NotesCommandResult,
+    add_note, default_notes_ref, generate_git_note_event, generate_git_note_event_with_pow,
+    git_note_event_id, git_note_tags, list_notes, remove_note, run_notes_command, show_note,
+    GitNote, NoteInfo, NotesCommand, NotesCommandResult,
 };
 pub use rebase::rebase_branch;
 pub use remotes::{
@@ -268,7 +269,14 @@ mod tests {
     // init log
     fn init_log() {
         let _ = env_logger::builder()
+            .parse_default_env()
             .is_test(true)
+            .filter_module("ureq", log::LevelFilter::Off)
+            .filter_module("serial_test", log::LevelFilter::Off)
+            .filter_module("mio", log::LevelFilter::Off)
+            .filter_module("tungstenite", log::LevelFilter::Off)
+            .filter_module("tokio_tungstenite", log::LevelFilter::Off)
+            .filter_module("rustls", log::LevelFilter::Warn)
             .filter_level(log::LevelFilter::Trace)
             .try_init();
     }

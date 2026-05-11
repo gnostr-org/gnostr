@@ -175,6 +175,41 @@ pub fn get_status(
 ) -> Result<Vec<StatusItem>> {
 	scope_time!("get_status");
 
+	if repo_path.workdir().is_some() && matches!(status_type, StatusType::WorkingDir) {
+		let repo = crate::sync::repository::repo(repo_path)?;
+
+		let show_untracked = if let Some(config) = show_untracked {
+			config
+		} else {
+			untracked_files_config_repo(&repo)?
+		};
+
+		let mut options = StatusOptions::default();
+		options
+			.show(StatusShow::Workdir)
+			.update_index(true)
+			.include_untracked(show_untracked.include_untracked())
+			.renames_head_to_index(true)
+			.recurse_untracked_dirs(
+				show_untracked.recurse_untracked_dirs(),
+			);
+
+		let statuses = repo.statuses(Some(&mut options))?;
+		let mut res = Vec::new();
+
+		for item in statuses.iter() {
+			let status = item.status().into();
+			let path = item.path().unwrap_or_default().to_string();
+			res.push(StatusItem { path, status });
+		}
+
+		res.sort_by(|a, b| {
+			Path::new(a.path.as_str()).cmp(Path::new(b.path.as_str()))
+		});
+
+		return Ok(res);
+	}
+
 	let repo: gix::Repository = gix_repo(repo_path)?;
 
 	let show_untracked = if let Some(config) = show_untracked {
@@ -302,7 +337,7 @@ mod tests {
 		sync::{
 			commit, stage_add_file,
 			status::{get_status, StatusType},
-			tests::{repo_init, repo_init_bare},
+			tests::repo_init,
 			RepoPath,
 		},
 		StatusItem, StatusItemType,
@@ -342,9 +377,15 @@ mod tests {
 	#[test]
 	#[ignore]
 	fn test_get_status_with_workdir() {
-		let (git_dir, _repo) = repo_init_bare().unwrap();
+		let (_td, repo) = repo_init().unwrap();
+		repo.config()
+			.unwrap()
+			.set_str("status.showUntrackedFiles", "all")
+			.unwrap();
 
 		let separate_workdir = TempDir::new().unwrap();
+		let current_dir = std::env::current_dir().unwrap();
+		std::env::set_current_dir(separate_workdir.path()).unwrap();
 
 		let file_path = Path::new("foo");
 		File::create(separate_workdir.path().join(file_path))
@@ -353,7 +394,7 @@ mod tests {
 			.unwrap();
 
 		let repo_path = RepoPath::Workdir {
-			gitdir: git_dir.path().into(),
+			gitdir: repo.path().into(),
 			workdir: separate_workdir.path().into(),
 		};
 
@@ -368,5 +409,7 @@ mod tests {
 				status: StatusItemType::New
 			}]
 		);
+
+		std::env::set_current_dir(current_dir).unwrap();
 	}
 }

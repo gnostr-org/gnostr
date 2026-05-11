@@ -5,6 +5,7 @@
 	outline: none;
 }
 
+html,
 body {
 	background: var(--clrBg);
 	color: var(--clrText);
@@ -12,6 +13,8 @@ body {
 	font-size: var(--fsNormal);
 	margin: 0;
 	padding: 0;
+	height: 100%;
+	overflow: hidden;
 }
 
 a {
@@ -88,20 +91,20 @@ th, td {
 :root {
     --header-height: 80px; /* Define a CSS variable for header height */
     --master-pane-top: 80px; /* Define a CSS variable for header height */
-    --master-pane-width: 220px;
+    --master-pane-width: 180px;
 }
 
 #app-main {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Ensure it takes full viewport height */
-    padding-top: var(--header-height); /* Account for fixed header */
+    height: 100vh; /* Keep the shell fixed to the viewport */
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 #global-header {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
     width: 100%;
     height: var(--header-height);
     background-color: var(--clrBg);
@@ -147,7 +150,7 @@ th, td {
 
 #list-detail-container {
     display: grid;
-    grid-template-columns: minmax(220px, var(--master-pane-width)) minmax(0, 1fr);
+    grid-template-columns: minmax(180px, var(--master-pane-width)) minmax(0, 1fr);
     flex: 1;
     width: 100%;
     min-height: 0;
@@ -159,9 +162,8 @@ th, td {
     border-right: 1px solid var(--clrBorder);
     background-color: var(--clrBg);
     overflow-y: auto;
-    height: calc(100vh - var(--header-height));
+    height: 100%;
     min-height: 0;
-    top: var(--header-height);
     position: sticky;
     align-self: flex-start;
 }
@@ -172,7 +174,7 @@ th, td {
     display: flex;
     flex-direction: column;
     position: relative;
-    height: calc(100vh - var(--header-height));
+    height: 100%;
     overflow: hidden;
 }
 
@@ -182,10 +184,20 @@ th, td {
     left: var(--master-pane-width);
     right: 0;
     bottom: 0;
+    display: flex;
+    flex-direction: column;
 	z-index: var(--zHeader);
 	background: var(--clrBg);
 	border-top: 1px solid var(--clrBorder);
 	box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+}
+#view footer > .footer-links,
+#view footer > .footer-build,
+#view footer > .nav.mobile {
+    order: 1;
+}
+#view footer > #dm-post {
+    order: 0;
 }
 #view {
 	padding-bottom: 150px;
@@ -1039,45 +1051,6 @@ code {
 	padding: 0;
 	overflow: hidden;
 }
-#settings #nip89-app-card::-webkit-details-marker,
-#settings #nip89-app-card > summary::-webkit-details-marker {
-	display: none;
-}
-#settings #nip89-app-card > summary {
-	display: grid;
-	grid-template-columns: 24px minmax(0, 1fr);
-	gap: 12px;
-	align-items: center;
-	padding: 15px;
-	list-style: none;
-	cursor: pointer;
-}
-#settings #nip89-app-card > summary::after {
-	content: "▾";
-	justify-self: end;
-	color: var(--clrTextLight);
-	transition: transform 0.15s ease;
-}
-#settings #nip89-app-card:not([open]) > summary::after {
-	transform: rotate(-90deg);
-}
-#settings #nip89-app-card > summary:hover {
-	background: color-mix(in srgb, var(--clrPanel) 80%, var(--clrBg) 20%);
-}
-#settings .nip89-app-summary-text {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-}
-#settings .nip89-app-summary-text [name='nip89-app-summary-name'] {
-	font-weight: 800;
-	color: var(--clrText);
-}
-#settings .nip89-app-summary-text [name='nip89-app-summary-subtitle'] {
-	color: var(--clrTextLight);
-	font-size: var(--fsReduced);
-	word-break: break-word;
-}
 #settings .nip89-app-body {
 	padding: 0 15px 15px;
 }
@@ -1148,8 +1121,7 @@ code {
 	background: var(--clrPanel);
 }
 #relays .relay-summary {
-	display: grid;
-	grid-template-columns: 24px minmax(0, 1fr) 56px;
+	display: flex;
 	align-items: start;
 	gap: 12px;
 	width: 100%;
@@ -1165,26 +1137,40 @@ code {
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 2px;
+	flex: 1 1 auto;
 	min-width: 0;
+	width: auto;
+	max-width: none;
+	overflow: hidden;
 }
 #relays .relay-summary-name {
+	display: block;
 	color: var(--clrText);
 	font-size: var(--fsNormal);
 	font-weight: 600;
 	line-height: 1.2;
-	word-break: break-word;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	min-width: 0;
 }
 #relays .relay-summary-address,
 #relays .relay-summary-ping {
+	display: block;
 	color: var(--clrTextLight);
 	font-size: var(--fsReduced);
 	line-height: 1.2;
-	word-break: break-all;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	min-width: 0;
 }
 #relays .relay-summary-icon {
 	width: 24px;
 	height: 24px;
 	flex: 0 0 auto;
+}
+#relays .relay-active-summary-nip34 {
+	width: 28px;
+	height: 28px;
 }
 #relays .relay-summary-action-spacer {
 	width: 56px;
@@ -1229,6 +1215,9 @@ code {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	align-self: start;
+	margin-left: auto;
+	margin-right: 12px;
 	min-width: 36px;
 	min-height: 36px;
 	padding: 8px 10px;
@@ -1236,18 +1225,23 @@ code {
 	flex: 0 0 auto;
 	justify-self: end;
 	width: auto;
+	white-space: nowrap;
 }
 #relays .relay-summary-action.remove-relay {
 	background: color-mix(in srgb, var(--clrWarn) 18%, transparent);
 }
 #relays .add-discovered-relay {
-	padding: 6px;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 8px 14px 8px 8px;
 	background: color-mix(in srgb, var(--clrSuccess) 18%, transparent);
 }
 #relays .add-discovered-relay:disabled {
 	opacity: 0.7;
 }
 #relays .add-discovered-relay .relay-add-icon {
+	width: 18px;
+	height: 18px;
 	filter: invert(46%) sepia(98%) saturate(1040%) hue-rotate(88deg) brightness(92%) contrast(94%);
 }
 #relays table.row tbody tr {
@@ -1353,6 +1347,8 @@ code {
 	padding: 15px;
 	background: var(--clrBg);
 	border-top: 1px solid var(--clrBorder);
+	width: 100%;
+	box-sizing: border-box;
 }
 .dm-group {
 	display: flex;

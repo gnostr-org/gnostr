@@ -8,6 +8,8 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
+
 MODE="notes"
 FEATURES=""
 ALL_FEATURES=false
@@ -15,6 +17,30 @@ NO_DEFAULT_FEATURES=false
 RELEASE=false
 NOCAPTURE=true
 TEST_FLAGS=()
+
+usage() {
+  cat <<'EOF'
+Usage: gnostr-ngit-tests.sh [--all] [--notes] [--ignored] [--nocapture] [--capture] [--all-features] [--no-default-features] [--release] [--features VALUE]
+
+Modes:
+  --notes          Run the notes-focused ngit slice (default)
+  --all            Run the full ngit suite
+
+Options:
+  --features VALUE        Add a Cargo feature (repeatable)
+  --all-features          Run with all features enabled
+  --no-default-features   Run with default features disabled
+  --ignored               Run ignored tests
+  --nocapture             Print test output
+  --capture               Silence test output
+  --release               Run tests in release mode
+  --help                  Show this help
+
+Examples:
+  ./scripts/gnostr-ngit-tests.sh --notes --nocapture
+  ./scripts/gnostr-ngit-tests.sh --all --nocapture
+EOF
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -41,6 +67,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --release)
       RELEASE=true
+      ;;
+    --help|-h)
+      usage
+      exit 0
       ;;
     --features)
       shift
@@ -102,10 +132,10 @@ run_notes_suite() {
   fi
 
   if [[ ${#test_args[@]} -gt 0 ]]; then
-    run_cargo --lib repo_state::tests::notes_refs_round_trip_through_repo_state -- "${test_args[@]}"
+    run_cargo --test nip34_kinds -- "${test_args[@]}"
     run_cargo --test git_notes -- "${test_args[@]}"
   else
-    run_cargo --lib repo_state::tests::notes_refs_round_trip_through_repo_state
+    run_cargo --test nip34_kinds
     run_cargo --test git_notes
   fi
 }

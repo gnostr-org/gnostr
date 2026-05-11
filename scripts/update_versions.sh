@@ -25,6 +25,16 @@ while (($#)); do
     shift
 done
 
+cargo_jobs() {
+    local jobs
+    jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+    jobs=$((jobs - 1))
+    if [ "$jobs" -lt 1 ]; then
+        jobs=1
+    fi
+    printf '%s\n' "$jobs"
+}
+
 ensure_taplo_installed() {
     if ! command -v taplo >/dev/null 2>&1; then
         echo "taplo-cli not found. Installing it..."
@@ -41,11 +51,15 @@ manifest_version() {
     local fallback="$2"
 
     if grep -q '^version\.workspace = true' "$manifest"; then
-        printf '%s\n' "$fallback"
+        printf '>=%s\n' "$fallback"
         return
     fi
 
-    grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}'
+    local version
+    version="$(grep '^version =' "$manifest" | head -1 | awk -F'"' '{print $2}')"
+    if [ -n "$version" ]; then
+        printf '>=%s\n' "$version"
+    fi
 }
 
 manifest_package_name() {
@@ -57,11 +71,11 @@ manifest_package_name() {
 cargo_paths() {
     while IFS= read -r -d '' path; do
         case "$path" in
-            ./vendor/*|vendor/*) continue ;;
+            ./vendor/*|vendor/*|./target/*|target/*) continue ;;
         esac
         printf '%s\0' "$path"
     done < <(
-        find . -path './vendor' -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
+        find . \( -path './vendor' -o -path './target' \) -prune -o \( -name Cargo.lock -o -name Cargo.toml \) -print0
     )
 }
 
@@ -78,33 +92,22 @@ stage_cargo_files() {
 
 managed_manifests() {
     python3 - <<'PY'
-import json
 import os
-import subprocess
 
 root = os.path.abspath(".")
-data = json.loads(subprocess.check_output(
-    ["cargo", "metadata", "--no-deps", "--format-version", "1"],
-    text=True,
-))
-paths = {
-    pkg["manifest_path"]
-    for pkg in data["packages"]
-    if os.path.abspath(pkg["manifest_path"]).startswith(root + os.sep)
-    or os.path.abspath(pkg["manifest_path"]) == root
-}
 
-paths = {
-    path for path in paths
-    if "/vendor/" not in os.path.abspath(path).replace("\\", "/")
-}
+paths = []
+for dirpath, dirnames, filenames in os.walk(root):
+    dirpath_norm = os.path.abspath(dirpath).replace("\\", "/")
+    dirnames[:] = [name for name in dirnames if name not in {"vendor", "target"}]
+    if "/vendor/" in dirpath_norm:
+        continue
+    if "/target/" in dirpath_norm:
+        continue
+    if "Cargo.toml" in filenames:
+        paths.append(os.path.join(dirpath, "Cargo.toml"))
 
-for rel_path in ["crawler/Cargo.toml", "asyncgit/src/lib/filehash/core/Cargo.toml"]:
-    manifest_path = os.path.abspath(rel_path)
-    if os.path.isfile(manifest_path) and "/vendor/" not in manifest_path.replace("\\", "/"):
-        paths.add(manifest_path)
-
-for path in sorted(paths):
+for path in sorted(set(paths)):
     print(path)
 PY
 }
@@ -363,6 +366,11 @@ SORT_CRATES=(
     qr
     relay
     relay/extensions
+    js
+    p2p
+    chat
+    web
+    bins
 )
 
 for crate in "${SORT_CRATES[@]}"; do
@@ -385,7 +393,28 @@ PUBLISH_CRATES=(
     qr
     relay
     relay/extensions
+    js
+    p2p
+    chat
+    web
 )
+
+PUBLISH_NO_VERIFY_CRATES=(
+    asyncgit
+)
+
+should_skip_verify() {
+    local crate="$1"
+    local candidate
+
+    for candidate in "${PUBLISH_NO_VERIFY_CRATES[@]}"; do
+        if [ "$candidate" = "$crate" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
 
 tag_package_versions() {
     local version="$1"
@@ -400,6 +429,10 @@ tag_package_versions() {
         commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
         git tag -f "$tag" "$commit"
     done
+
+    tag="gnostr/v$version"
+    commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
+    git tag -f "$tag" "$commit"
 }
 
 manifest_paths=()
@@ -417,18 +450,18 @@ stage_cargo_files
 if [ -n "${VERSION_TAG:-}" ]; then
     cargo update --workspace
     stage_cargo_files
+    git add -- Cargo.lock
 
     git checkout -b "release/$VERSION_TAG"
 
-    gnostr legit -m "$VERSION_TAG"
+    gnostr legit -m "$VERSION_TAG" --prefix 000000
     git tag -f "$VERSION_TAG" HEAD
     tag_package_versions "$WORKSPACE_VERSION"
 elif [ "${SKIP_VERSION_COMMIT:-0}" != "1" ]; then
 
     cargo update --workspace
     stage_cargo_files
-
-
+    git add -- Cargo.lock
 
     gnostr legit -m "v$WORKSPACE_VERSION" --prefix 000000
     tag_package_versions "$WORKSPACE_VERSION"
@@ -444,16 +477,27 @@ fi
 export CARGO_REGISTRY_TOKEN
 
 for crate in "${PUBLISH_CRATES[@]}"; do
-    sleep 1 && pushd "$crate" >/dev/null && cargo publish -j8 || true && popd >/dev/null
+    publish_args=(-j"$(cargo_jobs)")
+    if should_skip_verify "$crate"; then
+        publish_args=(--no-verify "${publish_args[@]}")
+    fi
+    sleep 1 && pushd "$crate" >/dev/null && cargo publish "${publish_args[@]}" || true && popd >/dev/null
 done
+
+sleep 1 && cargo publish -j"$(cargo_jobs)" -p gnostr || true
 
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
 fi
 
-if [ -n "${VERSION_TAG:-}" ]; then
-  git push origin "$VERSION_TAG:$VERSION_TAG"
-fi
+##git notes
+git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
+git notes add -m "v$WORKSPACE_VERSION" v$WORKSPACE_VERSION
+git push origin refs/notes/*
+
 for crate in "${PUBLISH_CRATES[@]}"; do
     git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
 done
+git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION"
+echo;
+git push origin v$WORKSPACE_VERSION:v$WORKSPACE_VERSION

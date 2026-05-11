@@ -12,11 +12,6 @@ license = "MIT"
 name = "gnostr_qr"
 path = "src/lib.rs"
 
-[[bin]]
-name = "gnostr-qr"
-path = "src/bin/gnostr-qr.rs"
-doc = true
-
 [dependencies]
 hex = "0.4.3"
 image = "0.25.2"

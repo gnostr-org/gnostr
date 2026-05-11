@@ -21,7 +21,7 @@ BUILD_FIRST=false
 
 # Global storage for command data
 # Using temp files for associative array compatibility on older bash
-TEMP_DIR=$(mktemp -d)
+TEMP_DIR="${TMPDIR:-/tmp}/gnostr-recursive-help.$(gnostr --blockheight 2>/dev/null || echo 0)"
 COMMANDS_FILE="$TEMP_DIR/commands.json"
 PARSED_PATHS_FILE="$TEMP_DIR/paths.txt"
 

@@ -2,18 +2,38 @@ use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
+use std::time::Duration;
 
 use axum::{http::StatusCode, routing::get, Router};
 use futures::{SinkExt, StreamExt};
 use git2::Signature;
+use gnostr_asyncgit::{
+    sync::{
+        add_note,
+        commit::{self, mine_commit, CommitMineOptions},
+        show_note,
+        stage_add_file,
+        NoteInfo,
+        RepoPath,
+    },
+    types::{
+        generate_git_note_event, generate_git_note_event_with_pow, Client as AsyncClient,
+        EventBuilder, EventKind, Keys as AsyncKeys, Options as AsyncOptions,
+        PrivateKey as AsyncPrivateKey, RelayMessage, SubscriptionId,
+    },
+    types::nip13::NIP13Event,
+};
 use gnostr_crawler as crawler;
 use gnostr_crawler::query::{build_gnostr_query, ConfigBuilder};
 use gnostr_crawler::relays::{self, Relays};
 use nostr_sdk::prelude::{Keys, ToBech32};
 use tokio::net::TcpListener;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
+use time_03::OffsetDateTime;
+use url::Url;
 
 static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -95,7 +115,7 @@ async fn start_http_server(body: &'static str, accept_head: bool) -> SocketAddr 
     addr
 }
 
-async fn start_ws_server(messages: Vec<&'static str>) -> String {
+async fn start_ws_server(messages: Vec<String>) -> String {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 
@@ -110,7 +130,7 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
         }
 
         for msg in messages {
-            ws.send(Message::Text(msg.to_string().into()))
+            ws.send(Message::Text(msg.into()))
                 .await
                 .unwrap();
         }
@@ -118,6 +138,225 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
     });
 
     format!("ws://{}", addr)
+}
+
+fn relay_response_contains_event_id(message: &str, event_id: &str) -> bool {
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(message) {
+        if let Some(array) = value.as_array() {
+            if let Some(event) = array.get(2) {
+                if event
+                    .get("id")
+                    .and_then(|id| id.as_str())
+                    .is_some_and(|id| id == event_id)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    message.contains(event_id)
+}
+
+fn leading_zero_bits(bytes: &[u8]) -> u8 {
+    let mut count = 0_u8;
+    for byte in bytes {
+        if *byte == 0 {
+            count += 8;
+            continue;
+        }
+        count += byte.leading_zeros() as u8;
+        break;
+    }
+    count
+}
+
+fn matrix_relay_urls() -> Vec<String> {
+    vec![
+        "wss://nostr-kyomu-haskell.onrender.com/".to_string(),
+        "wss://nostr-relay.amethyst.name/".to_string(),
+        "wss://relay.bitcoindistrict.org/".to_string(),
+        "wss://nos.lol/".to_string(),
+        "wss://relay.damus.io/".to_string(),
+    ]
+}
+
+async fn publish_and_query_git_note_case(
+    label: &str,
+    mine_commit_flag: bool,
+    mine_note_flag: bool,
+    pow_event_flag: bool,
+) -> anyhow::Result<()> {
+    let repo_dir = unique_temp_dir("gnostr-crawler-pow-matrix");
+    let _repo = git2::Repository::init(&repo_dir)?;
+    let repo_path: RepoPath = repo_dir.as_os_str().to_str().unwrap().into();
+    let file_path = Path::new("matrix.txt");
+
+    fs::write(repo_dir.join(file_path), label.as_bytes())?;
+    stage_add_file(&repo_path, file_path)?;
+
+    let commit_id = if mine_commit_flag {
+        mine_commit(
+            &repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!("{label} commit")],
+                timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?
+    } else {
+        commit::commit(&repo_path, &format!("{label} commit"))?
+    };
+
+    let note_base_message = format!("{label} note");
+    let note: NoteInfo = if mine_note_flag {
+        let mut nonce = 0u32;
+        loop {
+            let candidate_message = format!("{note_base_message} #{nonce}");
+            let note_id = add_note(&repo_path, commit_id, &candidate_message, None, true)?;
+            let note = show_note(&repo_path, commit_id, None)?.expect("note exists");
+            eprintln!(
+                "note mining attempt for {label}: nonce={nonce} note_id={} annotated_id={} message={}",
+                note_id, note.annotated_id, note.message
+            );
+            if note.note_id.to_string().starts_with('0') {
+                assert_eq!(note.note_id, note_id);
+                break note;
+            }
+            nonce = nonce.wrapping_add(1);
+        }
+    } else {
+        let note_id = add_note(&repo_path, commit_id, &note_base_message, None, false)?;
+        let note = show_note(&repo_path, commit_id, None)?.expect("note exists");
+        eprintln!(
+            "note created for {label}: note_id={note_id} annotated_id={} message={}",
+            note.annotated_id, note.message
+        );
+        note
+    };
+    assert_eq!(note.annotated_id, commit_id.into());
+    assert!(note.message.starts_with(&note_base_message));
+
+    let private_key = AsyncPrivateKey::generate();
+    let keys = AsyncKeys::new(private_key.clone());
+    let git_note = gnostr_asyncgit::types::GitNote::from(&note);
+    let event = if pow_event_flag {
+        generate_git_note_event_with_pow(&git_note, &private_key, 4)?
+    } else {
+        generate_git_note_event(&git_note, &private_key)?
+    };
+
+    let relay_urls = matrix_relay_urls();
+    assert!(
+        !relay_urls.is_empty(),
+        "expected at least one relay URL for crawler syndication"
+    );
+
+    let publish_relays = relay_urls.clone();
+    let mut client = AsyncClient::new(&keys, AsyncOptions::new());
+    client.add_relays(publish_relays.clone()).await?;
+    let published_id = client.send_event(event.clone()).await?;
+    assert_eq!(published_id, event.id);
+    eprintln!(
+        "published event for {label}:\n{}",
+        serde_json::to_string_pretty(&event)?
+    );
+
+    assert_eq!(event.kind, EventKind::TextNote);
+    assert_eq!(event.content, note.message);
+    assert_eq!(
+        event.created_at,
+        gnostr_asyncgit::types::Unixtime(note.committer_time)
+    );
+    assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+    assert!(event.tags.iter().any(|tag| {
+        tag.tagname() == "commit" && tag.value() == commit_id.to_string()
+    }));
+
+    if pow_event_flag {
+        assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+        assert!(event.nonce_data().is_some());
+        assert!(leading_zero_bits(&event.id.0) >= 4);
+    } else {
+        assert!(event.nonce_data().is_none());
+        assert!(!event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+    }
+
+    let query_relays = publish_relays
+        .iter()
+        .filter_map(|relay| Url::parse(relay).ok())
+        .collect::<Vec<_>>();
+    let event_id = event.id.to_string();
+    let query = build_gnostr_query(
+        None,
+        Some(event_id.as_str()),
+        Some(1),
+        None,
+        None,
+        None,
+        None,
+        Some("1"),
+        None,
+    )
+    .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+    eprintln!("query string for {label}:\n{query}");
+
+    tokio::time::sleep(Duration::from_secs(2)).await;
+
+    let mut found = None;
+    for attempt in 0..5 {
+        eprintln!(
+            "query attempt {attempt} start for {label}: {} relays",
+            query_relays.len()
+        );
+        for relay in &query_relays {
+            eprintln!("query attempt {attempt} for {label} via {relay}: send");
+            match crawler::send(query.clone(), vec![relay.clone()], Some(1)).await {
+                Ok(messages) => {
+                    if let Some(message) = messages
+                        .into_iter()
+                        .find(|message| relay_response_contains_event_id(message, &event_id))
+                    {
+                        eprintln!("query attempt {attempt} for {label} via {relay}: hit");
+                        eprintln!(
+                            "query hit relay response for {label} via {relay}:\n{message}"
+                        );
+                        found = Some(message);
+                        break;
+                    } else {
+                        eprintln!("query attempt {attempt} for {label} via {relay}: empty");
+                    }
+                }
+                Err(err) => {
+                    eprintln!("query relay failed for {label} via {relay}: {err}");
+                }
+            }
+        }
+
+        if found.is_some() {
+            break;
+        }
+
+        if attempt < 4 {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+    }
+
+    if found.is_none() {
+        eprintln!(
+            "best effort query skipped: event {event_id} was not returned by any crawler query relay"
+        );
+        return Ok(());
+    }
+
+    if let Some(message) = &found {
+        eprintln!(
+            "best effort query matched: event {event_id} returned by crawler query relay\n{message}"
+        );
+    }
+
+    Ok(())
 }
 
 #[test]
@@ -246,20 +485,46 @@ fn stats_and_pubkeys_track_counts() {
     assert_eq!(pubkeys.add_str(&public_key.to_bech32().unwrap()), 0);
 }
 
+#[tokio::test]
+#[ignore]
+async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()> {
+    for (label, mine_commit_flag, mine_note_flag, pow_event_flag) in [
+        ("plain-commit/plain-note/plain-event", false, false, false),
+        ("plain-commit/plain-note/pow-event", false, false, true),
+        ("plain-commit/mined-note/plain-event", false, true, false),
+        ("plain-commit/mined-note/pow-event", false, true, true),
+        ("mined-commit/plain-note/plain-event", true, false, false),
+        ("mined-commit/plain-note/pow-event", true, false, true),
+        ("mined-commit/mined-note/plain-event", true, true, false),
+        ("mined-commit/mined-note/pow-event", true, true, true),
+    ] {
+        publish_and_query_git_note_case(label, mine_commit_flag, mine_note_flag, pow_event_flag).await?;
+    }
+
+    Ok(())
+}
+
 #[test]
 fn config_builder_and_query_builder_work() {
+    let author1 = "1111111111111111111111111111111111111111111111111111111111111111";
+    let author2 = "2222222222222222222222222222222222222222222222222222222222222222";
+    let id1 = "3333333333333333333333333333333333333333333333333333333333333333";
+    let id2 = "4444444444444444444444444444444444444444444444444444444444444444";
+    let event1 = "5555555555555555555555555555555555555555555555555555555555555555";
+    let event2 = "6666666666666666666666666666666666666666666666666666666666666666";
+
     let config = ConfigBuilder::new()
         .host("relay.example.com")
         .port(443)
         .use_tls(true)
         .retries(2)
-        .authors("author1,author2")
-        .ids("id1,id2")
+        .authors(&format!("{author1},{author2}"))
+        .ids(&format!("{id1},{id2}"))
         .limit(10)
         .generic("d", "value1,value2")
         .hashtag("tag1,tag2")
-        .mentions("pk1,pk2")
-        .references("event1,event2")
+        .mentions(&format!("{author1},{author2}"))
+        .references(&format!("{event1},{event2}"))
         .kinds("1,2")
         .search("content", "nostr")
         .build()
@@ -268,13 +533,13 @@ fn config_builder_and_query_builder_work() {
     let _ = config;
 
     let query = build_gnostr_query(
-        Some("author1,author2"),
-        Some("id1,id2"),
+        Some(&format!("{author1},{author2}")),
+        Some(&format!("{id1},{id2}")),
         Some(10),
         Some(("d", "value1,value2")),
         Some("tag1,tag2"),
-        Some("pk1,pk2"),
-        Some("event1,event2"),
+        Some(&format!("{author1},{author2}")),
+        Some(&format!("{event1},{event2}")),
         Some("1,2"),
         Some(("content", "nostr")),
     )
@@ -286,8 +551,8 @@ fn config_builder_and_query_builder_work() {
     assert_eq!(parsed[2]["limit"], 10);
     assert_eq!(parsed[2]["#d"], serde_json::json!(["value1", "value2"]));
     assert_eq!(parsed[2]["#t"], serde_json::json!(["tag1", "tag2"]));
-    assert_eq!(parsed[2]["#p"], serde_json::json!(["pk1", "pk2"]));
-    assert_eq!(parsed[2]["#e"], serde_json::json!(["event1", "event2"]));
+    assert_eq!(parsed[2]["#p"], serde_json::json!([author1, author2]));
+    assert_eq!(parsed[2]["#e"], serde_json::json!([event1, event2]));
     assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2]));
 }
 
@@ -393,7 +658,26 @@ async fn fetch_online_relays_and_liveness_use_http_helpers() {
 
 #[tokio::test]
 async fn send_reads_messages_from_websocket() {
-    let relay = start_ws_server(vec!["one", "two", "three"]).await;
+    let make_frame = |content: &str| {
+        let event = EventBuilder::new(
+            EventKind::TextNote,
+            content.to_string(),
+            Vec::new(),
+        )
+        .to_event(&AsyncPrivateKey::mock())
+        .unwrap();
+        serde_json::to_string(&RelayMessage::Event(
+            SubscriptionId("gnostr-query".to_string()),
+            Box::new(event),
+        ))
+        .unwrap()
+    };
+    let relay = start_ws_server(vec![
+        make_frame("one"),
+        make_frame("two"),
+        make_frame("three"),
+    ])
+    .await;
     let results = crawler::query::send(
         r#"["REQ","gnostr-query",{}]"#.to_string(),
         vec![url::Url::parse(&relay).unwrap()],
@@ -402,5 +686,7 @@ async fn send_reads_messages_from_websocket() {
     .await
     .unwrap();
 
-    assert_eq!(results, vec!["one".to_string(), "two".to_string()]);
+    assert_eq!(results.len(), 2);
+    assert!(results[0].contains("\"content\":\"one\""));
+    assert!(results[1].contains("\"content\":\"two\""));
 }

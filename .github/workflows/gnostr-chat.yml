@@ -1,5 +1,5 @@
 ---
-name: Gnostr Chat
+name: gnostr-chat.yml
 
 on:
   workflow_run:
@@ -8,6 +8,17 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      topic:
+        description: "Chat topic"
+        required: false
+        default: gnostr-dev
+        type: string
+      detect_tag_as_topic:
+        description: "Use the current Git tag as the chat topic"
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [run-gnostr-chat-workflow]
   push:
@@ -24,10 +35,12 @@ jobs:
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
+      TOPIC: ${{ inputs.topic || 'gnostr-dev' }}
+      DETECT_TAG_AS_TOPIC: ${{ inputs.detect_tag_as_topic || 'false' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        os: [ubuntu-latest] # macos, ubuntu, windows
+        os: [ubuntu-latest, macos-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -40,15 +53,12 @@ jobs:
           echo POW=${{ env.POW }}
           echo DAMUS=${{ env.DAMUS }}
           echo NOS=${{ env.NOS }}
+          echo TOPIC=${{ env.TOPIC }}
+          echo DETECT_TAG_AS_TOPIC=${{ env.DETECT_TAG_AS_TOPIC }}
           printenv
         env:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
-
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ env.ACT == 'false' }}
-        with:
-          access_token: ${{ github.token }}
 
       - uses: actions/checkout@v3
         with:
@@ -114,6 +124,8 @@ jobs:
           cache: true
 
       - run: rustup default ${{ matrix.rustup }}
+      - name: Build gnostr p2p binaries
+        run: cargo build -p gnostr-p2p --bins --quiet
       - name: Install cargo-binstall
         id: binstall
         continue-on-error: true
@@ -147,13 +159,15 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          GNOSTR_HASH="$($GNOSTR_CMD --hash "")"
+
           $GNOSTR_CMD \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
-            --nsec "$(gnostr-sha256)" \
+            --nsec "$GNOSTR_HASH" \
             set-metadata \
             -n gnostr \
-            -a gnostr://$(gnostr-weeble)/$(gnostr-blockheight) \
+            -a gnostr://$($GNOSTR_CMD --weeble)/$($GNOSTR_CMD --blockheight) \
             -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
             -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
@@ -167,7 +181,7 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
-          $GNOSTR_CMD ngit --nsec $(gnostr-sha256) fetch
+          $GNOSTR_CMD ngit --nsec "$($GNOSTR_CMD --hash "")" fetch
       - run: |
           if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
@@ -179,19 +193,24 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          GNOSTR_HASH="$($GNOSTR_CMD --hash "")"
+          GNOSTR_WEEBLE="$($GNOSTR_CMD --weeble)"
+          GNOSTR_BLOCKHEIGHT="$($GNOSTR_CMD --blockheight)"
+          GNOSTR_WOBBLE="$($GNOSTR_CMD --wobble)"
+
           EVENT=$($GNOSTR_CMD \
-            --nsec $(gnostr-sha256) \
+            --nsec "$GNOSTR_HASH" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
-            -k 1 \
-            -c "$(gnostr-weeble)/$(gnostr-blockheight)/$(gnostr-wobble)" \
+            --kind 1 \
+            -c "$GNOSTR_WEEBLE/$GNOSTR_BLOCKHEIGHT/$GNOSTR_WOBBLE" \
             -t "a|blah" \
             -t "a|$(date +%s)" \
-            -t "$(gnostr-weeble)" \
-            -t "$(gnostr-blockheight)" \
-            -t "$(gnostr-wobble)" \
+            -t "$GNOSTR_WEEBLE" \
+            -t "$GNOSTR_BLOCKHEIGHT" \
+            -t "$GNOSTR_WOBBLE" \
             --hex || true) && \
             export EVENT=$EVENT && \
             NOTE=$($GNOSTR_CMD convert-key -p note -k $EVENT || true) || true && \
@@ -203,6 +222,14 @@ jobs:
           SENDER_HASH="$(printf '%s' sender | sha256sum | cut -d' ' -f1)"
           END_AT=$((SECONDS + 120))
           COUNT=0
+          CHAT_TOPIC="$TOPIC"
+
+          if [[ "$DETECT_TAG_AS_TOPIC" == "true" ]]; then
+            TAG_TOPIC="$(git tag --points-at HEAD | head -n 1 || true)"
+            if [[ -n "$TAG_TOPIC" ]]; then
+              CHAT_TOPIC="$TAG_TOPIC"
+            fi
+          fi
 
           if [ -f target/debug/gnostr ]; then
             chmod +x ./target/debug/gnostr
@@ -214,16 +241,57 @@ jobs:
             GNOSTR_CMD="cargo run --bin gnostr --"
           fi
 
+          if [ -f target/debug/gnostr-p2p ]; then
+            chmod +x ./target/debug/gnostr-p2p
+            GNOSTR_P2P_CMD=./target/debug/gnostr-p2p
+          else
+            GNOSTR_P2P_CMD="cargo run -p gnostr-p2p --bin gnostr-p2p --"
+          fi
+
+          PEER_HASH="$(printf '%s' peer | sha256sum | cut -d' ' -f1)"
+          BOOTSTRAP_HASH="$(printf '%s' bootstrap | sha256sum | cut -d' ' -f1)"
+
+          $GNOSTR_P2P_CMD \
+            --secret-key-seed "$BOOTSTRAP_HASH" \
+            --port 0 \
+            >/tmp/gnostr-chat-bootstrap-peer.log 2>&1 &
+          BOOTSTRAP_PEER_PID=$!
+
+          $GNOSTR_CMD \
+            --debug \
+            --name peer \
+            --hash "$PEER_HASH" \
+            --topic "$CHAT_TOPIC" \
+            --headless \
+            >/tmp/gnostr-chat-peer.log 2>&1 &
+          PEER_PID=$!
+          trap 'kill "$BOOTSTRAP_PEER_PID" "$PEER_PID" 2>/dev/null || true' EXIT
+
+          sleep 10
+
           echo "Pushing oneshot chat messages for 2 minutes..."
           while [ "$SECONDS" -lt "$END_AT" ]; do
             COUNT=$((COUNT + 1))
-            MESSAGE="Hello from github-ci-sender #${COUNT} at $(date +%s)"
-            $GNOSTR_CMD chat \
-              --debug \
-              --name sender \
-              --hash "$SENDER_HASH" \
-              --topic gnostr \
-              --oneshot "$MESSAGE"
+            MESSAGE="Hello from gnostr-chat.ymlr #${COUNT} at $(date +%s)"
+            for attempt in 1 2 3 4 5 6; do
+              MESSAGE_OUTPUT="$($GNOSTR_CMD chat \
+                --debug \
+                --name sender \
+                --hash "$SENDER_HASH" \
+                --topic "$CHAT_TOPIC" \
+                --oneshot "$MESSAGE" 2>&1 || true)"
+              printf '%s\n' "$MESSAGE_OUTPUT"
+              if ! printf '%s\n' "$MESSAGE_OUTPUT" | grep -q 'publish error:'; then
+                break
+              fi
+              if ! printf '%s\n' "$MESSAGE_OUTPUT" | grep -q 'InsufficientPeers'; then
+                exit 1
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                exit 1
+              fi
+              sleep 5
+            done
             sleep 5
           done
 

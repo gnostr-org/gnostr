@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-ngit"
-version = "1876.947630.6535"
+version = "948560.1874.701540"
 edition = "2021"
 description = "nostr plugin for git"
 authors = ["DanConwayDev <DanConwayDev@protonmail.com>"]
@@ -26,7 +26,7 @@ path = "src/bin/git_remote_nostr/main.rs"
 [features]
 default = []
 nostr = []
-vendored-openssl = ["gnostr-asyncgit/vendored-openssl"]
+vendor-openssl = ["gnostr-asyncgit/vendor-openssl"]
 
 [dependencies]
 anyhow = "1.0.98"
@@ -40,8 +40,8 @@ console = "0.16.0"
 dialoguer = "0.12.0"
 directories = "6.0.0"
 futures = "0.3.31"
-gnostr-asyncgit = { workspace = true }
-gnostr-legit = { version = "1876.947630.6535", path = "../legit" }
+gnostr-asyncgit = { workspace = true, features = ["vendor-openssl"] }
+gnostr-legit = { version = ">=948560.1874.701540", path = "../legit" }
 indicatif = "0.18.0"
 mailparse = "0.16.1"
 nostr = { workspace = true, features = ["nip04", "nip44", "nip49"] }
@@ -69,12 +69,14 @@ zeroize = "1.8.1"
 
 [dev-dependencies]
 assert_cmd = "2.0.17"
+env_logger = { workspace = true }
+log = { workspace = true }
 mockall = "0.13.1"
 once_cell = "1.21.3"
 rstest = "0.23"
 serial_test = "3.2.0"
-time = { workspace = true }
 test_utils = { path = "test_utils" }
+time = { workspace = true }
 
 ## [workspace]
 ## members = [

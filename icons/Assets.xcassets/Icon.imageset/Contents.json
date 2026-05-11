@@ -1,0 +1,39 @@
+{
+  "images" : [
+    {
+      "filename" : "1024x1024.png",
+      "idiom" : "universal"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "light"
+        }
+      ],
+      "filename" : "1024x1024 1.png",
+      "idiom" : "universal"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "background.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "auto-scaling" : "auto",
+    "compression-type" : "lossless",
+    "localizable" : true,
+    "preserves-vector-representation" : true,
+    "template-rendering-intent" : "original"
+  }
+}

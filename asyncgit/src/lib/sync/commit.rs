@@ -1,6 +1,6 @@
 //! Git Api for Commits
 //use anyhow::anyhow;
-use git2::{message_prettify, Commit, ErrorCode, ObjectType, Oid, Repository, Signature};
+use git2::{message_prettify, Commit, ErrorCode, ObjectType, Oid, Repository, ResetType, Signature};
 
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -8,6 +8,7 @@ use serde_json;
 //use serde_json::{Result as SerdeJsonResult, Value};
 use log::debug;
 use scopetime::scope_time;
+use time::OffsetDateTime;
 
 use super::{CommitId, RepoPath};
 use crate::{
@@ -18,6 +19,87 @@ use crate::{
         utils::get_head_repo,
     },
 };
+
+/// Options for proof-of-work commit mining.
+#[derive(Clone, Debug)]
+pub struct CommitMineOptions {
+    pub threads: u32,
+    pub target: String,
+    pub message: Vec<String>,
+    pub timestamp: OffsetDateTime,
+}
+
+fn commit_signature(repo: &Repository, timestamp: OffsetDateTime) -> Result<Signature<'_>> {
+    let config = repo.config()?;
+    let name = config
+        .get_string("user.name")
+        .unwrap_or_else(|_| "unknown".to_string());
+    let email = config
+        .get_string("user.email")
+        .unwrap_or_else(|_| "unknown@example.com".to_string());
+    let time = git2::Time::new(
+        timestamp.unix_timestamp(),
+        i32::from(timestamp.offset().whole_minutes()),
+    );
+    Ok(Signature::new(&name, &email, &time)?)
+}
+
+fn prepare_mine_tree(repo: &Repository) -> Result<(Oid, Option<Oid>)> {
+    let mut index = repo.index()?;
+    let tree_id = index.write_tree()?;
+    let parent = if let Ok(id) = get_head_repo(repo) {
+        Some(id.into())
+    } else {
+        None
+    };
+
+    Ok((tree_id, parent))
+}
+
+fn commit_message_body(message: &[String]) -> String {
+    match message {
+        [] => String::new(),
+        [one] => one.clone(),
+        [first, rest @ ..] => format!("{first}\n\n{}", rest.join("\n")),
+    }
+}
+
+/// Mine a git commit object whose hash starts with the requested prefix.
+pub fn mine_commit(repo_path: &RepoPath, opts: CommitMineOptions) -> Result<CommitId> {
+    scope_time!("mine_commit");
+
+    let repo = repo(repo_path)?;
+    let (tree_id, parent_id) = prepare_mine_tree(&repo)?;
+    let tree = repo.find_tree(tree_id)?;
+    let parent = parent_id.map(|id| repo.find_commit(id)).transpose()?;
+    let parents = parent.iter().collect::<Vec<_>>();
+    let signature = commit_signature(&repo, opts.timestamp)?;
+    let message_body = commit_message_body(&opts.message);
+
+    let mut nonce = 0u32;
+    loop {
+        let candidate_message = format!("{message_body}\n\n00-{:08x}", nonce);
+        let buffer = repo.commit_create_buffer(
+            &signature,
+            &signature,
+            &candidate_message,
+            &tree,
+            parents.as_slice(),
+        )?;
+        let oid = Oid::hash_object(ObjectType::Commit, buffer.as_ref())?;
+        if oid.to_string().starts_with(&opts.target) {
+            let odb = repo.odb()?;
+            let stored = odb.write(ObjectType::Commit, buffer.as_ref())?;
+            if stored != oid {
+                return Err(Error::Generic("mined commit hash mismatch".to_string()));
+            }
+            let commit = repo.find_commit(oid)?;
+            repo.reset(commit.as_object(), ResetType::Hard, None)?;
+            return Ok(oid.into());
+        }
+        nonce = nonce.wrapping_add(1);
+    }
+}
 
 ///
 pub fn amend(repo_path: &RepoPath, id: CommitId, msg: &str) -> Result<CommitId> {
@@ -267,7 +349,7 @@ mod tests {
     use crate::{
         error::Result,
         sync::{
-            commit::{self, commit, padded_commit_id, padded_note_id},
+            commit::{self, commit, mine_commit, padded_commit_id, padded_note_id, CommitMineOptions},
             get_commit_details, get_commit_files, stage_add_file,
             tags::{get_tags, Tag},
             tests::{get_statuses, repo_init, repo_init_empty},
@@ -335,6 +417,34 @@ mod tests {
 
         commit(repo_path, "commit msg").unwrap();
 
+        assert_eq!(get_statuses(repo_path), (0, 0));
+    }
+
+    #[test]
+    fn test_mine_commit_in_empty_repo() {
+        let file_path = Path::new("foo");
+        let (_td, repo) = repo_init_empty().unwrap();
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
+
+        File::create(root.join(file_path))
+            .unwrap()
+            .write_all(b"test\nfoo")
+            .unwrap();
+        stage_add_file(repo_path, file_path).unwrap();
+
+        let commit_id = mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec!["mine msg".to_string()],
+                timestamp: time::OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )
+        .unwrap();
+
+        assert!(commit_id.to_string().starts_with('0'));
         assert_eq!(get_statuses(repo_path), (0, 0));
     }
 

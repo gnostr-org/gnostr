@@ -11,6 +11,8 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
+
 TEST_FLAGS=()
 QUIET=false
 RELEASE=false
@@ -40,6 +42,16 @@ Options:
   --test-threads VALUE Pass --test-threads VALUE to the test harness
   --test-threads=VALUE Pass --test-threads VALUE to the test harness
   --help               Show this help
+
+Notes:
+  This helper runs the asyncgit slice: repo announcement/state, all NIP-34
+  event kinds, and the 1617 git-note/PoW matrix.
+  `nostr_sdk` belongs to test-only event coverage in asyncgit.
+  ureq logging is always silenced here.
+
+Examples:
+  ./scripts/asyncgit-tests.sh --nocapture
+  ./scripts/asyncgit-tests.sh --ignored --nocapture
 EOF
 }
 
@@ -274,6 +286,7 @@ run_cargo_test_step "types::nip34::tests::repo_ref_defaults_identifier_from_root
 run_cargo_test_step "types::nip34::tests::repo_ref_coordinates_include_relay_hint_and_all_maintainers"
 run_cargo_test_step "types::nip34::tests::repo_url_vector_matches_ngit_coordinate"
 run_cargo_test_step "types::nip34::tests::event_tag_from_nip19_or_hex_accepts_npub_when_allowed"
+run_cargo_test_step "types nip34 matrix" test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes
 run_cargo_test_step "types::nip4::tests::encrypt_and_decrypt_real_dm_events_in_both_directions"
 
 report_target_dir_size "$TARGET_DIR"

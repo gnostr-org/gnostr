@@ -22,6 +22,8 @@ jobs:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
+      BINS_MANIFEST: "./bins/Cargo.toml"
+      GNOSTR_MANIFEST: "./Cargo.toml"
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
@@ -184,19 +186,6 @@ jobs:
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
 
-      - name: Install OpenSSL for macOS
-        run: |
-          if [ "$(uname -m)" = "arm64" ]; then
-            arch -arm64 brew install openssl@3
-          else
-            brew install openssl@3
-          fi
-          echo "$(brew --prefix openssl@3)/bin" >> $GITHUB_PATH
-          echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
-        if: runner.os == 'macos'
-
       - name: linuxbrew (with retries)
         run: |
           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
@@ -311,10 +300,10 @@ jobs:
       ## build/run sequences
       ## build/run sequences
 
-      - name: Build gnostr binary
+      - name: Test gnostr bins
         shell: bash
         run: |
-          cargo build --bin gnostr
+          cargo test --manifest-path "$BINS_MANIFEST" --all-targets
 
       - name: Save Cargo target cache (post-build)
         if: always()
@@ -323,12 +312,19 @@ jobs:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-build
 
-      - name: 🚀 cargo run --bin gnostr-tui --
+      - name: 🚀 cargo run -p gnostr --bin gnostr --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr-tui -- --version
-          cargo run --bin gnostr-tui -- --help
+          cargo run --manifest-path "$GNOSTR_MANIFEST" --bin gnostr -- --version
+          cargo run --manifest-path "$GNOSTR_MANIFEST" --bin gnostr -- --help
+
+      - name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
@@ -377,7 +373,7 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path . --force --bin git-remote-nostr
+          cargo install --path ./bins --force --bin git-remote-nostr
           git fetch --all
 
       - name: Save Cargo target cache (post-git-remote-nostr)
@@ -391,7 +387,7 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path ./git-helpers --force
+          cargo test --path ./git-helpers 
           git fetch --all
 
       - name: Save Cargo target cache (post-git-helpers)
@@ -410,12 +406,12 @@ jobs:
       #    $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw) \
       #    --limit 100 | jq
 
-      - name: 🚀 cargo run --bin gnostr-tui --
+      - name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr-tui -- --version
-          cargo run --bin gnostr-tui -- --help
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
