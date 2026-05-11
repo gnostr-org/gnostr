@@ -4,7 +4,7 @@ The `grammar/build.rs` script automates the process of integrating Tree-sitter g
 
 ## Key Functionality:
 
-1.  **Fetching Helix Grammars**: The script prefers a cached checkout of the official `helix-editor/helix` repository at a specific commit reference (`GRAMMAR_REPOSITORY_REF`). The checkout lives under the user cache directory instead of `target/`, so clean builds can reuse it. If the git fetch fails, it falls back to the GitHub tarball archive for the same ref so builds can continue when the GitHub git endpoint is flaky.
+1.  **Fetching Helix Grammars**: The script prefers a cached checkout of the official `helix-editor/helix` repository at a specific commit reference (`GRAMMAR_REPOSITORY_REF`). The checkout lives under the user cache directory instead of `target/`, so clean builds can reuse it. If the git fetch fails, it falls back to the GitHub tarball archive for the same ref so builds can continue when the GitHub git endpoint is flaky. Setting `GRAMMAR_REPOSITORY_REF` changes the cache key and forces a fresh fetch.
 
 2.  **Language Configuration Parsing**: It reads and parses the `languages.toml` file from the fetched Helix repository. This file defines the various programming languages supported by Helix, their associated Tree-sitter grammars, file type associations (extensions, globs), and injection regexes.
 
