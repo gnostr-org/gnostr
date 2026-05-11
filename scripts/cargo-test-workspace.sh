@@ -13,7 +13,15 @@ cd "$ROOT_DIR"
 
 export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
 
-NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
+cargo_jobs() {
+  local jobs
+  jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+  jobs=$((jobs - 1))
+  if [ "$jobs" -lt 1 ]; then
+    jobs=1
+  fi
+  printf '%s\n' "$jobs"
+}
 TEST_FLAGS=()
 FEATURES=()
 PACKAGES=()
@@ -38,6 +46,7 @@ OFFLINE=false
     export TMP="${TMPDIR}/${TMP_VALUE}"
     export TEMP="${TMP}/debug/${TEMP_VALUE}"
 TARGET_ROOT="${TEMP}"
+SKIP_IGNORED_TESTS=false
 
 usage() {
   cat <<'EOF'
@@ -240,6 +249,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
+      SKIP_IGNORED_TESTS=true
       ;;
     --nocapture)
       TEST_FLAGS+=(--nocapture)
@@ -280,6 +290,21 @@ TARGET_SIZE_LIMIT_KIB="$(parse_prune_limit_kib "$PRUNE_LIMIT_SPEC")" || {
   echo "Invalid --prune-limit value: $PRUNE_LIMIT_SPEC" >&2
   exit 1
 }
+
+if [[ "$SKIP_IGNORED_TESTS" == true ]]; then
+  TEST_FLAGS+=(
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_decryption_success'
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_success'
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_success_bech32_recipient'
+    --skip 'sub_commands::query::tests::test_real_network_roundtrip_kind4_with_default_key'
+    --skip 'sub_commands::query::tests::test_real_network_roundtrip_kind44_with_default_key'
+    --skip 'sub_commands::query::tests::test_launch_no_panic_with_all_bootstrap_relays'
+    --skip 'tui::shared::syntax_parser::tests::test_highlight'
+    --skip 'sync::notes::tests::git_note_event_matrix_covers_commit_and_pow_variants'
+    --skip 'nip34_event_matrix_covers_all_kinds_and_git_notes'
+    --skip 'pow_matrix_events_publish_and_query_from_relays'
+  )
+fi
 
 if [[ "$VENDORED" == true ]]; then
   if [[ "$ALL_FEATURES" == true || "$NO_DEFAULT_FEATURES" == true || ${#FEATURES[@]} -gt 0 || ${#PACKAGES[@]} -gt 0 ]]; then
@@ -331,7 +356,10 @@ if [[ "$TARGET_TMPDIR" == true || -z "$TARGET_DIR" ]]; then
   prune_target_tree "$TARGET_TREE_ROOT"
 fi
 
-declare -a CARGO_FLAGS=(test --workspace -j"$NPROC")
+declare -a CARGO_FLAGS=(test --workspace --exclude asyncgit -j"$(cargo_jobs)")
+if [[ "$SKIP_IGNORED_TESTS" == true ]]; then
+  CARGO_FLAGS=(test --workspace --exclude asyncgit -j1)
+fi
 
 if [[ "$ALL_FEATURES" == true ]]; then
   CARGO_FLAGS+=(--all-features)

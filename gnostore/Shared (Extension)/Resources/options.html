@@ -117,7 +117,7 @@
       </select>
     </div>
 
-    <input class="mt-3 input" x-model="newRelay" type="text" @keyup.enter="await addRelay()" placeholder="wss://..."
+    <input class="mt-3 input" x-model="newRelay" type="text" @keyup.enter="await addRelay()" placeholder="ws://127.0.0.1:8080 or wss://..."
       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="off">
     <div class="block md:inline p-3 pl-0 md:p-0">
       <button class="button" @click="await addRelay()">Add</button>

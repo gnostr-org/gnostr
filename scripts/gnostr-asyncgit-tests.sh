@@ -23,34 +23,51 @@ QUIET=false
 RELEASE=false
 LOCKED=false
 OFFLINE=false
+MODE="full"
 
 usage() {
   cat <<'EOF'
-Usage: gnostr-asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir VALUE] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
+Usage: gnostr-asyncgit-tests.sh <nip34|matrix|full|list> [flags]
 
-Options:
-  --quiet              Pass --quiet to cargo test
-  --release            Pass --release to cargo test
-  --locked             Pass --locked to cargo test
-  --offline            Pass --offline to cargo test
-  --target-dir VALUE   Set Cargo's target directory
-  --target-tmpdir      Use the shared asyncgit temp directory
+Commands:
+  nip34   Run the NIP-34 note tests
+  matrix  Run only the PoW matrix test
+  full    Run nip34 plus the full asyncgit suite
+  list    Print the exact runnable commands and exit
+
+Flags:
+  --quiet               Pass --quiet to cargo test
+  --release             Pass --release to cargo test
+  --locked              Pass --locked to cargo test
+  --offline             Pass --offline to cargo test
+  --target-dir VALUE    Set Cargo's target directory
+  --target-tmpdir       Use the shared asyncgit temp directory
   --target-tmpdir-clean Remove the shared asyncgit temp directory first
-  --prune-limit VALUE  Prune oldest dirs once the tree reaches VALUE (default 20G)
-  --ignored            Pass --ignored to cargo test
-  --nocapture          Pass --nocapture to cargo test
-  --help               Show this help
+  --prune-limit VALUE   Prune oldest dirs once the tree reaches VALUE (default 20G)
+  --ignored             Pass --ignored to cargo test
+  --nocapture           Pass --nocapture to cargo test
+  --help                Show this help
 
 Notes:
-  This runs the full asyncgit suite with --features nostr so event-producing
-  tests, including the PoW matrix, are compiled and exercised.
+  `nip34` runs:
+    cargo test -p gnostr-asyncgit --lib repo_announcement_event_matches_ngit -- --nocapture
+    cargo test -p gnostr-asyncgit --lib repo_state_parsing_matches_ngit -- --nocapture
+    cargo test -p gnostr-asyncgit --lib repo_state_round_trip_adds_head -- --nocapture
+    cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture
+    cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture
+    cargo test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes -- --nocapture
+  `matrix` runs:
+    cargo test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants -- --nocapture
+  `full` runs notes plus:
+    cargo test -p gnostr-asyncgit --all-targets --features nostr -- --nocapture
   `nostr_sdk` is only used from asyncgit test code.
   ureq logging is always silenced here.
 
 Examples:
-  ./scripts/gnostr-asyncgit-tests.sh --nocapture
-  ./scripts/gnostr-asyncgit-tests.sh --ignored --nocapture
-  cargo test -p gnostr-asyncgit --all-targets --features nostr -- --nocapture
+  ./scripts/gnostr-asyncgit-tests.sh nip34 --nocapture
+  ./scripts/gnostr-asyncgit-tests.sh matrix --nocapture
+  ./scripts/gnostr-asyncgit-tests.sh full --nocapture
+  ./scripts/gnostr-asyncgit-tests.sh list
 EOF
 }
 
@@ -154,6 +171,9 @@ prune_target_tree() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    nip34|matrix|full|list)
+      MODE="$1"
+      ;;
     --quiet)
       QUIET=true
       ;;
@@ -165,6 +185,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --offline)
       OFFLINE=true
+      ;;
+    --nip34|--notes)
+      MODE="nip34"
+      ;;
+    --matrix)
+      MODE="matrix"
+      ;;
+    --full)
+      MODE="full"
+      ;;
+    --list)
+      MODE="list"
       ;;
     --target-dir|--target_dir)
       shift
@@ -257,15 +289,45 @@ fi
 run_cargo() {
   local cmd="$1"
   shift
+  local -a argv=(cargo)
+  # Build argv incrementally so empty arrays never trip `set -u`.
+  if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_COMMON_FLAGS[@]}")
+  fi
+  argv+=("$cmd")
+  if [[ ${#CARGO_SUBCOMMAND_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_SUBCOMMAND_FLAGS[@]}")
+  fi
 
   if [[ -n "$TARGET_DIR" ]]; then
-    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}" --target-dir "$TARGET_DIR" "$@"
-  else
-    cargo "${CARGO_COMMON_FLAGS[@]}" "$cmd" "${CARGO_SUBCOMMAND_FLAGS[@]}" "$@"
+    argv+=(--target-dir "$TARGET_DIR")
   fi
+  argv+=("$@")
+  "${argv[@]}"
 }
 
-VECTOR_FILE="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
+print_cargo_command() {
+  local cmd="$1"
+  shift
+  local -a argv=(cargo)
+  # Mirror the exact cargo invocation before we run it.
+  if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_COMMON_FLAGS[@]}")
+  fi
+  argv+=("$cmd")
+  if [[ ${#CARGO_SUBCOMMAND_FLAGS[@]} -gt 0 ]]; then
+    argv+=("${CARGO_SUBCOMMAND_FLAGS[@]}")
+  fi
+  if [[ -n "$TARGET_DIR" ]]; then
+    argv+=(--target-dir "$TARGET_DIR")
+  fi
+  argv+=("$@")
+  printf '+'
+  printf ' %q' "${argv[@]}"
+  printf '\n'
+}
+
+VECTOR_FILE="./types/src/nostr/nip44/nip44.vectors.json"
 EXPECTED_VECTOR_SHA256="269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040"
 if command -v shasum >/dev/null 2>&1; then
   ACTUAL_VECTOR_SHA256="$(shasum -a 256 "$VECTOR_FILE" | awk '{print $1}')"
@@ -289,14 +351,20 @@ send_chat_update() {
 run_cargo_test_step() {
   local test_name="$1"
   shift
-  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    if run_cargo "$@" -- "${TEST_FLAGS[@]}"; then
+  local -a test_flags=("${TEST_FLAGS[@]}")
+  if [[ ! " ${test_flags[*]} " =~ " --nocapture " ]]; then
+    test_flags+=(--nocapture)
+  fi
+  if [[ ${#test_flags[@]} -gt 0 ]]; then
+    print_cargo_command "$@" -- "${test_flags[@]}"
+    if run_cargo "$@" -- "${test_flags[@]}"; then
       send_chat_update "$test_name successful"
     else
       send_chat_update "$test_name fail"
       return 1
     fi
   else
+    print_cargo_command "$@"
     if run_cargo "$@"; then
       send_chat_update "$test_name successful"
     else
@@ -310,8 +378,13 @@ run_cargo_capture_step() {
   local test_name="$1"
   shift
   local output
-  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    if output="$(run_cargo "$@" -- "${TEST_FLAGS[@]}" 2>&1)"; then
+  local -a test_flags=("${TEST_FLAGS[@]}")
+  if [[ ! " ${test_flags[*]} " =~ " --nocapture " ]]; then
+    test_flags+=(--nocapture)
+  fi
+  if [[ ${#test_flags[@]} -gt 0 ]]; then
+    print_cargo_command "$@" -- "${test_flags[@]}"
+    if output="$(run_cargo "$@" -- "${test_flags[@]}" 2>&1)"; then
       printf '%s\n' "$output"
       send_chat_update "$test_name successful"
     else
@@ -321,6 +394,7 @@ run_cargo_capture_step() {
       return "$status"
     fi
   else
+    print_cargo_command "$@"
     if output="$(run_cargo "$@" 2>&1)"; then
       printf '%s\n' "$output"
       send_chat_update "$test_name successful"
@@ -333,14 +407,62 @@ run_cargo_capture_step() {
   fi
 }
 
-if bash ./scripts/asyncgit-tests.sh; then
-  send_chat_update "asyncgit bootstrap successful"
-else
-  send_chat_update "asyncgit bootstrap fail"
-  exit 1
+run_nip34_suite() {
+  # Keep the note-related cases together so `nip34` stays predictable.
+  run_cargo_test_step "asyncgit nip34 note message" test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message
+  run_cargo_test_step "asyncgit nip34 pow nonce" test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce
+  run_cargo_test_step "types nip34 matrix" test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes
+  run_cargo_test_step "asyncgit nip34 repo announcement" test -p gnostr-asyncgit --lib repo_announcement_event_matches_ngit
+  run_cargo_test_step "asyncgit nip34 repo state" test -p gnostr-asyncgit --lib repo_state_parsing_matches_ngit
+  run_cargo_test_step "asyncgit nip34 repo state round trip" test -p gnostr-asyncgit --lib repo_state_round_trip_adds_head
+}
+
+list_tests() {
+  # Print runnable commands, not just labels, so the matrix is copy-pasteable.
+  printf '%s\n' \
+    "./scripts/gnostr-asyncgit-tests.sh matrix --nocapture" \
+    "  cargo test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes -- --nocapture" \
+    "./scripts/gnostr-asyncgit-tests.sh nip34 --nocapture" \
+    "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_uses_the_note_message -- --nocapture" \
+    "  cargo test -p gnostr-asyncgit --lib generate_git_note_event_with_pow_adds_nonce -- --nocapture" \
+    "  cargo test -p gnostr-types --lib nip34_event_matrix_covers_all_kinds_and_git_notes -- --nocapture" \
+    "  cargo test -p gnostr-asyncgit --lib repo_announcement_event_matches_ngit -- --nocapture" \
+    "  cargo test -p gnostr-asyncgit --lib repo_state_parsing_matches_ngit -- --nocapture" \
+    "  cargo test -p gnostr-asyncgit --lib repo_state_round_trip_adds_head -- --nocapture"
+  if [[ "$MODE" != "nip34" ]]; then
+    printf '%s\n' \
+      "./scripts/gnostr-asyncgit-tests.sh full --nocapture" \
+      "  cargo test -p gnostr-asyncgit --all-targets --features nostr -- --nocapture"
+  fi
+}
+
+if [[ "$MODE" == "list" ]]; then
+  list_tests
+  exit 0
 fi
 
-run_cargo_test_step "asyncgit full test suite" test -p gnostr-asyncgit --all-targets --features nostr
+case "$MODE" in
+  nip34)
+    run_nip34_suite
+    ;;
+  matrix)
+    run_cargo_test_step "asyncgit nip34 matrix" test -p gnostr-asyncgit --lib git_note_event_matrix_covers_commit_and_pow_variants
+    ;;
+  full)
+    if bash ./scripts/asyncgit-tests.sh; then
+      send_chat_update "asyncgit bootstrap successful"
+    else
+      send_chat_update "asyncgit bootstrap fail"
+      exit 1
+    fi
+    run_nip34_suite
+    run_cargo_test_step "asyncgit full test suite" test -p gnostr-asyncgit --all-targets --features nostr
+    ;;
+  *)
+    echo "Unsupported mode: $MODE" >&2
+    exit 1
+    ;;
+esac
 
 report_target_dir_size "$TARGET_DIR"
 if [[ -n "$TARGET_TREE_ROOT" ]]; then

@@ -4,7 +4,11 @@
 //! topic, bridges Gossipsub messages into the UI channel, and reassembles
 //! chunked payloads before delivery.
 
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    time::Duration,
+};
 
 use anyhow::{anyhow, Result};
 use futures::stream::StreamExt;
@@ -12,14 +16,14 @@ use libp2p::{
     autonat, dcutr, gossipsub, identify, kad, mdns, noise, ping, relay,
     request_response::{self, ProtocolSupport},
     swarm::{NetworkBehaviour, SwarmEvent},
-    tcp, yamux, StreamProtocol,
+    tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
 use parking_lot::Mutex;
 use once_cell::sync::OnceCell;
-use terminal_size::{terminal_size, Height, Width};
+use terminal_size::{terminal_size, Width};
 use textwrap::{self, Options};
-use tokio::{io, select};
-use tracing::{debug, warn};
+use tokio::select;
+use tracing::debug;
 use ureq::Agent;
 
 use crate::{
@@ -27,6 +31,114 @@ use crate::{
     msg::{Msg, MsgKind},
 };
 use gnostr_p2p::kvs::{FileRequest, FileResponse};
+use libp2p::identity;
+
+/// Handle for the local p2p relay service started by chat.
+pub struct LocalP2pRelayService {
+    peer_id: PeerId,
+    listen_addr: Multiaddr,
+    join_handle: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for LocalP2pRelayService {
+    fn drop(&mut self) {
+        self.join_handle.abort();
+    }
+}
+
+impl LocalP2pRelayService {
+    pub fn peer_id(&self) -> PeerId {
+        self.peer_id
+    }
+
+    pub fn listen_addr(&self) -> &Multiaddr {
+        &self.listen_addr
+    }
+}
+
+/// Start an in-process relay-capable peer for chat startup.
+pub fn spawn_local_p2p_relay_service() -> Result<LocalP2pRelayService> {
+    global_rt().block_on(spawn_local_p2p_relay_service_async())
+}
+
+/// Async variant for tests and other Tokio contexts.
+pub async fn spawn_local_p2p_relay_service_async() -> Result<LocalP2pRelayService> {
+    let keypair = identity::Keypair::generate_ed25519();
+    let peer_id = keypair.public().to_peer_id();
+    let (listen_addr_tx, listen_addr_rx) = tokio::sync::oneshot::channel();
+    let join_handle = tokio::spawn(async move {
+        if let Err(error) = run_local_p2p_relay_service(keypair, listen_addr_tx).await {
+            tracing::warn!("local p2p relay service exited with error: {error}");
+        }
+    });
+
+    let listen_addr = listen_addr_rx
+        .await
+        .map_err(|_| anyhow!("local p2p relay service did not report a listen address"))?;
+
+    Ok(LocalP2pRelayService {
+        peer_id,
+        listen_addr,
+        join_handle,
+    })
+}
+
+async fn run_local_p2p_relay_service(
+    keypair: identity::Keypair,
+    listen_addr_tx: tokio::sync::oneshot::Sender<Multiaddr>,
+) -> Result<()> {
+    #[derive(NetworkBehaviour)]
+    struct RelayBehaviour {
+        relay: relay::Behaviour,
+        ping: ping::Behaviour,
+        identify: identify::Behaviour,
+    }
+
+    let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
+        .with_tokio()
+        .with_tcp(
+            tcp::Config::default(),
+            noise::Config::new,
+            yamux::Config::default,
+        )?
+        .with_quic()
+        .with_behaviour(|key| RelayBehaviour {
+            relay: relay::Behaviour::new(key.public().to_peer_id(), Default::default()),
+            ping: ping::Behaviour::new(ping::Config::new()),
+            identify: identify::Behaviour::new(identify::Config::new(
+                "/ipfs/id/1.0.0".to_string(),
+                key.public(),
+            )),
+        })?
+        .build();
+
+    swarm.listen_on("/ip4/127.0.0.1/tcp/0".parse()?)?;
+    swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse()?)?;
+
+    let mut listen_addr_tx = Some(listen_addr_tx);
+
+    while let Some(event) = swarm.next().await {
+        match event {
+            SwarmEvent::Behaviour(RelayBehaviourEvent::Identify(identify::Event::Received {
+                info: identify::Info { observed_addr, .. },
+                ..
+            })) => {
+                swarm.add_external_address(observed_addr);
+            }
+            SwarmEvent::Behaviour(event) => debug!("local p2p relay event: {event:?}"),
+            SwarmEvent::NewListenAddr { address, .. } => {
+                swarm.add_external_address(address.clone());
+                if let Some(tx) = listen_addr_tx.take() {
+                    let _ = tx.send(address.clone());
+                }
+                debug!("local p2p relay listening on {address}");
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
 
 /// Shared Tokio runtime for background chat tasks.
 pub fn global_rt() -> &'static tokio::runtime::Runtime {
@@ -218,6 +330,7 @@ pub async fn evt_loop(
     topic: gossipsub::IdentTopic,
 ) -> Result<()> {
     let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
+    let mut pending_crawler_search: HashMap<kad::QueryId, i32> = HashMap::new();
 
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
@@ -384,14 +497,23 @@ pub async fn evt_loop(
     loop {
         select! {
             Some(event) = send.recv() => {
-                if let ChatEvent::ChatMessage(m) = event {
-                    if let Err(e) = swarm
-                        .behaviour_mut().gossipsub
-                        .publish(topic.clone(), serde_json::to_vec(&m)?) {
-                        debug!("Publish error: {e:?}");
-                        let m = Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(MsgKind::System);
-                        recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
+                match event {
+                    ChatEvent::ChatMessage(m) => {
+                        if let Err(e) = swarm
+                            .behaviour_mut().gossipsub
+                            .publish(topic.clone(), serde_json::to_vec(&m)?) {
+                            debug!("Publish error: {e:?}");
+                            let m = Msg::default().set_content(format!("publish error: {e:?}"), 0).set_kind(MsgKind::System);
+                            recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
+                        }
                     }
+                    ChatEvent::CrawlerSearch { nip } => {
+                        let key = kad::RecordKey::new(&format!("gnostr/relay-buckets/{nip}"));
+                        let query_id = swarm.behaviour_mut().kademlia.get_providers(key);
+                        pending_crawler_search.insert(query_id, nip);
+                        recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
+                    }
+                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::PeerConnected { .. } => {}
                 }
             }
             event = swarm.select_next_some() => match event {
@@ -419,6 +541,42 @@ pub async fn evt_loop(
                 SwarmEvent::Behaviour(MyBehaviourEvent::Autonat(event)) => {
                     debug!("AutoNAT event: {event:?}");
                 }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FoundProviders { providers, .. })),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        let provider_list = providers.iter().map(|peer| peer.to_string()).collect::<Vec<_>>().join(", ");
+                        let message = if provider_list.is_empty() {
+                            format!("crawler bucket {nip} has no providers")
+                        } else {
+                            format!("crawler bucket {nip} providers: {provider_list}")
+                        };
+                        recv.send(ChatEvent::ShowInfoMsg(message)).await?;
+                        if let Some(mut query) = swarm.behaviour_mut().kademlia.query_mut(&id) {
+                            query.finish();
+                        }
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FinishedWithNoAdditionalRecord { .. })),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        recv.send(ChatEvent::ShowInfoMsg(format!("crawler bucket {nip} has no providers"))).await?;
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Err(err)),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        recv.send(ChatEvent::ShowErrorMsg(format!("crawler bucket {nip} lookup failed: {err}"))).await?;
+                    }
+                }
                 SwarmEvent::Behaviour(MyBehaviourEvent::Dcutr(event)) => {
                     debug!("DCUtR event: {event:?}");
                 }
@@ -426,6 +584,12 @@ pub async fn evt_loop(
                     debug!("Relay event: {event:?}");
                 }
                 SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
+                    recv
+                        .send(ChatEvent::PeerConnected {
+                            peer_id: peer_id.to_string(),
+                            endpoint: format!("{endpoint:?}"),
+                        })
+                        .await?;
                     recv
                         .send(ChatEvent::ShowInfoMsg(format!(
                             "Connected to peer {peer_id} via {endpoint:?}"

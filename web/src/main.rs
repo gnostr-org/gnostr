@@ -11,5 +11,5 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    gnostr_js::web_app::run(args.port).await;
+    let _ = gnostr_js::web_app::run(args.port).await;
 }

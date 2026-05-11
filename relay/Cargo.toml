@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "1876.947630.6535"
+version = "948560.1874.701540"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -19,7 +19,9 @@ actix-http = { version = "3.9.0" }
 actix-web = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
+directories = { workspace = true }
 nostr-relay = { version = "0.4.8", default-features = false }
+num_cpus = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

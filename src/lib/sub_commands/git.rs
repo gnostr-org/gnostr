@@ -192,12 +192,12 @@ fn get_git_tag_version(suffix: String) -> Result<String> {
 
     let mut tag_name = format!(
         "v{}.{}.{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
     );
 
@@ -236,12 +236,12 @@ fn get_git_tag_pr_version(suffix: String) -> Result<String> {
 
     let mut tag_name = format!(
         "pr/{}.{}.{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
     );
 
@@ -298,12 +298,12 @@ fn run_git_checkout_b(suffix: String, repo_path: &Path) -> Result<String> {
 
     let mut branch_name = format!(
         "{}/{}/{}/{}/{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
         head_parent,
         head
@@ -356,12 +356,12 @@ fn run_git_checkout_pr(suffix: String, repo_path: &Path) -> Result<String> {
 
     let mut branch_name = format!(
         "pr/{}/{}/{}/{}/{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
         head_parent,
         head
@@ -560,7 +560,7 @@ mod tests {
         let suffix = "feature";
         let _expected_branch_name = format!(
             "{}/{}/{}/{}/{}-{}",
-            weeble, blockheight, wobble, parent_head, current_head, suffix
+            blockheight, weeble, wobble, parent_head, current_head, suffix
         );
 
         std::env::set_current_dir(repo_path)?;
@@ -616,7 +616,7 @@ mod tests {
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
         let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}",
-            weeble, blockheight, wobble, parent_head, current_head
+            blockheight, weeble, wobble, parent_head, current_head
         );
 
         std::env::set_current_dir(repo_path)?;
@@ -673,7 +673,7 @@ mod tests {
         let suffix = "fix";
         let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}-{}",
-            weeble, blockheight, wobble, parent_head, current_head, suffix
+            blockheight, weeble, wobble, parent_head, current_head, suffix
         );
 
         std::env::set_current_dir(repo_path)?;

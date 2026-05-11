@@ -1,0 +1,91 @@
+use clap::Parser;
+use futures::StreamExt;
+use libp2p::{
+    identify, noise, ping, rendezvous,
+    swarm::{NetworkBehaviour, SwarmEvent},
+    tcp, yamux,
+};
+use gnostr_p2p::cli;
+
+#[derive(Debug, Parser)]
+#[command(
+    author,
+    version,
+    about = "Run a dedicated libp2p rendezvous server.",
+    long_about = "Run a rendezvous point for peers that need discovery, registration, or hole-punch coordination.\n\nPeers can register namespaces and discover each other through this service.",
+    help_template = cli::HELP_TEMPLATE,
+    next_line_help = true,
+    disable_help_subcommand = true
+)]
+struct Opt {
+    #[command(flatten)]
+    node: cli::NodeOpts,
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    cli::init_tracing();
+
+    let opt = Opt::parse();
+    if opt.node.detach {
+        let pid = gnostr_p2p::spawn_detached_current_exe(cli::current_args_without_detach())
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        println!("started background p2p rendezvous server (pid: {pid})");
+        return Ok(());
+    }
+
+    let keypair = gnostr_p2p::keypair_from_seed(opt.node.secret_key_seed);
+
+    let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
+        .with_tokio()
+        .with_tcp(
+            tcp::Config::default(),
+            noise::Config::new,
+            yamux::Config::default,
+        )?
+        .with_quic()
+        .with_behaviour(|key| RendezvousBehaviour {
+            ping: ping::Behaviour::new(ping::Config::new()),
+            identify: identify::Behaviour::new(identify::Config::new(
+                "/ipfs/id/1.0.0".to_string(),
+                key.public(),
+            )),
+            rendezvous: rendezvous::server::Behaviour::new(
+                rendezvous::server::Config::default(),
+            ),
+        })?
+        .build();
+
+    cli::listen_default_addresses_relay(
+        &mut swarm,
+        opt.node.port,
+        opt.node.use_ipv6,
+    )?;
+
+    while let Some(event) = swarm.next().await {
+        match event {
+            SwarmEvent::Behaviour(RendezvousBehaviourEvent::Identify(
+                identify::Event::Received {
+                    info: identify::Info { observed_addr, .. },
+                    ..
+                },
+            )) => {
+                swarm.add_external_address(observed_addr);
+            }
+            SwarmEvent::Behaviour(event) => println!("{event:?}"),
+            SwarmEvent::NewListenAddr { address, .. } => {
+                println!("rendezvous listening on {address}");
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
+
+#[derive(NetworkBehaviour)]
+struct RendezvousBehaviour {
+    ping: ping::Behaviour,
+    identify: identify::Behaviour,
+    rendezvous: rendezvous::server::Behaviour,
+}

@@ -59,6 +59,7 @@ impl<'a> Widget for DetailPanel<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct KeyHintPanel<'a> {
     pub title: &'a str,
     pub lines: Vec<Line<'a>>,
@@ -72,6 +73,7 @@ impl<'a> Widget for KeyHintPanel<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub fn tree_line<'a>(path: String, meta: &'a str, selected: bool) -> ListItem<'a> {
     let style = if selected {
         Style::default().reversed()

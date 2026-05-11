@@ -24,7 +24,7 @@ use libp2p::{
         store::{MemoryStore, MemoryStoreConfig},
         Config as KadConfig, Mode, Quorum, Record, RecordKey,
     },
-    mdns, noise, ping, rendezvous,
+    mdns, noise, ping, relay, rendezvous,
     swarm::SwarmEvent,
     tcp, yamux, Multiaddr, PeerId,
 };
@@ -190,8 +190,13 @@ pub async fn evt_loop(
             let mut ipfs_cfg = KadConfig::new(crate::p2p::network_config::IPFS_PROTO_NAME);
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(local_peer_id);
+            let relay_server = relay::Behaviour::new(local_peer_id, Default::default());
+            let rendezvous_client = rendezvous::client::Behaviour::new(key.clone());
+            let rendezvous_server =
+                rendezvous::server::Behaviour::new(rendezvous::server::Config::default());
             Ok(crate::p2p::behaviour::Behaviour {
-                relay: relay_client,
+                relay_client,
+                relay_server,
                 autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
                 dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
@@ -205,9 +210,8 @@ pub async fn evt_loop(
                     "/yamux/1.0.0".to_string(),
                     key.public(),
                 )),
-                rendezvous: rendezvous::server::Behaviour::new(
-                    rendezvous::server::Config::default(),
-                ),
+                rendezvous_client,
+                rendezvous: rendezvous_server,
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(60)),
                 ),
@@ -295,8 +299,8 @@ pub async fn evt_loop(
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Dcutr(event)) => {
                     debug!("DCUtR event: {event:?}");
                 }
-                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Relay(event)) => {
-                    debug!("Relay event: {event:?}");
+                SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::RelayClient(event)) => {
+                    debug!("Relay client event: {event:?}");
                 }
                 SwarmEvent::Behaviour(crate::p2p::behaviour::BehaviourEvent::Gossipsub(gossipsub::Event::Message {
                     propagation_source: peer_id,
@@ -366,7 +370,7 @@ pub async fn advertise_service(
     service_url: String,
 ) -> Result<(), Box<dyn Error>> {
     let keypair = identity::Keypair::generate_ed25519();
-    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair)?;
+    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair).await?;
     let peer_id = *swarm.local_peer_id();
 
     let bootstrap_addr: Multiaddr = "/dnsaddr/bootstrap.libp2p.io".parse()?;

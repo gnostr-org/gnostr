@@ -139,6 +139,7 @@ pub mod tests {
 			let mut config = repo.config()?;
 			config.set_str("user.name", "name")?;
 			config.set_str("user.email", "email")?;
+			config.set_str("status.showUntrackedFiles", "all")?;
 		}
 		Ok((td, repo))
 	}
@@ -163,6 +164,7 @@ pub mod tests {
 			let mut config = repo.config()?;
 			config.set_str("user.name", "name")?;
 			config.set_str("user.email", "email")?;
+			config.set_str("status.showUntrackedFiles", "all")?;
 
 			let mut index = repo.index()?;
 			let id = index.write_tree()?;

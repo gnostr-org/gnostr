@@ -137,10 +137,10 @@ pub mod sub_commands;
 pub mod tabs;
 ///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
 pub mod test_utils;
-///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/internal/index.html>
-pub use gnostr_asyncgit::types::internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/index.html>
 pub use gnostr_asyncgit::types;
+///  <https://docs.rs/gnostr/latest/gnostr/internal/index.html>
+pub mod internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -353,8 +353,8 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire =  gnostr_asyncgit::types::internal::event_to_wire(event);
-    gnostr_asyncgit::types::internal::post(host, uri, wire)
+    let wire = internal::event_to_wire(event);
+    internal::post(host, uri, wire)
 }
 // /// use nostr_types::EventV2;
 use gnostr_asyncgit::types::EventV2;
@@ -374,8 +374,8 @@ pub fn post_event_v2(url: &str, event_v2: EventV2) {
         content: event_v2.content,
         tags: event_v2.tags.into_iter().map(TagV3::from).collect(),
     };
-    let wire = gnostr_asyncgit::types::internal::event_to_wire(event_v3);
-    gnostr_asyncgit::types::internal::post(host, uri, wire)
+    let wire = internal::event_to_wire(event_v3);
+    internal::post(host, uri, wire)
 }
 /// use nostr_types::EventV3;
 /// use nostr_types::EventV3;
@@ -383,8 +383,8 @@ use gnostr_asyncgit::types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = gnostr_asyncgit::types::internal::event_to_wire(event);
-    gnostr_asyncgit::types::internal::post(host, uri, wire)
+    let wire = internal::event_to_wire(event);
+    internal::post(host, uri, wire)
 }
 
 /// pub fn print_event(event: &Event)
@@ -395,7 +395,7 @@ pub fn print_event(event: &Event) {
     );
 }
 
-use gnostr_asyncgit::types::internal::*;
+use crate::internal::*;
 
 /// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
 pub mod weeble { pub use gnostr_asyncgit::weeble::*; }

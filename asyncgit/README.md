@@ -17,11 +17,13 @@ git push ssh://127.0.0.1:2222/.gnostr/$(gnostr-weeble)/$(gnostr-blockheight)/$(g
 
 ## Testing
 
-Run the full asyncgit test suite, including the Nostr event paths and PoW matrix:
+Run the full asyncgit test suite, including the Nostr event paths and the full NIP-34 matrix:
 
 ```sh
 ./scripts/gnostr-asyncgit-tests.sh --nocapture
 ```
+
+That matrix now covers plain/mined commits, plain/mined notes, and plain/PoW events, and each case is also replayed as a NIP-44 DM to the shared default recipient key.
 
 Note: `nostr_sdk` is only used in test code here; production asyncgit paths stay on the repo's own types.
 

@@ -86,6 +86,9 @@ function init_relays(model) {
 	const rlist = find_node("#relay-list tbody", el);
 	rlist.innerHTML = ''; // Clear existing relays to prevent duplicates
 	model.relays.forEach((str) => {
+		if (str === local_relay_url) {
+			return;
+		}
 		rlist.appendChild(new_relay_item(str));
 	});
 
@@ -145,24 +148,11 @@ function render_settings_profile(model) {
     }
 
     const profile = model_get_profile(model, model.pubkey);
-    const name = fmt_name(profile);
     const image = find_node("img[name='settings-profile-image']", el);
-    image.src = get_profile_pic(profile);
-    image.classList.toggle("hide", !profile.data.picture);
-
-    find_node("[name='settings-profile-name']", el).textContent = name;
-
-    const nip05_el = find_node("[name='settings-profile-nip05']", el);
-    nip05_el.textContent = profile.data.nip05 || "";
-    nip05_el.classList.toggle("hide", !profile.data.nip05);
-
-    const about_el = find_node("[name='settings-profile-about']", el);
-    about_el.innerHTML = newlines_to_br(linkify(profile.data.about || ""));
-    about_el.classList.toggle("hide", !profile.data.about);
-
-    const pubkey_el = find_node("[name='settings-profile-pubkey']", el);
-    pubkey_el.textContent = model.pubkey;
-    pubkey_el.style.minHeight = "2.4em";
+    if (image) {
+        image.src = get_profile_pic(profile);
+        image.classList.toggle("hide", !profile.data.picture);
+    }
 }
 
 function ensure_nip89_app_metadata_card(
@@ -252,8 +242,6 @@ function render_nip89_app_metadata(
 	const kinds_label = [...new Set(kinds.map((kind) => String(kind).trim()).filter(Boolean))].join(", ");
 	const handlers_label = [...new Set(handlers.map((handler) => handler.trim()).filter(Boolean))].join(" • ");
 	const has_data = !!(name || description || pubkey || website || kinds_label || handlers_label || picture);
-	const summary_name = name || pubkey || "NIP-89 App";
-	const summary_subtitle = website || kinds_label || description || handlers_label || "";
 
 	find_node("[name='nip89-app-name']", card).textContent = name;
 	find_node("[name='nip89-app-name']", card).classList.toggle("hide", !name);
@@ -288,31 +276,12 @@ function render_nip89_app_metadata(
 		handlers_el.textContent = handlers_label;
 		handlers_el.classList.toggle("hide", !handlers_label);
 	}
-	const summary_image = find_node("[name='nip89-app-summary-image']", card);
-	if (summary_image) {
-		if (picture) {
-			summary_image.src = picture;
-			summary_image.classList.remove("hide");
-		} else {
-			summary_image.classList.add("hide");
-		}
-	}
-	const summary_name_el = find_node("[name='nip89-app-summary-name']", card);
-	if (summary_name_el) {
-		summary_name_el.textContent = summary_name;
-	}
-	const summary_subtitle_el = find_node("[name='nip89-app-summary-subtitle']", card);
-	if (summary_subtitle_el) {
-		summary_subtitle_el.textContent = summary_subtitle;
-		summary_subtitle_el.classList.toggle("hide", !summary_subtitle);
-	}
 
 	mount.classList.toggle("hide", !has_data);
 	const section = mount.closest("#nip89-app-section");
 	if (section) {
 		section.classList.toggle("hide", !has_data);
 	}
-	card.open = false;
 }
 
 async function load_nip89_app_metadata(
@@ -595,6 +564,10 @@ function on_click_add_discovered_relay(ev) {
 
 function add_relay_address(address, label) {
 	const model = GNOSTR;
+	if (address === local_relay_url) {
+		log_info(`Skipping duplicate local relay entry: ${address}`);
+		return;
+	}
 
 	if (model.relays.has(address)) {
 		log_info(`Relay ${address} is already in the active list.`);

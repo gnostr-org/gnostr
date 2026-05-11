@@ -3,14 +3,19 @@ use std::path::Path;
 use clap::Parser;
 
 #[derive(Parser, Debug, Clone)]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about = "Run the gnostr relay server",
+    long_about = "Run the local gnostr relay. It loads .gnostr/relay.toml by default, stores event data under .gnostr/relay, and writes logs to stderr and gnostr.log."
+)]
 pub struct RelayCli {
-    /// The logging level
+    /// The logging level written to stderr and gnostr.log.
     #[arg(short, long, default_value = "info")]
     pub logging: String,
 
-    /// Path to the relay config file
-    #[arg(long, default_value = "config/gnostr.toml")]
+    /// Path to the relay config file.
+    #[arg(long, default_value = ".gnostr/relay.toml")]
     pub config_file_path: String,
 }
 

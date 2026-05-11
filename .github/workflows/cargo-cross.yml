@@ -1,0 +1,247 @@
+name: cargo-cross
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to release"
+        required: false
+        type: string
+      toolchain:
+        description: "Rust toolchain to use"
+        required: false
+        default: stable
+        type: choice
+        options:
+          - stable
+          - nightly
+      all_features:
+        description: "Pass --all-features"
+        required: false
+        default: false
+        type: boolean
+      no_default_features:
+        description: "Pass --no-default-features"
+        required: false
+        default: false
+        type: boolean
+      features:
+        description: "Comma-separated features"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      release_tag: ${{ steps.set-matrix.outputs.release_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - id: set-matrix
+        shell: python3 {0}
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          import json
+          import os
+          targets = [
+              {"build": "linux-x64", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-gnu", "native": True, "features": ""},
+              {"build": "linux-x64-musl", "os": "ubuntu-latest", "target": "x86_64-unknown-linux-musl", "native": False, "features": "vendor-openssl"},
+              {"build": "linux-arm64", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-gnu", "native": False, "features": "vendor-openssl"},
+              {"build": "linux-arm64-musl", "os": "ubuntu-latest", "target": "aarch64-unknown-linux-musl", "native": False, "features": "vendor-openssl"},
+              {"build": "windows-x64", "os": "windows-latest", "target": "x86_64-pc-windows-msvc", "native": True, "features": ""},
+              {"build": "macos-x64", "os": "macos-13", "target": "x86_64-apple-darwin", "native": True, "features": ""},
+              {"build": "macos-arm64", "os": "macos-latest", "target": "aarch64-apple-darwin", "native": True, "features": ""},
+          ]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"release_tag={os.environ['RELEASE_TAG']}\n")
+              output.write(f"matrix={json.dumps({'include': targets})}\n")
+
+  build-binaries:
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    env:
+      BUILD_NAME: gnostr-${{ needs.setup.outputs.release_tag }}-${{ matrix.target }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          ref: ${{ needs.setup.outputs.release_tag }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ inputs.toolchain || 'stable' }}
+
+      - name: Setup OpenSSL and Perl for Windows
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-openssl-perl-windows
+
+      - name: Install cross
+        if: runner.os == 'Linux'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
+
+      - name: Set Clang environment variables
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          if command -v llvm-config >/dev/null 2>&1; then
+            lib_dir="$(llvm-config --libdir)"
+          else
+            so_path="$(find /usr /usr/local -name 'libclang.so*' 2>/dev/null | sort -V | tail -n 1)"
+            lib_dir="$(dirname "$so_path")"
+          fi
+
+          if [ -n "${lib_dir:-}" ] && [ -d "$lib_dir" ]; then
+            clang_resource_dir="$(clang -print-resource-dir)"
+            gcc_include_dir="$(gcc -print-file-name=include)"
+            echo "LIBCLANG_PATH=$lib_dir" >> "$GITHUB_ENV"
+            echo "BINDGEN_EXTRA_CLANG_ARGS=-I${clang_resource_dir}/include -isystem ${gcc_include_dir}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build release binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=(
+            --target "${{ matrix.target }}"
+            --verbose
+          )
+
+          if [[ "${{ inputs.all_features }}" == "true" ]]; then
+            args+=(--all-features)
+          fi
+
+          if [[ "${{ inputs.no_default_features }}" == "true" ]]; then
+            args+=(--no-default-features)
+          fi
+
+          if [ -n "${{ inputs.features }}" ]; then
+            args+=(--features "${{ inputs.features }}")
+          fi
+
+          if [ -n "${{ matrix.features }}" ]; then
+            args+=(--features "${{ matrix.features }}")
+          fi
+
+          ./scripts/cross.sh "${args[@]}"
+
+      - name: Bundle release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          bins=(
+            gnostr-server
+            git-remote-nostr
+            git-remote-gnostr-node
+            gnostr-shell
+            gnostr-blossom
+            blossom-filetree
+          )
+          exe_suffix=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            exe_suffix=".exe"
+          fi
+
+          mkdir -p "artifacts/$BUILD_NAME"
+          cp README.md LICENSE "artifacts/$BUILD_NAME/"
+          for bin in "${bins[@]}"; do
+            cp "target/${{ matrix.target }}/release/${bin}${exe_suffix}" "artifacts/$BUILD_NAME/"
+          done
+          (cd "artifacts/$BUILD_NAME" && sha256sum * > "${BUILD_NAME}-SHA256SUMS")
+
+      - name: Smoke test
+        if: matrix.native == true
+        shell: bash
+        run: |
+          exe_suffix=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            exe_suffix=".exe"
+          fi
+
+          "./artifacts/$BUILD_NAME/gnostr-server${exe_suffix}" --version
+          "./artifacts/$BUILD_NAME/gnostr-blossom${exe_suffix}" --version
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUILD_NAME }}
+          path: artifacts/${{ env.BUILD_NAME }}
+
+  create-github-release:
+    needs: [setup, build-binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          ref: ${{ needs.setup.outputs.release_tag }}
+
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub release
+        shell: bash
+        run: |
+          release_tag="${{ needs.setup.outputs.release_tag }}"
+          release_commit="$(git rev-parse HEAD)"
+          prerelease_flag=""
+          if [[ "$release_tag" == *-* ]]; then
+            prerelease_flag="--prerelease"
+          fi
+
+          gh release create "$release_tag" \
+            --target "$release_commit" \
+            --title "$release_tag" \
+            --generate-notes \
+            $prerelease_flag
+
+      - name: Zip release bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd artifacts
+          for dir in */; do
+            [ -d "$dir" ] || continue
+            zip -r "${dir%/}.zip" "$dir" >/dev/null
+          done
+
+      - name: Upload release assets
+        shell: bash
+        run: |
+          release_tag="${{ needs.setup.outputs.release_tag }}"
+          gh release upload "$release_tag" \
+            artifacts/*.zip \
+            --clobber

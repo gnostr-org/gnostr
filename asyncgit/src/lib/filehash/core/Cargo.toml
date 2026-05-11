@@ -1,6 +1,6 @@
 [package]
 name = "gnostr_filehash_core"
-version = "1876.947630.6535"
+version = "948560.1874.701540"
 edition = "2021"
 description = "gnostr filehash core"
 license = "MIT"
@@ -14,6 +14,9 @@ nostr = []
 
 [dependencies]
 sha2 = { version = "0.10.9" }
+
+[build-dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [dev-dependencies]
 sha2 = "0.10.9"

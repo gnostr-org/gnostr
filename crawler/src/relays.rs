@@ -135,6 +135,68 @@ fn sanitize_relay_entry(line: &str) -> Option<String> {
     }
 }
 
+fn write_bucket_serve_files(bucket_name: &str, relays: &[String]) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(bucket_name);
+    fs::create_dir_all(&config_dir)?;
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    debug!(
+        "write_bucket_serve_files: writing {}",
+        yaml_path.display()
+    );
+    let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    debug!(
+        "write_bucket_serve_files: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!("write_bucket_serve_files: writing {}", txt_path.display());
+    fs::write(&txt_path, relays.join(" "))?;
+
+    Ok(config_dir)
+}
+
+pub fn append_recent_relay(relay: &str) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join("recent");
+    fs::create_dir_all(&config_dir)?;
+    let txt_path = config_dir.join("relays.txt");
+
+    let mut relays: Vec<String> = match fs::read_to_string(&txt_path) {
+        Ok(content) => content
+            .split_whitespace()
+            .filter_map(|relay| Url::parse(relay).ok().map(|url| url.to_string()))
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+
+    let relay = match Url::parse(relay) {
+        Ok(url) => url.to_string(),
+        Err(_) => {
+            debug!("append_recent_relay: skipping invalid relay={relay}");
+            return Ok(config_dir);
+        }
+    };
+
+    if !relays.iter().any(|existing| existing == &relay) {
+        debug!("append_recent_relay: appending relay={} bucket=recent", relay);
+        relays.push(relay);
+        relays.sort();
+        relays.dedup();
+        write_bucket_serve_files("recent", &relays)?;
+    } else {
+        debug!("append_recent_relay: relay already present bucket=recent relay={relay}");
+    }
+
+    Ok(config_dir)
+}
+
 pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
     let config_dir = get_config_dir_path();
     let yaml_path = config_dir.join("relays.yaml");

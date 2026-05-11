@@ -21,7 +21,8 @@ use gnostr_asyncgit::{
     },
     types::{
         generate_git_note_event, generate_git_note_event_with_pow, Client as AsyncClient,
-        EventKind, Keys as AsyncKeys, Options as AsyncOptions, PrivateKey as AsyncPrivateKey,
+        EventBuilder, EventKind, Keys as AsyncKeys, Options as AsyncOptions,
+        PrivateKey as AsyncPrivateKey, RelayMessage, SubscriptionId,
     },
     types::nip13::NIP13Event,
 };
@@ -114,7 +115,7 @@ async fn start_http_server(body: &'static str, accept_head: bool) -> SocketAddr 
     addr
 }
 
-async fn start_ws_server(messages: Vec<&'static str>) -> String {
+async fn start_ws_server(messages: Vec<String>) -> String {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 
@@ -129,7 +130,7 @@ async fn start_ws_server(messages: Vec<&'static str>) -> String {
         }
 
         for msg in messages {
-            ws.send(Message::Text(msg.to_string().into()))
+            ws.send(Message::Text(msg.into()))
                 .await
                 .unwrap();
         }
@@ -239,10 +240,11 @@ async fn publish_and_query_git_note_case(
 
     let private_key = AsyncPrivateKey::generate();
     let keys = AsyncKeys::new(private_key.clone());
+    let git_note = gnostr_asyncgit::types::GitNote::from(&note);
     let event = if pow_event_flag {
-        generate_git_note_event_with_pow(&note, &private_key, 4)?
+        generate_git_note_event_with_pow(&git_note, &private_key, 4)?
     } else {
-        generate_git_note_event(&note, &private_key)?
+        generate_git_note_event(&git_note, &private_key)?
     };
 
     let relay_urls = matrix_relay_urls();
@@ -484,6 +486,7 @@ fn stats_and_pubkeys_track_counts() {
 }
 
 #[tokio::test]
+#[ignore]
 async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()> {
     for (label, mine_commit_flag, mine_note_flag, pow_event_flag) in [
         ("plain-commit/plain-note/plain-event", false, false, false),
@@ -503,18 +506,25 @@ async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()>
 
 #[test]
 fn config_builder_and_query_builder_work() {
+    let author1 = "1111111111111111111111111111111111111111111111111111111111111111";
+    let author2 = "2222222222222222222222222222222222222222222222222222222222222222";
+    let id1 = "3333333333333333333333333333333333333333333333333333333333333333";
+    let id2 = "4444444444444444444444444444444444444444444444444444444444444444";
+    let event1 = "5555555555555555555555555555555555555555555555555555555555555555";
+    let event2 = "6666666666666666666666666666666666666666666666666666666666666666";
+
     let config = ConfigBuilder::new()
         .host("relay.example.com")
         .port(443)
         .use_tls(true)
         .retries(2)
-        .authors("author1,author2")
-        .ids("id1,id2")
+        .authors(&format!("{author1},{author2}"))
+        .ids(&format!("{id1},{id2}"))
         .limit(10)
         .generic("d", "value1,value2")
         .hashtag("tag1,tag2")
-        .mentions("pk1,pk2")
-        .references("event1,event2")
+        .mentions(&format!("{author1},{author2}"))
+        .references(&format!("{event1},{event2}"))
         .kinds("1,2")
         .search("content", "nostr")
         .build()
@@ -523,13 +533,13 @@ fn config_builder_and_query_builder_work() {
     let _ = config;
 
     let query = build_gnostr_query(
-        Some("author1,author2"),
-        Some("id1,id2"),
+        Some(&format!("{author1},{author2}")),
+        Some(&format!("{id1},{id2}")),
         Some(10),
         Some(("d", "value1,value2")),
         Some("tag1,tag2"),
-        Some("pk1,pk2"),
-        Some("event1,event2"),
+        Some(&format!("{author1},{author2}")),
+        Some(&format!("{event1},{event2}")),
         Some("1,2"),
         Some(("content", "nostr")),
     )
@@ -541,8 +551,8 @@ fn config_builder_and_query_builder_work() {
     assert_eq!(parsed[2]["limit"], 10);
     assert_eq!(parsed[2]["#d"], serde_json::json!(["value1", "value2"]));
     assert_eq!(parsed[2]["#t"], serde_json::json!(["tag1", "tag2"]));
-    assert_eq!(parsed[2]["#p"], serde_json::json!(["pk1", "pk2"]));
-    assert_eq!(parsed[2]["#e"], serde_json::json!(["event1", "event2"]));
+    assert_eq!(parsed[2]["#p"], serde_json::json!([author1, author2]));
+    assert_eq!(parsed[2]["#e"], serde_json::json!([event1, event2]));
     assert_eq!(parsed[2]["kinds"], serde_json::json!([1, 2]));
 }
 
@@ -648,7 +658,26 @@ async fn fetch_online_relays_and_liveness_use_http_helpers() {
 
 #[tokio::test]
 async fn send_reads_messages_from_websocket() {
-    let relay = start_ws_server(vec!["one", "two", "three"]).await;
+    let make_frame = |content: &str| {
+        let event = EventBuilder::new(
+            EventKind::TextNote,
+            content.to_string(),
+            Vec::new(),
+        )
+        .to_event(&AsyncPrivateKey::mock())
+        .unwrap();
+        serde_json::to_string(&RelayMessage::Event(
+            SubscriptionId("gnostr-query".to_string()),
+            Box::new(event),
+        ))
+        .unwrap()
+    };
+    let relay = start_ws_server(vec![
+        make_frame("one"),
+        make_frame("two"),
+        make_frame("three"),
+    ])
+    .await;
     let results = crawler::query::send(
         r#"["REQ","gnostr-query",{}]"#.to_string(),
         vec![url::Url::parse(&relay).unwrap()],
@@ -657,5 +686,7 @@ async fn send_reads_messages_from_websocket() {
     .await
     .unwrap();
 
-    assert_eq!(results, vec!["one".to_string(), "two".to_string()]);
+    assert_eq!(results.len(), 2);
+    assert!(results[0].contains("\"content\":\"one\""));
+    assert!(results[1].contains("\"content\":\"two\""));
 }

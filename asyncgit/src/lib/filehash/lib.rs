@@ -3,7 +3,12 @@
 //! This macro allows you to compute the SHA-256 hash of a file at compile time,
 //! embedding the resulting hash string directly into your Rust executable.
 
-use std::time::Duration;
+use std::{
+    env,
+    fs,
+    path::PathBuf,
+    time::Duration,
+};
 
 use url::Url;
 
@@ -11,9 +16,12 @@ pub use gnostr_filehash_core::get_file_hash;
 pub use gnostr_filehash_core::get_git_tracked_files;
 pub use gnostr_filehash_core::should_remove_relay;
 
-use crate::types::{Client, Error, EventBuilder, EventKind, Id, Keys, Options, Tag};
+use crate::types::{local_relay_urls, Client, Error, EventBuilder, EventKind, Id, Keys, Options, Tag};
 
-const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("core/src/online_relays_gps.csv");
+const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/lib/filehash/online_relays_gps.csv"
+));
 
 /// The SHA-256 hash of this crate's `build.rs` at the time of compilation.
 pub const BUILD_HASH: &str = env!("BUILD_HASH");
@@ -39,8 +47,10 @@ pub const GIT_COMMIT_HASH: &str = env!("GIT_COMMIT_HASH");
 pub const GIT_BRANCH: &str = env!("GIT_BRANCH");
 
 pub fn get_relay_urls() -> Vec<String> {
+    let mut relays = local_relay_urls();
+
     let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
-    content
+    for relay in content
         .lines()
         .skip(1)
         .filter_map(|line| {
@@ -61,7 +71,13 @@ pub fn get_relay_urls() -> Vec<String> {
                 }
             }
         })
-        .collect()
+    {
+        if !relays.contains(&relay) {
+            relays.push(relay);
+        }
+    }
+
+    relays
 }
 
 pub async fn publish_patch_event(
