@@ -274,7 +274,7 @@ pub async fn run_time_sync_daemon() -> Result<(), Box<dyn std::error::Error + Se
             yamux::Config::default,
         )?
         .with_behaviour(|key| {
-            Ok(TimeSyncBehaviour {
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(TimeSyncBehaviour {
                 request_response: request_response::cbor::Behaviour::new(
                     [(StreamProtocol::new("/time/5.0"), ProtocolSupport::Full)],
                     request_response::Config::default(),
