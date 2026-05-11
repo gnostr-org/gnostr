@@ -139,7 +139,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948848/319156" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948863/295799" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
