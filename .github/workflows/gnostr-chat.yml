@@ -267,7 +267,19 @@ jobs:
           PEER_PID=$!
           trap 'kill "$BOOTSTRAP_PEER_PID" "$PEER_PID" 2>/dev/null || true' EXIT
 
-          sleep 10
+          echo "Waiting for headless chat peer to connect..."
+          for _ in $(seq 1 60); do
+            if grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          if ! grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
+            echo "headless chat peer never connected"
+            cat /tmp/gnostr-chat-peer.log
+            exit 1
+          fi
 
           echo "Pushing oneshot chat messages for 2 minutes..."
           while [ "$SECONDS" -lt "$END_AT" ]; do
