@@ -39,7 +39,8 @@ runs:
         EVENT=$(gnostr \
           --nsec "$(gnostr --hash "$GITHUB_REPOSITORY_ID")" \
           -d ${{ inputs.pow }} \
-          -r "${{ inputs.damus }}" "${{ inputs.nos }}" \
+          -r "${{ inputs.damus }}" \
+          -r "${{ inputs.nos }}" \
           custom-event \
           -k 1 \
           -c "[$GITHUB_REPOSITORY_ID](${{ inputs.job_url }}) (${{ inputs.matrix_label }}) ${{ inputs.status }}" \
