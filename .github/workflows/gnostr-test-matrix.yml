@@ -383,19 +383,10 @@ jobs:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-remote-nostr
 
-      - name: 🚀 git-helpers-test
-        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+      - name: 🚀 cargo-test-workspace
         shell: bash
         run: |
-          cargo test --path ./git-helpers 
-          git fetch --all
-
-      - name: Save Cargo target cache (post-git-helpers)
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: target
-          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-helpers
+          ./scripts/cargo-test-workspace.sh
 
       #- name: 🚀 gnostr query test
       #  # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
