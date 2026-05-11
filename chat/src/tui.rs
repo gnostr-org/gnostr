@@ -25,6 +25,7 @@ use crate::{
     msg::{Msg, MsgKind},
     session::{ChatNotification, ChatSession},
 };
+use gnostr_p2p::time::{Clock, ClockStatus, P2PClock};
 
 pub fn run_chat_tui(
     topic: String,
@@ -101,10 +102,12 @@ struct ChatTui {
     selected: usize,
     input: Input,
     status: String,
+    p2p_clock: P2PClock,
 }
 
 impl ChatTui {
     fn new(topic: String, username: String) -> Self {
+        let p2p_clock = P2PClock::new(1, &clock_checkpoint_path(&topic, &username));
         Self {
             topic,
             username,
@@ -114,6 +117,7 @@ impl ChatTui {
             selected: 0,
             input: Input::new(String::new()),
             status: "type a message and press enter".to_string(),
+            p2p_clock,
         }
     }
 
@@ -248,7 +252,7 @@ impl ChatTui {
         let root = frame.area();
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(3)])
+            .constraints([Constraint::Length(4), Constraint::Min(0), Constraint::Length(3)])
             .split(root);
 
         self.draw_header(frame, layout[0]);
@@ -268,6 +272,12 @@ impl ChatTui {
     }
 
     fn draw_header(&self, frame: &mut Frame, area: Rect) {
+        let clock_width = 32.min(area.width);
+        let layout = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Min(0), Constraint::Length(clock_width)])
+            .split(area);
+
         let tabs = Tabs::new(vec![
             Line::from("timeline"),
             Line::from("composer"),
@@ -282,7 +292,8 @@ impl ChatTui {
         .divider(Span::raw(" | "))
         .block(Block::default().title("chat").borders(Borders::ALL));
 
-        frame.render_widget(tabs, area);
+        frame.render_widget(tabs, layout[0]);
+        frame.render_widget(self.p2p_time_widget(), layout[1]);
     }
 
     fn draw_sidebar(&self, frame: &mut Frame, area: Rect) {
@@ -431,6 +442,30 @@ impl ChatTui {
     fn selected_message(&self) -> Option<&Msg> {
         self.messages.get(self.selected)
     }
+
+    fn p2p_time_widget(&self) -> Paragraph<'_> {
+        let metrics = self.p2p_clock.get_metrics();
+        let now = self.p2p_clock.now_utc();
+        let status = match metrics.status {
+            ClockStatus::Init => "init".to_string(),
+            ClockStatus::Synced => "synced".to_string(),
+            ClockStatus::Slewing => "slewing".to_string(),
+            ClockStatus::Unreliable(reason) => format!("unreliable:{reason}"),
+        };
+
+        Paragraph::new(vec![
+            Line::from(vec![
+                Span::styled("utc: ", Style::default().fg(Color::Magenta)),
+                Span::raw(now.format("%H:%M:%S").to_string()),
+            ]),
+            Line::from(vec![
+                Span::styled("p2p: ", Style::default().fg(Color::Magenta)),
+                Span::raw(format!("{status} {:+}ms", metrics.offset_ms)),
+            ]),
+        ])
+        .wrap(Wrap { trim: true })
+        .block(Block::default().title("p2p time").borders(Borders::ALL))
+    }
 }
 
 fn parse_crawler_search_command(input: &str) -> Option<i32> {
@@ -459,4 +494,43 @@ fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn clock_checkpoint_path(topic: &str, username: &str) -> String {
+    let mut path = std::env::temp_dir();
+    path.push(format!(
+        "gnostr-chat-p2p-{}-{}.json",
+        sanitize_for_filename(topic),
+        sanitize_for_filename(username)
+    ));
+    path.to_string_lossy().into_owned()
+}
+
+fn sanitize_for_filename(value: &str) -> String {
+    value
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sanitize_for_filename_replaces_path_separators() {
+        assert_eq!(sanitize_for_filename("topic/name with spaces"), "topic_name_with_spaces");
+    }
+
+    #[test]
+    fn clock_checkpoint_path_uses_temp_dir() {
+        let path = clock_checkpoint_path("topic/name", "user name");
+        assert!(path.contains("gnostr-chat-p2p-topic_name-user_name.json"));
+    }
 }
