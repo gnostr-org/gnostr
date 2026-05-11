@@ -382,20 +382,10 @@ impl Drop for PtyReplSession {
 ///
 /// For an example see the README
 pub fn spawn_bash(timeout: Option<u64>) -> Result<PtyReplSession, Error> {
-    // unfortunately working with a temporary tmpfile is the only
-    // way to guarantee that we are "in step" with the prompt
-    // all other attempts were futile, especially since we cannot
-    // wait for the first prompt since we don't know what .bashrc
-    // would set as PS1 and we cannot know when is the right time
-    // to set the new PS1
+    // Use a minimal rcfile so the prompt is deterministic across hosts.
     let mut rcfile = tempfile::NamedTempFile::new()?;
-    let _ = rcfile.write(
-        b"include () { [[ -f \"$1\" ]] && source \"$1\"; }\n\
-                  include /etc/bash.bashrc\n\
-                  include ~/.bashrc\n\
-                  PS1=\"~~~~\"\n\
-                  unset PROMPT_COMMAND\n",
-    )?;
+    let _ = rcfile.write(b"PS1=\"~~~~\"\n\
+                           unset PROMPT_COMMAND\n")?;
     let mut c = Command::new("bash");
     c.args(&[
         "--rcfile",
