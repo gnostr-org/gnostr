@@ -38,7 +38,7 @@ fi
 
 # Name of the Makefile to be converted
 MAKEFILE="Makefile"
-rm $MAKEFILE 2>/dev/null || true
+if [ ! -f "$MAKEFILE" ]; then
 touch $MAKEFILE
 tee -a $MAKEFILE <<EOF
 ACT_VERBOSE ?= 
@@ -254,6 +254,7 @@ gnostr-bot-macos-intel: 	### 	gnostr-bot-macos
 # vim: set noexpandtab:
 # vim: set setfiletype make
 EOF
+fi
 
 
 # Name of the output Justfile
