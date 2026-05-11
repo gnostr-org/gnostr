@@ -144,6 +144,7 @@ cargo-test-workspace: 	### 	cargo-test-workspace
 	@. \$(HOME)/.cargo/env
 	#@cargo test
 	cargo  test -j \$(NPROC) --workspace
+test: cargo-test-workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. \$(HOME)/.cargo/env
 	#@cargo test
@@ -165,6 +166,7 @@ cargo-clippy-workspace: 	### 	cargo-clippy-workspace
 cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
 	cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
 	cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
+clippy: cargo-clippy-workspace
 
 cargo-report: 	### 	cargo-report
 	@. \$(HOME)/.cargo/env
