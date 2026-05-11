@@ -7046,6 +7046,7 @@ dependencies = [
  "tracing-subscriber",
  "tree-sitter 0.23.2",
  "tree-sitter-highlight 0.23.2",
+ "tree-sitter-json",
  "tui-prompts",
  "unicode-normalization",
  "unicode-segmentation",
@@ -17914,6 +17915,16 @@ dependencies = [
  "regex",
  "thiserror 1.0.69",
  "tree-sitter 0.23.2",
+]
+
+[[package]]
+name = "tree-sitter-json"
+version = "0.24.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d727acca406c0020cffc6cf35516764f36c8e3dc4408e5ebe2cb35a947ec471"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
 ]
 
 [[package]]
