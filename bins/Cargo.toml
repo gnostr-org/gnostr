@@ -17,7 +17,7 @@ default = ["blossom", "blossom-tui"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
 relay = ["dep:gnostr-relay"]
-git = ["dep:ngit", "dep:git-version"]
+git = ["dep:gnostr_ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
 chat = ["dep:gnostr-chat"]
 p2p = ["dep:gnostr-p2p"]
@@ -60,7 +60,7 @@ gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist
 gnostr_qr = { path = "../qr", version = ">=948560.1874.701540" }
 libp2p = { workspace = true }
 log = { workspace = true }
-ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948560.1874.701540", optional = true }
+gnostr_ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948560.1874.701540", optional = true }
 nips = { path = "../nips", version = ">=948560.1874.701540" }
 nostr = { workspace = true }
 pretty_env_logger = "0.5.0"
