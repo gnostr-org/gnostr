@@ -16,6 +16,7 @@ path = "src/lib.rs"
 default = ["blossom", "blossom-tui"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
+relay = ["dep:gnostr-relay"]
 metrics = []
 rate_limiter = []
 vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
@@ -48,7 +49,7 @@ gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", 
 gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540" }
 gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948560.1874.701540" }
 gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540" }
-gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540" }
+gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540", optional = true }
 gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540" }
 gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948560.1874.701540" }
 gnostr_qr = { path = "../qr", version = ">=948560.1874.701540" }
@@ -88,3 +89,13 @@ url = { workspace = true }
 walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
+
+[[bin]]
+name = "gnostr-relay"
+path = "src/bin/gnostr-relay.rs"
+required-features = ["relay"]
+
+[[bin]]
+name = "gnostr-relay-tui"
+path = "src/bin/gnostr-relay-tui.rs"
+required-features = ["relay"]
