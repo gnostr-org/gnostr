@@ -286,7 +286,7 @@ function process_json_content(ev) {
 }
 
 function dms_available() {
-	return window.nostr && window.nostr.nip04;
+	return gnostrBrowserNostr.supportsNip04();
 }
 
 async function decrypt_dms(model) {
@@ -303,7 +303,7 @@ async function decrypt_dms(model) {
 				continue;
 			let str;
 			try {
-				str = await window.nostr.nip04.decrypt(dm.pubkey, ev.content);
+				str = await gnostrBrowserNostr.decrypt(dm.pubkey, ev.content);
 			} catch (err) {
 				log_error("unable to decrypt dm", ev.id, err);
 				str = "(Unable to decrypt)"
