@@ -16,7 +16,7 @@ path = "src/lib.rs"
 default = ["blossom", "blossom-tui"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
-web = ["dep:gnostr-web"]
+web = ["dep:gnostr-web", "dep:gnostr-js"]
 relay = ["dep:gnostr-relay"]
 git = ["dep:gnostr_ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
@@ -129,7 +129,7 @@ required-features = ["chat"]
 [[bin]]
 name = "websockets_chat"
 path = "src/bin/websockets_chat.rs"
-required-features = ["chat"]
+required-features = ["web"]
 
 [[bin]]
 name = "gnostr_relay_io"
@@ -255,6 +255,36 @@ required-features = ["legit"]
 name = "git_tui"
 path = "examples/git_tui.rs"
 required-features = ["git"]
+
+[[example]]
+name = "demo"
+path = "examples/demo.rs"
+required-features = ["crawler"]
+
+[[example]]
+name = "gnostr_crawler"
+path = "examples/gnostr_crawler.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "embedded_js"
+path = "src/bin/embedded_js.rs"
+required-features = ["web"]
+
+[[bin]]
+name = "embedded_main_js"
+path = "src/bin/embedded_main_js.rs"
+required-features = ["web"]
+
+[[bin]]
+name = "flat"
+path = "src/bin/flat.rs"
+required-features = ["web"]
+
+[[bin]]
+name = "gnostr-js-relay"
+path = "src/bin/gnostr-js-relay.rs"
+required-features = ["web"]
 
 [[example]]
 name = "gnostr_relay_demo"
