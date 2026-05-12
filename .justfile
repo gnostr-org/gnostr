@@ -37,15 +37,6 @@ cargo-install:
 cargo-sort:
   @make cargo-sort
 
-asyncgit:
-  @make asyncgit
-
-relay:
-  @make relay
-
-query:
-  @make query
-
 cargo-build-release:
   @make cargo-build-release
 
@@ -106,9 +97,6 @@ fetch-by-id:
 fetch-by-kind-and-author:
   @make fetch-by-kind-and-author
 
-crawler-test-relays:
-  @make crawler-test-relays
-
 gnostr-note-debug:
   @make gnostr-note-debug
 
@@ -145,12 +133,12 @@ docker-shared:
 gh-act-run-all:
   @make gh-act-run-all
 
-gnostr-bot-matrix:
-  @make gnostr-bot-matrix
+gnostr-test-matrix:
+  @make gnostr-test-matrix
 
-gnostr-bot-macos:
-  @make gnostr-bot-macos
+gnostr-test-macos:
+  @make gnostr-test-macos
 
-gnostr-bot-macos-intel:
-  @make gnostr-bot-macos-intel
+gnostr-test-macos-intel:
+  @make gnostr-test-macos-intel
 

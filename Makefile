@@ -71,14 +71,6 @@ cargo-install: 	###         cargo install --path . $(FORCE)
 cargo-sort: 	cargo-sort
 	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
 
-.PHONY:asyncgit relay query
-asyncgit: 	###     asyncgit
-	@cargo  install -j $(NPROC) --path ./asyncgit $(FORCE)
-relay: 	###     relay
-	@cargo install -j $(NPROC) --path ./relay $(FORCE)
-query: 	###     query
-	@cargo install -j $(NPROC) --path ./query $(FORCE)
-
 ## 	cargo-br q=true
 cargo-build-release: 	### 	cargo-build-release
 ## 	cargo-build-release q=true
@@ -143,7 +135,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1874/948963/159915" -n "952795a1f797b5c993ffc5d074b143eae036a499995e63f3dbd56ebba4e4ed9d"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1873/949094/945759" -n "a0b5322afbb030d7c3c8d9c63bc05fb133843d319efaab413da4180d2b4a9c3d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
@@ -154,10 +146,6 @@ fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
 	cargo  -j $(NPROC) install --bin fetch_by_kind-and-author --path .
 	cargo  -j $(NPROC) install --bin fetch_by_kind_and_author --path .
 	fetch_by_kind_and_author wss://relay.nostr.band 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
-
-crawler-test-relays: 	### crawler-test-relays
-	for relay in $(shell echo $(shell gnostr-crawler));do echo $$relay;done
-	for relay in $(shell echo $(shell gnostr-crawler));do test_relay $$relay;done
 
 gnostr-note-debug: 	### 	gnostr-note-debug
 	@gnostr --debug --hash "" note -c "gnostr --debug" --hex -s "gnostr --debug subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--debug|tag" --verbose --expiration 144000
@@ -194,16 +182,17 @@ gh-act-run-all: 	### 	gh-act-run-all
 	gh extension install nektos/gh-act || true
 	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
 
-gnostr-bot-matrix: 	### 	gnostr-bot-matrix
+gnostr-test-matrix: 	### 	gnostr-test-matrix
 	gh extension install nektos/gh-act || true
-	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml --container-architecture linux/amd64
 
-gnostr-bot-macos: 	### 	gnostr-bot-macos
+gnostr-test-macos: 	### 	gnostr-test-macos
 	gh extension install nektos/gh-act || true
-	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
-gnostr-bot-macos-intel: 	### 	gnostr-bot-macos
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
+
+gnostr-test-macos-intel: 	### 	gnostr-test-macos
 	gh extension install nektos/gh-act || true
-	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-bot-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
