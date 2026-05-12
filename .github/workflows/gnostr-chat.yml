@@ -32,6 +32,8 @@ jobs:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
+      GNOSTR_CHAT_HEADLESS_IMAGE: "gnostr-chat-headless"
+      GNOSTR_CHAT_HEADLESS_CONTAINER: "gnostr-chat-headless"
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
@@ -142,6 +144,13 @@ jobs:
       - name: Install gnostr via cargo-binstall
         if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
         uses: ./.github/actions/cargo-binstall-gnostr
+
+      - name: Build headless chat image
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build -t "$GNOSTR_CHAT_HEADLESS_IMAGE" -f docker/Dockerfile.gnostr-chat-headless .
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
@@ -256,29 +265,65 @@ jobs:
             --port 0 \
             >/tmp/gnostr-chat-bootstrap-peer.log 2>&1 &
           BOOTSTRAP_PEER_PID=$!
+          trap 'kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
 
-          $GNOSTR_CMD chat \
-            --debug \
-            --name peer \
-            --hash "$PEER_HASH" \
-            --topic "$CHAT_TOPIC" \
-            --headless \
-            >/tmp/gnostr-chat-peer.log 2>&1 &
-          PEER_PID=$!
-          trap 'kill "$BOOTSTRAP_PEER_PID" "$PEER_PID" 2>/dev/null || true' EXIT
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            docker rm -f "$GNOSTR_CHAT_HEADLESS_CONTAINER" >/dev/null 2>&1 || true
+            docker run -d \
+              --name "$GNOSTR_CHAT_HEADLESS_CONTAINER" \
+              "$GNOSTR_CHAT_HEADLESS_IMAGE" \
+              chat \
+              --debug \
+              --name peer \
+              --hash "$PEER_HASH" \
+              --topic "$CHAT_TOPIC" \
+              --headless
 
-          echo "Waiting for headless chat peer to connect..."
-          for _ in $(seq 1 60); do
-            if grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
-              break
+            trap 'docker rm -f "$GNOSTR_CHAT_HEADLESS_CONTAINER" >/dev/null 2>&1 || true; kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
+
+            if ! docker inspect -f '{{.State.Running}}' "$GNOSTR_CHAT_HEADLESS_CONTAINER" | grep -q true; then
+              docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" || true
+              echo "headless chat container is not running"
+              exit 1
             fi
-            sleep 2
-          done
 
-          if ! grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
-            echo "headless chat peer never connected"
-            cat /tmp/gnostr-chat-peer.log
-            exit 1
+            echo "Waiting for headless chat container to report readiness..."
+            for _ in $(seq 1 60); do
+              if docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
+                break
+              fi
+              sleep 2
+            done
+
+            if ! docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
+              docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" || true
+              echo "headless chat container never became ready"
+              exit 1
+            fi
+          else
+            $GNOSTR_CMD chat \
+              --debug \
+              --name peer \
+              --hash "$PEER_HASH" \
+              --topic "$CHAT_TOPIC" \
+              --headless \
+              >/tmp/gnostr-chat-peer.log 2>&1 &
+            PEER_PID=$!
+            trap 'kill "$BOOTSTRAP_PEER_PID" "$PEER_PID" 2>/dev/null || true' EXIT
+
+            echo "Waiting for headless chat peer to connect..."
+            for _ in $(seq 1 60); do
+              if grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
+                break
+              fi
+              sleep 2
+            done
+
+            if ! grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
+              echo "headless chat peer never connected"
+              cat /tmp/gnostr-chat-peer.log
+              exit 1
+            fi
           fi
 
           echo "Pushing oneshot chat messages for 2 minutes..."

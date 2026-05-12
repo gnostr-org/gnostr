@@ -11,6 +11,9 @@ runs:
         shell: bash
         run: |
           echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
+          if command -v docker >/dev/null 2>&1; then
+            docker rm -f gnostr-chat-headless >/dev/null 2>&1 || true
+          fi
           pkill -f "gnostr" || true
           pkill -f "gnostr-server" || true
           pkill -f "blossom-server" || true
