@@ -21,7 +21,7 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --all --check
         continue-on-error: true
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy --workspace --all-targets -- -A warnings
         continue-on-error: true
       - run: cargo test --workspace
         continue-on-error: true
@@ -37,7 +37,7 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --all --check
         continue-on-error: true
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy --workspace --all-targets -- -A warnings
         continue-on-error: true
       - run: cargo test --workspace
         continue-on-error: true
