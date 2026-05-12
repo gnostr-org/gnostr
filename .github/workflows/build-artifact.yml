@@ -217,8 +217,8 @@ jobs:
         include:
           - image: ghcr.io/gnostr-org/gnostr
             file: docker/Dockerfile.gnostr
-          - image: ghcr.io/gnostr-org/gnostr-chat-headless
-            file: docker/Dockerfile.gnostr-chat-headless
+          - image: ghcr.io/gnostr-org/gnostr-chat
+            file: docker/Dockerfile.gnostr-chat
           - image: ghcr.io/gnostr-org/gnostr-node
             file: docker/Dockerfile.gnostr-node
           - image: ghcr.io/gnostr-org/blossom-server
