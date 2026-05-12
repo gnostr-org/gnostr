@@ -8,7 +8,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-IMAGE="${GNOSTR_STACK_IMAGE:-gnostr-stack:local}"
+BASE_IMAGE="${GNOSTR_STACK_BASE_IMAGE:-gnostr-stack-base:local}"
 CONTAINER="${GNOSTR_STACK_CONTAINER:-gnostr-stack}"
 TOPIC="${GNOSTR_STACK_TOPIC:-gnostr-dev}"
 BUILD_ONLY="${GNOSTR_STACK_BUILD_ONLY:-false}"
@@ -20,7 +20,7 @@ usage() {
 Usage: docker-gnostr-stack.sh [up|down|logs|status|shell|restart]
 
 Environment:
-  GNOSTR_STACK_IMAGE       Docker image tag to build and run
+  GNOSTR_STACK_BASE_IMAGE   Base Docker image tag to build from docker/Dockerfile.gnostr
   GNOSTR_STACK_CONTAINER   Container name to manage
   GNOSTR_STACK_TOPIC       Chat topic for the headless peer
   GNOSTR_STACK_BUILD_ONLY  "true" to build the image and stop
@@ -29,7 +29,7 @@ EOF
 }
 
 build_image() {
-  docker build -t "$IMAGE" -f docker/Dockerfile.gnostr .
+  docker build -t "$BASE_IMAGE" -f docker/Dockerfile.gnostr .
 }
 
 wait_for_ready() {
@@ -53,7 +53,7 @@ start_stack() {
     -v "$ROOT_DIR:/workspace" \
     -w /workspace \
     --entrypoint gnostr \
-    "$IMAGE" \
+    "$BASE_IMAGE" \
     chat \
     --debug \
     --headless \
