@@ -11,7 +11,7 @@ This repo currently uses Docker in two distinct ways:
 | --- | --- |
 | `docker/Dockerfile.blossom-server` | Container image for upstream `blossom-server` |
 | `docker/Dockerfile.blossom-git` | Tools image with `git`, `git-lfs`, `blossom-cli`, and `blossom-lfs` |
-| `docker/Dockerfile.gnostr-chat-headless` | Headless chat runtime image for CI and local automation |
+| `docker/Dockerfile.gnostr-chat` | Chat runtime image for CI and local automation |
 | `docker/blossom-server-entrypoint.sh` | Env-driven entrypoint for the Blossom server image |
 | `docker-compose.blossom.yml` | Local compose stack for Blossom server and tools |
 | `docker/cross/*.Dockerfile` | Custom images used by `cross` for Linux cross-target builds |
@@ -127,6 +127,6 @@ For cross-build usage details, see [`CROSS.md`](CROSS.md).
 - On Apple Silicon, `cross 0.2.5` has a known host/toolchain issue for some
   Linux cross targets; that behavior is documented in `CROSS.md`.
 - `build-artifact.yml` publishes the main runtime images to GHCR as
-  `ghcr.io/gnostr-org/{gnostr,gnostr-chat-headless,gnostr-node,blossom-server,blossom-git}`.
+  `ghcr.io/gnostr-org/{gnostr,gnostr-chat,gnostr-node,blossom-server,blossom-git}`.
 - If `GITHUB_TOKEN` is restricted for package publish, add a repo secret named
   `GHCR_PAT` with `packages:write` and `read:packages` access.
