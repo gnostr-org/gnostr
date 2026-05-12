@@ -22,6 +22,10 @@ pub enum Error {
     #[error("The provided program name is empty.")]
     EmptyProgramName,
 
+    #[error("rexpect is not supported on Windows")]
+    UnsupportedPlatform,
+
+    #[cfg(not(windows))]
     #[error(transparent)]
     Nix(#[from] nix::Error),
 

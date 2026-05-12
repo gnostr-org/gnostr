@@ -65,9 +65,217 @@
 //! ```
 
 pub mod error;
-pub mod process;
 pub mod reader;
+
+#[cfg(not(windows))]
+pub mod process;
+
+#[cfg(windows)]
+pub mod process {
+    use crate::error::Error;
+    use std::process::Command;
+
+    #[derive(Debug)]
+    pub struct PtyProcess;
+
+    impl PtyProcess {
+        pub fn new(_command: Command) -> Result<Self, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn set_kill_timeout(&mut self, _timeout_ms: Option<u64>) {}
+    }
+}
+
+#[cfg(not(windows))]
 pub mod session;
+
+#[cfg(windows)]
+pub mod session {
+    use crate::error::Error;
+    use std::io::{Read, Write};
+    use std::marker::PhantomData;
+    use std::ops::{Deref, DerefMut};
+    use std::process::Command;
+
+    pub use crate::reader::{Options, ReadUntil};
+
+    #[derive(Debug)]
+    pub struct StreamSession<W: Write> {
+        _marker: PhantomData<W>,
+    }
+
+    impl<W: Write> StreamSession<W> {
+        pub fn new<R: Read + Send + 'static>(_reader: R, _writer: W, _options: Options) -> Self {
+            Self {
+                _marker: PhantomData,
+            }
+        }
+
+        pub fn send_line(&mut self, _line: &str) -> Result<usize, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn send(&mut self, _s: &str) -> Result<usize, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn send_control(&mut self, _c: char) -> Result<(), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn flush(&mut self) -> Result<(), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn read_line(&mut self) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn try_read(&mut self) -> Option<char> {
+            None
+        }
+
+        pub fn exp_eof(&mut self) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_regex(&mut self, _regex: &str) -> Result<(String, String), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_string(&mut self, _needle: &str) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_char(&mut self, _needle: char) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_any(&mut self, _needles: Vec<ReadUntil>) -> Result<(String, String), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct PtySession;
+
+    impl PtySession {
+        pub fn new(_process: (), _options: Options) -> Result<Self, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn send_line(&mut self, _line: &str) -> Result<usize, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn send(&mut self, _s: &str) -> Result<usize, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn flush(&mut self) -> Result<(), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn read_line(&mut self) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn try_read(&mut self) -> Option<char> {
+            None
+        }
+
+        pub fn exp_eof(&mut self) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_regex(&mut self, _regex: &str) -> Result<(String, String), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_string(&mut self, _needle: &str) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_char(&mut self, _needle: char) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn exp_any(&mut self, _needles: Vec<ReadUntil>) -> Result<(String, String), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct PtyReplSession {
+        pub prompt: String,
+        pub pty_session: PtySession,
+        pub quit_command: Option<String>,
+        pub echo_on: bool,
+    }
+
+    impl PtyReplSession {
+        pub fn wait_for_prompt(&mut self) -> Result<String, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn execute(&mut self, _cmd: &str, _ready_regex: &str) -> Result<(), Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+
+        pub fn send_line(&mut self, _line: &str) -> Result<usize, Error> {
+            Err(Error::UnsupportedPlatform)
+        }
+    }
+
+    impl Deref for PtyReplSession {
+        type Target = PtySession;
+
+        fn deref(&self) -> &PtySession {
+            &self.pty_session
+        }
+    }
+
+    impl DerefMut for PtyReplSession {
+        fn deref_mut(&mut self) -> &mut PtySession {
+            &mut self.pty_session
+        }
+    }
+
+    impl Drop for PtyReplSession {
+        fn drop(&mut self) {}
+    }
+
+    pub fn spawn(_program: &str, _timeout_ms: Option<u64>) -> Result<PtySession, Error> {
+        Err(Error::UnsupportedPlatform)
+    }
+
+    pub fn spawn_with_options(
+        _command: Command,
+        _options: Options,
+    ) -> Result<PtySession, Error> {
+        Err(Error::UnsupportedPlatform)
+    }
+
+    pub fn spawn_bash(_timeout: Option<u64>) -> Result<PtyReplSession, Error> {
+        Err(Error::UnsupportedPlatform)
+    }
+
+    pub fn spawn_python(_timeout: Option<u64>) -> Result<PtyReplSession, Error> {
+        Err(Error::UnsupportedPlatform)
+    }
+
+    pub fn spawn_stream<R: Read + Send + 'static, W: Write>(
+        _reader: R,
+        _writer: W,
+        _timeout_ms: Option<u64>,
+    ) -> StreamSession<W> {
+        StreamSession {
+            _marker: PhantomData,
+        }
+    }
+
+}
 
 pub use reader::ReadUntil;
 pub use session::{spawn, spawn_bash, spawn_python, spawn_stream, spawn_with_options};
