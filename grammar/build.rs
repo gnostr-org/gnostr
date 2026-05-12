@@ -397,12 +397,29 @@ fn grammar_repository_ref() -> String {
 }
 
 fn grammar_cache_root() -> anyhow::Result<PathBuf> {
-    let cache_home = std::env::var_os("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".cache")))
-        .context("unable to determine cache directory")?;
+    let mut candidates = Vec::new();
 
-    Ok(cache_home.join(GRAMMAR_CACHE_NAMESPACE))
+    if let Some(cache_home) = std::env::var_os("XDG_CACHE_HOME").map(PathBuf::from) {
+        candidates.push(cache_home.join(GRAMMAR_CACHE_NAMESPACE));
+    }
+
+    if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+        candidates.push(home.join(".cache").join(GRAMMAR_CACHE_NAMESPACE));
+    }
+
+    if let Ok(out_dir) = std::env::var("OUT_DIR").map(PathBuf::from) {
+        candidates.push(out_dir.join("grammar-cache"));
+    }
+
+    candidates.push(std::env::temp_dir().join(GRAMMAR_CACHE_NAMESPACE));
+
+    for candidate in candidates {
+        if fs::create_dir_all(&candidate).is_ok() {
+            return Ok(candidate);
+        }
+    }
+
+    bail!("unable to determine writable grammar cache directory")
 }
 
 fn target_triple() -> String {
