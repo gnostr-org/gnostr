@@ -243,6 +243,9 @@ gnostr-test-macos-intel: 	### 	gnostr-test-macos
 	gh act \${ACT_VERBOSE} \${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || \
 	   act \${ACT_VERBOSE} \${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
 
+act-cargo-cross: 	### 	acto-cargo-cross
+	 act -W .github/workflows/cargo-cross.yml -j setup --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
 EOF

@@ -142,3 +142,6 @@ gnostr-test-macos:
 gnostr-test-macos-intel:
   @make gnostr-test-macos-intel
 
+act-cargo-cross:
+  @make act-cargo-cross
+
