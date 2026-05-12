@@ -12,7 +12,7 @@ use libp2p::{
     tcp, yamux, PeerId, StreamProtocol,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
@@ -469,7 +469,13 @@ mod tests {
         let checkpoint_path = checkpoint.path().to_string_lossy().to_string();
         let mut state = SyncState::new(1, &checkpoint_path);
         let mut last_time = state.get_logical_utc();
-        let mut last_round_peer_names: Vec<&str> = Vec::new();
+        let mut last_round_peer_names: HashSet<&str> = HashSet::new();
+        println!(
+            "initial logical utc: {} status={:?} slew_rate={:.6}",
+            last_time.to_rfc3339(),
+            state.status,
+            state.slew_rate
+        );
 
         let rounds: Vec<(&str, Vec<(&str, Estimation)>)> = vec![
             (
@@ -518,8 +524,22 @@ mod tests {
         ];
 
         for (label, peers) in rounds {
-            println!("round {label}: {} peers", peers.len());
-            last_round_peer_names = peers.iter().map(|(peer, _)| *peer).collect();
+            let current_peer_names: HashSet<&str> = peers.iter().map(|(peer, _)| *peer).collect();
+            let entered: Vec<&str> = current_peer_names
+                .difference(&last_round_peer_names)
+                .copied()
+                .collect();
+            let left: Vec<&str> = last_round_peer_names
+                .difference(&current_peer_names)
+                .copied()
+                .collect();
+
+            println!(
+                "round {label}: peers={} quorum_needed={} entered={entered:?} left={left:?}",
+                peers.len(),
+                2 * state.f + 1
+            );
+            last_round_peer_names = current_peer_names;
             for (peer, estimate) in &peers {
                 println!(
                     "peer sample: {peer} -> d={:.6}s a={:.6}s",
@@ -543,9 +563,14 @@ mod tests {
             state.apply_bft_sync(estimates);
 
             let now = state.get_logical_utc();
+            let logical_delta = now - last_time;
             println!(
-                "after round {label}: status={:?}, slew_rate={:.6}, pending_alert={:?}",
-                state.status, state.slew_rate, state.pending_alert
+                "after round {label}: utc={} delta={}ms status={:?} slew_rate={:.6} pending_alert={:?}",
+                now.to_rfc3339(),
+                logical_delta.num_milliseconds(),
+                state.status,
+                state.slew_rate,
+                state.pending_alert
             );
 
             if peers.len() < 2 * state.f + 1 {
@@ -564,5 +589,12 @@ mod tests {
         for original in ["peer-alpha", "peer-beta", "peer-gamma", "peer-delta"] {
             assert!(!last_round_peer_names.contains(&original));
         }
+
+        println!(
+            "final consensus utc: {} status={:?} slew_rate={:.6}",
+            last_time.to_rfc3339(),
+            state.status,
+            state.slew_rate
+        );
     }
 }
