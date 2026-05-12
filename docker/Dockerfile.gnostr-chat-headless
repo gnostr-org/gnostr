@@ -2,11 +2,21 @@ FROM rust:latest AS build
 EXPOSE 4000
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    clang \
     curl \
+    libclang-dev \
+    llvm-dev \
     gzip \
+    pkg-config \
     sudo \
     tar \
     xz-utils \
+    && LIBCLANG_SO=$(find /usr -name 'libclang.so' 2>/dev/null | head -1 || \
+      find /usr -name 'libclang*.so*' 2>/dev/null | sort -V | tail -n 1) \
+    && { [ -n "$LIBCLANG_SO" ] || { echo "ERROR: could not find libclang.so after installing libclang-dev" >&2; exit 1; }; } \
+    && mkdir -p /usr/local/lib \
+    && ln -sf "$LIBCLANG_SO" /usr/local/lib/libclang.so \
     && rm -rf /var/lib/apt/lists/*
 RUN curl -L https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz \
     | tar -xzf - \
@@ -14,6 +24,7 @@ RUN curl -L https://github.com/cargo-bins/cargo-binstall/releases/latest/downloa
 RUN cargo-binstall -V
 RUN cargo-binstall cross -y
 RUN cargo-binstall gnostr --force -y
+ENV LIBCLANG_PATH=/usr/local/lib
 ENV PATH="/usr/local/cargo/bin:${PATH}"
 RUN git init
 RUN git config --global user.email "admin@gnostr.org"
