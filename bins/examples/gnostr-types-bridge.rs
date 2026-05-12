@@ -1,7 +1,7 @@
 #![allow(clippy::uninlined_format_args)]
 
 use clap::Parser;
-use gnostr::types::nostr::bridge::{decrypt_dm, encrypt_dm, encrypt_dm_with_algorithm};
+use gnostr::types::bridge::{decrypt_dm, encrypt_dm, encrypt_dm_with_algorithm};
 use gnostr::types::{ContentEncryptionAlgorithm, PrivateKey};
 
 #[derive(Parser, Debug)]
