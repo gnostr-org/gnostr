@@ -18,6 +18,5 @@ RUN git init
 RUN git config --global user.email "admin@gnostr.org"
 RUN git config --global user.name "admin@gnostr.org"
 RUN GIT_AUTHOR_DATE="Thu, 01 Jan 1970 00:00:00 +0000" GIT_COMMITTER_DATE="Thu, 01 Jan 1970 00:00:00 +0000" git commit --allow-empty -m 'gnostr repo'
-RUN gnostr chat --headless --topic gnostr-dev && sleep 60
-RUN gnostr chat --oneshot "gnostr chat docker started" --topic gnostr-dev
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["gnostr"]
+CMD ["chat", "--headless", "--topic", "gnostr-dev"]
