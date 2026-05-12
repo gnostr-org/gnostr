@@ -462,4 +462,107 @@ mod tests {
         assert!(state.pending_alert.is_none());
         assert!((state.slew_rate - 1.0).abs() <= 0.005);
     }
+
+    #[test]
+    fn test_quorum_churn_replaces_original_nodes() {
+        let checkpoint = NamedTempFile::new().expect("temp checkpoint");
+        let checkpoint_path = checkpoint.path().to_string_lossy().to_string();
+        let mut state = SyncState::new(1, &checkpoint_path);
+        let mut last_time = state.get_logical_utc();
+        let mut last_round_peer_names: Vec<&str> = Vec::new();
+
+        let rounds: Vec<(&str, Vec<(&str, Estimation)>)> = vec![
+            (
+                "bootstrap",
+                vec![
+                    ("peer-alpha", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-beta", Estimation { d: 0.005, a: 0.001 }),
+                ],
+            ),
+            (
+                "quorum-forms",
+                vec![
+                    ("peer-alpha", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-beta", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-gamma", Estimation { d: 0.007, a: 0.001 }),
+                    ("peer-delta", Estimation { d: 0.007, a: 0.001 }),
+                ],
+            ),
+            (
+                "churn-one",
+                vec![
+                    ("peer-beta", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-gamma", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-delta", Estimation { d: 0.007, a: 0.001 }),
+                    ("peer-epsilon", Estimation { d: 0.007, a: 0.001 }),
+                ],
+            ),
+            (
+                "churn-two",
+                vec![
+                    ("peer-gamma", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-delta", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-epsilon", Estimation { d: 0.007, a: 0.001 }),
+                    ("peer-zeta", Estimation { d: 0.007, a: 0.001 }),
+                ],
+            ),
+            (
+                "replacement-complete",
+                vec![
+                    ("peer-epsilon", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-zeta", Estimation { d: 0.005, a: 0.001 }),
+                    ("peer-eta", Estimation { d: 0.007, a: 0.001 }),
+                    ("peer-theta", Estimation { d: 0.007, a: 0.001 }),
+                ],
+            ),
+        ];
+
+        for (label, peers) in rounds {
+            println!("round {label}: {} peers", peers.len());
+            last_round_peer_names = peers.iter().map(|(peer, _)| *peer).collect();
+            for (peer, estimate) in &peers {
+                println!(
+                    "peer sample: {peer} -> d={:.6}s a={:.6}s",
+                    estimate.d, estimate.a
+                );
+            }
+
+            let estimates: Vec<Estimation> = peers.iter().map(|(_, estimate)| *estimate).collect();
+            let mut d_overs: Vec<f64> = estimates.iter().map(|e| e.d + e.a).collect();
+            let mut d_unders: Vec<f64> = estimates.iter().map(|e| e.d - e.a).collect();
+            d_overs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            d_unders.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+            let m_min = d_overs[state.f];
+            let m_max = d_unders[estimates.len() - 1 - state.f];
+            println!(
+                "consensus window: m_min={:.6}s m_max={:.6}s",
+                m_min, m_max
+            );
+
+            state.apply_bft_sync(estimates);
+
+            let now = state.get_logical_utc();
+            println!(
+                "after round {label}: status={:?}, slew_rate={:.6}, pending_alert={:?}",
+                state.status, state.slew_rate, state.pending_alert
+            );
+
+            if peers.len() < 2 * state.f + 1 {
+                assert_eq!(state.status, ClockStatus::Init);
+                assert!(state.pending_alert.is_none());
+            } else {
+                assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+                assert!(state.pending_alert.is_none());
+                assert!((state.slew_rate - 1.0).abs() <= 0.005);
+            }
+
+            assert!(now > last_time);
+            last_time = now;
+        }
+
+        for original in ["peer-alpha", "peer-beta", "peer-gamma", "peer-delta"] {
+            assert!(!last_round_peer_names.contains(&original));
+        }
+    }
 }
