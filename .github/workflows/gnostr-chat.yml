@@ -32,8 +32,8 @@ jobs:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
-      GNOSTR_CHAT_HEADLESS_IMAGE: "gnostr-chat-headless"
-      GNOSTR_CHAT_HEADLESS_CONTAINER: "gnostr-chat-headless"
+      GNOSTR_CHAT_IMAGE: "gnostr-chat"
+      GNOSTR_CHAT_CONTAINER: "gnostr-chat"
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
@@ -150,7 +150,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker build -t "$GNOSTR_CHAT_HEADLESS_IMAGE" -f docker/Dockerfile.gnostr-chat-headless .
+          docker build -t "$GNOSTR_CHAT_IMAGE" -f docker/Dockerfile.gnostr-chat .
       # - run: cargo build --bin gnostr
       # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
@@ -268,10 +268,10 @@ jobs:
           trap 'kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
 
           if [[ "$RUNNER_OS" == "Linux" ]]; then
-            docker rm -f "$GNOSTR_CHAT_HEADLESS_CONTAINER" >/dev/null 2>&1 || true
+            docker rm -f "$GNOSTR_CHAT_CONTAINER" >/dev/null 2>&1 || true
             docker run -d \
-              --name "$GNOSTR_CHAT_HEADLESS_CONTAINER" \
-              "$GNOSTR_CHAT_HEADLESS_IMAGE" \
+              --name "$GNOSTR_CHAT_CONTAINER" \
+              "$GNOSTR_CHAT_IMAGE" \
               chat \
               --debug \
               --name peer \
@@ -279,24 +279,24 @@ jobs:
               --topic "$CHAT_TOPIC" \
               --headless
 
-            trap 'docker rm -f "$GNOSTR_CHAT_HEADLESS_CONTAINER" >/dev/null 2>&1 || true; kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
+            trap 'docker rm -f "$GNOSTR_CHAT_CONTAINER" >/dev/null 2>&1 || true; kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
 
-            if ! docker inspect -f '{{.State.Running}}' "$GNOSTR_CHAT_HEADLESS_CONTAINER" | grep -q true; then
-              docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" || true
+            if ! docker inspect -f '{{.State.Running}}' "$GNOSTR_CHAT_CONTAINER" | grep -q true; then
+              docker logs "$GNOSTR_CHAT_CONTAINER" || true
               echo "headless chat container is not running"
               exit 1
             fi
 
             echo "Waiting for headless chat container to report readiness..."
             for _ in $(seq 1 60); do
-              if docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
+              if docker logs "$GNOSTR_CHAT_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
                 break
               fi
               sleep 2
             done
 
-            if ! docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
-              docker logs "$GNOSTR_CHAT_HEADLESS_CONTAINER" || true
+            if ! docker logs "$GNOSTR_CHAT_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
+              docker logs "$GNOSTR_CHAT_CONTAINER" || true
               echo "headless chat container never became ready"
               exit 1
             fi
