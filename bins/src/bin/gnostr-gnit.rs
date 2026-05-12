@@ -515,12 +515,12 @@ async fn main() -> Result<(), anyhow::Error> {
         res = indexer_wakeup_task => res.context("failed to run indexer"),
         _ = tokio::signal::ctrl_c() => {
             info!("Received ctrl-c, shutting down");
-    Ok(())
+            Ok(())
+        }
+    }
 }
 
 #[cfg(not(feature = "web"))]
 fn main() {
     eprintln!("gnostr-gnit requires the `web` feature");
-}
-    }
 }
