@@ -165,7 +165,6 @@ impl GitTestRepo {
     }
 
     pub fn populate(&mut self) -> Result<Oid> {
-        self.initial_commit()?;
         fs::write(self.dir.join("t1.md"), "some content")?;
         self.stage_and_commit("add t1.md")?;
         fs::write(self.dir.join("t2.md"), "some content1")?;
@@ -173,7 +172,6 @@ impl GitTestRepo {
     }
 
     pub fn populate_minus_1(&mut self) -> Result<Oid> {
-        self.initial_commit()?;
         fs::write(self.dir.join("t1.md"), "some content")?;
         self.stage_and_commit("add t1.md")
     }
@@ -366,17 +364,14 @@ mod tests {
     fn test_git_test_repo_new() -> Result<()> {
         let repo_main = GitTestRepo::new("main")?;
         assert!(repo_main.dir.exists());
-        assert_eq!(
-            repo_main.git_repo.head().err().unwrap().code(),
-            git2::ErrorCode::UnbornBranch
-        );
+        assert_eq!(repo_main.git_repo.head()?.shorthand(), Some("main"));
         assert_eq!(repo_main.get_checked_out_branch_name()?, "main");
 
         let repo_dev = GitTestRepo::new("development")?;
         assert!(repo_dev.dir.exists());
         assert_eq!(
-            repo_dev.git_repo.head().err().unwrap().code(),
-            git2::ErrorCode::UnbornBranch
+            repo_dev.git_repo.head()?.shorthand(),
+            Some("development")
         );
         assert_eq!(repo_dev.get_checked_out_branch_name()?, "development");
 
@@ -438,7 +433,6 @@ mod tests {
     #[ignore]
     fn test_get_local_branch_names() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
-        repo.initial_commit()?;
         let mut branches = repo.get_local_branch_names()?;
         branches.sort();
         assert_eq!(branches, vec!["main"]);
@@ -456,7 +450,6 @@ mod tests {
     #[ignore]
     fn test_get_checked_out_branch_name() -> Result<()> {
         let mut repo = GitTestRepo::new("main")?;
-        repo.initial_commit()?;
         assert_eq!(repo.get_checked_out_branch_name()?, "main");
 
         repo.create_branch("feature")?;

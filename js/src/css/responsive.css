@@ -15,14 +15,12 @@
 		border-right: none;
 		height: auto;
 		position: relative;
-		top: auto;
 	}
 	#detail-pane {
 		flex: 1;
 		width: 100%; /* Take full width below the master-pane */
 		height: auto;
 		position: relative;
-		top: auto;
 		left: auto;
 		right: auto;
 		bottom: auto;
@@ -31,6 +29,7 @@
 		flex: 1;
 		width: initial;
 		border-right: none;
+		height: 100%;
 	}
 	#view footer {
 		left: 0;

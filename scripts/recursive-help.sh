@@ -21,7 +21,7 @@ BUILD_FIRST=false
 
 # Global storage for command data
 # Using temp files for associative array compatibility on older bash
-TEMP_DIR=$(mktemp -d)
+TEMP_DIR="${TMPDIR:-/tmp}/gnostr-recursive-help.$(gnostr --blockheight 2>/dev/null || echo 0)"
 COMMANDS_FILE="$TEMP_DIR/commands.json"
 PARSED_PATHS_FILE="$TEMP_DIR/paths.txt"
 
@@ -60,6 +60,7 @@ Examples:
   $0 --output help.json      # Save to file
   $0 --base-cmd gnostr       # Use system gnostr
   $0 --pretty --validate     # Pretty print and validate
+  $0 --base-cmd ./target/debug/gnostr --pretty  # Capture root/chat/p2p/blossom examples
 
 EOF
 }
@@ -108,7 +109,7 @@ parse_arguments() {
 # Build gnostr if requested
 build_gnostr() {
     log_info "Building gnostr in debug mode..."
-    if cargo build; then
+    if bash ./scripts/with-system-rocksdb.sh cargo build; then
         log_success "Build completed successfully"
         return 0
     else

@@ -1,0 +1,277 @@
+[package]
+name = "gnostr-bins"
+edition = "2024"
+version.workspace = true
+description = "gnostr bins and bundled workflow binaries"
+license = "MIT"
+readme = "../README.md"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr.git"
+exclude.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["blossom", "blossom-tui"]
+blossom = []
+blossom-tui = ["dep:blossom_tui"]
+web = ["dep:gnostr-web"]
+relay = ["dep:gnostr-relay"]
+git = ["dep:gnostr_ngit", "dep:git-version"]
+legit = ["dep:gnostr-legit"]
+chat = ["dep:gnostr-chat"]
+p2p = ["dep:gnostr-p2p"]
+crawler = ["dep:gnostr-crawler", "dep:gnostr_filetreelist"]
+metrics = []
+rate_limiter = []
+vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
+vendored-openssl = ["vendor-openssl"]
+
+[dependencies]
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+async-std = { version = "1.12", features = ["attributes"] }
+axum = { workspace = true }
+blossom_tui = { workspace = true, optional = true }
+chrono = "0.4"
+clap = { workspace = true }
+const_format = "0.2"
+crossterm = "0.29"
+env_logger = "0.11"
+futures = { workspace = true }
+futures-util = { workspace = true }
+git-version = { version = "0.3.9", optional = true }
+git2 = { version = "0.20.4", default-features = false }
+gnostr = { path = "..", version = ">=948560.1874.701540" }
+gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = [
+  "tui",
+  "vendor-openssl",
+], version = ">=948560.1874.701540" }
+gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=948560.1874.701540", optional = true }
+gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=948560.1874.701540", optional = true }
+gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=948560.1874.701540" }
+gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=948560.1874.701540" }
+gnostr-js = { package = "gnostr-js", path = "../js", version = ">=948560.1874.701540", optional = true }
+gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=948560.1874.701540", optional = true }
+gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=948560.1874.701540", optional = true }
+gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=948560.1874.701540", optional = true }
+gnostr-web = { package = "gnostr-web", path = "../web", version = ">=948560.1874.701540", optional = true }
+gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=948560.1874.701540", optional = true }
+gnostr_qr = { path = "../qr", version = ">=948560.1874.701540" }
+libp2p = { workspace = true }
+log = { workspace = true }
+gnostr_ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=948560.1874.701540", optional = true }
+nips = { path = "../nips", version = ">=948560.1874.701540" }
+nostr = { workspace = true }
+pretty_env_logger = "0.5.0"
+proctitle = "0.1.1"
+ratatui = { workspace = true, default-features = false, features = [
+  "crossterm",
+] }
+regex = { workspace = true }
+reqwest = { workspace = true }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+secp256k1 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+serial_test = "2.0.0"
+sha2 = { workspace = true }
+sha256 = "1.6.0"
+simple_logger = { workspace = true }
+tempfile = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tokio-stream = "0.1.18"
+toml = { workspace = true }
+tower-http = { workspace = true }
+tower-layer = { workspace = true }
+tracing = { workspace = true }
+tracing-core = { workspace = true }
+tracing-subscriber = { workspace = true }
+tui-input = "0.14.0"
+url = { workspace = true }
+walkdir = { workspace = true }
+warp = "0.3"
+webbrowser = "0.8"
+
+[[bin]]
+name = "gnostr-tui"
+path = "src/bin/gnostr-tui.rs"
+required-features = ["blossom-tui"]
+
+[[bin]]
+name = "gnostr-nip34"
+path = "src/bin/gnostr-nip34.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "git-tui"
+path = "src/bin/git-tui.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "git_tui"
+path = "src/bin/git_tui.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo"
+path = "src/bin/gnostr_chat_tui_demo.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr-chat"
+path = "src/bin/gnostr-chat.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "websockets_chat"
+path = "src/bin/websockets_chat.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_relay_io"
+path = "src/bin/gnostr_relay_io.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo_help"
+path = "src/bin/gnostr_chat_tui_demo_help.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo_relays"
+path = "src/bin/gnostr_chat_tui_demo_relays.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr_chat_tui_demo_search"
+path = "src/bin/gnostr_chat_tui_demo_search.rs"
+required-features = ["chat"]
+
+[[bin]]
+name = "gnostr-blossom"
+path = "src/bin/gnostr-blossom.rs"
+required-features = ["blossom-tui"]
+
+[[bin]]
+name = "blossom-filetree"
+path = "src/bin/blossom-filetree.rs"
+required-features = ["blossom-tui"]
+
+[[bin]]
+name = "git-remote-blossom"
+path = "src/bin/git-remote-blossom.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-p2p"
+path = "src/bin/gnostr-p2p.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-p2p-client"
+path = "src/bin/gnostr-p2p-client.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-p2p-relay-server"
+path = "src/bin/gnostr-p2p-relay-server.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-p2p-rendezvous-server"
+path = "src/bin/gnostr-p2p-rendezvous-server.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr-org"
+path = "src/bin/gnostr-org.rs"
+required-features = ["web"]
+
+[[bin]]
+name = "gnostr-gnit"
+path = "src/bin/gnostr-gnit.rs"
+required-features = ["web"]
+
+[[bin]]
+name = "gnostr-lookup"
+path = "src/bin/gnostr-lookup.rs"
+required-features = ["p2p"]
+
+[[bin]]
+name = "gnostr_crawler"
+path = "src/bin/gnostr_crawler.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_master_detail"
+path = "src/bin/gnostr_master_detail.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876"
+path = "src/bin/gnostr_crawler_filetree-1876.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876-947418-280051"
+path = "src/bin/gnostr_crawler_filetree-1876-947418-280051.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876-947421-276222"
+path = "src/bin/gnostr_crawler_filetree-1876-947421-276222.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-285805"
+path = "src/bin/gnostr_crawler_filetree-285805.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-285805-1876"
+path = "src/bin/gnostr_crawler_filetree-285805-1876.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr_crawler_filetree-1876947415284713-947415-284728"
+path = "src/bin/gnostr_crawler_filetree-1876947415284713-947415-284728.rs"
+required-features = ["crawler"]
+
+[[bin]]
+name = "gnostr-legit"
+path = "src/bin/gnostr-legit.rs"
+required-features = ["legit"]
+
+[[bin]]
+name = "git-legit"
+path = "src/bin/git-legit.rs"
+required-features = ["legit"]
+
+[[example]]
+name = "git_tui"
+path = "examples/git_tui.rs"
+required-features = ["git"]
+
+[[example]]
+name = "gnostr_relay_demo"
+path = "examples/gnostr_relay_demo.rs"
+required-features = ["relay"]
+
+[[example]]
+name = "gnostr_relay_ext_demo"
+path = "examples/gnostr_relay_ext_demo.rs"
+required-features = ["relay"]
+
+[[bin]]
+name = "gnostr-relay"
+path = "src/bin/gnostr-relay.rs"
+required-features = ["relay"]
+
+[[bin]]
+name = "gnostr-relay-tui"
+path = "src/bin/gnostr-relay-tui.rs"
+required-features = ["relay"]

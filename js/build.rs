@@ -1,16 +1,11 @@
 use chrono::TimeZone;
-use gnostr_asyncgit::types::{Client, EventBuilder, EventKind, Keys, Tag};
+use serde_json::json;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-env-changed=GNOSTR_JS_NSEC");
-    println!("cargo:rerun-if-env-changed=GNOSTR_JS_RELAYS");
-    println!("cargo:rerun-if-env-changed=NSEC");
-    println!("cargo:rerun-if-env-changed=NOSTR_RELAYS");
-    println!("cargo:rerun-if-env-changed=RELAYS");
 
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
@@ -20,19 +15,30 @@ fn main() {
     };
     let build_date = now.date_naive();
     let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
-        env!("CARGO_PKG_VERSION").to_string()
+        format!("{}@{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
     } else {
         format!(
-            "gnostr-js-{} {} ({})",
+            "{}@{} {} ({})",
+            env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION"),
             build_date,
             get_git_hash()
         )
     };
 
+    println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+    let app_metadata = json!({
+        "name": "gnostr",
+        "description": env!("CARGO_PKG_DESCRIPTION"),
+        "website": env!("CARGO_PKG_HOMEPAGE"),
+        "repository": env!("CARGO_PKG_REPOSITORY"),
+        "build_name": build_name,
+        "kind": 31990,
+    });
+    println!("cargo:rustc-env=GITUI_APP_NAME=gnostr");
+    println!("cargo:rustc-env=GITUI_APP_METADATA_JSON={}", app_metadata.to_string());
     write_nip89_app_asset(&build_name);
-    emit_patch_event(&build_name);
     watch_sources(Path::new("src/js"), &["js"]);
     watch_sources(Path::new("src/css"), &["css"]);
     watch_sources(Path::new("src"), &["html"]);
@@ -47,23 +53,15 @@ fn write_nip89_app_asset(build_name: &str) {
         }
     };
 
-    let app_pubkey = load_private_key()
-        .map(|key| key.public_key().to_string())
-        .unwrap_or_default();
-    let repo_url = git_output(["remote", "get-url", "origin"]).unwrap_or_default();
-    let repository = if repo_url.is_empty() {
-        env!("CARGO_PKG_REPOSITORY").to_string()
-    } else {
-        repo_url
-    };
     let description = env!("CARGO_PKG_DESCRIPTION");
     let metadata = serde_json::json!({
         "kind": 31990,
-        "pubkey": app_pubkey,
+        "pubkey": "",
         "content": {
             "name": "gnostr",
             "about": if description.is_empty() { "git+nostr workflow utility" } else { description },
-            "website": repository,
+            "website": env!("CARGO_PKG_HOMEPAGE"),
+            "repository": env!("CARGO_PKG_REPOSITORY"),
             "picture": "/images/logo.svg",
             "version": env!("CARGO_PKG_VERSION"),
             "build_name": build_name,
@@ -95,146 +93,6 @@ fn write_nip89_app_asset(build_name: &str) {
     } else {
         println!("cargo:rerun-if-changed={}", path.display());
     }
-}
-
-fn emit_patch_event(build_name: &str) {
-    if std::env::var("PROFILE").as_deref() != Ok("release") {
-        return;
-    }
-
-    let Some(private_key) = load_private_key() else {
-        println!("cargo:warning=skipping Nostr patch event: no private key configured");
-        return;
-    };
-
-    let relays = configured_relays();
-    if relays.is_empty() {
-        println!("cargo:warning=skipping Nostr patch event: no relays configured");
-        return;
-    }
-
-    let Ok(runtime) = tokio::runtime::Runtime::new() else {
-        println!("cargo:warning=skipping Nostr patch event: failed to start runtime");
-        return;
-    };
-
-    let result = runtime.block_on(async move {
-        let keys = Keys::new(private_key.clone());
-        let mut client = Client::new(&keys, gnostr_asyncgit::types::client::Options::new());
-        client
-            .add_relays(relays)
-            .await
-            .map_err(|error| error.to_string())?;
-
-        let head_commit = git_output(["rev-parse", "HEAD"]).unwrap_or_else(|| get_git_hash());
-        let parent_commit = git_output(["rev-parse", "HEAD^"]).unwrap_or_default();
-        let branch_name = git_output(["rev-parse", "--abbrev-ref", "HEAD"])
-            .unwrap_or_default()
-            .replace("refs/heads/", "");
-        let branch_name_without_id_or_prefix = if branch_name.is_empty()
-            || branch_name == "HEAD"
-            || branch_name == "main"
-            || branch_name == "master"
-        {
-            safe_branch_name_for_pr(build_name)
-        } else {
-            safe_branch_name_for_pr(&branch_name)
-        };
-        let clone_url = git_output(["remote", "get-url", "origin"]).unwrap_or_default();
-        let patch_body = git_output(["diff", "--binary", "--no-ext-diff", "--no-color", "HEAD"])
-            .unwrap_or_default();
-        let content = if patch_body.trim().is_empty() {
-            format!("From {head_commit}\n\nBuild: {build_name}\n")
-        } else {
-            patch_body
-        };
-
-        let mut tags = vec![Tag::new_tag("commit", &head_commit)];
-        if !parent_commit.is_empty() {
-            tags.push(Tag::new_tag("parent-commit", &parent_commit));
-        }
-        if !clone_url.is_empty() {
-            tags.push(Tag::new_tag("clone", &clone_url));
-        }
-        tags.push(Tag::new_tag("branch-name", &branch_name_without_id_or_prefix));
-        tags.push(Tag::new_tag("build-name", build_name));
-
-        let event = EventBuilder::new(EventKind::Patches, content, tags)
-            .to_event(&private_key)
-            .map_err(|error| error.to_string())?;
-
-        client
-            .send_event(event)
-            .await
-            .map_err(|error| error.to_string())?;
-
-        Ok::<(), String>(())
-    });
-
-    if let Err(error) = result {
-        println!("cargo:warning=failed to emit Nostr patch event: {error}");
-    }
-}
-
-fn load_private_key() -> Option<gnostr_asyncgit::types::PrivateKey> {
-    for key_var in ["GNOSTR_JS_NSEC", "GNOSTR_NSEC", "NSEC"] {
-        let Ok(value) = std::env::var(key_var) else {
-            continue;
-        };
-
-        if let Some(keys) = Keys::parse(value) {
-            if let Ok(private_key) = keys.secret_key() {
-                return Some(private_key);
-            }
-        }
-    }
-
-    None
-}
-
-fn configured_relays() -> Vec<String> {
-    for relays_var in ["GNOSTR_JS_RELAYS", "NOSTR_RELAYS", "RELAYS"] {
-        if let Ok(value) = std::env::var(relays_var) {
-            let relays = value
-                .split(|c: char| c == ',' || c.is_whitespace())
-                .filter(|relay| !relay.is_empty())
-                .map(ToString::to_string)
-                .collect::<Vec<_>>();
-            if !relays.is_empty() {
-                return relays;
-            }
-        }
-    }
-
-    vec!["wss://relay.damus.io".to_string(), "wss://nos.lol".to_string()]
-}
-
-fn git_output<const N: usize>(args: [&str; N]) -> Option<String> {
-    let output = Command::new("git").args(args).output().ok()?;
-    if !output.status.success() {
-        return None;
-    }
-
-    let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if value.is_empty() {
-        None
-    } else {
-        Some(value)
-    }
-}
-
-fn safe_branch_name_for_pr(s: &str) -> String {
-    s.replace(' ', "-")
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() || c == '/' {
-                c
-            } else {
-                '-'
-            }
-        })
-        .take(60)
-        .collect()
 }
 
 fn get_git_hash() -> String {

@@ -20,15 +20,14 @@ categories = ["command-line-utilities"]
 name = "gnostr_legit"
 path = "src/lib.rs"
 
-[[bin]]
-name = "gnostr-legit"
-path = "src/main.rs"
-
 [dependencies]
 argparse = "0.2.2"
 clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
 env_logger = "0.10.0"
 git2 = "^0.20"
+gnostr_asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", version = ">=948560.1874.701540", features = [
+  "vendor-openssl",
+] }
 log = "0.4"
 rust-crypto = "^0.2"
 time-0-3 = { package = "time", version = "0.3.34", features = [
@@ -37,9 +36,7 @@ time-0-3 = { package = "time", version = "0.3.34", features = [
   "macros",
   "local-offset",
 ] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
 
 [build-dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-hex = "0.4.3"
-reqwest = { version = "0.11", features = ["blocking"] }
-sha2 = "0.10"

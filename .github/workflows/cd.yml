@@ -36,21 +36,29 @@ jobs:
         with:
           components: clippy
 
+      - name: Install system RocksDB
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-22.04'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config librocksdb-dev
+
+      - name: Install system RocksDB
+        if: matrix.os == 'macos-latest'
+        run: brew install pkg-config rocksdb
+
       - uses: taiki-e/install-action@nextest
 
       - name: Build
         if: matrix.os != 'ubuntu-22.04'
         env:
           GITUI_RELEASE: 1
-        run: cargo build
+        run: bash ./scripts/with-system-rocksdb.sh cargo build
       - name: Run tests
         if: matrix.os != 'ubuntu-22.04'
-        run: make test
+        run: bash ./scripts/with-system-rocksdb.sh make test
       - name: Run clippy
         if: matrix.os != 'ubuntu-22.04'
         run: |
           cargo clean
-          make clippy
+          bash ./scripts/with-system-rocksdb.sh make clippy
 
       - name: Setup MUSL
         if: matrix.os == 'ubuntu-latest'

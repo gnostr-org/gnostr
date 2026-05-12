@@ -7,6 +7,7 @@ This module contains various subcommands for interacting with the Nostr protocol
 - **`award_badge`**: Awards a badge to specified public keys by creating and publishing a Nostr event.
 - **`broadcast_events`**: Broadcasts multiple Nostr events from a JSON file to specified relays.
 - **`convert_key`**: Converts Nostr keys between bech32 and hex formats.
+- **`chat`**: Runs the peer-to-peer chat client, including `--headless` background mode and `--oneshot` message delivery.
 - **`create_badge`**: Creates and publishes a Nostr badge definition event.
 - **`create_public_channel`**: Creates and publishes a Nostr channel metadata event.
 - **`custom_event`**: Creates and publishes a custom Nostr event with a specified kind, content, and tags.
@@ -18,6 +19,7 @@ This module contains various subcommands for interacting with the Nostr protocol
 - **`list_events`**: Fetches and lists Nostr events based on various filters (IDs, authors, kinds, tags, time ranges).
 - **`list`**: Lists Nostr proposals and allows interaction with them (checkout, apply patches, etc.).
 - **`login`**: Handles user login, potentially using NSEC keys, passwords, or Bunker integration.
+- **`dm`**: Sends a NIP-44 direct message, or lists/decrypts inbox messages when no message is provided.
 - **`mute_publickey`**: Mutes a public key by publishing a mute event.
 - **`nip34`**: Handles NIP-34 git-related events.
 - **`note`**: Publishes a Nostr text note (NIP-01) with optional subject, tags, and expiration.

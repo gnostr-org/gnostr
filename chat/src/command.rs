@@ -1,18 +1,26 @@
-use anyhow::{anyhow, Result};
+use std::time::Duration;
+
+use anyhow::Result;
 use clap::Parser;
 use gnostr_asyncgit::types::PrivateKey;
-use libp2p::gossipsub;
+use gnostr_p2p::time::{Clock, P2PClock};
+use proctitle::set_title;
 use tracing::Level;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 use crate::{
-    event::ChatEvent,
-    msg::{Msg, MsgKind},
-    p2p::evt_loop,
+    session::{ChatNotification, ChatSession},
+    tui::run_chat_tui,
 };
 
 #[derive(Debug, Clone, Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about,
+    long_about = None,
+    after_help = "Examples:\n  gnostr chat --topic gnostr-dev --name copilot\n  gnostr chat --topic gnostr-dev --name copilot --oneshot \"hello\"\n  gnostr chat --headless --topic gnostr-dev --nsec <hex-key>"
+)]
 #[command(propagate_version = true)]
 pub struct ChatSubCommands {
     #[arg(short, long, global = true)]
@@ -67,6 +75,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         None
     };
 
+    let username_for_session = username_to_set
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string());
+
     if let Some(user_name) = username_to_set {
         if !user_name.is_empty() {
             use std::env;
@@ -85,8 +97,10 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         Level::WARN
     };
 
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
+    let filter = EnvFilter::builder()
+        .with_default_directive(level.into())
+        .from_env()
+        .expect("Failed to build EnvFilter from environment")
         .add_directive("nostr_sdk=off".parse().unwrap())
         .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
         .add_directive("nostr_sdk::client=off".parse().unwrap())
@@ -97,7 +111,8 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         .add_directive("gnostr::message=off".parse().unwrap())
         .add_directive("gnostr::nostr_proto=off".parse().unwrap())
         .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
-        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
+        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap())
+        .add_directive("tokio_tungstenite=off".parse().unwrap());
 
     let subscriber = Registry::default()
         .with(
@@ -108,50 +123,185 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         .with(filter);
 
     let _ = subscriber.try_init();
+    tracing::debug!(
+        "chat startup: topic={:?} headless={} oneshot={:?} gitdir={:?}",
+        sub_command_args.topic,
+        sub_command_args.headless,
+        sub_command_args.oneshot,
+        sub_command_args.gitdir
+    );
     tracing::trace!("\n{:?}\n", &sub_command_args);
     tracing::debug!("\n{:?}\n", &sub_command_args);
     tracing::info!("\n{:?}\n", &sub_command_args);
 
-    run_chat_session(sub_command_args).await
-}
+    let topic_name = chat_topic(sub_command_args);
+    let mut session = ChatSession::connect(topic_name.clone()).await?;
+    tracing::info!("local p2p relay service started for chat");
 
-async fn run_chat_session(sub_command_args: &ChatSubCommands) -> Result<()> {
-    let topic = gossipsub::IdentTopic::new(
-        sub_command_args
+    if let Some(message_input) = sub_command_args.oneshot.clone() {
+        if sub_command_args.headless {
+            println!("headless conflicts with oneshot!");
+            return Ok(());
+        }
+
+        run_oneshot(&mut session, message_input).await?;
+        return Ok(());
+    }
+
+    if sub_command_args.headless {
+        let topic_name = sub_command_args
             .topic
             .clone()
-            .unwrap_or_else(|| "gnostr".to_string()),
-    );
-    let (input_tx, input_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
-    let (output_tx, mut output_rx) = tokio::sync::mpsc::channel::<ChatEvent>(100);
+            .unwrap_or_else(|| "gnostr".to_string());
+        let process_title = format!("gnostr-chat-{topic_name}");
+        set_title(&process_title);
+        println!("Headless mode enabled:");
+        tracing::info!("running event loop in background.");
+        tracing::info!("Process name set to: {}", process_title);
 
-    tokio::spawn(async move {
-        let _ = evt_loop(input_rx, output_tx, topic).await;
-    });
+        let printer = spawn_notification_printer(session.subscribe());
+        tracing::info!("Headless mode is running; waiting for shutdown.");
+        tokio::signal::ctrl_c().await?;
+        tracing::debug!("headless chat received ctrl-c and is exiting");
+        drop(printer);
+        return Ok(());
+    }
 
-    use tokio::io::AsyncBufReadExt;
-    let mut stdin = tokio::io::BufReader::new(tokio::io::stdin()).lines();
+    run_chat_session(sub_command_args, username_for_session, &session).await
+}
 
-    loop {
-        tokio::select! {
-            line = stdin.next_line() => {
-                let Some(line) = line? else { break; };
-                if line.is_empty() {
-                    continue;
-                }
+fn chat_topic(sub_command_args: &ChatSubCommands) -> String {
+    sub_command_args
+        .topic
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string())
+}
 
-                let msg = Msg::default().set_content(line, 0).set_kind(MsgKind::Chat);
-                input_tx.send(ChatEvent::ChatMessage(msg)).await?;
+async fn run_chat_session(sub_command_args: &ChatSubCommands, username: String, session: &ChatSession) -> Result<()> {
+    let topic_name = sub_command_args
+        .topic
+        .clone()
+        .unwrap_or_else(|| "gnostr".to_string());
+
+    run_chat_tui(topic_name, username, session)?;
+    Ok(())
+}
+
+async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result<()> {
+    tracing::info!("Oneshot mode: sending message '{}'", message_input);
+    let printer = spawn_notification_printer(session.subscribe());
+    println!("Initializing network and discovering peers...");
+    tracing::debug!("chat oneshot: waiting for a connected peer");
+    session.wait_for_connected(Duration::from_secs(30)).await?;
+    let p2p_timestamp = oneshot_p2p_timestamp(session.topic());
+    println!("p2p time timestamp: {p2p_timestamp}");
+    session.send_text(message_input).await?;
+    println!("Oneshot message sent at {p2p_timestamp}. Waiting for propagation...");
+
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    drop(printer);
+    tracing::info!("Oneshot operation complete.");
+    Ok(())
+}
+
+fn oneshot_p2p_timestamp(topic: &str) -> String {
+    let clock = P2PClock::new(1, &oneshot_clock_path(topic));
+    clock.now_utc().to_rfc3339()
+}
+
+fn oneshot_clock_path(topic: &str) -> String {
+    let mut path = std::env::temp_dir();
+    path.push(format!("gnostr-chat-oneshot-{}.json", sanitize_for_filename(topic)));
+    path.to_string_lossy().into_owned()
+}
+
+fn sanitize_for_filename(value: &str) -> String {
+    value
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
             }
-            Some(event) = output_rx.recv() => {
-                match event {
-                    ChatEvent::ChatMessage(msg) => println!("{msg}"),
-                    ChatEvent::ShowErrorMsg(text) => eprintln!("{text}"),
-                    ChatEvent::ShowInfoMsg(text) => println!("{text}"),
+        })
+        .collect()
+}
+
+fn spawn_notification_printer(
+    mut output_rx: tokio::sync::broadcast::Receiver<ChatNotification>,
+) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        while let Ok(event) = output_rx.recv().await {
+            match event {
+                ChatNotification::ChatMessage(msg) => println!("{msg}"),
+                ChatNotification::Error(text) => eprintln!("{text}"),
+                ChatNotification::Info(text) => println!("{text}"),
+                ChatNotification::Connected { peer_id, endpoint } => {
+                    println!("Connected to peer {peer_id} via {endpoint}")
                 }
             }
         }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chat_topic_defaults_to_gnostr() {
+        let args = ChatSubCommands {
+            nsec: None,
+            password: None,
+            name: None,
+            topic: None,
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+            headless: false,
+            workdir: None,
+            gitdir: None,
+            oneshot: None,
+        };
+
+        assert_eq!(chat_topic(&args), "gnostr");
     }
 
-    Ok(())
+    #[test]
+    fn chat_topic_uses_explicit_topic() {
+        let args = ChatSubCommands {
+            topic: Some("gnostr-dev".to_string()),
+            ..ChatSubCommands {
+                nsec: None,
+                password: None,
+                name: None,
+                topic: None,
+                hash: None,
+                disable_cli_spinners: false,
+                info: false,
+                debug: false,
+                trace: false,
+                headless: false,
+                workdir: None,
+                gitdir: None,
+                oneshot: None,
+            }
+        };
+
+        assert_eq!(chat_topic(&args), "gnostr-dev");
+    }
+
+    #[test]
+    fn sanitize_for_filename_replaces_topic_separators() {
+        assert_eq!(sanitize_for_filename("gnostr/chat oneshot"), "gnostr_chat_oneshot");
+    }
+
+    #[test]
+    fn oneshot_clock_path_uses_temp_dir() {
+        let path = oneshot_clock_path("gnostr/chat");
+        assert!(path.contains("gnostr-chat-oneshot-gnostr_chat.json"));
+    }
 }

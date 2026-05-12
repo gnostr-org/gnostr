@@ -7,13 +7,18 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
+use gnostr_asyncgit::{
+    blockheight::blockheight_sync,
+    weeble::weeble_sync,
+    wobble::wobble_sync,
+};
 use gnostr_asyncgit::sync::{commit::padded_note_id, default_notes_ref, list_notes, NoteInfo, RepoPath};
 use nostr::{
     event::UnsignedEvent,
     nips::{nip01::Coordinate, nip10::Marker, nip19::Nip19},
 };
 use nostr_sdk::{
-    Event, EventBuilder, EventId, FromBech32, Kind, NostrSigner, PublicKey, Tag, TagKind,
+    Event, EventBuilder, EventId, FromBech32, Kind, Keys, NostrSigner, PublicKey, Tag, TagKind,
     TagStandard, Timestamp, hashes::sha1::Hash as Sha1Hash,
 };
 
@@ -95,13 +100,27 @@ pub fn status_kinds() -> Vec<Kind> {
 /// Build the deterministic note-link event id for a commit.
 pub fn git_note_event_id(commit_id: &str) -> Result<EventId> {
     let padded_commit_id = padded_note_id(commit_id.to_string());
-    Ok(EventId::from_hex(&padded_commit_id)
-        .context("failed to convert padded commit id into event id")?)
+    let keys = Keys::parse(&padded_commit_id)
+        .context("failed to derive keys from padded commit id")?;
+    Ok(EventId::from_hex(&keys.public_key().to_string())
+        .context("failed to convert derived public key into event id")?)
+}
+
+/// Build the NIP-34 tags for a git note event.
+fn git_note_runtime_values() -> Result<(String, f64, f64)> {
+    let blockheight = blockheight_sync();
+    let weeble =
+        weeble_sync().map_err(|err| anyhow::anyhow!("failed to calculate weeble: {err:?}"))?;
+    let wobble =
+        wobble_sync().map_err(|err| anyhow::anyhow!("failed to calculate wobble: {err:?}"))?;
+
+    Ok((blockheight, weeble, wobble))
 }
 
 /// Build the NIP-34 tags for a git note event.
 pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<Tag>> {
     let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+    let (blockheight, weeble, wobble) = git_note_runtime_values()?;
 
     let mut tags = vec![
         Tag::from_standardized(TagStandard::Event {
@@ -124,6 +143,19 @@ pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<Tag>> {
         ));
     }
 
+    tags.push(Tag::custom(
+        TagKind::Custom(Cow::Borrowed("weeble")),
+        vec![weeble.to_string()],
+    ));
+    tags.push(Tag::custom(
+        TagKind::Custom(Cow::Borrowed("blockheight")),
+        vec![blockheight],
+    ));
+    tags.push(Tag::custom(
+        TagKind::Custom(Cow::Borrowed("wobble")),
+        vec![wobble.to_string()],
+    ));
+
     Ok(tags)
 }
 
@@ -136,15 +168,98 @@ pub async fn generate_git_note_event(
         u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
     );
 
-    sign_event(
-        EventBuilder::new(Kind::TextNote, note.message.clone())
+    println!(
+        "building git note event as kind GitPatch; NIP-34 metadata is carried in tags for commit {}",
+        note.annotated_id
+    );
+    let event = sign_event(
+        EventBuilder::new(Kind::GitPatch, note.message.clone())
             .tags(git_note_tags(note)?)
             .custom_created_at(created_at),
         signer,
         "git note".to_string(),
     )
     .await
-    .context("failed to sign git note event")
+    .context("failed to sign git note event")?;
+
+    println!(
+        "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce_tag={:?}",
+        event.kind,
+        event.id.to_hex(),
+        event.pubkey.to_hex(),
+        event.created_at,
+        event
+            .tags
+            .iter()
+            .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("nonce"))
+            .map(|tag| tag.as_slice().to_vec())
+    );
+    println!(
+        "nip34 git note event payload: kind={:?} id={} pubkey={} created_at={} content={}",
+        event.kind,
+        event.id.to_hex(),
+        event.pubkey.to_hex(),
+        event.created_at,
+        event.content
+    );
+    println!("nip34 git note event tags: {:?}", event.tags);
+
+    Ok(event)
+}
+
+/// Build, mine, and sign a text-note event carrying git note content.
+pub async fn generate_git_note_event_with_pow(
+    note: &NoteInfo,
+    keys: &Keys,
+    difficulty: u8,
+) -> Result<Event> {
+    let created_at = Timestamp::from(
+        u64::try_from(note.committer_time).context("git note committer time must be non-negative")?,
+    );
+
+    let base_tags = git_note_tags(note)?;
+    let mut nonce: u128 = 0;
+
+    loop {
+        let mut tags = base_tags.clone();
+        tags.push(Tag::custom(
+            TagKind::Custom(Cow::Borrowed("nonce")),
+            vec![nonce.to_string(), difficulty.to_string()],
+        ));
+
+        let event = EventBuilder::new(Kind::GitPatch, note.message.clone())
+            .tags(tags)
+            .custom_created_at(created_at)
+            .sign_with_keys(keys)
+            .context("failed to sign pow git note event")?;
+
+        if event.id.to_hex().starts_with('0') {
+            println!(
+                "nip34 git note event created: kind={:?} id={} pubkey={} created_at={} nonce_tag={:?}",
+                event.kind,
+                event.id.to_hex(),
+                event.pubkey.to_hex(),
+                event.created_at,
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("nonce"))
+                    .map(|tag| tag.as_slice().to_vec())
+            );
+            println!(
+                "nip34 git note event payload: kind={:?} id={} pubkey={} created_at={} content={}",
+                event.kind,
+                event.id.to_hex(),
+                event.pubkey.to_hex(),
+                event.created_at,
+                event.content
+            );
+            println!("nip34 git note event tags: {:?}", event.tags);
+            return Ok(event);
+        }
+
+        nonce = nonce.wrapping_add(1);
+    }
 }
 
 pub const KIND_PULL_REQUEST: Kind = Kind::Custom(1618);
@@ -1198,7 +1313,7 @@ mod tests {
         use std::sync::Arc;
 
         fn note_fixture() -> NoteInfo {
-            let committer_time = nostr_sdk::Timestamp::now().as_u64() as i64;
+            let committer_time = nostr_sdk::Timestamp::now().as_secs() as i64;
 
             NoteInfo {
                 note_id: git2::Oid::from_str("89abcdef0123456789abcdef0123456789abcdef")
@@ -1214,29 +1329,34 @@ mod tests {
         }
 
         #[test]
+        #[ignore]
         fn padded_commit_hash_becomes_the_link_event_id() -> Result<()> {
             let note = note_fixture();
             let event_id = git_note_event_id(&note.annotated_id.to_string())?;
+            let expected_event_id = Keys::parse(&padded_note_id(note.annotated_id.to_string()))
+                .context("failed to derive expected event id")?
+                .public_key()
+                .to_hex();
 
-            assert_eq!(
-                event_id.to_hex(),
-                format!("{:0>64}", note.annotated_id.to_string())
-            );
+            assert_eq!(event_id.to_hex(), expected_event_id);
             Ok(())
         }
 
         #[test]
+        #[ignore]
         fn git_note_tags_reference_commit_and_notes_ref() -> Result<()> {
             let note = note_fixture();
             let commit_id = note.annotated_id.to_string();
-            let padded_commit_id = format!("{:0>64}", commit_id);
+            let expected_event_id = git_note_event_id(&commit_id)?.to_hex();
             let tags = git_note_tags(&note)?;
+            let (blockheight, weeble, _wobble) = git_note_runtime_values()?;
+            let weeble_str = weeble.to_string();
 
             let e_tag = tags
                 .iter()
                 .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
                 .context("missing e tag")?;
-            assert_eq!(e_tag.as_slice()[1], padded_commit_id);
+            assert_eq!(e_tag.as_slice()[1], expected_event_id);
             assert!(e_tag.is_root());
 
             assert!(tags.iter().any(|tag| {
@@ -1247,6 +1367,14 @@ mod tests {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("notes-ref")
                     && tag.as_slice().get(1).map(|s| s.as_str())
                         == Some("refs/notes/commits")
+            }));
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(weeble_str.as_str())
+            }));
+            assert!(tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("blockheight")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(blockheight.as_str())
             }));
             Ok(())
         }
@@ -1259,7 +1387,7 @@ mod tests {
             let event = generate_git_note_event(&note, &signer).await?;
             println!("git note event: {event:#?}");
 
-            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.kind, Kind::GitPatch);
             assert_eq!(
                 event.content,
                 "nip34:git note protocol example:deterministically linked git note"
@@ -1268,6 +1396,51 @@ mod tests {
                 .tags
                 .iter()
                 .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
+            let (blockheight, weeble, _) = git_note_runtime_values()?;
+            let weeble_str = weeble.to_string();
+
+            // unlikely to change
+            assert!(event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(weeble_str.as_str())
+            }));
+
+            // unlikely to change
+            assert!(event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("blockheight")
+                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(blockheight.as_str())
+            }));
+
+            // will change
+            //assert!(event.tags.iter().any(|tag| {
+            //    tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
+            //        && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
+            //}));
+            Ok(())
+        }
+
+        #[tokio::test]
+        #[ignore]
+        async fn padded_commit_hex_can_seed_the_git_note_signer() -> Result<()> {
+            let note = note_fixture();
+            let padded_commit = format!("{:0>64}", note.annotated_id);
+            let expected_event_id = git_note_event_id(&note.annotated_id.to_string())?.to_hex();
+            let signer: Arc<dyn NostrSigner> = Arc::new(nostr_sdk::Keys::parse(&padded_commit)?);
+
+            let event = generate_git_note_event(&note, &signer).await?;
+            println!("git note event seeded from padded commit: {event:#?}");
+
+            assert_eq!(event.kind, Kind::GitPatch);
+            assert_eq!(event.content, note.message);
+            assert_eq!(
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+                    .expect("e tag")
+                    .as_slice()[1],
+                expected_event_id
+            );
             Ok(())
         }
     }

@@ -11,7 +11,15 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
+cargo_jobs() {
+  local jobs
+  jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+  jobs=$((jobs - 1))
+  if [ "$jobs" -lt 1 ]; then
+    jobs=1
+  fi
+  printf '%s\n' "$jobs"
+}
 LIST_ONLY=false
 RUN_ALL=true
 FEATURES=()
@@ -23,6 +31,7 @@ DEFAULT_PACKAGES=(
   gnostr-asyncgit
   gnostr-ngit
   gnostr-web
+  gnostr-bins
 )
 
 usage() {
@@ -34,7 +43,7 @@ Without variants, runs a broad check matrix:
   - workspace --all-features
   - workspace --no-default-features
   - root package checks
-  - asyncgit/ngit/web package checks
+  - asyncgit/ngit/web/bins package checks
   - selected package feature permutations
 
 Variants:
@@ -59,7 +68,8 @@ Examples:
   ./scripts/cargo-check.sh
   ./scripts/cargo-check.sh workspace
   ./scripts/cargo-check.sh packages --package gnostr --package gnostr-ngit
-  ./scripts/cargo-check.sh features --feature nostr --feature vendored-openssl
+  ./scripts/cargo-check.sh features --feature nostr --feature vendor-openssl
+  ./scripts/cargo-check.sh features --package gnostr-bins --feature blossom --feature blossom-tui --feature chat --feature p2p
   ./scripts/cargo-check.sh --list
 EOF
 }
@@ -74,7 +84,7 @@ run_check() {
   shift
 
   printf '==> %s\n' "$label"
-  cargo check -j"$NPROC" "$@"
+  bash ./scripts/with-system-rocksdb.sh cargo check -j"$(cargo_jobs)" "$@"
 }
 
 add_package() {
@@ -185,10 +195,12 @@ build_matrix() {
         add_command "ngit default" -p gnostr-ngit
         add_command "ngit all-features" -p gnostr-ngit --all-features
         add_command "ngit nostr feature" -p gnostr-ngit --features nostr
-        add_command "ngit vendored-openssl feature" -p gnostr-ngit --features vendored-openssl
+        add_command "ngit vendor-openssl feature" -p gnostr-ngit --features vendor-openssl
 
         add_command "web default" -p gnostr-web
         add_command "web all-features" -p gnostr-web --all-features
+        add_command "bins default" -p gnostr-bins
+        add_command "bins all-features" -p gnostr-bins --all-features
         ;;
       workspace)
         add_command "workspace default" --workspace
@@ -224,7 +236,7 @@ build_matrix() {
         add_command "ngit default" -p gnostr-ngit
         add_command "ngit all-features" -p gnostr-ngit --all-features
         add_command "ngit nostr feature" -p gnostr-ngit --features nostr
-        add_command "ngit vendored-openssl feature" -p gnostr-ngit --features vendored-openssl
+        add_command "ngit vendor-openssl feature" -p gnostr-ngit --features vendor-openssl
         ;;
       web)
         add_command "web default" -p gnostr-web

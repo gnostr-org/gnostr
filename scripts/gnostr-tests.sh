@@ -11,19 +11,23 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
+
 LIST_ONLY=false
 TEST_NAME=""
 TEST_FLAGS=()
+RELEASE=false
 
 usage() {
   cat <<'EOF'
-Usage: gnostr-tests.sh [--workspace] [--list] [--test <name>] [--ignored] [--help]
+Usage: gnostr-tests.sh [--workspace] [--list] [--test <name>] [--ignored] [--release] [--help]
 
 Options:
   --workspace   Run workspace tests (default)
   --list        List all workspace tests
   --test NAME   Run one exact test by name
   --ignored     Run ignored tests
+  --release     Run tests in release mode
   --nocapture   Print test output
   --help        Show this help
 
@@ -33,11 +37,17 @@ Examples:
   ./scripts/gnostr-tests.sh --ignored
   ./scripts/gnostr-tests.sh --workspace --ignored
   ./scripts/gnostr-tests.sh --test blossom_remote_push_list_and_fetch_round_trip -- --nocapture
+  ./scripts/gnostr-tests.sh --test dm_subcommand_uses_short_r_for_relays -- --nocapture
+  ./scripts/gnostr-tests.sh --test server_subcommand_parses_with_blossom -- --nocapture
+
+Related runners:
+  ./scripts/gnostr-asyncgit-tests.sh --nocapture
+  ./scripts/gnostr-ngit-tests.sh --notes --nocapture
 EOF
 }
 
 check_nip44_vectors() {
-  local vector_file="./asyncgit/src/lib/types/nip44/nip44.vectors.json"
+  local vector_file="./types/src/nostr/nip44/nip44.vectors.json"
   local expected_vector_sha256="269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040"
   local actual_vector_sha256
 
@@ -58,7 +68,7 @@ check_nip44_vectors() {
 
 send_chat_update() {
   local message="$1"
-  cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "$message" >/dev/null 2>&1 || true
+  bash ./scripts/with-system-rocksdb.sh cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "$message" >/dev/null 2>&1 || true
 }
 
 run_test_step() {
@@ -94,6 +104,9 @@ while [[ $# -gt 0 ]]; do
     --ignored)
       TEST_FLAGS+=(--ignored)
       ;;
+    --release)
+      RELEASE=true
+      ;;
     --help|-h)
       usage
       exit 0
@@ -114,32 +127,46 @@ fi
 check_nip44_vectors
 
 if [[ "$LIST_ONLY" == true ]]; then
-  cargo test --workspace --all-targets -- --list
+  if [[ "$RELEASE" == true ]]; then
+    bash ./scripts/with-system-rocksdb.sh cargo test --workspace --all-targets --release -- --list
+  else
+    bash ./scripts/with-system-rocksdb.sh cargo test --workspace --all-targets -- --list
+  fi
   exit 0
 fi
 
 if [[ -n "$TEST_NAME" ]]; then
+  cargo_cmd=(bash ./scripts/with-system-rocksdb.sh cargo test --workspace --all-targets)
+  if [[ "$RELEASE" == true ]]; then
+    cargo_cmd+=(--release)
+  fi
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    cargo_cmd=(cargo test --workspace --all-targets "$TEST_NAME" -- --exact "${TEST_FLAGS[@]}")
+    cargo_cmd+=("$TEST_NAME" -- --exact "${TEST_FLAGS[@]}")
   else
-    cargo_cmd=(cargo test --workspace --all-targets "$TEST_NAME" -- --exact)
+    cargo_cmd+=("$TEST_NAME" -- --exact)
   fi
   if "${cargo_cmd[@]}"; then
-    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} successful" >/dev/null 2>&1 || true
+    bash ./scripts/with-system-rocksdb.sh cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} successful" >/dev/null 2>&1 || true
   else
-    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} fail" >/dev/null 2>&1 || true
+    bash ./scripts/with-system-rocksdb.sh cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test ${TEST_NAME} fail" >/dev/null 2>&1 || true
     exit 1
   fi
 else
+  cargo_cmd=(bash ./scripts/with-system-rocksdb.sh cargo test --workspace --all-targets)
+  if [[ "$RELEASE" == true ]]; then
+    cargo_cmd+=(--release)
+  fi
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    cargo_cmd=(cargo test --workspace --all-targets -- "${TEST_FLAGS[@]}")
-  else
-    cargo_cmd=(cargo test --workspace --all-targets --)
+    cargo_cmd+=(-- "${TEST_FLAGS[@]}")
+  fi
+  if ! ./scripts/gnostr-ngit-tests.sh --notes "${TEST_FLAGS[@]}"; then
+    bash ./scripts/with-system-rocksdb.sh cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr notes test suite fail" >/dev/null 2>&1 || true
+    exit 1
   fi
   if "${cargo_cmd[@]}"; then
-    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true
+    bash ./scripts/with-system-rocksdb.sh cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite successful" >/dev/null 2>&1 || true
   else
-    cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite fail" >/dev/null 2>&1 || true
+    bash ./scripts/with-system-rocksdb.sh cargo run --bin gnostr -- chat --topic gnostr-dev --name copilot --oneshot "gnostr workspace test suite fail" >/dev/null 2>&1 || true
     exit 1
   fi
 fi

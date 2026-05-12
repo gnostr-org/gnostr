@@ -1,8 +1,16 @@
 use git2::{ErrorCode, Oid, Signature};
 use scopetime::scope_time;
+use serde::{de::Error as DeError, Deserialize, Deserializer, Serialize, Serializer};
+use std::str::FromStr;
 
 use super::{repository::repo, RepoPath};
 use crate::error::Result;
+
+// This module owns git note storage. NIP-34 shaping lives in `types::nip34`.
+pub use crate::types::nip34::{
+    generate_git_note_event, generate_git_note_event_with_pow, git_note_event_id, git_note_tags,
+    GitNote,
+};
 
 /// A note attached to a git object.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
@@ -14,6 +22,86 @@ pub struct NoteInfo {
     pub author: String,
     pub committer: String,
     pub committer_time: i64,
+}
+
+impl Serialize for NoteInfo {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        struct NoteInfoSerde<'a> {
+            note_id: String,
+            annotated_id: String,
+            notes_ref: Option<&'a str>,
+            message: &'a str,
+            author: &'a str,
+            committer: &'a str,
+            committer_time: i64,
+        }
+
+        NoteInfoSerde {
+            note_id: self.note_id.to_string(),
+            annotated_id: self.annotated_id.to_string(),
+            notes_ref: self.notes_ref.as_deref(),
+            message: &self.message,
+            author: &self.author,
+            committer: &self.committer,
+            committer_time: self.committer_time,
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for NoteInfo {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct NoteInfoSerde {
+            note_id: String,
+            annotated_id: String,
+            notes_ref: Option<String>,
+            message: String,
+            author: String,
+            committer: String,
+            committer_time: i64,
+        }
+
+        let note = NoteInfoSerde::deserialize(deserializer)?;
+        Ok(Self {
+            note_id: Oid::from_str(&note.note_id)
+                .map_err(|error| DeError::custom(format!("invalid note_id: {error}")))?,
+            annotated_id: Oid::from_str(&note.annotated_id)
+                .map_err(|error| DeError::custom(format!("invalid annotated_id: {error}")))?,
+            notes_ref: note.notes_ref,
+            message: note.message,
+            author: note.author,
+            committer: note.committer,
+            committer_time: note.committer_time,
+        })
+    }
+}
+
+impl From<NoteInfo> for GitNote {
+    fn from(note: NoteInfo) -> Self {
+        Self {
+            note_id: note.note_id,
+            annotated_id: note.annotated_id,
+            notes_ref: note.notes_ref,
+            message: note.message,
+            author: note.author,
+            committer: note.committer,
+            committer_time: note.committer_time,
+        }
+    }
+}
+
+impl From<&NoteInfo> for GitNote {
+    fn from(note: &NoteInfo) -> Self {
+        Self::from(note.clone())
+    }
 }
 
 /// Commands supported by the notes backend.
@@ -245,6 +333,29 @@ pub fn run_notes_command(
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        fs::File,
+        io::Write,
+        path::Path,
+    };
+
+    use serial_test::serial;
+    use time::OffsetDateTime;
+
+    use crate::{
+        sync::{
+            commit::{self, mine_commit, CommitMineOptions},
+            stage_add_file,
+            tests::repo_init_empty,
+        },
+        types::{
+            Keys,
+            generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits,
+            EventKind, PrivateKey, Unixtime,
+        },
+        types::nip13::NIP13Event,
+    };
+
     use super::*;
     use crate::sync::tests::repo_init;
 
@@ -309,6 +420,144 @@ mod tests {
         let review_notes = list_notes(repo_path, Some("refs/notes/reviews"))?;
         println!("custom notes list: {review_notes:#?}");
         assert_eq!(review_notes.len(), 1);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[serial]
+    #[ignore]
+    async fn git_note_event_matrix_covers_commit_and_pow_variants() -> Result<()> {
+        println!("[asyncgit] git_note_event_matrix_covers_commit_and_pow_variants");
+        let private_key = PrivateKey::generate();
+
+        let cases = [
+            ("plain-commit/plain-note/plain-event", false, false, false),
+            ("plain-commit/plain-note/pow-event", false, false, true),
+            ("plain-commit/mined-note/plain-event", false, true, false),
+            ("plain-commit/mined-note/pow-event", false, true, true),
+            ("mined-commit/plain-note/plain-event", true, false, false),
+            ("mined-commit/plain-note/pow-event", true, false, true),
+            ("mined-commit/mined-note/plain-event", true, true, false),
+            ("mined-commit/mined-note/pow-event", true, true, true),
+        ];
+
+        for (label, mine_the_commit, mine_the_note, pow_the_event) in cases {
+            println!(
+                "matrix case start: label={label} mine_commit={mine_the_commit} mine_note={mine_the_note} pow_event={pow_the_event}"
+            );
+            let (_td, repo) = repo_init_empty()?;
+            let root = repo.path().parent().unwrap();
+            let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+            let repo_path: &RepoPath = &repo_path_owned;
+            let file_path = Path::new("matrix.txt");
+            File::create(root.join(file_path))?.write_all(label.as_bytes())?;
+            println!("matrix case file written: path={}", file_path.display());
+            stage_add_file(repo_path, file_path)?;
+            println!("matrix case staged: label={label}");
+
+            let commit_id = if mine_the_commit {
+                let mined = mine_commit(
+                    repo_path,
+                    CommitMineOptions {
+                        threads: 1,
+                        target: "0".to_string(),
+                        message: vec![format!("{label} commit")],
+                        timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+                    },
+                )?;
+                println!("matrix case mined commit: {mined}");
+                mined
+            } else {
+                let committed = commit::commit(repo_path, &format!("{label} commit"))?;
+                println!("matrix case committed: {committed}");
+                committed
+            };
+
+            let note_base_message = format!("{label} note");
+            let note = if mine_the_note {
+                let mut nonce = 0u32;
+                loop {
+                    let candidate_message = format!("{note_base_message} #{nonce}");
+                    let note_id = add_note(repo_path, commit_id, &candidate_message, None, true)?;
+                    let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+                    println!(
+                        "matrix case note attempt: label={label} nonce={nonce} note_id={} annotated_id={} message={}",
+                        note_id, note.annotated_id, note.message
+                    );
+                    if note.note_id.to_string().starts_with('0') {
+                        assert_eq!(note.note_id, note_id);
+                        break note;
+                    }
+                    nonce = nonce.wrapping_add(1);
+                }
+            } else {
+                let note_id = add_note(repo_path, commit_id, &note_base_message, None, false)?;
+                let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+                println!(
+                    "matrix case note created: note_id={note_id} annotated_id={} message={}",
+                    note.annotated_id, note.message
+                );
+                note
+            };
+
+            assert_eq!(note.annotated_id, commit_id.into());
+            assert!(note.message.starts_with(&note_base_message));
+
+            let git_note = GitNote::from(&note);
+            let event = if pow_the_event {
+                generate_git_note_event_with_pow(&git_note, &private_key, 4)
+                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?
+            } else {
+                generate_git_note_event(&git_note, &private_key)
+                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?
+            };
+            println!(
+                "matrix case nip34 note event built: kind={:?} id={} pow={} nonce={:?}",
+                event.kind,
+                event.id,
+                pow_the_event,
+                event.nonce_data()
+            );
+            println!(
+                "matrix case nip34 note event json: {}",
+                serde_json::to_string_pretty(&event).expect("serialize matrix event")
+            );
+            println!(
+                "matrix case nip34 note event e tag: {:?}",
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.tagname() == "e")
+                    .map(|tag| &tag.0)
+            );
+            println!(
+                "matrix case nip34 note event commit tag: {:?}",
+                event
+                    .tags
+                    .iter()
+                    .find(|tag| tag.tagname() == "commit")
+                    .map(|tag| &tag.0)
+            );
+            assert_eq!(event.kind, EventKind::Patches);
+            assert_eq!(event.content, note.message);
+            assert_eq!(event.created_at, Unixtime(note.committer_time));
+            assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+            assert!(event.tags.iter().any(|tag| {
+                tag.tagname() == "commit" && tag.value() == commit_id.to_string()
+            }));
+
+            if pow_the_event {
+                assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+                assert!(event.nonce_data().is_some());
+                assert!(get_leading_zero_bits(&event.id.0) >= 4);
+            } else {
+                assert!(event.nonce_data().is_none());
+                assert!(!event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+            }
+
+            println!("matrix case done: label={label}");
+        }
 
         Ok(())
     }

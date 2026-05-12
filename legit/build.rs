@@ -5,76 +5,6 @@ use std::{
     process::Command,
 };
 
-use sha2::{Digest, Sha256};
-
-fn _sync_nip44_vectors() {
-    const NIP44_VECTORS_URL: &str =
-        "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
-    const NIP44_VECTORS_SHA256: &str =
-        "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
-    let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("src/lib/types/nip44/nip44.vectors.json");
-
-    println!("cargo:rerun-if-changed={}", dest_path.display());
-
-    let mut needs_download = true;
-
-    if dest_path.exists() {
-        println!("cargo:warning=nip44.vectors.json already exists.");
-        let mut file = fs::File::open(&dest_path).unwrap();
-        let mut hasher = Sha256::new();
-        io::copy(&mut file, &mut hasher).unwrap();
-        let hash = hasher.finalize();
-        let hex_hash = hex::encode(hash);
-        if hex_hash == NIP44_VECTORS_SHA256 {
-            println!("cargo:warning=nip44.vectors.json hash is correct.");
-            needs_download = false;
-        } else {
-            println!("cargo:warning=nip44.vectors.json hash is incorrect. Re-downloading.");
-            fs::remove_file(&dest_path).unwrap();
-        }
-    }
-
-    if needs_download {
-        println!("cargo:warning=Downloading nip44.vectors.json...");
-        match reqwest::blocking::get(NIP44_VECTORS_URL) {
-            Ok(response) => {
-                let content = response.bytes().unwrap();
-                let mut hasher = Sha256::new();
-                hasher.update(&content);
-                let hash = hasher.finalize();
-                let hex_hash = hex::encode(hash);
-
-                if hex_hash == NIP44_VECTORS_SHA256 {
-                    let mut file = fs::File::create(&dest_path).unwrap();
-                    file.write_all(&content).unwrap();
-                    println!(
-                        "cargo:warning=Successfully downloaded and verified nip44.vectors.json."
-                    );
-                } else {
-                    panic!(
-                        "Downloaded nip44.vectors.json has incorrect hash. Expected {}, got {}",
-                        NIP44_VECTORS_SHA256, hex_hash
-                    );
-                }
-            }
-            Err(e) => {
-                if dest_path.exists() {
-                    println!(
-                        "cargo:warning=Failed to download nip44.vectors.json: {}. Using existing file.",
-                        e
-                    );
-                } else {
-                    panic!(
-                        "Failed to download nip44.vectors.json and no local copy available: {}",
-                        e
-                    );
-                }
-            }
-        }
-    }
-}
-
 fn command_exists(command: &str) -> bool {
     let checker = if env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows" {
         "where"
@@ -279,17 +209,18 @@ fn main() {
     let build_date = now.date_naive();
 
     let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!("{}@{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
         format!(
-            "{} {} ({})",
+            "{}@{} {} ({})",
+            env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION"),
             build_date,
             get_git_hash()
         )
-    } else {
-        format!("gnostr-legit@{} ({})", get_git_hash(), build_date)
     };
 
-    println!("cargo:warning=buildname '{}'", build_name);
+    println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={}", build_name);
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH not set");

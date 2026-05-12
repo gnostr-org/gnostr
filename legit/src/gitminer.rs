@@ -6,6 +6,10 @@ use std::sync::mpsc::channel;
 use std::thread;
 // use git2::*;
 use super::worker::Worker;
+use gnostr_asyncgit::{
+    filehash::{get_relay_urls, publish_patch_event},
+    types::Keys,
+};
 use time_0_3::OffsetDateTime;
 //TODO use gnostr_asyncgit::types for event creation and injection during the mining loop
 #[derive(Clone, Debug)]
@@ -64,6 +68,10 @@ impl Gitminer {
 
     pub fn mine(&mut self) -> Result<String, &'static str> {
         debug!("Starting mining process with options: {:?}", self.opts);
+        info!(
+            "Mining commit in {} with target {} using {} thread(s)",
+            self.opts.repo, self.opts.target, self.opts.threads
+        );
         let (tree, parent) = match Gitminer::prepare_tree(&mut self.repo) {
             Ok((t, p)) => (t, p),
             Err(e) => {
@@ -72,39 +80,36 @@ impl Gitminer {
             }
         };
         debug!("Tree: {}, Parent: {}", tree, parent);
+        info!("Prepared tree {} and parent {}", tree, parent);
 
         let (tx, rx) = channel();
 
         for i in 0..self.opts.threads {
             let target = self.opts.target.clone();
             let author = self.author.clone();
-            let msg = if self.opts.message.len() > 1 {
-                format!(
-                    "{}
-
-{}",
-                    self.opts.message[0],
-                    self.opts.message[1..].join("\n")
-                )
-            } else {
-                self.opts.message[0].clone()
+            let msg = match self.opts.message.as_slice() {
+                [] => String::new(),
+                [one] => one.clone(),
+                [first, rest @ ..] => format!("{first}\n\n{}", rest.join("\n")),
             };
             let wtx = tx.clone();
             let ts = self.opts.timestamp.clone();
             let (wtree, wparent) = (tree.clone(), parent.clone());
 
             debug!("Spawning worker {}", i);
+            info!("Spawning worker {} for target {}", i, target);
             thread::spawn(move || {
                 Worker::new(i, target, wtree, wparent, author, msg, ts, wtx).work();
             });
         }
 
+        info!("Waiting for a worker to find a valid commit hash...");
         let (_, blob, hash) = rx.recv().unwrap();
         info!("Received hash {} from a worker.", hash);
 
         match self.write_commit(&hash, &blob) {
             Ok(_) => {
-                print!("Mined commit hash: {}", hash);
+                self.send_nip34_patch_event(&hash)?;
                 Ok(hash)
             }
             Err(e) => {
@@ -117,6 +122,7 @@ impl Gitminer {
     fn write_commit(&self, hash: &String, blob: &String) -> Result<(), &'static str> {
         Gitminer::ensure_gnostr_dirs_exist(Path::new(&self.opts.repo))?;
         debug!("Writing commit for hash: {}", hash);
+        info!("Writing mined commit {}", hash);
         /* repo.blob() generates a blob, not a commit.
          * don't know if there's a way to do this with libgit2. */
         let tmpfile = format!("/tmp/{}.tmp", hash);
@@ -179,6 +185,80 @@ impl Gitminer {
         }
         info!("Git command executed successfully.");
         Ok(())
+    }
+
+    fn send_nip34_patch_event(&self, head: &str) -> Result<(), &'static str> {
+        info!("Preparing NIP-34 patch event for mined commit {}", head);
+        let padded_head = format!("{:0>64}", head);
+        let keys = Keys::parse(padded_head.clone())
+            .ok_or("Failed to derive Nostr keys from mined commit")?;
+        let relay_urls = get_relay_urls();
+        let patch_content = self.patch_content_for_commit(head)?;
+        info!(
+            "Fetched patch content for {} ({} bytes)",
+            head,
+            patch_content.len()
+        );
+        let repo_name = Path::new(&self.opts.repo)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or(self.opts.repo.as_str())
+            .to_string();
+        let head_hash = head.to_string();
+        let repo_path = self.opts.repo.clone();
+
+        // Spawn a dedicated OS thread with its own Tokio runtime so that
+        // this blocking call is safe whether or not the caller already runs
+        // inside a Tokio runtime (e.g. during #[tokio::test]).
+        std::thread::spawn(move || {
+            let runtime = tokio::runtime::Runtime::new()
+                .expect("Failed to create async runtime");
+            runtime.block_on(async move {
+                info!(
+                    "Publishing NIP-34 patch event for {} to {} relay(s)",
+                    repo_name,
+                    relay_urls.len()
+                );
+                publish_patch_event(
+                    &keys,
+                    &relay_urls,
+                    &repo_name,
+                    &head_hash,
+                    &patch_content,
+                    None,
+                )
+                .await
+                .map_err(|err| error!("Failed to publish NIP-34 patch event: {}", err))
+                .ok();
+                info!("Finished publishing NIP-34 patch event for {}", head_hash);
+            });
+        })
+        .join()
+        .map_err(|_| "NIP-34 patch event thread panicked")?;
+
+        info!("Submitted NIP-34 patch event for {}", repo_path);
+        Ok(())
+    }
+
+    fn patch_content_for_commit(&self, head: &str) -> Result<String, &'static str> {
+        let output = Command::new("git")
+            .args([
+                "show",
+                "--format=medium",
+                "--patch",
+                "--no-ext-diff",
+                "--no-color",
+                head,
+            ])
+            .current_dir(&self.opts.repo)
+            .output()
+            .map_err(|_| "Failed to generate patch content")?;
+
+        if !output.status.success() {
+            return Err("Failed to generate patch content");
+        }
+
+        String::from_utf8(output.stdout).map_err(|_| "Patch content was not valid UTF-8")
     }
 
     fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {

@@ -17,7 +17,7 @@ struct GettingStartediPhone: View {
                 .font(.title)
                 .foregroundColor(.accentColor)
             Spacer(minLength: 20.0)
-            Text("Upon installation of the app, goto **Settings -> Safari -> Extension** and enable the **Gnostore** extension. Then open Safari and look in the toolbar, where you will see the \(Image(systemName: "textformat.size")) icon:")
+            Text("Upon installation of the app, goto **Settings -> Safari -> Extension** and enable the **gnostore** extension. Then open Safari and look in the toolbar, where you will see the \(Image(systemName: "textformat.size")) icon:")
                 .padding([.horizontal, .top], 20)
 
             Image("iphone-url-bar")
@@ -37,7 +37,7 @@ struct GettingStartediPhone: View {
                 .padding([.top])
 
             Text("""
-The **Gnostore** logo is gray, indicating the extension is inactive for this site, and must be activated first. Click on the button, and give Gnostore permission to access the current site. Now the Gnostore logo will appear in color, and you can click it again to access the extension.
+The **gnostore** logo is gray, indicating the extension is inactive for this site, and must be activated first. Click on the button, and give gnostore permission to access the current site. Now the gnostore logo will appear in color, and you can click it again to access the extension.
 """).multilineTextAlignment(.leading)
                 .padding([.horizontal, .top], 20)
             

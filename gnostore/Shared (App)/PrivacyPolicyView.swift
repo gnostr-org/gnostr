@@ -15,7 +15,7 @@ struct PrivacyPolicyView: View {
                 .foregroundColor(.accentColor)
             Spacer(minLength: 20)
             Text("""
-**Gnostore** is developed in the spirit of Nostr.
+**gnostore** is developed in the spirit of Nostr.
 
 You, the user, own your data. The developers of this app collect no data, anonymous or otherwise.
 

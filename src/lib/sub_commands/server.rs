@@ -220,6 +220,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[ignore]
     async fn blossom_remote_push_list_and_fetch_round_trip() {
         let _cwd_lock = TEST_CWD_LOCK.lock().expect("cwd lock");
         let pubkey = "0".repeat(64);

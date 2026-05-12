@@ -11,8 +11,8 @@
 		<link rel="apple-touch-icon" href="/pwa/icon-256.png"/>
 		<link rel="stylesheet" href="/css/vars.css?v=1">
 		<link rel="stylesheet" href="/css/utils.css?v=1">
-		<link rel="stylesheet" href="/css/styles.css?v=23">
-		<link rel="stylesheet" href="/css/responsive.css?v=10">
+		<link rel="stylesheet" href="/css/styles.css?v=26">
+		<link rel="stylesheet" href="/css/responsive.css?v=13">
 		<script defer src="/js/util.js?v=5"></script>
 		<script defer src="/js/ui/safe-html.js?v=1"></script>
 		<script defer src="/js/ui/util.js?v=8"></script>
@@ -23,6 +23,7 @@
 		<script defer src="/js/ui/settings.js?v=2"></script>
 		<script defer src="/js/ui/dm.js?v=1"></script>
 		<script defer src="/js/nostr.js?v=7"></script>
+		<script defer src="/js/browser-nostr.js?v=1"></script>
 		<script defer src="/js/nip/34.js?v=1"></script>
 		<script defer src="/js/core.js?v=2"></script>
 		<script defer src="/js/postbox.js?v=1"></script>
@@ -57,41 +58,12 @@
 
 		<!-- Main application wrapper -->
 		<div id="app-main" class="hide">
-			<!-- Global Header (e.g., for app title or global actions) -->
-			<header id="global-header">
-				<button id="global-header-gnostr-btn" action="open-view" data-view="nip" class="nav icon active"
-				        title="gnostr.org">
-					<!-- <img class="icon svg inactive" src="/images/logo-inverted.svg"/> -->
-					<img class="icon svg active" src="/images/logo.svg"/>
-				</button>
-				<header>
-					<label id="app-title"></label>
-				</header>
-				<div id="header-tools">
-					<input type="search" id="main-search" placeholder="Search..."/>
-					<button class="action small hide"
-					        disabled action="mark-all-read">
-						Mark All Read
-					</button>
-					<img class="pfp hide" role="their-pfp" data-pubkey=""
-					        src="/images/no-user.svg"/>
-					<img class="pfp hide" role="my-pfp" data-pubkey=""
-					        src="/images/no-user.svg"/>
-				</div>
-				<!-- Potentially add global actions here -->
-			</header>
-
 			<!-- List-Detail Container -->
 			<div id="list-detail-container">
 				<!-- Master Pane (e.g., main navigation, list of items) -->
 				<div id="master-pane">
 					<nav id="nav" class="nav full flex-noshrink">
 						<div>
-							<button action="open-view" data-view="friends" class="nav icon"
-							        title="__73Home__">
-								<img class="icon svg inactive" src="/images/home.svg"/>
-								<img class="icon svg active" src="/images/home-active.svg"/>
-							</button>
 							<button action="open-view" data-view="nip" class="nav icon"
 							        title="NIP explorer">
 								<img class="icon svg inactive" src="/images/logo-inverted.svg"/>
@@ -129,6 +101,28 @@
 
 				<!-- Detail Pane (e.g., content for selected item/view) -->
 				<div id="detail-pane">
+					<header id="global-header">
+						<button id="global-header-gnostr-btn" action="open-view" data-view="nip" class="nav icon active"
+						        title="gnostr.org">
+							<!-- <img class="icon svg inactive" src="/images/logo-inverted.svg"/> -->
+							<img class="icon svg active" src="/images/logo.svg"/>
+						</button>
+						<header>
+							<label id="app-title"></label>
+						</header>
+						<div id="header-tools">
+							<input type="search" id="main-search" placeholder="Search..."/>
+							<button class="action small hide"
+							        disabled action="mark-all-read">
+								Mark All Read
+							</button>
+							<img class="pfp hide" role="their-pfp" data-pubkey=""
+							        src="/images/no-user.svg"/>
+							<img class="pfp hide" role="my-pfp" data-pubkey=""
+							        src="/images/no-user.svg"/>
+						</div>
+						<!-- Potentially add global actions here -->
+					</header>
 					<div id="view">
 						<div id="gnostr-nip34-feed" class="events hide"></div>
 						<div id="profile-info" role="profile-info" class="bottom-border hide">
@@ -183,49 +177,8 @@
 						<div id="settings-profile" class="settings-profile hide">
 							<div class="settings-profile-top">
 								<img name="settings-profile-image" class="pfp jumbo hide"/>
-								<div class="settings-profile-meta">
-									<label name="settings-profile-name"></label>
-									<label name="settings-profile-nip05"></label>
-									<p name="settings-profile-about"></p>
-									<code name="settings-profile-pubkey"></code>
-								</div>
 							</div>
 						</div>
-						<section id="nip89-app-section" class="hide">
-								<header>
-									<label>NIP-89 App Metadata</label>
-								</header>
-								<template id="nip89-app-template">
-									<details id="nip89-app-card" class="settings-profile nip89-app-profile" open>
-										<summary class="nip89-app-summary">
-											<img name="nip89-app-summary-image" class="pfp hide" />
-											<span class="nip89-app-summary-text">
-												<span name="nip89-app-summary-name"></span>
-												<span name="nip89-app-summary-subtitle"></span>
-											</span>
-										</summary>
-										<div class="nip89-app-body">
-										<div class="settings-profile-top">
-											<img name="nip89-app-image" class="pfp jumbo hide"/>
-											<div class="settings-profile-meta">
-												<label name="nip89-app-name"></label>
-												<label name="nip89-app-kinds"></label>
-												<p name="nip89-app-about"></p>
-											</div>
-										</div>
-											<div class="nip89-app-links">
-												<dl>
-													<dt>Website</dt>
-													<dd data-field="nip89-app-website"></dd>
-													<dt>Handlers</dt>
-													<dd data-field="nip89-app-handlers"></dd>
-												</dl>
-											</div>
-										</div>
-									</details>
-								</template>
-								<div id="nip89-app-mount"></div>
-							</section>
 						<div id="relays" class="hide">
 							<details class="relay-section" open>
 								<summary><label>Relays</label></summary>
@@ -323,7 +276,7 @@
 									<thead>
 										<tr>
 											<td class="column-address">Address</td>
-											<td class="column-action">Remove</td>
+											<td class="column-action"></td>
 										</tr>
 									</thead>
 									<tbody>
@@ -337,6 +290,35 @@
 							</details>
 						</div>
 						<div id="settings" class="hide">
+							<section id="nip89-app-section" class="hide">
+								<header>
+									<label>NIP-89 App Metadata</label>
+								</header>
+								<template id="nip89-app-template">
+									<div id="nip89-app-card" class="settings-profile nip89-app-profile">
+										<div class="nip89-app-body">
+											<div class="settings-profile-top">
+												<img name="nip89-app-image" class="pfp jumbo hide"/>
+												<div class="settings-profile-meta">
+													<label name="nip89-app-name"></label>
+													<label name="nip89-app-kinds"></label>
+													<p name="nip89-app-about"></p>
+													<code name="nip89-app-pubkey"></code>
+												</div>
+											</div>
+											<div class="nip89-app-links">
+												<dl>
+													<dt>Website</dt>
+													<dd data-field="nip89-app-website"></dd>
+													<dt>Handlers</dt>
+													<dd data-field="nip89-app-handlers"></dd>
+												</dl>
+											</div>
+										</div>
+									</div>
+								</template>
+								<div id="nip89-app-mount"></div>
+							</section>
 							<section>
 								<header><label>Info</label></header>
 								<div class="settings-actions">

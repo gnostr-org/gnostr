@@ -38,7 +38,6 @@ runs:
     - name: Set environment
       shell: bash
       run: |
-        echo "OPENSSL_NO_VENDOR=1" >> "$GITHUB_ENV"
         echo "VCPKG_BUILD=${{ inputs.build }}" >> "$GITHUB_ENV"
         echo "VCPKG_TOOLCHAIN=${{ inputs.toolchain }}" >> "$GITHUB_ENV"
 
@@ -47,7 +46,7 @@ runs:
       shell: pwsh
       run: |
         echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "VCPKG_KEEP_ENV_VARS=OPENSSL_NO_VENDOR;VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "VCPKG_KEEP_ENV_VARS=VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "VCVARSALL_DEBUG=1" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: Restore vcpkg Cache

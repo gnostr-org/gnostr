@@ -2,6 +2,9 @@
 relay_db/
 relay_policy.db
 
+!icons
+!icons/**
+
 vendor/*
 vendor/*/**
 !vendor/actix-web-actors
@@ -93,6 +96,8 @@ cmake_install.cmake
 db/
 drives/
 example
+!bins/example/
+!bins/example/**
 ext/
 ffi/
 get-relays/
@@ -125,7 +130,6 @@ libsecp256k1.a
 list_01.txt
 list_02.txt
 modal/
-nips/
 nostro
 org/
 proxy/
@@ -178,7 +182,6 @@ src/lib/ssh/site/site.md
 src/lib/ssh/ssh.md
 src/lib/sub_commands/sub_commands.md
 src/lib/tabs/tabs.md
-src/lib/types/nip44/nip44.md
 src/lib/types/private_key/private_key.md
 src/lib/types/types.md
 src/lib/types/versioned/versioned.md

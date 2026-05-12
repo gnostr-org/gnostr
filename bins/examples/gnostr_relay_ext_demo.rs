@@ -1,0 +1,33 @@
+#[cfg(feature = "relay")]
+use gnostr_relay::App;
+#[cfg(feature = "relay")]
+use tracing::info;
+
+#[cfg(feature = "relay")]
+#[actix_web::main]
+async fn main() -> gnostr_relay::Result<()> {
+    tracing_subscriber::fmt::init();
+    info!("Start relay server");
+    let mut app_data = App::create(Some("demo.toml"), true, Some("NOSTR".to_owned()), None)?;
+
+    #[cfg(feature = "metrics")]
+    {
+        app_data = app_data.add_extension(gnostr_extensions::Metrics::new());
+    }
+
+    app_data = app_data.add_extension(gnostr_extensions::Auth::new());
+
+    #[cfg(feature = "rate_limiter")]
+    {
+        app_data = app_data.add_extension(gnostr_extensions::Ratelimiter::new());
+    }
+
+    gnostr_relay::run_app_with_endpoint(app_data).await?;
+    info!("Relay server shutdown");
+    Ok(())
+}
+
+#[cfg(not(feature = "relay"))]
+fn main() {
+    eprintln!("gnostr_relay_ext_demo requires the `relay` feature");
+}

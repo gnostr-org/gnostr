@@ -60,8 +60,19 @@ Alpine.data('popup', () => ({
     },
 
     async openOptions() {
-        await browser.runtime.openOptionsPage();
-        window.close();
+        const url = browser.runtime.getURL('options.html');
+
+        if (typeof browser.runtime.openOptionsPage === 'function') {
+            try {
+                await browser.runtime.openOptionsPage();
+                window.close();
+                return;
+            } catch (error) {
+                console.warn('openOptionsPage failed, falling back to direct navigation:', error);
+            }
+        }
+
+        window.location.href = url;
     },
 
     async countRelays() {

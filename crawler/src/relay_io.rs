@@ -33,7 +33,7 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
         sync_fs::create_dir_all(parent)?;
     }
 
-    debug!("Loading file: {}", file_path.display());
+    debug!("load_file: start path={}", file_path.display());
 
     let file_content = sync_fs::read_to_string(&file_path)?;
     let preprocessed_lines: Vec<String> = file_content
@@ -55,6 +55,11 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
                 preprocessed_lines
             }
         };
+    debug!(
+        "load_file: parsed {} relay entries from {}",
+        relays.len(),
+        file_path.display()
+    );
 
     let filtered_relays: Vec<String> = relays
         .into_iter()
@@ -111,16 +116,30 @@ pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
         })
         .collect();
 
+    debug!(
+        "load_file: returning {} filtered relay entries from {}",
+        filtered_relays.len(),
+        file_path.display()
+    );
     Ok(filtered_relays)
 }
 
 pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
-    BufReader::new(sync_fs::File::open(filename)?)
+    let path = filename.as_ref().to_path_buf();
+    debug!("load_shitlist: start path={}", path.display());
+    let entries = BufReader::new(sync_fs::File::open(&path)?)
         .lines()
-        .collect()
+        .collect::<io::Result<HashSet<String>>>()?;
+    debug!(
+        "load_shitlist: loaded {} entries from {}",
+        entries.len(),
+        path.display()
+    );
+    Ok(entries)
 }
 
 pub fn load_relays_or_bootstrap() -> Vec<String> {
+    debug!("load_relays_or_bootstrap: start");
     match load_file("relays.yaml") {
         Ok(relays) => relays,
         Err(e) => {
@@ -128,7 +147,12 @@ pub fn load_relays_or_bootstrap() -> Vec<String> {
                 "Failed to load relays.yaml ({}); falling back to bootstrap relays",
                 e
             );
-            BOOTSTRAP_RELAYS.iter().cloned().collect()
+            let relays: Vec<String> = BOOTSTRAP_RELAYS.iter().cloned().collect();
+            debug!(
+                "load_relays_or_bootstrap: using {} bootstrap relays",
+                relays.len()
+            );
+            relays
         }
     }
 }

@@ -32,6 +32,10 @@ Options:
   --all-features         Alias for --allow-all
   --no-default-features  Keep the --no-default-features install variant enabled
   --help                 Show this help
+
+Examples:
+  ./scripts/cargo-install-feature-variants.sh
+  ./scripts/cargo-install-feature-variants.sh --features chat --features p2p --features blossom --features blossom-tui
 EOF
 }
 
@@ -45,9 +49,10 @@ run_install() {
   shift
 
   local build_dir
-  build_dir="$(mktemp -d "${TMPDIR:-/tmp}/gnostr-install-${label//[^A-Za-z0-9]/_}.XXXXXX")"
+  build_dir="${TMPDIR:-/tmp}/gnostr-install-${label//[^A-Za-z0-9]/_}.$(gnostr --blockheight 2>/dev/null || echo 0)"
+  mkdir -p "$build_dir"
   printf '==> %s\n' "$label"
-  CARGO_TARGET_DIR="$build_dir" cargo install --path . --locked --force "$@"
+  CARGO_TARGET_DIR="$build_dir" bash ./scripts/with-system-rocksdb.sh cargo install --path . --locked --force "$@"
   rm -rf "$build_dir"
 }
 

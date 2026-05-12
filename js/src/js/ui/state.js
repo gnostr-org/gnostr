@@ -278,6 +278,9 @@ function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
 				break;
 	case VM_DM:
 		sync_all_dm_events_to_local_relay(GNOSTR);
+		if (typeof refresh_dm_subscriptions === "function") {
+			refresh_dm_subscriptions(GNOSTR);
+		}
 		model.dms_need_redraw = true;
 		view_show_spinner(true);
 		view_set_show_count(0, true, true);
@@ -1386,7 +1389,7 @@ async function onclick_send_dm(ev) {
 		pubkey,
 		kind: KIND_DM,
 		created_at: new_creation_time(),
-		content: await window.nostr.nip04.encrypt(target, el_input.value),
+		content: await gnostrBrowserNostr.encrypt(target, el_input.value),
 		tags: [["p", target]],
 	};
 	post.id = await nostrjs.calculate_id(post);

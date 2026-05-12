@@ -4,28 +4,34 @@ version.workspace = true
 edition = "2021"
 description = "gnostr chat transport crate"
 authors = [
-  "gnostr <admin@gnostr.org>",
-  "0xtr <oxtrr@protonmail.com>",
-  "TODO <add_more@gnostr.org>",
+    "gnostr <admin@gnostr.org>",
+    "0xtr <oxtrr@protonmail.com>",
+    "TODO <add_more@gnostr.org>",
 ]
 license = "MIT"
 repository = "https://github.com/gnostr-org/gnostr.git"
+readme = "README.md"
 exclude.workspace = true
 
 [lib]
 name = "gnostr_chat"
 path = "src/lib.rs"
 
+[features]
+long_tests = []
+
 [dependencies]
 anyhow = "1.0.98"
 clap = { version = "4.5.41", features = ["derive"] }
+crossterm = { workspace = true }
 futures = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = "1876.947527.130335", default-features = false, features = [
-  "tui",
-] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = "1876.947527.130335" }
-gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = "1876.947527.130335" }
 git2 = "0.20.2"
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=948560.1874.701540", default-features = false, features = [
+  "tui",
+  "vendor-openssl",
+] }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=948560.1874.701540" }
+gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = ">=948560.1874.701540" }
 hostname = "0.3.1"
 libp2p = { version = "0.54.1", features = [
   "full",
@@ -67,10 +73,10 @@ libp2p = { version = "0.54.1", features = [
 ] }
 once_cell = "1.21.3"
 parking_lot = "0.12.3"
+proctitle = "0.1.1"
 ratatui = { version = "0.29", default-features = false, features = [
   "crossterm",
 ] }
-crossterm = { workspace = true }
 reqwest = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -78,7 +84,6 @@ serde_yaml = { workspace = true }
 sha2 = { workspace = true }
 terminal_size = "0.4.3"
 textwrap = "0.16.0"
-tui-input = "0.14.0"
 tokio = { version = "1.46.1", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", default-features = false, features = [
@@ -86,4 +91,8 @@ tracing-subscriber = { version = "0.3.22", default-features = false, features = 
   "fmt",
   "parking_lot",
 ] }
+tui-input = "0.14.0"
 ureq = { version = "2.12.1", features = ["json", "charset"] }
+
+[dev-dependencies]
+serial_test = "3.2.0"

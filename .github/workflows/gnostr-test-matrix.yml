@@ -1,5 +1,4 @@
 name: gnostr-test-matrix
-
 concurrency:
   group: gnostr-test-matrix-${{ github.ref }}
   cancel-in-progress: true
@@ -22,6 +21,8 @@ jobs:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
+      BINS_MANIFEST: "./bins/Cargo.toml"
+      GNOSTR_MANIFEST: "./Cargo.toml"
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
@@ -50,6 +51,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-
+            cargo-registry-git-${{ runner.os }}-
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -61,6 +65,9 @@ jobs:
         with:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-
+            cargo-build-target-${{ runner.os }}-
 
       - name: Use Bash for all subsequent steps
         shell: bash
@@ -171,24 +178,11 @@ jobs:
       #- name: Install gnostr via cargo-binstall
       #  uses: ./.github/actions/cargo-binstall-gnostr
 
-      - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
+      - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev pkg-config librocksdb-dev"
         if: matrix.os == 'ubuntu-latest'
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: runner.os == 'macos'
-
-      - name: Install OpenSSL for macOS
-        run: |
-          if [ "$(uname -m)" = "arm64" ]; then
-            arch -arm64 brew install openssl@3
-          else
-            brew install openssl@3
-          fi
-          echo "$(brew --prefix openssl@3)/bin" >> $GITHUB_PATH
-          echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
         if: runner.os == 'macos'
 
       - name: linuxbrew (with retries)
@@ -305,17 +299,31 @@ jobs:
       ## build/run sequences
       ## build/run sequences
 
-      - name: Build gnostr binary
+      - name: Test gnostr bins
         shell: bash
         run: |
-          cargo build --bin gnostr
+          cargo test --manifest-path "$BINS_MANIFEST" --all-targets
 
-      - name: 🚀 cargo run --bin gnostr-tui --
+      - name: Save Cargo target cache (post-build)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-build
+
+      - name: 🚀 cargo run -p gnostr --bin gnostr --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr-tui -- --version
-          cargo run --bin gnostr-tui -- --help
+          cargo run --manifest-path "$GNOSTR_MANIFEST" --bin gnostr -- --version
+          cargo run --manifest-path "$GNOSTR_MANIFEST" --bin gnostr -- --help
+
+      - name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
@@ -336,6 +344,13 @@ jobs:
         run: |
           bash ./scripts/gnostr-ngit-tests.sh --nocapture
 
+      - name: Save Cargo target cache (post-run-tests)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-run-tests
+
       ## install sequences
       ## install sequences
       ## install sequences
@@ -346,19 +361,40 @@ jobs:
         run: |
           cargo install --path . --force
 
+      - name: Save Cargo target and bin cache (post-install)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-install
+
       - name: 🚀 src/bin/git-remote-nostr test
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path . --force --bin git-remote-nostr
+          cargo install --path ./bins --force --bin git-remote-nostr
           git fetch --all
+
+      - name: Save Cargo target cache (post-git-remote-nostr)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-remote-nostr
 
       - name: 🚀 git-helpers-test
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo install --path ./git-helpers --force
+          cargo test --path ./git-helpers 
           git fetch --all
+
+      - name: Save Cargo target cache (post-git-helpers)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-helpers
 
       #- name: 🚀 gnostr query test
       #  # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
@@ -369,12 +405,12 @@ jobs:
       #    $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw) \
       #    --limit 100 | jq
 
-      - name: 🚀 cargo run --bin gnostr-tui --
+      - name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --bin gnostr-tui -- --version
-          cargo run --bin gnostr-tui -- --help
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
@@ -393,6 +429,13 @@ jobs:
         shell: bash
         run: |
           bash ./scripts/gnostr-ngit-tests.sh --nocapture
+
+      - name: Save Cargo target cache (post-final-tests)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-final-tests
 
       # - name: 🚀 cargo test -j8
       #   #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
@@ -507,24 +550,24 @@ jobs:
           njump_base: 'http://njump.me'
 
       - name: Save Cargo registry and Git dependencies
-        if: always() && steps.cache-cargo-restore.outputs.cache-hit != 'true'
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
 
       - name: Save cargo bin
         if: always()
         uses: actions/cache/save@v4
         with:
           path: ~/.cargo/bin/gnostr
-          key: cargo-bin-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          key: cargo-bin-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
 
       - name: Save Cargo build target
-        if: always() && steps.cache-target-restore.outputs.cache-hit != 'true'
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}

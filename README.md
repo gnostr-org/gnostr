@@ -70,14 +70,16 @@ The repo keeps a few shell wrappers for the most common test paths:
 
 ```bash
 ./scripts/gnostr-tests.sh [--list] [--test <name>] [--ignored] [--nocapture]
-./scripts/gnostr-asyncgit-tests.sh [--ignored] [--nocapture]
+./scripts/asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir <dir>] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
+./scripts/gnostr-asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir <dir>] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
 ./scripts/gnostr-ngit-tests.sh [--features <list>] [--all-features] [--no-default-features] [--ignored] [--nocapture]
 ./scripts/cargo-install-feature-variants.sh [--features <list>] [--allow-all] [--no-default-features]
 ```
 
 `gnostr-tests.sh` runs the workspace test suite, `gnostr-asyncgit-tests.sh`
 adds the asyncgit DM/NIP regressions and queries the real event ids it emits,
-including the shared NIP-34 repo URL vector regression, and
+including the shared NIP-34 repo URL vector regression and the extended
+plain/mined commit, plain/mined note, and plain/PoW matrix, and
 `gnostr-ngit-tests.sh` exercises the ngit library with optional cargo feature
 switches.
 `cargo-install-feature-variants.sh` runs `cargo install --path .` for the

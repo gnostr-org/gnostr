@@ -5,7 +5,7 @@ use std::{
 };
 
 use libp2p::{
-    autonat, dcutr, gossipsub, identify, identity,
+    autonat, dcutr, gossipsub, identify, identity, relay,
     kad::{
         self,
         store::{MemoryStore, MemoryStoreConfig},
@@ -20,7 +20,7 @@ use tracing::info;
 
 use crate::p2p::{behaviour::Behaviour, network_config::IPFS_PROTO_NAME};
 
-pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
+pub async fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
     let peer_id = PeerId::from(keypair.public());
     info!("Local PeerId: {}", peer_id);
 
@@ -57,6 +57,8 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         )?
         .with_quic()
         .with_dns()?
+        .with_websocket(noise::Config::new, yamux::Config::default)
+        .await?
         .with_relay_client(noise::Config::new, yamux::Config::default)?
         .with_behaviour(move |key, relay_client| {
             let local_peer_id = key.public().to_peer_id();
@@ -76,8 +78,14 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
             ipfs_cfg.set_query_timeout(Duration::from_secs(5 * 60));
             let ipfs_store = MemoryStore::new(local_peer_id);
 
+            let relay_server = relay::Behaviour::new(local_peer_id, Default::default());
+            let rendezvous_client = rendezvous::client::Behaviour::new(key.clone());
+            let rendezvous_server =
+                rendezvous::server::Behaviour::new(rendezvous::server::Config::default());
+
             Ok(Behaviour {
-                relay: relay_client,
+                relay_client,
+                relay_server,
                 autonat: autonat::Behaviour::new(local_peer_id, autonat::Config::default()),
                 dcutr: dcutr::Behaviour::new(local_peer_id),
                 gossipsub: gossipsub::Behaviour::new(
@@ -91,9 +99,8 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
                     "/yamux/1.0.0".to_string(),
                     key.public(),
                 )),
-                rendezvous: rendezvous::server::Behaviour::new(
-                    rendezvous::server::Config::default(),
-                ),
+                rendezvous_client,
+                rendezvous: rendezvous_server,
                 ping: ping::Behaviour::new(
                     ping::Config::new().with_interval(Duration::from_secs(60)),
                 ),
@@ -103,4 +110,20 @@ pub fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>, Box<d
         .build();
 
     Ok(swarm)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use libp2p::Multiaddr;
+
+    #[tokio::test]
+    async fn build_swarm_accepts_websocket_listen_address() {
+        let keypair = crate::keypair_from_seed(Some(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
+        ));
+        let mut swarm = build_swarm(keypair).await.expect("swarm");
+        let addr: Multiaddr = "/ip4/127.0.0.1/tcp/0/ws".parse().expect("websocket multiaddr");
+        swarm.listen_on(addr).expect("websocket listen");
+    }
 }

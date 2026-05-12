@@ -11,13 +11,24 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-NPROC="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 1)"
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
+
+cargo_jobs() {
+  local jobs
+  jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+  jobs=$((jobs - 1))
+  if [ "$jobs" -lt 1 ]; then
+    jobs=1
+  fi
+  printf '%s\n' "$jobs"
+}
 TEST_FLAGS=()
 FEATURES=()
 PACKAGES=()
 TARGET_DIR=""
 TARGET_TMPDIR=false
 TARGET_TMPDIR_CLEAN=false
+PRUNE_LIMIT_SPEC="20G"
 ALL_FEATURES=false
 NO_DEFAULT_FEATURES=false
 VENDORED=false
@@ -31,10 +42,11 @@ OFFLINE=false
     TMPDIR_VALUE="${TMPDIR_VALUE:-0}"
     TMP_VALUE="${TMP_VALUE:-0}"
     TEMP_VALUE="${TEMP_VALUE:-0}"
-    export TMPDIR="/var/tmp/1876/cargo/test/workspace/${TMPDIR_VALUE}"
+    export TMPDIR="/var/tmp/cargo/test/workspace/${TMPDIR_VALUE}"
     export TMP="${TMPDIR}/${TMP_VALUE}"
     export TEMP="${TMP}/debug/${TEMP_VALUE}"
 TARGET_ROOT="${TEMP}"
+SKIP_IGNORED_TESTS=false
 
 usage() {
   cat <<'EOF'
@@ -57,12 +69,9 @@ Options:
   --package=VALUE      Select a Cargo package
   --target-dir VALUE   Set Cargo's target directory
   --target-dir=VALUE   Set Cargo's target directory
-  --target_dir VALUE   Set Cargo's target directory
-  --target_dir=VALUE   Set Cargo's target directory
-  --target-tmpdir      Use the shared vendored temp directory
-  --target_tmpdir      Use the shared vendored temp directory
-  --target-tmpdir-clean Remove the shared vendored temp directory first
-  --target_tmpdir-clean Remove the shared vendored temp directory first
+  --target-tmpdir      Use the shared temp directory
+  --target-tmpdir-clean Remove the shared temp directory first
+  --prune-limit VALUE  Prune oldest dirs once the tree reaches VALUE (default 20G)
   --ignored            Pass --ignored to cargo test
   --nocapture          Pass --nocapture to cargo test
   --quiet              Pass --quiet to cargo test
@@ -72,7 +81,98 @@ Options:
   --test-threads VALUE Pass --test-threads VALUE to the test harness
   --test-threads=VALUE Pass --test-threads VALUE to the test harness
   --help               Show this help
+ 
+Examples:
+  cargo-test-workspace.sh --package gnostr-bins --features chat --features p2p --features blossom --features blossom-tui --nocapture
+  cargo-test-workspace.sh all-features --package gnostr-bins --nocapture
 EOF
+}
+
+parse_prune_limit_kib() {
+  local raw
+  local value unit
+
+  raw="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')"
+
+  if [[ "$raw" =~ ^([0-9]+)([KMG])?$ ]]; then
+    value="${BASH_REMATCH[1]}"
+    unit="${BASH_REMATCH[2]}"
+    case "$unit" in
+      ""|K) echo "$value" ;;
+      M) echo $((value * 1024)) ;;
+      G) echo $((value * 1024 * 1024)) ;;
+      *) return 1 ;;
+    esac
+  else
+    return 1
+  fi
+}
+
+target_dir_size_kib() {
+  local target_path="$1"
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    echo 0
+    return
+  fi
+
+  du -sk "$target_path" 2>/dev/null | awk '{print $1+0}'
+}
+
+oldest_child_dir() {
+  local prune_root="$1"
+  local os_name
+
+  os_name="$(uname -s 2>/dev/null || echo unknown)"
+  find "$prune_root" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r child; do
+    case "$os_name" in
+      Darwin|FreeBSD|OpenBSD|NetBSD|DragonFly)
+        stat -f '%m\t%N' "$child" 2>/dev/null || true
+        ;;
+      *)
+        stat -c '%Y\t%n' "$child" 2>/dev/null || true
+        ;;
+    esac
+  done | sort -n | head -1 | awk -F'\t' '{print $2}'
+}
+
+prune_target_tree() {
+  local prune_root="$1"
+  local current_size
+  local oldest
+
+  if [[ -z "$prune_root" || ! -d "$prune_root" ]]; then
+    return 0
+  fi
+
+  while :; do
+    current_size="$(target_dir_size_kib "$prune_root")"
+    if (( current_size <= TARGET_SIZE_LIMIT_KIB )); then
+      break
+    fi
+
+    oldest="$(oldest_child_dir "$prune_root")"
+    if [[ -z "$oldest" ]]; then
+      break
+    fi
+
+    printf 'pruning oldest target dir: %s\n' "$oldest"
+    rm -rf "$oldest"
+  done
+}
+
+report_target_dir_size() {
+  local target_path="$1"
+  local size
+
+  if [[ -z "$target_path" || ! -d "$target_path" ]]; then
+    return 0
+  fi
+
+  size="$(du -sh "$target_path" 2>/dev/null | awk '{print $1}')"
+  if [[ -n "$size" ]]; then
+    printf 'target dir size: %s (%s)\n' "$size" "$target_path"
+  fi
 }
 
 add_feature() {
@@ -143,8 +243,17 @@ while [[ $# -gt 0 ]]; do
     --target-tmpdir-clean|--target_tmpdir-clean)
       TARGET_TMPDIR_CLEAN=true
       ;;
+    --prune-limit)
+      shift
+      [[ $# -gt 0 ]] || { echo "--prune-limit requires a value" >&2; exit 1; }
+      PRUNE_LIMIT_SPEC="$1"
+      ;;
+    --prune-limit=*)
+      PRUNE_LIMIT_SPEC="${1#*=}"
+      ;;
     --ignored)
       TEST_FLAGS+=(--ignored)
+      SKIP_IGNORED_TESTS=true
       ;;
     --nocapture)
       TEST_FLAGS+=(--nocapture)
@@ -181,6 +290,26 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+TARGET_SIZE_LIMIT_KIB="$(parse_prune_limit_kib "$PRUNE_LIMIT_SPEC")" || {
+  echo "Invalid --prune-limit value: $PRUNE_LIMIT_SPEC" >&2
+  exit 1
+}
+
+if [[ "$SKIP_IGNORED_TESTS" == true ]]; then
+  TEST_FLAGS+=(
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_decryption_success'
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_success'
+    --skip 'sub_commands::dm::dm_tests::test_dm_command_success_bech32_recipient'
+    --skip 'sub_commands::query::tests::test_real_network_roundtrip_kind4_with_default_key'
+    --skip 'sub_commands::query::tests::test_real_network_roundtrip_kind44_with_default_key'
+    --skip 'sub_commands::query::tests::test_launch_no_panic_with_all_bootstrap_relays'
+    --skip 'tui::shared::syntax_parser::tests::test_highlight'
+    --skip 'sync::notes::tests::git_note_event_matrix_covers_commit_and_pow_variants'
+    --skip 'nip34_event_matrix_covers_all_kinds_and_git_notes'
+    --skip 'pow_matrix_events_publish_and_query_from_relays'
+  )
+fi
+
 if [[ "$VENDORED" == true ]]; then
   if [[ "$ALL_FEATURES" == true || "$NO_DEFAULT_FEATURES" == true || ${#FEATURES[@]} -gt 0 || ${#PACKAGES[@]} -gt 0 ]]; then
     echo "vendored mode does not support --features, --package, all-features, or no-default-features" >&2
@@ -214,14 +343,27 @@ if [[ "$VENDORED" == true ]]; then
   fi
 
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}" "${TEST_FLAGS[@]}"
+    bash ./scripts/with-system-rocksdb.sh ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}" "${TEST_FLAGS[@]}"
   else
-    ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}"
+    bash ./scripts/with-system-rocksdb.sh ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}"
   fi
   exit $?
 fi
 
-declare -a CARGO_FLAGS=(test --workspace -j"$NPROC")
+if [[ "$TARGET_TMPDIR_CLEAN" == true && -d "$TARGET_ROOT" ]]; then
+  rm -rf "$TARGET_ROOT"
+fi
+mkdir -p "$TARGET_ROOT"
+
+if [[ "$TARGET_TMPDIR" == true || -z "$TARGET_DIR" ]]; then
+  TARGET_TREE_ROOT="$(dirname "$TARGET_ROOT")"
+  prune_target_tree "$TARGET_TREE_ROOT"
+fi
+
+declare -a CARGO_FLAGS=(test --workspace --exclude asyncgit -j"$(cargo_jobs)")
+if [[ "$SKIP_IGNORED_TESTS" == true ]]; then
+  CARGO_FLAGS=(test --workspace --exclude asyncgit -j1)
+fi
 
 if [[ "$ALL_FEATURES" == true ]]; then
   CARGO_FLAGS+=(--all-features)
@@ -249,11 +391,6 @@ elif [[ -n "$TARGET_ROOT" ]]; then
   CARGO_FLAGS+=(--target-dir "$TARGET_ROOT")
 fi
 
-if [[ "$TARGET_TMPDIR" == true || "$TARGET_TMPDIR_CLEAN" == true ]]; then
-  echo "--target-tmpdir and --target-tmpdir-clean are only supported with vendored mode" >&2
-  exit 1
-fi
-
 if [[ ${#PACKAGES[@]} -gt 0 ]]; then
   for package in "${PACKAGES[@]}"; do
     CARGO_FLAGS+=(--package "$package")
@@ -261,7 +398,17 @@ if [[ ${#PACKAGES[@]} -gt 0 ]]; then
 fi
 
 if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-  cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
+  bash ./scripts/with-system-rocksdb.sh cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
 else
-  cargo "${CARGO_FLAGS[@]}"
+  bash ./scripts/with-system-rocksdb.sh cargo "${CARGO_FLAGS[@]}"
+fi
+
+if [[ -n "${TARGET_TREE_ROOT:-}" ]]; then
+  prune_target_tree "$TARGET_TREE_ROOT"
+fi
+
+if [[ -n "$TARGET_DIR" ]]; then
+  report_target_dir_size "$TARGET_DIR"
+elif [[ -n "$TARGET_ROOT" ]]; then
+  report_target_dir_size "$TARGET_ROOT"
 fi

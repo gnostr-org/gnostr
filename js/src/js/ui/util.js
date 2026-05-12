@@ -158,16 +158,7 @@ function update_notifications(model) {
 }
 
 async function get_pubkey(use_prompt=true) {
-	if (!(window.nostr && window.nostr.getPublicKey)) {
-		console.error("window.nostr.getPublicKey is unsupported");
-		return;
-	}
-	try {
-		return await window.nostr.getPublicKey()
-	} catch (err) {
-		console.error(err);
-		return;
-	}
+	return await gnostrBrowserNostr.getPublicKey(use_prompt);
 }
 
 function open_thread(thread_id) {

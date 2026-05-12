@@ -12,7 +12,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "${SCRIPT_DIR}/.." && pwd)
 
 PROFILE="release"
-PACKAGE="gnostr"
+PACKAGE="gnostr-bins"
 BIN_MODE="--bins"
 LOCKED=true
 ALL_FEATURES=false
@@ -69,7 +69,7 @@ Options:
   --skip NAME|TRIPLE     Skip the named CI target or Rust target triple.
                          Repeat to skip multiple targets.
   --profile NAME         Cargo profile to use (default: release).
-  --package NAME         Cargo package to build (default: gnostr).
+  --package NAME         Cargo package to build (default: gnostr-bins).
   --workspace            Build the full workspace instead of one package.
   --all-features         Enable all cargo features.
   --no-default-features  Disable default cargo features.
@@ -85,6 +85,7 @@ Examples:
   $0
   $0 --profile dist --target linux-arm64 --target linux-arm64-musl
   $0 --workspace --all-features --dry-run
+  $0 --package gnostr-bins --features chat,p2p,blossom,blossom-tui --dry-run
 EOF
 }
 

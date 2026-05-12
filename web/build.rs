@@ -1,8 +1,11 @@
 use std::{
+    collections::BTreeMap,
     io::Write,
+    process::Command,
     path::{Path, PathBuf},
 };
 
+use chrono::TimeZone;
 use anyhow::Context;
 
 #[derive(Copy, Clone)]
@@ -19,6 +22,7 @@ fn main() {
 }
 
 fn run() -> anyhow::Result<()> {
+    report_build_name();
     let manifest_dir =
         PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
@@ -33,6 +37,50 @@ fn run() -> anyhow::Result<()> {
 
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
+}
+
+fn report_build_name() {
+    let now = match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(val) => chrono::Local
+            .timestamp_opt(val.parse::<i64>().unwrap(), 0)
+            .unwrap(),
+        Err(_) => chrono::Local::now(),
+    };
+    let build_date = now.date_naive();
+    let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!("{}@{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
+        format!(
+            "{}@{} {} ({})",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION"),
+            build_date,
+            get_git_hash()
+        )
+    };
+
+    println!("cargo:warning=buildname '{build_name}'");
+    println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+}
+
+fn get_git_hash() -> String {
+    if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
+        return commit[..7].to_string();
+    }
+
+    let commit = Command::new("git")
+        .arg("rev-parse")
+        .arg("--short=7")
+        .arg("--verify")
+        .arg("HEAD")
+        .output();
+
+    if let Ok(commit_output) = commit {
+        let commit_string = String::from_utf8_lossy(&commit_output.stdout);
+        return commit_string.lines().next().unwrap_or("").into();
+    }
+
+    panic!("Can not get git commit: {}", commit.unwrap_err());
 }
 
 fn build_scss(paths: Paths) -> anyhow::Result<()> {
@@ -68,59 +116,46 @@ fn build_scss(paths: Paths) -> anyhow::Result<()> {
 }
 
 fn build_js(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("../js/src/js");
-    let ui_in_dir = in_dir.join("ui");
     let out_dir = paths.statics_out_dir.join("src/lib/js");
     std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
 
-    println!("cargo:rerun-if-changed={}", in_dir.display());
-    println!("cargo:rerun-if-changed={}", ui_in_dir.display());
-
     let mut all_js_content = String::new();
-
-    let util_js_path = in_dir.join("util.js");
-    println!("cargo:rerun-if-changed={}", util_js_path.display());
-    let util_js_content = std::fs::read_to_string(&util_js_path).context(format!(
-        "Failed to read JS file: {}",
-        util_js_path.display()
-    ))?;
-    all_js_content.push_str(&util_js_content);
-    all_js_content.push_str("\n");
-
-    let mut js_files: Vec<PathBuf> = std::fs::read_dir(&in_dir)
-        .context("Failed to read statics/js directory")?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.is_file()
-                && path.extension().is_some_and(|ext| ext == "js")
-                && *path != util_js_path
-        })
-        .collect();
-    js_files.sort();
-
-    for path in js_files {
-        println!("cargo:rerun-if-changed={}", path.display());
-        let content = std::fs::read_to_string(&path)
-            .context(format!("Failed to read JS file: {}", path.display()))?;
-        all_js_content.push_str(&content);
-        all_js_content.push_str("\n");
+    let assets = gnostr_js::get_js_assets();
+    let mut ordered_assets: BTreeMap<String, &'static [u8]> = BTreeMap::new();
+    for (name, bytes) in assets {
+        ordered_assets.insert(name, bytes);
     }
 
-    let mut ui_js_files: Vec<PathBuf> = std::fs::read_dir(&ui_in_dir)
-        .context("Failed to read statics/js/ui directory")?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| path.is_file() && path.extension().is_some_and(|ext| ext == "js"))
+    let mut root_js_files: Vec<String> = ordered_assets
+        .keys()
+        .filter(|name| name.ends_with(".js") && !name.contains('/') && name.as_str() != "util.js")
+        .cloned()
+        .collect();
+    root_js_files.sort();
+    for name in root_js_files {
+        let content = ordered_assets
+            .get(&name)
+            .copied()
+            .with_context(|| format!("Missing JS asset: {name}"))?;
+        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        all_js_content.push_str(content);
+        all_js_content.push('\n');
+    }
+
+    let mut ui_js_files: Vec<String> = ordered_assets
+        .keys()
+        .filter(|name| name.starts_with("ui/") && name.ends_with(".js"))
+        .cloned()
         .collect();
     ui_js_files.sort();
-
-    for path in ui_js_files {
-        println!("cargo:rerun-if-changed={}", path.display());
-        let content = std::fs::read_to_string(&path)
-            .context(format!("Failed to read JS file: {}", path.display()))?;
-        all_js_content.push_str(&content);
-        all_js_content.push_str("\n");
+    for name in ui_js_files {
+        let content = ordered_assets
+            .get(&name)
+            .copied()
+            .with_context(|| format!("Missing JS asset: {name}"))?;
+        let content = std::str::from_utf8(content).with_context(|| format!("JS asset {name} is not UTF-8"))?;
+        all_js_content.push_str(content);
+        all_js_content.push('\n');
     }
 
     let output_file = out_dir.join("bundle.js");

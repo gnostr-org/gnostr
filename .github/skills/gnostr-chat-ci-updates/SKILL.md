@@ -11,6 +11,7 @@ Use `gnostr chat` to broadcast short, readable status messages from CI jobs and 
 
 - `gnostr -V` prints the installed version and is useful when CI and local behavior differ.
 - `gnostr chat` supports short oneshot messages with `--topic`, `--name`, and `--oneshot`.
+- `gnostr chat --help` is the quickest way to confirm the current chat flags.
 - `gnostr legit` is for git/nostr workflow tasks, not chat updates.
 - When using repeated `-m` flags with `gnostr legit`, wrap each line to 80 columns.
 - `gnostr server` runs the Blossom server.
@@ -23,6 +24,13 @@ Use `gnostr chat` to broadcast short, readable status messages from CI jobs and 
 
 ```bash
 cargo run --bin gnostr -- chat --topic gnostr --name copilot --oneshot "message"
+```
+
+## Common checks
+
+```bash
+gnostr -V
+gnostr chat --help
 ```
 
 ## When to send updates

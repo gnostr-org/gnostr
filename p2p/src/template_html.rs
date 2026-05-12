@@ -9,11 +9,11 @@ impl TemplateHtml {
     }
 
     pub fn bytes(&self) -> &'static [u8] {
-        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../js/src/template.html"))
+        gnostr_js::TEMPLATE_HTML_BYTES
     }
 
     pub fn as_str(&self) -> &'static str {
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../js/src/template.html"))
+        gnostr_js::TEMPLATE_HTML
     }
 
     pub fn to_string(&self) -> String {
@@ -23,11 +23,7 @@ impl TemplateHtml {
 
 pub fn get_template_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
-    assets.insert(
-        "template.html".to_string(),
-        include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../js/src/template.html"))
-            as &'static [u8],
-    );
+    assets.insert("template.html".to_string(), gnostr_js::TEMPLATE_HTML_BYTES);
     assets
 }
 

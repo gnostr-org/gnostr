@@ -139,6 +139,7 @@ pub mod tests {
 			let mut config = repo.config()?;
 			config.set_str("user.name", "name")?;
 			config.set_str("user.email", "email")?;
+			config.set_str("status.showUntrackedFiles", "all")?;
 		}
 		Ok((td, repo))
 	}
@@ -163,6 +164,7 @@ pub mod tests {
 			let mut config = repo.config()?;
 			config.set_str("user.name", "name")?;
 			config.set_str("user.email", "email")?;
+			config.set_str("status.showUntrackedFiles", "all")?;
 
 			let mut index = repo.index()?;
 			let id = index.write_tree()?;
@@ -349,6 +351,8 @@ pub mod tests {
 		let output = if cfg!(target_os = "windows") {
 			Command::new("cmd")
 				.args(["/C", cmd])
+				.env_remove("GIT_DIR")
+				.env_remove("GIT_WORK_TREE")
 				.current_dir(path.gitpath())
 				.output()
 				.unwrap()
@@ -356,6 +360,8 @@ pub mod tests {
 			Command::new("sh")
 				.arg("-c")
 				.arg(cmd)
+				.env_remove("GIT_DIR")
+				.env_remove("GIT_WORK_TREE")
 				.current_dir(path.gitpath())
 				.output()
 				.unwrap()

@@ -18,6 +18,7 @@ import {
     validateKey,
     feature,
     getDelegator,
+    isSupportedRelayUrl,
 } from './utilities/utils';
 
 const log = console.log;
@@ -202,7 +203,7 @@ Alpine.data('options', () => ({
         let newRelay = relayToAdd || this.newRelay;
         try {
             let url = new URL(newRelay);
-            if (url.protocol !== 'wss:') {
+            if (!isSupportedRelayUrl(url)) {
                 this.setUrlError('Must be a websocket url');
                 return;
             }
