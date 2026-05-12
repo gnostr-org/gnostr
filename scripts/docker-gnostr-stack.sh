@@ -8,28 +8,34 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-BASE_IMAGE="${GNOSTR_STACK_BASE_IMAGE:-gnostr-stack-base:local}"
+CHAT_IMAGE="${GNOSTR_STACK_CHAT_IMAGE:-gnostr-chat:local}"
 CONTAINER="${GNOSTR_STACK_CONTAINER:-gnostr-stack}"
 TOPIC="${GNOSTR_STACK_TOPIC:-gnostr-dev}"
 BUILD_ONLY="${GNOSTR_STACK_BUILD_ONLY:-false}"
 FOLLOW_LOGS="${GNOSTR_STACK_FOLLOW:-false}"
 COMMAND="${1:-up}"
+if [[ $# -gt 0 ]]; then
+  shift
+fi
+CHAT_ARGS=("$@")
 
 usage() {
   cat <<'EOF'
 Usage: docker-gnostr-stack.sh [up|down|logs|status|shell|restart]
 
 Environment:
-  GNOSTR_STACK_BASE_IMAGE   Base Docker image tag to build from docker/Dockerfile.gnostr
+  GNOSTR_STACK_CHAT_IMAGE   Docker image tag to build from docker/Dockerfile.gnostr-chat
   GNOSTR_STACK_CONTAINER   Container name to manage
   GNOSTR_STACK_TOPIC       Chat topic for the headless peer
   GNOSTR_STACK_BUILD_ONLY  "true" to build the image and stop
   GNOSTR_STACK_FOLLOW      "true" to follow container logs after startup
+
+Any arguments after `up` or `restart` are forwarded to `gnostr chat ...`.
 EOF
 }
 
 build_image() {
-  docker build -t "$BASE_IMAGE" -f docker/Dockerfile.gnostr .
+  docker build -t "$CHAT_IMAGE" -f docker/Dockerfile.gnostr-chat .
 }
 
 wait_for_ready() {
@@ -53,11 +59,12 @@ start_stack() {
     -v "$ROOT_DIR:/workspace" \
     -w /workspace \
     --entrypoint gnostr \
-    "$BASE_IMAGE" \
+    "$CHAT_IMAGE" \
     chat \
     --debug \
     --headless \
-    --topic "$TOPIC" >/dev/null
+    --topic "$TOPIC" \
+    "${CHAT_ARGS[@]}" >/dev/null
 
   wait_for_ready
   docker ps --filter "name=^/${CONTAINER}$" --format 'running {{.Names}} {{.Status}}'
