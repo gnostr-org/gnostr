@@ -45,11 +45,15 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       release_tag: ${{ steps.set-matrix.outputs.release_tag }}
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.tag || github.ref_name }}
+
+      - name: Install gnostr via cargo-binstall
+        uses: ./.github/actions/cargo-binstall-gnostr
 
       - id: set-matrix
         shell: python3 {0}
@@ -108,6 +112,7 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          echo "- name: Set Clang environment variables"
           if command -v llvm-config >/dev/null 2>&1; then
             lib_dir="$(llvm-config --libdir)"
           else

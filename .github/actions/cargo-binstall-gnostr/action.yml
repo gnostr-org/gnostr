@@ -63,7 +63,7 @@ runs:
     - name: Install gnostr via cargo-binstall
       shell: bash
       run: |
-        cargo-binstall --force --no-confirm gnostr && \
-        gnostr --version && echo \
-        gnostr --help && echo \
-        || true
+        set -euo pipefail
+        cargo-binstall gnostr --force -y
+        gnostr --version
+        gnostr --help

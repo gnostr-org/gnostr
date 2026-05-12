@@ -64,7 +64,7 @@ runs:
         if curl --proto '=https' --tlsv1.2 -LsSf "$installer_url" | sh; then
           :
         elif [ "${{ inputs.fallback_to_binstall }}" = "true" ]; then
-          cargo-binstall --force --no-confirm gnostr
+          cargo-binstall gnostr --force -y
         else
           exit 1
         fi
