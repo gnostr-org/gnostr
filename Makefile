@@ -135,7 +135,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1873/949097/943781" -n "a0b5322afbb030d7c3c8d9c63bc05fb133843d319efaab413da4180d2b4a9c3d"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1873/949097/944192" -n "a0b5322afbb030d7c3c8d9c63bc05fb133843d319efaab413da4180d2b4a9c3d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
@@ -194,8 +194,10 @@ gnostr-test-macos-intel: 	### 	gnostr-test-macos
 	gh extension install nektos/gh-act || true
 	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
 
-act-cargo-cross: 	### 	acto-cargo-cross
+act-cargo-cross-setup: 	### 	acto-cargo-cross-setup
 	 act -W .github/workflows/cargo-cross.yml -j setup --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
+act-cargo-cross: 	### 	acto-cargo-cross
+	 act -W .github/workflows/cargo-cross.yml --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
 
 # vim: set noexpandtab:
 # vim: set setfiletype make
