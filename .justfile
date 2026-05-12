@@ -148,3 +148,6 @@ act-cargo-cross-setup:
 act-cargo-cross:
   @make act-cargo-cross
 
+act-gnostr-act:
+  @make act-gnostr-act
+

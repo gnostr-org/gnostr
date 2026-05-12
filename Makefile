@@ -135,7 +135,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1873/949097/944192" -n "a0b5322afbb030d7c3c8d9c63bc05fb133843d319efaab413da4180d2b4a9c3d"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1873/949100/939485" -n "a0b5322afbb030d7c3c8d9c63bc05fb133843d319efaab413da4180d2b4a9c3d"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
@@ -198,6 +198,9 @@ act-cargo-cross-setup: 	### 	acto-cargo-cross-setup
 	 act -W .github/workflows/cargo-cross.yml -j setup --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
 act-cargo-cross: 	### 	acto-cargo-cross
 	 act -W .github/workflows/cargo-cross.yml --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
+
+act-gnostr-act: 	## 	act-gnostr-act
+	docker build -t gnostr-act -f ./docker/Dockerfile.gnostr . && act -W .github/workflows/cargo-cross.yml -j setup --container-architecture linux/amd64 -P ubuntu-latest=gnostr-act
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

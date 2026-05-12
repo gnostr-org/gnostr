@@ -255,6 +255,16 @@ act-cargo-cross: 	### 	acto-cargo-cross
 --container-architecture linux/amd64 \
 -P ubuntu-latest=catthehacker/ubuntu:full-latest
 
+act-gnostr-act: 	## 	act-gnostr-act
+	docker build \
+-t gnostr-act \
+-f ./docker/Dockerfile.gnostr . && \
+act \
+-W .github/workflows/cargo-cross.yml \
+-j setup \
+--container-architecture linux/amd64 \
+-P ubuntu-latest=gnostr-act
+
 # vim: set noexpandtab:
 # vim: set setfiletype make
 EOF
