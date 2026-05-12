@@ -44,3 +44,6 @@ if [[ -n "$TEST_NAME" ]]; then
 else
   bash ./scripts/with-system-rocksdb.sh cargo test -p gnostr-p2p -- "${TEST_FLAGS[@]}"
 fi
+
+cargo test -p gnostr-p2p test_bft_sync_valid -- --exact --nocapture && \
+ cargo test -p gnostr-p2p test_multi_peer_time_consensus_with_outlier -- --exact --nocapture
