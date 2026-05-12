@@ -405,9 +405,10 @@ mod tests {
     fn test_bft_sync_valid() {
         let mut state = SyncState::new(1, "/tmp/test_clock4.json");
         state.apply_bft_sync(vec![
-            Estimation { d: 0.01, a: 0.001 },
-            Estimation { d: 0.015, a: 0.001 },
-            Estimation { d: 0.02, a: 0.001 },
+            Estimation { d: 0.005, a: 0.001 },
+            Estimation { d: 0.005, a: 0.001 },
+            Estimation { d: 0.007, a: 0.001 },
+            Estimation { d: 0.007, a: 0.001 },
         ]);
         assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
     }
@@ -419,10 +420,10 @@ mod tests {
         let mut state = SyncState::new(1, &checkpoint_path);
 
         let peer_estimates = vec![
-            ("peer-alpha", Estimation { d: 0.010, a: 0.001 }),
-            ("peer-beta", Estimation { d: 0.011, a: 0.001 }),
-            ("peer-gamma", Estimation { d: 0.012, a: 0.001 }),
-            ("peer-delta", Estimation { d: 0.0105, a: 0.001 }),
+            ("peer-alpha", Estimation { d: 0.005, a: 0.001 }),
+            ("peer-beta", Estimation { d: 0.005, a: 0.001 }),
+            ("peer-gamma", Estimation { d: 0.007, a: 0.001 }),
+            ("peer-delta", Estimation { d: 0.007, a: 0.001 }),
             ("peer-byzantine", Estimation { d: 0.250, a: 0.001 }),
         ];
 
