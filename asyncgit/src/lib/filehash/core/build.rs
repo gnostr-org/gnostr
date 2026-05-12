@@ -53,14 +53,10 @@ fn report_build_name() {
     };
     let build_date = now.date_naive();
     let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
-        format!(
-            "{}-{}",
-            env!("CARGO_PKG_NAME").replace('_', "-"),
-            env!("CARGO_PKG_VERSION")
-        )
+        format!("{}@{}", env!("CARGO_PKG_NAME").replace('_', "-"), env!("CARGO_PKG_VERSION"))
     } else {
         format!(
-            "{}-{} {} ({})",
+            "{}@{} {} ({})",
             env!("CARGO_PKG_NAME").replace('_', "-"),
             env!("CARGO_PKG_VERSION"),
             build_date,

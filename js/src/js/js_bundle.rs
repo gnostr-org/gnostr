@@ -14,6 +14,7 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     assets.insert("bip32@2.0.6.js".to_string(), include_bytes!("bip32@2.0.6.js") as &'static [u8]);
     assets.insert("bip39@3.0.4.js".to_string(), include_bytes!("bip39@3.0.4.js") as &'static [u8]);
     assets.insert("bitcoinjs-lib.js".to_string(), include_bytes!("bitcoinjs-lib.js") as &'static [u8]);
+    assets.insert("browser-nostr.js".to_string(), include_bytes!("browser-nostr.js") as &'static [u8]);
     assets.insert("contacts.js".to_string(), include_bytes!("contacts.js") as &'static [u8]);
     assets.insert("core.js".to_string(), include_bytes!("core.js") as &'static [u8]);
     assets.insert("postbox.js".to_string(), include_bytes!("postbox.js") as &'static [u8]);

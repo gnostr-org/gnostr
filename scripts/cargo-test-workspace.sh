@@ -81,6 +81,10 @@ Options:
   --test-threads VALUE Pass --test-threads VALUE to the test harness
   --test-threads=VALUE Pass --test-threads VALUE to the test harness
   --help               Show this help
+ 
+Examples:
+  cargo-test-workspace.sh --package gnostr-bins --features chat --features p2p --features blossom --features blossom-tui --nocapture
+  cargo-test-workspace.sh all-features --package gnostr-bins --nocapture
 EOF
 }
 
@@ -339,9 +343,9 @@ if [[ "$VENDORED" == true ]]; then
   fi
 
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-    ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}" "${TEST_FLAGS[@]}"
+    bash ./scripts/with-system-rocksdb.sh ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}" "${TEST_FLAGS[@]}"
   else
-    ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}"
+    bash ./scripts/with-system-rocksdb.sh ./scripts/cargo-test-vendor.sh "${VENDORED_FLAGS[@]}"
   fi
   exit $?
 fi
@@ -394,9 +398,9 @@ if [[ ${#PACKAGES[@]} -gt 0 ]]; then
 fi
 
 if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
-  cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
+  bash ./scripts/with-system-rocksdb.sh cargo "${CARGO_FLAGS[@]}" -- "${TEST_FLAGS[@]}"
 else
-  cargo "${CARGO_FLAGS[@]}"
+  bash ./scripts/with-system-rocksdb.sh cargo "${CARGO_FLAGS[@]}"
 fi
 
 if [[ -n "${TARGET_TREE_ROOT:-}" ]]; then

@@ -268,7 +268,7 @@ fi
 
 run_cargo_test_step() {
   local test_name="$1"
-  local cargo_cmd=(cargo "${CARGO_FLAGS[@]}" "$test_name")
+  local cargo_cmd=(bash ./scripts/with-system-rocksdb.sh cargo "${CARGO_FLAGS[@]}" "$test_name")
   if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
     "${cargo_cmd[@]}" -- "${TEST_FLAGS[@]}"
   else

@@ -1,4 +1,7 @@
-pub use crate::nostr::js::js_bundle::get_js_assets;
+/// MIME helpers used by the static asset bridge.
+///
+/// This keeps the filename-to-content-type mapping in `types` so browser-facing
+/// crates can reuse the same logic later without duplicating it.
 
 /// Return the MIME type used for a static asset filename.
 pub fn asset_content_type(filename: &str) -> &'static str {
@@ -21,17 +24,12 @@ pub fn asset_content_type(filename: &str) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::{asset_content_type, get_js_assets};
+    use super::asset_content_type;
 
     #[test]
     fn asset_content_types_match_extensions() {
         assert_eq!(asset_content_type("main.js"), "application/javascript");
         assert_eq!(asset_content_type("style.css"), "text/css");
         assert_eq!(asset_content_type("logo.svg"), "image/svg+xml");
-    }
-
-    #[test]
-    fn js_assets_are_not_embedded_here() {
-        assert!(get_js_assets().is_empty());
     }
 }

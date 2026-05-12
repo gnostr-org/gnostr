@@ -119,7 +119,7 @@ build_cargo_flags() {
 run_cargo() {
   local -a cargo_flags=()
   cargo_flags=($(build_cargo_flags))
-  cargo "${cargo_flags[@]}" "$@"
+  bash ./scripts/with-system-rocksdb.sh cargo "${cargo_flags[@]}" "$@"
 }
 
 run_notes_suite() {

@@ -289,7 +289,7 @@ fi
 run_cargo() {
   local cmd="$1"
   shift
-  local -a argv=(cargo)
+  local -a argv=(bash ./scripts/with-system-rocksdb.sh cargo)
   # Build argv incrementally so empty arrays never trip `set -u`.
   if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
     argv+=("${CARGO_COMMON_FLAGS[@]}")
@@ -309,7 +309,7 @@ run_cargo() {
 print_cargo_command() {
   local cmd="$1"
   shift
-  local -a argv=(cargo)
+  local -a argv=(bash ./scripts/with-system-rocksdb.sh cargo)
   # Mirror the exact cargo invocation before we run it.
   if [[ ${#CARGO_COMMON_FLAGS[@]} -gt 0 ]]; then
     argv+=("${CARGO_COMMON_FLAGS[@]}")

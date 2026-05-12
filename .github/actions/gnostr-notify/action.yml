@@ -39,7 +39,8 @@ runs:
         EVENT=$(gnostr \
           --nsec "$(gnostr --hash "$GITHUB_REPOSITORY_ID")" \
           -d ${{ inputs.pow }} \
-          -r "${{ inputs.damus }}" "${{ inputs.nos }}" \
+          -r "${{ inputs.damus }}" \
+          -r "${{ inputs.nos }}" \
           custom-event \
           -k 1 \
           -c "[$GITHUB_REPOSITORY_ID](${{ inputs.job_url }}) (${{ inputs.matrix_label }}) ${{ inputs.status }}" \
@@ -58,10 +59,14 @@ runs:
           ,"$(gnostr --weeble)" \
           ,"$(gnostr --blockheight)" \
           ,"$(gnostr --wobble)" \
-          --hex || true) && \
-          export EVENT=$EVENT && \
-          NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-          export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-          gnostr query -i $EVENT -r ${{ inputs.damus }} || true && \
-          gnostr query -i $EVENT -r ${{ inputs.nos }} || true && \
-          echo "${{ inputs.njump_base }}/$NOTE"
+          --hex || true)
+        export EVENT
+
+        NOTE=$(gnostr convert-key -p note -k "$EVENT" || true)
+        export NOTE
+
+        echo "$NOTE"
+        echo "$EVENT"
+        gnostr query -i "$EVENT" -r "${{ inputs.damus }}" || true
+        gnostr query -i "$EVENT" -r "${{ inputs.nos }}" || true
+        echo "${{ inputs.njump_base }}/$NOTE"

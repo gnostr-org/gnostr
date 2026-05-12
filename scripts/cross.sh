@@ -85,6 +85,7 @@ Examples:
   $0
   $0 --profile dist --target linux-arm64 --target linux-arm64-musl
   $0 --workspace --all-features --dry-run
+  $0 --package gnostr-bins --features chat,p2p,blossom,blossom-tui --dry-run
 EOF
 }
 

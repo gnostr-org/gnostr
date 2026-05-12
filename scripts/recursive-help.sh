@@ -60,6 +60,7 @@ Examples:
   $0 --output help.json      # Save to file
   $0 --base-cmd gnostr       # Use system gnostr
   $0 --pretty --validate     # Pretty print and validate
+  $0 --base-cmd ./target/debug/gnostr --pretty  # Capture root/chat/p2p/blossom examples
 
 EOF
 }
@@ -108,7 +109,7 @@ parse_arguments() {
 # Build gnostr if requested
 build_gnostr() {
     log_info "Building gnostr in debug mode..."
-    if cargo build; then
+    if bash ./scripts/with-system-rocksdb.sh cargo build; then
         log_success "Build completed successfully"
         return 0
     else

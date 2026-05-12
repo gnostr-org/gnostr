@@ -14,7 +14,7 @@ The P2P module serves as the foundation for decentralized applications within `g
   - **mDNS:** For local peer discovery.
   - **Noise & Yamux:** For secure and multiplexed connections.
   - **TCP & QUIC:** For transport layer protocols.
-- **P2P Chat Application:** A TUI-based chat application (`chat` submodule) that integrates Git commit information and the Nostr protocol for unique messaging and identity.
+- **P2P Chat Application:** A TUI-based chat application (`chat` submodule) that integrates Git commit information and the Nostr protocol for unique messaging and identity. Chat now boots an in-process relay-capable peer during session startup, and `--headless`/`--oneshot` flows wait for a connected peer before publishing.
 - **Distributed Key-Value Store (KVS):** Provides functionalities for storing and retrieving data in a decentralized manner using Kademlia DHT.
 - **Git Integration & Publishing:** Tools to publish Git repository data (commits, diffs, tags) to the P2P network, enabling decentralized version control information sharing.
 - **Command-Line Interface (CLI) Tools:** Various subcommands and arguments for interacting with P2P functionalities, managing network configurations, and performing Kademlia operations.
@@ -25,9 +25,9 @@ The P2P module serves as the foundation for decentralized applications within `g
 - **`args.rs`**: Defines command-line argument structures (`Args`) for configuring P2P tools and Git-related operations.
 - **`behaviour.rs`**: Implements the `NetworkBehaviour` trait, combining various `libp2p` behaviors (Gossipsub, Kademlia, mDNS, Identify, Rendezvous, Ping) into a single, cohesive network behavior for the `gnostr` P2P node.
 - **`chat/`**: A submodule dedicated to the P2P chat application.
-  - **`chat/mod.rs`**: The main entry point for the chat application, handling CLI arguments, Nostr integration, Git commit serialization/deserialization, key generation from commit hashes, and orchestrating the TUI and P2P event loop.
+  - **`chat/mod.rs`**: The main entry point for the chat application, handling CLI arguments, Nostr integration, Git commit serialization/deserialization, key generation from commit hashes, and orchestrating the TUI, local relay startup, and P2P event loop.
   - **`chat/msg.rs`**: Defines the `Msg` struct and `MsgKind` enum for chat messages, including formatting and styling for the TUI.
-  - **`chat/p2p.rs`**: Manages the `libp2p` swarm specifically for the chat application, handling message publishing via Gossipsub and peer discovery via mDNS.
+  - **`chat/p2p.rs`**: Manages the `libp2p` swarm specifically for the chat application, handling message publishing via Gossipsub, peer discovery via mDNS, and the local relay-capable service used by headless and oneshot chat runs.
   - **`chat/ui.rs`**: Implements the Text User Interface (TUI) for the chat application using `ratatui`, managing input, message display, and user interactions.
   - **`chat/tests/`**: Contains unit and integration tests for the chat module.
 - **`command_handler.rs`**: Processes user input commands for interacting with the `libp2p` swarm, primarily for Kademlia DHT operations (GET, PUT, PROVIDE) and Gossipsub topic subscriptions.

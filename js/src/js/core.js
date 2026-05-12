@@ -117,16 +117,7 @@ async function update_contacts() {
 }
 
 async function sign_event(ev) {
-	if (!(window.nostr && window.nostr.signEvent)) {
-		console.error("window.nostr.signEvent is unsupported");
-		return;
-	}
-	const signed = await window.nostr.signEvent(ev)
-	if (typeof signed === 'string') {
-		ev.sig = signed
-		return ev
-	}
-	return signed
+	return await gnostrBrowserNostr.signEvent(ev);
 }
 
 async function create_deletion_event(pubkey, target, content="") {

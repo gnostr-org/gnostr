@@ -81,3 +81,27 @@ fn test_justfile_generation() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+#[ignore]
+#[serial]
+fn test_existing_makefile_is_not_clobbered() -> Result<()> {
+    let temp_dir = tempdir()?;
+    let temp_path = temp_dir.path();
+
+    let script_path = temp_path.join("make_just.sh");
+    fs::copy("make_just.sh", &script_path)?;
+    Command::new("chmod").arg("+x").arg(&script_path).status()?;
+
+    let makefile_path = temp_path.join("Makefile");
+    fs::write(&makefile_path, "preserve-me:\n\t@echo keep\n")?;
+
+    let output = Command::new(&script_path)
+        .current_dir(temp_path)
+        .output()?;
+
+    assert!(output.status.success());
+    assert_eq!(fs::read_to_string(&makefile_path)?, "preserve-me:\n\t@echo keep\n");
+
+    Ok(())
+}

@@ -6,6 +6,7 @@
 //! not depend on `p2p`, or the workspace will cycle.
 //!
 //! The browser-side pure JavaScript implementation lives under `src/js/`.
+//#![feature(trivial_bounds)]
 
 extern crate gnostr_asyncgit as git2;
 
@@ -31,6 +32,7 @@ pub mod js;
 pub mod crawler_broadcast;
 pub mod message;
 pub mod relay_bridge;
+pub mod time;
 pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
@@ -104,7 +106,7 @@ mod tests {
 pub mod p2p {
     pub use crate::{
         args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
-        keypair_from_seed, lookup, message, network_config, opt, relay_bridge,
+        keypair_from_seed, lookup, message, network_config, opt, relay_bridge, time,
         crawler_broadcast, swarm_builder, utils,
     };
 }

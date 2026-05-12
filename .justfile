@@ -4,6 +4,9 @@ default:
 help:
   @make help
 
+rm_cargo_lock:
+  @make rm_cargo_lock
+
 all:
   @make all
 
@@ -61,6 +64,9 @@ cargo-test--ignored:
 cargo-test-workspace:
   @make cargo-test-workspace
 
+test:
+  @make test
+
 cargo-test-nightly:
   @make cargo-test-nightly
 
@@ -75,6 +81,9 @@ cargo-clippy-workspace:
 
 cargo-clippy-fix-workspace:
   @make cargo-clippy-fix-workspace
+
+clippy:
+  @make clippy
 
 cargo-report:
   @make cargo-report

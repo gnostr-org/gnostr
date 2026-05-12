@@ -169,7 +169,7 @@ pub use http::Uri;
 pub use lazy_static::lazy_static;
 use log::debug;
 // pub //use gnostr_asyncgit::types::RelayMessageV5;
-pub use nostr_sdk_0_32_0::prelude::rand;
+pub use nostr_sdk_0_34_0::secp256k1::rand;
 pub use tokio::sync::mpsc::{Receiver, Sender};
 pub use tokio_tungstenite::{WebSocketStream, connect_async, tungstenite::Message};
 //use tokio_tungstenite::WebSocketStream;

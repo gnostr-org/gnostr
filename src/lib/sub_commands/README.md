@@ -7,6 +7,7 @@ This module contains various subcommands for interacting with the Nostr protocol
 - **`award_badge`**: Awards a badge to specified public keys by creating and publishing a Nostr event.
 - **`broadcast_events`**: Broadcasts multiple Nostr events from a JSON file to specified relays.
 - **`convert_key`**: Converts Nostr keys between bech32 and hex formats.
+- **`chat`**: Runs the peer-to-peer chat client, including `--headless` background mode and `--oneshot` message delivery.
 - **`create_badge`**: Creates and publishes a Nostr badge definition event.
 - **`create_public_channel`**: Creates and publishes a Nostr channel metadata event.
 - **`custom_event`**: Creates and publishes a custom Nostr event with a specified kind, content, and tags.

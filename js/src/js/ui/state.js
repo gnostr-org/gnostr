@@ -1389,7 +1389,7 @@ async function onclick_send_dm(ev) {
 		pubkey,
 		kind: KIND_DM,
 		created_at: new_creation_time(),
-		content: await window.nostr.nip04.encrypt(target, el_input.value),
+		content: await gnostrBrowserNostr.encrypt(target, el_input.value),
 		tags: [["p", target]],
 	};
 	post.id = await nostrjs.calculate_id(post);

@@ -15,6 +15,9 @@ use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
 
+#[cfg(feature = "git")]
+use gnostr_ngit as ngit;
+
 fn install_rustls_crypto_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
@@ -188,9 +191,15 @@ pub async fn run_with_cli(mut gnostr_cli_args: GnostrCli) -> anyhow::Result<()> 
                 .await
                 .map_err(|e| anyhow!("Error in legit subcommand: {}", e))
         }
+        #[cfg(feature = "git")]
         Some(GnostrCommands::Ngit(sub_command_args)) => ngit::run_cli(sub_command_args)
             .await
             .map_err(|e| anyhow!("Error in ngit subcommand: {}", e)),
+        #[cfg(not(feature = "git"))]
+        Some(GnostrCommands::Ngit(sub_command_args)) => {
+            let _ = sub_command_args;
+            Err(anyhow!("ngit subcommand is not enabled in this build"))
+        }
         Some(GnostrCommands::Server(sub_command_args)) => {
             #[cfg(feature = "blossom")]
             {

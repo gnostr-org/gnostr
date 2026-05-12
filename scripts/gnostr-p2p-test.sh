@@ -40,7 +40,7 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-cargo build -p gnostr-p2p --bins --quiet
+bash ./scripts/with-system-rocksdb.sh cargo build -p gnostr-p2p --bins --quiet
 
 relay_log="$logs_dir/relay.log"
 (
