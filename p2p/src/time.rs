@@ -597,4 +597,122 @@ mod tests {
             state.slew_rate
         );
     }
+
+    #[test]
+    fn test_malicious_peers_are_outvoted_during_quorum_rotation() {
+        let checkpoint = NamedTempFile::new().expect("temp checkpoint");
+        let checkpoint_path = checkpoint.path().to_string_lossy().to_string();
+        let mut state = SyncState::new(1, &checkpoint_path);
+        let mut last_time = state.get_logical_utc();
+        let mut last_round_peer_names: HashSet<&str> = HashSet::new();
+
+        println!(
+            "initial logical utc: {} status={:?} slew_rate={:.6}",
+            last_time.to_rfc3339(),
+            state.status,
+            state.slew_rate
+        );
+
+        let rounds: Vec<(&str, Vec<(&str, &'static str, Estimation)>)> = vec![
+            (
+                "quorum-forms",
+                vec![
+                    ("honest-alpha", "honest", Estimation { d: 0.005, a: 0.001 }),
+                    ("honest-beta", "honest", Estimation { d: 0.005, a: 0.001 }),
+                    ("honest-gamma", "honest", Estimation { d: 0.007, a: 0.001 }),
+                    ("malicious-red", "malicious", Estimation { d: 0.250, a: 0.001 }),
+                    ("malicious-blue", "malicious", Estimation { d: -0.200, a: 0.001 }),
+                ],
+            ),
+            (
+                "malicious-actors-rotate-out",
+                vec![
+                    ("honest-beta", "honest", Estimation { d: 0.005, a: 0.001 }),
+                    ("honest-gamma", "honest", Estimation { d: 0.007, a: 0.001 }),
+                    ("honest-delta", "honest", Estimation { d: 0.005, a: 0.001 }),
+                    ("honest-epsilon", "honest", Estimation { d: 0.007, a: 0.001 }),
+                    ("malicious-blue", "malicious", Estimation { d: -0.200, a: 0.001 }),
+                ],
+            ),
+            (
+                "malicious-actors-replaced",
+                vec![
+                    ("honest-gamma", "honest", Estimation { d: 0.005, a: 0.001 }),
+                    ("honest-delta", "honest", Estimation { d: 0.005, a: 0.001 }),
+                    ("honest-epsilon", "honest", Estimation { d: 0.007, a: 0.001 }),
+                    ("honest-zeta", "honest", Estimation { d: 0.007, a: 0.001 }),
+                    ("honest-eta", "honest", Estimation { d: 0.007, a: 0.001 }),
+                ],
+            ),
+        ];
+
+        for (label, peers) in rounds {
+            let current_peer_names: HashSet<&str> = peers.iter().map(|(peer, _, _)| *peer).collect();
+            let entered: Vec<&str> = current_peer_names
+                .difference(&last_round_peer_names)
+                .copied()
+                .collect();
+            let left: Vec<&str> = last_round_peer_names
+                .difference(&current_peer_names)
+                .copied()
+                .collect();
+
+            println!(
+                "round {label}: peers={} quorum_needed={} entered={entered:?} left={left:?}",
+                peers.len(),
+                2 * state.f + 1
+            );
+            last_round_peer_names = current_peer_names;
+
+            for (peer, role, estimate) in &peers {
+                println!(
+                    "peer sample: {peer} role={role} -> d={:.6}s a={:.6}s",
+                    estimate.d, estimate.a
+                );
+            }
+
+            let estimates: Vec<Estimation> = peers.iter().map(|(_, _, estimate)| *estimate).collect();
+            let mut d_overs: Vec<f64> = estimates.iter().map(|e| e.d + e.a).collect();
+            let mut d_unders: Vec<f64> = estimates.iter().map(|e| e.d - e.a).collect();
+            d_overs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            d_unders.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+            let m_min = d_overs[state.f];
+            let m_max = d_unders[estimates.len() - 1 - state.f];
+            println!(
+                "consensus window: m_min={:.6}s m_max={:.6}s",
+                m_min, m_max
+            );
+
+            state.apply_bft_sync(estimates);
+
+            let now = state.get_logical_utc();
+            let logical_delta = now - last_time;
+            println!(
+                "after round {label}: utc={} delta={}ms status={:?} slew_rate={:.6} pending_alert={:?}",
+                now.to_rfc3339(),
+                logical_delta.num_milliseconds(),
+                state.status,
+                state.slew_rate,
+                state.pending_alert
+            );
+
+            assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+            assert!(state.pending_alert.is_none());
+            assert!((state.slew_rate - 1.0).abs() <= 0.005);
+            assert!(now > last_time);
+            last_time = now;
+        }
+
+        for malicious in ["malicious-red", "malicious-blue"] {
+            assert!(!last_round_peer_names.contains(&malicious));
+        }
+
+        println!(
+            "final consensus utc: {} status={:?} slew_rate={:.6}",
+            last_time.to_rfc3339(),
+            state.status,
+            state.slew_rate
+        );
+    }
 }
