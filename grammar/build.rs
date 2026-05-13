@@ -256,6 +256,11 @@ fn main() -> anyhow::Result<()> {
             // Linux CI links the generated scanner sources against libstdc++.
             println!("cargo::rustc-link-lib=stdc++");
         }
+        Ok("windows") => {
+            // Windows MSVC targets need the C++ runtime for generated scanner code.
+            println!("cargo::rustc-link-lib=dylib=msvcp140");
+            println!("cargo::rustc-link-lib=dylib=vcruntime140");
+        }
         _ => {}
     }
     //println!("cargo:warning=DEBUG: gnostr-grammar build.rs is executing.");
