@@ -29,6 +29,15 @@ export RUST_LOG="${RUST_LOG:+$RUST_LOG,}info,ureq=off,serial_test=off,mio=off,tu
 
 pids=()
 
+launch() {
+  local log_file="$1"
+  shift
+  (
+    "$@"
+  ) >"$log_file" 2>&1 &
+  pids+=("$!")
+}
+
 cleanup() {
   local pid
   for pid in "${pids[@]:-}"; do
@@ -42,19 +51,14 @@ trap cleanup EXIT INT TERM
 
 bash ./scripts/with-system-rocksdb.sh cargo build -p gnostr-p2p --bins --quiet
 
-relay_log="$logs_dir/relay.log"
-(
+start_relay() {
   export XDG_CONFIG_HOME="$relay_home"
   ./target/debug/gnostr-p2p-relay-server \
     --secret-key-seed "$(gnostr --hash "gnostr-p2p-relay-server")" \
     --port 0
-) >"$relay_log" 2>&1 &
-pids+=("$!")
+}
 
-sleep 2
-
-subscriber_one_log="$logs_dir/subscriber-one.log"
-(
+start_subscriber_one() {
   export XDG_CONFIG_HOME="$subscriber_one_home"
   {
     printf 'TOPIC crawler/relay-buckets/42\n'
@@ -63,11 +67,9 @@ subscriber_one_log="$logs_dir/subscriber-one.log"
   } | ./target/debug/gnostr-p2p \
     --secret-key-seed "$(gnostr --hash "gnostr-p2p-subscriber-one")" \
     --port 0
-) >"$subscriber_one_log" 2>&1 &
-pids+=("$!")
+}
 
-subscriber_two_log="$logs_dir/subscriber-two.log"
-(
+start_subscriber_two() {
   export XDG_CONFIG_HOME="$subscriber_two_home"
   {
     printf 'TOPIC crawler/relay-buckets/42\n'
@@ -76,13 +78,9 @@ subscriber_two_log="$logs_dir/subscriber-two.log"
   } | ./target/debug/gnostr-p2p \
     --secret-key-seed "$(gnostr --hash "gnostr-p2p-subscriber-two")" \
     --port 0
-) >"$subscriber_two_log" 2>&1 &
-pids+=("$!")
+}
 
-sleep 5
-
-publisher_log="$logs_dir/publisher.log"
-(
+start_publisher() {
   export XDG_CONFIG_HOME="$publisher_home"
   {
     sleep 5
@@ -92,12 +90,27 @@ publisher_log="$logs_dir/publisher.log"
   } | ./target/debug/gnostr-p2p \
     --secret-key-seed "$(gnostr --hash "gnostr-p2p-publisher")" \
     --port 0
-) >"$publisher_log" 2>&1 &
-pids+=("$!")
+}
 
-wait "${pids[1]}"
-wait "${pids[2]}"
-wait "${pids[3]}"
+relay_log="$logs_dir/relay.log"
+launch "$relay_log" start_relay
+
+sleep 2
+
+subscriber_one_log="$logs_dir/subscriber-one.log"
+launch "$subscriber_one_log" start_subscriber_one
+
+subscriber_two_log="$logs_dir/subscriber-two.log"
+launch "$subscriber_two_log" start_subscriber_two
+
+sleep 5
+
+publisher_log="$logs_dir/publisher.log"
+launch "$publisher_log" start_publisher
+
+for pid in "${pids[@]}"; do
+  wait "$pid"
+done
 
 grep -F "broadcasted 1 crawler relay bucket" "$publisher_log" >/dev/null
 grep -F "Received message:" "$subscriber_one_log" >/dev/null
