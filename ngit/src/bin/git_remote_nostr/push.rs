@@ -218,7 +218,7 @@ pub async fn run_push(
                                 update_remote_refs_pushed(
                                     &git_repo.git_repo,
                                     refspec,
-                                    git_server_url,
+                                    &repo_ref.to_nostr_git_url(&None).to_string(),
                                 )
                                 .context("could not update remote_ref locally")?;
                             }
