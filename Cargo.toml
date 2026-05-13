@@ -970,6 +970,7 @@ actix-web-actors = { path = "vendor/actix-web-actors" }
 curve25519-dalek = { path = "vendor/curve25519-dalek" }
 ed25519-dalek = { path = "vendor/ed25519-dalek" }
 lindera-dictionary = { path = "vendor/lindera-dictionary" }
+nostr-relay = { path = "vendor/nostr-relay" }
 gitui = { path = "vendor/gitui" }
 
 # The profile that 'dist' will build with

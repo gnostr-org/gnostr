@@ -23,6 +23,11 @@ The current workspace keeps that dependency on the vendored path so the
 truncated responses while building the `lindera-unidic` and `lindera-ko-dic`
 dictionary crates used through `nostr-db` / `nostr-relay`.
 
+## nostr-relay
+
+`nostr-relay` is vendored so the workspace can disable `nostr-db` default
+features and avoid pulling the Lindera search dictionaries during install.
+
 ## curve25519-dalek
 
 `vendor/curve25519-dalek` is a local patch of the `5.0.0-pre.1` prerelease

@@ -26,6 +26,9 @@ vendor/*/**
 !vendor/lindera-dictionary
 !vendor/lindera-dictionary/*
 !vendor/lindera-dictionary/*/**
+!vendor/nostr-relay
+!vendor/nostr-relay/*
+!vendor/nostr-relay/*/**
 !vendor/gitui
 !vendor/gitui/*
 !vendor/gitui/*/**
