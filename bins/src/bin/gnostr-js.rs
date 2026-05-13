@@ -1,5 +1,5 @@
+#[cfg(all(feature = "relay", feature = "crawler"))]
 use clap::{Parser, Subcommand};
-
 #[cfg(all(feature = "relay", feature = "crawler"))]
 use gnostr_relay::cli::RelayCli;
 #[cfg(all(feature = "relay", feature = "crawler"))]
@@ -13,6 +13,7 @@ use gnostr_js::utils::detach::{
     spawn_detached_current_exe_named_with_env,
 };
 
+#[cfg(all(feature = "relay", feature = "crawler"))]
 const DETACHED_ENV: &str = "GNOSTR_JS_RELAY_DETACHED";
 
 #[cfg(all(feature = "relay", feature = "crawler"))]
