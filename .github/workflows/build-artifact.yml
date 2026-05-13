@@ -133,6 +133,10 @@ jobs:
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-openssl-perl-windows
 
+      - name: Set up MSVC developer command prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Install cross
         if: runner.os == 'Linux'
         uses: taiki-e/install-action@v2
