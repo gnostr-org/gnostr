@@ -18,6 +18,10 @@ inputs:
     description: Install with cargo-binstall if the release installer download fails
     required: false
     default: 'true'
+  github_token:
+    description: GitHub token used for release API and asset downloads
+    required: false
+    default: ''
 
 outputs:
   latest_tag:
@@ -36,8 +40,13 @@ runs:
       run: |
         set -euo pipefail
 
+        auth_header=()
+        if [ -n "${{ inputs.github_token }}" ]; then
+          auth_header=(-H "Authorization: Bearer ${{ inputs.github_token }}")
+        fi
+
         latest_tag="$(
-          curl -fsSL "https://api.github.com/repos/${{ inputs.repository }}/releases/latest" |
+          curl -fsSL "${auth_header[@]}" "https://api.github.com/repos/${{ inputs.repository }}/releases/latest" |
           jq -r '.tag_name'
         )"
 
@@ -60,8 +69,12 @@ runs:
         set -euo pipefail
 
         installer_url="${{ steps.get_latest_release.outputs.installer_url }}"
+        auth_header=()
+        if [ -n "${{ inputs.github_token }}" ]; then
+          auth_header=(-H "Authorization: Bearer ${{ inputs.github_token }}")
+        fi
 
-        if curl --proto '=https' --tlsv1.2 -LsSf "$installer_url" | sh; then
+        if curl --proto '=https' --tlsv1.2 -LsSf "${auth_header[@]}" "$installer_url" | sh; then
           :
         elif [ "${{ inputs.fallback_to_binstall }}" = "true" ]; then
           cargo-binstall gnostr --force -y

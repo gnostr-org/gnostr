@@ -188,6 +188,8 @@ jobs:
 
       - name: Install gnostr (latest release)
         uses: ./.github/actions/get-latest
+        with:
+          github_token: ${{ github.token }}
         #if: runner.os != 'macOS'
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines

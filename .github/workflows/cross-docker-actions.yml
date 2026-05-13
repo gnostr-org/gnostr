@@ -147,6 +147,7 @@ jobs:
           asset_name: gnostr-installer.sh
           install: 'true'
           fallback_to_binstall: 'false'
+          github_token: ${{ github.token }}
 
       - name: Install gnostr via cargo-binstall
         if: ${{ inputs.install_method == 'cargo-binstall' }}
