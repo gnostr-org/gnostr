@@ -17,10 +17,11 @@ mod tests {
     use super::*;
     use gnostr_asyncgit::{
         sync::{add_note, commit, default_notes_ref, show_note, stage_add_file, RepoPath},
-        types::{generate_git_note_event, PrivateKey},
+        types::{generate_git_note_event, PrivateKey, Unixtime},
     };
+    use crate::time::{ClockStatus, Estimation, SyncState};
     use serde_json;
-    use tempfile::tempdir;
+    use tempfile::{tempdir, NamedTempFile};
 
     fn real_trace_fixture() -> (GitNote, Event, SubscriptionId, Filter) {
         let temp_dir = tempdir().expect("temp repo");
@@ -82,6 +83,21 @@ mod tests {
         let subscription_id = SubscriptionId(event.id.as_hex_string());
 
         (git_note, event, subscription_id, filter)
+    }
+
+    fn consensus_time(
+        state: &mut SyncState,
+        estimates: Vec<Estimation>,
+    ) -> chrono::DateTime<chrono::Utc> {
+        state.apply_bft_sync(estimates);
+        let logical = state.get_logical_utc();
+        println!(
+            "quorum utc consensus: {} status={:?} slew_rate={:.6}",
+            logical.to_rfc3339(),
+            state.status,
+            state.slew_rate
+        );
+        logical
     }
 
     #[test]
@@ -272,5 +288,132 @@ mod tests {
             other => panic!("unexpected relay message: {:?}", other),
         }
         assert_eq!(decoded_client, client_message);
+    }
+
+    #[test]
+    fn nip34_git_note_created_at_tracks_quorum_consensus_time() {
+        let (git_note, _, _, _) = real_trace_fixture();
+        let checkpoint = NamedTempFile::new().expect("temp checkpoint");
+        let checkpoint_path = checkpoint.path().to_string_lossy().to_string();
+        let mut state = SyncState::new(1, &checkpoint_path);
+        let private_key = PrivateKey::generate();
+
+        println!("==================== nip34 quorum created-at ====================");
+        println!(
+            "starting state: status={:?} slew_rate={:.6}",
+            state.status, state.slew_rate
+        );
+
+        let consensus = consensus_time(
+            &mut state,
+            vec![
+                Estimation { d: 0.005, a: 0.001 },
+                Estimation { d: 0.005, a: 0.001 },
+                Estimation { d: 0.007, a: 0.001 },
+                Estimation { d: 0.007, a: 0.001 },
+                Estimation { d: 0.250, a: 0.001 },
+            ],
+        );
+
+        let mut quorum_note = git_note.clone();
+        quorum_note.committer_time = consensus.timestamp();
+        let event = generate_git_note_event(&quorum_note, &private_key).expect("git note event");
+
+        println!(
+            "quorum consensus event created_at={} consensus={}",
+            event.created_at,
+            consensus.timestamp()
+        );
+        println!("quorum consensus event tags:");
+        for tag in &event.tags {
+            println!("  - {}", tag.0.join(":"));
+        }
+
+        assert_eq!(event.kind, EventKind::Patches);
+        assert_eq!(event.created_at, Unixtime(consensus.timestamp()));
+        assert_eq!(event.content, quorum_note.message);
+        assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+        assert!(state.pending_alert.is_none());
+    }
+
+    #[test]
+    fn nip34_git_note_created_at_tracks_quorum_rotation_time() {
+        let (git_note, _, _, _) = real_trace_fixture();
+        let checkpoint = NamedTempFile::new().expect("temp checkpoint");
+        let checkpoint_path = checkpoint.path().to_string_lossy().to_string();
+        let mut state = SyncState::new(1, &checkpoint_path);
+        let private_key = PrivateKey::generate();
+        let mut last_created_at = None;
+
+        println!("==================== nip34 quorum rotation created-at ====================");
+
+        let rounds = [
+            (
+                "quorum-forms",
+                vec![
+                    Estimation { d: 0.005, a: 0.001 },
+                    Estimation { d: 0.005, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                    Estimation { d: 0.250, a: 0.001 },
+                ],
+            ),
+            (
+                "honest-rotation",
+                vec![
+                    Estimation { d: 0.005, a: 0.001 },
+                    Estimation { d: 0.005, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                    Estimation { d: 0.250, a: 0.001 },
+                ],
+            ),
+            (
+                "replacement-complete",
+                vec![
+                    Estimation { d: 0.005, a: 0.001 },
+                    Estimation { d: 0.005, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                    Estimation { d: 0.007, a: 0.001 },
+                ],
+            ),
+        ];
+
+        for (label, estimates) in rounds {
+            println!("round {label}: {} samples", estimates.len());
+            for (idx, estimate) in estimates.iter().enumerate() {
+                println!(
+                    "peer sample {idx}: d={:.6}s a={:.6}s",
+                    estimate.d, estimate.a
+                );
+            }
+
+            let consensus = consensus_time(&mut state, estimates);
+            let mut quorum_note = git_note.clone();
+            quorum_note.committer_time = consensus.timestamp();
+            let event = generate_git_note_event(&quorum_note, &private_key).expect("git note event");
+
+            println!(
+                "round {label}: event created_at={} consensus={}",
+                event.created_at,
+                consensus.timestamp()
+            );
+            println!(
+                "round {label}: status={:?} slew_rate={:.6} pending_alert={:?}",
+                state.status, state.slew_rate, state.pending_alert
+            );
+
+            assert_eq!(event.kind, EventKind::Patches);
+            assert_eq!(event.created_at, Unixtime(consensus.timestamp()));
+            assert_eq!(event.content, quorum_note.message);
+            assert!(matches!(state.status, ClockStatus::Synced | ClockStatus::Slewing));
+            assert!(state.pending_alert.is_none());
+
+            if let Some(previous) = last_created_at {
+                assert!(event.created_at >= previous);
+            }
+            last_created_at = Some(event.created_at);
+        }
     }
 }
