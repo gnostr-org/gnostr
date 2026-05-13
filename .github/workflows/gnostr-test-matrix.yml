@@ -222,8 +222,6 @@ jobs:
         #if: runner.os != 'macOS'
         with:
           github_token: ${{ github.token }}
-        with:
-          github_token: ${{ github.token }}
 
       - name: gnostr-weeble/blockheight/blockhash/wobble
         uses: ./.github/actions/gnostr-weeble-wobble
