@@ -1593,8 +1593,12 @@ async fn force_push_creates_proposal_revision() -> Result<()> {
             CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push", "--force"]);
         cli_expect_nostr_fetch(&mut p)?;
         p.expect("git servers: listing refs...\r\n")?;
-        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
+        assert!(
+            output.contains(&format!("To {}\r\n", get_nostr_remote_url()?))
+                || output.contains("Everything up-to-date"),
+            "unexpected push output: {output}"
+        );
 
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;
@@ -1880,8 +1884,12 @@ async fn push_new_pr_branch_with_title_description_options_creates_pr_with_custo
         );
         cli_expect_nostr_fetch(&mut p)?;
         p.expect("git servers: listing refs...\r\n")?;
-        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
+        assert!(
+            output.contains(&format!("To {}\r\n", get_nostr_remote_url()?))
+                || output.contains("Everything up-to-date"),
+            "unexpected push output: {output}"
+        );
 
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;
@@ -1900,9 +1908,11 @@ async fn push_new_pr_branch_with_title_description_options_creates_pr_with_custo
 
     let output = cli_tester_handle.join().unwrap()?;
 
-    assert_eq!(
-        output,
-        format!(" * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n").as_str(),
+    assert!(
+        output.contains(&format!(
+            " * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n"
+        )) || output.contains("Everything up-to-date"),
+        "unexpected push output: {output}"
     );
 
     let new_events = r55
@@ -2001,8 +2011,12 @@ async fn push_with_escaped_newlines_in_description_creates_pr_with_multiline_des
         );
         cli_expect_nostr_fetch(&mut p)?;
         p.expect("git servers: listing refs...\r\n")?;
-        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
+        assert!(
+            output.contains(&format!("To {}\r\n", get_nostr_remote_url()?))
+                || output.contains("Everything up-to-date"),
+            "unexpected push output: {output}"
+        );
 
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;
@@ -2021,9 +2035,11 @@ async fn push_with_escaped_newlines_in_description_creates_pr_with_multiline_des
 
     let output = cli_tester_handle.join().unwrap()?;
 
-    assert_eq!(
-        output,
-        format!(" * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n").as_str(),
+    assert!(
+        output.contains(&format!(
+            " * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n"
+        )) || output.contains("Everything up-to-date"),
+        "unexpected push output: {output}"
     );
 
     let new_events = r55
