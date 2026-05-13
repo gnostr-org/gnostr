@@ -10482,8 +10482,6 @@ dependencies = [
 [[package]]
 name = "lindera-dictionary"
 version = "0.43.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cbb45e81527092e1af24c45bf068376df34faaa9f98d44a99ec59c7edfdb45a"
 dependencies = [
  "anyhow",
  "bincode 2.0.1",
@@ -11884,8 +11882,6 @@ dependencies = [
 [[package]]
 name = "nostr-relay"
 version = "0.4.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47f14e39173a840402b6dc4b6457718d628043d1e061ac87b8a91daea8f12056"
 dependencies = [
  "actix",
  "actix-cors",
