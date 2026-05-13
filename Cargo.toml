@@ -969,6 +969,7 @@ asn1-rs = { path = "vendor/asn1-rs" }
 actix-web-actors = { path = "vendor/actix-web-actors" }
 curve25519-dalek = { path = "vendor/curve25519-dalek" }
 ed25519-dalek = { path = "vendor/ed25519-dalek" }
+lindera-dictionary = { path = "vendor/lindera-dictionary" }
 gitui = { path = "vendor/gitui" }
 
 # The profile that 'dist' will build with
