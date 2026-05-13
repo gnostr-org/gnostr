@@ -95,7 +95,7 @@ mod tests {
             "quorum utc consensus: {} status={:?} slew_rate={:.6}",
             logical.to_rfc3339(),
             state.status,
-            state.slew_rate
+            state.get_metrics().slew_rate
         );
         logical
     }
@@ -301,7 +301,8 @@ mod tests {
         println!("==================== nip34 quorum created-at ====================");
         println!(
             "starting state: status={:?} slew_rate={:.6}",
-            state.status, state.slew_rate
+            state.status,
+            state.get_metrics().slew_rate
         );
 
         let consensus = consensus_time(
@@ -401,7 +402,9 @@ mod tests {
             );
             println!(
                 "round {label}: status={:?} slew_rate={:.6} pending_alert={:?}",
-                state.status, state.slew_rate, state.pending_alert
+                state.status,
+                state.get_metrics().slew_rate,
+                state.pending_alert
             );
 
             assert_eq!(event.kind, EventKind::Patches);
