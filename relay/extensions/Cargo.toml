@@ -12,7 +12,7 @@ keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
 categories = ["network-programming", "web-programming"]
 
 [features]
-default = ["metrics", "rate_limiter", "count", "search"]
+default = ["metrics", "rate_limiter", "count"]
 search = ["nostr-extensions/search"]
 metrics = ["nostr-extensions/metrics"]
 rate_limiter = ["nostr-extensions/rate_limiter"]
