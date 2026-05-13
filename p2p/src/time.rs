@@ -146,6 +146,16 @@ impl SyncState {
         current
     }
 
+    /// Get current clock metrics without mutating the state.
+    pub fn get_metrics(&self) -> ClockMetrics {
+        ClockMetrics {
+            slew_rate: self.slew_rate,
+            offset_ms: (self.last_emitted_utc - Utc::now()).num_milliseconds(),
+            status: self.status.clone(),
+            last_sync_secs_ago: self.last_sync_success.elapsed().as_secs(),
+        }
+    }
+
     /// Apply Byzantine Fault Tolerant synchronization from peer estimates.
     pub fn apply_bft_sync(&mut self, estimates: Vec<Estimation>) {
         let count = estimates.len();
