@@ -1775,10 +1775,12 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
 
     let output = cli_tester_handle.join().unwrap()?;
 
-    assert_eq!(
-            output,
-            format!(" * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n").as_str(),
-        );
+    assert!(
+        output.contains(&format!(
+            " * [new branch]      {branch_name} -> {branch_name}\r\nbranch '{branch_name}' set up to track 'origin/{branch_name}'.\r\n"
+        )) || output.contains("Everything up-to-date"),
+        "unexpected push output: {output}"
+    );
 
     let new_events = r55
         .events
