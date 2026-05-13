@@ -220,6 +220,10 @@ jobs:
       - name: Install gnostr (latest release)
         uses: ./.github/actions/get-latest
         #if: runner.os != 'macOS'
+        with:
+          github_token: ${{ github.token }}
+        with:
+          github_token: ${{ github.token }}
 
       - name: gnostr-weeble/blockheight/blockhash/wobble
         uses: ./.github/actions/gnostr-weeble-wobble
