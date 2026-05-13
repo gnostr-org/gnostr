@@ -26,6 +26,8 @@ vendor/*/**
 !vendor/gitui
 !vendor/gitui/*
 !vendor/gitui/*/**
+!vendor/ngit-cli
+!vendor/ngit-cli/**
 
 index.html
 !web/templates/index.html
