@@ -22,4 +22,4 @@ publish-jobs = ["homebrew"]
 # Whether to install an updater program
 install-updater = true
 
-allow-dirty = ["CI"]
+allow-dirty = ["ci"]
