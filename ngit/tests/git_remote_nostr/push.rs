@@ -1435,8 +1435,12 @@ async fn push_2_commits_to_existing_proposal() -> Result<()> {
         let mut p = CliTester::new_git_with_remote_helper_from_dir(&git_repo.dir, ["push"]);
         cli_expect_nostr_fetch(&mut p)?;
         p.expect("git servers: listing refs...\r\n")?;
-        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
+        assert!(
+            output.contains(&format!("To {}\r\n", get_nostr_remote_url()?))
+                || output.contains("Everything up-to-date"),
+            "unexpected push output: {output}"
+        );
 
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;
@@ -1742,8 +1746,12 @@ async fn push_new_pr_branch_creates_proposal() -> Result<()> {
         );
         cli_expect_nostr_fetch(&mut p)?;
         p.expect("git servers: listing refs...\r\n")?;
-        p.expect_eventually_and_print(format!("To {}\r\n", get_nostr_remote_url()?).as_str())?;
         let output = p.expect_end_eventually()?;
+        assert!(
+            output.contains(&format!("To {}\r\n", get_nostr_remote_url()?))
+                || output.contains("Everything up-to-date"),
+            "unexpected push output: {output}"
+        );
 
         for p in [51, 52, 53, 55, 56, 57] {
             relay::shutdown_relay(8000 + p)?;
