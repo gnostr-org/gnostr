@@ -2,10 +2,10 @@
 //! metadata serving.
 //!
 //! It re-exports the shared asyncgit-backed Nostr types for the query path,
-//! but it must stay upstream of `gnostr-p2p` in the workspace graph because
-//! `gnostr-p2p` already depends on `gnostr-crawler` for relay bucket helpers.
-//! If a query type needs to be shared with chat, add it to `p2p`'s reexports
-//! rather than depending on `p2p` here.
+//! while `gnostr-p2p` keeps its relay bucket helpers local so the graph stays
+//! one-way: `types -> asyncgit -> crawler/p2p`.
+//! If a query type needs to be shared with chat, add it to `types` or the
+//! asyncgit-backed wire surface rather than depending on `p2p` here.
  
 pub mod processor;
 pub mod api;
