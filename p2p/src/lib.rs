@@ -30,6 +30,7 @@ pub mod bridge;
 pub mod js;
 pub mod crawler_broadcast;
 pub mod message;
+pub mod repo_state;
 pub mod relay_bridge;
 pub mod relay_paths;
 pub mod time;
@@ -74,6 +75,7 @@ fn seed_bytes(seed: &str) -> [u8; 32] {
 pub use bridge::{asset_content_type, asset_response, shell_html};
 pub use js::get_js_assets;
 pub use message::*;
+pub use repo_state::{RepoStateQuorum, RepoStateRefs, RepoStateSnapshot};
 pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeSession, NostrRelayConnection};
 pub use template_html::{get_template_assets, TemplateHtml};
 
@@ -106,7 +108,7 @@ mod tests {
 pub mod p2p {
     pub use crate::{
         args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
-        keypair_from_seed, lookup, message, network_config, opt, relay_bridge, relay_paths, time,
+        keypair_from_seed, lookup, message, network_config, opt, repo_state, relay_bridge, relay_paths, time,
         crawler_broadcast, swarm_builder, utils,
     };
 }
