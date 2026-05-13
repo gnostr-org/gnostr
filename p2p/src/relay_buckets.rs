@@ -1,9 +1,4 @@
-use std::{
-    collections::BTreeSet,
-    error::Error,
-    fs,
-    path::Path,
-};
+use std::{collections::BTreeSet, error::Error, fs, path::Path};
 
 use libp2p::{
     kad::{Quorum, Record, RecordKey},
@@ -12,6 +7,7 @@ use libp2p::{
 use serde::{Deserialize, Serialize};
 
 use crate::behaviour::Behaviour;
+use crate::relay_paths::{load_relays_or_bootstrap, websocket_http_url};
 
 const BUCKET_KEY_PREFIX: &str = "gnostr/relay-buckets";
 const ROOT_BUCKET_NAME: &str = "relays";
@@ -23,10 +19,10 @@ pub struct RelayBucketSnapshot {
 }
 
 pub fn collect_local_snapshots() -> std::io::Result<Vec<RelayBucketSnapshot>> {
-    let config_dir = gnostr_crawler::relays::get_config_dir_path();
+    let config_dir = crate::relay_paths::get_config_dir_path();
     let mut snapshots = Vec::new();
 
-    let root_relays = gnostr_crawler::relay_io::load_relays_or_bootstrap();
+    let root_relays = load_relays_or_bootstrap();
     snapshots.push(RelayBucketSnapshot {
         bucket: ROOT_BUCKET_NAME.to_string(),
         relays: dedup_sorted(root_relays),
@@ -101,7 +97,7 @@ pub fn collect_bucket_relays(bucket_dir: impl AsRef<Path>) -> std::io::Result<Ve
         }
 
         if let Some(host) = name.strip_suffix(".json") {
-            relays.insert(gnostr_crawler::relay_fetch::websocket_http_url(host));
+            relays.insert(websocket_http_url(host));
         }
     }
 

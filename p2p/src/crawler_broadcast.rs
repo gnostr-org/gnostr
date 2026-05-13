@@ -8,6 +8,8 @@ use libp2p::gossipsub::IdentTopic;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
+use crate::relay_paths::get_config_dir_path;
+
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RelayBucket {
     pub nip: i32,
@@ -59,7 +61,7 @@ pub fn load_relay_buckets(config_dir: &Path) -> Result<Vec<RelayBucket>, Box<dyn
 }
 
 pub fn load_crawler_relay_buckets() -> Result<Vec<RelayBucket>, Box<dyn Error>> {
-    let config_dir = gnostr_crawler::relays::get_config_dir_path();
+    let config_dir = get_config_dir_path();
     load_relay_buckets(&config_dir)
 }
 
@@ -166,7 +168,7 @@ mod tests {
         let _home_guard = EnvGuard::set("HOME", home_dir.path());
         let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", &config_dir);
 
-        let crawler_config_dir = gnostr_crawler::relays::get_config_dir_path();
+        let crawler_config_dir = get_config_dir_path();
         let bucket_dir = crawler_config_dir.join("23");
         create_dir_all(&bucket_dir).expect("bucket dir");
         write(

@@ -432,7 +432,7 @@ mod tests {
         let _home_guard = EnvGuard::set("HOME", home_dir.path());
         let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", &config_dir);
 
-        let crawler_config_dir = gnostr_crawler::relays::get_config_dir_path();
+        let crawler_config_dir = crate::relay_paths::get_config_dir_path();
         let bucket_dir = crawler_config_dir.join("34");
         fs::create_dir_all(&bucket_dir).expect("bucket dir");
 
