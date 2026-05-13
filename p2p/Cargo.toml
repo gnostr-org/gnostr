@@ -31,11 +31,11 @@ clap = { version = "4.5.41", features = [
 ] }
 futures = "0.3.31"
 futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=949277.1873.717729", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=949279.1873.715472", default-features = false, features = [
   "nostr",
   "vendor-openssl",
 ] }
-gnostr-js = { path = "../js", package = "gnostr-js", version = ">=949277.1873.717729" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = ">=949279.1873.715472" }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",
