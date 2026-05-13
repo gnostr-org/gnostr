@@ -23,6 +23,9 @@ vendor/*/**
 !vendor/actix-http-test
 !vendor/actix-http-test/*
 !vendor/actix-http-test/*/**
+!vendor/lindera-dictionary
+!vendor/lindera-dictionary/*
+!vendor/lindera-dictionary/*/**
 !vendor/gitui
 !vendor/gitui/*
 !vendor/gitui/*/**

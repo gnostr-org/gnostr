@@ -17,6 +17,12 @@ material.
 The current workspace keeps that dependency on the vendored path so the
 `ed25519-dalek` patch above is applied consistently during builds.
 
+## lindera-dictionary
+
+`lindera-dictionary` is vendored so the Lindera asset fetch path can retry
+truncated responses while building the `lindera-unidic` and `lindera-ko-dic`
+dictionary crates used through `nostr-db` / `nostr-relay`.
+
 ## curve25519-dalek
 
 `vendor/curve25519-dalek` is a local patch of the `5.0.0-pre.1` prerelease
