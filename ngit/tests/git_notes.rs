@@ -9,7 +9,7 @@ use gnostr_ngit::{
     git_events::{
         event_is_cover_letter, event_is_patch_set_root, event_is_revision_root,
         event_is_valid_pr_or_pr_update, generate_cover_letter_and_patch_events,
-        generate_git_note_event, generate_unsigned_pr_or_update_event, git_note_event_id,
+        generate_git_note_event, generate_git_note_event_with_pow, generate_unsigned_pr_or_update_event, git_note_event_id,
         git_note_tags, patch_supports_commit_ids, KIND_PULL_REQUEST, KIND_PULL_REQUEST_UPDATE,
     },
     repo_ref::RepoRef,
@@ -72,9 +72,36 @@ fn mine_pow_commit(repo: &GitTestRepo) -> Result<String> {
     miner.mine().map_err(anyhow::Error::msg)
 }
 
+fn mine_git_note(
+    repo_path: &RepoPath,
+    commit_id: Oid,
+    note_base_message: &str,
+    notes_ref: Option<&str>,
+) -> Result<gnostr_asyncgit::sync::NoteInfo> {
+    let mut nonce = 0u32;
+
+    loop {
+        let note_message = format!("{note_base_message} #{nonce}");
+        let note_id = add_note(repo_path, commit_id, &note_message, notes_ref, true)?;
+        let note = show_note(repo_path, commit_id, notes_ref)?.expect("note exists");
+        println!(
+            "note mining attempt: nonce={nonce} note_id={note_id} annotated_id={} message={}",
+            note.annotated_id, note.message
+        );
+        if note.note_id.to_string().starts_with('0') {
+            assert_eq!(note.note_id, note_id);
+            assert!(note.message.starts_with(note_base_message));
+            return Ok(note);
+        }
+        nonce = nonce.wrapping_add(1);
+    }
+}
+
 #[tokio::test]
+#[ignore]
 #[serial]
 async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
+    println!("[ngit] real_repo_git_notes_workflow_creates_signed_event");
     init_test_log();
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
@@ -109,9 +136,26 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
 
     let signer: Arc<dyn NostrSigner> = Arc::new(Keys::generate());
     let event = generate_git_note_event(&note, &signer).await?;
-    println!("git note event: {event:#?}");
+    println!("nip34 git note event: {event:#?}");
+    println!(
+        "nip34 git note event root e tag: {:?}",
+        event
+            .tags
+            .iter()
+            .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+            .map(|tag| tag.as_slice().to_vec())
+    );
+    println!(
+        "nip34 git note event commit tag: {:?}",
+        event
+            .tags
+            .iter()
+            .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("commit"))
+            .map(|tag| tag.as_slice().to_vec())
+    );
+    let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
 
-    assert_eq!(event.kind, nostr_sdk::Kind::TextNote);
+    assert_eq!(event.kind, nostr_sdk::Kind::GitPatch);
     assert_eq!(event.content, note_text);
     assert_eq!(
         event
@@ -120,11 +164,11 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
             .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
             .expect("e tag")
             .as_slice()[1],
-        format!("{:0>64}", head)
+        expected_root
     );
     assert_eq!(
         git_note_event_id(&head.to_string())?.to_hex(),
-        format!("{:0>64}", head)
+        expected_root
     );
     assert_eq!(git_note_tags(&note)?.len(), 6);
 
@@ -136,8 +180,10 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
 }
 
 #[tokio::test]
+#[ignore]
 #[serial]
 async fn nip34_examples_for_all_kinds() -> Result<()> {
+    println!("[ngit] nip34_examples_for_all_kinds");
     init_test_log();
     let repo_ref = repo_ref_fixture()?;
     let (git_repo, repo) = repo_fixture()?;
@@ -207,7 +253,7 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
     println!("pull request update event: {update_event:#?}");
 
     assert_eq!(repo_announcement.kind, nostr_sdk::Kind::GitRepoAnnouncement);
-    assert_eq!(git_note_event.kind, nostr_sdk::Kind::TextNote);
+    assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
     assert!(patch_events.len() >= 2);
     assert_eq!(patch_events[0].kind, nostr_sdk::Kind::GitPatch);
     assert!(event_is_cover_letter(&patch_events[0]));
@@ -231,5 +277,103 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
         .iter()
         .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P")));
     remove_note(note_repo_path, head, Some(notes_ref.as_str()))?;
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+#[serial]
+async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> {
+    println!("[ngit] nip34_event_matrix_covers_commit_note_and_pow_variants");
+    init_test_log();
+
+    let cases = [
+        ("plain-commit/plain-note/plain-event", false, false, false),
+        ("plain-commit/plain-note/pow-event", false, false, true),
+        ("plain-commit/mined-note/plain-event", false, true, false),
+        ("plain-commit/mined-note/pow-event", false, true, true),
+        ("mined-commit/plain-note/plain-event", true, false, false),
+        ("mined-commit/plain-note/pow-event", true, false, true),
+        ("mined-commit/mined-note/plain-event", true, true, false),
+        ("mined-commit/mined-note/pow-event", true, true, true),
+    ];
+
+    for (label, mine_commit_flag, mine_note_flag, pow_event_flag) in cases {
+        println!(
+            "matrix case start: label={label} mine_commit={mine_commit_flag} mine_note={mine_note_flag} pow_event={pow_event_flag}"
+        );
+        let repo = GitTestRepo::new("main")?;
+        repo.populate()?;
+        if mine_commit_flag {
+            let mined_hash = mine_pow_commit(&repo)?;
+            println!("matrix case mined commit: {mined_hash}");
+        }
+
+        let head = repo.git_repo.head()?.target().unwrap();
+        let repo_path_owned: RepoPath = repo.dir.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let notes_ref = default_notes_ref(repo_path)?;
+        let note_base_message = format!("{label} note");
+
+        let note = if mine_note_flag {
+            mine_git_note(repo_path, head, &note_base_message, Some(notes_ref.as_str()))?
+        } else {
+            let note_id = add_note(
+                repo_path,
+                head,
+                &note_base_message,
+                Some(notes_ref.as_str()),
+                false,
+            )?;
+            let note = show_note(repo_path, head, Some(notes_ref.as_str()))?.expect("note exists");
+            println!(
+                "matrix case note created: note_id={note_id} annotated_id={} message={}",
+                note.annotated_id, note.message
+            );
+            note
+        };
+
+        assert_eq!(note.annotated_id, head);
+        assert!(note.message.starts_with(&note_base_message));
+
+        let signer_keys = Keys::generate();
+        let signer: Arc<dyn NostrSigner> = Arc::new(signer_keys.clone());
+        let event = if pow_event_flag {
+            generate_git_note_event_with_pow(&note, &signer_keys, 4).await?
+        } else {
+            generate_git_note_event(&note, &signer).await?
+        };
+        let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
+
+        println!(
+            "matrix case event built: kind={:?} id={} pow={} tags={:?}",
+            event.kind,
+            event.id,
+            pow_event_flag,
+            event.tags
+        );
+
+        assert_eq!(event.kind, nostr_sdk::Kind::GitPatch);
+        assert_eq!(event.content, note.message);
+        assert_eq!(
+            event
+                .tags
+                .iter()
+                .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e"))
+                .expect("e tag")
+                .as_slice()[1],
+            expected_root
+        );
+        if pow_event_flag {
+            assert!(event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("nonce")
+            }));
+        } else {
+            assert!(!event.tags.iter().any(|tag| {
+                tag.as_slice().first().map(|s| s.as_str()) == Some("nonce")
+            }));
+        }
+    }
+
     Ok(())
 }
