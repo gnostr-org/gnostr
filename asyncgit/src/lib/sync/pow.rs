@@ -1,4 +1,5 @@
 use git2::{Oid, Sort};
+use std::borrow::Cow;
 
 use super::{notes::show_note, repository::repo, RepoPath};
 use crate::{error::Result, types::get_leading_zero_bits};
@@ -63,14 +64,15 @@ fn accumulated_pow_range(
 ) -> Result<AccumulatedPowSummary> {
     let repo = repo(repo_path)?;
     let mut revwalk = repo.revwalk()?;
-    revwalk.push_range(range)?;
+    let range = normalize_range(range);
+    revwalk.push_range(range.as_ref())?;
     revwalk.set_sorting(Sort::TOPOLOGICAL)?;
 
     let mut summary = AccumulatedPowSummary::default();
 
     for oid in revwalk {
         let commit_id = oid?;
-        let mut entry = accumulated_pow_entry(repo_path, commit_id, notes_ref, true, include_notes)?;
+        let entry = accumulated_pow_entry(repo_path, commit_id, notes_ref, true, include_notes)?;
         summary.commit_pow += entry.commit_pow;
         summary.note_pow += entry.note_pow;
         summary.total_pow += entry.total_pow;
@@ -78,6 +80,14 @@ fn accumulated_pow_range(
     }
 
     Ok(summary)
+}
+
+fn normalize_range(range: &str) -> Cow<'_, str> {
+    if let Some((left, right)) = range.split_once("...") {
+        Cow::Owned(format!("{}..{}", right.trim(), left.trim()))
+    } else {
+        Cow::Borrowed(range)
+    }
 }
 
 /// Sum commit and git-note proof-of-work over a revwalk range.
@@ -103,7 +113,7 @@ pub fn accumulated_note_pow(
     range: &str,
     notes_ref: Option<&str>,
 ) -> Result<AccumulatedPowSummary> {
-    accumulated_pow_range(repo_path, range, notes_ref, false)
+    accumulated_pow_range(repo_path, range, notes_ref, true)
 }
 
 /// Convenience helper for linear history depth from `HEAD`.
