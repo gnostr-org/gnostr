@@ -17,7 +17,7 @@ mod tests {
     use super::*;
     use gnostr_asyncgit::{
         sync::{
-            add_note, append_public_attestation_log, commit, show_note, stage_add_file,
+            append_public_attestation_log, commit, mine_note, show_note, stage_add_file,
             CommitMineOptions, RepoPath,
         },
         types::{generate_git_note_event, nip3::create_attestation_with_pow, Id, PrivateKey, Unixtime},
@@ -480,7 +480,7 @@ mod tests {
                 &commit_id.to_string(),
                 attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
             );
-            let note_id = add_note(repo_path, commit_id, &note_message, Some(&notes_ref), true)?;
+            let note_id = mine_note(repo_path, commit_id, &note_message, Some(&notes_ref), 5, Some("0"))?;
             let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
             let relay_message = RelayMessage::Event(
                 SubscriptionId(attestation.id.as_hex_string()),
