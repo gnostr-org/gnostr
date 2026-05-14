@@ -368,9 +368,10 @@ pub async fn tui(
     if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
     {
         let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+        let mut secret_key = keys.secret_key().unwrap();
         debug!(
             "{{\"private_key\":\"{}\"}}",
-            keys.secret_key().display_secret()
+            secret_key.as_hex_string()
         );
         debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
     }
