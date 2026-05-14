@@ -781,7 +781,7 @@ mod tests {
                     "profile": profile.label,
                     "commit": commit_id.to_string(),
                     "note_id": note_id.to_string(),
-                    "note": note,
+                    "note": &note,
                     "profile_metadata": profile.metadata(),
                     "profile_npub": profile.npub(),
                     "profile_nsec": profile.nsec(),

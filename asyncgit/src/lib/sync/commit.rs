@@ -485,7 +485,8 @@ mod tests {
                 "npub": profile.npub(),
                 "nsec": profile.nsec(),
                 "metadata": profile.metadata(),
-            }))?
+            }))
+            .unwrap()
         );
         let attestation = create_attestation_with_pow(
             attestation_target,
@@ -505,7 +506,8 @@ mod tests {
                 "kind": format!("{:?}", attestation.kind),
                 "tags": attestation.tags,
                 "content": attestation.content,
-            }))?
+            }))
+            .unwrap()
         );
 
         let attested_commit = mine_commit(
@@ -525,7 +527,8 @@ mod tests {
             serde_json::to_string_pretty(&serde_json::json!({
                 "attested_commit": attested_commit.to_string(),
                 "attestation_message": attestation.id.to_string(),
-            }))?
+            }))
+            .unwrap()
         );
 
         let details = get_commit_details(repo_path, attested_commit)?;
