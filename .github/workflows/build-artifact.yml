@@ -161,14 +161,48 @@ jobs:
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${clang_resource_dir}/include -isystem ${gcc_include_dir}" >> "$GITHUB_ENV"
           fi
 
-      - name: Build release binary
-        shell: bash
-        run: |
-          args=(
-            --target "${{ matrix.target }}"
-            --all-features
-            --verbose
-          )
+    - name: Generate Cargo.lock
+      shell: bash
+      run: |
+        cargo generate-lockfile
+        if ! git diff --ignore-cr-at-eol --quiet -- Cargo.lock; then
+          echo "::error::Cargo.lock changed after generate-lockfile. Commit the updated lockfile."
+          echo "Cargo.lock diff:"
+          git diff -- Cargo.lock | tee cargo-lock.diff || true
+          exit 1
+        fi
+
+    - name: Build release binary
+      shell: bash
+      env:
+        CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+        CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+        CC_aarch64_unknown_linux_musl: aarch64-linux-gnu-gcc
+        CXX_aarch64_unknown_linux_musl: aarch64-linux-gnu-g++
+      run: |
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          rustup target add x86_64-unknown-linux-musl || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features || \
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
+        fi
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-gnu" ]]; then
+          rustup target add ${{ matrix.target }} || true
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
+        else
+          rustup target add ${{ matrix.target }} || true
+          cross build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features || \
+          cargo build --verbose --release --locked --target ${{ matrix.target }} -p gnostr --all-features
+        fi
 
           if [ -n "${{ matrix.features }}" ]; then
             args+=(--features "${{ matrix.features }}")
