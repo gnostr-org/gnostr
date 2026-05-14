@@ -15,6 +15,7 @@ readme = "README.md"
 [lib]
 name = "gnostr_p2p"
 path = "src/lib.rs"
+doctest = false
 
 [dependencies]
 ansi_term = "0.12"
