@@ -472,17 +472,18 @@ fn build_language_registry(
     let mut regex_to_camel = Vec::new();
 
     for language in &language_definition {
-        if is_blacklisted(&language.name) {
+        let grammar = language
+            .grammar
+            .as_deref()
+            .unwrap_or(language.name.as_str());
+
+        if is_blacklisted(&language.name) || is_blacklisted(grammar) {
             continue;
         }
 
         let camel_cased_name = format_ident!("{}", language.name.to_upper_camel_case());
         camel.push(camel_cased_name.clone());
 
-        let grammar = language
-            .grammar
-            .as_deref()
-            .unwrap_or(language.name.as_str());
         grammars.push(format_ident!("{}", grammar.to_upper_camel_case()));
 
         for ty in &language.file_types {
