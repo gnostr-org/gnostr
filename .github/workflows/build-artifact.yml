@@ -137,6 +137,13 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Prefer MSVC linker on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pathEntries = $env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch '\\Git\\usr\\bin$') }
+          "PATH=$($pathEntries -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Install cross
         if: runner.os == 'Linux'
         uses: taiki-e/install-action@v2
