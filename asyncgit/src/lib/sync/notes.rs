@@ -7,12 +7,19 @@ use super::{repository::repo, RepoPath};
 use crate::error::Result;
 
 // This module owns git note storage. NIP-34 shaping lives in `types::nip34`.
+//
+// Here, "git note" means a real git notes object attached to a commit, not a
+// generic Nostr text note. The public NIP-34 event builders re-exported below
+// preserve that distinction by emitting `GitPatch` events.
 pub use crate::types::nip34::{
     generate_git_note_event, generate_git_note_event_with_pow, git_note_event_id, git_note_tags,
     GitNote,
 };
 
 /// A note attached to a git object.
+///
+/// This is the repository's git-backed note record, which later becomes a
+/// Nostr `GitPatch` event through `types::nip34`.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct NoteInfo {
     pub note_id: Oid,
