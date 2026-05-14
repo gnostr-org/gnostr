@@ -142,6 +142,14 @@ jobs:
       - name: Set up MSVC developer command prompt
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Prefer MSVC linker on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pathEntries = $env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch '\\Git\\usr\\bin$') }
+          "PATH=$($pathEntries -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Build artifacts
         run: |
           # Actually do builds and make zips and whatnot
