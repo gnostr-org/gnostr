@@ -182,6 +182,9 @@ pub async fn generate_git_note_event(
 }
 
 /// Build, mine, and sign a git note event.
+///
+/// The POW variant still models a real git note as a `GitPatch` event; the
+/// proof-of-work only changes the event's signing/mining metadata.
 pub async fn generate_git_note_event_with_pow(
     note: &NoteInfo,
     keys: &Keys,
@@ -1340,7 +1343,7 @@ mod tests {
             let event = generate_git_note_event(&note, &signer).await?;
             println!("git note event: {event:#?}");
 
-            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.kind, Kind::GitPatch);
             assert_eq!(
                 event.content,
                 "nip34:git note protocol example:deterministically linked git note"
@@ -1376,7 +1379,7 @@ mod tests {
             let event = generate_git_note_event(&note, &signer).await?;
             println!("git note event seeded from padded commit: {event:#?}");
 
-            assert_eq!(event.kind, Kind::TextNote);
+            assert_eq!(event.kind, Kind::GitPatch);
             assert_eq!(event.content, note.message);
             assert_eq!(
                 event
