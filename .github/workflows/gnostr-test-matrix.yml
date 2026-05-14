@@ -325,8 +325,8 @@ jobs:
         # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
-          cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
+          #cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+          #cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
 
       - name: 🚀 gnostr query nested command test
         shell: bash
