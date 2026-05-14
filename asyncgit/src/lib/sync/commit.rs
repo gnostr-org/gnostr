@@ -469,7 +469,7 @@ mod tests {
                 timestamp: time::OffsetDateTime::from_unix_timestamp(0).unwrap(),
             },
         )?;
-        println!("attestation test base_commit={base_commit}");
+        println!("pretty_print_attestations\n  commit={base_commit}");
 
         let attestation_target = Id::try_from_hex_string(&padded_commit_id(base_commit.to_string()))
             .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
@@ -477,7 +477,7 @@ mod tests {
         let secret_key = profile.private_key().0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
         println!(
-            "attestation test profile={} target_event_id={} public_key={} npub={} nsec={} metadata={}",
+            "pretty_print_attestations\n  profile={}\n  target_event_id={}\n  public_key={}\n  npub={}\n  nsec={}\n  metadata={}",
             profile.label,
             attestation_target,
             xonly_public_key,
@@ -495,9 +495,13 @@ mod tests {
 
         assert!(attestation.nonce_data().is_some());
         println!(
-            "attestation test attestation_id={} nonce={:?}",
+            "pretty_print_attestations\n  attestation_id={}\n  signature={:?}\n  nonce={:?}\n  kind={:?}\n  tags={:?}\n  content={}",
             attestation.id,
-            attestation.nonce_data()
+            attestation.sig,
+            attestation.nonce_data(),
+            attestation.kind,
+            attestation.tags,
+            attestation.content
         );
 
         let attested_commit = mine_commit(
@@ -513,7 +517,7 @@ mod tests {
             },
         )?;
         println!(
-            "attestation test attested_commit={attested_commit} message={}",
+            "pretty_print_attestations\n  attested_commit={attested_commit}\n  attestation_message={}",
             attestation.id
         );
 

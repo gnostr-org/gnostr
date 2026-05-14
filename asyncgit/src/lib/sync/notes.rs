@@ -704,19 +704,20 @@ mod tests {
             let ts = 1234 + index as i64;
             let event_id = format!("event-{index}");
             let commit_id = format!("commit-{index}");
-            println!(
-                "attestation log profile={} npub={} nsec={} metadata={}",
-                profile.label,
-                profile.npub(),
-                profile.nsec(),
-                profile.metadata_json()
-            );
             logged = append_public_attestation_log(
                 Some(&logged),
                 ts,
                 &event_id,
                 &commit_id,
                 7 + index as u8,
+            );
+            println!(
+                "pretty_print_attestations\n  profile={}\n  npub={}\n  nsec={}\n  metadata={}\n  log={}",
+                profile.label,
+                profile.npub(),
+                profile.nsec(),
+                profile.metadata_json(),
+                logged
             );
         }
 
