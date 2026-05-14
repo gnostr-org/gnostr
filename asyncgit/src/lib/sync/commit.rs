@@ -477,13 +477,15 @@ mod tests {
         let secret_key = profile.private_key().0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
         println!(
-            "pretty_print_attestations\n  profile={}\n  target_event_id={}\n  public_key={}\n  npub={}\n  nsec={}\n  metadata={}",
-            profile.label,
-            attestation_target,
-            xonly_public_key,
-            profile.npub(),
-            profile.nsec(),
-            profile.metadata_json()
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "profile": profile.label,
+                "target_event_id": attestation_target.to_string(),
+                "public_key": xonly_public_key.to_string(),
+                "npub": profile.npub(),
+                "nsec": profile.nsec(),
+                "metadata": profile.metadata(),
+            }))?
         );
         let attestation = create_attestation_with_pow(
             attestation_target,
@@ -495,13 +497,15 @@ mod tests {
 
         assert!(attestation.nonce_data().is_some());
         println!(
-            "pretty_print_attestations\n  attestation_id={}\n  signature={:?}\n  nonce={:?}\n  kind={:?}\n  tags={:?}\n  content={}",
-            attestation.id,
-            attestation.sig,
-            attestation.nonce_data(),
-            attestation.kind,
-            attestation.tags,
-            attestation.content
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "attestation_id": attestation.id.to_string(),
+                "signature": format!("{:?}", attestation.sig),
+                "nonce": attestation.nonce_data().map(|(nonce, bits)| serde_json::json!({"nonce": nonce, "bits": bits})),
+                "kind": format!("{:?}", attestation.kind),
+                "tags": attestation.tags,
+                "content": attestation.content,
+            }))?
         );
 
         let attested_commit = mine_commit(
@@ -517,8 +521,11 @@ mod tests {
             },
         )?;
         println!(
-            "pretty_print_attestations\n  attested_commit={attested_commit}\n  attestation_message={}",
-            attestation.id
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "attested_commit": attested_commit.to_string(),
+                "attestation_message": attestation.id.to_string(),
+            }))?
         );
 
         let details = get_commit_details(repo_path, attested_commit)?;

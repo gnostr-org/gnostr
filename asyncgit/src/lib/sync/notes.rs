@@ -712,12 +712,15 @@ mod tests {
                 7 + index as u8,
             );
             println!(
-                "pretty_print_attestations\n  profile={}\n  npub={}\n  nsec={}\n  metadata={}\n  log={}",
-                profile.label,
-                profile.npub(),
-                profile.nsec(),
-                profile.metadata_json(),
-                logged
+                "pretty_print_attestations\n{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "profile": profile.label,
+                    "npub": profile.npub(),
+                    "nsec": profile.nsec(),
+                    "metadata": profile.metadata(),
+                    "log": logged,
+                }))
+                .unwrap()
             );
         }
 
@@ -773,27 +776,23 @@ mod tests {
             let note = show_note(repo_path, commit_id, None)?.expect("note exists");
 
             println!(
-                "pretty_print_attestations profile={} commit={} note_id={} note={:#?}",
-                profile.label,
-                commit_id,
-                note_id,
-                note
-            );
-            println!(
-                "pretty_print_attestations profile={} npub={} nsec={} metadata={}",
-                profile.label,
-                profile.npub(),
-                profile.nsec(),
-                profile.metadata_json()
-            );
-            println!(
-                "pretty_print_attestations attestation id={} sig={:?} nonce={:?} kind={:?} tags={:?} content={}",
-                attestation.id,
-                attestation.sig,
-                attestation.nonce_data(),
-                attestation.kind,
-                attestation.tags,
-                attestation.content
+                "pretty_print_attestations\n{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "profile": profile.label,
+                    "commit": commit_id.to_string(),
+                    "note_id": note_id.to_string(),
+                    "note": note,
+                    "profile_metadata": profile.metadata(),
+                    "profile_npub": profile.npub(),
+                    "profile_nsec": profile.nsec(),
+                    "attestation_id": attestation.id.to_string(),
+                    "attestation_signature": format!("{:?}", attestation.sig),
+                    "attestation_nonce": attestation.nonce_data().map(|(nonce, bits)| serde_json::json!({"nonce": nonce, "bits": bits})),
+                    "attestation_kind": format!("{:?}", attestation.kind),
+                    "attestation_tags": attestation.tags,
+                    "attestation_content": attestation.content,
+                }))
+                .unwrap()
             );
 
             assert_eq!(note.note_id, note_id);
