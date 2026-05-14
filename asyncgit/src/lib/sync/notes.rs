@@ -287,6 +287,7 @@ pub fn amend_note<T: Into<Oid>>(
         Err(err) if err.code() == ErrorCode::NotFound => None,
         Err(err) => return Err(err.into()),
     };
+    let has_existing_note = existing_note.is_some();
     let combined_note = if let Some(existing_note) = existing_note {
         let existing_message = existing_note.message().unwrap_or_default();
         if existing_message.is_empty() {
@@ -300,7 +301,7 @@ pub fn amend_note<T: Into<Oid>>(
         note.to_string()
     };
 
-    if existing_note.is_some() {
+    if has_existing_note {
         repo.note_delete(object_id, notes_ref, &signature, &signature)?;
     }
 
