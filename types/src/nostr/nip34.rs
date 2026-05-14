@@ -7,6 +7,8 @@ use std::{
 //
 // This module owns repo announcement/state plus the PR, update, status, and
 // grasp kinds. `sync::notes` owns the 1617 git-note/PoW permutations.
+// In gnostr, a "git note" means a real git notes entry attached to a commit;
+// this module converts that git object into a Nostr `GitPatch` event.
 
 use git2::Oid;
 use serde::{Deserialize, Serialize};
@@ -45,6 +47,8 @@ pub type Nip34Event = EventV3;
 pub type Nip34UnsignedEvent = PreEventV3;
 
 /// A deterministic NIP-34 git note wrapper around git-note storage data.
+///
+/// This is the git-backed note object, not a plain Nostr text note.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct GitNote {
     pub note_id: Oid,
@@ -214,12 +218,18 @@ fn git_note_preevent(note: &GitNote, pubkey: PublicKey) -> Result<PreEventV3, Er
     })
 }
 
-/// Build and sign a text-note event carrying git note content.
+/// Build and sign a git-note event carrying git note content.
+///
+/// The resulting Nostr event uses the NIP-34 `GitPatch` kind and keeps the
+/// git note's commit linkage in tags.
 pub fn generate_git_note_event(note: &GitNote, private_key: &PrivateKey) -> Result<EventV3, Error> {
     git_note_sign(note, private_key, None)
 }
 
-/// Build, mine, and sign a text-note event carrying git note content.
+/// Build, mine, and sign a git-note event carrying git note content.
+///
+/// This keeps the event kind as NIP-34 `GitPatch` and adds POW to the signed
+/// Nostr event; it does not turn the git note into a plain text note.
 pub fn generate_git_note_event_with_pow(
     note: &GitNote,
     private_key: &PrivateKey,
