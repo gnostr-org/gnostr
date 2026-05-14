@@ -356,6 +356,7 @@ mod tests {
             utils::get_head,
             LogWalker, RepoPath,
         },
+        types::{nip13::NIP13Event, nip3::create_attestation_with_pow, Id, PrivateKey},
     };
 
     fn count_commits(repo: &Repository, max: usize) -> usize {
@@ -446,6 +447,66 @@ mod tests {
 
         assert!(commit_id.to_string().starts_with('0'));
         assert_eq!(get_statuses(repo_path), (0, 0));
+    }
+
+    #[test]
+    fn test_mine_commit_with_pow_attestation_in_message() -> Result<()> {
+        let file_path = Path::new("foo");
+        let (_td, repo) = repo_init_empty()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path: &RepoPath = &root.as_os_str().to_str().unwrap().into();
+
+        File::create(root.join(file_path))?.write_all(b"test\nfoo")?;
+        stage_add_file(repo_path, file_path)?;
+
+        let base_commit = mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec!["base commit".to_string()],
+                timestamp: time::OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?;
+
+        let attestation_target = Id::try_from_hex_string(&padded_commit_id(base_commit.to_string()))
+            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        let attestation_key = PrivateKey::generate();
+        let secret_key = attestation_key.0.clone();
+        let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            "dGVzdA==".to_string(),
+            &xonly_public_key,
+            &secret_key,
+            4,
+        );
+
+        assert!(attestation.nonce_data().is_some());
+
+        let attested_commit = mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!(
+                    "commit with attestation {}",
+                    attestation.id.as_hex_string()
+                )],
+                timestamp: time::OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?;
+
+        let details = get_commit_details(repo_path, attested_commit)?;
+        assert!(
+            details
+                .message
+                .unwrap()
+                .subject
+                .contains(&attestation.id.as_hex_string())
+        );
+        assert!(attested_commit.to_string().starts_with('0'));
+        Ok(())
     }
 
     #[test]
