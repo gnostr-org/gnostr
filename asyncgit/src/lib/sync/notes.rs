@@ -569,14 +569,14 @@ mod tests {
     use crate::{
         profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
         sync::{
-            commit::{self, mine_commit, CommitMineOptions},
+            commit::{self, mine_commit, padded_commit_id, CommitMineOptions},
             stage_add_file,
             tests::repo_init_empty,
         },
         types::{
+            generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits, Id,
             Keys,
-            generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits,
-            EventKind, PrivateKey, Unixtime,
+            nip3::create_attestation_with_pow, EventKind, PrivateKey, Unixtime,
         },
         types::nip13::NIP13Event,
     };
@@ -724,6 +724,84 @@ mod tests {
             logged,
             "hello notes\nattestation timestamp=1234 event_id=event-0 commit_id=commit-0 pow=7\nattestation timestamp=1235 event_id=event-1 commit_id=commit-1 pow=8\nattestation timestamp=1236 event_id=event-2 commit_id=commit-2 pow=9"
         );
+    }
+
+    #[test]
+    fn pretty_print_attestations() -> Result<()> {
+        let (_td, repo) = repo_init_empty()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
+
+        for (index, profile) in fixtures.iter().enumerate() {
+            let file_name = format!("pretty-print-attestations-{index}.txt");
+            File::create(root.join(&file_name))?.write_all(profile.label.as_bytes())?;
+            stage_add_file(repo_path, Path::new(&file_name))?;
+
+            let commit_id = mine_commit(
+                repo_path,
+                CommitMineOptions {
+                    threads: 1,
+                    target: "0".to_string(),
+                    message: vec![format!("{} commit", profile.label)],
+                    timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+                },
+            )?;
+
+            let attestation_target = Id::try_from_hex_string(&padded_commit_id(commit_id.to_string()))
+                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            let secret_key = profile.private_key().0.clone();
+            let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+            let attestation = create_attestation_with_pow(
+                attestation_target,
+                profile.metadata_json(),
+                &xonly_public_key,
+                &secret_key,
+                5,
+            );
+
+            let note_message = append_public_attestation_log(
+                None,
+                1234 + index as i64,
+                &attestation.id.as_hex_string(),
+                &commit_id.to_string(),
+                attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+            );
+            let note_id = add_note(repo_path, commit_id, &note_message, None, true)?;
+            let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+
+            println!(
+                "pretty_print_attestations profile={} commit={} note_id={} note={:#?}",
+                profile.label,
+                commit_id,
+                note_id,
+                note
+            );
+            println!(
+                "pretty_print_attestations profile={} npub={} nsec={} metadata={}",
+                profile.label,
+                profile.npub(),
+                profile.nsec(),
+                profile.metadata_json()
+            );
+            println!(
+                "pretty_print_attestations attestation id={} sig={} nonce={:?} kind={:?} tags={:?} content={}",
+                attestation.id,
+                attestation.sig,
+                attestation.nonce_data(),
+                attestation.kind,
+                attestation.tags,
+                attestation.content
+            );
+
+            assert_eq!(note.note_id, note_id);
+            assert!(note.message.contains(&attestation.id.as_hex_string()));
+            let commit_id_string = commit_id.to_string();
+            assert!(note.message.contains(&commit_id_string));
+        }
+
+        Ok(())
     }
 
     #[tokio::test]
