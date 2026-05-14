@@ -16,12 +16,17 @@ mod tests {
 
     use super::*;
     use gnostr_asyncgit::{
-        sync::{add_note, commit, default_notes_ref, show_note, stage_add_file, RepoPath},
-        types::{generate_git_note_event, PrivateKey, Unixtime},
+        sync::{
+            add_note, append_public_attestation_log, commit, show_note, stage_add_file,
+            CommitMineOptions, RepoPath,
+        },
+        types::{generate_git_note_event, nip3::create_attestation_with_pow, Id, PrivateKey, Unixtime},
     };
+    use crate::{bitcoindev_1, bitcoindev_2, bitcoindev_3};
     use crate::time::{ClockStatus, Estimation, SyncState};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
+    use time::OffsetDateTime;
 
     fn real_trace_fixture() -> (GitNote, Event, SubscriptionId, Filter) {
         let temp_dir = tempdir().expect("temp repo");
@@ -418,5 +423,98 @@ mod tests {
             }
             last_created_at = Some(event.created_at);
         }
+    }
+
+    #[test]
+    fn pretty_print_attestations() -> anyhow::Result<()> {
+        let (_td, repo) = tempdir().map(|td| {
+            let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
+            {
+                let mut config = repo.config().expect("repo config");
+                config.set_str("user.name", "gnostr-p2p").expect("user name");
+                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+            }
+            (td, repo)
+        })?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
+        let mut previous_attestation_id: Option<String> = None;
+
+        for (index, profile) in fixtures.iter().enumerate() {
+            let file_name = format!("pretty-print-attestations-{index}.txt");
+            std::fs::write(root.join(&file_name), profile.label.as_bytes())?;
+            stage_add_file(repo_path, Path::new(&file_name))?;
+
+            let commit_id = gnostr_asyncgit::sync::commit::mine_commit(
+                repo_path,
+                CommitMineOptions {
+                    threads: 1,
+                    target: "0".to_string(),
+                    message: vec![format!("{} commit", profile.label)],
+                    timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+                },
+            )?;
+
+            let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+                .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+            let secret_key = profile.private_key().0.clone();
+            let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+            let attestation = create_attestation_with_pow(
+                attestation_target,
+                profile.metadata_json(),
+                &xonly_public_key,
+                &secret_key,
+                5,
+            );
+            let notes_ref = previous_attestation_id
+                .as_deref()
+                .map(|event_id| format!("refs/notes/public-attestations/{event_id}"))
+                .unwrap_or_else(|| "refs/notes/public-attestations/root".to_string());
+
+            let note_message = append_public_attestation_log(
+                None,
+                1234 + index as i64,
+                &attestation.id.as_hex_string(),
+                &commit_id.to_string(),
+                attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+            );
+            let note_id = add_note(repo_path, commit_id, &note_message, Some(&notes_ref), true)?;
+            let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
+            let relay_message = RelayMessage::Event(
+                SubscriptionId(attestation.id.as_hex_string()),
+                Box::new(attestation.clone()),
+            );
+            let attestation_json = serde_json::to_value(&attestation)?;
+            let relay_message_json = serde_json::to_value(&relay_message)?;
+            let profile_metadata = profile.metadata();
+            let attestation_content = serde_json::from_str::<serde_json::Value>(&attestation.content)?;
+
+            println!(
+                "pretty_print_attestations\n{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "profile": profile.label,
+                    "commit": commit_id.to_string(),
+                    "note_id": note_id.to_string(),
+                    "note": &note,
+                    "profile_metadata": profile_metadata,
+                    "profile_npub": profile.npub(),
+                    "profile_nsec": profile.nsec(),
+                    "attestation": attestation_json,
+                    "attestation_signature": format!("{:?}", attestation.sig),
+                    "attestation_content": attestation_content,
+                    "relay_message": relay_message_json,
+                    "notes_ref": notes_ref,
+                }))?
+            );
+
+            assert_eq!(note.note_id, note_id);
+            assert!(note.message.contains(&attestation.id.as_hex_string()));
+            assert!(note.message.contains(&commit_id.to_string()));
+            previous_attestation_id = Some(attestation.id.as_hex_string());
+        }
+
+        Ok(())
     }
 }
