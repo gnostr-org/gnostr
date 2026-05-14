@@ -467,8 +467,7 @@ mod tests {
 
             let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
                 .map_err(|err| anyhow::anyhow!(err.to_string()))?;
-            let private_key = profile.private_key();
-            let secret_key = private_key.0.clone();
+            let secret_key = profile.private_key().0.clone();
             let xonly_public_key = profile.public_key().as_xonly_public_key();
             let attestation = create_attestation_with_pow(
                 attestation_target,
@@ -519,6 +518,9 @@ mod tests {
                     "profile_nsec": profile.nsec(),
                     "attestation": attestation_json,
                     "attestation_signature": format!("{:?}", attestation.sig),
+                    "author": note.author,
+                    "committer": note.committer,
+                    "committer_time": note.committer_time,
                     "note_pow_bits": note_id_leading_zero_bits(&note_id),
                     "attestation_content": attestation_content,
                     "relay_message": relay_message_json,
