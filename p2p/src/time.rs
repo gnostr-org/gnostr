@@ -12,7 +12,9 @@ use libp2p::{
     tcp, yamux, PeerId, StreamProtocol,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+#[cfg(test)]
+use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
