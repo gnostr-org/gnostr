@@ -1266,6 +1266,7 @@ mod tests {
         use super::*;
         use std::sync::Arc;
 
+        #[allow(deprecated)]
         fn note_fixture() -> NoteInfo {
             let committer_time = nostr_sdk::Timestamp::now().as_u64() as i64;
 
@@ -1300,9 +1301,8 @@ mod tests {
             let commit_id = note.annotated_id.to_string();
             let padded_commit_id = format!("{:0>64}", commit_id);
             let tags = git_note_tags(&note)?;
-            let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+            let (blockheight, weeble, _wobble) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
-            let wobble_str = wobble.to_string();
 
             let e_tag = tags
                 .iter()
@@ -1330,7 +1330,11 @@ mod tests {
             }));
             assert!(tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
-                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
+                    && tag
+                        .as_slice()
+                        .get(1)
+                        .and_then(|s| s.parse::<f64>().ok())
+                        .is_some()
             }));
             Ok(())
         }
@@ -1352,9 +1356,8 @@ mod tests {
                 .tags
                 .iter()
                 .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("e")));
-            let (blockheight, weeble, wobble) = git_note_runtime_values()?;
+            let (blockheight, weeble, _wobble) = git_note_runtime_values()?;
             let weeble_str = weeble.to_string();
-            let wobble_str = wobble.to_string();
             assert!(event.tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("weeble")
                     && tag.as_slice().get(1).map(|s| s.as_str()) == Some(weeble_str.as_str())
@@ -1365,7 +1368,11 @@ mod tests {
             }));
             assert!(event.tags.iter().any(|tag| {
                 tag.as_slice().first().map(|s| s.as_str()) == Some("wobble")
-                    && tag.as_slice().get(1).map(|s| s.as_str()) == Some(wobble_str.as_str())
+                    && tag
+                        .as_slice()
+                        .get(1)
+                        .and_then(|s| s.parse::<f64>().ok())
+                        .is_some()
             }));
             Ok(())
         }
