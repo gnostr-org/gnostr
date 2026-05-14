@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use git2::Repository;
+use crate::git2::Repository;
 use libp2p::{gossipsub, kad};
 use tracing::debug;
 
@@ -43,17 +43,17 @@ pub async fn run_git_publisher(
     }
     let mut revwalk = repo.revwalk()?;
     let base = if args.flag_reverse {
-        git2::Sort::REVERSE
+        crate::git2::Sort::REVERSE
     } else {
-        git2::Sort::NONE
+        crate::git2::Sort::NONE
     };
     let sorting = base
         | if args.flag_topo_order {
-            git2::Sort::TOPOLOGICAL
+            crate::git2::Sort::TOPOLOGICAL
         } else if args.flag_date_order {
-            git2::Sort::TIME
+            crate::git2::Sort::TIME
         } else {
-            git2::Sort::NONE
+            crate::git2::Sort::NONE
         };
     revwalk.set_sorting(sorting)?;
 

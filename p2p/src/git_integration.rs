@@ -1,9 +1,9 @@
-use git2::{Commit, DiffFormat, ObjectType, Repository};
+use crate::git2::{Commit, DiffFormat, ObjectType, Repository};
 
 pub fn get_commit_diff_as_bytes(
     repo: &Repository,
     commit: &Commit,
-) -> Result<Vec<u8>, git2::Error> {
+) -> Result<Vec<u8>, crate::git2::Error> {
     let tree = commit.tree()?;
     let parent_tree = if commit.parent_count() > 0 {
         Some(commit.parent(0)?.tree()?)
@@ -22,7 +22,7 @@ pub fn get_commit_diff_as_bytes(
     Ok(buf)
 }
 
-pub fn get_commit_id_of_tag(repo: &Repository, tag_name: &str) -> Result<String, git2::Error> {
+pub fn get_commit_id_of_tag(repo: &Repository, tag_name: &str) -> Result<String, crate::git2::Error> {
     let reference_name = format!("refs/tags/{}", tag_name);
     let reference = repo.find_reference(&reference_name)?;
     let object = reference.peel(ObjectType::Commit)?;
