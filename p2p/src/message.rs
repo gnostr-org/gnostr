@@ -21,11 +21,12 @@ mod tests {
             show_note, stage_add_file, CommitMineOptions, RepoPath,
         },
         types::{
-            generate_git_note_event, get_leading_zero_bits, nip3::create_attestation_with_pow, Id,
-            PrivateKey, Unixtime,
+            generate_git_note_event, get_leading_zero_bits, nip13::NIP13Event,
+            nip3::create_attestation_with_pow, Id, PrivateKey, Unixtime,
         },
         profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     };
+    use gnostr_asyncgit::git2::Oid;
     use crate::time::{ClockStatus, Estimation, SyncState};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
