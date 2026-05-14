@@ -153,7 +153,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
             .find(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("commit"))
             .map(|tag| tag.as_slice().to_vec())
     );
-    let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
+    let expected_root = format!("{:0>64}", head);
 
     assert_eq!(event.kind, nostr_sdk::Kind::GitPatch);
     assert_eq!(event.content, note_text);
@@ -343,7 +343,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
         } else {
             generate_git_note_event(&note, &signer).await?
         };
-        let expected_root = seeded_keys_from_oid(&head)?.public_key().to_string();
+        let expected_root = git_note_event_id(&head.to_string())?.to_hex();
 
         println!(
             "matrix case event built: kind={:?} id={} pow={} tags={:?}",
