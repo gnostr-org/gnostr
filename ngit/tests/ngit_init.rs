@@ -56,7 +56,6 @@ mod state_a_fresh {
         use super::*;
 
         #[test]
-#[ignore]
         #[serial]
         fn bare_no_flags() -> Result<()> {
             let git_repo = prep_git_repo()?;
@@ -70,7 +69,6 @@ mod state_a_fresh {
         }
 
         #[test]
-#[ignore]
         #[serial]
         fn name_only_missing_server_infra() -> Result<()> {
             let git_repo = prep_git_repo()?;
@@ -89,7 +87,6 @@ mod state_a_fresh {
         }
 
         #[test]
-#[ignore]
         #[serial]
         fn relays_only_missing_name_and_servers() -> Result<()> {
             let git_repo = prep_git_repo()?;
@@ -189,7 +186,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn identifier_derived_from_name(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -201,7 +197,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn name_tag_matches(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -213,7 +208,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn description_empty(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -225,7 +219,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn clone_url_derived_from_grasp_server(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -253,7 +246,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn relays_include_grasp_derived(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -270,7 +262,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn maintainers_is_just_me(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -284,7 +275,6 @@ mod state_a_fresh {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn earliest_unique_commit_is_root(
                 #[future] scenario: (nostr::Event, GitTestRepo),
@@ -395,7 +385,6 @@ mod state_b_coordinate_only {
         }
 
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn bare_no_flags() -> Result<()> {
             let output = run_init_expecting_error(vec![]).await?;
@@ -407,7 +396,6 @@ mod state_b_coordinate_only {
         }
 
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn defaults_still_requires_force() -> Result<()> {
             let output = run_init_expecting_error(vec!["--defaults"]).await?;
@@ -499,7 +487,6 @@ mod state_b_coordinate_only {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn identifier_from_coordinate(#[future] state_b_force: nostr::Event) -> Result<()> {
             let event = state_b_force.await;
@@ -512,7 +499,6 @@ mod state_b_coordinate_only {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn name_defaults_to_identifier(#[future] state_b_force: nostr::Event) -> Result<()> {
             let event = state_b_force.await;
@@ -525,7 +511,6 @@ mod state_b_coordinate_only {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn clone_url_from_grasp_server(#[future] state_b_force: nostr::Event) -> Result<()> {
             let event = state_b_force.await;
@@ -631,7 +616,6 @@ mod state_c_my_announcement {
         use super::*;
 
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn identifier_change_requires_force() -> Result<()> {
             let git_repo = prep_git_repo()?;
@@ -709,7 +693,6 @@ mod state_c_my_announcement {
         }
 
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn bare_no_flags_requires_force() -> Result<()> {
             let git_repo = prep_git_repo()?;
@@ -793,7 +776,6 @@ mod state_c_my_announcement {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn name_preserved(#[future] scenario: nostr::Event) -> Result<()> {
                 let event = scenario.await;
@@ -803,7 +785,6 @@ mod state_c_my_announcement {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn description_preserved(#[future] scenario: nostr::Event) -> Result<()> {
                 let event = scenario.await;
@@ -813,7 +794,6 @@ mod state_c_my_announcement {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn relays_from_my_event(#[future] scenario: nostr::Event) -> Result<()> {
                 let event = scenario.await;
@@ -828,7 +808,6 @@ mod state_c_my_announcement {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn maintainers_preserved(#[future] scenario: nostr::Event) -> Result<()> {
                 let event = scenario.await;
@@ -859,7 +838,6 @@ mod state_c_my_announcement {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn name_overridden(#[future] scenario: nostr::Event) -> Result<()> {
                 let event = scenario.await;
@@ -869,7 +847,6 @@ mod state_c_my_announcement {
 
             #[rstest]
             #[tokio::test]
-#[ignore]
             #[serial]
             async fn identifier_unchanged(#[future] scenario: nostr::Event) -> Result<()> {
                 let event = scenario.await;
@@ -987,7 +964,6 @@ mod state_d_co_maintainer {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn name_inherited_from_other_maintainer(
             #[future] scenario: nostr::Event,
@@ -999,7 +975,6 @@ mod state_d_co_maintainer {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn description_inherited_from_other_maintainer(
             #[future] scenario: nostr::Event,
@@ -1011,7 +986,6 @@ mod state_d_co_maintainer {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn web_inherited_from_other_maintainer(
             #[future] scenario: nostr::Event,
@@ -1028,7 +1002,6 @@ mod state_d_co_maintainer {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn clone_url_from_my_grasp_server_not_theirs(
             #[future] scenario: nostr::Event,
@@ -1052,7 +1025,6 @@ mod state_d_co_maintainer {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn relays_from_my_grasp_server(#[future] scenario: nostr::Event) -> Result<()> {
             let event = scenario.await;
@@ -1067,7 +1039,6 @@ mod state_d_co_maintainer {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn maintainers_is_me_and_trusted(#[future] scenario: nostr::Event) -> Result<()> {
             let event = scenario.await;
@@ -1191,7 +1162,6 @@ mod state_e_not_listed {
         use super::*;
 
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn bare_no_flags() -> Result<()> {
             let output = run_init_expecting_error(vec![]).await?;
@@ -1203,7 +1173,6 @@ mod state_e_not_listed {
         }
 
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn defaults_still_requires_force() -> Result<()> {
             let output = run_init_expecting_error(vec!["--defaults"]).await?;
@@ -1298,7 +1267,6 @@ mod state_e_not_listed {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn name_inherited_from_other_maintainer(
             #[future] scenario: nostr::Event,
@@ -1310,7 +1278,6 @@ mod state_e_not_listed {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn description_inherited_from_other_maintainer(
             #[future] scenario: nostr::Event,
@@ -1322,7 +1289,6 @@ mod state_e_not_listed {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn web_inherited_from_other_maintainer(
             #[future] scenario: nostr::Event,
@@ -1339,7 +1305,6 @@ mod state_e_not_listed {
 
         #[rstest]
         #[tokio::test]
-#[ignore]
         #[serial]
         async fn maintainers_is_me_and_trusted(#[future] scenario: nostr::Event) -> Result<()> {
             let event = scenario.await;

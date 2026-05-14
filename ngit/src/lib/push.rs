@@ -731,7 +731,6 @@ pub async fn push_refs_and_generate_pr_or_pr_update_event(
 
     let mut unsigned_pr_event: Option<UnsignedEvent> = None;
     for clone_url in servers {
-        let display_url = display_git_server_url(clone_url);
         let mut draft_pr_event = if let Some(ref unsigned_pr_event) = unsigned_pr_event {
             unsigned_pr_event.clone()
         } else {
@@ -792,20 +791,22 @@ pub async fn push_refs_and_generate_pr_or_pr_update_event(
 
         match res {
             Err(error) => {
+                let normalized_url = normalize_grasp_server_url(clone_url)?;
                 term.write_line(&format!(
-                    "push: error sending commit data to {display_url}: {error}"
+                    "push: error sending commit data to {normalized_url}: {error}"
                 ))?;
                 responses.push((clone_url.clone(), Err(anyhow!(error))));
             }
             Ok(ref_updates) => {
+                let normalized_url = normalize_grasp_server_url(clone_url)?;
                 if let Some((_, Some(error))) = ref_updates.iter().next() {
                     term.write_line(&format!(
-                        "push: error sending commit data to {display_url}: {error}"
+                        "push: error sending commit data to {normalized_url}: {error}"
                     ))?;
                     responses.push((clone_url.clone(), Err(anyhow!(error.clone()))));
                 } else {
                     responses.push((clone_url.clone(), Ok(())));
-                    term.write_line(&format!("push: commit data sent to {display_url}"))?;
+                    term.write_line(&format!("push: commit data sent to {normalized_url}"))?;
                     unsigned_pr_event = Some(draft_pr_event);
                 }
             }
@@ -843,37 +844,6 @@ pub async fn push_refs_and_generate_pr_or_pr_update_event(
         }
     } else {
         Ok((None, responses))
-    }
-}
-
-fn display_git_server_url(url: &str) -> String {
-    if is_grasp_server_clone_url(url) {
-        normalize_grasp_server_url(url).unwrap_or_else(|_| url.to_string())
-    } else {
-        url.to_string()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn display_git_server_url_keeps_non_grasp_urls() {
-        assert_eq!(
-            display_git_server_url("git@github.com:gnostr-org/gnostr.git"),
-            "git@github.com:gnostr-org/gnostr.git"
-        );
-    }
-
-    #[test]
-    fn display_git_server_url_normalizes_grasp_urls() {
-        assert_eq!(
-            display_git_server_url(
-                "https://relay.ngit.dev/npub15qydau2hjma6ngxkl2cyar74wzyjshvl65za5k5rl69264ar2exs5cyejr/example-repo.git"
-            ),
-            "relay.ngit.dev"
-        );
     }
 }
 

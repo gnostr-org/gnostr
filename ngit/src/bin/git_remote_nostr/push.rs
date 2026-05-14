@@ -153,6 +153,20 @@ pub async fn run_push(
         .await?;
 
         if !rejected {
+            for refspec in git_state_refspecs.iter().chain(proposal_refspecs.iter()) {
+                if rejected_proposal_refspecs.contains(refspec) {
+                    continue;
+                }
+                let (_, to) = refspec_to_from_to(refspec)?;
+                println!("ok {to}");
+                update_remote_refs_pushed(
+                    &git_repo.git_repo,
+                    refspec,
+                    &repo_ref.to_nostr_git_url(&None).to_string(),
+                )
+                .context("could not update remote_ref locally")?;
+            }
+
             // TODO make async - check gitlib2 callbacks work async
 
             // Filter out grasp servers whose relay did not receive the state event
@@ -209,19 +223,6 @@ pub async fn run_push(
                         )
                         .is_ok()
                         {
-                            for refspec in server_refspecs {
-                                if rejected_proposal_refspecs.contains(refspec) {
-                                    continue;
-                                }
-                                let (_, to) = refspec_to_from_to(refspec)?;
-                                println!("ok {to}");
-                                update_remote_refs_pushed(
-                                    &git_repo.git_repo,
-                                    refspec,
-                                    &repo_ref.to_nostr_git_url(&None).to_string(),
-                                )
-                                .context("could not update remote_ref locally")?;
-                            }
                             any_push_succeeded = true;
                         }
                     }
