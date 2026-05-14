@@ -786,7 +786,7 @@ mod tests {
                 profile.metadata_json()
             );
             println!(
-                "pretty_print_attestations attestation id={} sig={} nonce={:?} kind={:?} tags={:?} content={}",
+                "pretty_print_attestations attestation id={} sig={:?} nonce={:?} kind={:?} tags={:?} content={}",
                 attestation.id,
                 attestation.sig,
                 attestation.nonce_data(),
