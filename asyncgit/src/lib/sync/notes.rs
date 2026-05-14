@@ -777,7 +777,14 @@ mod tests {
                 &commit_id.to_string(),
                 attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
             );
-            let note_id = add_note(repo_path, commit_id, &note_message, Some(&notes_ref), true)?;
+            let note_id = mine_note(
+                repo_path,
+                commit_id,
+                &note_message,
+                Some(&notes_ref),
+                5,
+                Some("0"),
+            )?;
             let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
 
             println!(
@@ -795,6 +802,7 @@ mod tests {
                     "profile_nsec": profile.nsec(),
                     "attestation_id": attestation.id.to_string(),
                     "attestation_signature": format!("{:?}", attestation.sig),
+                    "note_pow_bits": note_id_leading_zero_bits(&note_id),
                     "attestation_nonce": attestation.nonce_data().map(|(nonce, bits)| serde_json::json!({"nonce": nonce, "bits": bits})),
                     "attestation_kind": format!("{:?}", attestation.kind),
                     "attestation_tags": attestation.tags,
@@ -804,6 +812,8 @@ mod tests {
             );
 
             assert_eq!(note.note_id, note_id);
+            assert!(note.note_id.to_string().starts_with('0'));
+            assert!(note_id_leading_zero_bits(&note_id) >= 5);
             assert!(note.message.contains(&attestation.id.as_hex_string()));
             let commit_id_string = commit_id.to_string();
             assert!(note.message.contains(&commit_id_string));
