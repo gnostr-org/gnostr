@@ -20,7 +20,10 @@ mod tests {
             append_public_attestation_log, commit, mine_note, show_note, stage_add_file,
             CommitMineOptions, RepoPath,
         },
-        types::{generate_git_note_event, nip3::create_attestation_with_pow, Id, PrivateKey, Unixtime},
+        types::{
+            generate_git_note_event, get_leading_zero_bits, nip3::create_attestation_with_pow, Id,
+            PrivateKey, Unixtime,
+        },
     };
     use crate::{bitcoindev_1, bitcoindev_2, bitcoindev_3};
     use crate::time::{ClockStatus, Estimation, SyncState};
@@ -103,6 +106,10 @@ mod tests {
             state.get_metrics().slew_rate
         );
         logical
+    }
+
+    fn note_id_leading_zero_bits(note_id: &Oid) -> u8 {
+        get_leading_zero_bits(note_id.as_bytes())
     }
 
     #[test]
@@ -503,6 +510,7 @@ mod tests {
                     "profile_nsec": profile.nsec(),
                     "attestation": attestation_json,
                     "attestation_signature": format!("{:?}", attestation.sig),
+                    "note_pow_bits": note_id_leading_zero_bits(&note_id),
                     "attestation_content": attestation_content,
                     "relay_message": relay_message_json,
                     "notes_ref": notes_ref,
@@ -510,6 +518,7 @@ mod tests {
             );
 
             assert_eq!(note.note_id, note_id);
+            assert!(note_id_leading_zero_bits(&note_id) >= 5);
             assert!(note.message.contains(&attestation.id.as_hex_string()));
             assert!(note.message.contains(&commit_id.to_string()));
             previous_attestation_id = Some(attestation.id.as_hex_string());
