@@ -20,6 +20,7 @@ mod ignore;
 mod logwalker;
 mod merge;
 mod notes;
+mod pow;
 mod patches;
 mod rebase;
 pub mod remotes;
@@ -71,6 +72,10 @@ pub use notes::{
     add_note, amend_note, default_notes_ref, generate_git_note_event,
     generate_git_note_event_with_pow, git_note_event_id, git_note_tags, list_notes, remove_note,
     mine_note, run_notes_command, show_note, GitNote, NoteInfo, NotesCommand, NotesCommandResult,
+};
+pub use pow::{
+    accumulated_commit_pow, accumulated_note_pow, accumulated_pow, accumulated_pow_depth,
+    AccumulatedPowEntry, AccumulatedPowSummary,
 };
 pub use rebase::rebase_branch;
 pub use remotes::{
