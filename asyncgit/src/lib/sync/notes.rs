@@ -14,6 +14,12 @@ use crate::types::get_leading_zero_bits;
 // Here, "git note" means a real git notes object attached to a commit, not a
 // generic Nostr text note. The public NIP-34 event builders re-exported below
 // preserve that distinction by emitting `GitPatch` events.
+//
+// The attestation flow is deterministic and chronological: a mined commit is
+// followed by a signed public attestation event, then by a mined git note that
+// records the event id, commit id, and PoW bits. Each subsequent note can link
+// to the previous attestation through `notes_ref`, so the log forms a stable
+// chain instead of an unordered set.
 pub use crate::types::nip34::{
     generate_git_note_event, generate_git_note_event_with_pow, git_note_event_id, git_note_tags,
     GitNote,

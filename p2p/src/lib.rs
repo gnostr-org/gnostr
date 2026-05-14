@@ -5,6 +5,11 @@
 //! dependency graph stays one-way: `types -> asyncgit -> p2p`.
 //!
 //! The browser-side pure JavaScript implementation lives under `src/js/`.
+//!
+//! Attestation syndication follows the same deterministic structure used by
+//! `asyncgit`: mined commit, signed attestation event, mined git note, and a
+//! chronological `notes_ref` chain that links each public attestation to the
+//! previous one.
 //#![feature(trivial_bounds)]
 
 pub mod git2 {

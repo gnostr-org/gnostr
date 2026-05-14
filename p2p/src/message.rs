@@ -3,6 +3,12 @@
 //! `gnostr-p2p` re-exports the canonical types from `gnostr_asyncgit`, and
 //! `gnostr-chat` re-exports this module so the chain stays
 //! `asyncgit -> p2p -> chat`.
+//!
+//! The attestation syndication tests mirror `asyncgit`'s pretty-print
+//! structure: each entry is emitted in commit order, the Nostr attestation
+//! event is signed with deterministic fixture keys, the git note is mined for
+//! PoW, and `notes_ref` links each note to the previous attestation id so the
+//! chain stays chronological.
 
 pub use crate::git2::types::*;
 
