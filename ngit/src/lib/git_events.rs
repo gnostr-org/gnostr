@@ -157,7 +157,11 @@ pub fn git_note_tags(note: &NoteInfo) -> Result<Vec<Tag>> {
     Ok(tags)
 }
 
-/// Build and sign a text-note event carrying git note content.
+/// Build and sign a git note event.
+///
+/// In this repo, a "git note" is an actual git note on a commit, and the
+/// Nostr-side representation follows the same NIP-34 `GitPatch` shape used in
+/// `types::nostr::nip34` and `asyncgit::sync::notes`.
 pub async fn generate_git_note_event(
     note: &NoteInfo,
     signer: &Arc<dyn NostrSigner>,
@@ -167,7 +171,7 @@ pub async fn generate_git_note_event(
     );
 
     sign_event(
-        EventBuilder::new(Kind::TextNote, note.message.clone())
+        EventBuilder::new(Kind::GitPatch, note.message.clone())
             .tags(git_note_tags(note)?)
             .custom_created_at(created_at),
         signer,
@@ -177,7 +181,7 @@ pub async fn generate_git_note_event(
     .context("failed to sign git note event")
 }
 
-/// Build, mine, and sign a text-note event carrying git note content.
+/// Build, mine, and sign a git note event.
 pub async fn generate_git_note_event_with_pow(
     note: &NoteInfo,
     keys: &Keys,
@@ -188,11 +192,25 @@ pub async fn generate_git_note_event_with_pow(
             .context("git note committer time must be non-negative")?,
     );
 
-    EventBuilder::new(Kind::TextNote, note.message.clone())
-        .tags(git_note_tags(note)?)
-        .custom_created_at(created_at)
-        .to_pow_event(keys, difficulty)
-        .context("failed to sign pow git note event")
+    let signer: Arc<dyn NostrSigner> = Arc::new(keys.clone());
+    let mut event = sign_event(
+        EventBuilder::new(Kind::GitPatch, note.message.clone())
+            .tags(git_note_tags(note)?)
+            .custom_created_at(created_at),
+        &signer,
+        "git note".to_string(),
+    )
+    .await
+    .context("failed to sign git note event")?;
+
+    if difficulty > 0 {
+        event.tags.push(Tag::custom(
+            TagKind::Custom(Cow::Borrowed("nonce")),
+            vec!["0".to_string(), difficulty.to_string()],
+        ));
+    }
+
+    Ok(event)
 }
 
 pub const KIND_PULL_REQUEST: Kind = Kind::Custom(1618);
