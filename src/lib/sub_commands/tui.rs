@@ -28,7 +28,7 @@ use gnostr_asyncgit::{
     sync::{repo_open_error, resolve_repo_path, utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
 };
-use nostr_sdk_0_37_0::Keys;
+use gnostr_asyncgit::types::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::{self, scope_time};
