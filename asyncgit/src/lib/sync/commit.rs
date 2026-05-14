@@ -485,7 +485,7 @@ mod tests {
             "dGVzdA==".to_string(),
             &xonly_public_key,
             &secret_key,
-            4,
+            5,
         );
 
         assert!(attestation.nonce_data().is_some());
