@@ -67,6 +67,9 @@ pub mod css;
 #[path = "filehash/lib.rs"]
 pub mod filehash;
 
+/// Deterministic Nostr profile fixtures used in tests and examples.
+pub mod profiles;
+
 /// Local Nostr and Git domain types.
 pub mod types;
 
@@ -133,6 +136,7 @@ pub use crate::{
         AccumulatedPowEntry, AccumulatedPowSummary, GitNote, NoteInfo, NotesCommand,
         NotesCommandResult,
     },
+    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3, NostrProfileFixture},
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,
     types::{
