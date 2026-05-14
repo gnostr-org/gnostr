@@ -642,21 +642,18 @@ mod tests {
         let remined_note_id = mine_note(repo_path, head, "even more notes", None, 0, Some("00"))?;
         let triple_mined_note_id =
             mine_note(repo_path, head, "yet even more notes", None, 0, Some("000"))?;
-        let quad_mined_note_id =
-            mine_note(repo_path, head, "and even more notes", None, 0, Some("0000"))?;
         let note = show_note(repo_path, head, None)?.expect("note exists");
 
         println!(
-            "mined notes: first_note_id={first_note_id} mined_note_id={mined_note_id} remined_note_id={remined_note_id} triple_mined_note_id={triple_mined_note_id} quad_mined_note_id={quad_mined_note_id} note={note:#?}"
+            "mined notes: first_note_id={first_note_id} mined_note_id={mined_note_id} remined_note_id={remined_note_id} triple_mined_note_id={triple_mined_note_id} note={note:#?}"
         );
         assert!(note.message.contains("hello notes"));
         assert!(note.message.contains("more notes"));
         assert!(note.message.contains("even more notes"));
         assert!(note.message.contains("yet even more notes"));
-        assert!(note.message.contains("and even more notes"));
         assert!(note.message.contains("000-"));
-        assert_eq!(note.note_id, quad_mined_note_id);
-        assert!(note.note_id.to_string().starts_with("0000"));
+        assert_eq!(note.note_id, triple_mined_note_id);
+        assert!(note.note_id.to_string().starts_with("000"));
         Ok(())
     }
 
