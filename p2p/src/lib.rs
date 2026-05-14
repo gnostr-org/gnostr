@@ -7,7 +7,9 @@
 //! The browser-side pure JavaScript implementation lives under `src/js/`.
 //#![feature(trivial_bounds)]
 
-extern crate gnostr_asyncgit as git2;
+pub mod git2 {
+    pub use gnostr_asyncgit::types;
+}
 
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -26,14 +28,19 @@ pub mod kvs;
 pub mod lookup;
 pub mod network_config;
 pub mod opt;
+#[cfg(not(doc))]
 pub mod bridge;
+#[cfg(not(doc))]
 pub mod js;
 pub mod crawler_broadcast;
+#[cfg(not(doc))]
 pub mod message;
 pub mod repo_state;
+#[cfg(not(doc))]
 pub mod relay_bridge;
 pub mod relay_paths;
 pub mod time;
+#[cfg(not(doc))]
 pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
@@ -72,11 +79,16 @@ fn seed_bytes(seed: &str) -> [u8; 32] {
     digest.into()
 }
 
+#[cfg(not(doc))]
 pub use bridge::{asset_content_type, asset_response, shell_html};
+#[cfg(not(doc))]
 pub use js::get_js_assets;
+#[cfg(not(doc))]
 pub use message::*;
 pub use repo_state::{RepoStateQuorum, RepoStateRefs, RepoStateSnapshot};
+#[cfg(not(doc))]
 pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeSession, NostrRelayConnection};
+#[cfg(not(doc))]
 pub use template_html::{get_template_assets, TemplateHtml};
 
 pub fn spawn_detached_current_exe<I, S>(args: I) -> Result<u32, Box<dyn std::error::Error>>
@@ -108,7 +120,9 @@ mod tests {
 pub mod p2p {
     pub use crate::{
         args, behaviour, cli, command_handler, event_handler, git_integration, git_publisher, kvs,
-        keypair_from_seed, lookup, message, network_config, opt, repo_state, relay_bridge, relay_paths, time,
-        crawler_broadcast, swarm_builder, utils,
+        keypair_from_seed, lookup, network_config, opt, repo_state, relay_paths, time, crawler_broadcast,
+        swarm_builder, utils,
     };
+    #[cfg(not(doc))]
+    pub use crate::{message, relay_bridge};
 }
