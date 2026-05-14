@@ -69,7 +69,7 @@ pub use merge::{
     merge_msg, mergehead_ids, rebase_progress,
 };
 pub use notes::{
-    add_note, amend_note, default_notes_ref, generate_git_note_event,
+    add_note, amend_note, append_public_attestation_log, default_notes_ref, generate_git_note_event,
     generate_git_note_event_with_pow, git_note_event_id, git_note_tags, list_notes, remove_note,
     mine_note, run_notes_command, show_note, GitNote, NoteInfo, NotesCommand, NotesCommandResult,
 };

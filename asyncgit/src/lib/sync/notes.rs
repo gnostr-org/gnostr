@@ -267,6 +267,25 @@ fn combine_note_messages(existing: Option<&str>, note: &str) -> String {
     }
 }
 
+/// Append a plain-text public attestation entry to a note log.
+pub fn append_public_attestation_log(
+    existing: Option<&str>,
+    timestamp: i64,
+    event_id: &str,
+    commit_id: &str,
+    pow_bits: u8,
+) -> String {
+    let entry = format!(
+        "attestation timestamp={timestamp} event_id={event_id} commit_id={commit_id} pow={pow_bits}"
+    );
+
+    match existing.map(str::trim_end) {
+        Some(existing) if existing.is_empty() => entry,
+        Some(existing) => format!("{existing}\n{entry}"),
+        None => entry,
+    }
+}
+
 /// Amends the note for an object by appending new content and re-adding it.
 ///
 /// If a note already exists, the existing content is preserved and the new
@@ -673,6 +692,22 @@ mod tests {
         assert_eq!(note.message, "hello notes\nmore notes");
         assert_eq!(note.note_id, amended_note_id);
         Ok(())
+    }
+
+    #[test]
+    fn public_attestation_log_appends_plain_text_entries() {
+        let logged = append_public_attestation_log(
+            Some("hello notes"),
+            1234,
+            "event-abc",
+            "commit-def",
+            7,
+        );
+
+        assert_eq!(
+            logged,
+            "hello notes\nattestation timestamp=1234 event_id=event-abc commit_id=commit-def pow=7"
+        );
     }
 
     #[tokio::test]

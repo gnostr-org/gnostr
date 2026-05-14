@@ -468,12 +468,18 @@ mod tests {
                 timestamp: time::OffsetDateTime::from_unix_timestamp(0).unwrap(),
             },
         )?;
+        println!("attestation test base_commit={base_commit}");
 
         let attestation_target = Id::try_from_hex_string(&padded_commit_id(base_commit.to_string()))
             .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
         let attestation_key = PrivateKey::generate();
         let secret_key = attestation_key.0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+        println!(
+            "attestation test target_event_id={} public_key={}",
+            attestation_target,
+            xonly_public_key
+        );
         let attestation = create_attestation_with_pow(
             attestation_target,
             "dGVzdA==".to_string(),
@@ -483,6 +489,11 @@ mod tests {
         );
 
         assert!(attestation.nonce_data().is_some());
+        println!(
+            "attestation test attestation_id={} nonce={:?}",
+            attestation.id,
+            attestation.nonce_data()
+        );
 
         let attested_commit = mine_commit(
             repo_path,
@@ -496,6 +507,10 @@ mod tests {
                 timestamp: time::OffsetDateTime::from_unix_timestamp(0).unwrap(),
             },
         )?;
+        println!(
+            "attestation test attested_commit={attested_commit} message={}",
+            attestation.id
+        );
 
         let details = get_commit_details(repo_path, attested_commit)?;
         assert!(
