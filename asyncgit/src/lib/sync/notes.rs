@@ -567,6 +567,7 @@ mod tests {
     use time::OffsetDateTime;
 
     use crate::{
+        profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
         sync::{
             commit::{self, mine_commit, CommitMineOptions},
             stage_add_file,
@@ -696,17 +697,32 @@ mod tests {
 
     #[test]
     fn public_attestation_log_appends_plain_text_entries() {
-        let logged = append_public_attestation_log(
-            Some("hello notes"),
-            1234,
-            "event-abc",
-            "commit-def",
-            7,
-        );
+        let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
+        let mut logged = String::from("hello notes");
+
+        for (index, profile) in fixtures.iter().enumerate() {
+            let ts = 1234 + index as i64;
+            let event_id = format!("event-{index}");
+            let commit_id = format!("commit-{index}");
+            println!(
+                "attestation log profile={} npub={} nsec={} metadata={}",
+                profile.label,
+                profile.npub(),
+                profile.nsec(),
+                profile.metadata_json()
+            );
+            logged = append_public_attestation_log(
+                Some(&logged),
+                ts,
+                &event_id,
+                &commit_id,
+                7 + index as u8,
+            );
+        }
 
         assert_eq!(
             logged,
-            "hello notes\nattestation timestamp=1234 event_id=event-abc commit_id=commit-def pow=7"
+            "hello notes\nattestation timestamp=1234 event_id=event-0 commit_id=commit-0 pow=7\nattestation timestamp=1235 event_id=event-1 commit_id=commit-1 pow=8\nattestation timestamp=1236 event_id=event-2 commit_id=commit-2 pow=9"
         );
     }
 

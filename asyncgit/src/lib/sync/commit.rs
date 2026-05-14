@@ -356,7 +356,8 @@ mod tests {
             utils::get_head,
             LogWalker, RepoPath,
         },
-        types::{nip13::NIP13Event, nip3::create_attestation_with_pow, Id, PrivateKey},
+        profiles::bitcoindev_1,
+        types::{nip13::NIP13Event, nip3::create_attestation_with_pow, Id},
     };
 
     fn count_commits(repo: &Repository, max: usize) -> usize {
@@ -472,13 +473,17 @@ mod tests {
 
         let attestation_target = Id::try_from_hex_string(&padded_commit_id(base_commit.to_string()))
             .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
-        let attestation_key = PrivateKey::generate();
-        let secret_key = attestation_key.0.clone();
+        let profile = bitcoindev_1;
+        let secret_key = profile.private_key().0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
         println!(
-            "attestation test target_event_id={} public_key={}",
+            "attestation test profile={} target_event_id={} public_key={} npub={} nsec={} metadata={}",
+            profile.label,
             attestation_target,
-            xonly_public_key
+            xonly_public_key,
+            profile.npub(),
+            profile.nsec(),
+            profile.metadata_json()
         );
         let attestation = create_attestation_with_pow(
             attestation_target,
