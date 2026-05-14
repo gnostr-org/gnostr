@@ -639,15 +639,17 @@ mod tests {
 
         let first_note_id = add_note(repo_path, head, "hello notes", None, false)?;
         let mined_note_id = mine_note(repo_path, head, "more notes", None, 0, Some("0"))?;
+        let remined_note_id = mine_note(repo_path, head, "even more notes", None, 0, Some("0"))?;
         let note = show_note(repo_path, head, None)?.expect("note exists");
 
         println!(
-            "mined notes: first_note_id={first_note_id} mined_note_id={mined_note_id} note={note:#?}"
+            "mined notes: first_note_id={first_note_id} mined_note_id={mined_note_id} remined_note_id={remined_note_id} note={note:#?}"
         );
         assert!(note.message.contains("hello notes"));
         assert!(note.message.contains("more notes"));
+        assert!(note.message.contains("even more notes"));
         assert!(note.message.contains("0-"));
-        assert_eq!(note.note_id, mined_note_id);
+        assert_eq!(note.note_id, remined_note_id);
         assert!(note.note_id.to_string().starts_with('0'));
         Ok(())
     }
