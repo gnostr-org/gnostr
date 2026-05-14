@@ -506,7 +506,7 @@ doctest = false
 ## path = "bins/src/bin/server-toml.rs"
 
 [features]
-default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom", "blossom-tui"]
+default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom"]
 long_tests = []
 expensive_tests = ["long_tests"]                                               # Backward-compatible alias.
 blossom = []

@@ -198,7 +198,7 @@ path = "src/bin/gnostr-relay-tui.rs"
 required-features = ["relay"]
 
 [features]
-default = ["blossom", "blossom-tui"]
+default = ["blossom"]
 blossom = []
 blossom-tui = ["dep:blossom_tui"]
 web = ["dep:gnostr-web", "dep:gnostr-js"]
