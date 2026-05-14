@@ -737,6 +737,7 @@ mod tests {
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
         let repo_path: &RepoPath = &repo_path_owned;
         let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
+        let mut previous_attestation_id: Option<String> = None;
 
         for (index, profile) in fixtures.iter().enumerate() {
             let file_name = format!("pretty-print-attestations-{index}.txt");
@@ -764,6 +765,10 @@ mod tests {
                 &secret_key,
                 5,
             );
+            let notes_ref = previous_attestation_id
+                .as_deref()
+                .map(|event_id| format!("refs/notes/public-attestations/{event_id}"))
+                .unwrap_or_else(|| "refs/notes/public-attestations/root".to_string());
 
             let note_message = append_public_attestation_log(
                 None,
@@ -772,8 +777,8 @@ mod tests {
                 &commit_id.to_string(),
                 attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
             );
-            let note_id = add_note(repo_path, commit_id, &note_message, None, true)?;
-            let note = show_note(repo_path, commit_id, None)?.expect("note exists");
+            let note_id = add_note(repo_path, commit_id, &note_message, Some(&notes_ref), true)?;
+            let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
 
             println!(
                 "pretty_print_attestations\n{}",
@@ -802,6 +807,7 @@ mod tests {
             assert!(note.message.contains(&attestation.id.as_hex_string()));
             let commit_id_string = commit_id.to_string();
             assert!(note.message.contains(&commit_id_string));
+            previous_attestation_id = Some(attestation.id.as_hex_string());
         }
 
         Ok(())
