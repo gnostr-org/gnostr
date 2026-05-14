@@ -123,7 +123,7 @@ pub use crate::{
     revlog::{AsyncLog, FetchStatus},
     status::{AsyncStatus, StatusParams},
     sync::{
-        add_note, default_notes_ref,
+        add_note, amend_note, default_notes_ref,
         diff::{DiffLine, DiffLineType, FileDiff},
         list_notes,
         remotes::push::PushType,

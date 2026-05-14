@@ -123,6 +123,12 @@ pub enum NotesCommand {
         notes_ref: Option<String>,
         force: bool,
     },
+    /// Amend a note by appending content and re-adding it.
+    Amend {
+        object_id: Oid,
+        note: String,
+        notes_ref: Option<String>,
+    },
     /// Show a note attached to an object.
     Show {
         object_id: Oid,
@@ -225,6 +231,53 @@ pub fn add_note<T: Into<Oid>>(
     )?)
 }
 
+/// Amends the note for an object by appending new content and re-adding it.
+///
+/// If a note already exists, the existing content is preserved and the new
+/// content is appended on a new line before the updated note is written back.
+pub fn amend_note<T: Into<Oid>>(
+    repo_path: &RepoPath,
+    object_id: T,
+    note: &str,
+    notes_ref: Option<&str>,
+) -> Result<Oid> {
+    scope_time!("amend_note");
+
+    let repo = repo(repo_path)?;
+    let object_id = object_id.into();
+    let signature = signature_allow_undefined_name(&repo)?;
+    let existing_note = match repo.find_note(notes_ref, object_id) {
+        Ok(existing_note) => Some(existing_note),
+        Err(err) if err.code() == ErrorCode::NotFound => None,
+        Err(err) => return Err(err.into()),
+    };
+    let combined_note = if let Some(existing_note) = existing_note {
+        let existing_message = existing_note.message().unwrap_or_default();
+        if existing_message.is_empty() {
+            note.to_string()
+        } else if note.is_empty() {
+            existing_message.to_string()
+        } else {
+            format!("{existing_message}\n{note}")
+        }
+    } else {
+        note.to_string()
+    };
+
+    if existing_note.is_some() {
+        repo.note_delete(object_id, notes_ref, &signature, &signature)?;
+    }
+
+    Ok(repo.note(
+        &signature,
+        &signature,
+        notes_ref,
+        object_id,
+        &combined_note,
+        false,
+    )?)
+}
+
 /// Lists notes for the given notes reference.
 pub fn list_notes(repo_path: &RepoPath, notes_ref: Option<&str>) -> Result<Vec<NoteInfo>> {
     scope_time!("list_notes");
@@ -315,6 +368,16 @@ pub fn run_notes_command(
             &note,
             notes_ref.as_deref(),
             force,
+        )?)),
+        NotesCommand::Amend {
+            object_id,
+            note,
+            notes_ref,
+        } => Ok(NotesCommandResult::NoteId(amend_note(
+            repo_path,
+            object_id,
+            &note,
+            notes_ref.as_deref(),
         )?)),
         NotesCommand::Show {
             object_id,
@@ -428,6 +491,24 @@ mod tests {
         println!("custom notes list: {review_notes:#?}");
         assert_eq!(review_notes.len(), 1);
 
+        Ok(())
+    }
+
+    #[test]
+    fn amend_note_appends_existing_content() -> Result<()> {
+        let (_td, repo) = repo_init()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let head = repo.head()?.target().unwrap();
+
+        let first_note_id = add_note(repo_path, head, "hello notes", None, false)?;
+        let amended_note_id = amend_note(repo_path, head, "more notes", None)?;
+        let note = show_note(repo_path, head, None)?.expect("note exists");
+
+        println!("amended notes: first_note_id={first_note_id} amended_note_id={amended_note_id} note={note:#?}");
+        assert_eq!(note.message, "hello notes\nmore notes");
+        assert_eq!(note.note_id, amended_note_id);
         Ok(())
     }
 
