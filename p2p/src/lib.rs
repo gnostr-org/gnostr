@@ -8,6 +8,7 @@
 //#![feature(trivial_bounds)]
 
 pub mod git2 {
+    pub use gnostr_asyncgit::git2::*;
     pub use gnostr_asyncgit::types;
 }
 
