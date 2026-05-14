@@ -17,15 +17,15 @@ mod tests {
     use super::*;
     use gnostr_asyncgit::{
         sync::{
-            append_public_attestation_log, commit, mine_note, show_note, stage_add_file,
-            CommitMineOptions, RepoPath,
+            add_note, append_public_attestation_log, commit, default_notes_ref, mine_note,
+            show_note, stage_add_file, CommitMineOptions, RepoPath,
         },
         types::{
             generate_git_note_event, get_leading_zero_bits, nip3::create_attestation_with_pow, Id,
             PrivateKey, Unixtime,
         },
+        profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     };
-    use crate::{bitcoindev_1, bitcoindev_2, bitcoindev_3};
     use crate::time::{ClockStatus, Estimation, SyncState};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
@@ -466,8 +466,9 @@ mod tests {
 
             let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
                 .map_err(|err| anyhow::anyhow!(err.to_string()))?;
-            let secret_key = profile.private_key().0.clone();
-            let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+            let private_key = profile.private_key();
+            let secret_key = private_key.0.clone();
+            let xonly_public_key = profile.public_key().as_xonly_public_key();
             let attestation = create_attestation_with_pow(
                 attestation_target,
                 profile.metadata_json(),
@@ -487,7 +488,14 @@ mod tests {
                 &commit_id.to_string(),
                 attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
             );
-            let note_id = mine_note(repo_path, commit_id, &note_message, Some(&notes_ref), 5, Some("0"))?;
+            let note_id = mine_note(
+                repo_path,
+                commit_id,
+                &note_message,
+                Some(&notes_ref),
+                5,
+                Some("0"),
+            )?;
             let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
             let relay_message = RelayMessage::Event(
                 SubscriptionId(attestation.id.as_hex_string()),

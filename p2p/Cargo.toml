@@ -83,6 +83,7 @@ serde_yaml = "0.9"
 sha2 = { workspace = true }
 tempfile = { workspace = true }
 thiserror = "1.0.69"
+time = "0.3"
 tokio = { version = "1.46.1", features = ["full"] }
 tokio-tungstenite = { workspace = true }
 tracing = "0.1.44"
