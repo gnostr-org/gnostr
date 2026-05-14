@@ -73,6 +73,7 @@ The repo keeps a few shell wrappers for the most common test paths:
 ./scripts/asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir <dir>] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
 ./scripts/gnostr-asyncgit-tests.sh [--quiet] [--release] [--locked] [--offline] [--target-dir <dir>] [--target-tmpdir] [--target-tmpdir-clean] [--ignored] [--nocapture]
 ./scripts/gnostr-ngit-tests.sh [--features <list>] [--all-features] [--no-default-features] [--ignored] [--nocapture]
+./scripts/gnostr-p2p-tests.sh [tests|integration] [--test <name>] [--ignored] [--help]
 ./scripts/cargo-install-feature-variants.sh [--features <list>] [--allow-all] [--no-default-features]
 ```
 
@@ -81,7 +82,8 @@ adds the asyncgit DM/NIP regressions and queries the real event ids it emits,
 including the shared NIP-34 repo URL vector regression and the extended
 plain/mined commit, plain/mined note, and plain/PoW matrix, and
 `gnostr-ngit-tests.sh` exercises the ngit library with optional cargo feature
-switches.
+switches. `gnostr-p2p-tests.sh` runs the p2p cargo tests by default and the
+integration relay/subscriber/publisher flow in `integration` mode.
 `cargo-install-feature-variants.sh` runs `cargo install --path .` for the
 default feature set, `--all-features`, and `--no-default-features`.
 
