@@ -1,10 +1,13 @@
 use git2::{ErrorCode, Oid, Signature};
+use hex::decode as hex_decode;
 use scopetime::scope_time;
 use serde::{de::Error as DeError, Deserialize, Deserializer, Serialize, Serializer};
 use std::str::FromStr;
+use uuid::Uuid;
 
 use super::{repository::repo, RepoPath};
 use crate::error::Result;
+use crate::types::get_leading_zero_bits;
 
 // This module owns git note storage. NIP-34 shaping lives in `types::nip34`.
 //
@@ -123,6 +126,14 @@ pub enum NotesCommand {
         notes_ref: Option<String>,
         force: bool,
     },
+    /// Mine a note by appending a nonce until the PoW target is met.
+    Mine {
+        object_id: Oid,
+        note: String,
+        notes_ref: Option<String>,
+        pow_target_bits: u8,
+        prefix: Option<String>,
+    },
     /// Amend a note by appending content and re-adding it.
     Amend {
         object_id: Oid,
@@ -152,6 +163,9 @@ pub enum NotesCommandResult {
     Notes(Vec<NoteInfo>),
     Removed,
 }
+
+pub const DEFAULT_MINE_NOTE_PREFIX: &str = "000";
+pub const DEFAULT_MINE_NOTE_TARGET_BITS: u8 = 0;
 
 fn signature_allow_undefined_name(
     repo: &git2::Repository,
@@ -231,6 +245,28 @@ pub fn add_note<T: Into<Oid>>(
     )?)
 }
 
+fn note_id_leading_zero_bits(note_id: &Oid) -> u8 {
+    let bytes = hex_decode(note_id.to_string()).expect("git oid must be valid hex");
+    get_leading_zero_bits(&bytes)
+}
+
+fn append_nonce(message: &str, nonce: u64, prefix: &str) -> String {
+    if message.is_empty() {
+        format!("{prefix}-{nonce:08x}")
+    } else {
+        format!("{message}\n\n{prefix}-{nonce:08x}")
+    }
+}
+
+fn combine_note_messages(existing: Option<&str>, note: &str) -> String {
+    match existing.map(str::trim_end) {
+        Some(existing) if existing.is_empty() => note.to_string(),
+        Some(existing) if note.is_empty() => existing.to_string(),
+        Some(existing) => format!("{existing}\n{note}"),
+        None => note.to_string(),
+    }
+}
+
 /// Amends the note for an object by appending new content and re-adding it.
 ///
 /// If a note already exists, the existing content is preserved and the new
@@ -276,6 +312,90 @@ pub fn amend_note<T: Into<Oid>>(
         &combined_note,
         false,
     )?)
+}
+
+/// Mine a note by appending a nonce until the requested PoW target is met.
+///
+/// If a note already exists, its content is preserved and the new content is
+/// appended before mining. The existing note is only replaced after a valid
+/// candidate has been found.
+pub fn mine_note<T: Into<Oid>>(
+    repo_path: &RepoPath,
+    object_id: T,
+    note: &str,
+    notes_ref: Option<&str>,
+    pow_target_bits: u8,
+    prefix: Option<&str>,
+) -> Result<Oid> {
+    scope_time!("mine_note");
+
+    let repo = repo(repo_path)?;
+    let object_id = object_id.into();
+    let signature = signature_allow_undefined_name(&repo)?;
+    let prefix = prefix.unwrap_or(DEFAULT_MINE_NOTE_PREFIX);
+    let existing_note = match repo.find_note(notes_ref, object_id) {
+        Ok(existing_note) => Some(existing_note),
+        Err(err) if err.code() == ErrorCode::NotFound => None,
+        Err(err) => return Err(err.into()),
+    };
+    let base_message = combine_note_messages(existing_note.as_ref().and_then(|n| n.message()), note);
+    let temp_notes_ref = format!(
+        "refs/notes/gnostr-mine/{}-{}",
+        object_id,
+        Uuid::new_v4().simple()
+    );
+
+    let mut nonce = 0u64;
+    let candidate_note_id = loop {
+        let candidate_message = append_nonce(&base_message, nonce, prefix);
+        let note_id = repo.note(
+            &signature,
+            &signature,
+            Some(temp_notes_ref.as_str()),
+            object_id,
+            &candidate_message,
+            true,
+        )?;
+        if note_id.to_string().starts_with(prefix)
+            && note_id_leading_zero_bits(&note_id) >= pow_target_bits
+        {
+            break note_id;
+        }
+        nonce = nonce.wrapping_add(1);
+    };
+
+    let final_message = append_nonce(&base_message, nonce, prefix);
+    let force = existing_note.is_some();
+    let final_note_id = repo.note(
+        &signature,
+        &signature,
+        notes_ref,
+        object_id,
+        &final_message,
+        force,
+    )
+    .map_err(|err| {
+        let _ = repo.note_delete(
+            object_id,
+            Some(temp_notes_ref.as_str()),
+            &signature,
+            &signature,
+        );
+        err
+    })?;
+
+    let _ = repo.note_delete(
+        object_id,
+        Some(temp_notes_ref.as_str()),
+        &signature,
+        &signature,
+    );
+
+    Ok(if final_note_id == candidate_note_id {
+        final_note_id
+    } else {
+        candidate_note_id
+    })
 }
 
 /// Lists notes for the given notes reference.
@@ -368,6 +488,20 @@ pub fn run_notes_command(
             &note,
             notes_ref.as_deref(),
             force,
+        )?)),
+        NotesCommand::Mine {
+            object_id,
+            note,
+            notes_ref,
+            pow_target_bits,
+            prefix,
+        } => Ok(NotesCommandResult::NoteId(mine_note(
+            repo_path,
+            object_id,
+            &note,
+            notes_ref.as_deref(),
+            pow_target_bits,
+            prefix.as_deref(),
         )?)),
         NotesCommand::Amend {
             object_id,
@@ -491,6 +625,29 @@ mod tests {
         println!("custom notes list: {review_notes:#?}");
         assert_eq!(review_notes.len(), 1);
 
+        Ok(())
+    }
+
+    #[test]
+    fn mine_note_appends_existing_content_and_keeps_pow_target() -> Result<()> {
+        let (_td, repo) = repo_init()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+        let head = repo.head()?.target().unwrap();
+
+        let first_note_id = add_note(repo_path, head, "hello notes", None, false)?;
+        let mined_note_id = mine_note(repo_path, head, "more notes", None, 0, Some("0"))?;
+        let note = show_note(repo_path, head, None)?.expect("note exists");
+
+        println!(
+            "mined notes: first_note_id={first_note_id} mined_note_id={mined_note_id} note={note:#?}"
+        );
+        assert!(note.message.contains("hello notes"));
+        assert!(note.message.contains("more notes"));
+        assert!(note.message.contains("0-"));
+        assert_eq!(note.note_id, mined_note_id);
+        assert!(note.note_id.to_string().starts_with('0'));
         Ok(())
     }
 

@@ -127,7 +127,7 @@ pub use crate::{
         diff::{DiffLine, DiffLineType, FileDiff},
         list_notes,
         remotes::push::PushType,
-        remove_note, run_notes_command, show_note,
+        mine_note, remove_note, run_notes_command, show_note,
         status::{StatusItem, StatusItemType},
         GitNote, NoteInfo, NotesCommand, NotesCommandResult,
     },
