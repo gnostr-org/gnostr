@@ -65,7 +65,7 @@ fn accumulated_pow_range(
     let repo = repo(repo_path)?;
     let mut revwalk = repo.revwalk()?;
     let range = normalize_range(range);
-    if range.as_ref().contains("..") {
+    if range.as_ref().split_once("..").is_some() {
         revwalk.push_range(range.as_ref())?;
     } else {
         let commit = repo.revparse_single(range.as_ref())?.peel_to_commit()?;
@@ -207,6 +207,24 @@ mod tests {
         let c1 = commit(repo_path, "c1")?;
 
         let summary = accumulated_commit_pow(repo_path, "HEAD")?;
+        assert_eq!(summary.entries.len(), 1);
+        assert_eq!(summary.entries[0].commit_id, c1.into());
+        assert_eq!(summary.note_pow, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn accumulated_commit_pow_accepts_single_commit_id() -> Result<()> {
+        let (_td, repo) = repo_init_empty()?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+
+        std::fs::write(root.join("one.txt"), b"one")?;
+        stage_add_file(repo_path, std::path::Path::new("one.txt"))?;
+        let c1 = commit(repo_path, "c1")?;
+
+        let summary = accumulated_commit_pow(repo_path, &c1.to_string())?;
         assert_eq!(summary.entries.len(), 1);
         assert_eq!(summary.entries[0].commit_id, c1.into());
         assert_eq!(summary.note_pow, 0);
