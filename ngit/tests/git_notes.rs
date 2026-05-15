@@ -1,7 +1,8 @@
-use std::{fs, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
 use gnostr_asyncgit::{
+    create_temp_repo,
     profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     sync::{
         add_note, append_public_attestation_log, default_notes_ref, list_notes, mine_note,
@@ -24,9 +25,7 @@ use gnostr_ngit::{
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
-use directories::ProjectDirs;
 use secp256k1::SECP256K1;
-use tempfile::Builder;
 use time::OffsetDateTime;
 use std::sync::Once;
 
@@ -64,12 +63,32 @@ fn repo_ref_fixture() -> Result<RepoRef> {
     Ok(RepoRef::try_from((generate_repo_ref_event(), None))?)
 }
 
-fn mine_pow_commit(repo_dir: impl AsRef<Path>) -> Result<String> {
+fn mine_pow_commit(repo_dir: impl AsRef<Path>) -> Result<Oid> {
     let repo_dir = repo_dir.as_ref();
     let repo = gnostr_asyncgit::git2::Repository::open(repo_dir)?;
+    let (name, email) = repo
+        .signature()
+        .ok()
+        .and_then(|signature| {
+            let name = signature.name()?.to_string();
+            let email = signature.email()?.to_string();
+            Some((name, email))
+        })
+        .filter(|(name, email)| !name.is_empty() && !email.is_empty())
+        .unwrap_or_else(|| {
+            let name = std::env::var("GIT_AUTHOR_NAME")
+                .or_else(|_| std::env::var("GIT_COMMITTER_NAME"))
+                .or_else(|_| std::env::var("USER"))
+                .unwrap_or_else(|_| "name".to_string());
+            let email = std::env::var("GIT_AUTHOR_EMAIL")
+                .or_else(|_| std::env::var("GIT_COMMITTER_EMAIL"))
+                .or_else(|_| std::env::var("EMAIL"))
+                .unwrap_or_else(|_| "email@example.com".to_string());
+            (name, email)
+        });
     let mut config = repo.config()?;
-    config.set_str("user.name", "gnostr")?;
-    config.set_str("user.email", "admin@gnostr.org")?;
+    config.set_str("user.name", &name)?;
+    config.set_str("user.email", &email)?;
 
     let opts = LegitOptions {
         threads: 1,
@@ -81,7 +100,10 @@ fn mine_pow_commit(repo_dir: impl AsRef<Path>) -> Result<String> {
     };
 
     let mut miner = Gitminer::new(opts).map_err(anyhow::Error::msg)?;
-    miner.mine().map_err(anyhow::Error::msg)
+    let mined_hash = miner.mine().map_err(anyhow::Error::msg)?;
+    mined_hash
+        .parse::<Oid>()
+        .map_err(|err| anyhow::Error::msg(err.to_string()))
 }
 
 fn mine_git_note(
@@ -302,18 +324,7 @@ async fn pretty_print_attestations() -> Result<()> {
     println!("[ngit] pretty_print_attestations");
     init_test_log();
 
-    let project_dirs = ProjectDirs::from("org", "gnostr", "tests").expect("project dirs");
-    fs::create_dir_all(project_dirs.cache_dir())?;
-    let blockheight = gnostr_asyncgit::blockheight::blockheight_sync();
-    let temp_repo = Builder::new()
-        .prefix(&format!("{blockheight}-"))
-        .tempdir_in(project_dirs.cache_dir())?;
-    let git_repo = gnostr_asyncgit::git2::Repository::init(temp_repo.path())?;
-    {
-        let mut config = git_repo.config()?;
-        config.set_str("user.name", "gnostr")?;
-        config.set_str("user.email", "admin@gnostr.org")?;
-    }
+    let (temp_repo, _git_repo) = create_temp_repo()?;
     let root = temp_repo.path().to_path_buf();
     let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
     let repo_path: &RepoPath = &repo_path_owned;
@@ -327,7 +338,7 @@ async fn pretty_print_attestations() -> Result<()> {
 
         let commit_id = mine_pow_commit(temp_repo.path())?;
         let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id))
-        .map_err(|err| anyhow::Error::msg(err.to_string()))?;
+            .map_err(|err| anyhow::Error::msg(err.to_string()))?;
         let secret_key = profile.private_key().0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(SECP256K1);
         let attestation = create_attestation_with_pow(
