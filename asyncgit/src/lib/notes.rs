@@ -189,7 +189,7 @@ mod tests {
     #[test]
     #[serial]
     fn async_notes_roundtrip() -> Result<()> {
-        let (td, repo) = create_temp_repo_with_empty_tree()
+        let (_td, repo) = create_temp_repo_with_empty_tree()
             .map_err(|error| crate::error::Error::Generic(error.to_string()))?;
 
         let root = repo.path().parent().unwrap();
