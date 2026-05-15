@@ -736,9 +736,11 @@ mod tests {
     #[tokio::test]
     async fn real_attestation_events_are_broadcast_to_crawler_relays() -> anyhow::Result<()> {
         let _guard = test_lock();
+        println!("[p2p] real_attestation_events_are_broadcast_to_crawler_relays");
         let config_root = tempfile::tempdir()?;
         let _home_guard = EnvGuard::set("HOME", config_root.path());
         let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+        println!("[p2p] config_root={}", config_root.path().display());
 
         let (_td, repo) = tempdir().map(|td| {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
@@ -749,23 +751,28 @@ mod tests {
             }
             (td, repo)
         })?;
+        println!("[p2p] temp repo={}", repo.path().display());
         let root = repo.path().parent().unwrap();
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
         let repo_path: &RepoPath = &repo_path_owned;
 
         let config_dir = crate::relay_paths::get_config_dir_path();
+        println!("[p2p] config_dir={}", config_dir.display());
         let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
+        println!("[p2p] crawler relays={relays:?}");
 
         let buckets = load_relay_buckets(&config_dir)
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
         assert_eq!(buckets[0].relays, relays);
+        println!("[p2p] relay buckets loaded={buckets:?}");
 
         let file_name = "real-attestation-events.txt";
         std::fs::write(root.join(file_name), bitcoindev_2.label.as_bytes())?;
         stage_add_file(repo_path, Path::new(file_name))?;
+        println!("[p2p] staged file={file_name}");
 
         let commit_id = gnostr_asyncgit::sync::commit::mine_commit(
             repo_path,
@@ -776,6 +783,7 @@ mod tests {
                 timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
             },
         )?;
+        println!("[p2p] mined commit={commit_id}");
 
         let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
@@ -804,6 +812,7 @@ mod tests {
             5,
             Some("0"),
         )?;
+        println!("[p2p] mined note={note_id}");
         let note = show_note(repo_path, commit_id, Some(notes_ref))?.expect("note exists");
         let relay_message = RelayMessage::Event(
             SubscriptionId(attestation.id.as_hex_string()),
@@ -834,6 +843,7 @@ mod tests {
             &attestation,
         )
         .await?;
+        println!("[p2p] broadcast complete");
 
         Ok(())
     }
