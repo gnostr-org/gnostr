@@ -27,6 +27,12 @@ That matrix now covers plain/mined commits, plain/mined notes, and plain/PoW eve
 
 Note: `nostr_sdk` is only used in test code here; production asyncgit paths stay on the repo's own types.
 
+## Public attestation structure
+
+`asyncgit`'s attestation tests are deterministic and chronological: commit first, then attestation event, then mined git note. The note payload records the attestation event id, commit id, and PoW bits, and `notes_ref` links each note to the previous attestation so the log forms a chain.
+
+That structure is what `p2p` syndicates downstream, so the test output stays stable across release flows and BQS-style public attestations.
+
 Useful variants:
 
 ```sh
