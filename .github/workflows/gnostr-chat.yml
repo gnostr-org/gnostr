@@ -126,24 +126,12 @@ jobs:
           cache: true
 
       - run: rustup default ${{ matrix.rustup }}
-      - name: Build gnostr p2p binaries
-        run: cargo build -p gnostr-p2p --bins --quiet
-      - name: Install cargo-binstall
-        id: binstall
-        continue-on-error: true
-        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
-        uses: cargo-bins/cargo-binstall@v1.18.1
 
-      - name: Fallback install cargo-binstall (from crates.io)
-        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') && steps.binstall.outcome != 'success' }}
-        shell: bash
-        run: |
-          set -euxo pipefail
-          cargo install cargo-binstall --locked
-
-      - name: Install gnostr via cargo-binstall
-        if: ${{ !env.ACT && !hashFiles('target/debug/gnostr') }}
-        uses: ./.github/actions/cargo-binstall-gnostr
+      - name: Install gnostr (latest release)
+        uses: ./.github/actions/get-latest
+        #if: runner.os != 'macOS'
+        with:
+          github_token: ${{ github.token }}
 
       - name: Build headless chat image
         if: runner.os == 'Linux'
