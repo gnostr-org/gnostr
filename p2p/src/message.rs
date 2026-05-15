@@ -18,7 +18,6 @@ mod tests {
         collections::BTreeMap,
         fs,
         path::Path,
-        process::Command,
     };
 
     use super::*;
@@ -124,18 +123,14 @@ mod tests {
         get_leading_zero_bits(note_id.as_bytes())
     }
 
-    fn fetch_live_crawler_relays() -> anyhow::Result<Vec<String>> {
-        let output = Command::new("curl")
-            .args(["-fsS", "http://127.0.0.1:8080/relays.yaml"])
-            .output()?;
-        if !output.status.success() {
-            return Err(anyhow::anyhow!(
-                "failed to fetch live crawler relays: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ));
-        }
+    async fn fetch_live_crawler_relays() -> anyhow::Result<Vec<String>> {
+        let relays_yaml = reqwest::get("http://127.0.0.1:8080/relays.yaml")
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
 
-        let relays = String::from_utf8(output.stdout)?
+        let relays = relays_yaml
             .lines()
             .map(str::trim)
             .filter(|line| !line.is_empty())
@@ -937,7 +932,7 @@ mod tests {
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
         let repo_path: &RepoPath = &repo_path_owned;
 
-        let relays = fetch_live_crawler_relays()?;
+        let relays = fetch_live_crawler_relays().await?;
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
 
         let config_dir = tempdir()?;
