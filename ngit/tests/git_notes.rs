@@ -1,7 +1,14 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use gnostr_asyncgit::sync::{add_note, default_notes_ref, list_notes, remove_note, show_note, RepoPath};
+use gnostr_asyncgit::{
+    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
+    sync::{
+        add_note, append_public_attestation_log, default_notes_ref, list_notes, mine_note,
+        remove_note, show_note, stage_add_file, CommitMineOptions, RepoPath,
+    },
+    types::{get_leading_zero_bits, nip3::create_attestation_with_pow, Id},
+};
 use gnostr_asyncgit::git2::Oid;
 use gnostr_legit::gitminer::{Gitminer, Options as LegitOptions};
 use gnostr_ngit::{
@@ -17,6 +24,7 @@ use gnostr_ngit::{
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
+use time::OffsetDateTime;
 use time::OffsetDateTime;
 use std::sync::Once;
 
@@ -95,6 +103,10 @@ fn mine_git_note(
         }
         nonce = nonce.wrapping_add(1);
     }
+}
+
+fn note_id_leading_zero_bits(note_id: &Oid) -> u8 {
+    get_leading_zero_bits(note_id.as_bytes())
 }
 
 #[tokio::test]
@@ -277,6 +289,106 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
         .iter()
         .any(|tag| tag.as_slice().first().map(|s| s.as_str()) == Some("P")));
     remove_note(note_repo_path, head, Some(notes_ref.as_str()))?;
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn pretty_print_attestations() -> Result<()> {
+    println!("[ngit] pretty_print_attestations");
+    init_test_log();
+
+    let repo = GitTestRepo::new("main")?;
+    repo.populate_minus_1()?;
+    let root = repo.dir.clone();
+    let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+    let repo_path: &RepoPath = &repo_path_owned;
+    let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
+    let mut previous_attestation_id: Option<String> = None;
+
+    for (index, profile) in fixtures.iter().enumerate() {
+        let file_name = format!("pretty-print-attestations-{index}.txt");
+        std::fs::write(root.join(&file_name), profile.label.as_bytes())?;
+        stage_add_file(repo_path, std::path::Path::new(&file_name))?;
+
+        let commit_id = mine_pow_commit(&repo)?;
+        let attestation_target = Id::try_from_hex_string(&gnostr_asyncgit::sync::padded_commit_id(
+            commit_id.to_string(),
+        ))
+        .map_err(|err| anyhow::Error::msg(err.to_string()))?;
+        let secret_key = profile.private_key().0.clone();
+        let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            profile.metadata_json(),
+            &xonly_public_key,
+            &secret_key,
+            5,
+        );
+        let notes_ref = previous_attestation_id
+            .as_deref()
+            .map(|event_id| format!("refs/notes/public-attestations/{event_id}"))
+            .unwrap_or_else(|| "refs/notes/public-attestations/root".to_string());
+        let note_message = append_public_attestation_log(
+            None,
+            1234 + index as i64,
+            &attestation.id.as_hex_string(),
+            &commit_id.to_string(),
+            attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+        );
+        let note_id = mine_note(
+            repo_path,
+            commit_id,
+            &note_message,
+            Some(&notes_ref),
+            5,
+            Some("0"),
+        )?;
+        let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
+        let signer_keys = Keys::generate();
+        let signer: Arc<dyn NostrSigner> = Arc::new(signer_keys.clone());
+        let git_note_event = gnostr_ngit::git_events::generate_git_note_event_with_pow(
+            &note,
+            &signer_keys,
+            4,
+        )
+        .await?;
+
+        println!(
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "profile": profile.label,
+                "commit": commit_id.to_string(),
+                "note_id": note_id.to_string(),
+                "note": &note,
+                "author": note.author,
+                "committer": note.committer,
+                "committer_time": note.committer_time,
+                "profile_metadata": profile.metadata(),
+                "profile_npub": profile.npub(),
+                "profile_nsec": profile.nsec(),
+                "attestation_id": attestation.id.to_string(),
+                "attestation_signature": format!("{:?}", attestation.sig),
+                "attestation_kind": format!("{:?}", attestation.kind),
+                "attestation_content": attestation.content,
+                "attestation_nonce": attestation.nonce_data().map(|(nonce, bits)| serde_json::json!({"nonce": nonce, "bits": bits})),
+                "note_pow_bits": note_id_leading_zero_bits(&note_id),
+                "notes_ref": notes_ref,
+                "git_note_event": serde_json::to_value(&git_note_event)?,
+            }))?
+        );
+
+        assert_eq!(note.note_id, note_id);
+        assert!(note.note_id.to_string().starts_with('0'));
+        assert!(note_id_leading_zero_bits(&note_id) >= 5);
+        assert!(note.message.contains(&attestation.id.as_hex_string()));
+        assert!(note.message.contains(&commit_id.to_string()));
+        assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
+        assert_eq!(git_note_event.content, note.message);
+        previous_attestation_id = Some(attestation.id.as_hex_string());
+        let _ = signer; // keep the signer path explicit in the structured print test.
+    }
+
     Ok(())
 }
 
