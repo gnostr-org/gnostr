@@ -1,13 +1,13 @@
-use std::sync::Arc;
+use std::{fs, path::Path, sync::Arc};
 
 use anyhow::Result;
 use gnostr_asyncgit::{
     profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     sync::{
         add_note, append_public_attestation_log, default_notes_ref, list_notes, mine_note,
-        remove_note, show_note, stage_add_file, CommitMineOptions, RepoPath,
+        remove_note, show_note, stage_add_file, RepoPath,
     },
-    types::{get_leading_zero_bits, nip3::create_attestation_with_pow, Id},
+    types::{get_leading_zero_bits, nip13::NIP13Event, nip3::create_attestation_with_pow, Id},
 };
 use gnostr_asyncgit::git2::Oid;
 use gnostr_legit::gitminer::{Gitminer, Options as LegitOptions};
@@ -24,6 +24,9 @@ use gnostr_ngit::{
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
+use directories::ProjectDirs;
+use secp256k1::SECP256K1;
+use tempfile::Builder;
 use time::OffsetDateTime;
 use std::sync::Once;
 
@@ -51,7 +54,7 @@ fn seeded_keys_from_oid(oid: &Oid) -> Result<Keys> {
 fn repo_fixture() -> Result<(GitTestRepo, Repo)> {
     let git_repo = GitTestRepo::new("main")?;
     git_repo.populate_minus_1()?;
-    let mined_hash = mine_pow_commit(&git_repo)?;
+    let mined_hash = mine_pow_commit(git_repo.dir.as_path())?;
     let repo = Repo::from_path(&git_repo.dir)?;
     println!("pow commit mined for fixture: {mined_hash}");
     Ok((git_repo, repo))
@@ -61,16 +64,18 @@ fn repo_ref_fixture() -> Result<RepoRef> {
     Ok(RepoRef::try_from((generate_repo_ref_event(), None))?)
 }
 
-fn mine_pow_commit(repo: &GitTestRepo) -> Result<String> {
-    let mut config = repo.git_repo.config()?;
-    config.set_str("user.name", "randymcmillan")?;
-    config.set_str("user.email", "randymcmillan@example.com")?;
+fn mine_pow_commit(repo_dir: impl AsRef<Path>) -> Result<String> {
+    let repo_dir = repo_dir.as_ref();
+    let repo = gnostr_asyncgit::git2::Repository::open(repo_dir)?;
+    let mut config = repo.config()?;
+    config.set_str("user.name", "gnostr")?;
+    config.set_str("user.email", "admin@gnostr.org")?;
 
     let opts = LegitOptions {
         threads: 1,
         target: "00".to_string(),
         message: vec!["proof-of-work commit".to_string()],
-        repo: repo.dir.to_str().unwrap().to_string(),
+        repo: repo_dir.to_str().unwrap().to_string(),
         timestamp: OffsetDateTime::now_utc(),
         kind: None,
     };
@@ -116,7 +121,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     init_test_log();
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
-    let mined_hash = mine_pow_commit(&repo)?;
+    let mined_hash = mine_pow_commit(repo.dir.as_path())?;
 
     let head = repo.git_repo.head()?.target().unwrap();
     let repo_path_owned: RepoPath = repo.dir.as_os_str().to_str().unwrap().into();
@@ -297,9 +302,19 @@ async fn pretty_print_attestations() -> Result<()> {
     println!("[ngit] pretty_print_attestations");
     init_test_log();
 
-    let repo = GitTestRepo::new("main")?;
-    repo.populate_minus_1()?;
-    let root = repo.dir.clone();
+    let project_dirs = ProjectDirs::from("org", "gnostr", "tests").expect("project dirs");
+    fs::create_dir_all(project_dirs.cache_dir())?;
+    let blockheight = gnostr_asyncgit::blockheight::blockheight_sync();
+    let temp_repo = Builder::new()
+        .prefix(&format!("{blockheight}-"))
+        .tempdir_in(project_dirs.cache_dir())?;
+    let git_repo = gnostr_asyncgit::git2::Repository::init(temp_repo.path())?;
+    {
+        let mut config = git_repo.config()?;
+        config.set_str("user.name", "gnostr")?;
+        config.set_str("user.email", "admin@gnostr.org")?;
+    }
+    let root = temp_repo.path().to_path_buf();
     let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
     let repo_path: &RepoPath = &repo_path_owned;
     let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
@@ -310,11 +325,11 @@ async fn pretty_print_attestations() -> Result<()> {
         std::fs::write(root.join(&file_name), profile.label.as_bytes())?;
         stage_add_file(repo_path, std::path::Path::new(&file_name))?;
 
-        let commit_id = mine_pow_commit(&repo)?;
+        let commit_id = mine_pow_commit(temp_repo.path())?;
         let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id))
         .map_err(|err| anyhow::Error::msg(err.to_string()))?;
         let secret_key = profile.private_key().0.clone();
-        let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
+        let (xonly_public_key, _parity) = secret_key.x_only_public_key(SECP256K1);
         let attestation = create_attestation_with_pow(
             attestation_target,
             profile.metadata_json(),
@@ -409,7 +424,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
         let repo = GitTestRepo::new("main")?;
         repo.populate()?;
         if mine_commit_flag {
-            let mined_hash = mine_pow_commit(&repo)?;
+            let mined_hash = mine_pow_commit(repo.dir.as_path())?;
             println!("matrix case mined commit: {mined_hash}");
         }
 
