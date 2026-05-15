@@ -752,6 +752,11 @@ mod tests {
 
     #[tokio::test]
     async fn real_attestation_events_are_broadcast_to_crawler_relays() -> anyhow::Result<()> {
+        let _guard = test_lock();
+        let config_root = tempfile::tempdir()?;
+        let _home_guard = EnvGuard::set("HOME", config_root.path());
+        let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+
         let (_td, repo) = tempdir().map(|td| {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
@@ -766,13 +771,14 @@ mod tests {
         let repo_path: &RepoPath = &repo_path_owned;
 
         let config_dir = crate::relay_paths::get_config_dir_path();
-        let buckets = load_crawler_relay_buckets()
+        let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
+        assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
+
+        let buckets = load_relay_buckets(&config_dir)
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
-        assert!(
-            !buckets.is_empty(),
-            "no crawler relay buckets configured at {}",
-            config_dir.display()
-        );
+        assert_eq!(buckets.len(), 1);
+        assert_eq!(buckets[0].nip, 34);
+        assert_eq!(buckets[0].relays, relays);
 
         let file_name = "real-attestation-events.txt";
         std::fs::write(root.join(file_name), bitcoindev_2.label.as_bytes())?;
@@ -836,7 +842,7 @@ mod tests {
                 "note_pow_bits": note_id_leading_zero_bits(&note_id),
                 "relay_message": serde_json::to_value(&relay_message)?,
                 "notes_ref": notes_ref,
-                "relay_urls": buckets.iter().flat_map(|bucket| bucket.relays.clone()).collect::<Vec<_>>(),
+                "relay_urls": relays.clone(),
             }))?
         );
 
