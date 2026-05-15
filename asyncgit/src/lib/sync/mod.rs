@@ -137,6 +137,13 @@ fn configure_temp_repo(repo: &git2::Repository, label: &str) -> anyhow::Result<(
     Ok(())
 }
 
+fn seed_empty_tree(repo: &git2::Repository, label: &str) -> anyhow::Result<git2::Oid> {
+    let mut index = repo.index()?;
+    let empty_tree = index.write_tree()?;
+    log::info!("{label}: empty_tree={empty_tree}");
+    Ok(empty_tree)
+}
+
 /// Create a temporary non-bare repo using the developer machine's git identity.
 pub fn create_temp_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
     let temp_dir = tempfile::TempDir::new()?;
@@ -145,11 +152,26 @@ pub fn create_temp_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository
     Ok((temp_dir, repo))
 }
 
+/// Create a temporary non-bare repo and seed an empty tree object.
+pub fn create_temp_repo_with_empty_tree() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let (temp_dir, repo) = create_temp_repo()?;
+    let _ = seed_empty_tree(&repo, "create_temp_repo_with_empty_tree")?;
+    Ok((temp_dir, repo))
+}
+
 /// Create a temporary bare repo using the developer machine's git identity.
 pub fn create_temp_bare_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
     let temp_dir = tempfile::TempDir::new()?;
     let repo = git2::Repository::init_bare(temp_dir.path())?;
     configure_temp_repo(&repo, "create_temp_bare_repo")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary bare repo and seed an empty tree object.
+pub fn create_temp_bare_repo_with_empty_tree()
+-> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let (temp_dir, repo) = create_temp_bare_repo()?;
+    let _ = seed_empty_tree(&repo, "create_temp_bare_repo_with_empty_tree")?;
     Ok((temp_dir, repo))
 }
 

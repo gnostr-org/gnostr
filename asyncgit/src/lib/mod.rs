@@ -127,7 +127,8 @@ pub use crate::{
     status::{AsyncStatus, StatusParams},
     sync::{
         add_note, amend_note, append_public_attestation_log, create_empty_tree,
-        create_empty_tree_sha256, default_notes_ref, create_temp_bare_repo, create_temp_repo,
+        create_empty_tree_sha256, default_notes_ref, create_temp_bare_repo,
+        create_temp_bare_repo_with_empty_tree, create_temp_repo, create_temp_repo_with_empty_tree,
         diff::{DiffLine, DiffLineType, FileDiff},
         list_notes, accumulated_commit_pow, accumulated_note_pow, accumulated_pow,
         accumulated_pow_depth, mine_note, remotes::push::PushType, remove_note,
