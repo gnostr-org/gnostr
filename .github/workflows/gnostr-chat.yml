@@ -136,7 +136,12 @@ jobs:
       - run: gnostr -V
       - run: gnostr -h
       - run: gnostr chat -h
-      - run: gnostr chat --topic gnostr-dev --headless &
+      - run: gnostr chat --topic gnostr-dev --headless & sleep 10 &
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
 
       - name: Build headless chat image
         if: runner.os == 'Linux'
