@@ -25,7 +25,6 @@ use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
 use time::OffsetDateTime;
-use time::OffsetDateTime;
 use std::sync::Once;
 
 fn init_test_log() {
@@ -312,9 +311,7 @@ async fn pretty_print_attestations() -> Result<()> {
         stage_add_file(repo_path, std::path::Path::new(&file_name))?;
 
         let commit_id = mine_pow_commit(&repo)?;
-        let attestation_target = Id::try_from_hex_string(&gnostr_asyncgit::sync::padded_commit_id(
-            commit_id.to_string(),
-        ))
+        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id))
         .map_err(|err| anyhow::Error::msg(err.to_string()))?;
         let secret_key = profile.private_key().0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
@@ -346,12 +343,8 @@ async fn pretty_print_attestations() -> Result<()> {
         )?;
         let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
         let signer_keys = Keys::generate();
-        let signer: Arc<dyn NostrSigner> = Arc::new(signer_keys.clone());
-        let git_note_event = gnostr_ngit::git_events::generate_git_note_event_with_pow(
-            &note,
-            &signer_keys,
-            4,
-        )
+        let git_note_event =
+            gnostr_ngit::git_events::generate_git_note_event_with_pow(&note, &signer_keys, 4)
         .await?;
 
         println!(
@@ -386,7 +379,6 @@ async fn pretty_print_attestations() -> Result<()> {
         assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
         assert_eq!(git_note_event.content, note.message);
         previous_attestation_id = Some(attestation.id.as_hex_string());
-        let _ = signer; // keep the signer path explicit in the structured print test.
     }
 
     Ok(())
