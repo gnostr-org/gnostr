@@ -104,6 +104,52 @@ pub use utils::{
     stage_addremoved, Head,
 };
 
+fn temp_repo_identity(repo: &git2::Repository) -> (String, String) {
+    if let Ok(signature) = repo.signature() {
+        let name = signature.name().unwrap_or_default().to_string();
+        let email = signature.email().unwrap_or_default().to_string();
+        if !name.is_empty() && !email.is_empty() {
+            return (name, email);
+        }
+    }
+
+    let name = std::env::var("GIT_AUTHOR_NAME")
+        .or_else(|_| std::env::var("GIT_COMMITTER_NAME"))
+        .or_else(|_| std::env::var("USER"))
+        .unwrap_or_else(|_| "name".to_string());
+    let email = std::env::var("GIT_AUTHOR_EMAIL")
+        .or_else(|_| std::env::var("GIT_COMMITTER_EMAIL"))
+        .or_else(|_| std::env::var("EMAIL"))
+        .unwrap_or_else(|_| "email@example.com".to_string());
+
+    (name, email)
+}
+
+fn configure_temp_repo(repo: &git2::Repository, label: &str) -> anyhow::Result<()> {
+    let (name, email) = temp_repo_identity(repo);
+    let mut config = repo.config()?;
+    config.set_str("user.name", &name)?;
+    config.set_str("user.email", &email)?;
+    log::info!("{label}: user.name={name} user.email={email}");
+    Ok(())
+}
+
+/// Create a temporary non-bare repo using the developer machine's git identity.
+pub fn create_temp_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let temp_dir = tempfile::TempDir::new()?;
+    let repo = git2::Repository::init(temp_dir.path())?;
+    configure_temp_repo(&repo, "create_temp_repo")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary bare repo using the developer machine's git identity.
+pub fn create_temp_bare_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let temp_dir = tempfile::TempDir::new()?;
+    let repo = git2::Repository::init_bare(temp_dir.path())?;
+    configure_temp_repo(&repo, "create_temp_bare_repo")?;
+    Ok((temp_dir, repo))
+}
+
 #[cfg(test)]
 mod tests {
     use std::{path::Path, process::Command};
