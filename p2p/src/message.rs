@@ -677,8 +677,9 @@ mod tests {
             }))?
         );
 
-        let session = crate::RelayBridgeSession::connect(buckets[0].relays[0].clone()).await?;
-        session.publish_event(attestation.clone()).await?;
+        let published =
+            crate::crawler_broadcast::broadcast_event_to_crawler_relays(config_dir.path(), &attestation).await?;
+        assert_eq!(published, 1);
 
         let received_event = timeout(std::time::Duration::from_secs(5), received_event)
             .await
@@ -687,7 +688,6 @@ mod tests {
         assert_eq!(received_event.kind, attestation.kind);
         assert_eq!(received_event.content, attestation.content);
 
-        drop(session);
         relay_task.await.expect("relay task");
 
         Ok(())

@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
 use crate::relay_paths::get_config_dir_path;
+use crate::{message::Event, relay_bridge::NostrRelayConnection};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RelayBucket {
@@ -97,6 +98,24 @@ pub async fn publish_local_snapshots(
     swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
 ) -> Result<usize, Box<dyn Error>> {
     broadcast_crawler_relay_buckets(swarm).await
+}
+
+pub async fn broadcast_event_to_crawler_relays(
+    config_dir: &Path,
+    event: &Event,
+) -> anyhow::Result<usize> {
+    let buckets = load_relay_buckets(config_dir).map_err(|err| anyhow::anyhow!(err.to_string()))?;
+    let mut published = 0usize;
+
+    for bucket in buckets {
+        for relay_url in bucket.relays {
+            let mut connection = NostrRelayConnection::connect(relay_url.clone()).await?;
+            connection.publish_event(event.clone()).await?;
+            published += 1;
+        }
+    }
+
+    Ok(published)
 }
 
 #[cfg(test)]
