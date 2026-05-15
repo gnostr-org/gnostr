@@ -584,9 +584,9 @@ async fn main() -> anyhow::Result<()> {
                 );
 
                 let bootstrap_relays = gnostr::crawler::bootstrap_relays();
-                println!("DM bootstrap relays:");
+                debug!("DM bootstrap relays:");
                 for relay in &bootstrap_relays {
-                    println!("  {relay}");
+                    debug!("  {relay}");
                 }
                 debug!("DM bootstrap relays: {:?}", bootstrap_relays);
                 debug!(
