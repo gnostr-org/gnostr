@@ -19,80 +19,31 @@ path = "src/lib.rs"
 
 [dependencies]
 ansi_term = "0.12"
-anyhow = "1.0.98"
+anyhow = { workspace = true }
 async-std = { version = "1.12", features = ["attributes"] }
-chrono = { version = "0.4", features = ["serde"] }
-clap = { version = "4.5.41", features = [
-  "std",
-  "cargo",
-  "derive",
-  "help",
-  "usage",
-  "env",
-] }
-futures = "0.3.31"
-futures-util = "0.3.31"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=949423.1873.524849", default-features = false, features = [
+chrono = { workspace = true, features = ["serde"] }
+clap = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+gnostr-asyncgit = { workspace = true, default-features = false, features = [
   "nostr",
   "vendor-openssl",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=949423.1873.524849" }
-gnostr-js = { path = "../js", package = "gnostr-js", version = ">=949423.1873.524849" }
-libp2p = { version = "0.54.1", features = [
-  "full",
-  "autonat",
-  "cbor",
-  "dcutr",
-  "dns",
-  "ecdsa",
-  "ed25519",
-  "floodsub",
-  "gossipsub",
-  "identify",
-  "json",
-  "kad",
-  "macros",
-  "mdns",
-  "memory-connection-limits",
-  "metrics",
-  "noise",
-  "ping",
-  "plaintext",
-  "pnet",
-  "quic",
-  "relay",
-  "rendezvous",
-  "request-response",
-  "rsa",
-  "secp256k1",
-  "serde",
-  "tcp",
-  "tls",
-  "tokio",
-  "uds",
-  "upnp",
-  "wasm-bindgen",
-  "websocket",
-  "webtransport-websys",
-  "yamux",
-] }
-log = "0.4.29"
-rand = "0.8.5"
+gnostr-crawler = { workspace = true }
+gnostr-js = { workspace = true }
+libp2p = { workspace = true }
+log = { workspace = true }
+rand = { workspace = true }
 reqwest = { workspace = true }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-serde_yaml = "0.9"
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 sha2 = { workspace = true }
 tempfile = { workspace = true }
-thiserror = "1.0.69"
-time = "0.3"
-tokio = { version = "1.46.1", features = ["full"] }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
-tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.22", default-features = false, features = [
-  "env-filter",
-  "smallvec",
-  "parking_lot",
-  "fmt",
-] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 warp = { workspace = true }
