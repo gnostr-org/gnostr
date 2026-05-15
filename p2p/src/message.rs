@@ -38,8 +38,7 @@ mod tests {
     use futures_util::StreamExt;
     use crate::time::{ClockStatus, Estimation, SyncState};
     use crate::crawler_broadcast::{
-        bootstrap_crawler_relay_buckets, bucket_topic, load_crawler_relay_buckets,
-        load_relay_buckets,
+        bootstrap_crawler_relay_buckets, bucket_topic, load_relay_buckets,
     };
     use tokio::{net::TcpListener, time::timeout};
     use tokio_tungstenite::{accept_async, tungstenite::Message};
@@ -162,22 +161,6 @@ mod tests {
 
     fn note_id_leading_zero_bits(note_id: &Oid) -> u8 {
         get_leading_zero_bits(note_id.as_bytes())
-    }
-
-    async fn fetch_live_crawler_relays() -> anyhow::Result<Vec<String>> {
-        let relays_yaml = reqwest::get("http://127.0.0.1:8080/relays.yaml")
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
-
-        let relays = relays_yaml
-            .lines()
-            .map(str::trim)
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim_start_matches("- ").trim().to_string())
-            .collect::<Vec<_>>();
-        Ok(relays)
     }
 
     async fn spawn_attestation_relay(
