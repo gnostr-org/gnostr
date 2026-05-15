@@ -75,6 +75,8 @@ mockall = "0.13.1"
 once_cell = "1.21.3"
 rstest = "0.23"
 serial_test = "3.2.0"
+secp256k1 = { workspace = true }
+tempfile = { workspace = true }
 test_utils = { path = "test_utils" }
 time = { workspace = true }
 
