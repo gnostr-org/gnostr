@@ -181,19 +181,15 @@ mod tests {
     use std::{fs::File, io::Write, path::Path, time::Duration};
 
     use crossbeam_channel::unbounded;
-    use tempfile::TempDir;
+    use serial_test::serial;
 
+    use crate::{create_temp_repo_with_empty_tree, git2::Signature};
     use super::*;
 
     #[test]
+    #[serial]
     fn async_notes_roundtrip() -> Result<()> {
-        let td = TempDir::new()?;
-        let repo = git2::Repository::init(td.path())?;
-        {
-            let mut config = repo.config()?;
-            config.set_str("user.name", "name")?;
-            config.set_str("user.email", "email")?;
-        }
+        let (td, repo) = create_temp_repo_with_empty_tree()?;
 
         let file_path = Path::new("foo");
         File::create(td.path().join(file_path))?.write_all(b"a")?;
@@ -201,7 +197,7 @@ mod tests {
         index.add_path(file_path)?;
         let tree_id = index.write_tree()?;
         let tree = repo.find_tree(tree_id)?;
-        let sig = repo.signature()?;
+        let sig = Signature::now("name", "email")?;
         repo.commit(Some("HEAD"), &sig, &sig, "initial", &tree, &[])?;
 
         let root = repo.path().parent().unwrap();
