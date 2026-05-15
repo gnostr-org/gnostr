@@ -65,7 +65,15 @@ fn accumulated_pow_range(
     let repo = repo(repo_path)?;
     let mut revwalk = repo.revwalk()?;
     let range = normalize_range(range);
-    revwalk.push_range(range.as_ref())?;
+    if range.as_ref().contains("..") {
+        revwalk.push_range(range.as_ref())?;
+    } else {
+        let commit = repo.revparse_single(range.as_ref())?.peel_to_commit()?;
+        revwalk.push(commit.id())?;
+        for parent in commit.parents() {
+            revwalk.hide(parent.id())?;
+        }
+    }
     revwalk.set_sorting(Sort::TOPOLOGICAL)?;
 
     let mut summary = AccumulatedPowSummary::default();
