@@ -160,7 +160,7 @@ pub async fn bootstrap_crawler_relay_buckets(
         tokio::time::timeout(Duration::from_secs(30), async {
             loop {
                 if let Some(relays) = fetch_live_crawler_relays().await? {
-                    break Ok(relays);
+                    break Ok::<Vec<String>, anyhow::Error>(relays);
                 }
                 tokio::time::sleep(Duration::from_millis(500)).await;
             }

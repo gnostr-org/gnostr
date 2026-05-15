@@ -18,7 +18,6 @@ mod tests {
         collections::BTreeMap,
         fs,
         path::Path,
-        process::Stdio,
         sync::{Mutex, OnceLock},
     };
 
@@ -640,7 +639,7 @@ mod tests {
         std::fs::create_dir_all(&bucket_dir)?;
         std::fs::write(bucket_dir.join("relays.yaml"), format!("- {relay_url}\n"))?;
 
-        let buckets = load_relay_buckets(&config_dir)
+        let buckets = load_relay_buckets(config_dir.path())
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
@@ -1042,7 +1041,7 @@ mod tests {
         );
 
         let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
-            config_dir.path(),
+            config_dir.as_path(),
             &attestation,
         )
         .await?;
