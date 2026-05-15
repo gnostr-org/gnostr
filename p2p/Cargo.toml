@@ -36,6 +36,7 @@ gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version =
   "nostr",
   "vendor-openssl",
 ] }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=949423.1873.524849" }
 gnostr-js = { path = "../js", package = "gnostr-js", version = ">=949423.1873.524849" }
 libp2p = { version = "0.54.1", features = [
   "full",
@@ -77,6 +78,7 @@ libp2p = { version = "0.54.1", features = [
 ] }
 log = "0.4.29"
 rand = "0.8.5"
+reqwest = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 serde_yaml = "0.9"

@@ -18,6 +18,7 @@ mod tests {
         collections::BTreeMap,
         fs,
         path::Path,
+        sync::{Mutex, OnceLock},
     };
 
     use super::*;
@@ -28,15 +29,58 @@ mod tests {
         },
         types::{
             generate_git_note_event, get_leading_zero_bits, nip13::NIP13Event,
-            nip3::create_attestation_with_pow, Id, PrivateKey, Unixtime,
+            nip3::create_attestation_with_pow, ClientMessage, EventKind, Id, MilliSatoshi,
+            Nip34Kind, PrivateKey, PublicKey, RelayMessage, Unixtime,
         },
         profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     };
     use gnostr_asyncgit::git2::Oid;
+    use futures_util::StreamExt;
     use crate::time::{ClockStatus, Estimation, SyncState};
+    use crate::crawler_broadcast::{
+        bootstrap_crawler_relay_buckets, bucket_topic, load_relay_buckets,
+    };
+    use tokio::{net::TcpListener, time::timeout};
+    use tokio_tungstenite::{accept_async, tungstenite::Message};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
     use time::OffsetDateTime;
+
+    static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    struct EnvGuard {
+        key: &'static str,
+        value: Option<std::ffi::OsString>,
+    }
+
+    impl EnvGuard {
+        fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
+            let previous = std::env::var_os(key);
+            unsafe {
+                std::env::set_var(key, value);
+            }
+            Self { key, value: previous }
+        }
+    }
+
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            unsafe {
+                match &self.value {
+                    Some(value) => std::env::set_var(self.key, value),
+                    None => std::env::remove_var(self.key),
+                }
+            }
+        }
+    }
+
+    fn test_lock() -> std::sync::MutexGuard<'static, ()> {
+        TEST_LOCK
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
 
     fn real_trace_fixture() -> (GitNote, Event, SubscriptionId, Filter) {
         let temp_dir = tempdir().expect("temp repo");
@@ -117,6 +161,37 @@ mod tests {
 
     fn note_id_leading_zero_bits(note_id: &Oid) -> u8 {
         get_leading_zero_bits(note_id.as_bytes())
+    }
+
+    async fn spawn_attestation_relay(
+    ) -> anyhow::Result<(String, tokio::task::JoinHandle<()>, tokio::sync::oneshot::Receiver<Event>)>
+    {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let port = listener.local_addr()?.port();
+        let (event_tx, event_rx) = tokio::sync::oneshot::channel::<Event>();
+
+        let handle = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.expect("accept relay");
+            let mut ws = accept_async(stream).await.expect("accept websocket");
+            while let Some(frame) = ws.next().await {
+                match frame.expect("relay frame") {
+                    Message::Text(text) => {
+                        let client_message: ClientMessage =
+                            serde_json::from_str(&text).expect("client message");
+                        match client_message {
+                            ClientMessage::Event(event) => {
+                                let _ = event_tx.send(*event);
+                                break;
+                            }
+                            other => panic!("unexpected client message: {other:?}"),
+                        }
+                    }
+                    other => panic!("unexpected websocket frame: {other:?}"),
+                }
+            }
+        });
+
+        Ok((format!("ws://127.0.0.1:{port}"), handle, event_rx))
     }
 
     #[test]
@@ -540,6 +615,438 @@ mod tests {
             assert!(note.message.contains(&commit_id.to_string()));
             previous_attestation_id = Some(attestation.id.as_hex_string());
         }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pretty_print_attestations_are_syndicated_via_p2p_and_crawler_buckets() -> anyhow::Result<()> {
+        let (_td, repo) = tempdir().map(|td| {
+            let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
+            {
+                let mut config = repo.config().expect("repo config");
+                config.set_str("user.name", "gnostr-p2p").expect("user name");
+                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+            }
+            (td, repo)
+        })?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+
+        let (relay_url, relay_task, received_event) = spawn_attestation_relay().await?;
+        let config_dir = tempdir()?;
+        let bucket_dir = config_dir.path().join("34");
+        std::fs::create_dir_all(&bucket_dir)?;
+        std::fs::write(bucket_dir.join("relays.yaml"), format!("- {relay_url}\n"))?;
+
+        let buckets = load_relay_buckets(config_dir.path())
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        assert_eq!(buckets.len(), 1);
+        assert_eq!(buckets[0].nip, 34);
+        assert_eq!(buckets[0].relays, vec![relay_url.clone()]);
+
+        let file_name = "pretty-print-attestations-syndicated.txt";
+        std::fs::write(root.join(file_name), bitcoindev_1.label.as_bytes())?;
+        stage_add_file(repo_path, Path::new(file_name))?;
+
+        let commit_id = gnostr_asyncgit::sync::commit::mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!("{} commit", bitcoindev_1.label)],
+                timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?;
+
+        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let secret_key = bitcoindev_1.private_key().0.clone();
+        let xonly_public_key = bitcoindev_1.public_key().as_xonly_public_key();
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            bitcoindev_1.metadata_json(),
+            &xonly_public_key,
+            &secret_key,
+            5,
+        );
+        let note_message = append_public_attestation_log(
+            None,
+            1234,
+            &attestation.id.as_hex_string(),
+            &commit_id.to_string(),
+            attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+        );
+        let notes_ref = "refs/notes/public-attestations/root";
+        let note_id = mine_note(
+            repo_path,
+            commit_id,
+            &note_message,
+            Some(notes_ref),
+            5,
+            Some("0"),
+        )?;
+        let note = show_note(repo_path, commit_id, Some(notes_ref))?.expect("note exists");
+        let relay_message = RelayMessage::Event(
+            SubscriptionId(attestation.id.as_hex_string()),
+            Box::new(attestation.clone()),
+        );
+        let attestation_json = serde_json::to_value(&attestation)?;
+        let relay_message_json = serde_json::to_value(&relay_message)?;
+
+        println!(
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "crawler_bucket_nip": buckets[0].nip,
+                "crawler_bucket_topic": bucket_topic(buckets[0].nip).to_string(),
+                "relay_url": relay_url,
+                "syndication": "p2p-relay-bridge",
+                "profile": bitcoindev_1.label,
+                "commit": commit_id.to_string(),
+                "note_id": note_id.to_string(),
+                "note": &note,
+                "profile_metadata": bitcoindev_1.metadata(),
+                "profile_npub": bitcoindev_1.npub(),
+                "profile_nsec": bitcoindev_1.nsec(),
+                "attestation": attestation_json,
+                "attestation_signature": format!("{:?}", attestation.sig),
+                "note_pow_bits": note_id_leading_zero_bits(&note_id),
+                "relay_message": relay_message_json,
+                "notes_ref": notes_ref,
+            }))?
+        );
+
+        let published =
+            crate::crawler_broadcast::broadcast_event_to_crawler_relays(config_dir.path(), &attestation).await?;
+        assert_eq!(published, 1);
+
+        let received_event = timeout(std::time::Duration::from_secs(5), received_event)
+            .await
+            .expect("relay publish timeout")?;
+        assert_eq!(received_event.id, attestation.id);
+        assert_eq!(received_event.kind, attestation.kind);
+        assert_eq!(received_event.content, attestation.content);
+
+        relay_task.await.expect("relay task");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn real_attestation_events_are_broadcast_to_crawler_relays() -> anyhow::Result<()> {
+        let _guard = test_lock();
+        let config_root = tempfile::tempdir()?;
+        let _home_guard = EnvGuard::set("HOME", config_root.path());
+        let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+
+        let (_td, repo) = tempdir().map(|td| {
+            let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
+            {
+                let mut config = repo.config().expect("repo config");
+                config.set_str("user.name", "gnostr-p2p").expect("user name");
+                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+            }
+            (td, repo)
+        })?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+
+        let config_dir = crate::relay_paths::get_config_dir_path();
+        let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
+        assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
+
+        let buckets = load_relay_buckets(&config_dir)
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        assert_eq!(buckets.len(), 1);
+        assert_eq!(buckets[0].nip, 34);
+        assert_eq!(buckets[0].relays, relays);
+
+        let file_name = "real-attestation-events.txt";
+        std::fs::write(root.join(file_name), bitcoindev_2.label.as_bytes())?;
+        stage_add_file(repo_path, Path::new(file_name))?;
+
+        let commit_id = gnostr_asyncgit::sync::commit::mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!("{} commit", bitcoindev_2.label)],
+                timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?;
+
+        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let secret_key = bitcoindev_2.private_key().0.clone();
+        let xonly_public_key = bitcoindev_2.public_key().as_xonly_public_key();
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            bitcoindev_2.metadata_json(),
+            &xonly_public_key,
+            &secret_key,
+            5,
+        );
+        let note_message = append_public_attestation_log(
+            None,
+            2234,
+            &attestation.id.as_hex_string(),
+            &commit_id.to_string(),
+            attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+        );
+        let notes_ref = "refs/notes/public-attestations/root";
+        let note_id = mine_note(
+            repo_path,
+            commit_id,
+            &note_message,
+            Some(notes_ref),
+            5,
+            Some("0"),
+        )?;
+        let note = show_note(repo_path, commit_id, Some(notes_ref))?.expect("note exists");
+        let relay_message = RelayMessage::Event(
+            SubscriptionId(attestation.id.as_hex_string()),
+            Box::new(attestation.clone()),
+        );
+
+        println!(
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "profile": bitcoindev_2.label,
+                "commit": commit_id.to_string(),
+                "note_id": note_id.to_string(),
+                "note": &note,
+                "profile_metadata": bitcoindev_2.metadata(),
+                "profile_npub": bitcoindev_2.npub(),
+                "profile_nsec": bitcoindev_2.nsec(),
+                "attestation": serde_json::to_value(&attestation)?,
+                "attestation_signature": format!("{:?}", attestation.sig),
+                "note_pow_bits": note_id_leading_zero_bits(&note_id),
+                "relay_message": serde_json::to_value(&relay_message)?,
+                "notes_ref": notes_ref,
+                "relay_urls": relays.clone(),
+            }))?
+        );
+
+        let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
+            &config_dir,
+            &attestation,
+        )
+        .await?;
+        assert!(published >= 1);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn real_attestation_events_broadcast_from_primed_crawler_buckets() -> anyhow::Result<()> {
+        let _guard = test_lock();
+        let config_root = tempfile::tempdir()?;
+        let _home_guard = EnvGuard::set("HOME", config_root.path());
+        let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+
+        let (_td, repo) = tempdir().map(|td| {
+            let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
+            {
+                let mut config = repo.config().expect("repo config");
+                config.set_str("user.name", "gnostr-p2p").expect("user name");
+                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+            }
+            (td, repo)
+        })?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+
+        let config_dir = crate::relay_paths::get_config_dir_path();
+        let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
+        assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
+
+        let buckets = load_relay_buckets(&config_dir)
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        assert_eq!(buckets.len(), 1);
+        assert_eq!(buckets[0].nip, 34);
+        assert_eq!(buckets[0].relays, relays);
+
+        let file_name = "real-attestation-events-primed.txt";
+        std::fs::write(root.join(file_name), bitcoindev_3.label.as_bytes())?;
+        stage_add_file(repo_path, Path::new(file_name))?;
+
+        let commit_id = gnostr_asyncgit::sync::commit::mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!("{} commit", bitcoindev_3.label)],
+                timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?;
+
+        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let secret_key = bitcoindev_3.private_key().0.clone();
+        let xonly_public_key = bitcoindev_3.public_key().as_xonly_public_key();
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            bitcoindev_3.metadata_json(),
+            &xonly_public_key,
+            &secret_key,
+            5,
+        );
+        let note_message = append_public_attestation_log(
+            None,
+            3234,
+            &attestation.id.as_hex_string(),
+            &commit_id.to_string(),
+            attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+        );
+        let notes_ref = "refs/notes/public-attestations/root";
+        let note_id = mine_note(
+            repo_path,
+            commit_id,
+            &note_message,
+            Some(notes_ref),
+            5,
+            Some("0"),
+        )?;
+        let note = show_note(repo_path, commit_id, Some(notes_ref))?.expect("note exists");
+        let relay_message = RelayMessage::Event(
+            SubscriptionId(attestation.id.as_hex_string()),
+            Box::new(attestation.clone()),
+        );
+
+        println!(
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "profile": bitcoindev_3.label,
+                "commit": commit_id.to_string(),
+                "note_id": note_id.to_string(),
+                "note": &note,
+                "profile_metadata": bitcoindev_3.metadata(),
+                "profile_npub": bitcoindev_3.npub(),
+                "profile_nsec": bitcoindev_3.nsec(),
+                "attestation": serde_json::to_value(&attestation)?,
+                "attestation_signature": format!("{:?}", attestation.sig),
+                "note_pow_bits": note_id_leading_zero_bits(&note_id),
+                "relay_message": serde_json::to_value(&relay_message)?,
+                "notes_ref": notes_ref,
+                "relay_urls": relays.clone(),
+            }))?
+        );
+
+        let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
+            &config_dir,
+            &attestation,
+        )
+        .await?;
+        assert!(published >= 1);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn real_attestation_events_are_broadcast_to_live_crawler_relays() -> anyhow::Result<()> {
+        let _guard = test_lock();
+        let config_root = tempfile::tempdir()?;
+        let _home_guard = EnvGuard::set("HOME", config_root.path());
+        let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+
+        let (_td, repo) = tempdir().map(|td| {
+            let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
+            {
+                let mut config = repo.config().expect("repo config");
+                config.set_str("user.name", "gnostr-p2p").expect("user name");
+                config.set_str("user.email", "p2p@gnostr.org").expect("user email");
+            }
+            (td, repo)
+        })?;
+        let root = repo.path().parent().unwrap();
+        let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+        let repo_path: &RepoPath = &repo_path_owned;
+
+        let config_dir = crate::relay_paths::get_config_dir_path();
+        let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
+        assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
+
+        let buckets = load_relay_buckets(&config_dir)
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        assert_eq!(buckets.len(), 1);
+        assert_eq!(buckets[0].nip, 34);
+        assert_eq!(buckets[0].relays, relays);
+
+        let file_name = "real-attestation-events-live.txt";
+        std::fs::write(root.join(file_name), bitcoindev_1.label.as_bytes())?;
+        stage_add_file(repo_path, Path::new(file_name))?;
+
+        let commit_id = gnostr_asyncgit::sync::commit::mine_commit(
+            repo_path,
+            CommitMineOptions {
+                threads: 1,
+                target: "0".to_string(),
+                message: vec![format!("{} commit", bitcoindev_1.label)],
+                timestamp: OffsetDateTime::from_unix_timestamp(0).unwrap(),
+            },
+        )?;
+
+        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id.to_string()))
+            .map_err(|err| anyhow::anyhow!(err.to_string()))?;
+        let secret_key = bitcoindev_1.private_key().0.clone();
+        let xonly_public_key = bitcoindev_1.public_key().as_xonly_public_key();
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            bitcoindev_1.metadata_json(),
+            &xonly_public_key,
+            &secret_key,
+            5,
+        );
+        let note_message = append_public_attestation_log(
+            None,
+            4234,
+            &attestation.id.as_hex_string(),
+            &commit_id.to_string(),
+            attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+        );
+        let notes_ref = "refs/notes/public-attestations/root";
+        let note_id = mine_note(
+            repo_path,
+            commit_id,
+            &note_message,
+            Some(notes_ref),
+            5,
+            Some("0"),
+        )?;
+        let note = show_note(repo_path, commit_id, Some(notes_ref))?.expect("note exists");
+        let relay_message = RelayMessage::Event(
+            SubscriptionId(attestation.id.as_hex_string()),
+            Box::new(attestation.clone()),
+        );
+
+        println!(
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "profile": bitcoindev_1.label,
+                "commit": commit_id.to_string(),
+                "note_id": note_id.to_string(),
+                "note": &note,
+                "profile_metadata": bitcoindev_1.metadata(),
+                "profile_npub": bitcoindev_1.npub(),
+                "profile_nsec": bitcoindev_1.nsec(),
+                "attestation": serde_json::to_value(&attestation)?,
+                "attestation_signature": format!("{:?}", attestation.sig),
+                "note_pow_bits": note_id_leading_zero_bits(&note_id),
+                "relay_message": serde_json::to_value(&relay_message)?,
+                "notes_ref": notes_ref,
+                "relay_urls": buckets[0].relays.clone(),
+            }))?
+        );
+
+        let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
+            config_dir.as_path(),
+            &attestation,
+        )
+        .await?;
+        assert!(published >= 1);
 
         Ok(())
     }
