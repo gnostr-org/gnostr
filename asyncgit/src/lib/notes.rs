@@ -178,12 +178,12 @@ impl AsyncJob for AsyncNotesJob {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, io::Write, path::Path, time::Duration};
+    use std::time::Duration;
 
     use crossbeam_channel::unbounded;
     use serial_test::serial;
 
-    use crate::{create_temp_repo_with_empty_tree, git2::Signature};
+    use crate::create_temp_repo_with_empty_tree;
     use super::*;
 
     #[test]
@@ -191,15 +191,6 @@ mod tests {
     fn async_notes_roundtrip() -> Result<()> {
         let (td, repo) = create_temp_repo_with_empty_tree()
             .map_err(|error| crate::error::Error::Generic(error.to_string()))?;
-
-        let file_path = Path::new("foo");
-        File::create(td.path().join(file_path))?.write_all(b"a")?;
-        let mut index = repo.index()?;
-        index.add_path(file_path)?;
-        let tree_id = index.write_tree()?;
-        let tree = repo.find_tree(tree_id)?;
-        let sig = Signature::now("name", "email")?;
-        repo.commit(Some("HEAD"), &sig, &sig, "initial", &tree, &[])?;
 
         let root = repo.path().parent().unwrap();
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
