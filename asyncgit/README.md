@@ -33,6 +33,17 @@ Note: `nostr_sdk` is only used in test code here; production asyncgit paths stay
 
 That structure is what `p2p` syndicates downstream, so the test output stays stable across release flows and BQS-style public attestations.
 
+## Testing help
+
+- Use `--nocapture` so attestation logs stay visible.
+- `pretty_print_attestations` prints the commit, note, profile fixture, attestation event, signature, and note PoW in a stable order.
+- The mined note id is part of the public attestation chain; keep `notes_ref` chronological when adding or updating tests.
+- For focused runs, prefer the exact test name:
+
+```sh
+cargo test -p gnostr-asyncgit --lib sync::notes::tests::pretty_print_attestations -- --nocapture
+```
+
 Useful variants:
 
 ```sh
