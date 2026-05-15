@@ -136,6 +136,7 @@ jobs:
       - run: gnostr -V
       - run: gnostr -h
       - run: gnostr chat -h
+      - run: gnostr chat --topic gnostr-dev --headless &
 
       - name: Build headless chat image
         if: runner.os == 'Linux'
