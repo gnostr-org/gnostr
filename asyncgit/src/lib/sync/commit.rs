@@ -366,7 +366,10 @@ mod tests {
     use crate::{
         error::Result,
         sync::{
-            commit::{self, commit, mine_commit, padded_commit_id, padded_note_id, CommitMineOptions},
+            commit::{
+                self, commit, create_empty_tree, create_empty_tree_sha256, mine_commit,
+                padded_commit_id, padded_note_id, CommitMineOptions,
+            },
             get_commit_details, get_commit_files, stage_add_file,
             tags::{get_tags, Tag},
             tests::{get_statuses, repo_init, repo_init_empty},
