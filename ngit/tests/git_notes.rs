@@ -2,7 +2,7 @@ use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
 use gnostr_asyncgit::{
-    create_temp_repo,
+    create_temp_repo_with_empty_tree,
     profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     sync::{
         add_note, append_public_attestation_log, default_notes_ref, list_notes, mine_note,
@@ -324,7 +324,7 @@ async fn pretty_print_attestations() -> Result<()> {
     println!("[ngit] pretty_print_attestations");
     init_test_log();
 
-    let (temp_repo, _git_repo) = create_temp_repo()?;
+    let (temp_repo, _git_repo) = create_temp_repo_with_empty_tree()?;
     let root = temp_repo.path().to_path_buf();
     let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
     let repo_path: &RepoPath = &repo_path_owned;
