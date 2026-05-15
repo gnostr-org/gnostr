@@ -8,8 +8,9 @@ use std::{
 
 use libp2p::gossipsub::IdentTopic;
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
+use gnostr_crawler::processor::SHITLIST_RELAYS;
 use crate::relay_paths::get_config_dir_path;
 use crate::{message::Event, relay_bridge::NostrRelayConnection};
 
@@ -23,6 +24,10 @@ pub const RELAY_BUCKET_TOPIC_PREFIX: &str = "crawler/relay-buckets";
 
 pub fn bucket_topic(nip: i32) -> IdentTopic {
     IdentTopic::new(format!("{RELAY_BUCKET_TOPIC_PREFIX}/{nip}"))
+}
+
+fn is_shitlisted(url: &str) -> bool {
+    SHITLIST_RELAYS.iter().any(|relay| url.contains(relay))
 }
 
 pub fn load_relay_bucket_from_dir(dir: &Path) -> Result<RelayBucket, Box<dyn Error>> {
@@ -181,6 +186,17 @@ pub async fn bootstrap_crawler_relay_buckets(
         })
         .await??
     };
+    let relays: Vec<String> = relays
+        .into_iter()
+        .filter(|relay| {
+            if is_shitlisted(relay) {
+                warn!("bootstrap_crawler_relay_buckets: skipping shitlisted relay {}", relay);
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
 
     let bucket_dir = config_dir.join(nip.to_string());
     fs::create_dir_all(&bucket_dir)?;
@@ -210,9 +226,25 @@ pub async fn broadcast_event_to_crawler_relays(
                 "pretty_print_attestations relays_sent_to nip={} relay_url={}",
                 bucket.nip, relay_url
             );
-            let mut connection = NostrRelayConnection::connect(relay_url.clone()).await?;
-            connection.publish_event(event.clone()).await?;
-            published += 1;
+            match NostrRelayConnection::connect(relay_url.clone()).await {
+                Ok(mut connection) => {
+                    if let Err(err) = connection.publish_event(event.clone()).await {
+                        warn!(
+                            "broadcast_event_to_crawler_relays: skipping {} after publish error: {}",
+                            relay_url, err
+                        );
+                        continue;
+                    }
+                    published += 1;
+                }
+                Err(err) => {
+                    warn!(
+                        "broadcast_event_to_crawler_relays: skipping {} after connect error: {}",
+                        relay_url, err
+                    );
+                    continue;
+                }
+            }
         }
     }
 
