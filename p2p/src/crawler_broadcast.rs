@@ -109,6 +109,10 @@ pub async fn broadcast_event_to_crawler_relays(
 
     for bucket in buckets {
         for relay_url in bucket.relays {
+            println!(
+                "pretty_print_attestations relays_sent_to nip={} relay_url={}",
+                bucket.nip, relay_url
+            );
             let mut connection = NostrRelayConnection::connect(relay_url.clone()).await?;
             connection.publish_event(event.clone()).await?;
             published += 1;
