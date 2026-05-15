@@ -170,7 +170,15 @@ pub async fn bootstrap_crawler_relay_buckets(
 
     let bucket_dir = config_dir.join(nip.to_string());
     fs::create_dir_all(&bucket_dir)?;
-    fs::write(bucket_dir.join("relays.yaml"), serde_yaml::to_string(&relays)?)?;
+    fs::write(
+        bucket_dir.join("relays.yaml"),
+        serde_yaml::to_string(&relays)?,
+    )?;
+    fs::write(
+        bucket_dir.join("relays.json"),
+        serde_json::to_string_pretty(&relays)?,
+    )?;
+    fs::write(bucket_dir.join("relays.txt"), relays.join(" "))?;
 
     Ok(relays)
 }
