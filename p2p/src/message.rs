@@ -29,7 +29,8 @@ mod tests {
         },
         types::{
             generate_git_note_event, get_leading_zero_bits, nip13::NIP13Event,
-            nip3::create_attestation_with_pow, Id, PrivateKey, Unixtime,
+            nip3::create_attestation_with_pow, ClientMessage, EventKind, Id, MilliSatoshi,
+            Nip34Kind, PrivateKey, PublicKey, RelayMessage, Unixtime,
         },
         profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
     };
