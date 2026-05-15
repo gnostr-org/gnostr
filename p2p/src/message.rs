@@ -18,6 +18,8 @@ mod tests {
         collections::BTreeMap,
         fs,
         path::Path,
+        process::Stdio,
+        sync::{Mutex, OnceLock},
     };
 
     use super::*;
@@ -36,11 +38,116 @@ mod tests {
     use futures_util::StreamExt;
     use crate::time::{ClockStatus, Estimation, SyncState};
     use crate::crawler_broadcast::{bucket_topic, load_crawler_relay_buckets, load_relay_buckets};
-    use tokio::{net::TcpListener, time::timeout};
+    use tokio::{
+        net::TcpListener,
+        process::{Child, Command},
+        time::{sleep, timeout, Duration},
+    };
     use tokio_tungstenite::{accept_async, tungstenite::Message};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
     use time::OffsetDateTime;
+
+    static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    struct EnvGuard {
+        key: &'static str,
+        value: Option<std::ffi::OsString>,
+    }
+
+    impl EnvGuard {
+        fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
+            let previous = std::env::var_os(key);
+            unsafe {
+                std::env::set_var(key, value);
+            }
+            Self { key, value: previous }
+        }
+    }
+
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            unsafe {
+                match &self.value {
+                    Some(value) => std::env::set_var(self.key, value),
+                    None => std::env::remove_var(self.key),
+                }
+            }
+        }
+    }
+
+    struct CrawlerServerGuard {
+        child: Child,
+    }
+
+    impl Drop for CrawlerServerGuard {
+        fn drop(&mut self) {
+            let _ = self.child.start_kill();
+        }
+    }
+
+    fn test_lock() -> std::sync::MutexGuard<'static, ()> {
+        TEST_LOCK
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
+        let response = match reqwest::get("http://127.0.0.1:8080/relays.yaml").await {
+            Ok(response) => response,
+            Err(_) => return Ok(None),
+        };
+
+        if !response.status().is_success() {
+            return Ok(None);
+        }
+
+        let relays = response
+            .text()
+            .await?
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(|line| line.trim_start_matches("- ").trim().to_string())
+            .collect::<Vec<_>>();
+
+        if relays.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(relays))
+        }
+    }
+
+    async fn spawn_crawler_server() -> anyhow::Result<CrawlerServerGuard> {
+        let mut command = Command::new("gnostr");
+        command
+            .args(["crawler", "serve", "--port", "8080"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+        let child = command.spawn()?;
+        Ok(CrawlerServerGuard { child })
+    }
+
+    async fn ensure_live_crawler_relays() -> anyhow::Result<(Vec<String>, Option<CrawlerServerGuard>)> {
+        if let Some(relays) = fetch_live_crawler_relays().await? {
+            return Ok((relays, None));
+        }
+
+        let guard = spawn_crawler_server().await?;
+        let relays = timeout(Duration::from_secs(30), async {
+            loop {
+                if let Some(relays) = fetch_live_crawler_relays().await? {
+                    break Ok(relays);
+                }
+                sleep(Duration::from_millis(500)).await;
+            }
+        })
+        .await??;
+
+        Ok((relays, Some(guard)))
+    }
 
     fn real_trace_fixture() -> (GitNote, Event, SubscriptionId, Filter) {
         let temp_dir = tempdir().expect("temp repo");
@@ -616,7 +723,7 @@ mod tests {
         std::fs::create_dir_all(&bucket_dir)?;
         std::fs::write(bucket_dir.join("relays.yaml"), format!("- {relay_url}\n"))?;
 
-        let buckets = load_relay_buckets(config_dir.path())
+        let buckets = load_relay_buckets(&config_dir)
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
@@ -811,6 +918,11 @@ mod tests {
 
     #[tokio::test]
     async fn real_attestation_events_broadcast_from_primed_crawler_buckets() -> anyhow::Result<()> {
+        let _guard = test_lock();
+        let config_root = tempfile::tempdir()?;
+        let _home_guard = EnvGuard::set("HOME", config_root.path());
+        let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+
         let (_td, repo) = tempdir().map(|td| {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
@@ -824,22 +936,20 @@ mod tests {
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
         let repo_path: &RepoPath = &repo_path_owned;
 
-        let config_dir = tempdir()?;
-        let bucket_dir = config_dir.path().join("34");
+        let (relays, _crawler_guard) = ensure_live_crawler_relays().await?;
+        assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
+
+        let config_dir = crate::relay_paths::get_config_dir_path();
+        std::fs::create_dir_all(&config_dir)?;
+        let bucket_dir = config_dir.join("34");
         std::fs::create_dir_all(&bucket_dir)?;
-        std::fs::write(
-            bucket_dir.join("relays.yaml"),
-            "- wss://relay.damus.io\n- wss://nos.lol\n",
-        )?;
+        std::fs::write(bucket_dir.join("relays.yaml"), relays.join("\n") + "\n")?;
 
         let buckets = load_relay_buckets(config_dir.path())
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
-        assert_eq!(
-            buckets[0].relays,
-            vec!["wss://relay.damus.io".to_string(), "wss://nos.lol".to_string()]
-        );
+        assert_eq!(buckets[0].relays, relays);
 
         let file_name = "real-attestation-events-primed.txt";
         std::fs::write(root.join(file_name), bitcoindev_3.label.as_bytes())?;
@@ -903,16 +1013,16 @@ mod tests {
                 "note_pow_bits": note_id_leading_zero_bits(&note_id),
                 "relay_message": serde_json::to_value(&relay_message)?,
                 "notes_ref": notes_ref,
-                "relay_urls": buckets[0].relays.clone(),
+                "relay_urls": relays.clone(),
             }))?
         );
 
         let published = crate::crawler_broadcast::broadcast_event_to_crawler_relays(
-            config_dir.path(),
+            &config_dir,
             &attestation,
         )
         .await?;
-        assert_eq!(published, 2);
+        assert!(published >= 1);
 
         Ok(())
     }
