@@ -1,7 +1,9 @@
 use std::{
     error::Error,
     fs,
+    process::Stdio,
     path::Path,
+    time::Duration,
 };
 
 use libp2p::gossipsub::IdentTopic;
@@ -98,6 +100,79 @@ pub async fn publish_local_snapshots(
     swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
 ) -> Result<usize, Box<dyn Error>> {
     broadcast_crawler_relay_buckets(swarm).await
+}
+
+struct CrawlerServerGuard {
+    child: tokio::process::Child,
+}
+
+impl Drop for CrawlerServerGuard {
+    fn drop(&mut self) {
+        let _ = self.child.start_kill();
+    }
+}
+
+async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
+    let response = match reqwest::get("http://127.0.0.1:8080/relays.yaml").await {
+        Ok(response) => response,
+        Err(_) => return Ok(None),
+    };
+
+    if !response.status().is_success() {
+        return Ok(None);
+    }
+
+    let relays = response
+        .text()
+        .await?
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| line.trim_start_matches("- ").trim().to_string())
+        .collect::<Vec<_>>();
+
+    if relays.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(relays))
+    }
+}
+
+async fn spawn_crawler_server() -> anyhow::Result<CrawlerServerGuard> {
+    let mut command = tokio::process::Command::new("gnostr");
+    command
+        .args(["crawler", "serve", "--port", "8080"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    let child = command.spawn()?;
+    Ok(CrawlerServerGuard { child })
+}
+
+pub async fn bootstrap_crawler_relay_buckets(
+    config_dir: &Path,
+    nip: i32,
+) -> anyhow::Result<Vec<String>> {
+    let relays = if let Some(relays) = fetch_live_crawler_relays().await? {
+        relays
+    } else {
+        let _guard = spawn_crawler_server().await?;
+        tokio::time::timeout(Duration::from_secs(30), async {
+            loop {
+                if let Some(relays) = fetch_live_crawler_relays().await? {
+                    break Ok(relays);
+                }
+                tokio::time::sleep(Duration::from_millis(500)).await;
+            }
+        })
+        .await??
+    };
+
+    let bucket_dir = config_dir.join(nip.to_string());
+    fs::create_dir_all(&bucket_dir)?;
+    fs::write(bucket_dir.join("relays.yaml"), relays.join("\n") + "\n")?;
+
+    Ok(relays)
 }
 
 pub async fn broadcast_event_to_crawler_relays(
