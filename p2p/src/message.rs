@@ -37,12 +37,11 @@ mod tests {
     use gnostr_asyncgit::git2::Oid;
     use futures_util::StreamExt;
     use crate::time::{ClockStatus, Estimation, SyncState};
-    use crate::crawler_broadcast::{bucket_topic, load_crawler_relay_buckets, load_relay_buckets};
-    use tokio::{
-        net::TcpListener,
-        process::{Child, Command},
-        time::{sleep, timeout, Duration},
+    use crate::crawler_broadcast::{
+        bootstrap_crawler_relay_buckets, bucket_topic, load_crawler_relay_buckets,
+        load_relay_buckets,
     };
+    use tokio::{net::TcpListener, time::timeout};
     use tokio_tungstenite::{accept_async, tungstenite::Message};
     use serde_json;
     use tempfile::{tempdir, NamedTempFile};
@@ -76,16 +75,6 @@ mod tests {
         }
     }
 
-    struct CrawlerServerGuard {
-        child: Child,
-    }
-
-    impl Drop for CrawlerServerGuard {
-        fn drop(&mut self) {
-            let _ = self.child.start_kill();
-        }
-    }
-
     fn test_lock() -> std::sync::MutexGuard<'static, ()> {
         TEST_LOCK
             .get_or_init(|| Mutex::new(()))
@@ -93,61 +82,6 @@ mod tests {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
-        let response = match reqwest::get("http://127.0.0.1:8080/relays.yaml").await {
-            Ok(response) => response,
-            Err(_) => return Ok(None),
-        };
-
-        if !response.status().is_success() {
-            return Ok(None);
-        }
-
-        let relays = response
-            .text()
-            .await?
-            .lines()
-            .map(str::trim)
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim_start_matches("- ").trim().to_string())
-            .collect::<Vec<_>>();
-
-        if relays.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(relays))
-        }
-    }
-
-    async fn spawn_crawler_server() -> anyhow::Result<CrawlerServerGuard> {
-        let mut command = Command::new("gnostr");
-        command
-            .args(["crawler", "serve", "--port", "8080"])
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null());
-        let child = command.spawn()?;
-        Ok(CrawlerServerGuard { child })
-    }
-
-    async fn ensure_live_crawler_relays() -> anyhow::Result<(Vec<String>, Option<CrawlerServerGuard>)> {
-        if let Some(relays) = fetch_live_crawler_relays().await? {
-            return Ok((relays, None));
-        }
-
-        let guard = spawn_crawler_server().await?;
-        let relays = timeout(Duration::from_secs(30), async {
-            loop {
-                if let Some(relays) = fetch_live_crawler_relays().await? {
-                    break Ok(relays);
-                }
-                sleep(Duration::from_millis(500)).await;
-            }
-        })
-        .await??;
-
-        Ok((relays, Some(guard)))
-    }
 
     fn real_trace_fixture() -> (GitNote, Event, SubscriptionId, Filter) {
         let temp_dir = tempdir().expect("temp repo");
@@ -936,16 +870,11 @@ mod tests {
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
         let repo_path: &RepoPath = &repo_path_owned;
 
-        let (relays, _crawler_guard) = ensure_live_crawler_relays().await?;
+        let config_dir = crate::relay_paths::get_config_dir_path();
+        let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
 
-        let config_dir = crate::relay_paths::get_config_dir_path();
-        std::fs::create_dir_all(&config_dir)?;
-        let bucket_dir = config_dir.join("34");
-        std::fs::create_dir_all(&bucket_dir)?;
-        std::fs::write(bucket_dir.join("relays.yaml"), relays.join("\n") + "\n")?;
-
-        let buckets = load_relay_buckets(config_dir.path())
+        let buckets = load_relay_buckets(&config_dir)
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
@@ -1029,6 +958,11 @@ mod tests {
 
     #[tokio::test]
     async fn real_attestation_events_are_broadcast_to_live_crawler_relays() -> anyhow::Result<()> {
+        let _guard = test_lock();
+        let config_root = tempfile::tempdir()?;
+        let _home_guard = EnvGuard::set("HOME", config_root.path());
+        let _xdg_guard = EnvGuard::set("XDG_CONFIG_HOME", config_root.path());
+
         let (_td, repo) = tempdir().map(|td| {
             let repo = gnostr_asyncgit::git2::Repository::init(td.path()).expect("init repo");
             {
@@ -1042,15 +976,11 @@ mod tests {
         let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
         let repo_path: &RepoPath = &repo_path_owned;
 
-        let relays = fetch_live_crawler_relays().await?;
+        let config_dir = crate::relay_paths::get_config_dir_path();
+        let relays = bootstrap_crawler_relay_buckets(&config_dir, 34).await?;
         assert!(!relays.is_empty(), "live crawler relays.yaml was empty");
 
-        let config_dir = tempdir()?;
-        let bucket_dir = config_dir.path().join("34");
-        std::fs::create_dir_all(&bucket_dir)?;
-        std::fs::write(bucket_dir.join("relays.yaml"), relays.join("\n") + "\n")?;
-
-        let buckets = load_relay_buckets(config_dir.path())
+        let buckets = load_relay_buckets(&config_dir)
             .map_err(|err| anyhow::anyhow!(err.to_string()))?;
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 34);
