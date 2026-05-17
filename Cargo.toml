@@ -523,6 +523,7 @@ vendor-openssl = [
   "dep:git2",
   "git2/vendored-openssl",
   "openssl/vendored",
+  "openssl-sys/vendored",
 ]
 vendored-openssl = ["vendor-openssl"]
 nightly = []
@@ -953,7 +954,6 @@ quinn = { version = "0.11.9", default-features = false }
 rand = "0.8.5"
 reqwest = { workspace = true, features = ["json"] }
 serial_test = "2.0.0"
-signal-child = "1.0.6"
 strip-ansi-escapes = { workspace = true }
 structopt = "0.3.26"
 temp-env = "0.3.6"

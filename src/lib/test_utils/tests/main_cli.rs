@@ -38,6 +38,7 @@ mod tests {
     use git2::{Repository, Signature};
     use predicates::{prelude::PredicateBooleanExt, str};
     use serial_test::serial;
+    #[cfg(not(target_os = "windows"))]
     use signal_child::Signalable;
     use tempfile::TempDir;
 
@@ -495,6 +496,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "windows"))]
     #[serial]
     fn test_run_tui_and_sleep() -> Result<(), Box<dyn Error>> {
         let _cleanup_guard = TerminalCleanup;
