@@ -6651,7 +6651,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -6913,7 +6913,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-test",
  "aes",
@@ -7004,8 +7004,6 @@ dependencies = [
  "rkyv 0.8.16",
  "rocksdb",
  "rsass",
- "russh",
- "russh-keys",
  "rust-ini",
  "scrypt",
  "sd-notify",
@@ -7013,6 +7011,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test 3.4.0",
+ "sha1",
  "sha2 0.10.9",
  "shellwords",
  "simdutf8",
@@ -7066,7 +7065,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-bins"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7133,7 +7132,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-blossom-tui"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "arboard",
  "bech32 0.11.1",
@@ -7157,7 +7156,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-chat"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "anyhow",
  "clap 4.6.1",
@@ -7190,7 +7189,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7232,7 +7231,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-extensions"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-web",
  "gnostr-relay",
@@ -7243,7 +7242,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "pretty_assertions",
  "thiserror 1.0.69",
@@ -7251,7 +7250,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git-helpers"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "anyhow",
  "bech32 0.11.1",
@@ -7273,14 +7272,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "git2-hooks 0.7.0",
 ]
 
 [[package]]
 name = "gnostr-git2-testing"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "env_logger 0.11.10",
  "git2",
@@ -7290,7 +7289,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "anyhow",
  "cc",
@@ -7310,11 +7309,11 @@ dependencies = [
 
 [[package]]
 name = "gnostr-invalidstring"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 
 [[package]]
 name = "gnostr-js"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -7344,7 +7343,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-legit"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "argparse",
  "chrono",
@@ -7360,7 +7359,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-ngit"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -7394,10 +7393,12 @@ dependencies = [
  "rstest",
  "rustls 0.23.39",
  "scrypt",
+ "secp256k1 0.29.1",
  "serde",
  "serde_json",
  "serde_yaml",
  "serial_test 3.4.0",
+ "tempfile",
  "test_utils",
  "time 0.3.47",
  "tokio",
@@ -7408,7 +7409,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-p2p"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -7440,7 +7441,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -7456,7 +7457,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "log",
  "scopetime 0.1.0",
@@ -7464,7 +7465,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-types"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-test",
  "aes",
@@ -7523,8 +7524,6 @@ dependencies = [
  "reqwest 0.12.28",
  "rkyv 0.8.16",
  "ron 0.8.1",
- "russh",
- "russh-keys",
  "rust-ini",
  "scrypt",
  "secp256k1 0.29.1",
@@ -7588,7 +7587,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-web"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "actix-http",
  "anyhow",
@@ -7655,7 +7654,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_filehash_core"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "chrono",
  "sha2 0.10.9",
@@ -7664,7 +7663,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr_qr"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "hex",
  "image",
@@ -11457,7 +11456,7 @@ dependencies = [
 
 [[package]]
 name = "nips"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "axum 0.7.9",
  "bytes",
@@ -17050,7 +17049,7 @@ checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "test_utils"
-version = "949423.1873.524849"
+version = "949455.1873.486970"
 dependencies = [
  "anyhow",
  "assert_cmd",

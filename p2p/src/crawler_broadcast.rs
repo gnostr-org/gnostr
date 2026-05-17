@@ -118,7 +118,7 @@ impl Drop for CrawlerServerGuard {
 }
 
 async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
-    let response = match reqwest::get("http://127.0.0.1:8080/relays.json").await {
+    let response = match reqwest::get("http://127.0.0.1:8080/relays.yaml").await {
         Ok(response) => response,
         Err(_) => return Ok(None),
     };
@@ -127,27 +127,18 @@ async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
         return Ok(None);
     }
 
-    let relays = response
-        .text()
-        .await?
-        ;
-
-    let relays = serde_json::from_str::<Vec<String>>(&relays)
-        .or_else(|_| serde_yaml::from_str::<Vec<String>>(&relays))
-        .map(|relays| {
-            relays
-                .into_iter()
-                .map(|relay| {
-                    relay
-                        .trim()
-                        .trim_matches('\'')
-                        .trim_matches('"')
-                        .trim_start_matches("- ")
-                        .trim()
-                        .to_string()
-                })
-                .filter(|relay| !relay.is_empty())
-                .collect::<Vec<_>>()
+    let relays = response.text().await?;
+    let relays = serde_yaml::from_str::<Vec<String>>(&relays)
+        .or_else(|_| {
+            Ok::<Vec<String>, serde_yaml::Error>(
+                relays
+                    .lines()
+                    .map(str::trim)
+                    .map(|relay| relay.trim_start_matches("- ").trim_matches('\'').trim_matches('"').trim())
+                    .filter(|relay| !relay.is_empty())
+                    .map(|relay| relay.to_string())
+                    .collect(),
+            )
         })?;
 
     if relays.is_empty() {

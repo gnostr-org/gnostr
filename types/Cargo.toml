@@ -80,9 +80,7 @@ regex = { workspace = true }
 reqwest = { workspace = true }
 rkyv = "0.8.14"
 ron = "0.8.1"
-russh = { version = "0.37.1", features = ["openssl"] }
-russh-keys = "0.37.1"
-rust-ini = "0.21.3"
+    rust-ini = "0.21.3"
 scrypt = { version = "0.11.0" }
 secp256k1 = { workspace = true }
 serde = { workspace = true }

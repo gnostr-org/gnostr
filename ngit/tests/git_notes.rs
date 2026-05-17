@@ -1,7 +1,15 @@
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
-use gnostr_asyncgit::sync::{add_note, default_notes_ref, list_notes, remove_note, show_note, RepoPath};
+use gnostr_asyncgit::{
+    create_temp_repo_with_empty_tree,
+    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3},
+    sync::{
+        add_note, append_public_attestation_log, default_notes_ref, list_notes, mine_note,
+        remove_note, show_note, stage_add_file, RepoPath,
+    },
+    types::{get_leading_zero_bits, nip13::NIP13Event, nip3::create_attestation_with_pow, Id},
+};
 use gnostr_asyncgit::git2::Oid;
 use gnostr_legit::gitminer::{Gitminer, Options as LegitOptions};
 use gnostr_ngit::{
@@ -17,6 +25,7 @@ use gnostr_ngit::{
 use nostr_sdk::{Keys, NostrSigner};
 use serial_test::serial;
 use test_utils::{generate_repo_ref_event, git::GitTestRepo};
+use secp256k1::SECP256K1;
 use time::OffsetDateTime;
 use std::sync::Once;
 
@@ -44,7 +53,7 @@ fn seeded_keys_from_oid(oid: &Oid) -> Result<Keys> {
 fn repo_fixture() -> Result<(GitTestRepo, Repo)> {
     let git_repo = GitTestRepo::new("main")?;
     git_repo.populate_minus_1()?;
-    let mined_hash = mine_pow_commit(&git_repo)?;
+    let mined_hash = mine_pow_commit(git_repo.dir.as_path())?;
     let repo = Repo::from_path(&git_repo.dir)?;
     println!("pow commit mined for fixture: {mined_hash}");
     Ok((git_repo, repo))
@@ -54,22 +63,47 @@ fn repo_ref_fixture() -> Result<RepoRef> {
     Ok(RepoRef::try_from((generate_repo_ref_event(), None))?)
 }
 
-fn mine_pow_commit(repo: &GitTestRepo) -> Result<String> {
-    let mut config = repo.git_repo.config()?;
-    config.set_str("user.name", "randymcmillan")?;
-    config.set_str("user.email", "randymcmillan@example.com")?;
+fn mine_pow_commit(repo_dir: impl AsRef<Path>) -> Result<Oid> {
+    let repo_dir = repo_dir.as_ref();
+    let repo = gnostr_asyncgit::git2::Repository::open(repo_dir)?;
+    let (name, email) = repo
+        .signature()
+        .ok()
+        .and_then(|signature| {
+            let name = signature.name()?.to_string();
+            let email = signature.email()?.to_string();
+            Some((name, email))
+        })
+        .filter(|(name, email)| !name.is_empty() && !email.is_empty())
+        .unwrap_or_else(|| {
+            let name = std::env::var("GIT_AUTHOR_NAME")
+                .or_else(|_| std::env::var("GIT_COMMITTER_NAME"))
+                .or_else(|_| std::env::var("USER"))
+                .unwrap_or_else(|_| "name".to_string());
+            let email = std::env::var("GIT_AUTHOR_EMAIL")
+                .or_else(|_| std::env::var("GIT_COMMITTER_EMAIL"))
+                .or_else(|_| std::env::var("EMAIL"))
+                .unwrap_or_else(|_| "email@example.com".to_string());
+            (name, email)
+        });
+    let mut config = repo.config()?;
+    config.set_str("user.name", &name)?;
+    config.set_str("user.email", &email)?;
 
     let opts = LegitOptions {
         threads: 1,
         target: "00".to_string(),
         message: vec!["proof-of-work commit".to_string()],
-        repo: repo.dir.to_str().unwrap().to_string(),
+        repo: repo_dir.to_str().unwrap().to_string(),
         timestamp: OffsetDateTime::now_utc(),
         kind: None,
     };
 
     let mut miner = Gitminer::new(opts).map_err(anyhow::Error::msg)?;
-    miner.mine().map_err(anyhow::Error::msg)
+    let mined_hash = miner.mine().map_err(anyhow::Error::msg)?;
+    mined_hash
+        .parse::<Oid>()
+        .map_err(|err| anyhow::Error::msg(err.to_string()))
 }
 
 fn mine_git_note(
@@ -97,6 +131,10 @@ fn mine_git_note(
     }
 }
 
+fn note_id_leading_zero_bits(note_id: &Oid) -> u8 {
+    get_leading_zero_bits(note_id.as_bytes())
+}
+
 #[tokio::test]
 #[ignore]
 #[serial]
@@ -105,7 +143,7 @@ async fn real_repo_git_notes_workflow_creates_signed_event() -> Result<()> {
     init_test_log();
     let repo = GitTestRepo::new("main")?;
     repo.populate()?;
-    let mined_hash = mine_pow_commit(&repo)?;
+    let mined_hash = mine_pow_commit(repo.dir.as_path())?;
 
     let head = repo.git_repo.head()?.target().unwrap();
     let repo_path_owned: RepoPath = repo.dir.as_os_str().to_str().unwrap().into();
@@ -281,6 +319,98 @@ async fn nip34_examples_for_all_kinds() -> Result<()> {
 }
 
 #[tokio::test]
+#[serial]
+async fn pretty_print_attestations() -> Result<()> {
+    println!("[ngit] pretty_print_attestations");
+    init_test_log();
+
+    let (temp_repo, _git_repo) = create_temp_repo_with_empty_tree()?;
+    let root = temp_repo.path().to_path_buf();
+    let repo_path_owned: RepoPath = root.as_os_str().to_str().unwrap().into();
+    let repo_path: &RepoPath = &repo_path_owned;
+    let fixtures = [bitcoindev_1, bitcoindev_2, bitcoindev_3];
+    let mut previous_attestation_id: Option<String> = None;
+
+    for (index, profile) in fixtures.iter().enumerate() {
+        let file_name = format!("pretty-print-attestations-{index}.txt");
+        std::fs::write(root.join(&file_name), profile.label.as_bytes())?;
+        stage_add_file(repo_path, std::path::Path::new(&file_name))?;
+
+        let commit_id = mine_pow_commit(temp_repo.path())?;
+        let attestation_target = Id::try_from_hex_string(&format!("{:0>64}", commit_id))
+            .map_err(|err| anyhow::Error::msg(err.to_string()))?;
+        let secret_key = profile.private_key().0.clone();
+        let (xonly_public_key, _parity) = secret_key.x_only_public_key(SECP256K1);
+        let attestation = create_attestation_with_pow(
+            attestation_target,
+            profile.metadata_json(),
+            &xonly_public_key,
+            &secret_key,
+            5,
+        );
+        let notes_ref = previous_attestation_id
+            .as_deref()
+            .map(|event_id| format!("refs/notes/public-attestations/{event_id}"))
+            .unwrap_or_else(|| "refs/notes/public-attestations/root".to_string());
+        let note_message = append_public_attestation_log(
+            None,
+            1234 + index as i64,
+            &attestation.id.as_hex_string(),
+            &commit_id.to_string(),
+            attestation.nonce_data().map(|(_, bits)| bits).unwrap_or(0),
+        );
+        let note_id = mine_note(
+            repo_path,
+            commit_id,
+            &note_message,
+            Some(&notes_ref),
+            5,
+            Some("0"),
+        )?;
+        let note = show_note(repo_path, commit_id, Some(&notes_ref))?.expect("note exists");
+        let signer_keys = Keys::generate();
+        let git_note_event =
+            gnostr_ngit::git_events::generate_git_note_event_with_pow(&note, &signer_keys, 4)
+        .await?;
+
+        println!(
+            "pretty_print_attestations\n{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "profile": profile.label,
+                "commit": commit_id.to_string(),
+                "note_id": note_id.to_string(),
+                "note": &note,
+                "author": note.author,
+                "committer": note.committer,
+                "committer_time": note.committer_time,
+                "profile_metadata": profile.metadata(),
+                "profile_npub": profile.npub(),
+                "profile_nsec": profile.nsec(),
+                "attestation_id": attestation.id.to_string(),
+                "attestation_signature": format!("{:?}", attestation.sig),
+                "attestation_kind": format!("{:?}", attestation.kind),
+                "attestation_content": attestation.content,
+                "attestation_nonce": attestation.nonce_data().map(|(nonce, bits)| serde_json::json!({"nonce": nonce, "bits": bits})),
+                "note_pow_bits": note_id_leading_zero_bits(&note_id),
+                "notes_ref": notes_ref,
+                "git_note_event": serde_json::to_value(&git_note_event)?,
+            }))?
+        );
+
+        assert_eq!(note.note_id, note_id);
+        assert!(note.note_id.to_string().starts_with('0'));
+        assert!(note_id_leading_zero_bits(&note_id) >= 5);
+        assert!(note.message.contains(&attestation.id.as_hex_string()));
+        assert!(note.message.contains(&commit_id.to_string()));
+        assert_eq!(git_note_event.kind, nostr_sdk::Kind::GitPatch);
+        assert_eq!(git_note_event.content, note.message);
+        previous_attestation_id = Some(attestation.id.as_hex_string());
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 #[ignore]
 #[serial]
 async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> {
@@ -305,7 +435,7 @@ async fn nip34_event_matrix_covers_commit_note_and_pow_variants() -> Result<()> 
         let repo = GitTestRepo::new("main")?;
         repo.populate()?;
         if mine_commit_flag {
-            let mined_hash = mine_pow_commit(&repo)?;
+            let mined_hash = mine_pow_commit(repo.dir.as_path())?;
             println!("matrix case mined commit: {mined_hash}");
         }
 

@@ -2,12 +2,15 @@
 //use anyhow::anyhow;
 use git2::{message_prettify, Commit, ErrorCode, ObjectType, Oid, Repository, ResetType, Signature};
 
+use hex;
 use serde::{Deserialize, Serialize};
 use serde_json;
 //?use nostr_sdk::serde_json;
 //use serde_json::{Result as SerdeJsonResult, Value};
 use log::debug;
 use scopetime::scope_time;
+use sha1::{Digest as Sha1Digest, Sha1};
+use sha2::{Digest as Sha2Digest, Sha256};
 use time::OffsetDateTime;
 
 use super::{CommitId, RepoPath};
@@ -294,6 +297,20 @@ pub fn padded_commit_id(commit_id: String) -> String {
     format!("{:0>64}", commit_id)
 }
 
+/// Create the SHA-1 empty tree hash as a hex string.
+pub fn create_empty_tree() -> String {
+    let mut hasher = Sha1::new();
+    hasher.update(b"tree 0\0");
+    hex::encode(hasher.finalize())
+}
+
+/// Create the SHA-256 empty tree hash as a hex string.
+pub fn create_empty_tree_sha256() -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(b"tree 0\0");
+    hex::encode(hasher.finalize())
+}
+
 /// Pad a note id string to sha256 length and return a String.
 pub fn padded_note_id(note_id: String) -> String {
     format!("{:0>64}", note_id)
@@ -349,7 +366,10 @@ mod tests {
     use crate::{
         error::Result,
         sync::{
-            commit::{self, commit, mine_commit, padded_commit_id, padded_note_id, CommitMineOptions},
+            commit::{
+                self, commit, create_empty_tree, create_empty_tree_sha256, mine_commit,
+                padded_commit_id, padded_note_id, CommitMineOptions,
+            },
             get_commit_details, get_commit_files, stage_add_file,
             tags::{get_tags, Tag},
             tests::{get_statuses, repo_init, repo_init_empty},
@@ -395,6 +415,18 @@ mod tests {
         let id = "abc123";
         println!("padded_note_id: {}", padded_note_id(id.to_string()));
         assert_eq!(padded_note_id(id.to_string()), padded_commit_id(id.to_string()));
+    }
+
+    #[test]
+    fn empty_tree_hashes_match_git_values() {
+        assert_eq!(
+            create_empty_tree(),
+            "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+        );
+        assert_eq!(
+            create_empty_tree_sha256(),
+            "6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321"
+        );
     }
 
     #[test]
