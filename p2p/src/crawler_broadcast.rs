@@ -1,14 +1,18 @@
 use std::{
     error::Error,
     fs,
+    process::Stdio,
     path::Path,
+    time::Duration,
 };
 
 use libp2p::gossipsub::IdentTopic;
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
+use gnostr_crawler::processor::SHITLIST_RELAYS;
 use crate::relay_paths::get_config_dir_path;
+use crate::{message::Event, relay_bridge::NostrRelayConnection};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RelayBucket {
@@ -20,6 +24,10 @@ pub const RELAY_BUCKET_TOPIC_PREFIX: &str = "crawler/relay-buckets";
 
 pub fn bucket_topic(nip: i32) -> IdentTopic {
     IdentTopic::new(format!("{RELAY_BUCKET_TOPIC_PREFIX}/{nip}"))
+}
+
+fn is_shitlisted(url: &str) -> bool {
+    SHITLIST_RELAYS.iter().any(|relay| url.contains(relay))
 }
 
 pub fn load_relay_bucket_from_dir(dir: &Path) -> Result<RelayBucket, Box<dyn Error>> {
@@ -97,6 +105,150 @@ pub async fn publish_local_snapshots(
     swarm: &mut libp2p::Swarm<crate::behaviour::Behaviour>,
 ) -> Result<usize, Box<dyn Error>> {
     broadcast_crawler_relay_buckets(swarm).await
+}
+
+struct CrawlerServerGuard {
+    child: tokio::process::Child,
+}
+
+impl Drop for CrawlerServerGuard {
+    fn drop(&mut self) {
+        let _ = self.child.start_kill();
+    }
+}
+
+async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
+    let response = match reqwest::get("http://127.0.0.1:8080/relays.json").await {
+        Ok(response) => response,
+        Err(_) => return Ok(None),
+    };
+
+    if !response.status().is_success() {
+        return Ok(None);
+    }
+
+    let relays = response
+        .text()
+        .await?
+        ;
+
+    let relays = serde_json::from_str::<Vec<String>>(&relays)
+        .or_else(|_| serde_yaml::from_str::<Vec<String>>(&relays))
+        .map(|relays| {
+            relays
+                .into_iter()
+                .map(|relay| {
+                    relay
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .trim_start_matches("- ")
+                        .trim()
+                        .to_string()
+                })
+                .filter(|relay| !relay.is_empty())
+                .collect::<Vec<_>>()
+        })?;
+
+    if relays.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(relays))
+    }
+}
+
+async fn spawn_crawler_server() -> anyhow::Result<CrawlerServerGuard> {
+    let mut command = tokio::process::Command::new("gnostr");
+    command
+        .args(["crawler", "serve", "--port", "8080"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    let child = command.spawn()?;
+    Ok(CrawlerServerGuard { child })
+}
+
+pub async fn bootstrap_crawler_relay_buckets(
+    config_dir: &Path,
+    nip: i32,
+) -> anyhow::Result<Vec<String>> {
+    let relays = if let Some(relays) = fetch_live_crawler_relays().await? {
+        relays
+    } else {
+        let _guard = spawn_crawler_server().await?;
+        tokio::time::timeout(Duration::from_secs(30), async {
+            loop {
+                if let Some(relays) = fetch_live_crawler_relays().await? {
+                    break Ok::<Vec<String>, anyhow::Error>(relays);
+                }
+                tokio::time::sleep(Duration::from_millis(500)).await;
+            }
+        })
+        .await??
+    };
+    let relays: Vec<String> = relays
+        .into_iter()
+        .filter(|relay| {
+            if is_shitlisted(relay) {
+                warn!("bootstrap_crawler_relay_buckets: skipping shitlisted relay {}", relay);
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
+
+    let bucket_dir = config_dir.join(nip.to_string());
+    fs::create_dir_all(&bucket_dir)?;
+    fs::write(
+        bucket_dir.join("relays.yaml"),
+        serde_yaml::to_string(&relays)?,
+    )?;
+    fs::write(
+        bucket_dir.join("relays.json"),
+        serde_json::to_string_pretty(&relays)?,
+    )?;
+    fs::write(bucket_dir.join("relays.txt"), relays.join(" "))?;
+
+    Ok(relays)
+}
+
+pub async fn broadcast_event_to_crawler_relays(
+    config_dir: &Path,
+    event: &Event,
+) -> anyhow::Result<usize> {
+    let buckets = load_relay_buckets(config_dir).map_err(|err| anyhow::anyhow!(err.to_string()))?;
+    let mut published = 0usize;
+
+    for bucket in buckets {
+        for relay_url in bucket.relays {
+            println!(
+                "pretty_print_attestations relays_sent_to nip={} relay_url={}",
+                bucket.nip, relay_url
+            );
+            match NostrRelayConnection::connect(relay_url.clone()).await {
+                Ok(mut connection) => {
+                    if let Err(err) = connection.publish_event(event.clone()).await {
+                        warn!(
+                            "broadcast_event_to_crawler_relays: skipping {} after publish error: {}",
+                            relay_url, err
+                        );
+                        continue;
+                    }
+                    published += 1;
+                }
+                Err(err) => {
+                    warn!(
+                        "broadcast_event_to_crawler_relays: skipping {} after connect error: {}",
+                        relay_url, err
+                    );
+                    continue;
+                }
+            }
+        }
+    }
+
+    Ok(published)
 }
 
 #[cfg(test)]
