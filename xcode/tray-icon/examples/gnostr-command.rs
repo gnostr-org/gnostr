@@ -1,26 +1,36 @@
+use tao::event_loop::{ControlFlow, EventLoop};
+use tray_icon::{menu::MenuEvent, TrayIconBuilder};
+
 fn main() {
-    if !gnostr_tray_icon::command_exists("gnostr") {
-        eprintln!("gnostr not found on PATH");
-        std::process::exit(1);
-    }
+    let context = gnostr_tray_icon::default_tray_context();
+    let icon = gnostr_tray_icon::load_gnostr_icon_tinted(gnostr_tray_icon::tray_icon_tint_from_env());
+    let event_loop = EventLoop::new();
+    let tray_menu = context.menu;
+    let gnostr_item = context.gnostr_item;
+    let quit_item = context.quit_item;
 
-    let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
+    let _tray_icon = TrayIconBuilder::new()
+        .with_menu(Box::new(tray_menu))
+        .with_tooltip(gnostr_tray_icon::DEFAULT_TOOLTIP)
+        .with_icon(icon)
+        .build()
+        .unwrap();
 
-    let mut command = gnostr_tray_icon::pty_command("gnostr");
-    command.arg("tui");
-    command.arg("--gitdir");
-    command.arg(&gitdir);
-    command.arg("--help");
-    command.env("GNOSTR_GITDIR", &gitdir);
-    command.cwd(&gitdir);
+    let menu_channel = MenuEvent::receiver();
 
-    match gnostr_tray_icon::run_command_in_pty(command) {
-        Ok(output) => {
-            print!("{output}");
+    event_loop.run(move |_event, _, control_flow| {
+        *control_flow = ControlFlow::Poll;
+
+        if let Ok(event) = menu_channel.try_recv() {
+            if event.id == quit_item.id() {
+                *control_flow = ControlFlow::Exit;
+            } else if event.id == gnostr_item.id() {
+                if let Err(error) = gnostr_tray_icon::spawn_terminal_command(
+                    gnostr_tray_icon::gnostr_command_line(),
+                ) {
+                    eprintln!("failed to launch gnostr: {error}");
+                }
+            }
         }
-        Err(error) => {
-            eprintln!("failed to launch gnostr: {error}");
-            std::process::exit(1);
-        }
-    }
+    });
 }
