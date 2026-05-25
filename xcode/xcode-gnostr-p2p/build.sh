@@ -13,14 +13,15 @@ RELDIR="release"
 STATIC_LIB_NAME="lib${MY_CRATE}.a"
 NEW_HEADER_DIR="out/include"
 TARGETDIR="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json, sys; print(json.load(sys.stdin)["target_directory"])')"
+JOBS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 8)"
 
 targets=("aarch64-apple-ios" "aarch64-apple-ios-sim" "x86_64-apple-ios" "aarch64-apple-darwin")
 
 for target in "${targets[@]}"; do
-    rustup target add ${target}
-            cargo build --target "${target}" --release -j8
-            cargo run --bin uniffi-bindgen -- generate --library "${TARGETDIR}/${target}/release/librustylib.a" --language swift --out-dir out
-        done
+    rustup target add "${target}"
+    cargo build --target "${target}" --release -j"${JOBS}"
+    cargo run --bin uniffi-bindgen -- generate --library "${TARGETDIR}/${target}/release/librustylib.a" --language swift --out-dir out
+done
 
 SIM_DIR="${TARGETDIR}/ios-simulator"
 SIM_LIB="${SIM_DIR}/${RELDIR}/${STATIC_LIB_NAME}"
