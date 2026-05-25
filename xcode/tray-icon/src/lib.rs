@@ -44,9 +44,45 @@ pub fn load_gnostr_icon() -> tray_icon::Icon {
     load_icon_from_svg(include_bytes!("../../icons/gnostr.svg"))
 }
 
+pub fn load_gnostr_icon_tinted(tint: [u8; 4]) -> tray_icon::Icon {
+    load_icon_from_svg_tinted(include_bytes!("../../icons/gnostr.svg"), tint)
+}
+
+pub fn tray_icon_tint_from_env() -> [u8; 4] {
+    std::env::var("TRAY_ICON_TINT")
+        .ok()
+        .and_then(|value| parse_tint(&value))
+        .unwrap_or([255, 0, 255, 255])
+}
+
+pub fn parse_tint(input: &str) -> Option<[u8; 4]> {
+    let value = input.trim();
+    if value.is_empty() {
+        return None;
+    }
+
+    let hex = value.strip_prefix('#').unwrap_or(value);
+    match hex.len() {
+        6 => {
+            let red = u8::from_str_radix(&hex[0..2], 16).ok()?;
+            let green = u8::from_str_radix(&hex[2..4], 16).ok()?;
+            let blue = u8::from_str_radix(&hex[4..6], 16).ok()?;
+            Some([red, green, blue, 255])
+        }
+        8 => {
+            let red = u8::from_str_radix(&hex[0..2], 16).ok()?;
+            let green = u8::from_str_radix(&hex[2..4], 16).ok()?;
+            let blue = u8::from_str_radix(&hex[4..6], 16).ok()?;
+            let alpha = u8::from_str_radix(&hex[6..8], 16).ok()?;
+            Some([red, green, blue, alpha])
+        }
+        _ => None,
+    }
+}
+
 pub fn default_tray_context() -> TrayContext {
     let menu = Menu::new();
-    let hello_item = MenuItem::new("Hello from Rust!", true, None);
+    let hello_item = MenuItem::new("Hello from gnostr", true, None);
     let separator = PredefinedMenuItem::separator();
     let quit_item = MenuItem::new("Quit App", true, None);
 
@@ -62,7 +98,11 @@ pub fn default_tray_context() -> TrayContext {
 }
 
 pub fn run_default_tray_app() -> ! {
-    run_tray_app(DEFAULT_TOOLTIP, load_gnostr_icon(), default_tray_context())
+    run_tray_app(
+        DEFAULT_TOOLTIP,
+        load_gnostr_icon_tinted(tray_icon_tint_from_env()),
+        default_tray_context(),
+    )
 }
 
 pub fn run_tray_app(tooltip: &str, icon: tray_icon::Icon, context: TrayContext) -> ! {
@@ -92,4 +132,24 @@ pub fn run_tray_app(tooltip: &str, icon: tray_icon::Icon, context: TrayContext) 
             }
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_rgb_hex() {
+        assert_eq!(parse_tint("#ff00ff"), Some([255, 0, 255, 255]));
+    }
+
+    #[test]
+    fn parses_rgba_hex() {
+        assert_eq!(parse_tint("ff00ff80"), Some([255, 0, 255, 128]));
+    }
+
+    #[test]
+    fn rejects_invalid_values() {
+        assert_eq!(parse_tint("not-a-color"), None);
+    }
 }
