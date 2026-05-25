@@ -1,0 +1,72 @@
+---
+name: xcode-build
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Harness mode"
+        required: false
+        default: build
+        type: choice
+        options:
+          - build
+          - test
+          - all
+          - list
+      project:
+        description: "Project selection"
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - relay
+          - p2p
+          - appwithtool
+      clean:
+        description: "Clean derived data before running"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  xcode-build:
+    name: Xcode Build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Run harness
+        shell: bash
+        run: |
+          args=(
+            --mode "${{ inputs.mode || 'build' }}"
+            --project "${{ inputs.project || 'all' }}"
+          )
+
+          if [[ "${{ inputs.clean || 'false' }}" == "true" ]]; then
+            args+=(--clean)
+          fi
+
+          ./scripts/xcode-build.sh "${args[@]}"
