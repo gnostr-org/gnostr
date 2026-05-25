@@ -1,10 +1,21 @@
+use std::process::Stdio;
+
 fn main() {
     if !gnostr_tray_icon::command_exists("gnostr") {
         eprintln!("gnostr not found on PATH");
         std::process::exit(1);
     }
 
-    match std::process::Command::new("gnostr").arg("--help").output() {
+    let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
+
+    match gnostr_tray_icon::system_command("gnostr")
+        .arg("tui")
+        .arg("--gitdir")
+        .arg(gitdir)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+    {
         Ok(output) => {
             print!("{}", String::from_utf8_lossy(&output.stdout));
             eprint!("{}", String::from_utf8_lossy(&output.stderr));
