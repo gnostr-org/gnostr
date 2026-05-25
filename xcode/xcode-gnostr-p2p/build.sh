@@ -6,7 +6,9 @@ SWIFT_CORE_NAME=RustyCore
 
 export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-15.0}"
 
-cd $MY_CRATE
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+cd "$MY_CRATE"
 
 # step 1 - compile rust library and generate bindings
 HEADERPATH="out/${MY_CRATE}FFI.h"
