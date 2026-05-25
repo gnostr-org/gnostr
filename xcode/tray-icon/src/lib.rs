@@ -1,3 +1,6 @@
+use std::ffi::OsStr;
+use std::process::{Command, Stdio};
+
 use tao::event_loop::{ControlFlow, EventLoop};
 use tray_icon::{
     menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem},
@@ -48,6 +51,20 @@ pub fn load_gnostr_icon_tinted(tint: [u8; 4]) -> tray_icon::Icon {
     load_icon_from_svg_tinted(include_bytes!("../../icons/gnostr.svg"), tint)
 }
 
+pub fn system_command(program: impl AsRef<OsStr>) -> Command {
+    let mut command = Command::new(program);
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::null());
+    command.stderr(Stdio::null());
+    command
+}
+
+pub fn tray_icon_command(program: impl AsRef<OsStr>, tint: [u8; 4]) -> Command {
+    let mut command = system_command(program);
+    command.env("TRAY_ICON_TINT", tint_hex(tint));
+    command
+}
+
 pub fn tray_icon_tint_from_env() -> [u8; 4] {
     std::env::var("TRAY_ICON_TINT")
         .ok()
@@ -78,6 +95,13 @@ pub fn parse_tint(input: &str) -> Option<[u8; 4]> {
         }
         _ => None,
     }
+}
+
+pub fn tint_hex(tint: [u8; 4]) -> String {
+    format!(
+        "#{:02x}{:02x}{:02x}{:02x}",
+        tint[0], tint[1], tint[2], tint[3]
+    )
 }
 
 pub fn default_tray_context() -> TrayContext {
@@ -151,5 +175,16 @@ mod tests {
     #[test]
     fn rejects_invalid_values() {
         assert_eq!(parse_tint("not-a-color"), None);
+    }
+
+    #[test]
+    fn formats_tint_as_hex() {
+        assert_eq!(tint_hex([255, 0, 255, 255]), "#ff00ffff");
+    }
+
+    #[test]
+    fn builds_tray_command() {
+        let command = tray_icon_command("tray-icon", [255, 0, 255, 255]);
+        assert_eq!(command.get_program(), std::ffi::OsStr::new("tray-icon"));
     }
 }
