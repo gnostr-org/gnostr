@@ -91,6 +91,7 @@ fn drain_updates(handle: &mut ChatHandle) {
     }
 }
 
+#[uniffi::export]
 pub fn chat_current_topic() -> String {
     let mut guard = chat_slot()
         .lock()
@@ -103,6 +104,7 @@ pub fn chat_current_topic() -> String {
     }
 }
 
+#[uniffi::export]
 pub fn chat_start(topic: String) -> String {
     let topic = normalize_topic(&topic);
     let mut guard = chat_slot()
@@ -145,6 +147,7 @@ pub fn chat_start(topic: String) -> String {
     }
 }
 
+#[uniffi::export]
 pub fn chat_stop() -> String {
     let state = {
         let mut guard = chat_slot()
@@ -163,6 +166,7 @@ pub fn chat_stop() -> String {
     status
 }
 
+#[uniffi::export]
 pub fn chat_status() -> String {
     let mut guard = chat_slot()
         .lock()
@@ -175,6 +179,7 @@ pub fn chat_status() -> String {
     handle.status.clone()
 }
 
+#[uniffi::export]
 pub fn chat_logs() -> String {
     {
         let mut guard = chat_slot()
@@ -191,6 +196,7 @@ pub fn chat_logs() -> String {
         .join("\n")
 }
 
+#[uniffi::export]
 pub fn chat_send(text: String) -> String {
     let mut guard = chat_slot()
         .lock()
