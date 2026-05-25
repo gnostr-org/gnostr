@@ -66,7 +66,7 @@ pub fn pty_command(program: impl AsRef<OsStr>) -> CommandBuilder {
     CommandBuilder::new(program)
 }
 
-pub fn run_command_in_pty(mut command: CommandBuilder) -> io::Result<String> {
+pub fn run_command_in_pty(command: CommandBuilder) -> io::Result<String> {
     let pty_system = native_pty_system();
     let portable_pty::PtyPair { master, slave } = pty_system
         .openpty(PtySize {
