@@ -13,10 +13,11 @@ PROJECT_FILTER="all"
 CONFIGURATION="${XCODE_CONFIGURATION:-Debug}"
 BUILD_DESTINATION="${XCODE_BUILD_DESTINATION:-generic/platform=iOS}"
 DERIVED_DATA_ROOT="${XCODE_DERIVED_DATA_ROOT:-$ROOT_DIR/.xcodebuild}"
+CLEAN=false
 
 usage() {
   cat <<'EOF'
-Usage: xcode-build.sh [--mode build|test|all|list] [--project relay|p2p|appwithtool|all] [--configuration Debug|Release]
+Usage: xcode-build.sh [--mode build|test|all|list] [--project relay|p2p|appwithtool|all] [--configuration Debug|Release] [--clean]
 
 Modes:
   build   Build the selected Xcode projects
@@ -27,8 +28,18 @@ Modes:
 Options:
   --project NAME        Select relay, p2p, appwithtool, or all (default)
   --configuration NAME  Xcode build configuration (default: Debug)
+  --clean               Remove per-project derived data before running
   --help                Show this help
 EOF
+}
+
+clean_project_artifacts() {
+  local project="$1"
+  local project_root="$DERIVED_DATA_ROOT/$project"
+
+  if [[ "$CLEAN" == true && -d "$project_root" ]]; then
+    rm -rf "$project_root"
+  fi
 }
 
 project_path() {
@@ -188,6 +199,7 @@ run_xcodebuild() {
 run_build_projects() {
   local project
   for project in $(selected_projects); do
+    clean_project_artifacts "$project"
     run_build_script "$project"
     run_xcodebuild build "$project"
   done
@@ -197,6 +209,7 @@ run_test_projects() {
   local project
 
   for project in $(selected_projects); do
+    clean_project_artifacts "$project"
     run_build_script "$project"
     run_xcodebuild build "$project"
   done
@@ -218,6 +231,9 @@ while [[ $# -gt 0 ]]; do
       shift
       [[ $# -gt 0 ]] || { echo "--configuration requires a value" >&2; exit 1; }
       CONFIGURATION="$1"
+      ;;
+    --clean)
+      CLEAN=true
       ;;
     --help|-h)
       usage
