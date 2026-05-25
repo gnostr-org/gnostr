@@ -70,3 +70,30 @@ jobs:
           fi
 
           ./scripts/xcode-build.sh "${args[@]}"
+
+  cross-build:
+    name: Cross Build
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: swift-cross-ui
+            command: ./xcode/scripts/build-swift-cross-ui.sh
+          - package: swift-cross-ui-p2p
+            command: ./xcode/scripts/swift-build-package.sh swift-cross-ui-p2p
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Build ${{ matrix.package }}
+        shell: bash
+        run: ${{ matrix.command }}
