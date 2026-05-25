@@ -118,6 +118,17 @@ if fallback is not None:
 raise SystemExit('no available iOS Simulator device found')"
 }
 
+project_test_destination() {
+  case "$1" in
+    appwithtool)
+      printf '%s\n' "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone],name=My Mac"
+      ;;
+    *)
+      resolve_test_destination
+      ;;
+  esac
+}
+
 selected_projects() {
   case "$PROJECT_FILTER" in
     all)
@@ -187,18 +198,29 @@ run_test_projects() {
   local schemes
   local scheme
   local derived_data_path
+  local test_destination
 
   for project in $(selected_projects); do
     if schemes="$(project_test_schemes "$project" 2>/dev/null)"; then
+      test_destination="$(project_test_destination "$project")"
+      derived_data_path="$DERIVED_DATA_ROOT/$project/$CONFIGURATION/test-host"
+      mkdir -p "$derived_data_path"
+
+      xcodebuild \
+        -project "$(project_path "$project")" \
+        -scheme "$(project_scheme "$project")" \
+        -configuration "$CONFIGURATION" \
+        -derivedDataPath "$derived_data_path" \
+        -destination "$test_destination" \
+        build
+
       for scheme in $schemes; do
-        derived_data_path="$DERIVED_DATA_ROOT/$project/$CONFIGURATION/test/$scheme"
-        mkdir -p "$derived_data_path"
         xcodebuild \
           -project "$(project_path "$project")" \
           -scheme "$scheme" \
           -configuration "$CONFIGURATION" \
           -derivedDataPath "$derived_data_path" \
-          -destination "$(resolve_test_destination)" \
+          -destination "$test_destination" \
           test
       done
     else
