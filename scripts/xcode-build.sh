@@ -121,7 +121,7 @@ raise SystemExit('no available iOS Simulator device found')"
 project_test_destination() {
   case "$1" in
     appwithtool)
-      printf '%s\n' "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone],name=My Mac"
+      printf '%s\n' "platform=macOS,id=00008103-0018790121B9001E"
       ;;
     *)
       resolve_test_destination
