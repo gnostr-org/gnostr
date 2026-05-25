@@ -14,7 +14,7 @@ pub const DEFAULT_TOOLTIP: &str = "Sovereign Menu Bar Utility";
 
 pub struct TrayContext {
     pub menu: Menu,
-    pub hello_item: MenuItem,
+    pub gnostr_item: MenuItem,
     pub quit_item: MenuItem,
 }
 
@@ -89,6 +89,19 @@ pub fn run_command_in_pty(command: CommandBuilder) -> io::Result<String> {
     reader.read_to_string(&mut output)?;
     let _ = child.wait();
     Ok(output)
+}
+
+pub fn gnostr_command_line() -> String {
+    let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
+    if gitdir.trim().is_empty() || gitdir == "." {
+        "gnostr tui".to_string()
+    } else {
+        format!("cd {} ; gnostr tui", shell_string(&gitdir))
+    }
+}
+
+pub fn launch_gnostr_in_terminal() -> io::Result<std::process::Child> {
+    spawn_terminal_command(gnostr_command_line())
 }
 
 pub fn command_exists(program: impl AsRef<OsStr>) -> bool {
@@ -211,7 +224,6 @@ pub fn tint_hex(tint: [u8; 4]) -> String {
     )
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
 fn shell_string(input: &str) -> String {
     format!("'{}'", input.replace('\'', r"'\''"))
 }
@@ -282,17 +294,17 @@ fn is_executable_path(path: &Path) -> bool {
 
 pub fn default_tray_context() -> TrayContext {
     let menu = Menu::new();
-    let hello_item = MenuItem::new("Hello from gnostr", true, None);
+    let gnostr_item = MenuItem::new("gnostr", true, None);
     let separator = PredefinedMenuItem::separator();
     let quit_item = MenuItem::new("Quit App", true, None);
 
-    menu.append(&hello_item).unwrap();
+    menu.append(&gnostr_item).unwrap();
     menu.append(&separator).unwrap();
     menu.append(&quit_item).unwrap();
 
     TrayContext {
         menu,
-        hello_item,
+        gnostr_item,
         quit_item,
     }
 }
@@ -308,7 +320,7 @@ pub fn run_default_tray_app() -> ! {
 pub fn run_tray_app(tooltip: &str, icon: tray_icon::Icon, context: TrayContext) -> ! {
     let event_loop = EventLoop::new();
     let tray_menu = context.menu;
-    let hello_item = context.hello_item;
+    let gnostr_item = context.gnostr_item;
     let quit_item = context.quit_item;
 
     let _tray_icon = TrayIconBuilder::new()
@@ -327,8 +339,10 @@ pub fn run_tray_app(tooltip: &str, icon: tray_icon::Icon, context: TrayContext) 
             if event.id == quit_item.id() {
                 println!("Exiting gracefully.");
                 *control_flow = ControlFlow::Exit;
-            } else if event.id == hello_item.id() {
-                println!("Hello item clicked!");
+            } else if event.id == gnostr_item.id() {
+                if let Err(error) = launch_gnostr_in_terminal() {
+                    eprintln!("failed to launch gnostr: {error}");
+                }
             }
         }
     });
