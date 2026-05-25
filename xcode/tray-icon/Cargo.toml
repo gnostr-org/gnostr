@@ -1,0 +1,8 @@
+[workspace]
+[package]
+name = "macos-tray-icon"
+edition = "2024"
+
+[dependencies]
+tao = "0.31"
+tray-icon = "0.19"
