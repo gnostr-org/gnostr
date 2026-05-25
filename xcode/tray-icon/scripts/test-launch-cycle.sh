@@ -35,7 +35,8 @@ trap cleanup EXIT INT TERM
 cargo test --manifest-path "$manifest" --lib
 
 for tint in "${colors[@]}"; do
-  log_file="$(mktemp "/tmp/tray-icon-${tint//#/}.XXXX.log")"
+  temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/tray-icon-${tint//#/}.XXXXXX")"
+  log_file="$temp_dir/run.log"
   echo "launching tray icon with tint $tint"
   TRAY_ICON_TINT="$tint" cargo run --manifest-path "$manifest" >"$log_file" 2>&1 &
   cleanup_pid="$!"
@@ -51,5 +52,6 @@ for tint in "${colors[@]}"; do
   kill "$cleanup_pid"
   wait "$cleanup_pid" || true
   cleanup_pid=""
+  rm -rf "$temp_dir"
   echo "relaunching with next tint"
 done

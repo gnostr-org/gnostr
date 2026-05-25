@@ -1,6 +1,6 @@
 [workspace]
 [package]
-name = "macos-tray-icon"
+name = "gnostr-tray-icon"
 edition = "2024"
 
 [dependencies]
