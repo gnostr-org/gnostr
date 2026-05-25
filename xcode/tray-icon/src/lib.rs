@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::io::{self, Read};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
@@ -94,9 +94,9 @@ pub fn run_command_in_pty(command: CommandBuilder) -> io::Result<String> {
 pub fn gnostr_command_line() -> String {
     let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
     if gitdir.trim().is_empty() || gitdir == "." {
-        "gnostr tui".to_string()
+        "gnostr".to_string()
     } else {
-        format!("cd {} ; gnostr tui", shell_string(&gitdir))
+        format!("cd {} ; gnostr", shell_string(&gitdir))
     }
 }
 
@@ -105,23 +105,27 @@ pub fn launch_gnostr_in_terminal() -> io::Result<std::process::Child> {
 }
 
 pub fn command_exists(program: impl AsRef<OsStr>) -> bool {
+    resolve_command_path(program).is_some()
+}
+
+pub fn resolve_command_path(program: impl AsRef<OsStr>) -> Option<PathBuf> {
     let program = Path::new(program.as_ref());
 
     if program.components().count() > 1 {
-        return is_executable_path(program);
+        return is_executable_path(program).then(|| program.to_path_buf());
     }
 
     let Some(paths) = std::env::var_os("PATH") else {
-        return false;
+        return None;
     };
 
     for dir in std::env::split_paths(&paths) {
         if has_command_in_dir(&dir, program) {
-            return true;
+            return Some(dir.join(program));
         }
     }
 
-    false
+    None
 }
 
 pub fn tray_icon_command(program: impl AsRef<OsStr>, tint: [u8; 4]) -> Command {
