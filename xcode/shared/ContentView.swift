@@ -13,9 +13,9 @@ import RustyLib
 struct ContentView: View {
     @State private var networkStatus = p2pNetworkStatus()
     @State private var networkLogs = p2pNetworkLogs()
-    @State private var chatTopic = chatCurrentTopic()
-    @State private var chatStatus = chatStatus()
-    @State private var chatLogs = chatLogs()
+    @State private var chatTopic = RustyLib.chatCurrentTopic()
+    @State private var chatStatus = RustyLib.chatStatus()
+    @State private var chatLogs = RustyLib.chatLogs()
     @State private var chatDraft = ""
     @State private var showingNetworkPanel = false
     @State private var didAutoStartServices = false
@@ -282,9 +282,9 @@ struct ContentView: View {
     private func startChat() {
         let topic = chatTopic
         DispatchQueue.global(qos: .userInitiated).async {
-            let status = chatStart(topic: topic)
-            let resolvedTopic = chatCurrentTopic()
-            let logs = chatLogs()
+            let status = RustyLib.chatStart(topic: topic)
+            let resolvedTopic = RustyLib.chatCurrentTopic()
+            let logs = RustyLib.chatLogs()
             DispatchQueue.main.async {
                 chatStatus = status
                 chatTopic = resolvedTopic
@@ -295,8 +295,8 @@ struct ContentView: View {
 
     private func stopChat() {
         DispatchQueue.global(qos: .userInitiated).async {
-            let status = chatStop()
-            let logs = chatLogs()
+            let status = RustyLib.chatStop()
+            let logs = RustyLib.chatLogs()
             DispatchQueue.main.async {
                 chatStatus = status
                 chatLogs = logs
@@ -308,8 +308,8 @@ struct ContentView: View {
         let message = chatDraft
         guard !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         DispatchQueue.global(qos: .userInitiated).async {
-            let status = chatSend(text: message)
-            let logs = chatLogs()
+            let status = RustyLib.chatSend(text: message)
+            let logs = RustyLib.chatLogs()
             DispatchQueue.main.async {
                 chatStatus = status
                 chatLogs = logs
@@ -322,9 +322,9 @@ struct ContentView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             let networkStatus = p2pNetworkStatus()
             let networkLogs = p2pNetworkLogs()
-            let chatStatus = chatStatus()
-            let chatTopic = chatCurrentTopic()
-            let chatLogs = chatLogs()
+            let chatStatus = RustyLib.chatStatus()
+            let chatTopic = RustyLib.chatCurrentTopic()
+            let chatLogs = RustyLib.chatLogs()
             DispatchQueue.main.async {
                 self.networkStatus = networkStatus
                 self.networkLogs = networkLogs
