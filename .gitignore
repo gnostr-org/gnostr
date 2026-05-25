@@ -1,3 +1,5 @@
+.xcodebuild/
+
 ## gnostr-relay/server artifacts
 relay_db/
 relay_policy.db
