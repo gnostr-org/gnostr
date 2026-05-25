@@ -17,6 +17,10 @@ name = "gnostr_p2p"
 path = "src/lib.rs"
 ##doctest = false
 
+[features]
+default = ["js"]
+js = ["dep:gnostr-js"]
+
 [dependencies]
 ansi_term = "0.12"
 anyhow = "1.0.98"
@@ -37,7 +41,7 @@ gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version =
   "vendor-openssl",
 ] }
 gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=949455.1873.486970" }
-gnostr-js = { path = "../js", package = "gnostr-js", version = ">=949455.1873.486970" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = ">=949455.1873.486970", optional = true }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",
