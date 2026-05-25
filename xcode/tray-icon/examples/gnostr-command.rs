@@ -1,5 +1,3 @@
-use std::process::Stdio;
-
 fn main() {
     if !gnostr_tray_icon::command_exists("gnostr") {
         eprintln!("gnostr not found on PATH");
@@ -8,21 +6,17 @@ fn main() {
 
     let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
 
-    match gnostr_tray_icon::system_command("gnostr")
-        .arg("tui")
-        .arg("--gitdir")
-        .arg(gitdir)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()
-    {
+    let mut command = gnostr_tray_icon::pty_command("gnostr");
+    command.arg("tui");
+    command.arg("--gitdir");
+    command.arg(&gitdir);
+    command.arg("--help");
+    command.env("GNOSTR_GITDIR", &gitdir);
+    command.cwd(&gitdir);
+
+    match gnostr_tray_icon::run_command_in_pty(command) {
         Ok(output) => {
-            print!("{}", String::from_utf8_lossy(&output.stdout));
-            eprint!("{}", String::from_utf8_lossy(&output.stderr));
-            if !output.status.success() {
-                eprintln!("gnostr exited with status: {}", output.status);
-                std::process::exit(1);
-            }
+            print!("{output}");
         }
         Err(error) => {
             eprintln!("failed to launch gnostr: {error}");

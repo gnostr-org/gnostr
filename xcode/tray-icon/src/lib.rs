@@ -1,7 +1,9 @@
 use std::ffi::OsStr;
+use std::io::{self, Read};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use tao::event_loop::{ControlFlow, EventLoop};
 use tray_icon::{
     menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem},
@@ -58,6 +60,35 @@ pub fn system_command(program: impl AsRef<OsStr>) -> Command {
     command.stdout(Stdio::null());
     command.stderr(Stdio::null());
     command
+}
+
+pub fn pty_command(program: impl AsRef<OsStr>) -> CommandBuilder {
+    CommandBuilder::new(program)
+}
+
+pub fn run_command_in_pty(mut command: CommandBuilder) -> io::Result<String> {
+    let pty_system = native_pty_system();
+    let portable_pty::PtyPair { master, slave } = pty_system
+        .openpty(PtySize {
+        rows: 24,
+        cols: 80,
+        pixel_width: 0,
+        pixel_height: 0,
+    })
+    .map_err(|error| io::Error::other(error.to_string()))?;
+
+    let mut child = slave
+        .spawn_command(command)
+        .map_err(|error| io::Error::other(error.to_string()))?;
+    drop(slave);
+
+    let mut reader = master
+        .try_clone_reader()
+        .map_err(|error| io::Error::other(error.to_string()))?;
+    let mut output = String::new();
+    reader.read_to_string(&mut output)?;
+    let _ = child.wait();
+    Ok(output)
 }
 
 pub fn command_exists(program: impl AsRef<OsStr>) -> bool {

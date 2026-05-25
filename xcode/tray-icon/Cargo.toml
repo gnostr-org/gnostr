@@ -4,6 +4,7 @@ name = "gnostr-tray-icon"
 edition = "2024"
 
 [dependencies]
+portable-pty = "0.8.1"
 resvg = "0.44"
 tao = "0.31"
 tray-icon = "0.19"
