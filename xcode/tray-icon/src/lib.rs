@@ -65,6 +65,61 @@ pub fn tray_icon_command(program: impl AsRef<OsStr>, tint: [u8; 4]) -> Command {
     command
 }
 
+pub fn terminal_command(command_line: impl AsRef<str>) -> Command {
+    let command_line = command_line.as_ref().trim().to_string();
+
+    #[cfg(target_os = "macos")]
+    {
+        let mut command = system_command("osascript");
+        command.arg("-e").arg(format!(
+            "tell application \"Terminal\"\n  activate\n  do script {}\nend tell",
+            applescript_string(&command_line)
+        ));
+        return command;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let mut command = system_command("cmd");
+        command.args([
+            "/C",
+            "start",
+            "",
+            "powershell",
+            "-NoExit",
+            "-NoProfile",
+            "-Command",
+            &command_line,
+        ]);
+        return command;
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let script = format!(
+            "if command -v x-terminal-emulator >/dev/null 2>&1; then\n  exec x-terminal-emulator -e sh -lc {}\nelif command -v gnome-terminal >/dev/null 2>&1; then\n  exec gnome-terminal -- sh -lc {}\nelif command -v konsole >/dev/null 2>&1; then\n  exec konsole -e sh -lc {}\nelif command -v kitty >/dev/null 2>&1; then\n  exec kitty sh -lc {}\nelif command -v xterm >/dev/null 2>&1; then\n  exec xterm -e sh -lc {}\nfi\nexec sh -lc {}",
+            shell_string(&command_line),
+            shell_string(&command_line),
+            shell_string(&command_line),
+            shell_string(&command_line),
+            shell_string(&command_line),
+            shell_string(&command_line),
+        );
+        let mut command = system_command("sh");
+        command.args(["-lc", &script]);
+        return command;
+    }
+
+    #[allow(unreachable_code)]
+    {
+        system_command("sh")
+    }
+}
+
+pub fn spawn_terminal_command(command_line: impl AsRef<str>) -> std::io::Result<std::process::Child> {
+    terminal_command(command_line).spawn()
+}
+
 pub fn tray_icon_tint_from_env() -> [u8; 4] {
     std::env::var("TRAY_ICON_TINT")
         .ok()
@@ -102,6 +157,20 @@ pub fn tint_hex(tint: [u8; 4]) -> String {
         "#{:02x}{:02x}{:02x}{:02x}",
         tint[0], tint[1], tint[2], tint[3]
     )
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn shell_string(input: &str) -> String {
+    format!("'{}'", input.replace('\'', r"'\''"))
+}
+
+#[cfg(target_os = "macos")]
+fn applescript_string(input: &str) -> String {
+    let escaped = input
+        .replace('\\', r"\\")
+        .replace('"', r#"\""#)
+        .replace('\n', r"\n");
+    format!("\"{}\"", escaped)
 }
 
 pub fn default_tray_context() -> TrayContext {
@@ -186,5 +255,16 @@ mod tests {
     fn builds_tray_command() {
         let command = tray_icon_command("tray-icon", [255, 0, 255, 255]);
         assert_eq!(command.get_program(), std::ffi::OsStr::new("tray-icon"));
+    }
+
+    #[test]
+    fn builds_terminal_command() {
+        let command = terminal_command("echo hi");
+        #[cfg(target_os = "macos")]
+        assert_eq!(command.get_program(), std::ffi::OsStr::new("osascript"));
+        #[cfg(target_os = "windows")]
+        assert_eq!(command.get_program(), std::ffi::OsStr::new("cmd"));
+        #[cfg(all(unix, not(target_os = "macos")))]
+        assert_eq!(command.get_program(), std::ffi::OsStr::new("sh"));
     }
 }
