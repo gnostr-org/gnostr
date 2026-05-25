@@ -94,7 +94,7 @@ pub fn run_command_in_pty(command: CommandBuilder) -> io::Result<String> {
 pub fn gnostr_command_line() -> String {
     let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
     let gnostr = resolve_command_path("gnostr")
-        .map(|path| shell_string(&path.to_string_lossy()))
+        .map(|path| path.to_string_lossy().to_string())
         .unwrap_or_else(|| "gnostr".to_string());
     if gitdir.trim().is_empty() || gitdir == "." {
         gnostr
