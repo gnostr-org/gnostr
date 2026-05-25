@@ -19,7 +19,7 @@
 /* Begin PBXFileReference section */
 		291DE5302C3DE74F007F9706 /* gnostr-relay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "gnostr-relay.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		291DE5332C3DE74F007F9706 /* swiftyappApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swiftyappApp.swift; sourceTree = "<group>"; };
-		291DE5352C3DE74F007F9706 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../../shared/ContentView.swift; sourceTree = "<group>"; };
+		291DE5352C3DE74F007F9706 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = ../../../shared/ContentView.swift; sourceTree = "<group>"; };
 		291DE5372C3DE74F007F9706 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		291DE53A2C3DE74F007F9706 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2986A2E02C3F8F9800D13583 /* swiftyrustlib */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = swiftyrustlib; sourceTree = "<group>"; };
