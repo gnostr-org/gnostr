@@ -1,0 +1,1 @@
+//invoke gnostr if exists
