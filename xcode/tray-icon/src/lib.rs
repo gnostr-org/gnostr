@@ -92,19 +92,33 @@ pub fn run_command_in_pty(command: CommandBuilder) -> io::Result<String> {
 }
 
 pub fn gnostr_command_line() -> String {
-    let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
     let gnostr = resolve_command_path("gnostr")
         .map(|path| path.to_string_lossy().to_string())
         .unwrap_or_else(|| "gnostr".to_string());
-    if gitdir.trim().is_empty() || gitdir == "." {
-        gnostr
-    } else {
-        format!("cd {} ; {gnostr}", shell_string(&gitdir))
-    }
+    let gitdir = resolve_gnostr_gitdir().unwrap_or_else(|| ".".to_string());
+    format!("{gnostr} --gitdir {} tui", shell_string(&gitdir))
 }
 
 pub fn launch_gnostr_in_terminal() -> io::Result<std::process::Child> {
     spawn_terminal_command(gnostr_command_line())
+}
+
+pub fn resolve_gnostr_gitdir() -> Option<String> {
+    if let Ok(value) = std::env::var("GNOSTR_GITDIR") {
+        let trimmed = value.trim();
+        if !trimmed.is_empty() {
+            return Some(trimmed.to_string());
+        }
+    }
+
+    let cwd = std::env::current_dir().ok()?;
+    for dir in cwd.as_path().ancestors() {
+        if dir.join(".git").exists() {
+            return Some(dir.to_string_lossy().to_string());
+        }
+    }
+
+    None
 }
 
 pub fn command_exists(program: impl AsRef<OsStr>) -> bool {
@@ -144,8 +158,7 @@ pub fn terminal_command(command_line: impl AsRef<str>) -> Command {
     {
         let mut command = system_command("osascript");
         let script = format!(
-            "tell application \"Terminal\"\n  activate\n  if not (exists window 1) then\n    do script {}\n  else\n    do script {} in window 1\n  end if\nend tell",
-            applescript_string(&command_line),
+            "tell application \"Terminal\"\n  activate\n  do script {}\nend tell",
             applescript_string(&command_line)
         );
         command.arg("-e").arg(script);
