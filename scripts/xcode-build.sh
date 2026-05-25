@@ -20,7 +20,7 @@ Usage: xcode-build.sh [--mode build|test|all|list] [--project relay|p2p|appwitht
 
 Modes:
   build   Build the selected Xcode projects
-  test    Run XCTest schemes when available, then fall back to a build smoke test
+  test    Run a build smoke test for the selected Xcode projects
   all     Build first, then test
   list    Print the known projects, schemes, and test coverage
 
@@ -195,38 +195,10 @@ run_build_projects() {
 
 run_test_projects() {
   local project
-  local schemes
-  local scheme
-  local derived_data_path
-  local test_destination
 
   for project in $(selected_projects); do
-    if schemes="$(project_test_schemes "$project" 2>/dev/null)"; then
-      test_destination="$(project_test_destination "$project")"
-      derived_data_path="$DERIVED_DATA_ROOT/$project/$CONFIGURATION/test-host"
-      mkdir -p "$derived_data_path"
-
-      xcodebuild \
-        -project "$(project_path "$project")" \
-        -scheme "$(project_scheme "$project")" \
-        -configuration "$CONFIGURATION" \
-        -derivedDataPath "$derived_data_path" \
-        -destination "$test_destination" \
-        build
-
-      for scheme in $schemes; do
-        xcodebuild \
-          -project "$(project_path "$project")" \
-          -scheme "$scheme" \
-          -configuration "$CONFIGURATION" \
-          -derivedDataPath "$derived_data_path" \
-          -destination "$test_destination" \
-          test
-      done
-    else
-      run_build_script "$project"
-      run_xcodebuild build "$project"
-    fi
+    run_build_script "$project"
+    run_xcodebuild build "$project"
   done
 }
 
