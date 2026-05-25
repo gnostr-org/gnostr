@@ -4,7 +4,8 @@
 //! crates, and it keeps relay bucket and quorum-time helpers local so the
 //! dependency graph stays one-way: `types -> asyncgit -> p2p`.
 //!
-//! The browser-side pure JavaScript implementation lives under `src/js/`.
+//! The browser-side pure JavaScript implementation lives under `src/js/` and
+//! is available behind the `js` feature.
 //!
 //! Attestation syndication follows the same deterministic structure used by
 //! `asyncgit`: mined commit, signed attestation event, mined git note, and a
@@ -36,8 +37,10 @@ pub mod lookup;
 pub mod network_config;
 pub mod opt;
 #[cfg(not(doc))]
+#[cfg(feature = "js")]
 pub mod bridge;
 #[cfg(not(doc))]
+#[cfg(feature = "js")]
 pub mod js;
 pub mod crawler_broadcast;
 #[cfg(not(doc))]
@@ -48,6 +51,7 @@ pub mod relay_bridge;
 pub mod relay_paths;
 pub mod time;
 #[cfg(not(doc))]
+#[cfg(feature = "js")]
 pub mod template_html;
 pub mod swarm_builder;
 pub mod utils;
@@ -86,16 +90,16 @@ fn seed_bytes(seed: &str) -> [u8; 32] {
     digest.into()
 }
 
-#[cfg(not(doc))]
+#[cfg(all(not(doc), feature = "js"))]
 pub use bridge::{asset_content_type, asset_response, shell_html};
-#[cfg(not(doc))]
+#[cfg(all(not(doc), feature = "js"))]
 pub use js::get_js_assets;
 #[cfg(not(doc))]
 pub use message::*;
 pub use repo_state::{RepoStateQuorum, RepoStateRefs, RepoStateSnapshot};
 #[cfg(not(doc))]
 pub use relay_bridge::{RelayBridgeCommand, RelayBridgeNotification, RelayBridgeSession, NostrRelayConnection};
-#[cfg(not(doc))]
+#[cfg(all(not(doc), feature = "js"))]
 pub use template_html::{get_template_assets, TemplateHtml};
 
 pub fn spawn_detached_current_exe<I, S>(args: I) -> Result<u32, Box<dyn std::error::Error>>
