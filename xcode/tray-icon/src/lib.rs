@@ -13,6 +13,10 @@ pub struct TrayContext {
 }
 
 pub fn load_icon_from_svg(svg: &[u8]) -> tray_icon::Icon {
+    load_icon_from_svg_tinted(svg, [255, 0, 255, 255])
+}
+
+pub fn load_icon_from_svg_tinted(svg: &[u8], tint: [u8; 4]) -> tray_icon::Icon {
     let mut options = usvg::Options::default();
     options.fontdb_mut().load_system_fonts();
 
@@ -24,6 +28,14 @@ pub fn load_icon_from_svg(svg: &[u8]) -> tray_icon::Icon {
         tiny_skia::Transform::default(),
         &mut pixmap.as_mut(),
     );
+
+    for pixel in pixmap.data_mut().chunks_mut(4) {
+        if pixel[3] != 0 {
+            pixel[0] = tint[0];
+            pixel[1] = tint[1];
+            pixel[2] = tint[2];
+        }
+    }
 
     tray_icon::Icon::from_rgba(pixmap.take(), size.width(), size.height()).expect("build tray icon")
 }
