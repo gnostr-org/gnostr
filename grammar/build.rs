@@ -252,6 +252,10 @@ fn main() -> anyhow::Result<()> {
             // Tree-sitter grammars compiled from C++ sources need the C++ runtime on Darwin.
             println!("cargo::rustc-link-lib=c++");
         }
+        Ok("ios") => {
+            // iOS targets also need the C++ runtime for generated tree-sitter scanners.
+            println!("cargo::rustc-link-lib=c++");
+        }
         Ok("linux") => {
             // Linux CI links the generated scanner sources against libstdc++.
             println!("cargo::rustc-link-lib=stdc++");
