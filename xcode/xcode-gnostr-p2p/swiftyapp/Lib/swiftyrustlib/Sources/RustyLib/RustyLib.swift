@@ -11,24 +11,6 @@ import Foundation
     import rustylibFFI
 #endif
 
-@_silgen_name("uniffi_rustylib_fn_func_chat_current_topic")
-private func uniffi_rustylib_fn_func_chat_current_topic(_ callStatus: UnsafeMutablePointer<RustCallStatus>) -> RustBuffer
-
-@_silgen_name("uniffi_rustylib_fn_func_chat_start")
-private func uniffi_rustylib_fn_func_chat_start(_ topic: RustBuffer, _ callStatus: UnsafeMutablePointer<RustCallStatus>) -> RustBuffer
-
-@_silgen_name("uniffi_rustylib_fn_func_chat_status")
-private func uniffi_rustylib_fn_func_chat_status(_ callStatus: UnsafeMutablePointer<RustCallStatus>) -> RustBuffer
-
-@_silgen_name("uniffi_rustylib_fn_func_chat_logs")
-private func uniffi_rustylib_fn_func_chat_logs(_ callStatus: UnsafeMutablePointer<RustCallStatus>) -> RustBuffer
-
-@_silgen_name("uniffi_rustylib_fn_func_chat_send")
-private func uniffi_rustylib_fn_func_chat_send(_ text: RustBuffer, _ callStatus: UnsafeMutablePointer<RustCallStatus>) -> RustBuffer
-
-@_silgen_name("uniffi_rustylib_fn_func_chat_stop")
-private func uniffi_rustylib_fn_func_chat_stop(_ callStatus: UnsafeMutablePointer<RustCallStatus>) -> RustBuffer
-
 private extension RustBuffer {
     /// Allocate a new buffer, copying the contents of a `UInt8` array.
     init(bytes: [UInt8]) {
@@ -450,6 +432,46 @@ private struct FfiConverterString: FfiConverter {
     }
 }
 
+public func chatCurrentTopic() -> String {
+    return try! FfiConverterString.lift(try! rustCall {
+        uniffi_rustylib_fn_func_chat_current_topic($0)
+    })
+}
+
+public func chatLogs() -> String {
+    return try! FfiConverterString.lift(try! rustCall {
+        uniffi_rustylib_fn_func_chat_logs($0)
+    })
+}
+
+public func chatSend(text: String) -> String {
+    return try! FfiConverterString.lift(try! rustCall {
+        uniffi_rustylib_fn_func_chat_send(
+            FfiConverterString.lower(text), $0
+        )
+    })
+}
+
+public func chatStart(topic: String) -> String {
+    return try! FfiConverterString.lift(try! rustCall {
+        uniffi_rustylib_fn_func_chat_start(
+            FfiConverterString.lower(topic), $0
+        )
+    })
+}
+
+public func chatStatus() -> String {
+    return try! FfiConverterString.lift(try! rustCall {
+        uniffi_rustylib_fn_func_chat_status($0)
+    })
+}
+
+public func chatStop() -> String {
+    return try! FfiConverterString.lift(try! rustCall {
+        uniffi_rustylib_fn_func_chat_stop($0)
+    })
+}
+
 public func p2pNetworkLogs() -> String {
     return try! FfiConverterString.lift(try! rustCall {
         uniffi_rustylib_fn_func_p2p_network_logs($0)
@@ -471,42 +493,6 @@ public func p2pNetworkStatus() -> String {
 public func p2pNetworkStop() -> String {
     return try! FfiConverterString.lift(try! rustCall {
         uniffi_rustylib_fn_func_p2p_network_stop($0)
-    })
-}
-
-public func chatCurrentTopic() -> String {
-    return try! FfiConverterString.lift(try! rustCall {
-        uniffi_rustylib_fn_func_chat_current_topic($0)
-    })
-}
-
-public func chatStart(topic: String) -> String {
-    return try! FfiConverterString.lift(try! rustCall {
-        uniffi_rustylib_fn_func_chat_start(FfiConverterString.lower(topic), $0)
-    })
-}
-
-public func chatStatus() -> String {
-    return try! FfiConverterString.lift(try! rustCall {
-        uniffi_rustylib_fn_func_chat_status($0)
-    })
-}
-
-public func chatLogs() -> String {
-    return try! FfiConverterString.lift(try! rustCall {
-        uniffi_rustylib_fn_func_chat_logs($0)
-    })
-}
-
-public func chatSend(text: String) -> String {
-    return try! FfiConverterString.lift(try! rustCall {
-        uniffi_rustylib_fn_func_chat_send(FfiConverterString.lower(text), $0)
-    })
-}
-
-public func chatStop() -> String {
-    return try! FfiConverterString.lift(try! rustCall {
-        uniffi_rustylib_fn_func_chat_stop($0)
     })
 }
 
@@ -540,6 +526,24 @@ private var initializationResult: InitializationResult = {
     let scaffolding_contract_version = ffi_rustylib_uniffi_contract_version()
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
+    }
+    if uniffi_rustylib_checksum_func_chat_current_topic() != 3020 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_rustylib_checksum_func_chat_logs() != 6190 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_rustylib_checksum_func_chat_send() != 19118 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_rustylib_checksum_func_chat_start() != 27325 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_rustylib_checksum_func_chat_status() != 10822 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_rustylib_checksum_func_chat_stop() != 15528 {
+        return InitializationResult.apiChecksumMismatch
     }
     if uniffi_rustylib_checksum_func_p2p_network_logs() != 9870 {
         return InitializationResult.apiChecksumMismatch
