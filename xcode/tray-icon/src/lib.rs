@@ -93,10 +93,13 @@ pub fn run_command_in_pty(command: CommandBuilder) -> io::Result<String> {
 
 pub fn gnostr_command_line() -> String {
     let gitdir = std::env::var("GNOSTR_GITDIR").unwrap_or_else(|_| ".".to_string());
+    let gnostr = resolve_command_path("gnostr")
+        .map(|path| shell_string(&path.to_string_lossy()))
+        .unwrap_or_else(|| "gnostr".to_string());
     if gitdir.trim().is_empty() || gitdir == "." {
-        "gnostr".to_string()
+        gnostr
     } else {
-        format!("cd {} ; gnostr", shell_string(&gitdir))
+        format!("cd {} ; {gnostr}", shell_string(&gitdir))
     }
 }
 
@@ -140,10 +143,12 @@ pub fn terminal_command(command_line: impl AsRef<str>) -> Command {
     #[cfg(target_os = "macos")]
     {
         let mut command = system_command("osascript");
-        command.arg("-e").arg(format!(
-            "tell application \"Terminal\"\n  activate\n  do script {}\nend tell",
+        let script = format!(
+            "tell application \"Terminal\"\n  activate\n  if not (exists window 1) then\n    do script {}\n  else\n    do script {} in window 1\n  end if\nend tell",
+            applescript_string(&command_line),
             applescript_string(&command_line)
-        ));
+        );
+        command.arg("-e").arg(script);
         return command;
     }
 
