@@ -1,4 +1,5 @@
 use std::ffi::OsStr;
+use std::path::Path;
 use std::process::{Command, Stdio};
 
 use tao::event_loop::{ControlFlow, EventLoop};
@@ -57,6 +58,26 @@ pub fn system_command(program: impl AsRef<OsStr>) -> Command {
     command.stdout(Stdio::null());
     command.stderr(Stdio::null());
     command
+}
+
+pub fn command_exists(program: impl AsRef<OsStr>) -> bool {
+    let program = Path::new(program.as_ref());
+
+    if program.components().count() > 1 {
+        return is_executable_path(program);
+    }
+
+    let Some(paths) = std::env::var_os("PATH") else {
+        return false;
+    };
+
+    for dir in std::env::split_paths(&paths) {
+        if has_command_in_dir(&dir, program) {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub fn tray_icon_command(program: impl AsRef<OsStr>, tint: [u8; 4]) -> Command {
@@ -173,6 +194,61 @@ fn applescript_string(input: &str) -> String {
     format!("\"{}\"", escaped)
 }
 
+fn has_command_in_dir(dir: &Path, program: &Path) -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        let pathext = std::env::var_os("PATHEXT")
+            .unwrap_or_else(|| ".EXE;.CMD;.BAT;.COM".into())
+            .to_string_lossy()
+            .into_owned();
+
+        let extensions = pathext
+            .split(';')
+            .map(str::trim)
+            .filter(|ext| !ext.is_empty())
+            .collect::<Vec<_>>();
+
+        if program.extension().is_some() {
+            return is_executable_path(&dir.join(program));
+        }
+
+        for ext in extensions {
+            let candidate = dir.join(format!("{}{}", program.display(), ext));
+            if is_executable_path(&candidate) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        is_executable_path(&dir.join(program))
+    }
+}
+
+fn is_executable_path(path: &Path) -> bool {
+    let Ok(metadata) = std::fs::metadata(path) else {
+        return false;
+    };
+
+    if !metadata.is_file() {
+        return false;
+    }
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        metadata.permissions().mode() & 0o111 != 0
+    }
+
+    #[cfg(not(unix))]
+    {
+        true
+    }
+}
+
 pub fn default_tray_context() -> TrayContext {
     let menu = Menu::new();
     let hello_item = MenuItem::new("Hello from gnostr", true, None);
@@ -266,5 +342,10 @@ mod tests {
         assert_eq!(command.get_program(), std::ffi::OsStr::new("cmd"));
         #[cfg(all(unix, not(target_os = "macos")))]
         assert_eq!(command.get_program(), std::ffi::OsStr::new("sh"));
+    }
+
+    #[test]
+    fn detects_program_presence_for_current_shell() {
+        assert!(command_exists("sh") || command_exists("cmd"));
     }
 }
