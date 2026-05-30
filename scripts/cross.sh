@@ -30,6 +30,9 @@ HOST_ARCH=$(uname -m)
 # On Windows (Git Bash / MSYS2), Git's usr/bin is prepended to PATH by the
 # shell startup scripts, placing Git's link.exe before the MSVC linker.  Strip
 # it so that cargo picks up the real MSVC link.exe installed by ilammy/msvc-dev-cmd.
+# Note: inside Git Bash the PATH variable uses POSIX-style colon separators and
+# POSIX-style paths (e.g. /c/Program Files/Git/usr/bin), not Windows semicolons.
+# uname -s on Git Bash returns uppercase strings like "MINGW64_NT-10.0-…".
 if [[ "$HOST_OS" == MINGW* || "$HOST_OS" == MSYS* || "$HOST_OS" == CYGWIN* ]]; then
   PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -iv '/Git/usr/bin$' | tr '\n' ':' | sed 's/:$//')
   export PATH
