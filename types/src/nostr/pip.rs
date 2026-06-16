@@ -60,6 +60,9 @@ pub fn calculate_parity(left: &[u8], right: &[u8]) -> Vec<u8> {
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
 
     #[test]
     fn test_protocol_slice_serde() {
@@ -358,5 +361,95 @@ mod tests {
         assert_eq!(event["tags"][1][1], sha256_hex);
         assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
         println!("<<< END: test_real_pip_manifest_event\n");
+    }
+
+    #[test]
+    fn test_packetize_git_repo() {
+        println!("\n>>> START: test_packetize_git_repo");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Populate repo
+        let file1 = temp_dir.join("file1.txt");
+        fs::write(&file1, "Hello Git Repo!").unwrap();
+        
+        let file2 = temp_dir.join("file2.txt");
+        fs::write(&file2, "More content for pip test.").unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(entry).unwrap();
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch: {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        assert!(batch.packets.iter().any(|p| p.is_parity));
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo\n");
     }
 }
