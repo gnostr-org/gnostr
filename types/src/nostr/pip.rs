@@ -31,7 +31,10 @@ pub struct PacketManifest {
     pub packets: u64,
     pub depth: u32,
     pub mtu: u64,
-/// A finalized packet tree output (PIP).
+    pub encoding: String,
+    pub path: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PacketBatch {
     /// Number of packets in the batch.
