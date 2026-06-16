@@ -7,6 +7,121 @@ pub struct PacketHeader {
     pub seq_num: u64,
     /// Total number of packets in the finalized batch.
     pub total_packets: u64,
+
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
 }
 
 /// A single packet slice produced by the recursive packetizer (PIP).
@@ -20,6 +135,121 @@ pub struct ProtocolSlice {
     pub data: Vec<u8>,
     /// `true` when this slice is a parity frame.
     pub is_parity: bool,
+
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
 }
 
 /// A manifest event describing the whole packet tree (PIP).
@@ -33,6 +263,121 @@ pub struct PacketManifest {
     pub mtu: u64,
     pub encoding: String,
     pub path: String,
+
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
 }
 
 /// A finalized packet tree output (PIP).
@@ -42,6 +387,121 @@ pub struct PacketBatch {
     pub total_packets: u64,
     /// Finalized packets.
     pub packets: Vec<ProtocolSlice>,
+
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
 }
 
 /// XOR two payloads into a parity buffer (PIP helper).
@@ -52,8 +512,238 @@ pub fn calculate_parity(left: &[u8], right: &[u8]) -> Vec<u8> {
         let l = if i < left.len() { left[i] } else { 0 };
         let r = if i < right.len() { right[i] } else { 0 };
         parity[i] = l ^ r;
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
     parity
+
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
 }
 
 #[cfg(test)]
@@ -94,7 +784,122 @@ mod tests {
         println!("Deserialized: {:?}", deserialized);
         assert_eq!(slice, deserialized);
         println!("<<< END: test_protocol_slice_serde\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_packet_manifest_serde() {
@@ -131,7 +936,122 @@ mod tests {
         println!("Deserialized: {:?}", deserialized);
         assert_eq!(manifest, deserialized);
         println!("<<< END: test_packet_manifest_serde\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_packet_batch_serde() {
@@ -154,7 +1074,122 @@ mod tests {
         println!("Deserialized: {:?}", deserialized);
         assert_eq!(batch, deserialized);
         println!("<<< END: test_packet_batch_serde\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_calculate_parity() {
@@ -174,7 +1209,122 @@ mod tests {
         assert_eq!(recovered_left, left);
         assert_eq!(recovered_right, right);
         println!("<<< END: test_calculate_parity\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_recursive_packetization() {
@@ -189,7 +1339,122 @@ mod tests {
                 };
                 *seq += 1;
                 return vec![slice];
+            
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
             }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
             let half = data.len() / 2;
             let left_data = data[..half].to_vec();
@@ -207,7 +1472,122 @@ mod tests {
             });
             *seq += 1;
             slices
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
         }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
         let data = vec![0xAB; 30];
         let mut seq = 0;
@@ -216,7 +1596,122 @@ mod tests {
         
         for p in &mut packets {
             p.header.total_packets = total;
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
         }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
         let batch = PacketBatch { total_packets: total, packets };
         println!("Recursive Batch: {:?}", batch);
@@ -225,7 +1720,122 @@ mod tests {
         assert!(batch.packets.iter().any(|p| p.id == "ROOT.P"));
         assert_eq!(batch.total_packets, 7);
         println!("<<< END: test_recursive_packetization\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_large_file_packetization() {
@@ -244,6 +1854,56 @@ mod tests {
                 };
                 *seq += 1;
                 return vec![slice];
+            
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
             }
             let half = data.len() / 2;
             let left_data = data[..half].to_vec();
@@ -261,17 +1921,427 @@ mod tests {
             slices
         }
 
-        let mut packets = recursive_process("ROOT".to_string(), large_data, &mut seq);
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
         let total = packets.len() as u64;
+        
         for p in &mut packets {
             p.header.total_packets = total;
         }
 
         let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+        let mut packets = recursive_process("ROOT".to_string(), large_data, &mut seq);
+        let total = packets.len() as u64;
+        for p in &mut packets {
+            p.header.total_packets = total;
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+        let batch = PacketBatch { total_packets: total, packets };
         println!("Large Batch: {} packets", batch.total_packets);
         assert!(batch.total_packets > 10);
         println!("<<< END: test_large_file_packetization\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_parity_recovery() {
@@ -311,7 +2381,122 @@ mod tests {
         println!("Recovered Right: {:?}", recovered_right);
         assert_eq!(recovered_right, right_data);
         println!("<<< END: test_parity_recovery\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_real_pip_manifest_event() {
@@ -361,7 +2546,122 @@ mod tests {
         assert_eq!(event["tags"][1][1], sha256_hex);
         assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
         println!("<<< END: test_real_pip_manifest_event\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
 
     #[test]
     fn test_packetize_git_repo() {
@@ -371,7 +2671,122 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo");
         if temp_dir.exists() {
             fs::remove_dir_all(&temp_dir).unwrap();
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
         }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
         fs::create_dir_all(&temp_dir).unwrap();
 
         let _ = Command::new("git")
@@ -400,6 +2815,43 @@ mod tests {
         for entry in entries {
             let data = fs::read(entry).unwrap();
             all_data.extend(data);
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
         }
 
         // 4. Recursive packetize
@@ -414,15 +2866,12 @@ mod tests {
                 *seq += 1;
                 return vec![slice];
             }
-
             let half = data.len() / 2;
             let left_data = data[..half].to_vec();
             let right_data = data[half..].to_vec();
             let parity_data = calculate_parity(&left_data, &right_data);
-
             let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
             slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
-            
             slices.push(ProtocolSlice {
                 id: format!("{}.P", id),
                 header: PacketHeader { seq_num: *seq, total_packets: 0 },
@@ -442,6 +2891,432 @@ mod tests {
         }
 
         let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+        let batch = PacketBatch { total_packets: total, packets };
         println!("Git Repo Batch: {} packets", batch.total_packets);
 
         // 5. Verify
@@ -451,5 +3326,235 @@ mod tests {
         // Cleanup
         fs::remove_dir_all(&temp_dir).unwrap();
         println!("<<< END: test_packetize_git_repo\n");
+    
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
+    }
+}
+
+    #[test]
+    fn test_packetize_git_repo_with_file_copy() {
+        println!("\n>>> START: test_packetize_git_repo_with_file_copy");
+        
+        // 1. Setup temporary git repository
+        let temp_dir = std::env::temp_dir().join("gnostr_pip_test_repo_copy");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        let _ = Command::new("git")
+            .arg("init")
+            .current_dir(&temp_dir)
+            .status()
+            .unwrap();
+        
+        // 2. Copy pip.rs into the repo
+        let pip_rs_path = PathBuf::from("types/src/nostr/pip.rs");
+        let dest_path = temp_dir.join("pip.rs");
+        fs::copy(&pip_rs_path, &dest_path).unwrap();
+
+        // 3. Walk directory and collect bytes
+        let mut all_data = Vec::new();
+        let mut entries: Vec<PathBuf> = fs::read_dir(&temp_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_file())
+            .collect();
+        entries.sort();
+
+        for entry in entries {
+            let data = fs::read(&entry).unwrap();
+            println!("Collected file: {:?}, size: {} bytes", entry.file_name(), data.len());
+            all_data.extend(data);
+        }
+
+        // 4. Recursive packetize
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 {
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), all_data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Git Repo Batch (with pip.rs copy): {} packets", batch.total_packets);
+
+        // 5. Verify
+        assert!(batch.total_packets > 0);
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_git_repo_with_file_copy\n");
+    }
+
+    #[test]
+    fn test_packetize_and_broadcast_git_repo() {
+        println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Clone repo
+        let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).unwrap();
+        }
+        
+        println!("Cloning repository...");
+        let _ = Command::new("git")
+            .args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()])
+            .status()
+            .unwrap();
+
+        // 2. Packetize
+        // Note: Packetization logic would be same as above.
+        // For now, demonstrate preparation for broadcast.
+
+        println!("Git Test Repo cloned and ready for packetization.");
+        
+        // This is where you would call the broadcast mechanism if approved.
+        println!("Broadcasting not implemented: Awaiting explicit command.");
+        
+        // Cleanup
+        fs::remove_dir_all(&temp_dir).unwrap();
+        println!("<<< END: test_packetize_and_broadcast_git_repo\n");
     }
 }
