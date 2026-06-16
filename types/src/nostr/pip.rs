@@ -7,55 +7,6 @@ pub struct PacketHeader {
     pub seq_num: u64,
     /// Total number of packets in the finalized batch.
     pub total_packets: u64,
-    #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
 }
 
 /// A single packet slice produced by the recursive packetizer (PIP).
@@ -69,55 +20,6 @@ pub struct ProtocolSlice {
     pub data: Vec<u8>,
     /// `true` when this slice is a parity frame.
     pub is_parity: bool,
-    #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
 }
 
 /// A manifest event describing the whole packet tree (PIP).
@@ -131,55 +33,6 @@ pub struct PacketManifest {
     pub mtu: u64,
     pub encoding: String,
     pub path: String,
-    #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
 }
 
 /// A finalized packet tree output (PIP).
@@ -189,55 +42,6 @@ pub struct PacketBatch {
     pub total_packets: u64,
     /// Finalized packets.
     pub packets: Vec<ProtocolSlice>,
-    #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
 }
 
 /// XOR two payloads into a parity buffer (PIP helper).
@@ -248,106 +52,8 @@ pub fn calculate_parity(left: &[u8], right: &[u8]) -> Vec<u8> {
         let l = if i < left.len() { left[i] } else { 0 };
         let r = if i < right.len() { right[i] } else { 0 };
         parity[i] = l ^ r;
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
     }
-}
     parity
-    #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
 }
 
 #[cfg(test)]
@@ -385,56 +91,7 @@ mod tests {
         println!("Deserialized: {:?}", deserialized);
         assert_eq!(slice, deserialized);
         println!("<<< END: test_protocol_slice_serde\n");
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
     }
-}
 
     #[test]
     fn test_packet_manifest_serde() {
@@ -471,56 +128,7 @@ mod tests {
         println!("Deserialized: {:?}", deserialized);
         assert_eq!(manifest, deserialized);
         println!("<<< END: test_packet_manifest_serde\n");
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
     }
-}
 
     #[test]
     fn test_packet_batch_serde() {
@@ -543,56 +151,7 @@ mod tests {
         println!("Deserialized: {:?}", deserialized);
         assert_eq!(batch, deserialized);
         println!("<<< END: test_packet_batch_serde\n");
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
     }
-}
 
     #[test]
     fn test_calculate_parity() {
@@ -612,62 +171,11 @@ mod tests {
         assert_eq!(recovered_left, left);
         assert_eq!(recovered_right, right);
         println!("<<< END: test_calculate_parity\n");
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
     }
-}
 
     #[test]
     fn test_recursive_packetization() {
         println!("\n>>> START: test_recursive_packetization");
-        // ... (rest of recursive test)
-
         fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
             if data.len() <= 10 {
                 let slice = ProtocolSlice {
@@ -678,56 +186,7 @@ mod tests {
                 };
                 *seq += 1;
                 return vec![slice];
-                #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
-}
+            }
 
             let half = data.len() / 2;
             let left_data = data[..half].to_vec();
@@ -745,56 +204,7 @@ mod tests {
             });
             *seq += 1;
             slices
-            #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
-}
+        }
 
         let data = vec![0xAB; 30];
         let mut seq = 0;
@@ -803,56 +213,7 @@ mod tests {
         
         for p in &mut packets {
             p.header.total_packets = total;
-            #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
-}
+        }
 
         let batch = PacketBatch { total_packets: total, packets };
         println!("Recursive Batch: {:?}", batch);
@@ -860,59 +221,12 @@ mod tests {
         assert!(batch.packets.iter().any(|p| p.is_parity));
         assert!(batch.packets.iter().any(|p| p.id == "ROOT.P"));
         assert_eq!(batch.total_packets, 7);
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
+        println!("<<< END: test_recursive_packetization\n");
     }
-}
 
     #[test]
     fn test_large_file_packetization() {
+        println!("\n>>> START: test_large_file_packetization");
         let large_data = vec![0xAB; 1024 * 10]; // 10KB
         println!("Testing Large File Packetization: {} bytes", large_data.len());
         
@@ -927,56 +241,7 @@ mod tests {
                 };
                 *seq += 1;
                 return vec![slice];
-                #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
-}
+            }
             let half = data.len() / 2;
             let left_data = data[..half].to_vec();
             let right_data = data[half..].to_vec();
@@ -991,168 +256,23 @@ mod tests {
             });
             *seq += 1;
             slices
-            #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
-}
+        }
 
         let mut packets = recursive_process("ROOT".to_string(), large_data, &mut seq);
         let total = packets.len() as u64;
         for p in &mut packets {
             p.header.total_packets = total;
-            #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
-    }
-}
+        }
 
         let batch = PacketBatch { total_packets: total, packets };
         println!("Large Batch: {} packets", batch.total_packets);
         assert!(batch.total_packets > 10);
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
+        println!("<<< END: test_large_file_packetization\n");
     }
-}
 
     #[test]
     fn test_parity_recovery() {
+        println!("\n>>> START: test_parity_recovery");
         let left_data = vec![0xDE, 0xAD, 0xBE];
         let right_data = vec![0x01, 0x02, 0x03];
         let parity_data = calculate_parity(&left_data, &right_data);
@@ -1187,56 +307,9 @@ mod tests {
         let recovered_right = calculate_parity(&left.data, &parity.data);
         println!("Recovered Right: {:?}", recovered_right);
         assert_eq!(recovered_right, right_data);
-        #[test]
-    fn test_real_pip_manifest_event() {
-        use sha2::{Digest, Sha256};
-        println!("\n>>> START: test_real_pip_manifest_event");
-
-        let payload = vec![0xAB; 3000];
-        let hash = Sha256::digest(&payload);
-        let sha256_hex = format!("{:x}", hash);
-        println!("Payload hash: {}", sha256_hex);
-
-        let manifest = PacketManifest {
-            root: "ROOT".to_string(),
-            sha256: sha256_hex.clone(),
-            size: 3000,
-            packets: 63,
-            depth: 5,
-            mtu: 1460,
-            encoding: "json".to_string(),
-            path: "docs/example.bin".to_string(),
-        };
-
-        let content = serde_json::to_string(&manifest).unwrap();
-        println!("Content: {}", content);
-
-        let event = json!({
-            "kind": 39078,
-            "content": content,
-            "tags": [
-                ["d", "ROOT"],
-                ["sha256", sha256_hex],
-                ["size", "3000"],
-                ["packets", "63"],
-                ["depth", "5"],
-                ["mtu", "1460"],
-                ["encoding", "json"],
-                ["path", "docs/example.bin"],
-                ["t", "pip"],
-                ["t", "manifest"]
-            ]
-        });
-
-        println!("Real Nostr PIP Manifest Event: {}", event.to_string());
-        
-        // Assertions
-        assert_eq!(event["kind"], 39078);
-        assert_eq!(event["tags"][1][1], sha256_hex);
-        assert!(event["content"].as_str().unwrap().contains(&sha256_hex));
-        println!("<<< END: test_real_pip_manifest_event\n");
+        println!("<<< END: test_parity_recovery\n");
     }
-}
+
     #[test]
     fn test_real_pip_manifest_event() {
         use sha2::{Digest, Sha256};
