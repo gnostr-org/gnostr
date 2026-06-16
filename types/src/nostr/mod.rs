@@ -87,6 +87,7 @@ pub mod nip44;
 pub mod nip53;
 pub mod nip94;
 pub mod nip19;
+pub mod pip;
 pub mod keys;
 pub mod client;
 pub mod image_dimensions;
