@@ -61,6 +61,7 @@ mod tests {
         });
 
         let json_val = serde_json::to_value(&slice).unwrap();
+        println!("ProtocolSlice JSON: {}", json_val);
         assert_eq!(json_val, expected_json);
 
         let deserialized: ProtocolSlice = serde_json::from_value(json_val).unwrap();
@@ -93,6 +94,7 @@ mod tests {
         });
 
         let json_val = serde_json::to_value(&manifest).unwrap();
+        println!("PacketManifest JSON: {}", json_val);
         assert_eq!(json_val, expected_json);
 
         let deserialized: PacketManifest = serde_json::from_value(json_val).unwrap();
