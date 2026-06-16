@@ -61,7 +61,7 @@ mod tests {
     use super::*;
     use serde_json::json;
     use std::fs;
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
     use std::process::Command;
 
     #[test]
@@ -374,7 +374,7 @@ mod tests {
         }
         fs::create_dir_all(&temp_dir).unwrap();
 
-        Command::new("git")
+        let _ = Command::new("git")
             .arg("init")
             .current_dir(&temp_dir)
             .status()
