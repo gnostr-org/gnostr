@@ -323,19 +323,58 @@ mod tests {
         println!("<<< END: test_packetize_git_repo_with_file_copy\n");
     }
 
+    use crate::nostr::client::{Client, Options};
+    use crate::nostr::event_builder::EventBuilder;
+    use crate::nostr::event_kind::EventKind;
+    use crate::nostr::Tag;
+    use crate::nostr::keys::Keys;
+
     #[test]
     #[serial]
     fn test_packetize_and_broadcast_git_repo() {
         println!("\n>>> START: test_packetize_and_broadcast_git_repo");
+        
+        // 1. Setup temporary git repository
         let temp_dir = std::env::temp_dir().join("gnostr_git_test_clone");
         if temp_dir.exists() { fs::remove_dir_all(&temp_dir).unwrap(); }
+        
         println!("Cloning repository...");
         let _ = Command::new("git").args(["clone", "https://github.com/gnostr-org/git-test.git", &temp_dir.to_string_lossy()]).status().unwrap();
-        println!("Git Test Repo cloned and ready for packetization.");
-        println!("Broadcasting not implemented: Awaiting explicit command.");
+
+        // 2. Mock packetization for broadcast
+        let manifest = PacketManifest {
+            root: "GIT-TEST-ROOT".to_string(),
+            sha256: "fake-sha256".to_string(),
+            size: 1024,
+            packets: 1,
+            depth: 1,
+            mtu: 1460,
+            encoding: "json".to_string(),
+            path: "git-test".to_string(),
+        };
+        let content = serde_json::to_string(&manifest).unwrap();
+        let tags = vec![Tag::new_identifier("GIT-TEST-ROOT")];
+        
+        // 3. Construct and broadcast
+        let keys = crate::nostr::default_gnostr_private_key();
+        let event = EventBuilder::new(EventKind::PipManifest, content, tags)
+            .to_event(&keys.into_private_key())
+            .unwrap();
+        
+        println!("Event to broadcast: {:?}", event);
+        
+        let client = Client::new(&Keys::new(keys.public_key()), Options::new());
+        
+        // Final live broadcast step (wrapped in tokio)
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let result = rt.block_on(client.send_event(event));
+        println!("Broadcast result: {:?}", result);
+
+        // Cleanup
         fs::remove_dir_all(&temp_dir).unwrap();
         println!("<<< END: test_packetize_and_broadcast_git_repo\n");
     }
+
 
     #[test]
     #[serial]
