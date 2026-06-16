@@ -34,3 +34,68 @@ pub struct PacketManifest {
     pub encoding: String,
     pub path: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_protocol_slice_serde() {
+        let slice = ProtocolSlice {
+            id: "ROOT.0.0.0.0.0".to_string(),
+            header: PacketHeader {
+                seq_num: 0,
+                total_packets: 63,
+            },
+            data: vec![171, 171, 171],
+            is_parity: false,
+        };
+
+        // Wire example from spec
+        let expected_json = json!({
+            "id":"ROOT.0.0.0.0.0",
+            "header":{"seq_num":0,"total_packets":63},
+            "data":[171,171,171],
+            "is_parity":false
+        });
+
+        let json_val = serde_json::to_value(&slice).unwrap();
+        assert_eq!(json_val, expected_json);
+
+        let deserialized: ProtocolSlice = serde_json::from_value(json_val).unwrap();
+        assert_eq!(slice, deserialized);
+    }
+
+    #[test]
+    fn test_packet_manifest_serde() {
+        let manifest = PacketManifest {
+            root: "ROOT".to_string(),
+            sha256: "50f3...00f4".to_string(),
+            size: 3000,
+            packets: 63,
+            depth: 5,
+            mtu: 1460,
+            encoding: "json".to_string(),
+            path: "docs/example.bin".to_string(),
+        };
+
+        // Wire example from spec
+        let expected_json = json!({
+            "root":"ROOT",
+            "sha256":"50f3...00f4",
+            "size":3000,
+            "packets":63,
+            "depth":5,
+            "mtu":1460,
+            "encoding":"json",
+            "path":"docs/example.bin"
+        });
+
+        let json_val = serde_json::to_value(&manifest).unwrap();
+        assert_eq!(json_val, expected_json);
+
+        let deserialized: PacketManifest = serde_json::from_value(json_val).unwrap();
+        assert_eq!(manifest, deserialized);
+    }
+}
