@@ -75,7 +75,7 @@ mod tests {
             data: vec![171, 171, 171],
             is_parity: false,
         };
-        let expected_json = json!({"id":"ROOT.0.0.0.0.0","header":{"seq_num":0,"total_packets":63},"data":[171,171,171],"is_parity":false});
+        let _expected_json = json!({"id":"ROOT.0.0.0.0.0","header":{"seq_num":0,"total_packets":63},"data":[171,171,171],"is_parity":false});
         let json_val = serde_json::to_value(&slice).unwrap();
         println!("Event JSON: {}", json_val);
         let deserialized: ProtocolSlice = serde_json::from_value(json_val).unwrap();
@@ -328,6 +328,7 @@ mod tests {
     use crate::nostr::event_kind::EventKind;
     use crate::nostr::Tag;
     use crate::nostr::keys::Keys;
+    use crate::nostr::private_key::{PrivateKey, KeySecurity};
 
     #[test]
     #[serial]
@@ -353,17 +354,18 @@ mod tests {
             path: "git-test".to_string(),
         };
         let content = serde_json::to_string(&manifest).unwrap();
-        let tags = vec![Tag::new_identifier("GIT-TEST-ROOT")];
+        let tags = vec![Tag::new_identifier("GIT-TEST-ROOT".to_string())];
         
         // 3. Construct and broadcast
-        let keys = crate::nostr::default_gnostr_private_key();
+        let sk = crate::nostr::default_gnostr_private_key();
+        let private_key = PrivateKey(sk, KeySecurity::Medium);
         let event = EventBuilder::new(EventKind::PipManifest, content, tags)
-            .to_event(&keys.into_private_key())
+            .to_event(&private_key)
             .unwrap();
         
         println!("Event to broadcast: {:?}", event);
         
-        let client = Client::new(&Keys::new(keys.public_key()), Options::new());
+        let client = Client::new(&Keys::new(private_key), Options::new());
         
         // Final live broadcast step (wrapped in tokio)
         let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
