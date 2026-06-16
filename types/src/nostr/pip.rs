@@ -336,4 +336,52 @@ mod tests {
         fs::remove_dir_all(&temp_dir).unwrap();
         println!("<<< END: test_packetize_and_broadcast_git_repo\n");
     }
+
+    #[test]
+    #[serial]
+    fn test_packet_size_comparison() {
+        println!("\n>>> START: test_packet_size_comparison");
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 1024 {
+                let slice = ProtocolSlice { id: id.clone(), header: PacketHeader { seq_num: *seq, total_packets: 0 }, data, is_parity: false, };
+                *seq += 1;
+                return vec![slice];
+            }
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            slices.push(ProtocolSlice { id: format!("{}.P", id), header: PacketHeader { seq_num: *seq, total_packets: 0 }, data: parity_data, is_parity: true, });
+            *seq += 1;
+            slices
+        }
+
+        fn get_batch_json(data: Vec<u8>) -> String {
+            let mut seq = 0;
+            let packets = recursive_process("ROOT".to_string(), data, &mut seq);
+            let total = packets.len() as u64;
+            let batch = PacketBatch { total_packets: total, packets };
+            serde_json::to_string(&batch).unwrap()
+        }
+
+        // Single file (1KB)
+        let single_file_data = vec![0xAB; 1024];
+        let single_json = get_batch_json(single_file_data);
+        println!("Single file batch JSON: {}", single_json);
+        println!("Single file batch size (JSON chars): {}", single_json.len());
+
+        // Folder (10 files of 100 bytes)
+        let mut folder_data = Vec::new();
+        for _ in 0..10 { folder_data.extend(vec![0xAB; 100]); }
+        let folder_json = get_batch_json(folder_data);
+        println!("Folder batch JSON: {}", folder_json);
+        println!("Folder batch size (JSON chars): {}", folder_json.len());
+
+        assert!(single_json.len() > 0);
+        assert!(folder_json.len() > 0);
+        println!("<<< END: test_packet_size_comparison\n");
+    }
 }
+
