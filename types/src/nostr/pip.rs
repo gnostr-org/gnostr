@@ -35,6 +35,7 @@ pub struct PacketManifest {
     pub path: String,
 }
 
+/// A finalized packet tree output (PIP).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PacketBatch {
     /// Number of packets in the batch.
@@ -174,5 +175,56 @@ mod tests {
         let parity = calculate_parity(&left, &right);
         println!("Calculated Parity: {:?}", parity);
         assert_eq!(parity, vec![0xDF, 0xAF, 0x03]);
+    }
+
+    #[test]
+    fn test_recursive_packetization() {
+        // Simple recursive mock implementation based on spec logic
+        fn recursive_process(id: String, data: Vec<u8>, seq: &mut u64) -> Vec<ProtocolSlice> {
+            if data.len() <= 10 { // Leaf threshold
+                let slice = ProtocolSlice {
+                    id: id.clone(),
+                    header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                    data,
+                    is_parity: false,
+                };
+                *seq += 1;
+                return vec![slice];
+            }
+
+            let half = data.len() / 2;
+            let left_data = data[..half].to_vec();
+            let right_data = data[half..].to_vec();
+            let parity_data = calculate_parity(&left_data, &right_data);
+
+            let mut slices = recursive_process(format!("{}.0", id), left_data, seq);
+            slices.append(&mut recursive_process(format!("{}.1", id), right_data, seq));
+            
+            slices.push(ProtocolSlice {
+                id: format!("{}.P", id),
+                header: PacketHeader { seq_num: *seq, total_packets: 0 },
+                data: parity_data,
+                is_parity: true,
+            });
+            *seq += 1;
+            slices
+        }
+
+        let data = vec![0xAB; 30]; // Should trigger recursion
+        let mut seq = 0;
+        let mut packets = recursive_process("ROOT".to_string(), data, &mut seq);
+        let total = packets.len() as u64;
+        
+        for p in &mut packets {
+            p.header.total_packets = total;
+        }
+
+        let batch = PacketBatch { total_packets: total, packets };
+        println!("Recursive Batch: {:?}", batch);
+        
+        // Verify structure
+        assert!(batch.packets.iter().any(|p| p.is_parity));
+        assert!(batch.packets.iter().any(|p| p.id == "ROOT.P"));
+        assert_eq!(batch.total_packets, 7); // 4 leaves + 3 parity nodes
     }
 }
