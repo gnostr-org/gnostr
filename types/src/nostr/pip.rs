@@ -31,8 +31,25 @@ pub struct PacketManifest {
     pub packets: u64,
     pub depth: u32,
     pub mtu: u64,
-    pub encoding: String,
-    pub path: String,
+/// A finalized packet tree output (PIP).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PacketBatch {
+    /// Number of packets in the batch.
+    pub total_packets: u64,
+    /// Finalized packets.
+    pub packets: Vec<ProtocolSlice>,
+}
+
+/// XOR two payloads into a parity buffer (PIP helper).
+pub fn calculate_parity(left: &[u8], right: &[u8]) -> Vec<u8> {
+    let max_len = left.len().max(right.len());
+    let mut parity = vec![0; max_len];
+    for i in 0..max_len {
+        let l = if i < left.len() { left[i] } else { 0 };
+        let r = if i < right.len() { right[i] } else { 0 };
+        parity[i] = l ^ r;
+    }
+    parity
 }
 
 #[cfg(test)]
@@ -52,7 +69,6 @@ mod tests {
             is_parity: false,
         };
 
-        // Wire example from spec
         let expected_json = json!({
             "id":"ROOT.0.0.0.0.0",
             "header":{"seq_num":0,"total_packets":63},
@@ -61,7 +77,6 @@ mod tests {
         });
 
         let json_val = serde_json::to_value(&slice).unwrap();
-        println!("ProtocolSlice JSON: {}", json_val);
         assert_eq!(json_val, expected_json);
 
         let deserialized: ProtocolSlice = serde_json::from_value(json_val).unwrap();
@@ -81,7 +96,6 @@ mod tests {
             path: "docs/example.bin".to_string(),
         };
 
-        // Wire example from spec
         let expected_json = json!({
             "root":"ROOT",
             "sha256":"50f3...00f4",
@@ -94,10 +108,47 @@ mod tests {
         });
 
         let json_val = serde_json::to_value(&manifest).unwrap();
-        println!("PacketManifest JSON: {}", json_val);
         assert_eq!(json_val, expected_json);
 
         let deserialized: PacketManifest = serde_json::from_value(json_val).unwrap();
         assert_eq!(manifest, deserialized);
+    }
+
+    #[test]
+    fn test_packet_batch_serde() {
+        let batch = PacketBatch {
+            total_packets: 1,
+            packets: vec![ProtocolSlice {
+                id: "ROOT".to_string(),
+                header: PacketHeader { seq_num: 0, total_packets: 1 },
+                data: vec![1, 2, 3],
+                is_parity: false,
+            }],
+        };
+        
+        let json_val = serde_json::to_value(&batch).unwrap();
+        let deserialized: PacketBatch = serde_json::from_value(json_val).unwrap();
+        assert_eq!(batch, deserialized);
+    }
+
+    #[test]
+    fn test_calculate_parity() {
+        let left = [0xDE, 0xAD, 0xBE];
+        let right = [0x01, 0x02, 0x03];
+        let parity = calculate_parity(&left, &right);
+        assert_eq!(parity, vec![0xDF, 0xAF, 0xBD]);
+        
+        // Recover one side
+        assert_eq!(calculate_parity(&right, &parity), left);
+        assert_eq!(calculate_parity(&left, &parity), right);
+    }
+
+    #[test]
+    fn test_calculate_parity_different_lengths() {
+        let left = [0xDE, 0xAD];
+        let right = [0x01, 0x02, 0x03];
+        // left is 0xDE 0xAD 0x00, right is 0x01 0x02 0x03
+        let parity = calculate_parity(&left, &right);
+        assert_eq!(parity, vec![0xDF, 0xAF, 0x03]);
     }
 }
