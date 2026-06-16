@@ -72,6 +72,8 @@ mod tests {
             is_parity: false,
         };
 
+        println!("Testing ProtocolSlice: {:?}", slice);
+
         let expected_json = json!({
             "id":"ROOT.0.0.0.0.0",
             "header":{"seq_num":0,"total_packets":63},
@@ -80,9 +82,11 @@ mod tests {
         });
 
         let json_val = serde_json::to_value(&slice).unwrap();
+        println!("ProtocolSlice JSON: {}", json_val);
         assert_eq!(json_val, expected_json);
 
         let deserialized: ProtocolSlice = serde_json::from_value(json_val).unwrap();
+        println!("Deserialized: {:?}", deserialized);
         assert_eq!(slice, deserialized);
     }
 
@@ -99,6 +103,8 @@ mod tests {
             path: "docs/example.bin".to_string(),
         };
 
+        println!("Testing PacketManifest: {:?}", manifest);
+
         let expected_json = json!({
             "root":"ROOT",
             "sha256":"50f3...00f4",
@@ -111,9 +117,11 @@ mod tests {
         });
 
         let json_val = serde_json::to_value(&manifest).unwrap();
+        println!("PacketManifest JSON: {}", json_val);
         assert_eq!(json_val, expected_json);
 
         let deserialized: PacketManifest = serde_json::from_value(json_val).unwrap();
+        println!("Deserialized: {:?}", deserialized);
         assert_eq!(manifest, deserialized);
     }
 
@@ -129,8 +137,12 @@ mod tests {
             }],
         };
         
+        println!("Testing PacketBatch: {:?}", batch);
+
         let json_val = serde_json::to_value(&batch).unwrap();
+        println!("PacketBatch JSON: {}", json_val);
         let deserialized: PacketBatch = serde_json::from_value(json_val).unwrap();
+        println!("Deserialized: {:?}", deserialized);
         assert_eq!(batch, deserialized);
     }
 
@@ -138,20 +150,29 @@ mod tests {
     fn test_calculate_parity() {
         let left = [0xDE, 0xAD, 0xBE];
         let right = [0x01, 0x02, 0x03];
+        println!("Parity Input - Left: {:?}, Right: {:?}", left, right);
+        
         let parity = calculate_parity(&left, &right);
+        println!("Calculated Parity: {:?}", parity);
         assert_eq!(parity, vec![0xDF, 0xAF, 0xBD]);
         
         // Recover one side
-        assert_eq!(calculate_parity(&right, &parity), left);
-        assert_eq!(calculate_parity(&left, &parity), right);
+        let recovered_left = calculate_parity(&right, &parity);
+        let recovered_right = calculate_parity(&left, &parity);
+        println!("Recovered - Left: {:?}, Right: {:?}", recovered_left, recovered_right);
+        assert_eq!(recovered_left, left);
+        assert_eq!(recovered_right, right);
     }
 
     #[test]
     fn test_calculate_parity_different_lengths() {
         let left = [0xDE, 0xAD];
         let right = [0x01, 0x02, 0x03];
+        println!("Parity Input (diff len) - Left: {:?}, Right: {:?}", left, right);
+        
         // left is 0xDE 0xAD 0x00, right is 0x01 0x02 0x03
         let parity = calculate_parity(&left, &right);
+        println!("Calculated Parity: {:?}", parity);
         assert_eq!(parity, vec![0xDF, 0xAF, 0x03]);
     }
 }
