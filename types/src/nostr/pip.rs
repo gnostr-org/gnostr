@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Packet header metadata shared by all packet types in the tree (PIP).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PacketHeader {
     /// Monotonic sequence number assigned during packetization.
     pub seq_num: u64,
