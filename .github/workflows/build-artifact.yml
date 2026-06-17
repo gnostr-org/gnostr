@@ -141,8 +141,15 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          # Filter out the Git usr/bin directory from the current PATH
           $pathEntries = $env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch '\\Git\\usr\\bin$') }
+
+          # Persist the cleaned PATH to GITHUB_ENV for all subsequent steps
           "PATH=$($pathEntries -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Verification: print the resolved link.exe path to the job logs
+          Write-Host "Resolved link.exe path:"
+          Get-Command link | Select-Object -ExpandProperty Source
 
       - name: Install cross
         if: runner.os == 'Linux'
