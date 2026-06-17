@@ -189,7 +189,7 @@ jobs:
             args+=(--features "${{ matrix.features }}")
           fi
 
-          ./scripts/cross.sh "${args[@]}"
+          ./scripts/cross.sh #"${args[@]}"
 
       - name: Bundle release
         shell: bash
