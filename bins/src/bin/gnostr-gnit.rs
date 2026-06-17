@@ -58,6 +58,7 @@ use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
 
+#[cfg(unix)]
 #[cfg(feature = "web")]
 async fn run_as_service() -> Result<(), anyhow::Error> {
     info!("Starting gnostr-gnit in daemon mode...");
@@ -90,6 +91,7 @@ async fn run_as_service() -> Result<(), anyhow::Error> {
 
     Ok(())
 }
+
 
 #[cfg(feature = "web")]
 #[cfg(any(target_os = "linux", target_os = "macos"))]

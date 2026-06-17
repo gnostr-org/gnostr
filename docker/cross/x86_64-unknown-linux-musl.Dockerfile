@@ -11,7 +11,10 @@ RUN set -eux; \
       clang \
       libclang-dev \
       llvm-dev \
-      pkg-config; \
+      pkg-config \
+      libssl-dev \
+      perl \
+      make; \
     LIBCLANG_SO=$(find /usr -name 'libclang.so' 2>/dev/null | head -1 || \
       find /usr -name 'libclang*.so*' 2>/dev/null | sort -V | tail -n 1); \
     { [ -n "$LIBCLANG_SO" ] || { echo "ERROR: could not find libclang.so after installing libclang-dev" >&2; exit 1; }; }; \
