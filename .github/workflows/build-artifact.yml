@@ -139,7 +139,7 @@ jobs:
 
       - name: Prefer MSVC linker on Windows
         if: runner.os == 'Windows'
-        shell: pwsh
+        shell: bash
         run: |
           # Filter out the Git usr/bin directory from the current PATH
           $pathEntries = $env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch '\\Git\\usr\\bin$') }
