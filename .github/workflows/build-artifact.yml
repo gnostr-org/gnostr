@@ -137,19 +137,20 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Prefer MSVC linker on Windows
+      - name: Prefer MSVC linker on Windows (Bash)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           # Filter out the Git usr/bin directory from the current PATH
-          $pathEntries = $env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch '\\Git\\usr\\bin$') }
-
-          # Persist the cleaned PATH to GITHUB_ENV for all subsequent steps
-          "PATH=$($pathEntries -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
+          # We use a colon ':' as the delimiter for PATH in bash/linux-like environments
+          NEW_PATH=$(echo $PATH | tr ':' '\n' | grep -v "/Git/usr/bin" | tr '\n' ':' | sed 's/:$//')
+          
+          # Persist the cleaned PATH to GITHUB_ENV
+          echo "PATH=$NEW_PATH" >> $GITHUB_ENV
+          
           # Verification: print the resolved link.exe path to the job logs
-          Write-Host "Resolved link.exe path:"
-          Get-Command link | Select-Object -ExpandProperty Source
+          echo "Resolved link.exe path:"
+          which link
 
       - name: Install cross
         if: runner.os == 'Linux'
