@@ -197,13 +197,15 @@ jobs:
           mkdir -p "$BUILD_NAME"
           cp README.md LICENSE "$BUILD_NAME/"
 
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp "target/${{ matrix.target }}/release/gnostr-blossom.exe" "$BUILD_NAME/"
-            cp "target/${{ matrix.target }}/release/gnostr-server.exe" "$BUILD_NAME/"
-          else
-            cp "target/${{ matrix.target }}/release/gnostr-blossom" "$BUILD_NAME/"
-            cp "target/${{ matrix.target }}/release/gnostr-server" "$BUILD_NAME/"
-          fi
+          # Dynamically find the binaries
+          # This handles both standard 'cargo' paths and 'cross' output locations
+          find . -type f \( -name "gnostr-blossom" -o -name "gnostr-blossom.exe" -o -name "gnostr-server" -o -name "gnostr-server.exe" \) \
+            -not -path "*/.*" \
+            -exec cp {} "$BUILD_NAME/" \;
+
+          # Debug: list what was copied
+          echo "Files in $BUILD_NAME:"
+          ls -l "$BUILD_NAME/"
 
       - name: Smoke test
         if: matrix.native == true
