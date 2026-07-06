@@ -1,0 +1,49 @@
+[package]
+name = "gpui-component-story"
+version = "0.5.1"
+publish = false
+edition.workspace = true
+
+[features]
+inspector = ["gpui-component/inspector"]
+tree-sitter = ["gpui-component/tree-sitter-languages"]
+default = ["tree-sitter"]
+
+[dependencies]
+anyhow.workspace = true
+gpui.workspace = true
+gpui_platform.workspace = true
+gpui-component = { workspace = true }
+gpui-component-assets.workspace = true
+
+autocorrect = "2.14.2"
+chrono = "0.4"
+csv = "1.4"
+fake = { version = "2.10.0", features = ["dummy"] }
+itertools = "0.14.0"
+lsp-types.workspace = true
+rand = "0.8"
+regex = "1"
+serde = "1"
+serde_json = "1"
+tracing.workspace = true
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt", "registry"], default-features = false }
+unindent = "0.2.3"
+rust-i18n.workspace = true
+dirs = "6.0.0"
+
+# Native-only dependencies (not available on WASM)
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+reqwest_client.workspace = true
+smol.workspace = true
+tree-sitter-navi = "0.2.3"
+color-lsp = "0.2.0"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+gpui_web.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = { version = "0.18" }
+
+[lints]
+workspace = true

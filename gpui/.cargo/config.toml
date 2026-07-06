@@ -1,0 +1,45 @@
+[source."git+https://github.com/proptest-rs/proptest?rev=3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b"]
+git = "https://github.com/proptest-rs/proptest"
+rev = "3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/rust-lang/stacker?branch=master"]
+git = "https://github.com/rust-lang/stacker"
+branch = "master"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/zed-industries/font-kit?rev=94b0f28166665e8fd2f53ff6d268a14955c82269"]
+git = "https://github.com/zed-industries/font-kit"
+rev = "94b0f28166665e8fd2f53ff6d268a14955c82269"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/zed-industries/reqwest.git?rev=c15662463bda39148ba154100dd44d3fba5873a4"]
+git = "https://github.com/zed-industries/reqwest.git"
+rev = "c15662463bda39148ba154100dd44d3fba5873a4"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/zed-industries/scap?rev=4afea48c3b002197176fb19cd0f9b180dd36eaac"]
+git = "https://github.com/zed-industries/scap"
+rev = "4afea48c3b002197176fb19cd0f9b180dd36eaac"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/zed-industries/wgpu.git?rev=357a0c56e0070480ad9daea5d2eaa83150b79e88"]
+git = "https://github.com/zed-industries/wgpu.git"
+rev = "357a0c56e0070480ad9daea5d2eaa83150b79e88"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/zed-industries/xim-rs.git?rev=16f35a2c881b815a2b6cdfd6687988e84f8447d8"]
+git = "https://github.com/zed-industries/xim-rs.git"
+rev = "16f35a2c881b815a2b6cdfd6687988e84f8447d8"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/zed-industries/zed?rev=1d217ee39d381ac101b7cf49d3d22451ac1093fe"]
+git = "https://github.com/zed-industries/zed"
+rev = "1d217ee39d381ac101b7cf49d3d22451ac1093fe"
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=/STACK:8000000"]
