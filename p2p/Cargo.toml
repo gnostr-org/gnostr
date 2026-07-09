@@ -61,12 +61,12 @@ env_logger = { workspace = true }
 futures = "0.3.31"
 futures-util = "0.3.31"
 getrandom = { version = "0.1.16", features = ["dummy"] }
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=953267.1868.494774", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=957094.1863.397465", default-features = false, features = [
   "nostr",
   "vendor-openssl",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=953267.1868.494774" }
-gnostr-js = { path = "../js", package = "gnostr-js", version = ">=953267.1868.494774", optional = true }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=957094.1863.397465" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = ">=957094.1863.397465", optional = true }
 libp2p = { version = "0.54.1", features = [
   "full",
   "autonat",

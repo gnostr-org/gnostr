@@ -26,12 +26,12 @@ clap = { version = "4.5.41", features = ["derive"] }
 crossterm = { workspace = true }
 futures = "0.3.31"
 git2 = "0.20.2"
-gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=953267.1868.494774", default-features = false, features = [
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=957094.1863.397465", default-features = false, features = [
   "tui",
   "vendor-openssl",
 ] }
-gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=953267.1868.494774" }
-gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = ">=953267.1868.494774", default-features = false, features = [
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=957094.1863.397465" }
+gnostr-p2p = { path = "../p2p", package = "gnostr-p2p", version = ">=957094.1863.397465", default-features = false, features = [
   "tor",
 ] }
 hostname = "0.3.1"
