@@ -5,7 +5,6 @@ use gnostr_asyncgit::sync::{
     get_commit_details, get_head, is_workdir_clean, status::get_status, status::StatusType, RepoPath,
 };
 use gnostr_legit::gitminer::{self, Gitminer};
-use once_cell::sync::OnceCell;
 use serde_json::json;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
@@ -304,12 +303,6 @@ pub async fn create_event(
     Ok(signed_event)
 }
 
-//async tasks
-pub fn global_rt() -> &'static tokio::runtime::Runtime {
-    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
-    RT.get_or_init(|| tokio::runtime::Runtime::new().unwrap())
-}
-
 pub async fn gnostr_legit_event(
     kind: Option<u16>,
     repo_path: RepoPath,
@@ -357,7 +350,7 @@ pub async fn gnostr_legit_event(
         PrivateKey::try_from_hex_string(&crate::git2::default_gnostr_private_key_hex()).unwrap();
     let empty_hash_keys = KeySigner::from_private_key(empty_hash_private_key, "", 1).unwrap();
     let custom_tags_clone = custom_tags.clone();
-    global_rt().spawn(async move {
+    let _ = tokio::spawn(async move {
         let signed_event = create_event(
             empty_hash_keys,
             custom_tags_clone,
@@ -369,7 +362,7 @@ pub async fn gnostr_legit_event(
     });
 
     let serialized_commit_for_kind_event = serialized_commit.clone();
-    global_rt().spawn(async move {
+    let _ = tokio::spawn(async move {
         let result: anyhow::Result<()> = async {
             let create_event_result = create_event(
                 padded_keys.clone(),
