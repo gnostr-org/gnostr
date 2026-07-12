@@ -1,5 +1,5 @@
-[build]
-target_dir = "/Volumes/DeepSpaceExtSDD/target/"
+#[build]
+#target_dir = "/Volumes/DeepSpaceExtSDD/target/"
 
 [alias]
 xtask = "run --package xtask --"
