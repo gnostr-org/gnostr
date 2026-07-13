@@ -369,7 +369,6 @@ PUBLISH_CRATES=(
     asyncgit/src/lib/filehash/core
     scopetime
     asyncgit
-    tui
     crawler
     git-helpers
     legit

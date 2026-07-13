@@ -8,7 +8,14 @@ resize_png() {
   local height="$3"
   local output_file="$4"
 
-  sips -z "$height" "$width" "$source_file" --out "$output_file" >/dev/null
+  case "${source_file##*.}" in
+    svg|SVG)
+      rsvg-convert -w "$width" -h "$height" "$source_file" -o "$output_file"
+      ;;
+    *)
+      sips -z "$height" "$width" "$source_file" --out "$output_file" >/dev/null
+      ;;
+  esac
 }
 
 generate_square_sizes() {
@@ -32,6 +39,18 @@ generate_banner_sizes() {
   resize_png "$source_file" 1024 341 "$output_dir/1024x341.png"
 }
 
+generate_appicon_sizes() {
+  local source_file="$1"
+  local output_dir="$2"
+
+  local sizes=(40 60 58 87 76 80 120 180 152 167 1024 16 32 64 128 256 512)
+
+  mkdir -p "$output_dir"
+  for size in "${sizes[@]}"; do
+    resize_png "$source_file" "$size" "$size" "$output_dir/${size}x${size}.png"
+  done
+}
+
 main() {
   local mode="${1:-}"
   local source_file="${2:-}"
@@ -52,8 +71,15 @@ main() {
       }
       generate_banner_sizes "$source_file" "$output_dir"
       ;;
+    appicon)
+      [[ -n "$source_file" && -n "$output_dir" ]] || {
+        echo "usage: $0 appicon <source_png> <output_dir>" >&2
+        exit 1
+      }
+      generate_appicon_sizes "$source_file" "$output_dir"
+      ;;
     *)
-      echo "usage: $0 {square|banner} <source_png> <output_dir>" >&2
+      echo "usage: $0 {square|banner|appicon} <source_png> <output_dir>" >&2
       exit 1
       ;;
   esac

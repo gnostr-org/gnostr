@@ -10,13 +10,20 @@ render_variants() {
     local size="${variant%%:*}"
     local output_name="${variant#*:}"
 
-    sips -z "$size" "$size" "$source_file" --out "icon.iconset/$output_name" >/dev/null
+    case "${source_file##*.}" in
+      svg|SVG)
+        rsvg-convert -w "$size" -h "$size" "$source_file" -o "icon.iconset/$output_name"
+        ;;
+      *)
+        sips -z "$size" "$size" "$source_file" --out "icon.iconset/$output_name" >/dev/null
+        ;;
+    esac
   done
 }
 
 mkdir -p icon.iconset
 
-render_variants app/gnostr.png \
+render_variants "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../icon-circle.svg" \
   16:icon_16x16.png \
   32:icon_16x16@2x.png \
   32:icon_32x32.png \
