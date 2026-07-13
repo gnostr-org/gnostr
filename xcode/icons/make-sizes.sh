@@ -21,3 +21,8 @@ rsvg-convert -w 1024 -h 1024 "$SCRIPT_DIR/background.svg" -o "$SCRIPT_DIR/app/ba
   appicon \
   "$SCRIPT_DIR/icon-circle-white.svg" \
   "$SCRIPT_DIR/Assets.xcassets/IconCircleWhite.imageset"
+
+"$SCRIPT_DIR/scripts/render-sizes.sh" \
+  appicon \
+  "$SCRIPT_DIR/background.svg" \
+  "$SCRIPT_DIR/Assets.xcassets/Background.imageset"
