@@ -40,7 +40,8 @@
 			children = (
 				4BE2D1312FC2404200461214 /* Preview Assets.xcassets */,
 			);
-			path = "Preview Content";
+			name = "Preview Content";
+			path = "Preview Assets";
 			sourceTree = "<group>";
 		};
 		FFIKS000000000000000030 = {
