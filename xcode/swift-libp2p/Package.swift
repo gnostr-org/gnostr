@@ -29,11 +29,11 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // LibP2P Core
-        .package(path: "../swift-libp2p-core"),
+        .package(url: "https://github.com/randymcmillan/swift-libp2p-core.git", branch: "gnostr"),
         // LibP2P Multiaddr
-        .package(path: "../swift-multiaddr"),
+        .package(url: "https://github.com/randymcmillan/swift-multiaddr.git", branch: "gnostr"),
         // LibP2P Peer Identities
-        .package(path: "../swift-peer-id"),
+        .package(url: "https://github.com/randymcmillan/swift-peer-id.git", branch: "gnostr"),
         // Swift NIO for all things networking
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from: "2.87.0")),
         .package(url: "https://github.com/apple/swift-nio-extras.git", .upToNextMajor(from: "1.25.0")),
