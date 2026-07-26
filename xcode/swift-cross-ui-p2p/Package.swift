@@ -18,7 +18,7 @@ let package = Package(
             .package(path: "../swift-libp2p"),
             .package(path: "../swift-libp2p-noise"),
             .package(path: "../swift-libp2p-yamux"),
-            .package(path: "../swift-libp2p-dcutr"),
+            .package(url: "https://github.com/randymcmillan/swift-libp2p-dcutr.git", branch: "gnostr"),
             .package(path: "../swift-libp2p-kad-dht"),
             .package(name: "GnostrGit", path: "../Git"),
         ]
