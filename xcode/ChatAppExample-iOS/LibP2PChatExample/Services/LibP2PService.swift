@@ -50,6 +50,12 @@ class LibP2PService {
         case stopping
     }
 
+    public enum PeerConnectionState: Equatable {
+        case disconnected
+        case dialing
+        case connected
+    }
+
     private var app:Application
     private let peerID: PeerID
     private var lna: LocalNetworkAuthorization?
