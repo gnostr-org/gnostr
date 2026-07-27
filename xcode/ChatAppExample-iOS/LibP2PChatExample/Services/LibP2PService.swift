@@ -113,18 +113,12 @@ class LibP2PService {
         app.relay.use(.relay)
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
-        app.discovery.use(.bootstrap(Self.bootstrapPeers))
-        app.dht.use(.kadDHT(mode: .client, bootstrapPeers: Self.bootstrapPeers))
         app.pubsub.use(.gossipsub)
         app.resolvers.use(.dnsaddr)
         app.discovery.use(.mdns)
         app.servers.use(.tcp(host: "0.0.0.0", port: Self.listenPort))
         try! routes(app)
         return app
-    }
-
-    private static var bootstrapPeers: [PeerInfo] {
-        BootstrapPeerDiscovery.IPFSBootNodes
     }
 
     private static var listenPort: Int {
@@ -142,11 +136,18 @@ class LibP2PService {
             self.app.logger.notice("We discovered a peer: \(peer)")
             self.app.connections.getConnectionsToPeer(peer: peer.peer, on: nil).whenSuccess { conns in
                 if conns.isEmpty {
-                    if let address = peer.addresses.first(where: { $0.description.contains("/tcp/") }) {
-                        self.recordDiscoveredAddress(address, for: peer.peer)
+                    guard let address = peer.addresses.first(where: { $0.description.contains("/tcp/") }) else {
+                        self.app.logger.warning("No dialable TCP address found for peer \(peer.peer)")
+                        return
                     }
-                    self.markPeerDialing(peer.peer)
-                    self.connect(peerID: peer.peer)
+                    self.app.logger.notice("Dialing peer \(peer.peer) at \(address)")
+                    do {
+                        try self.app.newStream(to: address, forProtocol: "/chat/1.0.0")
+                    } catch {
+                        self.app.logger.error("Failed to dial peer \(peer.peer): \(error)")
+                    }
+                } else {
+                    self.markPeerConnected(peer.peer)
                 }
             }
         }
@@ -220,16 +221,6 @@ class LibP2PService {
     private func markPeerDisconnected(_ peerID: PeerID) {
         DispatchQueue.main.async {
             self.peerConnectionStates[peerID.b58String] = .disconnected
-        }
-    }
-
-    private func connect(peerID: PeerID) {
-        self.app.logger.notice("Connecting to peer \(peerID.b58String)")
-        do {
-            try self.app.newStream(to: peerID, forProtocol: "/ipfs/id/1.0.0")
-        } catch {
-            self.app.logger.error("Failed to connect to peer \(peerID): \(error)")
-            self.markPeerDisconnected(peerID)
         }
     }
 
