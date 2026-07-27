@@ -12,9 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import DNSClient
+import Dispatch
+@preconcurrency import DNS
 import LibP2P
 import NIOConcurrencyHelpers
+import dnssd
 
 /// DNSAddr
 /// Is a protocol used by libp2p to resolve `Multiaddr`s that use the `dnsaddr` protocol.
@@ -32,9 +34,9 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
     public static let key: String = "DNSADDR"
 
     public enum Errors: Error {
-        case clientNotInitialized
         case invalidMultiaddr
         case noMatchingHostFound
+        case dnsServiceFailed(DNSServiceErrorType)
     }
 
     private let application: Application
@@ -42,11 +44,6 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
     private let logger: Logger
     private let uuid: UUID
     private let host: SocketAddress?
-
-    private var client: DNSClient? {
-        get { _client.withLockedValue { $0 } }
-    }
-    private let _client: NIOLockedValueBox<DNSClient?>
 
     init(application: Application, host: SocketAddress? = nil) {
         self.application = application
@@ -56,26 +53,29 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
         logger[metadataKey: DNSAddr.key] = .string("[\(uuid.uuidString.prefix(5))]")
         self.logger = logger
         self.host = host
-        self._client = .init(nil)
+    }
+
+    private final class QueryState: @unchecked Sendable {
+        let eventLoop: EventLoop
+        let promise: EventLoopPromise<[Multiaddr]>
+        let expectedPeerID: PeerID?
+        var service: DNSServiceRef?
+        var addresses: [Multiaddr] = []
+        var finished = false
+
+        init(eventLoop: EventLoop, promise: EventLoopPromise<[Multiaddr]>, expectedPeerID: PeerID?) {
+            self.eventLoop = eventLoop
+            self.promise = promise
+            self.expectedPeerID = expectedPeerID
+        }
     }
 
     public func willBoot(_ application: Application) throws {
         self.logger.trace("Initializing")
-        // We connect with TCP due to UDP packet size contstraints (UPD seems to max out at 4 records)
-        var hostConfig: [SocketAddress] = []
-        if let host = self.host {
-            hostConfig.append(host)
-        } else {
-            hostConfig.append(try SocketAddress(ipAddress: "1.1.1.1", port: 53))
-        }
-        try self._client.withLockedValue {
-            $0 = try DNSClient.connectTCP(on: self.eventLoop.next(), config: hostConfig).wait()
-        }
     }
 
     public func shutdown(_ application: Application) {
         self.logger.trace("Shutting Down")
-        self.client?.cancelQueries()
     }
 
     /// Provided a Multiaddr that uses the `dnsaddr` codec, this method will attempt to resolve the domain into it's underyling ip address.
@@ -134,42 +134,138 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
         return promise.futureResult
     }
 
-    private func resolveAddresses(forHost host: String, enforcingPeerID: PeerID? = nil) -> EventLoopFuture<[Multiaddr]>
-    {
-        self.resolveTXTRecords(forHost: host).map { txtRecords in
-            // Convert our txtRecords to Multiaddr
-            var resovledAddresses: [Multiaddr] = []
-            for txtRecord in txtRecords {
-                for entry in txtRecord.values {
-                    // Ensure the txt records key equals "dnsaddr"
-                    guard entry.key == "dnsaddr" else { continue }
-                    // Ensure the ttx records value is a valid Multiaddr
-                    guard let ma = try? Multiaddr(entry.value) else { continue }
-                    // If we're validating the PeerID
-                    if let enforcingPeerID {
-                        guard let peerID = try? ma.getPeerID() else { continue }
-                        // Ensure that the Multiaddr contains the expected PeerID
-                        guard peerID == enforcingPeerID else { continue }
-                    }
-                    resovledAddresses.append(ma)
-                }
+    private func resolveAddresses(forHost host: String, enforcingPeerID: PeerID? = nil) -> EventLoopFuture<[Multiaddr]> {
+        let promise = self.eventLoop.makePromise(of: [Multiaddr].self)
+        let state = QueryState(eventLoop: self.eventLoop, promise: promise, expectedPeerID: enforcingPeerID)
+        let context = Unmanaged.passRetained(state).toOpaque()
+        let queue = DispatchQueue(label: "LibP2PDNSAddr.\(self.uuid.uuidString)")
+
+        var service: DNSServiceRef?
+        let callback: DNSServiceQueryRecordReply = { _, flags, _, errorCode, _, rrtype, _, rdlen, rdata, _, context in
+            guard let context else { return }
+            let state = Unmanaged<QueryState>.fromOpaque(context).takeUnretainedValue()
+            guard !state.finished else { return }
+
+            if errorCode != kDNSServiceErr_NoError {
+                Self.completeQuery(state: state, context: context, result: .failure(Errors.dnsServiceFailed(errorCode)))
+                return
             }
-            return resovledAddresses
+
+            guard rrtype == UInt16(kDNSServiceType_TXT), let rdata, rdlen > 0 else {
+                if (flags & kDNSServiceFlagsMoreComing) == 0 {
+                    Self.completeQuery(
+                        state: state,
+                        context: context,
+                        result: state.addresses.isEmpty ? .failure(Errors.noMatchingHostFound) : .success(Array(Set(state.addresses)))
+                    )
+                }
+                return
+            }
+
+            let records = Self.multiaddrs(
+                fromTXTRecordBytes: UnsafeRawBufferPointer(start: rdata, count: Int(rdlen)),
+                enforcingPeerID: state.expectedPeerID
+            )
+            if !records.isEmpty {
+                state.addresses.append(contentsOf: records)
+            }
+
+            if (flags & kDNSServiceFlagsMoreComing) == 0 {
+                Self.completeQuery(
+                    state: state,
+                    context: context,
+                    result: state.addresses.isEmpty ? .failure(Errors.noMatchingHostFound) : .success(Array(Set(state.addresses)))
+                )
+            }
         }
+
+        let error = host.withCString { cHost in
+            DNSServiceQueryRecord(
+                &service,
+                0,
+                0,
+                cHost,
+                UInt16(kDNSServiceType_TXT),
+                UInt16(kDNSServiceClass_IN),
+                callback,
+                context
+            )
+        }
+
+        guard error == kDNSServiceErr_NoError, let service else {
+            Unmanaged<QueryState>.fromOpaque(context).release()
+            promise.fail(Errors.dnsServiceFailed(error))
+            return promise.futureResult
+        }
+
+        state.service = service
+
+        let schedulingError = DNSServiceSetDispatchQueue(service, queue)
+        guard schedulingError == kDNSServiceErr_NoError else {
+            DNSServiceRefDeallocate(service)
+            state.service = nil
+            Unmanaged<QueryState>.fromOpaque(context).release()
+            promise.fail(Errors.dnsServiceFailed(schedulingError))
+            return promise.futureResult
+        }
+
+        return promise.futureResult
     }
 
-    private func resolveTXTRecords(forHost host: String) -> EventLoopFuture<[TXTRecord]> {
-        self.client!.sendQuery(forHost: host, type: .txt).map { results -> [TXTRecord] in
-            var values: [TXTRecord] = []
-            for answer in results.answers {
-                switch answer {
-                case .txt(let txtRecord):
-                    values.append(txtRecord.resource)
-                default:
-                    continue
-                }
+    internal static func multiaddrs(fromTXTRecordBytes bytes: UnsafeRawBufferPointer, enforcingPeerID: PeerID? = nil) -> [Multiaddr] {
+        guard let baseAddress = bytes.baseAddress, bytes.count > 0 else { return [] }
+
+        var results: [Multiaddr] = []
+        let count = TXTRecordGetCount(UInt16(bytes.count), baseAddress)
+
+        for index in 0..<count {
+            var keyBuffer = [CChar](repeating: 0, count: 256)
+            var valueLength: UInt8 = 0
+            var valuePointer: UnsafeRawPointer?
+
+            let status = TXTRecordGetItemAtIndex(
+                UInt16(bytes.count),
+                baseAddress,
+                index,
+                UInt16(keyBuffer.count),
+                &keyBuffer,
+                &valueLength,
+                &valuePointer
+            )
+
+            guard status == kDNSServiceErr_NoError, String(cString: keyBuffer) == "dnsaddr", let valuePointer else { continue }
+
+            let valueData = Data(bytes: valuePointer, count: Int(valueLength))
+            guard let value = String(data: valueData, encoding: .utf8), let multiaddr = try? Multiaddr(value) else { continue }
+
+            if let enforcingPeerID {
+                guard let peerID = try? multiaddr.getPeerID(), peerID == enforcingPeerID else { continue }
             }
-            return values
+
+            results.append(multiaddr)
         }
+
+        return results
+    }
+
+    private static func completeQuery(state: QueryState, context: UnsafeMutableRawPointer, result: Result<[Multiaddr], Error>) {
+        guard !state.finished else { return }
+        state.finished = true
+
+        state.eventLoop.execute {
+            switch result {
+            case .success(let addresses):
+                state.promise.succeed(addresses)
+            case .failure(let error):
+                state.promise.fail(error)
+            }
+        }
+
+        if let service = state.service {
+            DNSServiceRefDeallocate(service)
+            state.service = nil
+        }
+
+        Unmanaged<QueryState>.fromOpaque(context).release()
     }
 }
