@@ -274,6 +274,7 @@ class LibP2PService {
             self.topicSubscriptions[topic] = subscription
             self.subscribedTopics.insert(topic)
             self.app.logger.notice("[LibP2PTopic] Joined gossip topic \(topic)")
+            self.topicDelegate?.on(topicPeerJoined: self.app.peerID, topic: topic)
             self.app.pubsub.gossipsub.getPeersSubscribed(to: topic, on: eventLoop).whenSuccess { peers in
                 for peer in peers {
                     self.topicDelegate?.on(topicPeerJoined: peer, topic: topic)
