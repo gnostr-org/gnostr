@@ -187,6 +187,11 @@ public final class AutoNATCoordinator: @unchecked Sendable {
 
     public func probe(peer: PeerID) -> EventLoopFuture<AutoNATStatus> {
         let el = self.application.eventLoopGroup.any()
+        let existingFuture = self.queue.sync { self.pending[peer.b58String]?.promise.futureResult }
+        guard existingFuture == nil else {
+            return existingFuture!
+        }
+
         let promise = el.makePromise(of: AutoNATStatus.self)
         let token = Array(UUID().uuidString.utf8)
         let addresses = self.candidateDialbackAddresses()
@@ -194,12 +199,10 @@ public final class AutoNATCoordinator: @unchecked Sendable {
             guard let self else { return }
             self.failPendingProbe(peer: peer, error: ProbeError.timedOut)
         }
-        var shouldOpenStream = false
-        var existingFuture: EventLoopFuture<AutoNATStatus>?
         self.queue.sync {
-            if let existing = self.pending[peer.b58String] {
-                existingFuture = existing.promise.futureResult
+            guard self.pending[peer.b58String] == nil else {
                 timeoutTask.cancel()
+                promise.fail(ProbeError.failedToOpenStream)
                 return
             }
             self.pending[peer.b58String] = PendingProbe(
@@ -210,11 +213,6 @@ public final class AutoNATCoordinator: @unchecked Sendable {
                 addresses: addresses,
                 timeoutTask: timeoutTask
             )
-            shouldOpenStream = true
-        }
-
-        guard shouldOpenStream else {
-            return existingFuture ?? promise.futureResult
         }
 
         do {
