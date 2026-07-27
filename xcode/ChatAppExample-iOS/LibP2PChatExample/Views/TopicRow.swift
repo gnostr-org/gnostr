@@ -26,6 +26,10 @@ struct TopicRow: View {
                         .font(.body)
                         .bold()
                     Spacer()
+                    Text("\(topic.members.count) members")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Spacer().frame(width: 8)
                     Text(topic.lastMessage?.date.formatted(date: .numeric, time: .shortened) ?? "")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -40,4 +44,3 @@ struct TopicRow: View {
         }
     }
 }
-

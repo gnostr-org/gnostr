@@ -21,7 +21,7 @@ struct TopicView: View {
             GeometryReader { geoProxy in
                 ScrollView {
                     ScrollViewReader { scrollProxy in
-                        Section(footer: VStack {
+                        Section(header: membersView, footer: VStack {
                             Spacer()
                             Text("Updated at: \(topic.messages.last?.date.formatted(date: .omitted, time: .shortened) ?? "???")")
                                 .foregroundColor(.secondary)
@@ -67,6 +67,35 @@ struct TopicView: View {
         .padding(.top, 1)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(topic.name)
+    }
+
+    var membersView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Members")
+                .font(.headline)
+            if topic.members.isEmpty {
+                Text("No peers yet")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(topic.members) { peer in
+                            VStack(spacing: 6) {
+                                PeerIconView(peer: peer, frame: CGSize(width: 54, height: 54))
+                                Text(peer.nickname)
+                                    .font(.caption2)
+                                    .lineLimit(1)
+                            }
+                            .frame(width: 72)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
 
     let columns = [GridItem(.flexible(minimum: 10))]
@@ -160,4 +189,3 @@ struct TopicView: View {
         }
     }
 }
-

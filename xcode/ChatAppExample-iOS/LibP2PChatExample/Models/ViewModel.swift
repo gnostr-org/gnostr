@@ -163,7 +163,8 @@ class ViewModel: ObservableObject, ChatDelegate, TopicDelegate {
     internal func on(topicPeerJoined peer: PeerID, topic: String) {
         DispatchQueue.main.async {
             print("We found a peer for topic \(topic): \(peer.b58String)")
-            _ = self.topic(for: topic)
+            let topicEntry = self.topic(for: topic)
+            topicEntry.upsertMember(peer)
         }
     }
 
