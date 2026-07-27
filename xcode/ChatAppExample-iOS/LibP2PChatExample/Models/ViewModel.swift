@@ -34,6 +34,7 @@ class ViewModel: ObservableObject, ChatDelegate, TopicDelegate {
         // Restore the chats if possible...
         print("Attempting to restore chats")
         self.restoreChats()
+        self.syncDefaultTopicMembers()
 
         // Restore our Nickname if we have one saved
         if let nickname = UserDefaults.standard.string(forKey: "Nickname") {
@@ -79,6 +80,7 @@ class ViewModel: ObservableObject, ChatDelegate, TopicDelegate {
     /// This method gets called by our `Topology` Registration when a libp2p peer that supports the `/chat/1.0.0` protocol becomes active / comes online.
     private func onChatBuddyJoined(peer: PeerID, conn: Connection) {
         DispatchQueue.main.async {
+            self.topic(for: Self.defaultTopicName).upsertMember(peer)
             guard !self.chats.contains(where: { $0.peer.peer == peer }) else {
                 // Mark the existing peer as active
                 if let index = self.chats.firstIndex(where: { $0.peer.peer == peer }) {
@@ -122,6 +124,7 @@ class ViewModel: ObservableObject, ChatDelegate, TopicDelegate {
                 if let index = self.chats.firstIndex(where: { $0.peer.peer == peer }) {
                     self.chats[index].peer.isActive = false
                 }
+                self.topic(for: Self.defaultTopicName).markMemberInactive(peer)
             }
         }
     }
@@ -240,6 +243,13 @@ class ViewModel: ObservableObject, ChatDelegate, TopicDelegate {
         let topic = Topic(name: name)
         self.topics.append(topic)
         return topic
+    }
+
+    private func syncDefaultTopicMembers() {
+        let topic = self.topic(for: Self.defaultTopicName)
+        for chat in self.chats {
+            topic.upsertMember(chat.peer.peer, isActive: chat.peer.isActive)
+        }
     }
 
     /// Save the chats out to UserDefaults
