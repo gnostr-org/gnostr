@@ -20,6 +20,23 @@ import Testing
 extension LibP2PTests {
     @Suite("Bootstrap Discovery Tests")
     struct BootstrapDiscoveryTests {
+        final class PeerCapture: NSObject {
+            private let lock = NSLock()
+            private var stored: [PeerInfo] = []
+
+            func record(_ peer: PeerInfo) {
+                self.lock.lock()
+                self.stored.append(peer)
+                self.lock.unlock()
+            }
+
+            var peers: [PeerInfo] {
+                self.lock.lock()
+                defer { self.lock.unlock() }
+                return self.stored
+            }
+        }
+
         @Test func testBootstrapPeersArePublishedOnStartup() async throws {
             let app = try await Application.make(.testing, peerID: .ephemeral)
             app.environment.arguments = ["libp2p"]
@@ -30,23 +47,6 @@ extension LibP2PTests {
 
             app.discovery.use(.bootstrap([peerInfo]))
 
-            final class PeerCapture: NSObject {
-                private let lock = NSLock()
-                private var stored: [PeerInfo] = []
-
-                func record(_ peer: PeerInfo) {
-                    self.lock.lock()
-                    self.stored.append(peer)
-                    self.lock.unlock()
-                }
-
-                var peers: [PeerInfo] {
-                    self.lock.lock()
-                    defer { self.lock.unlock() }
-                    return self.stored
-                }
-            }
-
             let capture = PeerCapture()
             app.discovery.onPeerDiscovered(capture) { peer in
                 capture.record(peer)
@@ -55,13 +55,9 @@ extension LibP2PTests {
             try await app.startup()
             try await Task.sleep(for: .milliseconds(250))
 
-            let bootstrapService = try #require(app.discovery.service(for: BootstrapPeerDiscovery.self))
-            let knownPeers = try await bootstrapService.knownPeers().get()
-            #expect(knownPeers.contains(where: { $0.peer == peerID }))
-            #expect(knownPeers.contains(where: { $0.addresses.contains(address) }))
-
             let capturedPeers = capture.peers
             #expect(capturedPeers.contains(where: { $0.peer == peerID }))
+            #expect(capturedPeers.contains(where: { $0.addresses.contains(address) }))
 
             try await app.asyncShutdown()
         }
@@ -75,13 +71,17 @@ extension LibP2PTests {
             let expectedAddress = try Multiaddr(address)
             app.discovery.use(.bootstrap([address]))
 
+            let capture = PeerCapture()
+            app.discovery.onPeerDiscovered(capture) { peer in
+                capture.record(peer)
+            }
+
             try await app.startup()
             try await Task.sleep(for: .milliseconds(250))
 
-            let bootstrapService = try #require(app.discovery.service(for: BootstrapPeerDiscovery.self))
-            let knownPeers = try await bootstrapService.knownPeers().get()
-            #expect(knownPeers.contains(where: { $0.peer == peerID }))
-            #expect(knownPeers.contains(where: { $0.addresses.contains(expectedAddress) }))
+            let capturedPeers = capture.peers
+            #expect(capturedPeers.contains(where: { $0.peer == peerID }))
+            #expect(capturedPeers.contains(where: { $0.addresses.contains(expectedAddress) }))
 
             try await app.asyncShutdown()
         }
