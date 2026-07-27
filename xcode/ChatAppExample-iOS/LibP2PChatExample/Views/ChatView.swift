@@ -151,11 +151,10 @@ struct ChatView: View {
                         .frame(width: height2, height: height2)
                         .background(
                             Circle()
-                                .foregroundColor(text.isEmpty || !chat.peer.isActive ? .gray : .blue)
+                                .foregroundColor(text.isEmpty ? .gray : .blue)
                         )
                 }
                 .disabled(text.isEmpty)
-                .disabled(!chat.peer.isActive)
             }
             .frame(height: height)
         }
