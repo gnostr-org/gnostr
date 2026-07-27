@@ -65,6 +65,9 @@ class LibP2PService {
     private var subscribedTopics: Set<String> = []
     private var topicSubscriptions: [String: PubSub.SubscriptionHandler] = [:]
     private let defaultTopic = "gnostr"
+    private var discoveredPeerAddresses: [String: Multiaddr] = [:]
+    private let discoveredPeerAddressesQueue = DispatchQueue(label: "LibP2PService.discoveredPeerAddresses")
+    @Published private var peerConnectionStates: [String: PeerConnectionState] = [:]
 
     internal var topicDelegate: TopicDelegate? = nil
     
@@ -105,7 +108,7 @@ class LibP2PService {
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
         app.discovery.use(.bootstrap(Self.bootstrapPeers))
-        app.discovery.use(.kadDHT(mode: .client, bootstrapPeers: Self.bootstrapPeers))
+        app.dht.use(.kadDHT(mode: .client, bootstrapPeers: Self.bootstrapPeers))
         app.pubsub.use(.gossipsub)
         app.resolvers.use(.dnsaddr)
         app.discovery.use(.mdns)
@@ -177,6 +180,40 @@ class LibP2PService {
     private func reinstallTopicSubscriptions() {
         for topic in self.subscribedTopics {
             self.joinTopicIfNeeded(topic)
+        }
+    }
+
+    public func connectionState(for peerID: PeerID) -> PeerConnectionState {
+        self.peerConnectionStates[peerID.b58String] ?? .disconnected
+    }
+
+    private func recordDiscoveredAddress(_ address: Multiaddr, for peerID: PeerID) {
+        self.discoveredPeerAddressesQueue.sync {
+            self.discoveredPeerAddresses[peerID.b58String] = address
+        }
+    }
+
+    private func discoveredAddress(for peerID: PeerID) -> Multiaddr? {
+        self.discoveredPeerAddressesQueue.sync {
+            self.discoveredPeerAddresses[peerID.b58String]
+        }
+    }
+
+    private func markPeerConnected(_ peerID: PeerID) {
+        DispatchQueue.main.async {
+            self.peerConnectionStates[peerID.b58String] = .connected
+        }
+    }
+
+    private func markPeerDialing(_ peerID: PeerID) {
+        DispatchQueue.main.async {
+            self.peerConnectionStates[peerID.b58String] = .dialing
+        }
+    }
+
+    private func markPeerDisconnected(_ peerID: PeerID) {
+        DispatchQueue.main.async {
+            self.peerConnectionStates[peerID.b58String] = .disconnected
         }
     }
 
