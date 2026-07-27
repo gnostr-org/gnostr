@@ -497,7 +497,7 @@ final public class MulticastPeerDiscovery: Discovery, PeerDiscovery, LifecycleHa
     }
 
     /// Queries the mDNS multicast group for libp2p services running on the local network, and if peers are found returns a list of Multiaddrs for dialing...
-    private func queryForPeers() -> EventLoopFuture<[Multiaddr]> {
+    func queryForPeers() -> EventLoopFuture<[Multiaddr]> {
         let question = Question(name: "_p2p._udp.local", type: .all)
         return self.newQueryResponse(question).map { msgs in
             msgs.reduce(into: []) { mas, msg in
@@ -506,7 +506,7 @@ final public class MulticastPeerDiscovery: Discovery, PeerDiscovery, LifecycleHa
         }
     }
 
-    private func extractMultiaddressFromAdditionalRecords(_ records: [ResourceRecord]) -> [Multiaddr] {
+    func extractMultiaddressFromAdditionalRecords(_ records: [any ResourceRecord]) -> [Multiaddr] {
         guard records.count >= 3 else { return [] }
 
         /// Lets try and recover the Multiaddr

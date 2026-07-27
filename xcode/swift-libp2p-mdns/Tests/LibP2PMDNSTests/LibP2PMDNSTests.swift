@@ -24,14 +24,6 @@ import Testing
 
 @Suite("Libp2p mDNS Tests")
 struct LibP2PMDNSTests {
-    // Try and get our machines internal IP Address
-    let internalIPAddress = try! System.enumerateDevices().first(where: { device in
-        guard device.name == "en0" && device.address != nil else { return false }
-        guard let ma = try? device.address?.toMultiaddr().tcpAddress else { return false }
-
-        return ma.ip4
-    }).map { try! $0.address!.toMultiaddr().tcpAddress!.address }!
-
     /// System.enumerateDevices
     @Test func testSystemDevices() throws {
         for device in try! System.enumerateDevices() {

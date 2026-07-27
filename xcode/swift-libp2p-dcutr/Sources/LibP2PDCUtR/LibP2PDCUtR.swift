@@ -151,7 +151,7 @@ final class DCUtRCoordinator: @unchecked Sendable {
 
     private func initiatePunch(for peer: PeerID, relayConnection: Connection) {
         var attempt = self.attempt(for: peer)
-        guard attempt.relayConnection == nil else { return }
+        guard attempt.connectSentAt == nil else { return }
         attempt.relayConnection = relayConnection
         attempt.connectSentAt = Date()
         self.setAttempt(attempt, for: peer)

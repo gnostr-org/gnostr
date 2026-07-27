@@ -24,8 +24,8 @@ extension MulticastPeerDiscovery {
         supportingService protocol: String,
         options: Options? = nil
     ) -> EventLoopFuture<DiscoverdPeers> {
-        self.queryForService(`protocol`).map { socketAddress in
-            socketAddress.compactMap { try? $0.toMultiaddr() }.compactMap {
+        self.queryForPeers().map { peerAddresses in
+            peerAddresses.compactMap {
                 guard let pid = try? $0.getPeerID() else { return nil }
                 return PeerInfo(peer: pid, addresses: [$0])
             }
