@@ -206,23 +206,32 @@ class LibP2PService {
     
     public func send(message:String, to peer:PeerID) {
         guard self.app.isRunning else { print("LibP2P needs to be running in order to send messages!"); return }
-        // There's a lot happening in this `newRequest` call, let's break it down
-        // We have some data (our `message`) that we would like to send to our `peer`
-        // Libp2p offers a `Request` type that makes sending a single chunk of data easier than opening up and managing a streaming channel (similar to an HTTP Request)
-        // So we create a `newRequest` to our `peer`, destined for the `/chat/1.0.0` protocol, with the `message` we'd like to send them
-        //
-        // The next couple params are a little more in depth...
-        //  `style` provides the Request with a hint at what kind of behavior to expect.
-        //      `.noResponseExpected` means the stream will imediately request to be closed after sending the data, not waiting for a response / reply. (like a PUT request)
-        //      `.responseExpected` means that we expect data back from the peer (like a GET request)
-        //     Because our `/chat/1.0.0` doesn't support read reciepts we set this to `.noResponseExpected`
-        //     If, let's say, `/chat/2.0.0` supported delivery confirmations (read receipts), we could change this to `.responseExpected` and parse the returned message for confirmation of delivery.
-        //  `withHandlers` let's us configure the `/chat/1.0.0` stream with custom Channel Handlers (similar to middleware if you're familiar with other server side frameworks).
-        //     When we registered our `/chat/1.0.0` route earlier (in our initiailizer) we told Libp2p that the `/chat/1.0.0` should be `.newLineDelimited` (Routes.swift).
-        //     Therefor, when set to `.inherit`, libp2p can automagically use this info to configure the `/chat/1.0.0` stream with the same channel handlers.
-        //     If, for some reason, you wanted to have a unique channel handler configuration for this particular requets, you can add any ChannelHandlers you'd like to here.
-        //       ex: perhaps adding additional Logging handlers if you were trying to debug a request
-        self.app.newRequest(to: peer, forProtocol: "/chat/1.0.0", withRequest: Data(message.utf8), style: .noResponseExpected, withHandlers: .inherit).whenComplete { result in
+        let request = Data(message.utf8)
+        let protocolID = "/chat/1.0.0"
+
+        // Reuse an existing live connection whenever possible so chat messages do not pay
+        // discovery/dial setup on every send.
+        self.app.connections.getBestConnectionForPeer(peer: peer, on: self.app.eventLoopGroup.next()).flatMap { connection -> EventLoopFuture<Data> in
+            if let remoteAddr = connection?.remoteAddr {
+                return self.app.newRequest(
+                    to: remoteAddr,
+                    forProtocol: protocolID,
+                    withRequest: request,
+                    style: .noResponseExpected,
+                    withHandlers: .inherit,
+                    withTimeout: .seconds(10)
+                )
+            }
+
+            return self.app.newRequest(
+                to: peer,
+                forProtocol: protocolID,
+                withRequest: request,
+                style: .noResponseExpected,
+                withHandlers: .inherit,
+                withTimeout: .seconds(10)
+            )
+        }.whenComplete { result in
             switch result {
             case .failure(let error):
                 self.app.logger.error("Error: \(error)")

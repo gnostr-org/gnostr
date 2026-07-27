@@ -48,7 +48,7 @@ func routes(_ app: Application) throws {
                             req.myService.delegate?.on(message: str, from: peer)
                         }
                     }
-                    return .stayOpen
+                    return .close
 
                 // `.closed` gets called when the remote peer closes their end of the stream
                 // We simply respond with a similar `.close` event so both parties know the stream has been closed gracefully
