@@ -8,10 +8,13 @@
 import LibP2P
 import SwiftUI
 
-class ViewModel: ObservableObject, ChatDelegate {
+class ViewModel: ObservableObject, ChatDelegate, TopicDelegate {
+    static let defaultTopicName = "gnostr"
+
     @Published var isReady:Bool = false
     @Published var groups: [String]
     @Published var chats: [Chat]
+    @Published var topics: [Topic]
 
     @Published var nickname: String? = nil {
         didSet {
@@ -26,6 +29,7 @@ class ViewModel: ObservableObject, ChatDelegate {
         // Dummy data
         self.groups = ["No Groups Yet"]
         self.chats = []
+        self.topics = [Topic(name: Self.defaultTopicName)]
 
         // Restore the chats if possible...
         print("Attempting to restore chats")
@@ -56,6 +60,7 @@ class ViewModel: ObservableObject, ChatDelegate {
             // Register ourselves as the ChatDelegate
             // `p2pService` will call our `on(message:)` and `on(nickname:)` methods
             self.p2pService.delegate = self
+            self.p2pService.topicDelegate = self
 
             // Register to be notified when the user sends the app into the background so we can shut down libp2p and save our chats.
             await NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
@@ -147,6 +152,21 @@ class ViewModel: ObservableObject, ChatDelegate {
         }
     }
 
+    internal func on(topicMessage message: String, from: PeerID, topic: String) {
+        DispatchQueue.main.async {
+            print("We got a topic message from libP2P!")
+            let topicEntry = self.topic(for: topic)
+            topicEntry.messages.append(Message(message, type: .received))
+        }
+    }
+
+    internal func on(topicPeerJoined peer: PeerID, topic: String) {
+        DispatchQueue.main.async {
+            print("We found a peer for topic \(topic): \(peer.b58String)")
+            _ = self.topic(for: topic)
+        }
+    }
+
     /// Attempts to start the libp2p service
     /// This includes...
     /// - Starting a TCP Server and listening for inbound TCP requests
@@ -186,6 +206,17 @@ class ViewModel: ObservableObject, ChatDelegate {
         return nil
     }
 
+    /// Publishes a single message to a gossip topic.
+    public func send(message: String, to topic: Topic) -> Message? {
+        if let index = self.topics.firstIndex(where: { $0.id == topic.id }) {
+            let msg = Message(message, type: .sent)
+            self.topics[index].messages.append(msg)
+            self.p2pService.publish(message: message, to: topic.name)
+            return msg
+        }
+        return nil
+    }
+
     /// Sends  a Nickname update message to a Chat buddy
     private func send(nickname: String, to peer: PeerID) {
         self.p2pService.send(message: "nickname:\(nickname)", to: peer)
@@ -198,6 +229,16 @@ class ViewModel: ObservableObject, ChatDelegate {
         } else {
             return false
         }
+    }
+
+    private func topic(for name: String) -> Topic {
+        if let existing = self.topics.first(where: { $0.name == name }) {
+            return existing
+        }
+
+        let topic = Topic(name: name)
+        self.topics.append(topic)
+        return topic
     }
 
     /// Save the chats out to UserDefaults

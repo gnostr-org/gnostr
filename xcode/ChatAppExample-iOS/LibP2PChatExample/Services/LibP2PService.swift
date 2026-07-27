@@ -15,11 +15,17 @@ import LibP2PDCUtR
 import LibP2PDNSAddr
 import LibP2PMDNS
 import LibP2PKadDHT
+import LibP2PPubSub
 
 /// Any class that conforms to the ChatDelegate can register themselves on the LibP2PService to get notified of Chat events
 protocol ChatDelegate {
     func on(message:String, from:PeerID)
     func on(nickname:String, from:PeerID)
+}
+
+protocol TopicDelegate {
+    func on(topicMessage message: String, from: PeerID, topic: String)
+    func on(topicPeerJoined peer: PeerID, topic: String)
 }
 
 /// We extend the Request struct with a computed var that provides access to a shared instance of our LibP2PService.
@@ -56,6 +62,11 @@ class LibP2PService {
     private var runtimeHandlersInstalled = false
     private var lifecycleState: LifecycleState = .stopped
     private var topologyRegistrations: [TopologyRegistration] = []
+    private var subscribedTopics: Set<String> = []
+    private var topicSubscriptions: [String: PubSub.SubscriptionHandler] = [:]
+    private let defaultTopic = "gnostr"
+
+    internal var topicDelegate: TopicDelegate? = nil
     
     public var savedPeerID:PeerID? {
         if let pid = UserDefaults.standard.data(forKey: "MyPeerID") {
@@ -93,6 +104,7 @@ class LibP2PService {
         app.relay.use(.relay)
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
+        app.pubsub.use(.gossipsub)
         app.resolvers.use(.dnsaddr)
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
@@ -162,12 +174,59 @@ class LibP2PService {
         }
     }
 
+    private func reinstallTopicSubscriptions() {
+        for topic in self.subscribedTopics {
+            self.joinTopicIfNeeded(topic)
+        }
+    }
+
     private var needsLocalNetworkAuthorization: Bool {
 #if os(iOS) && !targetEnvironment(macCatalyst)
         return true
 #else
         return false
 #endif
+    }
+
+    private func joinTopicIfNeeded(_ topic: String) {
+        guard self.topicSubscriptions[topic] == nil else { return }
+
+        do {
+            let subscription = try self.app.pubsub.gossipsub.subscribe(
+                .init(
+                    topic: topic,
+                    signaturePolicy: .strictSign,
+                    validator: .acceptAll,
+                    messageIDFunc: .concatFromAndSequenceFields
+                )
+            )
+
+            let eventLoop = self.app.eventLoopGroup.next()
+            subscription.on = { [weak self] event in
+                guard let self else { return eventLoop.makeSucceededVoidFuture() }
+                switch event {
+                case .newPeer(let peer):
+                    self.app.logger.notice("[LibP2PTopic] \(topic) discovered peer: \(peer.b58String)")
+                    self.topicDelegate?.on(topicPeerJoined: peer, topic: topic)
+                case .data(let message):
+                    guard let fromPeer = try? PeerID(fromBytesID: Array(message.from)) else {
+                        self.app.logger.warning("[LibP2PTopic] Invalid sender for topic \(topic)")
+                        return eventLoop.makeSucceededVoidFuture()
+                    }
+                    let text = String(data: message.data, encoding: .utf8) ?? ""
+                    self.topicDelegate?.on(topicMessage: text, from: fromPeer, topic: topic)
+                case .error(let error):
+                    self.app.logger.error("[LibP2PTopic] \(topic) subscription error: \(error)")
+                }
+                return eventLoop.makeSucceededVoidFuture()
+            }
+
+            self.topicSubscriptions[topic] = subscription
+            self.subscribedTopics.insert(topic)
+            self.app.logger.notice("[LibP2PTopic] Joined gossip topic \(topic)")
+        } catch {
+            self.app.logger.error("[LibP2PTopic] Failed to join topic \(topic): \(error)")
+        }
     }
     
     public func start() async throws {
@@ -182,9 +241,12 @@ class LibP2PService {
             self.app = Self.makeApplication(peerID: self.peerID)
             self.lna = self.needsLocalNetworkAuthorization ? LocalNetworkAuthorization() : nil
             self.runtimeHandlersInstalled = false
+            self.topicSubscriptions = [:]
             self.reinstallTopologyRegistrations()
+            self.reinstallTopicSubscriptions()
         }
         self.installRuntimeHandlersIfNeeded()
+        self.joinTopicIfNeeded(self.defaultTopic)
         do {
             try app.start()
             self.app.logger.notice("LibP2P Started!")
@@ -201,6 +263,7 @@ class LibP2PService {
         self.pingTask?.cancel()
         app.shutdown()
         self.runtimeHandlersInstalled = false
+        self.topicSubscriptions = [:]
         self.lifecycleState = .stopped
     }
     
@@ -239,6 +302,16 @@ class LibP2PService {
                 self.app.logger.trace("Sent message to peer: \(peer)")
             }
         }
+    }
+
+    public func publish(message: String, to topic: String) {
+        guard self.app.isRunning else { print("LibP2P needs to be running in order to publish messages!"); return }
+        self.joinTopicIfNeeded(topic)
+        guard let subscription = self.topicSubscriptions[topic] else {
+            self.app.logger.error("[LibP2PTopic] No subscription available for topic \(topic)")
+            return
+        }
+        subscription.publish(Data(message.utf8))
     }
     
     public func isConnectedTo(peer:PeerID) async -> Bool {

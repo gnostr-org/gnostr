@@ -25,12 +25,16 @@
 		CA3C5426286A2BEF001E1858 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541C286A2BEF001E1858 /* ChatView.swift */; };
 		CA3C5427286A2BEF001E1858 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541D286A2BEF001E1858 /* ContentView.swift */; };
 		CA3C5428286A2BEF001E1858 /* ChatRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541E286A2BEF001E1858 /* ChatRow.swift */; };
+		CA55D76F290860A5007B8F2D /* TopicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76C290860A5007B8F2D /* TopicModel.swift */; };
+		CA55D770290860A5007B8F2D /* TopicRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76D290860A5007B8F2D /* TopicRow.swift */; };
+		CA55D771290860A5007B8F2D /* TopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76E290860A5007B8F2D /* TopicView.swift */; };
 		CA3C542E286A2C3C001E1858 /* LibP2PNoise in Frameworks */ = {isa = PBXBuildFile; productRef = CA3C542D286A2C3C001E1858 /* LibP2PNoise */; };
 		CA3C5431286A2C4F001E1858 /* LibP2PMPLEX in Frameworks */ = {isa = PBXBuildFile; productRef = CA3C5430286A2C4F001E1858 /* LibP2PMPLEX */; };
 		CA3C5436286A3264001E1858 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5435286A3264001E1858 /* README.md */; };
 		E10000000000000000000021 /* LibP2PRelay in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000011 /* LibP2PRelay */; };
 		E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000012 /* LibP2PAutoNAT */; };
 		E10000000000000000000024 /* LibP2PKadDHT in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000014 /* LibP2PKadDHT */; };
+		E10000000000000000000025 /* LibP2PPubSub in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000015 /* LibP2PPubSub */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +52,9 @@
 		CA3C541C286A2BEF001E1858 /* ChatView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		CA3C541D286A2BEF001E1858 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CA3C541E286A2BEF001E1858 /* ChatRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRow.swift; sourceTree = "<group>"; };
+		CA55D76C290860A5007B8F2D /* TopicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicModel.swift; sourceTree = "<group>"; };
+		CA55D76D290860A5007B8F2D /* TopicRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicRow.swift; sourceTree = "<group>"; };
+		CA55D76E290860A5007B8F2D /* TopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicView.swift; sourceTree = "<group>"; };
 		CA3C5435286A3264001E1858 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		CA55D76A29085FB4007B8F2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CA55D76B290860A5007B8F2D /* LibP2PChatExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibP2PChatExample.entitlements; sourceTree = "<group>"; };
@@ -65,6 +72,7 @@
 				4BA83ABE30179EA900846AE9 /* LibP2PDCUtR in Frameworks */,
 				E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */,
 				E10000000000000000000024 /* LibP2PKadDHT in Frameworks */,
+				E10000000000000000000025 /* LibP2PPubSub in Frameworks */,
 				4BA83AB53016B72200846AE9 /* LibP2PMDNS in Frameworks */,
 				4BA83AB73016B8AA00846AE9 /* LibP2PDNSAddr in Frameworks */,
 				95394E6829F45781009A74DF /* LibP2P in Frameworks */,
@@ -119,6 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				CA3C5413286A2BEF001E1858 /* ChatModel.swift */,
+				CA55D76C290860A5007B8F2D /* TopicModel.swift */,
 				CA3C5414286A2BEF001E1858 /* ViewModel.swift */,
 			);
 			path = Models;
@@ -140,8 +149,10 @@
 				CA3C541A286A2BEF001E1858 /* SettingsView.swift */,
 				CA3C541B286A2BEF001E1858 /* PeerIconView.swift */,
 				CA3C541C286A2BEF001E1858 /* ChatView.swift */,
+				CA55D76E290860A5007B8F2D /* TopicView.swift */,
 				CA3C541D286A2BEF001E1858 /* ContentView.swift */,
 				CA3C541E286A2BEF001E1858 /* ChatRow.swift */,
+				CA55D76D290860A5007B8F2D /* TopicRow.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -175,6 +186,7 @@
 				E10000000000000000000011 /* LibP2PRelay */,
 				E10000000000000000000012 /* LibP2PAutoNAT */,
 				E10000000000000000000014 /* LibP2PKadDHT */,
+				E10000000000000000000015 /* LibP2PPubSub */,
 				95394E6729F45781009A74DF /* LibP2P */,
 				4BA83AB43016B72200846AE9 /* LibP2PMDNS */,
 				4BA83AB63016B8AA00846AE9 /* LibP2PDNSAddr */,
@@ -215,6 +227,7 @@
 				E10000000000000000000001 /* XCLocalSwiftPackageReference "../swift-libp2p-relay" */,
 				E10000000000000000000002 /* XCLocalSwiftPackageReference "../swift-libp2p-autonat" */,
 				E10000000000000000000004 /* XCLocalSwiftPackageReference "../swift-libp2p-kad-dht" */,
+				E10000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */,
 				95394E6629F45781009A74DF /* XCLocalSwiftPackageReference "../swift-libp2p" */,
 				4BA83AB33016B72200846AE9 /* XCLocalSwiftPackageReference "../swift-libp2p-mdns" */,
 				4BA83AB53016B8AA00846AE9 /* XCLocalSwiftPackageReference "../swift-libp2p-dnsaddr" */,
@@ -251,12 +264,15 @@
 				CA3C5423286A2BEF001E1858 /* LibP2PService.swift in Sources */,
 				CA3C5425286A2BEF001E1858 /* PeerIconView.swift in Sources */,
 				CA3C5405286A2BC2001E1858 /* LibP2PChatExampleApp.swift in Sources */,
+				CA55D771290860A5007B8F2D /* TopicView.swift in Sources */,
 				CA3C5426286A2BEF001E1858 /* ChatView.swift in Sources */,
 				CA3C5427286A2BEF001E1858 /* ContentView.swift in Sources */,
 				CA3C5424286A2BEF001E1858 /* SettingsView.swift in Sources */,
+				CA55D76F290860A5007B8F2D /* TopicModel.swift in Sources */,
 				CA3C5420286A2BEF001E1858 /* ViewModel.swift in Sources */,
 				95394E6029F2F4F8009A74DF /* Routes.swift in Sources */,
 				CA3C5428286A2BEF001E1858 /* ChatRow.swift in Sources */,
+				CA55D770290860A5007B8F2D /* TopicRow.swift in Sources */,
 				CA3C541F286A2BEF001E1858 /* ChatModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -486,6 +502,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p-dnsaddr";
 		};
+		E10000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-pubsub";
+		};
 		4BA83ABC30179EA900846AE9 /* XCLocalSwiftPackageReference "../swift-libp2p-dcutr" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p-dcutr";
@@ -564,6 +584,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E10000000000000000000004 /* XCLocalSwiftPackageReference "../swift-libp2p-kad-dht" */;
 			productName = LibP2PKadDHT;
+		};
+		E10000000000000000000015 /* LibP2PPubSub */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E10000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */;
+			productName = LibP2PPubSub;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
