@@ -113,12 +113,18 @@ class LibP2PService {
         app.relay.use(.relay)
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
+        app.discovery.use(.bootstrap(Self.bootstrapPeers))
+        app.dht.use(.kadDHT(mode: .client, bootstrapPeers: Self.bootstrapPeers))
         app.pubsub.use(.gossipsub)
         app.resolvers.use(.dnsaddr)
         app.discovery.use(.mdns)
         app.servers.use(.tcp(host: "0.0.0.0", port: Self.listenPort))
         try! routes(app)
         return app
+    }
+
+    private static var bootstrapPeers: [PeerInfo] {
+        BootstrapPeerDiscovery.IPFSBootNodes
     }
 
     private static var listenPort: Int {
