@@ -12,6 +12,7 @@ import LibP2PMPLEX
 import LibP2PRelay
 import LibP2PAutoNAT
 import LibP2PDCUtR
+import LibP2PDNSAddr
 import LibP2PMDNS
 import LibP2PKadDHT
 
@@ -92,6 +93,7 @@ class LibP2PService {
         app.relay.use(.relay)
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
+        app.resolvers.use(.dnsaddr)
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
         app.servers.use(.tcp(host: "0.0.0.0", port: Self.listenPort))
@@ -159,16 +161,26 @@ class LibP2PService {
             self.app.topology.register(registration)
         }
     }
+
+    private var needsLocalNetworkAuthorization: Bool {
+#if os(iOS) && !targetEnvironment(macCatalyst)
+        return true
+#else
+        return false
+#endif
+    }
     
     public func start() async throws {
-        guard await self.lna?.requestAuthorization() ?? true else {
-            throw CocoaError(.userCancelled)
+        if self.needsLocalNetworkAuthorization {
+            guard await self.lna?.requestAuthorization() ?? true else {
+                throw CocoaError(.userCancelled)
+            }
         }
         guard self.lifecycleState != .running && self.lifecycleState != .starting else { return }
         self.lifecycleState = .starting
         if self.app.didShutdown {
             self.app = Self.makeApplication(peerID: self.peerID)
-            self.lna = LocalNetworkAuthorization()
+            self.lna = self.needsLocalNetworkAuthorization ? LocalNetworkAuthorization() : nil
             self.runtimeHandlersInstalled = false
             self.reinstallTopologyRegistrations()
         }

@@ -18,6 +18,34 @@ import LibP2P
 import NIOConcurrencyHelpers
 import dnssd
 
+private func dnsaddrQueryRecordCallback(
+    sdRef: DNSServiceRef?,
+    flags: DNSServiceFlags,
+    interfaceIndex: UInt32,
+    errorCode: DNSServiceErrorType,
+    fullname: UnsafePointer<CChar>?,
+    rrtype: UInt16,
+    rrclass: UInt16,
+    rdlen: UInt16,
+    rdata: UnsafeRawPointer?,
+    ttl: UInt32,
+    context: UnsafeMutableRawPointer?
+) {
+    DNSAddr.handleQueryRecord(
+        sdRef: sdRef,
+        flags: flags,
+        interfaceIndex: interfaceIndex,
+        errorCode: errorCode,
+        fullname: fullname,
+        rrtype: rrtype,
+        rrclass: rrclass,
+        rdlen: rdlen,
+        rdata: rdata,
+        ttl: ttl,
+        context: context
+    )
+}
+
 /// DNSAddr
 /// Is a protocol used by libp2p to resolve `Multiaddr`s that use the `dnsaddr` protocol.
 /// - [Specification](https://github.com/multiformats/multiaddr/blob/master/protocols/DNSADDR.md)
@@ -141,43 +169,6 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
         let queue = DispatchQueue(label: "LibP2PDNSAddr.\(self.uuid.uuidString)")
 
         var service: DNSServiceRef?
-        let callback: DNSServiceQueryRecordReply = { _, flags, _, errorCode, _, rrtype, _, rdlen, rdata, _, context in
-            guard let context else { return }
-            let state = Unmanaged<QueryState>.fromOpaque(context).takeUnretainedValue()
-            guard !state.finished else { return }
-
-            if errorCode != kDNSServiceErr_NoError {
-                Self.completeQuery(state: state, context: context, result: .failure(Errors.dnsServiceFailed(errorCode)))
-                return
-            }
-
-            guard rrtype == UInt16(kDNSServiceType_TXT), let rdata, rdlen > 0 else {
-                if (flags & kDNSServiceFlagsMoreComing) == 0 {
-                    Self.completeQuery(
-                        state: state,
-                        context: context,
-                        result: state.addresses.isEmpty ? .failure(Errors.noMatchingHostFound) : .success(Array(Set(state.addresses)))
-                    )
-                }
-                return
-            }
-
-            let records = Self.multiaddrs(
-                fromTXTRecordBytes: UnsafeRawBufferPointer(start: rdata, count: Int(rdlen)),
-                enforcingPeerID: state.expectedPeerID
-            )
-            if !records.isEmpty {
-                state.addresses.append(contentsOf: records)
-            }
-
-            if (flags & kDNSServiceFlagsMoreComing) == 0 {
-                Self.completeQuery(
-                    state: state,
-                    context: context,
-                    result: state.addresses.isEmpty ? .failure(Errors.noMatchingHostFound) : .success(Array(Set(state.addresses)))
-                )
-            }
-        }
 
         let error = host.withCString { cHost in
             DNSServiceQueryRecord(
@@ -187,7 +178,7 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
                 cHost,
                 UInt16(kDNSServiceType_TXT),
                 UInt16(kDNSServiceClass_IN),
-                callback,
+                dnsaddrQueryRecordCallback,
                 context
             )
         }
@@ -267,5 +258,55 @@ public final class DNSAddr: AddressResolver, LifecycleHandler {
         }
 
         Unmanaged<QueryState>.fromOpaque(context).release()
+    }
+
+    fileprivate static func handleQueryRecord(
+        sdRef: DNSServiceRef?,
+        flags: DNSServiceFlags,
+        interfaceIndex: UInt32,
+        errorCode: DNSServiceErrorType,
+        fullname: UnsafePointer<CChar>?,
+        rrtype: UInt16,
+        rrclass: UInt16,
+        rdlen: UInt16,
+        rdata: UnsafeRawPointer?,
+        ttl: UInt32,
+        context: UnsafeMutableRawPointer?
+    ) {
+        guard let context else { return }
+        let state = Unmanaged<QueryState>.fromOpaque(context).takeUnretainedValue()
+        guard !state.finished else { return }
+
+        if errorCode != kDNSServiceErr_NoError {
+            Self.completeQuery(state: state, context: context, result: .failure(Errors.dnsServiceFailed(errorCode)))
+            return
+        }
+
+        guard rrtype == UInt16(kDNSServiceType_TXT), let rdata, rdlen > 0 else {
+            if (flags & kDNSServiceFlagsMoreComing) == 0 {
+                Self.completeQuery(
+                    state: state,
+                    context: context,
+                    result: state.addresses.isEmpty ? .failure(Errors.noMatchingHostFound) : .success(Array(Set(state.addresses)))
+                )
+            }
+            return
+        }
+
+        let records = Self.multiaddrs(
+            fromTXTRecordBytes: UnsafeRawBufferPointer(start: rdata, count: Int(rdlen)),
+            enforcingPeerID: state.expectedPeerID
+        )
+        if !records.isEmpty {
+            state.addresses.append(contentsOf: records)
+        }
+
+        if (flags & kDNSServiceFlagsMoreComing) == 0 {
+            Self.completeQuery(
+                state: state,
+                context: context,
+                result: state.addresses.isEmpty ? .failure(Errors.noMatchingHostFound) : .success(Array(Set(state.addresses)))
+            )
+        }
     }
 }
