@@ -138,7 +138,7 @@ pub fn get_branches_info(
 			.filter_map(|b| {
 				let branch = b.ok()?.0;
 				let upstream = branch.upstream().ok()?;
-				Some(upstream.get().name_bytes().to_owned())
+				Some(upstream.name_bytes().ok()?.to_owned())
 			})
 			.collect();
 		(BranchType::Remote, remotes)
