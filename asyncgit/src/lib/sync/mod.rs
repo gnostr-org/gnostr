@@ -45,7 +45,10 @@ pub use branch::{
     merge_rebase::merge_upstream_rebase, rename::rename_branch, validate_branch_name,
     BranchCompare, BranchDetails, BranchInfo,
 };
-pub use commit::{amend, commit, mine_commit, tag_commit, CommitMineOptions};
+pub use commit::{
+    amend, commit, create_empty_tree, create_empty_tree_sha256, mine_commit, tag_commit,
+    CommitMineOptions,
+};
 pub use commit_details::{get_commit_details, CommitDetails, CommitMessage, CommitSignature};
 pub use commit_files::get_commit_files;
 pub use commit_filter::{
@@ -103,6 +106,83 @@ pub use utils::{
     get_head, get_head_tuple, repo_dir, repo_open_error, stage_add_all, stage_add_file,
     stage_addremoved, Head,
 };
+
+fn temp_repo_identity(repo: &git2::Repository) -> (String, String) {
+    if let Ok(signature) = repo.signature() {
+        let name = signature.name().unwrap_or_default().to_string();
+        let email = signature.email().unwrap_or_default().to_string();
+        if !name.is_empty() && !email.is_empty() {
+            return (name, email);
+        }
+    }
+
+    let name = std::env::var("GIT_AUTHOR_NAME")
+        .or_else(|_| std::env::var("GIT_COMMITTER_NAME"))
+        .or_else(|_| std::env::var("USER"))
+        .unwrap_or_else(|_| "name".to_string());
+    let email = std::env::var("GIT_AUTHOR_EMAIL")
+        .or_else(|_| std::env::var("GIT_COMMITTER_EMAIL"))
+        .or_else(|_| std::env::var("EMAIL"))
+        .unwrap_or_else(|_| "email@example.com".to_string());
+
+    (name, email)
+}
+
+fn configure_temp_repo(repo: &git2::Repository, label: &str) -> anyhow::Result<()> {
+    let (name, email) = temp_repo_identity(repo);
+    let mut config = repo.config()?;
+    config.set_str("user.name", &name)?;
+    config.set_str("user.email", &email)?;
+    log::info!("{label}: user.name={name} user.email={email}");
+    Ok(())
+}
+
+fn seed_empty_tree(repo: &git2::Repository, label: &str) -> anyhow::Result<git2::Oid> {
+    let mut index = repo.index()?;
+    let empty_tree = index.write_tree()?;
+    log::info!("{label}: empty_tree={empty_tree}");
+    Ok(empty_tree)
+}
+
+fn seed_empty_tree_commit(repo: &git2::Repository, label: &str) -> anyhow::Result<git2::Oid> {
+    let empty_tree = seed_empty_tree(repo, label)?;
+    let tree = repo.find_tree(empty_tree)?;
+    let signature = repo.signature()?;
+    let commit_id = repo.commit(Some("HEAD"), &signature, &signature, "initial empty tree", &tree, &[])?;
+    log::info!("{label}: empty_tree_commit={commit_id}");
+    Ok(commit_id)
+}
+
+/// Create a temporary non-bare repo using the developer machine's git identity.
+pub fn create_temp_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let temp_dir = tempfile::TempDir::new()?;
+    let repo = git2::Repository::init(temp_dir.path())?;
+    configure_temp_repo(&repo, "create_temp_repo")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary non-bare repo and seed an empty tree object.
+pub fn create_temp_repo_with_empty_tree() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let (temp_dir, repo) = create_temp_repo()?;
+    let _ = seed_empty_tree_commit(&repo, "create_temp_repo_with_empty_tree")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary bare repo using the developer machine's git identity.
+pub fn create_temp_bare_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let temp_dir = tempfile::TempDir::new()?;
+    let repo = git2::Repository::init_bare(temp_dir.path())?;
+    configure_temp_repo(&repo, "create_temp_bare_repo")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary bare repo and seed an empty tree object.
+pub fn create_temp_bare_repo_with_empty_tree()
+-> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let (temp_dir, repo) = create_temp_bare_repo()?;
+    let _ = seed_empty_tree_commit(&repo, "create_temp_bare_repo_with_empty_tree")?;
+    Ok((temp_dir, repo))
+}
 
 #[cfg(test)]
 mod tests {

@@ -61,7 +61,8 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
         .arg(
             Arg::new("relay")
                 .short('r')
-                .long("relay")
+                .long("relays")
+                .visible_alias("relay")
                 .required(false)
                 .value_delimiter(',')
                 .action(ArgAction::Append),
@@ -74,8 +75,7 @@ pub async fn cli() -> Result<ArgMatches, Box<dyn std::error::Error>> {
 
 #[derive(Args, Clone, Debug, Default)]
 pub struct QuerySubCommand {
-    #[arg(short, long)]
-    #[arg(short = 'r', long, value_delimiter = ',', action = ArgAction::Append)]
+    #[arg(short = 'r', long = "relays", alias = "relay", value_delimiter = ',', action = ArgAction::Append)]
     pub relay: Vec<String>,
     #[arg(short, long)]
     pub authors: Option<String>,

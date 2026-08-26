@@ -29,7 +29,7 @@ pub struct ChatSubCommands {
     pub password: Option<String>,
     #[arg(long, global = true)]
     pub name: Option<String>,
-    #[arg(long, global = true, default_value = "gnostr")]
+    #[arg(long, global = true, default_value = "gnostr-dev")]
     pub topic: Option<String>,
     #[arg(long, global = true)]
     pub hash: Option<String>,
@@ -77,7 +77,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
 
     let username_for_session = username_to_set
         .clone()
-        .unwrap_or_else(|| "gnostr".to_string());
+        .unwrap_or_else(|| "gnostr-dev".to_string());
 
     if let Some(user_name) = username_to_set {
         if !user_name.is_empty() {
@@ -152,7 +152,7 @@ pub async fn run(sub_command_args: &ChatSubCommands) -> Result<()> {
         let topic_name = sub_command_args
             .topic
             .clone()
-            .unwrap_or_else(|| "gnostr".to_string());
+            .unwrap_or_else(|| "gnostr-dev".to_string());
         let process_title = format!("gnostr-chat-{topic_name}");
         set_title(&process_title);
         println!("Headless mode enabled:");
@@ -174,14 +174,14 @@ fn chat_topic(sub_command_args: &ChatSubCommands) -> String {
     sub_command_args
         .topic
         .clone()
-        .unwrap_or_else(|| "gnostr".to_string())
+        .unwrap_or_else(|| "gnostr-dev".to_string())
 }
 
 async fn run_chat_session(sub_command_args: &ChatSubCommands, username: String, session: &ChatSession) -> Result<()> {
     let topic_name = sub_command_args
         .topic
         .clone()
-        .unwrap_or_else(|| "gnostr".to_string());
+        .unwrap_or_else(|| "gnostr-dev".to_string());
 
     run_chat_tui(topic_name, username, session)?;
     Ok(())
@@ -250,7 +250,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn chat_topic_defaults_to_gnostr() {
+    fn chat_topic_defaults_to_gnostr_dev() {
         let args = ChatSubCommands {
             nsec: None,
             password: None,
@@ -267,7 +267,7 @@ mod tests {
             oneshot: None,
         };
 
-        assert_eq!(chat_topic(&args), "gnostr");
+        assert_eq!(chat_topic(&args), "gnostr-dev");
     }
 
     #[test]

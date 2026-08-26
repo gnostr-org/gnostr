@@ -43,11 +43,11 @@ This allows user to fill in the commit message and update user name/email in the
 
 If you use both XGit and MiniGit i.e. add both to your project's target **Frameworks, Libraries and Embedded Contents**, then you are good to go.
 
-If you use the core module XGit by itself only, then you must add the `libgit2.xcframework`, `libz.tbd` and `libiconv.tbd` to your project's target **Frameworks, Libraries and Embedded Contents**.
+If you use the core module XGit by itself only, add the sibling `LibGit2-iOS` package to your project so `Clibgit2` is available, along with `libz.tbd` and `libiconv.tbd` if your target needs them.
 
 When building for real iPhone, disable Bitcode.
 
-See [our sample app](https://github.com/light-tech/MiniGit-SampleApp) for a starting point.
+See `../Examples/MiniGitSample` for the sample app.
 
 # Design
 

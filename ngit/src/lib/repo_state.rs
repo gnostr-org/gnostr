@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{Context, Result};
-use git2::Oid;
+use gnostr_asyncgit::git2::Oid;
 use nostr::{
     event::{EventBuilder, Tag},
     signer::NostrSigner,

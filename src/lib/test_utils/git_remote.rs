@@ -2,23 +2,24 @@ use std::{collections::HashSet, env::current_dir};
 
 use anyhow::{Context, Result};
 use futures::join;
-use nostr_0_34_1::nips::nip01::Coordinate;
-use nostr_sdk_0_34_0::{secp256k1::rand, Kind, ToBech32};
+use nostr::{nips::nip01::Coordinate, nips::nip19::Nip19Coordinate, RelayUrl, ToBech32};
 
 use super::{git::GitTestRepo, *};
 
 pub static NOSTR_REMOTE_NAME: &str = "nostr";
-pub static STATE_KIND: nostr_0_34_1::Kind = Kind::Custom(30618);
+pub static STATE_KIND: Kind = Kind::Custom(30618);
 
 pub fn get_nostr_remote_url() -> Result<String> {
     let repo_event = generate_repo_ref_event();
-    let naddr = Coordinate {
-        kind: Kind::GitRepoAnnouncement,
-        public_key: repo_event.author(),
-        identifier: repo_event.identifier().unwrap().to_string(),
+    let naddr = Nip19Coordinate {
+        coordinate: Coordinate {
+            kind: Kind::GitRepoAnnouncement,
+            public_key: repo_event.pubkey,
+            identifier: repo_event.tags.identifier().unwrap().to_string(),
+        },
         relays: vec![
-            "ws://localhost:8055".to_string(),
-            "ws://localhost:8056".to_string(),
+            RelayUrl::parse("ws://localhost:8055").unwrap(),
+            RelayUrl::parse("ws://localhost:8056").unwrap(),
         ],
     }
     .to_bech32()?;
@@ -94,7 +95,7 @@ pub fn cli_tester_after_nostr_fetch_and_sent_list_for_push_responds(
     Ok(p)
 }
 
-pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, GitTestRepo)> {
+pub async fn generate_repo_with_state_event() -> Result<(Event, GitTestRepo)> {
     let mut git_repo = prep_git_repo()?;
     git_repo.create_branch("example-branch")?;
     let example_branch_tip = git_repo.get_tip_of_local_branch("example-branch")?;
@@ -168,7 +169,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
     let state_event = r56
         .events
         .iter()
-        .find(|e| e.kind().eq(&STATE_KIND))
+        .find(|e| e.kind.eq(&STATE_KIND))
         .context("state event not created")?;
 
     assert_eq!(
@@ -176,7 +177,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
             .tags
             .iter()
             .filter(|t| t.kind().to_string().as_str().ne("d"))
-            .map(|t| t.as_vec().to_vec())
+            .map(|t| t.clone().to_vec())
             .collect::<HashSet<Vec<String>>>(),
         HashSet::from([
             vec!["HEAD".to_string(), "ref: refs/heads/main".to_string()],
@@ -192,7 +193,7 @@ pub async fn generate_repo_with_state_event() -> Result<(nostr_0_34_1::Event, Gi
 }
 
 pub async fn prep_source_repo_and_events_including_proposals(
-) -> Result<(Vec<nostr_0_34_1::Event>, GitTestRepo)> {
+) -> Result<(Vec<Event>, GitTestRepo)> {
     let (state_event, source_git_repo) = generate_repo_with_state_event().await?;
     let source_path = source_git_repo.dir.to_str().unwrap().to_string();
 

@@ -177,15 +177,11 @@ pub fn hooks_pre_push(
 	}
 
 	let git_remote = repo.find_remote(remote)?;
-	let url = git_remote
-		.pushurl()
-		.or_else(|| git_remote.url())
-		.ok_or_else(|| {
-			crate::error::Error::Generic(format!(
-				"remote '{remote}' has no URL configured"
-			))
-		})?
-		.to_string();
+	let url = if let Ok(Some(url)) = git_remote.pushurl() {
+		url.to_owned()
+	} else {
+		git_remote.url()?.to_owned()
+	};
 
 	let advertised = advertised_remote_refs(
 		repo_path,

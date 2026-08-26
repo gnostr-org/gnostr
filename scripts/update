@@ -57,7 +57,7 @@ stage_cargo_files() {
     )
 
     if [ "${#paths[@]}" -gt 0 ]; then
-        git add -- "${paths[@]}"
+        git add -f -- "${paths[@]}"
     fi
 }
 

@@ -2,7 +2,9 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use directories::UserDirs;
-use git2::opts::{set_server_connect_timeout_in_milliseconds, set_server_timeout_in_milliseconds};
+use gnostr_asyncgit::git2::opts::{
+    set_server_connect_timeout_in_milliseconds, set_server_timeout_in_milliseconds,
+};
 
 pub fn check_ssh_keys() -> bool {
     // Get the user's home directory using the directories crate

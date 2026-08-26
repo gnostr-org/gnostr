@@ -17,7 +17,7 @@ pub async fn run_git_publisher(
     let path = args.flag_git_dir.as_ref().map_or(".", |s| &s[..]);
     let repo = Repository::discover(path)?;
     if let Ok(tag_names) = repo.tag_names(None) {
-        for tag_name in tag_names.iter().flatten() {
+        for tag_name in tag_names.iter().flatten().flatten() {
             if let Ok(commit_id) = get_commit_id_of_tag(&repo, tag_name) {
                 let key = kad::RecordKey::new(&tag_name);
                 let record = kad::Record {

@@ -8,7 +8,8 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use console::{Style, Term};
-use git2::Oid;
+use gnostr_asyncgit::git2;
+use gnostr_asyncgit::git2::Oid;
 use ngit::{
     accept_maintainership::{grasp_servers_from_user_or_fallback, wait_for_grasp_servers},
     cli_interactor::{
@@ -1206,7 +1207,7 @@ async fn publish_and_finalize(
         println!("publishing repostory state to nostr...");
         (false, true)
     } else if let Ok(remote) = git_repo.git_repo.find_remote("origin") {
-        if let Some(url) = remote.url() {
+        if let Ok(url) = remote.url() {
             // issue a state event with origin state, to all (inc. new) repo relays
             if let Ok(mut origin_state) =
                 list_from_remote(&Term::stdout(), git_repo, url, &nostr_url_decoded, false)

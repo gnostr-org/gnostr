@@ -26,7 +26,7 @@ use crate::utils::detach::{
 
 /// install_rustls_crypto_provider
 pub fn install_rustls_crypto_provider() {
-    let _ = rustls::crypto::ring::default_provider().install_default();
+    let _ = gnostr_asyncgit::install_rustls_crypto_provider();
 }
 
 /// parse_json

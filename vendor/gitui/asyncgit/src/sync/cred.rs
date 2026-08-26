@@ -35,16 +35,24 @@ impl BasicAuthCredential {
 	}
 }
 
+fn remote_url(remote: &git2::Remote<'_>) -> Result<String> {
+	if let Ok(Some(url)) = remote.pushurl() {
+		return Ok(url.to_owned());
+	}
+
+	if let Ok(url) = remote.url() {
+		return Ok(url.to_owned());
+	}
+
+	Err(Error::UnknownRemote)
+}
+
 /// know if username and password are needed for this url
 pub fn need_username_password(repo_path: &RepoPath) -> Result<bool> {
 	let repo = repo(repo_path)?;
 	let remote =
 		repo.find_remote(&get_default_remote_in_repo(&repo)?)?;
-	let url = remote
-		.pushurl()
-		.or_else(|| remote.url())
-		.ok_or(Error::UnknownRemote)?
-		.to_owned();
+	let url = remote_url(&remote)?;
 	let is_http = url.starts_with("http");
 	Ok(is_http)
 }
@@ -58,11 +66,7 @@ pub fn need_username_password_for_fetch(
 	let repo = repo(repo_path)?;
 	let remote = repo
 		.find_remote(&get_default_remote_for_fetch_in_repo(&repo)?)?;
-	let url = remote
-		.url()
-		.or_else(|| remote.url())
-		.ok_or(Error::UnknownRemote)?
-		.to_owned();
+	let url = remote_url(&remote)?;
 	let is_http = url.starts_with("http");
 	Ok(is_http)
 }
@@ -76,11 +80,7 @@ pub fn need_username_password_for_push(
 	let repo = repo(repo_path)?;
 	let remote = repo
 		.find_remote(&get_default_remote_for_push_in_repo(&repo)?)?;
-	let url = remote
-		.pushurl()
-		.or_else(|| remote.url())
-		.ok_or(Error::UnknownRemote)?
-		.to_owned();
+	let url = remote_url(&remote)?;
 	let is_http = url.starts_with("http");
 	Ok(is_http)
 }
@@ -90,11 +90,7 @@ pub fn extract_username_password(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
 	let repo = repo(repo_path)?;
-	let url = repo
-		.find_remote(&get_default_remote_in_repo(&repo)?)?
-		.url()
-		.ok_or(Error::UnknownRemote)?
-		.to_owned();
+	let url = remote_url(&repo.find_remote(&get_default_remote_in_repo(&repo)?)?)?;
 	let mut helper = CredentialHelper::new(&url);
 
 	//TODO: look at Cred::credential_helper,
@@ -119,11 +115,9 @@ pub fn extract_username_password_for_fetch(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
 	let repo = repo(repo_path)?;
-	let url = repo
-		.find_remote(&get_default_remote_for_fetch_in_repo(&repo)?)?
-		.url()
-		.ok_or(Error::UnknownRemote)?
-		.to_owned();
+	let url = remote_url(
+		&repo.find_remote(&get_default_remote_for_fetch_in_repo(&repo)?)?,
+	)?;
 	let mut helper = CredentialHelper::new(&url);
 
 	//TODO: look at Cred::credential_helper,
@@ -148,11 +142,9 @@ pub fn extract_username_password_for_push(
 	repo_path: &RepoPath,
 ) -> Result<BasicAuthCredential> {
 	let repo = repo(repo_path)?;
-	let url = repo
-		.find_remote(&get_default_remote_for_push_in_repo(&repo)?)?
-		.url()
-		.ok_or(Error::UnknownRemote)?
-		.to_owned();
+	let url = remote_url(
+		&repo.find_remote(&get_default_remote_for_push_in_repo(&repo)?)?,
+	)?;
 	let mut helper = CredentialHelper::new(&url);
 
 	//TODO: look at Cred::credential_helper,

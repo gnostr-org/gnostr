@@ -353,10 +353,8 @@ pub async fn gnostr_legit_event(
         vec!["GNOSTR".to_string()],
     );
 
-    let empty_hash_private_key = PrivateKey::try_from_hex_string(
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    )
-    .unwrap();
+    let empty_hash_private_key =
+        PrivateKey::try_from_hex_string(&crate::git2::default_gnostr_private_key_hex()).unwrap();
     let empty_hash_keys = KeySigner::from_private_key(empty_hash_private_key, "", 1).unwrap();
     let custom_tags_clone = custom_tags.clone();
     global_rt().spawn(async move {

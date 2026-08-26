@@ -1,4 +1,5 @@
 use crate::pubkeys::PubKeys;
+use crate::relay_io::parse_relay_entries;
 use crate::relays::get_config_dir_path;
 use crate::relays::record_live_kind;
 use crate::stats::Stats;
@@ -22,20 +23,14 @@ fn load_bootstrap_relays() -> Vec<String> {
     };
 
     let embedded_relays = include_bytes!(env!("GNOSTR_CRAWLER_RELAYS_YAML"));
-    for line in String::from_utf8_lossy(embedded_relays).lines() {
-        let relay = line.trim();
-        if !relay.is_empty() {
-            push_unique(relay.to_string(), &mut relays, &mut seen);
-        }
+    for relay in parse_relay_entries(&String::from_utf8_lossy(embedded_relays)) {
+        push_unique(relay, &mut relays, &mut seen);
     }
 
     let relays_path = get_config_dir_path().join("relays.yaml");
     if let Ok(relays_yaml_content) = fs::read_to_string(&relays_path) {
-        for line in relays_yaml_content.lines() {
-            let relay = line.trim();
-            if !relay.is_empty() {
-                push_unique(relay.to_string(), &mut relays, &mut seen);
-            }
+        for relay in parse_relay_entries(&relays_yaml_content) {
+            push_unique(relay, &mut relays, &mut seen);
         }
     }
 

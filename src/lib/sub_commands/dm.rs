@@ -743,19 +743,14 @@ mod dm_tests {
     #[ignore]
     #[serial]
     async fn test_dm_command_decryption_success() {
+        let default_private_key = crate::git2::default_gnostr_private_key_hex();
         // Setup sender and receiver keypairs
-        let sender_privkey = PrivateKey::try_from_hex_string(
-            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        )
-        .unwrap();
+        let sender_privkey = PrivateKey::try_from_hex_string(&default_private_key).unwrap();
         let sender_pubkey = sender_privkey.public_key();
         let sender_keys = Keys::new(sender_privkey.clone());
         let mut sender_client = Client::new(&sender_keys, Options::new());
 
-        let recipient_privkey = PrivateKey::try_from_hex_string(
-            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        )
-        .unwrap();
+        let recipient_privkey = PrivateKey::try_from_hex_string(&default_private_key).unwrap();
         let recipient_pubkey = recipient_privkey.public_key();
         let _recipient_keys = Keys::new(recipient_privkey.clone());
 

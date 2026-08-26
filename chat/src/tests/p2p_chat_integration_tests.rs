@@ -150,7 +150,7 @@ mod tests {
             .with(libp2p::multiaddr::Protocol::P2p(target))
     }
 
-    fn init_trace_repo() -> (PathBuf, RepoPath, git2::Oid) {
+    fn init_trace_repo() -> (PathBuf, RepoPath, gnostr_asyncgit::git2::Oid) {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("system time")
@@ -413,7 +413,7 @@ mod tests {
         }
     }
 
-    fn real_nip34_message() -> (Msg, Event, git2::Oid) {
+    fn real_nip34_message() -> (Msg, Event, gnostr_asyncgit::git2::Oid) {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("system time")
@@ -581,7 +581,7 @@ mod tests {
 
     fn pull_received_event_into_local_repo(
         repo_path: &RepoPath,
-        anchor_commit: git2::Oid,
+        anchor_commit: gnostr_asyncgit::git2::Oid,
         notes_ref: &str,
         event: &Event,
     ) {

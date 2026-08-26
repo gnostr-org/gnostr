@@ -1,25 +1,14 @@
-// This file contains the remaining part of the send.rs file that was corrupted
-
-use anyhow::{Context, Result};
-use nostr_sdk_0_34_0::hashes::sha1::Hash as Sha1Hash;
+use anyhow::Result;
 
 use crate::types::Tag;
 
-/// Convert nostr_0_34_1::Tag to local Tag type
-fn convert_nostr_tag_to_local(nostr_tag: &nostr_0_34_1::Tag) -> Result<Tag> {
-    // Convert nostr_0_34_1::Tag to Vec<String>
-    let tag_vec: Vec<String> = nostr_tag
-        .clone()
-        .to_vec()
-        .iter()
-        .map(|field| field.to_string())
-        .collect();
-
-    Ok(Tag::from_strings(tag_vec))
+/// Convert a local tag to the local `Tag` representation.
+fn convert_nostr_tag_to_local(nostr_tag: &Tag) -> Result<Tag> {
+    Ok(Tag::from_strings(nostr_tag.clone().into_inner()))
 }
 
 async fn get_root_proposal_id_and_mentions_from_in_reply_to(
-    git_repo_path: &std::path::Path,
+    _git_repo_path: &std::path::Path,
     in_reply_to: &[String],
 ) -> Result<(Option<String>, Vec<Tag>)> {
     let root_proposal_id = if let Some(first) = in_reply_to.first() {

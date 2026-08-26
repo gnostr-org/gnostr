@@ -184,7 +184,7 @@ fn signature_allow_undefined_name(
 
             if config.get_entry("user.name").is_err() {
                 if let Ok(email_entry) = config.get_entry("user.email") {
-                    if let Some(email) = email_entry.value() {
+                    if let Ok(email) = email_entry.value() {
                         return Signature::now("unknown", email);
                     }
                 }
@@ -364,7 +364,12 @@ pub fn mine_note<T: Into<Oid>>(
         Err(err) if err.code() == ErrorCode::NotFound => None,
         Err(err) => return Err(err.into()),
     };
-    let base_message = combine_note_messages(existing_note.as_ref().and_then(|n| n.message()), note);
+    let base_message = combine_note_messages(
+        existing_note
+            .as_ref()
+            .and_then(|n| n.message().ok()),
+        note,
+    );
     let temp_notes_ref = format!(
         "refs/notes/gnostr-mine/{}-{}",
         object_id,

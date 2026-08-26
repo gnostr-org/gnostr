@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::Write;
 
+use crate::relay_io::normalize_relay_entry;
 use crate::relays::get_config_dir_path;
 
 /// Maintain a list of all encountered relays
@@ -25,11 +26,16 @@ impl Relays {
     }
 
     pub fn add(&mut self, s1: &str) -> bool {
-        let mut res = false;
-        if let Ok(u) = Url::parse(s1) {
-            res = self.r.insert(u);
+        match normalize_relay_entry(s1) {
+            Some(normalized) => match Url::parse(&normalized) {
+                Ok(u) => self.r.insert(u),
+                Err(e) => {
+                    warn!("Skipping invalid relay URL {}: {}", normalized, e);
+                    false
+                }
+            },
+            None => false,
         }
-        res
     }
 
     pub fn count(&self) -> usize {
@@ -129,5 +135,21 @@ impl Relays {
         let _ = writeln!(file, "]");
 
         debug!("Relays dumped to {}", file_path.display());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Relays;
+
+    #[test]
+    fn add_rejects_private_relays_and_allows_loopback() {
+        let mut relays = Relays::new();
+
+        assert!(!relays.add("wss://10.0.0.21:4848/"));
+        assert!(!relays.add("ws://100.71.217.147:4848/"));
+        assert!(relays.add("wss://localhost:4848/"));
+        assert!(relays.add("ws://127.0.0.1:4848/"));
+        assert!(relays.add("wss://relay.example/"));
     }
 }

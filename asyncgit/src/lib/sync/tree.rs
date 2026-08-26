@@ -154,7 +154,7 @@ mod tests {
             .map(|f| TreeFile {
                 path: PathBuf::from(f),
                 filemode: 0,
-                id: Oid::zero(),
+                id: Oid::ZERO_SHA1,
             })
             .collect::<Vec<_>>();
 
@@ -179,7 +179,7 @@ mod tests {
             .map(|f| TreeFile {
                 path: PathBuf::from(f),
                 filemode: 0,
-                id: Oid::zero(),
+                id: Oid::ZERO_SHA1,
             })
             .collect::<Vec<_>>();
 
@@ -200,7 +200,7 @@ mod tests {
             .map(|f| TreeFile {
                 path: PathBuf::from(f),
                 filemode: 0,
-                id: Oid::zero(),
+                id: Oid::ZERO_SHA1,
             })
             .collect::<Vec<_>>();
 

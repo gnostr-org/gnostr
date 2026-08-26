@@ -1,8 +1,19 @@
-## Attestation syndication
+## gnostr-p2p
 
-`p2p` mirrors the `asyncgit` attestation structure: deterministic fixture keys, chronological commit/event/note ordering, and `notes_ref` chaining for public attestations.
+`p2p` is the libp2p networking crate for gnostr. It owns swarm construction, peer lookup helpers, relay and crawler broadcast wiring, deterministic identity generation, and the attestation syndication path used by the tests.
 
-The p2p tests load crawler relay buckets and publish attestation events through the relay bridge so the syndication path stays wired to the crawler-discovered relay list.
+## What it can do
+
+- Build a libp2p swarm with TCP, QUIC, DNS, WebSocket, relay, mDNS, kademlia, identify, ping, rendezvous, autonat, and dcutr.
+- Add the local `libp2p-tor` transport with the `tor` feature.
+- Expose browser-side assets and bridge helpers with the `js` feature.
+- Handle interactive swarm commands such as `TOPIC`, `GET`, `GET_PROVIDERS`, `PUT`, `PUT_PROVIDER`, and `CRAWLER_BUCKETS`.
+- Publish crawler-discovered relay buckets and public attestation events through the relay bridge.
+
+## Features
+
+- `js` keeps the browser-side bundle enabled by default.
+- `tor` adds the local `libp2p-tor` transport to the swarm builder.
 
 ## Testing help
 

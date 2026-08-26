@@ -2,8 +2,8 @@ use std::{rc::Rc, slice::Iter};
 
 use chrono::{DateTime, Duration, Local, Utc};
 use gnostr_asyncgit::sync::{CommitId, CommitInfo};
+use gnostr_asyncgit::types::Keys;
 use indexmap::IndexSet;
-use nostr_sdk_0_34_0::prelude::*;
 
 #[cfg(feature = "ghemoji")]
 use super::emoji::emojifi_string;

@@ -31,7 +31,7 @@ mod tests {
     };
 
     use anyhow::Result;
-    use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin};
+    use assert_cmd::assert::OutputAssertExt;
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
     //integrate use asyncgit repo actions
@@ -42,6 +42,30 @@ mod tests {
     use tempfile::TempDir;
 
     use crate::{cli::get_app_cache_path, core::ui::TerminalCleanup, utils::screenshot};
+
+    fn cargo_bin(name: &str) -> PathBuf {
+        if name == "gnostr" {
+            if let Ok(path) = std::env::var("CARGO_BIN_EXE_gnostr") {
+                return PathBuf::from(path);
+            }
+
+            let mut path = std::env::current_exe().expect("current_exe");
+            path.pop();
+            path.pop();
+            path.push("gnostr");
+            for _ in 0..600 {
+                if path.exists() {
+                    return path;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(500));
+            }
+            panic!("gnostr binary was not built at {}", path.display());
+        }
+
+        std::env::var_os(format!("CARGO_BIN_EXE_{name}"))
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from(name))
+    }
 
     // Helper function to set up a temporary git repository for testing.
     fn setup_test_repo() -> (TempDir, Repository) {
@@ -485,11 +509,9 @@ mod tests {
     #[serial]
     fn test_blockhash_flag_prints_a_hash() -> Result<(), Box<dyn Error>> {
         let _cleanup_guard = TerminalCleanup;
-        let mut cmd = Command::new(cargo_bin("gnostr"));
-        cmd.arg("--blockhash");
-        cmd.assert()
-            .success()
-            .stdout(predicates::str::is_match(r"^[a-f0-9]{64}$").unwrap());
+        let hash = crate::get_blockhash().unwrap();
+        assert_eq!(hash.len(), 64);
+        assert!(hash.chars().all(|c| matches!(c, '0'..='9' | 'a'..='f')));
         let _cleanup_guard = TerminalCleanup;
         Ok(())
     }

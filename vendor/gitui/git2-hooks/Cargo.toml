@@ -35,7 +35,7 @@ name = "git2_hooks"
 path = "src/lib.rs"
 
 [dependencies.git2]
-version = ">=0.17"
+version = "0.21"
 
 [dependencies.gix-path]
 version = "0.11"

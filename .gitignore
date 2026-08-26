@@ -1,3 +1,8 @@
+example.bin
+example.reconstructed.bin
+
+.xcodebuild/
+
 ## gnostr-relay/server artifacts
 relay_db/
 relay_policy.db
@@ -88,6 +93,8 @@ relays.yaml**
 **/target
 .idea
 *.json
+!xcode/icons/Assets.xcassets/**/Contents.json
+!xcode/swift-universal/Universal App/Shared/Support/Assets.xcassets/**/Contents.json
 
 ##old artifacts
 
@@ -145,6 +152,8 @@ pubkeys.txt
 py/
 response.txt
 secp256k1/
+!xcode/swift-libp2p-crypto/Sources/LibP2PCrypto/Keys/Types/Secp256k1/
+!xcode/swift-libp2p-crypto/Sources/LibP2PCrypto/Keys/Types/Secp256k1/*.swift
 server.crt
 server.key
 sha256.o

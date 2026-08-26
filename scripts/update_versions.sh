@@ -27,7 +27,17 @@ done
 
 cargo_jobs() {
     local jobs
-    jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+    case "$(uname -s 2>/dev/null || echo unknown)" in
+        MINGW*|MSYS*|CYGWIN*|Windows_NT)
+            jobs="${NUMBER_OF_PROCESSORS:-}"
+            if [[ -z "$jobs" ]] && command -v powershell.exe >/dev/null 2>&1; then
+                jobs="$(powershell.exe -NoProfile -Command "[Environment]::ProcessorCount" 2>/dev/null || echo 1)"
+            fi
+            ;;
+        *)
+            jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+            ;;
+    esac
     jobs=$((jobs - 1))
     if [ "$jobs" -lt 1 ]; then
         jobs=1
@@ -350,7 +360,9 @@ done < <(managed_manifests)
 
 echo "Local path dependency versions synchronized."
 
-SORT_CRATES=(
+PUBLISH_CRATES=(
+    types
+    invalidstring
     git2-hooks
     grammar
     filetreelist
@@ -360,7 +372,6 @@ SORT_CRATES=(
     tui
     crawler
     git-helpers
-    invalidstring
     legit
     ngit
     qr
@@ -373,34 +384,13 @@ SORT_CRATES=(
     bins
 )
 
-for crate in "${SORT_CRATES[@]}"; do
+for crate in "${PUBLISH_CRATES[@]}"; do
     sleep 1 && pushd "$crate" >/dev/null && cargo sort || true && popd >/dev/null
 done
 
-PUBLISH_CRATES=(
-    invalidstring
-    git2-hooks
-    grammar
-    filetreelist
-    asyncgit/src/lib/filehash/core
-    scopetime
-    asyncgit
-    tui
-    crawler
-    git-helpers
-    legit
-    ngit
-    qr
-    relay
-    relay/extensions
-    js
-    p2p
-    chat
-    web
-)
-
 PUBLISH_NO_VERIFY_CRATES=(
     asyncgit
+    types
 )
 
 should_skip_verify() {

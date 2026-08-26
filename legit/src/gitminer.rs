@@ -24,7 +24,7 @@ pub struct Options {
 
 pub struct Gitminer {
     opts: Options,
-    repo: git2::Repository,
+    repo: gnostr_asyncgit::git2::Repository,
     author: String,
 }
 
@@ -40,7 +40,7 @@ impl std::fmt::Debug for Gitminer {
 
 impl Clone for Gitminer {
     fn clone(&self) -> Self {
-        let repo = git2::Repository::open(&self.opts.repo)
+        let repo = gnostr_asyncgit::git2::Repository::open(&self.opts.repo)
             .expect("Failed to open repository during clone");
         Self {
             opts: self.opts.clone(),
@@ -52,7 +52,7 @@ impl Clone for Gitminer {
 
 impl Gitminer {
     pub fn new(opts: Options) -> Result<Gitminer, &'static str> {
-        let repo = match git2::Repository::open(&opts.repo) {
+        let repo = match gnostr_asyncgit::git2::Repository::open(&opts.repo) {
             Ok(r) => r,
             Err(e) => {
                 error!("Failed to open repository: {}", e);
@@ -261,7 +261,7 @@ impl Gitminer {
         String::from_utf8(output.stdout).map_err(|_| "Patch content was not valid UTF-8")
     }
 
-    fn load_author(repo: &git2::Repository) -> Result<String, &'static str> {
+    fn load_author(repo: &gnostr_asyncgit::git2::Repository) -> Result<String, &'static str> {
         debug!("Loading author from git config.");
         let cfg = match repo.config() {
             Ok(c) => c,
@@ -310,7 +310,9 @@ impl Gitminer {
         Ok(())
     }
 
-    fn prepare_tree(repo: &mut git2::Repository) -> Result<(String, String), &'static str> {
+    fn prepare_tree(
+        repo: &mut gnostr_asyncgit::git2::Repository,
+    ) -> Result<(String, String), &'static str> {
         debug!("Preparing tree.");
         Gitminer::ensure_no_unstaged_changes(repo)?;
 
@@ -334,20 +336,22 @@ impl Gitminer {
         Ok((tree_s, head_s))
     }
 
-    fn ensure_no_unstaged_changes(repo: &mut git2::Repository) -> Result<(), &'static str> {
+    fn ensure_no_unstaged_changes(
+        repo: &mut gnostr_asyncgit::git2::Repository,
+    ) -> Result<(), &'static str> {
         debug!("Ensuring no unstaged changes.");
-        let mut opts = git2::StatusOptions::new();
-        let mut m = git2::Status::empty();
+        let mut opts = gnostr_asyncgit::git2::StatusOptions::new();
+        let mut m = gnostr_asyncgit::git2::Status::empty();
         let statuses = match repo.statuses(Some(&mut opts)) {
             Ok(s) => s,
             Err(_) => return Err("Failed to get statuses"),
         };
 
-        m.insert(git2::Status::WT_NEW);
-        m.insert(git2::Status::WT_MODIFIED);
-        m.insert(git2::Status::WT_DELETED);
-        m.insert(git2::Status::WT_RENAMED);
-        m.insert(git2::Status::WT_TYPECHANGE);
+        m.insert(gnostr_asyncgit::git2::Status::WT_NEW);
+        m.insert(gnostr_asyncgit::git2::Status::WT_MODIFIED);
+        m.insert(gnostr_asyncgit::git2::Status::WT_DELETED);
+        m.insert(gnostr_asyncgit::git2::Status::WT_RENAMED);
+        m.insert(gnostr_asyncgit::git2::Status::WT_TYPECHANGE);
 
         for i in 0..statuses.len() {
             let status_entry = match statuses.get(i) {

@@ -169,9 +169,7 @@ pub fn filter_commit_by_search(
 				.options
 				.fields
 				.contains(SearchFields::MESSAGE_SUMMARY)
-				.then(|| {
-					commit.summary().map(|msg| filter.match_text(msg))
-				})
+				.then(|| commit.summary().ok().flatten().map(|msg| filter.match_text(msg)))
 				.flatten()
 				.unwrap_or_default();
 
@@ -179,9 +177,7 @@ pub fn filter_commit_by_search(
 				.options
 				.fields
 				.contains(SearchFields::MESSAGE_BODY)
-				.then(|| {
-					commit.body().map(|msg| filter.match_text(msg))
-				})
+				.then(|| commit.body().ok().flatten().map(|msg| filter.match_text(msg)))
 				.flatten()
 				.unwrap_or_default();
 
@@ -189,12 +185,7 @@ pub fn filter_commit_by_search(
 				.options
 				.fields
 				.contains(SearchFields::FILENAMES)
-				.then(|| {
-					get_commit_diff(
-						repo, *commit_id, None, None, None,
-					)
-					.ok()
-				})
+				.then(|| get_commit_diff(repo, *commit_id, None, None, None).ok())
 				.flatten()
 				.is_some_and(|diff| filter.match_diff(&diff));
 
@@ -204,13 +195,13 @@ pub fn filter_commit_by_search(
 				.contains(SearchFields::AUTHORS)
 			{
 				let author = get_author_of_commit(&commit, &mailmap);
-				[author.email(), author.name()].iter().any(
-					|opt_haystack| {
-						opt_haystack.is_some_and(|haystack| {
-							filter.match_text(haystack)
-						})
-					},
-				)
+				let author_haystacks =
+					[author.email().ok(), author.name().ok()];
+				let author_match = author_haystacks
+					.into_iter()
+					.flatten()
+					.any(|haystack| filter.match_text(haystack));
+				author_match
 			} else {
 				false
 			};

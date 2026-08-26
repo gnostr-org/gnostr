@@ -38,7 +38,9 @@ pub fn need_username_password(repo_path: &RepoPath) -> Result<bool> {
     let remote = repo.find_remote(&get_default_remote_in_repo(&repo)?)?;
     let url = remote
         .pushurl()
-        .or_else(|| remote.url())
+        .ok()
+        .flatten()
+        .or_else(|| remote.url().ok())
         .ok_or(Error::UnknownRemote)?
         .to_owned();
     let is_http = url.starts_with("http");
@@ -53,7 +55,8 @@ pub fn need_username_password_for_fetch(repo_path: &RepoPath) -> Result<bool> {
     let remote = repo.find_remote(&get_default_remote_for_fetch_in_repo(&repo)?)?;
     let url = remote
         .url()
-        .or_else(|| remote.url())
+        .ok()
+        .or_else(|| remote.pushurl().ok().flatten())
         .ok_or(Error::UnknownRemote)?
         .to_owned();
     let is_http = url.starts_with("http");
@@ -68,7 +71,9 @@ pub fn need_username_password_for_push(repo_path: &RepoPath) -> Result<bool> {
     let remote = repo.find_remote(&get_default_remote_for_push_in_repo(&repo)?)?;
     let url = remote
         .pushurl()
-        .or_else(|| remote.url())
+        .ok()
+        .flatten()
+        .or_else(|| remote.url().ok())
         .ok_or(Error::UnknownRemote)?
         .to_owned();
     let is_http = url.starts_with("http");
@@ -81,6 +86,7 @@ pub fn extract_username_password(repo_path: &RepoPath) -> Result<BasicAuthCreden
     let url = repo
         .find_remote(&get_default_remote_in_repo(&repo)?)?
         .url()
+        .ok()
         .ok_or(Error::UnknownRemote)?
         .to_owned();
     let mut helper = CredentialHelper::new(&url);
@@ -107,6 +113,7 @@ pub fn extract_username_password_for_fetch(repo_path: &RepoPath) -> Result<Basic
     let url = repo
         .find_remote(&get_default_remote_for_fetch_in_repo(&repo)?)?
         .url()
+        .ok()
         .ok_or(Error::UnknownRemote)?
         .to_owned();
     let mut helper = CredentialHelper::new(&url);
@@ -133,6 +140,7 @@ pub fn extract_username_password_for_push(repo_path: &RepoPath) -> Result<BasicA
     let url = repo
         .find_remote(&get_default_remote_for_push_in_repo(&repo)?)?
         .url()
+        .ok()
         .ok_or(Error::UnknownRemote)?
         .to_owned();
     let mut helper = CredentialHelper::new(&url);

@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result, bail};
 use console::Term;
-use git2::Oid;
+use gnostr_asyncgit::git2;
+use gnostr_asyncgit::git2::Oid;
 use ngit::{
     client::{
         Client, Connect, Params, fetching_with_report, get_repo_ref_from_cache,

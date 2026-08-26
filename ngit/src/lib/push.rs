@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow, bail};
-use auth_git2::GitAuthenticator;
+use gnostr_asyncgit::git2::{Cred, CredentialType};
 use console::Term;
 use nostr::{
     event::{Event, EventBuilder, Kind, Tag, TagStandard, UnsignedEvent},
@@ -155,23 +155,32 @@ pub fn push_to_remote_url(
 ) -> Result<HashMap<String, Option<String>>> {
     let git_config = git_repo.git_repo.config()?;
     let mut git_server_remote = git_repo.git_repo.remote_anonymous(git_server_url)?;
-    let auth = {
-        if git_server_url.contains("git@") {
-            if let Some(ssh_key_file) = ssh_key_file {
-                GitAuthenticator::default()
-                    .add_ssh_key_from_file(PathBuf::from_str(ssh_key_file)?, None)
-            } else {
-                GitAuthenticator::default()
-            }
-        } else {
-            GitAuthenticator::default()
-        }
-    };
+    let ssh_key_file = ssh_key_file
+        .map(|ssh_key_file| PathBuf::from_str(ssh_key_file))
+        .transpose()?;
     let mut push_options = git2::PushOptions::new();
     let mut remote_callbacks = git2::RemoteCallbacks::new();
     let push_reporter = Arc::new(Mutex::new(PushReporter::new(term)));
 
-    remote_callbacks.credentials(auth.credentials(&git_config));
+    remote_callbacks.credentials({
+        let git_config = git_config;
+        move |url, username_from_url, allowed_types| {
+            if allowed_types.contains(CredentialType::USER_PASS_PLAINTEXT) {
+                Cred::credential_helper(&git_config, url, username_from_url)
+            } else if allowed_types.contains(CredentialType::SSH_KEY) {
+                let username = username_from_url.unwrap_or("git");
+                if let Some(ref ssh_key_file) = ssh_key_file {
+                    Cred::ssh_key(username, None, ssh_key_file.as_path(), None)
+                } else {
+                    Cred::ssh_key_from_agent(username)
+                }
+            } else if allowed_types.contains(CredentialType::USERNAME) {
+                Cred::username(username_from_url.unwrap_or("git"))
+            } else {
+                Cred::default()
+            }
+        }
+    });
 
     remote_callbacks.push_update_reference({
         let push_reporter = Arc::clone(&push_reporter);

@@ -934,8 +934,11 @@ impl RepoActions for Repo {
     async fn get_first_nostr_remote_when_in_ngit_binary(
         &self,
     ) -> Result<Option<(String, NostrUrlDecoded)>> {
-        for remote_name in self.git_repo.remotes()?.iter().flatten() {
-            if let Some(remote_url) = self.git_repo.find_remote(remote_name)?.url() {
+        for remote_name in self.git_repo.remotes()?.iter().filter_map(|remote| match remote {
+            Ok(Some(name)) => Some(name),
+            _ => None,
+        }) {
+            if let Ok(remote_url) = self.git_repo.find_remote(remote_name)?.url() {
                 if let Ok(nostr_url_decoded) =
                     NostrUrlDecoded::parse_and_resolve(remote_url, &Some(self)).await
                 {
@@ -1082,7 +1085,7 @@ pub fn get_git_config_item(git_repo: &Option<&Repo>, item: &str) -> Result<Optio
     } else {
         Ok(
             match git2::Config::open_default()?.open_global()?.get_entry(item) {
-                Ok(item) => item.value().map(|v| v.to_string()),
+                Ok(item) => item.value().ok().map(|v| v.to_string()),
                 Err(_) => None,
             },
         )
@@ -1477,7 +1480,7 @@ mod tests {
                 +some content1\n\\ \
                 No newline at end of file\n\
                 --\n\
-                libgit2 1.9.2\n\
+                libgit2 1.9.3\n\
                 \n\
                 ",
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
@@ -1513,7 +1516,7 @@ mod tests {
                 +some content1\n\\ \
                 No newline at end of file\n\
                 --\n\
-                libgit2 1.9.2\n\
+                libgit2 1.9.3\n\
                 \n\
                 ",
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,

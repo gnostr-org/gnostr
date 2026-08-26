@@ -11,14 +11,18 @@ use axum::{
     Router,
 };
 use log::{debug, error, info, warn};
+use serde::Serialize;
 use nostr_sdk::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::future;
 use std::fs as sync_fs;
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::sync::mpsc;
+use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
 use tokio::fs;
 use tokio::task::spawn;
+use tokio::sync::oneshot;
 use tower_http::trace::{self, TraceLayer};
 use ::url::Url;
 
@@ -68,38 +72,75 @@ pub(crate) async fn collect_supported_relays_for_nip(
     Ok(supported)
 }
 
-pub(crate) async fn prime_all_nip_relays_files(
+pub async fn prime_all_nip_relays_files(
     client: &reqwest::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    crate::record_sniper_log("sniper service: starting prime pass");
     info!("prime_all_nip_relays_files: starting pass");
     let relays = load_relays_or_bootstrap();
+    crate::record_sniper_log(format!(
+        "sniper service: checking {} relays for NIP support",
+        relays.len()
+    ));
     info!(
         "prime_all_nip_relays_files: checking {} relays for NIP support",
         relays.len()
     );
+    crate::record_sniper_log("sniper service: fetching relay metadata");
+    info!("prime_all_nip_relays_files: fetching relay metadata bodies");
     let bodies = fetch_relay_texts(relays, client, "prime_all_nip_relays_files").await;
+    crate::record_sniper_log(format!(
+        "sniper service: received {} metadata responses",
+        bodies.len()
+    ));
+    info!(
+        "prime_all_nip_relays_files: received {} metadata responses",
+        bodies.len()
+    );
 
     let mut nip_relays: HashMap<i32, HashSet<String>> = HashMap::new();
+    let mut parsed_relays = 0usize;
+    let mut skipped_relays = 0usize;
+    let mut written_files = 0usize;
     for item in bodies {
         if let Ok((url, json_string, ping_ms)) = item {
             if json_string.is_empty() {
+                crate::record_sniper_log(format!(
+                    "sniper service: no metadata body for {}",
+                    url
+                ));
                 info!("prime_all_nip_relays_files: no metadata body for {}", url);
+                skipped_relays += 1;
                 continue;
             }
+            crate::record_sniper_log(format!(
+                "sniper service: read metadata for {} ({} bytes)",
+                url,
+                json_string.len()
+            ));
             info!(
                 "prime_all_nip_relays_files: read metadata for {} ({} bytes)",
                 url,
                 json_string.len()
             );
             if let Ok(mut relay_info) = parse_relay_metadata(&json_string) {
+                parsed_relays += 1;
                 relay_info.ping_ms = Some(ping_ms);
                 let supported_nips = relay_info.supported_nips.clone().unwrap_or_default();
                 if supported_nips.is_empty() {
+                    crate::record_sniper_log(format!(
+                        "sniper service: {} reported no supported_nips",
+                        url
+                    ));
                     info!(
                         "prime_all_nip_relays_files: {} reported no supported_nips",
                         url
                     );
                 }
+                crate::record_sniper_log(format!(
+                    "sniper service: {} supports {:?}",
+                    url, supported_nips
+                ));
                 info!(
                     "prime_all_nip_relays_files: {} supports {:?}",
                     url, supported_nips
@@ -107,12 +148,22 @@ pub(crate) async fn prime_all_nip_relays_files(
                 for nip in &supported_nips {
                     let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip));
                     if let Err(e) = sync_fs::create_dir_all(&dir_path) {
+                        crate::record_sniper_log(format!(
+                            "sniper service: failed to create NIP {} dir {}: {}",
+                            nip,
+                            dir_path.display(),
+                            e
+                        ));
                         warn!("Failed to create nip dir {}: {}", dir_path.display(), e);
                         continue;
                     }
                     if let Ok(parsed_url) = Url::parse(&url) {
                         let host = parsed_url.host_str().unwrap_or("unknown");
                         let file_path = dir_path.join(format!("{}.json", host));
+                        crate::record_sniper_log(format!(
+                            "sniper service: writing relay metadata to {}",
+                            file_path.display()
+                        ));
                         info!(
                             "prime_all_nip_relays_files: writing relay metadata to {}",
                             file_path.display()
@@ -120,11 +171,18 @@ pub(crate) async fn prime_all_nip_relays_files(
                         let serialized = serde_json::to_string_pretty(&relay_info)
                             .map_err(std::io::Error::other)?;
                         if let Err(e) = sync_fs::write(&file_path, serialized) {
+                            crate::record_sniper_log(format!(
+                                "sniper service: failed to write {}: {}",
+                                file_path.display(),
+                                e
+                            ));
                             warn!(
                                 "Failed to write individual relay file {}: {}",
                                 file_path.display(),
                                 e
                             );
+                        } else {
+                            written_files += 1;
                         }
                     } else {
                         warn!(
@@ -132,49 +190,145 @@ pub(crate) async fn prime_all_nip_relays_files(
                             url
                         );
                     }
+                    crate::record_sniper_log(format!(
+                        "sniper service: bucket {} now includes {}",
+                        nip, url
+                    ));
                     nip_relays.entry(*nip).or_default().insert(url.clone());
                 }
             } else {
+                crate::record_sniper_log(format!(
+                    "sniper service: failed to parse relay metadata for {}",
+                    url
+                ));
                 info!(
                     "prime_all_nip_relays_files: failed to parse relay metadata for {}",
                     url
                 );
+                skipped_relays += 1;
             }
         } else if let Err(e) = item {
+            crate::record_sniper_log(format!(
+                "sniper service: request failed while fetching relay metadata: {}",
+                e
+            ));
             info!(
                 "prime_all_nip_relays_files: request failed while fetching relay metadata: {}",
                 e
             );
+            skipped_relays += 1;
         }
     }
 
-    for (nip, _) in nip_relays {
+    crate::record_sniper_log(format!(
+        "sniper service: parsed {} relays, skipped {}, wrote {} files, built {} buckets",
+        parsed_relays,
+        skipped_relays,
+        written_files,
+        nip_relays.len()
+    ));
+    info!(
+        "prime_all_nip_relays_files: parsed {} relays, skipped {}, wrote {} files, built {} buckets",
+        parsed_relays,
+        skipped_relays,
+        written_files,
+        nip_relays.len()
+    );
+
+    for (nip, relays) in nip_relays {
         crate::relays::record_live_nips(std::iter::once(nip));
+        crate::record_sniper_log(format!(
+            "sniper service: rebuilding NIP {} aggregate files from {} relays",
+            nip,
+            relays.len()
+        ));
         info!(
-            "prime_all_nip_relays_files: rebuilding NIP {} aggregate files",
-            nip
+            "prime_all_nip_relays_files: rebuilding NIP {} aggregate files from {} relays",
+            nip,
+            relays.len()
         );
         if let Err(e) = crate::relays::write_nip_relays_serve_files_from_dir(nip) {
+            crate::record_sniper_log(format!(
+                "sniper service: failed to prime NIP {} relay files: {}",
+                nip, e
+            ));
             warn!("Failed to prime nip {} relay files: {}", nip, e);
+        } else {
+            crate::record_sniper_log(format!(
+                "sniper service: rebuilt NIP {} aggregate files",
+                nip
+            ));
+            info!("prime_all_nip_relays_files: rebuilt NIP {} aggregate files", nip);
         }
     }
 
+    crate::record_sniper_log("sniper service: completed prime pass");
     info!("prime_all_nip_relays_files: completed pass");
     Ok(())
 }
 
-pub(crate) async fn run_sniper_service(client: reqwest::Client) {
+pub async fn run_sniper_service_with_shutdown(
+    client: reqwest::Client,
+    mut shutdown: oneshot::Receiver<()>,
+) {
+    crate::record_sniper_lifecycle("sniper lifecycle: worker starting");
+    crate::record_sniper_log("sniper service: starting");
     info!("starting sniper service");
+    crate::record_sniper_lifecycle("sniper lifecycle: initial prime requested");
+    crate::record_sniper_log("sniper service: performing initial prime pass");
+    info!("run_sniper_service: performing initial prime pass");
+    if let Err(e) = prime_all_nip_relays_files(&client).await {
+        crate::record_sniper_lifecycle(format!(
+            "sniper lifecycle: initial prime failed: {}",
+            e
+        ));
+        crate::record_sniper_log(format!("sniper service: initial prime pass failed: {}", e));
+        warn!("Sniper service failed: {}", e);
+    }
+    crate::record_sniper_lifecycle("sniper lifecycle: initial prime finished");
+    crate::record_sniper_log("sniper service: initial prime pass finished");
+    crate::record_sniper_lifecycle("sniper lifecycle: running");
+    crate::record_sniper_log("sniper service: started");
+    info!("run_sniper_service: initial prime pass finished");
+
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
-    interval.tick().await;
 
     loop {
-        info!("run_sniper_service: triggering prime pass");
-        if let Err(e) = prime_all_nip_relays_files(&client).await {
-            warn!("Sniper service failed: {}", e);
+        tokio::select! {
+            _ = interval.tick() => {
+                crate::record_sniper_lifecycle("sniper lifecycle: scheduled prime requested");
+                crate::record_sniper_log("sniper service: triggering scheduled prime pass");
+                info!("run_sniper_service: triggering scheduled prime pass");
+                if let Err(e) = prime_all_nip_relays_files(&client).await {
+                    crate::record_sniper_lifecycle(format!(
+                        "sniper lifecycle: scheduled prime failed: {}",
+                        e
+                    ));
+                    crate::record_sniper_log(format!(
+                        "sniper service: scheduled prime pass failed: {}",
+                        e
+                    ));
+                    warn!("Sniper service failed: {}", e);
+                } else {
+                    crate::record_sniper_lifecycle("sniper lifecycle: scheduled prime finished");
+                    crate::record_sniper_log("sniper service: scheduled prime pass completed");
+                    info!("run_sniper_service: scheduled prime pass completed");
+                }
+            }
+            _ = &mut shutdown => {
+                crate::record_sniper_lifecycle("sniper lifecycle: stopping");
+                crate::record_sniper_log("sniper service: stopping");
+                info!("stopping sniper service");
+                crate::record_sniper_lifecycle("sniper lifecycle: stopped");
+                break;
+            }
         }
-        interval.tick().await;
     }
+}
+
+pub(crate) async fn run_sniper_service(client: reqwest::Client) {
+    let (_shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+    run_sniper_service_with_shutdown(client, shutdown_rx).await;
 }
 
 pub(crate) async fn refresh_nip_relays_files(
@@ -330,6 +484,160 @@ pub(crate) async fn get_relays_txt() -> Response {
                 .into_response()
         }
     }
+}
+
+#[derive(Serialize, Clone)]
+struct CrawlerBucketEntry {
+    path: String,
+    name: String,
+    is_directory: bool,
+    size_bytes: Option<u64>,
+    modified_at_unix: Option<u64>,
+}
+
+pub(crate) async fn get_bucket_entries(Query(params): Query<HashMap<String, String>>) -> Response {
+    let relative_path = params
+        .get("path")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or("");
+
+    let root = crate::relays::get_config_dir_path();
+    let Some(relative) = sanitize_bucket_path(relative_path) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Body::from("invalid bucket path"),
+        )
+            .into_response();
+    };
+
+    let directory = root.join(&relative);
+    let mut entries = match fs::read_dir(&directory).await {
+        Ok(entries) => entries,
+        Err(e) => {
+            error!(
+                "Failed to read bucket directory: {}. Path: {}",
+                e,
+                directory.display()
+            );
+            return (
+                StatusCode::NOT_FOUND,
+                Body::from(format!("Failed to read bucket directory: {}", e)),
+            )
+                .into_response();
+        }
+    };
+
+    let mut items = Vec::new();
+    while let Ok(Some(entry)) = entries.next_entry().await {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.starts_with('.') {
+            continue;
+        }
+        let file_type = match entry.file_type().await {
+            Ok(file_type) => file_type,
+            Err(_) => continue,
+        };
+        let metadata = entry.metadata().await.ok();
+        let path = if relative.as_os_str().is_empty() {
+            name.clone()
+        } else {
+            format!("{}/{}", relative.to_string_lossy(), name)
+        };
+        items.push(CrawlerBucketEntry {
+            path,
+            name,
+            is_directory: file_type.is_dir(),
+            size_bytes: metadata.as_ref().map(|meta| meta.len()).filter(|_| file_type.is_file()),
+            modified_at_unix: metadata
+                .and_then(|meta| meta.modified().ok())
+                .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|duration| duration.as_secs()),
+        });
+    }
+
+    items.sort_by(|a, b| {
+        if a.is_directory != b.is_directory {
+            return b.is_directory.cmp(&a.is_directory);
+        }
+        a.name.to_lowercase().cmp(&b.name.to_lowercase())
+    });
+
+    match serde_json::to_string(&items) {
+        Ok(body) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(body))
+            .unwrap_or_else(|e| {
+                error!("Failed to build bucket response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!("Failed to serialize bucket entries: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Failed to serialize bucket entries"),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) async fn get_bucket_file(Query(params): Query<HashMap<String, String>>) -> Response {
+    let relative_path = params
+        .get("path")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or("");
+
+    let root = crate::relays::get_config_dir_path();
+    let Some(relative) = sanitize_bucket_path(relative_path) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Body::from("invalid bucket path"),
+        )
+            .into_response();
+    };
+
+    let file_path = root.join(relative);
+    match fs::read_to_string(&file_path).await {
+        Ok(content) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "text/plain; charset=utf-8")
+            .body(Body::from(content))
+            .unwrap_or_else(|e| {
+                error!("Failed to build bucket file response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!("Failed to read bucket file: {}. Path: {}", e, file_path.display());
+            (
+                StatusCode::NOT_FOUND,
+                Body::from(format!("Failed to read bucket file: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+fn sanitize_bucket_path(path: &str) -> Option<PathBuf> {
+    let mut relative = PathBuf::new();
+    for component in Path::new(path).components() {
+        match component {
+            Component::Normal(part) => relative.push(part),
+            Component::CurDir => {}
+            _ => return None,
+        }
+    }
+    Some(relative)
 }
 
 pub(crate) async fn get_nip_relays_yaml(AxumPath(nip_lower): AxumPath<i32>) -> Response {
@@ -514,107 +822,17 @@ pub(crate) async fn get_nip_index(AxumPath(nip_lower): AxumPath<i32>) -> Respons
         while let Ok(Some(entry)) = dir.next_entry().await {
             let name = entry.file_name().to_string_lossy().to_string();
             if name.ends_with(".json") && name != "relays.json" {
-                let file_path = entry.path();
-                match fs::read_to_string(&file_path).await {
-                    Ok(content) => {
-                        let pretty = serde_json::from_str::<serde_json::Value>(&content)
-                            .ok()
-                            .map(|value| {
-                                let relay_name = value
-                                    .get("name")
-                                    .and_then(|v| v.as_str())
-                                    .unwrap_or(&name);
-                                let nip_links = value
-                                    .get("supported_nips")
-                                    .and_then(|v| v.as_array())
-                                    .map(|nips| {
-                                        let links = nips
-                                            .iter()
-                                            .filter_map(|nip| nip.as_i64())
-                                            .map(|nip| {
-                                                format!(
-                                                    "<a href=\"/{0}\" style=\"margin-right:0.35rem;\">NIP {0}</a>",
-                                                    nip
-                                                )
-                                            })
-                                            .collect::<Vec<_>>()
-                                            .join("");
-                                        if links.is_empty() {
-                                            String::new()
-                                        } else {
-                                            format!("<div style=\"margin:0.25rem 0 0.5rem 0;\">{}</div>", links)
-                                        }
-                                    })
-                                    .unwrap_or_default();
-                                let extension_links = value
-                                    .get("supported_nip_extensions")
-                                    .and_then(|v| v.as_array())
-                                    .map(|extensions| {
-                                        let links = extensions
-                                            .iter()
-                                            .filter_map(|extension| extension.as_str())
-                                            .map(|extension| {
-                                                format!(
-                                                    "<code style=\"margin-right:0.35rem;\">{}</code>",
-                                                    escape_html(extension)
-                                                )
-                                            })
-                                            .collect::<Vec<_>>()
-                                            .join("");
-                                        if links.is_empty() {
-                                            String::new()
-                                        } else {
-                                            format!(
-                                                "<div style=\"margin:0.25rem 0 0.5rem 0;\"><strong>supported_nip_extensions</strong>: {}</div>",
-                                                links
-                                            )
-                                        }
-                                    })
-                                    .unwrap_or_default();
-                                let icon_html = value
-                                    .get("icon")
-                                    .and_then(|v| v.as_str())
-                                    .map(|icon| {
-                                        format!(
-                                            "<div style=\"margin:0.5rem 0;\"><img src=\"{}\" alt=\"icon\" style=\"width:48px;height:48px;object-fit:contain;border-radius:0.35rem;background:rgba(255,255,255,0.06);padding:0.25rem;\"></div>",
-                                            escape_html(icon)
-                                        )
-                                    })
-                                    .unwrap_or_default();
-                                let pretty = serde_json::to_string_pretty(&value).ok().unwrap_or_default();
-                                format!(
-                                    "<div><strong>{}</strong></div>{}{}{}<pre>{}</pre>",
-                                    escape_html(relay_name),
-                                    nip_links,
-                                    extension_links,
-                                    icon_html,
-                                    escape_html(&pretty)
-                                )
-                            })
-                            .unwrap_or_else(|| format!("<pre>{}</pre>", escape_html(&content)));
-                        let relay_url = name
-                            .strip_suffix(".json")
-                            .map(|host| format!("wss://{}", host))
-                            .unwrap_or_else(|| name.clone());
-                        relay_cards.push(format!(
-                            "<li><details class=\"relay-favorite-card\" tabindex=\"0\" data-relay-url=\"{}\"><summary><span class=\"relay-favorite-heart\" aria-hidden=\"true\"></span><a href=\"/{}/{}\">{}</a></summary>{}</details></li>",
-                            escape_html(&relay_url),
-                            nip_lower,
-                            name,
-                            escape_html(&name),
-                            pretty
-                        ));
-                    }
-                    Err(e) => {
-                        relay_cards.push(format!(
-                            "<li><a href=\"/{}/{}\">{}</a> <em>(failed to read metadata: {})</em></li>",
-                            nip_lower,
-                            name,
-                            escape_html(&name),
-                            escape_html(&e.to_string())
-                        ));
-                    }
-                }
+                let relay_url = name
+                    .strip_suffix(".json")
+                    .map(|host| format!("wss://{}", host))
+                    .unwrap_or_else(|| name.clone());
+                relay_cards.push(format!(
+                    "<li><details class=\"relay-favorite-card\" tabindex=\"0\" data-relay-url=\"{}\"><summary><span class=\"relay-favorite-heart\" aria-hidden=\"true\"></span><a href=\"/{}/{}\">{}</a></summary><div style=\"margin-top:0.35rem;opacity:0.75;\">Open the JSON to inspect the relay profile.</div></details></li>",
+                    escape_html(&relay_url),
+                    nip_lower,
+                    name,
+                    escape_html(&name)
+                ));
             }
         }
         relay_cards.sort();
@@ -1389,9 +1607,42 @@ mod tests {
         assert_eq!(index.status(), StatusCode::OK);
         assert_eq!(index.headers().get(CONTENT_TYPE).unwrap(), "text/html");
         let html = response_text(index).await;
-        assert!(html.contains("Relay One"));
         assert!(html.contains("/34/relay-one.json"));
-        assert!(html.contains("NIP 35"));
+        assert!(html.contains("Open the JSON to inspect the relay profile."));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn bucket_entries_and_files_are_served_from_disk() {
+        let _guard = isolate_config_dir();
+        let config_dir = crate::relays::get_config_dir_path();
+        let nip_dir = config_dir.join("34");
+        fs::create_dir_all(&nip_dir).unwrap();
+        fs::write(config_dir.join("relays.yaml"), "wss://relay.example.com/\n").unwrap();
+        fs::write(nip_dir.join("relay-one.json"), r#"{"name":"Relay One"}"#).unwrap();
+
+        let root = get_bucket_entries(Query(HashMap::from([(
+            "path".to_string(),
+            "".to_string(),
+        )]))).await;
+        assert_eq!(root.status(), StatusCode::OK);
+        let root_json = response_text(root).await;
+        assert!(root_json.contains("relays.yaml"));
+        assert!(root_json.contains("\"is_directory\":true"));
+
+        let nip = get_bucket_entries(Query(HashMap::from([(
+            "path".to_string(),
+            "34".to_string(),
+        )]))).await;
+        assert_eq!(nip.status(), StatusCode::OK);
+        let nip_json = response_text(nip).await;
+        assert!(nip_json.contains("relay-one.json"));
+
+        let file = get_bucket_file(Query(HashMap::from([(
+            "path".to_string(),
+            "34/relay-one.json".to_string(),
+        )]))).await;
+        assert_eq!(file.status(), StatusCode::OK);
+        assert!(response_text(file).await.contains("Relay One"));
     }
 
     #[tokio::test(flavor = "current_thread")]
@@ -1428,6 +1679,27 @@ mod tests {
 }
 
 pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    run_api_server_with_shutdown(port, future::pending::<()>()).await
+}
+
+pub async fn run_api_server_with_shutdown<F>(
+    port: u16,
+    shutdown: F,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    F: std::future::Future<Output = ()> + Send + 'static,
+{
+    run_api_server_with_shutdown_and_ready(port, shutdown, None).await
+}
+
+pub async fn run_api_server_with_shutdown_and_ready<F>(
+    port: u16,
+    shutdown: F,
+    ready: Option<mpsc::Sender<Result<(), String>>>,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    F: std::future::Future<Output = ()> + Send + 'static,
+{
     debug!("run_api_server: Starting API server on port {}", port);
 
     let client = reqwest::Client::new();
@@ -1457,6 +1729,8 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
     let app = Router::new()
         .route("/", get(get_index_html))
         .route("/query", get(get_query))
+        .route("/api/buckets", get(get_bucket_entries))
+        .route("/api/buckets/file", get(get_bucket_file))
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
@@ -1480,8 +1754,21 @@ pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>>
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     info!("run_api_server: listening on {}", addr);
-    let listener = tokio::net::TcpListener::bind(&addr).await?;
-    axum::serve(listener, app.into_make_service()).await?;
+    let listener = match tokio::net::TcpListener::bind(&addr).await {
+        Ok(listener) => listener,
+        Err(error) => {
+            if let Some(ready) = ready {
+                let _ = ready.send(Err(error.to_string()));
+            }
+            return Err(Box::new(error));
+        }
+    };
+    if let Some(ready) = ready {
+        let _ = ready.send(Ok(()));
+    }
+    axum::serve(listener, app.into_make_service())
+        .with_graceful_shutdown(shutdown)
+        .await?;
 
     Ok(())
 }

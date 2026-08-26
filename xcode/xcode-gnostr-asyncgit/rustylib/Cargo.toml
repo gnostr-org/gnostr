@@ -1,0 +1,25 @@
+[package]
+name = "rustylib"
+version = "953267.1868.494774"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "rustylib"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[dependencies]
+gnostr-asyncgit = { version = ">=953267.1868.494774", path = "../../../asyncgit", features = [
+  "nostr",
+  "vendor-openssl",
+  "vendored-openssl",
+] }
+uniffi = { version = "0.28.0", features = ["cli"] }
+
+[build-dependencies]
+uniffi = { version = "0.28.0", features = ["build"] }
+
+[workspace]

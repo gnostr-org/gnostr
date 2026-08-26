@@ -1,0 +1,975 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E10000000000000000000025 /* LibP2PPubSub in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000015 /* LibP2PPubSub */; };
+		E10000000000000000000021 /* LibP2PRelay in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000011 /* LibP2PRelay */; };
+		E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000012 /* LibP2PAutoNAT */; };
+		E10000000000000000000023 /* LibP2PDCUtR in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000013 /* LibP2PDCUtR */; };
+		E10000000000000000000024 /* LibP2PKadDHT in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000014 /* LibP2PKadDHT */; };
+		4B6BD8E42FBBA42C007007B5 /* LocalNetworkAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5417286A2BEF001E1858 /* LocalNetworkAuthorization.swift */; };
+		4B6BD8E52FBBA42C007007B5 /* LibP2PService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5418286A2BEF001E1858 /* LibP2PService.swift */; };
+		4B6BD8E62FBBA42C007007B5 /* PeerIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541B286A2BEF001E1858 /* PeerIconView.swift */; };
+		4B6BD8E72FBBA42C007007B5 /* LibP2PChatExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5404286A2BC2001E1858 /* LibP2PChatExampleApp.swift */; };
+		4B6BD8E82FBBA42C007007B5 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541C286A2BEF001E1858 /* ChatView.swift */; };
+		4B6BD8E92FBBA42C007007B5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541D286A2BEF001E1858 /* ContentView.swift */; };
+		4B6BD8EA2FBBA42C007007B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541A286A2BEF001E1858 /* SettingsView.swift */; };
+		4B6BD8EB2FBBA42C007007B5 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5414286A2BEF001E1858 /* ViewModel.swift */; };
+		4B6BD8EC2FBBA42C007007B5 /* Routes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95394E5F29F2F4F8009A74DF /* Routes.swift */; };
+		4B6BD8ED2FBBA42C007007B5 /* ChatRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541E286A2BEF001E1858 /* ChatRow.swift */; };
+		4B6BD8EE2FBBA42C007007B5 /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5413286A2BEF001E1858 /* ChatModel.swift */; };
+		4B6BD8F02FBBA42C007007B5 /* LibP2PMPLEX in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD8DD2FBBA42C007007B5 /* LibP2PMPLEX */; };
+		4B6BD8F12FBBA42C007007B5 /* LibP2PMDNS in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD8E12FBBA42C007007B5 /* LibP2PMDNS */; };
+		4B6BD8F22FBBA42C007007B5 /* LibP2PNoise in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD8DB2FBBA42C007007B5 /* LibP2PNoise */; };
+		4B6BD8F32FBBA42C007007B5 /* LibP2P in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD8DF2FBBA42C007007B5 /* LibP2P */; };
+		4B6BD8F52FBBA42C007007B5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5435286A3264001E1858 /* README.md */; };
+		4B6BD8F62FBBA42C007007B5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA3C540B286A2BC2001E1858 /* Preview Assets.xcassets */; };
+		4B6BD8F72FBBA42C007007B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5408286A2BC2001E1858 /* Assets.xcassets */; };
+		4B6BD9072FBBA434007007B5 /* LocalNetworkAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5417286A2BEF001E1858 /* LocalNetworkAuthorization.swift */; };
+		4B6BD9082FBBA434007007B5 /* LibP2PService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5418286A2BEF001E1858 /* LibP2PService.swift */; };
+		4B6BD9092FBBA434007007B5 /* PeerIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541B286A2BEF001E1858 /* PeerIconView.swift */; };
+		4B6BD90A2FBBA434007007B5 /* LibP2PChatExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5404286A2BC2001E1858 /* LibP2PChatExampleApp.swift */; };
+		4B6BD90B2FBBA434007007B5 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541C286A2BEF001E1858 /* ChatView.swift */; };
+		4B6BD90C2FBBA434007007B5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541D286A2BEF001E1858 /* ContentView.swift */; };
+		4B6BD90D2FBBA434007007B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541A286A2BEF001E1858 /* SettingsView.swift */; };
+		4B6BD90E2FBBA434007007B5 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5414286A2BEF001E1858 /* ViewModel.swift */; };
+		4B6BD90F2FBBA434007007B5 /* Routes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95394E5F29F2F4F8009A74DF /* Routes.swift */; };
+		4B6BD9102FBBA434007007B5 /* ChatRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541E286A2BEF001E1858 /* ChatRow.swift */; };
+		4B6BD9112FBBA434007007B5 /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5413286A2BEF001E1858 /* ChatModel.swift */; };
+		4B6BD9132FBBA434007007B5 /* LibP2PMPLEX in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD9002FBBA434007007B5 /* LibP2PMPLEX */; };
+		4B6BD9142FBBA434007007B5 /* LibP2PMDNS in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD9042FBBA434007007B5 /* LibP2PMDNS */; };
+		4B6BD9152FBBA434007007B5 /* LibP2PNoise in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD8FE2FBBA434007007B5 /* LibP2PNoise */; };
+		4B6BD9162FBBA434007007B5 /* LibP2P in Frameworks */ = {isa = PBXBuildFile; productRef = 4B6BD9022FBBA434007007B5 /* LibP2P */; };
+		4B6BD9182FBBA434007007B5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5435286A3264001E1858 /* README.md */; };
+		4B6BD9192FBBA434007007B5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA3C540B286A2BC2001E1858 /* Preview Assets.xcassets */; };
+		4B6BD91A2FBBA434007007B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5408286A2BC2001E1858 /* Assets.xcassets */; };
+		95394E6029F2F4F8009A74DF /* Routes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95394E5F29F2F4F8009A74DF /* Routes.swift */; };
+		95394E6829F45781009A74DF /* LibP2P in Frameworks */ = {isa = PBXBuildFile; productRef = 95394E6729F45781009A74DF /* LibP2P */; };
+		95D22A7329F5E87400DF98C7 /* LibP2PMDNS in Frameworks */ = {isa = PBXBuildFile; productRef = 95D22A7229F5E87400DF98C7 /* LibP2PMDNS */; };
+		CA3C5405286A2BC2001E1858 /* LibP2PChatExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5404286A2BC2001E1858 /* LibP2PChatExampleApp.swift */; };
+		CA3C5409286A2BC2001E1858 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5408286A2BC2001E1858 /* Assets.xcassets */; };
+		CA3C540C286A2BC2001E1858 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CA3C540B286A2BC2001E1858 /* Preview Assets.xcassets */; };
+		CA3C541F286A2BEF001E1858 /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5413286A2BEF001E1858 /* ChatModel.swift */; };
+		CA3C5420286A2BEF001E1858 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5414286A2BEF001E1858 /* ViewModel.swift */; };
+		CA3C5422286A2BEF001E1858 /* LocalNetworkAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5417286A2BEF001E1858 /* LocalNetworkAuthorization.swift */; };
+		CA3C5423286A2BEF001E1858 /* LibP2PService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C5418286A2BEF001E1858 /* LibP2PService.swift */; };
+		CA3C5424286A2BEF001E1858 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541A286A2BEF001E1858 /* SettingsView.swift */; };
+		CA3C5425286A2BEF001E1858 /* PeerIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541B286A2BEF001E1858 /* PeerIconView.swift */; };
+		CA3C5426286A2BEF001E1858 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541C286A2BEF001E1858 /* ChatView.swift */; };
+		CA3C5427286A2BEF001E1858 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541D286A2BEF001E1858 /* ContentView.swift */; };
+		CA3C5428286A2BEF001E1858 /* ChatRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541E286A2BEF001E1858 /* ChatRow.swift */; };
+		CA3C542E286A2C3C001E1858 /* LibP2PNoise in Frameworks */ = {isa = PBXBuildFile; productRef = CA3C542D286A2C3C001E1858 /* LibP2PNoise */; };
+		CA3C5431286A2C4F001E1858 /* LibP2PMPLEX in Frameworks */ = {isa = PBXBuildFile; productRef = CA3C5430286A2C4F001E1858 /* LibP2PMPLEX */; };
+		CA3C5436286A3264001E1858 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5435286A3264001E1858 /* README.md */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4B6BD8FB2FBBA42C007007B5 /* gnostr-ipad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "gnostr-ipad.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B6BD8FC2FBBA42C007007B5 /* gnostr-iphone-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "gnostr-iphone-Info.plist"; path = "/Users/Shared/gnostr-org/.github/swift-gnostr-p2p/gnostr-chat/gnostr-iphone-Info.plist"; sourceTree = "<absolute>"; };
+		4B6BD91E2FBBA434007007B5 /* gnostr-macos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "gnostr-macos.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B6BD91F2FBBA434007007B5 /* gnostr-ipad-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "gnostr-ipad-Info.plist"; path = "/Users/Shared/gnostr-org/.github/swift-gnostr-p2p/gnostr-chat/gnostr-ipad-Info.plist"; sourceTree = "<absolute>"; };
+		95394E5F29F2F4F8009A74DF /* Routes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routes.swift; sourceTree = "<group>"; };
+		CA3C5401286A2BC2001E1858 /* gnostr-iphone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "gnostr-iphone.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA3C5404286A2BC2001E1858 /* LibP2PChatExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibP2PChatExampleApp.swift; sourceTree = "<group>"; };
+		CA3C5408286A2BC2001E1858 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CA3C540B286A2BC2001E1858 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		CA3C5413286A2BEF001E1858 /* ChatModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatModel.swift; sourceTree = "<group>"; };
+		CA3C5414286A2BEF001E1858 /* ViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
+		CA3C5417286A2BEF001E1858 /* LocalNetworkAuthorization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalNetworkAuthorization.swift; sourceTree = "<group>"; };
+		CA3C5418286A2BEF001E1858 /* LibP2PService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibP2PService.swift; sourceTree = "<group>"; };
+		CA3C541A286A2BEF001E1858 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CA3C541B286A2BEF001E1858 /* PeerIconView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerIconView.swift; sourceTree = "<group>"; };
+		CA3C541C286A2BEF001E1858 /* ChatView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		CA3C541D286A2BEF001E1858 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CA3C541E286A2BEF001E1858 /* ChatRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRow.swift; sourceTree = "<group>"; };
+		CA3C5435286A3264001E1858 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		CA55D76A29085FB4007B8F2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CA55D76B290860A5007B8F2D /* LibP2PChatExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibP2PChatExample.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4B6BD8EF2FBBA42C007007B5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B6BD8F02FBBA42C007007B5 /* LibP2PMPLEX in Frameworks */,
+				4B6BD8F12FBBA42C007007B5 /* LibP2PMDNS in Frameworks */,
+				4B6BD8F22FBBA42C007007B5 /* LibP2PNoise in Frameworks */,
+				E10000000000000000000025 /* LibP2PPubSub in Frameworks */,
+				E10000000000000000000021 /* LibP2PRelay in Frameworks */,
+				E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */,
+				E10000000000000000000023 /* LibP2PDCUtR in Frameworks */,
+				E10000000000000000000024 /* LibP2PKadDHT in Frameworks */,
+				4B6BD8F32FBBA42C007007B5 /* LibP2P in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B6BD9122FBBA434007007B5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B6BD9132FBBA434007007B5 /* LibP2PMPLEX in Frameworks */,
+				4B6BD9142FBBA434007007B5 /* LibP2PMDNS in Frameworks */,
+				4B6BD9152FBBA434007007B5 /* LibP2PNoise in Frameworks */,
+				E10000000000000000000025 /* LibP2PPubSub in Frameworks */,
+				E10000000000000000000021 /* LibP2PRelay in Frameworks */,
+				E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */,
+				E10000000000000000000023 /* LibP2PDCUtR in Frameworks */,
+				E10000000000000000000024 /* LibP2PKadDHT in Frameworks */,
+				4B6BD9162FBBA434007007B5 /* LibP2P in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA3C53FE286A2BC2001E1858 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CA3C5431286A2C4F001E1858 /* LibP2PMPLEX in Frameworks */,
+				95D22A7329F5E87400DF98C7 /* LibP2PMDNS in Frameworks */,
+				CA3C542E286A2C3C001E1858 /* LibP2PNoise in Frameworks */,
+				E10000000000000000000025 /* LibP2PPubSub in Frameworks */,
+				E10000000000000000000021 /* LibP2PRelay in Frameworks */,
+				E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */,
+				E10000000000000000000023 /* LibP2PDCUtR in Frameworks */,
+				E10000000000000000000024 /* LibP2PKadDHT in Frameworks */,
+				95394E6829F45781009A74DF /* LibP2P in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CA3C53F8286A2BC2001E1858 = {
+			isa = PBXGroup;
+			children = (
+				CA3C5435286A3264001E1858 /* README.md */,
+				CA3C5403286A2BC2001E1858 /* LibP2PChatExample */,
+				CA3C5402286A2BC2001E1858 /* Products */,
+				CA55D76729085D1D007B8F2D /* Frameworks */,
+				4B6BD8FC2FBBA42C007007B5 /* gnostr-iphone-Info.plist */,
+				4B6BD91F2FBBA434007007B5 /* gnostr-ipad-Info.plist */,
+			);
+			sourceTree = "<group>";
+		};
+		CA3C5402286A2BC2001E1858 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CA3C5401286A2BC2001E1858 /* gnostr-iphone.app */,
+				4B6BD8FB2FBBA42C007007B5 /* gnostr-ipad.app */,
+				4B6BD91E2FBBA434007007B5 /* gnostr-macos.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CA3C5403286A2BC2001E1858 /* LibP2PChatExample */ = {
+			isa = PBXGroup;
+			children = (
+				CA55D76B290860A5007B8F2D /* LibP2PChatExample.entitlements */,
+				CA55D76A29085FB4007B8F2D /* Info.plist */,
+				CA3C5412286A2BEF001E1858 /* Models */,
+				CA3C5416286A2BEF001E1858 /* Services */,
+				CA3C5419286A2BEF001E1858 /* Views */,
+				CA3C5404286A2BC2001E1858 /* LibP2PChatExampleApp.swift */,
+				CA3C5408286A2BC2001E1858 /* Assets.xcassets */,
+				CA3C540A286A2BC2001E1858 /* Preview Content */,
+			);
+			path = LibP2PChatExample;
+			sourceTree = "<group>";
+		};
+		CA3C540A286A2BC2001E1858 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				CA3C540B286A2BC2001E1858 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		CA3C5412286A2BEF001E1858 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				CA3C5413286A2BEF001E1858 /* ChatModel.swift */,
+				CA3C5414286A2BEF001E1858 /* ViewModel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CA3C5416286A2BEF001E1858 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				CA3C5417286A2BEF001E1858 /* LocalNetworkAuthorization.swift */,
+				CA3C5418286A2BEF001E1858 /* LibP2PService.swift */,
+				95394E5F29F2F4F8009A74DF /* Routes.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		CA3C5419286A2BEF001E1858 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				CA3C541A286A2BEF001E1858 /* SettingsView.swift */,
+				CA3C541B286A2BEF001E1858 /* PeerIconView.swift */,
+				CA3C541C286A2BEF001E1858 /* ChatView.swift */,
+				CA3C541D286A2BEF001E1858 /* ContentView.swift */,
+				CA3C541E286A2BEF001E1858 /* ChatRow.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		CA55D76729085D1D007B8F2D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4B6BD8DA2FBBA42C007007B5 /* gnostr-ipad */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B6BD8F82FBBA42C007007B5 /* Build configuration list for PBXNativeTarget "gnostr-ipad" */;
+			buildPhases = (
+				4B6BD8E32FBBA42C007007B5 /* Sources */,
+				4B6BD8EF2FBBA42C007007B5 /* Frameworks */,
+				4B6BD8F42FBBA42C007007B5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "gnostr-ipad";
+			packageProductDependencies = (
+				4B6BD8DB2FBBA42C007007B5 /* LibP2PNoise */,
+				4B6BD8DD2FBBA42C007007B5 /* LibP2PMPLEX */,
+				E10000000000000000000011 /* LibP2PRelay */,
+				E10000000000000000000012 /* LibP2PAutoNAT */,
+				E10000000000000000000013 /* LibP2PDCUtR */,
+				E10000000000000000000014 /* LibP2PKadDHT */,
+				E10000000000000000000015 /* LibP2PPubSub */,
+				4B6BD8DF2FBBA42C007007B5 /* LibP2P */,
+				4B6BD8E12FBBA42C007007B5 /* LibP2PMDNS */,
+			);
+			productName = LibP2PChatExample;
+			productReference = 4B6BD8FB2FBBA42C007007B5 /* gnostr-ipad.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4B6BD8FD2FBBA434007007B5 /* gnostr-macos */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B6BD91B2FBBA434007007B5 /* Build configuration list for PBXNativeTarget "gnostr-macos" */;
+			buildPhases = (
+				4B6BD9062FBBA434007007B5 /* Sources */,
+				4B6BD9122FBBA434007007B5 /* Frameworks */,
+				4B6BD9172FBBA434007007B5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "gnostr-macos";
+			packageProductDependencies = (
+				4B6BD8FE2FBBA434007007B5 /* LibP2PNoise */,
+				4B6BD9002FBBA434007007B5 /* LibP2PMPLEX */,
+				E10000000000000000000011 /* LibP2PRelay */,
+				E10000000000000000000012 /* LibP2PAutoNAT */,
+				E10000000000000000000013 /* LibP2PDCUtR */,
+				E10000000000000000000014 /* LibP2PKadDHT */,
+				E10000000000000000000015 /* LibP2PPubSub */,
+				4B6BD9022FBBA434007007B5 /* LibP2P */,
+				4B6BD9042FBBA434007007B5 /* LibP2PMDNS */,
+			);
+			productName = LibP2PChatExample;
+			productReference = 4B6BD91E2FBBA434007007B5 /* gnostr-macos.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CA3C5400286A2BC2001E1858 /* gnostr-iphone */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA3C540F286A2BC2001E1858 /* Build configuration list for PBXNativeTarget "gnostr-iphone" */;
+			buildPhases = (
+				CA3C53FD286A2BC2001E1858 /* Sources */,
+				CA3C53FE286A2BC2001E1858 /* Frameworks */,
+				CA3C53FF286A2BC2001E1858 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "gnostr-iphone";
+			packageProductDependencies = (
+				CA3C542D286A2C3C001E1858 /* LibP2PNoise */,
+				CA3C5430286A2C4F001E1858 /* LibP2PMPLEX */,
+				E10000000000000000000011 /* LibP2PRelay */,
+				E10000000000000000000012 /* LibP2PAutoNAT */,
+				E10000000000000000000013 /* LibP2PDCUtR */,
+				E10000000000000000000014 /* LibP2PKadDHT */,
+				E10000000000000000000015 /* LibP2PPubSub */,
+				95394E6729F45781009A74DF /* LibP2P */,
+				95D22A7229F5E87400DF98C7 /* LibP2PMDNS */,
+			);
+			productName = LibP2PChatExample;
+			productReference = CA3C5401286A2BC2001E1858 /* gnostr-iphone.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CA3C53F9286A2BC2001E1858 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1340;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					CA3C5400286A2BC2001E1858 = {
+						CreatedOnToolsVersion = 13.4.1;
+					};
+				};
+			};
+			buildConfigurationList = CA3C53FC286A2BC2001E1858 /* Build configuration list for PBXProject "gnostr-chat" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CA3C53F8286A2BC2001E1858;
+			packageReferences = (
+				CA3C542C286A2C3C001E1858 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */,
+				CA3C542F286A2C4F001E1858 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */,
+				E10000000000000000000001 /* XCRemoteSwiftPackageReference "swift-libp2p-relay" */,
+				E10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-libp2p-autonat" */,
+				E10000000000000000000003 /* XCRemoteSwiftPackageReference "swift-libp2p-dcutr" */,
+				E10000000000000000000004 /* XCRemoteSwiftPackageReference "swift-libp2p-kad-dht" */,
+				E10000000000000000000005 /* XCRemoteSwiftPackageReference "swift-libp2p-pubsub" */,
+				95394E6629F45781009A74DF /* XCRemoteSwiftPackageReference "swift-libp2p" */,
+				95D22A7129F5E87400DF98C7 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */,
+			);
+			productRefGroup = CA3C5402286A2BC2001E1858 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CA3C5400286A2BC2001E1858 /* gnostr-iphone */,
+				4B6BD8DA2FBBA42C007007B5 /* gnostr-ipad */,
+				4B6BD8FD2FBBA434007007B5 /* gnostr-macos */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4B6BD8F42FBBA42C007007B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B6BD8F52FBBA42C007007B5 /* README.md in Resources */,
+				4B6BD8F62FBBA42C007007B5 /* Preview Assets.xcassets in Resources */,
+				4B6BD8F72FBBA42C007007B5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B6BD9172FBBA434007007B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B6BD9182FBBA434007007B5 /* README.md in Resources */,
+				4B6BD9192FBBA434007007B5 /* Preview Assets.xcassets in Resources */,
+				4B6BD91A2FBBA434007007B5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA3C53FF286A2BC2001E1858 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CA3C5436286A3264001E1858 /* README.md in Resources */,
+				CA3C540C286A2BC2001E1858 /* Preview Assets.xcassets in Resources */,
+				CA3C5409286A2BC2001E1858 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4B6BD8E32FBBA42C007007B5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B6BD8E42FBBA42C007007B5 /* LocalNetworkAuthorization.swift in Sources */,
+				4B6BD8E52FBBA42C007007B5 /* LibP2PService.swift in Sources */,
+				4B6BD8E62FBBA42C007007B5 /* PeerIconView.swift in Sources */,
+				4B6BD8E72FBBA42C007007B5 /* LibP2PChatExampleApp.swift in Sources */,
+				4B6BD8E82FBBA42C007007B5 /* ChatView.swift in Sources */,
+				4B6BD8E92FBBA42C007007B5 /* ContentView.swift in Sources */,
+				4B6BD8EA2FBBA42C007007B5 /* SettingsView.swift in Sources */,
+				4B6BD8EB2FBBA42C007007B5 /* ViewModel.swift in Sources */,
+				4B6BD8EC2FBBA42C007007B5 /* Routes.swift in Sources */,
+				4B6BD8ED2FBBA42C007007B5 /* ChatRow.swift in Sources */,
+				4B6BD8EE2FBBA42C007007B5 /* ChatModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B6BD9062FBBA434007007B5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B6BD9072FBBA434007007B5 /* LocalNetworkAuthorization.swift in Sources */,
+				4B6BD9082FBBA434007007B5 /* LibP2PService.swift in Sources */,
+				4B6BD9092FBBA434007007B5 /* PeerIconView.swift in Sources */,
+				4B6BD90A2FBBA434007007B5 /* LibP2PChatExampleApp.swift in Sources */,
+				4B6BD90B2FBBA434007007B5 /* ChatView.swift in Sources */,
+				4B6BD90C2FBBA434007007B5 /* ContentView.swift in Sources */,
+				4B6BD90D2FBBA434007007B5 /* SettingsView.swift in Sources */,
+				4B6BD90E2FBBA434007007B5 /* ViewModel.swift in Sources */,
+				4B6BD90F2FBBA434007007B5 /* Routes.swift in Sources */,
+				4B6BD9102FBBA434007007B5 /* ChatRow.swift in Sources */,
+				4B6BD9112FBBA434007007B5 /* ChatModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA3C53FD286A2BC2001E1858 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CA3C5422286A2BEF001E1858 /* LocalNetworkAuthorization.swift in Sources */,
+				CA3C5423286A2BEF001E1858 /* LibP2PService.swift in Sources */,
+				CA3C5425286A2BEF001E1858 /* PeerIconView.swift in Sources */,
+				CA3C5405286A2BC2001E1858 /* LibP2PChatExampleApp.swift in Sources */,
+				CA3C5426286A2BEF001E1858 /* ChatView.swift in Sources */,
+				CA3C5427286A2BEF001E1858 /* ContentView.swift in Sources */,
+				CA3C5424286A2BEF001E1858 /* SettingsView.swift in Sources */,
+				CA3C5420286A2BEF001E1858 /* ViewModel.swift in Sources */,
+				95394E6029F2F4F8009A74DF /* Routes.swift in Sources */,
+				CA3C5428286A2BEF001E1858 /* ChatRow.swift in Sources */,
+				CA3C541F286A2BEF001E1858 /* ChatModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4B6BD8F92FBBA42C007007B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LibP2PChatExample/LibP2PChatExample.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LibP2PChatExample/Preview Content\"";
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "gnostr-iphone-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Chat uses the local network to find peers to chat with.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.gnostr.gnostr-ipad";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4B6BD8FA2FBBA42C007007B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LibP2PChatExample/LibP2PChatExample.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LibP2PChatExample/Preview Content\"";
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "gnostr-iphone-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Chat uses the local network to find peers to chat with.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.gnostr.gnostr-ipad";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4B6BD91C2FBBA434007007B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LibP2PChatExample/LibP2PChatExample.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LibP2PChatExample/Preview Content\"";
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "gnostr-ipad-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Chat uses the local network to find peers to chat with.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.gnostr.gnostr-macos";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4B6BD91D2FBBA434007007B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LibP2PChatExample/LibP2PChatExample.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LibP2PChatExample/Preview Content\"";
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "gnostr-ipad-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Chat uses the local network to find peers to chat with.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.gnostr.gnostr-macos";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CA3C540D286A2BC2001E1858 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CA3C540E286A2BC2001E1858 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CA3C5410286A2BC2001E1858 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LibP2PChatExample/LibP2PChatExample.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LibP2PChatExample/Preview Content\"";
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LibP2PChatExample/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Chat uses the local network to find peers to chat with.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.gnostr.gnostr-iphone";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CA3C5411286A2BC2001E1858 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LibP2PChatExample/LibP2PChatExample.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LibP2PChatExample/Preview Content\"";
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LibP2PChatExample/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = gnostr;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Chat uses the local network to find peers to chat with.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.gnostr.gnostr-iphone";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4B6BD8F82FBBA42C007007B5 /* Build configuration list for PBXNativeTarget "gnostr-ipad" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4B6BD8F92FBBA42C007007B5 /* Debug */,
+				4B6BD8FA2FBBA42C007007B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4B6BD91B2FBBA434007007B5 /* Build configuration list for PBXNativeTarget "gnostr-macos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4B6BD91C2FBBA434007007B5 /* Debug */,
+				4B6BD91D2FBBA434007007B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CA3C53FC286A2BC2001E1858 /* Build configuration list for PBXProject "gnostr-chat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA3C540D286A2BC2001E1858 /* Debug */,
+				CA3C540E286A2BC2001E1858 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CA3C540F286A2BC2001E1858 /* Build configuration list for PBXNativeTarget "gnostr-iphone" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA3C5410286A2BC2001E1858 /* Debug */,
+				CA3C5411286A2BC2001E1858 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4B6BD8DC2FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-noise";
+		};
+		4B6BD8DE2FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mplex";
+		};
+		4B6BD8E02FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p";
+		};
+		4B6BD8E22FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mdns";
+		};
+		4B6BD8FF2FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-noise";
+		};
+		4B6BD9012FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mplex";
+		};
+		4B6BD9032FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p";
+		};
+		4B6BD9052FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mdns";
+		};
+		95394E6629F45781009A74DF /* XCRemoteSwiftPackageReference "swift-libp2p" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p";
+		};
+		95D22A7129F5E87400DF98C7 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mdns";
+		};
+		CA3C542C286A2C3C001E1858 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-noise";
+		};
+		CA3C542F286A2C4F001E1858 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mplex";
+		};
+		E10000000000000000000001 /* XCRemoteSwiftPackageReference "swift-libp2p-relay" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-relay";
+		};
+		E10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-libp2p-autonat" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-autonat";
+		};
+		E10000000000000000000003 /* XCRemoteSwiftPackageReference "swift-libp2p-dcutr" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-dcutr";
+		};
+		E10000000000000000000004 /* XCRemoteSwiftPackageReference "swift-libp2p-kad-dht" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-kad-dht";
+		};
+		E10000000000000000000005 /* XCRemoteSwiftPackageReference "swift-libp2p-pubsub" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-pubsub";
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4B6BD8DB2FBBA42C007007B5 /* LibP2PNoise */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD8DC2FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */;
+			productName = LibP2PNoise;
+		};
+		4B6BD8DD2FBBA42C007007B5 /* LibP2PMPLEX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD8DE2FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */;
+			productName = LibP2PMPLEX;
+		};
+		4B6BD8DF2FBBA42C007007B5 /* LibP2P */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD8E02FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p" */;
+			productName = LibP2P;
+		};
+		4B6BD8E12FBBA42C007007B5 /* LibP2PMDNS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD8E22FBBA42C007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */;
+			productName = LibP2PMDNS;
+		};
+		4B6BD8FE2FBBA434007007B5 /* LibP2PNoise */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD8FF2FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */;
+			productName = LibP2PNoise;
+		};
+		E10000000000000000000011 /* LibP2PRelay */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E10000000000000000000001 /* XCRemoteSwiftPackageReference "swift-libp2p-relay" */;
+			productName = LibP2PRelay;
+		};
+		E10000000000000000000012 /* LibP2PAutoNAT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E10000000000000000000002 /* XCRemoteSwiftPackageReference "swift-libp2p-autonat" */;
+			productName = LibP2PAutoNAT;
+		};
+		E10000000000000000000013 /* LibP2PDCUtR */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E10000000000000000000003 /* XCRemoteSwiftPackageReference "swift-libp2p-dcutr" */;
+			productName = LibP2PDCUtR;
+		};
+		E10000000000000000000014 /* LibP2PKadDHT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E10000000000000000000004 /* XCRemoteSwiftPackageReference "swift-libp2p-kad-dht" */;
+			productName = LibP2PKadDHT;
+		};
+		E10000000000000000000015 /* LibP2PPubSub */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E10000000000000000000005 /* XCRemoteSwiftPackageReference "swift-libp2p-pubsub" */;
+			productName = LibP2PPubSub;
+		};
+		4B6BD9002FBBA434007007B5 /* LibP2PMPLEX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD9012FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */;
+			productName = LibP2PMPLEX;
+		};
+		4B6BD9022FBBA434007007B5 /* LibP2P */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD9032FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p" */;
+			productName = LibP2P;
+		};
+		4B6BD9042FBBA434007007B5 /* LibP2PMDNS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B6BD9052FBBA434007007B5 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */;
+			productName = LibP2PMDNS;
+		};
+		95394E6729F45781009A74DF /* LibP2P */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 95394E6629F45781009A74DF /* XCRemoteSwiftPackageReference "swift-libp2p" */;
+			productName = LibP2P;
+		};
+		95D22A7229F5E87400DF98C7 /* LibP2PMDNS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 95D22A7129F5E87400DF98C7 /* XCRemoteSwiftPackageReference "swift-libp2p-mdns" */;
+			productName = LibP2PMDNS;
+		};
+		CA3C542D286A2C3C001E1858 /* LibP2PNoise */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA3C542C286A2C3C001E1858 /* XCRemoteSwiftPackageReference "swift-libp2p-noise" */;
+			productName = LibP2PNoise;
+		};
+		CA3C5430286A2C4F001E1858 /* LibP2PMPLEX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA3C542F286A2C4F001E1858 /* XCRemoteSwiftPackageReference "swift-libp2p-mplex" */;
+			productName = LibP2PMPLEX;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = CA3C53F9286A2BC2001E1858 /* Project object */;
+}

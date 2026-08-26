@@ -12,6 +12,7 @@ use gnostr::{
     cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands,
     types::{Keys, PrivateKey, PublicKey},
+    utils::install_rustls_crypto_provider,
     weeble, wobble,
 };
 use gnostr_asyncgit::sync::{repo_open_error, resolve_repo_path, RepoPath};
@@ -19,10 +20,6 @@ use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
-
-fn install_rustls_crypto_provider() {
-    let _ = rustls::crypto::ring::default_provider().install_default();
-}
 
 struct SharedFileWriter(Arc<Mutex<std::fs::File>>);
 
@@ -584,9 +581,9 @@ async fn main() -> anyhow::Result<()> {
                 );
 
                 let bootstrap_relays = gnostr::crawler::bootstrap_relays();
-                println!("DM bootstrap relays:");
+                debug!("DM bootstrap relays:");
                 for relay in &bootstrap_relays {
-                    println!("  {relay}");
+                    debug!("  {relay}");
                 }
                 debug!("DM bootstrap relays: {:?}", bootstrap_relays);
                 debug!(
@@ -618,14 +615,14 @@ async fn main() -> anyhow::Result<()> {
 
                 debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
                 debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
-                println!("DM explicit relays:");
+                debug!("DM explicit relays:");
                 for relay in &sub_command_args.relay {
-                    println!("  {relay}");
+                    debug!("  {relay}");
                 }
                 let crawler_relays = gnostr::crawler::load_relays_or_bootstrap();
-                println!("DM crawler relays:");
+                debug!("DM crawler relays:");
                 for relay in &crawler_relays {
-                    println!("  {relay}");
+                    debug!("  {relay}");
                 }
                 let relays_to_use = merge_dm_relays(
                     preferred_relays,
@@ -633,9 +630,9 @@ async fn main() -> anyhow::Result<()> {
                     crawler_relays,
                     gnostr_cli_args.relays.clone(),
                 );
-                println!("DM final relays:");
+                debug!("DM final relays:");
                 for relay in &relays_to_use {
-                    println!("  {relay}");
+                    debug!("  {relay}");
                 }
                 debug!("relays_to_use: {:?}", relays_to_use);
 

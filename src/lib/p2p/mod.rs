@@ -163,15 +163,22 @@ pub async fn evt_loop(
         .build()
         .map_err(|msg| io::Error::other(msg))?;
 
-    let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
+    let builder = libp2p::SwarmBuilder::with_existing_identity(keypair)
         .with_tokio()
         .with_tcp(
             tcp::Config::default(),
             noise::Config::new,
             yamux::Config::default,
         )?
-        .with_quic()
-        .with_dns()?
+        .with_quic();
+
+    #[cfg(target_os = "ios")]
+    let builder = builder;
+
+    #[cfg(not(target_os = "ios"))]
+    let builder = builder.with_dns()?;
+
+    let mut swarm = builder
         .with_relay_client(noise::Config::new, yamux::Config::default)?
         .with_behaviour(|key, relay_client| {
             let local_peer_id = key.public().to_peer_id();
@@ -370,7 +377,9 @@ pub async fn advertise_service(
     service_url: String,
 ) -> Result<(), Box<dyn Error>> {
     let keypair = identity::Keypair::generate_ed25519();
-    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair).await?;
+    let mut swarm = crate::p2p::swarm_builder::build_swarm(keypair)
+        .await
+        .map_err(|e| -> Box<dyn Error> { e })?;
     let peer_id = *swarm.local_peer_id();
 
     let bootstrap_addr: Multiaddr = "/dnsaddr/bootstrap.libp2p.io".parse()?;

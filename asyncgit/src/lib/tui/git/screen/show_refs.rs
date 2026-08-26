@@ -156,7 +156,7 @@ fn create_prefix(repo: &Repository, reference: &Reference) -> Span<'static> {
         } else {
             "  "
         }
-    } else if reference.name() == head.as_ref().and_then(Reference::name) {
+    } else if reference.name().ok() == head.as_ref().and_then(|head| head.name().ok()) {
         "* "
     } else {
         "  "

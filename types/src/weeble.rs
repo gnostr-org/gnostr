@@ -2,7 +2,7 @@ use std::{env, time::SystemTime};
 
 use log::debug;
 
-use crate::blockheight::blockheight_sync;
+use crate::blockheight::{blockheight_async, blockheight_sync};
 /// pub fn weeble() -> Result<f64, ascii::AsciiChar>
 pub fn weeble() -> Result<f64, ascii::AsciiChar> {
     weeble_sync()
@@ -54,9 +54,45 @@ pub fn weeble_millis_sync() -> Result<f64, ascii::AsciiChar> {
 }
 /// pub async fn weeble_async() -> Result<f64, ascii::AsciiChar>
 pub async fn weeble_async() -> Result<f64, ascii::AsciiChar> {
-    weeble_sync()
+    let since_the_epoch = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("get millis error");
+    let seconds = since_the_epoch.as_secs();
+    let subsec_millis = since_the_epoch.subsec_millis() as u64;
+    let _now_millis = seconds * 1000 + subsec_millis;
+    debug!("now millis: {}", seconds * 1000 + subsec_millis);
+    let blockheight = blockheight_async().await;
+    let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
+    if tmp_u64 == 0 {
+        debug!("weeble_async: blockheight=0, weeble=0");
+        unsafe { env::set_var("WEEBLE", "0") };
+        return Ok(0.0);
+    }
+    let weeble = seconds as f64 / tmp_u64 as f64;
+    debug!("weeble_async: blockheight={}, weeble={}", tmp_u64, weeble);
+    unsafe { env::set_var("WEEBLE", weeble.to_string()) };
+    Ok(weeble.floor())
 }
+
 /// pub fn weeble_millis_async() -> Result<f64, ascii::AsciiChar>
 pub async fn weeble_millis_async() -> Result<f64, ascii::AsciiChar> {
-    weeble_millis_sync()
+    let since_the_epoch = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("get millis error");
+    let seconds = since_the_epoch.as_secs();
+    let subsec_millis = since_the_epoch.subsec_millis() as u64;
+    let now_millis = seconds * 1000 + subsec_millis;
+    debug!("now millis: {}", seconds * 1000 + subsec_millis);
+    let blockheight = blockheight_async().await;
+    let tmp_u64 = blockheight.parse::<u64>().unwrap_or(0);
+    if tmp_u64 == 0 {
+        debug!("weeble_millis_async: blockheight=0, weeble_millis=0");
+        unsafe { env::set_var("WEEBLE_MILLIS", "0") };
+        return Ok(0.0);
+    }
+    //gnostr-chat uses millis
+    let weeble = now_millis as f64 / tmp_u64 as f64;
+    debug!("weeble_millis_async: blockheight={}, weeble_millis={}", tmp_u64, weeble);
+    unsafe { env::set_var("WEEBLE_MILLIS", weeble.to_string()) };
+    Ok(weeble.floor())
 }

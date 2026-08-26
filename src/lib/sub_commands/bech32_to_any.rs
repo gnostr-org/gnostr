@@ -1,9 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
-use nostr_0_34_1::bech32;
+use bech32;
 use serde_json::{json, Value};
 
-use crate::types::{NEvent, NostrBech32, PrivateKey};
+use crate::types::{Id, NAddr, NEvent, NostrBech32, PrivateKey};
 
 #[derive(Parser, Debug, Clone)]
 pub struct Bech32ToAnySubCommand {
@@ -37,17 +37,17 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
 
     if sub_command_args.event_id {
         // Try nevent first
-        if let Ok(nevent) = crate::types::NEvent::try_from_bech32_string(bech32) {
-            println!("{}", nevent.id.as_hex_string());
+        if let Ok(nevent) = NEvent::try_from_bech32_string(bech32) {
+            print!("{}", nevent.id.as_hex_string());
             return Ok(());
         }
         // Try note (direct event ID)
-        else if let Ok(note) = crate::types::Id::try_from_bech32_string(bech32) {
-            println!("{}", note.as_hex_string());
+        else if let Ok(note) = Id::try_from_bech32_string(bech32) {
+            print!("{}", note.as_hex_string());
             return Ok(());
         }
         // Try naddr (parameterized replaceable event)
-        else if let Ok(_naddr) = crate::types::NAddr::try_from_bech32_string(bech32) {
+        else if let Ok(_naddr) = NAddr::try_from_bech32_string(bech32) {
             // naddr doesn't have a specific event ID, it's a coordinate
             eprintln!(
                 "Error: --event-id cannot be used with naddr (parameterized replaceable event)."
@@ -131,15 +131,15 @@ pub fn bech32_to_any(sub_command_args: &Bech32ToAnySubCommand) -> Result<()> {
     }
 
     if sub_command_args.raw && raw_output_string.is_some() && !sub_command_args.json {
-        println!("{}", raw_output_string.unwrap());
+        print!("{}", raw_output_string.unwrap());
     } else if sub_command_args.json || (!sub_command_args.raw && !sub_command_args.json) {
         // Default to pretty JSON if --json is specified or if neither --raw nor --json
         // are
-        println!("{}", serde_json::to_string_pretty(&output_value)?);
+        print!("{}", serde_json::to_string_pretty(&output_value)?);
     } else {
         // Fallback for raw output of complex types or when raw is requested but no
         // specific raw_output_string is available
-        println!("{}", serde_json::to_string(&output_value)?);
+        print!("{}", serde_json::to_string(&output_value)?);
     }
     Ok(())
 }

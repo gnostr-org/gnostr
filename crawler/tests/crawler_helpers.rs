@@ -583,9 +583,10 @@ fn render_page_shell_includes_nav_and_body() {
 fn relay_file_writers_use_config_dir() {
     with_isolated_config_dir(|_| {
         let config_dir = relays::get_config_dir_path();
-        fs::create_dir_all(&config_dir).unwrap();
+        let bucket_dir = config_dir.join("recent");
+        fs::create_dir_all(&bucket_dir).unwrap();
         fs::write(
-            config_dir.join("relays.yaml"),
+            bucket_dir.join("relays.yaml"),
             "relay.example.com\nws://relay.example.org\n",
         )
         .unwrap();

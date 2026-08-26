@@ -1,0 +1,48 @@
+name: Build & Test
+
+on:
+  workflow_call:
+    inputs:
+      test_in_release_configuration:
+        type: boolean
+        description: "Boolean to enable building and testing in release mode (as opposed to debug mode). Defaults to false (debug mode)."
+        default: false
+
+## Cancel previously triggered workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-test
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.0", "6.1", "6.2"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      - name: Get swift version
+        run: swift --version
+      # Build in debug mode with verbosity enabled
+      - name: Build Debug
+        if: ${{ !inputs.test_in_release_configuration }}
+        run: swift build -v
+      # Build in release mode with verbosity enabled
+      - name: Build Release
+        if: ${{ inputs.test_in_release_configuration }}
+        run: swift build -c release -v
+      # Test in debug mode with verbosity enabled
+      - name: Test Debug
+        if: ${{ !inputs.test_in_release_configuration }}
+        run: swift test -v
+      # Test in release mode with verbosity enabled
+      - name: Test Release
+        if: ${{ inputs.test_in_release_configuration }}
+        run: swift test -c release -v -Xswiftc -enable-testing

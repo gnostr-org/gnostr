@@ -168,7 +168,7 @@ pub fn get_status(
                 .ok_or_else(|| {
                     Error::Generic("failed to get path to diff's new file.".to_string())
                 })?,
-            None => e.path().map(String::from).ok_or_else(|| {
+            None => e.path().ok().map(String::from).ok_or_else(|| {
                 Error::Generic("failed to get the path to indexed file.".to_string())
             })?,
         };

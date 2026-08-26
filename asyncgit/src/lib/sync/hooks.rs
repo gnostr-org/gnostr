@@ -3,7 +3,7 @@ use std::cell::Ref;
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 
-use super::{repository::repo, RepoPath};
+use super::RepoPath;
 use crate::error::{Error, Result};
 //use crate::sync::utils;
 
@@ -114,27 +114,36 @@ pub fn hooks_pre_push(
 pub fn hooks_commit_msg(repo_path: &RepoPath, msg: &mut String) -> Result<HookResult> {
     scope_time!("hooks_commit_msg");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_commit_msg(&repo, None, msg)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_commit_msg(&upstream_repo_path, msg)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 /// this hook is documented here <https://git-scm.com/docs/githooks#_pre_commit>
 pub fn hooks_pre_commit(repo_path: &RepoPath) -> Result<HookResult> {
     scope_time!("hooks_pre_commit");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_pre_commit(&repo, None)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_pre_commit(&upstream_repo_path)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 ///
 pub fn hooks_post_commit(repo_path: &RepoPath) -> Result<HookResult> {
     scope_time!("hooks_post_commit");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_post_commit(&repo, None)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_post_commit(&upstream_repo_path)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 ///
@@ -145,9 +154,16 @@ pub fn hooks_prepare_commit_msg(
 ) -> Result<HookResult> {
     scope_time!("hooks_prepare_commit_msg");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_prepare_commit_msg(&repo, None, source, msg)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_prepare_commit_msg(
+            &upstream_repo_path,
+            source,
+            msg,
+        )
+        .map_err(|e| Error::Generic(e.to_string()))?
+        .into(),
+    )
 }
 
 #[cfg(test)]

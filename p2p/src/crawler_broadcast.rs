@@ -30,6 +30,78 @@ fn is_shitlisted(url: &str) -> bool {
     SHITLIST_RELAYS.iter().any(|relay| url.contains(relay))
 }
 
+fn relay_host(relay: &str) -> Option<&str> {
+    let relay = relay.trim();
+    let relay = relay
+        .strip_prefix("wss://")
+        .or_else(|| relay.strip_prefix("ws://"))?;
+    let authority = relay.split('/').next().unwrap_or("");
+    let authority = authority.rsplit('@').next().unwrap_or(authority);
+    if authority.starts_with('[') {
+        Some(authority)
+    } else {
+        Some(authority.split(':').next().unwrap_or(authority))
+    }
+}
+
+fn is_private_ipv4_relay(relay: &str) -> bool {
+    let host = match relay_host(relay) {
+        Some(host) => host,
+        None => return false,
+    };
+
+    let mut octets = host.split('.');
+    let first = match octets.next().and_then(|part| part.parse::<u8>().ok()) {
+        Some(first) => first,
+        None => return false,
+    };
+    let second = match octets.next().and_then(|part| part.parse::<u8>().ok()) {
+        Some(second) => second,
+        None => return false,
+    };
+
+    (first == 10)
+        || (first == 172 && (16..=31).contains(&second))
+        || (first == 192 && second == 168)
+        || (first == 100 && (64..=127).contains(&second))
+}
+
+fn is_valid_relay_url(relay: &str) -> bool {
+    relay_host(relay)
+        .map(|host| {
+            !host.is_empty()
+                && !host.starts_with('-')
+                && !is_private_ipv4_relay(relay)
+                && !(host == "localhost" || host == "127.0.0.1")
+        })
+        .unwrap_or(false)
+}
+
+fn is_loopback_relay(relay: &str) -> bool {
+    relay_host(relay)
+        .map(|host| host == "localhost" || host == "127.0.0.1")
+        .unwrap_or(false)
+}
+
+const RELAY_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+const RELAY_PUBLISH_TIMEOUT: Duration = Duration::from_secs(10);
+
+fn normalize_relay_entry(relay: &str) -> Option<String> {
+    let relay = relay
+        .trim()
+        .trim_start_matches("- ")
+        .trim_start_matches('-')
+        .trim_matches('\'')
+        .trim_matches('"')
+        .trim();
+
+    if relay.is_empty() {
+        None
+    } else {
+        Some(relay.to_string())
+    }
+}
+
 pub fn load_relay_bucket_from_dir(dir: &Path) -> Result<RelayBucket, Box<dyn Error>> {
     let nip = dir
         .file_name()
@@ -48,7 +120,13 @@ pub fn load_relay_bucket_from_dir(dir: &Path) -> Result<RelayBucket, Box<dyn Err
         Vec::new()
     };
 
-    Ok(RelayBucket { nip, relays })
+    Ok(RelayBucket {
+        nip,
+        relays: relays
+            .into_iter()
+            .filter_map(|relay| normalize_relay_entry(&relay))
+            .collect(),
+    })
 }
 
 pub fn load_relay_buckets(config_dir: &Path) -> Result<Vec<RelayBucket>, Box<dyn Error>> {
@@ -118,7 +196,7 @@ impl Drop for CrawlerServerGuard {
 }
 
 async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
-    let response = match reqwest::get("http://127.0.0.1:8080/relays.json").await {
+    let response = match reqwest::get("http://127.0.0.1:8080/relays.yaml").await {
         Ok(response) => response,
         Err(_) => return Ok(None),
     };
@@ -127,28 +205,21 @@ async fn fetch_live_crawler_relays() -> anyhow::Result<Option<Vec<String>>> {
         return Ok(None);
     }
 
-    let relays = response
-        .text()
-        .await?
-        ;
-
-    let relays = serde_json::from_str::<Vec<String>>(&relays)
-        .or_else(|_| serde_yaml::from_str::<Vec<String>>(&relays))
-        .map(|relays| {
-            relays
-                .into_iter()
-                .map(|relay| {
-                    relay
-                        .trim()
-                        .trim_matches('\'')
-                        .trim_matches('"')
-                        .trim_start_matches("- ")
-                        .trim()
-                        .to_string()
-                })
-                .filter(|relay| !relay.is_empty())
-                .collect::<Vec<_>>()
+    let relays = response.text().await?;
+    let relays = serde_yaml::from_str::<Vec<String>>(&relays)
+        .or_else(|_| {
+            Ok::<Vec<String>, serde_yaml::Error>(
+                relays
+                    .lines()
+                    .map(str::trim)
+                    .filter_map(normalize_relay_entry)
+                    .collect(),
+            )
         })?;
+    let relays = relays
+        .into_iter()
+        .filter_map(|relay| normalize_relay_entry(&relay))
+        .collect::<Vec<_>>();
 
     if relays.is_empty() {
         Ok(None)
@@ -188,6 +259,22 @@ pub async fn bootstrap_crawler_relay_buckets(
     };
     let relays: Vec<String> = relays
         .into_iter()
+        .filter_map(|relay| normalize_relay_entry(&relay))
+        .filter_map(|relay| {
+            if is_valid_relay_url(&relay) || is_loopback_relay(&relay) {
+                Some(relay)
+            } else {
+                warn!(
+                    "bootstrap_crawler_relay_buckets: rejecting invalid relay_url={}",
+                    relay
+                );
+                println!(
+                    "pretty_print_attestations relay_rejected relay_url={} reason=invalid or private host",
+                    relay
+                );
+                None
+            }
+        })
         .filter(|relay| {
             if is_shitlisted(relay) {
                 warn!("bootstrap_crawler_relay_buckets: skipping shitlisted relay {}", relay);
@@ -222,25 +309,69 @@ pub async fn broadcast_event_to_crawler_relays(
 
     for bucket in buckets {
         for relay_url in bucket.relays {
+            if !is_valid_relay_url(&relay_url) && !is_loopback_relay(&relay_url) {
+                warn!(
+                    "broadcast_event_to_crawler_relays: rejecting invalid relay_url={}",
+                    relay_url
+                );
+                println!(
+                    "pretty_print_attestations relay_rejected nip={} relay_url={} reason=invalid or private host",
+                    bucket.nip, relay_url
+                );
+                continue;
+            }
             println!(
                 "pretty_print_attestations relays_sent_to nip={} relay_url={}",
                 bucket.nip, relay_url
             );
-            match NostrRelayConnection::connect(relay_url.clone()).await {
-                Ok(mut connection) => {
-                    if let Err(err) = connection.publish_event(event.clone()).await {
-                        warn!(
-                            "broadcast_event_to_crawler_relays: skipping {} after publish error: {}",
-                            relay_url, err
-                        );
-                        continue;
-                    }
+            let relay_url_for_task = relay_url.clone();
+            match tokio::time::timeout(
+                RELAY_CONNECT_TIMEOUT + RELAY_PUBLISH_TIMEOUT,
+                async move {
+                    let mut connection = NostrRelayConnection::connect(relay_url_for_task.clone())
+                        .await
+                        .map_err(|err| {
+                            anyhow::anyhow!(
+                                "broadcast_event_to_crawler_relays: connect error for {}: {}",
+                                relay_url_for_task,
+                                err
+                            )
+                        })?;
+
+                    connection
+                        .publish_event(event.clone())
+                        .await
+                        .map_err(|err| {
+                            anyhow::anyhow!(
+                                "broadcast_event_to_crawler_relays: publish error for {}: {}",
+                                relay_url_for_task,
+                                err
+                            )
+                        })?;
+
+                    Ok::<(), anyhow::Error>(())
+                },
+            )
+            .await
+            {
+                Ok(Ok(())) => {
                     published += 1;
                 }
-                Err(err) => {
+                Ok(Err(err)) => {
+                    warn!("{err}");
+                    continue;
+                }
+                Err(_) => {
                     warn!(
-                        "broadcast_event_to_crawler_relays: skipping {} after connect error: {}",
-                        relay_url, err
+                        "broadcast_event_to_crawler_relays: timeout after {:?} for {}",
+                        RELAY_CONNECT_TIMEOUT + RELAY_PUBLISH_TIMEOUT,
+                        relay_url
+                    );
+                    println!(
+                        "pretty_print_attestations relay_timeout nip={} relay_url={} timeout_secs={}",
+                        bucket.nip,
+                        relay_url,
+                        (RELAY_CONNECT_TIMEOUT + RELAY_PUBLISH_TIMEOUT).as_secs()
                     );
                     continue;
                 }
@@ -333,5 +464,21 @@ mod tests {
         assert_eq!(buckets.len(), 1);
         assert_eq!(buckets[0].nip, 23);
         assert_eq!(buckets[0].relays, vec!["wss://relay.example"]);
+    }
+
+    #[test]
+    fn rejects_invalid_relay_hostnames() {
+        assert!(!is_valid_relay_url("wss://-auth.nostr1.com/"));
+        assert!(!is_valid_relay_url("wss://-pub.wellorder.net/"));
+        assert!(!is_valid_relay_url("wss://192.168.1.133:4848/"));
+        assert!(!is_valid_relay_url("wss://192.168.100.190:7777/"));
+        assert!(!is_valid_relay_url("wss://10.0.10.21:4848/"));
+        assert!(!is_valid_relay_url("wss://172.16.0.1:4848/"));
+        assert!(!is_valid_relay_url("wss://172.31.255.255:4848/"));
+        assert!(!is_valid_relay_url("wss://100.71.217.147:4848/"));
+        assert!(!is_valid_relay_url("wss://100.73.251.113/"));
+        assert!(is_loopback_relay("wss://localhost:4848/"));
+        assert!(is_loopback_relay("ws://127.0.0.1:4848/"));
+        assert!(is_valid_relay_url("wss://relay.example/"));
     }
 }

@@ -1,6 +1,5 @@
-extern crate git2;
-use git2::Repository;
-use git2::RepositoryState;
+use gnostr_asyncgit::git2::Repository;
+use gnostr_asyncgit::git2::RepositoryState;
 
 pub fn state(repo_root: &str) -> RepositoryState {
     let repo = Repository::discover(repo_root).expect("Couldn't open repository");

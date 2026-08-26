@@ -206,11 +206,15 @@ relay = ["dep:gnostr-relay"]
 git = ["dep:gnostr_ngit", "dep:git-version"]
 legit = ["dep:gnostr-legit"]
 chat = ["dep:gnostr-chat"]
-p2p = ["dep:gnostr-p2p"]
+p2p = ["dep:gnostr-p2p", "vendored-openssl"]
 crawler = ["dep:gnostr-crawler", "dep:gnostr_filetreelist"]
 metrics = []
 rate_limiter = []
-vendor-openssl = ["gnostr-asyncgit/vendor-openssl", "git2/vendored-openssl"]
+vendor-openssl = [
+  "gnostr-asyncgit/vendor-openssl",
+  "gnostr-legit/vendored-openssl",
+  "git2/vendored-openssl",
+]
 vendored-openssl = ["vendor-openssl"]
 
 [dependencies]
@@ -218,44 +222,53 @@ actix-web = { workspace = true }
 anyhow = { workspace = true }
 async-std = { version = "1.12", features = ["attributes"] }
 axum = { workspace = true }
+base64 = { workspace = true }
+bech32 = { workspace = true }
+bitcoin_hashes = { workspace = true }
 blossom_tui = { workspace = true, optional = true }
 chrono = "0.4"
 clap = { workspace = true }
 const_format = "0.2"
-crossterm = "0.29"
+crossterm = { workspace = true }
+directories = { workspace = true }
 env_logger = "0.11"
 futures = { workspace = true }
 futures-util = { workspace = true }
 git-version = { version = "0.3.9", optional = true }
 git2 = { version = "0.20.4", default-features = false }
-gnostr = { path = "..", version = ">=949423.1873.524849" }
+gnostr = { path = "..", version = ">=953267.1868.494774" }
 gnostr-asyncgit = { package = "gnostr-asyncgit", path = "../asyncgit", features = [
   "tui",
   "vendor-openssl",
-], version = ">=949423.1873.524849" }
-gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=949423.1873.524849", optional = true }
-gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=949423.1873.524849", optional = true }
-gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=949423.1873.524849" }
-gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=949423.1873.524849" }
-gnostr-js = { package = "gnostr-js", path = "../js", version = ">=949423.1873.524849", optional = true }
-gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=949423.1873.524849", optional = true }
-gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=949423.1873.524849", optional = true }
-gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=949423.1873.524849", optional = true }
-gnostr-web = { package = "gnostr-web", path = "../web", version = ">=949423.1873.524849", optional = true }
-gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=949423.1873.524849", optional = true }
-gnostr_ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=949423.1873.524849", optional = true }
-gnostr_qr = { path = "../qr", version = ">=949423.1873.524849" }
+], version = ">=953267.1868.494774" }
+gnostr-chat = { package = "gnostr-chat", path = "../chat", version = ">=953267.1868.494774", optional = true }
+gnostr-crawler = { package = "gnostr-crawler", path = "../crawler", version = ">=953267.1868.494774", optional = true }
+gnostr-extensions = { package = "gnostr-extensions", path = "../relay/extensions", version = ">=953267.1868.494774" }
+gnostr-git-helpers = { package = "gnostr-git-helpers", path = "../git-helpers", version = ">=953267.1868.494774" }
+gnostr-js = { package = "gnostr-js", path = "../js", version = ">=953267.1868.494774", optional = true }
+gnostr-legit = { package = "gnostr-legit", path = "../legit", version = ">=953267.1868.494774", optional = true }
+gnostr-p2p = { package = "gnostr-p2p", path = "../p2p", version = ">=953267.1868.494774", optional = true }
+gnostr-relay = { package = "gnostr-relay", path = "../relay", version = ">=953267.1868.494774", optional = true }
+gnostr-web = { package = "gnostr-web", path = "../web", version = ">=953267.1868.494774", optional = true }
+gnostr_filetreelist = { package = "gnostr-filetreelist", path = "../filetreelist", version = ">=953267.1868.494774", optional = true }
+gnostr_ngit = { package = "gnostr-ngit", path = "../ngit", version = ">=953267.1868.494774", optional = true }
+gnostr_qr = { path = "../qr", version = ">=953267.1868.494774" }
+hex = { workspace = true }
+k256 = { workspace = true }
 libp2p = { workspace = true }
 log = { workspace = true }
-nips = { path = "../nips", version = ">=949423.1873.524849" }
+nips = { path = "../nips", version = ">=953267.1868.494774" }
 nostr = { workspace = true }
+num-bigint = { workspace = true }
 pretty_env_logger = "0.5.0"
 proctitle = "0.1.1"
+rand = { workspace = true }
 ratatui = { workspace = true, default-features = false, features = [
   "crossterm",
 ] }
 regex = { workspace = true }
 reqwest = { workspace = true }
+rpassword = { workspace = true }
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 secp256k1 = { workspace = true }
 serde = { workspace = true }
@@ -265,6 +278,7 @@ serial_test = "2.0.0"
 sha2 = { workspace = true }
 sha256 = "1.6.0"
 simple_logger = { workspace = true }
+structopt = { workspace = true }
 tempfile = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }
@@ -280,6 +294,7 @@ url = { workspace = true }
 walkdir = { workspace = true }
 warp = "0.3"
 webbrowser = "0.8"
+zeroize = { workspace = true }
 
 [[example]]
 name = "git_tui"

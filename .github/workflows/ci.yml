@@ -25,6 +25,8 @@ jobs:
         continue-on-error: true
       - run: cargo test --workspace
         continue-on-error: true
+      - run: cargo run --quiet -p gnostr-p2p --example fractal_swarm_perfect_ip -- --help
+        continue-on-error: true
 
   # PR CI — runs on GitHub-hosted runner for pull requests.
   ci-pr:
@@ -40,4 +42,6 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -A warnings
         continue-on-error: true
       - run: cargo test --workspace
+        continue-on-error: true
+      - run: cargo run --quiet -p gnostr-p2p --example fractal_swarm_perfect_ip -- --help
         continue-on-error: true

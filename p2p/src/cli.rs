@@ -62,7 +62,7 @@ pub struct NetworkOpts {
     help_template = HELP_TEMPLATE,
     next_line_help = true,
     disable_help_subcommand = true,
-    after_help = "Examples:\n  gnostr-p2p-client --peer 12D3KooW... --network ipfs\n  gnostr-p2p-client --multiaddr /ip4/127.0.0.1/tcp/4001"
+    after_help = "Examples:\n  gnostr-p2p-client --peer 12D3KooW... --network ipfs\n  gnostr-p2p-client --multiaddr /ip4/127.0.0.1/tcp/4001\n  gnostr-p2p-client --peer 12D3KooW... --protocol /ipfs/kad --protocol-version 0.0.1"
 )]
 pub struct LookupOpts {
     /// Seed used to generate a deterministic Ed25519 identity.
@@ -80,6 +80,14 @@ pub struct LookupOpts {
     /// Optional bootstrap network whose bootnodes will be added to the DHT.
     #[arg(long)]
     pub network: Option<Network>,
+
+    /// Override the Kademlia protocol name.
+    #[arg(long, value_name = "PROTOCOL")]
+    pub protocol: Option<String>,
+
+    /// Replace the last protocol segment with a custom version string.
+    #[arg(long = "protocol-version", value_name = "VERSION")]
+    pub protocol_version: Option<String>,
 }
 
 pub fn init_tracing() {
@@ -167,7 +175,7 @@ mod tests {
 
     #[test]
     fn keypair_from_seed_is_deterministic() {
-        let seed = Some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string());
+        let seed = Some(gnostr_asyncgit::default_gnostr_private_key_hex());
         let left = crate::keypair_from_seed(seed.clone());
         let right = crate::keypair_from_seed(seed);
         assert_eq!(left.public().to_peer_id(), right.public().to_peer_id());
@@ -235,5 +243,22 @@ mod tests {
         );
         assert!(opts.multiaddr.is_none());
         assert!(matches!(opts.network, Some(Network::Ipfs)));
+    }
+
+    #[test]
+    fn lookup_opts_parses_protocol_overrides() {
+        let opts = LookupOpts::try_parse_from([
+            "gnostr-p2p-client",
+            "--peer",
+            "12D3KooWQKqane1SqWJNWMQkbia9qiMWXkcHtAdfW5eVF8hbwEDw",
+            "--protocol",
+            "/ipfs/kad",
+            "--protocol-version",
+            "0.0.1",
+        ])
+        .expect("lookup opts");
+
+        assert_eq!(opts.protocol.as_deref(), Some("/ipfs/kad"));
+        assert_eq!(opts.protocol_version.as_deref(), Some("0.0.1"));
     }
 }

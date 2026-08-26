@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use libp2p::identity;
+use libp2p::{identity, multiaddr::Protocol, Multiaddr, PeerId};
 use tracing::{debug, trace};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
@@ -43,4 +43,14 @@ pub fn generate_ed25519(secret_key_seed: Option<u8>) -> identity::Keypair {
     }
 
     identity::Keypair::ed25519_from_bytes(bytes).expect("only errors on wrong length")
+}
+
+/// Ensure a discovered address carries the peer ID suffix expected by libp2p dials.
+pub fn multiaddr_with_peer_id(address: &Multiaddr, peer_id: &PeerId) -> Multiaddr {
+    let p2p_suffix = Protocol::P2p(peer_id.clone());
+    if address.ends_with(&Multiaddr::empty().with(p2p_suffix.clone())) {
+        address.clone()
+    } else {
+        address.clone().with(p2p_suffix)
+    }
 }

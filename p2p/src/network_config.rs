@@ -1,7 +1,11 @@
+use std::env;
 use std::str::FromStr;
 
 use clap::ValueEnum;
 use libp2p::{Multiaddr, PeerId, StreamProtocol};
+
+pub const DEFAULT_DISCOVERY_TOPIC: &str = "gnostr/p2p/presence";
+pub const DEFAULT_CHAT_TOPIC: &str = "gnostr-dev";
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum Network {
@@ -66,6 +70,42 @@ impl Network {
     }
 }
 
+pub fn resolve_protocol_name(
+    network: Option<Network>,
+    protocol: Option<String>,
+    protocol_version: Option<String>,
+) -> String {
+    let protocol_name = protocol
+        .or_else(|| network.and_then(|n| n.protocol()))
+        .unwrap_or_else(|| IPFS_PROTO_NAME.to_string());
+
+    match protocol_version {
+        Some(version) => match protocol_name.rsplit_once('/') {
+            Some((base, last)) if !base.is_empty() && looks_like_version(last) => {
+                format!("{base}/{version}")
+            }
+            _ => format!("{protocol_name}/{version}"),
+        },
+        None => protocol_name,
+    }
+}
+
+pub fn active_protocol_name() -> String {
+    resolve_protocol_name(
+        None,
+        env::var("GNOSTR_P2P_PROTOCOL").ok(),
+        env::var("GNOSTR_P2P_PROTOCOL_VERSION").ok(),
+    )
+}
+
+pub fn active_discovery_topic() -> String {
+    normalized_env_value("GNOSTR_P2P_DISCOVERY_TOPIC").unwrap_or_else(|| DEFAULT_DISCOVERY_TOPIC.to_string())
+}
+
+pub fn active_chat_topic() -> String {
+    normalized_env_value("GNOSTR_P2P_CHAT_TOPIC").unwrap_or_else(|| DEFAULT_CHAT_TOPIC.to_string())
+}
+
 pub const IPFS_BOOTNODES: [&str; 6] = [
     "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
     "QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
@@ -75,6 +115,20 @@ pub const IPFS_BOOTNODES: [&str; 6] = [
     "12D3KooWFhXabKDwALpzqMbto94sB7rvmZ6M28hs9Y9xSopDKwQr",
 ];
 pub const IPFS_PROTO_NAME: StreamProtocol = StreamProtocol::new("/ipfs/kad/1.0.0");
+
+fn normalized_env_value(key: &str) -> Option<String> {
+    let value = env::var(key).ok()?;
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+fn looks_like_version(segment: &str) -> bool {
+    !segment.is_empty() && segment.chars().all(|c| c.is_ascii_digit() || c == '.')
+}
 
 #[cfg(test)]
 mod tests {
@@ -100,5 +154,25 @@ mod tests {
     fn ipfs_bootnodes_include_bootstrap_nodes() {
         let bootnodes = Network::Ipfs.bootnodes();
         assert!(bootnodes.iter().any(|(_, peer)| peer.to_string() == "QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"));
+    }
+
+    #[test]
+    fn resolve_protocol_name_replaces_last_segment() {
+        assert_eq!(
+            resolve_protocol_name(
+                Some(Network::Ipfs),
+                Some("/ipfs/kad".to_string()),
+                Some("0.0.1".to_string())
+            ),
+            "/ipfs/kad/0.0.1"
+        );
+        assert_eq!(
+            resolve_protocol_name(
+                None,
+                Some("/custom/protocol/1.2.3".to_string()),
+                Some("9.9.9".to_string())
+            ),
+            "/custom/protocol/9.9.9"
+        );
     }
 }

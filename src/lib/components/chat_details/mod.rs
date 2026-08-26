@@ -6,7 +6,6 @@ use gnostr_asyncgit::{
     sync::{commit_files::OldNew, CommitTags},
     AsyncCommitFiles, CommitFilesParams,
 };
-use nostr_sdk_0_34_0::prelude::*;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     Frame,

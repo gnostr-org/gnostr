@@ -6,8 +6,7 @@ use std::{
 };
 
 use anyhow::{Result, anyhow, bail};
-use auth_git2::GitAuthenticator;
-use git2::{Progress, Repository};
+use gnostr_asyncgit::git2::{Cred, CredentialType, Progress, Repository};
 
 use crate::{
     cli_interactor::count_lines_per_msg_vec,
@@ -122,20 +121,9 @@ fn fetch_from_git_server_url(
     }
     let git_config = git_repo.config()?;
     let mut git_server_remote = git_repo.remote_anonymous(git_server_url)?;
-    let auth = {
-        if dont_authenticate {
-            GitAuthenticator::default()
-        } else if git_server_url.contains("git@") {
-            if let Some(ssh_key_file) = ssh_key_file {
-                GitAuthenticator::default()
-                    .add_ssh_key_from_file(PathBuf::from_str(ssh_key_file)?, None)
-            } else {
-                GitAuthenticator::default()
-            }
-        } else {
-            GitAuthenticator::default()
-        }
-    };
+    let ssh_key_file = ssh_key_file
+        .map(|ssh_key_file| PathBuf::from_str(ssh_key_file))
+        .transpose()?;
     let mut fetch_options = git2::FetchOptions::new();
     let mut remote_callbacks = git2::RemoteCallbacks::new();
     let fetch_reporter = Arc::new(Mutex::new(FetchReporter::new(term)));
@@ -157,7 +145,25 @@ fn fetch_from_git_server_url(
     });
 
     if !dont_authenticate {
-        remote_callbacks.credentials(auth.credentials(&git_config));
+        remote_callbacks.credentials({
+            let git_config = git_config;
+            move |url, username_from_url, allowed_types| {
+                if allowed_types.contains(CredentialType::USER_PASS_PLAINTEXT) {
+                    Cred::credential_helper(&git_config, url, username_from_url)
+                } else if allowed_types.contains(CredentialType::SSH_KEY) {
+                    let username = username_from_url.unwrap_or("git");
+                    if let Some(ref ssh_key_file) = ssh_key_file {
+                        Cred::ssh_key(username, None, ssh_key_file.as_path(), None)
+                    } else {
+                        Cred::ssh_key_from_agent(username)
+                    }
+                } else if allowed_types.contains(CredentialType::USERNAME) {
+                    Cred::username(username_from_url.unwrap_or("git"))
+                } else {
+                    Cred::default()
+                }
+            }
+        });
     }
     fetch_options.remote_callbacks(remote_callbacks);
 

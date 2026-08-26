@@ -34,7 +34,7 @@ pub struct CommitId(Oid);
 
 impl Default for CommitId {
     fn default() -> Self {
-        Self(Oid::zero())
+        Self(Oid::ZERO_SHA1)
     }
 }
 
@@ -134,7 +134,10 @@ pub fn get_commits_info(
             let author = c
                 .author()
                 .name()
-                .map_or_else(|| String::from("<unknown>"), String::from);
+                .map_or_else(
+                    |_| String::from("<unknown>"),
+                    |name| name.to_string(),
+                );
             CommitInfo {
                 message,
                 author,
@@ -158,7 +161,7 @@ pub fn get_commit_info(repo_path: &RepoPath, commit_id: &CommitId) -> Result<Com
 
     Ok(CommitInfo {
         message: commit.message().unwrap_or("").into(),
-        author: author.name().unwrap_or("<unknown>").into(),
+        author: author.name().ok().unwrap_or("<unknown>").into(),
         time: commit.time().seconds(),
         id: CommitId(commit.id()),
     })

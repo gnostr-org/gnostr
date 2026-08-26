@@ -8,7 +8,8 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use git2::{Branch, Oid, RepositoryInitOptions, Signature, Time};
+use gnostr_asyncgit::git2;
+use gnostr_asyncgit::git2::{Branch, Oid, RepositoryInitOptions, Signature, Time};
 use nostr::nips::{nip01::Coordinate, nip19::Nip19Coordinate};
 use nostr_sdk::{Kind, RelayUrl, ToBech32};
 

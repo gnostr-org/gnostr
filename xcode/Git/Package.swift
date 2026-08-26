@@ -19,24 +19,25 @@ let package = Package(
             targets: ["GnostrGit"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
+        .package(path: "../LibGit2-iOS"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "XGit",
-            dependencies: ["libgit2"],
-            exclude: ["internal"]),
+            dependencies: [
+                .product(name: "Clibgit2", package: "libgit2-ios"),
+            ],
+            exclude: ["internal"],
+            linkerSettings: [
+                .linkedLibrary("z"),
+                .linkedLibrary("iconv"),
+            ]),
         .target(
             name: "GnostrGit",
             dependencies: ["XGit"],
             linkerSettings: [.linkedLibrary("z"), .linkedLibrary("iconv")]),
-        .binaryTarget(
-            name: "libgit2",
-            url: "https://github.com/light-tech/LibGit2-On-iOS/releases/download/v1.3.1/libgit2.xcframework.zip",
-            checksum: "332bfb255649f2295d5530e4abed4e81803acdc6abf18a266695fdb447ca3df2"),
         .testTarget(
             name: "GnostrGitTests",
             dependencies: ["GnostrGit"]),

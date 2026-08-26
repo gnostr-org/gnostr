@@ -1,0 +1,13 @@
+.DS_Store
+.build/
+.swiftpm/
+.vscode/
+.index-build/
+.devcontainer/
+/Packages
+Package.resolved
+/*.xcodeproj
+xcuserdata/
+/public
+/docs
+.benchmarkBaselines

@@ -60,9 +60,9 @@ pub struct CliArgs {
     flag_patch: bool,
     #[arg(
         value_name = "nsec",
-        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        default_value_t = gnostr_asyncgit::default_gnostr_private_key_hex()
     )]
-    arg_nsec: Option<String>,
+    arg_nsec: String,
     #[arg(value_name = "commit")]
     arg_commit: Vec<String>,
     #[arg(value_name = "spec", last = true)]
@@ -74,14 +74,14 @@ pub struct CliArgs {
 pub async fn run(args: &CliArgs) -> Result<()> {
     debug!("crawler::cli::run start args={args:?}");
     let _run_async = async {
-        let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+        let app_keys = Keys::parse(&args.arg_nsec).unwrap();
         let relay_client = Client::new(app_keys);
         let _ = relay_client
             .send_event_builder(EventBuilder::text_note("#gnostr"))
             .await;
     };
 
-    let app_keys = Keys::parse(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
+    let app_keys = Keys::parse(&args.arg_nsec).unwrap();
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor).await;
     let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();

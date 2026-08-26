@@ -145,7 +145,13 @@ pub fn filter_commit_by_search(filter: LogFilterSearch) -> SharedCommitFilterFn 
                 .options
                 .fields
                 .contains(SearchFields::MESSAGE_SUMMARY)
-                .then(|| commit.summary().map(|msg| filter.match_text(msg)))
+                .then(|| {
+                    commit
+                        .summary()
+                        .ok()
+                        .flatten()
+                        .map(|msg| filter.match_text(msg))
+                })
                 .flatten()
                 .unwrap_or_default();
 
@@ -153,7 +159,13 @@ pub fn filter_commit_by_search(filter: LogFilterSearch) -> SharedCommitFilterFn 
                 .options
                 .fields
                 .contains(SearchFields::MESSAGE_BODY)
-                .then(|| commit.body().map(|msg| filter.match_text(msg)))
+                .then(|| {
+                    commit
+                        .body()
+                        .ok()
+                        .flatten()
+                        .map(|msg| filter.match_text(msg))
+                })
                 .flatten()
                 .unwrap_or_default();
 
@@ -165,23 +177,19 @@ pub fn filter_commit_by_search(filter: LogFilterSearch) -> SharedCommitFilterFn 
                 .flatten()
                 .is_some_and(|diff| filter.match_diff(&diff));
 
-            let authors_match = filter
-                .options
-                .fields
-                .contains(SearchFields::AUTHORS)
-                .then(|| {
-                    let name_match = commit
-                        .author()
-                        .name()
-                        .is_some_and(|name| filter.match_text(name));
-                    let mail_match = commit
-                        .author()
-                        .email()
-                        .is_some_and(|name| filter.match_text(name));
-
-                    name_match || mail_match
-                })
-                .unwrap_or_default();
+            let authors_match = if filter.options.fields.contains(SearchFields::AUTHORS) {
+                let author = commit.author();
+                let author_match = {
+                    let author_haystacks = [author.name().ok(), author.email().ok()];
+                    author_haystacks
+                        .into_iter()
+                        .flatten()
+                        .any(|haystack| filter.match_text(haystack))
+                };
+                author_match
+            } else {
+                false
+            };
 
             Ok(msg_summary_match || msg_body_match || file_match || authors_match)
         },

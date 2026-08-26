@@ -61,11 +61,11 @@ fn submodule_to_info(s: &Submodule, r: &Repository) -> SubmoduleInfo {
 		.unwrap_or(SubmoduleStatus::empty());
 
 	SubmoduleInfo {
-		name: s.name().unwrap_or_default().into(),
+		name: s.name().map(str::to_owned).unwrap_or_default(),
 		path: s.path().to_path_buf(),
 		id: s.workdir_id().map(CommitId::from),
 		head_id: s.head_id().map(CommitId::from),
-		url: s.url().map(String::from),
+		url: s.url().ok().flatten().map(str::to_owned),
 		status,
 	}
 }

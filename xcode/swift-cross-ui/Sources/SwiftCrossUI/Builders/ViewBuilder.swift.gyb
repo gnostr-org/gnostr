@@ -1,0 +1,46 @@
+// This file was generated using gyb. Do not edit it directly. Edit
+// ViewBuilder.swift.gyb instead.
+
+// swiftformat:options --allow-partial-wrapping true
+%{
+maximum_view_count = 20
+}%
+
+/// A result builder used to compose views together into composite views in
+/// a declarative manner.
+@resultBuilder
+public struct ViewBuilder {
+    public static func buildBlock() -> some View {
+        return EmptyView()
+    }
+% for i in range(maximum_view_count):
+%{
+type_parameters = ", ".join(["V%d: View" % j for j in range(i + 1)])
+parameters = ", ".join(["_ view%d: V%d" % (j, j) for j in range(i + 1)])
+
+return_type_parameters = ", ".join(["V%d" % j for j in range(i + 1)])
+return_type = "TupleView%d<\n        %s\n    >" % (i + 1, return_type_parameters)
+return_type_init_parameters = ", ".join(["view%d" % j for j in range(i + 1)])
+}%
+
+    public static func buildBlock<
+        ${type_parameters}
+    >(
+        ${parameters}
+    ) -> ${return_type} {
+        return ${return_type}(${return_type_init_parameters})
+    }
+% end
+
+    public static func buildEither<A: View, B: View>(first component: A) -> EitherView<A, B> {
+        return EitherView(component)
+    }
+
+    public static func buildEither<A: View, B: View>(second component: B) -> EitherView<A, B> {
+        return EitherView(component)
+    }
+
+    public static func buildIf<V: View>(_ content: V?) -> OptionalView<V> {
+        return OptionalView(content)
+    }
+}

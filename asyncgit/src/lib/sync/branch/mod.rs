@@ -151,9 +151,7 @@ pub fn get_branches_info(repo_path: &RepoPath, local: bool) -> Result<Vec<Branch
             let remote = repo
                 .branch_upstream_remote(&reference)
                 .ok()
-                .as_ref()
-                .and_then(git2::Buf::as_str)
-                .map(String::from);
+                .and_then(|remote| remote.as_str().ok().map(str::to_owned));
 
             let name_bytes = branch.name_bytes()?;
 
@@ -222,11 +220,8 @@ pub fn get_branch_remote(repo_path: &RepoPath, branch: &str) -> Result<Option<St
     let branch = repo.find_branch(branch, BranchType::Local)?;
     let reference = bytes2string(branch.get().name_bytes())?;
     let remote_name = repo.branch_upstream_remote(&reference).ok();
-    if let Some(remote_name) = remote_name {
-        Ok(Some(bytes2string(remote_name.as_ref())?))
-    } else {
-        Ok(None)
-    }
+    Ok(remote_name
+        .and_then(|remote_name| remote_name.as_str().ok().map(str::to_owned)))
 }
 
 /// returns whether the pull merge strategy is set to rebase
@@ -287,12 +282,10 @@ pub fn checkout_branch(repo_path: &RepoPath, branch_name: &str, force: bool) -> 
     // modify state to match branch's state
     repo.checkout_tree(target_treeish_object, Some(&mut checkout_builder))?;
 
-    let branch_ref = branch_ref
-        .name()
-        .ok_or_else(|| Error::Generic(String::from("branch ref not found")));
+    let branch_ref = branch_ref.name()?;
 
     // modify HEAD to point to given branch
-    repo.set_head(branch_ref?)?;
+    repo.set_head(branch_ref)?;
 
     Ok(())
 }

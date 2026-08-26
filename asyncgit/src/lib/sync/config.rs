@@ -83,7 +83,7 @@ pub fn get_config_string_repo(repo: &Repository, key: &str) -> Result<Option<Str
     };
 
     if entry.has_value() {
-        Ok(entry.value().map(std::string::ToString::to_string))
+        Ok(entry.value().ok().map(std::string::ToString::to_string))
     } else {
         Ok(None)
     }

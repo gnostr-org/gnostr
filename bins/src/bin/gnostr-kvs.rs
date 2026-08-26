@@ -20,7 +20,7 @@ use tokio::{
 use tracing::{debug, info, warn};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let _ = init_subscriber();
     let args = Args::parse();
     warn!("args={:?}", args);
@@ -87,7 +87,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         select! {
             line = stdin.next_line() => {
-                let line = line?.ok_or("stdin closed")?;
+                let line = line?.ok_or_else(|| {
+                    std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "stdin closed")
+                })?;
                 handle_input_line(&mut swarm, line).await;
             }
             event = swarm.select_next_some() => {

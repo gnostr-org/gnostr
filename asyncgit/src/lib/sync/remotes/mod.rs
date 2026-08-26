@@ -67,7 +67,7 @@ pub fn validate_remote_name(name: &str) -> bool {
 pub fn get_remote_url(repo_path: &RepoPath, remote_name: &str) -> Result<Option<String>> {
     let repo = repo(repo_path)?;
     let remote = repo.find_remote(remote_name)?;
-    Ok(remote.url().map(ToString::to_string))
+    Ok(remote.url().ok().map(ToString::to_string))
 }
 
 ///
@@ -76,7 +76,13 @@ pub fn get_remotes(repo_path: &RepoPath) -> Result<Vec<String>> {
 
     let repo = repo(repo_path)?;
     let remotes = repo.remotes()?;
-    let remotes: Vec<String> = remotes.iter().flatten().map(String::from).collect();
+    let remotes: Vec<String> = remotes
+        .iter()
+        .filter_map(|remote| match remote {
+            Ok(Some(remote)) => Some(String::from(remote)),
+            _ => None,
+        })
+        .collect();
 
     Ok(remotes)
 }
@@ -213,9 +219,10 @@ pub(crate) fn get_default_remote_in_repo(repo: &Repository) -> Result<String> {
     let remotes = repo.remotes()?;
 
     // if `origin` exists return that
-    let found_origin = remotes
-        .iter()
-        .any(|r| r.is_some_and(|r| r == DEFAULT_REMOTE_NAME));
+    let found_origin = remotes.iter().any(|remote| match remote {
+        Ok(Some(remote)) => remote == DEFAULT_REMOTE_NAME,
+        _ => false,
+    });
     if found_origin {
         return Ok(DEFAULT_REMOTE_NAME.into());
     }
@@ -225,8 +232,10 @@ pub(crate) fn get_default_remote_in_repo(repo: &Repository) -> Result<String> {
         let first_remote = remotes
             .iter()
             .next()
-            .flatten()
-            .map(String::from)
+            .and_then(|remote| match remote {
+                Ok(Some(remote)) => Some(String::from(remote)),
+                _ => None,
+            })
             .ok_or_else(|| Error::Generic("no remote found".into()))?;
 
         return Ok(first_remote);
@@ -272,8 +281,10 @@ pub fn fetch_all(
     let remotes = repo
         .remotes()?
         .iter()
-        .flatten()
-        .map(String::from)
+        .filter_map(|remote| match remote {
+            Ok(Some(remote)) => Some(String::from(remote)),
+            _ => None,
+        })
         .collect::<Vec<_>>();
     let remotes_count = remotes.len();
 

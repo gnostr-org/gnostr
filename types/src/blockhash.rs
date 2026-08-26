@@ -1,6 +1,7 @@
 use std::env;
 
 use log::debug;
+use crate::nostr::ureq_async;
 
 const BLOCKHASH_URLS: [&str; 4] = [
     "https://bitcoin.gob.sv/api/blocks/tip/hash",
@@ -23,7 +24,13 @@ fn fetch_blockhash_sync() -> Option<String> {
 }
 
 async fn fetch_blockhash_async() -> Option<String> {
-    fetch_blockhash_sync()
+    for url in BLOCKHASH_URLS.iter() {
+        match ureq_async((*url).to_string()).await {
+            Ok(val) => return Some(val.trim().to_string()),
+            Err(err) => debug!("blockhash_async: failed to fetch from {}: {:?}", url, err),
+        }
+    }
+    None
 }
 
 pub fn blockhash() -> Result<String, ascii::AsciiChar> {
@@ -40,7 +47,7 @@ pub async fn blockhash_async() -> String {
     blockhash
 }
 pub fn blockhash_sync() -> String {
-    let blockhash = fetch_blockhash_sync().unwrap_or_default();
+    let blockhash = fetch_blockhash_sync().unwrap_or_else(|| "0".to_string());
     debug!("blockhash_sync: {}", blockhash);
     blockhash
 }

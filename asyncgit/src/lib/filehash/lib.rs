@@ -38,6 +38,10 @@ pub const CARGO_PKG_NAME: &str = env!("CARGO_PKG_NAME");
 /// The version of the package as specified in Cargo.toml.
 pub const CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 #[cfg(feature = "nostr")]
 /// The git commit hash of the repository at the time of compilation.
 pub const GIT_COMMIT_HASH: &str = env!("GIT_COMMIT_HASH");
@@ -88,6 +92,8 @@ pub async fn publish_patch_event(
     patch_content: &str,
     build_manifest_event_id: Option<&Id>,
 ) -> Result<Id, Error> {
+    install_rustls_crypto_provider();
+
     let mut client = Client::new(keys, Options::new().send_timeout(Some(Duration::from_secs(1))));
     client.add_relays(relay_urls.to_vec()).await?;
     client.connect().await;

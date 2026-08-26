@@ -29,6 +29,7 @@ Makefile shortcuts:
 ## Key conventions
 
 - Check `gnostr -V` and `gnostr <subcommand> --help` when behavior differs across environments; the live CLI surface is the source of truth.
+- On startup, run `gnostr -V` and `gnostr --blockheight`.
 - Prefer explicit repo and relay context with `--gitdir`, `--workdir`, and `--relays` when writing or debugging commands.
 - The test wrappers intentionally silence noisy crates with `RUST_LOG=...ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off`; keep that pattern when adding new shell runners.
 - Use exact test names with `./scripts/gnostr-tests.sh --test ...`; the wrapper is built around exact-name selection.

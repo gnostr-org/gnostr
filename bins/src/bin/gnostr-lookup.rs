@@ -23,6 +23,12 @@ enum Opt {
         /// Network of the peer.
         #[arg(long, value_enum, default_value = "ipfs")]
         network: Network,
+        /// Override the Kademlia protocol name.
+        #[arg(long, value_name = "PROTOCOL")]
+        protocol: Option<String>,
+        /// Replace the last protocol segment with a custom version string.
+        #[arg(long = "protocol-version", value_name = "VERSION")]
+        protocol_version: Option<String>,
     },
 }
 
@@ -32,8 +38,13 @@ async fn main() {
     let opt = Opt::parse();
 
     let lookup = match opt {
-        Opt::Dht { peer_id, network } => {
-            let client = LookupClient::new(Some(network));
+        Opt::Dht {
+            peer_id,
+            network,
+            protocol,
+            protocol_version,
+        } => {
+            let client = LookupClient::new_with_protocol(Some(network), protocol, protocol_version);
             client.lookup_on_dht(peer_id).boxed()
         }
         Opt::Direct { address } => {

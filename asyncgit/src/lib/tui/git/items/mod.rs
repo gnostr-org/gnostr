@@ -197,12 +197,16 @@ pub fn stash_list(config: &Config, repo: &Repository, limit: usize) -> Res<Vec<I
         .enumerate()
         .map(|(i, stash)| -> Res<Item> {
             let spans = itertools::intersperse(
-                iter::once(Span::styled(format!("stash@{i}"), &style.hash)).chain([stash
-                    .message()
-                    .unwrap_or("")
-                    .to_string()
-                    .into()]),
-                Span::raw(" "),
+                iter::once(Span::styled(format!("stash@{i}"), &style.hash)).chain([
+                    stash
+                        .message()
+                        .ok()
+                        .flatten()
+                        .unwrap_or("")
+                        .to_string()
+                        .into(),
+                ]),
+            Span::raw(" "),
             )
             .collect::<Vec<_>>();
 
@@ -250,7 +254,7 @@ pub fn log(
         .filter_map(Result::ok)
         .filter_map(
             |reference| match (reference.peel_to_commit(), reference.shorthand()) {
-                (Ok(target), Some(name)) => {
+                (Ok(target), Ok(name)) => {
                     if name.ends_with("/HEAD") || name.starts_with("prefetch/remotes/") {
                         return None;
                     }
@@ -281,13 +285,21 @@ pub fn log(
 
             let spans = itertools::intersperse(
                 iter::once(Span::styled(short_id, &style.hash))
-                    .chain(
-                        references
-                            .iter()
-                            .filter(|(commit, _)| commit.id() == oid)
-                            .map(|(_, name)| name.clone()),
-                    )
-                    .chain([commit.summary().unwrap_or("").to_string().into()]),
+                            .chain(
+                                references
+                                    .iter()
+                                    .filter(|(commit, _)| commit.id() == oid)
+                                    .map(|(_, name)| name.clone()),
+                            )
+                            .chain([
+                                commit
+                                    .summary()
+                                    .ok()
+                                    .flatten()
+                                    .unwrap_or("")
+                                    .to_string()
+                                    .into(),
+                            ]),
                 Span::raw(" "),
             )
             .collect::<Vec<_>>();

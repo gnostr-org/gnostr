@@ -9,10 +9,9 @@ use std::{
 
 use anyhow::{Context, Result};
 use git2::{Branch, Oid, RepositoryInitOptions, Signature, Time};
-use nostr_0_34_1::nips::nip01::Coordinate;
-use nostr_sdk_0_34_0::{Kind, ToBech32};
+use nostr::{nips::nip01::Coordinate, nips::nip19::Nip19Coordinate, RelayUrl, ToBech32};
 
-use crate::test_utils::generate_repo_ref_event;
+use crate::test_utils::{generate_repo_ref_event, Kind};
 
 pub struct GitTestRepo {
     pub dir: PathBuf,
@@ -23,13 +22,15 @@ pub struct GitTestRepo {
 impl Default for GitTestRepo {
     fn default() -> Self {
         let repo_event = generate_repo_ref_event();
-        let coordinate = Coordinate {
-            kind: Kind::GitRepoAnnouncement,
-            public_key: repo_event.author(),
-            identifier: repo_event.identifier().unwrap().to_string(),
+        let coordinate = Nip19Coordinate {
+            coordinate: Coordinate {
+                kind: Kind::GitRepoAnnouncement,
+                public_key: repo_event.pubkey,
+                identifier: repo_event.tags.identifier().unwrap().to_string(),
+            },
             relays: vec![
-                "ws://localhost:8055".to_string(),
-                "ws://localhost:8056".to_string(),
+                RelayUrl::parse("ws://localhost:8055").unwrap(),
+                RelayUrl::parse("ws://localhost:8056").unwrap(),
             ],
         };
 
@@ -364,15 +365,12 @@ mod tests {
     fn test_git_test_repo_new() -> Result<()> {
         let repo_main = GitTestRepo::new("main")?;
         assert!(repo_main.dir.exists());
-        assert_eq!(repo_main.git_repo.head()?.shorthand(), Some("main"));
+        assert_eq!(repo_main.git_repo.head()?.shorthand()?, "main");
         assert_eq!(repo_main.get_checked_out_branch_name()?, "main");
 
         let repo_dev = GitTestRepo::new("development")?;
         assert!(repo_dev.dir.exists());
-        assert_eq!(
-            repo_dev.git_repo.head()?.shorthand(),
-            Some("development")
-        );
+        assert_eq!(repo_dev.git_repo.head()?.shorthand()?, "development");
         assert_eq!(repo_dev.get_checked_out_branch_name()?, "development");
 
         Ok(())

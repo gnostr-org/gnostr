@@ -5,8 +5,8 @@
 
 use std::fmt::Display;
 
-use git2::Oid;
 use gnostr_asyncgit::sync::CommitId;
+use gnostr_asyncgit::git2::Oid;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
@@ -45,6 +45,7 @@ pub enum MsgKind {
 
 /// A single chat message or structured payload moving through the swarm.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(default)]
 pub struct Msg {
     /// Sender label shown in the UI.
     pub from: String,
@@ -70,7 +71,7 @@ impl Default for Msg {
             from: USER_NAME.clone(),
             content: vec!["".to_string(), "".to_string()],
             kind: MsgKind::Chat,
-            commit_id: CommitId::new(Oid::zero()),
+            commit_id: CommitId::new(Oid::ZERO_SHA1),
             nostr_event: None,
             message_id: None,
             sequence_num: None,

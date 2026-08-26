@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use git2::Repository;
+use gnostr_asyncgit::git2::Repository;
 use nostr::nips::nip19::ToBech32;
 use nostr_sdk::{Event, EventId, Kind, PublicKey};
 
@@ -62,22 +62,29 @@ pub fn get_short_git_server_name(url: &str) -> std::string::String {
 
 pub fn get_remote_name_by_url(git_repo: &Repository, url: &str) -> Result<String> {
     let remotes = git_repo.remotes()?;
-    Ok(remotes
+    let remote_name = remotes
         .iter()
-        .find(|r| {
-            if let Some(name) = r {
-                if let Some(remote_url) = git_repo.find_remote(name).unwrap().url() {
-                    url == remote_url
+        .find_map(|remote| match remote {
+            Ok(Some(name)) => {
+                let matches = match git_repo.find_remote(name) {
+                    Ok(remote) => match remote.url() {
+                        Ok(remote_url) => remote_url == url,
+                        Err(_) => false,
+                    },
+                    Err(_) => false,
+                };
+
+                if matches {
+                    Some(name)
                 } else {
-                    false
+                    None
                 }
-            } else {
-                false
             }
+            _ => None,
         })
-        .context("could not find remote with matching url")?
-        .context("remote with matching url must be named")?
-        .to_string())
+        .context("could not find remote with matching url")?;
+
+    Ok(remote_name.to_string())
 }
 
 pub fn get_oids_from_fetch_batch(

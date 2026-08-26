@@ -56,13 +56,7 @@ pub async fn launch(args: &QuerySubCommand, private_key: Option<String>) -> anyh
         debug!("  {relay},");
     }
 
-    let mut relays = explicit_relays;
-    for relay in crawler_relays {
-        if !relays.iter().any(|existing| existing == &relay) {
-            relays.push(relay);
-        }
-    }
-    let relays = prepend_local_relay(relays);
+    let relays = prioritize_query_relays(explicit_relays, crawler_relays);
     debug!("Query final relays:");
     for relay in &relays {
         debug!("  {relay},");
@@ -166,11 +160,21 @@ fn search_term(args: &QuerySubCommand) -> Option<String> {
         .filter(|search| !search.is_empty())
 }
 
-fn prepend_local_relay(mut relays: Vec<Url>) -> Vec<Url> {
+fn prepend_local_relay(relays: &mut Vec<Url>) {
     let local_relay = Url::parse("ws://127.0.0.1:8080").ok();
     if let Some(local_relay) = local_relay {
         if !relays.iter().any(|relay| relay == &local_relay) {
             relays.insert(0, local_relay);
+        }
+    }
+}
+
+fn prioritize_query_relays(explicit_relays: Vec<Url>, crawler_relays: Vec<Url>) -> Vec<Url> {
+    let mut relays = crawler_relays;
+    prepend_local_relay(&mut relays);
+    for relay in explicit_relays.into_iter().rev() {
+        if !relays.iter().any(|existing| existing == &relay) {
+            relays.insert(0, relay);
         }
     }
     relays
@@ -496,6 +500,51 @@ mod tests {
             ]
         );
         Ok(())
+    }
+
+    #[test]
+    fn test_parse_relays_alias_and_append() -> anyhow::Result<()> {
+        setup_rustls();
+        let args = create_query_subcommand(&[
+            "--relays",
+            "wss://relay.example,wss://relay2.example",
+            "-r",
+            "wss://relay3.example",
+        ]);
+
+        assert_eq!(
+            args.relay,
+            vec![
+                "wss://relay.example".to_string(),
+                "wss://relay2.example".to_string(),
+                "wss://relay3.example".to_string(),
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_prioritize_query_relays_puts_explicit_relays_first() {
+        let explicit = vec![
+            Url::parse("wss://relay.example").unwrap(),
+            Url::parse("wss://relay2.example").unwrap(),
+        ];
+        let crawler = vec![
+            Url::parse("ws://127.0.0.1:8080").unwrap(),
+            Url::parse("wss://relay.crawler.example").unwrap(),
+        ];
+
+        let relays = prioritize_query_relays(explicit, crawler);
+
+        assert_eq!(
+            relays,
+            vec![
+                Url::parse("wss://relay.example").unwrap(),
+                Url::parse("wss://relay2.example").unwrap(),
+                Url::parse("ws://127.0.0.1:8080").unwrap(),
+                Url::parse("wss://relay.crawler.example").unwrap(),
+            ]
+        );
     }
 
     #[test]

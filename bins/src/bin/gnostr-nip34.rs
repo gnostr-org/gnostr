@@ -125,7 +125,12 @@ impl App {
 
                 let full_hash = commit.id().to_string();
                 let hash = full_hash.chars().take(8).collect::<String>();
-                let summary = commit.summary().unwrap_or_default().to_string();
+                let summary = commit
+                    .summary()
+                    .ok()
+                    .flatten()
+                    .unwrap_or_default()
+                    .to_string();
 
                 Commit {
                     hash,
@@ -147,7 +152,7 @@ impl App {
                 if let Ok(reference) = repo.find_reference(&branch_ref_name) {
                     if let Some(commit) = reference.peel_to_commit().ok() {
                         let is_current = if let Ok(head) = repo.head() {
-                            head.name() == Some(format!("refs/heads/{}", branch_name).as_str())
+                            head.name().ok() == Some(branch_ref_name.as_str())
                         } else {
                             false
                         };
@@ -156,7 +161,12 @@ impl App {
                         branches.push(Branch {
                             name: branch_name.to_string(),
                             commit_hash: commit.id().to_string().chars().take(8).collect(),
-                            commit_message: commit.summary().unwrap_or_default().to_string(),
+                            commit_message: commit
+                                .summary()
+                                .ok()
+                                .flatten()
+                                .unwrap_or_default()
+                                .to_string(),
                             author: author.name().unwrap_or("Unknown").to_string(),
                             is_current,
                             is_remote: false,
@@ -594,10 +604,13 @@ impl App {
 
                     diff_content.push_str("\n");
                     diff_content.push_str("Message:\n");
-                    diff_content.push_str(&format!("    {}\n", git_commit.summary().unwrap_or("")));
+                    diff_content.push_str(&format!(
+                        "    {}\n",
+                        git_commit.summary().ok().flatten().unwrap_or("")
+                    ));
 
                     // Add full commit message body if it exists
-                    if let Some(message) = git_commit.message() {
+                    if let Ok(message) = git_commit.message() {
                         let lines: Vec<&str> = message.lines().collect();
                         if lines.len() > 1 {
                             for line in lines.iter().skip(1) {

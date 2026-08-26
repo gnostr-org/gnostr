@@ -198,7 +198,12 @@ impl Nip34Popup {
                     hash: Self::short_hash(&full_hash),
                     full_hash,
                     author: author.name().unwrap_or("Unknown").to_string(),
-                    summary: commit.summary().unwrap_or_default().to_string(),
+                    summary: commit
+                        .summary()
+                        .ok()
+                        .flatten()
+                        .unwrap_or_default()
+                        .to_string(),
                     date,
                 }
             })
@@ -208,7 +213,10 @@ impl Nip34Popup {
     }
 
     fn load_branches(repo: &git2::Repository) -> Result<Vec<BranchRow>> {
-        let head = repo.head().ok().and_then(|head| head.name().map(str::to_string));
+        let head = repo
+            .head()
+            .ok()
+            .and_then(|head| head.name().ok().map(str::to_string));
         let mut branches = Vec::new();
 
         for branch_type in [git2::BranchType::Local, git2::BranchType::Remote] {
@@ -225,7 +233,12 @@ impl Nip34Popup {
                             branches.push(BranchRow {
                                 name: branch_name.to_string(),
                                 full_hash: commit.id().to_string(),
-                                commit_message: commit.summary().unwrap_or_default().to_string(),
+                                commit_message: commit
+                                    .summary()
+                                    .ok()
+                                    .flatten()
+                                    .unwrap_or_default()
+                                    .to_string(),
                                 author: author.name().unwrap_or("Unknown").to_string(),
                                 is_current: head.as_deref() == Some(ref_name.as_str()),
                                 is_remote: matches!(branch_type, git2::BranchType::Remote),

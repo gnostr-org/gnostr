@@ -13,6 +13,7 @@ use log::debug;
 use thiserror::Error;
 
 use crate::p2p::network_config::Network;
+use crate::p2p::network_config::IPFS_PROTO_NAME;
 
 fn print_key(k: &str, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     writeln!(f, "{}:", Style::new().bold().paint(k))
@@ -64,6 +65,14 @@ impl std::fmt::Display for Peer {
 
 impl LookupClient {
     pub fn new(network: Option<Network>) -> Self {
+        Self::new_with_protocol(network, None, None)
+    }
+
+    pub fn new_with_protocol(
+        network: Option<Network>,
+        protocol: Option<String>,
+        protocol_version: Option<String>,
+    ) -> Self {
         // Create a random key for ourselves.
         let local_key = Keypair::generate_ed25519();
         let local_peer_id = PeerId::from(local_key.public());
@@ -71,6 +80,50 @@ impl LookupClient {
         //println!("Local peer id: {local_peer_id}");
 
         let (_relay_transport, _relay_client) = relay::client::new(local_peer_id);
+
+        #[cfg(target_os = "tvos")]
+        let mut swarm = SwarmBuilder::with_existing_identity(local_key)
+            .with_tokio()
+            .with_tcp(
+                tcp::Config::default(),
+                noise::Config::new,
+                yamux::Config::default,
+            )
+            .unwrap()
+            .with_relay_client(noise::Config::new, yamux::Config::default)
+            .unwrap()
+            .with_behaviour(|key, relay_client| {
+                let local_peer_id = PeerId::from(key.public());
+
+                let store = MemoryStore::new(local_peer_id);
+                let protocol_name = resolve_protocol_name(network, protocol, protocol_version);
+                let kademlia_config = libp2p::kad::Config::new(
+                    StreamProtocol::try_from_owned(protocol_name).unwrap(),
+                );
+                let kademlia =
+                    libp2p::kad::Behaviour::with_config(local_peer_id, store, kademlia_config);
+
+                let ping = ping::Behaviour::new(ping::Config::new());
+
+                let user_agent =
+                    "substrate-node/v2.0.0-e3245d49d-x86_64-linux-gnu (unknown)".to_string();
+                let proto_version = "/substrate/1.0".to_string();
+                let identify = identify::Behaviour::new(
+                    identify::Config::new(proto_version, key.public())
+                        .with_agent_version(user_agent),
+                );
+
+                LookupBehaviour {
+                    kademlia,
+                    ping,
+                    identify,
+                    relay: relay_client,
+                }
+            })
+            .unwrap()
+            .build();
+
+        #[cfg(not(target_os = "tvos"))]
         let mut swarm = SwarmBuilder::with_existing_identity(local_key)
             .with_async_std()
             .with_tcp(
@@ -87,9 +140,7 @@ impl LookupClient {
 
                 // Create a Kademlia behaviour.
                 let store = MemoryStore::new(local_peer_id);
-                let protocol_name = network
-                    .and_then(|n| n.protocol())
-                    .unwrap_or_else(|| "/ipfs/kad/1.0.0".to_string());
+                let protocol_name = resolve_protocol_name(network, protocol, protocol_version);
                 let kademlia_config = libp2p::kad::Config::new(
                     StreamProtocol::try_from_owned(protocol_name).unwrap(),
                 );
@@ -248,6 +299,65 @@ impl LookupClient {
                 e => debug!("{e:?}"),
             }
         }
+    }
+}
+
+fn resolve_protocol_name(
+    network: Option<Network>,
+    protocol: Option<String>,
+    protocol_version: Option<String>,
+) -> String {
+    let protocol_name = protocol
+        .or_else(|| network.and_then(|n| n.protocol()))
+        .unwrap_or_else(|| IPFS_PROTO_NAME.to_string());
+
+    match protocol_version {
+        Some(version) => match protocol_name.rsplit_once('/') {
+            Some((base, last)) if !base.is_empty() && looks_like_version(last) => {
+                format!("{base}/{version}")
+            }
+            _ => format!("{protocol_name}/{version}"),
+        },
+        None => protocol_name,
+    }
+}
+
+fn looks_like_version(segment: &str) -> bool {
+    !segment.is_empty() && segment.chars().all(|c| c.is_ascii_digit() || c == '.')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_protocol_name;
+    use crate::p2p::network_config::Network;
+
+    #[test]
+    fn resolve_protocol_name_keeps_defaults() {
+        assert_eq!(resolve_protocol_name(None, None, None), "/ipfs/kad/1.0.0");
+        assert_eq!(
+            resolve_protocol_name(Some(Network::Ursa), None, None),
+            "/ursa/kad/0.0.1"
+        );
+    }
+
+    #[test]
+    fn resolve_protocol_name_replaces_last_segment() {
+        assert_eq!(
+            resolve_protocol_name(
+                Some(Network::Ipfs),
+                Some("/ipfs/kad".to_string()),
+                Some("0.0.1".to_string())
+            ),
+            "/ipfs/kad/0.0.1"
+        );
+        assert_eq!(
+            resolve_protocol_name(
+                None,
+                Some("/custom/protocol/1.2.3".to_string()),
+                Some("9.9.9".to_string())
+            ),
+            "/custom/protocol/9.9.9"
+        );
     }
 }
 

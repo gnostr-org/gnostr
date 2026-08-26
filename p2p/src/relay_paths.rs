@@ -12,6 +12,22 @@ pub fn get_config_dir_path() -> PathBuf {
     PathBuf::from(".")
 }
 
+fn normalize_relay_entry(relay: &str) -> Option<String> {
+    let relay = relay
+        .trim()
+        .trim_start_matches("- ")
+        .trim_start_matches('-')
+        .trim_matches('\'')
+        .trim_matches('"')
+        .trim();
+
+    if relay.is_empty() {
+        None
+    } else {
+        Some(relay.to_string())
+    }
+}
+
 pub fn load_relays_or_bootstrap() -> Vec<String> {
     let config_dir = get_config_dir_path();
     let yaml_path = config_dir.join("relays.yaml");
@@ -21,7 +37,7 @@ pub fn load_relays_or_bootstrap() -> Vec<String> {
             .lines()
             .map(str::trim)
             .filter(|line| !line.is_empty())
-            .map(|line| line.trim_start_matches("- ").trim().to_string())
+            .filter_map(normalize_relay_entry)
             .collect(),
         Err(_) => Vec::new(),
     }
