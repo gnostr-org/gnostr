@@ -1,0 +1,43 @@
+import Foundation
+import PackagePlugin
+
+@main
+struct SwiftBundlerCommandPlugin: CommandPlugin {
+  /// This entry point is called when operating on a Swift package.
+  func performCommand(context: PluginContext, arguments: [String]) async throws {
+    let bundler = try context.tool(named: "swift-bundler")
+
+    try await run(command: bundler.url, with: arguments)
+  }
+}
+
+extension SwiftBundlerCommandPlugin {
+  /// Run a command with the given arguments.
+  func run(command: URL, with arguments: [String]) async throws {
+    let process = try await Process.runAndWait(command, arguments: arguments)
+
+    // Check whether the subprocess invocation was successful.
+    if process.terminationReason == .exit,
+      process.terminationStatus == 0
+    {
+      print("SwiftBundlerCommandPlugin successfully completed.")
+    } else {
+      let problem = "\(process.terminationReason):\(process.terminationStatus)"
+      Diagnostics.error("SwiftBundlerCommandPlugin failed: \(problem)")
+    }
+  }
+}
+
+extension Process {
+  class func runAndWait(_ url: URL, arguments: [String]) async throws -> Process {
+    try await withCheckedThrowingContinuation { continuation in
+      do {
+        _ = try Process.run(url, arguments: arguments) {
+          continuation.resume(returning: $0)
+        }
+      } catch {
+        continuation.resume(throwing: error)
+      }
+    }
+  }
+}

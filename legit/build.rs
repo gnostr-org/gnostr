@@ -4,70 +4,6 @@ use std::{
     path::Path,
     process::Command,
 };
-use sha2::{Digest, Sha256};
-
-use hex;
-
-fn _sync_nip44_vectors() {
-    const NIP44_VECTORS_URL: &str = "https://raw.githubusercontent.com/paulmillr/nip44/master/nip44.vectors.json";
-    const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
-    let out_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("src/lib/types/nip44/nip44.vectors.json");
-
-    println!("cargo:rerun-if-changed={}", dest_path.display());
-
-    let mut needs_download = true;
-
-    if dest_path.exists() {
-        println!("cargo:warning=nip44.vectors.json already exists.");
-        let mut file = fs::File::open(&dest_path).unwrap();
-        let mut hasher = Sha256::new();
-        io::copy(&mut file, &mut hasher).unwrap();
-        let hash = hasher.finalize();
-        let hex_hash = hex::encode(hash);
-        if hex_hash == NIP44_VECTORS_SHA256 {
-            println!("cargo:warning=nip44.vectors.json hash is correct.");
-            needs_download = false;
-        } else {
-            println!("cargo:warning=nip44.vectors.json hash is incorrect. Re-downloading.");
-            fs::remove_file(&dest_path).unwrap();
-        }
-    }
-
-    if needs_download {
-        println!("cargo:warning=Downloading nip44.vectors.json...");
-        match reqwest::blocking::get(NIP44_VECTORS_URL) {
-            Ok(response) => {
-                let content = response.bytes().unwrap();
-                let mut hasher = Sha256::new();
-                hasher.update(&content);
-                let hash = hasher.finalize();
-                let hex_hash = hex::encode(hash);
-
-                if hex_hash == NIP44_VECTORS_SHA256 {
-                    let mut file = fs::File::create(&dest_path).unwrap();
-                    file.write_all(&content).unwrap();
-                    println!("cargo:warning=Successfully downloaded and verified nip44.vectors.json.");
-                } else {
-                    panic!(
-                        "Downloaded nip44.vectors.json has incorrect hash. Expected {}, got {}",
-                        NIP44_VECTORS_SHA256, hex_hash
-                    );
-                }
-            }
-            Err(e) => {
-                if dest_path.exists() {
-                    println!(
-                        "cargo:warning=Failed to download nip44.vectors.json: {}. Using existing file.",
-                        e
-                    );
-                } else {
-                    panic!("Failed to download nip44.vectors.json and no local copy available: {}", e);
-                }
-            }
-        }
-    }
-}
 
 fn command_exists(command: &str) -> bool {
     let checker = if env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows" {
@@ -80,186 +16,14 @@ fn command_exists(command: &str) -> bool {
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .status()
-        .map_or(false, |s| s.success())
-}
-
-// try:
-// cargo build --features memory_profiling -j8
-
-fn check_sccache() {
-    if Command::new("sccache").arg("--version").output().is_ok() {
-        println!("cargo:warning=sscache detected, setting RUSTC_WRAPPER.");
-        env::set_var("RUSTC_WRAPPER", "sscache");
-        println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
-    } else {
-        println!("cargo:warning=sscache not found - trying to install.");
-        install_sccache();
-    }
+        .is_ok_and(|s| s.success())
 }
 
 fn check_brew() -> bool {
     command_exists("brew")
 }
 
-fn install_sccache() {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-
-    if target_os == "linux" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected Linux OS. Attempting to install sccache.");
-
-        let installer = if command_exists("apt-get") {
-            "apt-get"
-        } else if command_exists("yum") {
-            "yum"
-        } else if command_exists("dnf") {
-            "dnf"
-        } else {
-            println!("cargo:warning=Neither apt-get, yum, nor dnf found. Please install sccache manually.");
-            return;
-        };
-
-        if installer == "apt-get" {
-            if !Command::new("sudo")
-                .arg("apt-get")
-                .arg("update")
-                .status()
-                .map_or(false, |s| s.success())
-            {
-                println!("cargo:warning=Failed to update package lists with apt-get.");
-            }
-        }
-
-        println!("cargo:warning=Installing sccache with {}", installer);
-        let output = Command::new("sudo")
-            .arg(installer)
-            .arg("install")
-            .arg("-y")
-            .arg("sccache")
-            .output();
-
-        match output {
-            Ok(output) if output.status.success() => {
-                println!("cargo:warning=Successfully installed sccache.");
-            }
-            Ok(output) => {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                println!("cargo:warning=Failed to install sccache: {}", stderr);
-                println!("cargo:warning=Continuing build without sccache acceleration.");
-            }
-            Err(e) => {
-                println!("cargo:warning=Failed to run installation command: {}", e);
-                println!("cargo:warning=Continuing build without sccache acceleration.");
-            }
-        }
-    } else if target_os == "macos" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected macOS. Attempting to install 'sccache' using Homebrew.");
-
-        if check_brew() {
-            let output = Command::new("brew").arg("install").arg("sccache").output();
-            match output {
-                Ok(output) if output.status.success() => {
-                    println!("cargo:warning=Successfully installed sccache dependency.");
-                }
-                Ok(output) => {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    println!(
-                        "cargo:warning=Failed to install sccache with brew: {}",
-                        stderr
-                    );
-                    println!("cargo:warning=Continuing build without sccache acceleration.");
-                }
-                Err(e) => {
-                    println!("cargo:warning=Failed to run Homebrew command: {}", e);
-                    println!("cargo:warning=Continuing build without sccache acceleration.");
-                }
-            }
-        } else {
-            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
-            println!("cargo:warning=Continuing build without sccache acceleration.");
-        }
-    } else if target_os == "windows" {
-        println!("cargo:rerun-if-changed=build.rs");
-        println!("cargo:warning=Detected Windows. Trying to install sccache.");
-        let install_command = if command_exists("scoop") {
-            "scoop install sccache"
-        } else if command_exists("winget") {
-            "winget install --id=Mozilla.sccache -e"
-        } else {
-            ""
-        };
-
-        if !install_command.is_empty() {
-            install_windows_dependency("sccache", install_command);
-        } else {
-            println!("cargo:warning=Neither scoop nor winget found. Please install sccache manually.");
-        }
-    }
-}
-fn install_windows_dependency(name: &str, install_command: &str) {
-    // Check if the dependency is already installed using the Windows 'where'
-    // command.
-    let check_command = format!("where.exe {} >nul 2>nul", name);
-
-    // Command::new("cmd") is the standard way to run shell commands on Windows.
-    let output = Command::new("cmd").arg("/C").arg(&check_command).status();
-
-    match output {
-        Ok(status) => {
-            if status.success() {
-                println!("cargo:warning=Dependency '{}' already found.", name);
-                return;
-            }
-        }
-        Err(e) => {
-            // A non-zero exit from the 'where.exe' check is expected if the command isn't
-            // found, but a generic error here means 'cmd' itself couldn't run.
-            println!("cargo:warning=Failed to check for '{}': {}", name, e);
-        }
-    }
-
-    // Dependency not found (or check failed), proceed with installation.
-    println!(
-        "cargo:warning=Attempting to install dependency '{}' using: {}",
-        name, install_command
-    );
-
-    let output = Command::new("cmd")
-        .arg("/C") // Run the command string and then terminate
-        .arg(install_command)
-        .output();
-
-    match output {
-        Ok(output) => {
-            if !output.status.success() {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                let stdout = String::from_utf8_lossy(&output.stdout);
-
-                println!("cargo:warning=Failed to install {}: {}", name, stderr);
-                println!("cargo:warning=Stdout: {}", stdout);
-
-                // Exit the build process with a panick, since the build cannot continue.
-                panic!(
-                    "Failed to install required Windows dependency: {}. Ensure Scoop or Winget is installed and on your PATH.",
-                    name
-                );
-            } else {
-                println!("cargo:warning=Successfully installed {} dependency.", name);
-            }
-        }
-        Err(e) => {
-            println!(
-                "cargo:warning=Failed to run installation command for {}: {}",
-                name, e
-            );
-            // Exit the build process with a panick.
-            panic!("Failed to run installation command for {}.", name);
-        }
-    }
-}
-
-fn _install_xcb_deps() {
+fn install_xcb_deps() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
 
     if target_os == "linux" {
@@ -297,19 +61,20 @@ fn _install_xcb_deps() {
                 ],
             )
         } else {
-            println!("cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually.");
+            println!(
+                "cargo:warning=Could not find a package manager (apt-get, yum, dnf). Please install xcb development libraries manually."
+            );
             return;
         };
 
-        if installer == "apt-get" {
-            if !Command::new("sudo")
+        if installer == "apt-get"
+            && !Command::new("sudo")
                 .arg("apt-get")
                 .arg("update")
                 .status()
-                .map_or(false, |s| s.success())
-            {
-                println!("cargo:warning=Failed to update package lists with apt-get.");
-            }
+                .is_ok_and(|s| s.success())
+        {
+            println!("cargo:warning=Failed to update package lists with apt-get.");
         }
 
         let mut cmd = Command::new("sudo");
@@ -322,14 +87,18 @@ fn _install_xcb_deps() {
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 println!("cargo:warning=Failed to install dependencies: {}", stderr);
-                panic!("Failed to install required Linux dependencies.");
+                println!(
+                    "cargo:warning=Continuing without xcb dependencies - some clipboard features may not work."
+                );
             }
             Err(e) => {
                 println!(
                     "cargo:warning=Failed to run dependency installation command: {}",
                     e
                 );
-                panic!("Failed to run dependency installation command.");
+                println!(
+                    "cargo:warning=Continuing without xcb dependencies - some clipboard features may not work."
+                );
             }
         }
     } else if target_os == "macos" {
@@ -353,7 +122,9 @@ fn _install_xcb_deps() {
                 }
             }
         } else {
-            println!("cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue.");
+            println!(
+                "cargo:warning=Homebrew is not installed. Please install Homebrew at https://brew.sh to continue."
+            );
             panic!("Failed to install required macOS dependencies.");
         }
     } else if target_os == "windows" {
@@ -362,91 +133,32 @@ fn _install_xcb_deps() {
     }
 }
 
-fn install_openssl_brew() {
-    println!("cargo:warning=Attempting to install openssl@3 using Homebrew...");
-    let install_result = Command::new("brew").args(["install", "openssl@3"]).status();
-
-    match install_result {
-        Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed openssl@3 via Homebrew.");
-            // Instruct rustc to link against the OpenSSL libraries installed by
-            // Brew. The exact paths might vary slightly based on
-            // Brew's configuration. It's generally safer to rely on
-            // the `openssl` crate to handle linking. However, if
-            // you need explicit linking: The corrected paths are
-            // used conditionally in the main function.
-        }
-        Ok(status) => {
-            println!(
-                "cargo:warning=Failed to install openssl@3 via Homebrew (exit code: {}).",
-                status
-            );
-            println!(
-                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
-            );
-            println!("cargo:warning=  brew install openssl@3");
-        }
-        Err(e) => {
-            println!(
-                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
-                e
-            );
-        }
-    }
-}
-fn install_pkg_config() {
-    println!("cargo:warning=Attempting to install pkg-config using Homebrew...");
-    let install_result = Command::new("brew")
-        .args(["install", "pkg-config"])
-        .status();
-
-    match install_result {
-        Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed pkg-config via Homebrew.");
-            // Linking will be handled by the `openssl` crate or via pkg-config.
-        }
-        Ok(status) => {
-            println!(
-                "cargo:warning=Failed to install pkg-config via Homebrew (exit code: {}).",
-                status
-            );
-            println!(
-                "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
-            );
-            println!("cargo:warning=  brew install pkg-config");
-        }
-        Err(e) => {
-            println!(
-                "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
-                e
-            );
-        }
-    }
-}
 fn install_zlib() {
-    println!("cargo:warning=Attempting to install zlib using Homebrew...");
-    let install_result = Command::new("brew").args(["install", "zlib"]).status();
+    if check_brew() {
+        println!("cargo:warning=Attempting to install zlib using Homebrew...");
+        let install_result = Command::new("brew").args(["install", "zlib"]).status();
 
-    match install_result {
-        Ok(status) if status.success() => {
-            println!("cargo:warning=Successfully installed zlib via Homebrew.");
-            // Linking will be handled via pkg-config.
-        }
-        Ok(status) => {
-            println!(
-                "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
-                status
-            );
-            println!(
+        match install_result {
+            Ok(status) if status.success() => {
+                println!("cargo:warning=Successfully installed zlib via Homebrew.");
+                // Linking will be handled via pkg-config.
+            }
+            Ok(status) => {
+                println!(
+                    "cargo:warning=Failed to install zlib via Homebrew (exit code: {}).",
+                    status
+                );
+                println!(
                 "cargo:warning=Please ensure Homebrew is configured correctly and try installing manually:"
             );
-            println!("cargo:warning=  brew install zlib");
-        }
-        Err(e) => {
-            println!(
+                println!("cargo:warning=  brew install zlib");
+            }
+            Err(e) => {
+                println!(
                 "cargo:warning=Error executing Homebrew: {}. Please ensure Homebrew is installed and in your PATH.",
                 e
             );
+            }
         }
     }
 }
@@ -475,16 +187,8 @@ fn get_git_hash() -> String {
 
 fn main() {
     println!("cargo:rerun-if-changed=src/empty");
-    make_empty();
-    // _sync_nip44_vectors();
-
-    if env::var("RUSTC_WRAPPER").is_ok() {
-        println!("cargo:warning=RUSTC_WRAPPER is already set, skipping sccache check.");
-    } else if env::var("CARGO_FEATURE_SCCACHE").is_ok() {
-        check_sccache();
-    } else {
-        println!("cargo:warning=sccache feature not enabled, skipping sccache check. Enable with --features sccache.");
-    }
+    //_make_empty();
+    //_sync_nip44_vectors();
     // Tell Cargo to rerun this build script only if the Git HEAD or index changes
     println!("cargo:rerun-if-changed=.git/HEAD");
     println!("cargo:rerun-if-changed=.git/index");
@@ -494,7 +198,7 @@ fn main() {
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rerun-if-env-changed=GITUI_RELEASE");
 
-    make_empty();
+    //_make_empty();
 
     let now = match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(val) => chrono::Local
@@ -505,17 +209,18 @@ fn main() {
     let build_date = now.date_naive();
 
     let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!("{}@{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
         format!(
-            "{} {} ({})",
+            "{}@{} {} ({})",
+            env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION"),
             build_date,
             get_git_hash()
         )
-    } else {
-        format!("nightly {} ({})", build_date, get_git_hash())
     };
 
-    println!("cargo:warning=buildname '{}'", build_name);
+    println!("cargo:warning=buildname '{build_name}'");
     println!("cargo:rustc-env=GITUI_BUILD_NAME={}", build_name);
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("CARGO_CFG_TARGET_ARCH not set");
@@ -572,46 +277,17 @@ fn main() {
     if !if_windows() {
         //try
         musl_install_pkg_config();
-        //_install_xcb_deps();
+        install_xcb_deps();
         if if_linux_unknown() {
-            //_linux_install_pkg_config();
+            linux_install_pkg_config();
         }
-        if target_os == "aarch64-apple-darwin" || target_os == "x86_64-apple-darwin" {
-            println!("cargo:warning=On macOS, openssl@3 is recommended for this crate.");
-
+        if target_os == "macos" {
             if check_brew() {
                 println!("cargo:warning=Homebrew detected.");
-                install_pkg_config();
                 install_zlib();
-                install_openssl_brew();
-
-                // Instruct rustc to link against the OpenSSL libraries.
-                // The `openssl` crate generally handles finding these libraries.
-                // If you need explicit linking (less recommended):
-                if target_os == "aarch64-apple-darwin" {
-                    println!("cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    println!("cargo:rustc-link-lib=dylib=crypto@3");
-                } else if target_os == "x86_64-apple-darwin" {
-                    println!("cargo:rustc-link-search=native=/usr/local/opt/openssl@3/lib");
-                    println!("cargo:rustc-link-lib=dylib=ssl@3");
-                    println!("cargo:rustc-link-lib=dylib=crypto@3");
-                }
             } else {
-                println!(
-                    "cargo:warning=Homebrew not found. Please install openssl@3 manually using Homebrew:"
-                );
-                println!("cargo:warning=  brew install openssl@3");
-                println!("cargo:warning=  brew install pkg-config");
-                println!("cargo:warning=  brew install zlib");
-                println!("cargo:warning=Or using MacPorts:");
-                println!("cargo:warning=  sudo port install openssl@3");
-                println!("cargo:warning=And ensure your system can find the libraries.");
+                println!("cargo:warning=Homebrew not found. Please install zlib manually if needed.");
             }
-        } else {
-            // For other operating systems, the `openssl` crate should handle linking.
-            println!("cargo:rustc-link-lib=dylib=ssl");
-            println!("cargo:rustc-link-lib=dylib=crypto");
         }
     }
     // Add other build logic here if needed
@@ -621,6 +297,10 @@ fn if_windows() -> bool {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "windows" {
+        println!(
+            "{} may require additional configuration for native TLS support?",
+            target_os
+        );
         println!("cargo:rustc-cfg=target_os_windows");
         println!("cargo:warning=Building for Windows.");
         // Add Windows-specific build logic here
@@ -637,53 +317,40 @@ fn if_windows() -> bool {
     }
 }
 fn if_linux_unknown() -> bool {
-    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
 
-    if target == "aarch64-unknown-linux-gnu" {
+    if target_os == "linux" && target_arch == "aarch64" {
         println!(
-            "cargo:warning=On AArch64 Linux, the `libssl-dev` package is required for this crate."
+            "cargo:warning=On AArch64 Linux, native dependencies may need to be installed manually."
         );
-        println!("cargo:warning=Please ensure you have it installed.");
-        println!("cargo:warning=For Debian/Ubuntu-based systems, use:");
-        println!("cargo:warning=  sudo apt-get update && sudo apt-get install libssl-dev");
-        println!("cargo:warning=For Fedora/CentOS/RHEL-based systems, use:");
-        println!("cargo:warning=  sudo dnf install openssl-devel"); // Package name might vary
-        println!("cargo:warning=Or:");
-        println!("cargo:warning=  sudo yum install openssl-devel"); // Older systems
-        println!("cargo:warning=For Arch Linux-based systems, use:");
-        println!("cargo:warning=  sudo pacman -S openssl"); // Development headers are usually included
+        println!("cargo:warning=Please ensure the required build tools are installed.");
 
-        // Optionally, you can try to check if the necessary libraries exist
-        // This is more reliable than trying to run package managers
-        let check_libssl = Command::new("ldconfig").arg("-p").output();
+        let pkg_config_check = Command::new("which").arg("pkg-config").output();
 
-        match check_libssl {
-            Ok(output)
-                if String::from_utf8_lossy(&output.stdout).contains("libssl.so")
-                    && String::from_utf8_lossy(&output.stdout).contains("libcrypto.so") =>
-            {
-                println!("cargo:rustc-link-lib=dylib=ssl");
-                println!("cargo:rustc-link-lib=dylib=crypto");
+        match pkg_config_check {
+            Ok(output) if output.status.success() => {
+                println!(
+                    "cargo:warning=Found `pkg-config` in your PATH."
+                );
             }
             _ => {
                 println!(
-                    "cargo:warning=Could not find `libssl.so` and `libcrypto.so`. Ensure `libssl-dev` (or equivalent) is installed correctly."
+                    "cargo:warning=`pkg-config` not found in your PATH. Ensure it is installed and accessible."
                 );
-                // You might choose to fail the build here if it's strictly
-                // necessary std::process::exit(1);
             }
         }
         true
+    } else if target_os == "linux" {
+        // Logic for other Linux platforms
+        //println!("cargo:rustc-link-lib=dylib=ssl");
+        //println!("cargo:rustc-link-lib=dylib=crypto");
+        true
     } else {
-        // Logic for other target platforms
-        println!("cargo:rustc-link-lib=dylib=ssl");
-        println!("cargo:rustc-link-lib=dylib=crypto");
         false
     }
-
-    // Add other build logic here if needed
 }
-fn _linux_install_pkg_config() {
+fn linux_install_pkg_config() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
 
     if target_os == "linux" {
@@ -711,11 +378,11 @@ fn _linux_install_pkg_config() {
                 println!("cargo:warning=Found `pkg-config` in your PATH.");
                 // You can now use `pkg-config` to get build information
                 // For example:
-                let config_output = Command::new("pkg-config").arg("--libs").output().unwrap();
-                println!(
-                    "cargo:rustc-link-lib={}",
-                    String::from_utf8_lossy(&config_output.stdout).trim()
-                );
+                // let config_output = Command::new("pkg-config").arg("--libs").output().unwrap();
+                // println!(
+                //    "cargo:rustc-link-lib={}",
+                //    String::from_utf8_lossy(&config_output.stdout).trim()
+                // );
             }
             _ => {
                 println!(
@@ -733,10 +400,11 @@ fn _linux_install_pkg_config() {
 }
 
 fn musl_install_pkg_config() {
-    let target = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
 
-    if target == "x86_64-unknown-linux-musl" {
-        println!("cargo:warning=Building for x86_64-unknown-linux-musl (Musl libc).");
+    if target_os == "linux" && target_env == "musl" {
+        println!("cargo:warning=Building for Linux with Musl libc.");
         println!(
             "cargo:warning=This build process may require `pkg-config` to locate necessary libraries."
         );
@@ -758,17 +426,6 @@ fn musl_install_pkg_config() {
         match pkg_config_check {
             Ok(output) if output.status.success() => {
                 println!("cargo:warning=Found `pkg-config` in your PATH.");
-                // Now you can use `pkg-config` to get information about libraries
-                // For example:
-                let lib_info = Command::new("pkg-config")
-                    .arg("--libs")
-                    .arg("your_library")
-                    .output()
-                    .unwrap();
-                println!(
-                    "cargo:rustc-link-lib={}",
-                    String::from_utf8_lossy(&lib_info.stdout).trim()
-                );
             }
             _ => {
                 println!(
@@ -780,18 +437,10 @@ fn musl_install_pkg_config() {
         }
 
         println!("cargo:rustc-cfg=target_musl");
-    } else {
-        println!(
-            "cargo:warning=Not building for x86_64-unknown-linux-musl (current target: {}).",
-            target
-        );
-        // Logic for other target platforms
     }
-
-    // Common build logic can go here
 }
 
-fn make_empty() {
+fn _make_empty() {
     let target_path = Path::new("src/empty");
 
     // 1. Clean up the target path if it exists as a FILE or a DIRECTORY.
@@ -964,12 +613,12 @@ git commit --allow-empty -m "initial commit"
     //    );
     //}
 
-    let _ = git_commit(dir_path);
+    let _ = _git_commit(dir_path);
     // Good practice: Rerun build script if the script itself changes.
     println!("cargo:rerun-if-changed=src/empty");
 }
 
-fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
+fn _git_commit(dir_path: &Path) -> Result<(), io::Error> {
     // 1. Convert Path to &str safely using .ok_or_else()
     // This converts the Option<&str> to a Result<&str, io::Error>.
     // If the path is invalid UTF-8 (None), it generates a custom io::Error
@@ -994,7 +643,7 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
         .env("GIT_COMMITTER_DATE", "Thu, 01 Jan 1970 00:00:00 +0000");
 
     // 3. Set the arguments. Note the use of the safe dir_path_str variable.
-    command.args(&[
+    command.args([
         "-C", // Use -C to run the git command from the specified directory
         dir_path_str,
         "commit",
@@ -1021,9 +670,9 @@ fn git_commit(dir_path: &Path) -> Result<(), io::Error> {
 
         // The failure block must return the error value, which is Err(io::Error).
         // We create a new io::Error here to indicate the child process failed.
-        Err(Error::new(
-            ErrorKind::Other,
-            format!("'git commit' failed with status: {}", output.status),
-        ))
+        Err(Error::other(format!(
+            "'git commit' failed with status: {}",
+            output.status
+        )))
     }
 }

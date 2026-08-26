@@ -1,35 +1,29 @@
-use clap::{Parser, Subcommand};
-
-use crate::blockheight;
-use crate::weeble;
-use crate::wobble;
+use std::{io, path::Path, process::Command};
 
 use anyhow::Result;
+use clap::{Parser, Subcommand};
+use crossterm::{
+    event::DisableMouseCapture,
+    execute,
+    terminal::{disable_raw_mode, LeaveAlternateScreen},
+};
 use env_logger::Env;
-use gnostr_asyncgit::gitui;
-use std::path::Path;
-use std::process::Command;
 use which::which;
 
-#[cfg(not(test))]
-use crate::ssh::start;
+use gnostr_asyncgit::{blockheight, weeble, wobble};
 
-#[cfg(test)]
-mod mock_ssh {
-    pub async fn start() -> Result<(), Box<dyn std::error::Error>> {
-        // In test environment, always return an error for now
-        Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Mock SSH Start Error",
-        )))
+struct TerminalCleanup;
+
+impl Drop for TerminalCleanup {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
     }
 }
 
-#[cfg(test)]
-use mock_ssh::start;
-
+#[allow(dead_code)]
 #[derive(Parser, Debug, Clone)]
-#[clap(
+#[command(
     about = "A tool for interacting with git repositories.",
     help_template = "\
 {about-with-newline}
@@ -57,8 +51,6 @@ enum GitCommands {
         #[command(subcommand)]
         command: CheckoutCommands,
     },
-    /// Serve a git repository over SSH
-    ServeSsh,
     /// Show git info
     Info,
     /// Open git TUI
@@ -69,11 +61,13 @@ enum GitCommands {
 enum TagCommands {
     /// Creates a git tag with an optional suffix.
     Create { suffix: Option<String> },
-    /// Displays git tag version with an optional suffix, but does not create the tag.
+    /// Displays git tag version with an optional suffix, but does not create
+    /// the tag.
     Version { suffix: Option<String> },
     /// Creates a git PR tag with an optional suffix.
     Pr { suffix: Option<String> },
-    /// Displays git PR tag version with an optional suffix, but does not create the tag.
+    /// Displays git PR tag version with an optional suffix, but does not create
+    /// the tag.
     PrVersion { suffix: Option<String> },
 }
 
@@ -89,30 +83,26 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
     if let Some(command) = &sub_command_args.command {
         let current_dir = std::env::current_dir()?;
         match command {
-            GitCommands::ServeSsh => {
-                env_logger::init_from_env(Env::default().default_filter_or("info"));
-                crate::ssh::start().await?;
-            }
             GitCommands::Tag { command } => match command {
                 TagCommands::Version { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
-                    let tag_name = 
+                    let tag_name =
                         tokio::task::spawn_blocking(move || get_git_tag_version(suffix)).await??;
                     println!("{}", tag_name);
                 }
                 TagCommands::PrVersion { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
-                    let tag_name = 
-                        tokio::task::spawn_blocking(move || get_git_tag_pr_version(suffix)).await??;
+                    let tag_name =
+                        tokio::task::spawn_blocking(move || get_git_tag_pr_version(suffix))
+                            .await??;
                     println!("{}", tag_name);
                 }
                 TagCommands::Create { suffix } => {
                     let suffix = suffix.clone().unwrap_or_default();
                     let cloned_repo_path = current_dir.clone();
-                    let tag_name = tokio::task::spawn_blocking(move || {
-                        run_git_tag(suffix, &cloned_repo_path)
-                    })
-                    .await??;
+                    let tag_name =
+                        tokio::task::spawn_blocking(move || run_git_tag(suffix, &cloned_repo_path))
+                            .await??;
                     println!("{}", tag_name);
                 }
                 TagCommands::Pr { suffix } => {
@@ -150,10 +140,11 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
                 println!("{}", info);
             }
             GitCommands::Tui => {
-                let term = gnostr_asyncgit::gitui::term::backend();
-                let mut terminal = gnostr_asyncgit::gitui::term::Term::new(term)?;
-                gnostr_asyncgit::gitui::run(
-                    &gnostr_asyncgit::gitui::cli::Args::default(),
+                let _cleanup_guard = TerminalCleanup;
+                let term = gnostr_asyncgit::tui::git::term::backend();
+                let mut terminal = gnostr_asyncgit::tui::git::term::Term::new(term)?;
+                gnostr_asyncgit::tui::git::run(
+                    &gnostr_asyncgit::tui::git::cli::Args::default(),
                     &mut terminal,
                 )
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
@@ -164,9 +155,9 @@ pub async fn git(sub_command_args: &GitSubCommand) -> Result<(), Box<dyn std::er
 
     if !sub_command_args.git_args.is_empty() {
         let git_args = sub_command_args.git_args.clone();
-        let status = 
+        let status =
             tokio::task::spawn_blocking(move || Command::new("git").args(&git_args).status())
-            .await??;
+                .await??;
         std::process::exit(status.code().unwrap_or(1));
     }
 
@@ -201,12 +192,12 @@ fn get_git_tag_version(suffix: String) -> Result<String> {
 
     let mut tag_name = format!(
         "v{}.{}.{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
     );
 
@@ -245,12 +236,12 @@ fn get_git_tag_pr_version(suffix: String) -> Result<String> {
 
     let mut tag_name = format!(
         "pr/{}.{}.{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
     );
 
@@ -307,12 +298,12 @@ fn run_git_checkout_b(suffix: String, repo_path: &Path) -> Result<String> {
 
     let mut branch_name = format!(
         "{}/{}/{}/{}/{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
         head_parent,
         head
@@ -365,12 +356,12 @@ fn run_git_checkout_pr(suffix: String, repo_path: &Path) -> Result<String> {
 
     let mut branch_name = format!(
         "pr/{}/{}/{}/{}/{}",
-        if weeble.is_empty() { "0" } else { &weeble },
         if blockheight.is_empty() {
             "0"
         } else {
             &blockheight
         },
+        if weeble.is_empty() { "0" } else { &weeble },
         if wobble.is_empty() { "0" } else { &wobble },
         head_parent,
         head
@@ -397,6 +388,7 @@ fn run_git_checkout_pr(suffix: String, repo_path: &Path) -> Result<String> {
     Ok(branch_name)
 }
 
+#[allow(dead_code)]
 static REPO_TOML: &str = r###"#'''
 name = "gnostr-gnit-server"
 public = true
@@ -404,6 +396,7 @@ members = ["gnostr", "gnostr-user"]
 failed_push_message = "Issues and patches can be emailed to admin@gnostr.org"
 "###;
 
+#[allow(dead_code)]
 static SERVER_TOML: &str = r###"#
 
 name = "gnostr.org"
@@ -437,11 +430,11 @@ welcome_message = "welcome to gnostr.org!"
 #[cfg(test)]
 mod tests {
 
-    use super::*;
-
     use std::fs;
 
     use tempfile::tempdir;
+
+    use super::*;
 
     // Helper to create a dummy git repo for testing
     fn setup_test_repo() -> tempfile::TempDir {
@@ -565,9 +558,9 @@ mod tests {
         let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
         let suffix = "feature";
-        let expected_branch_name = format!(
+        let _expected_branch_name = format!(
             "{}/{}/{}/{}/{}-{}",
-            weeble, blockheight, wobble, parent_head, current_head, suffix
+            blockheight, weeble, wobble, parent_head, current_head, suffix
         );
 
         std::env::set_current_dir(repo_path)?;
@@ -621,9 +614,9 @@ mod tests {
         let weeble = crate::weeble::weeble().unwrap_or(0.0).to_string();
         let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
-        let expected_branch_name = format!(
+        let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}",
-            weeble, blockheight, wobble, parent_head, current_head
+            blockheight, weeble, wobble, parent_head, current_head
         );
 
         std::env::set_current_dir(repo_path)?;
@@ -678,9 +671,9 @@ mod tests {
         let blockheight = crate::blockheight::blockheight().unwrap_or(0.0).to_string();
         let wobble = crate::wobble::wobble().unwrap_or(0.0).to_string();
         let suffix = "fix";
-        let expected_branch_name = format!(
+        let _expected_branch_name = format!(
             "pr/{}/{}/{}/{}/{}-{}",
-            weeble, blockheight, wobble, parent_head, current_head, suffix
+            blockheight, weeble, wobble, parent_head, current_head, suffix
         );
 
         std::env::set_current_dir(repo_path)?;

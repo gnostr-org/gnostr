@@ -11,17 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v4
+      - name: Checkout sources
+        uses: actions/checkout@v4
 
-    - name: Install nix
-      uses: cachix/install-nix-action@v30
+      - name: Install nix
+        uses: cachix/install-nix-action@v30
 
-    - name: Authenticate with Cachix
-      uses: cachix/cachix-action@v15
-      with:
-        name: gitu
-        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Authenticate with Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: gitu
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-    - name: Build nix flake
-      run: nix build -L
+      - name: Build nix flake
+        run: nix build -L

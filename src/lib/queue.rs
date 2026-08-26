@@ -14,6 +14,7 @@ use crate::{
     },
     tabs::StashingOptions,
 };
+use gnostr_asyncgit::types::{EventV3, Id, UncheckedUrl};
 
 bitflags! {
     /// flags defining what part of the app need to update
@@ -37,7 +38,7 @@ pub struct ResetItem {
     pub path: String,
 }
 
-///
+/// Action
 #[derive(Debug)]
 pub enum Action {
     Reset(ResetItem),
@@ -59,20 +60,24 @@ pub enum Action {
 
 #[derive(Debug)]
 pub enum StackablePopupOpen {
-    ///
+    /// BlameFile
     BlameFile(BlameFileOpen),
-    ///
+    /// DisplayChat
     DisplayChat(DisplayChatOpen),
-    ///
+    /// FileRevLog
     FileRevlog(FileRevOpen),
-    ///
+    /// FileTree
     FileTree(FileTreeOpen),
-    ///
+    /// InspectChat
     InspectChat(InspectChatOpen),
-    ///
+    /// InspectCommit
     InspectCommit(InspectCommitOpen),
-    ///
+    /// CompareCommits
     CompareCommits(InspectCommitOpen),
+    /// NotesList
+    NotesList,
+    /// Nip34
+    Nip34,
 }
 
 #[derive(Debug)]
@@ -85,83 +90,96 @@ pub enum AppTabs {
     Stashlist,
 }
 
-///
+/// Commands related to Nostr interactions
+#[derive(Debug)]
+pub enum NostrCommand {
+    /// Send a NIP-28 channel message
+    SendChannelMessage {
+        channel_id: String,
+        message: String,
+        reply_to_id: Option<crate::types::Id>,
+        root_message_id: Option<crate::types::Id>,
+        relay_url: Option<crate::types::UncheckedUrl>,
+    },
+    /// Create a NIP-28 channel
+    CreateChannel {
+        channel_id: String,
+        channel_name: String,
+        channel_description: String,
+        channel_picture: Option<String>,
+        relay_url: Option<crate::types::UncheckedUrl>,
+    },
+}
+
+/// InternalEvent
 #[derive(Debug)]
 pub enum InternalEvent {
-    ///
-    ChatMessage(crate::p2p::chat::msg::Msg),
-    ///
+    /// Nostr event received from a relay
+    NostrEvent(EventV3),
+    /// Command to interact with Nostr
+    NostrCommand(NostrCommand),
+    /// ChatMessage
+    ChatMessage(gnostr_chat::msg::Msg),
+    /// ConfirmAction
     ConfirmAction(Action),
-    ///
+    /// ComfirmedAction
     ConfirmedAction(Action),
-    ///
+    /// ShowErrorMsg
     ShowErrorMsg(String),
-    ///
+    /// ShowInfoMsg
     ShowInfoMsg(String),
-    ///
+    /// Update
     Update(NeedsUpdate),
-    ///
+    /// StatusLastFileMoved
     StatusLastFileMoved,
     /// open commit msg input
-    //OpenCommit,
+    /// OpenCommit,
     OpenCommit,
-    //
+    /// OpenChat
     OpenChat,
-    ///
+    /// PopupStashing
     PopupStashing(StashingOptions),
-    ///
+    /// TabSwitchStatus
     TabSwitchStatus,
-    ///
+    /// TabSwitch
     TabSwitch(AppTabs),
-    ///
+    /// SelectCommitInRevlog
     SelectCommitInRevlog(CommitId),
-    ///
+    /// TagCommit
     TagCommit(CommitId),
-    ///
+    /// Tags
     Tags,
-    ///
+    /// CreateBranch
     CreateBranch,
-    ///
+    /// RenameBranch
     RenameBranch(String, String),
-    ///
+    /// SelectBranch
     SelectBranch,
-    ///
     OpenExternalEditor(Option<String>),
-    ///
     OpenExternalChat(Option<String>),
-    ///
+    OpenGitNote(gnostr_asyncgit::sync::CommitId, Option<String>),
+    OpenGitNoteBatch(
+        gnostr_asyncgit::sync::CommitId,
+        Option<String>,
+        Vec<gnostr_asyncgit::sync::CommitId>,
+    ),
     Push(String, PushType, bool, bool),
-    ///
     Pull(String),
-    ///
     PushTags,
-    ///
     OptionSwitched(AppOption),
-    ///
     OpenFuzzyFinder(Vec<String>, FuzzyFinderTarget),
-    ///
     OpenLogSearchPopup,
-    ///
     FuzzyFinderChanged(usize, String, FuzzyFinderTarget),
-    ///
     FetchRemotes,
-    ///
     OpenPopup(StackablePopupOpen),
-    ///
     PopupStackPop,
-    ///
     PopupStackPush(StackablePopupOpen),
-    ///
     ViewSubmodules,
-    ///
     OpenRepo {
         path: PathBuf,
     },
-    ///
     OpenResetPopup(CommitId),
-    ///
     RewordCommit(CommitId),
-    ///
     CommitSearch(LogFilterSearchOptions),
 }
 

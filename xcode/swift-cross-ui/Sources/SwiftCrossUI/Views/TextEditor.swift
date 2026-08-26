@@ -1,0 +1,88 @@
+/// A control for editing multiline text.
+public struct TextEditor: ElementaryView {
+    /// The editor's content.
+    @Binding var text: String
+
+    /// Creates a text editor.
+    ///
+    /// - Parameter text: The editor's content.
+    public init(text: Binding<String>) {
+        _text = text
+    }
+
+    func asWidget<Backend: BaseAppBackend>(backend: Backend) -> Backend.Widget {
+        backend.createTextEditor()
+    }
+
+    func computeLayout<Backend: BaseAppBackend>(
+        _ widget: Backend.Widget,
+        proposedSize: ProposedViewSize,
+        environment: EnvironmentValues,
+        backend: Backend
+    ) -> ViewLayoutResult {
+        // Avoid evaluating the binding multiple times
+        let content = text
+
+        let size: ViewSize
+        if proposedSize == .unspecified {
+            size = ViewSize(10, 10)
+        } else if let width = proposedSize.width, proposedSize.height == nil {
+            // See ``Text``'s computeLayout for a more details on why we clamp
+            // the width to be positive.
+            let idealSize = backend.size(
+                of: content,
+                whenDisplayedIn: widget,
+                // For text, an infinite proposal is the same as an unspecified
+                // proposal, and this works nicer with most backends than converting
+                // .infinity to a large integer (which is the alternative).
+                proposedWidth: width == .infinity ? nil : max(1, LayoutSystem.roundSize(width)),
+                proposedHeight: nil,
+                environment: environment
+            )
+            size = ViewSize(
+                max(width, Double(idealSize.x)),
+                Double(idealSize.y)
+            )
+        } else {
+            size = proposedSize.replacingUnspecifiedDimensions(by: ViewSize(10, 10))
+        }
+
+        return ViewLayoutResult.leafView(size: size)
+    }
+
+    func commit<Backend: BaseAppBackend>(
+        _ widget: Backend.Widget,
+        layout: ViewLayoutResult,
+        environment: EnvironmentValues,
+        backend: Backend
+    ) {
+        // Avoid evaluating the binding multiple times
+        let content = self.text
+
+        backend.updateTextEditor(widget, environment: environment) { newValue in
+            // We perform this check in debug mode to catch backends that cause
+            // unnecessary binding writes, but avoid doing so in release mode
+            // because comparing text may often be more expensive than just
+            // avoiding the additional write at the backend level. These
+            // additional writes are often the result of the handler being
+            // triggered when we call backend.setContent(ofTextEditor:to:)
+            #if DEBUG
+                if text == newValue {
+                    logger.warning(
+                        """
+                        Unnecessary write to text Binding of TextEditor detected, \
+                        please open an issue at \(Meta.issueReportingURL) \
+                        so we can fix it for \(type(of: backend)).
+                        """
+                    )
+                }
+            #endif
+            self.text = newValue
+        }
+        if text != backend.getContent(ofTextEditor: widget) {
+            backend.setContent(ofTextEditor: widget, to: content)
+        }
+
+        backend.setSize(of: widget, to: layout.size.vector)
+    }
+}

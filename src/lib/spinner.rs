@@ -10,7 +10,10 @@ use ratatui::{
 // '⡗', '⡏'];
 static SPINNER_CHARS: &[char] = &['⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽', '⣾'];
 
-///
+pub fn spinner_char(idx: usize) -> char {
+    SPINNER_CHARS[idx % SPINNER_CHARS.len()]
+}
+
 pub struct Spinner {
     idx: usize,
     active: bool,
@@ -34,7 +37,10 @@ impl Spinner {
         self.idx %= SPINNER_CHARS.len();
     }
 
-    ///
+    pub fn char(&self) -> char {
+        spinner_char(self.idx)
+    }
+
     pub fn set_state(&mut self, active: bool) {
         self.active = active;
     }
@@ -43,7 +49,7 @@ impl Spinner {
     pub fn draw(&self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> io::Result<()> {
         let idx = self.idx;
 
-        let char_to_draw = if self.active { SPINNER_CHARS[idx] } else { ' ' };
+        let char_to_draw = if self.active { spinner_char(idx) } else { ' ' };
 
         if self.last_char.get() != char_to_draw {
             self.last_char.set(char_to_draw);

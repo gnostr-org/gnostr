@@ -106,7 +106,6 @@ impl Component for TagCommitPopup {
 }
 
 impl TagCommitPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -124,7 +123,6 @@ impl TagCommitPopup {
         }
     }
 
-    ///
     pub fn open(&mut self, id: CommitId) -> Result<()> {
         self.commit_id = Some(id);
         self.show()?;
@@ -151,9 +149,9 @@ impl TagCommitPopup {
             .unwrap_or_default();
 
         anyhow::ensure!(
-			!gpgsign,
-			"config tag.gpgsign=true detected.\ngpg signing not supported.\ndeactivate in your repo/gitconfig to be able to tag without signing."
-		);
+            !gpgsign,
+            "config tag.gpgsign=true detected.\ngpg signing not supported.\ndeactivate in your repo/gitconfig to be able to tag without signing."
+        );
 
         let (tag_name, tag_annotation) = self.tag_info();
 

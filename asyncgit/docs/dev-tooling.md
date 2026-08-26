@@ -9,21 +9,39 @@ extra commands over `cargo test` that you might find useful running locally.
 
 ### Testing
 
-Gitu makes heavy use of snapshot-testing with a library called **Insta** (https://insta.rs/).
-Most tests are written on a pretty high level.
-The philosophy is to keep the tests easy to reason about, and make refactoring painless.
+Asyncgit uses a mix of focused unit tests and higher-level integration tests. For the
+full asyncgit suite, including the Nostr event pipeline and PoW matrix, run:
+
+```sh
+./scripts/gnostr-asyncgit-tests.sh --nocapture
+```
+
+`nostr_sdk` is reserved for test-only event publishing and validation in this tree.
+
+For narrower runs:
+
+```sh
+./scripts/asyncgit-tests.sh --nocapture
+./scripts/gnostr-ngit-tests.sh --notes --nocapture
+cargo test -p gnostr-asyncgit --all-targets --features nostr -- --nocapture
+```
+
+The `--nocapture` flag is the easiest way to see event payloads and other test output.
 
 ### Commit messages
+
 Explain user-relevant changes in a `feat:`, `fix:`, `style:` or `perf:`.
 
 Examples:
-- ```feat: ability to stage all files via "Unstaged changes" section```
-- ```fix: crash when opening Gitu on Windows```
+
+- `feat: ability to stage all files via "Unstaged changes" section`
+- `fix: crash when opening Gitu on Windows`
 
 For minor, technical changes that are irrelevant to the user of Gitu, you can just use any other format:
-- ```refactor: changes some stuff```
-- ```test: added new test about xyz```
-- ```changed something```
+
+- `refactor: changes some stuff`
+- `test: added new test about xyz`
+- `changed something`
 
 ### Changelog
 

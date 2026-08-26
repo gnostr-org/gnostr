@@ -106,7 +106,6 @@ impl Component for StashMsgPopup {
 }
 
 impl StashMsgPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             options: StashingOptions::default(),
@@ -123,7 +122,6 @@ impl StashMsgPopup {
         }
     }
 
-    ///
     pub fn options(&mut self, options: StashingOptions) {
         self.options = options;
     }

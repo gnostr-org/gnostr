@@ -1,23 +1,84 @@
+#![allow(unused_imports)]
+#![deny(non_ascii_idents)]
 //! gnostr: a git+nostr workflow utility and library
-//!
+
+extern crate gnostr_asyncgit as git2;
+
+#[macro_export]
+macro_rules! chat_oneshot {
+    ($topic:expr, $message:expr) => {
+        gnostr_chat::ChatSubCommands {
+            nsec: None,
+            password: None,
+            name: None,
+            topic: Some($topic.into()),
+            hash: None,
+            disable_cli_spinners: false,
+            info: false,
+            debug: false,
+            trace: false,
+            headless: false,
+            workdir: None,
+            gitdir: None,
+            oneshot: Some($message.into()),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! chat_oneshot_named {
+    ($topic:expr, $message:expr) => {{
+        $crate::chat_oneshot!(
+            $topic,
+            format!("{}::{} {}", module_path!(), function_name!(), $message)
+        )
+    }};
+}
+
+#[macro_export]
+macro_rules! chat_debug {
+    ($message:expr) => {{
+        gnostr_chat::msg::Msg::default()
+            .set_content($crate::introspection_debug!($message), 0)
+            .set_kind(gnostr_chat::msg::MsgKind::Debug)
+    }};
+}
+
 ///  <https://docs.rs/gnostr/latest/gnostr/app/index.html>
 pub mod app;
 ///  <https://docs.rs/gnostr/latest/gnostr/bug_report/index.html>
 pub mod bug_report;
-///  <https://docs.rs/gnostr/latest/gnostr/chat/index.html>
-
 ///  <https://docs.rs/gnostr/latest/gnostr/cli/index.html>
 pub mod cli;
 ///  <https://docs.rs/gnostr/latest/gnostr/cli_interactor/index.html>
 pub mod cli_interactor;
 ///  <https://docs.rs/gnostr/latest/gnostr/client/index.html>
-pub mod client;
+pub mod client {
+    pub use ngit::client::*;
+
+    #[cfg(test)]
+    pub type MockConnect = Client;
+
+    pub trait ClientCompat {
+        fn get_fallback_relays(&self) -> &Vec<String>;
+    }
+
+    impl ClientCompat for Client {
+        fn get_fallback_relays(&self) -> &Vec<String> {
+            self.get_fallback_signer_relays()
+        }
+    }
+}
 ///  <https://docs.rs/gnostr/latest/gnostr/clipboard/index.html>
 pub mod clipboard;
 ///  <https://docs.rs/gnostr/latest/gnostr/cmdbar/index.html>
 pub mod cmdbar;
 ///  <https://docs.rs/gnostr/latest/gnostr/components/index.html>
 pub mod components;
+///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
+pub mod core;
+///  <https://docs.rs/gnostr/latest/gnostr/crawler/index.html>
+pub mod crawler;
 ///  <https://docs.rs/gnostr/latest/gnostr/dashboard/index.html>
 pub mod dashboard;
 ///  <https://docs.rs/gnostr/latest/gnostr/dns_resolver/index.html>
@@ -28,12 +89,14 @@ pub mod git;
 pub mod git_events;
 ///  <https://docs.rs/gnostr/latest/gnostr/global_events/index.html>
 pub mod global_rt;
-///  <https://docs.rs/gnostr/latest/gnostr/core/index.html>
-pub mod core;
 ///  <https://docs.rs/gnostr/latest/gnostr/input/index.html>
 pub mod input;
+///  <https://docs.rs/gnostr/latest/gnostr/introspection/index.html>
+pub mod introspection;
 ///  <https://docs.rs/gnostr/latest/gnostr/keys/index.html>
 pub mod keys;
+///  <https://docs.rs/gnostr/latest/gnostr/asyncgit/types/nostr_client/index.html>
+// mod nostr_client;
 ///  <https://docs.rs/gnostr/latest/gnostr/legit/index.html>
 pub mod legit;
 ///  <https://docs.rs/gnostr/latest/gnostr/login/index.html>
@@ -48,18 +111,22 @@ pub mod p2p;
 pub mod popup_stack;
 ///  <https://docs.rs/gnostr/latest/gnostr/popup/index.html>
 pub mod popups;
+///  <https://docs.rs/gnostr/latest/gnostr/query/index.html>
+pub mod query;
 ///  <https://docs.rs/gnostr/latest/gnostr/queue/index.html>
 pub mod queue;
-///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>
-pub mod remote;
+// TODO move this some place else
+// ///  <https://docs.rs/gnostr/latest/gnostr/remote/index.html>
+// pub mod remote;
 ///  <https://docs.rs/gnostr/latest/gnostr/repo_ref/index.html>
 pub mod repo_ref;
 ///  <https://docs.rs/gnostr/latest/gnostr/repo_state/index.html>
 pub mod repo_state;
+///  <https://docs.rs/gnostr/latest/gnostr/server/index.html>
+#[cfg(feature = "blossom")]
+pub mod server;
 ///  <https://docs.rs/gnostr/latest/gnostr/spinner/index.html>
 pub mod spinner;
-///  <https://docs.rs/gnostr/latest/gnostr/ssh/index.html>
-pub mod ssh;
 ///  <https://docs.rs/gnostr/latest/gnostr/string_utils/index.html>
 pub mod string_utils;
 ///  <https://docs.rs/gnostr/latest/gnostr/strings/index.html>
@@ -68,8 +135,12 @@ pub mod strings;
 pub mod sub_commands;
 ///  <https://docs.rs/gnostr/latest/gnostr/tabs/index.html>
 pub mod tabs;
-///  <https://docs.rs/gnostr/latest/gnostr/types/index.html>
-pub mod types;
+///  <https://docs.rs/gnostr/latest/gnostr/test_utils/index.html>
+pub mod test_utils;
+///  <https://docs.rs/gnostr/latest/gnostr/gnostr_asyncgit/types/index.html>
+pub use gnostr_asyncgit::types;
+///  <https://docs.rs/gnostr/latest/gnostr/internal/index.html>
+pub mod internal;
 ///  <https://docs.rs/gnostr/latest/gnostr/ui/index.html>
 pub mod ui;
 ///  <https://docs.rs/gnostr/latest/gnostr/utils/index.html>
@@ -78,91 +149,57 @@ pub mod utils;
 pub mod verify_keypair;
 ///  <https://docs.rs/gnostr/latest/gnostr/watcher/index.html>
 pub mod watcher;
-///
-
 /// <https://docs.rs/gnostr/latest/gnostr/ws/index.html>
 pub mod ws;
-///
+/// <https://docs.rs/gnostr/latest/gnostr/node/index.html>
+pub mod node;
+/// <https://docs.rs/gnostr/latest/gnostr/nostr_client/index.html>
+pub mod nostr_client;
+
+use gnostr_asyncgit::types::TagV3;
+
+//avoid?//upgrade?
+//pub use lightning;
+use anyhow::{Result, anyhow};
 pub use base64::Engine;
-///
 pub use colorful::{Color, Colorful};
-///
-pub use futures_util::stream::FusedStream;
-///
-pub use futures_util::{SinkExt, StreamExt};
-///
+use directories::ProjectDirs;
+pub use futures_util::{SinkExt, StreamExt, stream::FusedStream};
 pub use http::Uri;
-///
 pub use lazy_static::lazy_static;
-///
 use log::debug;
-// pub //use nostr_types::RelayMessageV5;
+// pub //use gnostr_asyncgit::types::RelayMessageV5;
+pub use nostr_sdk_0_37_0::secp256k1::rand;
+pub use tokio::sync::mpsc::{Receiver, Sender};
+pub use tokio_tungstenite::{WebSocketStream, connect_async, tungstenite::Message};
+//use tokio_tungstenite::WebSocketStream;
+pub use gnostr_asyncgit::types::nip44;
 ///  <https://docs.rs/gnostr_types/latest/gnostr_types/index.html>
-pub use types::{
+pub use gnostr_asyncgit::types::{
     ClientMessage, EncryptedPrivateKey, Event, EventKind, Filter, Id, IdHex, KeySigner, PreEvent,
     RelayMessage, RelayMessageV3, RelayMessageV5, Signer, SubscriptionId, Tag, Unixtime, Why,
 };
-//
-///
-pub use nostr_sdk_0_19_1::prelude::rand;
-//
-///
-pub use tokio::sync::mpsc::{Receiver, Sender};
-///
-pub use tungstenite::Message;
-///
 pub use zeroize::Zeroize;
-pub use types::nip44;
-//avoid?//upgrade?
-//pub use lightning;
-
-///
-use anyhow::{anyhow, Result};
-///
-use directories::ProjectDirs;
-
-///
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-///
 pub const GNOSTR_HEX_STR: &str = "ca45fe800a2c3b678e0a877aa77e3676340a59c9a7615e305976fb9ba8da4806";
-
-///
 pub const GNOSTR_SHA256: [u8; 32] = [
     0xca, 0x45, 0xfe, 0x80, 0x0a, 0x2c, 0x3b, 0x67, 0x8e, 0x0a, 0x87, 0x7a, 0xa7, 0x7e, 0x36, 0x76,
     0x34, 0x0a, 0x59, 0xc9, 0xa7, 0x61, 0x5e, 0x30, 0x59, 0x76, 0xfb, 0x9b, 0xa8, 0xda, 0x48, 0x06,
 ];
-
-///
 pub const DEFAULT_POW_DIFFICULTY: u8 = 4;
-
-///
 pub fn get_dirs() -> Result<ProjectDirs> {
     //maintain compat with ngit
     ProjectDirs::from("org", "gnostr", "gnostr").ok_or(anyhow!(
         "should find operating system home directories with rust-directories crate"
     ))
 }
-
-///
 type Ws =
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-
-///
 pub mod reflog;
-///
 pub use reflog::{ref_hash_list, ref_hash_list_padded, ref_hash_list_w_commit_message};
-
-///
-pub use relays::{
-    relays, relays_by_nip, relays_offline, relays_online, relays_paid, relays_public,
-};
-
-///
+pub use relays::{relays_all, relays_by_nip, relays_offline, relays_online, relays_paid};
 pub mod watch_list;
-///
 pub use watch_list::*;
-
 //TODO
 /// get_relays_by_nip
 /// pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str>
@@ -174,37 +211,37 @@ pub fn get_relays_by_nip(nip: &str) -> Result<String, &'static str> {
 /// get_relays <https://api.nostr.watch>
 /// pub fn get_relays() -> Result<String, &'static str>
 pub fn get_relays() -> Result<String, &'static str> {
-    let _relays_no_nl = relays().unwrap().to_string();
+    let _relays_no_nl = relays_all().unwrap().to_string();
 
-    Ok(format!("{}", relays().unwrap().to_string()))
+    Ok(relays_all().unwrap().to_string())
 }
 /// get_relays_online <https://api.nostr.watch>
 /// pub fn get_relays_online() -> Result<String, &'static str>
 pub fn get_relays_online() -> Result<String, &'static str> {
     let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_online().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_public <https://api.nostr.watch>
 /// pub fn get_relays_public() -> Result<String, &'static str>
 pub fn get_relays_public() -> Result<String, &'static str> {
-    let _relays_no_nl = relays_public().unwrap().to_string();
+    let _relays_no_nl = relays_online().unwrap().to_string();
 
-    Ok(format!("{}", relays_public().unwrap().to_string()))
+    Ok(relays_online().unwrap().to_string())
 }
 /// get_relays_paid <https://api.nostr.watch>
 /// pub fn get_relays_paid() -> Result<String, &'static str>
 pub fn get_relays_paid() -> Result<String, &'static str> {
     let _relays_no_nl = relays_paid().unwrap().to_string();
 
-    Ok(format!("{}", relays_paid().unwrap().to_string()))
+    Ok(relays_paid().unwrap().to_string())
 }
 /// get_relays_offline <https://api.nostr.watch>
 /// pub fn get_relays_offline() -> Result<String, &'static str>
 pub fn get_relays_offline() -> Result<String, &'static str> {
     let _relays_no_nl = relays_offline().unwrap().to_string();
 
-    Ok(format!("{}", relays_offline().unwrap().to_string()))
+    Ok(relays_offline().unwrap().to_string())
 }
 
 /// weeble
@@ -214,21 +251,15 @@ pub fn get_weeble() -> Result<String, &'static str> {
 }
 /// pub fn get_weeble_sync() -> Result<String, &'static str>
 pub fn get_weeble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", weeble_sync().unwrap_or(0_f64).to_string()))
+    Ok(weeble_sync().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_weeble_async() -> Result<String, &'static str>
 pub async fn get_weeble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(weeble_async().await.unwrap_or(0_f64).to_string())
 }
 /// pub fn get_weeble_millis_async() -> Result<String, &'static str>
 pub async fn get_weeble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        weeble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(weeble_millis_async().await.unwrap_or(0_f64).to_string())
 }
 /// wobble
 /// pub fn get_wobble() -> Result<String, &'static str>
@@ -237,34 +268,28 @@ pub fn get_wobble() -> Result<String, &'static str> {
 }
 /// pub fn get_wobble_sync() -> Result<String, &'static str>
 pub fn get_wobble_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", wobble_sync().unwrap_or(0_f64).to_string()))
+    Ok(wobble_sync().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_wobble_async() -> Result<String, &'static str>
 pub async fn get_wobble_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(wobble_async().await.unwrap_or(0_f64).to_string())
 }
 /// pub fn get_wobble_millis_async() -> Result<String, &'static str>
 pub async fn get_wobble_millis_async() -> Result<String, &'static str> {
-    Ok(format!(
-        "{}",
-        wobble_millis_async().await.unwrap_or(0_f64).to_string()
-    ))
+    Ok(wobble_millis_async().await.unwrap_or(0_f64).to_string())
 }
 
 /// pub fn get_blockheight_sync() -> Result<String, &'static str>
 pub fn get_blockheight_sync() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight().unwrap_or(0_f64).to_string()))
+    Ok(blockheight::blockheight().unwrap_or(0_f64).to_string())
 }
 /// pub async fn get_blockheight_async() -> Result<String, &'static str>
 pub async fn get_blockheight_async() -> Result<String, &'static str> {
-    Ok(format!("{}", blockheight_async().await))
+    Ok(blockheight_async().await.to_string())
 }
 /// pub fn get_blockhash() -> Result<String, &'static str>
 pub fn get_blockhash() -> Result<String, &'static str> {
-    Ok(format!("{}", blockhash().unwrap().to_string()))
+    Ok(blockhash::blockhash().unwrap().to_string())
 }
 
 /// pub fn hash_list()
@@ -287,8 +312,9 @@ pub struct Config {
     /// pub query: String
     pub query: String,
 }
-use sha256::digest;
 use std::process;
+
+use sha256::digest;
 // impl Config {
 impl Config {
     /// pub fn build(args: &\[String\]) -> Result\<Config, &'static str\>
@@ -327,24 +353,38 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 /// pub fn post_event(url: &str, event: Event)
 pub fn post_event(url: &str, event: Event) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = event_to_wire(event);
-    post(host, uri, wire)
+    let wire = internal::event_to_wire(event);
+    internal::post(host, uri, wire)
 }
 // /// use nostr_types::EventV2;
-// use nostr_types::EventV2;
+use gnostr_asyncgit::types::EventV2;
 // /// pub fn post_event_v2(url: &str, event_v2: EventV2)
-// pub fn post_event_v2(url: &str, event_v2: EventV2) {
-//     let (host, uri) = url_to_host_and_uri(url);
-//     let wire = event_to_wire_v2(event_v2);
-//     post(host, uri, wire)
-// }
+pub fn post_event_v2(url: &str, event_v2: EventV2) {
+    let (host, uri) = url_to_host_and_uri(url);
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    // Convert EventV2 to EventV3 for internal::event_to_wire
+    let event_v3 = EventV3 {
+        id: event_v2.id,
+        pubkey: event_v2.pubkey,
+        created_at: event_v2.created_at,
+        kind: event_v2.kind,
+        sig: event_v2.sig,
+        content: event_v2.content,
+        tags: event_v2.tags.into_iter().map(TagV3::from).collect(),
+    };
+    let wire = internal::event_to_wire(event_v3);
+    internal::post(host, uri, wire)
+}
 /// use nostr_types::EventV3;
-use types::EventV3;
+/// use nostr_types::EventV3;
+use gnostr_asyncgit::types::EventV3;
 /// pub fn post_event_v3(url: &str, event: EventV3)
 pub fn post_event_v3(url: &str, event: EventV3) {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = event_to_wire(event);
-    post(host, uri, wire)
+    let wire = internal::event_to_wire(event);
+    internal::post(host, uri, wire)
 }
 
 /// pub fn print_event(event: &Event)
@@ -355,30 +395,23 @@ pub fn print_event(event: &Event) {
     );
 }
 
-use crate::types::internal::*;
+use crate::internal::*;
 
-/// <https://docs.rs/gnostr/latest/gnostr/weeble/index.html>
-pub mod weeble;
-pub use weeble::weeble;
-pub use weeble::weeble_async;
-pub use weeble::weeble_millis_async;
-pub use weeble::weeble_sync;
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/weeble/index.html>
+pub mod weeble { pub use gnostr_asyncgit::weeble::*; }
+pub use gnostr_asyncgit::weeble::{weeble_async, weeble_millis_async, weeble_sync};
 
-/// <https://docs.rs/gnostr/latest/gnostr/wobble/index.html>
-pub mod wobble;
-pub use wobble::wobble;
-pub use wobble::wobble_async;
-pub use wobble::wobble_millis_async;
-pub use wobble::wobble_sync;
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/wobble/index.html>
+pub mod wobble { pub use gnostr_asyncgit::wobble::*; }
+pub use gnostr_asyncgit::wobble::{wobble_async, wobble_millis_async, wobble_sync};
 
-/// <https://docs.rs/gnostr/latest/gnostr/blockhash/index.html>
-pub mod blockhash;
-pub use blockhash::blockhash;
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockhash/index.html>
+pub mod blockhash { pub use gnostr_asyncgit::blockhash::*; }
+pub use gnostr_asyncgit::blockhash::blockhash_async;
 
-/// <https://docs.rs/gnostr/latest/gnostr/blockheight/index.html>
-pub mod blockheight;
-pub use blockheight::blockheight;
-pub use blockheight::blockheight_async;
+/// <https://docs.rs/gnostr/latest/gnostr/asyncgit/blockheight/index.html>
+pub mod blockheight { pub use gnostr_asyncgit::blockheight::*; }
+pub use gnostr_asyncgit::blockheight::blockheight_async;
 
 /// <https://docs.rs/gnostr/latest/gnostr/hash/index.html>
 pub mod hash;
@@ -403,7 +436,7 @@ pub mod relays;
 /// pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec\<Event\>
 pub fn fetch_by_filter(url: &str, filter: Filter) -> Vec<Event> {
     let (host, uri) = url_to_host_and_uri(url);
-    let wire = filters_to_wire(vec![filter]);
+    let wire = internal::filters_to_wire(vec![filter]);
     fetch(host, uri, wire)
 }
 
@@ -491,7 +524,7 @@ impl Probe {
         loop {
             tokio::select! {
                 _ = ping_timer.tick() => {
-                    let msg = Message::Ping(vec![0x1]);
+                    let msg = Message::Ping(vec![0x1].into());
                     self.send(&mut websocket, msg).await?;
                 },
                 local_message = self.from_main.recv() => {
@@ -499,19 +532,19 @@ impl Probe {
                         Some(Command::PostEvent(event)) => {
                             let client_message = ClientMessage::Event(Box::new(event));
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::Auth(event)) => {
                             let client_message = ClientMessage::Auth(Box::new(event));
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::FetchEvents(subid, filters)) => {
                             let client_message = ClientMessage::Req(subid, filters);
                             let wire = serde_json::to_string(&client_message)?;
-                            let msg = Message::Text(wire);
+                            let msg = Message::Text(wire.into());
                             self.send(&mut websocket, msg).await?;
                         },
                         Some(Command::Exit) => {
@@ -574,7 +607,7 @@ impl Probe {
                     RelayMessage::Auth(challenge) => {
                         eprintln!("{}: AUTH({})", PREFIXES.from_relay, challenge);
                     }
-                    RelayMessage::Event(sub, e) => {
+                    RelayMessage::Event(_sub, e) => {
                         let event_json = serde_json::to_string(&e)?;
                         //#[cfg(debug_assertions)]
                         //eprintln!(
@@ -765,13 +798,15 @@ pub async fn req(
                 if sub == our_sub_id {
                     if why == Some(Why::AuthRequired) {
                         if authenticated.is_none() {
-                            eprintln!("Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)");
+                            eprintln!(
+                                "Relay CLOSED our sub due to auth-required, but it has not AUTHed us! (Relay is buggy)"
+                            );
                             to_probe.send(Command::Exit).await?;
                             break;
                         }
 
-                        // We have already authenticated. We will resubmit once we get the
-                        // OK message.
+                        // We have already authenticated. We will resubmit once
+                        // we get the OK message.
                     } else {
                         to_probe.send(Command::Exit).await?;
                         break;

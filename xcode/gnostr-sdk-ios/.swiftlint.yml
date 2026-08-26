@@ -1,0 +1,14 @@
+disabled_rules:
+  - cyclomatic_complexity
+  - file_length
+  - function_body_length
+  - identifier_name
+  - line_length
+  - nesting
+  - trailing_whitespace
+  - type_body_length
+
+excluded:
+  - .build
+  - Sources/GnostrSDK/Bech32.swift # Most of the file was copied from a different source, so we do not want to modify it too much unnecessarily.
+  - Tests/GnostrSDKTests/Bech32Tests.swift # Most of the file was copied from a different source, so we do not want to modify it too much unnecessarily.

@@ -1,0 +1,29 @@
+[build.env]
+# Keep the environment that the current build scripts and bindgen setup already rely on.
+# NOTE: LIBCLANG_PATH and BINDGEN_EXTRA_CLANG_ARGS are intentionally NOT in this list.
+# The host runner sets those to host-side paths (e.g. /usr/lib/llvm-14/lib) which do
+# not exist inside the cross Docker containers. Each Dockerfile installs libclang-dev and
+# sets ENV LIBCLANG_PATH to a stable symlink inside the image, so bindgen finds the
+# correct libclang without needing the host values.
+passthrough = [
+  "OPENSSL_DIR",
+  "OPENSSL_INCLUDE_DIR",
+  "OPENSSL_LIB_DIR",
+  "OPENSSL_STATIC",
+  "PKG_CONFIG_ALLOW_CROSS",
+  "PKG_CONFIG_PATH",
+  "PKG_CONFIG_SYSROOT_DIR",
+  "CC_aarch64_unknown_linux_gnu",
+  "CXX_aarch64_unknown_linux_gnu",
+  "CC_x86_64_unknown_linux_musl",
+  "CXX_x86_64_unknown_linux_musl",
+]
+
+[target.aarch64-unknown-linux-gnu]
+dockerfile = "./docker/cross/aarch64-unknown-linux-gnu.Dockerfile"
+
+[target.aarch64-unknown-linux-musl]
+dockerfile = "./docker/cross/aarch64-unknown-linux-musl.Dockerfile"
+
+[target.x86_64-unknown-linux-musl]
+dockerfile = "./docker/cross/x86_64-unknown-linux-musl.Dockerfile"

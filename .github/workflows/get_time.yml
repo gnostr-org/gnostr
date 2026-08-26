@@ -7,6 +7,8 @@ on:
     branches:
       - '**'
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-get-time-workflow]
 permissions:
   actions: read
   contents: read

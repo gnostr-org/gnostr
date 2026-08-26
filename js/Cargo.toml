@@ -1,0 +1,44 @@
+[package]
+name = "gnostr-js"
+version.workspace = true
+edition = "2021"
+authors = ["gnostr <admin@gnostr.org>"]
+description = "gnostr web and JS bindings crate"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr.git"
+readme = "README.md"
+license = "MIT"
+build = "build.rs"
+
+[lib]
+name = "gnostr_js"
+path = "src/lib.rs"
+
+[dependencies]
+actix-web = "4"
+anyhow = { workspace = true }
+clap = { workspace = true }
+futures-util = "0.3.31"
+gnostr-crawler = { version = ">=953267.1868.494774", path = "../crawler" }
+gnostr-relay = { version = ">=953267.1868.494774", path = "../relay" }
+handlebars = "6.3.2"
+lazy_static = "1.5.0"
+libc = { workspace = true }
+log = "0.4"
+pretty_env_logger = "0.5.0"
+regex = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+sha2 = "0.10.8"
+structopt = "0.3.26"
+tempfile = { workspace = true }
+tiny_http = "0.12.0"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1.17"
+walkdir = { workspace = true }
+warp = "0.3"
+webbrowser = "0.8"
+
+[build-dependencies]
+chrono = { workspace = true, features = ["clock"] }
+serde_json = "1.0.140"

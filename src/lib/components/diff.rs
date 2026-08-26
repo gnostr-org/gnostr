@@ -18,6 +18,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use sha2::{Digest, Sha256};
 
 use super::{
     utils::{scroll_horizontal::HorizontalScroll, scroll_vertical::VerticalScroll},
@@ -32,12 +33,10 @@ use crate::{
     string_utils::{tabs_to_spaces, trim_offset},
     strings,
     try_or_popup,
-    ui::style::SharedTheme,
+    types::Keys,
     //utils::parse_private_key,
+    ui::style::SharedTheme,
 };
-
-use nostr_sdk_0_37_0::prelude::*;
-use sha2::{Digest, Sha256};
 
 #[derive(Default)]
 struct Current {
@@ -46,7 +45,6 @@ struct Current {
     hash: u64,
 }
 
-///
 #[derive(Clone, Copy)]
 enum Selection {
     Single(usize),
@@ -105,7 +103,7 @@ impl Selection {
     }
 }
 
-///
+/// DiffComponent
 pub struct DiffComponent {
     repo: RepoPathRef,
     diff: Option<FileDiff>,
@@ -126,7 +124,7 @@ pub struct DiffComponent {
 }
 
 impl DiffComponent {
-    ///
+    /// new
     pub fn new(env: &Environment, is_immutable: bool) -> Self {
         Self {
             focused: false,
@@ -147,17 +145,14 @@ impl DiffComponent {
             options: env.options.clone(),
         }
     }
-    ///
-    ///
-    ///
     fn can_scroll(&self) -> bool {
         self.diff.as_ref().is_some_and(|diff| diff.lines > 1)
     }
-    ///
+    /// current
     pub fn current(&self) -> (String, bool) {
         (self.current.path.clone(), self.current.is_stage)
     }
-    ///
+    /// clear
     pub fn clear(&mut self, pending: bool) {
         self.current = Current::default();
         self.diff = None;
@@ -168,7 +163,7 @@ impl DiffComponent {
         self.selected_hunk = None;
         self.pending = pending;
     }
-    ///
+    /// update
     pub fn update(&mut self, path: String, is_stage: bool, diff: FileDiff) {
         self.pending = false;
 

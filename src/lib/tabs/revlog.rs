@@ -59,7 +59,7 @@ enum LogSearch {
     Results(LogSearchResult),
 }
 
-///
+/// Represents the commit log view and its associated operations.
 pub struct Revlog {
     repo: RepoPathRef,
     commit_details: CommitDetailsComponent,
@@ -76,8 +76,9 @@ pub struct Revlog {
     theme: SharedTheme,
 }
 
+/// Implements methods for the Revlog struct.
 impl Revlog {
-    ///
+    /// new
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -96,13 +97,14 @@ impl Revlog {
         }
     }
 
-    ///
+    /// any_work_pending
     pub fn any_work_pending(&self) -> bool {
         self.git_log.is_pending()
             || self.is_search_pending()
             || self.git_tags.is_pending()
             || self.git_local_branches.is_pending()
             || self.git_remote_branches.is_pending()
+            || self.list.any_work_pending()
             || self.commit_details.any_work_pending()
     }
 
@@ -110,7 +112,7 @@ impl Revlog {
         matches!(self.search, LogSearch::Searching(_, _, _, _))
     }
 
-    ///
+    /// update
     pub fn update(&mut self) -> Result<()> {
         if self.is_visible() {
             if self.git_log.fetch()? == FetchStatus::Started {
@@ -118,6 +120,7 @@ impl Revlog {
             }
 
             self.list.refresh_extend_data(self.git_log.extract_items()?);
+            self.list.update();
 
             self.git_tags.request(Duration::from_secs(3), false)?;
 
@@ -133,7 +136,17 @@ impl Revlog {
         Ok(())
     }
 
-    ///
+    /// update_spinner
+    pub fn update_spinner(&mut self) {
+        self.list.update_spinner();
+    }
+
+    /// request_notes_refresh
+    pub fn refresh_notes(&mut self) {
+        self.list.refresh_notes();
+    }
+
+    /// update_git
     pub fn update_git(&mut self, ev: AsyncGitNotification) -> Result<()> {
         if self.visible {
             match ev {
@@ -162,6 +175,9 @@ impl Revlog {
                         }
                     }
                 }
+                AsyncGitNotification::Notes => {
+                    self.list.update_git(ev);
+                }
                 _ => (),
             }
         }
@@ -179,7 +195,7 @@ impl Revlog {
         commit.and_then(|commit| tags.and_then(|tags| tags.get(&commit).cloned()))
     }
 
-    ///
+    /// select_commit
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         self.list.select_commit(id)
     }
@@ -331,6 +347,7 @@ impl Revlog {
     }
 }
 
+/// Implements the drawing functionality for the Revlog component.
 impl DrawableComponent for Revlog {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
         let area = if self.is_in_search_mode() {
@@ -342,14 +359,25 @@ impl DrawableComponent for Revlog {
             Rc::new([area])
         };
 
+        // When commit details are open, the right side is split into
+        // details + notes. Notes are rendered from the same cached snapshot
+        // as the row badges so the view and markers stay in sync.
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(60), Constraint::Percentage(40)].as_ref())
+            .constraints(
+                [
+                    Constraint::Percentage(60),
+                    Constraint::Percentage(20),
+                    Constraint::Percentage(20),
+                ]
+                .as_ref(),
+            )
             .split(area[0]);
 
         if self.commit_details.is_visible() {
             self.list.draw(f, chunks[0])?;
             self.commit_details.draw(f, chunks[1])?;
+            self.list.draw_notes(f, chunks[2]);
         } else {
             self.list.draw(f, area[0])?;
         }

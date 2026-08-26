@@ -1,16 +1,21 @@
 ## Installing Gitu
+
 ### Using Cargo
+
 Run the command (recommended):
+
 ```
 cargo install gitu --locked
 ```
 
 ...or to install from git, run:
+
 ```
 cargo install --git https://github.com/altsem/gitu.git --locked
 ```
 
 ### Arch Linux
+
 You can install the `gitu` package from the [official extra repository](https://archlinux.org/packages/extra/x86_64/gitu/):
 
 ```
@@ -18,6 +23,7 @@ pacman -S gitu
 ```
 
 ### Using Release binaries
+
 gitu is available on Github Releases and should be installed from there.
 
 The latest release is available
@@ -27,6 +33,7 @@ Download the archive that is appropriate for your platform and extract the
 binary into your `$PATH`. A common valid path location is `/usr/local/bin`.
 
 ### Using Nix flakes
+
 To build from `master` on flaked Nix platforms add this repo to your inputs:
 
 ```nix
@@ -53,5 +60,3 @@ nix.settings = {
     [ "gitu.cachix.org-1:iUIaNys1l3W1LF/M8OXzaTl7N/OinGOlzdUJUSc+5eY=" ];
 }
 ```
-
-

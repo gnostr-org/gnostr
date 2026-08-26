@@ -1,0 +1,86 @@
+use futures::StreamExt;
+
+use clap::Parser;
+use gnostr_p2p::{
+    args::Args as GitArgs, cli, command_handler, event_handler, git_publisher, relay_buckets,
+    swarm_builder::build_swarm,
+};
+use libp2p::kad;
+use tokio::io::AsyncBufReadExt;
+
+#[derive(Debug, Parser)]
+#[command(
+    author,
+    version,
+    about = "Run the main gnostr p2p daemon.",
+    long_about = "Run the libp2p swarm used by gnostr chat and related services.\n\nThis daemon owns discovery, DHT bootstrap, gossipsub traffic, relay handling, and stdin command processing.",
+    help_template = cli::HELP_TEMPLATE,
+    next_line_help = true,
+    disable_help_subcommand = true,
+    after_help = "Examples:\n  gnostr-p2p --network ipfs\n  gnostr-p2p --detach --port 4001\n  gnostr-p2p --listen-address /ip4/0.0.0.0/tcp/4001\n\nUse the sibling relay and rendezvous binaries when you want a dedicated infrastructure role."
+)]
+struct Opt {
+    #[command(flatten)]
+    node: cli::NodeOpts,
+
+    #[command(flatten)]
+    network: cli::NetworkOpts,
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    cli::init_tracing();
+
+    let opt = Opt::parse();
+    if opt.node.detach {
+        let pid = gnostr_p2p::spawn_detached_current_exe(cli::current_args_without_detach())
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        println!("started background p2p daemon (pid: {pid})");
+        return Ok(());
+    }
+
+    let keypair = gnostr_p2p::keypair_from_seed(opt.node.secret_key_seed);
+    let mut swarm = build_swarm(keypair)
+        .await
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    swarm.behaviour_mut().kademlia.set_mode(Some(kad::Mode::Server));
+
+    if let Some(network) = opt.network.network {
+        for (addr, peer_id) in network.bootnodes() {
+            swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
+        }
+    }
+
+    if let Err(error) = relay_buckets::publish_local_snapshots(&mut swarm).await {
+        eprintln!("failed to publish local relay buckets: {error}");
+    }
+
+    let repo_args = GitArgs::parse_from(["gnostr-p2p", "--git-dir", "nips"]);
+    if let Err(error) = git_publisher::run_git_publisher(&repo_args, &mut swarm).await {
+        eprintln!("failed to publish nips repo data: {error}");
+    }
+
+    cli::listen_default_addresses(
+        &mut swarm,
+        opt.node.listen_address,
+        opt.node.port,
+        opt.node.use_ipv6,
+    )?;
+
+    let mut stdin = tokio::io::BufReader::new(tokio::io::stdin()).lines();
+    loop {
+        tokio::select! {
+            line = stdin.next_line() => {
+                let Some(line) = line? else { break; };
+                if line.trim().is_empty() {
+                    continue;
+                }
+                command_handler::handle_input_line(&mut swarm, line).await;
+            }
+            event = swarm.select_next_some() => {
+                event_handler::handle_swarm_event(&mut swarm, event).await;
+            }
+        }
+    }
+    Ok(())
+}

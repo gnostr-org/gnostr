@@ -3,75 +3,62 @@
 
 //use crate::sub_commands::chat::Utc;
 
-//use crate::p2p::chat::p2p::evt_loop; //migrate carefully
-use crate::p2p::chat::*;
- //migrate carefully
+//migrate carefully
 use anyhow::Result;
+use gnostr_chat::{chat as chat_impl, run as chat_run, ChatSubCommands as ChatCommandSubCommands};
 
-use serde::ser::StdError;
+use gnostr_chat::ChatSubCommands;
 
-
-
-use nostr_sdk_0_37_0::Keys;
-
-use tracing::{debug, Level};
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
-
+/// chat
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn chat(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
-    run(sub_command_args).await?;
+    let args = ChatCommandSubCommands {
+        nsec: sub_command_args.nsec.clone(),
+        password: sub_command_args.password.clone(),
+        name: sub_command_args.name.clone(),
+        topic: sub_command_args.topic.clone(),
+        hash: sub_command_args.hash.clone(),
+        disable_cli_spinners: sub_command_args.disable_cli_spinners,
+        info: sub_command_args.info,
+        debug: sub_command_args.debug,
+        trace: sub_command_args.trace,
+        headless: sub_command_args.headless,
+        workdir: sub_command_args.workdir.clone(),
+        gitdir: sub_command_args.gitdir.clone(),
+        oneshot: sub_command_args.oneshot.clone(),
+    };
+    chat_impl(&args).await?;
     Ok(())
 }
 
+/// run
+///
+/// # Panics
+///
+/// Panics if the tracing directive cannot be parsed.
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
 pub async fn run(sub_command_args: &ChatSubCommands) -> Result<(), anyhow::Error> {
-    let sub_command_args = sub_command_args;
-    if let Some(name) = sub_command_args.name.clone() {
-        use std::env;
-        env::set_var("USER", &name);
+    let args = ChatCommandSubCommands {
+        nsec: sub_command_args.nsec.clone(),
+        password: sub_command_args.password.clone(),
+        name: sub_command_args.name.clone(),
+        topic: sub_command_args.topic.clone(),
+        hash: sub_command_args.hash.clone(),
+        disable_cli_spinners: sub_command_args.disable_cli_spinners,
+        info: sub_command_args.info,
+        debug: sub_command_args.debug,
+        trace: sub_command_args.trace,
+        headless: sub_command_args.headless,
+        workdir: sub_command_args.workdir.clone(),
+        gitdir: sub_command_args.gitdir.clone(),
+        oneshot: sub_command_args.oneshot.clone(),
     };
-
-    let level = if sub_command_args.debug {
-        Level::DEBUG
-    } else if sub_command_args.trace {
-        Level::TRACE
-    } else if sub_command_args.info {
-        Level::INFO
-    } else {
-        Level::WARN
-    };
-    //TODO chat specific filters
-    let filter = EnvFilter::default()
-        .add_directive(level.into())
-        .add_directive("nostr_sdk=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::client=off".parse().unwrap())
-        .add_directive("nostr_sdk::client::handler=off".parse().unwrap())
-        .add_directive("nostr_relay_pool=off".parse().unwrap())
-        .add_directive("nostr_sdk::relay::connection=off".parse().unwrap())
-        .add_directive("gnostr::chat::p2p=off".parse().unwrap())
-        .add_directive("gnostr::message=off".parse().unwrap())
-        .add_directive("gnostr::nostr_proto=off".parse().unwrap())
-        .add_directive("libp2p_mdns::behaviour::iface=off".parse().unwrap())
-        .add_directive("libp2p_gossipsub::behaviour=off".parse().unwrap());
-
-    //    let subscriber = Registry::default()
-    //        .with(fmt::layer().with_writer(std::io::stdout))
-    //        .with(filter);
-
-    let subscriber = Registry::default()
-        .with(
-            fmt::layer()
-                .with_writer(std::io::stdout)
-                //.with_timer(fmt::time::Utc::rfc_3339()) // Corrected line
-                .with_thread_ids(true),
-        )
-        .with(filter);
-
-    let _ = subscriber.try_init();
-    tracing::trace!("\n{:?}\n", &sub_command_args);
-    tracing::debug!("\n{:?}\n", &sub_command_args);
-    tracing::info!("\n{:?}\n", &sub_command_args);
-
-    crate::p2p::chat::chat(sub_command_args).await?;
-
+    chat_run(&args).await?;
     Ok(())
 }

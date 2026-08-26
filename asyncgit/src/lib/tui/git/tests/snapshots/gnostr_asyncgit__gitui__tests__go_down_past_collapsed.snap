@@ -1,0 +1,25 @@
+---
+source: src/gitui/tests/mod.rs
+expression: ctx.redact_buffer()
+---
+ On branch main                                                                 |
+                                                                                |
+ Unstaged changes (2)                                                           |
+ modified   file-one…                                                           |
+▌modified   file-two…                                                           |
+                                                                                |
+ Recent commits                                                                 |
+ ba7ba58 main add file-two                                                      |
+ 428f4a7 add file-one                                                           |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: cd3e23e061eab209

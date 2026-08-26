@@ -1,0 +1,317 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4B5721162FC0C22F00B31674 /* FFIKitchenSink in Frameworks */ = {isa = PBXBuildFile; productRef = FFIKS000000000000000060 /* FFIKitchenSink */; };
+		FFIKS000000000000000001 /* FFIKitchenSinkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFIKS000000000000000011 /* FFIKitchenSinkApp.swift */; };
+		FFIKS000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFIKS000000000000000012 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		FFIKS000000000000000010 /* FFIKitchenSinkApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FFIKitchenSinkApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFIKS000000000000000011 /* FFIKitchenSinkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFIKitchenSinkApp.swift; sourceTree = "<group>"; };
+		FFIKS000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FFIKS000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FFIKS000000000000000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B5721162FC0C22F00B31674 /* FFIKitchenSink in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FFIKS000000000000000021 /* Build crawler FFI */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\n\nCRATE_DIR=\"${PROJECT_DIR}/../swift-gnostr-crawler/Rust/crawler-ffi\"\nMANIFEST_PATH=\"${CRATE_DIR}/Cargo.toml\"\nexport CARGO_TARGET_DIR=\"${CRATE_DIR}/target\"\nCARGO_BIN=\"${CARGO:-${HOME}/.cargo/bin/cargo}\"\nif [ ! -x \"${CARGO_BIN}\" ]; then\n  CARGO_BIN=\"$(command -v cargo 2>/dev/null || true)\"\nfi\nif [ -z \"${CARGO_BIN}\" ] || [ ! -x \"${CARGO_BIN}\" ]; then\n  echo \"cargo not found\" >&2\n  exit 1\nfi\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  \"${CARGO_BIN}\" build --manifest-path \"${MANIFEST_PATH}\" --release\n  BUILD_DIR=\"${CARGO_TARGET_DIR}/release\"\nelse\n  \"${CARGO_BIN}\" build --manifest-path \"${MANIFEST_PATH}\"\n  BUILD_DIR=\"${CARGO_TARGET_DIR}/debug\"\nfi\n\nmkdir -p \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\ncp -f \"${BUILD_DIR}/libcrawler_ffi.dylib\" \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/libcrawler_ffi.dylib\"\n";
+		};
+		FFIKS000000000000000022 /* Clean crawler FFI */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\n\nrm -f \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/libcrawler_ffi.dylib\"\n";
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FFIKS000000000000000030 = {
+			isa = PBXGroup;
+			children = (
+				FFIKS000000000000000031 /* FFIKitchenSinkApp */,
+				FFIKS000000000000000032 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FFIKS000000000000000031 /* FFIKitchenSinkApp */ = {
+			isa = PBXGroup;
+			children = (
+				FFIKS000000000000000011 /* FFIKitchenSinkApp.swift */,
+				FFIKS000000000000000012 /* ContentView.swift */,
+				FFIKS000000000000000013 /* Info.plist */,
+			);
+			path = FFIKitchenSinkApp;
+			sourceTree = "<group>";
+		};
+		FFIKS000000000000000032 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FFIKS000000000000000010 /* FFIKitchenSinkApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FFIKS000000000000000040 /* FFIKitchenSinkApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FFIKS000000000000000050 /* Build configuration list for PBXNativeTarget "FFIKitchenSinkApp" */;
+			buildPhases = (
+				FFIKS000000000000000022 /* Clean crawler FFI */,
+				FFIKS000000000000000021 /* Build crawler FFI */,
+				FFIKS000000000000000041 /* Sources */,
+				FFIKS000000000000000020 /* Frameworks */,
+				FFIKS000000000000000042 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FFIKitchenSinkApp;
+			packageProductDependencies = (
+				FFIKS000000000000000060 /* FFIKitchenSink */,
+			);
+			productName = FFIKitchenSinkApp;
+			productReference = FFIKS000000000000000010 /* FFIKitchenSinkApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FFIKS000000000000000100 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					FFIKS000000000000000040 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = FFIKS000000000000000051 /* Build configuration list for PBXProject "FFIKitchenSinkApp" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FFIKS000000000000000030;
+			packageReferences = (
+				FFIKS000000000000000061 /* XCLocalSwiftPackageReference "." */,
+			);
+			productRefGroup = FFIKS000000000000000032 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FFIKS000000000000000040 /* FFIKitchenSinkApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FFIKS000000000000000042 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FFIKS000000000000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FFIKS000000000000000001 /* FFIKitchenSinkApp.swift in Sources */,
+				FFIKS000000000000000002 /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		FFIKS000000000000000052 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"ARCHS[sdk=iphonesimulator*]" = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = FFIKitchenSinkApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"MACOSX_DEPLOYMENT_TARGET[sdk=macosx*]" = 14.0;
+				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.gnostr.FFIKitchenSinkApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FFIKS000000000000000053 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"ARCHS[sdk=iphonesimulator*]" = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = FFIKitchenSinkApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"MACOSX_DEPLOYMENT_TARGET[sdk=macosx*]" = 14.0;
+				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.gnostr.FFIKitchenSinkApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		FFIKS000000000000000054 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FFIKitchenSinkApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FFIKS000000000000000055 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M684FYCYG6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FFIKitchenSinkApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FFIKS000000000000000050 /* Build configuration list for PBXNativeTarget "FFIKitchenSinkApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FFIKS000000000000000054 /* Debug */,
+				FFIKS000000000000000055 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FFIKS000000000000000051 /* Build configuration list for PBXProject "FFIKitchenSinkApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FFIKS000000000000000052 /* Debug */,
+				FFIKS000000000000000053 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		FFIKS000000000000000061 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FFIKS000000000000000060 /* FFIKitchenSink */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FFIKS000000000000000061 /* XCLocalSwiftPackageReference "." */;
+			productName = FFIKitchenSink;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FFIKS000000000000000100 /* Project object */;
+}

@@ -1,0 +1,74 @@
+# This workflow is intended to be adopted by all repositories in the swift-libp2p org
+
+name: Pull Request
+
+# Controls when the workflow will run
+on:
+  workflow_call:
+    inputs:
+      api_breakage_check_enabled:
+        type: boolean
+        description: "Boolean to enable the API breakage check job. Defaults to true."
+        default: true
+      api_breakage_check_allowlist_path:
+        type: string
+        description: "Path to a file that will be passed as --breakage-allowlist-path to swift package diagnose-api-breaking-changes"
+        default: ""
+      test_in_release_configuration:
+        type: boolean
+        description: "Boolean to enable building and testing in release mode (as opposed to debug mode). Defaults to false (debug mode)."
+        default: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  soundness:
+    name: Soundness
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
+    with:
+      api_breakage_check_enabled: ${{ !contains(github.event.pull_request.labels.*.name, 'breaking-change') && inputs.api_breakage_check_enabled }}
+      api_breakage_check_allowlist_path: ${{ inputs.api_breakage_check_allowlist_path }}
+      unacceptable_language_check_word_list: "blacklist whitelist slave sane sanity insane insanity kill killed killing hang hung hanged hanging"
+      license_header_check_project_name: "swift-libp2p"
+
+  tests-linux:
+    needs: soundness
+    name: Tests-Linux
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+    with:
+      # Disable windows builds for the time being
+      enable_windows_checks: false
+      # Exclude swift 5.9 and 5.10
+      linux_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}]"
+      # Pass the configuration flags for linux builds and tests
+      swift_flags: ${{ inputs.test_in_release_configuration && '-c release -Xswiftc -enable-testing' || '' }}
+      swift_nightly_flags: ${{ inputs.test_in_release_configuration && '-c release -Xswiftc -enable-testing' || '' }}
+
+  # Implement our own MacOS tests until swiftlang adds support for it
+  test-macos:
+    needs: soundness
+    name: Tests-MacOS
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.0", "6.1", "6.2"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      - name: Get swift version
+        run: swift --version
+      # Build in debug mode
+      - name: Build
+        run: swift build
+      # Test in debug mode
+      - name: Test Debug
+        if: ${{ !inputs.test_in_release_configuration }}
+        run: swift test
+      # Test in release mode
+      - name: Test Release
+        if: ${{ inputs.test_in_release_configuration }}
+        run: swift test -c release -Xswiftc -enable-testing

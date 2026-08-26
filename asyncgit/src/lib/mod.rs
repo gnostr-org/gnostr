@@ -1,0 +1,345 @@
+//! asyncgit
+
+#![allow(missing_docs)]
+#![allow(
+    unused_imports,
+    unused_must_use,
+    dead_code,
+    unstable_name_collisions,
+    unused_assignments
+)]
+#![allow(clippy::all, clippy::perf, clippy::nursery, clippy::pedantic)]
+#![allow(
+	clippy::filetype_is_file,
+	clippy::cargo,
+	clippy::unwrap_used,
+	clippy::panic,
+	clippy::match_like_matches_macro,
+	clippy::needless_update
+	//TODO: get this in someday since expect still leads us to crashes sometimes
+	// clippy::expect_used
+)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
+    clippy::missing_errors_doc
+)]
+//TODO:
+#![allow(
+    clippy::significant_drop_tightening,
+    clippy::missing_panics_doc,
+    clippy::multiple_crate_versions,
+    clippy::needless_pass_by_ref_mut,
+    clippy::too_long_first_doc_paragraph,
+    clippy::set_contains_or_insert,
+    clippy::empty_docs
+)]
+
+// use crate::nostr_client;
+use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use ureq::Agent;
+
+pub(crate) use gitui_asyncgit::sync as upstream_sync;
+
+/// Deterministic helper utilities.
+pub mod weeble;
+
+/// Randomized helper utilities.
+pub mod wobble;
+
+/// Block height helpers.
+pub mod blockheight;
+
+/// Block hash helpers.
+pub mod blockhash;
+
+/// Embedded image assets.
+pub mod images;
+
+/// Embedded JavaScript assets.
+pub mod js;
+
+/// Embedded CSS assets.
+pub mod css;
+
+#[path = "filehash/lib.rs"]
+pub mod filehash;
+
+/// Deterministic Nostr profile fixtures used in tests and examples.
+pub mod profiles;
+
+/// Local Nostr and Git domain types.
+pub mod types;
+
+/// Terminal UI entry points.
+#[cfg(feature = "tui")]
+pub mod tui;
+
+mod notes;
+
+pub mod asyncjob;
+mod blame;
+mod branches;
+pub mod cached;
+mod commit_files;
+mod diff;
+mod error;
+mod fetch_job;
+mod filter_commits;
+mod progress;
+mod pull;
+mod push;
+mod push_tags;
+pub mod remote_progress;
+pub mod remote_tags;
+mod revlog;
+mod status;
+pub mod sync;
+mod tags;
+mod treefiles;
+
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
+
+pub use git2;
+pub use git2::*;
+pub use git2::message_prettify;
+
+pub use crate::{
+    blame::{AsyncBlame, BlameParams},
+    branches::AsyncBranchesJob,
+    commit_files::{AsyncCommitFiles, CommitFilesParams},
+    diff::{AsyncDiff, DiffParams, DiffType},
+    error::{Error, Result},
+    fetch_job::AsyncFetchJob,
+    filter_commits::{AsyncCommitFilterJob, CommitFilterResult},
+    notes::{AsyncNotes, AsyncNotesJob},
+    progress::ProgressPercent,
+    pull::{AsyncPull, FetchRequest},
+    push::{AsyncPush, PushRequest},
+    push_tags::{AsyncPushTags, PushTagsRequest},
+    remote_progress::{RemoteProgress, RemoteProgressState},
+    revlog::{AsyncLog, FetchStatus},
+    status::{AsyncStatus, StatusParams},
+    sync::{
+        add_note, amend_note, append_public_attestation_log, create_empty_tree,
+        create_empty_tree_sha256, default_notes_ref, create_temp_bare_repo,
+        create_temp_bare_repo_with_empty_tree, create_temp_repo, create_temp_repo_with_empty_tree,
+        diff::{DiffLine, DiffLineType, FileDiff},
+        list_notes, accumulated_commit_pow, accumulated_note_pow, accumulated_pow,
+        accumulated_pow_depth, mine_note, remotes::push::PushType, remove_note,
+        run_notes_command, show_note, status::{StatusItem, StatusItemType},
+        AccumulatedPowEntry, AccumulatedPowSummary, GitNote, NoteInfo, NotesCommand,
+        NotesCommandResult,
+    },
+    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3, NostrProfileFixture},
+    tags::AsyncTags,
+    treefiles::AsyncTreeFilesJob,
+    types::{
+        event_is_patch_set_root, event_is_revision_root, event_is_valid_pr_or_pr_update,
+        event_tag_from_nip19_or_hex, get_commit_id_from_patch, get_event_root,
+        get_parent_commit_from_patch, patch_supports_commit_ids, status_kinds, EventRefType,
+        Nip34Event, Nip34Kind, Nip34UnsignedEvent, RepoRef, RepoState, REPO_ANNOUNCEMENT_KIND,
+        REPO_STATE_KIND,
+    },
+};
+pub use filehash::install_rustls_crypto_provider;
+
+/// Default deterministic private key material used by tests and fixtures.
+pub use crate::types::DEFAULT_GNOSTR_PRIVATE_KEY;
+
+/// Default deterministic private key material encoded as lowercase hex.
+pub fn default_gnostr_private_key_hex() -> String {
+    hex::encode(DEFAULT_GNOSTR_PRIVATE_KEY)
+}
+
+
+/// Default deterministic private key material in bech32 form.
+pub const DEFAULT_GNOSTR_PRIVATE_KEY_BECH32: &str =
+    "nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36";
+
+/// Returns the shared deterministic private key as a `SecretKey`.
+pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
+    secp256k1::SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
+        .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid")
+}
+
+/// this type is used to communicate events back through the channel
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum AsyncGitNotification {
+    /// this indicates that no new state was fetched but that a async
+    /// process finished
+    FinishUnchanged,
+    ///
+    Status,
+    ///
+    Diff,
+    ///
+    Log,
+    ///
+    FileLog,
+    ///
+    CommitFiles,
+    ///
+    Tags,
+    ///
+    Push,
+    ///
+    PushTags,
+    ///
+    Pull,
+    ///
+    Blame,
+    ///
+    RemoteTags,
+    ///
+    Fetch,
+    ///
+    Branches,
+    ///
+    TreeFiles,
+    ///
+    CommitFilter,
+    ///
+    Notes,
+}
+
+/// helper function to calculate the hash of an arbitrary type that
+/// implements the `Hash` trait
+pub fn hash<T: Hash + ?Sized>(v: &T) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    v.hash(&mut hasher);
+    hasher.finish()
+}
+
+///
+#[cfg(feature = "trace-libgit")]
+pub fn register_tracing_logging() -> bool {
+    fn git_trace(level: git2::TraceLevel, msg: &[u8]) {
+        if let Ok(msg) = std::str::from_utf8(msg) {
+            log::info!("[{:?}]: {}", level, msg);
+        }
+    }
+    git2::trace_set(git2::TraceLevel::Trace, git_trace).is_ok()
+}
+
+///
+#[cfg(not(feature = "trace-libgit"))]
+pub fn register_tracing_logging() -> bool {
+    true
+}
+
+/// Synchronous HTTP request using ureq.
+/// Handles errors gracefully instead of panicking.
+//pub fn ureq_sync(url: String) -> Result<String, String> {
+pub fn ureq_sync(url: String) -> Result<String> {
+    // Build the ureq agent with more generous timeouts.
+    // 5 seconds for read and write should be more robust for network operations.
+    let agent: Agent = ureq::AgentBuilder::new()
+        .timeout_read(Duration::from_secs(5)) // Increased timeout
+        .timeout_write(Duration::from_secs(5)) // Increased timeout
+        .build();
+
+    // Attempt to make the GET request and handle potential errors.
+    match agent.get(&url).call() {
+        Ok(response) => {
+            // If the call was successful, try to convert the response into a string.
+            match response.into_string() {
+                Ok(body) => {
+                    debug!("ureq_sync:body:\n{}", body); // Debug log the body
+                    Ok(body)
+                }
+                Err(e) => {
+                    // Log an error if converting the response to string fails.
+                    error!(
+                        "Failed to convert ureq_sync response to string for URL {}: {}",
+                        url, e
+                    );
+                    Err(Error::Generic(format!(
+                        "Failed to convert response to string: {}",
+                        e
+                    )))
+                }
+            }
+        }
+        Err(e) => {
+            // Log a detailed error if the ureq call fails.
+            // This will show up in your logs if the log level is configured to show errors.
+            error!("ureq_sync:agent.get(&url) failed for URL {}: {:?}", url, e);
+            Err(Error::Generic(format!("HTTP request failed: {}", e)))
+        }
+    }
+}
+
+/// Asynchronous HTTP request using tokio and ureq.
+/// Handles errors gracefully instead of panicking.
+//pub async fn ureq_async(url: String) -> Result<String, String> {
+pub async fn ureq_async(url: String) -> Result<String> {
+    let s = tokio::spawn(async move {
+        // Build the ureq agent with more generous timeouts.
+        let agent: Agent = ureq::AgentBuilder::new()
+            .timeout_read(Duration::from_secs(5)) // Increased timeout
+            .timeout_write(Duration::from_secs(5)) // Increased timeout
+            .build();
+
+        // Attempt to make the GET request and handle potential errors.
+        match agent.get(&url).call() {
+            Ok(response) => {
+                // If the call was successful, try to convert the response into a string.
+                match response.into_string() {
+                    Ok(body) => {
+                        debug!("ureq_async:body:\n{}", body); // Debug log the body
+                        Ok(body)
+                    }
+                    Err(e) => {
+                        // Log an error if converting the response to string fails.
+                        error!(
+                            "Failed to convert ureq_async response to string for URL {}: {}",
+                            url, e
+                        );
+                        Err(Error::Generic(format!(
+                            "Failed to convert response to string: {}",
+                            e
+                        )))
+                    }
+                }
+            }
+            Err(e) => {
+                // Log a detailed error if the ureq call fails.
+                error!("ureq_async:agent.get(&url) failed for URL {}: {:?}", url, e);
+                Err(Error::Generic(format!("HTTP request failed: {}", e)))
+            }
+        }
+    });
+
+    // Await the spawned task and handle its result.
+    // The `?` operator here will propagate any `Err` from the spawned task.
+    s.await
+        .map_err(|e| Error::Generic(format!("Asynchronous task failed: {}", e)))?
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_gnostr_private_key_roundtrip_bech32() {
+        let mut private_key = types::PrivateKey(
+            default_gnostr_private_key(),
+            types::KeySecurity::NotTracked,
+        );
+
+        let bech32 = private_key.as_bech32_string();
+        assert_eq!(bech32, DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+
+        let parsed = types::PrivateKey::try_from_bech32_string(&bech32).unwrap();
+        assert_eq!(parsed.as_secret_key().secret_bytes(), DEFAULT_GNOSTR_PRIVATE_KEY);
+
+        let mut parsed_roundtrip = parsed.clone();
+        assert_eq!(parsed_roundtrip.as_bech32_string(), DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+    }
+}

@@ -1,12 +1,15 @@
 use std::{
     cell::{Cell, RefCell},
+    collections::VecDeque,
     env,
     path::{Path, PathBuf},
     rc::Rc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
-use crate::weeble::weeble_sync;
-use crate::wobble::wobble_sync;
 use anyhow::{bail, Result};
 use crossbeam_channel::Sender;
 use crossterm::event::{Event, KeyEvent};
@@ -26,7 +29,33 @@ use ratatui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-use crate::{    accessors,    cmdbar::CommandBar,    components::{        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,    },    input::{Input, InputEvent, InputState},    keys::{key_match, KeyConfig, SharedKeyConfig},    options::{Options, SharedOptions},    popup_stack::PopupStack,    popups::{        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,        FileRevlogPopup, FuzzyFindPopup, HelpPopup, InspectChatPopup, InspectCommitPopup,        LogSearchPopupPopup, MsgPopup, OptionsPopup, PullPopup, PushPopup, PushTagsPopup,        RenameBranchPopup, ResetPopup, RevisionFilesPopup, StashMsgPopup, SubmodulesListPopup,        TagCommitPopup, TagListPopup,    },    queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},    setup_popups,    strings::{self, ellipsis_trim_start, order},    sub_commands::tui::{AsyncAppNotification, AsyncNotification},    tabs::{Chatlog, FilesTab, Revlog, StashList, Stashing, Status},    try_or_popup,    types::nip34,    ui::style::{SharedTheme, Theme},};
+use crate::{
+    accessors,
+    cmdbar::CommandBar,
+    components::{
+        command_pump, event_pump, CommandInfo, Component, DrawableComponent, FuzzyFinderTarget,
+    },
+    input::{Input, InputEvent, InputState},
+    keys::{key_match, KeyConfig, SharedKeyConfig},
+    options::{Options, SharedOptions},
+    popup_stack::PopupStack,
+    popups::{
+        AppOption, BlameFilePopup, BranchListPopup, ChatPopup, CommitPopup, CompareCommitsPopup,
+        ConfirmPopup, CreateBranchPopup, DisplayChatPopup, ExternalEditorPopup, FetchPopup,
+        FileRevlogPopup, FuzzyFindPopup, GitnotePopup, HelpPopup, InspectChatPopup,
+        InspectCommitPopup, LogSearchPopupPopup, MsgPopup, Nip34Popup, NotesListPopup, OptionsPopup,
+        PullPopup, PushPopup, PushTagsPopup, RenameBranchPopup, ResetPopup, RevisionFilesPopup,
+        StashMsgPopup, SubmodulesListPopup, TagCommitPopup, TagListPopup,
+    },
+    queue::{Action, AppTabs, InternalEvent, NeedsUpdate, Queue, StackablePopupOpen},
+    setup_popups,
+    strings::{self, ellipsis_trim_start, order},
+    sub_commands::tui::{AsyncAppNotification, AsyncNotification},
+    tabs::{Chatlog, FilesTab, Revlog, StashTab, Status},
+    try_or_popup,
+    ui::style::{SharedTheme, Theme},
+    weeble_sync, wobble_sync,
+};
 
 #[derive(Clone)]
 pub enum QuitState {
@@ -55,6 +84,9 @@ pub struct App {
     inspect_commit_popup: InspectCommitPopup,
     compare_commits_popup: CompareCommitsPopup,
     external_editor_popup: ExternalEditorPopup,
+    gitnote_popup: GitnotePopup,
+    nip34_popup: Nip34Popup,
+    notes_list_popup: NotesListPopup,
     revision_files_popup: RevisionFilesPopup,
     fuzzy_find_popup: FuzzyFindPopup,
     log_search_popup: LogSearchPopupPopup,
@@ -74,8 +106,7 @@ pub struct App {
     tab: usize,
     revlog: Revlog,
     status_tab: Status,
-    stashing_tab: Stashing,
-    stashlist_tab: StashList,
+    stash_tab: StashTab,
     files_tab: FilesTab,
     chat_tab: Chatlog,
     queue: Queue,
@@ -89,6 +120,10 @@ pub struct App {
     // "Flags"
     requires_redraw: Cell<bool>,
     file_to_open: Option<String>,
+    git_note_target: Option<gnostr_asyncgit::sync::CommitId>,
+    git_note_ref: Option<String>,
+    git_note_pending: VecDeque<gnostr_asyncgit::sync::CommitId>,
+    quit_flag: Arc<AtomicBool>,
 }
 
 pub struct Environment {
@@ -121,7 +156,6 @@ impl Environment {
 
 // public interface
 impl App {
-    ///
     #[allow(clippy::too_many_lines)]
     pub async fn new(
         repo: RepoPathRef,
@@ -130,6 +164,7 @@ impl App {
         input: Input,
         theme: Theme,
         key_config: KeyConfig,
+        quit_flag: Arc<AtomicBool>,
     ) -> Result<Self> {
         log::trace!("open repo at: {:?}", &repo);
 
@@ -168,6 +203,9 @@ impl App {
             compare_commits_popup: CompareCommitsPopup::new(&env),
 
             external_editor_popup: ExternalEditorPopup::new(&env),
+            gitnote_popup: GitnotePopup::new(&env),
+            nip34_popup: Nip34Popup::new(&env),
+            notes_list_popup: NotesListPopup::new(&env),
             push_popup: PushPopup::new(&env),
             push_tags_popup: PushTagsPopup::new(&env),
             reset_popup: ResetPopup::new(&env),
@@ -188,8 +226,7 @@ impl App {
             msg_popup: MsgPopup::new(&env),
             revlog: Revlog::new(&env),
             status_tab: Status::new(&env),
-            stashing_tab: Stashing::new(&env),
-            stashlist_tab: StashList::new(&env),
+            stash_tab: StashTab::new(&env),
             files_tab: FilesTab::new(&env),
             //chat_tab
             chat_tab: Chatlog::new(&env).await,
@@ -200,17 +237,20 @@ impl App {
             key_config: env.key_config,
             requires_redraw: Cell::new(false),
             file_to_open: None,
+            git_note_target: None,
+            git_note_ref: None,
+            git_note_pending: VecDeque::new(),
             repo: env.repo,
             repo_path_text,
             popup_stack: PopupStack::default(),
+            quit_flag,
         };
 
-        app.set_tab(tab)?;
+        app.set_tab(tab.min(4))?;
 
         Ok(app)
     }
 
-    ///
     pub fn draw(&self, f: &mut Frame) -> Result<()> {
         let fsize = f.area();
 
@@ -251,8 +291,7 @@ impl App {
                 1 => self.status_tab.draw(f, chunks_main[1])?,
                 2 => self.revlog.draw(f, chunks_main[1])?,
                 3 => self.files_tab.draw(f, chunks_main[1])?,
-                4 => self.stashing_tab.draw(f, chunks_main[1])?,
-                5 => self.stashlist_tab.draw(f, chunks_main[1])?,
+                4 => self.stash_tab.draw(f, chunks_main[1])?,
                 _ => bail!("unknown tab"),
             };
         }
@@ -262,7 +301,6 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn event(&mut self, ev: InputEvent) -> Result<()> {
         log::trace!("event: {:?}", ev);
 
@@ -299,6 +337,9 @@ impl App {
                     //
                     self.options_popup.show()?;
                     NeedsUpdate::ALL
+                } else if key_match(k, self.key_config.keys.open_nip34) {
+                    self.queue.push(InternalEvent::OpenPopup(StackablePopupOpen::Nip34));
+                    NeedsUpdate::ALL | NeedsUpdate::COMMANDS
                 } else {
                     NeedsUpdate::empty()
                 };
@@ -310,18 +351,49 @@ impl App {
         } else if let InputEvent::State(polling_state) = ev {
             //
             self.external_editor_popup.hide();
+            self.gitnote_popup.hide();
             if matches!(polling_state, InputState::Paused) {
+                let git_note_target = self.git_note_target.take();
+                let git_note_ref = self.git_note_ref.take();
+                let is_git_note = git_note_target.is_some();
                 let result = if let Some(path) = self.file_to_open.take() {
                     ExternalEditorPopup::open_file_in_editor(&self.repo.borrow(), Path::new(&path))
+                } else if let Some(target) = git_note_target {
+                    GitnotePopup::open_note_in_editor(
+                        &self.repo.borrow(),
+                        &target,
+                        git_note_ref.as_deref(),
+                    )
                 } else {
                     let changes = self.status_tab.get_files_changes()?;
                     self.commit_popup.show_editor(changes)
                 };
+                let result_ok = result.is_ok();
 
-                if let Err(e) = result {
+                if let Err(ref e) = result {
                     let msg = format!("failed to launch editor:\n{e}");
                     log::error!("{}", msg.as_str());
                     self.msg_popup.show_error(msg.as_str())?;
+                }
+
+                if is_git_note && result_ok {
+                    self.revlog.refresh_notes();
+                    self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
+                    while let Some(target) = self.git_note_pending.pop_front() {
+                        let result = GitnotePopup::open_note_in_editor(
+                            &self.repo.borrow(),
+                            &target,
+                            git_note_ref.as_deref(),
+                        );
+                        if let Err(ref e) = result {
+                            let msg = format!("failed to launch editor:\n{e}");
+                            log::error!("{}", msg.as_str());
+                            self.msg_popup.show_error(msg.as_str())?;
+                            break;
+                        }
+                        self.revlog.refresh_notes();
+                        self.update_async(AsyncNotification::Git(AsyncGitNotification::Notes))?;
+                    }
                 }
 
                 self.requires_redraw.set(true);
@@ -345,8 +417,7 @@ impl App {
         self.status_tab.update()?;
         self.revlog.update()?;
         self.files_tab.update()?;
-        self.stashing_tab.update()?;
-        self.stashlist_tab.update()?;
+        self.stash_tab.update()?;
         self.reset_popup.update()?;
 
         self.update_commands();
@@ -354,12 +425,16 @@ impl App {
         Ok(())
     }
 
-    ///
+    /// advance spinner-backed async UI state
+    pub fn update_spinner(&mut self) {
+        self.revlog.update_spinner();
+    }
+
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         log::trace!("update_async: {:?}", ev);
 
-        env::set_var("WEEBLE", weeble_sync().unwrap().to_string());
-        env::set_var("WOBBLE", wobble_sync().unwrap().to_string());
+        let _ = weeble_sync();
+        let _ = wobble_sync();
         log::debug!("WEEBLE: {:?}", env::var("WEEBLE"));
 
         if let AsyncNotification::Git(ev) = ev {
@@ -367,7 +442,7 @@ impl App {
             self.chat_tab.update_git(ev)?;
             //
             self.status_tab.update_git(ev)?;
-            self.stashing_tab.update_git(ev)?;
+            self.stash_tab.update_git(ev)?;
             self.revlog.update_git(ev)?;
             self.file_revlog_popup.update_git(ev)?;
             self.inspect_chat_popup.update_git(ev)?;
@@ -394,21 +469,20 @@ impl App {
         Ok(())
     }
 
-    ///
     pub fn is_quit(&self) -> bool {
-        !matches!(self.do_quit, QuitState::None) || self.input.is_aborted()
+        !matches!(self.do_quit, QuitState::None)
+            || self.input.is_aborted()
+            || self.quit_flag.load(Ordering::SeqCst)
     }
 
-    ///
     pub fn quit_state(&self) -> QuitState {
         self.do_quit.clone()
     }
 
-    ///
     pub fn any_work_pending(&self) -> bool {
         self.status_tab.anything_pending()
             || self.revlog.any_work_pending()
-            || self.stashing_tab.anything_pending()
+            || self.stash_tab.anything_pending()
             || self.files_tab.anything_pending()
             || self.chat_tab.any_work_pending()
             || self.blame_file_popup.any_work_pending()
@@ -417,6 +491,7 @@ impl App {
             || self.inspect_chat_popup.any_work_pending()
             || self.inspect_commit_popup.any_work_pending()
             || self.compare_commits_popup.any_work_pending()
+            || self.nip34_popup.any_work_pending()
             || self.input.is_state_changing()
             || self.push_popup.any_work_pending()
             || self.push_tags_popup.any_work_pending()
@@ -426,7 +501,6 @@ impl App {
             || self.tags_popup.any_work_pending()
     }
 
-    ///
     pub fn requires_redraw(&self) -> bool {
         if self.requires_redraw.get() {
             self.requires_redraw.set(false);
@@ -462,6 +536,9 @@ impl App {
             compare_commits_popup,
             //
             external_editor_popup,
+            gitnote_popup,
+            nip34_popup,
+            notes_list_popup,
             push_popup,
             push_tags_popup,
             pull_popup,
@@ -480,8 +557,7 @@ impl App {
             status_tab,
             files_tab,
             chat_tab,
-            stashing_tab,
-            stashlist_tab
+            stash_tab
         ]
     );
 
@@ -507,6 +583,8 @@ impl App {
             select_branch_popup,
             submodule_popup,
             tags_popup,
+            nip34_popup,
+            notes_list_popup,
             reset_popup,
             create_branch_popup,
             rename_branch_popup,
@@ -553,8 +631,7 @@ impl App {
             &mut self.status_tab,
             &mut self.revlog,
             &mut self.files_tab,
-            &mut self.stashing_tab,
-            &mut self.stashlist_tab,
+            &mut self.stash_tab,
         ]
     }
 
@@ -589,7 +666,7 @@ impl App {
         Ok(())
     }
 
-    fn set_tab(&mut self, tab: usize) -> Result<()> {
+    fn set_tab_internal(&mut self, tab: usize, persist: bool) -> Result<()> {
         let tabs = self.get_tabs();
         for (i, t) in tabs.into_iter().enumerate() {
             if tab == i {
@@ -600,21 +677,50 @@ impl App {
         }
 
         self.tab = tab;
-        self.options.borrow_mut().set_current_tab(tab);
+        if persist {
+            self.options.borrow_mut().set_current_tab(tab);
+        }
 
         Ok(())
+    }
+
+    fn set_tab(&mut self, tab: usize) -> Result<()> {
+        self.set_tab_internal(tab, true)
+    }
+
+    pub fn set_start_tab(&mut self, tab: usize) -> Result<()> {
+        match tab {
+            1 => self.set_tab_internal(0, false),
+            2 => self.set_tab_internal(1, false),
+            3 => self.set_tab_internal(2, false),
+            4 => self.set_tab_internal(3, false),
+            5 => {
+                self.stash_tab.select_files()?;
+                self.set_tab_internal(4, false)
+            }
+            6 => {
+                self.stash_tab.select_stashes()?;
+                self.set_tab_internal(4, false)
+            }
+            _ => bail!("invalid --tab value {tab}; expected 1..=6"),
+        }
     }
 
     fn switch_to_tab(&mut self, tab: &AppTabs) -> Result<()> {
         match tab {
             //AppTabs::Chat => self.set_tab(0)?,
-            //
             AppTabs::Chat => self.set_tab(0)?,
             AppTabs::Status => self.set_tab(1)?,
             AppTabs::Log => self.set_tab(2)?,
             AppTabs::Files => self.set_tab(3)?,
-            AppTabs::Stashing => self.set_tab(4)?,
-            AppTabs::Stashlist => self.set_tab(5)?,
+            AppTabs::Stashing => {
+                self.stash_tab.select_files()?;
+                self.set_tab(4)?;
+            }
+            AppTabs::Stashlist => {
+                self.stash_tab.select_stashes()?;
+                self.set_tab(4)?;
+            }
         }
         Ok(())
     }
@@ -662,8 +768,6 @@ impl App {
                 self.blame_file_popup.open(params)?;
             }
             //
-            //
-            //
             StackablePopupOpen::DisplayChat(param) => {
                 self.display_chat_popup.open(param)?;
             }
@@ -674,30 +778,29 @@ impl App {
             //    self.inspect_commit_popup.open(param)?;
             //}
             //
-            //
             StackablePopupOpen::FileRevlog(param) => {
                 self.file_revlog_popup.open(param)?;
             }
-            //
-            //
             //
             StackablePopupOpen::FileTree(param) => {
                 self.revision_files_popup.open(param)?;
             }
             //
-            //
-            //
             StackablePopupOpen::InspectChat(param) => {
                 self.inspect_chat_popup.open(param)?;
             }
-            //
-            //
             //
             StackablePopupOpen::InspectCommit(param) => {
                 self.inspect_commit_popup.open(param)?;
             }
             StackablePopupOpen::CompareCommits(param) => {
                 self.compare_commits_popup.open(param)?;
+            }
+            StackablePopupOpen::NotesList => {
+                self.notes_list_popup.open()?;
+            }
+            StackablePopupOpen::Nip34 => {
+                self.nip34_popup.show()?;
             }
         }
 
@@ -741,7 +844,8 @@ impl App {
             }
             InternalEvent::Update(u) => flags.insert(u),
             InternalEvent::ChatMessage(msg) => {
-                self.chat_tab.handle_internal_event(InternalEvent::ChatMessage(msg));
+                self.chat_tab
+                    .handle_internal_event(InternalEvent::ChatMessage(msg));
                 flags.insert(NeedsUpdate::ALL);
             }
             //
@@ -793,6 +897,22 @@ impl App {
                 self.input.set_polling(false);
                 self.external_editor_popup.show()?;
                 self.file_to_open = path;
+                flags.insert(NeedsUpdate::COMMANDS);
+            }
+            InternalEvent::OpenGitNote(target, notes_ref) => {
+                self.input.set_polling(false);
+                self.gitnote_popup.show()?;
+                self.git_note_target = Some(target);
+                self.git_note_ref = notes_ref;
+                self.git_note_pending.clear();
+                flags.insert(NeedsUpdate::COMMANDS);
+            }
+            InternalEvent::OpenGitNoteBatch(target, notes_ref, pending) => {
+                self.input.set_polling(false);
+                self.gitnote_popup.show()?;
+                self.git_note_target = Some(target);
+                self.git_note_ref = notes_ref;
+                self.git_note_pending = pending.into_iter().collect();
                 flags.insert(NeedsUpdate::COMMANDS);
             }
             InternalEvent::OpenExternalChat(path) => {
@@ -892,6 +1012,7 @@ impl App {
             InternalEvent::CommitSearch(options) => {
                 self.revlog.search(options);
             }
+            InternalEvent::NostrEvent(_) | InternalEvent::NostrCommand(_) => todo!(),
         };
 
         Ok(flags)
@@ -903,10 +1024,7 @@ impl App {
                 self.status_tab.reset(&r);
             }
             Action::StashDrop(_) | Action::StashPop(_) => {
-                if let Err(e) = self
-                    .stashlist_tab
-                    .action_confirmed(&self.repo.borrow(), &action)
-                {
+                if let Err(e) = self.stash_tab.action_confirmed(&self.repo.borrow(), &action) {
                     self.queue.push(InternalEvent::ShowErrorMsg(e.to_string()));
                 }
             }
@@ -1039,6 +1157,14 @@ impl App {
             )
             .order(order::NAV),
         );
+        res.push(
+            CommandInfo::new(
+                strings::commands::nip34_popup(&self.key_config),
+                true,
+                !self.any_popup_visible(),
+            )
+            .order(order::NAV),
+        );
 
         res.push(
             CommandInfo::new(
@@ -1048,6 +1174,9 @@ impl App {
             )
             .order(100),
         );
+
+        res.push(CommandInfo::new(strings::commands::note_save(), true, true).hidden());
+        res.push(CommandInfo::new(strings::commands::note_cancel(), true, true).hidden());
 
         res
     }
@@ -1070,8 +1199,7 @@ impl App {
             Span::raw(strings::tab_status(&self.key_config)),
             Span::raw(strings::tab_log(&self.key_config)),
             Span::raw(strings::tab_files(&self.key_config)),
-            Span::raw(strings::tab_stashing(&self.key_config)),
-            Span::raw(strings::tab_stashes(&self.key_config)),
+            Span::raw(strings::tab_stash(&self.key_config)),
         ];
         let divider = strings::tab_divider(&self.key_config);
 

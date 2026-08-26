@@ -1,0 +1,333 @@
+name: Build & Test Drivers
+
+on:
+  workflow_dispatch:
+
+## Cancel previously triggered workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-test-driver
+  cancel-in-progress: true
+
+jobs:
+  cache-swift-libp2p:
+    name: Cache swift-libp2p
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.1", "6.2"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout swift-libp2p
+      - uses: actions/checkout@v5
+        with:
+          repository: swift-libp2p/swift-libp2p
+          path: swift-libp2p
+          ref: 'gen-cmd'
+      # Set up Swift
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      # Log the Swift Version
+      - name: Log Swift Version
+        run: swift --version
+      # Use Cache to restore swift-libp2p build
+      - name: Cache swift-libp2p build
+        id: cache-swift-build
+        uses: actions/cache@v5
+        with:
+          path: ./swift-libp2p/.build
+          key: ${{ runner.os }}-${{ matrix.swift-version }}-spm-${{ hashFiles('./swift-libp2p/Sources/Generate/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.swift-version }}-spm-
+      # Run Generate to gen our test
+      - name: Build swift-libp2p
+        if: steps.cache-swift-build.outputs.cache-hit != 'true'
+        working-directory: ./swift-libp2p
+        run: swift build
+
+  test-sqlite:
+    needs: cache-swift-libp2p
+    name: Test-SQLite
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.1", "6.2"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout swift-libp2p
+      - uses: actions/checkout@v5
+        with:
+          repository: swift-libp2p/swift-libp2p
+          path: swift-libp2p
+          ref: 'gen-cmd'
+      # Set up Swift
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      # Log the Swift Version
+      - name: Log Swift Version
+        run: swift --version
+      # Use Cache to restore swift-libp2p build
+      - name: Cache swift-libp2p build
+        id: cache-swift-build
+        uses: actions/cache@v5
+        with:
+          path: ./swift-libp2p/.build
+          key: ${{ runner.os }}-${{ matrix.swift-version }}-spm-${{ hashFiles('./swift-libp2p/Sources/Generate/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.swift-version }}-spm-
+      # Run Generate to gen our test (Cached)
+      - name: Create Fluent Test Repository (Cached)
+        if: steps.cache-swift-build.outputs.cache-hit == 'true'
+        working-directory: ./swift-libp2p
+        run: .build/debug/Generate new "fluent-test-sqlite" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o sqlite
+      # Run Generate to gen our test
+      - name: Create Fluent Test Repository
+        if: steps.cache-swift-build.outputs.cache-hit != 'true'
+        working-directory: ./swift-libp2p
+        run: swift run Generate new "fluent-test-sqlite" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o sqlite
+      # Build in debug mode
+      - name: Build
+        working-directory: ./fluent-test-sqlite
+        run: swift build
+      # Test in debug mode with verbosity enabled
+      - name: Test
+        working-directory: ./fluent-test-sqlite
+        run: swift test
+
+  test-psql:
+    needs: cache-swift-libp2p
+    name: Test-PostgreSQL
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.1", "6.2"]
+    runs-on: ${{ matrix.os }}
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: libp2p
+          POSTGRES_USER: libp2p
+          POSTGRES_DB: libp2p
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+    steps:
+      # Checkout swift-libp2p
+      - uses: actions/checkout@v5
+        with:
+          repository: swift-libp2p/swift-libp2p
+          path: swift-libp2p
+          ref: 'gen-cmd'
+      # Set up Swift
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      # Log the Swift Version
+      - name: Log Swift Version
+        run: swift --version
+      # Use Cache to restore swift-libp2p build
+      - name: Cache swift-libp2p build
+        id: cache-swift-build
+        uses: actions/cache@v5
+        with:
+          path: ./swift-libp2p/.build
+          key: ${{ runner.os }}-${{ matrix.swift-version }}-spm-${{ hashFiles('./swift-libp2p/Sources/Generate/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.swift-version }}-spm-
+      # Run Generate to gen our test (Cached)
+      - name: Create Fluent Test Repository (Cached)
+        if: steps.cache-swift-build.outputs.cache-hit == 'true'
+        working-directory: ./swift-libp2p
+        run: .build/debug/Generate new "fluent-test-psql" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o psql
+      # Run Generate to gen our test
+      - name: Create Fluent Test Repository
+        if: steps.cache-swift-build.outputs.cache-hit != 'true'
+        working-directory: ./swift-libp2p
+        run: swift run Generate new "fluent-test-psql" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o psql
+      # Build in debug mode
+      - name: Build
+        working-directory: ./fluent-test-psql
+        run: swift build
+      # Test in debug mode with verbosity enabled
+      - name: Test
+        working-directory: ./fluent-test-psql
+        run: swift test
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          DB_HOSTNAME: localhost
+          DB_USERNAME: libp2p
+          DB_PASSWORD: libp2p
+          DB_DATABASE: libp2p
+
+  test-mysql:
+    needs: cache-swift-libp2p
+    name: Test-MySQL
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.1", "6.2"]
+    runs-on: ${{ matrix.os }}
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      mysql:
+        # Docker Hub image
+        image: mysql:8.0
+        # Provide the password for postgres
+        env:
+          MYSQL_DATABASE: libp2p
+          MYSQL_ROOT_PASSWORD: libp2p
+          MYSQL_USER: libp2p
+          MYSQL_PASSWORD: libp2p
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 3306 on service container to the host
+          - 3306:3306
+    steps:
+      # Checkout swift-libp2p
+      - uses: actions/checkout@v5
+        with:
+          repository: swift-libp2p/swift-libp2p
+          path: swift-libp2p
+          ref: 'gen-cmd'
+      # Set up Swift
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      # Log the Swift Version
+      - name: Log Swift Version
+        run: swift --version
+      # Use Cache to restore swift-libp2p build
+      - name: Cache swift-libp2p build
+        id: cache-swift-build
+        uses: actions/cache@v5
+        with:
+          path: ./swift-libp2p/.build
+          key: ${{ runner.os }}-${{ matrix.swift-version }}-spm-${{ hashFiles('./swift-libp2p/Sources/Generate/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.swift-version }}-spm-
+      # Run Generate to gen our test (Cached)
+      - name: Create Fluent Test Repository (Cached)
+        if: steps.cache-swift-build.outputs.cache-hit == 'true'
+        working-directory: ./swift-libp2p
+        run: .build/debug/Generate new "fluent-test-mysql" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o mysql
+      # Run Generate to gen our test
+      - name: Create Fluent Test Repository
+        if: steps.cache-swift-build.outputs.cache-hit != 'true'
+        working-directory: ./swift-libp2p
+        run: swift run Generate new "fluent-test-mysql" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o mysql
+      # Build in debug mode
+      - name: Build
+        working-directory: ./fluent-test-mysql
+        run: swift build
+      # Test in debug mode with verbosity enabled
+      - name: Test
+        working-directory: ./fluent-test-mysql
+        run: swift test
+        env:
+          # The info used to communicate with the MySQL service container
+          DB_HOSTNAME: localhost
+          DB_USERNAME: libp2p
+          DB_PASSWORD: libp2p
+          DB_DATABASE: libp2p
+
+  test-mongo:
+    needs: cache-swift-libp2p
+    name: Test-MongoDB
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.1", "6.2"]
+        # The versions of node to test against
+        node-version: [24.x]
+        # The versions of mongodb to test against
+        mongodb-version: ["8.0"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout swift-libp2p
+      - uses: actions/checkout@v5
+        with:
+          repository: swift-libp2p/swift-libp2p
+          path: swift-libp2p
+          ref: 'gen-cmd'
+      # Set up Swift
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      # Log the Swift Version
+      - name: Log Swift Version
+        run: swift --version
+      # Install Node JS
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      # Install MongoDB
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.1
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-username: libp2p
+          mongodb-password: libp2p
+          mongodb-db: libp2p
+          mongodb-port: 27017
+      # Use Cache to restore swift-libp2p build
+      - name: Cache swift-libp2p build
+        id: cache-swift-build
+        uses: actions/cache@v5
+        with:
+          path: ./swift-libp2p/.build
+          key: ${{ runner.os }}-${{ matrix.swift-version }}-spm-${{ hashFiles('./swift-libp2p/Sources/Generate/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.swift-version }}-spm-
+      # Run Generate to gen our test (Cached)
+      - name: Create Fluent Test Repository (Cached)
+        if: steps.cache-swift-build.outputs.cache-hit == 'true'
+        working-directory: ./swift-libp2p
+        run: .build/debug/Generate new "fluent-test-mongo" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o mongo
+      # Run Generate to gen our test
+      - name: Create Fluent Test Repository
+        if: steps.cache-swift-build.outputs.cache-hit != 'true'
+        working-directory: ./swift-libp2p
+        run: swift run Generate new "fluent-test-mongo" --template "test-fluent" --mode listener -t tcp -s noise -m yamux -o mongo
+      # Build in debug mode
+      - name: Build
+        working-directory: ./fluent-test-mongo
+        run: swift build
+      # Test in debug mode with verbosity enabled
+      - name: Test
+        working-directory: ./fluent-test-mongo
+        run: swift test
+        env:
+          # The info used to communicate with the MongoDB instance
+          DB_HOSTNAME: localhost
+          DB_USERNAME: libp2p
+          DB_PASSWORD: libp2p
+          DB_DATABASE: libp2p

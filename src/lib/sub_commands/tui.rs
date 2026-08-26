@@ -1,19 +1,23 @@
 #![cfg_attr(not(test), warn(clippy::pedantic))]
 #![cfg_attr(not(test), warn(clippy::expect_used))]
-use crate::blockheight;
-use crate::weeble;
-use crate::wobble;
-use std::env;
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::if_not_else)]
+use std::{
+    cell::RefCell,
+    env,
+    io::{self, Stdout},
+    panic, process,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::{Duration, Instant},
+};
 
-use crate::app::App;
-use crate::app::QuitState;
-use crate::core::GnostrSubCommands;
-use crate::input::{Input, InputEvent, InputState};
-use crate::keys::KeyConfig;
-use crate::spinner::Spinner;
-use crate::ui::style::Theme;
-use crate::watcher::RepoWatcher;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use backtrace::Backtrace;
 use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
@@ -21,23 +25,28 @@ use crossterm::{
     ExecutableCommand,
 };
 use gnostr_asyncgit::{
-    sync::{utils::repo_work_dir, RepoPath},
+    sync::{repo_open_error, resolve_repo_path, utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
 };
-use nostr_sdk_0_37_0::Keys;
+use gnostr_asyncgit::types::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
-use scopetime;
-use scopetime::scope_time;
+use scopetime::{self, scope_time};
 use serde::ser::StdError;
-use std::{
-    cell::RefCell,
-    io::{self, Stdout},
-    panic, process,
-    time::{Duration, Instant},
-};
 use tracing::{debug, Level};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
+
+use crate::{
+    app::{App, QuitState},
+    blockheight,
+    core::GnostrSubCommands,
+    input::{Input, InputEvent, InputState},
+    keys::KeyConfig,
+    spinner::Spinner,
+    ui::style::Theme,
+    watcher::RepoWatcher,
+    weeble, wobble,
+};
 
 //use crate::{app::App, cli::process_cmdline};
 pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
@@ -45,7 +54,7 @@ pub type Terminal = ratatui::Terminal<CrosstermBackend<io::Stdout>>;
 pub static TICK_INTERVAL: Duration = Duration::from_secs(5);
 pub static SPINNER_INTERVAL: Duration = Duration::from_millis(80);
 
-///
+/// QueueEvent
 #[derive(Clone)]
 pub enum QueueEvent {
     Tick,
@@ -55,23 +64,24 @@ pub enum QueueEvent {
     InputEvent(InputEvent),
 }
 
+/// SyntaxHighlightProgress
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SyntaxHighlightProgress {
     Progress,
     Done,
 }
 
+/// AsyncAppNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncAppNotification {
-    ///
     SyntaxHighlighting(SyntaxHighlightProgress),
 }
 
+/// AsyncNotification
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AsyncNotification {
-    ///
     App(AsyncAppNotification),
-    ///
+
     Git(AsyncGitNotification),
 }
 
@@ -181,7 +191,7 @@ pub fn select_event(
 ///
 /// Will return `Err` if `filename` does not exist or the user does not have
 /// permission to read it.
-pub /*async*/fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
+pub fn start_terminal(buf: Stdout) -> io::Result<Terminal> {
     let backend = CrosstermBackend::new(buf);
     let mut terminal = Terminal::new(backend)?;
     terminal.hide_cursor()?;
@@ -209,10 +219,10 @@ pub fn set_panic_handlers() -> Result<()> {
         let backtrace = Backtrace::new();
         shutdown_terminal();
         log_eprintln!(
-			"\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
-			e,
-			backtrace
-		);
+            "\nGitUI was close due to an unexpected panic.\nPlease file an issue on https://github.com/extrawurst/gitui/issues with the following info:\n\n{:?}\ntrace:\n{:?}",
+            e,
+            backtrace
+        );
     }));
 
     // global threadpool
@@ -229,6 +239,17 @@ pub fn set_panic_handlers() -> Result<()> {
     Ok(())
 }
 /// GNOSTR_TUI
+///
+/// # Panics
+///
+/// Panics if the ctrlc handler cannot be set.
+/// Panics if the terminal cannot be started.
+/// Panics if the app cannot be run.
+///
+/// # Errors
+///
+/// This function will return an error if the command fails.
+#[allow(clippy::too_many_lines)]
 pub async fn tui(
     mut sub_command_args: GnostrSubCommands,
     cli: &crate::cli::GnostrCli,
@@ -236,33 +257,42 @@ pub async fn tui(
     let app_start = Instant::now();
     gnostr_asyncgit::register_tracing_logging();
 
-    debug!("233:tui:{:?}", sub_command_args);
-    //debug!("234:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
+    let quit_flag = Arc::new(AtomicBool::new(false));
+    let r = Arc::clone(&quit_flag);
+    if let Err(e) = ctrlc::set_handler(move || {
+        r.store(true, Ordering::SeqCst);
+    }) {
+        log::error!("failed to set ctrlc handler: {e}");
+    }
+
+    debug!("239:tui:{:?}", sub_command_args);
+    //debug!("240:tui:{:?}", sub_command_args.gitdir.clone().expect(""));
 
     //TODO gnostr --gitdir
-    //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git init?
+    //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git
+    // init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
-    if !valid_path(&gitdir) {
-        debug!("237:invalid path\nplease run gitui inside of a non-bare git repository");
-        if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            debug!("241:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
-            //let repo_path: RepoPath = RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().to_string()));
-            let repo_path: RepoPath = RepoPath::from(
-                env::var("GNOSTR_GITDIR")
-                    .unwrap_or(env::var("HOME").unwrap().to_string() /*TODO*/)
-                    .as_ref(),
+    if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
+        debug!("247:{}", gitdir_env_value);
+        let repo_path = resolve_repo_path(&RepoPath::from(gitdir_env_value.as_ref()))?;
+        if let Some(error) = repo_open_error(&repo_path) {
+            eprintln!(
+                "gnostr: not inside a git repository at `{}`: {error}. Run `git init` first or use `gnostr chat --topic <name>`.",
+                repo_path.as_path().display()
             );
-
-            debug!("247:{:?}", repo_path);
-            sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            debug!("251:{:?}", sub_command_args.gitdir);
-        } else {
-            debug!("GNOSTR_GITDIR NOT set case!");
-            debug!("fork no return  case!");
-            debug!("TODO:git init in $HOME/.gnostr/tmp repo or /tmp/...");
-            //return Ok(());
+            return Err(anyhow!("not inside a git repository").into());
         }
-    } else { /*NOT NOT valid case!*/
+
+        debug!("253:{:?}", repo_path);
+        sub_command_args.gitdir = Some(repo_path);
+        gitdir = sub_command_args.gitdir.clone().unwrap_or(gitdir);
+        debug!("257:{:?}", sub_command_args.gitdir);
+    } else if !valid_path(&gitdir) {
+        debug!("243:invalid path\nplease run gnostr inside of a git repository");
+        eprintln!(
+            "gnostr: not inside a git repository.\nRun `git init` first or start chat with `gnostr chat --topic <name>`."
+        );
+        return Err(anyhow!("not inside a git repository").into());
     } //must be a valid path to a git repo!
 
     let key_config = KeyConfig::init()
@@ -277,7 +307,13 @@ pub async fn tui(
 
     set_panic_handlers()?;
 
-    let mut terminal = start_terminal(io::stdout())/*.await*/.expect("");
+    let mut terminal = match start_terminal(io::stdout())/*.await*/ {
+        Ok(terminal) => terminal,
+        Err(e) => {
+            log::error!("failed to start terminal: {e}");
+            return Ok(());
+        }
+    };
     //let mut gitdir = sub_command_args.gitdir.clone().unwrap();
     let input = Input::new();
 
@@ -290,7 +326,7 @@ pub async fn tui(
     let sub_command_args = sub_command_args;
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
-        env::set_var("USER", &name);
+        unsafe { env::set_var("USER", &name) };
     }
 
     let level = if sub_command_args.debug {
@@ -332,15 +368,16 @@ pub async fn tui(
     if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
     {
         let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+        let mut secret_key = keys.secret_key().unwrap();
         debug!(
             "{{\"private_key\":\"{}\"}}",
-            keys.secret_key().display_secret()
+            secret_key.as_hex_string()
         );
         debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
     }
 
     loop {
-        let quit_state = run_app(
+        let quit_state = match Box::pin(run_app(
             app_start,
             gitdir.clone(),
             theme.clone(),
@@ -349,9 +386,17 @@ pub async fn tui(
             updater,
             &mut terminal,
             cli.screenshots,
-        )
+            Arc::clone(&quit_flag),
+            cli.tab,
+        ))
         .await
-        .expect("");
+        {
+            Ok(quit_state) => quit_state,
+            Err(e) => {
+                log::error!("failed to run app: {e}");
+                return Ok(());
+            }
+        };
 
         match quit_state {
             QuitState::OpenSubmodule(p) => {
@@ -364,15 +409,36 @@ pub async fn tui(
     Ok(())
 }
 
-//pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn StdError>> {
-//    let _ = crate::tui::tui().await;
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use crate::cli::{GnostrCli, GnostrCommands};
+
+    #[test]
+    fn parses_start_tab() {
+        let args = GnostrCli::parse_from(["gnostr", "tui", "--tab", "6"]);
+        assert_eq!(args.tab, Some(6));
+        match args.command {
+            Some(GnostrCommands::Tui(_tui)) => {}
+            _ => panic!("expected tui command"),
+        }
+    }
+}
+
+//pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn
+// StdError>> {    let _ = crate::tui::tui().await;
 //    Ok(())
 //}
 
+/// # Panics
+///
+/// Panics if the app cannot be created.
+///
 /// # Errors
 ///
-/// Will return `Err` if `filename` does not exist or the user does not have
-/// permission to read it.
+/// Will return `Err` if the app fails to run.
+#[allow(clippy::too_many_lines)]
 pub async fn run_app(
     app_start: Instant,
     repo: RepoPath,
@@ -382,6 +448,8 @@ pub async fn run_app(
     updater: Updater,
     terminal: &mut Terminal,
     screenshots: Option<u8>,
+    quit_flag: Arc<AtomicBool>,
+    start_tab: Option<usize>,
 ) -> Result<QuitState, anyhow::Error> {
     let (tx_git, rx_git) = unbounded();
     let (tx_app, rx_app) = unbounded();
@@ -399,16 +467,27 @@ pub async fn run_app(
 
     let spinner_ticker = tick(SPINNER_INTERVAL);
 
-    let mut app = App::new(
+    let mut app = match Box::pin(App::new(
         RefCell::new(repo.clone()),
         tx_git,
         tx_app,
         input.clone(),
         theme,
         key_config,
-    )
+        Arc::clone(&quit_flag),
+    ))
     .await
-    .expect("402:App::new fail!");
+    {
+        Ok(app) => app,
+        Err(e) => {
+            log::error!("failed to create app: {e}");
+            return Err(e);
+        }
+    };
+
+    if let Some(tab) = start_tab {
+        app.set_start_tab(tab)?;
+    }
 
     let mut spinner = Spinner::default();
     let mut first_update = true;
@@ -418,7 +497,7 @@ pub async fn run_app(
     let mut last_screenshot = Instant::now();
     loop {
         if let Some(interval) = screenshots {
-            if last_screenshot.elapsed() >= Duration::from_secs(interval as u64) {
+            if last_screenshot.elapsed() >= Duration::from_secs(u64::from(interval)) {
                 let mut path = if let Some(workdir) = repo.workdir() {
                     let mut p = workdir.to_path_buf();
                     p.push(".gnostr");
@@ -438,8 +517,9 @@ pub async fn run_app(
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
                     .as_secs();
-                path.push(format!("screenshot-{}.png", timestamp));
-                crate::utils::screenshot::make_screenshot(path.to_str().unwrap()).unwrap();
+                path.push(format!("screenshot-{timestamp}.png"));
+                crate::utils::screenshot::make_screenshot_cross_platform(path.to_str().unwrap())
+                    .unwrap();
                 last_screenshot = Instant::now();
             }
         }
@@ -459,7 +539,13 @@ pub async fn run_app(
 
         {
             if matches!(event, QueueEvent::SpinnerUpdate) {
+                let pending = app.any_work_pending();
+                app.update_spinner();
                 spinner.update();
+                if pending {
+                    draw(terminal, &app)?;
+                }
+                spinner.set_state(pending);
                 spinner.draw(terminal)?;
                 continue;
             }
@@ -503,7 +589,7 @@ pub async fn run_app(
             spinner.set_state(app.any_work_pending());
             spinner.draw(terminal)?;
 
-            if app.is_quit() {
+            if app.is_quit() || quit_flag.load(Ordering::SeqCst) {
                 break;
             }
         }

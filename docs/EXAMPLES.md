@@ -1,6 +1,7 @@
 ## Examples
 
 ### Update metadata
+
 ```shell
 nostr-tool -r wss://nostr.oxtr.dev update-metadata -n "Alice" -a "Who the fuck is Alice?" -p "https://upload.wikimedia.org/wikipedia/en/2/2b/New_world-living_next_door_to_alice.JPG"
 ```
@@ -30,6 +31,7 @@ nostr-tool -r wss://nostr.oxtr.dev -p {PRIVATE_KEY} publish-contact-list-csv -f 
 ```
 
 The CSV file should have the following format
+
 ```csv
 pubkey,relay,petname
 b2d670de53b27691c0c3400225b65c35a26d06093bcc41f48ffc71e0907f9d4a,"wss://nostr.oxtr.dev",""
@@ -51,11 +53,13 @@ nostr-tool -r wss://nostr.oxtr.dev -p {PRIVATE_KEY} delete-event -e {EVENT_ID} -
 ### Delete a profile
 
 Just events:
+
 ```shell
 nostr-tool -r wss://nostr.oxtr.dev -p {PRIVATE_KEY} delete-profile --events-only --kinds 1
 ```
 
 Delete metadata profile:
+
 ```shell
 nostr-tool -r wss://nostr.oxtr.dev -p {PRIVATE_KEY} delete-profile
 ```
@@ -67,6 +71,7 @@ nostr-tool -r wss://nostr.oxtr.dev -p {PRIVATE_KEY} react -e {EVENT_ID} -a {EVEN
 ```
 
 ### Run with docker
+
 ```shell
 docker run nostr-tool nostr-tool -r wss://nostr.oxtr.dev text-note -c "Hello World"
 ```

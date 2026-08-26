@@ -1,0 +1,49 @@
+name: Build Windows
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches-ignore:
+      - 'gh-pages'
+  workflow_dispatch:
+
+defaults:
+  run: # Use powershell because bash is not supported: https://github.com/compnerd/gha-setup-swift/issues/18#issuecomment-1705524890
+    shell: pwsh
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Setup VS Dev Environment
+        uses: seanmiddleditch/gha-setup-vsdevenv@v5
+
+      - name: Setup
+        uses: compnerd/gha-setup-swift@v0.2.3
+        with:
+          branch: swift-6.2-release
+          tag: 6.2-RELEASE
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Debug cmd
+        run: where.exe cmd.exe
+
+      - name: Build
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          swift build --product swift-bundler
+
+      # The tests work locally in my Windows VM, but fail in CI...
+      # - name: Test
+      #   run: swift test

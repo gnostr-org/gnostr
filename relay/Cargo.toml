@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-relay"
-version = "1906.925289.572444"
+version = "953267.1868.494774"
 edition = "2021"
 authors = ["Arron zhang <arronzhang@me.com>", "gnostr <admin@gnostr.org>"]
 description = "gnostr:git+nostr protocol relay"
@@ -11,42 +11,17 @@ license = "MIT"
 keywords = ["nostr", "nostr-relay", "server", "gnostr", "git"]
 categories = ["network-programming", "web-programming"]
 
-[features]
-search = ["nostr-db/search"]
+## [features] ## dependency lindera-unidic v0.32.3 unavailable
+## search = ["nostr-relay/search"]
 
 [dependencies]
-actix = "0.13.5"
-actix-cors = "0.7.0"
-actix-http = "3.9.0"
-actix-web = "4.9.0"
-actix-web-actors = "4.3.1"
-anyhow = "1.0.75"
-bytes = "1.7.1"
-bytestring = "1.3.1"
-clap = { version = "4.5.20", features = ["derive", "env", "cargo"] }
-config = { version = "0.14.0", features = [
-    "toml",
-    "json",
-], default-features = false }
-duration-str = { version = "0.11.2", default-features = false }
-hex = "0.4.3"
-metrics = "0.23.0"
-nostr-db = { version = "0.4.5", features = ["search"] }
-notify = "6.1.1"
-num_cpus = "1.16.0"
-parking_lot = "0.12.3"
-serde = { version = "1.0.209", features = ["derive"] }
-serde_json = "1.0.127"
-thiserror = "1.0.63"
-tokio = { version = "1.33.0", features = ["full"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-
-[dev-dependencies]
-actix-rt = "2.10.0"
-actix-test = "0.1.5"
-anyhow = "1.0.86"
-futures-util = "0.3.30"
-temp-env = "0.3.6"
-tempfile = "3.12.0"
-tracing-subscriber = "0.3.18"
+actix-http = { version = "3.9.0" }
+actix-web = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+directories = { workspace = true }
+nostr-relay = { version = "0.4.8", default-features = false }
+num_cpus = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

@@ -56,6 +56,9 @@ pub fn title_branches() -> String {
 pub fn title_tags() -> String {
     "Tags".to_string()
 }
+pub fn title_notes() -> String {
+    "Git Notes".to_string()
+}
 pub fn title_status(_key_config: &SharedKeyConfig) -> String {
     "Unstaged Changes".to_string()
 }
@@ -77,12 +80,19 @@ pub fn tab_log(key_config: &SharedKeyConfig) -> String {
 pub fn tab_files(key_config: &SharedKeyConfig) -> String {
     format!("Files [{}]", key_config.get_hint(key_config.keys.tab_files))
 }
-pub fn tab_chat(key_config: &SharedKeyConfig) -> String {
+pub fn tab_chat(_key_config: &SharedKeyConfig) -> String {
     "🅖".to_string()
+}
+pub fn tab_stash(key_config: &SharedKeyConfig) -> String {
+    format!(
+        "Stash [{}/{}]",
+        key_config.get_hint(key_config.keys.tab_stashing),
+        key_config.get_hint(key_config.keys.tab_stashes)
+    )
 }
 pub fn tab_stashing(key_config: &SharedKeyConfig) -> String {
     format!(
-        "Stashing [{}]",
+        "Files to Stash [{}]",
         key_config.get_hint(key_config.keys.tab_stashing)
     )
 }
@@ -336,7 +346,7 @@ pub mod commit {
         "Committer: ".to_string()
     }
     pub fn details_sha() -> String {
-        "339:commit ".to_string()
+        "details_sha:339:commit ".to_string()
     }
     pub fn details_date() -> String {
         "Date: ".to_string()
@@ -403,6 +413,8 @@ pub mod commands {
     static CMD_GROUP_STASHES: &str = "-- Stashes --";
     static CMD_GROUP_LOG: &str = "-- Log --";
     static CMD_GROUP_BRANCHES: &str = "-- Branches --";
+    static CMD_GROUP_NOTES: &str = "-- Notes --";
+    static CMD_GROUP_NIP34: &str = "-- NIP-34 --";
 
     pub fn toggle_tabs(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
@@ -431,12 +443,11 @@ pub mod commands {
     pub fn toggle_tabs_direct(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!(
-                "Tab [{}{}{}{}{}]",
+                "Tab [{}{}{}{}]",
                 key_config.get_hint(key_config.keys.tab_status),
                 key_config.get_hint(key_config.keys.tab_log),
                 key_config.get_hint(key_config.keys.tab_files),
                 key_config.get_hint(key_config.keys.tab_stashing),
-                key_config.get_hint(key_config.keys.tab_stashes),
             ),
             "switch top level tabs directly",
             CMD_GROUP_GENERAL,
@@ -450,6 +461,13 @@ pub mod commands {
             ),
             "open options popup",
             CMD_GROUP_GENERAL,
+        )
+    }
+    pub fn nip34_popup(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("NIP-34 [{}]", key_config.get_hint(key_config.keys.open_nip34)),
+            "open NIP-34 popup",
+            CMD_GROUP_NIP34,
         )
     }
     pub fn help_open(key_config: &SharedKeyConfig) -> CommandText {
@@ -667,6 +685,13 @@ pub mod commands {
             CMD_GROUP_GENERAL,
         )
     }
+    pub fn nip34_switch_mode() -> CommandText {
+        CommandText::new(
+            "Switch Mode [Tab]".to_string(),
+            "switch NIP-34 popup mode",
+            CMD_GROUP_NIP34,
+        )
+    }
     pub fn scroll_popup(key_config: &SharedKeyConfig) -> CommandText {
         CommandText::new(
             format!(
@@ -726,6 +751,54 @@ pub mod commands {
             "open submodule view",
             CMD_GROUP_GENERAL,
         )
+    }
+
+    pub fn new_note() -> CommandText {
+        CommandText::new("Edit Note [n]".to_string(), "edit note", CMD_GROUP_NOTES)
+    }
+
+    pub fn select_note() -> CommandText {
+        CommandText::new(
+            "Select Note [space]".to_string(),
+            "toggle note selection",
+            CMD_GROUP_NOTES,
+        )
+    }
+
+    pub fn list_notes(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("List Notes [{}]", key_config.get_hint(key_config.keys.list_notes)),
+            "list git notes",
+            CMD_GROUP_NOTES,
+        )
+    }
+
+    pub fn amend_note() -> CommandText {
+        CommandText::new("Amend Note [a]".to_string(), "amend selected note", CMD_GROUP_NOTES)
+    }
+
+    pub fn delete_note_popup() -> CommandText {
+        CommandText::new(
+            "Delete Note [d]".to_string(),
+            "delete selected note(s)",
+            CMD_GROUP_NOTES,
+        )
+    }
+
+    pub fn push_notes(key_config: &SharedKeyConfig) -> CommandText {
+        CommandText::new(
+            format!("Push Notes [{}]", key_config.get_hint(key_config.keys.push)),
+            "push git notes to origin",
+            CMD_GROUP_NOTES,
+        )
+    }
+
+    pub fn note_save() -> CommandText {
+        CommandText::new("Save note: [Enter]".to_string(), "save note", CMD_GROUP_NOTES)
+    }
+
+    pub fn note_cancel() -> CommandText {
+        CommandText::new("Cancel: [Esc]".to_string(), "cancel note editing", CMD_GROUP_NOTES)
     }
 
     pub fn open_submodule(key_config: &SharedKeyConfig) -> CommandText {

@@ -1,17 +1,17 @@
-use std::{borrow::Cow, collections::BTreeSet, fmt::Write, path::Path};
+use std::{borrow::Cow, collections::BTreeSet, fmt::Write, path::Path, process::Command};
 
 use anyhow::Result;
 use crossterm::event::Event;
 use filetreelist::{FileTree, FileTreeItem};
 use gnostr_asyncgit::{
     asyncjob::AsyncSingleJob,
-    sync::{get_commit_info, CommitId, CommitInfo, RepoPathRef, TreeFile},
+    sync::{get_commit_info, utils::repo_work_dir, CommitId, CommitInfo, RepoPathRef, TreeFile},
     AsyncGitNotification, AsyncTreeFilesJob,
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    text::Span,
-    widgets::{Block, Borders},
+    text::{Line, Span},
+    widgets::{Block, Borders, Tabs},
     Frame,
 };
 use unicode_truncate::UnicodeTruncateStr;
@@ -27,17 +27,17 @@ use crate::{
     popups::{BlameFileOpen, FileRevOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order, symbol},
+    sub_commands::tui::*,
     try_or_popup,
     ui::{self, common_nav, style::SharedTheme},
 };
-
-use crate::sub_commands::tui::*;
 
 enum Focus {
     Tree,
     File,
 }
 
+/// RevisionFilesComponent
 pub struct RevisionFilesComponent {
     repo: RepoPathRef,
     queue: Queue,
@@ -55,7 +55,7 @@ pub struct RevisionFilesComponent {
 }
 
 impl RevisionFilesComponent {
-    ///
+    /// new
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -73,7 +73,7 @@ impl RevisionFilesComponent {
         }
     }
 
-    ///
+    /// set_commit
     pub fn set_commit(&mut self, commit: CommitId) -> Result<()> {
         self.show()?;
 
@@ -90,12 +90,12 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
-    ///
+    /// revision
     pub const fn revision(&self) -> Option<&CommitInfo> {
         self.revision.as_ref()
     }
 
-    ///
+    /// update
     pub fn update(&mut self, ev: AsyncNotification) -> Result<()> {
         self.current_file.update(ev);
 
@@ -106,6 +106,7 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
+    /// refresh_files
     fn refresh_files(&mut self) -> Result<(), anyhow::Error> {
         if let Some(last) = self.async_treefiles.take_last() {
             if let Some(result) = last.result() {
@@ -130,7 +131,7 @@ impl RevisionFilesComponent {
         Ok(())
     }
 
-    ///
+    /// any_work_pending
     pub fn any_work_pending(&self) -> bool {
         self.current_file.any_work_pending() || self.async_treefiles.is_pending()
     }
@@ -194,6 +195,36 @@ impl RevisionFilesComponent {
         })
     }
 
+    fn list_notes(&self) -> Result<()> {
+        self.queue
+            .push(InternalEvent::OpenPopup(StackablePopupOpen::NotesList));
+        Ok(())
+    }
+
+    fn push_notes(&self) -> Result<()> {
+        let repo = self.repo.borrow();
+        let work_dir = repo_work_dir(&repo)?;
+
+        let output = Command::new("git")
+            .current_dir(work_dir)
+            .args(["push", "origin", "refs/notes/*"])
+            .output()?;
+        let combined = format!(
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        if output.status.success() {
+            if combined.contains("Everything is up to date") {
+                self.queue.push(InternalEvent::ShowInfoMsg(combined));
+            }
+            Ok(())
+        } else {
+            anyhow::bail!("git push notes failed:\n{combined}")
+        }
+    }
+
     fn open_finder(&self) {
         if let Some(files) = self.files.clone() {
             self.queue.push(InternalEvent::OpenFuzzyFinder(
@@ -206,6 +237,7 @@ impl RevisionFilesComponent {
         }
     }
 
+    /// find_file
     pub fn find_file(&mut self, file: &Path) {
         self.tree.collapse_but_root();
         if self.tree.select_file(file) {
@@ -338,9 +370,31 @@ impl DrawableComponent for RevisionFilesComponent {
     fn draw(&self, f: &mut Frame, area: Rect) -> Result<()> {
         if self.is_visible() {
             let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(2), Constraint::Min(1)].as_ref())
+                .split(area);
+
+            let is_tree_focused = matches!(self.focus, Focus::Tree);
+            let tabs = vec![Line::from("Tree"), Line::from("File")];
+
+            f.render_widget(
+                Tabs::new(tabs)
+                    .block(
+                        Block::default()
+                            .borders(Borders::BOTTOM)
+                            .border_style(self.theme.block(false)),
+                    )
+                    .style(self.theme.tab(false))
+                    .highlight_style(self.theme.tab(true))
+                    .divider(strings::tab_divider(&self.key_config))
+                    .select(if is_tree_focused { 0 } else { 1 }),
+                chunks[0],
+            );
+
+            let chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
-                .split(area);
+                .split(chunks[1]);
 
             self.draw_tree(f, chunks[0])?;
 
@@ -370,6 +424,21 @@ impl Component for RevisionFilesComponent {
             out.push(CommandInfo::new(
                 strings::commands::edit_item(&self.key_config),
                 self.tree.selected_file().is_some(),
+                true,
+            ));
+            out.push(CommandInfo::new(
+                strings::commands::new_note(),
+                self.revision.is_some(),
+                true,
+            ));
+            out.push(CommandInfo::new(
+                strings::commands::list_notes(&self.key_config),
+                self.revision.is_some(),
+                true,
+            ));
+            out.push(CommandInfo::new(
+                strings::commands::push_notes(&self.key_config),
+                self.revision.is_some(),
                 true,
             ));
             out.push(
@@ -442,6 +511,21 @@ impl Component for RevisionFilesComponent {
                     self.queue.push(InternalEvent::TabSwitchStatus);
                     self.queue
                         .push(InternalEvent::OpenExternalEditor(Some(file)));
+                    return Ok(EventState::Consumed);
+                }
+            } else if key_match(key, self.key_config.keys.list_notes) {
+                if self.revision.is_some() {
+                    self.list_notes()?;
+                    return Ok(EventState::Consumed);
+                }
+            } else if key_match(key, self.key_config.keys.push) {
+                if self.revision.is_some() {
+                    try_or_popup!(self, "failed to push notes:", self.push_notes());
+                    return Ok(EventState::Consumed);
+                }
+            } else if key_match(key, self.key_config.keys.log_comment_commit) {
+                if let Some(commit) = self.revision.as_ref().map(|revision| revision.id) {
+                    self.queue.push(InternalEvent::OpenGitNote(commit, None));
                     return Ok(EventState::Consumed);
                 }
             } else if key_match(key, self.key_config.keys.copy) {

@@ -1,0 +1,73 @@
+// This file was generated using gyb. Do not edit it directly. Edit
+// TupleScene.swift.gyb instead.
+
+// swiftformat:options --allow-partial-wrapping true
+%{
+maximum_scene_count = 20
+}%
+
+%for i in range(2, maximum_scene_count + 1):
+public struct TupleScene${i}<
+    ${", ".join("Scene%d: Scene" % j for j in range(i))}
+>: Scene {
+    public typealias Node = TupleSceneNode${i}<
+        ${", ".join("Scene%d" % j for j in range(i))}
+    >
+
+    %for j in range(i):
+    var scene${j}: Scene${j}
+    %end
+
+    public init(
+        ${", ".join("_ scene%d: Scene%d" % (j, j) for j in range(i))}
+    ) {
+        %for j in range(i):
+        self.scene${j} = scene${j}
+        %end
+    }
+}
+
+public final class TupleSceneNode${i}<
+    ${", ".join("Scene%d: Scene" % j for j in range(i))}
+>: SceneGraphNode {
+    public typealias NodeScene = TupleScene${i}<
+        ${", ".join("Scene%d" % j for j in range(i))}
+    >
+
+    %for j in range(i):
+    var node${j}: Scene${j}.Node
+    %end
+
+    public init<Backend: BaseAppBackend>(
+        from scene: NodeScene,
+        backend: Backend,
+        environment: EnvironmentValues
+    ) {
+        %for j in range(i):
+        node${j} = Scene${j}.Node(from: scene.scene${j}, backend: backend, environment: environment)
+        %end
+    }
+
+    public func updateNode(
+        _ newScene: NodeScene?,
+        environment: EnvironmentValues
+    ) -> SceneNodeUpdateResult {
+        return SceneNodeUpdateResult(
+            childResults: [
+                %for j in range(i):
+                node${j}.updateNode(newScene?.scene${j}, environment: environment),
+                %end
+            ]
+        )
+    }
+
+    public func update<Backend: BaseAppBackend>(
+        backend: Backend,
+        environment: EnvironmentValues
+    ) {
+        %for j in range(i):
+        node${j}.update(backend: backend, environment: environment)
+        %end
+    }
+}
+%end

@@ -1,0 +1,44 @@
+name: Specific Manual Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        type: choice
+        description: OS
+        options:
+          - ubuntu
+          - macos
+          - windows
+      os-version:
+        description: OS Version
+        default: latest
+      swift-version:
+        type: choice
+        description: Swift Version
+        options:
+          - '5.9'
+          - '5.8'
+          - '5.7'
+          - '5.6'
+          - '5.5'
+          - '5.4'
+          - '5.3'
+          - '5.2'
+          - '5.1'
+          - '5.0'
+
+jobs:
+  test-spec:
+    runs-on: ${{ github.event.inputs.os }}-${{ github.event.inputs.os-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: '${{ github.event.inputs.swift-version }}'
+      - name: Get swift version
+        run: swift --version
+      - name: Build
+        run: swift build -v
+      - name: Test
+        run: swift test -v

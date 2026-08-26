@@ -25,7 +25,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct ExternalEditorPopup {
     visible: bool,
     theme: SharedTheme,
@@ -33,7 +32,6 @@ pub struct ExternalEditorPopup {
 }
 
 impl ExternalEditorPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             visible: false,
@@ -119,7 +117,7 @@ impl DrawableComponent for ExternalEditorPopup {
                     .collect::<Vec<Span>>(),
             );
 
-            let area = ui::centered_rect_absolute(25, 3, f.size());
+            let area = ui::centered_rect_absolute(25, 3, f.area());
             f.render_widget(Clear, area);
             f.render_widget(
                 Paragraph::new(txt)

@@ -3,8 +3,9 @@ use std::{borrow::Cow, cell::Cell, cmp, collections::BTreeMap, rc::Rc, time::Ins
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use crossterm::event::Event;
-use gnostr_asyncgit::sync::{
-    self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags,
+use gnostr_asyncgit::{
+    sync::{self, checkout_commit, BranchDetails, BranchInfo, CommitId, RepoPathRef, Tags},
+    AsyncGitNotification,
 };
 use indexmap::IndexSet;
 use itertools::Itertools;
@@ -21,7 +22,7 @@ use crate::{
     app::Environment,
     components::{
         utils::string_width_align, CommandBlocking, CommandInfo, Component, DrawableComponent,
-        EventState, ScrollType,
+        EventState, NotesComponent, ScrollType,
     },
     keys::{key_match, SharedKeyConfig},
     queue::{InternalEvent, Queue},
@@ -37,7 +38,7 @@ use crate::{
 const ELEMENTS_PER_LINE: usize = 9;
 const SLICE_SIZE: usize = 1200;
 
-///
+/// CommitList
 pub struct CommitList {
     repo: RepoPathRef,
     title: Box<str>,
@@ -56,10 +57,11 @@ pub struct CommitList {
     theme: SharedTheme,
     queue: Queue,
     key_config: SharedKeyConfig,
+    notes: NotesComponent,
 }
 
 impl CommitList {
-    ///
+    /// new
     pub fn new(env: &Environment, title: &str) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -78,61 +80,105 @@ impl CommitList {
             theme: env.theme.clone(),
             queue: env.queue.clone(),
             key_config: env.key_config.clone(),
+            notes: NotesComponent::new(env),
             title: title.into(),
         }
     }
 
-    ///
+    /// tags
     pub const fn tags(&self) -> Option<&Tags> {
         self.tags.as_ref()
     }
 
-    ///
+    /// clear
     pub fn clear(&mut self) {
         self.items.clear();
         self.commits.clear();
+        self.notes.clear();
     }
 
-    ///
+    fn sync_target_notes(&mut self) {
+        self.notes
+            .set_target(self.selected_entry().map(|entry| entry.id.into()));
+    }
+
+    /// copy_items
     pub fn copy_items(&self) -> Vec<CommitId> {
         self.commits.iter().copied().collect_vec()
     }
 
-    ///
+    /// set_tags
     pub fn set_tags(&mut self, tags: Tags) {
         self.tags = Some(tags);
     }
 
-    ///
+    /// any_work_pending
+    pub fn any_work_pending(&self) -> bool {
+        self.notes.any_work_pending()
+    }
+
+    /// update
+    pub fn update(&mut self) {
+        self.notes.update();
+    }
+
+    /// request_notes_refresh
+    pub fn refresh_notes(&mut self) {
+        self.notes.refresh();
+    }
+
+    /// Notes data is cached per commit Oid; this only advances the selected
+    /// commit mapping inside the shared notes service.
+    /// advance spinner animation for async notes loading
+    pub fn update_spinner(&mut self) {
+        self.notes.update_spinner();
+    }
+
+    /// draw_notes
+    pub fn draw_notes(&self, f: &mut Frame, area: Rect) {
+        let note_chunks = ratatui::layout::Layout::default()
+            .direction(ratatui::layout::Direction::Vertical)
+            .constraints(
+                [
+                    ratatui::layout::Constraint::Percentage(70),
+                    ratatui::layout::Constraint::Length(3),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+        self.notes.draw(f, note_chunks[0], note_chunks[1]);
+    }
+
+    /// selected_entry
     pub fn selected_entry(&self) -> Option<&LogEntry> {
         self.items
             .iter()
             .nth(self.selection.saturating_sub(self.items.index_offset()))
     }
 
-    ///
+    /// marked_count
     pub fn marked_count(&self) -> usize {
         self.marked.len()
     }
 
-    ///
+    /// marked
     pub fn marked(&self) -> &[(usize, CommitId)] {
         &self.marked
     }
 
-    ///
+    /// clear_marked
     pub fn clear_marked(&mut self) {
         self.marked.clear();
     }
 
-    ///
+    /// marked_commits
     pub fn marked_commits(&self) -> Vec<CommitId> {
         let (_, commits): (Vec<_>, Vec<CommitId>) = self.marked.iter().copied().unzip();
 
         commits
     }
 
-    ///
+    /// copy_commit_hash
     pub fn copy_commit_hash(&self) -> Result<()> {
         let marked = self.marked.as_slice();
         let yank: Option<String> = match marked {
@@ -165,7 +211,7 @@ impl CommitList {
         Ok(())
     }
 
-    ///
+    /// checkout
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn checkout(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
@@ -176,18 +222,18 @@ impl CommitList {
             );
         }
     }
+    /// comment
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub fn comment(&mut self) {
         if let Some(commit_hash) = self.selected_entry().map(|entry| entry.id) {
-            try_or_popup!(
-                self,
-                "failed to checkout commit:",
-                checkout_commit(&self.repo.borrow(), commit_hash)
-            );
+            // Notes stay on the shared editor component so the key path remains
+            // async-friendly and reusable across commit views.
+            self.notes.set_target(Some(commit_hash.into()));
+            self.notes.open_editor();
         }
     }
 
-    ///
+    /// set_local_branches
     pub fn set_local_branches(&mut self, local_branches: Vec<BranchInfo>) {
         self.local_branches.clear();
 
@@ -199,7 +245,7 @@ impl CommitList {
         }
     }
 
-    ///
+    /// set_remote_branches
     pub fn set_remote_branches(&mut self, remote_branches: Vec<BranchInfo>) {
         self.remote_branches.clear();
 
@@ -211,7 +257,7 @@ impl CommitList {
         }
     }
 
-    ///
+    /// set_commits
     pub fn set_commits(&mut self, commits: IndexSet<CommitId>) {
         if commits != self.commits {
             self.items.clear();
@@ -220,7 +266,7 @@ impl CommitList {
         }
     }
 
-    ///
+    /// refresh_extend_data
     pub fn refresh_extend_data(&mut self, commits: Vec<CommitId>) {
         let new_commits = !commits.is_empty();
         self.commits.extend(commits);
@@ -233,7 +279,7 @@ impl CommitList {
         }
     }
 
-    ///
+    /// set_highlighting
     pub fn set_highlighting(&mut self, highlighting: Option<Rc<IndexSet<CommitId>>>) {
         //note: set highlights to none if there is no highlight
         self.highlights = if highlighting.as_ref().is_some_and(|set| set.is_empty()) {
@@ -247,22 +293,23 @@ impl CommitList {
         self.fetch_commits(true);
     }
 
-    ///
+    /// select_commit
     pub fn select_commit(&mut self, id: CommitId) -> Result<()> {
         let index = self.commits.get_index_of(&id);
 
         if let Some(index) = index {
             self.selection = index;
             self.set_highlighted_selection_index();
+            self.sync_target_notes();
             Ok(())
         } else {
             anyhow::bail!(
-				"Could not select commit. It might not be loaded yet or it might be on a different branch."
-			);
+                "Could not select commit. It might not be loaded yet or it might be on a different branch."
+            );
         }
     }
 
-    ///
+    /// highlighted_selection_info
     pub fn highlighted_selection_info(&self) -> (usize, usize) {
         let amount = self
             .highlights
@@ -297,6 +344,10 @@ impl CommitList {
         self.selected_entry()
             .and_then(|e| self.is_marked(&e.id))
             .unwrap_or_default()
+    }
+
+    fn entry_has_notes(&self, id: CommitId) -> bool {
+        self.notes.has_notes_for(id.into())
     }
 
     fn move_selection(&mut self, scroll: ScrollType) -> Result<bool> {
@@ -365,6 +416,7 @@ impl CommitList {
         let needs_update = new_selection != self.selection;
 
         self.selection = new_selection;
+        self.sync_target_notes();
 
         Ok(needs_update)
     }
@@ -419,6 +471,7 @@ impl CommitList {
         &self,
         e: &'a LogEntry,
         selected: bool,
+        notes_present: bool,
         tags: Option<String>,
         local_branches: Option<String>,
         remote_branches: Option<String>,
@@ -427,8 +480,11 @@ impl CommitList {
         now: DateTime<Local>,
         marked: Option<bool>,
     ) -> Line<'a> {
-        let mut txt: Vec<Span> =
-            Vec::with_capacity(ELEMENTS_PER_LINE + if marked.is_some() { 2 } else { 0 });
+        let mut txt: Vec<Span> = Vec::with_capacity(
+            ELEMENTS_PER_LINE
+                + if marked.is_some() { 2 } else { 0 }
+                + 2,
+        );
 
         let normal = !self.items.highlighting() || (self.items.highlighting() && e.highlighted);
 
@@ -454,6 +510,16 @@ impl CommitList {
             ));
             txt.push(splitter.clone());
         }
+
+        txt.push(Span::styled(
+            Cow::from(if notes_present {
+                symbol::DOT
+            } else {
+                symbol::EMPTY_SPACE
+            }),
+            theme.log_marker(selected),
+        ));
+        txt.push(splitter.clone());
 
         let style_hash = if normal {
             theme.commit_hash(selected)
@@ -570,6 +636,7 @@ impl CommitList {
             txt.push(self.get_entry_to_add(
                 e,
                 idx + self.scroll_top.get() == selection,
+                self.entry_has_notes(e.id),
                 tags,
                 local_branches,
                 self.remote_branches_string(e),
@@ -707,7 +774,16 @@ impl CommitList {
 
             if let Ok(commits) = commits {
                 self.items.set_items(want_min, commits, &self.highlights);
+                self.sync_target_notes();
+                self.notes.refresh();
             }
+        }
+    }
+
+    /// Apply notes notifications without blocking the list draw path.
+    pub fn update_git(&mut self, ev: AsyncGitNotification) {
+        if matches!(ev, AsyncGitNotification::Notes) {
+            self.notes.update_git(ev);
         }
     }
 }
@@ -761,6 +837,10 @@ impl DrawableComponent for CommitList {
 impl Component for CommitList {
     fn event(&mut self, ev: &Event) -> Result<EventState> {
         if let Event::Key(k) = ev {
+            if self.notes.event(ev)? {
+                return Ok(EventState::Consumed);
+            }
+
             let selection_changed = if key_match(k, self.key_config.keys.move_up) {
                 self.move_selection(ScrollType::Up)?
             } else if key_match(k, self.key_config.keys.move_down) {
@@ -785,7 +865,6 @@ impl Component for CommitList {
                 self.checkout();
                 true
             } else if key_match(k, self.key_config.keys.log_comment_commit) {
-                //
                 self.comment();
                 true
             } else {
@@ -798,6 +877,11 @@ impl Component for CommitList {
     }
 
     fn commands(&self, out: &mut Vec<CommandInfo>, _force_all: bool) -> CommandBlocking {
+        let note_blocking = self.notes.commands(out, _force_all);
+        if note_blocking == CommandBlocking::Blocking {
+            return note_blocking;
+        }
+
         out.push(CommandInfo::new(
             strings::commands::scroll(&self.key_config),
             self.selected_entry().is_some(),
@@ -808,7 +892,7 @@ impl Component for CommitList {
             true,
             true,
         ));
-        CommandBlocking::PassingOn
+        note_blocking
     }
 }
 

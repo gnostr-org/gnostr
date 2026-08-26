@@ -27,7 +27,6 @@ use crate::{
     ui::{self, Size},
 };
 
-///
 pub struct SubmodulesListPopup {
     repo: RepoPathRef,
     repo_path: String,
@@ -213,7 +212,6 @@ impl SubmodulesListPopup {
         }
     }
 
-    ///
     pub fn open(&mut self) -> Result<()> {
         self.show()?;
         self.update_submodules()?;
@@ -221,7 +219,6 @@ impl SubmodulesListPopup {
         Ok(())
     }
 
-    ///
     pub fn update_submodules(&mut self) -> Result<()> {
         if self.is_visible() {
             self.submodules = get_submodules(&self.repo.borrow())?;

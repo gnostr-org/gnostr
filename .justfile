@@ -4,6 +4,9 @@ default:
 help:
   @make help
 
+rm_cargo_lock:
+  @make rm_cargo_lock
+
 all:
   @make all
 
@@ -34,18 +37,6 @@ cargo-install:
 cargo-sort:
   @make cargo-sort
 
-crawler:
-  @make crawler
-
-asyncgit:
-  @make asyncgit
-
-relay:
-  @make relay
-
-query:
-  @make query
-
 cargo-build-release:
   @make cargo-build-release
 
@@ -64,6 +55,9 @@ cargo-test--ignored:
 cargo-test-workspace:
   @make cargo-test-workspace
 
+test:
+  @make test
+
 cargo-test-nightly:
   @make cargo-test-nightly
 
@@ -76,20 +70,17 @@ cargo-test-types-nip_three_four:
 cargo-clippy-workspace:
   @make cargo-clippy-workspace
 
+cargo-clippy-fix-workspace:
+  @make cargo-clippy-fix-workspace
+
+clippy:
+  @make clippy
+
 cargo-report:
   @make cargo-report
 
 cargo-run:
   @make cargo-run
-
-cargo-dist:
-  @make cargo-dist
-
-cargo-dist-build:
-  @make cargo-dist-build
-
-cargo-dist-manifest:
-  @make cargo-dist-manifest
 
 cargo-git-cliff-changelog:
   @make cargo-git-cliff-changelog
@@ -105,9 +96,6 @@ fetch-by-id:
 
 fetch-by-kind-and-author:
   @make fetch-by-kind-and-author
-
-crawler-test-relays:
-  @make crawler-test-relays
 
 gnostr-note-debug:
   @make gnostr-note-debug
@@ -145,6 +133,21 @@ docker-shared:
 gh-act-run-all:
   @make gh-act-run-all
 
-gnostr-bot-matrix:
-  @make gnostr-bot-matrix
+gnostr-test-matrix:
+  @make gnostr-test-matrix
+
+gnostr-test-macos:
+  @make gnostr-test-macos
+
+gnostr-test-macos-intel:
+  @make gnostr-test-macos-intel
+
+act-cargo-cross-setup:
+  @make act-cargo-cross-setup
+
+act-cargo-cross:
+  @make act-cargo-cross
+
+act-gnostr-act:
+  @make act-gnostr-act
 

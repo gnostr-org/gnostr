@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! bash -n "${BASH_SOURCE[0]}"; then
+  exit 1
+fi
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+export RUST_LOG="${RUST_LOG:+$RUST_LOG,}ureq=off,serial_test=off,mio=off,tungstenite=off,tokio_tungstenite=off"
+
+MODE="notes"
+FEATURES=""
+ALL_FEATURES=false
+NO_DEFAULT_FEATURES=false
+RELEASE=false
+NOCAPTURE=true
+TEST_FLAGS=()
+
+usage() {
+  cat <<'EOF'
+Usage: gnostr-ngit-tests.sh [--all] [--notes] [--ignored] [--nocapture] [--capture] [--all-features] [--no-default-features] [--release] [--features VALUE]
+
+Modes:
+  --notes          Run the notes-focused ngit slice (default)
+  --all            Run the full ngit suite
+
+Options:
+  --features VALUE        Add a Cargo feature (repeatable)
+  --all-features          Run with all features enabled
+  --no-default-features   Run with default features disabled
+  --ignored               Run ignored tests
+  --nocapture             Print test output
+  --capture               Silence test output
+  --release               Run tests in release mode
+  --help                  Show this help
+
+Examples:
+  ./scripts/gnostr-ngit-tests.sh --notes --nocapture
+  ./scripts/gnostr-ngit-tests.sh --all --nocapture
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --all)
+      MODE="all"
+      ;;
+    --notes)
+      MODE="notes"
+      ;;
+    --ignored)
+      TEST_FLAGS+=(--ignored)
+      ;;
+    --nocapture)
+      NOCAPTURE=true
+      ;;
+    --capture)
+      NOCAPTURE=false
+      ;;
+    --all-features)
+      ALL_FEATURES=true
+      ;;
+    --no-default-features)
+      NO_DEFAULT_FEATURES=true
+      ;;
+    --release)
+      RELEASE=true
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    --features)
+      shift
+      [[ $# -gt 0 ]] || { echo "--features requires a value" >&2; exit 1; }
+      if [[ -n "$FEATURES" ]]; then
+        FEATURES+=","
+      fi
+      FEATURES+="$1"
+      ;;
+    --features=*)
+      if [[ -n "$FEATURES" ]]; then
+        FEATURES+=","
+      fi
+      FEATURES+="${1#*=}"
+      ;;
+    *)
+      echo "Unsupported flag: $1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+build_cargo_flags() {
+  local -a cargo_flags=(test -p gnostr-ngit)
+  if [[ "$ALL_FEATURES" == true ]]; then
+    cargo_flags+=(--all-features)
+  elif [[ "$NO_DEFAULT_FEATURES" == true ]]; then
+    cargo_flags+=(--no-default-features)
+    if [[ -n "$FEATURES" ]]; then
+      cargo_flags+=(--features "$FEATURES")
+    fi
+  else
+    if [[ -n "$FEATURES" ]]; then
+      cargo_flags+=(--features "$FEATURES")
+    else
+      cargo_flags+=(--features nostr)
+    fi
+  fi
+  if [[ "$RELEASE" == true ]]; then
+    cargo_flags+=(--release)
+  fi
+  printf '%s\n' "${cargo_flags[@]}"
+}
+
+run_cargo() {
+  local -a cargo_flags=()
+  cargo_flags=($(build_cargo_flags))
+  bash ./scripts/with-system-rocksdb.sh cargo "${cargo_flags[@]}" "$@"
+}
+
+run_notes_suite() {
+  local -a test_args=()
+  if [[ "$NOCAPTURE" == true ]]; then
+    test_args+=(--nocapture)
+  fi
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    test_args+=("${TEST_FLAGS[@]}")
+  fi
+
+  if [[ ${#test_args[@]} -gt 0 ]]; then
+    run_cargo --test nip34_kinds -- "${test_args[@]}"
+    run_cargo --test git_notes -- "${test_args[@]}"
+  else
+    run_cargo --test nip34_kinds
+    run_cargo --test git_notes
+  fi
+}
+
+run_all_suite() {
+  local -a test_args=()
+  if [[ "$NOCAPTURE" == true ]]; then
+    test_args+=(--nocapture)
+  fi
+  if [[ ${#TEST_FLAGS[@]} -gt 0 ]]; then
+    test_args+=("${TEST_FLAGS[@]}")
+  fi
+
+  if [[ ${#test_args[@]} -gt 0 ]]; then
+    run_cargo --lib -- "${test_args[@]}"
+    run_cargo --tests -- "${test_args[@]}"
+  else
+    run_cargo --lib
+    run_cargo --tests
+  fi
+}
+
+case "$MODE" in
+  notes)
+    run_notes_suite
+    ;;
+  all)
+    run_all_suite
+    ;;
+  *)
+    echo "Unsupported mode: $MODE" >&2
+    exit 1
+    ;;
+esac

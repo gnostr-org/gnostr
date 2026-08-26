@@ -27,7 +27,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct FetchPopup {
     repo: RepoPathRef,
     visible: bool,
@@ -41,7 +40,6 @@ pub struct FetchPopup {
 }
 
 impl FetchPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -56,7 +54,6 @@ impl FetchPopup {
         }
     }
 
-    ///
     pub fn fetch(&mut self) -> Result<()> {
         self.show()?;
         if need_username_password(&self.repo.borrow())? {
@@ -83,19 +80,16 @@ impl FetchPopup {
             .spawn(AsyncFetchJob::new(self.repo.borrow().clone(), cred));
     }
 
-    ///
     pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
     pub fn update_git(&mut self, ev: AsyncGitNotification) {
         if self.is_visible() && ev == AsyncGitNotification::Fetch {
             self.update();
         }
     }
 
-    ///
     fn update(&mut self) {
         self.pending = self.async_fetch.is_pending();
         self.progress = self.async_fetch.progress();
@@ -113,7 +107,7 @@ impl DrawableComponent for FetchPopup {
         if self.visible {
             let progress = self.progress.unwrap_or_default().progress;
 
-            let area = ui::centered_rect_absolute(30, 3, f.size());
+            let area = ui::centered_rect_absolute(30, 3, f.area());
 
             f.render_widget(Clear, area);
             f.render_widget(

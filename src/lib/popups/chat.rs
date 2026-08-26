@@ -23,7 +23,6 @@ use ratatui::{
 };
 
 use super::ExternalEditorPopup;
-use crate::popups::ExternalChatPopup;
 use crate::{
     app::Environment,
     components::{
@@ -32,6 +31,7 @@ use crate::{
     },
     keys::{key_match, SharedKeyConfig},
     options::SharedOptions,
+    popups::ExternalChatPopup,
     queue::{InternalEvent, NeedsUpdate, Queue},
     strings, try_or_popup,
     ui::style::SharedTheme,
@@ -67,7 +67,6 @@ pub struct ChatPopup {
 const FIRST_LINE_LIMIT: usize = 50;
 
 impl ChatPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             queue: env.queue.clone(),
@@ -84,7 +83,6 @@ impl ChatPopup {
         }
     }
 
-    ///
     pub fn update(&mut self) {
         self.git_branch_name.lookup().ok();
     }

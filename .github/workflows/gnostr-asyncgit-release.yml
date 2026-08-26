@@ -1,0 +1,119 @@
+name: gnostr-asyncgit release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  build-artifact:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [linux-x64, windows-x64, macos-x64, macos-arm64]
+        include:
+          - build: linux-x64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            exe_suffix: ""
+          - build: windows-x64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            exe_suffix: ".exe"
+          - build: macos-x64
+            os: macos-13
+            target: x86_64-apple-darwin
+            exe_suffix: ""
+          - build: macos-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            exe_suffix: ""
+    env:
+      BUILD_NAME: "gnostr-asyncgit-${{ github.ref_name }}-${{ matrix.target }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Restore cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --verbose --release --locked --package gnostr-asyncgit --bin git-tui --features tui --target ${{ matrix.target }}
+
+      - name: Bundle release
+        shell: bash
+        run: |
+          mkdir -p "$BUILD_NAME"
+          cp README.md LICENSE "$BUILD_NAME/"
+          cp "target/${{ matrix.target }}/release/git-tui${{ matrix.exe_suffix }}" "$BUILD_NAME/"
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          "./$BUILD_NAME/git-tui${{ matrix.exe_suffix }}" --version
+
+      - name: Upload asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUILD_NAME }}
+          path: ${{ env.BUILD_NAME }}
+
+  verify:
+    needs: build-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test --locked -p gnostr-asyncgit --all-targets --features tui
+
+  create-github-release:
+    needs: [build-artifact, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub release
+        working-directory: artifacts
+        run: |
+          gh release create "$GITHUB_REF_NAME" --generate-notes
+          ls | xargs -I{} zip -r {}.zip {}
+          ls *.zip | xargs gh release upload "$GITHUB_REF_NAME" --clobber

@@ -1,0 +1,131 @@
+[package]
+name = "gnostr-p2p"
+version.workspace = true
+edition = "2021"
+description = "gnostr p2p crate"
+authors = [
+    "gnostr <admin@gnostr.org>",
+    "0xtr <oxtrr@protonmail.com>",
+    "TODO <add_more@gnostr.org>",
+]
+license = "MIT"
+repository = "https://github.com/gnostr-org/gnostr.git"
+readme = "README.md"
+
+[lib]
+name = "gnostr_p2p"
+path = "src/lib.rs"
+##doctest = false
+
+[features]
+default = ["js"]
+js = ["dep:gnostr-js"]
+tor = ["dep:arti-client", "dep:tor-rtcompat", "dep:data-encoding"]
+listen-onion-service = [
+    "tor",
+    "arti-client/onion-service-service",
+    "dep:tor-hsservice",
+    "dep:tor-cell",
+    "dep:tor-proto",
+]
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serde_yaml = "0.9"
+
+[target.'cfg(not(target_os = "tvos"))'.dependencies]
+ansi_term = "0.12"
+anyhow = "1.0.98"
+arti-client = { version = "^0.21", default-features = false, features = [
+  "tokio",
+  "rustls",
+  "onion-service-client",
+  "static-sqlite",
+], optional = true }
+async-std = { version = "1.12", features = ["attributes"] }
+base64 = { workspace = true }
+bincode = { workspace = true }
+chacha20poly1305 = { workspace = true }
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.5.41", features = [
+  "std",
+  "cargo",
+  "derive",
+  "help",
+  "usage",
+  "env",
+] }
+data-encoding = { version = "2.6.0", optional = true }
+env_logger = { workspace = true }
+futures = "0.3.31"
+futures-util = "0.3.31"
+getrandom = { version = "0.1.16", features = ["dummy"] }
+gnostr-asyncgit = { path = "../asyncgit", package = "gnostr-asyncgit", version = ">=953267.1868.494774", default-features = false, features = [
+  "nostr",
+  "vendor-openssl",
+] }
+gnostr-crawler = { path = "../crawler", package = "gnostr-crawler", version = ">=953267.1868.494774" }
+gnostr-js = { path = "../js", package = "gnostr-js", version = ">=953267.1868.494774", optional = true }
+libp2p = { version = "0.54.1", features = [
+  "full",
+  "autonat",
+  "cbor",
+  "dcutr",
+  "dns",
+  "ecdsa",
+  "ed25519",
+  "floodsub",
+  "gossipsub",
+  "identify",
+  "json",
+  "kad",
+  "macros",
+  "mdns",
+  "memory-connection-limits",
+  "metrics",
+  "noise",
+  "ping",
+  "plaintext",
+  "pnet",
+  "quic",
+  "relay",
+  "rendezvous",
+  "request-response",
+  "rsa",
+  "secp256k1",
+  "serde",
+  "tcp",
+  "tls",
+  "tokio",
+  "uds",
+  "upnp",
+  "wasm-bindgen",
+  "websocket",
+  "webtransport-websys",
+  "yamux",
+] }
+log = { workspace = true }
+rand = "0.8.5"
+reqwest = { workspace = true }
+sha2 = { workspace = true }
+tempfile = { workspace = true }
+thiserror = "1.0.69"
+time = "0.3"
+tokio = { version = "1.46.1", features = ["full"] }
+tokio-tungstenite = { workspace = true }
+tor-cell = { version = "^0.21", optional = true }
+tor-hsservice = { version = "^0.21", optional = true }
+tor-proto = { version = "^0.21", optional = true }
+tor-rtcompat = { version = "^0.21", features = [
+  "tokio",
+  "rustls",
+], optional = true }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", default-features = false, features = [
+  "env-filter",
+  "smallvec",
+  "parking_lot",
+  "fmt",
+] }
+warp = { workspace = true }

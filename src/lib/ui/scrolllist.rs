@@ -9,7 +9,7 @@ use ratatui::{
 
 use super::style::SharedTheme;
 
-///
+/// A scrollable list widget.
 struct ScrollableList<'b, L, S>
 where
     S: Into<Text<'b>>,

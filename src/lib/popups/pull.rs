@@ -32,7 +32,6 @@ use crate::{
     ui::{self, style::SharedTheme},
 };
 
-///
 pub struct PullPopup {
     repo: RepoPathRef,
     visible: bool,
@@ -47,7 +46,6 @@ pub struct PullPopup {
 }
 
 impl PullPopup {
-    ///
     pub fn new(env: &Environment) -> Self {
         Self {
             repo: env.repo.clone(),
@@ -63,7 +61,6 @@ impl PullPopup {
         }
     }
 
-    ///
     pub fn fetch(&mut self, branch: String) -> Result<()> {
         self.branch = branch;
         self.show()?;
@@ -93,12 +90,10 @@ impl PullPopup {
         Ok(())
     }
 
-    ///
     pub const fn any_work_pending(&self) -> bool {
         self.pending
     }
 
-    ///
     pub fn update_git(&mut self, ev: AsyncGitNotification) {
         if self.is_visible() && ev == AsyncGitNotification::Pull {
             if let Err(error) = self.update() {
@@ -111,7 +106,6 @@ impl PullPopup {
         }
     }
 
-    ///
     fn update(&mut self) -> Result<()> {
         self.pending = self.git_fetch.is_pending()?;
         self.progress = self.git_fetch.progress()?;
@@ -176,7 +170,7 @@ impl DrawableComponent for PullPopup {
         if self.visible {
             let (state, progress) = PushPopup::get_progress(&self.progress);
 
-            let area = ui::centered_rect_absolute(30, 3, f.size());
+            let area = ui::centered_rect_absolute(30, 3, f.area());
 
             f.render_widget(Clear, area);
             f.render_widget(

@@ -19,7 +19,7 @@ pub struct FilesTab {
 }
 
 impl FilesTab {
-    ///
+    /// new
     pub fn new(env: &Environment) -> Self {
         Self {
             visible: false,
@@ -28,7 +28,7 @@ impl FilesTab {
         }
     }
 
-    ///
+    /// update
     pub fn update(&mut self) -> Result<()> {
         if self.is_visible() {
             if let Ok(head) = sync::get_head(&self.repo.borrow()) {
@@ -39,12 +39,12 @@ impl FilesTab {
         Ok(())
     }
 
-    ///
+    /// anything_pending
     pub fn anything_pending(&self) -> bool {
         self.files.any_work_pending()
     }
 
-    ///
+    /// update_async
     pub fn update_async(&mut self, ev: AsyncNotification) -> Result<()> {
         if self.is_visible() {
             self.files.update(ev)?;

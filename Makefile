@@ -1,3 +1,7 @@
+ACT_VERBOSE ?= 
+ACT_BIND ?= --bind
+ACT_USE_NEW_ACTION_CACHE ?= ${ACT_BIND}
+
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 ifeq ($(TAG),)
 TAG := v$(shell cat Cargo.toml | grep 'version = "' | head -n 1 | sed 's/version = "\(.*\)".*/\1/')
@@ -19,6 +23,8 @@ help:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?##/ {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo
 
+rm_cargo_lock: 	### 	rm_cargo_lock
+	rm /Users/git/.cache/cargo/debug/.cargo-lock 2>/dev/null || true
 ##
 ##===============================================================================
 ##all
@@ -27,7 +33,7 @@ all: 	bin### 	all
 ##bin
 ## 	cargo b -j $(NPROC)
 bin: 	### 	bin
-	cargo b -j $(NPROC)
+	bash ./scripts/with-system-rocksdb.sh cargo b -j $(NPROC)
 
 ##
 ##===============================================================================
@@ -56,89 +62,81 @@ cargo-install-bins:### 	cargo-install-bins
 cargo-build: 	## 	cargo build
 ## 	cargo-build q=true
 	@. $(HOME)/.cargo/env
-	@RUST_BACKTRACE=all cargo b -j $(NPROC) $(QUIET)
-cargo-install: 	crawler asyncgit 	###         cargo install --path . $(FORCE)
+	@RUST_BACKTRACE=all bash ./scripts/with-system-rocksdb.sh cargo b -j $(NPROC) $(QUIET)
+cargo-install: 	###         cargo install --path . $(FORCE)
 	@. $(HOME)/.cargo/env
-	@cargo install -j $(NPROC) --path . $(FORCE)
+	@cargo install -j $(NPROC) --locked --path ./bins $(FORCE)
+	@cargo install -j $(NPROC) --locked --path . $(FORCE)
 
 cargo-sort: 	cargo-sort
 	for cargo_toml in $(shell ls */Cargo.toml); do cargo sort -n $(cargo_toml);done
-
-.PHONY:crawler asyncgit relay query
-crawler: 	###     crawler
-	@cargo install -j $(NPROC) --path ./crawler $(FORCE)
-asyncgit: 	###     asyncgit
-	@cargo  install -j $(NPROC) --path ./asyncgit $(FORCE)
-relay: 	###     relay
-	@cargo install -j $(NPROC) --path ./relay $(FORCE)
-query: 	###     query
-	@cargo install -j $(NPROC) --path ./query $(FORCE)
 
 ## 	cargo-br q=true
 cargo-build-release: 	### 	cargo-build-release
 ## 	cargo-build-release q=true
 	@. $(HOME)/.cargo/env
-	@cargo b -r -j $(NPROC) $(QUIET)
+	@bash ./scripts/with-system-rocksdb.sh cargo b -r -j $(NPROC) $(QUIET)
 cargo-check: 	### 	cargo-check
 	@. $(HOME)/.cargo/env
-	@cargo  c -j $(NPROC)
+	@bash ./scripts/with-system-rocksdb.sh cargo  c -j $(NPROC)
 cargo-bench: 	### 	cargo-bench
 	@. $(HOME)/.cargo/env
-	@cargo bench -j $(NPROC)
+	@bash ./scripts/with-system-rocksdb.sh cargo bench -j $(NPROC)
 cargo-test: 	### 	cargo-test
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo  test -j $(NPROC)
+	bash ./scripts/with-system-rocksdb.sh cargo  test -j $(NPROC)
 cargo-test--ignored: 	### 	cargo-test--ignored
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo  test -j $(NPROC) -- --ignored --nocapture
+	bash ./scripts/with-system-rocksdb.sh cargo  test -j $(NPROC) -- --ignored --nocapture
 cargo-test-workspace: 	### 	cargo-test-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo  test -j $(NPROC) --workspace
+	bash ./scripts/with-system-rocksdb.sh cargo  test -j $(NPROC) --workspace
+test: cargo-test-workspace
 cargo-test-nightly: 	### 	cargo-test-nightly
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo  +nightly test -j $(NPROC)
+	bash ./scripts/with-system-rocksdb.sh cargo  +nightly test -j $(NPROC)
 cargo-test-nightly-workspace: 	### 	cargo-test-nightly-workspace
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo  +nightly test -j $(NPROC) --workspace
+	bash ./scripts/with-system-rocksdb.sh cargo  +nightly test -j $(NPROC) --workspace
 
 cargo-test-types-nip_three_four: 	### 	cargo-test-types-nip34
 	@. $(HOME)/.cargo/env
 	#@cargo test
-	cargo test -j $(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
+	bash ./scripts/with-system-rocksdb.sh cargo test -j $(NPROC) -p gnostr -- --test-threads=1 --test types::nip34
 
 cargo-clippy-workspace: 	### 	cargo-clippy-workspace
-	cargo clippy --workspace --all-targets --all-features -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --workspace --all-targets -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --workspace --all-targets --all-features -- -D warnings
+
+cargo-clippy-fix-workspace: 	### 	cargo-clippy-fix-workspace
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets -- -D warnings
+	bash ./scripts/with-system-rocksdb.sh cargo +nightly clippy --allow-dirty --fix --workspace --all-targets --all-features -- -D warnings
+clippy: cargo-clippy-workspace
 
 cargo-report: 	### 	cargo-report
 	@. $(HOME)/.cargo/env
 	cargo report future-incompatibilities --id 1 -j $(NPROC)
 cargo-run: 	### 	cargo-run
 	@. $(HOME)/.cargo/env
-	cargo run -j $(NPROC)  --bin gnostr -- -h
+	bash ./scripts/with-system-rocksdb.sh cargo run -j $(NPROC)  --bin gnostr -- -h
 
 ##===============================================================================
-cargo-dist: 	### 	make cargo-dist TAG=$(TAG)
-	
-	@dist host --steps=create --tag=$(TAG) --allow-dirty --output-format=json > plan-dist-manifest.json
-cargo-dist-build: 	### 	cargo-dist-build
-	RUSTFLAGS="--cfg tokio_unstable" dist build --allow-dirty
-cargo-dist-manifest: 	### 	dist manifest --artifacts=all
-	dist manifest --artifacts=all
-
 cargo-git-cliff-changelog: 	### 	cargo-git-cliff-changelog
 	git-cliff --output CHANGELOG.md || cargo install git-cliff
 
 dep-graph: 	### 	dep-graph
-	@cargo  -j $(NPROC) depgraph --depth 1 | dot -Tpng > graph.png
+	@cargo depgraph --depth 1 | dot -Tpng > graph.png || brew install graphviz || cargo install cargo-depgraph
 
 gnostr-chat: 	## 	gnostr-chat
-	cargo  b -j $(NPROC) --bin gnostr
-	./target/debug/gnostr chat --topic gnostr --name "$(shell gnostr-weeble)/$(shell gnostr-blockheight)/$(shell gnostr-wobble):$(USER)"
+	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
+	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1871/950820/649920" -n "51f8abfe29ee9821b5727c55d31f9d29115fe91b610751d7c9586b91178c0119"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
 	cargo  -j $(NPROC) install --bin gnostr-fetch-by-id --path .
@@ -148,10 +146,6 @@ fetch-by-kind-and-author: 	### 	fetch-by-kind-and-author
 	cargo  -j $(NPROC) install --bin fetch_by_kind-and-author --path .
 	cargo  -j $(NPROC) install --bin fetch_by_kind_and_author --path .
 	fetch_by_kind_and_author wss://relay.nostr.band 1 a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
-
-crawler-test-relays: 	### crawler-test-relays
-	for relay in $(shell echo $(shell gnostr-crawler));do echo $$relay;done
-	for relay in $(shell echo $(shell gnostr-crawler));do test_relay $$relay;done
 
 gnostr-note-debug: 	### 	gnostr-note-debug
 	@gnostr --debug --hash "" note -c "gnostr --debug" --hex -s "gnostr --debug subject" --ptag a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd --etag 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -t "gnostr--debug|tag" --verbose --expiration 144000
@@ -185,10 +179,28 @@ docker-shared: 	### 	docker container with volumes
 	docker buildx build . -t gnostr:latest && docker run -it --privileged -v /Users/Shared:/Users/Shared -v /Users/git:/Users/git gnostr:latest
 
 gh-act-run-all: 	### 	gh-act-run-all
-	gh extension install nektos/gh-act
-	gh act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act -vv -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
-gnostr-bot-matrix: 	### 	gnostr-bot-matrix
-	act -vv -W .github/workflows/gnostr-bot-matrix.yml --container-architecture linux/amd64 || 	gh act -vv --container-architecture linux/amd64 -W .github/workflows/gnostr-bot-matrix.yml
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/run-all-workflows.yml --container-architecture linux/amd64
+
+gnostr-test-matrix: 	### 	gnostr-test-matrix
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml --container-architecture linux/amd64 || 	act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml --container-architecture linux/amd64
+
+gnostr-test-macos: 	### 	gnostr-test-macos
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-latest=-self-hosted --container-architecture linux/amd64
+
+gnostr-test-macos-intel: 	### 	gnostr-test-macos
+	gh extension install nektos/gh-act || true
+	gh act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64 || 	   act ${ACT_VERBOSE} ${ACT_USE_NEW_ACTION_CACHE} -W .github/workflows/gnostr-test-matrix.yml -P macos-15-intel=-self-hosted --container-architecture linux/amd64
+
+act-cargo-cross-setup: 	### 	acto-cargo-cross-setup
+	 act -W .github/workflows/cargo-cross.yml -j setup --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
+act-cargo-cross: 	### 	acto-cargo-cross
+	 act -W .github/workflows/cargo-cross.yml --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:full-latest
+
+act-gnostr-act: 	## 	act-gnostr-act
+	docker build -t gnostr-act -f ./docker/Dockerfile.gnostr . && act -W .github/workflows/cargo-cross.yml -j setup --container-architecture linux/amd64 -P ubuntu-latest=gnostr-act
 
 # vim: set noexpandtab:
 # vim: set setfiletype make

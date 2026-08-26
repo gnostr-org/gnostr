@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/discard.rs
+assertion_line: 7
+expression: ctx.redact_buffer()
+---
+ Branches                                                                       |
+▌  asd                                                                          |
+ * main                                                                         |
+                                                                                |
+ Remote origin                                                                  |
+   origin/HEAD                                                                  |
+   origin/main                                                                  |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+? Really discard? (y or n) ›                                                    |
+styles_hash: e802436b24fbcb24

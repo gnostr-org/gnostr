@@ -1,0 +1,30 @@
+[package]
+name = "actix_derive"
+version = "0.6.2"
+authors = [
+    "Callym <hi@callym.com>",
+    "Nikolay Kim <fafhrd91@gmail.com>",
+    "Rob Ede <robjtede@icloud.com>",
+]
+description = "Derive macros for `actix` actors"
+keywords = ["actix", "actors", "derive", "macro"]
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[badges]
+maintenance.status = "passively-maintained"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "2", features = ["full"] }
+proc-macro2 = "1"
+
+[dev-dependencies]
+actix = "0.13"
+trybuild = "1"
+rustversion-msrv = "0.100"

@@ -21,6 +21,8 @@ on:
     #tags-ignore:
     #  - v999.**
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-ghcr-io-workflow]
 
 jobs:
       push-store-image:

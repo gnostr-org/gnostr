@@ -1,0 +1,746 @@
+//! P2P transport for `gnostr chat`.
+//!
+//! This layer owns the libp2p swarm used by chat sessions. It subscribes to a
+//! topic, bridges Gossipsub messages into the UI channel, and reassembles
+//! chunked payloads before delivery.
+
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::Arc,
+    time::Duration,
+};
+
+use anyhow::{anyhow, Result};
+use futures::stream::StreamExt;
+use libp2p::{
+    autonat, dcutr, gossipsub, identify, kad, mdns, noise, ping, relay,
+    request_response::{self, ProtocolSupport},
+    swarm::{NetworkBehaviour, SwarmEvent},
+    tcp, yamux, Multiaddr, PeerId, StreamProtocol,
+};
+use parking_lot::Mutex;
+use once_cell::sync::OnceCell;
+use terminal_size::{terminal_size, Width};
+use textwrap::{self, Options};
+use tokio::select;
+use tracing::debug;
+use ureq::Agent;
+
+use crate::{
+    event::ChatEvent,
+    msg::{Msg, MsgKind},
+};
+use gnostr_p2p::build_tor_transport;
+use gnostr_p2p::kvs::{FileRequest, FileResponse};
+use gnostr_p2p::utils::multiaddr_with_peer_id;
+use libp2p::identity;
+
+fn is_insufficient_peers_error(error: &impl std::fmt::Debug) -> bool {
+    let error = format!("{error:?}").to_lowercase();
+    error.contains("insufficient") && error.contains("peer")
+}
+
+async fn publish_or_queue_chat_message(
+    swarm: &mut libp2p::Swarm<MyBehaviour>,
+    topic: &gossipsub::IdentTopic,
+    msg: Msg,
+    pending_chat_messages: &mut VecDeque<Msg>,
+    recv: &tokio::sync::mpsc::Sender<ChatEvent>,
+) -> Result<()> {
+    let payload = serde_json::to_vec(&msg)?;
+    match swarm.behaviour_mut().gossipsub.publish(topic.clone(), payload) {
+        Ok(_) => Ok(()),
+        Err(error) if is_insufficient_peers_error(&error) => {
+            pending_chat_messages.push_back(msg);
+            recv.send(ChatEvent::ShowInfoMsg(
+                "queued chat message until a peer connects".to_string(),
+            ))
+            .await?;
+            Ok(())
+        }
+        Err(error) => {
+            debug!("Publish error: {error:?}");
+            let system = Msg::default()
+                .set_content(format!("publish error: {error:?}"), 0)
+                .set_kind(MsgKind::System);
+            recv.send(ChatEvent::ShowErrorMsg(system.to_string())).await?;
+            Ok(())
+        }
+    }
+}
+
+async fn flush_pending_chat_messages(
+    swarm: &mut libp2p::Swarm<MyBehaviour>,
+    topic: &gossipsub::IdentTopic,
+    pending_chat_messages: &mut VecDeque<Msg>,
+    recv: &tokio::sync::mpsc::Sender<ChatEvent>,
+) -> Result<()> {
+    while let Some(msg) = pending_chat_messages.pop_front() {
+        let payload = serde_json::to_vec(&msg)?;
+        match swarm.behaviour_mut().gossipsub.publish(topic.clone(), payload) {
+            Ok(_) => {
+                recv.send(ChatEvent::ShowInfoMsg("sent queued chat message".to_string()))
+                    .await?;
+            }
+            Err(error) if is_insufficient_peers_error(&error) => {
+                pending_chat_messages.push_front(msg);
+                break;
+            }
+            Err(error) => {
+                debug!("Publish error: {error:?}");
+                let system = Msg::default()
+                    .set_content(format!("publish error: {error:?}"), 0)
+                    .set_kind(MsgKind::System);
+                recv.send(ChatEvent::ShowErrorMsg(system.to_string())).await?;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Handle for the local p2p relay service started by chat.
+pub struct LocalP2pRelayService {
+    peer_id: PeerId,
+    listen_addr: Multiaddr,
+    join_handle: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for LocalP2pRelayService {
+    fn drop(&mut self) {
+        self.join_handle.abort();
+    }
+}
+
+impl LocalP2pRelayService {
+    pub fn peer_id(&self) -> PeerId {
+        self.peer_id
+    }
+
+    pub fn listen_addr(&self) -> &Multiaddr {
+        &self.listen_addr
+    }
+}
+
+/// Start an in-process relay-capable peer for chat startup.
+///
+/// The auxiliary peer participates in relay-client hole punching and can dial
+/// through Tor when the Tor transport is enabled.
+pub fn spawn_local_p2p_relay_service() -> Result<LocalP2pRelayService> {
+    global_rt().block_on(spawn_local_p2p_relay_service_async())
+}
+
+/// Async variant for tests and other Tokio contexts.
+pub async fn spawn_local_p2p_relay_service_async() -> Result<LocalP2pRelayService> {
+    let keypair = identity::Keypair::generate_ed25519();
+    let peer_id = keypair.public().to_peer_id();
+    let (listen_addr_tx, listen_addr_rx) = tokio::sync::oneshot::channel();
+    let join_handle = tokio::spawn(async move {
+        if let Err(error) = run_local_p2p_relay_service(keypair, listen_addr_tx).await {
+            tracing::warn!("local p2p relay service exited with error: {error}");
+        }
+    });
+
+    let listen_addr = listen_addr_rx
+        .await
+        .map_err(|_| anyhow!("local p2p relay service did not report a listen address"))?;
+
+    Ok(LocalP2pRelayService {
+        peer_id,
+        listen_addr,
+        join_handle,
+    })
+}
+
+async fn run_local_p2p_relay_service(
+    keypair: identity::Keypair,
+    listen_addr_tx: tokio::sync::oneshot::Sender<Multiaddr>,
+) -> Result<()> {
+    #[derive(NetworkBehaviour)]
+    struct RelayBehaviour {
+        relay_client: relay::client::Behaviour,
+        relay: relay::Behaviour,
+        autonat: autonat::Behaviour,
+        dcutr: dcutr::Behaviour,
+        ping: ping::Behaviour,
+        identify: identify::Behaviour,
+    }
+
+    let tor_transport = build_tor_transport(&keypair)
+        .await
+        .map_err(|error| anyhow!("{error}"))?;
+
+    let mut swarm = libp2p::SwarmBuilder::with_existing_identity(keypair)
+        .with_tokio()
+        .with_tcp(
+            tcp::Config::default(),
+            noise::Config::new,
+            yamux::Config::default,
+        )?
+        .with_quic()
+        .with_other_transport(move |_| tor_transport)?
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(|key, relay_client| RelayBehaviour {
+            relay_client,
+            relay: relay::Behaviour::new(key.public().to_peer_id(), Default::default()),
+            autonat: autonat::Behaviour::new(key.public().to_peer_id(), autonat::Config::default()),
+            dcutr: dcutr::Behaviour::new(key.public().to_peer_id()),
+            ping: ping::Behaviour::new(ping::Config::new()),
+            identify: identify::Behaviour::new(identify::Config::new(
+                "/ipfs/id/1.0.0".to_string(),
+                key.public(),
+            )),
+        })?
+        .build();
+
+    swarm.listen_on("/ip4/127.0.0.1/tcp/0".parse()?)?;
+    swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse()?)?;
+
+    let mut listen_addr_tx = Some(listen_addr_tx);
+
+    while let Some(event) = swarm.next().await {
+        match event {
+            SwarmEvent::Behaviour(RelayBehaviourEvent::Identify(identify::Event::Received {
+                info: identify::Info { observed_addr, .. },
+                ..
+            })) => {
+                swarm.add_external_address(observed_addr);
+            }
+            SwarmEvent::Behaviour(event) => debug!("local p2p relay event: {event:?}"),
+            SwarmEvent::NewListenAddr { address, .. } => {
+                swarm.add_external_address(address.clone());
+                if let Some(tx) = listen_addr_tx.take() {
+                    let _ = tx.send(address.clone());
+                }
+                debug!("local p2p relay listening on {address}");
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
+
+/// Shared Tokio runtime for background chat tasks.
+pub fn global_rt() -> &'static tokio::runtime::Runtime {
+    static RT: OnceCell<tokio::runtime::Runtime> = OnceCell::new();
+    RT.get_or_init(|| tokio::runtime::Runtime::new().expect("failed to create chat runtime"))
+}
+
+/// Buffer and reassemble chunked chat messages by message ID.
+pub struct MessageReassembler {
+    /// `message_id -> (total_chunks, received_chunks, chunks)`.
+    buffer: Mutex<HashMap<String, (usize, usize, Vec<Option<Msg>>)>>,
+}
+
+impl MessageReassembler {
+    /// Create an empty reassembly buffer.
+    pub fn new() -> Self {
+        MessageReassembler {
+            buffer: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// Add a chunk to the buffer and return a full message when complete.
+    ///
+    /// The first chunk supplies the metadata for the reconstructed message; all
+    /// chunk contents are concatenated in sequence order.
+    pub fn add_chunk_and_reassemble(&self, msg_chunk: Msg) -> Option<Msg> {
+        if msg_chunk.message_id.is_none()
+            || msg_chunk.sequence_num.is_none()
+            || msg_chunk.total_chunks.is_none()
+        {
+            // Not a multi-part message, or missing sequencing info
+            debug!("Received non-multi-part message or message with missing sequencing info.");
+            return None;
+        }
+
+        let message_id = msg_chunk.message_id.clone().unwrap(); // Clone here
+        let sequence_num = msg_chunk.sequence_num.unwrap();
+        let total_chunks = msg_chunk.total_chunks.unwrap();
+
+        debug!(
+            "AddChunk: Received chunk for message_id: {}, sequence_num: {}/{}, content_len: {}",
+            message_id,
+            sequence_num + 1,
+            total_chunks,
+            msg_chunk.content[0].len()
+        );
+
+        let mut buffer_guard = self.buffer.lock();
+
+        let (buffered_total_chunks, received_count, chunks) =
+            buffer_guard.entry(message_id.clone()).or_insert_with(|| {
+                debug!(
+                    "AddChunk: Initializing buffer for message_id: {} with total_chunks: {}",
+                    message_id, total_chunks
+                );
+                (total_chunks, 0, vec![None; total_chunks])
+            });
+
+        // Ensure consistency if a message_id is reused with different total_chunks
+        // Or if an invalid chunk is received for an already existing message_id
+        if *buffered_total_chunks != total_chunks {
+            debug!(
+                "AddChunk: Inconsistent total_chunks for message_id {}. Expected {}, got {}",
+                message_id, *buffered_total_chunks, total_chunks
+            );
+            buffer_guard.remove(&message_id);
+            return None;
+        }
+
+        if sequence_num < total_chunks {
+            if chunks[sequence_num].is_none() {
+                chunks[sequence_num] = Some(msg_chunk.clone()); // Clone msg_chunk here
+                *received_count += 1;
+                debug!(
+                    "AddChunk: Chunk {} received for message_id: {}. Total received: {}/{}",
+                    sequence_num, message_id, *received_count, total_chunks
+                );
+            } else {
+                debug!(
+                    "AddChunk: Duplicate chunk received for message_id {} sequence {}",
+                    message_id, sequence_num
+                );
+            }
+        } else {
+            debug!(
+                "AddChunk: Invalid sequence_num {} for message_id {} (total_chunks {})",
+                sequence_num, message_id, total_chunks
+            );
+            return None;
+        }
+
+        if *received_count == total_chunks {
+            debug!(
+                "AddChunk: All chunks received for message_id: {}. Attempting reassembly.",
+                message_id
+            );
+            // All chunks received, reassemble
+            let mut full_content = String::new();
+            let mut reassembled_msg = Msg::default();
+
+            for (i, chunk_option) in chunks.iter().enumerate() {
+                if let Some(chunk) = chunk_option {
+                    if i == 0 {
+                        // Use the first chunk's metadata for the reassembled message
+                        reassembled_msg.from = chunk.from.clone();
+                        reassembled_msg.kind = chunk.kind;
+                        reassembled_msg.commit_id = chunk.commit_id;
+                        reassembled_msg.nostr_event = chunk.nostr_event.clone();
+                        // Reset sequencing info as it's now a single complete message
+                        reassembled_msg.message_id = None;
+                        reassembled_msg.sequence_num = None;
+                        reassembled_msg.total_chunks = None;
+                    }
+                    full_content.push_str(&chunk.content[0]);
+                } else {
+                    // This should not happen if received_count == total_chunks
+                    debug!(
+                        "AddChunk: Critical error - Missing chunk for message_id {} at sequence {} during reassembly despite received_count matching total_chunks.",
+                        message_id, i
+                    );
+                    buffer_guard.remove(&message_id); // Clear incomplete message
+                    return None;
+                }
+            }
+            reassembled_msg.content = vec![full_content];
+            buffer_guard.remove(&message_id);
+            debug!(
+                "AddChunk: Successfully reassembled message for message_id: {}.",
+                message_id
+            );
+            Some(reassembled_msg)
+        } else {
+            None
+        }
+    }
+}
+
+/// libp2p behaviours used by the chat swarm.
+#[derive(NetworkBehaviour)]
+pub struct MyBehaviour {
+    pub relay: relay::client::Behaviour,
+    pub autonat: autonat::Behaviour,
+    pub dcutr: dcutr::Behaviour,
+    pub gossipsub: gossipsub::Behaviour,
+    pub mdns: mdns::tokio::Behaviour,
+    pub identify: identify::Behaviour,
+    pub kademlia: kad::Behaviour<kad::store::MemoryStore>,
+    pub ping: ping::Behaviour,
+    pub request_response: request_response::cbor::Behaviour<FileRequest, FileResponse>,
+}
+
+/// Fetch a mempool URL asynchronously without blocking the swarm thread.
+pub async fn async_prompt(mempool_url: String) -> String {
+    let s = tokio::spawn(async move {
+        let agent: Agent = ureq::AgentBuilder::new()
+            .timeout_read(Duration::from_secs(10))
+            .timeout_write(Duration::from_secs(10))
+            .build();
+        let body: String = agent
+            .get(&mempool_url)
+            .call()
+            .expect("")
+            .into_string()
+            .expect("mempool_url:body:into_string:fail!");
+
+        body
+    });
+
+    s.await.unwrap()
+}
+
+///// fetch_data_async
+//async fn fetch_data_async<T>(url: String) -> Result<ureq::Response<T>,
+// ureq::Error> {    task::spawn_blocking(move || {
+//        let response = ureq::get(&url).call();
+//        response
+//    })
+//    .await
+//    .unwrap() // Handle potential join errors
+//}
+
+/// Run the chat swarm event loop.
+///
+/// This bootstraps the transport stack, subscribes to the requested topic, and
+/// forwards inbound chat messages into the caller's output channel.
+pub async fn evt_loop(
+    mut send: tokio::sync::mpsc::Receiver<ChatEvent>,
+    recv: tokio::sync::mpsc::Sender<ChatEvent>,
+    topic: gossipsub::IdentTopic,
+) -> Result<()> {
+    let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
+    let mut pending_crawler_search: HashMap<kad::QueryId, i32> = HashMap::new();
+    let mut pending_chat_messages: VecDeque<Msg> = VecDeque::new();
+
+    let mut swarm = libp2p::SwarmBuilder::with_new_identity()
+        .with_tokio()
+        .with_tcp(
+            tcp::Config::default(),
+            noise::Config::new,
+            yamux::Config::default,
+        )?
+        .with_quic()
+        .with_relay_client(noise::Config::new, yamux::Config::default)?
+        .with_behaviour(|key, relay_client| {
+            let local_peer_id = key.public().to_peer_id();
+            // NOTE: To content-address message,
+            // we can take the hash of message
+            // and use it as an ID.
+            // This is used to deduplicate messages.
+            //
+            let _message_id_fn = |message: &gossipsub::Message| {
+                use std::hash::{DefaultHasher, Hash, Hasher};
+                let mut s = DefaultHasher::new();
+                message.data.hash(&mut s);
+                gossipsub::MessageId::from(s.finish().to_string())
+            };
+
+            // Set a custom gossipsub configuration
+            let gossipsub_config = gossipsub::ConfigBuilder::default()
+                .heartbeat_interval(Duration::from_secs(10))
+                // This is set to aid debugging by not cluttering the log space
+                .validation_mode(gossipsub::ValidationMode::Strict)
+                // This sets the kind of message validation.
+                // The default is Strict (enforce message signing)
+                // .message_id_fn(message_id_fn)
+                // content-address messages.
+                // No two messages of the same content will be propagated.
+                .build()
+                .map_err(|msg| anyhow!(msg))?;
+            // Temporary hack because `build` does not return a proper `std::error::Error`.
+
+            // build a gossipsub network behaviour
+            let gossipsub = gossipsub::Behaviour::new(
+                gossipsub::MessageAuthenticity::Signed(key.clone()),
+                gossipsub_config,
+            )?;
+
+            let autonat = autonat::Behaviour::new(local_peer_id, autonat::Config::default());
+            let dcutr = dcutr::Behaviour::new(local_peer_id);
+
+            let mdns = libp2p::mdns::tokio::Behaviour::new(
+                libp2p::mdns::Config::default(),
+                local_peer_id,
+            )?;
+
+            let identify = identify::Behaviour::new(identify::Config::new(
+                "/ipfs/id/1.0.0".to_string(),
+                key.public(),
+            ));
+
+            let kademlia =
+                kad::Behaviour::new(local_peer_id, kad::store::MemoryStore::new(local_peer_id));
+
+            let ping = ping::Behaviour::new(ping::Config::new());
+
+            let request_response = request_response::cbor::Behaviour::new(
+                [(
+                    StreamProtocol::new("/file-exchange/1"),
+                    ProtocolSupport::Full,
+                )],
+                request_response::Config::default(),
+            );
+
+            Ok(MyBehaviour {
+                relay: relay_client,
+                autonat,
+                dcutr,
+                gossipsub,
+                mdns,
+                identify,
+                kademlia,
+                ping,
+                request_response,
+            })
+        })?
+        .with_swarm_config(|c: libp2p::swarm::Config| {
+            c.with_idle_connection_timeout(Duration::from_secs(60))
+        })
+        .build();
+
+    // subscribes to our topic
+    swarm.behaviour_mut().gossipsub.subscribe(&topic)?;
+
+    // Listen on all interfaces and whatever port the OS assigns
+    swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+
+    debug!("Enter messages via STDIN and they will be sent to connected peers using Gossipsub");
+
+    // Helper function for text wrapping
+    fn apply_text_wrapping(msg: &mut Msg, terminal_width: usize) {
+        if msg.content.is_empty() {
+            return;
+        }
+
+        match msg.kind {
+            MsgKind::Chat | MsgKind::OneShot | MsgKind::Debug => {
+                // OneShot without --diff will be handled here
+                let wrapped_content = textwrap::fill(&msg.content[0], Options::new(terminal_width));
+                msg.content = wrapped_content.lines().map(String::from).collect();
+            }
+            MsgKind::GitDiff => {
+                let mut wrapped_lines = Vec::new();
+                for line in msg.content[0].lines() {
+                    let (prefix, content) = if line.starts_with('+') {
+                        ("+", &line[1..])
+                    } else if line.starts_with('-') {
+                        ("-", &line[1..])
+                    } else if line.starts_with(' ') {
+                        // context line
+                        (" ", &line[1..])
+                    } else if line.starts_with("diff --git")
+                        || line.starts_with("index")
+                        || line.starts_with("--- a/")
+                        || line.starts_with("+++ b/")
+                    {
+                        // Header lines, no wrapping for now, just add as is
+                        wrapped_lines.push(line.to_string());
+                        continue;
+                    } else if line.starts_with("@@") {
+                        ("@@", &line[2..]) // Handle @@ line
+                    } else {
+                        // No specific diff prefix, treat as regular content
+                        ("", line)
+                    };
+
+                    // Ensure the width calculation accounts for the prefix length
+                    let wrap_width = if terminal_width > prefix.len() {
+                        terminal_width - prefix.len()
+                    } else {
+                        terminal_width // Fallback if prefix is too long
+                    };
+
+                    let wrapped_segments = textwrap::fill(content, Options::new(wrap_width));
+                    for (i, segment) in wrapped_segments.lines().enumerate() {
+                        if i == 0 {
+                            // First segment gets the prefix
+                            wrapped_lines.push(format!("{}{}", prefix, segment));
+                        } else {
+                            // Subsequent segments are indented if prefix was not empty
+                            wrapped_lines.push(format!(
+                                "{:indent$}{}",
+                                "",
+                                segment,
+                                indent = prefix.len()
+                            ));
+                        }
+                    }
+                }
+                msg.content = wrapped_lines;
+            }
+            _ => { /* No wrapping for other message kinds */ }
+        }
+    }
+
+    // Kick it off
+    loop {
+        select! {
+            Some(event) = send.recv() => {
+                match event {
+                    ChatEvent::ChatMessage(m) => {
+                        publish_or_queue_chat_message(
+                            &mut swarm,
+                            &topic,
+                            m,
+                            &mut pending_chat_messages,
+                            &recv,
+                        )
+                        .await?;
+                    }
+                    ChatEvent::CrawlerSearch { nip } => {
+                        let key = kad::RecordKey::new(&format!("gnostr/relay-buckets/{nip}"));
+                        let query_id = swarm.behaviour_mut().kademlia.get_providers(key);
+                        pending_crawler_search.insert(query_id, nip);
+                        recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
+                    }
+                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::PeerConnected { .. } => {}
+                }
+            }
+            event = swarm.select_next_some() => match event {
+                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
+                    for (peer_id, multiaddr) in list {
+                        debug!("mDNS discovered a new peer: {peer_id}");
+                        let peer_id_label = peer_id.to_string();
+                        swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+                        let address_with_p2p = multiaddr_with_peer_id(&multiaddr, &peer_id);
+                        swarm
+                            .behaviour_mut()
+                            .autonat
+                            .add_server(peer_id, Some(address_with_p2p.clone()));
+                        recv
+                            .send(ChatEvent::ShowInfoMsg(format!(
+                                "Discovered peer {peer_id} at {address_with_p2p}"
+                            )))
+                            .await?;
+                        if let Err(error) = swarm.dial(address_with_p2p) {
+                            recv
+                                .send(ChatEvent::ShowErrorMsg(format!(
+                                    "failed to dial discovered peer {peer_id_label}: {error}"
+                                )))
+                                .await?;
+                        }
+                    }
+                },
+                SwarmEvent::Behaviour(MyBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
+                    for (peer_id, _multiaddr) in list {
+                        debug!("mDNS discover peer has expired: {peer_id}");
+                        swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
+                        swarm.behaviour_mut().autonat.remove_server(&peer_id);
+                        // let m = Msg::default().set_content(format!("peer expired: {peer_id}"), 0).set_kind(MsgKind::System);
+                        // recv.send(ChatEvent::ShowInfoMsg(m.to_string())).await?;
+                    }
+                },
+                SwarmEvent::Behaviour(MyBehaviourEvent::Autonat(event)) => {
+                    debug!("AutoNAT event: {event:?}");
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FoundProviders { providers, .. })),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        let provider_list = providers.iter().map(|peer| peer.to_string()).collect::<Vec<_>>().join(", ");
+                        let message = if provider_list.is_empty() {
+                            format!("crawler bucket {nip} has no providers")
+                        } else {
+                            format!("crawler bucket {nip} providers: {provider_list}")
+                        };
+                        recv.send(ChatEvent::ShowInfoMsg(message)).await?;
+                        if let Some(mut query) = swarm.behaviour_mut().kademlia.query_mut(&id) {
+                            query.finish();
+                        }
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Ok(kad::GetProvidersOk::FinishedWithNoAdditionalRecord { .. })),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        recv.send(ChatEvent::ShowInfoMsg(format!("crawler bucket {nip} has no providers"))).await?;
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Kademlia(kad::Event::OutboundQueryProgressed {
+                    id,
+                    result: kad::QueryResult::GetProviders(Err(err)),
+                    ..
+                })) => {
+                    if let Some(nip) = pending_crawler_search.remove(&id) {
+                        recv.send(ChatEvent::ShowErrorMsg(format!("crawler bucket {nip} lookup failed: {err}"))).await?;
+                    }
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Dcutr(event)) => {
+                    debug!("DCUtR event: {event:?}");
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Relay(event)) => {
+                    debug!("Relay event: {event:?}");
+                }
+                SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
+                    recv
+                        .send(ChatEvent::PeerConnected {
+                            peer_id: peer_id.to_string(),
+                            endpoint: format!("{endpoint:?}"),
+                        })
+                        .await?;
+                    flush_pending_chat_messages(
+                        &mut swarm,
+                        &topic,
+                        &mut pending_chat_messages,
+                        &recv,
+                    )
+                    .await?;
+                    recv
+                        .send(ChatEvent::ShowInfoMsg(format!(
+                            "Connected to peer {peer_id} via {endpoint:?}"
+                        )))
+                        .await?;
+                }
+                SwarmEvent::Behaviour(MyBehaviourEvent::Gossipsub(gossipsub::Event::Message {
+                    propagation_source: peer_id,
+                    message_id: id,
+                    message,
+                })) => {
+                    debug!(
+                        "Got message: '{}' with id: {id} from peer: {peer_id}",
+                        String::from_utf8_lossy(&message.data),
+                    );
+                    match serde_json::from_slice::<Msg>(&message.data) {
+                        Ok(msg) => {
+                            if msg.message_id.is_some() && msg.sequence_num.is_some() && msg.total_chunks.is_some() {
+                                                                if let Some(mut reassembled_msg) = reassembler.add_chunk_and_reassemble(msg) {
+                                                                    let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                                                    apply_text_wrapping(&mut reassembled_msg, terminal_width);
+                                                                    recv.send(ChatEvent::ChatMessage(reassembled_msg)).await?;
+                                                                }
+                            } else {
+                                // It's a single-part message, send directly
+                                let mut processed_msg = msg;
+                                let terminal_width = terminal_size().map(|(Width(w), _)| w as usize).unwrap_or(80);
+                                apply_text_wrapping(&mut processed_msg, terminal_width);
+                                recv.send(ChatEvent::ChatMessage(processed_msg)).await?;
+                            }
+                        },
+                        Err(e) => {
+                            debug!("Error deserializing message: {e:?}");
+                            let m = Msg::default().set_content(format!("Error deserializing message: {e:?}"), 0).set_kind(MsgKind::System);
+                            recv.send(ChatEvent::ShowErrorMsg(m.to_string())).await?;
+                        }
+                    }
+
+                },
+                SwarmEvent::NewListenAddr { address, .. } => {
+                    debug!("Local node is listening on {address}");
+                    recv
+                        .send(ChatEvent::ShowInfoMsg(format!(
+                            "Local node is listening on {address}"
+                        )))
+                        .await?;
+                }
+                _ => {}
+            }
+        }
+    }
+}
