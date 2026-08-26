@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/editor.rs
+assertion_line: 74
+expression: ctx.redact_buffer()
+---
+▌No branch                                                                      |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+Branch                                                                          |
+b Checkout branch/revision                                                      |
+c Checkout new branch                                                           |
+K Delete branch                                                                 |
+q/<esc> Quit/Close                                                              |
+styles_hash: 9ae8f56b30eeec76

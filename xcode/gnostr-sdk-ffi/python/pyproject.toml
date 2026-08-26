@@ -1,0 +1,32 @@
+[build-system]
+requires = [
+    "setuptools>=78.1.1",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nostr-sdk"
+version = "0.44.2"
+description = "Nostr protocol implementation, Relay, RelayPool, high-level client library, NWC client and more."
+readme = "README.md"
+authors = [
+    {name = "Yuki Kishimoto", email = "yukikishimoto@protonmail.com"}
+]
+license = "MIT"
+requires-python = ">=3.9" # Based on py-limited-api
+
+[project.urls]
+Homepage = "https://rust-nostr.org"
+documentation = "https://rust-nostr.org"
+repository = "https://github.com/rust-nostr/nostr-sdk-ffi"
+changelog = "https://github.com/rust-nostr/nostr-sdk-ffi/blob/master/CHANGELOG.md"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+packages = ["nostr_sdk"]
+package-dir = {"nostr_sdk" = "./src/nostr-sdk"}
+
+[tool.distutils.bdist_wheel]
+# This enables ABI3 compatibility
+py-limited-api = "cp39"  # Support Python 3.9+

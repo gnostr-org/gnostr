@@ -2770,7 +2770,7 @@
 
 - add/remove some BOOTSTRAP_RELAYS (203cb66)
 
-### examples/nostr-sqlite.rs
+### examples/local-cache.rs
 
 - apply cargo fmt (fdfe71e)
 
@@ -3912,7 +3912,7 @@
 
 - debug logging event (e2c67b5)
 
-### examples/nostr-sqlite.rs
+### examples/local-cache.rs
 
 - initial impl (de19693)
 

@@ -1,0 +1,6 @@
+[bindings.kotlin]
+package_name = "rust.nostr.sdk"
+
+[bindings.csharp]
+namespace = "Nostr.Sdk"
+access_modifier = "public"

@@ -1,0 +1,27 @@
+[package]
+name = "rustylib"
+version = "953267.1868.494774"
+edition = "2021"
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "rustylib"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[dependencies]
+gnostr-crawler = { version = ">=953267.1868.494774", path = "../../../crawler" }
+gnostr-p2p = { package = "gnostr-p2p", path = "../../../p2p", version = ">=953267.1868.494774" }
+gnostr-relay = { version = ">=953267.1868.494774", path = "../../../relay" }
+reqwest = { version = "0.12.28", default-features = false, features = [
+  "rustls-tls",
+] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
+uniffi = { version = "0.28.0", features = ["cli"] }
+
+[build-dependencies]
+uniffi = { version = "0.28.0", features = ["build"] }

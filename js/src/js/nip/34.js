@@ -1,0 +1,157 @@
+const KIND_REPO_ANNOUNCE = 30617;
+const KIND_REPO_STATE_ANNOUNCE = 30618;
+const KIND_REPO_PATCH = 1617;
+const KIND_REPO_PULL_REQ = 1618;
+const KIND_REPO_PULL_REQ_UPDATE = 1619;
+const KIND_REPO_ISSUE = 1620;
+const KIND_REPO_STATUS_OPEN = 1630;
+const KIND_REPO_STATUS_APPLIED = 1631;
+const KIND_REPO_STATUS_CLOSED = 1632;
+const KIND_REPO_STATUS_DRAFT = 1633;
+const KIND_RELAY_LIST = 10002;
+
+const NIP34_REPO_KINDS = [
+	KIND_REPO_ANNOUNCE,
+	KIND_REPO_STATE_ANNOUNCE,
+	KIND_REPO_PATCH,
+	KIND_REPO_PULL_REQ,
+	KIND_REPO_PULL_REQ_UPDATE,
+	KIND_REPO_ISSUE,
+	KIND_REPO_STATUS_OPEN,
+	KIND_REPO_STATUS_APPLIED,
+	KIND_REPO_STATUS_CLOSED,
+	KIND_REPO_STATUS_DRAFT,
+];
+
+const NIP_34_KINDS = [...NIP34_REPO_KINDS, KIND_RELAY_LIST];
+const NIP34_KIND_META = {
+	[KIND_REPO_ANNOUNCE]: {
+		title: "Repository announcement",
+		description: "Initial repository announcements.",
+	},
+	[KIND_REPO_STATE_ANNOUNCE]: {
+		title: "Repository state",
+		description: "Repository state changes and follow-up announcements.",
+	},
+	[KIND_REPO_PATCH]: {
+		title: "Patch",
+		description: "Patch events for repository changes.",
+	},
+	[KIND_REPO_PULL_REQ]: {
+		title: "Pull request",
+		description: "Pull request events.",
+	},
+	[KIND_REPO_PULL_REQ_UPDATE]: {
+		title: "Pull request update",
+		description: "Pull request updates and revisions.",
+	},
+	[KIND_REPO_ISSUE]: {
+		title: "Issue",
+		description: "Repository issue events.",
+	},
+	[KIND_REPO_STATUS_OPEN]: {
+		title: "Status open",
+		description: "Open status events.",
+	},
+	[KIND_REPO_STATUS_APPLIED]: {
+		title: "Status applied",
+		description: "Applied status events.",
+	},
+	[KIND_REPO_STATUS_CLOSED]: {
+		title: "Status closed",
+		description: "Closed status events.",
+	},
+	[KIND_REPO_STATUS_DRAFT]: {
+		title: "Status draft",
+		description: "Draft status events.",
+	},
+};
+
+const NIP_EXPLORER_ITEMS = [
+	{
+		nip: "34",
+		title: "NIP-34",
+		href: "/nip/34/30617",
+		description: "Git repositories, announcements, patches, issues, and status events.",
+	},
+	...NIP34_REPO_KINDS.map((kind) => {
+		const meta = nip34_kind_meta(kind);
+		return {
+			nip: `34/${kind}`,
+			title: meta.title,
+			href: `/nip/34/${kind}`,
+			description: meta.description,
+		};
+	}),
+];
+
+function is_nip34_repo_kind(kind) {
+	return NIP34_REPO_KINDS.includes(kind);
+}
+
+function nip34_kind_meta(kind) {
+	return NIP34_KIND_META[kind] || {
+		title: `Kind ${kind}`,
+		description: "NIP-34 kind view.",
+	};
+}
+
+function nip34_filter_kinds(kind) {
+	return Number.isInteger(kind) ? [kind] : NIP34_REPO_KINDS;
+}
+
+function render_nip_explorer() {
+	return html`
+		<section id="nip89-app-section-nip" class="hide nip89-app-section-top">
+			<template id="nip89-app-template-nip">
+				<details id="nip89-app-card-nip" class="settings-profile nip89-app-profile" open>
+					<summary class="nip89-app-summary">
+						<img name="nip89-app-summary-image" class="pfp hide" />
+						<span class="nip89-app-summary-text">
+							<span name="nip89-app-summary-name"></span>
+							<span name="nip89-app-summary-subtitle"></span>
+						</span>
+					</summary>
+					<div class="nip89-app-body">
+						<div class="settings-profile-top">
+							<img name="nip89-app-image" class="pfp jumbo hide"/>
+							<div class="settings-profile-meta">
+								<label name="nip89-app-name"></label>
+								<label name="nip89-app-kinds"></label>
+								<p name="nip89-app-about"></p>
+								<code name="nip89-app-pubkey"></code>
+							</div>
+						</div>
+						<div class="nip89-app-links">
+							<dl>
+								<dt>Website</dt>
+								<dd data-field="nip89-app-website"></dd>
+								<dt>Handlers</dt>
+								<dd data-field="nip89-app-handlers"></dd>
+							</dl>
+						</div>
+					</div>
+				</details>
+			</template>
+			<div id="nip89-app-mount-nip"></div>
+		</section>
+		<section class="nip-explorer">
+		<header>
+			<h2>NIP explorer</h2>
+			<p>Browse supported NIPs and jump straight into their views.</p>
+		</header>
+		<ul class="nip-explorer-list">
+			$${NIP_EXPLORER_ITEMS.map((item) => html`
+				<li class="nip-explorer-item">
+					<a class="nip-explorer-card" href="${item.href}">
+						<div class="nip-explorer-item-head">
+							<span class="nip-explorer-id">/${item.nip}</span>
+							<span class="nip-explorer-link">${item.title}</span>
+						</div>
+						<p>${item.description}</p>
+					</a>
+				</li>
+			`).join("")}
+		</ul>
+	</section>`;
+}

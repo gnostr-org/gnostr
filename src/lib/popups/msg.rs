@@ -1,20 +1,20 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
+    Frame,
 };
 use ui::style::SharedTheme;
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
-        VerticalScroll, visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
+        EventState, ScrollType, VerticalScroll,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     strings,
     strings::order,
     ui,
@@ -121,7 +121,9 @@ impl Component for MsgPopup {
     fn event(&mut self, ev: &Event) -> Result<EventState> {
         if self.visible {
             if let Event::Key(e) = ev {
-                if key_match(e, self.key_config.keys.enter) {
+                if key_match(e, self.key_config.keys.enter)
+                    || key_match(e, self.key_config.keys.exit_popup)
+                {
                     self.hide();
                 } else if key_match(e, self.key_config.keys.popup_down) {
                     self.scroll.move_top(ScrollType::Down);

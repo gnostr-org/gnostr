@@ -1,15 +1,29 @@
 ---
-name: Gnostr Chat
+name: gnostr-chat.yml
 
-# Controls when the action will run.
 on:
-  schedule: # run 30th minute
-    - cron: "*/30 * * * *"
+  workflow_run:
+    workflows:
+      - gnostr-test-matrix
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Chat topic"
+        required: false
+        default: gnostr-dev
+        type: string
+      detect_tag_as_topic:
+        description: "Use the current Git tag as the chat topic"
+        required: false
+        default: false
+        type: boolean
+  repository_dispatch:
+    types: [run-gnostr-chat-workflow]
   push:
     branches:
       - "**"
-
-  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -18,20 +32,21 @@ jobs:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
+      GNOSTR_CHAT_IMAGE: "gnostr-chat"
+      GNOSTR_CHAT_CONTAINER: "gnostr-chat"
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
-      ACT: "false"
+      TOPIC: ${{ inputs.topic || 'gnostr-dev' }}
+      DETECT_TAG_AS_TOPIC: ${{ inputs.detect_tag_as_topic || 'false' }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        os: [ubuntu-latest] # macos, ubuntu, windows
+        os: [ubuntu-latest, macos-latest] # macos, ubuntu, windows
         rustup: [stable, nightly]
-        force: ["", "--force"]
-        path: ["."] #, "relay", "asyncgit", "app"]
-        pow: ["0", "16"]
-        relay: ["wss://relay.damus.io", "wss://nos.lol"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: echo test
         run: |
@@ -40,48 +55,69 @@ jobs:
           echo POW=${{ env.POW }}
           echo DAMUS=${{ env.DAMUS }}
           echo NOS=${{ env.NOS }}
+          echo TOPIC=${{ env.TOPIC }}
+          echo DETECT_TAG_AS_TOPIC=${{ env.DETECT_TAG_AS_TOPIC }}
           printenv
         env:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
 
-      - uses: styfle/cancel-workflow-action@0.11.0
-        if: ${{ env.ACT == 'false' }}
+      - uses: actions/checkout@v3
         with:
-          access_token: ${{ github.token }}
+          submodules: 'true'
+          set-safe-directory: 'true'
+          fetch-depth: '0'
+          fetch-tags: 'false'
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      #- name: Restore rustup
-      #  id: cache-rustup-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
-
-      - name: Restore cargo
-        id: cache-cargo-restore
-        uses: actions/cache/restore@v3
+      - name: Restore rustup
+        id: cache-rustup-restore
+        uses: actions/cache/restore@v4
         if: ${{ !env.ACT }}
         with:
           path: |
-            ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ matrix.rustup }}
+            ~/.rustup
+          key: ${{ runner.os }}-rustup-${{ matrix.rustup }}
 
-      #- name: Restore target
-      #  id: cache-target-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ runner.os }}-target-${{ matrix.rustup }}
+      - name: Restore cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v4
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
+
+      - name: Restore cargo bin
+        id: cache-cargo-bin-restore
+        uses: actions/cache/restore@v4
+        if: ${{ !env.ACT }}
+        with:
+          path: ~/.cargo/bin/gnostr
+          key: cargo-bin-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
+
+      - name: Restore target
+        id: cache-target-restore
+        uses: actions/cache/restore@v4
+        if: ${{ !env.ACT }}
+        with:
+          path: |
+            target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.rustup }}-${{ hashFiles('Cargo.lock') }}
+
+      - name: List restored target
+        shell: bash
+        run: |
+          ls -l ~/.cargo/bin/gnostr || true
+          mkdir -p target
+          find target -maxdepth 3 -print | sort
 
       - name: Setup Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
-          # If not specified, it defaults to 'stable'.
+          # If not specified, it defaults to 'stable'. 
           # It can also read the version from a 'rust-toolchain.toml' file if present.
           toolchain: ${{ matrix.rustup }}
           # Comma-separated list of additional components to install.
@@ -89,178 +125,261 @@ jobs:
           # Automatically configure smart caching (recommended for speed)
           cache: true
 
-      - uses: cargo-bins/cargo-binstall@main
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-          submodules: recursive
-          set-safe-directory: true
-          fetch-depth: 0
-          fetch-tags: false
-
       - run: rustup default ${{ matrix.rustup }}
-      - run: cargo search gnostr --limit 100
-      - run: cargo-binstall --no-confirm sccache --force
-      - run: cargo-binstall --no-confirm gnostr --force
-      - run: cargo install --path ${{ matrix.path }} ${{ matrix.force }}
-      - name: Debug gnostr installation
+
+      - name: Install gnostr (latest release)
+        uses: ./.github/actions/get-latest
+        #if: runner.os != 'macOS'
+        with:
+          github_token: ${{ github.token }}
+
+      - run: gnostr -V
+      - run: gnostr -h
+      - run: gnostr chat -h
+      - run: gnostr chat --topic gnostr-dev --headless & sleep 10 &
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+      - run: gnostr chat --topic gnostr-dev --oneshot test-gnostr-dev
+
+      - name: Build headless chat image
+        if: runner.os == 'Linux'
+        shell: bash
         run: |
-          echo "Verifying cargo-binstall:"
-          which cargo-binstall || echo "cargo-binstall not found or not in PATH."
-          echo "Current PATH: $PATH"
-          echo "Verifying gnostr:"
-          which gnostr || echo "gnostr not found or not in PATH." && true
-          echo "CARGO_HOME: ${CARGO_HOME}"
-          ls -l ~/.cargo/bin
-          gnostr --version # Run if found, otherwise continue
-      - run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if: matrix.os == 'macos-latest'
-      - run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: matrix.os == 'macos-latest'
-      - run: brew tap nostorg/nostr || true
-        if: matrix.os == 'macos-latest'
-      - run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: matrix.os == 'macos-latest'
-      - run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help
-        if: matrix.os == 'macos-latest'
-      - run: gnostr --help
+          set -euo pipefail
+          docker build -t "$GNOSTR_CHAT_IMAGE" -f docker/Dockerfile.gnostr-chat .
+      # - run: cargo build --bin gnostr
+      # Use the restored target cache from gnostr-test-matrix.yml.
       - run: |
-          gnostr -d ${{ matrix.pow }} \
+          GNOSTR_CMD="cargo run --bin gnostr --"
+
+          $GNOSTR_CMD --help
+      - run: |
+          if [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
+            GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          else
+            GNOSTR_CMD="cargo run --bin gnostr --"
+          fi
+
+          GNOSTR_HASH="$($GNOSTR_CMD --hash "")"
+
+          $GNOSTR_CMD \
+            -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
-            --nsec "$(gnostr --hash '')" \
+            --nsec "$GNOSTR_HASH" \
             set-metadata \
             -n gnostr \
-            -a gnostr://$(gnostr --weeble)/$(gnostr --blockheight) \
+            -a gnostr://$($GNOSTR_CMD --weeble)/$($GNOSTR_CMD --blockheight) \
             -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
             -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" || true
       - run: |
-          gnostr ngit --nsec $(gnostr --hash '') fetch
+          if [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
+            GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          else
+            GNOSTR_CMD="cargo run --bin gnostr --"
+          fi
+
+          $GNOSTR_CMD ngit --nsec "$($GNOSTR_CMD --hash "")" fetch
       - run: |
-          EVENT=$(gnostr --nsec $(gnostr --hash '') \
+          if [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
+            GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          else
+            GNOSTR_CMD="cargo run --bin gnostr --"
+          fi
+
+          GNOSTR_HASH="$($GNOSTR_CMD --hash "")"
+          GNOSTR_WEEBLE="$($GNOSTR_CMD --weeble)"
+          GNOSTR_BLOCKHEIGHT="$($GNOSTR_CMD --blockheight)"
+          GNOSTR_WOBBLE="$($GNOSTR_CMD --wobble)"
+
+          EVENT=$($GNOSTR_CMD \
+            --nsec "$GNOSTR_HASH" \
             -d ${{ env.POW }} \
             -r ${{ env.DAMUS }} \
             -r ${{ env.NOS }} \
             custom-event \
-            -k 1 \
-            -c "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" \
+            --kind 1 \
+            -c "$GNOSTR_WEEBLE/$GNOSTR_BLOCKHEIGHT/$GNOSTR_WOBBLE" \
             -t "a|blah" \
             -t "a|$(date +%s)" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
+            -t "$GNOSTR_WEEBLE" \
+            -t "$GNOSTR_BLOCKHEIGHT" \
+            -t "$GNOSTR_WOBBLE" \
             --hex || true) && \
             export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
+            NOTE=$($GNOSTR_CMD convert-key -p note -k $EVENT || true) || true && \
             export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            curl https://nostr.band/$NOTE
+            curl https://njump.me/$NOTE
       - run: |
-          gnostr chat --name listener --topic gnostr-test-topic > listener_output.log 2>&1 &
-          LISTENER_PID=$!
-          echo "Listener PID: $LISTENER_PID"
-          sleep 5 # Give listener time to start
-          MESSAGE="Hello from gnostr-chat.yml at $(date +%s)"
-      - run: |
-          gnostr chat --name sender --topic gnostr-test-topic --oneshot "$MESSAGE"
-          sleep 5 # Give message time to propagate
-          echo "Checking listener output..."
-          cat listener_output.log
-          grep -q "$MESSAGE" listener_output.log
-          if [ $? -eq 0 ]; then
-            echo "Test passed: Message received by listener."
-          else
-            echo "Test failed: Message not found in listener output."
-            exit 1
+          set -euo pipefail
+
+          SENDER_HASH="$(printf '%s' sender | sha256sum | cut -d' ' -f1)"
+          END_AT=$((SECONDS + 120))
+          COUNT=0
+          CHAT_TOPIC="$TOPIC"
+
+          if [[ "$DETECT_TAG_AS_TOPIC" == "true" ]]; then
+            TAG_TOPIC="$(git tag --points-at HEAD | head -n 1 || true)"
+            if [[ -n "$TAG_TOPIC" ]]; then
+              CHAT_TOPIC="$TAG_TOPIC"
+            fi
           fi
-          kill $LISTENER_PID || true # Clean up listener process
 
-  tui:
-    name: TUI Test
-    runs-on: ubuntu-latest
-    env:
-      ACT: "false"
-    steps:
-      #- name: Restore rustup
-      #  id: cache-rustup-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ runner.os }}-rustup-stable
+          if [ -f target/debug/gnostr ]; then
+            chmod +x ./target/debug/gnostr
+            GNOSTR_CMD=./target/debug/gnostr
+          elif [ -f ~/.cargo/bin/gnostr ]; then
+            chmod +x "$HOME/.cargo/bin/gnostr"
+            GNOSTR_CMD="$HOME/.cargo/bin/gnostr"
+          else
+            GNOSTR_CMD="cargo run --bin gnostr --"
+          fi
 
-      - name: Restore cargo
-        id: cache-cargo-restore
-        uses: actions/cache/restore@v3
-        if: ${{ !env.ACT }}
+          if [ -f target/debug/gnostr-p2p ]; then
+            chmod +x ./target/debug/gnostr-p2p
+            GNOSTR_P2P_CMD=./target/debug/gnostr-p2p
+          else
+            GNOSTR_P2P_CMD="cargo run -p gnostr-p2p --bin gnostr-p2p --"
+          fi
+
+          PEER_HASH="$(printf '%s' peer | sha256sum | cut -d' ' -f1)"
+          BOOTSTRAP_HASH="$(printf '%s' bootstrap | sha256sum | cut -d' ' -f1)"
+
+          $GNOSTR_P2P_CMD \
+            --secret-key-seed "$BOOTSTRAP_HASH" \
+            --port 0 \
+            >/tmp/gnostr-chat-bootstrap-peer.log 2>&1 &
+          BOOTSTRAP_PEER_PID=$!
+          trap 'kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
+
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            docker rm -f "$GNOSTR_CHAT_CONTAINER" >/dev/null 2>&1 || true
+            docker run -d \
+              --name "$GNOSTR_CHAT_CONTAINER" \
+              "$GNOSTR_CHAT_IMAGE" \
+              chat \
+              --debug \
+              --name peer \
+              --hash "$PEER_HASH" \
+              --topic "$CHAT_TOPIC" \
+              --headless
+
+            trap 'docker rm -f "$GNOSTR_CHAT_CONTAINER" >/dev/null 2>&1 || true; kill "$BOOTSTRAP_PEER_PID" 2>/dev/null || true' EXIT
+
+            if ! docker inspect -f '{{.State.Running}}' "$GNOSTR_CHAT_CONTAINER" | grep -q true; then
+              docker logs "$GNOSTR_CHAT_CONTAINER" || true
+              echo "headless chat container is not running"
+              exit 1
+            fi
+
+            echo "Waiting for headless chat container to report readiness..."
+            for _ in $(seq 1 60); do
+              if docker logs "$GNOSTR_CHAT_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
+                break
+              fi
+              sleep 2
+            done
+
+            if ! docker logs "$GNOSTR_CHAT_CONTAINER" 2>&1 | grep -q 'local p2p relay service started for chat'; then
+              docker logs "$GNOSTR_CHAT_CONTAINER" || true
+              echo "headless chat container never became ready"
+              exit 1
+            fi
+          else
+            $GNOSTR_CMD chat \
+              --debug \
+              --name peer \
+              --hash "$PEER_HASH" \
+              --topic "$CHAT_TOPIC" \
+              --headless \
+              >/tmp/gnostr-chat-peer.log 2>&1 &
+            PEER_PID=$!
+            trap 'kill "$BOOTSTRAP_PEER_PID" "$PEER_PID" 2>/dev/null || true' EXIT
+
+            echo "Waiting for headless chat peer to connect..."
+            for _ in $(seq 1 60); do
+              if grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
+                break
+              fi
+              sleep 2
+            done
+
+            if ! grep -q 'Connected to peer' /tmp/gnostr-chat-peer.log 2>/dev/null; then
+              echo "headless chat peer never connected"
+              cat /tmp/gnostr-chat-peer.log
+              exit 1
+            fi
+          fi
+
+          echo "Pushing oneshot chat messages for 2 minutes..."
+          while [ "$SECONDS" -lt "$END_AT" ]; do
+            COUNT=$((COUNT + 1))
+            MESSAGE="Hello from gnostr-chat.ymlr #${COUNT} at $(date +%s)"
+            for attempt in 1 2 3 4 5 6; do
+              MESSAGE_OUTPUT="$($GNOSTR_CMD chat \
+                --debug \
+                --name sender \
+                --hash "$SENDER_HASH" \
+                --topic "$CHAT_TOPIC" \
+                --oneshot "$MESSAGE" 2>&1 || true)"
+              printf '%s\n' "$MESSAGE_OUTPUT"
+              if ! printf '%s\n' "$MESSAGE_OUTPUT" | grep -q 'publish error:'; then
+                break
+              fi
+              if ! printf '%s\n' "$MESSAGE_OUTPUT" | grep -q 'InsufficientPeers'; then
+                exit 1
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                exit 1
+              fi
+              sleep 5
+            done
+            sleep 5
+          done
+
+          echo "Finished pushing ${COUNT} oneshot messages."
+
+      - name: Save rustup
+        id: cache-rustup-save
+        uses: actions/cache/save@v4
+        if: ${{ !env.ACT && steps.cache-rustup-restore.outputs.cache-hit != 'true' }}
         with:
           path: |
-            ~/.cargo
-          key: ${{ runner.os }}-cargo-stable
-
-      #- name: Restore target
-      #  id: cache-target-restore
-      #  uses: actions/cache/restore@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ runner.os }}-target-stable
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          # You can specify a toolchain channel (stable, beta, nightly) or a specific version (e.g., '1.70.0').
-          # If not specified, it defaults to 'stable'.
-          # It can also read the version from a 'rust-toolchain.toml' file if present.
-          toolchain: ${{ matrix.rustup }}
-          # Comma-separated list of additional components to install.
-          components: clippy, rustfmt
-          # Automatically configure smart caching (recommended for speed)
-          cache: true
-
-      - uses: cargo-bins/cargo-binstall@main
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-          submodules: recursive
-          set-safe-directory: true
-          fetch-depth: 0
-          fetch-tags: false
-
-      - run: rustup default ${{ matrix.rustup }}
-      - run: cargo search gnostr --limit 100
-      - run: cargo-binstall --no-confirm sccache --force
-      #- run: cargo-binstall --no-confirm gnostr --force
-      - run: cargo install --path . --force
-      - name: Run gnostr tui
-        run: |
-          gnostr tui &
-          sleep 10
-          pkill -f gnostr
-
-      #- name: Save rustup
-      #  id: cache-rustup-save
-      #  uses: actions/cache/save@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      ~/.rustup
-      #    key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key || format('{0}-rustup-{1}', runner.os, 'stable') }}
+            ~/.rustup
+          key: ${{ steps.cache-rustup-restore.outputs.cache-primary-key }}
 
       - name: Save cargo
         id: cache-cargo-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+        uses: actions/cache/save@v4
+        if: ${{ !env.ACT && steps.cache-cargo-restore.outputs.cache-hit != 'true' }}
         with:
           path: |
-            ~/.cargo
-          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key || format('{0}-cargo-{1}', runner.os, 'stable') }}
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
 
-      #- name: Save target
-      #  id: cache-target-save
-      #  uses: actions/cache/save@v3
-      #  if: ${{ !env.ACT }}
-      #  with:
-      #    path: |
-      #      target
-      #    key: ${{ steps.cache-target-restore.outputs.cache-primary-key || format('{0}-target-{1}', runner.os, 'stable') }}
+      - name: Save target
+        id: cache-target-save
+        uses: actions/cache/save@v4
+        if: ${{ !env.ACT && steps.cache-target-restore.outputs.cache-hit != 'true' }}
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+
+      - name: Cleanup lingering gnostr processes
+        uses: ./.github/actions/gnostr-cleanup
+        continue-on-error: true

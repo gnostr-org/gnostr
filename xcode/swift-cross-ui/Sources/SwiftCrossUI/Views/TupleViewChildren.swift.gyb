@@ -1,0 +1,82 @@
+// This file was generated using gyb. Do not edit it directly. Edit
+// TupleViewChildren.swift.gyb instead.
+
+// swiftformat:options --allow-partial-wrapping true
+%{
+maximum_child_count = 20
+}%
+
+protocol TupleViewChildren: ViewGraphNodeChildren {
+    @MainActor
+    var stackLayoutCache: StackLayoutCache { get nonmutating set }
+}
+
+/// A helper function to shorten node initialisations to a single line. This
+/// helps compress the generated code a bit and minimise the number of additions
+/// and deletions caused by updating the generator.
+@MainActor
+private func node<V: View, Backend: BaseAppBackend>(
+    for view: V,
+    _ backend: Backend,
+    _ snapshot: ViewGraphSnapshotter.NodeSnapshot?,
+    _ environment: EnvironmentValues
+) -> AnyViewGraphNode<V> {
+    AnyViewGraphNode(
+        for: view,
+        backend: backend,
+        snapshot: snapshot,
+        environment: environment
+    )
+}
+
+% for i in range(maximum_child_count):
+%{
+children = []
+for j in range(i + 1):
+    children.append("Child%d" % j)
+
+struct_type_parameters = ", ".join(["%s: View" % child for child in children])
+variadic_type_parameters = ", ".join(children)
+}%
+
+/// A fixed-length strongly-typed collection of ${i + 1} child nodes. A counterpart to
+/// ``TupleView${i + 1}``.
+public class TupleViewChildren${i + 1}<
+    ${struct_type_parameters}
+>: TupleViewChildren {
+    public var widgets: [AnyWidget] {
+        return [${", ".join("%s.widget" % child.lower() for child in children)}]
+    }
+
+    public var erasedNodes: [ErasedViewGraphNode] {
+        return [
+            % for child in children:
+            ErasedViewGraphNode(wrapping: ${child.lower()}),
+            % end
+        ]
+    }
+
+    var stackLayoutCache = StackLayoutCache.initial
+
+    % for child in children:
+    /// ``AnyViewGraphNode`` is used instead of ``ViewGraphNode`` because otherwise the backend leaks into views.
+    public var ${child.lower()}: AnyViewGraphNode<${child}>
+    % end
+
+    /// Creates the nodes for ${i + 1} child views.
+    public init<Backend: BaseAppBackend>(
+        ${" ".join("_ %s: %s," % (child.lower(), child) for child in children)}
+        backend: Backend,
+        snapshots: [ViewGraphSnapshotter.NodeSnapshot]?,
+        environment: EnvironmentValues
+    ) {
+        let viewTypeNames = [
+            ${", ".join("ViewGraphSnapshotter.name(of: %s.self)" % child for child in children)}
+        ]
+        let snapshots = ViewGraphSnapshotter.match(snapshots ?? [], to: viewTypeNames)
+        % for j, child in enumerate(children):
+        self.${child.lower()} = node(for: ${child.lower()}, backend, snapshots[${j}], environment)
+        % end
+    }
+}
+% end

@@ -55,7 +55,7 @@ fn submodule_to_info(s: &Submodule, r: &Repository) -> SubmoduleInfo {
         path: s.path().to_path_buf(),
         id: s.workdir_id().map(CommitId::from),
         head_id: s.head_id().map(CommitId::from),
-        url: s.url().map(String::from),
+        url: s.url().ok().flatten().map(String::from),
         status,
     }
 }
@@ -134,6 +134,7 @@ pub fn submodule_parent_info(repo_path: &RepoPath) -> Result<Option<SubmodulePar
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use std::path::Path;
 
@@ -145,14 +146,32 @@ mod tests {
 
     #[test]
     fn test_smoke() {
+        // Commented out original remote git submodule test:
+        // let (dir, _r) = repo_init().unwrap();
+        // {
+        //     let r = Repository::open(dir.path()).unwrap();
+        //     let mut s = r
+        //         .submodule(
+        //             //TODO: use local git
+        //             "https://github.com/gnostr-org/git-test.git",
+        //             Path::new("foo/bar"),
+        //             false,
+        //         )
+        //         .unwrap();
+        //
+        //     let _sub_r = s.clone(None).unwrap();
+        //     s.add_finalize().unwrap();
+        // }
+
+        // New local git submodule test implementation:
+        let (sub_dir, _sub_r) = repo_init().unwrap();
         let (dir, _r) = repo_init().unwrap();
 
         {
             let r = Repository::open(dir.path()).unwrap();
             let mut s = r
                 .submodule(
-                    //TODO: use local git
-                    "https://github.com/extrawurst/brewdump.git",
+                    sub_dir.path().to_str().unwrap(),
                     Path::new("foo/bar"),
                     false,
                 )

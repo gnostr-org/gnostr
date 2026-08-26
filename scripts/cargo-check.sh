@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
+BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
+BASH_MINOR="${BASH_VERSINFO[1]:-0}"
+if ! bash -n "${BASH_SOURCE[0]}"; then
+  exit 1
+fi
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+cargo_jobs() {
+  local jobs
+  case "$(uname -s 2>/dev/null || echo unknown)" in
+    MINGW*|MSYS*|CYGWIN*|Windows_NT)
+      jobs="${NUMBER_OF_PROCESSORS:-}"
+      if [[ -z "$jobs" ]] && command -v powershell.exe >/dev/null 2>&1; then
+        jobs="$(powershell.exe -NoProfile -Command "[Environment]::ProcessorCount" 2>/dev/null || echo 1)"
+      fi
+      ;;
+    *)
+      jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1)"
+      ;;
+  esac
+  jobs=$((jobs - 1))
+  if [ "$jobs" -lt 1 ]; then
+    jobs=1
+  fi
+  printf '%s\n' "$jobs"
+}
+LIST_ONLY=false
+RUN_ALL=true
+FEATURES=()
+PACKAGES=()
+SELECTED_VARIANTS=()
+
+DEFAULT_PACKAGES=(
+  gnostr
+  gnostr-asyncgit
+  gnostr-ngit
+  gnostr-web
+  gnostr-bins
+)
+
+usage() {
+  cat <<'EOF'
+Usage: cargo-check.sh [variant ...] [--feature VALUE] [--package NAME] [--list] [--help]
+
+Without variants, runs a broad check matrix:
+  - workspace
+  - workspace --all-features
+  - workspace --no-default-features
+  - root package checks
+  - asyncgit/ngit/web/bins package checks
+  - selected package feature permutations
+
+Variants:
+  all                  Run the full default matrix (default)
+  workspace            Run workspace-only checks
+  packages             Run package-only checks
+  features             Run feature permutations only
+  root                 Run root package checks only
+  asyncgit             Run gnostr-asyncgit checks only
+  ngit                 Run gnostr-ngit checks only
+  web                  Run gnostr-web checks only
+  matrix               Alias for all
+
+Options:
+  --feature VALUE      Add a Cargo feature for feature permutations
+  --feature=VALUE      Add a Cargo feature for feature permutations
+  --package NAME       Add a package to the package list (repeatable)
+  --list               Print the planned commands and exit
+  --help               Show this help
+
+Examples:
+  ./scripts/cargo-check.sh
+  ./scripts/cargo-check.sh workspace
+  ./scripts/cargo-check.sh packages --package gnostr --package gnostr-ngit
+  ./scripts/cargo-check.sh features --feature nostr --feature vendor-openssl
+  ./scripts/cargo-check.sh features --package gnostr-bins --feature blossom --feature blossom-tui --feature chat --feature p2p
+  ./scripts/cargo-check.sh --list
+EOF
+}
+
+join_by_comma() {
+  local IFS=,
+  echo "$*"
+}
+
+run_check() {
+  local label="$1"
+  shift
+
+  printf '==> %s\n' "$label"
+  bash ./scripts/with-system-rocksdb.sh cargo check -j"$(cargo_jobs)" "$@"
+}
+
+add_package() {
+  local package="$1"
+  PACKAGES+=("$package")
+}
+
+add_feature() {
+  local feature="$1"
+  FEATURES+=("$feature")
+}
+
+normalize_variants() {
+  if [[ ${#SELECTED_VARIANTS[@]} -eq 0 ]]; then
+    SELECTED_VARIANTS+=(all)
+  fi
+}
+
+append_variant() {
+  local variant="$1"
+  case "$variant" in
+    all|matrix)
+      SELECTED_VARIANTS+=(all)
+      ;;
+    workspace|packages|features|root|asyncgit|ngit|web)
+      SELECTED_VARIANTS+=("$variant")
+      ;;
+    *)
+      echo "Unsupported variant: $variant" >&2
+      exit 1
+      ;;
+  esac
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --feature)
+      shift
+      [[ $# -gt 0 ]] || { echo "--feature requires a value" >&2; exit 1; }
+      add_feature "$1"
+      ;;
+    --feature=*)
+      add_feature "${1#*=}"
+      ;;
+    --package)
+      shift
+      [[ $# -gt 0 ]] || { echo "--package requires a value" >&2; exit 1; }
+      add_package "$1"
+      ;;
+    --package=*)
+      add_package "${1#*=}"
+      ;;
+    --list)
+      LIST_ONLY=true
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    workspace|packages|features|root|asyncgit|ngit|web|all|matrix)
+      append_variant "$1"
+      ;;
+    *)
+      echo "Unsupported argument: $1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+normalize_variants
+
+if [[ ${#PACKAGES[@]} -eq 0 ]]; then
+  PACKAGES=("${DEFAULT_PACKAGES[@]}")
+fi
+
+declare -a COMMANDS=()
+
+add_command() {
+  local label="$1"
+  shift
+  COMMANDS+=("$label"$'\n'"$*")
+}
+
+build_matrix() {
+  local package
+  local feature_args=()
+
+  if [[ ${#FEATURES[@]} -gt 0 ]]; then
+    feature_args=(--features "$(join_by_comma "${FEATURES[@]}")")
+  fi
+
+  for variant in "${SELECTED_VARIANTS[@]}"; do
+    case "$variant" in
+      all)
+        add_command "workspace default" --workspace
+        add_command "workspace all-features" --workspace --all-features
+        add_command "workspace no-default-features" --workspace --no-default-features
+
+        add_command "root default" -p gnostr
+        add_command "root all-features" -p gnostr --all-features
+        add_command "root no-default-features" -p gnostr --no-default-features
+        add_command "root nostr feature" -p gnostr --features nostr
+
+        add_command "asyncgit default" -p gnostr-asyncgit
+        add_command "asyncgit all-features" -p gnostr-asyncgit --all-features
+
+        add_command "ngit default" -p gnostr-ngit
+        add_command "ngit all-features" -p gnostr-ngit --all-features
+        add_command "ngit nostr feature" -p gnostr-ngit --features nostr
+        add_command "ngit vendor-openssl feature" -p gnostr-ngit --features vendor-openssl
+
+        add_command "web default" -p gnostr-web
+        add_command "web all-features" -p gnostr-web --all-features
+        add_command "bins default" -p gnostr-bins
+        add_command "bins all-features" -p gnostr-bins --all-features
+        ;;
+      workspace)
+        add_command "workspace default" --workspace
+        add_command "workspace all-features" --workspace --all-features
+        add_command "workspace no-default-features" --workspace --no-default-features
+        ;;
+      packages)
+        for package in "${PACKAGES[@]}"; do
+          add_command "$package default" -p "$package"
+          add_command "$package all-features" -p "$package" --all-features
+        done
+        ;;
+      features)
+        if [[ ${#FEATURES[@]} -eq 0 ]]; then
+          echo "features variant requires at least one --feature" >&2
+          exit 1
+        fi
+        for package in "${PACKAGES[@]}"; do
+          add_command "$package features:$(join_by_comma "${FEATURES[@]}")" -p "$package" "${feature_args[@]}"
+        done
+        ;;
+      root)
+        add_command "root default" -p gnostr
+        add_command "root all-features" -p gnostr --all-features
+        add_command "root no-default-features" -p gnostr --no-default-features
+        add_command "root nostr feature" -p gnostr --features nostr
+        ;;
+      asyncgit)
+        add_command "asyncgit default" -p gnostr-asyncgit
+        add_command "asyncgit all-features" -p gnostr-asyncgit --all-features
+        ;;
+      ngit)
+        add_command "ngit default" -p gnostr-ngit
+        add_command "ngit all-features" -p gnostr-ngit --all-features
+        add_command "ngit nostr feature" -p gnostr-ngit --features nostr
+        add_command "ngit vendor-openssl feature" -p gnostr-ngit --features vendor-openssl
+        ;;
+      web)
+        add_command "web default" -p gnostr-web
+        add_command "web all-features" -p gnostr-web --all-features
+        ;;
+    esac
+  done
+}
+
+build_matrix
+
+if [[ "$LIST_ONLY" == true ]]; then
+  for entry in "${COMMANDS[@]}"; do
+    label="${entry%%$'\n'*}"
+    command="${entry#*$'\n'}"
+    printf '%s\n  %s\n' "$label" "$command"
+  done
+  exit 0
+fi
+
+for entry in "${COMMANDS[@]}"; do
+  label="${entry%%$'\n'*}"
+  command="${entry#*$'\n'}"
+  # shellcheck disable=SC2086
+  run_check "$label" $command
+done

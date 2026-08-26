@@ -2,8 +2,8 @@ use std::{cell::RefCell, collections::VecDeque, path::PathBuf, rc::Rc};
 
 use bitflags::bitflags;
 use gnostr_asyncgit::{
+    sync::{diff::DiffLinePosition, CommitId, LogFilterSearchOptions},
     PushType,
-    sync::{CommitId, LogFilterSearchOptions, diff::DiffLinePosition},
 };
 
 use crate::{
@@ -14,7 +14,7 @@ use crate::{
     },
     tabs::StashingOptions,
 };
-use gnostr_asyncgit::types::{Id, UncheckedUrl, EventV3};
+use gnostr_asyncgit::types::{EventV3, Id, UncheckedUrl};
 
 bitflags! {
     /// flags defining what part of the app need to update
@@ -74,6 +74,10 @@ pub enum StackablePopupOpen {
     InspectCommit(InspectCommitOpen),
     /// CompareCommits
     CompareCommits(InspectCommitOpen),
+    /// NotesList
+    NotesList,
+    /// Nip34
+    Nip34,
 }
 
 #[derive(Debug)]
@@ -115,7 +119,7 @@ pub enum InternalEvent {
     /// Command to interact with Nostr
     NostrCommand(NostrCommand),
     /// ChatMessage
-    ChatMessage(crate::p2p::chat::msg::Msg),
+    ChatMessage(gnostr_chat::msg::Msg),
     /// ConfirmAction
     ConfirmAction(Action),
     /// ComfirmedAction
@@ -153,6 +157,12 @@ pub enum InternalEvent {
     SelectBranch,
     OpenExternalEditor(Option<String>),
     OpenExternalChat(Option<String>),
+    OpenGitNote(gnostr_asyncgit::sync::CommitId, Option<String>),
+    OpenGitNoteBatch(
+        gnostr_asyncgit::sync::CommitId,
+        Option<String>,
+        Vec<gnostr_asyncgit::sync::CommitId>,
+    ),
     Push(String, PushType, bool, bool),
     Pull(String),
     PushTags,

@@ -1,0 +1,44 @@
+/// A checkbox control that is either on or off.
+///
+/// This corresponds to the ``ToggleStyle/checkbox`` toggle style.
+struct Checkbox: ElementaryView, View {
+    /// Whether the checkbox is active or not.
+    private var active: Binding<Bool>
+
+    /// Creates a checkbox.
+    ///
+    /// - Parameter active: Whether the checkbox is active or not.
+    public init(isOn active: Binding<Bool>) {
+        self.active = active
+    }
+
+    public func asWidget<Backend: BaseAppBackend>(backend: Backend) -> Backend.Widget {
+        return backend.createCheckbox()
+    }
+
+    func computeLayout<Backend: BaseAppBackend>(
+        _ widget: Backend.Widget,
+        proposedSize: ProposedViewSize,
+        environment: EnvironmentValues,
+        backend: Backend
+    ) -> ViewLayoutResult {
+        return ViewLayoutResult.leafView(
+            size: ViewSize(backend.naturalSize(of: widget))
+        )
+    }
+
+    func commit<Backend: BaseAppBackend>(
+        _ widget: Backend.Widget,
+        layout: ViewLayoutResult,
+        environment: EnvironmentValues,
+        backend: Backend
+    ) {
+        backend.updateCheckbox(widget, environment: environment) { newActiveState in
+            if active.wrappedValue != newActiveState {
+                active.wrappedValue = newActiveState
+            }
+        }
+        backend.setState(ofCheckbox: widget, to: active.wrappedValue)
+        backend.setSize(of: widget, to: layout.size.vector)
+    }
+}

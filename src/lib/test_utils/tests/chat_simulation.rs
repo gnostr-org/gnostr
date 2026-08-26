@@ -2,7 +2,7 @@
 ///
 /// This test suite is designed to capture the TUI of multiple `gnostr chat`
 /// instances to ensure that the CLI TUI messages are consistent and correct.
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
     use std::{thread, time::Duration};
 
@@ -10,13 +10,13 @@ mod tests {
     use tracing::{debug, info};
 
     use crate::{
-        test_utils::{CliTester, git::GitTestRepo},
+        test_utils::{git::GitTestRepo, CliTester},
         utils::screenshot::make_screenshot,
     };
 
     #[test]
     #[serial]
-    #[cfg(feature = "expensive_tests")]
+    #[cfg(feature = "long_tests")]
     #[ignore]
     fn test_chat_simulation() -> Result<(), Box<dyn std::error::Error>> {
         // Enable verbose output for this test

@@ -1,0 +1,83 @@
+name: Pull Request
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, ready_for_review]
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  LOG_LEVEL: info
+  REDIS_HOSTNAME: redis
+  REDIS_PORT: 6379
+  REDIS_HOSTNAME_2: redis-2
+  REDIS_PORT_2: 6379
+
+jobs:
+  soundness:
+    name: Soundness
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
+    with:
+      api_breakage_check_enabled: ${{ !contains(github.event.pull_request.labels.*.name, 'breaking-change') }}
+      license_header_check_project_name: "swift-libp2p"
+
+  test-linux:
+    needs: soundness
+    name: Tests-Linux
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - swift:6.0-noble
+          - swift:6.1-noble
+          - swiftlang/swift:nightly-6.2-noble
+          - swiftlang/swift:nightly-main-noble
+        redis:
+          - redis:7
+          - redis:8
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    services:
+      redis:
+        image: ${{ matrix.redis }}
+      redis-2:
+        image: ${{ matrix.redis }}
+    steps:
+      - name: Check out package
+        uses: actions/checkout@v5
+      - name: Run unit tests
+        run: swift test
+
+  test-macos:
+    needs: soundness
+    name: Tests-MacOS
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        # Test on the latest 3 versions of Swift
+        swift-version: ["6.0", "6.1", "6.2"]
+        redis-version: ["8.6"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: ${{ matrix.swift-version }}
+      - name: Get swift version
+        run: swift --version
+      - name: Install Redis
+        run: brew install redis@${{ matrix.redis-version }}
+      # Build in debug mode
+      - name: Build
+        run: swift build
+      # - name: Start Redis
+      # run: brew services start redis
+      - name: Start First Redis Server
+        run: redis-server .github/redis1.conf
+      - name: Start Second Redis Server
+        run: redis-server .github/redis2.conf
+      # Test in debug mode
+      - name: Test Debug
+        run: swift test

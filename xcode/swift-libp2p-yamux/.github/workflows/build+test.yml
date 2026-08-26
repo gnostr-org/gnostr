@@ -1,0 +1,11 @@
+name: Build & Test
+
+on:
+  schedule:
+    - cron: "49 2 * * 1"
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Tests
+    uses: swift-libp2p/github-workflows/.github/workflows/build+test.yml@main

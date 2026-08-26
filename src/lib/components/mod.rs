@@ -7,6 +7,7 @@ mod commit_details;
 mod commitlist;
 mod cred;
 mod diff;
+mod notes;
 mod revision_files;
 mod status_tree;
 mod syntax_text;
@@ -23,11 +24,12 @@ pub use commitlist::CommitList;
 pub use cred::CredComponent;
 use crossterm::event::Event;
 pub use diff::DiffComponent;
+pub use notes::{NotesComponent, NotesService};
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     text::{Span, Text},
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 pub use revision_files::RevisionFilesComponent;
 pub use syntax_text::SyntaxTextComponent;

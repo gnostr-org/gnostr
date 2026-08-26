@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-scopetime"
-version = "1894.934224.276199"
+version.workspace = true
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "log runtime of arbitrary scope"
@@ -17,7 +17,8 @@ path = "src/lib.rs"
 
 [features]
 default = []
-enabled = []
+enabled = ["gitui_scopetime/enabled"]
 
 [dependencies]
+gitui_scopetime = { package = "scopetime", version = ">=0.1.0", path = "../vendor/gitui/scopetime" }
 log = "0.4"

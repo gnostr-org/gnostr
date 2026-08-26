@@ -1,6 +1,5 @@
 use anyhow::{Error as AnyhowError, Result};
 use clap::Args;
-use crate::crawler::processor::BOOTSTRAP_RELAYS;
 use log::debug;
 
 use crate::{
@@ -21,7 +20,7 @@ pub async fn broadcast_events(
     sub_command_args: &BroadcastEventsSubCommand,
 ) -> Result<(), AnyhowError> {
     if relays.is_empty() {
-        relays = BOOTSTRAP_RELAYS.clone()
+        relays = crate::crawler::load_relays_or_bootstrap()
     }
 
     let keys = if nsec.is_none() {

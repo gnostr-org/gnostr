@@ -4,7 +4,7 @@ The `grammar/build.rs` script automates the process of integrating Tree-sitter g
 
 ## Key Functionality:
 
-1.  **Fetching Helix Grammars**: The script clones the official `helix-editor/helix` GitHub repository at a specific commit reference (`GRAMMAR_REPOSITORY_REF`). This provides access to the latest Tree-sitter grammars and language configurations.
+1.  **Fetching Helix Grammars**: The script prefers a cached checkout of the official `helix-editor/helix` repository at a specific commit reference (`GRAMMAR_REPOSITORY_REF`). The checkout lives under the user cache directory instead of `target/`, so clean builds can reuse it. If the git fetch fails, it falls back to the GitHub tarball archive for the same ref so builds can continue when the GitHub git endpoint is flaky. Setting `GRAMMAR_REPOSITORY_REF` changes the cache key and forces a fresh fetch.
 
 2.  **Language Configuration Parsing**: It reads and parses the `languages.toml` file from the fetched Helix repository. This file defines the various programming languages supported by Helix, their associated Tree-sitter grammars, file type associations (extensions, globs), and injection regexes.
 
@@ -31,4 +31,4 @@ The `grammar/build.rs` script automates the process of integrating Tree-sitter g
 
 ## How it uses Helix:
 
-The script directly leverages the `helix-editor/helix` repository as the primary source for its Tree-sitter grammars and language configuration. It adheres to Helix's `languages.toml` structure and its query file conventions (`highlights.scm`, `injections.scm`, `locals.scm`) to ensure compatibility and consistent syntax support. By fetching grammars from Helix, this project benefits from the continuous development and refinement of syntax definitions maintained by the Helix community.
+The script directly leverages the `helix-editor/helix` repository as the primary source for its Tree-sitter grammars and language configuration. It adheres to Helix's `languages.toml` structure and its query file conventions (`highlights.scm`, `injections.scm`, `locals.scm`) to ensure compatibility and consistent syntax support. Grammar repositories and compiled archives are cached under the user cache directory by ref and target, and when the git endpoint is unavailable it downloads the matching GitHub archive for the pinned ref instead of failing outright.

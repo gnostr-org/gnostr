@@ -31,7 +31,7 @@ struct MergeHandler: CheckoutProgressReporter, GitErrorReporter {
     git_annotated_commit **annotated = NULL;
     size_t annotated_count = 0;
 
-    void mergeBranchesToHEAD(git_repository *repo, NSArray<Reference*> *refs)
+    int mergeBranchesToHEAD(git_repository *repo, NSArray<Reference*> *refs)
     {
         annotated_count = refs.count;
         annotated = new git_annotated_commit*[refs.count];
@@ -47,7 +47,7 @@ struct MergeHandler: CheckoutProgressReporter, GitErrorReporter {
         int state = git_repository_state(repo);
         if (state != GIT_REPOSITORY_STATE_NONE) {
             fprintf(stderr, "repository is in unexpected state %d\n", state);
-            return;
+            return -1;
         }
 
         err = git_merge_analysis(&analysis, &preference,

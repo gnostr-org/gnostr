@@ -3,16 +3,17 @@ use std::{borrow::Cow, cell::Cell};
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::{
-    self, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag, commit_files::OldNew,
+    self, commit_files::OldNew, CommitDetails, CommitId, CommitMessage, RepoPathRef, Tag,
 };
 use log::debug;
-use nostr_sdk_0_34_0::prelude::*;
-use nostr_sqlite_0_34_0::{Error, SQLiteDatabase};
+use nostr_database::DatabaseError;
+use nostr_lmdb::NostrLMDB;
+use nostr_sdk::prelude::*;
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span, Text},
+    Frame,
 };
 use sync::CommitTags;
 
@@ -20,12 +21,12 @@ use super::style::Detail;
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
         chat_details::style::style_detail,
         dialog_paragraph,
         utils::{scroll_vertical::VerticalScroll, time_to_string},
+        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, ScrollType,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     strings::{self, order},
     ui::style::SharedTheme,
 };
@@ -100,8 +101,8 @@ impl DetailsComponent {
     }
 
     fn get_wrapped_lines(data: &Option<CommitDetails>, width: usize) -> WrappedCommitMessage<'_> {
-        if let Some(ref data) = data {
-            if let Some(ref message) = data.message {
+        if let Some(data) = data {
+            if let Some(message) = &data.message {
                 return Self::wrap_commit_details(message, width);
             }
         }
@@ -381,7 +382,7 @@ impl Component for DetailsComponent {
 pub struct CompareDetailsComponent {
     repo: RepoPathRef,
     data: Option<OldNew<CommitDetails>>,
-    //_db: SQLiteDatabase,
+    //_db: NostrLMDB,
     theme: SharedTheme,
     focused: bool,
 }
@@ -407,7 +408,7 @@ impl CompareDetailsComponent {
             path::{Path, PathBuf},
         };
         let base_path = async_std::path::Path::new(".git");
-        let filename = async_std::path::Path::new("nostr-cache.sqlite");
+        let filename = async_std::path::Path::new("nostr-cache.lmdb");
         let full_path: PathBuf = base_path.join(filename);
         println!("The full path is: {}", full_path.display());
         if Path::new(&full_path).is_file().await {
@@ -447,7 +448,7 @@ impl CompareDetailsComponent {
     }
 
     #[allow(dead_code)]
-    pub async fn connect() -> Result<SQLiteDatabase, Error> {
+    pub async fn connect() -> Result<NostrLMDB, DatabaseError> {
         use async_std::path::{Path, PathBuf};
         let directory_to_check = ".git";
         if Path::new(directory_to_check).is_dir().await {
@@ -457,7 +458,7 @@ impl CompareDetailsComponent {
             let _ = Self::create_directory_if_not_exists().await;
         }
         let base_path = async_std::path::Path::new(".git");
-        let filename = async_std::path::Path::new("nostr-cache.sqlite");
+        let filename = async_std::path::Path::new("nostr-cache.lmdb");
         let full_path: PathBuf = base_path.join(filename);
         if Path::new(&full_path).is_file().await {
             debug!("The file '{}' exists.", full_path.display());
@@ -465,9 +466,7 @@ impl CompareDetailsComponent {
             debug!("The file '{}' does not exist.", full_path.display());
         }
         debug!("The full path is: {}", full_path.display());
-        let db = SQLiteDatabase::open(".git/nostr-cache.sqlite")
-            .await
-            .expect("");
+        let db = NostrLMDB::open(".git/nostr-cache.lmdb").expect("");
         Ok(db)
     }
 
@@ -536,7 +535,7 @@ impl DrawableComponent for CompareDetailsComponent {
                     &strings::commit::compare_details_info_title(
                         true,
                         //Nostr PublicKey
-                        &Keys::parse(data.old.padded_hash())
+                        &Keys::parse(&data.old.padded_hash())
                             .unwrap()
                             .public_key()
                             //.to_bech32()?,
@@ -556,7 +555,7 @@ impl DrawableComponent for CompareDetailsComponent {
                 dialog_paragraph(
                     &strings::commit::compare_details_info_title(
                         false,
-                        &Keys::parse(data.new.padded_hash())
+                        &Keys::parse(&data.new.padded_hash())
                             .unwrap()
                             .public_key()
                             //.to_bech32()?,

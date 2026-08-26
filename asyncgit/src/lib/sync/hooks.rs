@@ -1,8 +1,10 @@
+use std::cell::Ref;
+
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 
-use super::{repository::repo, RepoPath};
-use crate::error::Result;
+use super::RepoPath;
+use crate::error::{Error, Result};
 //use crate::sync::utils;
 
 ///
@@ -14,15 +16,94 @@ pub enum HookResult {
     NotOk(String),
 }
 
+///
+#[derive(Debug, PartialEq, Eq)]
+pub enum PrePushTarget<'a> {
+    /// Push a single branch.
+    Branch {
+        /// Local branch name being pushed.
+        branch: &'a str,
+        /// Whether this is a delete push.
+        delete: bool,
+    },
+    /// Push tags.
+    Tags,
+}
+
 impl From<git2_hooks::HookResult> for HookResult {
     fn from(v: git2_hooks::HookResult) -> Self {
         match v {
-            git2_hooks::HookResult::Ok { .. } | git2_hooks::HookResult::NoHookFound => Self::Ok,
-            git2_hooks::HookResult::RunNotSuccessful { stdout, stderr, .. } => {
-                Self::NotOk(format!("{stdout}{stderr}"))
+            git2_hooks::HookResult::NoHookFound => Self::Ok,
+            git2_hooks::HookResult::Run(response) if response.is_successful() => Self::Ok,
+            git2_hooks::HookResult::Run(response) => {
+                Self::NotOk(format!("{}{}", response.stdout, response.stderr))
             }
         }
     }
+}
+
+impl From<crate::upstream_sync::HookResult> for HookResult {
+    fn from(v: crate::upstream_sync::HookResult) -> Self {
+        match v {
+            crate::upstream_sync::HookResult::Ok => Self::Ok,
+            crate::upstream_sync::HookResult::NotOk(msg) => Self::NotOk(msg),
+        }
+    }
+}
+
+fn to_upstream_repo_path(repo_path: &RepoPath) -> crate::upstream_sync::RepoPath {
+    match repo_path {
+        RepoPath::Path(path) => crate::upstream_sync::RepoPath::Path(path.clone()),
+        RepoPath::Workdir { gitdir, workdir } => {
+            crate::upstream_sync::RepoPath::Workdir {
+                gitdir: gitdir.clone(),
+                workdir: workdir.clone(),
+            }
+        }
+    }
+}
+
+fn to_upstream_target<'a>(
+    push: &'a PrePushTarget<'a>,
+) -> crate::upstream_sync::PrePushTarget<'a> {
+    match push {
+        PrePushTarget::Branch { branch, delete } => {
+            crate::upstream_sync::PrePushTarget::Branch {
+                branch,
+                delete: *delete,
+            }
+        }
+        PrePushTarget::Tags => crate::upstream_sync::PrePushTarget::Tags,
+    }
+}
+
+///
+pub fn hooks_pre_push(
+    repo_path: &Ref<'_, RepoPath>,
+    remote: &str,
+    push: &PrePushTarget<'_>,
+    basic_credential: Option<crate::sync::cred::BasicAuthCredential>,
+) -> Result<HookResult> {
+    scope_time!("hooks_pre_push");
+
+    let repo_path = &**repo_path;
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    let upstream_cred = basic_credential.map(|cred| {
+        crate::upstream_sync::cred::BasicAuthCredential::new(
+            cred.username,
+            cred.password,
+        )
+    });
+
+    let result = crate::upstream_sync::hooks_pre_push(
+        &upstream_repo_path,
+        remote,
+        &to_upstream_target(push),
+        upstream_cred,
+    )
+    .map_err(|e| Error::Generic(e.to_string()))?;
+
+    Ok(result.into())
 }
 
 /// this hook is documented here <https://git-scm.com/docs/githooks#_commit_msg>
@@ -33,27 +114,36 @@ impl From<git2_hooks::HookResult> for HookResult {
 pub fn hooks_commit_msg(repo_path: &RepoPath, msg: &mut String) -> Result<HookResult> {
     scope_time!("hooks_commit_msg");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_commit_msg(&repo, None, msg)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_commit_msg(&upstream_repo_path, msg)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 /// this hook is documented here <https://git-scm.com/docs/githooks#_pre_commit>
 pub fn hooks_pre_commit(repo_path: &RepoPath) -> Result<HookResult> {
     scope_time!("hooks_pre_commit");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_pre_commit(&repo, None)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_pre_commit(&upstream_repo_path)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 ///
 pub fn hooks_post_commit(repo_path: &RepoPath) -> Result<HookResult> {
     scope_time!("hooks_post_commit");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_post_commit(&repo, None)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_post_commit(&upstream_repo_path)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 ///
@@ -64,9 +154,16 @@ pub fn hooks_prepare_commit_msg(
 ) -> Result<HookResult> {
     scope_time!("hooks_prepare_commit_msg");
 
-    let repo = repo(repo_path)?;
-
-    Ok(git2_hooks::hooks_prepare_commit_msg(&repo, None, source, msg)?.into())
+    let upstream_repo_path = to_upstream_repo_path(repo_path);
+    Ok(
+        crate::upstream_sync::hooks_prepare_commit_msg(
+            &upstream_repo_path,
+            source,
+            msg,
+        )
+        .map_err(|e| Error::Generic(e.to_string()))?
+        .into(),
+    )
 }
 
 #[cfg(test)]
@@ -91,7 +188,7 @@ mod tests {
 
         let res = hooks_post_commit(&subfolder.to_str().unwrap().into()).unwrap();
 
-        assert_ne!(res, HookResult::NotOk(String::from("rejected\n")));
+        assert_eq!(res, HookResult::NotOk(String::from("rejected\n")));
     }
 
     // make sure we run the hooks with the correct pwd.
@@ -113,7 +210,7 @@ mod tests {
         git2_hooks::create_hook(&repo, git2_hooks::HOOK_PRE_COMMIT, hook);
         let res = hooks_pre_commit(repo_path).unwrap();
         if let HookResult::NotOk(res) = res {
-            assert_ne!(
+            assert_eq!(
                 std::path::Path::new(res.trim_end()),
                 std::path::Path::new(&workdir)
             );
@@ -141,7 +238,7 @@ mod tests {
         let mut msg = String::from("test");
         let res = hooks_commit_msg(&subfolder.to_str().unwrap().into(), &mut msg).unwrap();
 
-        assert_ne!(res, HookResult::NotOk(String::from("rejected\n")));
+        assert_eq!(res, HookResult::NotOk(String::from("rejected\n")));
 
         assert_eq!(msg, String::from("msg\n"));
     }

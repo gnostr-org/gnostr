@@ -123,16 +123,7 @@ pub async fn set_metadata(
         }
     }
 
-    let pre_event = PreEventV3 {
-        pubkey: keys.public_key(),
-        created_at: Unixtime::now(),
-        kind: EventKind::Metadata,
-        tags,
-        content: serde_json::to_string(&metadata)?,
-    };
-
-    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
-    let event = signer.sign_event(pre_event)?;
+    let event = build_metadata_event(&keys, metadata, tags)?;
 
     let event_id = client.send_event(event).await?;
     if sub_command_args.hex {
@@ -142,4 +133,40 @@ pub async fn set_metadata(
     }
 
     Ok(())
+}
+
+fn build_metadata_event(keys: &Keys, metadata: Metadata, tags: Vec<Tag>) -> Result<Event, AnyhowError> {
+    let pre_event = PreEventV3 {
+        pubkey: keys.public_key(),
+        created_at: Unixtime::now(),
+        kind: EventKind::Metadata,
+        tags,
+        content: serde_json::to_string(&metadata)?,
+    };
+
+    let signer = KeySigner::from_private_key(keys.secret_key()?, "", 1)?;
+    Ok(signer.sign_event(pre_event)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{test_utils::TEST_KEY_1_PUBKEY_HEX, types::PrivateKey};
+
+    #[test]
+    fn build_metadata_event_uses_shared_test_key() {
+        let private_key = PrivateKey::try_from_bech32_string(crate::test_utils::TEST_KEY_1_NSEC)
+            .unwrap();
+        let keys = Keys::new(private_key);
+        let mut metadata = Metadata::new();
+        metadata.name = Some("fred".to_string());
+        metadata.about = Some("other info in metadata".to_string());
+
+        let event = build_metadata_event(&keys, metadata, vec![]).unwrap();
+
+        assert_eq!(event.kind, EventKind::Metadata);
+        assert_eq!(event.pubkey.as_hex_string(), TEST_KEY_1_PUBKEY_HEX);
+        assert!(event.content.contains(r#""name":"fred""#));
+        assert!(event.content.contains(r#""about":"other info in metadata""#));
+    }
 }

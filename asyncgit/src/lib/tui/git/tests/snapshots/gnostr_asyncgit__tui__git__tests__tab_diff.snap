@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/mod.rs
+assertion_line: 361
+expression: ctx.redact_buffer()
+---
+▌On branch main                                                                 |
+                                                                                |
+ Unstaged changes (1)                                                           |
+ modified   tab.txt                                                             |
+ @@ -1 +1 @@                                                                    |
+ -this has no tab prefixed                                                      |
+ +    this has a tab prefixed                                                   |
+                                                                                |
+ Recent commits                                                                 |
+ bbba724 main add tab.txt                                                       |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 4c33c9d79050f1a0

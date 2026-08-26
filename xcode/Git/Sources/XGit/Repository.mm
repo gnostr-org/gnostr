@@ -12,7 +12,9 @@
 
 #import "Repository.h"
 
-#import "git2.h"
+#if __has_include(<git2.h>)
+
+#include <git2.h>
 
 #import "internal/StringHelpers.mm"
 
@@ -257,7 +259,6 @@ int addReferenceToTargetCommit(const char *name, void *payload)
     }
 
     git_revwalk_free(walk);
-
     [self updateAllCommitsParents];
     [self updateReferencesTargets];
 }
@@ -369,3 +370,78 @@ int addReferenceToTargetCommit(const char *name, void *payload)
 }
 
 @end
+
+#else
+
+@implementation Repository
+{
+    NSString *_pathToRepo;
+}
+
+- (nonnull instancetype)init:(nonnull NSString*)path
+{
+    self = [super init];
+    if (self) {
+        _pathToRepo = [path copy];
+    }
+
+    return self;
+}
+
+- (nonnull Commit*)makeCommit
+{
+    return nil;
+}
+
+- (nonnull Reference*)makeReference
+{
+    return nil;
+}
+
+- (nonnull Remote*)makeRemote
+{
+    return nil;
+}
+
+- (BOOL)exists
+{
+    return [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:_pathToRepo error:nil] count] > 0;
+}
+
+- (void)updateReferencesTargets {}
+- (void)open {}
+- (void)create {}
+- (void)clone:(nonnull NSString*)url :(id<RemoteProgressProtocol> _Nonnull)remoteProgress :(id<CheckoutProtocol> _Nullable)checkoutProgress :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)status:(id<StatusProtocol> _Nonnull)gitStatusReceiver :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)stage:(nonnull NSString*)path :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)unstage:(nonnull NSString*)path :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (Signature* _Nullable)getSignature { return nil; }
+- (void)setSignature:(nonnull NSString*)name :(nonnull NSString*)email {}
+- (void)commit:(nonnull NSString*)message :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)log:(id<CommitGraphProtocol>)commitGraph {}
+- (void)diff:(nonnull Commit*)baseCommit :(nonnull Commit*)targetCommit :(id<DiffReceiverProtocol> _Nonnull)diffReceiver {}
+- (Commit* _Nullable)getReferenceTargetCommit:(nonnull Reference*)ref { return nil; }
+- (void)createBranch:(nonnull NSString*)branchName :(Commit*)commit {}
+- (void)createLocalTrackingBranch:(nonnull Reference*)ref {}
+- (void)createLightweightTag:(nonnull NSString*)tagName :(Commit*)commit {}
+- (void)removeReference:(nonnull Reference*)ref {}
+- (void)reset:(nonnull Commit*)commit :(id<CheckoutProtocol> _Nullable)checkoutProgress :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)checkout:(nonnull Reference*)reference :(id<CheckoutProtocol> _Nullable)checkoutProgress :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)merge:(nonnull NSArray<Reference*> *)refs :(id<MergeProtocol> _Nullable)mergeProgress :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (nonnull NSArray<Remote*>*)getRemotes
+{
+    return @[];
+}
+
+- (Remote* _Nullable)addRemote:(nonnull NSString*)name :(nonnull NSString*)url
+{
+    return nil;
+}
+
+- (void)removeRemote:(nonnull Remote*)remote {}
+- (void)push:(nonnull Remote*)remote :(BOOL)force :(id<RemoteProgressProtocol> _Nonnull)remoteProgress :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+- (void)fetch:(nonnull Remote*)remote :(id<RemoteProgressProtocol> _Nonnull)remoteProgress :(id<ErrorReceiverProtocol> _Nullable)errorReceiver {}
+
+@end
+
+#endif

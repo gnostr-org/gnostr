@@ -67,7 +67,7 @@ pub struct CustomEventCommand {
     /// > gnostr custom-event -k 9735 -c '{"amount": 1000, "bolt11":
     /// > "lnbc100..."}' -r wss://relay.example.com -t "p|recipient_pubkey..."
     /// > -t "amount|1000"
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = 1)]
     kind: u16,
 
     /// Note content
@@ -171,6 +171,11 @@ pub struct CustomEventCommand {
     hex: bool,
 }
 
+/// Creates and publishes a custom event using the caller-provided secret key.
+///
+/// The `private_key` value is passed in from `GnostrCli.nsec` by the top-level
+/// dispatcher. That value defaults to the built-in test key unless `--nsec` is
+/// supplied, and `--hash` may replace it before dispatch.
 pub async fn create_custom_event(
     private_key: Option<String>,
     relays: Vec<String>,

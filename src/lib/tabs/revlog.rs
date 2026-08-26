@@ -1,8 +1,8 @@
 use std::{
     rc::Rc,
     sync::{
-        Arc,
         atomic::{AtomicBool, Ordering},
+        Arc,
     },
     time::Duration,
 };
@@ -11,30 +11,30 @@ use anyhow::Result;
 use crossbeam_channel::Sender;
 use crossterm::event::Event;
 use gnostr_asyncgit::{
-    AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification, AsyncLog, AsyncTags,
-    CommitFilesParams, FetchStatus, ProgressPercent,
     asyncjob::AsyncSingleJob,
     sync::{
-        self, CommitId, LogFilterSearch, LogFilterSearchOptions, RepoPathRef,
-        filter_commit_by_search,
+        self, filter_commit_by_search, CommitId, LogFilterSearch, LogFilterSearchOptions,
+        RepoPathRef,
     },
+    AsyncBranchesJob, AsyncCommitFilterJob, AsyncGitNotification, AsyncLog, AsyncTags,
+    CommitFilesParams, FetchStatus, ProgressPercent,
 };
 use indexmap::IndexSet;
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::Span,
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 use sync::CommitTags;
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, CommitDetailsComponent, CommitList, Component,
-        DrawableComponent, EventState, visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, CommitDetailsComponent, CommitList,
+        Component, DrawableComponent, EventState,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     popups::{FileTreeOpen, InspectCommitOpen},
     queue::{InternalEvent, Queue, StackablePopupOpen},
     strings::{self, order},
@@ -104,6 +104,7 @@ impl Revlog {
             || self.git_tags.is_pending()
             || self.git_local_branches.is_pending()
             || self.git_remote_branches.is_pending()
+            || self.list.any_work_pending()
             || self.commit_details.any_work_pending()
     }
 
@@ -119,6 +120,7 @@ impl Revlog {
             }
 
             self.list.refresh_extend_data(self.git_log.extract_items()?);
+            self.list.update();
 
             self.git_tags.request(Duration::from_secs(3), false)?;
 
@@ -132,6 +134,16 @@ impl Revlog {
         }
 
         Ok(())
+    }
+
+    /// update_spinner
+    pub fn update_spinner(&mut self) {
+        self.list.update_spinner();
+    }
+
+    /// request_notes_refresh
+    pub fn refresh_notes(&mut self) {
+        self.list.refresh_notes();
     }
 
     /// update_git
@@ -162,6 +174,9 @@ impl Revlog {
                             self.update()?;
                         }
                     }
+                }
+                AsyncGitNotification::Notes => {
+                    self.list.update_git(ev);
                 }
                 _ => (),
             }
@@ -344,14 +359,25 @@ impl DrawableComponent for Revlog {
             Rc::new([area])
         };
 
+        // When commit details are open, the right side is split into
+        // details + notes. Notes are rendered from the same cached snapshot
+        // as the row badges so the view and markers stay in sync.
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(60), Constraint::Percentage(40)].as_ref())
+            .constraints(
+                [
+                    Constraint::Percentage(60),
+                    Constraint::Percentage(20),
+                    Constraint::Percentage(20),
+                ]
+                .as_ref(),
+            )
             .split(area[0]);
 
         if self.commit_details.is_visible() {
             self.list.draw(f, chunks[0])?;
             self.commit_details.draw(f, chunks[1])?;
+            self.list.draw_notes(f, chunks[2]);
         } else {
             self.list.draw(f, area[0])?;
         }

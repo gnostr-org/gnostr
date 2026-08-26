@@ -4,20 +4,9 @@ authors = ["gnostr admin@gnostr.org"]
 description = "gnostr_qr: part of the git+nostr workflow utility"
 homepage = "https://github.com/gnostr-org/gnostr"
 repository = "https://github.com/gnostr-org/gnostr.git"
-version = "1894.934224.276199"
+version.workspace = true
 edition = "2021"
 license = "MIT"
-
-[package.metadata.wix]
-upgrade-guid = "6B5B281A-A1CD-403C-9722-22776599DF63"
-path-guid = "112568BC-3A65-41EB-84F4-210F26CBAAEB"
-license = false
-eula = false
-
-[[bin]]
-name = "gnostr-qr"
-path = "src/bin/gnostr-qr.rs"
-doc = true
 
 [lib]
 name = "gnostr_qr"

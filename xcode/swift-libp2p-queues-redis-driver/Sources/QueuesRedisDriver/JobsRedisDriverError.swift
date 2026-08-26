@@ -1,0 +1,26 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the swift-libp2p open source project
+//
+// Copyright (c) 2022-2025 swift-libp2p project authors
+// Licensed under MIT
+//
+// See LICENSE for license information
+// See CONTRIBUTORS for the list of swift-libp2p project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+//
+//  Created by Jimmy McDermott on 6/11/19.
+//  Modified by swift-libp2p
+//
+
+import Foundation
+
+/// Describes an error from the JobsRedisDriver
+public enum JobsRedisDriverError: Error {
+
+    /// Could not convert data to RESPValue
+    case couldNotConvertData
+}

@@ -36,46 +36,48 @@
 )]
 
 // use crate::nostr_client;
-use tracing::error;
-use tracing::debug;
-use ureq::Agent;
 use std::time::Duration;
+use tracing::debug;
+use tracing::error;
+use ureq::Agent;
 
-/// pub mod weeble
+pub(crate) use gitui_asyncgit::sync as upstream_sync;
+
+/// Deterministic helper utilities.
 pub mod weeble;
 
-/// pub mod wobble
+/// Randomized helper utilities.
 pub mod wobble;
 
-/// pub mod images
-pub mod images;
-
-/// pub mod blockheight
+/// Block height helpers.
 pub mod blockheight;
 
-/// pub mod blockhash
+/// Block hash helpers.
 pub mod blockhash;
 
-/// pub mod css
-pub mod css;
+/// Embedded image assets.
+pub mod images;
 
-/// pub mod js
+/// Embedded JavaScript assets.
 pub mod js;
 
-/// pub mod theme
-pub mod theme;
+/// Embedded CSS assets.
+pub mod css;
 
-/// pub mod types
+#[path = "filehash/lib.rs"]
+pub mod filehash;
+
+/// Deterministic Nostr profile fixtures used in tests and examples.
+pub mod profiles;
+
+/// Local Nostr and Git domain types.
 pub mod types;
 
-/// pub mod web
-pub mod web;
+/// Terminal UI entry points.
+#[cfg(feature = "tui")]
+pub mod tui;
 
-/// pub mod gitui
-pub mod gitui;
-
-/// pub mod gnostr
-pub mod gnostr;
+mod notes;
 
 pub mod asyncjob;
 mod blame;
@@ -103,6 +105,8 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+pub use git2;
+pub use git2::*;
 pub use git2::message_prettify;
 
 pub use crate::{
@@ -113,6 +117,7 @@ pub use crate::{
     error::{Error, Result},
     fetch_job::AsyncFetchJob,
     filter_commits::{AsyncCommitFilterJob, CommitFilterResult},
+    notes::{AsyncNotes, AsyncNotesJob},
     progress::ProgressPercent,
     pull::{AsyncPull, FetchRequest},
     push::{AsyncPush, PushRequest},
@@ -121,18 +126,47 @@ pub use crate::{
     revlog::{AsyncLog, FetchStatus},
     status::{AsyncStatus, StatusParams},
     sync::{
+        add_note, amend_note, append_public_attestation_log, create_empty_tree,
+        create_empty_tree_sha256, default_notes_ref, create_temp_bare_repo,
+        create_temp_bare_repo_with_empty_tree, create_temp_repo, create_temp_repo_with_empty_tree,
         diff::{DiffLine, DiffLineType, FileDiff},
-        remotes::push::PushType,
-        status::{StatusItem, StatusItemType},
+        list_notes, accumulated_commit_pow, accumulated_note_pow, accumulated_pow,
+        accumulated_pow_depth, mine_note, remotes::push::PushType, remove_note,
+        run_notes_command, show_note, status::{StatusItem, StatusItemType},
+        AccumulatedPowEntry, AccumulatedPowSummary, GitNote, NoteInfo, NotesCommand,
+        NotesCommandResult,
     },
+    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3, NostrProfileFixture},
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,
+    types::{
+        event_is_patch_set_root, event_is_revision_root, event_is_valid_pr_or_pr_update,
+        event_tag_from_nip19_or_hex, get_commit_id_from_patch, get_event_root,
+        get_parent_commit_from_patch, patch_supports_commit_ids, status_kinds, EventRefType,
+        Nip34Event, Nip34Kind, Nip34UnsignedEvent, RepoRef, RepoState, REPO_ANNOUNCEMENT_KIND,
+        REPO_STATE_KIND,
+    },
 };
+pub use filehash::install_rustls_crypto_provider;
 
-// Re-export web-related constants and modules for Askama templates
-pub use crate::web::{CRATE_VERSION, GLOBAL_CSS_HASH, GNOSTR_SVG_HASH, LOADER_FRAGMENT_SVG_HASH, LOGO_INVERTED_SVG_HASH, LOGO_SVG_HASH, HOME_SVG_HASH, HOME_ACTIVE_SVG_HASH, MESSAGES_SVG_HASH, MESSAGES_ACTIVE_SVG_HASH, NOTIFICATIONS_SVG_HASH, NOTIFICATIONS_ACTIVE_SVG_HASH, SETTINGS_SVG_HASH, SETTINGS_ACTIVE_SVG_HASH, NEW_NOTE_SVG_HASH, NO_USER_SVG_HASH, PROFILE_WEBSITE_SVG_HASH, PROFILE_ZAP_SVG_HASH, MESSAGE_USER_SVG_HASH, PUBKEY_SVG_HASH, ADD_RELAY_SVG_HASH, CLOSE_MODAL_SVG_HASH, EVENT_LIKE_SVG_HASH, EVENT_LIKED_SVG_HASH, EVENT_DELETE_SVG_HASH, EVENT_REPLY_SVG_HASH, EVENT_SHARE_SVG_HASH, EVENT_OPTIONS_SVG_HASH, GNOSTR_NOTIF_SVG_HASH, JS_BUNDLE_HASH, HIGHLIGHT_CSS_HASH, DARK_HIGHLIGHT_CSS_HASH};
-pub use crate::web::layers;
-pub use crate::web::git as git;
+/// Default deterministic private key material used by tests and fixtures.
+pub use crate::types::DEFAULT_GNOSTR_PRIVATE_KEY;
+
+/// Default deterministic private key material encoded as lowercase hex.
+pub fn default_gnostr_private_key_hex() -> String {
+    hex::encode(DEFAULT_GNOSTR_PRIVATE_KEY)
+}
+
+
+/// Default deterministic private key material in bech32 form.
+pub const DEFAULT_GNOSTR_PRIVATE_KEY_BECH32: &str =
+    "nsec1uwcvgs5clswpfxhm7nyfjmaeysn6us0yvjdexn9yjkv3k7zjhp2sv7rt36";
+
+/// Returns the shared deterministic private key as a `SecretKey`.
+pub fn default_gnostr_private_key() -> secp256k1::SecretKey {
+    secp256k1::SecretKey::from_slice(&DEFAULT_GNOSTR_PRIVATE_KEY)
+        .expect("DEFAULT_GNOSTR_PRIVATE_KEY must be valid")
+}
 
 /// this type is used to communicate events back through the channel
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -170,6 +204,8 @@ pub enum AsyncGitNotification {
     TreeFiles,
     ///
     CommitFilter,
+    ///
+    Notes,
 }
 
 /// helper function to calculate the hash of an arbitrary type that
@@ -223,7 +259,10 @@ pub fn ureq_sync(url: String) -> Result<String> {
                         "Failed to convert ureq_sync response to string for URL {}: {}",
                         url, e
                     );
-                    Err(Error::Generic(format!("Failed to convert response to string: {}", e)))
+                    Err(Error::Generic(format!(
+                        "Failed to convert response to string: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -262,7 +301,10 @@ pub async fn ureq_async(url: String) -> Result<String> {
                             "Failed to convert ureq_async response to string for URL {}: {}",
                             url, e
                         );
-                        Err(Error::Generic(format!("Failed to convert response to string: {}", e)))
+                        Err(Error::Generic(format!(
+                            "Failed to convert response to string: {}",
+                            e
+                        )))
                     }
                 }
             }
@@ -280,3 +322,24 @@ pub async fn ureq_async(url: String) -> Result<String> {
         .map_err(|e| Error::Generic(format!("Asynchronous task failed: {}", e)))?
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_gnostr_private_key_roundtrip_bech32() {
+        let mut private_key = types::PrivateKey(
+            default_gnostr_private_key(),
+            types::KeySecurity::NotTracked,
+        );
+
+        let bech32 = private_key.as_bech32_string();
+        assert_eq!(bech32, DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+
+        let parsed = types::PrivateKey::try_from_bech32_string(&bech32).unwrap();
+        assert_eq!(parsed.as_secret_key().secret_bytes(), DEFAULT_GNOSTR_PRIVATE_KEY);
+
+        let mut parsed_roundtrip = parsed.clone();
+        assert_eq!(parsed_roundtrip.as_bech32_string(), DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+    }
+}

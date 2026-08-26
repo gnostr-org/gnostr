@@ -1,0 +1,34 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the swift-libp2p open source project
+//
+// Copyright (c) 2022-2025 swift-libp2p project authors
+// Licensed under MIT
+//
+// See LICENSE for license information
+// See CONTRIBUTORS for the list of swift-libp2p project authors
+//
+// SPDX-License-Identifier: MIT
+//
+//===----------------------------------------------------------------------===//
+//
+// https://github.com/libp2p/specs/blob/master/plaintext/README.md
+
+syntax = "proto2";
+
+message Exchange {
+    optional bytes id = 1;
+    optional PublicKey pubkey = 2;
+
+    enum KeyType {
+        RSA = 0;
+        Ed25519 = 1;
+        Secp256k1 = 2;
+        ECDSA = 3;
+    }
+
+    message PublicKey {
+        required KeyType Type = 1;
+        required bytes Data = 2;
+    }
+}

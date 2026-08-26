@@ -1,0 +1,11 @@
+.github/workflows/configs/.flake8
+**/*.yml
+*.md
+*.txt
+Package.swift
+.gitignore
+.swift-format
+.licenseignore
+.license_header_template
+.github/redis1.conf
+.github/redis2.conf

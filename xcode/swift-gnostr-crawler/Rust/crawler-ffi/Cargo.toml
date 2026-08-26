@@ -1,0 +1,20 @@
+[package]
+name = "crawler_ffi"
+version = "953267.1868.494774"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[workspace]
+
+[dependencies]
+gnostr-crawler = { path = "../../../../crawler" }
+gnostr-types = { path = "../../../../types", package = "gnostr-types" }
+nostr-sdk = { version = "0.44.1" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
+tracing = "0.1"
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

@@ -4,6 +4,7 @@ use std::{
 };
 
 use git2::{Repository, RepositoryOpenFlags};
+use path_clean::PathClean;
 
 use crate::error::Result;
 
@@ -50,6 +51,44 @@ impl RepoPath {
 impl From<&str> for RepoPath {
     fn from(p: &str) -> Self {
         Self::Path(PathBuf::from(p))
+    }
+}
+
+fn resolve_clean_path(path: &Path) -> Result<PathBuf> {
+    let resolved = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()?.join(path)
+    };
+
+    Ok(resolved.clean())
+}
+
+pub fn resolve_repo_path(repo_path: &RepoPath) -> Result<RepoPath> {
+    Ok(match repo_path {
+        RepoPath::Path(path) => RepoPath::Path(resolve_clean_path(path.as_path())?),
+        RepoPath::Workdir { gitdir, workdir } => RepoPath::Workdir {
+            gitdir: resolve_clean_path(gitdir.as_path())?,
+            workdir: resolve_clean_path(workdir.as_path())?,
+        },
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{resolve_repo_path, RepoPath};
+    use path_clean::PathClean;
+
+    #[test]
+    fn resolves_relative_repo_paths_against_current_dir() {
+        let repo_path = RepoPath::from("../");
+        let resolved = resolve_repo_path(&repo_path).expect("path resolution should succeed");
+
+        assert!(resolved.as_path().is_absolute());
+        assert_eq!(
+            resolved.as_path(),
+            std::env::current_dir().expect("cwd").join("../").clean()
+        );
     }
 }
 

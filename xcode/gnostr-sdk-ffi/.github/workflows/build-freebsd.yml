@@ -1,0 +1,59 @@
+name: Build FFI for FreeBSD
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-freebsd
+            use_nightly: false
+          - target: aarch64-unknown-freebsd
+            use_nightly: true
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2.7.8
+      with:
+        key: ${{ matrix.target }}
+
+    - name: Install cargo-zigbuild
+      run: pip install cargo-zigbuild==0.22.1
+
+    - name: Install rust-src for nightly
+      if: ${{ matrix.use_nightly }}
+      run: |
+        rustup toolchain install nightly
+        rustup component add rust-src --toolchain nightly
+
+    - name: Build library
+      if: ${{ !matrix.use_nightly }}
+      run: cargo zigbuild --target ${{ matrix.target }} --release
+
+    - name: Build library with nightly
+      if: ${{ matrix.use_nightly }}
+      run: cargo +nightly zigbuild -Z build-std=std,panic_abort --target ${{ matrix.target }} --release
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nostr-sdk-ffi-${{ matrix.target }}
+        path: target/${{ matrix.target }}/release/libnostr_sdk_ffi.so

@@ -4,16 +4,16 @@ use anyhow::Result;
 use crossterm::event::Event;
 use filetreelist::MoveSelection;
 use gnostr_asyncgit::{
-    ProgressPercent,
     asyncjob::AsyncSingleJob,
     sync::{self, RepoPathRef, TreeFile},
+    ProgressPercent,
 };
 use itertools::Either;
 use ratatui::{
-    Frame,
     layout::Rect,
     text::Text,
     widgets::{Block, Borders, Wrap},
+    Frame,
 };
 
 use super::{CommandBlocking, CommandInfo, Component, DrawableComponent, EventState};
@@ -24,8 +24,8 @@ use crate::{
     strings,
     sub_commands::tui::{AsyncAppNotification, AsyncNotification, SyntaxHighlightProgress},
     ui::{
-        self, AsyncSyntaxJob, ParagraphState, ScrollPos, StatefulParagraph, common_nav,
-        style::SharedTheme,
+        self, common_nav, style::SharedTheme, AsyncSyntaxJob, ParagraphState, ScrollPos,
+        StatefulParagraph,
     },
 };
 

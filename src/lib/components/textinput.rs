@@ -3,20 +3,20 @@ use std::cell::{Cell, OnceCell};
 use anyhow::Result;
 use crossterm::event::Event;
 use ratatui::{
-    Frame,
     layout::{Alignment, Rect},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 use tui_textarea::{CursorMove, Input, Key, Scrolling, TextArea};
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent, EventState,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     strings,
-    ui::{self, Size, style::SharedTheme},
+    ui::{self, style::SharedTheme, Size},
 };
 
 /// InputType

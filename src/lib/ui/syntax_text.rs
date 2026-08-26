@@ -7,8 +7,8 @@ use std::{
 };
 
 use gnostr_asyncgit::{
-    ProgressPercent,
     asyncjob::{AsyncJob, RunParams},
+    ProgressPercent,
 };
 use once_cell::sync::Lazy;
 use ratatui::text::{Line, Span};

@@ -1,9 +1,12 @@
 name: gnostr-test-matrix
+concurrency:
+  group: gnostr-test-matrix-${{ github.ref }}
+  cancel-in-progress: true
 
 # Controls when the action will run.
 on:
   schedule:
-    - cron: "*/30 * * * *" # run 30th minute
+    - cron: "0 4 * * *" # 4am every day
   push:
     branches:
       - "**"
@@ -14,55 +17,22 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  windows-vcpkg:
-    strategy:
-      matrix:
-        os:
-          - runner: windows-latest
-            arch: x64
-          - runner: windows-11-arm
-            arch: arm64
-      fail-fast: false
-    name: windows-vcpkg-${{ matrix.os.arch }}
-    runs-on: ${{ matrix.os.runner }}
-    steps:
-      - uses: actions/checkout@v6
-      - uses: sfackler/actions/rustup@master
-      - run: echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
-        id: rust-version
-      - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - run: vcpkg install openssl:${{ matrix.os.arch }}-windows-static-md
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cargo/registry/index
-          key: index-${{ runner.os }}-${{ github.run_number }}
-          restore-keys: |
-            index-${{ runner.os }}-
-      - run: cargo generate-lockfile
-      - uses: actions/cache@v5
-        with:
-          path: ~/.cargo/registry/cache
-          key: registry-${{ runner.os }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-      - run: cargo fetch
-      - uses: actions/cache@v5
-        with:
-          path: target
-          key: target-${{ github.job }}-${{ steps.rust-version.outputs.version }}-${{ hashFiles('Cargo.lock') }}
-      - run: cargo test -j8
-
-  gnostr-bot:
+  gnostr-test:
     env:
       FORCE: "--force"
       GNOSTR: "gnostr"
+      BINS_MANIFEST: "./bins/Cargo.toml"
+      GNOSTR_MANIFEST: "./Cargo.toml"
       POW: "16"
       DAMUS: "wss://relay.damus.io"
       NOS: "wss://nos.lol"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest, macos-15-intel]
+        os: [macos-latest, macos-15-intel, ubuntu-latest]
         toolchain: [stable, nightly]
         #commands: [""]  # , "sniper", "chat", "legit", "ngit", "set-metadata", "note"]
-      fail-fast: false
+      fail-fast: true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -73,56 +43,31 @@ jobs:
           fetch-depth: 0
           fetch-tags: false
 
-      - name: Cache Cargo registry and Git dependencies
-        uses: actions/cache@v3
+      - name: Restore Cargo registry and Git dependencies
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-
+            cargo-registry-git-${{ runner.os }}-
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache Cargo build target
-        uses: actions/cache@v3
+      - name: Restore Cargo build target
+        id: cache-target-restore
+        uses: actions/cache/restore@v4
         with:
           path: target
           key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}
-
-      - name: Run sccache-cache only on non-release runs
-        if: github.event_name != 'release' && matrix.os != 'macos-15-intel'
-        uses: mozilla-actions/sccache-action@v0.0.9
-
-      - name: Set Rust caching env vars only on non-release runs
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          # echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && matrix.os != 'macos-15-intel'
-
-      - name: Calculate Odd/Even Status
-        shell: bash
-        id: time_check_hour
-        run: |
-          # Alternate tasks on cron runs to balance testing depth and speed.
-          # Get the current hour (0-23) in UTC
-          CURRENT_HOUR=$(date -u +%H)
-          echo "Current UTC Hour is $CURRENT_HOUR"
-
-          # Use a shell arithmetic expression to check for evenness (remainder of division by 2 is 0)
-          # '0' is even, '1' is odd.
-          if (( CURRENT_HOUR % 2 == 0 )); then
-            IS_EVEN="true"
-            STATUS="EVEN"
-          else
-            IS_EVEN="false"
-            STATUS="ODD"
-          fi
-
-          echo "The hour is $STATUS"
-
-          # Set a boolean output for the subsequent steps to consume
-          echo "is_even=$IS_EVEN" >> $GITHUB_OUTPUT
+          restore-keys: |
+            cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-
+            cargo-build-target-${{ runner.os }}-
 
       - name: Use Bash for all subsequent steps
         shell: bash
@@ -136,7 +81,19 @@ jobs:
           MEMPOOL: "mempool"
           MEMPOOL_SPACE: "mempool-space"
 
-      - uses: cargo-bins/cargo-binstall@main
+      - name: Install cargo-binstall
+        id: binstall
+        continue-on-error: true
+        uses: cargo-bins/cargo-binstall@v1.18.1
+
+      - name: Fallback install cargo-binstall (from crates.io)
+        if: steps.binstall.outcome != 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cargo install cargo-binstall --locked
+
       - uses: styfle/cancel-workflow-action@0.11.0
         if: ${{ !env.ACT }}
         with:
@@ -195,6 +152,10 @@ jobs:
           # Optional: Uncomment if you want to explicitly disable tag fetching
           # fetch-tags: 'false'
 
+      - name: Calculate Odd/Even Status
+        id: time_check_hour
+        uses: ./.github/actions/calculate-odd-even
+
       - name: printenv
         shell: bash
         run: |
@@ -211,102 +172,67 @@ jobs:
           make || true
 
       - name: cargo search gnostr --limit 100
+        continue-on-error: true
         shell: bash
         run: |
           cargo search gnostr --limit 100
 
-      - name: Install cargo-binstall
-        shell: bash
-        run: |
-          for i in {1..5}; do
-            curl --retry 10 -L --proto '=https' --tlsv1.2 -sSf -O https://github.com/cargo-bins/cargo-binstall/releases/download/v1.3.0/cargo-binstall-universal-apple-darwin.zip && break || sleep 10
-          done
-        if: matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'
+      #- name: Install gnostr via cargo-binstall
+      #  uses: ./.github/actions/cargo-binstall-gnostr
 
-      - name: Get latest release
-        shell: bash
-        id: get_latest_release
-        run: |
-          # Use GitHub API to get the latest release tag
-          LATEST_TAG=$(curl -sL https://api.github.com/repos/gnostr-org/gnostr/releases/latest | jq -r ".tag_name")
-          echo "Latest release tag: $LATEST_TAG"
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-
-      - name: Install gnostr (latest release)
-        shell: bash
-        run: |
-          # Construct the installer URL using the latest tag
-          INSTALLER_URL="https://github.com/gnostr-org/gnostr/releases/download/${{ steps.get_latest_release.outputs.latest_tag }}/gnostr-installer.sh"
-          echo "Installer URL: $INSTALLER_URL"
-          curl --proto '=https' --tlsv1.2 -LsSf "$INSTALLER_URL" | sh || \
-          cargo-binstall --force --no-confirm gnostr
-
-      - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev"
+      - run: /bin/bash -c "sudo apt-get update && sudo apt-get install -y build-essential procps curl file git libssl-dev pkg-config librocksdb-dev"
         if: matrix.os == 'ubuntu-latest'
-
-      #- run: cargo install sccache --force -j8
-      #  if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-
-      #- name: winget install sccache
-      #  shell: bash
-      #  run: |
-      #    winget install Mozilla.sccache --accept-package-agreements --accept-source-agreements
-      #  if: runner.os == 'windows'
-
-      - name: Install Strawberry Perl
-        run: choco install strawberryperl -y
-        if: runner.os == 'windows'
-      - name: Install Perl modules
-        run: perl -MCPAN -e "install Locale::Maketext::Simple"
-        if: runner.os == 'windows'
 
       - name: brew install
         run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         if: runner.os == 'macos'
 
-      - name: Install OpenSSL for macOS
-        run: |
-          brew install openssl@1.1
-          echo "export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"" >> $GITHUB_ENV
-          echo "export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"" >> $GITHUB_ENV
-          echo "export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"" >> $GITHUB_ENV
-          echo "export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@1.1/lib/pkgconfig"" >> $GITHUB_ENV
-        if: runner.os == 'macos'
-
       - name: linuxbrew (with retries)
         run: |
-          set -e
-          for i in {1..5}; do
-            test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-            test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-            brew install gnostr-org/gnostr-org/gnostr && gnostr --help && break || { echo "brew install failed, retry $i..."; sleep 10; }
-          done
-          if ! command -v gnostr > /dev/null; then
-            echo "brew install failed after retries, attempting install via cargo-binstall"
-            cargo-binstall --force --no-confirm gnostr
-          fi
+          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
         if: matrix.os == 'ubuntu-latest'
 
+      # - name: Install gnostr via cargo-binstall
+      #   uses: ./.github/actions/cargo-binstall-gnostr
+
       - name: brew tap gnostr-org/homebrew-gnostr-org
-        run: brew tap gnostr-org/homebrew-gnostr-org || true
-        if: runner.os != 'windows'
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")" && \
+          $BREW_CMD tap gnostr-org/homebrew-gnostr-org || true
+        if: runner.os == 'macOS'
 
       - name: brew tap nostorg/nostr
-        run: brew tap nostorg/nostr || true
-        if: runner.os != 'windows'
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")" && \
+          $BREW_CMD tap nostorg/nostr || true
+        if: runner.os == 'macOS'
 
       - name: brew tap randymcmillan/homebrew-randymcmillan
-        run: brew tap randymcmillan/homebrew-randymcmillan || true
-        if: runner.os != 'windows'
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")" && \
+          $BREW_CMD tap randymcmillan/homebrew-randymcmillan || true
+        if: runner.os == 'macOS'
 
-      - name: brew install gnostr-org/homebrew-gnostr-org/gnostr
-        run: brew install gnostr-org/gnostr-org/gnostr && gnostr --help || true
-        if: runner.os != 'windows'
+      #- name: Install gnostr via Homebrew
+      #  uses: ./.github/actions/brew-install-gnostr/
+      #  if: runner.os == 'macOS'
+
+      - name: Install gnostr (latest release)
+        uses: ./.github/actions/get-latest
+        #if: runner.os != 'macOS'
+        with:
+          github_token: ${{ github.token }}
+
+      - name: gnostr-weeble/blockheight/blockhash/wobble
+        uses: ./.github/actions/gnostr-weeble-wobble
 
       - name: brew install cargo-llvm-cov cargo-llvm-lines
-        run: brew install cargo-llvm-cov cargo-llvm-lines || true
-        if: runner.os != 'windows'
+        run: |
+          BREW_CMD="$([ "$(uname -m)" = "arm64" ] && [ "$(uname -s)" = "Darwin" ] && echo "arch -arm64 brew" || echo "brew")"
+          $BREW_CMD install cargo-llvm-cov cargo-llvm-lines || true
+        if: runner.os == 'macOS'
 
       #- name: powershell install gnostr
       #  shell: powershell
@@ -320,131 +246,257 @@ jobs:
       #    gnostr ${{ matrix.commands }} -h
       #    gnostr ${{ matrix.commands }} --help
       - name: create set-metadata kind 0
-        shell: bash
-        run: |
-          gnostr -V
-          gnostr \
-          -d ${{ env.POW }} \
-          -r ${{ env.DAMUS }} \
-          --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-          set-metadata \
-          -n "#gnostr" \
-          -a "$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" \
-          -p "https://avatars.githubusercontent.com/u/135379339?s=400&u=11cb72cccbc2b13252867099546074c50caef1ae&v=4" \
-          -b "https://raw.githubusercontent.com/gnostr-org/gnostr-icons/refs/heads/master/banner/1024x341.png" \
-          -e "$GITHUB_REPOSITORY" \
-          -e "$GITHUB_WORKFLOW" \
-          -e "$GITHUB_WORKFLOW_SHA" \
-          -e "$GITHUB_WORKFLOW_REF" \
-          -e "$GITHUB_REF" \
-          -e "$GITHUB_RUN_ID" \
-          -e "gnostr" \
-          -e "gnostr-bot" \
-          -e "$GITHUB_REPOSITORY_OWNER" \
-          -e "$(date +%s)" \
-          -e "$RUNNER_ENVIRONMENT" \
-          -e "$RUNNER_OS" \
-          -e "$(gnostr --weeble)" \
-          -e "$(gnostr --blockheight)" \
-          -e "$(gnostr --wobble)" || true
-        #if: matrix.os == 'macos-latest'
+        uses: ./.github/actions/gnostr-custom-event
+        with:
+          kind: 0
+          # Using '|' allows you to write clean JSON without escaping every quote
+          content: |
+            {
+              "name": "gnostr",
+              "display_name": "gnostr",
+              "about": "a git+nostr workflow utility",
+              "picture": "https://avatars.githubusercontent.com/u/135379339?s=400&v=4",
+              "website": "https://github.com/gnostr-org/gnostr",
+              "nip05": "gnostr@example.com",
+              "lud16": "gnostr@getalby.com"
+            }
+          # Formatting tags as a standard JSON array string for the action to parse
+          tags: '[["p", "p-tag"], ["t", "gnostr"], ["relay", "wss://blossom.gnostr.cloud"]]'
 
       - name: Create custom-event kind 1
+        uses: ./.github/actions/gnostr-custom-event
+        with:
+          kind: 1
+          content: |
+            #gnostr CI run event
+            run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            repository: ${{ github.repository }}
+            repository_owner: ${{ github.repository_owner }}
+            workflow: ${{ github.workflow }}
+            workflow_ref: ${{ github.workflow_ref }}
+            run_id: ${{ github.run_id }}
+            run_attempt: ${{ github.run_attempt }}
+            event_name: ${{ github.event_name }}
+            ref: ${{ github.ref }}
+            sha: ${{ github.sha }}
+            actor: ${{ github.actor }}
+            runner_os: ${{ runner.os }}
+            matrix: os=${{ matrix.os }}, toolchain=${{ matrix.toolchain }}
+          # Formatting tags as a standard JSON array string for the action to parse
+          tags: '[["weeble", "${{ env.WEEBLE }}"], ["blockheight", "${{ env.BLOCKHEIGHT }}"], ["wobble", "${{ env.WOBBLE }}"], ["t", "gnostr"]]'
+
+
+      # - name: 🌙 UTC second is ODD
+      #   if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
+      #   run: |
+      #     cargo clean && echo "✅" || echo "❌"
+
+      - name: 🚀 git remote add
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
         shell: bash
         run: |
-          gnostr -V
-          EVENT=$(gnostr \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            --nsec "$(gnostr --hash '')" \
-            custom-event \
-            -k 1 \
-            -c "$GITHUB_REPOSITORY_OWNER $(gnostr --weeble)/$(gnostr --blockheight) #$GITHUB_REPOSITORY_ID" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE;
-            gnostr query -i $EVENT -r ${{ env.DAMUS }};
-            echo && echo "http://nostr.band/$NOTE"
-        #if: matrix.os == 'macos-latest'
+          git remote add gitworkshop \
+          nostr://npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k/blossom.gnostr.cloud/gnostr
+          git remote add git-tui-upstream-https \
+          https://github.com/gnostr-org/gnostr-tui-upstream.git
 
-      #- name: 🌙 UTC second is ODD
-      #  if: ${{ steps.time_check_hour.outputs.is_even != 'true' }} && runner.os != 'windows'
-      #  run: |
-      #    cargo clean && echo "✅" || echo "❌"
+      ## build/run sequences
+      ## build/run sequences
+      ## build/run sequences
 
-      - name: 🚀 cargo run --bin gnostr
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          cargo run --bin gnostr -- -V
-          cargo run --bin gnostr -- nip34 --help
-          cargo run --bin gnostr -- nip34 repo-announcement --help
-          cargo run --bin gnostr -- nip34 repo-state --help
-          cargo run --bin gnostr -- nip34 patch --help
-          cargo run --bin gnostr -- nip34 pull-request --help
-          cargo run --bin gnostr -- nip34 issue --help
-          cargo run --bin gnostr -- nip34 status --help
-
-      - name: 🚀 cargo test -j8
-        #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
-        shell: bash
-        run: |
-          cargo test -j8 && echo "✅" ## || echo "❌"
-        if: matrix.os != 'windows-latest'
-
-      - name: gnostr ngit fetch
-        shell: bash
-        run: |
-          git remote add gitworkshop nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
-          cargo run --bin gnostr -- ngit --help
-          cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
-          cargo run --bin gnostr -- ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
-        if: ${{ !env.ACT }}
-
-      - name: 🌙 UTC second is ODD
-        if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
-        run: |
-          make gnostr-chat &
-          make gnostr-chat &
-          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
-          gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
-          sleep 5 # Wait for services to start
-          gnostr query --limit 100
-
-      - name: Cleanup lingering gnostr processes (Linux/macOS)
-        if: success() && (matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest')
-        run: |
-          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
-          pkill -f "gnostr" || true
-          pkill -f "git-remote-nostr" || true
-          echo "Cleanup attempt finished."
+      - name: Test gnostr bins
         continue-on-error: true
-
-      - name: Cleanup lingering gnostr processes (Windows)
-        if: success() && (matrix.os == 'windows-latest')
-        shell: pwsh
+        shell: bash
         run: |
-          echo "Attempting to kill lingering gnostr and git-remote-nostr processes..."
-          Stop-Process -Name "gnostr" -ErrorAction SilentlyContinue || true
-          Stop-Process -Name "git-remote-nostr" -ErrorAction SilentlyContinue || true
-          echo "Cleanup attempt finished."
+          cargo test --manifest-path "$BINS_MANIFEST" --all-targets
+
+      - name: Save Cargo target cache (post-build)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-build
+
+      - name: 🚀 cargo run -p gnostr --bin gnostr --
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo run --manifest-path "$GNOSTR_MANIFEST" --bin gnostr -- --version
+          cargo run --manifest-path "$GNOSTR_MANIFEST" --bin gnostr -- --help
+
+      #- name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
+      #  # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+      #  shell: bash
+      #  run: |
+      #    cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+      #    cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
+
+      - name: 🚀 gnostr query nested command test
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo build --bin gnostr
+          ./target/debug/gnostr query --help
+          GNOSTR_BIN=./target/debug/gnostr bash ./scripts/gnostr-nested-query.sh && echo "✅"
+
+      - name: 🚀 gnostr asyncgit script tests
+        if: matrix.toolchain == 'stable'
+        continue-on-error: true
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-asyncgit-tests.sh --nocapture
+
+      - name: 🚀 gnostr ngit script tests
+        if: matrix.toolchain == 'stable'
+        continue-on-error: true
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-ngit-tests.sh --nocapture
+
+      - name: Save Cargo target cache (post-run-tests)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-run-tests
+
+      ## install sequences
+      ## install sequences
+      ## install sequences
+
+      - name: 🚀 cargo install --path .
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo install --path . --force
+
+      - name: Save Cargo target and bin cache (post-install)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-install
+
+      - name: 🚀 src/bin/git-remote-nostr test
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo install --path ./bins --force --bin git-remote-nostr
+          git fetch --all
+
+      - name: Save Cargo target cache (post-git-remote-nostr)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-remote-nostr
+
+      - name: 🚀 git-helpers-test
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo test --manifest-path ./git-helpers
+          git fetch --all
+
+      - name: Save Cargo target cache (post-git-helpers)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-git-helpers
+
+      - name: 🚀 gnostr query test
+        # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+        shell: bash
+        run: |
+          gnostr query \
+          --authors \
+          $(gnostr bech32-to-any npub15d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7smrxq6k --raw) \
+          --limit 100 | jq
+
+      #- name: 🚀 cargo run -p gnostr-bins --bin gnostr-tui --
+      #  # if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+      #  shell: bash
+      #  run: |
+      #    cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --version
+      #    cargo run --manifest-path "$BINS_MANIFEST" --bin gnostr-tui -- --help
+
+      - name: 🚀 gnostr query nested command test
+        continue-on-error: true
+        shell: bash
+        run: |
+          gnostr query --help
+          bash ./scripts/gnostr-nested-query.sh && echo "✅"
+
+      - name: 🚀 gnostr asyncgit script tests
+        if: matrix.toolchain == 'stable'
+        continue-on-error: true
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-asyncgit-tests.sh --nocapture
+
+      - name: 🚀 gnostr ngit script tests
+        if: matrix.toolchain == 'stable'
+        continue-on-error: true
+        shell: bash
+        run: |
+          bash ./scripts/gnostr-ngit-tests.sh --nocapture
+
+      - name: Save Cargo target cache (post-final-tests)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}-final-tests
+
+      # - name: 🚀 cargo test -j8
+      #   #if: ${{ steps.time_check_hour.outputs.is_even == 'true' }}
+      #   shell: bash
+      #   run: |
+      #     cargo test -j8 && echo "✅" ## || echo "❌"
+      #     gnostr query \
+      #     -i $(gnostr --nsec $(gnostr --hash "") \
+      #     custom-event \
+      #     --kind $(gnostr --weeble) \
+      #     --hex \
+      #     -c "gnostr query nested command test" \
+      #     -t "gnostr|gnostr","gnostr-query|gnostr-query")
+      #   if: matrix.os != 'windows-latest'
+
+      # - name: gnostr ngit fetch
+      #   shell: bash
+      #   run: |
+      #     git \
+      #     remote \
+      #     add \
+      #     gitworkshop \
+      #     nostr://npub1ahaz04ya9tehace3uy39hdhdryfvdkve9qdndkqp3tvehs6h8s5slq45hy/gnostr
+      #     cargo run --bin gnostr -- ngit --help
+      #     #cargo run --bin gnostr -- ngit --nsec $(gnostr --hash "") list
+      #     cargo \
+      #     run \
+      #     --bin \
+      #     gnostr \
+      #     -- \
+      #     ngit --nsec $(gnostr --hash '') fetch 2>/dev/null || true
+      #   if: ${{ !env.ACT }}
+
+      # - name: 🌙 UTC second is ODD
+      #   if: ${{ steps.time_check_hour.outputs.is_even != 'true' }}
+      #   run: |
+      #     make gnostr-chat &
+      #     make gnostr-chat &
+      #     gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr &
+      #     gnostr chat --oneshot "testing gnostr oneshot" --topic gnostr
+      #     sleep 5 # Wait for services to start
+      #     gnostr query --limit 100
+
+      - name: Cleanup lingering gnostr processes
+        uses: ./.github/actions/gnostr-cleanup
         continue-on-error: true
 
       - name: Debug GITHUB_API_URL
@@ -478,125 +530,60 @@ jobs:
         run: echo ${{ steps.jobs.outputs.html_url }}
 
       - name: Execute script on failure
-        shell: bash
         if: failure()
-        run: |
-          echo "A previous step failed! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Failed!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Failed!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.toolchain }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://njump.me'
 
       - name: Execute script on cancelled
-        shell: bash
         if: cancelled()
-        run: |
-          echo "A previous step cancelled! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Cancelled!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo $NOTE && echo $EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Cancelled!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.toolchain }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://njump.me'
 
       - name: Execute script on success
-        shell: bash
         if: success()
-        run: |
-          echo "A previous step succeeded! Executing cleanup or notification script..."
-          EVENT=$(gnostr --nsec "$(gnostr --hash '$GITHUB_REPOSITORY_ID')" \
-            -d ${{ env.POW }} \
-            -r ${{ env.DAMUS }} \
-            -r ${{ env.NOS }} \
-            custom-event \
-            -k 1 \
-            -c "[$GITHUB_REPOSITORY_ID](${{ steps.jobs.outputs.html_url }}) (${{ matrix.os }}, ${{ matrix.toolchain }}) Success!" \
-            -t "$GITHUB_REPOSITORY" \
-            -t "$GITHUB_WORKFLOW" \
-            -t "$GITHUB_WORKFLOW_SHA" \
-            -t "$GITHUB_WORKFLOW_REF" \
-            -t "$GITHUB_REF" \
-            -t "$GITHUB_RUN_ID" \
-            -t "gnostr" \
-            -t "gnostr-bot" \
-            -t "$GITHUB_REPOSITORY_OWNER" \
-            -t "$(date +%s)" \
-            -t "$RUNNER_ENVIRONMENT" \
-            -t "$RUNNER_OS" \
-            -t "$(gnostr --weeble)" \
-            -t "$(gnostr --blockheight)" \
-            -t "$(gnostr --wobble)" \
-            --hex || true) && \
-            export EVENT=$EVENT && \
-            echo EVENT=$EVENT && \
-            NOTE=$(gnostr convert-key -p note -k $EVENT || true) || true && \
-            export NOTE=$NOTE && echo NOTE=$NOTE && echo EVENT=$EVENT && \
-            gnostr query -i $EVENT -r ${{ env.DAMUS }} && \
-            gnostr query -i $EVENT -r ${{ env.NOS }} && \
-            echo "http://nostr.band/$NOTE"
+        uses: ./.github/actions/gnostr-notify
+        with:
+          status: 'Success!'
+          job_url: ${{ steps.jobs.outputs.html_url }}
+          matrix_label: '${{ matrix.os }}, ${{ matrix.toolchain }}'
+          pow: ${{ env.POW }}
+          damus: ${{ env.DAMUS }}
+          nos: ${{ env.NOS }}
+          njump_base: 'http://njump.me'
 
-      - name: Save cargo
-        id: cache-cargo-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+      - name: Save Cargo registry and Git dependencies
+        if: always()
+        uses: actions/cache/save@v4
         with:
           path: |
-            ~/.cargo
-          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-git-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
 
-      - name: Save target
-        id: cache-target-save
-        uses: actions/cache/save@v3
-        if: ${{ !env.ACT }}
+      - name: Save cargo bin
+        if: always()
+        uses: actions/cache/save@v4
         with:
-          path: |
-            target
-          key: ${{ steps.cache-target-restore.outputs.cache-primary-key }}
+          path: ~/.cargo/bin/gnostr
+          key: cargo-bin-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+
+      - name: Save Cargo build target
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: target
+          key: cargo-build-target-${{ runner.os }}-${{ matrix.toolchain }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}

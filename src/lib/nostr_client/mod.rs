@@ -1,23 +1,21 @@
 use std::sync::{Arc, Mutex};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use futures_util::{
-    SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
+    SinkExt, StreamExt,
 };
 use rand::Rng;
 use tokio::{net::TcpStream, sync::mpsc};
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite};
+use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
 use tracing::{debug, info, warn};
 
+use crate::queue::{InternalEvent, Queue};
 use gnostr_asyncgit::types::{
     ClientMessage, EventKind, Filter, PublicKey, RelayMessage, SubscriptionId, UncheckedUrl,
     Unixtime,
 }; // Added PublicKey
-use gnostr_asyncgit::{
-    types::{ClientMessageV3, EventV3},
-};
-use crate::queue::{InternalEvent, Queue};
+use gnostr_asyncgit::types::{ClientMessageV3, EventV3};
 
 type WsSink =
     SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;
@@ -52,7 +50,7 @@ impl NostrClient {
     fn spawn_listener_task(&self, url: UncheckedUrl, mut stream: WsStream) {
         let queue_tx_clone = self.queue_tx.clone();
 
-        let _ = crate::p2p::chat::global_rt().spawn(async move {
+        let _ = gnostr_chat::global_rt().spawn(async move {
             while let Some(message_result) = stream.next().await {
                 match message_result {
                     Ok(tokio_tungstenite::tungstenite::Message::Text(text)) => {

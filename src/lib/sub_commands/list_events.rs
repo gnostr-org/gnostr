@@ -22,7 +22,7 @@ pub struct ListEventsSubCommand {
     /// Kinds
     #[arg(short, long, action = clap::ArgAction::Append, default_values = [
            "30617", "30618", "1617", "1621", "1630", "1631", "1632", "1633"
-       ])]
+        ])]
     pub kinds: Option<Vec<u64>>,
     /// e tag
     #[arg(long, action = clap::ArgAction::Append)]

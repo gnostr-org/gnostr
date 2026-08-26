@@ -6,7 +6,7 @@ use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     process::{Child, Command, Stdio},
-    sync::mpsc::{Receiver, Sender, channel},
+    sync::mpsc::{channel, Receiver, Sender},
     thread,
 };
 

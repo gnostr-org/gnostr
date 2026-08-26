@@ -1,0 +1,111 @@
+format_version = 2
+
+[apps.ControlsExample]
+identifier = 'dev.swiftcrossui.ControlsExample'
+product = 'ControlsExample'
+version = '0.1.0'
+
+[[apps.ControlsExample.overlays]]
+condition = 'platform(macCatalyst)'
+interface_idiom = 'mac'
+
+[apps.CounterExample]
+identifier = 'dev.swiftcrossui.CounterExample'
+product = 'CounterExample'
+version = '0.1.0'
+
+[apps.RandomNumberGeneratorExample]
+identifier = 'dev.swiftcrossui.RandomNumberGeneratorExample'
+product = 'RandomNumberGeneratorExample'
+version = '0.1.0'
+
+[apps.WindowingExample]
+identifier = 'dev.swiftcrossui.WindowingExample'
+product = 'WindowingExample'
+version = '0.1.0'
+
+[apps.GreetingGeneratorExample]
+identifier = 'dev.swiftcrossui.GreetingGeneratorExample'
+product = 'GreetingGeneratorExample'
+version = '0.1.0'
+
+[apps.NavigationExample]
+identifier = 'dev.swiftcrossui.NavigationExample'
+product = 'NavigationExample'
+version = '0.1.0'
+
+[apps.SplitExample]
+identifier = 'dev.swiftcrossui.SplitExample'
+product = 'SplitExample'
+version = '0.1.0'
+
+[[apps.SplitExample.overlays]]
+condition = "platform(macCatalyst)"
+interface_idiom = "mac"
+
+[apps.SpreadsheetExample]
+identifier = 'dev.swiftcrossui.SpreadsheetExample'
+product = 'SpreadsheetExample'
+version = '0.1.0'
+
+[apps.StressTestExample]
+identifier = 'dev.swiftcrossui.StressTestExample'
+product = 'StressTestExample'
+version = '0.1.0'
+
+[apps.NotesExample]
+identifier = 'dev.swiftcrossui.NotesExample'
+product = 'NotesExample'
+version = '0.1.0'
+
+[apps.PathsExample]
+identifier = 'dev.swiftcrossui.PathsExample'
+product = 'PathsExample'
+version = '0.1.0'
+
+[apps.WebViewExample]
+identifier = 'dev.swiftcrossui.WebViewExample'
+product = 'WebViewExample'
+version = '0.1.0'
+android.permissions = ['INTERNET']
+
+[apps.HoverExample]
+identifier = 'dev.swiftcrossui.HoverExample'
+product = 'HoverExample'
+version = '0.1.0'
+
+[apps.FontsExample]
+identifier = 'dev.swiftcrossui.FontsExample'
+product = 'FontsExample'
+version = '0.1.0'
+
+[apps.ForEachExample]
+identifier = 'dev.swiftcrossui.ForEachExample'
+product = 'ForEachExample'
+version = '0.1.0'
+
+[apps.AdvancedCustomizationExample]
+identifier = 'dev.swiftcrossui.AdvancedCustomizationExample'
+product = 'AdvancedCustomizationExample'
+version = '0.1.0'
+
+[apps.ColorsExample]
+identifier = 'dev.swiftcrossui.ColorsExample'
+product = 'ColorsExample'
+version = '0.1.0'
+
+[apps.MusicPlayerExample]
+identifier = 'dev.swiftcrossui.MusicPlayerExample'
+product = 'MusicPlayerExample'
+version = '0.1.0'
+icon = 'Icons/MusicPlayerExample.png'
+
+[apps.GradientsExample]
+identifier = 'dev.swiftcrossui.GradientsExample'
+product = 'GradientsExample'
+version = '0.1.0'
+    
+[apps.TapGesturesExample]
+identifier = 'dev.swiftcrossui.TapGesturesExample'
+product = 'TapGesturesExample'
+version = '0.1.0'

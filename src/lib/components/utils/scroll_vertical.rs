@@ -1,11 +1,11 @@
 #![warn(missing_docs)]
 use std::cell::Cell;
 
-use ratatui::{Frame, layout::Rect};
+use ratatui::{layout::Rect, Frame};
 
 use crate::{
     components::ScrollType,
-    ui::{Orientation, draw_scrollbar, style::SharedTheme},
+    ui::{draw_scrollbar, style::SharedTheme, Orientation},
 };
 
 /// VerticalScroll

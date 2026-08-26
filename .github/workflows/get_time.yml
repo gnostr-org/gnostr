@@ -2,11 +2,13 @@ name: Check UTC Hour Odd/Even
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # run 30th minute
+    - cron: '*/30 * * * *' # run 30th minute
   push:
     branches:
-      - "**"
+      - '**'
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-get-time-workflow]
 permissions:
   actions: read
   contents: read
@@ -14,7 +16,7 @@ permissions:
 jobs:
   check_time:
     runs-on: ubuntu-latest
-
+    
     # 1. Get the current UTC hour and DETERMINE if it's even
     steps:
       - name: Calculate Odd/Even Status

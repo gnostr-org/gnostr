@@ -1,19 +1,423 @@
-use nostr_sdk::prelude::Url;
-use directories::ProjectDirs;
-use crate::preprocess_line;
-use std::collections::HashSet;
-use std::fs::{self, File};
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use tracing::{debug, warn};
-use reqwest::Client;
+use crate::relay_io::normalize_relay_entry;
+use crate::processor::BOOTSTRAP_RELAYS;
 use anyhow::Result;
+use directories::ProjectDirs;
+use nostr_sdk::prelude::Url;
 use reqwest::header::ACCEPT;
+use reqwest::Client;
+use std::collections::HashSet;
+use std::fs::{self};
+use std::path::{Path, PathBuf};
+use std::sync::{LazyLock, Mutex};
+use tracing::{debug, info, warn};
+
+#[path = "relays_set.rs"]
+mod relays_set;
+#[path = "relays_html.rs"]
+mod relays_html;
+pub use relays_set::Relays;
+pub use relays_html::{render_page_shell, render_page_shell_with_header_right, write_index_html};
 
 pub fn get_config_dir_path() -> PathBuf {
     ProjectDirs::from("org", "gnostr", "gnostr/crawler")
         .map(|proj_dirs| proj_dirs.config_dir().to_path_buf())
         .unwrap_or_else(|| Path::new(".").to_path_buf())
+}
+
+pub fn bootstrap_relays() -> Vec<String> {
+    BOOTSTRAP_RELAYS.clone()
+}
+
+static LIVE_NIPS: LazyLock<Mutex<HashSet<i32>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
+static LIVE_KINDS: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
+
+pub fn record_live_nips(nips: impl IntoIterator<Item = i32>) {
+    let mut live = LIVE_NIPS.lock().unwrap();
+    let mut changed = false;
+    for nip in nips {
+        changed |= live.insert(nip);
+    }
+    drop(live);
+    if changed {
+        let _ = write_index_html();
+    }
+}
+
+pub fn record_live_kind(kind: impl Into<String>) {
+    let changed = LIVE_KINDS.lock().unwrap().insert(kind.into());
+    if changed {
+        let _ = write_kinds_serve_files();
+        let _ = write_index_html();
+    }
+}
+
+pub fn live_nips() -> Vec<i32> {
+    let mut nips: Vec<i32> = LIVE_NIPS.lock().unwrap().iter().copied().collect();
+    nips.sort_unstable();
+    nips
+}
+
+pub fn live_kinds() -> Vec<String> {
+    let mut kinds: Vec<String> = LIVE_KINDS.lock().unwrap().iter().cloned().collect();
+    kinds.sort();
+    kinds
+}
+
+fn kinds_from_disk() -> Vec<String> {
+    let config_dir = get_config_dir_path();
+    let kinds_path = config_dir.join("kinds.txt");
+
+    match fs::read_to_string(&kinds_path) {
+        Ok(content) => content
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => Vec::new(),
+    }
+}
+
+pub fn prime_live_kinds_from_disk() {
+    let kinds = kinds_from_disk();
+    if kinds.is_empty() {
+        return;
+    }
+
+    let mut live = LIVE_KINDS.lock().unwrap();
+    for kind in kinds {
+        live.insert(kind);
+    }
+}
+
+pub fn write_kinds_serve_files() -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path();
+    fs::create_dir_all(&config_dir)?;
+
+    let mut kinds = live_kinds();
+    for kind in kinds_from_disk() {
+        if !kinds.contains(&kind) {
+            kinds.push(kind);
+        }
+    }
+    kinds.sort();
+    kinds.dedup();
+
+    let txt_path = config_dir.join("kinds.txt");
+    let json_path = config_dir.join("kinds.json");
+
+    fs::write(&txt_path, kinds.join("\n"))?;
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(&kinds).map_err(std::io::Error::other)?,
+    )?;
+
+    Ok(txt_path)
+}
+
+fn collect_relays_from_content(path: &Path, content: &str, relays: &mut Vec<String>) {
+    let mut record_relay = |relay: String| {
+        info!(
+            "write_relays_serve_files: including relay={} from {}",
+            relay,
+            path.display()
+        );
+        relays.push(relay);
+    };
+
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("json") => {
+            if let Ok(values) = serde_json::from_str::<Vec<String>>(content) {
+                for value in values {
+                    if let Some(relay) = normalize_relay_entry(&value) {
+                        record_relay(relay);
+                    }
+                }
+                return;
+            }
+        }
+        Some("yaml") | Some("yml") => {
+            if let Ok(values) = serde_yaml::from_str::<Vec<String>>(content) {
+                for value in values {
+                    if let Some(relay) = normalize_relay_entry(&value) {
+                        record_relay(relay);
+                    }
+                }
+                return;
+            }
+        }
+        Some("txt") => {
+            for value in content.split_whitespace() {
+                if let Some(relay) = normalize_relay_entry(value) {
+                    record_relay(relay);
+                }
+            }
+            return;
+        }
+        _ => {}
+    }
+
+    for line in content.lines() {
+        if let Some(relay) = normalize_relay_entry(line) {
+            record_relay(relay);
+        }
+    }
+}
+
+fn collect_relays_from_bucket_tree(root: &Path, relays: &mut Vec<String>) -> std::io::Result<()> {
+    if !root.is_dir() {
+        return Ok(());
+    }
+
+    for entry in fs::read_dir(root)? {
+        let entry = entry?;
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+
+        if path.is_dir() {
+            info!(
+                "write_relays_serve_files: scanning bucket directory {}",
+                path.display()
+            );
+            collect_relays_from_bucket_tree(&path, relays)?;
+            continue;
+        }
+
+        if path.parent() == Some(root) && matches!(name.as_str(), "relays.json" | "relays.txt") {
+            debug!(
+                "write_relays_serve_files: skipping root aggregate file {}",
+                path.display()
+            );
+            continue;
+        }
+
+        if matches!(name.as_str(), "relays.yaml" | "relays.json" | "relays.txt") {
+            match fs::read_to_string(&path) {
+                Ok(content) => {
+                    info!(
+                        "write_relays_serve_files: reading relay bucket file {}",
+                        path.display()
+                    );
+                    collect_relays_from_content(&path, &content, relays);
+                }
+                Err(e) => {
+                    warn!(
+                        "write_relays_serve_files: failed to read {}: {}",
+                        path.display(),
+                        e
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn write_bucket_serve_files(bucket_name: &str, relays: &[String]) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(bucket_name);
+    fs::create_dir_all(&config_dir)?;
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    debug!(
+        "write_bucket_serve_files: writing {}",
+        yaml_path.display()
+    );
+    let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    debug!(
+        "write_bucket_serve_files: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!("write_bucket_serve_files: writing {}", txt_path.display());
+    fs::write(&txt_path, relays.join(" "))?;
+
+    Ok(config_dir)
+}
+
+pub fn append_recent_relay(relay: &str) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join("recent");
+    fs::create_dir_all(&config_dir)?;
+    let txt_path = config_dir.join("relays.txt");
+
+    let mut relays: Vec<String> = match fs::read_to_string(&txt_path) {
+        Ok(content) => content
+            .split_whitespace()
+            .filter_map(|relay| Url::parse(relay).ok().map(|url| url.to_string()))
+            .collect(),
+        Err(_) => Vec::new(),
+    };
+
+    let relay = match Url::parse(relay) {
+        Ok(url) => url.to_string(),
+        Err(_) => {
+            debug!("append_recent_relay: skipping invalid relay={relay}");
+            return Ok(config_dir);
+        }
+    };
+
+    if !relays.iter().any(|existing| existing == &relay) {
+        debug!("append_recent_relay: appending relay={} bucket=recent", relay);
+        relays.push(relay);
+        relays.sort();
+        relays.dedup();
+        write_bucket_serve_files("recent", &relays)?;
+        let _ = write_relays_serve_files();
+    } else {
+        debug!("append_recent_relay: relay already present bucket=recent relay={relay}");
+    }
+
+    Ok(config_dir)
+}
+
+pub fn write_relays_json_from_yaml() -> std::io::Result<PathBuf> {
+    write_relays_serve_files()?;
+    Ok(get_config_dir_path().join("relays.json"))
+}
+
+pub fn write_relays_serve_files() -> std::io::Result<()> {
+    let config_dir = get_config_dir_path();
+    fs::create_dir_all(&config_dir)?;
+
+    let mut relays: Vec<String> = Vec::new();
+    collect_relays_from_bucket_tree(&config_dir, &mut relays)?;
+    if relays.is_empty() {
+        info!(
+            "write_relays_serve_files: no bucket relays found, falling back to bootstrap relays"
+        );
+        relays.extend(BOOTSTRAP_RELAYS.clone());
+    }
+    relays.sort();
+    relays.dedup();
+    info!(
+        "write_relays_serve_files: built {} aggregated relay entries",
+        relays.len()
+    );
+    for relay in &relays {
+        info!("write_relays_serve_files: root relay={relay}");
+    }
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
+    debug!("write_relays_serve_files: writing {}", yaml_path.display());
+    fs::write(&yaml_path, yaml_content)?;
+    debug!("write_relays_serve_files: writing {}", json_path.display());
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!("write_relays_serve_files: writing {}", txt_path.display());
+    fs::write(&txt_path, relays.join(" "))?;
+    Ok(())
+}
+
+pub fn write_nip_relays_serve_files(nip: i32, relays: &[String]) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(nip.to_string());
+    fs::create_dir_all(&config_dir)?;
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    debug!(
+        "write_nip_relays_serve_files: writing {}",
+        yaml_path.display()
+    );
+    let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    debug!(
+        "write_nip_relays_serve_files: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!(
+        "write_nip_relays_serve_files: writing {}",
+        txt_path.display()
+    );
+    fs::write(&txt_path, relays.join(" "))?;
+    let _ = write_relays_serve_files();
+
+    Ok(config_dir)
+}
+
+pub fn write_nip_relays_serve_files_from_dir(nip: i32) -> std::io::Result<PathBuf> {
+    let config_dir = get_config_dir_path().join(nip.to_string());
+    fs::create_dir_all(&config_dir)?;
+
+    let mut relays: Vec<String> = Vec::new();
+    debug!(
+        "write_nip_relays_serve_files_from_dir: reading {}",
+        config_dir.display()
+    );
+    for entry in fs::read_dir(&config_dir)? {
+        let entry = entry?;
+        let name = entry.file_name().to_string_lossy().to_string();
+        if !name.ends_with(".json") || name == "relays.json" {
+            continue;
+        }
+        if let Some(host) = name.strip_suffix(".json") {
+            if let Ok(url) = Url::parse(&format!("wss://{}", host)) {
+                info!(
+                    "write_nip_relays_serve_files_from_dir: including {} from {}",
+                    url,
+                    entry.path().display()
+                );
+                relays.push(url.to_string());
+            } else {
+                info!(
+                    "write_nip_relays_serve_files_from_dir: skipping invalid host file {}",
+                    entry.path().display()
+                );
+            }
+        }
+    }
+    relays.sort();
+    relays.dedup();
+    info!(
+        "write_nip_relays_serve_files_from_dir: built {} relay entries for NIP {}",
+        relays.len(),
+        nip
+    );
+
+    let yaml_path = config_dir.join("relays.yaml");
+    let json_path = config_dir.join("relays.json");
+    let txt_path = config_dir.join("relays.txt");
+
+    debug!(
+        "write_nip_relays_serve_files_from_dir: writing {}",
+        yaml_path.display()
+    );
+    let yaml_content = serde_yaml::to_string(&relays).map_err(std::io::Error::other)?;
+    fs::write(&yaml_path, yaml_content)?;
+    debug!(
+        "write_nip_relays_serve_files_from_dir: writing {}",
+        json_path.display()
+    );
+    fs::write(
+        &json_path,
+        serde_json::to_string_pretty(&relays).map_err(std::io::Error::other)?,
+    )?;
+    debug!(
+        "write_nip_relays_serve_files_from_dir: writing {}",
+        txt_path.display()
+    );
+    fs::write(&txt_path, relays.join(" "))?;
+    let _ = write_relays_serve_files();
+
+    Ok(config_dir)
 }
 
 pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
@@ -22,87 +426,10 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
     let response = client.get(url).send().await?.error_for_status()?;
     let text = response.text().await?;
 
-    let relays: Vec<String> = text.lines()
-        .filter_map(|line| {
-            let preprocessed_line = preprocess_line(line);
-
-                        if preprocessed_line.is_empty() {
-
-                            return None;
-
-                        }
-
-            
-
-                        let mut final_line = preprocessed_line;
-
-            
-
-                        // Attempt to prepend wss:// if it looks like a hostname without a scheme
-
-                        if !final_line.contains("://") {
-
-                            let potential_url = format!("wss://{}", final_line);
-
-                            match Url::parse(&potential_url) {
-
-                                Ok(url) => {
-
-                                    debug!("Prepended 'wss://' to form valid URL: {}", url);
-
-                                    final_line = url.to_string();
-
-                                },
-
-                                Err(_) => {
-
-                                    // If prepending wss:// doesn't form a valid URL, keep the original line
-
-                                    // and let the next checks handle it as a non-URL line.
-
-                                    debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
-
-                                }
-
-                            }
-
-                        }
-
-            
-
-                        if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
-
-                            match Url::parse(&final_line) {
-
-                                Ok(url) => Some(url.to_string()),
-
-                                Err(_) => {
-
-                                    warn!("Skipping invalid WEBSOCKET URL format: {}", final_line);
-
-                                    None
-
-                                }
-
-                            }
-
-                        } else if final_line.contains(":://") { // It's a URL, but not a websocket URL
-
-                            warn!("Skipping non-websocket URL scheme: {}", final_line);
-
-                            None
-
-                        } else { // It's not a URL at all (e.g., "Relay URL")
-
-                            debug!("Silently skipping non-URL line: {}", final_line);
-
-                            None
-
-                        }
-
-                    })
-
-                    .collect();
+    let relays: Vec<String> = text
+        .lines()
+        .filter_map(normalize_relay_entry)
+        .collect();
 
     debug!("Fetched {} online relays", relays.len());
     Ok(relays)
@@ -124,7 +451,11 @@ pub async fn check_relay_liveness(url_str: &str) -> bool {
         Ok(response) => {
             let is_success = response.status().is_success();
             if !is_success {
-                warn!("Liveness check failed for {}: Status {}", url_str, response.status());
+                warn!(
+                    "Liveness check failed for {}: Status {}",
+                    url_str,
+                    response.status()
+                );
             }
             is_success
         }
@@ -132,128 +463,5 @@ pub async fn check_relay_liveness(url_str: &str) -> bool {
             warn!("Liveness check error for {}: {}", url_str, e);
             false
         }
-    }
-}
-
-/// Maintain a list of all encountered relays
-pub struct Relays {
-    r: HashSet<Url>,
-}
-
-impl Default for Relays {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Relays {
-    pub fn new() -> Self {
-        Self {
-            r: HashSet::default(),
-        }
-    }
-
-    pub fn add(&mut self, s1: &str) -> bool {
-        let mut res = false;
-        if let Ok(u) = Url::parse(s1) {
-            res = self.r.insert(u);
-            if res {
-                //self.print();
-            }
-        }
-        res
-    }
-
-    pub fn count(&self) -> usize {
-        self.r.len()
-    }
-
-    pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
-        let list: Vec<Url> = list.to_vec();
-        for url in &list { debug!("de_dup:: url={}", url); }
-        list
-    }
-    pub fn de_dup_string(&self, list: &[String]) -> Vec<String> {
-        let list: Vec<String> = list.to_vec();
-        list
-    }
-
-    pub fn get_some(&self, max_count: usize) -> Vec<Url> {
-        let mut res = Vec::new();
-        for u in &self.r {
-            res.push(u.clone());
-            if res.len() >= max_count {
-                return res;
-            }
-        }
-        res = self.de_dup(&res);
-        res
-    }
-
-    pub fn get_all(&self) -> Vec<String> {
-        let list: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
-        self.de_dup_string(&list)
-    }
-
-    pub fn print(&self) {
-        for u in &self.r {
-            let mut relay = format!("{}", u);
-            if relay.ends_with('/') {
-                relay.pop();
-                debug!("relays::125:{}", relay);
-            } else {
-                debug!("relays::127:{}", relay);
-            }
-        }
-    }
-
-    pub fn dump_list(&self) {
-        self.dump_to_file("relays.yaml");
-        self.dump_to_json("relays.json");
-    }
-
-    pub fn dump_to_file(&self, filename: &str) {
-        let config_dir = get_config_dir_path();
-        let file_path = config_dir.join(filename);
-
-        if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent).expect("Failed to create directory");
-        }
-
-        let relays: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
-        match serde_yaml::to_string(&relays) {
-            Ok(yaml_content) => {
-                let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
-                write!(file, "{}", yaml_content).expect("Failed to write YAML content");
-                debug!("Relays dumped to {}", file_path.display());
-                debug!("Relays.yaml written to: {}", file_path.canonicalize().unwrap_or_default().display());
-            },
-            Err(e) => {
-                warn!("Failed to serialize relays to YAML for {}: {}", filename, e);
-            }
-        }
-    }
-
-    pub fn dump_to_json(&self, filename: &str) {
-        let config_dir = get_config_dir_path();
-        let file_path = config_dir.join(filename);
-
-        if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent).expect("Failed to create directory");
-        }
-
-        let mut file = File::create(&file_path).expect("Failed to create relays.yaml");
-        debug!("file={:?}", file);
-
-        let mut count = 0;
-        let _ = writeln!(file, "[\"RELAYS\",");
-        for u in &self.r {
-            let _ = writeln!(file, "{{\"{}\":\"{}\"}},", count, u);
-            count += 1;
-        }
-        let _ = writeln!(file, "{{\"{}\":\"wss://relay.gnostr.org\"}}", count);
-        let _ = writeln!(file, "]");
-
-        debug!("Relays dumped to {}", file_path.display());
     }
 }

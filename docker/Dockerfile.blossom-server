@@ -1,0 +1,23 @@
+FROM rust:1.95-bookworm AS builder
+
+ARG BLOSSOM_VERSION=0.5.6
+
+RUN cargo install cargo-binstall --locked
+RUN cargo binstall --no-confirm --locked "blossom-server@${BLOSSOM_VERSION}"
+
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+ && apt-get install --yes --no-install-recommends ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/cargo/bin/blossom-server /usr/local/bin/blossom-server
+COPY docker/blossom-server-entrypoint.sh /usr/local/bin/blossom-server-entrypoint.sh
+
+RUN chmod +x /usr/local/bin/blossom-server-entrypoint.sh
+
+WORKDIR /var/lib/blossom
+VOLUME ["/var/lib/blossom"]
+EXPOSE 3000
+
+ENTRYPOINT ["/usr/local/bin/blossom-server-entrypoint.sh"]

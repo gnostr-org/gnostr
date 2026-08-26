@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
 use tokio::{net::TcpStream, time::timeout};
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite};
+use tokio_tungstenite::{tungstenite, MaybeTlsStream, WebSocketStream};
 
-use crate::ws::{Error, Event, Message, Responder, launch_from_listener};
+use crate::ws::{launch_from_listener, Error, Event, Message, Responder};
 
 // Helper to find an available port and return a bound TcpListener
 #[allow(unused)]
@@ -61,7 +61,7 @@ async fn test_message_conversion() {
 }
 
 #[tokio::test]
-#[cfg(feature = "expensive_tests")]
+#[cfg(feature = "long_tests")]
 #[ignore]
 async fn test_find_available_listener_and_connect_websocket_client() {
     let listener = find_available_listener().await;
@@ -186,7 +186,7 @@ async fn test_responder_client_id() {
 }
 
 #[tokio::test]
-#[cfg(feature = "expensive_tests")]
+#[cfg(feature = "long_tests")]
 #[ignore]
 async fn test_websocket_connection_and_message_echo() {
     let listener = find_available_listener().await;

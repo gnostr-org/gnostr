@@ -7,11 +7,10 @@ mod tests {
     use actix_test::start;
     use anyhow::Result;
     use futures_util::{SinkExt, StreamExt};
-    use gnostr_crawler::processor::BOOTSTRAP_RELAYS;
     use gnostr_relay::App as GnostrRelayApp;
-    use nostr_0_34_1::{EventBuilder, Keys, Kind, Tag};
+    use nostr::{EventBuilder, Keys, Kind, Tag};
     use serde_json::json;
-    use tempfile::NamedTempFile;
+    use tempfile::{NamedTempFile, tempdir};
     use tokio::sync::Mutex as TokioMutex;
     use tokio_tungstenite::{connect_async, tungstenite::Message};
 
@@ -22,19 +21,26 @@ mod tests {
         let config_file =
             NamedTempFile::with_suffix(".toml").expect("Failed to create temp config file");
         let config_path = config_file.path().to_str().unwrap().to_owned();
+        let data_dir = tempdir().expect("Failed to create temp data dir");
+        let data_path = data_dir.path().to_str().unwrap().to_owned();
         let default_config_content = r#"
             [server]
             port = 0 # Use a random available port
             host = "127.0.0.1"
 
             [database]
-            path = ":memory:" # Use in-memory database for tests
+            path = "unused"
         "#
         .to_string();
         fs::write(&config_path, default_config_content).expect("Failed to write temp config");
 
         let app_data =
-            GnostrRelayApp::create(Some(&config_path), true, Some("NOSTR".to_owned()), None)
+            GnostrRelayApp::create(
+                Some(&config_path),
+                true,
+                Some("NOSTR".to_owned()),
+                Some(&data_path),
+            )
                 .expect("Failed to create GnostrRelayApp");
 
         let r = app_data.setting.read();
@@ -54,7 +60,8 @@ mod tests {
             app_data.web_app()
         });
 
-        let ws_url = BOOTSTRAP_RELAYS[0].clone();
+        let mut ws_url = srv.url("/");
+        ws_url = ws_url.replace("http", "ws");
 
         let retry_strategy = GnostrRetry::new_exponential_async(1, 3); // 1 second initial delay, 3 retries
         let (mut ws_stream, _) = retry_strategy
@@ -108,11 +115,12 @@ mod tests {
 
         let keys = Keys::generate();
         let tags = vec![
-            Tag::parse(&["t", "gnostr"]).unwrap(),
-            Tag::parse(&["t", "nostr"]).unwrap(),
+            Tag::parse(["t", "gnostr"]).unwrap(),
+            Tag::parse(["t", "nostr"]).unwrap(),
         ];
-        let event = EventBuilder::new(Kind::TextNote, "Hello gostr from test!", tags.into_iter())
-            .to_event(&keys)
+        let event = EventBuilder::new(Kind::TextNote, "Hello gostr from test!")
+            .tags(tags)
+            .sign_with_keys(&keys)
             .unwrap();
 
         let event_json = json!(["EVENT", event]).to_string();

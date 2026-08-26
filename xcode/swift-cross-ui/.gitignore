@@ -1,0 +1,17 @@
+.DS_Store
+/.build
+/.index-build
+/Examples/.build
+/Packages
+/*.xcodeproj
+xcuserdata/
+DerivedData/
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+/.vscode
+*.pyc
+.swiftpm
+vcpkg_installed/
+*.trace
+notes.json
+/Tools
+.docc-build/

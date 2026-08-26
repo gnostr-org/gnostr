@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/quit.rs
+assertion_line: 20
+expression: ctx.redact_buffer()
+---
+▌No branch                                                                      |
+                                                                                |
+ Recent commits                                                                 |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+────────────────────────────────────────────────────────────────────────────────|
+? Really quit? (y or n) ›                                                       |
+styles_hash: d282fc509f9f2617

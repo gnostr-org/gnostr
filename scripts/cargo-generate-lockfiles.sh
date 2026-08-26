@@ -1,4 +1,10 @@
 #!/bin/bash
+BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
+BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
+BASH_MINOR="${BASH_VERSINFO[1]:-0}"
+if ! bash -n "${BASH_SOURCE[0]}"; then
+  exit 1
+fi
 
 # ---
 # Description: Recursively find Rust projects and generate/update Cargo.lock files.
@@ -22,8 +28,8 @@ find "$TARGET_DIR" -name "target" -prune -o -name "Cargo.toml" -print | while re
     # Using subshell ( ) to ensure we return to the original path automatically
     (
         cd "$project_dir" || exit
-        cargo sort;
-        if cargo generate-lockfile; then
+        bash ./scripts/with-system-rocksdb.sh cargo sort;
+        if bash ./scripts/with-system-rocksdb.sh cargo generate-lockfile; then
             echo "Successfully generated lockfile for $(basename "$project_dir")"
         else
             echo "Error: Failed to generate lockfile in $project_dir" >&2

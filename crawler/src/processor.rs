@@ -1,24 +1,48 @@
 use crate::pubkeys::PubKeys;
+use crate::relay_io::parse_relay_entries;
+use crate::relays::get_config_dir_path;
+use crate::relays::record_live_kind;
 use crate::stats::Stats;
 use log::debug;
+use std::collections::HashSet;
+use std::fs;
 
-use nostr_sdk::prelude::{Event, Kind, Tag, Timestamp};
+use nostr_sdk::prelude::{Event, Kind, TagStandard, Timestamp};
 use std::sync::LazyLock;
 
 pub const LOCALHOST_8080: &str = "ws://127.0.0.1:8080";
 
-pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
-    let relays_yaml_bytes = include_bytes!("relays.yaml");
-    let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
-    relays_yaml_content.lines()
-        .filter(|line: &&str| !line.trim().is_empty())
-        .map(|line: &str| String::from(line))
-        .collect()
-});
+fn load_bootstrap_relays() -> Vec<String> {
+    let mut relays = Vec::new();
+    let mut seen = HashSet::new();
+
+    let push_unique = |relay: String, relays: &mut Vec<String>, seen: &mut HashSet<String>| {
+        if seen.insert(relay.clone()) {
+            relays.push(relay);
+        }
+    };
+
+    let embedded_relays = include_bytes!(env!("GNOSTR_CRAWLER_RELAYS_YAML"));
+    for relay in parse_relay_entries(&String::from_utf8_lossy(embedded_relays)) {
+        push_unique(relay, &mut relays, &mut seen);
+    }
+
+    let relays_path = get_config_dir_path().join("relays.yaml");
+    if let Ok(relays_yaml_content) = fs::read_to_string(&relays_path) {
+        for relay in parse_relay_entries(&relays_yaml_content) {
+            push_unique(relay, &mut relays, &mut seen);
+        }
+    }
+
+    relays
+}
+
+pub static BOOTSTRAP_RELAYS: LazyLock<Vec<String>> = LazyLock::new(load_bootstrap_relays);
 pub static SHITLIST_RELAYS: LazyLock<Vec<String>> = LazyLock::new(|| {
     let relays_yaml_bytes = include_bytes!("shitlist.yaml");
     let relays_yaml_content = String::from_utf8_lossy(relays_yaml_bytes);
-    relays_yaml_content.lines()
+    relays_yaml_content
+        .lines()
         .filter(|line: &&str| !line.trim().is_empty())
         .map(|line: &str| String::from(line))
         .collect()
@@ -47,14 +71,23 @@ impl Processor {
 
     #[allow(dead_code)]
     fn age(t: Timestamp) -> i64 {
-        Timestamp::now().as_i64() - t.as_i64()
+        Timestamp::now().as_secs() as i64 - t.as_secs() as i64
     }
 
     pub fn handle_event(&mut self, event: &Event) {
         //TODO: forward (proxy)
-        debug!("{:?}", event.id);
-        //println!("{:}", event.as_json());
-        debug!("age {:?}  created_at {:?}", Self::age(event.created_at), event.created_at);
+        debug!(
+            "processor::handle_event start id={:?} kind={:?} pubkey={:?}",
+            event.id,
+            event.kind,
+            event.pubkey
+        );
+        debug!(
+            "age {:?}  created_at {:?}",
+            Self::age(event.created_at),
+            event.created_at
+        );
+        record_live_kind(format!("{:?}", event.kind));
         match event.kind {
             Kind::Metadata => {
                 debug!("Kind::Metadata={:?}", event.kind);
@@ -110,7 +143,7 @@ impl Processor {
             Kind::ZapRequest => {
                 println!("{:?}", event.kind);
             }
-            Kind::Zap => {
+            Kind::ZapReceipt => {
                 println!("{:?}", event.kind);
             }
             Kind::Authentication => {
@@ -122,13 +155,13 @@ impl Processor {
             Kind::RelayList => {
                 println!("{:?}", event.kind);
             }
-            Kind::Replaceable(_u16) => {
+            kind if kind.is_replaceable() => {
                 println!("{:?}", event.kind);
             }
-            Kind::Ephemeral(_u16) => {
+            kind if kind.is_ephemeral() => {
                 println!("{:?}", event.kind);
             }
-            Kind::ParameterizedReplaceable(_u16) => {
+            kind if kind.is_addressable() => {
                 println!("{:?}", event.kind);
             }
             Kind::Custom(_u64) => {
@@ -138,14 +171,20 @@ impl Processor {
                 self.stats.add_contacts();
                 // count p tags
                 let mut cnt = 0;
-                for t in &event.tags {
-                    if let Tag::PubKey(pk, _s) = t {
+                for t in event.tags.iter() {
+                    if let Some(TagStandard::PublicKey {
+                        public_key: pk,
+                        relay_url: _,
+                        alias: _,
+                        uppercase: _,
+                    }) = t.as_standardized()
+                    {
                         self.pubkeys.add(pk);
                         cnt += 1;
                     }
                 }
                 debug!("Contacts {} \t ", cnt); // event.pubkey.to_bech32().unwrap(),
-                // self.print_summary();
+                                                // self.print_summary();
 
                 //println!("{:?}", event);
             }
@@ -158,6 +197,7 @@ impl Processor {
                 println!("processing...");
             }
         }
+        debug!("processor::handle_event done id={:?}", event.id);
     }
 
     // fn print_summary(&self) {

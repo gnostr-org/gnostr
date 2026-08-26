@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Nostr.Sdk</PackageId>
+    <Version>0.44.2</Version>
+    <Company>rust-nostr</Company>
+    <Description>Nostr protocol implementation, Relay, RelayPool, high-level client library, NWC client and more.</Description>
+    <TargetFramework>net6.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://rust-nostr.org</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rust-nostr/nostr-sdk-ffi</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>nostr protocol</PackageTags>
+    <Copyright>2025 Yuki Kishimoto</Copyright>
+    <Authors>Yuki Kishimoto</Authors>
+    <RuntimeIdentifiers>linux-x86;linux-x64;linux-arm;linux-arm64;linux-riscv64;linux-musl-x86;linux-musl-x64;linux-musl-arm;linux-musl-arm64;linux-musl-riscv64;freebsd-x64;freebsd-arm64;osx-x64;osx-arm64;win-x86;win-x64;win-arm64;android-arm;android-arm64;android-x86;android-x64;ios-arm64;iossimulator-x64;iossimulator-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\"/>
+    <None Include="../../LICENSE" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <!-- Check for mandatory files before build -->
+  <Target Name="CheckMandatoryFiles" BeforeTargets="BeforeBuild">
+    <Error Text="Required file 'nostr_sdk.cs' is missing from the project!" Condition="!Exists('nostr_sdk.cs')" />
+  </Target>
+
+  <ItemGroup>
+    <!-- Linux GLIBC -->
+    <Content Include="runtimes/linux-x86/native/libnostr_sdk_ffi.so" Link="runtimes/linux-x86/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-x86/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-x64/native/libnostr_sdk_ffi.so" Link="runtimes/linux-x64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-x64/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-arm/native/libnostr_sdk_ffi.so" Link="runtimes/linux-arm/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-arm/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-arm64/native/libnostr_sdk_ffi.so" Link="runtimes/linux-arm64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-arm64/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-riscv64/native/libnostr_sdk_ffi.so" Link="runtimes/linux-riscv64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-riscv64/native/libnostr_sdk_ffi.so" />
+
+    <!-- Linux MUSL -->
+    <Content Include="runtimes/linux-musl-x86/native/libnostr_sdk_ffi.so" Link="runtimes/linux-musl-x86/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-musl-x86/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-musl-x64/native/libnostr_sdk_ffi.so" Link="runtimes/linux-musl-x64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-musl-x64/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-musl-arm/native/libnostr_sdk_ffi.so" Link="runtimes/linux-musl-arm/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-musl-arm/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-musl-arm64/native/libnostr_sdk_ffi.so" Link="runtimes/linux-musl-arm64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-musl-arm64/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/linux-musl-riscv64/native/libnostr_sdk_ffi.so" Link="runtimes/linux-musl-riscv64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/linux-musl-riscv64/native/libnostr_sdk_ffi.so" />
+
+    <!-- FreeBSD -->
+    <Content Include="runtimes/freebsd-x64/native/libnostr_sdk_ffi.so" Link="runtimes/freebsd-x64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/freebsd-x64/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/freebsd-arm64/native/libnostr_sdk_ffi.so" Link="runtimes/freebsd-arm64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/freebsd-arm64/native/libnostr_sdk_ffi.so" />
+
+    <!-- macOS -->
+    <Content Include="runtimes/osx-x64/native/libnostr_sdk_ffi.dylib" Link="runtimes/osx-x64/native/libnostr_sdk_ffi.dylib" Pack="true" PackagePath="runtimes/osx-x64/native/libnostr_sdk_ffi.dylib" />
+    <Content Include="runtimes/osx-arm64/native/libnostr_sdk_ffi.dylib" Link="runtimes/osx-arm64/native/libnostr_sdk_ffi.dylib" Pack="true" PackagePath="runtimes/osx-arm64/native/libnostr_sdk_ffi.dylib" />
+
+    <!-- Windows -->
+    <Content Include="runtimes/win-x86/native/nostr_sdk_ffi.dll" Link="runtimes/win-x86/native/nostr_sdk_ffi.dll" Pack="true" PackagePath="runtimes/win-x86/native/nostr_sdk_ffi.dll" />
+    <Content Include="runtimes/win-x64/native/nostr_sdk_ffi.dll" Link="runtimes/win-x64/native/nostr_sdk_ffi.dll" Pack="true" PackagePath="runtimes/win-x64/native/nostr_sdk_ffi.dll" />
+    <Content Include="runtimes/win-arm64/native/nostr_sdk_ffi.dll" Link="runtimes/win-arm64/native/nostr_sdk_ffi.dll" Pack="true" PackagePath="runtimes/win-arm64/native/nostr_sdk_ffi.dll" />
+
+     <!-- Android -->
+    <Content Include="runtimes/android-arm/native/libnostr_sdk_ffi.so" Link="runtimes/android-arm/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/android-arm/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/android-arm64/native/libnostr_sdk_ffi.so" Link="runtimes/android-arm64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/android-arm64/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/android-x86/native/libnostr_sdk_ffi.so" Link="runtimes/android-x86/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/android-x86/native/libnostr_sdk_ffi.so" />
+    <Content Include="runtimes/android-x64/native/libnostr_sdk_ffi.so" Link="runtimes/android-x64/native/libnostr_sdk_ffi.so" Pack="true" PackagePath="runtimes/android-x64/native/libnostr_sdk_ffi.so" />
+
+    <!-- iOS -->
+    <Content Include="runtimes/ios-arm64/native/libnostr_sdk_ffi.a" Link="runtimes/ios-arm64/native/libnostr_sdk_ffi.a" Pack="true" PackagePath="runtimes/ios-arm64/native/libnostr_sdk_ffi.a" />
+    <Content Include="runtimes/iossimulator-x64/native/libnostr_sdk_ffi.a" Link="runtimes/iossimulator-x64/native/libnostr_sdk_ffi.a" Pack="true" PackagePath="runtimes/iossimulator-x64/native/libnostr_sdk_ffi.a" />
+    <Content Include="runtimes/iossimulator-arm64/native/libnostr_sdk_ffi.a" Link="runtimes/iossimulator-arm64/native/libnostr_sdk_ffi.a" Pack="true" PackagePath="runtimes/iossimulator-arm64/native/libnostr_sdk_ffi.a" />
+  </ItemGroup>
+
+</Project>

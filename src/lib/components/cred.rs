@@ -1,15 +1,15 @@
 use anyhow::Result;
 use crossterm::event::Event;
 use gnostr_asyncgit::sync::cred::BasicAuthCredential;
-use ratatui::{Frame, layout::Rect};
+use ratatui::{layout::Rect, Frame};
 
 use crate::{
     app::Environment,
     components::{
-        CommandBlocking, CommandInfo, Component, DrawableComponent, EventState, InputType,
-        TextInputComponent, visibility_blocking,
+        visibility_blocking, CommandBlocking, CommandInfo, Component, DrawableComponent,
+        EventState, InputType, TextInputComponent,
     },
-    keys::{SharedKeyConfig, key_match},
+    keys::{key_match, SharedKeyConfig},
     strings,
 };
 

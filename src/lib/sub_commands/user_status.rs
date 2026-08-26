@@ -64,14 +64,14 @@ pub async fn set_user_status(
 
     // Add p-tag
     if let Some(p) = sub_command_args.ptag.clone() {
-        let pubkey_hex = parse_key_or_id_to_hex_string(p).await?;
+        let pubkey_hex = parse_key_or_id_to_hex_string(p)?;
         let pubkey: PublicKey = PublicKey::try_from_hex_string(&pubkey_hex, true)?;
         tags.push(Tag::new(&["p", &pubkey.as_hex_string()]));
     }
 
     // Add e-tag
     if let Some(e) = sub_command_args.etag.clone() {
-        let event_id_hex = parse_key_or_id_to_hex_string(e).await?;
+        let event_id_hex = parse_key_or_id_to_hex_string(e)?;
         let event_id: Id = Id::try_from_hex_string(&event_id_hex)?;
         tags.push(Tag::new(&["e", &event_id.as_hex_string()]));
     }

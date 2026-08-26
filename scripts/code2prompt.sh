@@ -1,4 +1,10 @@
 #!/bin/bash
+BASH_VERSION_CURRENT="${BASH_VERSION:-unknown}"
+BASH_MAJOR="${BASH_VERSINFO[0]:-0}"
+BASH_MINOR="${BASH_VERSINFO[1]:-0}"
+if ! bash -n "${BASH_SOURCE[0]}"; then
+  exit 1
+fi
 
 # code2prompt.sh - Recursively generate markdown files containing folder contents
 # Usage: ./code2prompt.sh [options] [directories]

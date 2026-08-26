@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use clap::{
     /* crate_authors, crate_description, crate_name, Arg, Command as ClapApp, */ Parser,
     Subcommand,
@@ -19,17 +19,19 @@ use gnostr_asyncgit::sync::RepoPath;
 use crate::sub_commands::award_badge;
 // Import the sniper subcommand module
 use crate::sub_commands::git;
-// Import the new QuerySubCommand struct
-use crate::sub_commands::query::QuerySubCommand;
+// Import the shared QuerySubCommand struct from the re-exported query module
+use crate::query::cli::QuerySubCommand;
 // Import the new relay subcommand module
-use crate::sub_commands::relay;
-use crate::sub_commands::{bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
+use crate::sub_commands::crawler;
+use crate::sub_commands::{
+    bech32_to_any, broadcast_events, convert_key, create_badge, create_public_channel,
     custom_event, delete_event, delete_profile, fetch, fetch_by_id, generate_keypair,
-    hide_public_channel_message, init, legit, list_events, login, mute_publickey, ngit, note,
-    privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, send,
+    hide_public_channel_message, init, legit, list_events, login, mute_publickey, note,
+    privkey_to_bech32, profile_badges, publish_contactlist_csv, push, react, relay, send,
     send_channel_message, set_channel_metadata, set_metadata, sniper, user_status, vanity,
 };
-use crate::sub_commands::crawler;
+#[cfg(feature = "blossom")]
+use crate::sub_commands::server;
 
 /// CliArgs
 #[derive(Parser, Debug)]
@@ -77,60 +79,18 @@ pub enum LegitCommands {
     Mine,
 }
 
-/// NgitCli
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct NgitCli {
-    /// command
-    #[command(subcommand)]
-    pub command: NgitCommands,
-    /// remote signer address
-    #[arg(long, global = true)]
-    pub bunker_uri: Option<String>,
-    /// remote signer app secret key
-    #[arg(long, global = true)]
-    pub bunker_app_key: Option<String>,
-    /// nsec or hex private key
-    #[arg(short, long, global = true)]
-    pub nsec: Option<String>,
-    /// password to decrypt nsec
-    #[arg(short, long, global = true)]
-    pub password: Option<String>,
-    /// disable spinner animations
-    #[arg(long, action = clap::ArgAction::SetTrue)] //
-    pub disable_cli_spinners: bool,
-}
-
-/// NgitCommands
-#[derive(Subcommand, Debug)]
-pub enum NgitCommands {
-    /// update cache with latest updates from nostr
-    Fetch(fetch::FetchArgs),
-    /// signal you are this repo's maintainer accepting proposals via
-    /// nostr
-    Init(init::InitArgs),
-    /// issue commits as a proposal
-    Send(send::SendArgs),
-    /// list proposals; checkout, apply or download selected
-    List,
-    /// send proposal revision
-    Push(push::PushArgs),
-    /// fetch and apply new proposal commits / revisions linked to
-    /// branch
-    Pull,
-    /// run with --nsec flag to change npub
-    Login(login::LoginArgs),
-    /// Query events from relays
-    Query(QuerySubCommand),
-}
-
 /// GnostrCli
 #[derive(Parser)]
 #[command(name = "gnostr")]
 #[command(author = "gnostr <admin@gnostr.org>, 0xtr. <oxtrr@protonmail.com")]
 #[command(version = "0.0.1")]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about,
+    long_about = None,
+    after_help = "Examples:\n  gnostr chat --topic gnostr-dev --name copilot --oneshot \"hello\"\n  gnostr dm --recipient npub1... --message \"hello\"\n  gnostr relay --detach --logging info\n  gnostr server --help"
+)]
 pub struct GnostrCli {
     /// command
     #[command(subcommand)]
@@ -174,6 +134,14 @@ pub struct GnostrCli {
     )]
     /// gitdir
     pub gitdir: Option<RepoPath>,
+    /// start on a specific tab (1-6; stash uses 5/6)
+    #[arg(
+        long,
+        global = true,
+        value_name = "TAB",
+        help = "Start on tab number (1-6)"
+    )]
+    pub tab: Option<usize>,
     /// directory
     #[arg(long, value_name = "DIRECTORY", help = "gnostr --directory '<string>'")]
     pub directory: Option<String>,
@@ -227,6 +195,9 @@ pub struct GnostrCli {
     /// Generate bugreport
     #[arg(long, default_value = "false")]
     pub bugreport: bool,
+    /// commands
+    #[arg(long = "command", action = clap::ArgAction::Append, help = "gnostr --command '<string>'")]
+    pub commands: Vec<String>,
 }
 
 impl Default for GnostrCli {
@@ -239,6 +210,7 @@ impl Default for GnostrCli {
             hash: None,
             workdir: Some(".".to_string()),
             gitdir: Some(".".into()),
+            tab: None,
             directory: None,
             theme: None,
             watcher: None,
@@ -257,6 +229,7 @@ impl Default for GnostrCli {
             trace: false,
             warn: false,
             bugreport: false,
+            commands: vec![],
         }
     }
 }
@@ -271,7 +244,7 @@ pub enum GnostrCommands {
     /// Broadcast events from file
     BroadcastEvents(broadcast_events::BroadcastEventsSubCommand),
     /// Chat sub commands
-    Chat(crate::p2p::chat::ChatSubCommands),
+    Chat(gnostr_chat::ChatSubCommands),
     /// Convert key from bech32 to hex or hex to bech32
     ConvertKey(convert_key::ConvertKeySubCommand),
     /// Create a new badge
@@ -294,6 +267,8 @@ pub enum GnostrCommands {
     GenerateKeypair(generate_keypair::GenerateKeypairSubCommand),
     /// Git sub commands
     Git(git::GitSubCommand),
+    /// ngit passthrough subcommands
+    Ngit(ngit::cli::Cli),
     /// Hide a message in a public chat room
     HidePublicChannelMessage(hide_public_channel_message::HidePublicChannelMessageSubCommand),
     /// Legit sub commands
@@ -302,8 +277,6 @@ pub enum GnostrCommands {
     ListEvents(list_events::ListEventsSubCommand),
     /// Mute a public key
     MutePublicKey(mute_publickey::MutePublickeySubCommand),
-    /// Ngit sub commands
-    Ngit(ngit::NgitSubCommand),
     /// Nip34 sub commands
     Nip34(crate::sub_commands::nip34::Nip34Command),
     /// Send text note
@@ -318,8 +291,11 @@ pub enum GnostrCommands {
     Query(QuerySubCommand),
     /// React to an event
     React(react::ReactionSubCommand),
-    /// Relay sub commands
+    /// Run the gnostr relay server
     Relay(relay::RelaySubCommand),
+    #[cfg(feature = "blossom")]
+    /// Run the Blossom server
+    Server(server::ServerSubCommand),
     /// Send a message to a public channel
     SendChannelMessage(send_channel_message::SendChannelMessageSubCommand),
     /// Update channel metadata
@@ -342,17 +318,26 @@ pub enum GnostrCommands {
 
 /// DmArgs
 #[derive(Parser, Debug, Clone)]
-#[command(author, version, about = "Send a NIP-44 direct message", long_about = None)]
+#[command(author, version, about = "Send or list NIP-44 direct messages", long_about = None)]
 pub struct DmArgs {
     /// Public key of the recipient (hex or bech32)
-    #[arg(short, long, help = "Recipient's public key (hex or bech32)")]
+    #[arg(long, help = "Recipient's public key (hex or bech32)")]
     pub recipient: String,
     /// Message content
-    #[arg(short, long, help = "The message to send")]
-    pub message: String,
+    #[arg(short, long, help = "The message to send; omit to list DMs for the recipient")]
+    pub message: Option<String>,
     /// Relay to send the DM to (can be used multiple times)
-    #[arg(long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
+    #[arg(short, long, action = clap::ArgAction::Append, help = "Relay to send the DM to (can be used multiple times)")]
     pub relay: Vec<String>,
+    /// Limit when listing DMs for a recipient
+    #[arg(short, long, help = "Limit when listing DMs for the recipient")]
+    pub limit: Option<i32>,
+    /// Print decrypted inbox events as JSON
+    #[arg(long, help = "Print decrypted inbox events as JSON")]
+    pub json: bool,
+    /// Print the event before sending
+    #[arg(short = 'v', long = "verbose", action = clap::ArgAction::Count, help = "Print the event before sending")]
+    pub verbose: u8,
 }
 
 /// get_app_cache_path
@@ -383,7 +368,117 @@ pub fn get_app_config_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-//#[test]
-//fn verify_app() {
-//    app().debug_assert();
-//}
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use super::*;
+
+    fn default_test_npub() -> String {
+        let sender = crate::types::PrivateKey(
+            crate::git2::default_gnostr_private_key(),
+            crate::types::KeySecurity::Weak,
+        );
+        sender.public_key().as_bech32_string()
+    }
+
+    #[test]
+    #[cfg(not(feature = "blossom"))]
+    fn server_subcommand_is_hidden_without_blossom() {
+        assert!(GnostrCli::try_parse_from(["gnostr", "server"]).is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "blossom")]
+    fn server_subcommand_parses_with_blossom() {
+        let cli = GnostrCli::try_parse_from(["gnostr", "server"]).expect("server subcommand");
+        assert!(matches!(cli.command, Some(GnostrCommands::Server(_))));
+    }
+
+    #[test]
+    fn dm_subcommand_uses_short_r_for_relays() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+            "--message",
+            "hello",
+            "-r",
+            "wss://relay.damus.io",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(args.recipient, recipient);
+                assert_eq!(args.message, Some("hello".to_string()));
+                assert_eq!(args.relay, vec!["wss://relay.damus.io".to_string()]);
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+
+    #[test]
+    fn dm_subcommand_allows_missing_message_for_inbox_mode() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(args.recipient, recipient);
+                assert_eq!(args.message, None);
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+
+    #[test]
+    fn dm_subcommand_parses_limit_for_inbox_mode() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+            "--limit",
+            "25",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert_eq!(args.recipient, recipient);
+                assert_eq!(args.limit, Some(25));
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+
+    #[test]
+    fn dm_subcommand_parses_json_flag_for_inbox_mode() {
+        let recipient = default_test_npub();
+        let cli = GnostrCli::try_parse_from([
+            "gnostr",
+            "dm",
+            "--recipient",
+            &recipient,
+            "--json",
+        ])
+        .expect("dm subcommand");
+
+        match cli.command {
+            Some(GnostrCommands::Dm(args)) => {
+                assert!(args.json);
+            }
+            _ => panic!("expected dm command"),
+        }
+    }
+}

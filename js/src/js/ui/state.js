@@ -1,0 +1,1551 @@
+const VM_FRIENDS       = "friends"; // mine + only events that are from my contacts
+const VM_NOTIFICATIONS = "notifications";  // reactions & replys
+const VM_DM            = "dm"; // all events of KIND_DM aimmed at user 
+const VM_DM_THREAD     = "dmthread"; // all events from a user of KIND_DM 
+const VM_THREAD        = "thread"; // all events in response to target event
+const VM_USER          = "user"; // all events by pubkey 
+const VM_SETTINGS      = "settings";
+const VM_RELAYS        = "relays";
+const VM_NIP_EXPLORER  = "nip-explorer";
+const VM_NIP_KIND      = "nip-kind";
+const VM_NIP34         = "nip34-view-friends"; // NIP-34 events from followed profiles
+const VM_GNOSTR  = "gnostr"; // All NIP-34 events
+const VM_NIP34_DETAIL  = "nip34-detail"; // Detailed view of a NIP-34 repository
+
+const VM_SEARCH        = "search"; // Search results
+
+const VIEW_NAMES= {};
+VIEW_NAMES[VM_FRIENDS] = "home";
+VIEW_NAMES[VM_NOTIFICATIONS] = "notifications";
+VIEW_NAMES[VM_DM] = "messages";
+VIEW_NAMES[VM_DM_THREAD] = "dm";
+VIEW_NAMES[VM_USER] = "profile";
+VIEW_NAMES[VM_THREAD] = "thread";
+VIEW_NAMES[VM_SETTINGS] = "settings";
+VIEW_NAMES[VM_RELAYS] = "relays";
+VIEW_NAMES[VM_NIP_EXPLORER] = "nip";
+VIEW_NAMES[VM_NIP_KIND] = "nip";
+VIEW_NAMES[VM_NIP34] = "nip/34";
+VIEW_NAMES[VM_GNOSTR] = "gnostr";
+VIEW_NAMES[VM_NIP34_DETAIL] = "repository-details";
+VIEW_NAMES[VM_SEARCH] = "Search";
+
+function view_get_timeline_el() {
+	return find_node("#timeline");
+}
+
+// TODO clean up popstate listener (move to init method or such)
+window.addEventListener("popstate", function(event) {
+	if (event.state && event.state.mode) {
+		// Update the timeline mode.
+		// Pass pushState=false to avoid adding another state to the history
+		view_timeline_apply_mode(GNOSTR, event.state.mode, event.state.opts, false);
+	}
+})
+
+function view_timeline_apply_mode(model, mode, opts={}, push_state=true) {
+    console.log(`view_timeline_apply_mode called. Mode: ${mode}, Opts:`, opts);
+	let xs;
+	const { pubkey, thread_id } = opts;
+	const el = view_get_timeline_el();
+	const now = new Date().getTime();
+
+	if (mode !== VM_SEARCH) {
+		clear_search_subscription(model);
+	}
+
+	if (opts.hide_replys == undefined) {
+		opts.hide_replys = el.dataset.hideReplys == "true";
+	}
+
+	// Don't do anything if we are already here
+	if (el.dataset.mode == mode) {
+		switch (mode) {
+			case VM_FRIENDS:
+				if ((el.dataset.hideReplys == "true") == opts.hide_replys)
+					return;
+				push_state = false;
+				break;
+			case VM_NIP_KIND:
+				if (el.dataset.kind == String(opts.kind))
+					return;
+				break;
+			case VM_SEARCH:
+				if (el.dataset.searchQuery == (opts.query || ""))
+					return;
+				break;
+			case VM_DM_THREAD:
+			case VM_USER:
+				if (el.dataset.pubkey == opts.pubkey)
+					return;
+				break;
+			case VM_THREAD:
+				if (el.dataset.threadId == thread_id && el.dataset.relatedThreadId == opts.related_thread_id)
+					return;
+				break;
+	case VM_NIP34_DETAIL:
+		if (el.dataset.repoId == opts.repo_id)
+			return;
+		break;
+	case VM_RELAYS:
+		return;
+	case VM_NIP_EXPLORER:
+		return;
+			default:
+				return;
+		}
+	}
+	
+	// Fetch history for certain views
+	if (mode == VM_THREAD) {
+		view_show_spinner(true);
+		const clicked_event = model.all_events[thread_id];
+        if (clicked_event && is_nip34_repo_kind(clicked_event.kind)) {
+            const repo_id_tag = clicked_event.tags.find(tag => tag[0] === 'a');
+			if (repo_id_tag) {
+				const repo_id = repo_id_tag[1];
+				const parts = repo_id.split(':');
+				if (parts.length === 3) {
+					const kind = parseInt(parts[0]);
+					const pubkey = parts[1];
+					const d_tag = parts[2];
+					if (kind === KIND_REPO_ANNOUNCE) {
+						model.pool.subscribe(`repo:${thread_id}`, [{
+							kinds: [kind],
+							authors: [pubkey],
+							"#d": [d_tag]
+						}]);
+					}
+				}
+			}
+		}
+		fetch_thread_history(thread_id, model.pool);
+	}
+	if (mode == VM_USER && pubkey && pubkey != model.pubkey) {
+		view_show_spinner(true);
+		fetch_profile(pubkey, model.pool);
+	}
+	if (mode == VM_NOTIFICATIONS) {
+		reset_notifications(model);
+	}
+	if (mode == VM_NIP34 || mode == VM_GNOSTR) {
+            view_show_spinner(true);
+            // NIP-34 events are already fetched as part of PUBLIC_KINDS,
+            // so no special fetch is needed here beyond what's done for friends.
+        }
+	if (mode == VM_NIP_EXPLORER) {
+		view_show_spinner(false);
+	}
+        if (mode == VM_NIP34_DETAIL) {
+            console.log(`view_timeline_apply_mode: Entering VM_NIP34_DETAIL for repo_id: ${opts.repo_id}`);
+        }
+
+	const names = VIEW_NAMES;
+	let name = names[mode];
+	let profile;
+
+	// Push a new state to the browser history stack
+	if (push_state) {
+		let pieces = [name.toLowerCase()];
+		switch (mode) {
+			case VM_FRIENDS:
+				pieces = [];
+				break;
+			case VM_SEARCH:
+				pieces = ["search"];
+				break;
+			case VM_THREAD:
+				pieces.push(thread_id);
+				break;
+			case VM_USER:
+			case VM_DM_THREAD:
+			case VM_GNOSTR: // Add for nip34-global
+				pieces.push(pubkey); // This should be empty for global
+				break;
+	case VM_NIP34:
+		if (opts.kind) {
+			pieces.push(opts.kind);
+		}
+		break;
+		case VM_NIP_KIND:
+			pieces = ["nip", opts.kind];
+			break;
+		case VM_NIP34_DETAIL:
+	        pieces.push(opts.repo_id);
+	        break;
+	}
+			let next_path = "/" + pieces.join("/");
+			if (mode == VM_SEARCH) {
+				next_path += `?search=${encodeURIComponent(opts.query || "")}`;
+			}
+			window.history.pushState({mode, opts}, "", next_path);
+	}
+
+	el.dataset.mode = mode;
+	delete el.dataset.threadId;
+	delete el.dataset.relatedThreadId;
+	delete el.dataset.pubkey;
+	delete el.dataset.repoId;
+	delete el.dataset.kind;
+	delete el.dataset.searchQuery;
+	switch(mode) {
+	case VM_FRIENDS:
+		el.dataset.hideReplys = opts.hide_replys;
+		name = "Home";
+		break;
+	case VM_THREAD:
+		el.dataset.threadId = thread_id;
+		if (opts.related_thread_id) {
+			el.dataset.relatedThreadId = opts.related_thread_id;
+		}
+		break;
+	case VM_USER:
+	case VM_DM_THREAD:
+		profile = model_get_profile(model, pubkey);
+		name = fmt_name(profile);
+		el.dataset.pubkey = pubkey;
+		break;
+	case VM_NIP34:
+		if (opts.kind) {
+			el.dataset.kind = opts.kind;
+			name = `nip/34/${opts.kind}`;
+		}
+		break;
+	case VM_NIP_KIND:
+		if (opts.kind !== undefined) {
+			el.dataset.kind = opts.kind;
+			name = `nip/${opts.kind}`;
+		}
+		break;
+	case VM_NIP_EXPLORER:
+		name = "NIP explorer";
+		view_set_show_count(0, true, true);
+		break;
+	case VM_SEARCH:
+		el.dataset.searchQuery = opts.query || "";
+		name = "Search";
+		break;
+	case VM_RELAYS:
+		name = "Relays";
+		view_set_show_count(0, true, true);
+		break;
+        case VM_NIP34_DETAIL:
+		el.dataset.repoId = opts.repo_id;
+		//finger print
+		name = "gnostr://" + (opts.repo_name || opts.repo_id.slice(5 + 1, 5+1+8) + '/' + opts.repo_id.slice(5+1+64+1,100));
+		break;
+	}
+
+	// Do some visual updates
+	find_node("#show-more").classList.add("hide");
+	// Capitalize the first letter of the name for display, unless it's a special case
+	if (mode !== VM_USER && mode !== VM_DM_THREAD && mode !== VM_NIP34_DETAIL && mode !== VM_NIP_KIND) {
+		name = name.charAt(0).toUpperCase() + name.slice(1);
+	}
+		find_node("#global-header #app-title").innerText = name;
+		view_update_navs(mode);
+		find_node("#view [role='profile-info']").classList.toggle("hide", mode != VM_USER);
+		const timeline_el = find_node("#timeline");
+		timeline_el.classList.toggle("reverse", mode == VM_DM_THREAD);
+		timeline_el.classList.toggle("hide", mode == VM_SETTINGS || mode == VM_RELAYS || mode == VM_DM);
+		find_node("#settings").classList.toggle("hide", mode != VM_SETTINGS);
+		find_node("#settings-profile").classList.toggle("hide", mode != VM_SETTINGS);
+		find_node("#relays").classList.toggle("hide", mode != VM_RELAYS);
+		find_node("#dms").classList.toggle("hide", mode != VM_DM);
+		find_node("#dm-post").classList.toggle("hide", mode != VM_DM_THREAD);
+		find_node("#new-note-mobile").classList.toggle("hide", mode == VM_DM_THREAD);
+		find_node("#global-header #header-tools button[action='mark-all-read']")
+			.classList.toggle("hide", mode != VM_DM);
+
+		// Show/hide different profile image in header
+		const show_mypfp = mode != VM_DM_THREAD && mode != VM_USER;
+		const el_their_pfp = find_node("#global-header img.pfp[role='their-pfp']");
+		el_their_pfp.classList.toggle("hide", show_mypfp);
+		find_node("#global-header img.pfp[role='my-pfp']")
+			.classList.toggle("hide", !show_mypfp);
+
+		view_timeline_refresh(model, mode, opts);
+
+		switch (mode) {
+			case VM_SEARCH:
+				perform_search(model, opts.query || "");
+				break;
+			case VM_DM_THREAD:
+				decrypt_dms(model);
+				model_dm_seen(model, pubkey);
+				el_their_pfp.src = get_profile_pic(profile);
+				el_their_pfp.dataset.pubkey = pubkey;
+				break;
+	case VM_DM:
+		sync_all_dm_events_to_local_relay(GNOSTR);
+		if (typeof refresh_dm_subscriptions === "function") {
+			refresh_dm_subscriptions(GNOSTR);
+		}
+		model.dms_need_redraw = true;
+		view_show_spinner(true);
+		view_set_show_count(0, true, true);
+		//decrypt_dms(model);
+				//view_dm_update(model);
+				break;
+			case VM_SETTINGS:
+				view_show_spinner(false);
+				view_set_show_count(0, true, true);
+				break;
+			case VM_USER:
+				el_their_pfp.src = get_profile_pic(profile);
+				el_their_pfp.dataset.pubkey = pubkey;
+				view_update_profile(model, pubkey);
+				break;
+			case VM_NIP34_DETAIL:
+				view_show_spinner(true);
+				fetch_repo_events(opts.repo_id, model.pool);
+				break;
+		}
+	return mode;
+}
+
+function clear_search_subscription(model) {
+	if (!model.search_sub_id || !model.pool) {
+		return;
+	}
+	model.pool.unsubscribe(model.search_sub_id);
+	model.search_sub_id = null;
+}
+
+function normalize_relay_urls(relays) {
+	return relays.filter((relay) => typeof relay === "string" && (relay.startsWith("ws://") || relay.startsWith("wss://")));
+}
+
+function relay_supports_nip34(model, url) {
+	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
+	const entry = discovery.find((item) => item && item.url === url);
+	return Array.isArray(entry?.supported_nips) && entry.supported_nips.includes(34);
+}
+
+function relay_is_local(url) {
+	return typeof local_relay_url !== "undefined" && url === local_relay_url;
+}
+
+function relay_sort_priority(model, url) {
+	if (relay_supports_nip34(model, url)) {
+		return 0;
+	}
+	if (relay_is_local(url)) {
+		return 1;
+	}
+	return 2;
+}
+
+function relay_ping_sort_value(model, url) {
+	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
+	const entry = discovery.find((item) => item && item.url === url);
+	return Number.isFinite(entry?.ping_ms) ? entry.ping_ms : Number.POSITIVE_INFINITY;
+}
+
+function sort_relays_by_ping(model, relays) {
+	return relays
+		.map((relay, index) => ({
+			relay,
+			index,
+			priority: relay_sort_priority(model, relay),
+			ping: relay_ping_sort_value(model, relay),
+		}))
+		.sort((left, right) => {
+			if (left.priority !== right.priority) {
+				return left.priority - right.priority;
+			}
+			if (left.ping !== right.ping) {
+				return left.ping - right.ping;
+			}
+			return left.index - right.index;
+		})
+		.map((item) => item.relay);
+}
+
+function sort_relay_pairs_by_ping(model, relay_pairs) {
+	return relay_pairs
+		.map((pair, index) => ({
+			pair,
+			index,
+			priority: relay_sort_priority(model, pair[0]),
+			ping: relay_ping_sort_value(model, pair[0]),
+		}))
+		.sort((left, right) => {
+			if (left.priority !== right.priority) {
+				return left.priority - right.priority;
+			}
+			if (left.ping !== right.ping) {
+				return left.ping - right.ping;
+			}
+			return left.index - right.index;
+		})
+		.map((item) => item.pair);
+}
+
+function sort_pool_relays_by_ping(model) {
+	if (!model || !model.pool || !Array.isArray(model.pool.relays)) {
+		return;
+	}
+	model.pool.relays.sort((left, right) => {
+		const left_priority = relay_sort_priority(model, left.url);
+		const right_priority = relay_sort_priority(model, right.url);
+		if (left_priority !== right_priority) {
+			return left_priority - right_priority;
+		}
+		const left_ping = relay_ping_sort_value(model, left.url);
+		const right_ping = relay_ping_sort_value(model, right.url);
+		if (left_ping !== right_ping) {
+			return left_ping - right_ping;
+		}
+		return left.url.localeCompare(right.url);
+	});
+}
+
+/* view_timeline_refresh is a hack for redrawing the events in order
+ */
+function view_timeline_refresh(model, mode, opts={}) {
+    console.log(`view_timeline_refresh called. Mode: ${mode}, Opts:`, opts);
+	const el = view_get_timeline_el();
+	if (!mode) {
+		mode = el.dataset.mode;
+		opts.thread_id = el.dataset.threadId;
+		opts.pubkey = el.dataset.pubkey;
+        opts.repo_id = el.dataset.repoId;
+		opts.hide_replys = el.dataset.hideReplys == "true";
+	}
+	if (!opts.is_showing_more) {
+		el.innerHTML = "";
+	}
+
+	if (mode == VM_NIP_EXPLORER) {
+		el.appendChild(document.createRange().createContextualFragment(render_nip_explorer()));
+		if (typeof load_nip89_app_metadata === "function") {
+			void load_nip89_app_metadata(
+				model,
+				"#nip89-app-mount-nip",
+				"#nip89-app-template-nip",
+				"#nip89-app-card-nip"
+			);
+		}
+		view_set_show_count(0, true, true);
+		return;
+	}
+
+	let evs = model_events_arr(model);
+
+	if (mode == VM_THREAD) {
+		const clicked_event = model.all_events[opts.thread_id];
+		if (clicked_event) {
+			const root_id = clicked_event.refs.root || clicked_event.id;
+			const root_event = model.all_events[root_id];
+
+			if (root_event) {
+				let announcement_event = null;
+				let repo_state_events = [];
+				let repo_id = "";
+				if (root_event.kind === KIND_REPO_STATE_ANNOUNCE) {
+					const d_tag = root_event.tags.find(tag => tag[0] === 'd');
+					if (d_tag) {
+						repo_id = d_tag[1];
+						for (const key in model.all_events) {
+							const ev = model.all_events[key];
+							if (ev.kind === KIND_REPO_ANNOUNCE && ev.tags.find(t => t[0] === 'd' && t[1] === repo_id)) {
+								announcement_event = ev;
+								break;
+							}
+						}
+					}
+				} else if (root_event.kind === KIND_REPO_ANNOUNCE) {
+					const d_tag = root_event.tags.find(tag => tag[0] === 'd');
+					if (d_tag) {
+						repo_id = d_tag[1];
+						for (const key in model.all_events) {
+							const ev = model.all_events[key];
+							if (ev.kind === KIND_REPO_STATE_ANNOUNCE && ev.tags.find(t => t[0] === 'd' && t[1] === repo_id)) {
+								repo_state_events.push(ev);
+							}
+						}
+					}
+				}
+
+				const replies = [];
+				for (const ev of evs) {
+					if (ev.id !== root_id && event_refs_event(ev, {id: root_id})) {
+						replies.push(ev);
+					}
+				}
+				replies.sort((a, b) => a.created_at - b.created_at);
+
+				// Keep repo activity anchored to the original thread when we drill
+				// from a thread into a related NIP-34 event.
+				const related_anchor_id = opts.related_thread_id || root_id;
+				const related_nip34 = [];
+				for (const ev of evs) {
+					if (ev.id === root_id || !is_nip34_repo_kind(ev.kind)) {
+						continue;
+					}
+					if (root_event.kind === KIND_REPO_ANNOUNCE && ev.kind === KIND_REPO_STATE_ANNOUNCE) {
+						continue;
+					}
+					if (ev.refs && (ev.refs.root === related_anchor_id || ev.refs.reply === related_anchor_id)) {
+						related_nip34.push(ev);
+						continue;
+					}
+					if (event_refs_event(ev, {id: related_anchor_id})) {
+						related_nip34.push(ev);
+					}
+				}
+				related_nip34.sort((a, b) => a.created_at - b.created_at);
+
+				const fragment = new DocumentFragment();
+				if (announcement_event) {
+					const el = view_render_event(model, announcement_event);
+					if (el) fragment.appendChild(el);
+				}
+				const root_el = view_render_event(model, root_event);
+				if (root_el) fragment.appendChild(root_el);
+				for (const ev of repo_state_events) {
+					const state_el = view_render_event(model, ev);
+					if (state_el) fragment.appendChild(state_el);
+				}
+
+				for (const reply of replies) {
+					const reply_el = view_render_event(model, reply);
+					if (reply_el) fragment.appendChild(reply_el);
+				}
+
+				if (related_nip34.length > 0) {
+					// Render matching repo events directly beneath the thread so the
+					// related activity stays visible while navigating nested threads.
+					const section = document.createElement("section");
+					section.classList.add("related-nip34");
+					section.innerHTML = "<header><label>Related NIP-34</label></header>";
+					for (const ev of related_nip34) {
+						const related_el = view_render_event(model, ev);
+						if (related_el) {
+							section.appendChild(related_el);
+						}
+					}
+					fragment.appendChild(section);
+				}
+				el.appendChild(fragment);
+			}
+		}
+	} else {
+		// Existing logic for other views
+		if (mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP34 || mode == VM_NIP_KIND) {
+			evs.sort((a, b) => b.created_at - a.created_at);
+		} else {
+			evs.reverse();
+		}
+
+		const fragment = new DocumentFragment();
+		let count = 0;
+		const limit = 50;
+		for (let i = 0; i < evs.length && count < limit; i++) {
+			const ev = evs[i];
+			if (!view_mode_contains_event(model, ev, mode, opts))
+				continue;
+			let ev_el = model.elements[ev.id];
+			if (!ev_el) {
+				ev_el = view_render_event(model, ev);
+				if (!ev_el) continue;
+			}
+			fragment.appendChild(ev_el);
+			count++;
+		}
+		if (count > 0) {
+			el.append(fragment);
+		}
+		const is_more_mode = mode == VM_FRIENDS || mode == VM_NOTIFICATIONS || mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP_KIND;
+		if (is_more_mode && evs.length > limit) {
+			find_node("#show-more").classList.remove("hide");
+		} else {
+			find_node("#show-more").classList.add("hide");
+		}
+	}
+
+	view_set_show_count(0);
+	view_timeline_update_timestamps();
+	view_show_spinner(false);
+}
+
+function view_update_navs(mode) {
+	find_nodes("nav.nav button[data-view]").forEach((el)=> {
+		el.classList.toggle("active", view_matches_mode(el.dataset.view, mode))
+	});
+}
+
+function view_matches_mode(view_name, mode) {
+	if (view_name == mode)
+		return true;
+	if (view_name == "nip" && (mode == VM_NIP_EXPLORER || mode == VM_NIP_KIND))
+		return true;
+	if (view_name == "relays" && mode == VM_RELAYS)
+		return true;
+	return false;
+}
+
+function view_name_to_mode(view_name) {
+	if (view_name == "nip")
+		return VM_NIP_EXPLORER;
+	if (view_name == "relays")
+		return VM_RELAYS;
+	return view_name;
+}
+
+function view_path_to_mode(pathname) {
+	const parts = pathname.split("/").slice(1);
+	let mode;
+	let opts = {};
+	let valid = true;
+
+	if (pathname == "/" || parts[0] == "") {
+		mode = VM_NIP_EXPLORER;
+	} else if (parts[0] == "nip") {
+		if (parts[1] == "34") {
+			mode = VM_NIP34;
+			opts.kind = KIND_REPO_ANNOUNCE;
+			if (parts[2] && typeof NIP34_REPO_KINDS !== "undefined") {
+				const kind = parseInt(parts[2], 10);
+				if (!Number.isNaN(kind) && NIP34_REPO_KINDS.includes(kind)) {
+					opts.kind = kind;
+				} else {
+					valid = false;
+				}
+			}
+		} else if (parts[1]) {
+			const kind = parseInt(parts[1], 10);
+			if (!Number.isNaN(kind)) {
+				mode = VM_NIP_KIND;
+				opts.kind = kind;
+			} else {
+				mode = VM_NIP_EXPLORER;
+				valid = false;
+			}
+		} else {
+			mode = VM_NIP_EXPLORER;
+		}
+	} else if (parts[0] == "relays") {
+		mode = VM_RELAYS;
+	} else {
+		for (var key in VIEW_NAMES) {
+			if (VIEW_NAMES[key].toLowerCase() == parts[0]) {
+				mode = key;
+				break;
+			}
+		}
+	}
+
+	if (!mode) {
+		return null;
+	}
+
+	switch (mode) {
+		case VM_THREAD:
+			opts.thread_id = parts[1];
+			break;
+		case VM_DM_THREAD:
+		case VM_USER:
+			opts.pubkey = parts[1];
+			break;
+		case VM_NIP34_DETAIL:
+			opts.repo_id = parts[1];
+			break;
+		case VM_NIP_KIND:
+			opts.kind = parseInt(opts.kind, 10);
+			break;
+	}
+
+	return { mode, opts, valid };
+}
+
+function view_show_spinner(show=true) {
+	find_node("#view .loading-events").classList.toggle("hide", !show);
+}
+
+function view_get_el_opts(el) {
+	const mode = el.dataset.mode;
+	return {
+		thread_id: el.dataset.threadId,
+		related_thread_id: el.dataset.relatedThreadId,
+		pubkey: el.dataset.pubkey,
+		kind: el.dataset.kind ? parseInt(el.dataset.kind, 10) : undefined,
+		hide_replys: mode == VM_FRIENDS && el.dataset.hideReplys == "true",
+	};
+}
+
+/* view_timeline_update iterates through invalidated event ids and updates the
+ * state of the timeline and other factors such as notifications, etc.
+ */
+function view_timeline_update(model) {
+	const el = view_get_timeline_el();
+	const mode = el.dataset.mode;
+	if (mode == VM_NIP_EXPLORER) {
+		view_show_spinner(false);
+		return;
+	}
+	const opts = view_get_el_opts(el);
+	let count = 0;
+	let ncount = 0;
+	let decrypted = false;
+	const latest_ev = el.firstChild ? 
+		model.all_events[el.firstChild.id.slice(2)] : undefined;
+	const left_overs = [];
+	while (model.invalidated.length > 0 && count < 500) {
+		var evid = model.invalidated.pop();
+
+		// Remove deleted events first
+		if (model_is_event_deleted(model, evid)) {
+			let x = model.elements[evid];
+			if (x && x.parentElement) {
+				x.parentElement.removeChild(x);	
+				delete model.elements[evid];
+			}
+			continue;
+		}
+
+		// Skip non-renderables
+		var ev = model.all_events[evid];
+		if (!event_is_renderable(ev)) {
+			continue;
+		}
+
+		// Re-render content of a decrypted dm
+		if (ev.kind == KIND_DM && model.elements[evid]) {
+			rerender_dm(model, ev, model.elements[evid]);
+			decrypted = true;
+			continue;
+		}
+
+		// Put it back on the stack to re-render if it's not ready.
+		if (!view_render_event(model, ev)) {
+			left_overs.push(evid);
+			continue;
+		}
+
+		// Increase notification count if needed
+		if (event_refs_pubkey(ev, model.pubkey) && 
+			ev.created_at > model.notifications.last_viewed) {
+			ncount++;
+		}
+
+		// If the new element is newer than the latest & is viewable then
+		// we want to increase the count of how many to add to view
+		if (event_cmp_created(ev, latest_ev) >= 0 && 
+			view_mode_contains_event(model, ev, mode, opts)) {
+			count++;
+		}
+	}
+	model.invalidated = model.invalidated.concat(left_overs);
+
+	// If there are new things to show on our current view lets do it
+	if (count > 0) {
+		if (!latest_ev || mode == VM_DM_THREAD) {
+			view_timeline_show_new(model);
+		}
+		if (mode == VM_DM_THREAD) {
+			model_mark_dms_seen(model, opts.pubkey);
+			view_dm_update(model);
+		}
+		view_set_show_count(count, true, false);
+	}
+	// Update notification markers and count
+	if (ncount > 0) {
+		//log_debug(`new notis ${ncount}`);
+		model.notifications.count += ncount;
+	}
+	// Update the dms list view
+	if (decrypted) {
+		view_dm_update(model);
+	}
+}
+
+function view_set_show_count(count, add=false, hide=false) {
+	const show_el = find_node("#show-new")
+	const num_el = find_node("#show-new span", show_el);
+	if (!num_el) {
+		return;
+	}
+
+        if (num_el.innerText !== null) {
+        if (add) {
+		count += parseInt(num_el.innerText || 0)
+	}
+        num_el.innerText = count;
+
+        // You might also need to check for the count being zero to hide it
+        if (count === 0) {
+            num_el.style.display = 'none';
+        } else {
+            num_el.style.display = 'block'; // Or whatever default display is
+        }
+
+        }
+	show_el.classList.toggle("hide", hide || count <= 0);
+}
+
+function view_timeline_show_new(model) {
+	const el = view_get_timeline_el();
+	const mode = el.dataset.mode;
+	const opts = view_get_el_opts(el);
+	let latest_evid = el.firstChild ? el.firstChild.id.slice(2) : undefined;
+	if (mode == VM_THREAD) {
+		latest_evid = el.lastElementChild ? el.lastElementChild.id.slice(2) : undefined;
+	}
+
+	let count = 0;
+	const evs = model_events_arr(model)
+	const fragment = new DocumentFragment();
+	for (let i = evs.length - 1; i >= 0 && count < 500; i--) {
+		const ev = evs[i];
+		if (latest_evid && ev.id == latest_evid) {
+			break;
+		}
+		if (!view_mode_contains_event(model, ev, mode, opts))
+			continue;
+		let ev_el = model.elements[ev.id];
+		if (!ev_el)
+			continue;
+		fragment.appendChild(ev_el);
+		count++;
+	}
+	if (count > 0) {
+		if (mode == VM_THREAD) {
+			el.appendChild(fragment);
+		} else {
+			el.prepend(fragment);
+		}
+		view_show_spinner(false);
+		if (mode == VM_NOTIFICATIONS) {
+			reset_notifications(model);
+		}
+	}
+	view_set_show_count(-count, true);
+	view_timeline_update_timestamps();
+	if (mode == VM_DM_THREAD) decrypt_dms(model);
+}
+
+function view_timeline_show_more(model) {
+	const el = view_get_timeline_el();
+	const mode = el.dataset.mode;
+	if (mode == VM_NIP_EXPLORER) {
+		view_show_spinner(false);
+		return;
+	}
+	const opts = view_get_el_opts(el);
+	const oldest_evid = el.lastElementChild ? el.lastElementChild.id.slice(2) : undefined;
+	const evs = model_events_arr(model);
+	const sorted = (mode == VM_NIP34_DETAIL || mode == VM_GNOSTR || mode == VM_NIP34 || mode == VM_NIP_KIND)
+		? evs.slice().sort((a, b) => b.created_at - a.created_at)
+		: evs.slice().reverse();
+	const oldest_index = oldest_evid ? sorted.findIndex((ev) => ev.id === oldest_evid) : -1;
+	if (oldest_index < 0) {
+		find_node("#show-more").classList.add("hide");
+		return;
+	}
+	const fragment = new DocumentFragment();
+	const limit = 200;
+	let count = 0;
+	let has_more = false;
+	for (let i = oldest_index + 1; i < sorted.length; i++) {
+		const ev = sorted[i];
+		if (!view_mode_contains_event(model, ev, mode, opts))
+			continue;
+		let ev_el = model.elements[ev.id];
+		if (!ev_el || ev_el.parentElement) {
+			has_more = true;
+			continue;
+		}
+		fragment.appendChild(ev_el);
+		count++;
+		if (count >= limit) {
+			has_more = true;
+			break;
+		}
+	}
+	if (count > 0) {
+		el.append(fragment);
+	}
+	if (!has_more) {
+		// No more to show, hide the button
+		find_node("#show-more").classList.add("hide");
+	}
+	view_timeline_update_timestamps();
+}
+
+function show_more_nip34_events(model) {
+    console.log("show_more_nip34_events called.");
+    const el = view_get_timeline_el();
+    const repo_id = el.dataset.repoId;
+    if (!repo_id) {
+        console.error("show_more_nip34_events: No repo_id found in dataset.");
+        return;
+    }
+
+    const oldest_event_el = el.lastElementChild; // Assuming chronological order, last element is oldest
+    if (!oldest_event_el) {
+        console.log("show_more_nip34_events: No oldest event found in timeline.");
+        return;
+    }
+
+    const oldest_evid = oldest_event_el.id.slice(2);
+    const oldest_event = model.all_events[oldest_evid];
+    if (!oldest_event) {
+        console.error(`show_more_nip34_events: Oldest event ${oldest_evid} not found in model.`);
+        return;
+    }
+    const until = oldest_event.created_at;
+
+    console.log(`show_more_nip34_events: Fetching more NIP-34 events for repo_id: ${repo_id} until: ${until}`);
+    fetch_repo_events(repo_id, model.pool, until);
+
+    // Temporarily hide the show-more button until new events are loaded
+    find_node("#show-more").classList.add("hide");
+}
+
+function view_render_event(model, ev, force=false) {
+	if (model.elements[ev.id] && !force)
+		return model.elements[ev.id];
+	const html = render_event(model, ev, {});
+	if (html == "") {
+		//log_debug(`failed to render ${ev.id}`);
+		return;
+	}
+	const div = document.createElement("div");
+	div.innerHTML = html;
+	const el = div.firstChild;
+	model.elements[ev.id] = el;
+	const pfp = find_node("img.pfp", el)
+	if (pfp)
+		pfp.addEventListener("error", onerror_pfp);
+	return el;
+}
+
+function view_timeline_update_profiles(model, pubkey) {
+	const el = view_get_timeline_el();
+	const p = model_get_profile(model, pubkey);
+	const name = fmt_name(p);
+	const pic = get_profile_pic(p);
+	for (const evid in model.elements) {
+		// XXX if possible update profile pics in a smarter way
+		// this may be perhaps a micro optimization tho
+		update_el_profile(model.elements[evid], pubkey, name, pic);	
+	}
+	// Update the profile view if it's active
+	if (el.dataset.pubkey == pubkey) {
+		const mode = el.dataset.mode;
+		switch (mode) {
+			case VM_USER:
+				view_update_profile(model, pubkey);
+			case VM_DM_THREAD:
+				find_node("#global-header #app-title").innerText = name;
+		}
+	}
+	// Update dm's section since they are not in our view, dm's themselves will
+	// be caught by the process above.
+	update_el_profile(find_node("#dms"), pubkey, name, pic);
+	update_el_profile(find_node("#global-header"), pubkey, name, pic);
+}
+
+function update_el_profile(el, pubkey, name, pic) {
+	if (!el)
+		return;
+	find_nodes(`.username[data-pubkey='${pubkey}']`, el).forEach((el)=> {
+		el.innerText = name;
+	});
+	find_nodes(`img[data-pubkey='${pubkey}']`, el).forEach((el)=> {
+		el.src = pic;
+		el.title = name;
+	});
+}
+
+function view_timeline_update_timestamps() {
+	// TODO only update elements that are fresh and are in DOM
+	const el = view_get_timeline_el();
+	let xs = el.querySelectorAll(".timestamp");
+	let now = new Date().getTime(); 
+	for (const x of xs) {
+		let t = parseInt(x.dataset.timestamp)
+		x.innerText = fmt_since_str(now, t*1000); 
+	}
+}
+
+///
+
+
+function render_dummy_events(container_el, count) {
+    const fragment = new DocumentFragment();
+    for (let i = 0; i < count; i++) {
+        const dummy_el = document.createElement("div");
+        dummy_el.classList.add("dummy-event", "event-base"); // Add event-base for consistent styling
+        dummy_el.innerHTML = `
+            <div class="post-info">
+                <img class="pfp skeleton" style="width:40px;height:40px;border-radius:50%;" src="${IMG_NO_USER}"></img>
+                <div class="post-identifiers">
+                    <div class="author skeleton" style="width:100px;height:12px;"></div>
+                    <div class="time skeleton" style="width:60px;height:10px;"></div>
+                </div>
+            </div>
+            <div class="post-content skeleton" style="height:60px;"></div>
+        `;
+        fragment.appendChild(dummy_el);
+    }
+    container_el.appendChild(fragment);
+}
+
+
+///
+
+
+//function view_timeline_update_reaction(model, ev) {
+//	let el;
+//	const o = event_parse_reaction(ev);
+//	if (!o)
+//		return;
+//	const ev_id = o.e;
+//	const root = model.elements[ev_id];
+//	if (!root)
+//		return;
+//
+//	// Update reaction groups
+//	el = find_node(`.reactions`, root);
+//	el.innerHTML = render_reactions_inner(model, model.all_events[ev_id]);
+//
+//	// Update like button
+//	if (ev.pubkey == model.pubkey) {
+//		const reaction = model_get_reacts_to(model, model.pubkey, ev_id, R_SHAKA);
+//		const liked = !!reaction;
+//		const img = find_node("button.icon.heart > img", root);
+//		const btn = find_node("button.icon.heart", root)
+//		btn.classList.toggle("liked", liked);
+//		btn.title = liked ? "Unlike" : "Like";
+//		btn.disabled = false;
+//		btn.dataset.liked = liked ? "yes" : "no";
+//		btn.dataset.reactionId = liked ? reaction.id : "";
+//		img.classList.toggle("dark-noinvert", liked);
+//		img.src = liked ? IMG_EVENT_LIKED : IMG_EVENT_LIKE;
+//	}
+//}
+
+function view_timeline_update_reaction(model, ev) {
+	let el;
+	const o = event_parse_reaction(ev);
+	if (!o)
+		return;
+	const ev_id = o.e;
+	const root = model.elements[ev_id];
+	if (!root)
+		return;
+
+	// Update reaction groups
+	el = find_node(`.reactions`, root);
+	el.innerHTML = render_reactions_inner(model, model.all_events[ev_id]); 
+
+	// Update like button
+	if (ev.pubkey == model.pubkey) {
+		const reaction = model_get_reacts_to(model, model.pubkey, ev_id, R_SHAKA);
+		const liked = !!reaction;
+		const img = find_node("button.icon.heart > img", root);
+		const btn = find_node("button.icon.heart", root)
+		btn.classList.toggle("liked", liked);
+		btn.title = liked ? "Unlike" : "Like";
+		btn.disabled = false;
+		btn.dataset.liked = liked ? "yes" : "no";
+		btn.dataset.reactionId = liked ? reaction.id : "";
+		img.classList.toggle("dark-noinvert", liked);
+		img.src = liked ? IMG_EVENT_LIKED : IMG_EVENT_LIKE;
+	}
+}
+
+function init_search() {
+    const search_input = find_node("#main-search");
+    if (!search_input) {
+        return;
+    }
+
+    const submit_search = () => {
+        switch_view(VM_SEARCH, { query: search_input.value.trim() });
+    };
+
+    search_input.addEventListener("keyup", (ev) => {
+        if (ev.key === "Enter") {
+            submit_search();
+        }
+    });
+}
+
+function search_in_object(obj, query) {
+    if (!query) {
+        return false;
+    }
+    const needle = query.toLowerCase();
+    if (typeof obj === "string") {
+        return obj.toLowerCase().includes(needle);
+    }
+    if (typeof obj === "number" || typeof obj === "boolean") {
+        return String(obj).includes(needle);
+    }
+    if (Array.isArray(obj)) {
+        return obj.some((item) => search_in_object(item, query));
+    }
+    if (obj && typeof obj === "object") {
+        return Object.keys(obj).some((key) => search_in_object(obj[key], query));
+    }
+    return false;
+}
+
+function perform_search(model, query) {
+    const events = model_events_arr(model).filter((ev) => event_is_renderable(ev));
+    let results = [];
+
+    if (!query) {
+        const first = events[0];
+        if (first) {
+            results = [first];
+        }
+    } else {
+        results = events.filter((ev) => search_in_object(ev, query));
+    }
+
+    model.search_query = query;
+    model.search_results = results;
+    void refresh_search_subscription(model);
+}
+
+async function load_nip_relays(model, nip) {
+	if (!model.nip_relay_lists) {
+		model.nip_relay_lists = new Map();
+	}
+	if (model.nip_relay_lists.has(nip)) {
+		return model.nip_relay_lists.get(nip);
+	}
+
+	try {
+		const response = await fetch(`/${nip}/relays.json`, {
+			headers: {
+				"Accept": "application/json",
+			},
+		});
+		if (!response.ok) {
+			throw new Error(`nip relay request failed with ${response.status}`);
+		}
+		const relays = normalize_relay_urls(await response.json());
+		if (relays.length) {
+			const sorted_relays = sort_relays_by_ping(model, relays);
+			model.nip_relay_lists.set(nip, sorted_relays);
+			return sorted_relays;
+		}
+		return relays;
+	} catch (error) {
+		log_warn(`load_nip_relays: failed to load NIP-${nip} relays`, error);
+	}
+
+	const discovery = Array.isArray(model.relay_discovery) ? model.relay_discovery : [];
+	const fallback = discovery
+		.filter((entry) => {
+			if (!entry || !entry.url || !Array.isArray(entry.supported_nips)) {
+				return false;
+			}
+			return entry.supported_nips.includes(nip);
+		})
+		.map((entry) => entry.url);
+	const normalized_fallback = normalize_relay_urls(fallback);
+	if (normalized_fallback.length) {
+		const sorted_fallback = sort_relays_by_ping(model, normalized_fallback);
+		model.nip_relay_lists.set(nip, sorted_fallback);
+		return sorted_fallback;
+	}
+	return normalized_fallback;
+}
+
+async function refresh_search_subscription(model) {
+	clear_search_subscription(model);
+	if (!model.search_query || !model.pool) {
+		return;
+	}
+
+	const query = model.search_query;
+	const relays = await load_nip_relays(model, 50);
+	if (query !== model.search_query || !model.pool) {
+		return;
+	}
+	if (!relays.length) {
+		log_warn("No NIP-50 relays available for search.");
+		return;
+	}
+
+	model.search_sub_id = `search:${query}`;
+	model.pool.subscribe(model.search_sub_id, [{
+		search: query,
+		kinds: PUBLIC_KINDS,
+		limit: 100,
+	}], relays);
+}
+
+function view_mode_contains_event(model, ev, mode, opts={}) {
+    console.log(`view_mode_contains_event called. Mode: ${mode}, Event Kind: ${ev.kind}`);
+	if (mode != VM_DM_THREAD && ev.kind == KIND_DM) {
+		return false;
+	}
+	switch(mode) {
+		case VM_USER:
+			return opts.pubkey && ev.pubkey == opts.pubkey;
+		case VM_FRIENDS:
+			if (opts.hide_replys && event_is_reply(ev))
+				return false;
+			return ev.pubkey == model.pubkey || contact_is_friend(model.contacts, ev.pubkey);
+		case VM_THREAD:
+			if (ev.kind == KIND_SHARE) return false;
+			return ev.id == opts.thread_id || 
+				event_refs_event(ev, {id:opts.thread_id});
+		case VM_NOTIFICATIONS:
+			return event_tags_pubkey(ev, model.pubkey);
+		case VM_DM_THREAD:
+			if (ev.kind != KIND_DM) return false;
+			return (ev.pubkey == opts.pubkey && 
+				event_tags_pubkey(ev, model.pubkey)) || 
+				(ev.pubkey == model.pubkey &&
+				event_tags_pubkey(ev, opts.pubkey));
+        case VM_GNOSTR:
+            return is_nip34_repo_kind(ev.kind);
+	case VM_NIP34:
+		if (opts.kind && ev.kind != opts.kind) {
+			return false;
+		}
+		return is_nip34_repo_kind(ev.kind);
+	case VM_NIP_KIND:
+		return opts.kind != null && ev.kind == opts.kind;
+        case VM_NIP34_DETAIL:
+            console.log(`view_mode_contains_event: Filtering for VM_NIP34_DETAIL. Event ID: ${ev.id}, Repo ID from opts: ${opts.repo_id}`);
+            const all_nip34_kinds = new Set([
+                KIND_REPO_ANNOUNCE,
+                KIND_REPO_STATE_ANNOUNCE,
+                KIND_REPO_PATCH,
+                KIND_REPO_PULL_REQ,
+                KIND_REPO_PULL_REQ_UPDATE,
+                KIND_REPO_ISSUE,
+                KIND_REPO_STATUS_OPEN,
+                KIND_REPO_STATUS_APPLIED,
+                KIND_REPO_STATUS_CLOSED,
+                KIND_REPO_STATUS_DRAFT,
+            ]);
+            if (!all_nip34_kinds.has(ev.kind)) {
+                console.log(`view_mode_contains_event: Event ${ev.id} is not a NIP-34 kind.`);
+                return false;
+            }
+            // Check for the 'a' tag matching the repo_id
+            for (const tag of ev.tags) {
+                if (tag[0] === 'a' && tag[1] === opts.repo_id) {
+                    console.log(`view_mode_contains_event: Event ${ev.id} matches repo ID ${opts.repo_id}.`);
+                    return true;
+                }
+            }
+            console.log(`view_mode_contains_event: Event ${ev.id} does NOT match repo ID ${opts.repo_id}.`);
+            return false;
+	case VM_SEARCH:
+            if (model.search_results.includes(ev)) {
+                return true;
+            }
+            if (typeof search_in_object === "function" && model.search_query && event_is_renderable(ev)) {
+                const timeline = view_get_timeline_el();
+                if (timeline && timeline.dataset.mode === VM_SEARCH && search_in_object(ev, model.search_query)) {
+                    if (!model.search_results.some((item) => item.id === ev.id)) {
+                        model.search_results.push(ev);
+                    }
+                    return true;
+                }
+            }
+            return false;
+	}
+	return false;
+}
+
+function event_is_renderable(ev={}) {
+	return ev.kind == KIND_NOTE || ev.kind == KIND_SHARE || ev.kind == KIND_DM ||
+		   ev.kind == KIND_REPO_ANNOUNCE ||
+		   ev.kind == KIND_REPO_STATE_ANNOUNCE ||
+		   ev.kind == KIND_REPO_PATCH ||
+		   ev.kind == KIND_REPO_PULL_REQ ||
+		   ev.kind == KIND_REPO_PULL_REQ_UPDATE ||
+		   ev.kind == KIND_REPO_ISSUE ||
+		   ev.kind == KIND_REPO_STATUS_OPEN ||
+		   ev.kind == KIND_REPO_STATUS_APPLIED ||
+		   ev.kind == KIND_REPO_STATUS_CLOSED ||
+		   ev.kind == KIND_REPO_STATUS_DRAFT;
+}
+
+function get_default_max_depth(gnostr, view) {
+	return view.max_depth || gnostr.max_depth
+}
+
+function get_thread_max_depth(gnostr, view, root_id) {
+	if (!view.depths[root_id])
+		return get_default_max_depth(gnostr, view);
+	return view.depths[root_id];
+}
+
+function get_thread_root_id(gnostr, id) {
+	const ev = gnostr.all_events[id];
+	if (!ev) {
+		log_debug("expand_thread: no event found?", id)
+		return null;
+	}
+	return ev.refs && ev.refs.root;
+}
+
+function switch_view(mode, opts) {
+	view_timeline_apply_mode(GNOSTR, mode, opts);
+}
+
+function toggle_hide_replys(el) {
+	const hide = el.innerText == "Hide Replys";
+	switch_view(VM_FRIENDS, {hide_replys: hide});
+	el.innerText = hide ? "Show Replys" : "Hide Replys";
+}
+
+function reset_notifications(model) {
+	model.notifications.count = 0;
+	model.notifications.last_viewed = new_creation_time();
+	update_notifications(model);
+	void model_save_settings(model);
+}
+
+function html2el(html) {
+	const div = document.createElement("div");
+	div.innerHTML = html;
+	return div.firstChild;
+}
+
+function init_timeline(model) {
+	const el = view_get_timeline_el();
+	el.addEventListener("click", onclick_timeline);
+}
+function onclick_timeline(ev) {
+	if (ev.target.matches(".username[data-pubkey]")) {
+		open_profile(ev.target.dataset.pubkey);
+	}
+}
+
+function init_my_pfp(model) {
+	find_nodes(`img[role='my-pfp']`).forEach((el)=> {
+		el.dataset.pubkey = model.pubkey;
+		el.addEventListener("error", onerror_pfp);
+		el.addEventListener("click", onclick_pfp);
+		el.classList.add("clickable");
+	});
+	find_nodes(`img[role='their-pfp']`).forEach((el)=> {
+		el.addEventListener("error", onerror_pfp);
+		el.addEventListener("click", onclick_pfp);
+		el.classList.add("clickable");
+	});
+}
+
+function view_update_cached_active_pfp(model) {
+	const profile = model_get_profile(model, model.pubkey);
+	const pic = get_profile_pic(profile);
+	find_nodes(`img[role='my-pfp']`).forEach((el)=> {
+		el.src = pic;
+	});
+	find_nodes(`img[role='their-pfp']`).forEach((el)=> {
+		if (!el.dataset.pubkey || el.dataset.pubkey === model.pubkey) {
+			el.dataset.pubkey = model.pubkey;
+			el.src = pic;
+		}
+	});
+}
+
+function init_postbox(model) {
+	find_node("#reply-content").addEventListener("input", oninput_post);
+	find_node("#dm-post textarea").addEventListener("input", oninput_post);
+	find_node("button[name='reply']")
+		.addEventListener("click", onclick_reply);
+	find_node("button[name='reply-all']")
+		.addEventListener("click", onclick_reply);
+	find_node("button[role='send'], button[name='send']")
+		.addEventListener("click", onclick_send);
+	find_node("button[name='send-dm']")
+		.addEventListener("click", onclick_send_dm);
+}
+async function onclick_reply(ev) {
+	do_send_reply(ev.target.dataset.all == "1");
+}
+async function onclick_send(ev) {
+	const el = find_node("#reply-modal");
+	const el_input = el.querySelector("#reply-content");
+	await send_note(el_input.value);
+
+	// Reset UI
+	el_input.value = "";
+	trigger_postbox_assess(el_input);
+	close_modal(el);
+}
+async function onclick_send_dm(ev) {
+	const pubkey = await get_pubkey();
+	const el = find_node("#dm-post");
+	const el_input = el.querySelector("textarea");
+	const target = view_get_timeline_el().dataset.pubkey;
+	let post = {
+		pubkey,
+		kind: KIND_DM,
+		created_at: new_creation_time(),
+		content: await gnostrBrowserNostr.encrypt(target, el_input.value),
+		tags: [["p", target]],
+	};
+	post.id = await nostrjs.calculate_id(post);
+	post = await sign_event(post);
+	broadcast_event(post);
+	model_process_event(GNOSTR, null, post);
+
+	el_input.value = "";
+	trigger_postbox_assess(el_input);
+}
+/* oninput_post checks the content of the textarea and updates the size
+ * of it's element. Additionally I will toggle the enabled state of the sending
+ * button.
+ */
+function oninput_post(ev) {
+	trigger_postbox_assess(ev.target);
+}
+function trigger_postbox_assess(el) { 
+	el.style.height = `0px`;
+	el.style.height = `${el.scrollHeight}px`;
+	let btn = el.parentElement.querySelector("button[role='send'], button[name='send']");
+	if (btn) btn.disabled = el.value === "";
+}
+/* toggle_cw changes the active stage of the Content Warning for a post. It is
+ * relative to the element that is pressed.
+ */
+function onclick_toggle_cw(ev) {
+	const el = ev.target;
+	el.classList.toggle("active");
+    const isOn = el.classList.contains("active");
+	const input = el.parentElement.querySelector("input.cw");
+	input.classList.toggle("hide", !isOn);
+}
+
+function onclick_any(ev) {
+	console.log("onclick_any triggered. Event target:", ev.target, "Action attribute on target:", ev.target.getAttribute("action"));
+	let el = ev.target;
+	// Check if we have a selection and don't bother with anything
+	let selection = document.getSelection();
+	if (selection && selection.isCollapsed == false && 
+		view_get_timeline_el().contains(selection.anchorNode)) {
+		return;
+	}
+	let action = el.getAttribute("action");
+	if (action == null && el.tagName != "A") {
+		const parent = find_parent(el, "[action]");
+		if (parent) {
+			const parent_action = parent.getAttribute("action")
+			// This is a quick hijack for propogating clicks; further extending
+			// this should be obvious.
+			if (parent_action == "open-thread") {
+				el = parent;
+				action = parent_action;
+			}
+            // Also handle NIP-34 detail view propagation if the parent has the action
+            if (parent_action == "open-nip34-detail") {
+                el = parent;
+                action = parent_action;
+            }
+		}
+	}
+	if (action == null) {
+		const link = el.tagName == "A" ? el : find_parent(el, "a[href]");
+		if (link) {
+			const pathname = new URL(link.href, window.location.href).pathname;
+			if (pathname.startsWith("/nip") || pathname == "/relays" || pathname == "/settings") {
+				ev.preventDefault();
+				const nav = view_path_to_mode(pathname);
+				if (nav) {
+					switch_view(nav.mode, nav.opts);
+				}
+				return;
+			}
+		}
+	}
+	switch (action) {
+		case "sign-in":
+			signin();
+			break;
+		case "open-view":
+			switch_view(view_name_to_mode(el.dataset.view));
+			break;
+		case "close-media":
+			close_media_preview();
+			break;
+		case "close-modal":
+			close_modal(el);
+			break;
+		case "open-profile":
+			open_profile(el.dataset.pubkey);
+			break;
+		case "open-profile-editor":
+			click_update_profile();
+			break;
+		case "show-timeline-new":
+			show_new();
+			break;
+		case "show-timeline-more":
+			view_timeline_show_more(GNOSTR);
+			break;
+		case "open-thread":
+			open_thread(el.dataset.threadId);
+			break;
+		case "reply":
+			send_reply(el.dataset.emoji, el.dataset.to);
+			break;
+		case "delete":
+			delete_post(el.dataset.evid);
+			break;
+		case "reply-to":
+			reply(el.dataset.evid);
+			break;
+		case "react-like":
+			click_toggle_like(el);
+			break;
+		case "share":
+			click_share(el);
+			break;
+		case "open-thread":
+			open_thread(el.dataset.threadId);
+			break;
+		case "open-media":
+			open_media_preview(el.src, el.dataset.type);
+			break;
+		case "open-link":
+			window.open(el.dataset.url, "_blank");
+			break;
+		case "open-lud06":
+			open_lud06(el.dataset.lud06);
+			break;
+		case "show-event-json":
+			on_click_show_event_details(el.dataset.evid);
+			break;
+		case "open-event-options":
+			on_click_show_event_details(el.dataset.evid);
+			break;
+		case "confirm-delete":
+			delete_post_confirm(el.dataset.evid);
+			break;
+		case "mark-all-read":
+			model_mark_dms_seen(GNOSTR);
+			void model_save_settings(GNOSTR);
+			break;
+		case "toggle-hide-replys":
+			toggle_hide_replys(el);
+			break;
+		case "new-note":
+			new_note();
+			break;
+        case "open-nip34-detail":
+            console.log(`onclick_any: Opening NIP-34 detail for repo_id: ${el.dataset.repoId}`);
+            switch_view(VM_NIP34_DETAIL, { repo_id: el.dataset.repoId });
+            break;
+        case "show-nip34-more":
+            console.log("onclick_any: 'Show More' for NIP-34 clicked.");
+            show_more_nip34_events(GNOSTR);
+            break;
+	}
+}

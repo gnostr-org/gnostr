@@ -1,0 +1,26 @@
+---
+source: asyncgit/src/lib/tui/git/tests/reset.rs
+assertion_line: 26
+expression: ctx.redact_buffer()
+---
+▌b66a0bf main origin/main add initial-file                                      |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+                                                                                |
+styles_hash: 4c49c12dcc50cb4b

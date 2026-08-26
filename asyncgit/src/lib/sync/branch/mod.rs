@@ -19,7 +19,7 @@ use crate::{
     },
 };
 
-/// returns the branch-name head is currently pointing to
+/// Return the current local branch name for a repository path.
 /// this might be expensive, see `cached::BranchName`
 pub(crate) fn get_branch_name(repo_path: &RepoPath) -> Result<String> {
     let repo = repo(repo_path)?;
@@ -27,7 +27,7 @@ pub(crate) fn get_branch_name(repo_path: &RepoPath) -> Result<String> {
     get_branch_name_repo(&repo)
 }
 
-/// ditto
+/// Return the current local branch name for an open repository.
 pub(crate) fn get_branch_name_repo(repo: &Repository) -> Result<String> {
     scope_time!("get_branch_name_repo");
 
@@ -42,65 +42,70 @@ pub(crate) fn get_branch_name_repo(repo: &Repository) -> Result<String> {
     bytes2string(head_ref.shorthand_bytes())
 }
 
-///
+/// Summary information for a local or remote branch.
 #[derive(Clone, Debug)]
 pub struct LocalBranch {
-    ///
+    /// True when this branch is checked out.
     pub is_head: bool,
-    ///
+    /// True when an upstream branch is configured.
     pub has_upstream: bool,
-    ///
+    /// Configured upstream branch, if any.
     pub upstream: Option<UpstreamBranch>,
-    ///
+    /// Remote name backing this branch, if any.
     pub remote: Option<String>,
 }
 
-///
+/// Upstream branch metadata.
 #[derive(Clone, Debug)]
 pub struct UpstreamBranch {
-    ///
+    /// Full upstream reference name.
     pub reference: String,
 }
 
-///
+/// Remote branch metadata.
 #[derive(Clone, Debug)]
 pub struct RemoteBranch {
-    ///
+    /// True when the remote branch has local tracking.
     pub has_tracking: bool,
 }
 
-///
+/// Local or remote branch details.
 #[derive(Clone, Debug)]
 pub enum BranchDetails {
-    ///
+    /// Local branch metadata.
     Local(LocalBranch),
-    ///
+    /// Remote branch metadata.
     Remote(RemoteBranch),
 }
 
-///
+/// Branch summary used by listings and selectors.
 #[derive(Clone, Debug)]
 pub struct BranchInfo {
-    ///
+    /// Display name.
     pub name: String,
-    ///
+    /// Full reference path.
     pub reference: String,
-    ///
+    /// Message from the tip commit.
     pub top_commit_message: String,
-    ///
+    /// Tip commit identifier.
     pub top_commit: CommitId,
-    ///
+    /// Branch detail payload.
     pub details: BranchDetails,
 }
 
 impl BranchInfo {
-    /// returns details about local branch or None
+    /// Return local branch details when this is a local branch.
     pub const fn local_details(&self) -> Option<&LocalBranch> {
         if let BranchDetails::Local(details) = &self.details {
             return Some(details);
         }
 
         None
+    }
+
+    /// True when this branch summary represents a local branch.
+    pub const fn is_local(&self) -> bool {
+        matches!(self.details, BranchDetails::Local(_))
     }
 }
 
@@ -113,7 +118,7 @@ pub fn validate_branch_name(name: &str) -> Result<bool> {
     Ok(valid)
 }
 
-/// returns a list of `BranchInfo` with a simple summary on each
+/// Return a sorted list of branch summaries.
 /// branch `local` filters for local branches otherwise remote
 /// branches will be returned
 pub fn get_branches_info(repo_path: &RepoPath, local: bool) -> Result<Vec<BranchInfo>> {
@@ -146,9 +151,7 @@ pub fn get_branches_info(repo_path: &RepoPath, local: bool) -> Result<Vec<Branch
             let remote = repo
                 .branch_upstream_remote(&reference)
                 .ok()
-                .as_ref()
-                .and_then(git2::Buf::as_str)
-                .map(String::from);
+                .and_then(|remote| remote.as_str().ok().map(str::to_owned));
 
             let name_bytes = branch.name_bytes()?;
 
@@ -187,16 +190,16 @@ pub fn get_branches_info(repo_path: &RepoPath, local: bool) -> Result<Vec<Branch
     Ok(branches_for_display)
 }
 
-///
+/// Local branch tracking state.
 #[derive(Debug, Default)]
 pub struct BranchCompare {
-    ///
+    /// Ahead commits.
     pub ahead: usize,
-    ///
+    /// Behind commits.
     pub behind: usize,
 }
 
-///
+/// Configure upstream tracking after a push.
 pub(crate) fn branch_set_upstream_after_push(repo: &Repository, branch_name: &str) -> Result<()> {
     scope_time!("branch_set_upstream");
 
@@ -211,17 +214,14 @@ pub(crate) fn branch_set_upstream_after_push(repo: &Repository, branch_name: &st
     Ok(())
 }
 
-/// returns remote of the upstream tracking branch for `branch`
+/// Return the remote backing the upstream tracking branch.
 pub fn get_branch_remote(repo_path: &RepoPath, branch: &str) -> Result<Option<String>> {
     let repo = repo(repo_path)?;
     let branch = repo.find_branch(branch, BranchType::Local)?;
     let reference = bytes2string(branch.get().name_bytes())?;
     let remote_name = repo.branch_upstream_remote(&reference).ok();
-    if let Some(remote_name) = remote_name {
-        Ok(Some(bytes2string(remote_name.as_ref())?))
-    } else {
-        Ok(None)
-    }
+    Ok(remote_name
+        .and_then(|remote_name| remote_name.as_str().ok().map(str::to_owned)))
 }
 
 /// returns whether the pull merge strategy is set to rebase
@@ -280,17 +280,12 @@ pub fn checkout_branch(repo_path: &RepoPath, branch_name: &str, force: bool) -> 
     }
 
     // modify state to match branch's state
-    repo.checkout_tree(
-        target_treeish_object,
-        Some(&mut checkout_builder),
-    )?;
+    repo.checkout_tree(target_treeish_object, Some(&mut checkout_builder))?;
 
-    let branch_ref = branch_ref
-        .name()
-        .ok_or_else(|| Error::Generic(String::from("branch ref not found")));
+    let branch_ref = branch_ref.name()?;
 
     // modify HEAD to point to given branch
-    repo.set_head(branch_ref?)?;
+    repo.set_head(branch_ref)?;
 
     Ok(())
 }

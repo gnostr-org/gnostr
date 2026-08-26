@@ -1,0 +1,47 @@
+name: Test Dependency Graph
+
+on:
+  workflow_call:
+    inputs:
+      dependents:
+        type: string
+        description: "The packages to test that are dependent on us"
+        default: "[\"swift-libp2p/swift-libp2p\"]"
+
+## Cancel previously triggered workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-providers
+  cancel-in-progress: true
+
+jobs:
+  test-dependents:
+    # Requires the PR to have a 'dependency-check' label (default color #F6AC33)
+    if: contains(github.event.pull_request.labels.*.name, 'dependency-check')
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: ${{ fromJson(inputs.dependents) }}
+        os: [ubuntu-latest, macos-latest]
+        swift-version: ['6.2']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup swift
+        uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: '${{ matrix.swift-version }}'
+      - name: Check out ${{ github.event.repository.name }}
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.event.repository.name }}
+      - name: Check out provider
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.provider }}
+          path: provider
+          ref: ${{ matrix.ref }}
+      - name: Use local ${{ github.event.repository.name }}
+        run: swift package --package-path ./provider edit ${{ github.event.repository.name }} --path ./${{ github.event.repository.name }}
+      - name: Run tests
+        env:
+            SWIFT_DETERMINISTIC_HASHING: 1
+        run: swift test --package-path ./provider --configuration release -Xswiftc -enable-testing

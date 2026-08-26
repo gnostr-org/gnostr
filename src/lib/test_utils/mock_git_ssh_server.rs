@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use log::info;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -140,7 +140,7 @@ impl MockGitSshServer {
 
 #[cfg(test)]
 mod tests {
-    use tokio::time::{Duration, timeout};
+    use tokio::time::{timeout, Duration};
 
     use super::*;
 

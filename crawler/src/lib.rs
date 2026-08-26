@@ -1,832 +1,209 @@
+//! `gnostr-crawler` owns relay discovery, query construction, and relay
+//! metadata serving.
+//!
+//! It re-exports the shared asyncgit-backed Nostr types for the query path,
+//! while `gnostr-p2p` keeps its relay bucket helpers local so the graph stays
+//! one-way: `types -> asyncgit -> crawler/p2p`.
+//! If a query type needs to be shared with chat, add it to `types` or the
+//! asyncgit-backed wire surface rather than depending on `p2p` here.
+
+use std::{
+    ffi::CString,
+    io::{self, Write},
+    os::raw::c_char,
+    sync::{Mutex, OnceLock},
+};
+
+use tracing_subscriber::fmt;
 pub mod processor;
+pub mod api;
+pub mod cli;
+pub mod message;
+pub mod relay_metadata;
+pub mod relay_fetch;
+pub mod relay_io;
 pub mod pubkeys;
+pub mod commands;
+pub mod query;
 pub mod relay_manager;
 pub mod relays;
 pub mod stats;
+pub mod tui;
+mod api_cache;
+mod api_routes;
+mod git_helpers;
+
+pub use cli::{dispatch_cli_command, run, Cli, CliArgs, Commands};
+pub use message::*;
+pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
+pub use api::{
+    run_api_server,
+    run_api_server_detached,
+    run_api_server_with_shutdown,
+    run_api_server_with_shutdown_and_ready,
+    run_sniper_service_with_shutdown,
+};
+pub use commands::{run_nip34, run_sniper, run_watch};
+pub use relay_metadata::Relay;
+pub use relay_fetch::{fetch_relay_texts, parse_relay_metadata, websocket_http_url};
+pub use relay_io::{load_file, load_relays_or_bootstrap, load_shitlist, preprocess_line};
+pub use git_helpers::{
+    log_message_matches, match_with_parent, print_commit, print_time, sig_matches,
+};
+
+type LogCallback = Option<unsafe extern "C" fn(*const c_char)>;
+
+static LOG_CALLBACK: OnceLock<Mutex<LogCallback>> = OnceLock::new();
+static SNIPER_LOGS: OnceLock<Mutex<Vec<String>>> = OnceLock::new();
+static SNIPER_LIFECYCLE: OnceLock<Mutex<Vec<String>>> = OnceLock::new();
+
+fn log_callback_slot() -> &'static Mutex<LogCallback> {
+    LOG_CALLBACK.get_or_init(|| Mutex::new(None))
+}
+
+fn sniper_log_slot() -> &'static Mutex<Vec<String>> {
+    SNIPER_LOGS.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+fn sniper_lifecycle_slot() -> &'static Mutex<Vec<String>> {
+    SNIPER_LIFECYCLE.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+fn emit_log_line(line: impl AsRef<str>) {
+    let line = line.as_ref();
+    let callback = *log_callback_slot().lock().unwrap();
+    if let Some(callback) = callback {
+        let sanitized = line.replace('\0', " ");
+        if let Ok(c_line) = CString::new(sanitized) {
+            unsafe {
+                callback(c_line.as_ptr());
+            }
+            return;
+        }
+    }
+
+    eprintln!("{}", line);
+}
+
+pub fn record_sniper_log(line: impl AsRef<str>) {
+    let line = line.as_ref().trim_end().to_string();
+    if line.is_empty() {
+        return;
+    }
+
+    eprintln!("{line}");
+    let mut logs = sniper_log_slot().lock().unwrap();
+    logs.push(line);
+    if logs.len() > 1_000 {
+        let drain = logs.len() - 1_000;
+        logs.drain(0..drain);
+    }
+}
+
+pub fn sniper_service_logs() -> String {
+    let lifecycle = sniper_lifecycle_slot().lock().unwrap();
+    let logs = sniper_log_slot().lock().unwrap();
+    lifecycle
+        .iter()
+        .chain(logs.iter())
+        .cloned()
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+pub fn record_sniper_lifecycle(line: impl AsRef<str>) {
+    let line = line.as_ref().trim_end().to_string();
+    if line.is_empty() {
+        return;
+    }
+
+    eprintln!("{line}");
+    let mut events = sniper_lifecycle_slot().lock().unwrap();
+    events.push(line);
+    if events.len() > 1_000 {
+        let drain = events.len() - 1_000;
+        events.drain(0..drain);
+    }
+}
+
+pub fn sniper_service_lifecycle() -> String {
+    let events = sniper_lifecycle_slot().lock().unwrap();
+    events.join("\n")
+}
+
+fn drain_complete_lines(buffer: &mut Vec<u8>) {
+    while let Some(pos) = buffer.iter().position(|byte| *byte == b'\n') {
+        let mut line = buffer.drain(..=pos).collect::<Vec<u8>>();
+        if line.last() == Some(&b'\n') {
+            line.pop();
+        }
+        emit_log_line(String::from_utf8_lossy(&line));
+    }
+}
+
+struct CrawlerLogWriter;
+
+struct CrawlerLogWriterGuard {
+    buffer: Vec<u8>,
+}
+
+impl io::Write for CrawlerLogWriterGuard {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.buffer.extend_from_slice(buf);
+        drain_complete_lines(&mut self.buffer);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        if !self.buffer.is_empty() {
+            emit_log_line(String::from_utf8_lossy(&self.buffer));
+            self.buffer.clear();
+        }
+        Ok(())
+    }
+}
+
+impl Drop for CrawlerLogWriterGuard {
+    fn drop(&mut self) {
+        let _ = self.flush();
+    }
+}
+
+impl<'a> fmt::MakeWriter<'a> for CrawlerLogWriter {
+    type Writer = CrawlerLogWriterGuard;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        CrawlerLogWriterGuard { buffer: Vec::new() }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn crawler_set_log_callback(callback: LogCallback) {
+    *log_callback_slot().lock().unwrap() = callback;
+}
 
 pub fn init_tracing() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
-        .add_directive("nostr_sdk::relay=off".parse()?)
-        //.add_directive("hyper=off".parse()?)
-
-        /**/)/**/
-        .init();
-    Ok(())
-}
-
-use clap::{Parser, Subcommand};
-use futures::{stream, StreamExt};
-use git2::Error;
-use git2::{Commit, DiffOptions, Repository, Signature, Time};
-use reqwest::header::ACCEPT;
-use std::collections::HashSet;
-use std::fs as sync_fs;
-use std::io::{self, BufRead, BufReader, Write};
-use std::path::Path;
-use std::str;
-#[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn};
-
-use serde::{Deserialize, Serialize};
-
-use ::time::at;
-use ::time::Timespec;
-use nostr_sdk::prelude::*;
-use url::Url;
-
-use crate::processor::Processor;
-use crate::processor::APP_SECRET_KEY;
-use crate::relay_manager::RelayManager;
-
-#[allow(unused_imports)]
-use crate::processor::LOCALHOST_8080;
-use crate::processor::BOOTSTRAP_RELAYS;
-
-use axum::{
-    routing::get,
-    response::{IntoResponse, Response},
-    Router,
-    body::Body, // Added for explicit body type
-    http::{StatusCode, header::CONTENT_TYPE}, // Changed to axum::http
-};
-use std::net::SocketAddr;
-use tokio::fs; // For async file operations
-#[allow(unused_imports)] // Suppress false positive for tokio::task::spawn
-use tokio::task::spawn; // Added for spawning async tasks
-use tower_http::trace::{self, TraceLayer}; // For logging requests
-
-const CONCURRENT_REQUESTS: usize = 16;
-
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-pub struct Cli {
-    #[clap(subcommand)]
-    pub command: Commands,
-    //nsec: Option<String>,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum Commands {
-    /// Runs the sniper mode to find relays supporting a specific NIP
-    Sniper {
-        /// The NIP number to search for (e.g., 1)
-        nip: i32,
-        /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Runs the watch mode to monitor relays and print their metadata
-    Watch {
-        /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Lists relays that are likely to support NIP-34 (Git collaboration)
-    Nip34 {
-        /// Optional: Path to a shitlist file to exclude relays
-        #[clap(long, short)]
-        shitlist: Option<String>,
-    },
-    /// Runs the main gnostr-crawler logic
-    Crawl(CliArgs),
-    /// Starts a web server to serve relay information
-    Serve {
-        /// The port to listen on for the API server
-        #[clap(long, short, default_value = "3000")]
-        port: u16,
-    },
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Relay {
-    pub contact: Option<String>,
-    pub description: Option<String>,
-    pub name: Option<String>,
-    pub software: Option<String>,
-    pub supported_nips: Option<Vec<i32>>,
-    pub version: Option<String>,
-}
-
-pub fn preprocess_line(line: &str) -> String {
-    let mut trimmed_line = line.trim().to_string();
-    // Truncate at the first comma, if any
-    if let Some(comma_idx) = trimmed_line.find(',') {
-        trimmed_line.truncate(comma_idx);
-        trimmed_line = trimmed_line.trim().to_string(); // Re-trim after truncation
-    }
-    trimmed_line
-}
-
-pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-    let base_dir = crate::relays::get_config_dir_path();
-    let file_path = base_dir.join(filename.as_ref().file_name().unwrap_or(filename.as_ref().as_os_str()));
-
-    if let Some(parent) = file_path.parent() {
-        sync_fs::create_dir_all(parent)?;
-    }
-
-    debug!("Loading file: {}", file_path.display());
-
-    let file_content = sync_fs::read_to_string(&file_path)?;
-
-    // Preprocess each line to truncate after a comma and trim whitespace
-    let preprocessed_lines: Vec<String> = file_content.lines()
-        .map(|line| preprocess_line(line))
-        .filter(|line| !line.is_empty())
-        .collect();
-
-    let preprocessed_content_for_yaml = preprocessed_lines.join("\n");
-
-    let relays: Vec<String> = match serde_yaml::from_str::<Vec<String>>(&preprocessed_content_for_yaml) {
-        Ok(yaml_relays) => yaml_relays,
-        Err(e) => {
-            // Fallback to line-by-line collection of already preprocessed lines if it's not valid YAML
-            warn!("Failed to parse {} as YAML: {}. Falling back to preprocessed lines.", file_path.display(), e);
-            preprocessed_lines
-        }
-    };
-
-    let filtered_relays: Vec<String> = relays.into_iter()
-        .filter_map(|line| {
-            // Lines are already preprocessed for truncation and trimming.
-            // Now, refine filtering to differentiate between actual non-websocket URLs and non-URL lines.
-            if line.is_empty() {
-                return None;
-            }
-
-            let mut final_line = line.clone();
-
-            // Attempt to prepend wss:// if it looks like a hostname without a scheme
-            if !final_line.contains("://") {
-                let potential_url = format!("wss://{}", final_line);
-                match Url::parse(&potential_url) {
-                    Ok(url) => {
-                        debug!("Prepended 'wss://' to form valid URL: {}", url);
-                        final_line = url.to_string();
-                    },
-                    Err(_) => {
-                        // If prepending wss:// doesn't form a valid URL, keep the original line
-                        // and let the next checks handle it as a non-URL line.
-                        debug!("Attempted to prepend 'wss://' but it's still not a valid URL: {}", potential_url);
-                    }
-                }
-            }
-
-            if final_line.starts_with("wss://") || final_line.starts_with("ws://") {
-                match Url::parse(&final_line) {
-                    Ok(url) => Some(url.to_string()),
-                    Err(_) => {
-                        warn!("Skipping invalid WEBSOCKET URL in {}: {}", filename.as_ref().display(), final_line);
-                        None
-                    }
-                }
-            } else if final_line.contains("://") { // It's a URL, but not a websocket URL
-                warn!("Skipping non-websocket URL scheme in {}: {}", filename.as_ref().display(), final_line);
-                None
-            } else { // It's not a URL at all (e.g., "Relay URL")
-                debug!("Silently skipping non-URL line in {}: {}", filename.as_ref().display(), final_line);
-                None
-            }
-        })
-        .collect();
-
-    Ok(filtered_relays)
-}
-
-//pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {
-//    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
-//}
-
-pub fn load_shitlist(filename: impl AsRef<Path>) -> io::Result<HashSet<String>> {
-    BufReader::new(sync_fs::File::open(filename)?).lines().collect()
-}
-
-#[allow(clippy::manual_strip)]
-#[derive(Parser, Debug)]
-pub struct CliArgs {
-    //#[clap(name = "topo-order", long)]
-    ///// sort commits in topological order
-    //flag_topo_order: bool,
-    //#[clap(name = "date-order", long)]
-    ///// sort commits in date order
-    //flag_date_order: bool,
-    //#[clap(name = "reverse", long)]
-    ///// sort commits in reverse
-    //flag_reverse: bool,
-    //#[clap(name = "author", long)]
-    ///// author to sort by
-    //flag_author: Option<String>,
-    //#[clap(name = "committer", long)]
-    ///// committer to sort by
-    //flag_committer: Option<String>,
-    //#[clap(name = "pat", long = "grep")]
-    ///// pattern to filter commit messages by
-    //flag_grep: Option<String>,
-    #[clap(name = "dir", long = "git-dir")]
-    /// alternative git directory to use
-    flag_git_dir: Option<String>,
-    //#[clap(name = "skip", long)]
-    ///// number of commits to skip
-    //flag_skip: Option<usize>,
-    //#[clap(name = "max-count", short = 'n', long)]
-    ///// maximum number of commits to show
-    //flag_max_count: Option<usize>,
-    //#[clap(name = "merges", long)]
-    ///// only show merge commits
-    //flag_merges: bool,
-    //#[clap(name = "no-merges", long)]
-    ///// don't show merge commits
-    //flag_no_merges: bool,
-    //#[clap(name = "no-min-parents", long)]
-    ///// don't require a minimum number of parents
-    //flag_no_min_parents: bool,
-    //#[clap(name = "no-max-parents", long)]
-    ///// don't require a maximum number of parents
-    //flag_no_max_parents: bool,
-    //#[clap(name = "max-parents")]
-    ///// specify a maximum number of parents for a commit
-    //flag_max_parents: Option<usize>,
-    //#[clap(name = "min-parents")]
-    ///// specify a minimum number of parents for a commit
-    //flag_min_parents: Option<usize>,
-    #[clap(name = "patch", long, short)]
-    /// show commit diff
-    flag_patch: bool,
-    #[clap(
-        name = "nsec",
-        default_value = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    )]
-    arg_nsec: Option<String>,
-    #[clap(name = "commit")]
-    arg_commit: Vec<String>,
-    #[clap(name = "spec", last = true)]
-    arg_spec: Vec<String>,
-    #[clap(long)]
-    arg_dump: bool,
-}
-
-pub async fn run(args: &CliArgs) -> Result<()> {
-
-    let _run_async = async {
-        let opts = Options::new(); //.wait_for_send(true);
-        let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-        let relay_client = Client::new_with_opts(&app_keys, opts);
-        let _ = relay_client.publish_text_note("#gnostr", &[]).await;
-    };
-
-    let app_keys = Keys::from_sk_str(args.arg_nsec.clone().as_ref().expect("REASON")).unwrap();
-    let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor).await;
-    let bootstrap_relay_refs: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
-    let _run_async = relay_manager.run(bootstrap_relay_refs).await?;
-
-     if args.arg_dump {
-        relay_manager.processor.dump();
-    }
-
-    Ok(())
-}
-
-pub async fn dispatch_cli_command(cli: Cli, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
-    match &cli.command {
-        Commands::Sniper { nip, shitlist } => {
-            run_sniper(*nip, shitlist.clone(), client).await?;
-        }
-        Commands::Watch { shitlist } => {
-            run_watch(shitlist.clone(), client).await?;
-        }
-        Commands::Nip34 { shitlist } => {
-            run_nip34(shitlist.clone(), client).await?;
-        }
-        Commands::Crawl(args) => {
-            crate::run(args).await?;
-        }
-        Commands::Serve { port } => {
-            run_api_server(*port).await?;
-        }
-    }
-    Ok(())
-}
-
-pub fn sig_matches(sig: &Signature, arg: &Option<String>) -> bool {
-    match *arg {
-        Some(ref s) => {
-            sig.name().map(|n| n.contains(s)).unwrap_or(false)
-                || sig.email().map(|n| n.contains(s)).unwrap_or(false)
-        }
-        None => true,
-    }
-}
-
-pub fn log_message_matches(msg: Option<&str>, grep: &Option<String>) -> bool {
-    match (grep, msg) {
-        (&None, _) => true,
-        (&Some(_), None) => false,
-        (Some(s), Some(msg)) => msg.contains(s),
-    }
-}
-
-pub fn print_commit(commit: &Commit) {
-    //println!("commit {}", commit.id());
-
-    if commit.parents().len() > 1 {
-        print!("Merge:");
-        for id in commit.parent_ids() {
-            print!(" {:.8}", id);
-        }
-        println!();
-    }
-
-    let author = commit.author();
-    println!("Author: {}", author);
-    print_time(&author.when(), "Date:   ");
-    println!();
-
-    for line in String::from_utf8_lossy(commit.message_bytes()).lines() {
-        println!("    {}", line);
-    }
-    println!();
-}
-
-pub fn print_time(time: &Time, prefix: &str) {
-    let (offset, sign) = match time.offset_minutes() {
-        n if n < 0 => (-n, '-'),
-        n => (n, '+'),
-    };
-    let (hours, minutes) = (offset / 60, offset % 60);
-    let ts = Timespec::new(time.seconds() + (time.offset_minutes() as i64) * 60, 0);
-    let time = at(ts);
-
-    println!(
-        "{}{} {}{:02}{:02}",
-        prefix,
-        time.strftime("%a %b %e %T %Y").unwrap(),
-        sign,
-        hours,
-        minutes
-    );
-}
-
-pub fn match_with_parent(
-    repo: &Repository,
-    commit: &Commit,
-    parent: &Commit,
-    opts: &mut DiffOptions,
-) -> Result<bool, Error> {
-    let a = parent.tree()?;
-    let b = commit.tree()?;
-    let diff = repo.diff_tree_to_tree(Some(&a), Some(&b), Some(opts))?;
-    Ok(diff.deltas().len() > 0)
-}
-
-pub async fn run_sniper(
-    nip_lower: i32,
-    shitlist_path: Option<String>,
-    client: &reqwest::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
-    debug!("lib::run_sniper");
-
-    //TODO run_watcher populates relays.yaml
-    // add async background thread here
-    // allow to run for a few seconds
-    // giving the sniper a populated list
-
-
-    // Allow some time for the watcher to populate relays.yaml
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-    debug!("run_sniper: Finished initial sleep.");
-
-    let relays = load_file("relays.yaml").unwrap();
-    debug!("run_sniper: Loaded {} relays from relays.yaml.", relays.len());
-
-    let shitlist = if let Some(path) = shitlist_path {
-        match load_shitlist(&path) {
-            Ok(sl) => sl,
-            Err(e) => {
-                eprintln!("Failed to load shitlist from {}: {}", path, e);
-                return Err(e.into());
-            }
-        }
+    let _ = tracing_log::LogTracer::init();
+    eprintln!("crawler tracing: installing subscriber");
+    let result = tracing_subscriber::fmt()
+        .with_ansi(false)
+        .with_writer(CrawlerLogWriter)
+        .without_time()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive("hyper::client::trace=trace".parse()?)
+                .add_directive("hyper::client::connect=trace".parse()?)
+                .add_directive("hyper::client::connect::http=off".parse()?)
+                .add_directive("hyper::proto=off".parse()?)
+                .add_directive("nostr_sdk::relay=off".parse()?)
+                .add_directive("nostr_relay_pool=off".parse()?)
+                .add_directive("nostr_relay_pool::relay::inner=off".parse()?),
+        )
+        .try_init();
+    if let Err(error) = result {
+        eprintln!("crawler tracing: subscriber init failed: {}", error);
     } else {
-        std::collections::HashSet::new()
-    };
-    debug!("run_sniper: Shitlist loaded. Contains {} entries.", shitlist.len());
-
-    let initial_relay_count = relays.len();
-    let filtered_relays: Vec<String> = relays
-        .into_iter()
-        .filter(|url| {
-            if shitlist.is_empty() {
-                true
-            } else {
-                let is_shitlisted = shitlist
-                    .iter()
-                    .any(|shitlisted_url| url.contains(shitlisted_url));
-                if is_shitlisted {
-                    debug!("run_sniper: Filtering out shitlisted relay: {}", url);
-                }
-                !is_shitlisted
-            }
-        })
-        .collect();
-    debug!("run_sniper: Filtered from {} to {} relays.", initial_relay_count, filtered_relays.len());
-
-    let bodies = stream::iter(filtered_relays)
-        .map(|url| {
-            debug!("run_sniper: Processing URL: {}", url);
-            let client = client.clone();
-            async move {
-                let http_url = url.replace("wss://", "https://").replace("ws://", "http://");
-                debug!("run_sniper: Sending request to: {}", http_url);
-                let resp = client
-                    .get(&http_url)
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-
-                if !resp.status().is_success() {
-                    warn!("run_sniper: Failed to fetch NIP-11 document for {}: HTTP Status {}", url, resp.status());
-                    return Ok((url, String::new())); // Return empty string to skip JSON parsing
-                }
-
-                debug!("run_sniper: Received response status: {:?}", resp.status());
-                let text = resp.text().await?;
-                debug!("run_sniper: Raw response text from {}: {}", http_url, text); // Added debug log
-
-                let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
-                r
-            }
-        })
-        .buffer_unordered(CONCURRENT_REQUESTS);
-
-    bodies
-        .for_each(|b: Result<(String, String), reqwest::Error>| async {
-            if let Ok((url, json_string)) = b {
-                let data: Result<Relay, _> = serde_json::from_str(&json_string);
-                match data {
-                    Ok(relay_info) => {
-                        debug!("run_sniper: Successfully parsed relay info for {}", url);
-                        for n in &relay_info.supported_nips.unwrap_or_default() {
-                            if n == &nip_lower {
-                                debug!("run_sniper: Found NIP-{} support on relay: {}", nip_lower, url);
-                                debug!("contact:{:?}", &relay_info.contact);
-                                debug!("description:{:?}", &relay_info.description);
-                                debug!("name:{:?}", &relay_info.name);
-                                debug!("software:{:?}", &relay_info.software);
-                                debug!("version:{:?}", &relay_info.version);
-
-                                let parsed_url = match Url::parse(&url) {
-                                    Ok(u) => u,
-                                    Err(e) => {
-                                        error!("Failed to parse URL {}: {}", url, e);
-                                        return;
-                                    }
-                                };
-                                let host = parsed_url.host_str().unwrap_or("unknown");
-                                debug!("run_sniper: Host for {} is {}", url, host);
-
-                                let dir_path = crate::relays::get_config_dir_path().join(format!("{}", nip_lower));
-                                if let Err(e) = sync_fs::create_dir_all(&dir_path) {
-                                    error!("Failed to create directory {}: {}", dir_path.display(), e);
-                                    return;
-                                };
-                                debug!("run_sniper: Ensured directory exists: {}", dir_path.display());
-
-                                let file_name = format!("{}.json", host);
-                            let file_path = dir_path.join(&file_name);
-                            let file_path_str = file_path.display().to_string();
-                            debug!("run_sniper: Attempting to write to file: {}\n\n{}", file_path_str, file_path_str);
-
-                                match sync_fs::File::create(&file_path) {
-                                    Ok(mut file) => {
-                                        debug!("run_sniper: File created: {}", &file_path_str);
-                                        match file.write_all(json_string.as_bytes()) {
-                                            Ok(_) => debug!("run_sniper: Wrote relay metadata to: {}", &file_path_str),
-                                            Err(e) => {
-                                                error!("Failed to write to {}: {}", &file_path_str, e)
-                                            }
-                                        }
-                                    }
-                                    Err(e) => error!("Failed to create file {}: {}", &file_path_str, e),
-                                }
-
-                                debug!(
-                                    "run_sniper: Processed NIP {} for relay: {}/{}",
-                                    nip_lower,
-                                    nip_lower,
-                                    url.replace("https://", "")
-                                        .replace("wss://", "")
-                                        .replace("ws://", "")
-                                );
-                            } else {
-                                trace!("run_sniper: Relay {} does not support NIP-{}", url, nip_lower);
-                            }
-                        }
-                    },
-                    Err(e) => {
-                        error!("run_sniper: Failed to parse JSON for {}: {}. JSON: {}", url, e, json_string);
-                    }
-                }
-            } else if let Err(e) = b {
-                error!("run_sniper: Error fetching relay data: {}", e);
-            }
-        })
-        .await;
-
-    Ok(())
-}
-
-pub async fn run_watch(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
-    debug!("lib::run_watch");
-    let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY)?;
-    let app_keys = Keys::new(app_secret_key);
-    let processor = Processor::new();
-    let mut relay_manager = RelayManager::new(app_keys, processor).await;
-
-    let bootstrap_relays: Vec<&str> = BOOTSTRAP_RELAYS.iter().map(|s| s.as_str()).collect();
-    relay_manager.run(bootstrap_relays).await?;
-    let relays: Vec<String> = relay_manager.relays.get_all();
-
-    let shitlist = if let Some(path) = shitlist_path {
-        match load_shitlist(&path) {
-            Ok(sl) => sl,
-            Err(e) => {
-                eprintln!("Failed to load shitlist from {}: {}", path, e);
-                return Err(e.into());
-            }
-        }
-    } else {
-        std::collections::HashSet::new()
-    };
-
-    let relays_iterator = relays.into_iter().filter(|url: &String| {
-        if shitlist.is_empty() {
-            true
-        } else {
-            !shitlist
-                .iter()
-                .any(|shitlisted_url| url.contains(shitlisted_url))
-        }
-    });
-
-    let bodies = stream::iter(relays_iterator)
-        .map(|url: String| {
-            let client = client.clone();
-            async move {
-                let resp = client
-                    .get(
-                        url.replace("wss://", "https://")
-                            .replace("ws://", "http://"),
-                    )
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-                let text = resp.text().await?;
-
-                //TODO parse response and detect errors
-                Ok((url, text))
-            }
-        })
-        .buffer_unordered(CONCURRENT_REQUESTS);
-
-    bodies
-        .for_each(|b: Result<(String, String), reqwest::Error>| async {
-            if let Ok((url, json_string)) = b {
-                //TODO parse json_string data detect errors and add to shitlist
-                trace!("{{\"relay\":\"{}\", \"data\":{}}}", url, json_string);
-                let data: Result<Relay, serde_json::Error> = serde_json::from_str(&json_string);
-                if let Ok(relay_info) = data {
-                    //print!("{{\"nips\":\"");
-                    let supported_nips = relay_info.supported_nips.unwrap_or_default();
-                    let mut nip_count = supported_nips.len();
-                    for n in &supported_nips {
-                        trace!("nip_count:{}", nip_count);
-                        if nip_count > 1 {
-                              debug!("run_watch::bodies::nip-count > 1 -- {:0>2} ", n);
-                              trace!("LINE::581 lib::run_watch");
-                              let _ = run_sniper(*n, None, client).await;
-                        } else {
-                             trace!("{:0>2}", n);
-                             //TODO nip_count < 1 -- add to shitlist? 
-                        }
-                        nip_count -= 1;
-                    }
-                    //print!("}}");
-                    //println!();
-                }
-            }
-        })
-        .await;
-
-    // Add the processor.dump() call here
-    //relay_manager.processor.dump();
-
-    Ok(())
-}
-
-pub async fn run_nip34(shitlist_path: Option<String>, client: &reqwest::Client) -> Result<(), Box<dyn std::error::Error>> {
-    let relays = load_file("relays.yaml").unwrap();
-
-    let shitlist = if let Some(path) = shitlist_path {
-        match load_shitlist(&path) {
-            Ok(sl) => sl,
-            Err(e) => {
-                eprintln!("Failed to load shitlist from {}: {}", path, e);
-                return Err(e.into());
-            }
-        }
-    } else {
-        std::collections::HashSet::new()
-    };
-
-    let filtered_relays: Vec<String> = relays
-        .into_iter()
-        .filter(|url| {
-            if shitlist.is_empty() {
-                true
-            } else {
-                !shitlist
-                    .iter()
-                    .any(|shitlisted_url| url.contains(shitlisted_url))
-            }
-        })
-        .collect();
-
-    let bodies = stream::iter(filtered_relays)
-        .map(|url| {
-            let client = client.clone();
-            async move {
-                let resp = client
-                    .get(
-                        url.replace("wss://", "https://")
-                            .replace("ws://", "http://"),
-                    )
-                    .header(ACCEPT, "application/nostr+json")
-                    .send()
-                    .await?;
-                let text = resp.text().await?;
-
-                let r: Result<(String, String), reqwest::Error> = Ok((url.clone(), text.clone()));
-                r
-            }
-        })
-        .buffer_unordered(CONCURRENT_REQUESTS);
-
-    bodies
-        .for_each(|b: Result<(String, String), reqwest::Error>| async {
-            if let Ok((url, json_string)) = b {
-                let data: Result<Relay, _> = serde_json::from_str(&json_string);
-                if let Ok(relay_info) = data {
-                    let supported_nips = relay_info.supported_nips.unwrap_or_default();
-                    let _supports_nip01 = supported_nips.contains(&1);
-                    let _supports_nip11 = supported_nips.contains(&11);
-                    let supports_nip34 = supported_nips.contains(&34);
-
-                    //if _supports_nip01 && _supports_nip11 {
-                    if supports_nip34 {
-                        println!("{}", url);
-                    }
-                }
-            }
-        })
-        .await;
-
-    Ok(())
-}
-
-pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
-    debug!("run_api_server: Starting API server on port {}", port);
-
-    let client = reqwest::Client::new();
-
-    // Start the watch process in a separate asynchronous task
-    let client_for_watch = client.clone();
-    tokio::task::spawn(async move {
-        if let Err(e) = run_watch(None, &client_for_watch).await {
-            error!("Watch process failed: {}", e);
-        }
-    });
-
-    let app = Router::new()
-        .route("/", get(get_index_html))
-        .route("/relays.yaml", get(get_relays_yaml))
-        .route("/relays.json", get(get_relays_json))
-        .route("/relays.txt", get(get_relays_txt))
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
-                .on_response(trace::DefaultOnResponse::new().include_headers(true)),
-        );
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    info!("run_api_server: listening on {}", addr);
-    let listener = tokio::net::TcpListener::bind(&addr).await?;
-    axum::serve(listener, app.into_make_service()).await?;
-
-    Ok(())
-}
-
-async fn get_relays_yaml() -> Response {
-    let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.yaml");
-    debug!("Attempting to serve relays.yaml from: {}", file_path.display());
-
-    match fs::read_to_string(&file_path).await {
-        Ok(content) => {
-            let relays: Vec<String> = content.lines()
-                .filter(|line| !line.trim().is_empty())
-                .map(String::from)
-                .collect();
-
-            match serde_yaml::to_string(&relays) {
-                Ok(yaml_content) => {
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .header(CONTENT_TYPE, "application/x-yaml")
-                        .body(Body::from(yaml_content))
-                        .unwrap_or_else(|e| {
-                            error!("Failed to build YAML response: {}", e);
-                            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                        })
-                },
-                Err(e) => {
-                    error!("Failed to serialize relays to YAML: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to serialize relays to YAML: {}", e))).into_response()
-                }
-            }
-        },
-        Err(e) => {
-            error!("Failed to read relays.yaml: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml: {}", e))).into_response()
-        }
+        eprintln!("crawler tracing: subscriber installed");
     }
-}
-
-async fn get_relays_json() -> Response {
-    let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.json");
-    debug!("Attempting to serve relays.json from: {}", file_path.display());
-
-    match fs::read_to_string(&file_path).await {
-        Ok(content) => {
-            Response::builder()
-                .status(StatusCode::OK)
-                .header(CONTENT_TYPE, "application/json")
-                .body(Body::from(content))
-                .unwrap_or_else(|e| {
-                    error!("Failed to build JSON response: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                })
-        },
-        Err(e) => {
-            error!("Failed to read relays.json: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.json: {}", e))).into_response()
-        }
-    }
-}
-
-async fn get_relays_txt() -> Response {
-    let config_dir = crate::relays::get_config_dir_path();
-    let file_path = config_dir.join("relays.yaml"); // Use relays.yaml as source
-    debug!("Attempting to serve relays.txt (from relays.yaml) from: {}", file_path.display());
-
-    match fs::read_to_string(&file_path).await {
-        Ok(content) => {
-            match serde_yaml::from_str::<Vec<String>>(&content) {
-                Ok(relays) => {
-                    let relays_output = relays.join(" ");
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .header(CONTENT_TYPE, "text/plain")
-                        .body(Body::from(relays_output))
-                        .unwrap_or_else(|e| {
-                            error!("Failed to build TXT response: {}", e);
-                            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-                        })
-                },
-                Err(e) => {
-                    error!("Failed to parse relays.yaml for relays.txt: {}", e);
-                    (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to parse relays.yaml for relays.txt: {}", e))).into_response()
-                }
-            }
-        },
-        Err(e) => {
-            error!("Failed to read relays.yaml for relays.txt: {}. Path: {}", e, file_path.display());
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from(format!("Failed to read relays.yaml for relays.txt: {}", e))).into_response()
-        }
-    }
-}
-
-// Serve index.html from the compiled-in asset
-async fn get_index_html() -> Response {
-    let html_content = include_bytes!("index.html");
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(CONTENT_TYPE, "text/html")
-        .body(Body::from(html_content.as_ref() as &[u8]))
-        .unwrap_or_else(|e| {
-            error!("Failed to build HTML response: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Body::from("Internal Server Error")).into_response()
-        })
+    Ok(())
 }

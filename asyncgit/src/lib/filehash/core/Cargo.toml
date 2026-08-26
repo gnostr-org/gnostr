@@ -1,0 +1,23 @@
+[package]
+name = "gnostr_filehash_core"
+version = "953267.1868.494774"
+edition = "2021"
+description = "gnostr filehash core"
+license = "MIT"
+documentation = "https://github.com/gnostr-org/gnostr"
+homepage = "https://github.com/gnostr-org/gnostr"
+repository = "https://github.com/gnostr-org/gnostr"
+authors = ["gnostr <admin@gnostr.org>"]
+
+[features]
+nostr = []
+
+[dependencies]
+sha2 = { version = "0.10.9" }
+
+[build-dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+[dev-dependencies]
+sha2 = "0.10.9"
+tempfile = "3.27.0"

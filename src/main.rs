@@ -1,29 +1,99 @@
-use std::env;
+use std::{
+    env,
+    fs::OpenOptions,
+    io,
+    sync::{Arc, Mutex},
+};
 
 use anyhow::anyhow;
 use clap::{Parser /* , Subcommand */};
 use gnostr::{
     blockhash, blockheight,
-    cli::{GnostrCli, GnostrCommands, get_app_cache_path},
+    cli::{get_app_cache_path, GnostrCli, GnostrCommands},
     sub_commands,
     types::{Keys, PrivateKey, PublicKey},
+    utils::install_rustls_crypto_provider,
     weeble, wobble,
 };
-use gnostr_asyncgit::sync::RepoPath;
+use gnostr_asyncgit::sync::{repo_open_error, resolve_repo_path, RepoPath};
 use sha2::{Digest, Sha256};
 use tracing::{debug, /* info, */ trace};
 use tracing_core::metadata::LevelFilter;
-use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt}; // Import the anyhow macro
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry}; // Import the anyhow macro
+
+struct SharedFileWriter(Arc<Mutex<std::fs::File>>);
+
+struct SharedFileGuard(Arc<Mutex<std::fs::File>>);
+
+impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for SharedFileWriter {
+    type Writer = SharedFileGuard;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        SharedFileGuard(self.0.clone())
+    }
+}
+
+impl io::Write for SharedFileGuard {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.lock().unwrap().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.0.lock().unwrap().flush()
+    }
+}
+
+fn init_logging(base_level: LevelFilter) -> anyhow::Result<()> {
+    let app_cache = get_app_cache_path()?;
+    let log_file_path = app_cache.join("gnostr.log");
+    let log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_file_path)
+        .map_err(|err| anyhow::anyhow!("failed to open log file {:?}: {}", log_file_path, err))?;
+
+    let file_writer = SharedFileWriter(Arc::new(Mutex::new(log_file)));
+    let mut filter = EnvFilter::builder()
+        .with_default_directive(base_level.into())
+        .from_env()
+        .expect("Failed to build EnvFilter from environment");
+    filter = filter.add_directive("tokio_tungstenite=off".parse().unwrap());
+
+    let subscriber = Registry::default()
+        .with(fmt::layer().with_writer(std::io::stderr))
+        .with(fmt::layer().with_ansi(false).with_writer(file_writer))
+        .with(filter);
+
+    if let Err(e) = subscriber.try_init() {
+        eprintln!("Failed to initialize tracing subscriber: {}", e);
+    }
+
+    trace!(?log_file_path, "logging captured to file");
+    Ok(())
+}
+
+#[cfg(debug_assertions)]
+#[function_name::named]
+async fn _send_debug_startup_chat() {
+    let args = gnostr::chat_oneshot_named!("gnostr-dev", "gnostr main started");
+    if let Err(err) = gnostr::sub_commands::chat::chat(&args).await {
+        eprintln!("Failed to send debug startup chat: {err}");
+    }
+}
+
+#[cfg(not(debug_assertions))]
+async fn _send_debug_startup_chat() {}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    env::set_var("GNOSTR_GITDIR", "");
-    env::set_var("WEEBLE", "0");
-    env::set_var("BLOCKHEIGHT", "0");
-    env::set_var("WOBBLE", "0");
+    install_rustls_crypto_provider();
+    //_send_debug_startup_chat().await;
+    unsafe { env::set_var("GNOSTR_GITDIR", "") };
+    unsafe { env::set_var("WEEBLE", "0") };
+    unsafe { env::set_var("BLOCKHEIGHT", "0") };
+    unsafe { env::set_var("WOBBLE", "0") };
     let mut gnostr_cli_args: GnostrCli = GnostrCli::parse();
 
-    // Setup tracing subscriber once and globally
     let base_level = if gnostr_cli_args.debug {
         LevelFilter::DEBUG
     } else if gnostr_cli_args.trace {
@@ -35,22 +105,7 @@ async fn main() -> anyhow::Result<()> {
     } else {
         LevelFilter::OFF
     };
-
-    let filter = EnvFilter::builder()
-        .with_default_directive(base_level.into())
-        .from_env() // This reads RUST_LOG and builds the filter
-        .expect("Failed to build EnvFilter from environment");
-
-    let subscriber = Registry::default()
-        .with(fmt::layer().with_writer(std::io::stderr)) // Direct all logs to stderr
-        .with(filter);
-
-    if let Err(e) = subscriber.try_init() {
-        eprintln!("Failed to initialize tracing subscriber: {}", e);
-    }
-
-    let app_cache = get_app_cache_path();
-    trace!("{:?}", app_cache);
+    init_logging(base_level)?;
 
     let env_args: Vec<String> = env::args().collect();
     for arg in &env_args {
@@ -102,14 +157,18 @@ async fn main() -> anyhow::Result<()> {
     match gitdir_value.clone() {
         Some(value) => {
             debug!("main:103:The --gitdir value is: {}", value);
-            let repo_path: RepoPath = RepoPath::from(gitdir_value.clone().unwrap().as_str());
+            let repo_path = resolve_repo_path(&RepoPath::from(value.as_str()))?;
+            if let Some(error) = repo_open_error(&repo_path) {
+                return Err(anyhow!(
+                    "invalid --gitdir value `{value}`: {error}. run `git init` in that directory or omit `--gitdir`"
+                ));
+            }
             debug!("main:105:repo_path={:?}", repo_path);
-            // Convert the RepoPath to an OsStr reference
             let path_os_str = repo_path.as_path().as_os_str();
 
             // GNOSTR_GITDIR is used to enable "gnostr chat" or other cases
             // to start outside any GITDIR
-            env::set_var("GNOSTR_GITDIR", path_os_str);
+            unsafe { env::set_var("GNOSTR_GITDIR", path_os_str) };
         }
         None => {
             // OBJECTIVE to let sub services like "gnostr chat" to run outside of repos
@@ -139,22 +198,34 @@ async fn main() -> anyhow::Result<()> {
     }
     if gnostr_cli_args.weeble {
         let result = weeble::weeble();
+        let status = blockheight::blockheight_status();
         print!("{}", result.unwrap());
+        if status > 0 {
+            eprintln!("weeble: blockheight fallback status={status}");
+        }
         std::process::exit(0);
     }
     if gnostr_cli_args.wobble {
         let result = wobble::wobble();
+        let status = blockheight::blockheight_status();
         print!("{}", result.unwrap());
+        if status > 0 {
+            eprintln!("wobble: blockheight fallback status={status}");
+        }
         std::process::exit(0);
     }
     if gnostr_cli_args.blockheight {
         let result = blockheight::blockheight();
+        let status = blockheight::blockheight_status();
         print!("{}", result.unwrap());
+        if status > 0 {
+            eprintln!("blockheight: fallback status={status}");
+        }
         std::process::exit(0);
     }
     if gnostr_cli_args.blockhash {
         let result = blockhash::blockhash().unwrap();
-        env::set_var("BLOCKHASH", &result);
+        unsafe { env::set_var("BLOCKHASH", &result) };
         print!("{}", result);
         std::process::exit(0);
     }
@@ -173,15 +244,19 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .map_err(|e| anyhow!("Error in legit subcommand: {}", e))
         }
-        Some(GnostrCommands::Ngit(sub_command_args)) => {
+        Some(GnostrCommands::Ngit(sub_command_args)) => ngit::run_cli(sub_command_args)
+            .await
+            .map_err(|e| anyhow!("Error in ngit subcommand: {}", e)),
+        #[cfg(feature = "blossom")]
+        Some(GnostrCommands::Server(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::ngit::ngit(sub_command_args)
+            sub_commands::server::server(sub_command_args)
                 .await
-                .map_err(|e| anyhow!("Error in ngit subcommand: {}", e))
+                .map_err(|e| anyhow!("Error in server subcommand: {}", e))
         }
         Some(GnostrCommands::Query(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::query::launch(sub_command_args)
+            sub_commands::query::launch(sub_command_args, gnostr_cli_args.nsec.clone())
                 .await
                 .map_err(|e| anyhow!("Error in query subcommand: {}", e))
         }
@@ -415,7 +490,9 @@ async fn main() -> anyhow::Result<()> {
                         "342:OVERRIDE!! The git directory is: {:?}",
                         gitdir_string.clone()
                     );
-                    sub_command_args_mut.gitdir = Some(RepoPath::from(gitdir_string.as_str()));
+                    sub_command_args_mut.gitdir = Some(resolve_repo_path(&RepoPath::from(
+                        gitdir_string.as_str(),
+                    ))?);
                     // Call tui and map error, then assign to result
                     result = sub_commands::tui::tui(sub_command_args_mut.clone(), &gnostr_cli_args)
                         .await
@@ -486,39 +563,100 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(GnostrCommands::Dm(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            let mut client = gnostr::types::client::Client::new(
-                &Keys::new(PrivateKey::try_from_hex_string(
-                    &gnostr_cli_args
-                        .nsec
-                        .ok_or_else(|| anyhow!("nsec not provided"))?,
-                )?),
-                gnostr::types::client::Options::new(),
-            );
             // Try to parse the recipient string as a PublicKey
             let recipient_pubkey =
                 PublicKey::try_from_bech32_string(&sub_command_args.recipient, false)
                     .or_else(|_| PublicKey::try_from_hex_string(&sub_command_args.recipient, false))
                     .map_err(|e| anyhow!("Invalid recipient public key: {}", e))?;
 
-            // Use dm-specific relays if provided, otherwise fall back to global relays
-            debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
-            debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
-            let relays_to_use = if !sub_command_args.relay.is_empty() {
-                sub_command_args.relay.clone()
+            if let Some(message) = sub_command_args.message.clone() {
+                let sender_keys = Keys::new(PrivateKey::try_from_hex_string(
+                    &gnostr_cli_args
+                        .nsec
+                        .ok_or_else(|| anyhow!("nsec not provided"))?,
+                )?);
+                let mut client = gnostr::types::client::Client::new(
+                    &sender_keys,
+                    gnostr::types::client::Options::new(),
+                );
+
+                let bootstrap_relays = gnostr::crawler::bootstrap_relays();
+                debug!("DM bootstrap relays:");
+                for relay in &bootstrap_relays {
+                    debug!("  {relay}");
+                }
+                debug!("DM bootstrap relays: {:?}", bootstrap_relays);
+                debug!(
+                    "DM querying bootstrap relays for recipient NIP-65 relay list: {}",
+                    recipient_pubkey.as_hex_string()
+                );
+                let preferred_relays = match sub_commands::dm::recipient_preferred_relays(
+                    &sender_keys,
+                    recipient_pubkey,
+                    bootstrap_relays,
+                )
+                .await
+                {
+                    Ok(relays) => relays,
+                    Err(err) => {
+                        eprintln!("DM preferred relay lookup failed: {err}");
+                        debug!("DM preferred relay lookup failed: {err}");
+                        Vec::new()
+                    }
+                };
+                println!("DM recipient preferred relays:");
+                if preferred_relays.is_empty() {
+                    println!("  (none found)");
+                } else {
+                    for relay in &preferred_relays {
+                        println!("  {relay}");
+                    }
+                }
+
+                debug!("gnostr_cli_args.relays: {:?}", gnostr_cli_args.relays);
+                debug!("sub_command_args.relay: {:?}", sub_command_args.relay);
+                debug!("DM explicit relays:");
+                for relay in &sub_command_args.relay {
+                    debug!("  {relay}");
+                }
+                let crawler_relays = gnostr::crawler::load_relays_or_bootstrap();
+                debug!("DM crawler relays:");
+                for relay in &crawler_relays {
+                    debug!("  {relay}");
+                }
+                let relays_to_use = merge_dm_relays(
+                    preferred_relays,
+                    sub_command_args.relay.clone(),
+                    crawler_relays,
+                    gnostr_cli_args.relays.clone(),
+                );
+                debug!("DM final relays:");
+                for relay in &relays_to_use {
+                    debug!("  {relay}");
+                }
+                debug!("relays_to_use: {:?}", relays_to_use);
+
+                client.add_relays(relays_to_use).await?;
+
+                sub_commands::dm::dm_command(&client, recipient_pubkey, message, sub_command_args.verbose > 0)
+                    .await
+                    .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
             } else {
-                gnostr_cli_args.relays.clone()
-            };
-            debug!("relays_to_use: {:?}", relays_to_use);
-
-            client.add_relays(relays_to_use).await?;
-
-            sub_commands::dm::dm_command(
-                &client,
-                recipient_pubkey,
-                sub_command_args.message.clone(),
-            )
-            .await
-            .map_err(|e| anyhow!("Error in dm subcommand: {}", e))
+                debug!(
+                    recipient = %recipient_pubkey.as_hex_string(),
+                    "DM no message supplied; switching to inbox query mode"
+                );
+                sub_commands::dm::dm_inbox_command(
+                    gnostr_cli_args.nsec.clone(),
+                    recipient_pubkey,
+                    sub_command_args.relay.clone(),
+                    gnostr_cli_args.relays.clone(),
+                    sub_command_args.limit,
+                    sub_command_args.json,
+                )
+                .await
+                .map_err(|e| anyhow!("Error in dm inbox query: {}", e))
+            }
         }
         Some(GnostrCommands::PrivkeyToBech32(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -528,9 +666,12 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Crawler(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
             let client = reqwest::Client::new(); // Centralized client creation
-            sub_commands::crawler::dispatch_crawler_command(sub_command_args.command.clone(), &client)
-                .await
-                .map_err(|e| anyhow!("Error in crawler subcommand: {}", e))
+            sub_commands::crawler::dispatch_crawler_command(
+                sub_command_args.command.clone(),
+                &client,
+            )
+            .await
+            .map_err(|e| anyhow!("Error in crawler subcommand: {}", e))
         }
         None => {
             // TODO handle more scenarios
@@ -540,6 +681,28 @@ async fn main() -> anyhow::Result<()> {
                 .map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
     }
+}
+
+fn merge_dm_relays(
+    preferred_relays: Vec<String>,
+    explicit_relays: Vec<String>,
+    crawler_relays: Vec<String>,
+    fallback_relays: Vec<String>,
+) -> Vec<String> {
+    let mut relays = Vec::new();
+
+    for relay in explicit_relays
+        .into_iter()
+        .chain(preferred_relays)
+        .chain(crawler_relays)
+        .chain(fallback_relays)
+    {
+        if !relays.contains(&relay) {
+            relays.push(relay);
+        }
+    }
+
+    relays
 }
 
 #[cfg(test)]
@@ -568,5 +731,46 @@ mod tests {
         assert!(!cli.trace);
         assert!(!cli.info);
         assert!(!cli.warn);
+    }
+
+    #[test]
+    fn merge_dm_relays_keeps_cli_defaults_when_others_are_empty() {
+        let relays = merge_dm_relays(
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://nos.lol".to_string(),
+            ],
+        );
+
+        assert_eq!(
+            relays,
+            vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://nos.lol".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn merge_dm_relays_deduplicates_in_priority_order() {
+        let relays = merge_dm_relays(
+            vec!["wss://preferred.example".to_string()],
+            vec!["wss://explicit.example".to_string()],
+            vec!["wss://preferred.example".to_string(), "wss://crawler.example".to_string()],
+            vec!["wss://explicit.example".to_string(), "wss://fallback.example".to_string()],
+        );
+
+        assert_eq!(
+            relays,
+            vec![
+                "wss://explicit.example".to_string(),
+                "wss://preferred.example".to_string(),
+                "wss://crawler.example".to_string(),
+                "wss://fallback.example".to_string(),
+            ]
+        );
     }
 }

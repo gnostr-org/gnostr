@@ -110,7 +110,7 @@ pub(crate) fn apply_selection(
                 let hunk_line_pos: DiffLinePosition = hunk_line.into();
                 let selected_line = lines.contains(&hunk_line_pos);
 
-                log::debug!(
+                log::trace!(
                     // println!(
                     "{} line: {} [{:?} old, {:?} new] -> {}",
                     if selected_line { "*" } else { " " },

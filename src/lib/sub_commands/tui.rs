@@ -11,30 +11,30 @@ use std::{
     io::{self, Stdout},
     panic, process,
     sync::{
-        Arc,
         atomic::{AtomicBool, Ordering},
+        Arc,
     },
     time::{Duration, Instant},
 };
 
-use anyhow::{Result, bail};
+use anyhow::{anyhow, bail, Result};
 use backtrace::Backtrace;
-use crossbeam_channel::{Receiver, Select, never, tick, unbounded};
+use crossbeam_channel::{never, tick, unbounded, Receiver, Select};
 use crossterm::{
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use gnostr_asyncgit::{
+    sync::{repo_open_error, resolve_repo_path, utils::repo_work_dir, RepoPath},
     AsyncGitNotification,
-    sync::{RepoPath, utils::repo_work_dir},
 };
-use nostr_sdk_0_37_0::Keys;
+use gnostr_asyncgit::types::Keys;
 use ratatui::backend::CrosstermBackend;
 use scopeguard::defer;
 use scopetime::{self, scope_time};
 use serde::ser::StdError;
-use tracing::{Level, debug};
-use tracing_subscriber::{EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing::{debug, Level};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 use crate::{
     app::{App, QuitState},
@@ -272,29 +272,27 @@ pub async fn tui(
     //TODO if !valid_path invoke mkdir -p GNOSTR_GITDIR; cd GNOSTR_GITDIR; git
     // init?
     let mut gitdir = sub_command_args.gitdir.clone().unwrap_or(".".into());
-    if !valid_path(&gitdir) {
-        debug!("243:invalid path\nplease run gitui inside of a non-bare git repository");
-        if Some(env::var("GNOSTR_GITDIR")).is_some() {
-            debug!("247:{}", env::var("GNOSTR_GITDIR").unwrap());
-            //let repo_path: RepoPath =
-            // RepoPath::from(PathBuf::from(env::var("GNOSTR_GITDIT").unwrap().
-            // to_string()));
-            let repo_path: RepoPath = RepoPath::from(
-                env::var("GNOSTR_GITDIR")
-                    .unwrap_or(env::var("HOME").unwrap().clone() /* TODO */)
-                    .as_ref(),
+    if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
+        debug!("247:{}", gitdir_env_value);
+        let repo_path = resolve_repo_path(&RepoPath::from(gitdir_env_value.as_ref()))?;
+        if let Some(error) = repo_open_error(&repo_path) {
+            eprintln!(
+                "gnostr: not inside a git repository at `{}`: {error}. Run `git init` first or use `gnostr chat --topic <name>`.",
+                repo_path.as_path().display()
             );
-
-            debug!("253:{:?}", repo_path);
-            sub_command_args.gitdir = Some(repo_path); //env::var("GNOSTR_GITDIR").unwrap().to_string()
-            debug!("257:{:?}", sub_command_args.gitdir);
-        } else {
-            debug!("GNOSTR_GITDIR NOT set case!");
-            debug!("fork no return  case!");
-            debug!("TODO:git init in $HOME/.gnostr/tmp repo or /tmp/...");
-            //return Ok(());
+            return Err(anyhow!("not inside a git repository").into());
         }
-    } else { /*NOT NOT valid case!*/
+
+        debug!("253:{:?}", repo_path);
+        sub_command_args.gitdir = Some(repo_path);
+        gitdir = sub_command_args.gitdir.clone().unwrap_or(gitdir);
+        debug!("257:{:?}", sub_command_args.gitdir);
+    } else if !valid_path(&gitdir) {
+        debug!("243:invalid path\nplease run gnostr inside of a git repository");
+        eprintln!(
+            "gnostr: not inside a git repository.\nRun `git init` first or start chat with `gnostr chat --topic <name>`."
+        );
+        return Err(anyhow!("not inside a git repository").into());
     } //must be a valid path to a git repo!
 
     let key_config = KeyConfig::init()
@@ -328,7 +326,7 @@ pub async fn tui(
     let sub_command_args = sub_command_args;
     if let Some(name) = sub_command_args.name.clone() {
         use std::env;
-        env::set_var("USER", &name);
+        unsafe { env::set_var("USER", &name) };
     }
 
     let level = if sub_command_args.debug {
@@ -370,9 +368,10 @@ pub async fn tui(
     if (sub_command_args.debug || sub_command_args.trace) && sub_command_args.nsec.clone().is_some()
     {
         let keys = Keys::parse(sub_command_args.nsec.clone().unwrap().clone()).unwrap();
+        let mut secret_key = keys.secret_key().unwrap();
         debug!(
             "{{\"private_key\":\"{}\"}}",
-            keys.secret_key().display_secret()
+            secret_key.as_hex_string()
         );
         debug!("{{\"public_key\":\"{}\"}}", keys.public_key());
     }
@@ -388,6 +387,7 @@ pub async fn tui(
             &mut terminal,
             cli.screenshots,
             Arc::clone(&quit_flag),
+            cli.tab,
         ))
         .await
         {
@@ -407,6 +407,23 @@ pub async fn tui(
     }
     //run(sub_command_args).await?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::Parser;
+
+    use crate::cli::{GnostrCli, GnostrCommands};
+
+    #[test]
+    fn parses_start_tab() {
+        let args = GnostrCli::parse_from(["gnostr", "tui", "--tab", "6"]);
+        assert_eq!(args.tab, Some(6));
+        match args.command {
+            Some(GnostrCommands::Tui(_tui)) => {}
+            _ => panic!("expected tui command"),
+        }
+    }
 }
 
 //pub async fn run(sub_command_args: &GnostrSubCommands) -> Result<(), Box<dyn
@@ -432,6 +449,7 @@ pub async fn run_app(
     terminal: &mut Terminal,
     screenshots: Option<u8>,
     quit_flag: Arc<AtomicBool>,
+    start_tab: Option<usize>,
 ) -> Result<QuitState, anyhow::Error> {
     let (tx_git, rx_git) = unbounded();
     let (tx_app, rx_app) = unbounded();
@@ -466,6 +484,11 @@ pub async fn run_app(
             return Err(e);
         }
     };
+
+    if let Some(tab) = start_tab {
+        app.set_start_tab(tab)?;
+    }
+
     let mut spinner = Spinner::default();
     let mut first_update = true;
 
@@ -516,7 +539,13 @@ pub async fn run_app(
 
         {
             if matches!(event, QueueEvent::SpinnerUpdate) {
+                let pending = app.any_work_pending();
+                app.update_spinner();
                 spinner.update();
+                if pending {
+                    draw(terminal, &app)?;
+                }
+                spinner.set_state(pending);
                 spinner.draw(terminal)?;
                 continue;
             }

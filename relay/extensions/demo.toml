@@ -4,7 +4,7 @@
 # config relay information
 [information]
 name = "gnostr-relay"
-description = "gnostr-relay:a git+nostr workflow utility"
+description = "GnostrApp:a git+nostr workflow utility"
 software = "https://github.com/gnostr-org/gnostr"
 # pubkey = ""
 # contact = ""
@@ -23,7 +23,7 @@ db_query_timeout = "100ms"
 # Interface to listen on. Use 0.0.0.0 to listen on all interfaces (restart required)
 host = "127.0.0.1"
 # Listen port (restart required)
-port = 8080
+port = 0
 
 # real ip header (default empty)
 # ie: cf-connecting-ip, x-real-ip, x-forwarded-for
@@ -126,7 +126,7 @@ enabled = false
 # kinds = [[0, 40000]]
 
 # # skip when ip in whitelist
-ip_whitelist = ["127.0.0.1"]
+# ip_whitelist = ["127.0.0.1"]
 
 # [[rate_limiter.event]]
 # name = "kind 10000"

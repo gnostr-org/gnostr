@@ -1,10 +1,11 @@
 [package]
 name = "gnostr-grammar"
 description = "tree-sitter grammars built from Helix with support for dynamic linking"
-version = "1894.934224.276199"
+version = "953267.1868.494774"
 edition = "2021"
 authors = ["gnostr <admin@gnostr.org>", "Jordan Doyle <jordan@doyle.la>"]
 license = "WTFPL"
+homepage = "https://github.com/gnostr-org/gnostr"
 
 [dependencies]
 globset = "0.4"
@@ -14,6 +15,7 @@ tree-sitter-language = "0.1"
 [build-dependencies]
 anyhow = "1.0"
 cc = "1.1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 heck = "0.5"
 prettyplease = "0.2"
 proc-macro2 = "1.0"

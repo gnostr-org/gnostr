@@ -1,15 +1,9 @@
-use std::{
-    io::Write,
-    path::{Path, PathBuf},
-};
+use chrono::TimeZone;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use anyhow::Context;
-
-#[derive(Copy, Clone)]
-pub struct Paths<'a> {
-    statics_in_dir: &'a Path,
-    statics_out_dir: &'a Path,
-}
+use sha2::{Digest, Sha256};
 
 fn main() {
     if let Err(e) = run() {
@@ -19,151 +13,105 @@ fn main() {
 }
 
 fn run() -> anyhow::Result<()> {
+    report_build_name();
+    println!("cargo:rustc-check-cfg=cfg(gnostr_workspace_assets)");
+
     let manifest_dir =
         PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").context("CARGO_MANIFEST_DIR not set")?);
-    let statics_in_dir = manifest_dir;
-
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").context("OUT_DIR not set by rustc")?);
-    let statics_out_dir = out_dir;
-
-    let paths = Paths {
-        statics_in_dir: &statics_in_dir,
-        statics_out_dir: &statics_out_dir,
-    };
-
-    build_scss(paths).context("Failed to build CSS stylesheets")?;
-    build_js(paths).context("Failed to build JS bundle")?;
-
-
+    export_filehash_envs(&manifest_dir).context("Failed to export filehash build envs")?;
+    export_git_envs(&manifest_dir).context("Failed to export git build envs")?;
 
     println!("cargo:rerun-if-changed=build.rs");
     Ok(())
 }
 
-fn build_scss(paths: Paths) -> anyhow::Result<()> {
-
-    //gnostr-gnit
-    let in_dir = paths.statics_in_dir.join("src/lib/sass");
-    let out_dir = paths.statics_out_dir.join("src/lib/css");
-    std::fs::create_dir_all(&out_dir).context("Failed to create output directory")?;
-
-    println!("cargo:rerun-if-changed={}", in_dir.display());
-
-    let input_file = in_dir.join("style.scss");
-    let output_file = out_dir.join("style.css");
-    let format = rsass::output::Format {
-        style: rsass::output::Style::Compressed,
-        ..rsass::output::Format::default()
+fn report_build_name() {
+    let now = match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(val) => chrono::Local
+            .timestamp_opt(val.parse::<i64>().unwrap(), 0)
+            .unwrap(),
+        Err(_) => chrono::Local::now(),
+    };
+    let build_date = now.date_naive();
+    let build_name = if std::env::var("GITUI_RELEASE").is_ok() {
+        format!("{}@{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+    } else {
+        format!(
+            "{}@{} {} ({})",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION"),
+            build_date,
+            get_git_hash()
+        )
     };
 
-    let output_content =
-        rsass::compile_scss_path(&input_file, format).context("Failed to compile SASS")?;
+    println!("cargo:warning=buildname '{build_name}'");
+    println!("cargo:rustc-env=GITUI_BUILD_NAME={build_name}");
+}
 
-    let mut output_file = std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(output_file)
-        .context("Failed to open output file")?;
-    output_file
-        .write_all(&output_content)
-        .context("Failed to write compiled CSS to output")?;
+fn get_git_hash() -> String {
+    if let Ok(commit) = std::env::var("BUILD_GIT_COMMIT_ID") {
+        return commit[..7].to_string();
+    }
 
-    //gnostr-web
-    let input_file = in_dir.join("nostr-styles.scss");
-    let output_file = out_dir.join("styles.css");
-    let format = rsass::output::Format {
-        style: rsass::output::Style::Compressed,
-        ..rsass::output::Format::default()
-    };
+    let commit = Command::new("git")
+        .arg("rev-parse")
+        .arg("--short=7")
+        .arg("--verify")
+        .arg("HEAD")
+        .output();
 
-    let output_content =
-        rsass::compile_scss_path(&input_file, format).context("Failed to compile SASS")?;
+    if let Ok(commit_output) = commit {
+        let commit_string = String::from_utf8_lossy(&commit_output.stdout);
+        return commit_string.lines().next().unwrap_or("").into();
+    }
 
-    let mut output_file = std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(output_file)
-        .context("Failed to open output file")?;
-    output_file
-        .write_all(&output_content)
-        .context("Failed to write compiled CSS to output")?;
+    panic!("Can not get git commit: {}", commit.unwrap_err());
+}
 
+fn export_filehash_envs(manifest_dir: &Path) -> anyhow::Result<()> {
+    let build_rs = manifest_dir.join("build.rs");
+    let cargo_toml = manifest_dir.join("Cargo.toml");
+    let lib_mod = manifest_dir.join("src/lib/mod.rs");
+
+    println!("cargo:rerun-if-changed={}", build_rs.display());
+    println!("cargo:rerun-if-changed={}", cargo_toml.display());
+    println!("cargo:rerun-if-changed={}", lib_mod.display());
+
+    println!("cargo:rustc-env=BUILD_HASH={}", hash_file(&build_rs)?);
+    println!("cargo:rustc-env=CARGO_TOML_HASH={}", hash_file(&cargo_toml)?);
+    println!("cargo:rustc-env=LIB_HASH={}", hash_file(&lib_mod)?);
     Ok(())
 }
 
-fn build_js(paths: Paths) -> anyhow::Result<()> {
-    let in_dir = paths.statics_in_dir.join("src/lib/js");
-    let ui_in_dir = in_dir.join("ui");
-    let out_dir = paths.statics_out_dir.join("src/lib/js");
-    std::fs::create_dir_all(&out_dir).context("Failed to create output directory for JS")?;
+fn export_git_envs(manifest_dir: &Path) -> anyhow::Result<()> {
+    println!("cargo:rerun-if-changed={}", manifest_dir.join(".git/HEAD").display());
 
-    println!("cargo:rerun-if-changed={}", in_dir.display());
-    println!("cargo:rerun-if-changed={}", ui_in_dir.display());
+    let git_commit_hash = Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .current_dir(manifest_dir)
+        .output()
+        .ok()
+        .and_then(|output| output.status.success().then_some(output.stdout))
+        .map(|stdout| String::from_utf8_lossy(&stdout).trim().to_string())
+        .unwrap_or_default();
 
-    let mut all_js_content = String::new();
+    let git_branch = Command::new("git")
+        .args(["branch", "--show-current"])
+        .current_dir(manifest_dir)
+        .output()
+        .ok()
+        .and_then(|output| output.status.success().then_some(output.stdout))
+        .map(|stdout| String::from_utf8_lossy(&stdout).trim().to_string())
+        .filter(|branch| !branch.is_empty())
+        .unwrap_or_else(|| "HEAD".to_string());
 
-    // Explicitly add util.js first
-    let util_js_path = in_dir.join("util.js");
-    println!("cargo:rerun-if-changed={}", util_js_path.display());
-    let util_js_content = std::fs::read_to_string(&util_js_path).context(format!(
-        "Failed to read JS file: {}",
-        util_js_path.display()
-    ))?;
-    all_js_content.push_str(&util_js_content);
-    all_js_content.push_str("\n"); // Add newline for concatenation
-
-    // Collect and sort JS files from statics/js, excluding util.js for deterministic builds
-    let mut js_files: Vec<PathBuf> = std::fs::read_dir(&in_dir)
-        .context("Failed to read statics/js directory")?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.is_file()
-                && path.extension().map_or(false, |ext| ext == "js")
-                && *path != util_js_path
-        })
-        .collect();
-    js_files.sort();
-
-    for path in js_files {
-        println!("cargo:rerun-if-changed={}", path.display());
-        let content = std::fs::read_to_string(&path)
-            .context(format!("Failed to read JS file: {}", path.display()))?;
-        all_js_content.push_str(&content);
-        all_js_content.push_str("\n"); // Add newline for concatenation
-    }
-
-    // Collect and sort JS files from statics/js/ui for deterministic builds
-    let mut ui_js_files: Vec<PathBuf> = std::fs::read_dir(&ui_in_dir)
-        .context("Failed to read statics/js/ui directory")?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| path.is_file() && path.extension().map_or(false, |ext| ext == "js"))
-        .collect();
-    ui_js_files.sort();
-
-    for path in ui_js_files {
-        println!("cargo:rerun-if-changed={}", path.display());
-        let content = std::fs::read_to_string(&path)
-            .context(format!("Failed to read JS file: {}", path.display()))?;
-        all_js_content.push_str(&content);
-        all_js_content.push_str("\n"); // Add newline for concatenation
-    }
-
-    let output_file = out_dir.join("bundle.js");
-    let mut output_file = std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(output_file)
-        .context("Failed to open output JS bundle file")?;
-    output_file
-        .write_all(all_js_content.as_bytes())
-        .context("Failed to write compiled JS bundle to output")?;
-
-    //We output to CARGO_MANIFEST_DIR/src/lib/js/ also
-
+    println!("cargo:rustc-env=GIT_COMMIT_HASH={}", git_commit_hash);
+    println!("cargo:rustc-env=GIT_BRANCH={}", git_branch);
     Ok(())
+}
+
+fn hash_file(path: &Path) -> anyhow::Result<String> {
+    let bytes = std::fs::read(path).with_context(|| format!("Failed to read {}", path.display()))?;
+    Ok(format!("{:x}", Sha256::digest(&bytes)))
 }

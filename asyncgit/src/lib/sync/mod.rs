@@ -19,6 +19,8 @@ mod hunks;
 mod ignore;
 mod logwalker;
 mod merge;
+mod notes;
+mod pow;
 mod patches;
 mod rebase;
 pub mod remotes;
@@ -43,7 +45,10 @@ pub use branch::{
     merge_rebase::merge_upstream_rebase, rename::rename_branch, validate_branch_name,
     BranchCompare, BranchDetails, BranchInfo,
 };
-pub use commit::{amend, commit, tag_commit};
+pub use commit::{
+    amend, commit, create_empty_tree, create_empty_tree_sha256, mine_commit, tag_commit,
+    CommitMineOptions,
+};
 pub use commit_details::{get_commit_details, CommitDetails, CommitMessage, CommitSignature};
 pub use commit_files::get_commit_files;
 pub use commit_filter::{
@@ -56,8 +61,8 @@ pub use config::{get_config_string, untracked_files_config, ShowUntrackedFilesCo
 pub use diff::get_diff_commit;
 pub use git2::{BranchType, ResetType};
 pub use hooks::{
-    hooks_commit_msg, hooks_post_commit, hooks_pre_commit, hooks_prepare_commit_msg, HookResult,
-    PrepareCommitMsgSource,
+    hooks_commit_msg, hooks_post_commit, hooks_pre_commit, hooks_pre_push,
+    hooks_prepare_commit_msg, HookResult, PrePushTarget, PrepareCommitMsgSource,
 };
 pub use hunks::{reset_hunk, stage_hunk, unstage_hunk};
 pub use ignore::add_to_ignore;
@@ -66,13 +71,23 @@ pub use merge::{
     abort_pending_rebase, abort_pending_state, continue_pending_rebase, merge_branch, merge_commit,
     merge_msg, mergehead_ids, rebase_progress,
 };
+pub use notes::{
+    add_note, amend_note, append_public_attestation_log, default_notes_ref, generate_git_note_event,
+    generate_git_note_event_with_pow, git_note_event_id, git_note_tags, list_notes, remove_note,
+    mine_note, run_notes_command, show_note, GitNote, NoteInfo, NotesCommand, NotesCommandResult,
+};
+pub use pow::{
+    accumulated_commit_pow, accumulated_note_pow, accumulated_pow, accumulated_pow_depth,
+    AccumulatedPowEntry, AccumulatedPowSummary,
+};
 pub use rebase::rebase_branch;
 pub use remotes::{
-    get_default_remote, get_default_remote_for_fetch, get_default_remote_for_push, get_remotes,
-    push::AsyncProgress, tags::PushTagsProgress,
+    add_remote, delete_remote, get_default_remote, get_default_remote_for_fetch,
+    get_default_remote_for_push, get_remote_url, get_remotes, rename_remote, update_remote_url,
+    validate_remote_name, push::AsyncProgress, tags::PushTagsProgress,
 };
 pub(crate) use repository::repo;
-pub use repository::{RepoPath, RepoPathRef};
+pub use repository::{resolve_repo_path, RepoPath, RepoPathRef};
 pub use reset::{reset_repo, reset_stage, reset_workdir};
 pub use reword::reword;
 pub use staging::{discard_lines, stage_lines};
@@ -91,6 +106,83 @@ pub use utils::{
     get_head, get_head_tuple, repo_dir, repo_open_error, stage_add_all, stage_add_file,
     stage_addremoved, Head,
 };
+
+fn temp_repo_identity(repo: &git2::Repository) -> (String, String) {
+    if let Ok(signature) = repo.signature() {
+        let name = signature.name().unwrap_or_default().to_string();
+        let email = signature.email().unwrap_or_default().to_string();
+        if !name.is_empty() && !email.is_empty() {
+            return (name, email);
+        }
+    }
+
+    let name = std::env::var("GIT_AUTHOR_NAME")
+        .or_else(|_| std::env::var("GIT_COMMITTER_NAME"))
+        .or_else(|_| std::env::var("USER"))
+        .unwrap_or_else(|_| "name".to_string());
+    let email = std::env::var("GIT_AUTHOR_EMAIL")
+        .or_else(|_| std::env::var("GIT_COMMITTER_EMAIL"))
+        .or_else(|_| std::env::var("EMAIL"))
+        .unwrap_or_else(|_| "email@example.com".to_string());
+
+    (name, email)
+}
+
+fn configure_temp_repo(repo: &git2::Repository, label: &str) -> anyhow::Result<()> {
+    let (name, email) = temp_repo_identity(repo);
+    let mut config = repo.config()?;
+    config.set_str("user.name", &name)?;
+    config.set_str("user.email", &email)?;
+    log::info!("{label}: user.name={name} user.email={email}");
+    Ok(())
+}
+
+fn seed_empty_tree(repo: &git2::Repository, label: &str) -> anyhow::Result<git2::Oid> {
+    let mut index = repo.index()?;
+    let empty_tree = index.write_tree()?;
+    log::info!("{label}: empty_tree={empty_tree}");
+    Ok(empty_tree)
+}
+
+fn seed_empty_tree_commit(repo: &git2::Repository, label: &str) -> anyhow::Result<git2::Oid> {
+    let empty_tree = seed_empty_tree(repo, label)?;
+    let tree = repo.find_tree(empty_tree)?;
+    let signature = repo.signature()?;
+    let commit_id = repo.commit(Some("HEAD"), &signature, &signature, "initial empty tree", &tree, &[])?;
+    log::info!("{label}: empty_tree_commit={commit_id}");
+    Ok(commit_id)
+}
+
+/// Create a temporary non-bare repo using the developer machine's git identity.
+pub fn create_temp_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let temp_dir = tempfile::TempDir::new()?;
+    let repo = git2::Repository::init(temp_dir.path())?;
+    configure_temp_repo(&repo, "create_temp_repo")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary non-bare repo and seed an empty tree object.
+pub fn create_temp_repo_with_empty_tree() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let (temp_dir, repo) = create_temp_repo()?;
+    let _ = seed_empty_tree_commit(&repo, "create_temp_repo_with_empty_tree")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary bare repo using the developer machine's git identity.
+pub fn create_temp_bare_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let temp_dir = tempfile::TempDir::new()?;
+    let repo = git2::Repository::init_bare(temp_dir.path())?;
+    configure_temp_repo(&repo, "create_temp_bare_repo")?;
+    Ok((temp_dir, repo))
+}
+
+/// Create a temporary bare repo and seed an empty tree object.
+pub fn create_temp_bare_repo_with_empty_tree()
+-> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+    let (temp_dir, repo) = create_temp_bare_repo()?;
+    let _ = seed_empty_tree_commit(&repo, "create_temp_bare_repo_with_empty_tree")?;
+    Ok((temp_dir, repo))
+}
 
 #[cfg(test)]
 mod tests {
@@ -262,7 +354,14 @@ mod tests {
     // init log
     fn init_log() {
         let _ = env_logger::builder()
+            .parse_default_env()
             .is_test(true)
+            .filter_module("ureq", log::LevelFilter::Off)
+            .filter_module("serial_test", log::LevelFilter::Off)
+            .filter_module("mio", log::LevelFilter::Off)
+            .filter_module("tungstenite", log::LevelFilter::Off)
+            .filter_module("tokio_tungstenite", log::LevelFilter::Off)
+            .filter_module("rustls", log::LevelFilter::Warn)
             .filter_level(log::LevelFilter::Trace)
             .try_init();
     }

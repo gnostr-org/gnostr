@@ -1,3 +1,4 @@
+pub mod detach;
 pub mod pwd;
 pub mod retry;
 pub mod screenshot;
@@ -13,13 +14,20 @@ use std::{
 };
 
 use anyhow::{Error as AnyhowError, Result};
-//use actix_rt::net::TcpListener as ActixRtTcpListener;
 use async_std::net::TcpListener as AsyncStdTcpListener;
 use log::{debug, error, info};
 use serde_json::{self, Result as SerdeJsonResult, Value};
 use ureq::Agent;
 
 use crate::types::{Client, Filter, Id, Keys, Nip19Profile, Options, PrivateKey, PublicKey};
+use crate::utils::detach::{
+    capture_detached_pid, relay_port_is_listening, spawn_detached_current_exe_named,
+};
+
+/// install_rustls_crypto_provider
+pub fn install_rustls_crypto_provider() {
+    let _ = gnostr_asyncgit::install_rustls_crypto_provider();
+}
 
 /// parse_json
 pub fn parse_json(json_string: &str) -> SerdeJsonResult<Value> {
@@ -121,25 +129,47 @@ pub async fn create_client(
     Ok(client)
 }
 
-pub async fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowError> {
+/// Convert NIP-19 ids or nostr URLs into hex, preserving raw hex inputs.
+pub fn parse_key_or_id_to_hex_string(input: String) -> Result<String, AnyhowError> {
+    let input = input.trim();
+    let input = if let Some(rest) = input.strip_prefix("nostr://") {
+        rest.split('/').next().unwrap_or(rest)
+    } else {
+        input
+    };
+
     let hex_key_or_id = if input.starts_with("npub") {
-        crate::types::PublicKey::try_from_bech32_string(&input, true)?.as_hex_string()
+        crate::types::PublicKey::try_from_bech32_string(input, true)?.as_hex_string()
     } else if input.starts_with("nsec") {
-        crate::types::PrivateKey::try_from_bech32_string(&input)?.as_hex_string()
+        crate::types::PrivateKey::try_from_bech32_string(input)?.as_hex_string()
     } else if input.starts_with("note") {
-        crate::types::Id::try_from_bech32_string(&input)?.as_hex_string()
+        crate::types::Id::try_from_bech32_string(input)?.as_hex_string()
     } else if input.starts_with("nprofile") {
-        if let crate::types::Nip19::Profile(profile) = crate::types::Nip19::decode(&input)? {
+        if let crate::types::Nip19::Profile(profile) = crate::types::Nip19::decode(input)? {
             profile.public_key.as_hex_string()
         } else {
             return Err(AnyhowError::msg("Invalid nprofile format for conversion"));
         }
     } else {
-        // If the key is not bech32 encoded, return it as is
-        input.clone()
+        // If the key is not bech32 encoded, return it as is.
+        input.to_string()
     };
 
     Ok(hex_key_or_id)
+}
+
+/// Ensure the local crawler relay is running on `ws://127.0.0.1:8080`.
+pub fn ensure_crawler_serve_running() -> Result<(), AnyhowError> {
+    if relay_port_is_listening(8080) {
+        return Ok(());
+    }
+
+    let pid = spawn_detached_current_exe_named(
+        Some("gnostr-crawler"),
+        ["crawler", "serve", "--port", "8080"],
+    )?;
+    capture_detached_pid("gnostr-crawler", pid)?;
+    Ok(())
 }
 
 pub fn truncate_chars(s: &str, max_chars: usize) -> String {
@@ -361,7 +391,7 @@ mod tests {
     async fn test_parse_key_hex_input() {
         let hex_key =
             String::from("f4deaad98b61fa24d86ef315f1d5d57c1a6a533e1e87e777e5d0b48dcd332cdb");
-        let result = parse_key_or_id_to_hex_string(hex_key.clone()).await;
+        let result = parse_key_or_id_to_hex_string(hex_key.clone());
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), hex_key);
@@ -372,7 +402,7 @@ mod tests {
         let bech32_note_id =
             String::from("note1h445ule4je70k7kvddate8kpsh2fd6n77esevww5hmgda2qwssjsw957wk");
 
-        let result = parse_key_or_id_to_hex_string(bech32_note_id).await;
+        let result = parse_key_or_id_to_hex_string(bech32_note_id);
 
         assert!(result.is_ok());
         assert_eq!(
@@ -385,7 +415,7 @@ mod tests {
     async fn test_parse_bech32_public_key_input() {
         let bech32_encoded_key =
             String::from("npub1ktt8phjnkfmfrsxrgqpztdjuxk3x6psf80xyray0l3c7pyrln49qhkyhz0");
-        let result = parse_key_or_id_to_hex_string(bech32_encoded_key).await;
+        let result = parse_key_or_id_to_hex_string(bech32_encoded_key);
 
         assert!(result.is_ok());
         assert_eq!(
@@ -398,7 +428,7 @@ mod tests {
     async fn test_parse_bech32_private_key() {
         let bech32_encoded_key =
             String::from("nsec1hdeqm0y8vgzuucqv4840h7rlpy4qfu928ulxh3dzj6s2nqupdtzqagtew3");
-        let result = parse_key_or_id_to_hex_string(bech32_encoded_key).await;
+        let result = parse_key_or_id_to_hex_string(bech32_encoded_key);
 
         assert!(result.is_ok());
         assert_eq!(

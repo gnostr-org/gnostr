@@ -5,7 +5,7 @@ use std::path::Path;
 use git2::{Delta, Status, StatusOptions, StatusShow};
 use scopetime::scope_time;
 
-use super::{RepoPath, ShowUntrackedFilesConfig};
+use super::{reset_stage, reset_workdir, RepoPath, ShowUntrackedFilesConfig};
 use crate::{
     error::{Error, Result},
     sync::{config::untracked_files_config_repo, repository::repo},
@@ -168,7 +168,7 @@ pub fn get_status(
                 .ok_or_else(|| {
                     Error::Generic("failed to get path to diff's new file.".to_string())
                 })?,
-            None => e.path().map(String::from).ok_or_else(|| {
+            None => e.path().ok().map(String::from).ok_or_else(|| {
                 Error::Generic("failed to get the path to indexed file.".to_string())
             })?,
         };
@@ -182,4 +182,17 @@ pub fn get_status(
     res.sort_by(|a, b| Path::new(a.path.as_str()).cmp(Path::new(b.path.as_str())));
 
     Ok(res)
+}
+
+///
+pub fn discard_status(repo_path: &RepoPath) -> Result<()> {
+    scope_time!("discard_status");
+
+    let statuses = get_status(repo_path, StatusType::Both, None)?;
+    for item in statuses {
+        reset_stage(repo_path, &item.path)?;
+        reset_workdir(repo_path, &item.path)?;
+    }
+
+    Ok(())
 }
