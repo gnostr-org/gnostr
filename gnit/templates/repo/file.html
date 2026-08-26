@@ -1,0 +1,29 @@
+{% import "macros/link.html" as link %}
+{% import "macros/breadcrumbs.html" as breadcrumbs %}
+{% extends "repo/base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="/highlight-{{ crate::HIGHLIGHT_CSS_HASH.get().unwrap() }}.css" />
+    <link rel="stylesheet" type="text/css" href="/highlight-dark-{{ crate::DARK_HIGHLIGHT_CSS_HASH.get().unwrap() }}.css" />
+{%- endblock %}
+
+{% block tree_nav_class %}active{% endblock %}
+
+{% block subnav %}
+    {% call breadcrumbs::breadcrumbs(repo_path, filters::branch_query(branch.as_deref())) %}
+{% endblock %}
+
+{% block extra_nav_links %}
+    <a href="?raw=true{% call link::maybe_branch_suffix(branch) %}">plain</a>
+{% endblock %}
+
+{% block content %}
+<pre>
+    {%- match file.content -%}
+        {%- when crate::git::Content::Text with (content) -%}
+            {{- content|safe -}}
+        {%- when crate::git::Content::Binary with (_) -%}
+            &lt;binary file not displayed&gt;
+    {%- endmatch -%}
+</pre>
+{% endblock %}

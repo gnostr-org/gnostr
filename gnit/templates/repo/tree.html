@@ -1,0 +1,52 @@
+{% import "macros/breadcrumbs.html" as breadcrumbs %}
+{% extends "repo/base.html" %}
+
+{% block tree_nav_class %}active{% endblock %}
+
+{% block subnav %}
+    {% call breadcrumbs::breadcrumbs(repo_path, query) %}
+{% endblock %}
+
+{% block content %}
+<div class="table-responsive">
+<table class="repositories">
+    <thead>
+    <tr>
+        <th style="width: 10rem;">Mode</th>
+        <th>Name</th>
+        <th>Size</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% for item in items -%}
+    <tr>
+        {% match item -%}
+        {%- when crate::git::TreeItem::Tree with (tree) -%}
+        <td><pre>{{ tree.mode|file_perms }}</pre></td>
+        <td><pre><a class="nested-tree" href="/{{ repo.display() }}/tree/{{ tree.path.display() }}{{ query }}">{{ tree.name }}</a>
+            {%- for child in tree.children.ancestors().collect_vec().into_iter().rev() -%}
+                {%- if let Some(file_name) = child.file_name() %} / <a class="nested-tree" href="/{{ repo.display() }}/tree/{{ tree.path.display() }}/{{ child.display() }}{{ query }}">{{ file_name.to_string_lossy() }}</a>{%- endif -%}
+            {%- endfor -%}
+        </pre></td>
+        <td></td>
+        <td></td>
+
+        {%- when crate::git::TreeItem::File with (file) -%}
+        <td><pre>{{ file.mode|file_perms }}</pre></td>
+        <td><pre><a href="/{{ repo.display() }}/tree/{{ file.path.display() }}{{ query }}">{{ file.name }}</a></pre></td>
+        <td><pre>{{ file.size }}</pre></td>
+        <td></td>
+
+        {%- when crate::git::TreeItem::Submodule with (submodule) -%}
+        <td><pre>{{ submodule.mode|file_perms }}</pre></td>
+        <td><pre>🔗 <a href="{{ submodule.url }}">{{ submodule.name }}</a> @ {{ submodule.oid.to_hex_with_len(7) }}</pre></td>
+        <td></td>
+        <td></td>
+        {%- endmatch %}
+    </tr>
+    {% endfor -%}
+    </tbody>
+</table>
+</div>
+{% endblock %}

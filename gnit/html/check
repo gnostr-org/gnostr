@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euo pipefail
+
+cargo clippy -q -- --deny=clippy::all
+cargo build -q --all-targets
+cargo test -q
+cargo deny check

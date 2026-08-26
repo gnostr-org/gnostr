@@ -1,0 +1,25 @@
+accepted = [
+    "Apache-2.0",
+    "MIT",
+]
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+no-clearly-defined = true
+
+[bitmaps]
+accepted = ["MPL-2.0"]
+
+[imbl]
+accepted = ["MPL-2.0"]
+
+[sized-chunks]
+accepted = ["MPL-2.0"]
+
+[time-tz]
+accepted = ["BSD-3-Clause"]
+
+[unicode-ident]
+accepted = ["Unicode-DFS-2016"]
+
+[colored_json]
+accepted = ["EPL-2.0"]

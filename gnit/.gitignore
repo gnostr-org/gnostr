@@ -1,0 +1,26 @@
+.gnostr
+config.git
+
+#REF server.toml
+#name from public key config
+gnostr
+gnostr-user
+
+**.DS_Store
+
+server_key
+
+vendor
+/target
+/.idea
+result
+
+*.sst
+*.log
+CURRENT
+IDENTITY
+LOCK
+LOG
+LOG.old.*
+MANIFEST-*
+OPTIONS-*

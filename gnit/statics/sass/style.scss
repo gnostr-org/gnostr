@@ -1,0 +1,66 @@
+@import 'util';
+@import 'diff';
+@import 'tables';
+@import 'code';
+@import 'colours';
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background: $base03;
+    color: $base3;
+  }
+
+  h2, h3 {
+    color: darken($base3, 30%);
+  }
+}
+
+a:any-link {
+color: $blue
+}
+a:any-link:active {
+color: $blue
+}
+
+body {
+  font-family: sans-serif;
+  font-size: 0.9rem;
+  tab-size: 4;
+}
+
+header {
+  border-bottom: solid 1px $base2;
+}
+
+nav {
+  margin-top: 2rem;
+  border-bottom: solid 3px $base3;
+  display: flex;
+
+  .grow {
+    flex-grow: 1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-bottom-color: $base3;
+  }
+
+  a {
+    padding: 2px 0.75em;
+    color: $base1;
+    font-size: 110%;
+
+    @media (prefers-color-scheme: dark) {
+      color: $base2;
+    }
+
+    &.active {
+      color: $base1;
+      background-color: $base03;
+
+      @media (prefers-color-scheme: dark) {
+        background: $base03;
+      }
+    }
+  }
+}

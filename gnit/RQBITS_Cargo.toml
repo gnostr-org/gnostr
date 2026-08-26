@@ -1,0 +1,48 @@
+[package]
+name = "gnostr-bits"
+version = "0.0.4"
+authors = ["admin <admin@gnostr.org>", "Igor Katson <igor.katson@gmail.com>"]
+edition = "2021"
+description = "A bittorrent service for gnostr."
+license = "Apache-2.0"
+documentation = "https://github.com/gnostr-org/gnostr-bits"
+repository = "https://github.com/gnostr-org/gnostr-bits"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["sha1-system", "default-tls", "webui"]
+openssl-vendored = ["openssl/vendored"]
+tokio-console = ["console-subscriber", "tokio/tracing"]
+webui = ["librqbit/webui"]
+timed_existence = ["librqbit/timed_existence"]
+sha1-system = ["librqbit/sha1-system"]
+sha1-openssl = ["librqbit/sha1-openssl"]
+sha1-rust = ["librqbit/sha1-rust"]
+default-tls = ["librqbit/default-tls"]
+rust-tls = ["librqbit/rust-tls"]
+
+[dependencies]
+librqbit = {path="../librqbit", default-features=false, version = "5.4.1"}
+tokio = {version = "1", features = ["macros", "rt-multi-thread"]}
+console-subscriber = {version = "0.2", optional = true}
+anyhow = "1"
+clap = {version = "4", features = ["derive", "deprecated"]}
+tracing = "0.1"
+tracing-subscriber = {version = "0.3", features = ["env-filter"]}
+regex = "1"
+futures = "0.3"
+parse_duration = "2"
+parking_lot = {version = "0.12", features = ["deadlock_detection"]}
+reqwest = "0.11"
+serde = {version = "1", features=["derive"]}
+serde_json = "1"
+size_format = "1"
+bytes = "1.5.0"
+openssl = {version = "0.10", features = ["vendored"], optional=true}
+clap_complete = "4.4.0"
+gnostr-modal = { version = "0.0.2", path = "../modal" }
+
+[dev-dependencies]
+futures = {version = "0.3"}
