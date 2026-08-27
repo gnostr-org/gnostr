@@ -26,7 +26,7 @@ jobs:
 
       - name: Run format script and check for changes
         run: |
-          bun run script/format.ts
+          bun run scripts/format.ts
           if [[ -n $(git status --porcelain) ]]; then
             echo "❌ Files were modified by the format script"
             echo "Please run 'bun run script/format.ts' locally and commit the changes"
