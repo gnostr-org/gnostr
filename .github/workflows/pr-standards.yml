@@ -29,7 +29,7 @@ jobs:
           bun run scripts/format.ts
           if [[ -n $(git status --porcelain) ]]; then
             echo "❌ Files were modified by the format script"
-            echo "Please run 'bun run script/format.ts' locally and commit the changes"
+            echo "Please run 'bun run scripts/format.ts' locally and commit the changes"
             git diff --name-only
             exit 1
           else
