@@ -78,9 +78,7 @@ module ${MY_CRATE}FFI {
 }
 EOF
 
-if [ "${CLEAN}" = true ]; then
-    rm -rf "${OUTDIR}/${MY_CRATE}_framework.xcframework"
-fi
+rm -rf "${OUTDIR}/${MY_CRATE}_framework.xcframework"
 
 xcodebuild -create-xcframework \
     -library "${TARGETDIR}/aarch64-apple-ios/${RELDIR}/${STATIC_LIB_NAME}" -headers "${NEW_HEADER_DIR}" \
