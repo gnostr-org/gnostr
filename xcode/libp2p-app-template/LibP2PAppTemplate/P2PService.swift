@@ -6,6 +6,7 @@
 import CryptoKit
 import Foundation
 import LibP2P
+import Multihash
 import LibP2PDCUtR
 import LibP2PKadDHT
 import LibP2PMDNS
@@ -132,7 +133,7 @@ final class P2PService: ObservableObject {
         let isLocal: Bool
         let timestamp: Date
 
-        init(from msg: HistoryMessage, isLocal: Bool) {
+        fileprivate init(from msg: HistoryMessage, isLocal: Bool) {
             self.id = msg.id
             self.topic = msg.topic
             self.kind = msg.kind
@@ -292,7 +293,8 @@ final class P2PService: ObservableObject {
             // Request history from all already-discovered peers
             Task { @MainActor in
                 for peerInfo in self.discoveredPeers {
-                    if let peerID = try? PeerID(peerInfo.peerID) {
+                    if let mh = try? Multihash(b58String: peerInfo.peerID),
+                       let peerID = try? PeerID(fromBytesID: mh.value) {
                         await self.requestHistory(from: peerID, topic: topic)
                     }
                 }
@@ -331,6 +333,13 @@ final class P2PService: ObservableObject {
             lastError = "Failed to encode chat message"
             log("Failed to encode chat message for topic \(topic)")
             return
+        }
+
+        // Add to local history immediately so peers can request it right away
+        Task { @MainActor in
+            let msg = await self.historyStore.add(topic: topic, kind: "Chat", author: self.chatDisplayName, text: message)
+            self.chatMessages.insert(ChatEntry(from: msg, isLocal: true), at: 0)
+            self.chatMessages = Array(self.chatMessages.prefix(200))
         }
 
         chatSubscription?.publish(data)
@@ -535,7 +544,7 @@ final class P2PService: ObservableObject {
         app.on("libp2p-app-template", "chat-history", "1.0.0") { req -> EventLoopFuture<Data> in
             let promise = req.eventLoop.makePromise(of: Data.self)
             Task {
-                let payloadData = req.payload.getData(at: 0, length: req.payload.readableBytes) ?? Data()
+                let payloadData = req.payload.getBytes(at: 0, length: req.payload.readableBytes).map { Data($0) } ?? Data()
                 let request = try? JSONDecoder().decode(HistoryRequest.self, from: payloadData)
                 let history = await historyStore.history(
                     for: request?.topic ?? "",
