@@ -933,7 +933,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-relay"
-version = "949455.1873.486970"
+version = "953258.1868.506994"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -1813,7 +1813,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "relay_ffi"
-version = "0.1.0"
+version = "953258.1868.506994"
 dependencies = [
  "actix-web",
  "gnostr-relay",
