@@ -1,6 +1,6 @@
 //
 //  P2PService.swift
-//  GnostrP2P-KitchenSink
+//  libp2p-app-template
 //
 
 import CryptoKit
@@ -91,9 +91,9 @@ final class P2PService: ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var state: State = .stopped
     @Published var chatDisplayName = ""
-    @Published var chatTopic = "gnostr-dev"
+    @Published var chatTopic = "libp2p-dev"
     @Published var chatDraftMessage = ""
-    @Published var draftMessage = "Hello from GnostrP2P Kitchen Sink"
+    @Published var draftMessage = "Hello from LibP2P App Template"
 
     private var app: Application?
     private var runTask: Task<Void, Never>?
@@ -444,7 +444,7 @@ final class P2PService: ObservableObject {
     }
 
     private static func makePeerID(for profile: RuntimeProfile) -> PeerID {
-        let seed = Data(SHA256.hash(data: Data("GnostrP2P-KitchenSink.peerid.\(profile.rawValue)".utf8)))
+        let seed = Data(SHA256.hash(data: Data("libp2p-app-template.peerid.\(profile.rawValue)".utf8)))
         let privateKey = try! Curve25519.Signing.PrivateKey(rawRepresentation: seed)
         return try! PeerID(marshaledPrivateKey: privateKey.marshal())
     }

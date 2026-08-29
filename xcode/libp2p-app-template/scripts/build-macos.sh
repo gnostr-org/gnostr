@@ -3,11 +3,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "==> Building libp2p-app-template for macOS"
+echo "==> Building libp2p-app-template for macOS (Mac Catalyst)"
 xcodebuild -project libp2p-app-template.xcodeproj \
   -scheme LibP2PAppTemplate \
-  -sdk macosx \
-  -destination 'platform=macOS' \
+  -destination 'platform=macOS,variant=Mac Catalyst' \
   -configuration Debug \
   build
 

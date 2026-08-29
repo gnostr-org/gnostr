@@ -1,14 +1,14 @@
 //
-//  GnostrP2PKitchenSinkApp.swift
-//  GnostrP2P-KitchenSink
+//  LibP2PAppTemplateApp.swift
+//  libp2p-app-template
 //
 
 import SwiftUI
 
 @main
-struct GnostrP2PKitchenSinkApp: App {
+struct LibP2PAppTemplateApp: App {
     var body: some Scene {
-        WindowGroup("GnostrP2P Kitchen Sink") {
+        WindowGroup("LibP2P App Template") {
             ContentView()
         }
     }
