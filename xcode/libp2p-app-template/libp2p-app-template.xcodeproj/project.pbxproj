@@ -71,8 +71,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = FFIKS000000000000000050 /* Build configuration list for PBXNativeTarget "LibP2PAppTemplate" */;
 			buildPhases = (
-				FFIKS000000000000000022 /* Run Script */,
-				FFIKS000000000000000021 /* ShellScript */,
 				FFIKS000000000000000041 /* Sources */,
 				FFIKS000000000000000020 /* Frameworks */,
 				FFIKS000000000000000042 /* Resources */,
