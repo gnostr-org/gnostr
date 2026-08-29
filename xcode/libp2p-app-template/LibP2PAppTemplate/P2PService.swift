@@ -18,6 +18,88 @@ import SwiftUI
     import UIKit
 #endif
 
+// MARK: - History Sync Types
+
+private struct HistoryRequest: Codable {
+    let topic: String
+    let limit: Int
+}
+
+private struct HistoryResponse: Codable {
+    let messages: [HistoryMessage]
+}
+
+private struct HistoryMessage: Codable, Hashable {
+    let id: String
+    let topic: String
+    let kind: String
+    let author: String
+    let text: String
+    let timestamp: TimeInterval
+}
+
+// MARK: - History Store
+
+private actor HistoryStore {
+    private var messagesByTopic: [String: [HistoryMessage]] = [:]
+    private var allIDs: Set<String> = []
+    private let maxMessagesPerTopic = 200
+
+    func add(topic: String, kind: String, author: String, text: String) -> HistoryMessage {
+        let timestamp = Date().timeIntervalSince1970
+        let id = HistoryStore.stableID(author: author, text: text, timestamp: timestamp)
+        let msg = HistoryMessage(
+            id: id,
+            topic: topic,
+            kind: kind,
+            author: author,
+            text: text,
+            timestamp: timestamp
+        )
+
+        if allIDs.insert(id).inserted {
+            messagesByTopic[topic, default: []].append(msg)
+            trim(topic: topic)
+        }
+        return msg
+    }
+
+    func history(for topic: String, limit: Int) -> [HistoryMessage] {
+        let msgs = messagesByTopic[topic, default: []]
+        return Array(msgs.suffix(limit))
+    }
+
+    func merge(_ messages: [HistoryMessage]) -> [HistoryMessage] {
+        var newMessages: [HistoryMessage] = []
+        for msg in messages {
+            if allIDs.insert(msg.id).inserted {
+                messagesByTopic[msg.topic, default: []].append(msg)
+                newMessages.append(msg)
+            }
+        }
+        for topic in Set(newMessages.map(\.topic)) {
+            trim(topic: topic)
+        }
+        return newMessages
+    }
+
+    private func trim(topic: String) {
+        guard messagesByTopic[topic]!.count > maxMessagesPerTopic else { return }
+        let toRemove = messagesByTopic[topic]!.count - maxMessagesPerTopic
+        for msg in messagesByTopic[topic]!.prefix(toRemove) {
+            allIDs.remove(msg.id)
+        }
+        messagesByTopic[topic]!.removeFirst(toRemove)
+    }
+
+    static func stableID(author: String, text: String, timestamp: TimeInterval) -> String {
+        let input = "\(author)|\(text)|\(String(format: "%.3f", timestamp))"
+        return SHA256.hash(data: Data(input.utf8)).compactMap { String(format: "%02x", $0) }.joined()
+    }
+}
+
+// MARK: - P2P Service
+
 @MainActor
 final class P2PService: ObservableObject {
     enum State: String {
@@ -42,13 +124,23 @@ final class P2PService: ObservableObject {
     }
 
     struct ChatEntry: Identifiable, Hashable {
-        let id = UUID()
+        let id: String
         let topic: String
         let kind: String
         let author: String
         let text: String
         let isLocal: Bool
         let timestamp: Date
+
+        init(from msg: HistoryMessage, isLocal: Bool) {
+            self.id = msg.id
+            self.topic = msg.topic
+            self.kind = msg.kind
+            self.author = msg.author
+            self.text = msg.text
+            self.isLocal = isLocal
+            self.timestamp = Date(timeIntervalSince1970: msg.timestamp)
+        }
     }
 
     struct RustChatMessage: Codable {
@@ -100,6 +192,7 @@ final class P2PService: ObservableObject {
     private var chatSubscription: PubSub.SubscriptionHandler?
     private var chatSubscribedTopic: String?
     private var dialedPeerIDs = Set<String>()
+    private let historyStore = HistoryStore()
 
     let peerID: PeerID
 
@@ -162,7 +255,9 @@ final class P2PService: ObservableObject {
                 switch event {
                 case .newPeer(let peer):
                     Task { @MainActor in
-                        self?.log("Chat peer for \(topic): \(peer.b58String)")
+                        guard let self else { return }
+                        self.log("Chat peer for \(topic): \(peer.b58String)")
+                        await self.requestHistory(from: peer, topic: topic)
                     }
                 case .data(let message):
                     let author = message.from.asString(base: .base58btc)
@@ -172,15 +267,9 @@ final class P2PService: ObservableObject {
                     let kind = decoded?.kind ?? "Raw"
                     Task { @MainActor in
                         guard let self else { return }
+                        let msg = await self.historyStore.add(topic: topic, kind: kind, author: sender, text: text)
                         self.chatMessages.insert(
-                            ChatEntry(
-                                topic: topic,
-                                kind: kind,
-                                author: sender,
-                                text: text,
-                                isLocal: sender == self.chatDisplayName || author == self.peerID.b58String,
-                                timestamp: Date()
-                            ),
+                            ChatEntry(from: msg, isLocal: sender == self.chatDisplayName || author == self.peerID.b58String),
                             at: 0
                         )
                         self.chatMessages = Array(self.chatMessages.prefix(200))
@@ -199,6 +288,15 @@ final class P2PService: ObservableObject {
             chatSubscribedTopic = topic
             clearChatMessages()
             log("Joined chat topic \(topic)")
+
+            // Request history from all already-discovered peers
+            Task { @MainActor in
+                for peerInfo in self.discoveredPeers {
+                    if let peerID = try? PeerID(peerInfo.peerID) {
+                        await self.requestHistory(from: peerID, topic: topic)
+                    }
+                }
+            }
         } catch {
             lastError = error.localizedDescription
             log("Failed to join chat topic \(topic): \(error.localizedDescription)")
@@ -247,7 +345,7 @@ final class P2PService: ObservableObject {
         state = .starting
         log("Starting libp2p node")
 
-        let app = Self.makeApplication(peerID: peerID)
+        let app = Self.makeApplication(peerID: peerID, historyStore: historyStore)
         self.app = app
         joinChatTopic()
 
@@ -349,6 +447,41 @@ final class P2PService: ObservableObject {
         log("Ping: \(draftMessage)")
     }
 
+    private func requestHistory(from peer: PeerID, topic: String) async {
+        guard let app else { return }
+        guard peer.b58String != self.peerID.b58String else { return }
+
+        let request = HistoryRequest(topic: topic, limit: 50)
+        guard let data = try? JSONEncoder().encode(request) else { return }
+
+        do {
+            let responseData = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
+                app.newRequest(
+                    to: peer,
+                    forProtocol: "/libp2p-app-template/chat-history/1.0.0",
+                    withRequest: data,
+                    withTimeout: .seconds(5)
+                ).whenComplete { result in
+                    continuation.resume(with: result)
+                }
+            }
+
+            let response = try JSONDecoder().decode(HistoryResponse.self, from: responseData)
+            let newMessages = await historyStore.merge(response.messages)
+
+            for msg in newMessages.sorted(by: { $0.timestamp < $1.timestamp }) {
+                let isLocal = msg.author == self.chatDisplayName || msg.author == self.peerID.b58String
+                chatMessages.insert(ChatEntry(from: msg, isLocal: isLocal), at: 0)
+            }
+            if !newMessages.isEmpty {
+                chatMessages = Array(chatMessages.prefix(200))
+                log("Merged \(newMessages.count) historical messages from \(peer.b58String)")
+            }
+        } catch {
+            log("History request failed for \(peer.b58String): \(error.localizedDescription)")
+        }
+    }
+
     private func recordDiscoveredPeer(peerID: String, addresses: [String]) {
         let peer = PeerSummary(peerID: peerID, addresses: addresses)
         if !discoveredPeers.contains(peer) {
@@ -387,7 +520,7 @@ final class P2PService: ObservableObject {
         activityLog.insert("[\(formatter.string(from: Date()))] \(message)", at: 0)
     }
 
-    private static func makeApplication(peerID: PeerID) -> Application {
+    private static func makeApplication(peerID: PeerID, historyStore: HistoryStore) -> Application {
         let app = Application(.testing, peerID: peerID)
         app.logger.logLevel = .notice
         app.security.use(.noise)
@@ -397,6 +530,23 @@ final class P2PService: ObservableObject {
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
         app.listen(.tcp(host: "0.0.0.0", port: Self.listenPort))
+
+        // Register chat history sync protocol handler
+        app.on("libp2p-app-template", "chat-history", "1.0.0") { req -> EventLoopFuture<Data> in
+            let promise = req.eventLoop.makePromise(of: Data.self)
+            Task {
+                let payloadData = req.payload.getData(at: 0, length: req.payload.readableBytes) ?? Data()
+                let request = try? JSONDecoder().decode(HistoryRequest.self, from: payloadData)
+                let history = await historyStore.history(
+                    for: request?.topic ?? "",
+                    limit: request?.limit ?? 50
+                )
+                let response = try? JSONEncoder().encode(HistoryResponse(messages: history))
+                promise.succeed(response ?? Data())
+            }
+            return promise.futureResult
+        }
+
         return app
     }
 
