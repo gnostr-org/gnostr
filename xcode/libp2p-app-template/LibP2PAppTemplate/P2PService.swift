@@ -39,6 +39,47 @@ private struct HistoryMessage: Codable, Hashable {
     let timestamp: TimeInterval
 }
 
+// MARK: - History Persistence
+
+private actor HistoryPersistence {
+    private let directory: URL
+
+    init() {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        let dir = docs?.appendingPathComponent("ChatHistory", isDirectory: true)
+        if let dir, !FileManager.default.fileExists(atPath: dir.path) {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        self.directory = dir ?? URL(fileURLWithPath: "/tmp/chat-history")
+    }
+
+    func save(topic: String, messages: [HistoryMessage]) {
+        let url = fileURL(for: topic)
+        do {
+            let data = try JSONEncoder().encode(messages)
+            try data.write(to: url, options: .atomic)
+        } catch {
+            // Silently fail to avoid sluggish UI
+        }
+    }
+
+    func load(topic: String) -> [HistoryMessage] {
+        let url = fileURL(for: topic)
+        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
+        do {
+            let data = try Data(contentsOf: url)
+            return try JSONDecoder().decode([HistoryMessage].self, from: data)
+        } catch {
+            return []
+        }
+    }
+
+    private func fileURL(for topic: String) -> URL {
+        let safe = SHA256.hash(data: Data(topic.utf8)).compactMap { String(format: "%02x", $0) }.joined()
+        return directory.appendingPathComponent("\(safe).json")
+    }
+}
+
 // MARK: - History Store
 
 private actor HistoryStore {
@@ -82,6 +123,18 @@ private actor HistoryStore {
             trim(topic: topic)
         }
         return newMessages
+    }
+
+    func load(topic: String, messages: [HistoryMessage]) {
+        for msg in messages {
+            guard allIDs.insert(msg.id).inserted else { continue }
+            messagesByTopic[msg.topic, default: []].append(msg)
+        }
+        trim(topic: topic)
+    }
+
+    func allMessages(for topic: String) -> [HistoryMessage] {
+        messagesByTopic[topic, default: []]
     }
 
     private func trim(topic: String) {
@@ -194,6 +247,7 @@ final class P2PService: ObservableObject {
     private var chatSubscribedTopic: String?
     private var dialedPeerIDs = Set<String>()
     private let historyStore = HistoryStore()
+    private let historyPersistence = HistoryPersistence()
 
     let peerID: PeerID
 
@@ -239,6 +293,12 @@ final class P2PService: ObservableObject {
             return
         }
 
+        // If already subscribed to this topic, just reload history (no-op otherwise)
+        if chatSubscribedTopic == topic, chatSubscription != nil {
+            log("Already joined topic \(topic)")
+            return
+        }
+
         chatSubscription?.unsubscribe()
         chatSubscription = nil
 
@@ -275,6 +335,7 @@ final class P2PService: ObservableObject {
                         )
                         self.chatMessages = Array(self.chatMessages.prefix(200))
                         self.log("Chat message on \(topic) from \(author)")
+                        self.persistHistory(for: topic)
                     }
                 case .error(let error):
                     Task { @MainActor in
@@ -287,11 +348,23 @@ final class P2PService: ObservableObject {
 
             chatSubscription = subscription
             chatSubscribedTopic = topic
-            clearChatMessages()
-            log("Joined chat topic \(topic)")
 
-            // Request history from all already-discovered peers
+            // Load persisted history asynchronously so the UI isn't blocked
             Task { @MainActor in
+                let persisted = await self.historyPersistence.load(topic: topic)
+                if !persisted.isEmpty {
+                    await self.historyStore.load(topic: topic, messages: persisted)
+                    let loaded = await self.historyStore.history(for: topic, limit: 200)
+                    self.chatMessages = loaded.map { msg in
+                        ChatEntry(from: msg, isLocal: msg.author == self.chatDisplayName || msg.author == self.peerID.b58String)
+                    }.reversed()
+                    self.log("Loaded \(loaded.count) persisted messages for \(topic)")
+                } else {
+                    self.chatMessages.removeAll()
+                    self.log("Joined chat topic \(topic)")
+                }
+
+                // Request history from all already-discovered peers
                 for peerInfo in self.discoveredPeers {
                     if let mh = try? Multihash(b58String: peerInfo.peerID),
                        let peerID = try? PeerID(fromBytesID: mh.value) {
@@ -340,6 +413,7 @@ final class P2PService: ObservableObject {
             let msg = await self.historyStore.add(topic: topic, kind: "Chat", author: self.chatDisplayName, text: message)
             self.chatMessages.insert(ChatEntry(from: msg, isLocal: true), at: 0)
             self.chatMessages = Array(self.chatMessages.prefix(200))
+            self.persistHistory(for: topic)
         }
 
         chatSubscription?.publish(data)
@@ -456,6 +530,13 @@ final class P2PService: ObservableObject {
         log("Ping: \(draftMessage)")
     }
 
+    private func persistHistory(for topic: String) {
+        Task.detached(priority: .background) { [historyStore, historyPersistence] in
+            let messages = await historyStore.allMessages(for: topic)
+            await historyPersistence.save(topic: topic, messages: messages)
+        }
+    }
+
     private func requestHistory(from peer: PeerID, topic: String) async {
         guard let app else { return }
         guard peer.b58String != self.peerID.b58String else { return }
@@ -485,6 +566,7 @@ final class P2PService: ObservableObject {
             if !newMessages.isEmpty {
                 chatMessages = Array(chatMessages.prefix(200))
                 log("Merged \(newMessages.count) historical messages from \(peer.b58String)")
+                persistHistory(for: topic)
             }
         } catch {
             log("History request failed for \(peer.b58String): \(error.localizedDescription)")
