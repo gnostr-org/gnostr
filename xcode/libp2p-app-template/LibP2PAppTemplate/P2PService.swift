@@ -524,20 +524,23 @@ final class P2PService: ObservableObject {
             }
 
             await MainActor.run { [weak self] in
-                self?.state = .stopped
-                self?.runTask = nil
-                self?.app = nil
-                self?.listenAddresses = []
-                self?.chatSubscription = nil
-                self?.chatSubscribedTopic = nil
-                self?.dialedPeerIDs.removeAll()
-                self?.log("Node stopped")
+                guard let self else { return }
+                // If stop() has already taken over shutdown, let shutdownTask handle cleanup
+                guard self.shutdownTask == nil else { return }
+                self.state = .stopped
+                self.runTask = nil
+                self.app = nil
+                self.listenAddresses = []
+                self.chatSubscription = nil
+                self.chatSubscribedTopic = nil
+                self.dialedPeerIDs.removeAll()
+                self.log("Node stopped")
             }
         }
     }
 
     func stop() {
-        guard let app else { return }
+        guard let app, shutdownTask == nil else { return }
 
         state = .stopping
         log("Stopping libp2p node")
@@ -546,34 +549,40 @@ final class P2PService: ObservableObject {
         chatSubscription?.unsubscribe()
         chatSubscription = nil
         chatSubscribedTopic = nil
-        self.app = nil
-        self.runTask = nil
 
-        Task.detached(priority: .background) { [weak self] in
+        let currentRunTask = self.runTask
+
+        shutdownTask = Task { @MainActor [weak self] in
             do {
                 try await app.asyncShutdown()
             } catch {
-                await MainActor.run { [weak self] in
-                    self?.lastError = error.localizedDescription
-                    self?.log("Error: \(error.localizedDescription)")
-                }
+                self?.lastError = error.localizedDescription
+                self?.log("Error: \(error.localizedDescription)")
             }
+            await currentRunTask?.value
+            guard let self else { return }
+            self.app = nil
+            self.runTask = nil
+            self.listenAddresses = []
+            self.chatSubscription = nil
+            self.chatSubscribedTopic = nil
+            self.dialedPeerIDs.removeAll()
+            self.state = .stopped
+            self.log("Node stopped")
         }
     }
 
     private var restartTask: Task<Void, Never>?
+    private var shutdownTask: Task<Void, Never>?
 
     func restart() {
         restartTask?.cancel()
         restartTask = Task { @MainActor [weak self] in
             guard let self else { return }
             self.stop()
-            // Wait up to 3s for the node to fully stop before restarting
-            for _ in 0..<60 {
-                guard self.state != .stopped else { break }
-                try? await Task.sleep(nanoseconds: 50_000_000)
-                guard !Task.isCancelled else { return }
-            }
+            await self.shutdownTask?.value
+            self.shutdownTask = nil
+            guard !Task.isCancelled else { return }
             self.start()
             self.restartTask = nil
         }
