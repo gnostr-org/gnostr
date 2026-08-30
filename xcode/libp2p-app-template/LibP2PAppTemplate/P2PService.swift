@@ -561,10 +561,21 @@ final class P2PService: ObservableObject {
         }
     }
 
+    private var restartTask: Task<Void, Never>?
+
     func restart() {
-        stop()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        restartTask?.cancel()
+        restartTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.stop()
+            // Wait up to 3s for the node to fully stop before restarting
+            for _ in 0..<60 {
+                guard self.state != .stopped else { break }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+                guard !Task.isCancelled else { return }
+            }
             self.start()
+            self.restartTask = nil
         }
     }
 
@@ -902,9 +913,15 @@ final class DualP2PService: ObservableObject {
         secondary.stop()
     }
 
+    private var restartTask: Task<Void, Never>?
+
     func restart() {
-        primary.restart()
-        secondary.restart()
+        restartTask?.cancel()
+        restartTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.primary.restart()
+            self.secondary.restart()
+        }
     }
 
     func clearActivityLog() {
