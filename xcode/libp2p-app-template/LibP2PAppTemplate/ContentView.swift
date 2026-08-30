@@ -15,20 +15,25 @@ enum AppTab: String, CaseIterable, Hashable {
 
 struct ContentView: View {
     @StateObject private var p2p = P2PService()
+    @State private var selectedTab = AppTab.chat
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             statusTab
                 .tabItem { Label("Status", systemImage: "network") }
+                .tag(AppTab.status)
 
             p2pTab
                 .tabItem { Label("P2P", systemImage: "dot.radiowaves.left.and.right") }
+                .tag(AppTab.p2p)
 
             chatTab
                 .tabItem { Label("Chat", systemImage: "message.fill") }
+                .tag(AppTab.chat)
 
             activityTab
                 .tabItem { Label("Activity", systemImage: "text.bubble") }
+                .tag(AppTab.activity)
         }
         .task {
             p2p.start()
@@ -50,6 +55,7 @@ struct ContentView: View {
                             .textSelection(.enabled)
                         statRow(label: "Listen port", value: "\(p2p.listenPort)")
                         statRow(label: "State", value: p2pStateLabel)
+                        statRow(label: "AutoNAT", value: p2p.autonatStatus)
 
                         HStack {
                             Button("Start node") { p2p.start() }

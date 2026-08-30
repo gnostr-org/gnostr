@@ -7,10 +7,12 @@ import CryptoKit
 import Foundation
 import LibP2P
 import Multihash
+import LibP2PAutoNAT
 import LibP2PDCUtR
 import LibP2PKadDHT
 import LibP2PMDNS
 import LibP2PNoise
+import LibP2PRelay
 import LibP2PYAMUX
 import LibP2PPubSub
 import SwiftUI
@@ -147,8 +149,8 @@ private actor HistoryStore {
     }
 
     static func stableID(author: String, text: String, timestamp: TimeInterval) -> String {
-        let input = "\(author)|\(text)|\(String(format: "%.3f", timestamp))"
-        return SHA256.hash(data: Data(input.utf8)).compactMap { String(format: "%02x", $0) }.joined()
+        let utcMs = Int64(timestamp * 1000)
+        return "\(author)_\(utcMs)"
     }
 }
 
@@ -236,6 +238,7 @@ final class P2PService: ObservableObject {
     @Published private(set) var activityLog: [String] = []
     @Published private(set) var lastError: String?
     @Published private(set) var state: State = .stopped
+    @Published private(set) var autonatStatus: String = "unknown"
     @Published var chatDisplayName = ""
     @Published var chatTopic = "libp2p-dev"
     @Published var chatDraftMessage = ""
@@ -243,17 +246,27 @@ final class P2PService: ObservableObject {
 
     private var app: Application?
     private var runTask: Task<Void, Never>?
+    private var pingTask: Task<Void, Never>?
     private var chatSubscription: PubSub.SubscriptionHandler?
     private var chatSubscribedTopic: String?
     private var dialedPeerIDs = Set<String>()
     private let historyStore = HistoryStore()
     private let historyPersistence = HistoryPersistence()
+    private var pingSequence = 0
 
     let peerID: PeerID
 
     init() {
         peerID = Self.makePeerID(for: Self.runtimeProfile)
-        chatDisplayName = "ios-\(peerID.b58String.prefix(8))"
+        let prefix: String
+        switch Self.runtimeProfile {
+            case .macOS:       prefix = "mac"
+            case .macCatalyst: prefix = "catalyst"
+            case .iPad:        prefix = "ipad"
+            case .iPhone:      prefix = "ios"
+            case .madeForiPad: prefix = "ipad"
+        }
+        chatDisplayName = "\(prefix)-\(peerID.b58String.prefix(8))"
     }
 
     var runtimeProfile: String {
@@ -364,6 +377,9 @@ final class P2PService: ObservableObject {
                     self.log("Joined chat topic \(topic)")
                 }
 
+                // Send an immediate ping so peers know we're here
+                self.broadcastPing()
+
                 // Request history from all already-discovered peers
                 for peerInfo in self.discoveredPeers {
                     if let mh = try? Multihash(b58String: peerInfo.peerID),
@@ -458,6 +474,8 @@ final class P2PService: ObservableObject {
                     self.state = .running
                     self.log("Node is running")
                     self.joinChatTopic()
+                    self.startPingLoop()
+                    self.startConnectivityMonitoring()
                 }
             }
         }
@@ -490,6 +508,8 @@ final class P2PService: ObservableObject {
 
         state = .stopping
         log("Stopping libp2p node")
+        pingTask?.cancel()
+        pingTask = nil
         chatSubscription?.unsubscribe()
         chatSubscription = nil
         chatSubscribedTopic = nil
@@ -527,7 +547,52 @@ final class P2PService: ObservableObject {
     }
 
     func sendLocalPing() {
-        log("Ping: \(draftMessage)")
+        broadcastPing()
+    }
+
+    private func startPingLoop() {
+        pingTask?.cancel()
+        pingTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                guard let self, !Task.isCancelled else { break }
+                self.broadcastPing()
+            }
+        }
+    }
+
+    private func startConnectivityMonitoring() {
+        Task { [weak self] in
+            while let self, !Task.isCancelled, self.state == .running {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                guard let app = self.app, !Task.isCancelled else { break }
+                let natStatus = app.autonat.status.rawValue
+                await MainActor.run {
+                    self.autonatStatus = natStatus
+                }
+            }
+        }
+    }
+
+    private func broadcastPing() {
+        guard let subscription = chatSubscription, let topic = chatSubscribedTopic else {
+            log("Ping skipped: not subscribed to a topic")
+            return
+        }
+
+        pingSequence += 1
+        let formatter = ISO8601DateFormatter()
+        let timestamp = formatter.string(from: Date())
+        let text = "ping #\(pingSequence) | profile: \(runtimeProfile) | time: \(timestamp)"
+
+        let message = RustChatMessage(from: chatDisplayName, content: text, kind: "Ping")
+        guard let data = try? JSONEncoder().encode(message) else {
+            log("Failed to encode ping message")
+            return
+        }
+
+        subscription.publish(data)
+        log("Broadcast ping on \(topic)")
     }
 
     private func persistHistory(for topic: String) {
@@ -617,6 +682,8 @@ final class P2PService: ObservableObject {
         app.security.use(.noise)
         app.muxers.use(.yamux)
         app.pubsub.use(.gossipsub(emitSelf: true))
+        app.relay.use(.relay)
+        app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
