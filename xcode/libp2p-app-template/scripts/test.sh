@@ -5,19 +5,9 @@ cd "$(dirname "$0")/.."
 
 echo "==> Testing libp2p-app-template"
 
-# Note: The scheme must have a Test action configured in Xcode for this to work.
-# If tests are not configured, open the project in Xcode and add the test targets
-# to the scheme's Test action.
-
-xcodebuild -project libp2p-app-template.xcodeproj \
-  -scheme LibP2PAppTemplate \
-  -destination 'platform=macOS' \
-  test || {
-    echo ""
-    echo "Tests failed or no test target is configured."
-    echo "To enable tests, open the project in Xcode, edit the scheme, and add"
-    echo "libp2p-app-templateTests to the Test action."
-    exit 1
-  }
+# The Xcode project scheme does not include a Test action, but the Swift
+# Package Manager test target (defined in Package.swift) works from the
+# command line and is the canonical test runner for this repo.
+swift test
 
 echo "==> Tests passed"
