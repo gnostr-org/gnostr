@@ -558,17 +558,6 @@ final class P2PService: ObservableObject {
                     self?.log("Error: \(error.localizedDescription)")
                 }
             }
-
-            await MainActor.run { [weak self] in
-                self?.listenAddresses = []
-                self?.state = .stopped
-                self?.runTask = nil
-                self?.app = nil
-                self?.chatSubscription = nil
-                self?.chatSubscribedTopic = nil
-                self?.dialedPeerIDs.removeAll()
-                self?.log("Node stopped")
-            }
         }
     }
 
