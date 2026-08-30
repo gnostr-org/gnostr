@@ -149,8 +149,8 @@ private actor HistoryStore {
     }
 
     static func stableID(author: String, text: String, timestamp: TimeInterval) -> String {
-        let utcMs = Int64(timestamp * 1000)
-        return "\(author)_\(utcMs)"
+        let payload = "\(author):\(text)"
+        return SHA256.hash(data: Data(payload.utf8)).compactMap { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -257,16 +257,30 @@ final class P2PService: ObservableObject {
     private var pingSequence = 0
 
     let peerID: PeerID
+    let customListenPort: Int
 
-    init() {
-        peerID = Self.makePeerID(for: Self.runtimeProfile)
+    convenience init() {
+        let profile = Self.runtimeProfile
+        let peerID = Self.makePeerID(for: profile)
+        let port = Self.listenPort(for: profile)
+        self.init(peerID: peerID, listenPort: port, displayNamePrefix: nil)
+    }
+
+    init(peerID: PeerID, listenPort: Int, displayNamePrefix: String?) {
+        self.peerID = peerID
+        self.customListenPort = listenPort
+
         let prefix: String
-        switch Self.runtimeProfile {
-            case .macOS:       prefix = "mac"
-            case .macCatalyst: prefix = "catalyst"
-            case .iPad:        prefix = "ipad"
-            case .iPhone:      prefix = "ios"
-            case .madeForiPad: prefix = "dfi"
+        if let displayNamePrefix {
+            prefix = displayNamePrefix
+        } else {
+            switch Self.runtimeProfile {
+                case .macOS:       prefix = "mac"
+                case .macCatalyst: prefix = "catalyst"
+                case .iPad:        prefix = "ipad"
+                case .iPhone:      prefix = "ios"
+                case .madeForiPad: prefix = "dfi"
+            }
         }
         chatDisplayName = "\(prefix)-\(peerID.b58String.prefix(8))"
     }
@@ -276,7 +290,7 @@ final class P2PService: ObservableObject {
     }
 
     var listenPort: Int {
-        Self.listenPort
+        customListenPort
     }
 
     var peerIDString: String {
@@ -452,7 +466,7 @@ final class P2PService: ObservableObject {
         state = .starting
         log("Starting libp2p node")
 
-        let app = Self.makeApplication(peerID: peerID, historyStore: historyStore)
+        let app = Self.makeApplication(peerID: peerID, historyStore: historyStore, listenPort: customListenPort)
         self.app = app
 
         app.discovery.onPeerDiscovered(app) { [weak self] peer in
@@ -685,18 +699,18 @@ final class P2PService: ObservableObject {
         activityLog.insert("[\(formatter.string(from: Date()))] \(message)", at: 0)
     }
 
-    private static func makeApplication(peerID: PeerID, historyStore: HistoryStore) -> Application {
+    private static func makeApplication(peerID: PeerID, historyStore: HistoryStore, listenPort: Int) -> Application {
         let app = Application(.testing, peerID: peerID)
         app.logger.logLevel = .notice
         app.security.use(.noise)
         app.muxers.use(.yamux)
-        app.pubsub.use(.gossipsub(emitSelf: true))
+        app.pubsub.use(.gossipsub(emitSelf: false))
         app.relay.use(.relay)
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
-        app.listen(.tcp(host: "0.0.0.0", port: Self.listenPort))
+        app.listen(.tcp(host: "0.0.0.0", port: listenPort))
 
         // Register chat history sync protocol handler
         app.on("libp2p-app-template", "chat-history", "1.0.0") { req -> EventLoopFuture<Data> in
@@ -742,14 +756,14 @@ final class P2PService: ObservableObject {
         #endif
     }
 
-    private static var listenPort: Int {
+    private static func listenPort(for profile: RuntimeProfile) -> Int {
         if let value = ProcessInfo.processInfo.environment["P2P_LISTEN_PORT"],
            let port = Int(value),
            port > 0 {
             return port
         }
 
-        switch runtimeProfile {
+        switch profile {
             case .macOS:
                 return 10000
             case .iPhone:
@@ -763,6 +777,10 @@ final class P2PService: ObservableObject {
         }
     }
 
+    private static var listenPort: Int {
+        listenPort(for: runtimeProfile)
+    }
+
     private static func makePeerID(for profile: RuntimeProfile) -> PeerID {
         let seed = Data(SHA256.hash(data: Data("libp2p-app-template.peerid.\(profile.rawValue)".utf8)))
         let privateKey = try! Curve25519.Signing.PrivateKey(rawRepresentation: seed)
@@ -774,4 +792,147 @@ final class P2PService: ObservableObject {
         formatter.dateFormat = "HH:mm:ss"
         return formatter
     }()
+}
+//
+//  DualP2PService.swift
+//  libp2p-app-template
+//
+
+import Combine
+import CryptoKit
+import Foundation
+import LibP2P
+
+@MainActor
+final class DualP2PService: ObservableObject {
+    let primary: P2PService
+    let secondary: P2PService
+
+    @Published var chatTopic: String = "libp2p-dev"
+    @Published var chatDraftMessage: String = ""
+    @Published var draftMessage: String = "Hello from LibP2P App Template"
+
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        primary = P2PService()
+
+        let randomKey = try! Curve25519.Signing.PrivateKey()
+        let randomPeerID = try! PeerID(marshaledPrivateKey: randomKey.marshal())
+        let secondaryPort = primary.listenPort + 10
+
+        secondary = P2PService(peerID: randomPeerID, listenPort: secondaryPort, displayNamePrefix: "rnd")
+
+        primary.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }.store(in: &cancellables)
+
+        secondary.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }.store(in: &cancellables)
+
+        $chatTopic.sink { [weak self] topic in
+            self?.primary.chatTopic = topic
+            self?.secondary.chatTopic = topic
+        }.store(in: &cancellables)
+    }
+
+    var chatMessages: [P2PService.ChatEntry] {
+        let all = primary.chatMessages + secondary.chatMessages
+        var seen = Set<String>()
+        return all.filter { seen.insert($0.id).inserted }
+                  .sorted { $0.timestamp > $1.timestamp }
+    }
+
+    var discoveredPeers: [P2PService.PeerSummary] {
+        Array(Set(primary.discoveredPeers).union(Set(secondary.discoveredPeers)))
+    }
+
+    var listenAddresses: [String] {
+        primary.listenAddresses.map { "[A] \($0)" } + secondary.listenAddresses.map { "[B] \($0)" }
+    }
+
+    var activityLog: [String] {
+        primary.activityLog + secondary.activityLog
+    }
+
+    var state: String {
+        switch (primary.state, secondary.state) {
+        case (.running, .running): return "running"
+        case (.stopped, .stopped): return "stopped"
+        default: return "starting/stopping"
+        }
+    }
+
+    var isRunning: Bool {
+        primary.isRunning && secondary.isRunning
+    }
+
+    var autonatStatus: String {
+        "\(primary.autonatStatus) / \(secondary.autonatStatus)"
+    }
+
+    var lastError: String? {
+        primary.lastError ?? secondary.lastError
+    }
+
+    var peerIDString: String {
+        "\(primary.peerIDString) / \(secondary.peerIDString)"
+    }
+
+    var runtimeProfile: String {
+        "\(primary.runtimeProfile) + rnd"
+    }
+
+    var chatDisplayName: String {
+        "\(primary.chatDisplayName) + \(secondary.chatDisplayName)"
+    }
+
+    var listenPort: String {
+        "\(primary.listenPort) / \(secondary.listenPort)"
+    }
+
+    func start() {
+        primary.start()
+        secondary.start()
+    }
+
+    func stop() {
+        primary.stop()
+        secondary.stop()
+    }
+
+    func restart() {
+        primary.restart()
+        secondary.restart()
+    }
+
+    func clearActivityLog() {
+        primary.clearActivityLog()
+        secondary.clearActivityLog()
+    }
+
+    func clearChatMessages() {
+        primary.clearChatMessages()
+        secondary.clearChatMessages()
+    }
+
+    func joinChatTopic() {
+        primary.joinChatTopic()
+        secondary.joinChatTopic()
+    }
+
+    func sendChatMessage() {
+        let message = chatDraftMessage
+        primary.chatDraftMessage = message
+        secondary.chatDraftMessage = message
+        primary.sendChatMessage()
+        secondary.sendChatMessage()
+        chatDraftMessage = ""
+    }
+
+    func sendLocalPing() {
+        primary.sendLocalPing()
+        secondary.sendLocalPing()
+    }
 }

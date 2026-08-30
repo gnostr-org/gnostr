@@ -14,7 +14,7 @@ enum AppTab: String, CaseIterable, Hashable {
 }
 
 struct ContentView: View {
-    @StateObject private var p2p = P2PService()
+    @StateObject private var p2p = DualP2PService()
     @State private var selectedTab = AppTab.chat
 
     var body: some View {
@@ -209,10 +209,7 @@ struct ContentView: View {
                             }
                         }
 
-                        HStack {
-                            TextField("Display name", text: $p2p.chatDisplayName)
-                                .textFieldStyle(.roundedBorder)
-                        }
+                        statRow(label: "Display names", value: p2p.chatDisplayName)
 
                         HStack {
                             TextField("Message", text: $p2p.chatDraftMessage)
@@ -350,7 +347,7 @@ struct ContentView: View {
     }
 
     private var p2pStateLabel: String {
-        p2p.state.rawValue.capitalized
+        p2p.state.capitalized
     }
 }
 
