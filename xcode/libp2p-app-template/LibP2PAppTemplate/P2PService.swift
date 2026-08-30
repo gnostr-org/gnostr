@@ -187,8 +187,9 @@ final class P2PService: ObservableObject {
         let text: String
         let isLocal: Bool
         let timestamp: Date
+        let pingDeltaMs: Int64?
 
-        fileprivate init(from msg: HistoryMessage, isLocal: Bool) {
+        fileprivate init(from msg: HistoryMessage, isLocal: Bool, pingDeltaMs: Int64? = nil) {
             self.id = msg.id
             self.topic = msg.topic
             self.kind = msg.kind
@@ -196,6 +197,7 @@ final class P2PService: ObservableObject {
             self.text = msg.text
             self.isLocal = isLocal
             self.timestamp = Date(timeIntervalSince1970: msg.timestamp)
+            self.pingDeltaMs = pingDeltaMs
         }
     }
 
@@ -341,14 +343,15 @@ final class P2PService: ObservableObject {
                     let kind = decoded?.kind ?? "Raw"
                     Task { @MainActor in
                         guard let self else { return }
+                        var pingDelta: Int64?
                         if kind == "Ping", let sentMs = Int64(text) {
                             let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
-                            let delta = nowMs - sentMs
-                            self.log("Ping RTT from \(sender): \(delta)ms")
+                            pingDelta = nowMs - sentMs
+                            self.log("Ping RTT from \(sender): \(pingDelta!)ms")
                         }
                         let msg = await self.historyStore.add(topic: topic, kind: kind, author: sender, text: text)
                         self.chatMessages.insert(
-                            ChatEntry(from: msg, isLocal: sender == self.chatDisplayName || author == self.peerID.b58String),
+                            ChatEntry(from: msg, isLocal: sender == self.chatDisplayName || author == self.peerID.b58String, pingDeltaMs: pingDelta),
                             at: 0
                         )
                         self.chatMessages = Array(self.chatMessages.prefix(200))

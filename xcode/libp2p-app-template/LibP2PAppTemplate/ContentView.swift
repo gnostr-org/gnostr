@@ -262,8 +262,27 @@ struct ContentView: View {
                                     Text(entry.author)
                                         .font(.subheadline.monospaced())
                                         .foregroundStyle(.secondary)
-                                    Text(entry.text)
-                                        .font(.body)
+                                    if entry.kind == "Ping", let sentMs = Int64(entry.text) {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "arrow.left.arrow.right")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                            if let delta = entry.pingDeltaMs {
+                                                Text("Ping | \(delta)ms")
+                                                    .font(.body.monospaced())
+                                            } else if entry.isLocal {
+                                                let date = Date(timeIntervalSince1970: Double(sentMs) / 1000.0)
+                                                Text("Ping sent at \(date, style: .time)")
+                                                    .font(.body.monospaced())
+                                            } else {
+                                                Text("Ping")
+                                                    .font(.body.monospaced())
+                                            }
+                                        }
+                                    } else {
+                                        Text(entry.text)
+                                            .font(.body)
+                                    }
                                 }
                                 .padding(12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
