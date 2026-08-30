@@ -23,16 +23,16 @@ import SwiftUI
 
 // MARK: - History Sync Types
 
-private struct HistoryRequest: Codable {
+struct HistoryRequest: Codable {
     let topic: String
     let limit: Int
 }
 
-private struct HistoryResponse: Codable {
+struct HistoryResponse: Codable {
     let messages: [HistoryMessage]
 }
 
-private struct HistoryMessage: Codable, Hashable {
+struct HistoryMessage: Codable, Hashable {
     let id: String
     let topic: String
     let kind: String
@@ -43,8 +43,8 @@ private struct HistoryMessage: Codable, Hashable {
 
 // MARK: - History Persistence
 
-private actor HistoryPersistence {
-    private let directory: URL
+actor HistoryPersistence {
+    let directory: URL
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -76,7 +76,7 @@ private actor HistoryPersistence {
         }
     }
 
-    private func fileURL(for topic: String) -> URL {
+    func fileURL(for topic: String) -> URL {
         let safe = SHA256.hash(data: Data(topic.utf8)).compactMap { String(format: "%02x", $0) }.joined()
         return directory.appendingPathComponent("\(safe).json")
     }
@@ -84,10 +84,10 @@ private actor HistoryPersistence {
 
 // MARK: - History Store
 
-private actor HistoryStore {
-    private var messagesByTopic: [String: [HistoryMessage]] = [:]
-    private var allIDs: Set<String> = []
-    private let maxMessagesPerTopic = 200
+actor HistoryStore {
+    var messagesByTopic: [String: [HistoryMessage]] = [:]
+    var allIDs: Set<String> = []
+    let maxMessagesPerTopic = 200
 
     func add(topic: String, kind: String, author: String, text: String) -> HistoryMessage {
         let timestamp = Date().timeIntervalSince1970
@@ -139,7 +139,7 @@ private actor HistoryStore {
         messagesByTopic[topic, default: []]
     }
 
-    private func trim(topic: String) {
+    func trim(topic: String) {
         guard messagesByTopic[topic]!.count > maxMessagesPerTopic else { return }
         let toRemove = messagesByTopic[topic]!.count - maxMessagesPerTopic
         for msg in messagesByTopic[topic]!.prefix(toRemove) {
@@ -189,7 +189,18 @@ final class P2PService: ObservableObject {
         let timestamp: Date
         let pingDeltaMs: Int64?
 
-        fileprivate init(from msg: HistoryMessage, isLocal: Bool, pingDeltaMs: Int64? = nil) {
+        init(id: String, topic: String, kind: String, author: String, text: String, isLocal: Bool, timestamp: Date, pingDeltaMs: Int64? = nil) {
+            self.id = id
+            self.topic = topic
+            self.kind = kind
+            self.author = author
+            self.text = text
+            self.isLocal = isLocal
+            self.timestamp = timestamp
+            self.pingDeltaMs = pingDeltaMs
+        }
+
+        init(from msg: HistoryMessage, isLocal: Bool, pingDeltaMs: Int64? = nil) {
             self.id = msg.id
             self.topic = msg.topic
             self.kind = msg.kind
@@ -236,10 +247,10 @@ final class P2PService: ObservableObject {
 
     @Published private(set) var listenAddresses: [String] = []
     @Published private(set) var discoveredPeers: [PeerSummary] = []
-    @Published private(set) var chatMessages: [ChatEntry] = []
+    @Published var chatMessages: [ChatEntry] = []
     @Published private(set) var activityLog: [String] = []
     @Published private(set) var lastError: String?
-    @Published private(set) var state: State = .stopped
+    @Published var state: State = .stopped
     @Published private(set) var autonatStatus: String = "unknown"
     @Published var chatDisplayName = ""
     @Published var chatTopic = "libp2p-dev"

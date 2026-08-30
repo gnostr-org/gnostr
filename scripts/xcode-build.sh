@@ -63,6 +63,9 @@ project_path() {
     git-mac-ios-mac|git-mac-ios-ios)
       printf '%s\n' "xcode/git-mac-ios/Git.xcodeproj"
       ;;
+    libp2p-app-template)
+      printf '%s\n' "xcode/libp2p-app-template/libp2p-app-template.xcodeproj"
+      ;;
     *)
       echo "Unsupported project: $1" >&2
       exit 1
@@ -89,6 +92,9 @@ project_build_scheme() {
       ;;
     git-mac-ios-ios)
       printf '%s\n' "iOS"
+      ;;
+    libp2p-app-template)
+      printf '%s\n' "LibP2PAppTemplate"
       ;;
     *)
       echo "Unsupported project: $1" >&2
@@ -214,6 +220,9 @@ project_build_destination() {
     git-mac-ios-mac)
       printf '%s\n' "generic/platform=macOS"
       ;;
+    libp2p-app-template)
+      printf '%s\n' "platform=macOS,variant=Mac Catalyst"
+      ;;
     *)
       echo "Unsupported project: $1" >&2
       exit 1
@@ -224,9 +233,9 @@ project_build_destination() {
 selected_projects() {
   case "$PROJECT_FILTER" in
     all)
-      printf '%s\n' relay p2p appwithtool universal git-mac-ios-mac git-mac-ios-ios
+      printf '%s\n' relay p2p appwithtool universal git-mac-ios-mac git-mac-ios-ios libp2p-app-template
       ;;
-    relay|p2p|appwithtool|universal|git-mac-ios-mac|git-mac-ios-ios)
+    relay|p2p|appwithtool|universal|git-mac-ios-mac|git-mac-ios-ios|libp2p-app-template)
       printf '%s\n' "$PROJECT_FILTER"
       ;;
     *)
@@ -304,6 +313,16 @@ run_build_projects() {
   done
 }
 
+run_swift_test() {
+  local project="$1"
+  local project_path_value
+  project_path_value="$(dirname "$(project_path "$project")")"
+  (
+    cd "$project_path_value"
+    swift test
+  )
+}
+
 run_test_projects() {
   local project
 
@@ -311,7 +330,10 @@ run_test_projects() {
     clean_project_artifacts "$project"
     run_build_script "$project"
 
-    if project_has_tests "$project"; then
+    if [[ "$project" == "libp2p-app-template" ]]; then
+      run_xcodebuild build "$project"
+      run_swift_test "$project"
+    elif project_has_tests "$project"; then
       run_xcodebuild test "$project"
     else
       run_xcodebuild build "$project"
