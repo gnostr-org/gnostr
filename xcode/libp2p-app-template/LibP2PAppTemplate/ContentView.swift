@@ -173,23 +173,6 @@ struct ContentView: View {
                     }
                 }
 
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Activity")
-                            .font(.title3.weight(.semibold))
-                        if let lastError = p2p.lastError {
-                            Text("Last error: \(lastError)")
-                                .foregroundStyle(.red)
-                        }
-                        Button("Clear") {
-                            p2p.clearActivityLog()
-                        }
-                        ForEach(p2p.activityLog, id: \.self) { line in
-                            Text(line)
-                                .font(.callout.monospaced())
-                        }
-                    }
-                }
             }
             .padding(16)
         }
