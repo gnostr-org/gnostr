@@ -179,28 +179,30 @@ public final class AutoNATCoordinator: @unchecked Sendable {
 
     public func probe(peer: PeerID) -> EventLoopFuture<AutoNATStatus> {
         let el = self.application.eventLoopGroup.any()
-        let promise = el.makePromise(of: AutoNATStatus.self)
         let token = Array(UUID().uuidString.utf8)
         let addresses = self.candidateDialbackAddresses()
         var shouldOpenStream = false
         var existingFuture: EventLoopFuture<AutoNATStatus>?
+        var promise: EventLoopPromise<AutoNATStatus>?
+
         self.queue.sync {
             if let existing = self.pending[peer.b58String] {
                 existingFuture = existing.promise.futureResult
                 return
             }
+            promise = el.makePromise(of: AutoNATStatus.self)
             self.pending[peer.b58String] = PendingProbe(
                 token: token,
                 peer: peer,
                 startTime: .now(),
-                promise: promise,
+                promise: promise!,
                 addresses: addresses
             )
             shouldOpenStream = true
         }
 
-        guard shouldOpenStream else {
-            return existingFuture ?? promise.futureResult
+        guard shouldOpenStream, let promise else {
+            return existingFuture!
         }
 
         do {
