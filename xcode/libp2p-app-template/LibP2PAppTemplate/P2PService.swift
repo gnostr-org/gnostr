@@ -580,19 +580,15 @@ final class P2PService: ObservableObject {
             return
         }
 
-        pingSequence += 1
-        let formatter = ISO8601DateFormatter()
-        let timestamp = formatter.string(from: Date())
-        let text = "ping #\(pingSequence) | profile: \(runtimeProfile) | time: \(timestamp)"
-
-        let message = RustChatMessage(from: chatDisplayName, content: text, kind: "Ping")
+        let utcMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let message = RustChatMessage(from: chatDisplayName, content: "\(utcMs)", kind: "Ping")
         guard let data = try? JSONEncoder().encode(message) else {
             log("Failed to encode ping message")
             return
         }
 
         subscription.publish(data)
-        log("Broadcast ping on \(topic)")
+        log("Broadcast ping on \(topic): \(utcMs)")
     }
 
     private func persistHistory(for topic: String) {
