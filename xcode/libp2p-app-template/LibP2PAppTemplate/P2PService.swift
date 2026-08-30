@@ -260,6 +260,7 @@ final class P2PService: ObservableObject {
     private var app: Application?
     private var runTask: Task<Void, Never>?
     private var pingTask: Task<Void, Never>?
+    private var connectivityTask: Task<Void, Never>?
     private var chatSubscription: PubSub.SubscriptionHandler?
     private var chatSubscribedTopic: String?
     private var dialedPeerIDs = Set<String>()
@@ -523,10 +524,18 @@ final class P2PService: ObservableObject {
                 }
             }
 
+            // execute() has returned; shut down storage safely now.
+            do {
+                try await app.asyncShutdown()
+            } catch {
+                await MainActor.run { [weak self] in
+                    self?.lastError = error.localizedDescription
+                    self?.log("Shutdown error: \(error.localizedDescription)")
+                }
+            }
+
             await MainActor.run { [weak self] in
                 guard let self else { return }
-                // If stop() has already taken over shutdown, let shutdownTask handle cleanup
-                guard self.shutdownTask == nil else { return }
                 self.state = .stopped
                 self.runTask = nil
                 self.app = nil
@@ -540,48 +549,34 @@ final class P2PService: ObservableObject {
     }
 
     func stop() {
-        guard let app, shutdownTask == nil else { return }
+        guard let app else { return }
 
         state = .stopping
         log("Stopping libp2p node")
         pingTask?.cancel()
         pingTask = nil
+        connectivityTask?.cancel()
+        connectivityTask = nil
         chatSubscription?.unsubscribe()
         chatSubscription = nil
         chatSubscribedTopic = nil
 
-        let currentRunTask = self.runTask
-
-        shutdownTask = Task { @MainActor [weak self] in
-            do {
-                try await app.asyncShutdown()
-            } catch {
-                self?.lastError = error.localizedDescription
-                self?.log("Error: \(error.localizedDescription)")
-            }
-            await currentRunTask?.value
-            guard let self else { return }
-            self.app = nil
-            self.runTask = nil
-            self.listenAddresses = []
-            self.chatSubscription = nil
-            self.chatSubscribedTopic = nil
-            self.dialedPeerIDs.removeAll()
-            self.state = .stopped
-            self.log("Node stopped")
+        // Signal execute() to return. If running hasn't been set yet (startup still in
+        // progress), schedule a backup stop so the runTask doesn't hang forever.
+        app.running?.stop()
+        app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) {
+            app.running?.stop()
         }
     }
 
     private var restartTask: Task<Void, Never>?
-    private var shutdownTask: Task<Void, Never>?
 
     func restart() {
         restartTask?.cancel()
         restartTask = Task { @MainActor [weak self] in
             guard let self else { return }
             self.stop()
-            await self.shutdownTask?.value
-            self.shutdownTask = nil
+            await self.runTask?.value
             guard !Task.isCancelled else { return }
             self.start()
             self.restartTask = nil
@@ -604,7 +599,8 @@ final class P2PService: ObservableObject {
     }
 
     private func startConnectivityMonitoring() {
-        Task { [weak self] in
+        connectivityTask?.cancel()
+        connectivityTask = Task { [weak self] in
             while let self, !Task.isCancelled, self.state == .running {
                 try? await Task.sleep(nanoseconds: 5_000_000_000)
                 guard let app = self.app, !Task.isCancelled else { break }
