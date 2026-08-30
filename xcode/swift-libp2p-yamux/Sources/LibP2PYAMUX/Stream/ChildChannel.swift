@@ -884,7 +884,7 @@ extension ChildChannel {
     /// A helper function for transforming `ChannelData` into `Message`s before processing.
     private func processOutboundMessage(_ content: PendingContent, promise: EventLoopPromise<Void>?) {
         guard let recipientChannel = self.state.remoteChannelIdentifier else {
-            promise?.fail(YAMUXError.uncertainState)
+            promise?.fail(YAMUX.Error.unsupportedChannelEvent(event: "remoteChannelIdentifier not yet assigned"))
             return
         }
 
