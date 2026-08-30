@@ -264,7 +264,7 @@ final class P2PService: ObservableObject {
             case .macCatalyst: prefix = "catalyst"
             case .iPad:        prefix = "ipad"
             case .iPhone:      prefix = "ios"
-            case .madeForiPad: prefix = "ipad"
+            case .madeForiPad: prefix = "dfi"
         }
         chatDisplayName = "\(prefix)-\(peerID.b58String.prefix(8))"
     }
@@ -341,6 +341,11 @@ final class P2PService: ObservableObject {
                     let kind = decoded?.kind ?? "Raw"
                     Task { @MainActor in
                         guard let self else { return }
+                        if kind == "Ping", let sentMs = Int64(text) {
+                            let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+                            let delta = nowMs - sentMs
+                            self.log("Ping RTT from \(sender): \(delta)ms")
+                        }
                         let msg = await self.historyStore.add(topic: topic, kind: kind, author: sender, text: text)
                         self.chatMessages.insert(
                             ChatEntry(from: msg, isLocal: sender == self.chatDisplayName || author == self.peerID.b58String),
@@ -580,6 +585,11 @@ final class P2PService: ObservableObject {
             return
         }
 
+        guard !discoveredPeers.isEmpty else {
+            log("Ping skipped: no peers discovered yet")
+            return
+        }
+
         let utcMs = Int64(Date().timeIntervalSince1970 * 1000)
         let message = RustChatMessage(from: chatDisplayName, content: "\(utcMs)", kind: "Ping")
         guard let data = try? JSONEncoder().encode(message) else {
@@ -710,13 +720,16 @@ final class P2PService: ObservableObject {
         #elseif os(macOS)
             return .macOS
         #elseif os(iOS)
-            if ProcessInfo.processInfo.isiOSAppOnMac {
+            // isiOSAppOnMac  -> iPhone/iPad app running on Apple Silicon Mac (Designed for iPad)
+            // isMacCatalystApp -> true Mac Catalyst build
+            if ProcessInfo.processInfo.isiOSAppOnMac, !ProcessInfo.processInfo.isMacCatalystApp {
                 return .madeForiPad
             }
             switch UIDevice.current.userInterfaceIdiom {
                 case .pad:
                     return .iPad
                 case .mac:
+                    // Fallback for non-Catalyst iOS builds that report .mac idiom
                     return .madeForiPad
                 default:
                     return .iPhone
