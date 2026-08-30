@@ -138,7 +138,7 @@
 					};
 				};
 			};
-			buildConfigurationList = B701034D27CD0B6900D43034 /* Build configuration list for PBXProject "LibP2PAppTemplate" */;
+			buildConfigurationList = B701034D27CD0B6900D43034 /* Build configuration list for PBXProject "libp2p-app-template" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -378,7 +378,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B701034D27CD0B6900D43034 /* Build configuration list for PBXProject "LibP2PAppTemplate" */ = {
+		B701034D27CD0B6900D43034 /* Build configuration list for PBXProject "libp2p-app-template" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B701035E27CD0B6B00D43034 /* Debug */,
@@ -484,7 +484,6 @@
 			productName = LibP2PAutoNAT;
 		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = B701034A27CD0B6900D43034 /* Project object */;
 }
