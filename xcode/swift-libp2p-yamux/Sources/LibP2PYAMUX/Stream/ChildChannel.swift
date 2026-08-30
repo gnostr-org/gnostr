@@ -484,9 +484,9 @@ extension ChildChannel: Channel, ChannelCore {
 
     private func initializerFailed(error: Error) {
         // Tell the remote peer to go away.
-        if self.state.isActiveOnNetwork {
+        if self.state.isActiveOnNetwork, let remoteChannelID = self.state.remoteChannelIdentifier {
             let message = Message.ChannelOpenFailureMessage(
-                recipientChannel: self.state.remoteChannelIdentifier!,
+                recipientChannel: remoteChannelID,
                 reasonCode: YAMUX.NetworkError.internalError.code,
                 description: "",
                 language: "en-US"
@@ -510,7 +510,12 @@ extension ChildChannel: Channel, ChannelCore {
             return
         }
 
-        let message = Message.ChannelCloseMessage(recipientChannel: self.state.remoteChannelIdentifier!)
+        guard let remoteChannelID = self.state.remoteChannelIdentifier else {
+            // We haven't received the remote channel identifier yet; nothing to close.
+            return
+        }
+
+        let message = Message.ChannelCloseMessage(recipientChannel: remoteChannelID)
         self.processOutboundMessage(.channelClose(message), promise: nil)
         self.writePendingToMultiplexer()
     }
@@ -654,8 +659,11 @@ extension ChildChannel {
                 let increment = self.windowManager.unbufferBytes(data.readableBytes)
             {
                 self.logger.trace("Emitting Window Adjustment -> \(increment)")
+                guard let remoteChannelID = self.state.remoteChannelIdentifier else {
+                    break
+                }
                 let update = Message.ChannelWindowAdjustMessage(
-                    recipientChannel: self.state.remoteChannelIdentifier!,
+                    recipientChannel: remoteChannelID,
                     bytesToAdd: UInt32(increment)
                 )
                 self.processOutboundMessage(.channelWindowAdjust(update), promise: nil)
@@ -801,9 +809,9 @@ extension ChildChannel {
         // If we didn't throw, this must be acceptable to process.
         if self.state.isClosed {
             self.closedCleanly()
-        } else {
+        } else if let remoteChannelID = self.state.remoteChannelIdentifier {
             // We need to issue a close immediately.
-            let closeMessage = Message.channelClose(.init(recipientChannel: self.state.remoteChannelIdentifier!))
+            let closeMessage = Message.channelClose(.init(recipientChannel: remoteChannelID))
             self.processOutboundMessage(closeMessage, promise: nil)
         }
     }
@@ -875,7 +883,10 @@ extension ChildChannel {
 
     /// A helper function for transforming `ChannelData` into `Message`s before processing.
     private func processOutboundMessage(_ content: PendingContent, promise: EventLoopPromise<Void>?) {
-        let recipientChannel = self.state.remoteChannelIdentifier!
+        guard let recipientChannel = self.state.remoteChannelIdentifier else {
+            promise?.fail(YAMUXError.uncertainState)
+            return
+        }
 
         switch content {
         case .data(let buffer):
