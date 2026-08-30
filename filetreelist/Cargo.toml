@@ -11,14 +11,6 @@ license = "MIT"
 categories = ["command-line-utilities"]
 keywords = ["gui", "cli", "terminal", "ui", "tui"]
 
-[lib]
-name = "gnostr_filetreelist"
-path = "src/lib.rs"
-
-[[example]]
-name = "demo"
-path = "examples/demo.rs"
-
 [dependencies]
 thiserror = "1.0"
 
