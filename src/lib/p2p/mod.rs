@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+pub mod args;
+pub mod behaviour;
+pub mod chat;
+pub mod command_handler;
+pub mod event_handler;
+pub mod git_integration;
+pub mod git_publisher;
+pub mod kvs;
+pub mod lookup;
+pub mod network_config;
+pub mod opt;
+pub mod swarm_builder;
+pub mod time;
+pub mod utils;
+=======
 //! Core peer-to-peer primitives used by `gnostr`.
 //!
 //! This module owns the shared swarm setup, message routing, peer identity
@@ -7,6 +23,7 @@ pub use gnostr_p2p::{
     args, behaviour, command_handler, event_handler, git_integration, git_publisher, kvs, lookup,
     network_config, opt, swarm_builder, utils,
 };
+>>>>>>> origin/master
 
 use std::{
     env,
