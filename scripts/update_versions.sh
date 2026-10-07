@@ -384,6 +384,7 @@ PUBLISH_CRATES=(
     p2p
     web
     chat
+    .
     nips
     bins
 )
@@ -419,14 +420,14 @@ tag_package_versions() {
 
     tree="$(git rev-parse HEAD^{tree})"
     for crate in "${PUBLISH_CRATES[@]}"; do
-        tag="$crate/v$version"
+        if [ "$crate" = "." ]; then
+            tag="gnostr/v$version"
+        else
+            tag="$crate/v$version"
+        fi
         commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
         git tag -f "$tag" "$commit"
     done
-
-    tag="gnostr/v$version"
-    commit="$(printf '%s\n' "$tag" | git commit-tree "$tree" -p HEAD)"
-    git tag -f "$tag" "$commit"
 }
 
 manifest_paths=()
@@ -477,8 +478,6 @@ for crate in "${PUBLISH_CRATES[@]}"; do
     fi
     sleep 1 && pushd "$crate" >/dev/null && cargo publish "${publish_args[@]}" || true && popd >/dev/null
 done
-
-sleep 1 && cargo publish -j"$(cargo_jobs)" -p gnostr || true
 
 if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep -E '(^|/)(Cargo\.toml|Cargo\.lock)$' || true)" ]; then
     echo "Warning: Cargo manifests changed during publish; leaving tagged commits as-is."
