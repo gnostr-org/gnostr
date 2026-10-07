@@ -147,8 +147,28 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $pathEntries = $env:PATH -split ';' | Where-Object { $_ -and ($_ -notmatch '\\Git\\usr\\bin$') }
+          # Remove Git Bash paths that ship a conflicting link.exe (GNU coreutils).
+          $pathEntries = $env:PATH -split ';' | Where-Object {
+              $_ -and ($_ -notmatch '(?i)\\Git\\(usr|mingw64)\\bin\\?$')
+          }
           "PATH=$($pathEntries -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Pin the MSVC linker so cargo never resolves Git's link.exe.
+          $link = $null
+          $vcTools = $env:VCToolsInstallDir
+          if ($vcTools) {
+              $candidate = Join-Path $vcTools "bin\Hostx64\x64\link.exe"
+              if (Test-Path $candidate) { $link = $candidate }
+          }
+          if (-not $link) {
+              $candidates = Get-Item "C:\Program Files\Microsoft Visual Studio\2022\*\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe" -ErrorAction SilentlyContinue
+              if ($candidates) { $link = $candidates[-1].FullName }
+          }
+          if (-not $link) {
+              Write-Error "Could not find MSVC link.exe"
+              exit 1
+          }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$link" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Build artifacts
         run: |
