@@ -487,11 +487,11 @@ fi
 ##git notes
 git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
 git notes add -m "v$WORKSPACE_VERSION" v$WORKSPACE_VERSION
-git push origin refs/notes/*
+git push origin refs/notes/* -f
 
 for crate in "${PUBLISH_CRATES[@]}"; do
-    git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION"
+    git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION" -f
 done
-git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION"
+git push origin "gnostr/v$WORKSPACE_VERSION:gnostr/v$WORKSPACE_VERSION" -f
 echo;
-git push origin v$WORKSPACE_VERSION:v$WORKSPACE_VERSION
+git push origin v$WORKSPACE_VERSION:v$WORKSPACE_VERSION -f
