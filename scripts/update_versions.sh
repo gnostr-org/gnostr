@@ -377,7 +377,6 @@ PUBLISH_CRATES=(
     qr
     relay/extensions
     asyncgit
-    tui
     crawler
     legit
     js
