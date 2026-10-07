@@ -360,27 +360,31 @@ done < <(managed_manifests)
 
 echo "Local path dependency versions synchronized."
 
+# Publish order is a topological sort of workspace crates by their
+# path/normal/build dependencies. Crates must be published before any
+# crate that depends on them. Dev-dependency cycles (e.g. asyncgit <-> ngit)
+# cannot be resolved by ordering alone and are left to --no-verify / retry.
 PUBLISH_CRATES=(
-    types
-    invalidstring
+    filetreelist
+    git-helpers
     git2-hooks
     grammar
-    filetreelist
-    asyncgit/src/lib/filehash/core
+    invalidstring
+    relay
     scopetime
+    types
+    asyncgit/src/lib/filehash/core
+    qr
+    relay/extensions
     asyncgit
     tui
     crawler
-    git-helpers
     legit
-    ngit
-    qr
-    relay
-    relay/extensions
     js
+    ngit
     p2p
-    chat
     web
+    chat
     bins
 )
 
