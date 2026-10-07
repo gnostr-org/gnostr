@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-git-helpers"
-version = "953267.1868.494774"
+version = "970374.1846.86356"
 edition = "2021"
 description = "git-remote helpers for Blossom, Nostr NIP-34, IPFS, PKARR, and Tor"
 license = "MIT"
@@ -21,14 +21,14 @@ hex = "0.4"
 
 # PKARR DHT resolution (Ed25519 keys → blossom endpoints)
 pkarr = { version = "5.0.3", default-features = false, features = [
-  "relays",
-  "signed_packet",
+    "relays",
+    "signed_packet",
 ] }
 reqwest = { version = "0.12", features = [
-  "blocking",
-  "json",
-  "multipart",
-  "socks",
+    "blocking",
+    "json",
+    "multipart",
+    "socks",
 ] }
 # HTTP client (blocking for sync protocol loop)
 # socks: Tor SOCKS5 proxy support

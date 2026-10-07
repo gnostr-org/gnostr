@@ -1,6 +1,6 @@
 [package]
 name = "rustylib"
-version = "953267.1868.494774"
+version = "970374.1846.86356"
 edition = "2021"
 
 [workspace]
@@ -14,8 +14,8 @@ name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
 
 [dependencies]
-gnostr-p2p = { package = "gnostr-p2p", path = "../../../p2p", version = ">=953267.1868.494774" }
-gnostr-relay = { version = ">=953267.1868.494774", path = "../../../relay" }
+gnostr-p2p = { package = "gnostr-p2p", path = "../../../p2p", version = ">=970374.1846.86356" }
+gnostr-relay = { version = ">=970374.1846.86356", path = "../../../relay" }
 uniffi = { version = "0.28.0", features = ["cli"] }
 
 [build-dependencies]

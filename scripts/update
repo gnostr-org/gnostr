@@ -90,7 +90,7 @@ NEW_TAG="$(gnostr git tag create)"
 NEW_VERSION="${NEW_TAG#v}"
 
 set_workspace_version "$ROOT_CARGO_TOML" "$NEW_VERSION"
-taplo format "$ROOT_CARGO_TOML"
+taplo format "$ROOT_CARGO_TOML" || cargo install taplo-cli
 
 stage_cargo_files
 git add "$ROOT_CARGO_TOML"
