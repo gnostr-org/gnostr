@@ -1,6 +1,6 @@
 [package]
 name = "asyncgit_ffi"
-version = "970376.1846.83527"
+version = "970377.1846.82448"
 edition = "2021"
 
 [workspace]
