@@ -485,9 +485,11 @@ if [ -n "$(git status --porcelain -- . ':(exclude)vendor/**' 2>/dev/null | grep 
 fi
 
 ##git notes
-git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
-git notes add -m "v$WORKSPACE_VERSION" v$WORKSPACE_VERSION
-git push origin refs/notes/* -f
+git config --get-all remote.origin.push | grep -qxF '+refs/notes/*:refs/notes/*' || \
+    git config --add remote.origin.push "+refs/notes/*:refs/notes/*"
+git notes add -f -m "v$WORKSPACE_VERSION" "v$WORKSPACE_VERSION"
+git push origin "+refs/notes/*:refs/notes/*" || \
+    echo "Warning: failed to push git notes (non-fast-forward or denied by remote)"
 
 for crate in "${PUBLISH_CRATES[@]}"; do
     git push origin "$crate/v$WORKSPACE_VERSION:$crate/v$WORKSPACE_VERSION" -f

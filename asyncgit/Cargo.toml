@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-asyncgit"
-version = "970377.1846.82448"
+version = "970378.1846.81338"
 authors = [
     "gnostr <admin@gnostr.org>",
     "extrawurst <mail@rusticorn.com>",
@@ -82,7 +82,7 @@ futures = "0.3"
 futures-util = "0.3.31"
 fuzzy-matcher = "0.3"
 git-version = "0.3.9"
-git2 = { version = "^0.21", default-features = false }
+git2 = { version = "^0.21", default-features = false, features = ["cred"] }
 git2-hooks = { workspace = true } ##{ package = "gnostr-git2-hooks", path = "../git2-hooks", version = "1878.945649.607219" }
 ## gitui_asyncgit
 gitui_asyncgit = { package = "asyncgit", path = "../vendor/gitui/asyncgit", version = ">=0.28.1", default-features = false }
@@ -96,7 +96,7 @@ gix = { version = "0.66", default-features = false, features = [
 ##tree-sitter-language = "0.1" ##check version
 gnostr-grammar = { workspace = true }
 gnostr-types = { workspace = true }
-gnostr_filehash_core = { package = "gnostr_filehash_core", version = ">=970377.1846.82448", path = "src/lib/filehash/core" }
+gnostr_filehash_core = { package = "gnostr_filehash_core", version = ">=970378.1846.81338", path = "src/lib/filehash/core" }
 handlebars = { workspace = true }
 #anyhow = "1.0"
 hex = { workspace = true }
