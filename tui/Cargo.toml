@@ -1,3 +1,4 @@
+[workspace]
 [package]
 name = "gnostr-blossom-tui"
 version = "970378.1846.81338"
