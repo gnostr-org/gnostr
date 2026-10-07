@@ -1,10 +1,12 @@
 use std::{
     collections::HashSet,
     io,
+    path::PathBuf,
     time::{Duration, Instant},
 };
 
 use anyhow::Result;
+use clap::Parser;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
@@ -22,6 +24,165 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
     Frame, Terminal,
 };
+use serde::Deserialize;
+
+#[derive(Parser, Debug)]
+#[command(name = "gnostr-nip34", about = "NIP-34 git navigator")]
+struct Cli {
+    /// Secret key as hex or nsec1... bech32 string.
+    #[arg(long, short = 'k', env = "GNOSTR_SECRET_KEY")]
+    secret_key: Option<String>,
+
+    /// Path to a TOML config file.
+    #[arg(long, short = 'c')]
+    config: Option<PathBuf>,
+
+    /// Repository identifier.
+    #[arg(long)]
+    repo_identifier: Option<String>,
+
+    /// Repository name.
+    #[arg(long)]
+    repo_name: Option<String>,
+
+    /// Repository description.
+    #[arg(long)]
+    repo_description: Option<String>,
+
+    /// Maintainer public keys (hex or npub), comma-separated.
+    #[arg(long, value_delimiter = ',')]
+    maintainers: Vec<String>,
+
+    /// Default relays, comma-separated.
+    #[arg(long, value_delimiter = ',')]
+    relays: Option<Vec<String>>,
+
+    /// Git server URLs, comma-separated.
+    #[arg(long, value_delimiter = ',')]
+    git_server: Option<Vec<String>>,
+
+    /// Web URLs, comma-separated.
+    #[arg(long, value_delimiter = ',')]
+    web: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Default)]
+struct AppConfig {
+    secret_key: Option<String>,
+    #[serde(default)]
+    repo: RepoConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Default)]
+struct RepoConfig {
+    identifier: Option<String>,
+    name: Option<String>,
+    description: Option<String>,
+    maintainers: Option<Vec<String>>,
+    relays: Option<Vec<String>>,
+    git_server: Option<Vec<String>>,
+    web: Option<Vec<String>>,
+}
+
+fn load_config(path: &Option<PathBuf>) -> Result<AppConfig> {
+    match path {
+        Some(path) => {
+            let contents = std::fs::read_to_string(path)
+                .map_err(|e| anyhow::anyhow!("Failed to read config file {:?}: {}", path, e))?;
+            toml::from_str(&contents)
+                .map_err(|e| anyhow::anyhow!("Failed to parse config file: {}", e))
+        }
+        None => Ok(AppConfig::default()),
+    }
+}
+
+fn resolve_private_key(cli: &Cli, config: &AppConfig) -> Result<PrivateKey> {
+    let key_str = cli
+        .secret_key
+        .clone()
+        .or_else(|| config.secret_key.clone())
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "No secret key provided. Use --secret-key, set GNOSTR_SECRET_KEY, or provide a config file."
+            )
+        })?;
+
+    PrivateKey::try_from_bech32_string(&key_str)
+        .or_else(|_| PrivateKey::try_from_hex_string(&key_str))
+        .map_err(|e| anyhow::anyhow!("Invalid secret key: {e}"))
+}
+
+fn parse_public_key(s: &str) -> Result<PublicKey> {
+    PublicKey::try_from_bech32_string(s, false)
+        .or_else(|_| PublicKey::try_from_hex_string(s, false))
+        .map_err(|e| anyhow::anyhow!("Invalid public key '{s}': {e}").into())
+}
+
+fn resolve_repo_config(cli: &Cli, config: &AppConfig, public_key: PublicKey) -> RepoRef {
+    let repo = &config.repo;
+
+    let identifier = cli
+        .repo_identifier
+        .clone()
+        .or_else(|| repo.identifier.clone())
+        .unwrap_or_else(|| "gnostr".to_string());
+    let name = cli
+        .repo_name
+        .clone()
+        .or_else(|| repo.name.clone())
+        .unwrap_or_else(|| "gnostr".to_string());
+    let description = cli
+        .repo_description
+        .clone()
+        .or_else(|| repo.description.clone())
+        .unwrap_or_else(|| "A git implementation on nostr".to_string());
+    let git_server = cli
+        .git_server
+        .clone()
+        .or_else(|| repo.git_server.clone())
+        .unwrap_or_else(|| vec!["https://github.com/gnostr-org/gnostr.git".to_string()]);
+    let web = cli
+        .web
+        .clone()
+        .or_else(|| repo.web.clone())
+        .unwrap_or_else(|| vec!["https://github.com/gnostr-org/gnostr".to_string()]);
+    let relays: Vec<_> = cli
+        .relays
+        .clone()
+        .or_else(|| repo.relays.clone())
+        .unwrap_or_else(|| vec!["wss://relay.damus.io".to_string()])
+        .iter()
+        .map(|r| UncheckedUrl::from_str(r))
+        .collect();
+
+    let maintainers: Vec<_> = if cli.maintainers.is_empty() {
+        match &repo.maintainers {
+            Some(m) => m.iter().filter_map(|k| parse_public_key(k).ok()).collect(),
+            None => vec![public_key],
+        }
+    } else {
+        cli.maintainers
+            .iter()
+            .filter_map(|k| parse_public_key(k).ok())
+            .collect()
+    };
+
+    let trusted_maintainer = maintainers.first().copied().unwrap_or(public_key);
+
+    RepoRef {
+        name,
+        description,
+        identifier: identifier.clone(),
+        root_commit: String::new(),
+        git_server,
+        web,
+        relays,
+        hashtags: vec![identifier],
+        maintainers,
+        trusted_maintainer,
+        events: std::collections::HashMap::new(),
+    }
+}
 
 /// Represents a relevant subset of a Git commit's data.
 #[derive(Debug, Clone)]
@@ -99,11 +260,13 @@ struct App {
     show_full_commit: bool,
     private_key: PrivateKey,
     _public_key: PublicKey,
+    status_message: Option<String>,
+    error_message: Option<String>,
 }
 
 impl App {
     /// Constructs a new App with git data and NIP-34 support.
-    fn new() -> Result<Self> {
+    fn new(cli: &Cli, config: &AppConfig, private_key: PrivateKey) -> Result<Self> {
         let repo = git2::Repository::open_from_env()?;
 
         // Load commits (same as original)
@@ -176,28 +339,18 @@ impl App {
             }
         }
 
-        let private_key = PrivateKey::generate();
         let public_key = private_key.public_key();
 
         let mut nip34_events = vec![];
-        let repo_ref = RepoRef {
-            name: "gnostr".to_string(),
-            description: "A git implementation on nostr".to_string(),
-            identifier: "gnostr".to_string(),
-            root_commit: commits
-                .first()
-                .map(|commit| commit.full_hash.clone())
-                .unwrap_or_default(),
-            git_server: vec!["https://github.com/gnostr-org/gnostr.git".to_string()],
-            web: vec!["https://github.com/gnostr-org/gnostr".to_string()],
-            relays: vec![UncheckedUrl::from_str("wss://relay.damus.io")],
-            hashtags: vec!["gnostr".to_string()],
-            maintainers: vec![public_key],
-            trusted_maintainer: public_key,
-            events: std::collections::HashMap::new(),
-        };
-        if let Ok(event) = repo_ref.to_event(&private_key) {
-            nip34_events.push(event);
+        let mut repo_ref = resolve_repo_config(cli, config, public_key);
+        repo_ref.root_commit = commits
+            .first()
+            .map(|commit| commit.full_hash.clone())
+            .unwrap_or_default();
+
+        match repo_ref.to_event(&private_key) {
+            Ok(event) => nip34_events.push(event),
+            Err(e) => tracing::warn!("Failed to build repo announcement event: {e}"),
         }
 
         let mut state = std::collections::HashMap::new();
@@ -207,8 +360,9 @@ impl App {
                 commit.full_hash.clone(),
             );
         }
-        if let Ok(repo_state) = RepoState::build("gnostr".to_string(), state, &private_key) {
-            nip34_events.push(repo_state.event);
+        match RepoState::build(repo_ref.identifier.clone(), state, &private_key) {
+            Ok(repo_state) => nip34_events.push(repo_state.event),
+            Err(e) => tracing::warn!("Failed to build repo state event: {e}"),
         }
 
         let patch_event = build_sample_event(
@@ -252,7 +406,24 @@ impl App {
             show_full_commit: false,
             private_key,
             _public_key: public_key,
+            status_message: None,
+            error_message: None,
         })
+    }
+
+    fn set_status(&mut self, msg: impl Into<String>) {
+        self.status_message = Some(msg.into());
+        self.error_message = None;
+    }
+
+    fn set_error(&mut self, msg: impl Into<String>) {
+        self.error_message = Some(msg.into());
+        self.status_message = None;
+    }
+
+    fn clear_messages(&mut self) {
+        self.status_message = None;
+        self.error_message = None;
     }
 
     /// Switches between navigation modes.
@@ -342,7 +513,9 @@ impl App {
 
                 // Auto-show diff when exactly 2 commits are selected
                 if self.selected_commits.len() == 2 {
-                    let _ = self.load_full_commit();
+                    if let Err(e) = self.load_full_commit() {
+                        self.set_error(format!("{e}"));
+                    }
                 }
             }
             // If we already have 2 selected and trying to add a third,
@@ -354,7 +527,9 @@ impl App {
                 self.selected_commits.insert(selected_index);
 
                 // Auto-show diff for new selection
-                let _ = self.load_full_commit();
+                if let Err(e) = self.load_full_commit() {
+                    self.set_error(format!("{e}"));
+                }
             }
         }
     }
@@ -748,10 +923,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             if app.current_mode == NavigatorMode::Commits {
                                 app.show_full_commit = false; //always show_full_commit
 
-                                if let Err(_e) = app.load_full_commit() {
-
-                                    // Could show error message in UI
-
+                                if let Err(e) = app.load_full_commit() {
+                                    app.set_error(format!("{e}"));
                                 }
 
                             }
@@ -763,10 +936,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             if app.current_mode == NavigatorMode::Commits {
                                 app.show_full_commit = false; //always show_full_commit
 
-                                if let Err(_e) = app.load_full_commit() {
-
-                                    // Could show error message in UI
-
+                                if let Err(e) = app.load_full_commit() {
+                                    app.set_error(format!("{e}"));
                                 }
 
                             }
@@ -791,10 +962,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             if app.current_mode == NavigatorMode::Commits {
                                 app.show_full_commit = false; //always show_full_commit
 
-                                if let Err(_e) = app.load_full_commit() {
-
-                                    // Could show error message in UI
-
+                                if let Err(e) = app.load_full_commit() {
+                                    app.set_error(format!("{e}"));
                                 }
 
                             }
@@ -802,10 +971,8 @@ fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Left => {
                             if app.current_mode == NavigatorMode::Commits && app.show_full_commit {
                                   app.show_full_commit = false;
-                                  if let Err(_e) = app.load_full_commit() {
-
-                                      // Could show error message in UI
-
+                                  if let Err(e) = app.load_full_commit() {
+                                      app.set_error(format!("{e}"));
                                   }
                             }
                         }
@@ -813,26 +980,25 @@ fn run_app<B: ratatui::backend::Backend>(
 
                             app.clear_selection();
                             app.show_full_commit = false;
+                            app.clear_messages();
 
                         }
                         KeyCode::Char('n') => {
                             // Create NIP-34 patch from selected commits
                             if app.current_mode == NavigatorMode::Commits {
 
-                                if let Err(_e) = app.create_nip34_patch_event() {
-
-                                    // Could show error message
-
+                                match app.create_nip34_patch_event() {
+                                    Ok(()) => app.set_status("NIP-34 patch event created"),
+                                    Err(e) => app.set_error(format!("{e}")),
                                 }
                             }
                         }
                         KeyCode::Char('r') => {
                             if app.current_mode == NavigatorMode::Nip34Events {
 
-                                if let Err(_e) = app.republish_nip34_event() {
-
-                                    // Could show error message
-
+                                match app.republish_nip34_event() {
+                                    Ok(()) => app.set_status("NIP-34 event republished"),
+                                    Err(e) => app.set_error(format!("{e}")),
                                 }
                             }
                         }
@@ -882,6 +1048,10 @@ fn ui(f: &mut Frame, app: &mut App) {
         NavigatorMode::Nip34Events => render_nip34_view(f, app, content_area),
     }
 
+    // Message area above help text
+    let message_area = Rect::new(0, size.height.saturating_sub(2), size.width, 1);
+    render_message(f, app, message_area);
+
     // Help text at bottom
     let help_text = get_help_text(app);
     let help_widget = Paragraph::new(help_text)
@@ -891,6 +1061,22 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     let help_area = Rect::new(0, size.height.saturating_sub(1), size.width, 1);
     f.render_widget(help_widget, help_area);
+}
+
+fn render_message(f: &mut Frame, app: &App, area: Rect) {
+    if let Some(ref msg) = app.error_message {
+        let widget = Paragraph::new(msg.clone())
+            .style(Style::default().bg(Color::Black).fg(Color::Red))
+            .alignment(ratatui::layout::Alignment::Center)
+            .block(Block::default());
+        f.render_widget(widget, area);
+    } else if let Some(ref msg) = app.status_message {
+        let widget = Paragraph::new(msg.clone())
+            .style(Style::default().bg(Color::Black).fg(Color::Green))
+            .alignment(ratatui::layout::Alignment::Center)
+            .block(Block::default());
+        f.render_widget(widget, area);
+    }
 }
 
 /// Renders the commits view.
@@ -1235,6 +1421,15 @@ fn get_help_text(app: &App) -> String {
 
 /// Initializes the terminal and runs the application.
 fn main() -> Result<()> {
+    tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
+        .with_env_filter(tracing_subscriber::EnvFilter::from_env("GNOSTR_NIP34_LOG"))
+        .init();
+
+    let cli = Cli::parse();
+    let config = load_config(&cli.config)?;
+    let private_key = resolve_private_key(&cli, &config)?;
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -1243,7 +1438,7 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     // Create app and run it
-    let app = App::new()?;
+    let app = App::new(&cli, &config, private_key)?;
     let tick_rate = Duration::from_millis(250);
     let res = run_app(&mut terminal, app, tick_rate);
 
