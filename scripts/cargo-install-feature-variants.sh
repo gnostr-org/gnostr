@@ -35,7 +35,7 @@ Options:
 
 Examples:
   ./scripts/cargo-install-feature-variants.sh
-  ./scripts/cargo-install-feature-variants.sh --features chat --features p2p --features blossom --features blossom-tui
+  ./scripts/cargo-install-feature-variants.sh --features chat --features p2p --features blossom
 EOF
 }
 

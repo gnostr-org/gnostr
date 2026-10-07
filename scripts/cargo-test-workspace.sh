@@ -93,7 +93,7 @@ Options:
   --help               Show this help
  
 Examples:
-  cargo-test-workspace.sh --package gnostr-bins --features chat --features p2p --features blossom --features blossom-tui --nocapture
+  cargo-test-workspace.sh --package gnostr-bins --features chat --features p2p --features blossom --nocapture
   cargo-test-workspace.sh all-features --package gnostr-bins --nocapture
 EOF
 }

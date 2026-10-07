@@ -79,7 +79,7 @@ Examples:
   ./scripts/cargo-check.sh workspace
   ./scripts/cargo-check.sh packages --package gnostr --package gnostr-ngit
   ./scripts/cargo-check.sh features --feature nostr --feature vendor-openssl
-  ./scripts/cargo-check.sh features --package gnostr-bins --feature blossom --feature blossom-tui --feature chat --feature p2p
+  ./scripts/cargo-check.sh features --package gnostr-bins --feature blossom --feature chat --feature p2p
   ./scripts/cargo-check.sh --list
 EOF
 }
