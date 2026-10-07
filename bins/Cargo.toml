@@ -8,14 +8,15 @@ readme = "../README.md"
 homepage = "https://github.com/gnostr-org/gnostr"
 repository = "https://github.com/gnostr-org/gnostr.git"
 exclude.workspace = true
+autoexamples = false
 
 [lib]
 path = "src/lib.rs"
 
-[[bin]]
-name = "gnostr-tui"
-path = "src/bin/gnostr-tui.rs"
-required-features = ["blossom-tui"]
+## [[bin]]
+## name = "gnostr-tui"
+## path = "src/bin/gnostr-tui.rs"
+## required-features = ["blossom-tui"]
 
 [[bin]]
 name = "gnostr-nip34"
@@ -67,15 +68,15 @@ name = "gnostr_chat_tui_demo_search"
 path = "src/bin/gnostr_chat_tui_demo_search.rs"
 required-features = ["chat"]
 
-[[bin]]
-name = "gnostr-blossom"
-path = "src/bin/gnostr-blossom.rs"
-required-features = ["blossom-tui"]
+## [[bin]]
+## name = "gnostr-blossom"
+## path = "src/bin/gnostr-blossom.rs"
+## required-features = ["blossom-tui"]
 
-[[bin]]
-name = "blossom-filetree"
-path = "src/bin/blossom-filetree.rs"
-required-features = ["blossom-tui"]
+## [[bin]]
+## name = "blossom-filetree"
+## path = "src/bin/blossom-filetree.rs"
+## required-features = ["blossom-tui"]
 
 [[bin]]
 name = "git-remote-blossom"
@@ -200,7 +201,7 @@ required-features = ["relay"]
 [features]
 default = ["blossom"]
 blossom = []
-blossom-tui = ["dep:blossom_tui"]
+## blossom-tui = ["dep:blossom_tui"]
 web = ["dep:gnostr-web", "dep:gnostr-js"]
 relay = ["dep:gnostr-relay"]
 git = ["dep:gnostr_ngit", "dep:git-version"]
@@ -225,7 +226,7 @@ axum = { workspace = true }
 base64 = { workspace = true }
 bech32 = { workspace = true }
 bitcoin_hashes = { workspace = true }
-blossom_tui = { workspace = true, optional = true }
+## blossom_tui = { workspace = true, optional = true }
 chrono = "0.4"
 clap = { workspace = true }
 const_format = "0.2"
