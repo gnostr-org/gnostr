@@ -42,7 +42,7 @@ MAKEFILE="Makefile"
 rm $MAKEFILE || true
 touch $MAKEFILE
 tee -a $MAKEFILE <<EOF
-ACT_VERBOSE ?= 
+ACT_VERBOSE ?=
 ACT_BIND ?= --bind
 ACT_USE_NEW_ACTION_CACHE ?= \${ACT_BIND}
 
