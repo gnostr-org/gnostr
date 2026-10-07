@@ -1,4 +1,9 @@
+[build]
+target-dir = "./target"
+
 [alias]
+chk = "check --target-dir ./target/check"
+tst = "test --target-dir ./target/test"
 xtask = "run --package xtask --"
 
 [target.aarch64-unknown-linux-gnu]
