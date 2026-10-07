@@ -180,7 +180,7 @@ gnostr-chat: 	## 	gnostr-chat
 	$(which gnostr) chat --topic gnostr-dev --headless & \
 	cargo b -vv -j \$(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "\$(shell gnostr --weeble)/\$(shell gnostr --blockheight)/\$(shell gnostr --wobble):\$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" -n "$(gnostr --hash "$(gnostr-weeble)")"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-$(gnostr --weeble)/$(gnostr --blockheight)/$(gnostr --wobble)" -n "$(gnostr --hash "$(gnostr --weeble)")"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "\$(shell gnostr --weeble)/\$(shell gnostr --blockheight)/\$(shell gnostr --wobble):\$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id

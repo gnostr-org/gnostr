@@ -1,4 +1,4 @@
-ACT_VERBOSE ?= 
+ACT_VERBOSE ?=
 ACT_BIND ?= --bind
 ACT_USE_NEW_ACTION_CACHE ?= ${ACT_BIND}
 
@@ -135,7 +135,7 @@ dep-graph: 	### 	dep-graph
 gnostr-chat: 	## 	gnostr-chat
 	/Users/git/.cargo/bin/gnostr chat --topic gnostr-dev --headless & 	cargo b -vv -j $(NPROC) --bin gnostr
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)" --headless
-	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1871/950820/649920" -n "51f8abfe29ee9821b5727c55d31f9d29115fe91b610751d7c9586b91178c0119"
+	cargo run --bin gnostr -- chat --topic gnostr-dev --oneshot "testing-1846/970370/91988" -n "75cc7328c04ad5dec3d926c00f6282d5057b3c594e4f8dd8a6a0a14910fa53b9"
 	cargo run --bin gnostr -- chat --topic gnostr-dev --name "$(shell gnostr --weeble)/$(shell gnostr --blockheight)/$(shell gnostr --wobble):$(USER)"
 
 fetch-by-id: 	### 	fetch-by-id
