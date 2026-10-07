@@ -124,7 +124,6 @@ bincode = "1.3.1"
 bech32 = "0.11"
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
-## blossom_tui = { package = "gnostr-blossom-tui", version = ">=970376.1846.83527", path = "tui" }
 bytes = "1.11.0"
 #urlencoding = "2.1.3"
 cbc = { version = "0.1", features = ["std"] }
@@ -438,11 +437,6 @@ doctest = false
 ## path = "bins/src/bin/git-tui.rs"
 ## 
 ## [[bin]]
-## name = "gnostr-blossom"
-## path = "bins/src/bin/gnostr-blossom.rs"
-## required-features = ["blossom-tui"]
-## 
-## [[bin]]
 ## name = "gnostr-client"
 ## path = "bins/src/bin/gnostr-client.rs"
 ## 
@@ -520,7 +514,6 @@ default = ["ghemoji", "regex-fancy", "trace-libgit", "blossom"]
 long_tests = []
 expensive_tests = ["long_tests"]                                # Backward-compatible alias.
 blossom = []
-## blossom-tui = ["dep:blossom_tui"]
 ghemoji = ["dep:gh-emoji"]
 gnostr-web = []
 # regex-* features are mutually exclusive.
@@ -585,7 +578,6 @@ bincode = "1.3.1"
 bitcoin_hashes = { workspace = true }
 bitflags = "2.9.0"
 block-padding = "0.3.3"
-## blossom_tui = { workspace = true, optional = true }
 bugreport = "0.5"
 bwrap = { version = "1.3", features = ["use_std"] }
 bytes = "1.7.1"

@@ -73,7 +73,7 @@ Pass cargo feature/profile flags through:
 
 ```bash
 ./scripts/cross.sh --profile dist --all-features
-./scripts/cross.sh --no-default-features --features blossom-tui
+./scripts/cross.sh --no-default-features --features blossom
 ```
 
 ## GitHub Actions workflow
