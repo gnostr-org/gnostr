@@ -166,7 +166,6 @@ thiserror = "1.0"
 thread-priority = { workspace = true }
 time = { version = "0.3", features = ["serde", "formatting"] }
 timeago = { version = "0.4.2", default-features = false }
-tiny-hderive = { workspace = true }
 tiny_http = { workspace = true }
 tokio = { version = "1.19", features = ["full", "tracing"] }
 tokio-stream = "0.1.17"

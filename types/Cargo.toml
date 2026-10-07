@@ -102,7 +102,7 @@ thiserror = "1.0"
 thread-priority = { workspace = true }
 time = { workspace = true }
 timeago = { version = "0.4.2", default-features = false }
-tiny-hderive = { workspace = true }
+bip32 = { workspace = true }
 tiny_http = { workspace = true }
 tokio = { workspace = true }
 tokio-stream = "0.1.18"

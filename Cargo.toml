@@ -327,7 +327,7 @@ thiserror = "1.0.69"
 thread-priority = "1.2.0"
 time = { version = "0.3.46", features = ["macros", "formatting"] }
 timeago = { version = "0.4.2", default-features = false }
-tiny-hderive = "0.3.0"
+bip32 = { version = "0.5", default-features = false, features = ["secp256k1", "std"] }
 tiny_http = { version = "0.12" }
 tokio = { version = "1.46.1", features = ["full"] }
 tokio-stream = "0.1.18"
@@ -820,7 +820,6 @@ thread-priority = { workspace = true }
 time = { version = "0.3.41", features = ["macros", "formatting"] }
 
 timeago = { version = "0.4.2", default-features = false, optional = true }
-tiny-hderive = { workspace = true }
 tiny_http = { workspace = true, optional = true }
 tokio = { workspace = true }
 
