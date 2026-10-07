@@ -384,6 +384,7 @@ PUBLISH_CRATES=(
     p2p
     web
     chat
+    nips
     bins
 )
 
