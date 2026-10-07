@@ -30,6 +30,7 @@ exclude = [
   "examples/**",
   "helix/**",
   "test_screenshots/**",
+  "tui",
   "wix/**",
   "xcode/**",
   "vendor/gitui/**",
@@ -68,11 +69,10 @@ members = [
   "relay",
   "relay/extensions",
   "scopetime",
-  "tui",
   "types",
   "web",
 ]
-exclude = ["vendor/gitui/**"]
+exclude = ["vendor/gitui/**", "tui"]
 
 [workspace.package]
 # gnostr semver: blockheight is major, weeble is minor, wobble is patch.
@@ -97,6 +97,7 @@ exclude = [
   "org",
   "proxy",
   "xcode",
+  "tui",
   "xq",
   "GEMINI.md",
 ]
