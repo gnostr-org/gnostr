@@ -9,6 +9,26 @@ repository = "https://github.com/gnostr-org/gnostr.git"
 keywords = ["git", "nostr", "blossom", "ipfs", "remote-helper"]
 categories = ["development-tools", "command-line-utilities"]
 
+[[bin]]
+name = "git-remote-blossom"
+path = "src/bins/git-remote-blossom.rs"
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bins/git-remote-nostr.rs"
+
+[[bin]]
+name = "git-remote-ipfs"
+path = "src/bins/git-remote-ipfs.rs"
+
+[[bin]]
+name = "git-remote-pkarr"
+path = "src/bins/git-remote-pkarr.rs"
+
+[[bin]]
+name = "git-remote-tor"
+path = "src/bins/git-remote-tor.rs"
+
 [dependencies]
 anyhow = "1"
 
