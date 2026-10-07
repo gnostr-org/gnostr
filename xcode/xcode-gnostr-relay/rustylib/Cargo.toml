@@ -1,6 +1,6 @@
 [package]
 name = "rustylib"
-version = "970374.1846.86606"
+version = "970376.1846.83527"
 edition = "2021"
 
 [workspace]
@@ -14,9 +14,9 @@ name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
 
 [dependencies]
-gnostr-crawler = { version = ">=970374.1846.86606", path = "../../../crawler" }
-gnostr-p2p = { package = "gnostr-p2p", path = "../../../p2p", version = ">=970374.1846.86606" }
-gnostr-relay = { version = ">=970374.1846.86606", path = "../../../relay" }
+gnostr-crawler = { version = ">=970376.1846.83527", path = "../../../crawler" }
+gnostr-p2p = { package = "gnostr-p2p", path = "../../../p2p", version = ">=970376.1846.83527" }
+gnostr-relay = { version = ">=970376.1846.83527", path = "../../../relay" }
 reqwest = { version = "0.12.28", default-features = false, features = [
   "rustls-tls",
 ] }

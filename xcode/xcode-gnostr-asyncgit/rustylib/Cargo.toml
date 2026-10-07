@@ -1,6 +1,6 @@
 [package]
 name = "rustylib"
-version = "970374.1846.86606"
+version = "970376.1846.83527"
 edition = "2021"
 
 [lib]
@@ -12,7 +12,7 @@ name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
 
 [dependencies]
-gnostr-asyncgit = { version = ">=970374.1846.86606", path = "../../../asyncgit", features = [
+gnostr-asyncgit = { version = ">=970376.1846.83527", path = "../../../asyncgit", features = [
   "nostr",
   "vendor-openssl",
   "vendored-openssl",
