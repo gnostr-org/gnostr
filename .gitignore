@@ -1,7 +1,12 @@
 example.bin
 example.reconstructed.bin
 
+## gnostr-repo-flattener
+**@*.html
+
+## xcode
 .xcodebuild/
+xcode/libp2p-app-template/.build
 
 ## gnostr-relay/server artifacts
 relay_db/
