@@ -1,6 +1,6 @@
 [package]
 name = "rust-libp2p-gossip"
-version = "970396.1846.59223"
+version = "970398.1846.57265"
 edition = "2021"
 
 [dependencies]

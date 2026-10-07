@@ -76,7 +76,7 @@ exclude = ["tui", "vendor/gitui/**"]
 
 [workspace.package]
 # gnostr semver: blockheight is major, weeble is minor, wobble is patch.
-version = "970396.1846.59223"
+version = "970398.1846.57265"
 
 exclude = [
     ".git/",
@@ -120,6 +120,10 @@ axum-core = "0.4.5"
 base64 = "0.22.1"
 bech32 = "0.11"
 bincode = "1.3.1"
+bip32 = { version = "0.5", default-features = false, features = [
+    "secp256k1",
+    "std",
+] }
 bip39 = { package = "tiny-bip39", version = "2.0.0" }
 bitcoin_hashes = "0.14.0"
 bytes = "1.11.0"
@@ -146,31 +150,31 @@ dialoguer = { version = "0.12.0" }
 directories = { version = "6.0.0" }
 env_logger = "0.11"
 expectrl = "0.8.0"
-filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = ">=970396.1846.59223" }
+filetreelist = { path = "filetreelist", package = "gnostr-filetreelist", version = ">=970398.1846.57265" }
 flate2 = "1.1.8"
 function_name = "0.3.0"
 futures = { version = "0.3.31" }
 futures-util = "0.3.31"
 git2 = { version = "^0.21", default-features = false, features = ["cred"] }
-git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = ">=970396.1846.59223" }
-git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = ">=970396.1846.59223" }
+git2-hooks = { path = "git2-hooks", package = "gnostr-git2-hooks", version = ">=970398.1846.57265" }
+git2-testing = { path = "git2-testing", package = "gnostr-git2-testing", version = ">=970398.1846.57265" }
 # Keep the root workspace dependency on the current local asyncgit version during publish.
-gnostr-asyncgit = { path = "asyncgit", version = ">=970396.1846.59223", default-features = false, features = [
+gnostr-asyncgit = { path = "asyncgit", version = ">=970398.1846.57265", default-features = false, features = [
     "vendor-openssl",
 ] }
-gnostr-chat = { path = "chat", version = ">=970396.1846.59223" }
+gnostr-chat = { path = "chat", version = ">=970398.1846.57265" }
 # Keep crawler aligned with the current workspace version here so the root package can package cleanly.
-gnostr-crawler = { path = "crawler", version = ">=970396.1846.59223" }
+gnostr-crawler = { path = "crawler", version = ">=970398.1846.57265" }
 
-gnostr-extensions = { path = "relay/extensions", version = ">=970396.1846.59223", default-features = false }
-gnostr-grammar = { path = "grammar", version = ">=970396.1846.59223" }
-gnostr-js = { path = "js", version = ">=970396.1846.59223", default-features = false }
+gnostr-extensions = { path = "relay/extensions", version = ">=970398.1846.57265", default-features = false }
+gnostr-grammar = { path = "grammar", version = ">=970398.1846.57265" }
+gnostr-js = { path = "js", version = ">=970398.1846.57265", default-features = false }
 #gnostr-grammar = { version = "1894.934224.276199", path = "grammar" }
-gnostr-legit = { path = "legit", version = ">=970396.1846.59223" }
-gnostr-p2p = { path = "p2p", version = ">=970396.1846.59223" }
-gnostr-relay = { path = "relay", version = ">=970396.1846.59223", default-features = false }
-gnostr-types = { path = "types", version = ">=970396.1846.59223" }
-gnostr_qr = { path = "qr", version = ">=970396.1846.59223" }
+gnostr-legit = { path = "legit", version = ">=970398.1846.57265" }
+gnostr-p2p = { path = "p2p", version = ">=970398.1846.57265" }
+gnostr-relay = { path = "relay", version = ">=970398.1846.57265", default-features = false }
+gnostr-types = { path = "types", version = ">=970398.1846.57265" }
+gnostr_qr = { path = "qr", version = ">=970398.1846.57265" }
 handlebars = { version = "6.3.2" }
 #zeroize = "1.6.0"
 
@@ -182,7 +186,7 @@ httparse = "1.10.1"
 humantime = "2.1.3"
 include_dir = { version = "0.7.4", features = ["glob", "metadata"] }
 indicatif = { version = "0.18.0" }
-invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = ">=970396.1846.59223" }
+invalidstring = { path = "invalidstring", package = "gnostr-invalidstring", version = ">=970398.1846.57265" }
 itertools = "0.14.0"
 k256 = { version = "0.13", features = ["schnorr", "ecdh"] }
 kanal = "0.1.1"
@@ -282,7 +286,7 @@ rust-embed = { version = "8.6.0", features = [
     "include-exclude",
 ] }
 rust-ini = "0.21.3"
-scopetime = { path = "scopetime", package = "gnostr-scopetime", version = ">=970396.1846.59223" }
+scopetime = { path = "scopetime", package = "gnostr-scopetime", version = ">=970398.1846.57265" }
 scrypt = { version = "0.11.0" }
 secp256k1 = { version = "0.29.1", features = [
     "hashes",
@@ -327,7 +331,6 @@ thiserror = "1.0.69"
 thread-priority = "1.2.0"
 time = { version = "0.3.46", features = ["macros", "formatting"] }
 timeago = { version = "0.4.2", default-features = false }
-bip32 = { version = "0.5", default-features = false, features = ["secp256k1", "std"] }
 tiny_http = { version = "0.12" }
 tokio = { version = "1.46.1", features = ["full"] }
 tokio-stream = "0.1.18"
@@ -648,15 +651,15 @@ globset = "0.4"
 
 ##gitui
 gnostr-asyncgit = { workspace = true, features = ["tui"] }
-gnostr-crawler = { version = ">=970396.1846.59223", path = "crawler" }
-gnostr-git-helpers = { version = ">=970396.1846.59223", path = "git-helpers" }
+gnostr-crawler = { version = ">=970398.1846.57265", path = "crawler" }
+gnostr-git-helpers = { version = ">=970398.1846.57265", path = "git-helpers" }
 gnostr-grammar = { workspace = true }
 gnostr-js = { workspace = true, default-features = false, optional = true }
 gnostr-legit = { workspace = true }
 gnostr-relay = { workspace = true }
-gnostr-web = { path = "web", version = ">=970396.1846.59223", default-features = false }
-gnostr_chat = { package = "gnostr-chat", path = "chat", version = ">=970396.1846.59223" }
-gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = ">=970396.1846.59223" }
+gnostr-web = { path = "web", version = ">=970398.1846.57265", default-features = false }
+gnostr_chat = { package = "gnostr-chat", path = "chat", version = ">=970398.1846.57265" }
+gnostr_p2p = { package = "gnostr-p2p", path = "p2p", version = ">=970398.1846.57265" }
 gnostr_qr = { workspace = true }
 handlebars = { workspace = true, optional = true }
 hex = { workspace = true }
@@ -695,7 +698,7 @@ mailparse = { workspace = true }
 md5 = "0.7"
 metrics = "0.23.0"
 moka = { version = "0.12.0", features = ["future"], optional = true }
-ngit = { package = "gnostr-ngit", version = ">=970396.1846.59223", path = "ngit", features = [
+ngit = { package = "gnostr-ngit", version = ">=970398.1846.57265", path = "ngit", features = [
     "vendored-openssl",
 ] }
 nostr = { workspace = true }
