@@ -7006,7 +7006,6 @@ dependencies = [
  "sha256",
  "shellexpand",
  "shellwords",
- "signal-child",
  "simdutf8",
  "simple_logger",
  "sled",
@@ -15631,12 +15630,6 @@ name = "shlex"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
-
-[[package]]
-name = "signal-child"
-version = "1.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dab3c5715af66d5fca82640030c31a031b10db162090a83dbc6a9d3a0e2f4326"
 
 [[package]]
 name = "signal-hook"

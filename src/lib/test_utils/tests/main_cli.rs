@@ -38,8 +38,19 @@ mod tests {
     use git2::{Repository, Signature};
     use predicates::{prelude::PredicateBooleanExt, str};
     use serial_test::serial;
-    use signal_child::Signalable;
     use tempfile::TempDir;
+
+    #[cfg(unix)]
+    fn send_sigint(child: &std::process::Child) {
+        let pid = child.id() as libc::pid_t;
+        let rc = unsafe { libc::kill(pid, libc::SIGINT) };
+        assert!(rc == 0, "failed to send SIGINT: {}", std::io::Error::last_os_error());
+    }
+
+    #[cfg(not(unix))]
+    fn send_sigint(_child: &std::process::Child) {
+        panic!("sending SIGINT is not supported on this platform");
+    }
 
     use crate::{cli::get_app_cache_path, core::ui::TerminalCleanup, utils::screenshot};
 
@@ -533,9 +544,7 @@ mod tests {
         thread::sleep(Duration::from_secs(10));
 
         // Terminate the child process gracefully
-        child
-            .signal(signal_child::signal::SIGINT)
-            .expect("Failed to send SIGINT to gnostr process");
+        send_sigint(&child);
         child.wait().expect("Failed to wait for gnostr process");
 
         let log_file_path = crate::cli::get_app_cache_path().unwrap().join("gnostr.log");
@@ -572,9 +581,7 @@ mod tests {
             screenshot::make_screenshot("test_run_tui_and_sleep_screenshot");
 
         // Terminate the child process gracefully
-        child
-            .signal(signal_child::signal::SIGINT)
-            .expect("Failed to send SIGINT to gnostr process");
+        send_sigint(&child);
         child.wait().expect("Failed to wait for gnostr process");
 
         let log_file_path = crate::cli::get_app_cache_path().unwrap().join("gnostr.log");
