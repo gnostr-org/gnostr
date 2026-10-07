@@ -15,7 +15,6 @@ use tracing_subscriber::{fmt, util::SubscriberInitExt, EnvFilter, Registry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn StdError>> {
-    unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
     unsafe { env::set_var("BLOCKHEIGHT", "0") };
     unsafe { env::set_var("WOBBLE", "0") };
@@ -50,39 +49,46 @@ async fn main() -> Result<(), Box<dyn StdError>> {
         eprintln!("Failed to initialize tracing subscriber: {}", e);
     }
 
-    if args.gitdir.is_some() {
-        // Assuming 'args' and 'gitdir' are correctly defined elsewhere
-        let repo_path: RepoPath = args.gitdir.clone().expect("");
-        debug!("main:50:repo_path={:?}", repo_path);
-        // Convert the RepoPath to an OsStr reference
-        let path_os_str = repo_path.as_path().as_os_str();
-
-        // Now set the environment variable
-        unsafe { env::set_var("GNOSTR_GITDIR", path_os_str) };
-
-        debug!("main:57:{:?}", args.gitdir.clone().expect(""));
-        //env::set_var("GNOSTR_GITDIR", args.gitdir.clone().expect(""));
-        debug!("59:{}", env::var("GNOSTR_GITDIR").unwrap().to_string());
-        //replace gnostr tui --gitdir
-        //std::process::exit(0);
+    let mut gitdir_value: Option<String> = None;
+    let mut workdir_value: Option<String> = None;
+    let env_args: Vec<String> = env::args().collect();
+    for i in 0..env_args.len() {
+        if env_args[i] == "--gitdir" {
+            if i + 1 < env_args.len() {
+                gitdir_value = Some(env_args[i + 1].clone());
+            }
+        }
+        if env_args[i] == "--workdir" {
+            if i + 1 < env_args.len() {
+                workdir_value = Some(env_args[i + 1].clone());
+            }
+        }
     }
-    let _ = args.workdir.is_some();
-    let _ = args.directory.is_some();
 
     // Post event
     match &args.command {
         //
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
-            sub_commands::tui::tui(sub_command_args.clone(), &GnostrCli::default()).await
+            let mut sub_command_args_mut = sub_command_args.clone();
+            if let Some(dir) = gitdir_value.or(workdir_value) {
+                sub_command_args_mut.gitdir =
+                    Some(gnostr_asyncgit::sync::resolve_repo_path(&RepoPath::from(
+                        dir.as_str(),
+                    ))?);
+            }
+            sub_commands::tui::tui(sub_command_args_mut, &GnostrCli::default()).await
         }
         //
         None => {
-            {
-                let gnostr_subcommands = gnostr::core::GnostrSubCommands::default();
-                let _ = sub_commands::tui::tui(gnostr_subcommands, &GnostrCli::default()).await;
-            };
-            Ok(())
+            let mut gnostr_subcommands = gnostr::core::GnostrSubCommands::default();
+            if let Some(dir) = gitdir_value.or(workdir_value) {
+                gnostr_subcommands.gitdir =
+                    Some(gnostr_asyncgit::sync::resolve_repo_path(&RepoPath::from(
+                        dir.as_str(),
+                    ))?);
+            }
+            sub_commands::tui::tui(gnostr_subcommands, &GnostrCli::default()).await
         }
         &Some(_) => todo!(),
     }
