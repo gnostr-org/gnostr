@@ -1,6 +1,6 @@
 [package]
 name = "relay_ffi"
-version = "970402.1846.51281"
+version = "970403.1846.49785"
 edition = "2021"
 
 [lib]
