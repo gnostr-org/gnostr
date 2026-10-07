@@ -388,9 +388,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let git_tui_node = TuiNode::new(120, 24);
     let relay_node = TuiNode::new(120, 24);
     let chat_node = TuiNode::new(120, 24);
-    #[cfg(feature = "blossom-tui")]
-    let server_node = TuiNode::new(120, 24);
-    #[cfg(not(feature = "blossom-tui"))]
     let server_node = TuiNode::new(1, 1);
     let project_root = std::env::current_dir()?;
     let server_available = spawn_gnostr_server(project_root.clone())?;
@@ -413,14 +410,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
         project_root.clone(),
         Some("gnostr chat".to_string()),
     )?;
-    #[cfg(feature = "blossom-tui")]
-    if server_available {
-        server_node.spawn(
-            vec![],
-            project_root.clone(),
-            Some("gnostr-server".to_string()),
-        )?;
-    }
 
     let start_time = Instant::now();
     let mut ready_since: Option<Instant> = None;
@@ -435,26 +424,14 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
     let mut active_tab: usize = 0;
     let mut last_active_tab: usize = active_tab;
     let mut tab_titles = vec!["Nodes", "Relay", "Chat"];
-    #[cfg(feature = "blossom-tui")]
-    tab_titles.push("Server");
     tab_titles.push("Help");
     let git_tui_tab_index = tab_titles.len();
     let help_tab_index = tab_titles.len() - 1;
-    #[cfg(feature = "blossom-tui")]
-    let server_tab_index = help_tab_index - 1;
     let mut is_git_tui_active = false;
     let mut is_relay_active = false;
     let mut is_chat_active = false;
-    #[cfg(feature = "blossom-tui")]
     let mut is_server_active = false;
-    #[cfg(not(feature = "blossom-tui"))]
-    let mut is_server_active = false;
-    #[cfg(feature = "blossom-tui")]
-    let server_ready = server_node.byte_count.load(Ordering::SeqCst) > 0
-        || start_time.elapsed() > Duration::from_secs(3);
-    #[cfg(not(feature = "blossom-tui"))]
     let server_ready = true;
-    #[cfg(not(feature = "blossom-tui"))]
     let server_tab_index = usize::MAX;
 
     loop {
@@ -956,7 +933,7 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                     );
                 } else if active_tab == help_tab_index {
                     // Help Tab
-                    let mut help_text = vec![
+                    let help_text = vec![
                         Line::from(vec![Span::styled(
                             "GNOSTR DASHBOARD HELP",
                             Style::default()
@@ -986,17 +963,6 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                             "  [All]       : All other keys are forwarded to the node's PTY",
                         ),
                     ];
-                    #[cfg(feature = "blossom-tui")]
-                    help_text.insert(
-                        10,
-                        Line::from("  Server tab  : Available when blossom-tui is compiled in"),
-                    );
-                    if !server_available {
-                        help_text.push(Line::from(""));
-                        help_text.push(Line::from(
-                            "Server tab opens an install dialog until gnostr-server is available.",
-                        ));
-                    }
                     f.render_widget(
                         Paragraph::new(help_text).block(Block::default().borders(Borders::ALL)),
                         content_area,
@@ -1280,45 +1246,20 @@ pub async fn run_dashboard(mut commands: Vec<String>) -> anyhow::Result<()> {
                                 }
                             }
                             KeyCode::Enter => {
-                                #[cfg(feature = "blossom-tui")]
+                                if active_tab == git_tui_tab_index {
+                                    is_git_tui_active = true;
+                                } else if active_tab == 2 {
+                                    is_chat_active = true;
+                                } else if active_tab == 1 {
+                                    is_relay_active = true;
+                                } else if active_tab == 0
+                                    && visible_nodes
+                                        .get(selected_node)
+                                        .copied()
+                                        .unwrap_or(false)
                                 {
-                                    if active_tab == server_tab_index && server_available {
-                                        is_server_active = true;
-                                    } else if active_tab == server_tab_index && !server_available {
-                                        force_redraw = true;
-                                    } else if active_tab == git_tui_tab_index {
-                                        is_git_tui_active = true;
-                                    } else if active_tab == 2 {
-                                        is_chat_active = true;
-                                    } else if active_tab == 1 {
-                                        is_relay_active = true;
-                                    } else if active_tab == 0
-                                        && visible_nodes
-                                            .get(selected_node)
-                                            .copied()
-                                            .unwrap_or(false)
-                                    {
-                                        active_node = Some(selected_node);
-                                        active_tab = 0;
-                                    }
-                                }
-                                #[cfg(not(feature = "blossom-tui"))]
-                                {
-                                    if active_tab == git_tui_tab_index {
-                                        is_git_tui_active = true;
-                                    } else if active_tab == 2 {
-                                        is_chat_active = true;
-                                    } else if active_tab == 1 {
-                                        is_relay_active = true;
-                                    } else if active_tab == 0
-                                        && visible_nodes
-                                            .get(selected_node)
-                                            .copied()
-                                            .unwrap_or(false)
-                                    {
-                                        active_node = Some(selected_node);
-                                        active_tab = 0;
-                                    }
+                                    active_node = Some(selected_node);
+                                    active_tab = 0;
                                 }
                             }
                             KeyCode::Esc => {
