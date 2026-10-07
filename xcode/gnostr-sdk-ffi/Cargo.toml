@@ -1,6 +1,6 @@
 [package]
 name = "nostr-sdk-ffi"
-version = "970395.1846.59875"
+version = "970395.1846.60635"
 edition = "2024"
 publish = false
 
