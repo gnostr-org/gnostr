@@ -88,7 +88,6 @@ async fn _send_debug_startup_chat() {}
 async fn main() -> anyhow::Result<()> {
     install_rustls_crypto_provider();
     //_send_debug_startup_chat().await;
-    unsafe { env::set_var("GNOSTR_GITDIR", "") };
     unsafe { env::set_var("WEEBLE", "0") };
     unsafe { env::set_var("BLOCKHEIGHT", "0") };
     unsafe { env::set_var("WOBBLE", "0") };
@@ -113,45 +112,30 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let mut gitdir_value: Option<String> = None;
+    let mut workdir_value: Option<String> = None;
     if env_args.contains(&String::from("--gitdir")) {
         debug!("main::59:The --gitdir argument was found!");
     } else {
         debug!("main::61:The --gitdir argument was not found.");
     }
 
-    // let mut workdir_value: Option<String> = None;
-    // if env_args.contains(&String::from("--workdir")) {
-    //     debug!("main::66:The --workdir argument was found!");
-    // } else {
-    //     debug!("main::68:The --workdir argument was not found.");
-    // }
-
-    // let mut directory_value: Option<String> = None;
-    // if env_args.contains(&String::from("--directory")) {
-    //     debug!("main::73:The --directory argument was found!");
-    // } else {
-    //     debug!("main::75:The --directory argument was not found.");
-    // }
+    if env_args.contains(&String::from("--workdir")) {
+        debug!("main::66:The --workdir argument was found!");
+    } else {
+        debug!("main::68:The --workdir argument was not found.");
+    }
 
     for i in 0..env_args.len() {
         if env_args[i] == "--gitdir" {
             if i + 1 < env_args.len() {
                 gitdir_value = Some(env_args[i + 1].clone());
             }
-            break;
         }
-        // if env_args[i] == "--workdir" {
-        //     if i + 1 < env_args.len() {
-        //         workdir_value = Some(env_args[i + 1].clone());
-        //     }
-        //     break;
-        // }
-        // if env_args[i] == "--directory" {
-        //     if i + 1 < env_args.len() {
-        //         directory_value = Some(env_args[i + 1].clone());
-        //     }
-        //     break;
-        // }
+        if env_args[i] == "--workdir" {
+            if i + 1 < env_args.len() {
+                workdir_value = Some(env_args[i + 1].clone());
+            }
+        }
     }
 
     match gitdir_value.clone() {
@@ -473,43 +457,16 @@ async fn main() -> anyhow::Result<()> {
         Some(GnostrCommands::Tui(sub_command_args)) => {
             debug!("main:318:sub_command_args:{:?}", sub_command_args.clone());
             let mut sub_command_args_mut = sub_command_args.clone();
-            let result: anyhow::Result<()>; // = Ok(()); // Initialize result to Ok
 
-            // Check if GNOSTR_GITDIR environment variable is set
-            if let Ok(gitdir_env_value) = env::var("GNOSTR_GITDIR") {
-                eprintln!(
-                    "333:The GNOSTR_GITDIR environment variable is set to: {}",
-                    gitdir_env_value
-                );
-                // Check if --gitdir argument was provided (from command line args)
-                if let Some(git_dir_value) = gitdir_value {
-                    // Assuming gitdir_value is from command line args parsing
-                    eprintln!("339:OVERRIDE!! The git directory is: {:?}", git_dir_value);
-                    let gitdir_string = gitdir_env_value.to_string();
-                    debug!(
-                        "342:OVERRIDE!! The git directory is: {:?}",
-                        gitdir_string.clone()
-                    );
-                    sub_command_args_mut.gitdir = Some(resolve_repo_path(&RepoPath::from(
-                        gitdir_string.as_str(),
-                    ))?);
-                    // Call tui and map error, then assign to result
-                    result = sub_commands::tui::tui(sub_command_args_mut.clone(), &gnostr_cli_args)
-                        .await
-                        .map_err(|e| anyhow!("Error in tui subcommand: {}", e));
-                } else {
-                    // If gitdir_value is None, we don't override. The result remains Ok(()).
-                    result = Ok(()); // Explicitly set for clarity
-                }
-            } else {
-                // GNOSTR_GITDIR environment variable is not set.
-                debug!("354:The GNOSTR_GITDIR environment variable is not set.");
-                // Call tui with original args and map error, then assign to result
-                result = sub_commands::tui::tui(sub_command_args.clone(), &gnostr_cli_args)
-                    .await
-                    .map_err(|e| anyhow!("Error in tui subcommand: {}", e));
+            // Apply top-level --gitdir or --workdir overrides to the tui subcommand
+            if let Some(dir) = gitdir_value.clone().or(workdir_value.clone()) {
+                sub_command_args_mut.gitdir =
+                    Some(resolve_repo_path(&RepoPath::from(dir.as_str()))?);
             }
-            result // Return the accumulated result
+
+            sub_commands::tui::tui(sub_command_args_mut, &gnostr_cli_args)
+                .await
+                .map_err(|e| anyhow!("Error in tui subcommand: {}", e))
         }
         Some(GnostrCommands::FetchById(sub_command_args)) => {
             debug!("sub_command_args:{:?}", sub_command_args);
@@ -676,7 +633,12 @@ async fn main() -> anyhow::Result<()> {
         None => {
             // TODO handle more scenarios
             // Call tui with default commands and propagate its result
-            sub_commands::tui::tui(gnostr::core::GnostrSubCommands::default(), &gnostr_cli_args)
+            let mut default_args = gnostr::core::GnostrSubCommands::default();
+            if let Some(dir) = gitdir_value.clone().or(workdir_value.clone()) {
+                default_args.gitdir =
+                    Some(resolve_repo_path(&RepoPath::from(dir.as_str()))?);
+            }
+            sub_commands::tui::tui(default_args, &gnostr_cli_args)
                 .await
                 .map_err(|e| anyhow!("Error in default tui subcommand: {}", e))
         }
