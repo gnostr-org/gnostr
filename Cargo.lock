@@ -7238,6 +7238,7 @@ dependencies = [
  "time 0.3.47",
  "tokio",
  "tokio-stream",
+ "tokio-tungstenite 0.26.2",
  "toml",
  "tower-http 0.6.11",
  "tower-layer",

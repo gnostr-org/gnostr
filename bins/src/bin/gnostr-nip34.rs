@@ -50,6 +50,8 @@ enum Nip34Error {
     PatchCreation(String),
     #[error("invalid maintainer key '{0}'")]
     InvalidMaintainer(String),
+    #[error("publish failed: {0}")]
+    Publish(String),
 }
 
 type Result<T> = std::result::Result<T, Nip34Error>;
@@ -294,6 +296,37 @@ fn build_sample_event(
         .map_err(|e| Nip34Error::EventBuild(e.to_string()))
 }
 
+/// Publish a signed NIP-34 event to the provided relays over WebSocket.
+async fn publish_event_to_relays(event: &Nip34Event, relays: &[String]) -> Vec<String> {
+    use futures_util::{SinkExt, StreamExt};
+    use tokio_tungstenite::tungstenite::Message;
+
+    let payload = serde_json::json!(["EVENT", event]).to_string();
+    let mut results = Vec::new();
+
+    for url in relays {
+        let outcome = match tokio_tungstenite::connect_async(url).await {
+            Ok((mut ws, _)) => {
+                if let Err(e) = ws.send(Message::Text(payload.clone().into())).await {
+                    format!("{url}: send failed: {e}")
+                } else {
+                    match tokio::time::timeout(Duration::from_secs(3), ws.next()).await {
+                        Ok(Some(Ok(Message::Text(resp)))) => format!("{url}: {resp}"),
+                        Ok(Some(Ok(msg))) => format!("{url}: {msg:?}"),
+                        Ok(Some(Err(e))) => format!("{url}: read error: {e}"),
+                        Ok(None) => format!("{url}: closed without response"),
+                        Err(_) => format!("{url}: timeout waiting for OK"),
+                    }
+                }
+            }
+            Err(e) => format!("{url}: connect failed: {e}"),
+        };
+        results.push(outcome);
+    }
+
+    results
+}
+
 /// The main application state.
 struct App {
     commits: Vec<Commit>,
@@ -311,6 +344,7 @@ struct App {
     private_key: PrivateKey,
     _public_key: PublicKey,
     repo_reference: String,
+    relays: Vec<String>,
     pow_summary: AccumulatedPowSummary,
     status_message: Option<String>,
     error_message: Option<String>,
@@ -427,6 +461,11 @@ impl App {
         let mut nip34_events = vec![];
         let mut startup_warnings = Vec::new();
         let mut repo_ref = resolve_repo_config(cli, config, public_key)?;
+        let relays: Vec<String> = repo_ref
+            .relays
+            .iter()
+            .map(|url| url.to_string())
+            .collect();
         repo_ref.root_commit = commits
             .first()
             .map(|commit| commit.full_hash.clone())
@@ -496,6 +535,7 @@ impl App {
             private_key,
             _public_key: public_key,
             repo_reference,
+            relays,
             pow_summary,
             status_message: None,
             error_message: startup_warnings.into_iter().next(),
@@ -725,6 +765,41 @@ impl App {
                 //ensure the event is pushed to all relays
                 self.nip34_events.push(new_event);
             }
+        }
+        Ok(())
+    }
+
+    /// Publishes the selected NIP-34 event to the configured relays.
+    fn publish_selected_event(&mut self) -> Result<()> {
+        let selected_index = self
+            .nip34_state
+            .selected()
+            .ok_or_else(|| Nip34Error::Publish("no event selected".into()))?;
+        let event = self
+            .nip34_events
+            .get(selected_index)
+            .ok_or_else(|| Nip34Error::Publish("selected event not found".into()))?;
+        if self.relays.is_empty() {
+            return Err(Nip34Error::Publish(
+                "no relays configured; use --relays or config".into(),
+            ));
+        }
+
+        let rt = tokio::runtime::Runtime::new().map_err(Nip34Error::Terminal)?;
+        let results = rt.block_on(publish_event_to_relays(event, &self.relays));
+
+        let ok_count = results.iter().filter(|r| r.contains("\"true\"")).count();
+        if ok_count == 0 {
+            self.set_error(format!("Publish failed on all {} relays", results.len()));
+        } else {
+            self.set_status(format!(
+                "Published to {}/{} relays",
+                ok_count,
+                results.len()
+            ));
+        }
+        for response in results {
+            tracing::info!(relay_response = response);
         }
         Ok(())
     }
@@ -1090,6 +1165,13 @@ fn run_app<B: ratatui::backend::Backend>(
                                 match app.republish_nip34_event() {
                                     Ok(()) => app.set_status("NIP-34 event republished"),
                                     Err(e) => app.set_error(format!("{e}")),
+                                }
+                            }
+                        }
+                        KeyCode::Char('p') => {
+                            if app.current_mode == NavigatorMode::Nip34Events {
+                                if let Err(e) = app.publish_selected_event() {
+                                    app.set_error(format!("{e}"));
                                 }
                             }
                         }
@@ -1517,7 +1599,7 @@ fn get_help_text(app: &App) -> String {
                 ""
             };
             format!(
-                "{} | [Space] Select{} | [r] Republish",
+                "{} | [Space] Select{} | [r] Republish | [p] Publish",
                 base_help, selection_help
             )
         }
