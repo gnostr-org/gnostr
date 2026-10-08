@@ -1448,11 +1448,13 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
             let id_hex = event.id.as_hex_string();
             let sig_hex = event.sig.as_hex_string();
 
+            let event_pow = get_leading_zero_bits(&event.id.0);
             let event_details = format!(
                 "Event ID: {}\n\\
                 Public Key: {}\n\\
                 Kind: {} ({})\n\\
                 Created: {}\n\\
+                PoW: {} bits\n\\
                 Signature: {}\n\\
                 Content: {}\n\n\\
                 Tags:\n{}",
@@ -1464,6 +1466,7 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
                     .map(|dt| dt.naive_local())
                     .unwrap_or_default()
                     .format("%Y-%m-%d %H:%M:%S"),
+                event_pow,
                 &sig_hex[..16],
                 event.content,
                 event
