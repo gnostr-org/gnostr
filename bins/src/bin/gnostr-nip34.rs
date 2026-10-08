@@ -327,6 +327,33 @@ async fn publish_event_to_relays(event: &Nip34Event, relays: &[String]) -> Vec<S
     results
 }
 
+/// Collect extra syndication relays from the crawler bootstrap list and the
+/// p2p crawler relay buckets. Available only when the `nip34-syndicate`
+/// feature is enabled.
+#[cfg(feature = "nip34-syndicate")]
+fn collect_syndication_relays() -> Vec<String> {
+    use std::collections::HashSet;
+
+    let mut relays: HashSet<String> = gnostr_crawler::relays::bootstrap_relays()
+        .into_iter()
+        .collect();
+
+    match gnostr_p2p::crawler_broadcast::load_crawler_relay_buckets() {
+        Ok(buckets) => {
+            for bucket in buckets {
+                for relay in bucket.relays {
+                    let _ = relays.insert(relay);
+                }
+            }
+        }
+        Err(err) => {
+            tracing::warn!("failed to load p2p crawler relay buckets: {err}");
+        }
+    }
+
+    relays.into_iter().collect()
+}
+
 /// The main application state.
 struct App {
     commits: Vec<Commit>,
@@ -804,6 +831,51 @@ impl App {
         Ok(())
     }
 
+    /// Publishes the selected event to the configured relays plus the
+    /// crawler/p2p syndication relay set.
+    #[cfg(feature = "nip34-syndicate")]
+    fn syndicate_selected_event(&mut self) -> Result<()> {
+        let selected_index = self
+            .nip34_state
+            .selected()
+            .ok_or_else(|| Nip34Error::Publish("no event selected".into()))?;
+        let event = self
+            .nip34_events
+            .get(selected_index)
+            .ok_or_else(|| Nip34Error::Publish("selected event not found".into()))?;
+
+        let mut relays: std::collections::HashSet<String> = self.relays.iter().cloned().collect();
+        relays.extend(collect_syndication_relays());
+        let relays: Vec<String> = relays.into_iter().collect();
+
+        if relays.is_empty() {
+            return Err(Nip34Error::Publish(
+                "no relays configured or discovered".into(),
+            ));
+        }
+
+        let rt = tokio::runtime::Runtime::new().map_err(Nip34Error::Terminal)?;
+        let results = rt.block_on(publish_event_to_relays(event, &relays));
+
+        let ok_count = results.iter().filter(|r| r.contains("\"true\"")).count();
+        if ok_count == 0 {
+            self.set_error(format!(
+                "Syndication failed on all {} relays",
+                results.len()
+            ));
+        } else {
+            self.set_status(format!(
+                "Syndicated to {}/{} relays",
+                ok_count,
+                results.len()
+            ));
+        }
+        for response in results {
+            tracing::info!(relay_response = response);
+        }
+        Ok(())
+    }
+
     /// Loads git diff for selected commits (max 2 for range diff).
     fn load_full_commit(&mut self) -> Result<()> {
         let mut diff_content = String::new();
@@ -1172,6 +1244,23 @@ fn run_app<B: ratatui::backend::Backend>(
                             if app.current_mode == NavigatorMode::Nip34Events {
                                 if let Err(e) = app.publish_selected_event() {
                                     app.set_error(format!("{e}"));
+                                }
+                            }
+                        }
+                        KeyCode::Char('s') => {
+                            if app.current_mode == NavigatorMode::Nip34Events {
+                                #[cfg(feature = "nip34-syndicate")]
+                                {
+                                    if let Err(e) = app.syndicate_selected_event() {
+                                        app.set_error(format!("{e}"));
+                                    }
+                                }
+                                #[cfg(not(feature = "nip34-syndicate"))]
+                                {
+                                    app.set_error(
+                                        "Syndication requires the nip34-syndicate feature"
+                                            .to_string(),
+                                    );
                                 }
                             }
                         }
@@ -1599,7 +1688,7 @@ fn get_help_text(app: &App) -> String {
                 ""
             };
             format!(
-                "{} | [Space] Select{} | [r] Republish | [p] Publish",
+                "{} | [Space] Select{} | [r] Republish | [p] Publish | [s] Syndicate",
                 base_help, selection_help
             )
         }

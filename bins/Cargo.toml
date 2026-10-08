@@ -196,6 +196,7 @@ p2p = ["dep:gnostr-p2p", "vendored-openssl"]
 crawler = ["dep:gnostr-crawler", "dep:gnostr_filetreelist"]
 metrics = []
 rate_limiter = []
+nip34-syndicate = ["git", "dep:gnostr-crawler", "dep:gnostr-p2p"]
 vendor-openssl = [
     "gnostr-asyncgit/vendor-openssl",
     "gnostr-legit/vendored-openssl",
