@@ -191,6 +191,21 @@ jobs:
             echo "BINDGEN_EXTRA_CLANG_ARGS=-I${clang_resource_dir}/include -isystem ${gcc_include_dir}" >> "$GITHUB_ENV"
           fi
 
+      - name: Set musl cross compiler for C build scripts
+        if: runner.os == 'Linux' && contains(matrix.target, '-musl')
+        shell: bash
+        run: |
+          case "${{ matrix.target }}" in
+            x86_64-unknown-linux-musl)
+              echo "CC_x86_64_unknown_linux_musl=x86_64-linux-musl-gcc" >> "$GITHUB_ENV"
+              echo "CXX_x86_64_unknown_linux_musl=x86_64-linux-musl-g++" >> "$GITHUB_ENV"
+              ;;
+            aarch64-unknown-linux-musl)
+              echo "CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc" >> "$GITHUB_ENV"
+              echo "CXX_aarch64_unknown_linux_musl=aarch64-linux-musl-g++" >> "$GITHUB_ENV"
+              ;;
+          esac
+
       - name: Build release binary
         shell: bash
         run: |
