@@ -1,16 +1,25 @@
 [package]
 name = "gnostr-git2-hooks"
-version.workspace = true
+version = "970403.1846.49785"
 authors = ["extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "adds git hooks support based on git2-rs"
-homepage = "https://github.com/gnostr-org/gnostr"
-repository = "https://github.com/gnostr-org/gnostr"
-documentation = "https://docs.rs/gnostr/"
+homepage = "https://github.com/gitui-org/gitui"
+repository = "https://github.com/gitui-org/gitui"
+documentation = "https://docs.rs/git2-hooks/"
 readme = "README.md"
 license = "MIT"
 categories = ["development-tools"]
 keywords = ["git"]
 
 [dependencies]
-gitui_git2_hooks = { package = "git2-hooks", path = "../vendor/gitui/git2-hooks", version = ">=0.7.0" }
+git2 = "0.21"
+gix-path = "0.11"
+log = "0.4"
+shellexpand = "3.1"
+thiserror = "2.0"
+
+[dev-dependencies]
+gnostr-git2-testing = { path = "../git2-testing" }
+pretty_assertions = "1.4"
+tempfile = "3"

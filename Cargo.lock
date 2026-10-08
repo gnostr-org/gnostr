@@ -7371,7 +7371,14 @@ dependencies = [
 name = "gnostr-git2-hooks"
 version = "970403.1846.49785"
 dependencies = [
- "git2-hooks",
+ "git2 0.21.0",
+ "gix-path 0.11.3",
+ "gnostr-git2-testing",
+ "log",
+ "pretty_assertions",
+ "shellexpand",
+ "tempfile",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
