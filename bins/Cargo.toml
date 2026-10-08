@@ -184,6 +184,156 @@ name = "gnostr-relay-tui"
 path = "src/bin/gnostr-relay-tui.rs"
 required-features = ["relay"]
 
+[[bin]]
+name = "capture_tui"
+path = "src/bin/capture_tui.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "generate-server-config"
+path = "src/bin/generate-server-config.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-inspect-notes"
+path = "src/bin/git-inspect-notes.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-remote-gnostr"
+path = "src/bin/git-remote-gnostr/main.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-remote-gnostr-node"
+path = "src/bin/git-remote-gnostr-node.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-remote-ipfs"
+path = "src/bin/git-remote-ipfs.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-remote-nostr"
+path = "src/bin/git-remote-nostr.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-remote-pkarr"
+path = "src/bin/git-remote-pkarr.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-remote-tor"
+path = "src/bin/git-remote-tor.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-tag"
+path = "src/bin/git-tag.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-tag-pr"
+path = "src/bin/git-tag-pr.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "git-tag-version"
+path = "src/bin/git-tag-version.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-client"
+path = "src/bin/gnostr-client.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-dashboard"
+path = "src/bin/gnostr-dashboard.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-functions"
+path = "src/bin/gnostr-functions.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-genssh"
+path = "src/bin/gnostr-genssh.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-js"
+path = "src/bin/gnostr-js.rs"
+required-features = ["web", "relay", "crawler"]
+
+[[bin]]
+name = "gnostr-kvs"
+path = "src/bin/gnostr-kvs.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-qr"
+path = "src/bin/gnostr-qr.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-repo-flattener"
+path = "src/bin/gnostr-repo-flattener.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-server"
+path = "src/bin/gnostr-server.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-sha256"
+path = "src/bin/gnostr-sha256.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-shell"
+path = "src/bin/gnostr-shell.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-sniper"
+path = "src/bin/gnostr-sniper.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-test"
+path = "src/bin/gnostr-test.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "gnostr-tui"
+path = "src/bin/gnostr-tui.rs"
+required-features = ["git"]
+
+[[bin]]
+name = "nips"
+path = "src/bin/nips.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "screenshot"
+path = "src/bin/screenshot.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "server-toml"
+path = "src/bin/server-toml.rs"
+required-features = ["blossom"]
+
+[[bin]]
+name = "warp_filters"
+path = "src/bin/warp_filters.rs"
+required-features = ["blossom"]
+
 [features]
 default = ["blossom"]
 blossom = []
