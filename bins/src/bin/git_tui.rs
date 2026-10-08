@@ -1,7 +1,7 @@
 use clap::Parser;
 use gnostr_asyncgit::tui::git::{cli::Args, gitui_error::Error, term, Res};
 use log::LevelFilter;
-use git2::Repository;
+use gnostr_asyncgit::git2::Repository;
 use ratatui::Terminal;
 use simple_logger::SimpleLogger;
 use std::{backtrace::Backtrace, panic};
@@ -70,9 +70,7 @@ fn inspect_notes() -> Res<()> {
     let notes_refs = repo.references_glob("refs/notes/*").map_err(Error::ListGitReferences)?;
     for reference in notes_refs {
         let reference = reference.map_err(Error::ListGitReferences)?;
-        let Some(ref_name) = reference.name() else {
-            continue;
-        };
+        let ref_name = reference.name().map_err(Error::ListGitReferences)?;
 
         found = true;
         println!("== {ref_name} ==");
@@ -83,7 +81,7 @@ fn inspect_notes() -> Res<()> {
             let note = repo.find_note(Some(ref_name), object_oid).map_err(Error::ReadOid)?;
 
             println!("-- object: {object_oid}");
-            if let Some(message) = note.message() {
+            if let Ok(message) = note.message() {
                 print!("{message}");
                 if !message.ends_with('\n') {
                     println!();
