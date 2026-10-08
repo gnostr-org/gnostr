@@ -3,7 +3,7 @@ use std::cell::Ref;
 pub use git2_hooks::PrepareCommitMsgSource;
 use scopetime::scope_time;
 
-use super::RepoPath;
+use super::{repository::repo, RepoPath};
 use crate::error::{Error, Result};
 //use crate::sync::utils;
 
@@ -74,24 +74,6 @@ fn to_upstream_target<'a>(
             }
         }
         PrePushTarget::Tags => crate::upstream_sync::PrePushTarget::Tags,
-    }
-}
-
-fn to_upstream_source(
-    source: PrepareCommitMsgSource,
-) -> crate::upstream_sync::PrepareCommitMsgSource {
-    match source {
-        PrepareCommitMsgSource::Message => {
-            crate::upstream_sync::PrepareCommitMsgSource::Message
-        }
-        PrepareCommitMsgSource::Template => {
-            crate::upstream_sync::PrepareCommitMsgSource::Template
-        }
-        PrepareCommitMsgSource::Merge => crate::upstream_sync::PrepareCommitMsgSource::Merge,
-        PrepareCommitMsgSource::Squash => crate::upstream_sync::PrepareCommitMsgSource::Squash,
-        PrepareCommitMsgSource::Commit(oid) => {
-            crate::upstream_sync::PrepareCommitMsgSource::Commit(oid)
-        }
     }
 }
 
@@ -172,16 +154,10 @@ pub fn hooks_prepare_commit_msg(
 ) -> Result<HookResult> {
     scope_time!("hooks_prepare_commit_msg");
 
-    let upstream_repo_path = to_upstream_repo_path(repo_path);
-    Ok(
-        crate::upstream_sync::hooks_prepare_commit_msg(
-            &upstream_repo_path,
-            to_upstream_source(source),
-            msg,
-        )
+    let repo = repo(repo_path)?;
+    Ok(git2_hooks::hooks_prepare_commit_msg(&repo, None, source, msg)
         .map_err(|e| Error::Generic(e.to_string()))?
-        .into(),
-    )
+        .into())
 }
 
 #[cfg(test)]
