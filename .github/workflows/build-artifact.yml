@@ -163,6 +163,19 @@ jobs:
               exit 1
           }
           "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$link" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Ensure the matching MSVC import-lib directory is on LIB so the linker
+          # can find msvcp140.lib and friends for C++ dependencies.
+          $libDir = Join-Path $vcTools "lib\x64"
+          if (Test-Path $libDir) {
+              $existingLib = $env:LIB
+              if ($existingLib) {
+                  "LIB=$libDir;$existingLib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              } else {
+                  "LIB=$libDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              }
+          }
+
           # Do not set RUSTFLAGS here; spaces in the MSVC path are not reliably
           # parsed by Cargo's shell-word splitter on Windows. The per-target
           # linker env var is sufficient and avoids argument-splitting errors.
