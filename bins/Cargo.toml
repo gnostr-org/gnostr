@@ -264,6 +264,7 @@ sha2 = { workspace = true }
 sha256 = "1.6.0"
 simple_logger = { workspace = true }
 structopt = { workspace = true }
+thiserror = { workspace = true }
 tempfile = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }

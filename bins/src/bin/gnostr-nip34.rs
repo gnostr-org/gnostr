@@ -5,7 +5,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::Result;
 use clap::Parser;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
@@ -25,6 +24,33 @@ use ratatui::{
     Frame, Terminal,
 };
 use serde::Deserialize;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+enum Nip34Error {
+    #[error("no secret key provided; use --secret-key, set GNOSTR_SECRET_KEY, or provide a config file")]
+    MissingSecretKey,
+    #[error("invalid secret key: {0}")]
+    InvalidSecretKey(String),
+    #[error("invalid public key '{key}': {error}")]
+    InvalidPublicKey { key: String, error: String },
+    #[error("failed to read config file {path}: {source}")]
+    ConfigRead { path: PathBuf, source: io::Error },
+    #[error("failed to parse config file: {0}")]
+    ConfigParse(#[from] toml::de::Error),
+    #[error("git error: {0}")]
+    Git(#[from] git2::Error),
+    #[error("failed to build NIP-34 event: {0}")]
+    EventBuild(String),
+    #[error("terminal error: {0}")]
+    Terminal(#[from] io::Error),
+    #[error("patch creation failed: {0}")]
+    PatchCreation(String),
+    #[error("invalid maintainer key '{0}'")]
+    InvalidMaintainer(String),
+}
+
+type Result<T> = std::result::Result<T, Nip34Error>;
 
 #[derive(Parser, Debug)]
 #[command(name = "gnostr-nip34", about = "NIP-34 git navigator")]
@@ -40,6 +66,10 @@ struct Cli {
     /// Repository identifier.
     #[arg(long)]
     repo_identifier: Option<String>,
+
+    /// Repository reference slug, e.g. "owner/name" used in NIP-34 repository tags.
+    #[arg(long)]
+    repo_reference: Option<String>,
 
     /// Repository name.
     #[arg(long)]
@@ -76,6 +106,7 @@ struct AppConfig {
 #[derive(Debug, Clone, Deserialize, Default)]
 struct RepoConfig {
     identifier: Option<String>,
+    reference: Option<String>,
     name: Option<String>,
     description: Option<String>,
     maintainers: Option<Vec<String>>,
@@ -84,13 +115,18 @@ struct RepoConfig {
     web: Option<Vec<String>>,
 }
 
-fn load_config(path: &Option<PathBuf>) -> Result<AppConfig> {
+fn default_config_path() -> Option<PathBuf> {
+    directories::BaseDirs::new().map(|dirs| dirs.config_dir().join("gnostr").join("nip34.toml"))
+}
+
+fn load_config(path: Option<&PathBuf>) -> Result<AppConfig> {
     match path {
         Some(path) => {
-            let contents = std::fs::read_to_string(path)
-                .map_err(|e| anyhow::anyhow!("Failed to read config file {:?}: {}", path, e))?;
-            toml::from_str(&contents)
-                .map_err(|e| anyhow::anyhow!("Failed to parse config file: {}", e))
+            let contents = std::fs::read_to_string(path).map_err(|e| Nip34Error::ConfigRead {
+                path: path.clone(),
+                source: e,
+            })?;
+            Ok(toml::from_str(&contents)?)
         }
         None => Ok(AppConfig::default()),
     }
@@ -101,24 +137,42 @@ fn resolve_private_key(cli: &Cli, config: &AppConfig) -> Result<PrivateKey> {
         .secret_key
         .clone()
         .or_else(|| config.secret_key.clone())
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "No secret key provided. Use --secret-key, set GNOSTR_SECRET_KEY, or provide a config file."
-            )
-        })?;
+        .ok_or(Nip34Error::MissingSecretKey)?;
 
     PrivateKey::try_from_bech32_string(&key_str)
         .or_else(|_| PrivateKey::try_from_hex_string(&key_str))
-        .map_err(|e| anyhow::anyhow!("Invalid secret key: {e}"))
+        .map_err(|e| Nip34Error::InvalidSecretKey(e.to_string()))
 }
 
 fn parse_public_key(s: &str) -> Result<PublicKey> {
     PublicKey::try_from_bech32_string(s, false)
         .or_else(|_| PublicKey::try_from_hex_string(s, false))
-        .map_err(|e| anyhow::anyhow!("Invalid public key '{s}': {e}").into())
+        .map_err(|e| Nip34Error::InvalidPublicKey {
+            key: s.to_string(),
+            error: e.to_string(),
+        })
 }
 
-fn resolve_repo_config(cli: &Cli, config: &AppConfig, public_key: PublicKey) -> RepoRef {
+fn resolve_maintainers(
+    cli: &[String],
+    config: &Option<Vec<String>>,
+) -> Result<Vec<PublicKey>> {
+    let sources: Vec<&String> = if !cli.is_empty() {
+        cli.iter().collect()
+    } else {
+        config.as_ref().map(|v| v.iter().collect()).unwrap_or_default()
+    };
+    sources
+        .into_iter()
+        .map(|s| {
+            parse_public_key(s).map_err(|e| {
+                Nip34Error::InvalidMaintainer(format!("{s}: {e}"))
+            })
+        })
+        .collect()
+}
+
+fn resolve_repo_config(cli: &Cli, config: &AppConfig, public_key: PublicKey) -> Result<RepoRef> {
     let repo = &config.repo;
 
     let identifier = cli
@@ -155,21 +209,14 @@ fn resolve_repo_config(cli: &Cli, config: &AppConfig, public_key: PublicKey) -> 
         .map(|r| UncheckedUrl::from_str(r))
         .collect();
 
-    let maintainers: Vec<_> = if cli.maintainers.is_empty() {
-        match &repo.maintainers {
-            Some(m) => m.iter().filter_map(|k| parse_public_key(k).ok()).collect(),
-            None => vec![public_key],
-        }
-    } else {
-        cli.maintainers
-            .iter()
-            .filter_map(|k| parse_public_key(k).ok())
-            .collect()
-    };
+    let mut maintainers = resolve_maintainers(&cli.maintainers, &repo.maintainers)?;
+    if maintainers.is_empty() {
+        maintainers.push(public_key);
+    }
 
     let trusted_maintainer = maintainers.first().copied().unwrap_or(public_key);
 
-    RepoRef {
+    Ok(RepoRef {
         name,
         description,
         identifier: identifier.clone(),
@@ -181,7 +228,7 @@ fn resolve_repo_config(cli: &Cli, config: &AppConfig, public_key: PublicKey) -> 
         maintainers,
         trusted_maintainer,
         events: std::collections::HashMap::new(),
-    }
+    })
 }
 
 /// Represents a relevant subset of a Git commit's data.
@@ -241,7 +288,8 @@ fn build_sample_event(
         tags,
         content,
     };
-    Nip34Event::sign_with_private_key(preevent, private_key).map_err(Into::into)
+    Nip34Event::sign_with_private_key(preevent, private_key)
+        .map_err(|e| Nip34Error::EventBuild(e.to_string()))
 }
 
 /// The main application state.
@@ -260,6 +308,7 @@ struct App {
     show_full_commit: bool,
     private_key: PrivateKey,
     _public_key: PublicKey,
+    repo_reference: String,
     status_message: Option<String>,
     error_message: Option<String>,
 }
@@ -341,8 +390,15 @@ impl App {
 
         let public_key = private_key.public_key();
 
+        let repo_reference = cli
+            .repo_reference
+            .clone()
+            .or_else(|| config.repo.reference.clone())
+            .unwrap_or_else(|| "gnostr-org/gnostr".to_string());
+
         let mut nip34_events = vec![];
-        let mut repo_ref = resolve_repo_config(cli, config, public_key);
+        let mut startup_warnings = Vec::new();
+        let mut repo_ref = resolve_repo_config(cli, config, public_key)?;
         repo_ref.root_commit = commits
             .first()
             .map(|commit| commit.full_hash.clone())
@@ -350,26 +406,31 @@ impl App {
 
         match repo_ref.to_event(&private_key) {
             Ok(event) => nip34_events.push(event),
-            Err(e) => tracing::warn!("Failed to build repo announcement event: {e}"),
+            Err(e) => {
+                let msg = format!("Failed to build repo announcement event: {e}");
+                tracing::warn!("{}", msg);
+                startup_warnings.push(msg);
+            }
         }
 
         let mut state = std::collections::HashMap::new();
         if let Some(commit) = commits.first() {
-            let _ = state.insert(
-                "refs/heads/main".to_string(),
-                commit.full_hash.clone(),
-            );
+            state.insert("refs/heads/main".to_string(), commit.full_hash.clone());
         }
         match RepoState::build(repo_ref.identifier.clone(), state, &private_key) {
             Ok(repo_state) => nip34_events.push(repo_state.event),
-            Err(e) => tracing::warn!("Failed to build repo state event: {e}"),
+            Err(e) => {
+                let msg = format!("Failed to build repo state event: {e}");
+                tracing::warn!("{}", msg);
+                startup_warnings.push(msg);
+            }
         }
 
         let patch_event = build_sample_event(
             EventKind::from(1617),
             vec![
                 TagV3::new_identifier("fix-auth-bug".to_string()),
-                TagV3::new_tag("repository", "gnostr-org/gnostr"),
+                TagV3::new_tag("repository", &repo_reference),
             ],
             "Fix critical authentication bug in asyncgit NIP-34 implementation".to_string(),
             &private_key,
@@ -406,8 +467,9 @@ impl App {
             show_full_commit: false,
             private_key,
             _public_key: public_key,
+            repo_reference,
             status_message: None,
-            error_message: None,
+            error_message: startup_warnings.into_iter().next(),
         })
     }
 
@@ -563,8 +625,8 @@ impl App {
     /// Creates NIP-34 event from selected commits.
     fn create_nip34_patch_event(&mut self) -> Result<()> {
         if self.selected_commits.len() != 2 {
-            return Err(anyhow::anyhow!(
-                "Need exactly 2 commits selected to create patch"
+            return Err(Nip34Error::PatchCreation(
+                "Need exactly 2 commits selected to create patch".into(),
             ));
         }
 
@@ -585,9 +647,9 @@ impl App {
                     let from_tree = from_commit_obj.tree()?;
                     let to_tree = to_commit_obj.tree()?;
 
-                    let diff =
-                        self.repo
-                            .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), None)?;
+                    let diff = self
+                        .repo
+                        .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), None)?;
 
                     let mut patch = String::new();
                     diff.print(git2::DiffFormat::Patch, |_delta, _hunk, line| {
@@ -602,7 +664,7 @@ impl App {
                                 "{}..{}",
                                 from_commit.full_hash, to_commit.full_hash
                             )),
-                            TagV3::new_tag("repository", "gnostr-org/gnostr"),
+                            TagV3::new_tag("repository", &self.repo_reference),
                         ],
                         patch,
                         &self.private_key,
@@ -614,10 +676,10 @@ impl App {
 
                 Ok(())
             } else {
-                Err(anyhow::anyhow!("Invalid commit selection"))
+                Err(Nip34Error::PatchCreation("Invalid commit selection".into()))
             }
         } else {
-            Err(anyhow::anyhow!("No commits selected"))
+            Err(Nip34Error::PatchCreation("No commits selected".into()))
         }
     }
 
@@ -1427,7 +1489,8 @@ fn main() -> Result<()> {
         .init();
 
     let cli = Cli::parse();
-    let config = load_config(&cli.config)?;
+    let config_path = cli.config.clone().or_else(default_config_path);
+    let config = load_config(config_path.as_ref())?;
     let private_key = resolve_private_key(&cli, &config)?;
 
     // Setup terminal
