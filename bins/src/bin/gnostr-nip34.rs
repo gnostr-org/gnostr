@@ -13,9 +13,11 @@ use crossterm::{
 };
 use gnostr_asyncgit::git2;
 use gnostr_asyncgit::types::{
+    get_leading_zero_bits,
     nip34::{Nip34Event, Nip34UnsignedEvent, RepoRef, RepoState},
     EventKind, PrivateKey, PublicKey, TagV3, Unixtime, UncheckedUrl,
 };
+use gnostr_asyncgit::sync::{AccumulatedPowSummary, accumulated_pow, RepoPath};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -309,6 +311,7 @@ struct App {
     private_key: PrivateKey,
     _public_key: PublicKey,
     repo_reference: String,
+    pow_summary: AccumulatedPowSummary,
     status_message: Option<String>,
     error_message: Option<String>,
 }
@@ -387,6 +390,31 @@ impl App {
                 }
             }
         }
+
+        let repo_path = repo
+            .workdir()
+            .or_else(|| Some(repo.path()))
+            .and_then(|p| p.to_str())
+            .map(RepoPath::from)
+            .ok_or_else(|| {
+                Nip34Error::Git(git2::Error::from_str(
+                    "cannot determine repository path",
+                ))
+            })?;
+
+        let pow_summary = if commits.is_empty() {
+            AccumulatedPowSummary::default()
+        } else {
+            accumulated_pow(
+                &repo_path,
+                &format!("HEAD...HEAD~{}", commits.len()),
+                None,
+            )
+            .unwrap_or_else(|e| {
+                tracing::warn!("Failed to compute accumulated PoW: {e}");
+                AccumulatedPowSummary::default()
+            })
+        };
 
         let public_key = private_key.public_key();
 
@@ -468,6 +496,7 @@ impl App {
             private_key,
             _public_key: public_key,
             repo_reference,
+            pow_summary,
             status_message: None,
             error_message: startup_warnings.into_iter().next(),
         })
@@ -1088,11 +1117,22 @@ fn ui(f: &mut Frame, app: &mut App) {
         NavigatorMode::Nip34Events => 2,
     };
 
+    let event_pow: u32 = app
+        .nip34_events
+        .iter()
+        .map(|e| u32::from(get_leading_zero_bits(&e.id.0)))
+        .sum();
+    let total_apow = app.pow_summary.total_pow + event_pow;
+    let title = format!(
+        "NIP-34 Gnostr Navigator | aPoW: {} bits (commits: {}, notes: {}, events: {})",
+        total_apow, app.pow_summary.commit_pow, app.pow_summary.note_pow, event_pow
+    );
+
     let tabs = Tabs::new(titles)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("NIP-34 Gnostr Navigator"),
+                .title(title),
         )
         .style(Style::default().fg(Color::Cyan))
         .highlight_style(Style::default().fg(Color::White).bg(Color::Blue))
