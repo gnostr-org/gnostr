@@ -255,7 +255,10 @@ jobs:
             exe_suffix=".exe"
           fi
 
-          "$BUILD_NAME/git-remote-blossom${exe_suffix}" --version
+          bin="$BUILD_NAME/git-remote-blossom${exe_suffix}"
+          test -x "$bin" && echo "ok: $bin"
+          # git-remote-blossom requires remote/url args, so just verify it runs and prints usage.
+          "$bin" 2>&1 | grep -q "git-remote-blossom"
 
       - name: Upload asset
         uses: actions/upload-artifact@v4
