@@ -21,8 +21,9 @@ use gnostr_asyncgit::sync::{AccumulatedPowSummary, accumulated_pow, RepoPath};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use serde::Deserialize;
@@ -375,6 +376,8 @@ struct App {
     pow_summary: AccumulatedPowSummary,
     status_message: Option<String>,
     error_message: Option<String>,
+    show_help: bool,
+    popup_message: Option<String>,
 }
 
 impl App {
@@ -566,6 +569,8 @@ impl App {
             pow_summary,
             status_message: None,
             error_message: startup_warnings.into_iter().next(),
+            show_help: false,
+            popup_message: None,
         })
     }
 
@@ -582,6 +587,16 @@ impl App {
     fn clear_messages(&mut self) {
         self.status_message = None;
         self.error_message = None;
+        self.popup_message = None;
+    }
+
+    fn show_popup(&mut self, msg: impl Into<String>) {
+        self.popup_message = Some(msg.into());
+    }
+
+    fn dismiss_popup(&mut self) {
+        self.popup_message = None;
+        self.show_help = false;
     }
 
     /// Switches between navigation modes.
@@ -825,9 +840,13 @@ impl App {
                 results.len()
             ));
         }
-        for response in results {
-            tracing::info!(relay_response = response);
-        }
+        let summary = results.join("\n");
+        self.show_popup(format!(
+            "Publish results ({}/{} OK):\n{}",
+            ok_count,
+            results.len(),
+            summary
+        ));
         Ok(())
     }
 
@@ -870,9 +889,13 @@ impl App {
                 results.len()
             ));
         }
-        for response in results {
-            tracing::info!(relay_response = response);
-        }
+        let summary = results.join("\n");
+        self.show_popup(format!(
+            "Syndication results ({}/{} OK):\n{}",
+            ok_count,
+            results.len(),
+            summary
+        ));
         Ok(())
     }
 
@@ -1134,6 +1157,46 @@ impl App {
     }
 }
 
+/// RAII terminal guard that restores the screen on drop.
+struct TerminalGuard {
+    terminal: Terminal<CrosstermBackend<io::Stdout>>,
+}
+
+impl TerminalGuard {
+    fn new(terminal: Terminal<CrosstermBackend<io::Stdout>>) -> Self {
+        Self { terminal }
+    }
+}
+
+impl Drop for TerminalGuard {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = execute!(self.terminal.backend_mut(), LeaveAlternateScreen);
+        let _ = self.terminal.show_cursor();
+    }
+}
+
+/// Helper to render a centered rectangle for popups/overlays.
+fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(area);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}
+
 /// Runs the TUI application loop.
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
@@ -1149,8 +1212,29 @@ fn run_app<B: ratatui::backend::Backend>(
         if crossterm::event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
+                    // Global popup / help handling first.
+                    if app.show_help {
+                        match key.code {
+                            KeyCode::Char('q') => return Ok(()),
+                            KeyCode::Esc | KeyCode::Char('?') | KeyCode::F(1) => {
+                                app.show_help = false;
+                            }
+                            _ => {}
+                        }
+                        continue;
+                    }
+                    if app.popup_message.is_some() {
+                        match key.code {
+                            KeyCode::Char('q') => return Ok(()),
+                            KeyCode::Esc | KeyCode::Enter => app.dismiss_popup(),
+                            _ => {}
+                        }
+                        continue;
+                    }
+
                     match key.code {
-                        KeyCode::Char('q') /*| KeyCode::Esc*/ => return Ok(()),
+                        KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
+                        KeyCode::Char('?') | KeyCode::F(1) => app.show_help = true,
                         KeyCode::Tab => app.switch_mode(),
                         KeyCode::Char('1') => app.set_mode(NavigatorMode::Commits),
                         KeyCode::Char('2') => app.set_mode(NavigatorMode::Branches),
@@ -1294,10 +1378,28 @@ fn ui(f: &mut Frame, app: &mut App) {
         .map(|e| u32::from(get_leading_zero_bits(&e.id.0)))
         .sum();
     let total_apow = app.pow_summary.total_pow + event_pow;
-    let title = format!(
-        "NIP-34 Gnostr Navigator | aPoW: {} bits (commits: {}, notes: {}, events: {})",
-        total_apow, app.pow_summary.commit_pow, app.pow_summary.note_pow, event_pow
-    );
+
+    let title = Line::from(vec![
+        Span::styled(
+            "NIP-34 Gnostr Navigator",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::raw(" | "),
+        Span::styled(
+            format!("aPoW: {} bits", total_apow),
+            Style::default().fg(Color::Yellow),
+        ),
+        Span::raw(" "),
+        Span::styled(
+            format!(
+                "(commits: {}, notes: {}, events: {})",
+                app.pow_summary.commit_pow, app.pow_summary.note_pow, event_pow
+            ),
+            Style::default().fg(Color::Gray),
+        ),
+    ]);
 
     let tabs = Tabs::new(titles)
         .block(
@@ -1326,26 +1428,42 @@ fn ui(f: &mut Frame, app: &mut App) {
     render_message(f, app, message_area);
 
     // Help text at bottom
-    let help_text = get_help_text(app);
-    let help_widget = Paragraph::new(help_text)
+    let help_spans = get_help_spans(app);
+    let help_widget = Paragraph::new(Line::from(help_spans))
         .style(Style::default().bg(Color::Black).fg(Color::White))
         .alignment(ratatui::layout::Alignment::Center)
         .block(Block::default());
 
     let help_area = Rect::new(0, size.height.saturating_sub(1), size.width, 1);
     f.render_widget(help_widget, help_area);
+
+    // Overlays
+    if app.show_help {
+        render_help_overlay(f, size);
+    }
+    if let Some(ref msg) = app.popup_message {
+        render_popup(f, "Notice", msg, Color::Blue);
+    }
 }
 
 fn render_message(f: &mut Frame, app: &App, area: Rect) {
     if let Some(ref msg) = app.error_message {
-        let widget = Paragraph::new(msg.clone())
-            .style(Style::default().bg(Color::Black).fg(Color::Red))
+        let line = Line::from(vec![
+            Span::styled("ERROR ", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::styled(msg.clone(), Style::default().fg(Color::Red)),
+        ]);
+        let widget = Paragraph::new(line)
+            .style(Style::default().bg(Color::Black))
             .alignment(ratatui::layout::Alignment::Center)
             .block(Block::default());
         f.render_widget(widget, area);
     } else if let Some(ref msg) = app.status_message {
-        let widget = Paragraph::new(msg.clone())
-            .style(Style::default().bg(Color::Black).fg(Color::Green))
+        let line = Line::from(vec![
+            Span::styled("OK ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(msg.clone(), Style::default().fg(Color::Green)),
+        ]);
+        let widget = Paragraph::new(line)
+            .style(Style::default().bg(Color::Black))
             .alignment(ratatui::layout::Alignment::Center)
             .block(Block::default());
         f.render_widget(widget, area);
@@ -1433,12 +1551,16 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
             );
         }
     } else {
-        let _details_chunk = Layout::default()
+        let details_chunk = Layout::default()
             .direction(Direction::Vertical)
             .margin(1)
             .constraints([
-                Constraint::Length(1), // Instructions
-                Constraint::Length(1), // Selection count
+                Constraint::Length(8), // PoW summary
+                Constraint::Length(1), // spacer
+                Constraint::Length(3), // commit share gauge
+                Constraint::Length(3), // note share gauge
+                Constraint::Length(3), // event share gauge
+                Constraint::Length(1), // spacer
                 Constraint::Min(0),    // Tips
             ])
             .split(chunks[1].inner(ratatui::layout::Margin {
@@ -1446,26 +1568,86 @@ fn render_commits_view(f: &mut Frame, app: &mut App, area: Rect) {
                 vertical: 1,
             }));
 
-        // TODO this is help that should be displayed when . is pressed
-        // Help [.] option should be in the bottom menu bar
+        let event_pow: u32 = app
+            .nip34_events
+            .iter()
+            .map(|e| u32::from(get_leading_zero_bits(&e.id.0)))
+            .sum();
+        let total = app.pow_summary.total_pow + event_pow;
+        let max_scale = (total.max(64) as f64).max(1.0);
 
-        //f.render_widget(
-        //    Paragraph::new("Use ↑↓ to navigate, Space to select (max 2)")
-        //        .style(Style::default().fg(Color::Cyan)),
-        //    details_chunk[0],
-        //);
+        let commit_ratio = app.pow_summary.commit_pow as f64 / max_scale;
+        let note_ratio = app.pow_summary.note_pow as f64 / max_scale;
+        let event_ratio = event_pow as f64 / max_scale;
 
-        //f.render_widget(
-        //    Paragraph::new(format!("Selected: {} commits",
-        // app.selected_commits.len()))        .style(Style::default().
-        // fg(Color::Yellow)),    details_chunk[1],
-        //);
+        f.render_widget(
+            Paragraph::new(vec![
+                Line::from(vec![
+                    Span::styled("aPoW", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::raw(" = accumulated proof-of-work"),
+                ]),
+                Line::from(vec![
+                    Span::raw("commits "),
+                    Span::styled(format!("{} bits", app.pow_summary.commit_pow), Style::default().fg(Color::Green)),
+                ]),
+                Line::from(vec![
+                    Span::raw("notes   "),
+                    Span::styled(format!("{} bits", app.pow_summary.note_pow), Style::default().fg(Color::Yellow)),
+                ]),
+                Line::from(vec![
+                    Span::raw("events  "),
+                    Span::styled(format!("{} bits", event_pow), Style::default().fg(Color::Magenta)),
+                ]),
+                Line::from(vec![
+                    Span::raw("total   "),
+                    Span::styled(format!("{} bits", total), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                ]),
+            ])
+            .block(Block::default().title("PoW").borders(Borders::ALL)),
+            details_chunk[0],
+        );
 
-        //f.render_widget(
-        //    Paragraph::new("Press 'n' to create NIP-34 patch from selected
-        // commits")        .style(Style::default().fg(Color::Green)),
-        //    details_chunk[2],
-        //);
+        f.render_widget(
+            Gauge::default()
+                .block(Block::default().title("commit share").borders(Borders::ALL))
+                .gauge_style(Style::default().fg(Color::Green).bg(Color::Black))
+                .ratio(commit_ratio.min(1.0))
+                .label(format!("{:.0}%", commit_ratio * 100.0)),
+            details_chunk[2],
+        );
+
+        f.render_widget(
+            Gauge::default()
+                .block(Block::default().title("note share").borders(Borders::ALL))
+                .gauge_style(Style::default().fg(Color::Yellow).bg(Color::Black))
+                .ratio(note_ratio.min(1.0))
+                .label(format!("{:.0}%", note_ratio * 100.0)),
+            details_chunk[3],
+        );
+
+        f.render_widget(
+            Gauge::default()
+                .block(Block::default().title("event share").borders(Borders::ALL))
+                .gauge_style(Style::default().fg(Color::Magenta).bg(Color::Black))
+                .ratio(event_ratio.min(1.0))
+                .label(format!("{:.0}%", event_ratio * 100.0)),
+            details_chunk[4],
+        );
+
+        f.render_widget(
+            Paragraph::new(vec![
+                Line::from(vec![
+                    Span::styled("Selected: ", Style::default().fg(Color::Yellow)),
+                    Span::raw(format!("{} commits", app.selected_commits.len())),
+                ]),
+                Line::from(vec![
+                    Span::styled("Tip: ", Style::default().fg(Color::Green)),
+                    Span::raw("select 2 commits, then press 'n' to create a NIP-34 patch"),
+                ]),
+            ])
+            .wrap(Wrap { trim: true }),
+            details_chunk[6],
+        );
     }
 }
 
@@ -1656,43 +1838,123 @@ fn render_nip34_view(f: &mut Frame, app: &mut App, area: Rect) {
     }
 }
 
-/// Gets help text based on current mode and state.
-fn get_help_text(app: &App) -> String {
-    let base_help = "Controls: [1/2/3] Go to Tab | [Tab] Switch | [q/Esc] Quit | [j/Down] Next | [k/Up] Previous";
+/// Returns styled help spans for the bottom bar.
+fn get_help_spans(app: &App) -> Vec<Span<'static>> {
+    let mut spans = vec![
+        Span::styled("?", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" help "),
+        Span::styled("q", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" quit "),
+        Span::styled("1/2/3", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" tabs "),
+        Span::styled("tab", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" switch "),
+        Span::styled("j/k", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::raw(" move "),
+    ];
 
     match app.current_mode {
         NavigatorMode::Commits => {
-            let selection_help = if app.selected_commits.len() > 0 {
-                if app.selected_commits.len() == 2 {
-                    " | [c] Clear | [n] Create Patch"
-                } else {
-                    " | [Space] Select another | [c] Clear"
-                }
-            } else {
-                " | [Space] Select"
-            };
-
-            if app.show_full_commit {
-                format!("{} | [Left] Summary{}", base_help, selection_help)
-            } else {
-                format!("{} | [Right] Diff{}", base_help, selection_help)
-            }
+            spans.extend([
+                Span::styled("space", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" select "),
+                Span::styled("n", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" patch "),
+                Span::styled("c", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" clear "),
+                Span::styled("right", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" diff "),
+            ]);
         }
         NavigatorMode::Branches => {
-            format!("{} | [Enter] Checkout", base_help)
+            spans.extend([
+                Span::styled("enter", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" focus "),
+            ]);
         }
         NavigatorMode::Nip34Events => {
-            let selection_help = if app.selected_nip34_events.len() > 0 {
-                " | [c] Clear"
-            } else {
-                ""
-            };
-            format!(
-                "{} | [Space] Select{} | [r] Republish | [p] Publish | [s] Syndicate",
-                base_help, selection_help
-            )
+            spans.extend([
+                Span::styled("space", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" select "),
+                Span::styled("p", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" publish "),
+                Span::styled("s", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" syndicate "),
+                Span::styled("r", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" republish "),
+                Span::styled("c", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" clear "),
+            ]);
         }
     }
+
+    spans
+}
+
+/// Renders a centered popup with the given title and colored border.
+fn render_popup(f: &mut Frame, title: &str, body: &str, color: Color) {
+    let area = centered_rect(64, 40, f.area());
+    f.render_widget(Clear, area);
+
+    let text = Paragraph::new(body.to_string())
+        .wrap(Wrap { trim: true })
+        .block(
+            Block::default()
+                .title(title.to_string())
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(color)),
+        );
+    f.render_widget(text, area);
+}
+
+/// Renders the full help overlay.
+fn render_help_overlay(f: &mut Frame, area: Rect) {
+    let popup = centered_rect(72, 70, area);
+    f.render_widget(Clear, popup);
+
+    let lines = vec![
+        Line::from(vec![
+            Span::styled("Navigation", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("1/2/3  jump to Commits / Branches / NIP-34 Events"),
+        Line::from("tab    cycle through tabs"),
+        Line::from("j/k    move selection up/down (also arrow keys)"),
+        Line::from("q/esc  quit the application"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Commits", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("space  select/deselect a commit (max 2 for patch)"),
+        Line::from("right  show diff / details for selected commit"),
+        Line::from("left   return to commit list summary"),
+        Line::from("n      create a NIP-34 patch event from the selected range"),
+        Line::from("c      clear selection and messages"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("NIP-34 Events", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("space  select/deselect an event"),
+        Line::from("p      publish the selected event to configured relays"),
+        Line::from("s      syndicate the selected event via crawler/p2p relays (if enabled)"),
+        Line::from("r      republish the selected event with a fresh timestamp"),
+        Line::from("c      clear selection and messages"),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("PoW / aPoW", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]),
+        Line::from("The header shows accumulated proof-of-work across git commits and NIP-34 events."),
+        Line::from("Event PoW is the number of leading zero bits in the event id."),
+    ];
+
+    let help = Paragraph::new(lines)
+        .wrap(Wrap { trim: false })
+        .block(
+            Block::default()
+                .title("Help (press esc, ?, or F1 to close)")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan)),
+        );
+    f.render_widget(help, popup);
 }
 
 /// Initializes the terminal and runs the application.
@@ -1707,22 +1969,18 @@ fn main() -> Result<()> {
     let config = load_config(config_path.as_ref())?;
     let private_key = resolve_private_key(&cli, &config)?;
 
-    // Setup terminal
+    // Setup terminal with RAII cleanup on panic or normal exit.
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let terminal = Terminal::new(backend)?;
+    let mut guard = TerminalGuard::new(terminal);
 
     // Create app and run it
     let app = App::new(&cli, &config, private_key)?;
     let tick_rate = Duration::from_millis(250);
-    let res = run_app(&mut terminal, app, tick_rate);
-
-    // Restore terminal
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
+    let res = run_app(&mut guard.terminal, app, tick_rate);
 
     if let Err(e) = res {
         println!("{e}");
