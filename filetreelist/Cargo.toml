@@ -1,6 +1,6 @@
 [package]
 name = "gnostr-filetreelist"
-version = "970403.1846.49785"
+version = "970410.1846.41651"
 authors = ["gnostr <admin@gnostr.org>", "extrawurst <mail@rusticorn.com>"]
 edition = "2021"
 description = "filetree abstraction based on a sorted path list, supports key based navigation events, folding, scrolling and more"

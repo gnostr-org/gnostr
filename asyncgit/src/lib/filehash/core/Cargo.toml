@@ -1,6 +1,6 @@
 [package]
 name = "gnostr_filehash_core"
-version = "970403.1846.49785"
+version = "970410.1846.41651"
 edition = "2021"
 description = "gnostr filehash core"
 license = "MIT"
