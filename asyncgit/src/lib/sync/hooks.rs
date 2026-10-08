@@ -77,6 +77,24 @@ fn to_upstream_target<'a>(
     }
 }
 
+fn to_upstream_source(
+    source: PrepareCommitMsgSource,
+) -> crate::upstream_sync::PrepareCommitMsgSource {
+    match source {
+        PrepareCommitMsgSource::Message => {
+            crate::upstream_sync::PrepareCommitMsgSource::Message
+        }
+        PrepareCommitMsgSource::Template => {
+            crate::upstream_sync::PrepareCommitMsgSource::Template
+        }
+        PrepareCommitMsgSource::Merge => crate::upstream_sync::PrepareCommitMsgSource::Merge,
+        PrepareCommitMsgSource::Squash => crate::upstream_sync::PrepareCommitMsgSource::Squash,
+        PrepareCommitMsgSource::Commit(oid) => {
+            crate::upstream_sync::PrepareCommitMsgSource::Commit(oid)
+        }
+    }
+}
+
 ///
 pub fn hooks_pre_push(
     repo_path: &Ref<'_, RepoPath>,
@@ -158,7 +176,7 @@ pub fn hooks_prepare_commit_msg(
     Ok(
         crate::upstream_sync::hooks_prepare_commit_msg(
             &upstream_repo_path,
-            source,
+            to_upstream_source(source),
             msg,
         )
         .map_err(|e| Error::Generic(e.to_string()))?
