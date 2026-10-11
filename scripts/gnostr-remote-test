@@ -29,7 +29,7 @@ fi
 
 HASH=$($gnostr --hash "")
 NSEC=${1:-$HASH}
-RELAY=${2:-"wss://relay.damus.io"}
+RELAY=${2:-"wss://relay.gnostr.org"}
 
 export EVENT1=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 30617 -c "" \
   -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
