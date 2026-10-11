@@ -106,11 +106,9 @@ impl NEvent {
                         if raw.len() != 32 {
                             return Err(Error::InvalidNEvent);
                         }
-                        id = Some(
-                            Id(raw
-                                .try_into()
-                                .map_err(|_| Error::WrongLengthHexString)?),
-                        );
+                        id = Some(Id(raw
+                            .try_into()
+                            .map_err(|_| Error::WrongLengthHexString)?));
                     }
                     1 => {
                         // relay

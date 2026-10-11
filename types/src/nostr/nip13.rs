@@ -1,12 +1,12 @@
 //! NIP-13: Proof of Work
 //! https://github.com/nostr-protocol/nips/blob/master/13.md
 
-use std::convert::TryFrom;
 use secp256k1::{SecretKey, XOnlyPublicKey};
+use std::convert::TryFrom;
 
 use crate::nostr::{
-    event::{Event, UnsignedEvent},
     EventKind, Tag,
+    event::{Event, UnsignedEvent},
 };
 
 /// The name of the nonce tag.

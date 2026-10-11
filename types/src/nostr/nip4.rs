@@ -1,12 +1,12 @@
-use aes::{cipher::block_padding::Pkcs7, Aes256};
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use aes::{Aes256, cipher::block_padding::Pkcs7};
 use anyhow::anyhow;
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use cbc::{
-    cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit},
     Decryptor, Encryptor,
+    cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit},
 };
 use rand::RngCore;
-use secp256k1::{ecdh, Secp256k1, SecretKey, XOnlyPublicKey};
+use secp256k1::{Secp256k1, SecretKey, XOnlyPublicKey, ecdh};
 
 type Aes256CbcEncryptor = Encryptor<Aes256>;
 type Aes256CbcDecryptor = Decryptor<Aes256>;
@@ -75,16 +75,16 @@ pub fn decrypt(
 #[cfg(any())]
 mod tests {
     use super::*;
-    use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
     use actix_test::start;
+    use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
     use secp256k1::{Keypair, Secp256k1};
     use std::{fs, time::Duration};
     use tempfile::NamedTempFile;
 
     use crate::nostr::{
         default_gnostr_private_key,
-        nostr::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
         nostr::ContentEncryptionAlgorithm,
+        nostr::{EventBuilder, EventKind, KeySecurity, PrivateKey, Tag},
     };
     use gnostr_relay::App as GnostrRelayApp;
 
@@ -97,7 +97,10 @@ mod tests {
     }
 
     fn test_private_key(seed: u8) -> PrivateKey {
-        PrivateKey(SecretKey::from_slice(&[seed; 32]).unwrap(), KeySecurity::Weak)
+        PrivateKey(
+            SecretKey::from_slice(&[seed; 32]).unwrap(),
+            KeySecurity::Weak,
+        )
     }
 
     fn create_test_relay_app() -> crate::nostr::error::Result<GnostrRelayApp> {
@@ -130,7 +133,11 @@ path = ":memory:"
     fn decrypt_rejects_invalid_iv_length() {
         let (sender_sk, sender_pk) = test_keypair(1);
         let (recipient_sk, _) = test_keypair(2);
-        let payload = format!("{}?iv={}", BASE64.encode(b"ciphertext"), BASE64.encode([7u8; 15]));
+        let payload = format!(
+            "{}?iv={}",
+            BASE64.encode(b"ciphertext"),
+            BASE64.encode([7u8; 15])
+        );
 
         let err = decrypt(&recipient_sk, &sender_pk, &payload).unwrap_err();
         assert!(err.to_string().contains("Invalid IV length"));
@@ -147,7 +154,8 @@ path = ":memory:"
     }
 
     #[tokio::test]
-    async fn encrypt_and_decrypt_real_dm_events_in_both_directions() -> crate::nostr::error::Result<()> {
+    async fn encrypt_and_decrypt_real_dm_events_in_both_directions()
+    -> crate::nostr::error::Result<()> {
         let relay_srv = start(|| {
             let app_data = create_test_relay_app().expect("failed to create relay app");
             app_data.web_app()
@@ -194,10 +202,10 @@ path = ":memory:"
             .await
             .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         assert_eq!(
-        sender_client
-            .send_event(outbound_event.clone())
-            .await
-            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?,
+            sender_client
+                .send_event(outbound_event.clone())
+                .await
+                .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?,
             outbound_event.id
         );
 
@@ -235,10 +243,10 @@ path = ":memory:"
             .await
             .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?;
         assert_eq!(
-        recipient_client
-            .send_event(return_event.clone())
-            .await
-            .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?,
+            recipient_client
+                .send_event(return_event.clone())
+                .await
+                .map_err(|err| crate::nostr::error::Error::Generic(err.to_string()))?,
             return_event.id
         );
 

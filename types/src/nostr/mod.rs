@@ -27,6 +27,7 @@
 )]
 #![deny(clippy::string_slice)]
 
+pub mod bridge;
 mod client_message;
 mod content;
 mod delegation;
@@ -39,8 +40,6 @@ mod filter;
 mod id;
 mod identity;
 pub mod key_signer;
-pub mod nip28;
-pub mod nip34;
 mod metadata;
 mod naddr;
 mod nevent;
@@ -52,14 +51,15 @@ pub mod nip15;
 pub mod nip18;
 pub mod nip2;
 pub mod nip26;
+pub mod nip28;
 pub mod nip3;
+pub mod nip34;
 pub mod nip4;
 pub mod nip59;
 pub mod nip6;
 pub mod nip9;
 mod nostr_url;
 mod pay_request_data;
-pub mod bridge;
 mod private_key;
 mod profile;
 mod public_key;
@@ -76,7 +76,11 @@ mod tag;
 mod unixtime;
 mod url;
 
+pub mod client;
+pub mod image_dimensions;
+pub mod keys;
 pub mod nip14;
+pub mod nip19;
 pub mod nip25;
 pub mod nip30;
 pub mod nip32;
@@ -86,10 +90,6 @@ pub mod nip40;
 pub mod nip44;
 pub mod nip53;
 pub mod nip94;
-pub mod nip19;
-pub mod keys;
-pub mod client;
-pub mod image_dimensions;
 pub mod patch;
 pub mod versioned;
 

@@ -8,10 +8,9 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use crate::nostr::{
-    id::Id,
     Error, EventDelegation, EventKind, EventReference, IntoVec, KeySigner, MilliSatoshi, NAddr,
     NostrBech32, NostrUrl, PrivateKey, PublicKey, PublicKeyHex, RelayUrl, Signature, Signer, TagV2,
-    Unixtime, ZapDataV1,
+    Unixtime, ZapDataV1, id::Id,
 };
 
 /// The main event type

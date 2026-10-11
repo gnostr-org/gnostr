@@ -64,11 +64,14 @@ mod tests {
         assert_eq!(u32::from(event.kind), 3);
         assert_eq!(event.content, "");
         assert_eq!(event.tags.len(), 1);
-        assert_eq!(event.tags[0].0, vec![
-            "p".to_string(),
-            public_key.to_string(),
-            "wss://relay.damus.io".to_string(),
-            "alice".to_string(),
-        ]);
+        assert_eq!(
+            event.tags[0].0,
+            vec![
+                "p".to_string(),
+                public_key.to_string(),
+                "wss://relay.damus.io".to_string(),
+                "alice".to_string(),
+            ]
+        );
     }
 }

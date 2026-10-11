@@ -15,10 +15,13 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     Error, EventKind, EventV3, Id, KeySigner, NAddr, Nip19, PreEventV3, PrivateKey, PublicKey,
-    Signer, TagV3, Unixtime, UncheckedUrl,
+    Signer, TagV3, UncheckedUrl, Unixtime,
 };
-use crate::{blockhash::blockhash_sync, blockheight::blockheight_sync, weeble::weeble_sync, wobble::wobble_sync};
 use crate::nostr::nip13::NIP13Event;
+use crate::{
+    blockhash::blockhash_sync, blockheight::blockheight_sync, weeble::weeble_sync,
+    wobble::wobble_sync,
+};
 
 /// NIP-34 repository announcement kind.
 pub const REPO_ANNOUNCEMENT_KIND: u32 = 30617;
@@ -326,7 +329,10 @@ pub fn get_event_root(event: &EventV3) -> Result<Id, Error> {
     event
         .tags
         .iter()
-        .find(|tag| tag.tagname() == "e" && matches!(tag.marker(), "root" | "revision-root" | "root-revision"))
+        .find(|tag| {
+            tag.tagname() == "e"
+                && matches!(tag.marker(), "root" | "revision-root" | "root-revision")
+        })
         .ok_or(Error::TagMismatch)
         .and_then(|tag| tag.parse_event().map(|(id, _, _)| id))
 }
@@ -344,8 +350,7 @@ pub fn event_is_patch_set_root(event: &EventV3) -> bool {
 pub fn event_is_revision_root(event: &EventV3) -> bool {
     (event.kind == EventKind::Patches
         && event.tags.iter().any(|tag| {
-            tag.tagname() == "e"
-                && matches!(tag.marker(), "revision-root" | "root-revision")
+            tag.tagname() == "e" && matches!(tag.marker(), "revision-root" | "root-revision")
         }))
         || (event.kind == EventKind::from(PULL_REQUEST_KIND)
             && event.tags.iter().any(|tag| tag.tagname() == "e"))
@@ -450,11 +455,9 @@ pub fn event_tag_from_nip19_or_hex(
                 .map(|relay| UncheckedUrl::from_str(relay.as_str())),
             None,
         )),
-        Ok(Nip19::PublicKey(public_key)) if allow_npub_reference => Ok(TagV3::new_pubkey(
-            public_key,
-            None,
-            None,
-        )),
+        Ok(Nip19::PublicKey(public_key)) if allow_npub_reference => {
+            Ok(TagV3::new_pubkey(public_key, None, None))
+        }
         Ok(_) | Err(_) => Id::try_from_hex_string(reference)
             .map(|id| {
                 if ref_type == EventRefType::Quote {
@@ -619,7 +622,9 @@ impl TryFrom<(EventV3, Option<PublicKey>)> for RepoRef {
                 [name, commit_id] if name == "r" && Oid::from_str(commit_id).is_ok() => {
                     repo.root_commit = commit_id.clone();
                 }
-                [name, commit_id, marker] if name == "r" && marker == "euc" && Oid::from_str(commit_id).is_ok() => {
+                [name, commit_id, marker]
+                    if name == "r" && marker == "euc" && Oid::from_str(commit_id).is_ok() =>
+                {
                     repo.root_commit = commit_id.clone();
                 }
                 [name, values @ ..] if name == "relays" => {
@@ -698,7 +703,10 @@ impl RepoState {
         }
 
         state_events.sort_by_key(|event| event.created_at);
-        let event = state_events.last().cloned().ok_or(Error::InvalidOperation)?;
+        let event = state_events
+            .last()
+            .cloned()
+            .ok_or(Error::InvalidOperation)?;
 
         if event.kind != repo_state_kind() {
             return Err(Error::WrongEventKind);
@@ -780,19 +788,18 @@ fn add_head(state: &mut HashMap<String, String>) {
         let _ = state.insert("HEAD".to_string(), "ref: refs/heads/master".to_string());
     } else if state.contains_key("refs/heads/main") {
         let _ = state.insert("HEAD".to_string(), "ref: refs/heads/main".to_string());
-    } else if let Some(key) = state.keys().find(|key| key.starts_with("refs/heads/")).cloned() {
+    } else if let Some(key) = state
+        .keys()
+        .find(|key| key.starts_with("refs/heads/"))
+        .cloned()
+    {
         let _ = state.insert("HEAD".to_string(), format!("ref: {key}"));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::HashMap,
-        env,
-        fs,
-        path::PathBuf,
-    };
+    use std::{collections::HashMap, env, fs, path::PathBuf};
 
     use actix_test::start;
     use git2::Oid;
@@ -936,23 +943,31 @@ path = ":memory:"
 
         let hinted = repo_ref.coordinate_with_hint();
         assert_eq!(hinted.relays.len(), 1);
-        assert_eq!(hinted.relays[0], UncheckedUrl::from_str("wss://relay.damus.io"));
+        assert_eq!(
+            hinted.relays[0],
+            UncheckedUrl::from_str("wss://relay.damus.io")
+        );
 
         let coordinates = repo_ref.coordinates();
         assert_eq!(coordinates.len(), 2);
-        assert!(coordinates.iter().any(|coordinate| coordinate.author == trusted_maintainer));
-        assert!(coordinates.iter().any(|coordinate| coordinate.author == other_maintainer));
+        assert!(
+            coordinates
+                .iter()
+                .any(|coordinate| coordinate.author == trusted_maintainer)
+        );
+        assert!(
+            coordinates
+                .iter()
+                .any(|coordinate| coordinate.author == other_maintainer)
+        );
     }
 
     #[test]
     fn event_tag_from_nip19_or_hex_accepts_npub_when_allowed() {
         let public_key = PublicKey::mock();
-        let tag = event_tag_from_nip19_or_hex(
-            &public_key.as_bech32_string(),
-            EventRefType::Root,
-            true,
-        )
-        .unwrap();
+        let tag =
+            event_tag_from_nip19_or_hex(&public_key.as_bech32_string(), EventRefType::Root, true)
+                .unwrap();
 
         assert_eq!(tag.tagname(), "p");
         assert_eq!(tag.parse_pubkey().unwrap().0, public_key);
@@ -1012,9 +1027,18 @@ path = ":memory:"
             .unwrap()
             .as_hex_string();
 
-        assert!(tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root" && tag.value() == expected_root));
-        assert!(tags.iter().any(|tag| tag.tagname() == "commit" && tag.value() == note.annotated_id.to_string()));
-        assert!(tags.iter().any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits"));
+        assert!(tags.iter().any(|tag| tag.tagname() == "e"
+            && tag.marker() == "root"
+            && tag.value() == expected_root));
+        assert!(
+            tags.iter().any(
+                |tag| tag.tagname() == "commit" && tag.value() == note.annotated_id.to_string()
+            )
+        );
+        assert!(
+            tags.iter()
+                .any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits")
+        );
         assert!(tags.iter().any(|tag| tag.tagname() == "weeble"));
         assert!(tags.iter().any(|tag| tag.tagname() == "blockheight"));
         assert!(tags.iter().any(|tag| tag.tagname() == "wobble"));
@@ -1172,12 +1196,17 @@ path = ":memory:"
         let issue_event = signed_event(
             &private_key,
             EventKind::from(GIT_ISSUE_KIND),
-            "please provide feedback\nthis is an asyncgit issue used to exercise NIP-34".to_string(),
+            "please provide feedback\nthis is an asyncgit issue used to exercise NIP-34"
+                .to_string(),
             vec![
                 TagV3::new_tag("r", &root_commit),
                 TagV3::from_strings(vec![
                     "a".to_string(),
-                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    format!(
+                        "30617:{}:{}",
+                        trusted_maintainer.as_hex_string(),
+                        repo_ref.identifier
+                    ),
                     repo_url.clone(),
                     "root".to_string(),
                 ]),
@@ -1193,7 +1222,11 @@ path = ":memory:"
                 TagV3::new_event(issue_event.id, None, Some("root".to_string())),
                 TagV3::from_strings(vec![
                     "a".to_string(),
-                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    format!(
+                        "30617:{}:{}",
+                        trusted_maintainer.as_hex_string(),
+                        repo_ref.identifier
+                    ),
                     repo_url.clone(),
                     "reply".to_string(),
                 ]),
@@ -1270,10 +1303,18 @@ path = ":memory:"
         );
 
         let carriers = vec![
-            ("repo announcement", repo_announcement, repo_announcement_kind()),
+            (
+                "repo announcement",
+                repo_announcement,
+                repo_announcement_kind(),
+            ),
             ("repo state", repo_state.event.clone(), repo_state_kind()),
             ("repo patch root", root_patch, EventKind::Patches),
-            ("pull request", pr_event.clone(), EventKind::from(PULL_REQUEST_KIND)),
+            (
+                "pull request",
+                pr_event.clone(),
+                EventKind::from(PULL_REQUEST_KIND),
+            ),
             (
                 "pull request update",
                 pr_update_event.clone(),
@@ -1282,16 +1323,27 @@ path = ":memory:"
             ("issue", issue_event, EventKind::from(GIT_ISSUE_KIND)),
             ("reply", reply_event, EventKind::from(GIT_REPLY_KIND)),
             ("status open", status_open, EventKind::GitStatusOpen),
-            ("status applied", status_applied, EventKind::GitStatusApplied),
+            (
+                "status applied",
+                status_applied,
+                EventKind::GitStatusApplied,
+            ),
             ("status draft", status_draft, EventKind::GitStatusDraft),
             ("status closed", status_closed, EventKind::GitStatusClosed),
-            ("user grasp list", grasp_list, EventKind::from(USER_GRASP_LIST_KIND)),
+            (
+                "user grasp list",
+                grasp_list,
+                EventKind::from(USER_GRASP_LIST_KIND),
+            ),
         ];
 
         let note_variants = [("plain git note", false), ("pow git note", true)];
 
         assert_eq!(parsed_repo_state.identifier, "gnostr");
-        assert_eq!(parsed_repo_state.state.get("HEAD"), Some(&"ref: refs/heads/main".to_string()));
+        assert_eq!(
+            parsed_repo_state.state.get("HEAD"),
+            Some(&"ref: refs/heads/main".to_string())
+        );
 
         for (carrier_label, carrier_event, expected_kind) in carriers {
             log_event_summary(carrier_label, &carrier_event);
@@ -1343,10 +1395,7 @@ path = ":memory:"
                     generate_git_note_event(&note, &private_key).unwrap()
                 };
 
-                log_event_summary(
-                    &format!("{carrier_label} / {note_label}"),
-                    &git_note_event,
-                );
+                log_event_summary(&format!("{carrier_label} / {note_label}"), &git_note_event);
                 let published = client
                     .send_event(git_note_event.clone())
                     .await
@@ -1355,21 +1404,33 @@ path = ":memory:"
                 assert_eq!(git_note_event.kind, EventKind::Patches);
                 assert_eq!(git_note_event.content, note.message);
                 assert_eq!(git_note_event.created_at, Unixtime(note.committer_time));
-                assert!(git_note_event
-                    .tags
-                    .iter()
-                    .any(|tag| tag.tagname() == "commit" && tag.value() == root_commit));
-                assert!(git_note_event
-                    .tags
-                    .iter()
-                    .any(|tag| tag.tagname() == "notes-ref" && tag.value() == "refs/notes/commits"));
-                assert!(git_note_event
-                    .tags
-                    .iter()
-                    .any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+                assert!(
+                    git_note_event
+                        .tags
+                        .iter()
+                        .any(|tag| tag.tagname() == "commit" && tag.value() == root_commit)
+                );
+                assert!(
+                    git_note_event
+                        .tags
+                        .iter()
+                        .any(|tag| tag.tagname() == "notes-ref"
+                            && tag.value() == "refs/notes/commits")
+                );
+                assert!(
+                    git_note_event
+                        .tags
+                        .iter()
+                        .any(|tag| tag.tagname() == "e" && tag.marker() == "root")
+                );
 
                 if use_pow {
-                    assert!(git_note_event.tags.iter().any(|tag| tag.tagname() == "nonce"));
+                    assert!(
+                        git_note_event
+                            .tags
+                            .iter()
+                            .any(|tag| tag.tagname() == "nonce")
+                    );
                     assert!(git_note_event.nonce_data().is_some());
                 } else {
                     assert!(git_note_event.nonce_data().is_none());
@@ -1391,7 +1452,8 @@ path = ":memory:"
     fn patch_helpers_work() {
         let mut event = EventV3::new_dummy();
         event.kind = EventKind::Patches;
-        event.content = "From 0123456789abcdef0123456789abcdef01234567 Mon Sep 17 00:00:00 2001".to_string();
+        event.content =
+            "From 0123456789abcdef0123456789abcdef01234567 Mon Sep 17 00:00:00 2001".to_string();
         event.tags = vec![
             TagV3::new_event(
                 Id::try_from_hex_string(
@@ -1440,7 +1502,12 @@ path = ":memory:"
         assert!(event_is_valid_pr_or_pr_update(&pr_event));
 
         let note_ref = "note1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
-        let _ = event_tag_from_nip19_or_hex("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", EventRefType::Reply, false).unwrap();
+        let _ = event_tag_from_nip19_or_hex(
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            EventRefType::Reply,
+            false,
+        )
+        .unwrap();
 
         let nevent = NEvent::mock().as_bech32_string();
         let tag = event_tag_from_nip19_or_hex(&nevent, EventRefType::Quote, false).unwrap();
@@ -1526,5 +1593,4 @@ path = ":memory:"
             println!("  - {tag}");
         }
     }
-
 }

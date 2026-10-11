@@ -5,8 +5,8 @@ use std::time::Duration;
 use url::Url;
 
 use crate::nostr::{
-    client::{local_relay_urls, Options},
     Client, Error, EventBuilder, EventKind, Id, Keys, Tag,
+    client::{Options, local_relay_urls},
 };
 
 const ONLINE_RELAYS_GPS_CSV: &[u8] = include_bytes!("online_relays_gps.csv");
@@ -28,31 +28,27 @@ pub fn get_relay_urls() -> Vec<String> {
     let mut relays = local_relay_urls();
 
     let content = String::from_utf8_lossy(ONLINE_RELAYS_GPS_CSV);
-    for relay in content
-        .lines()
-        .skip(1)
-        .filter_map(|line| {
-            let url_str = line.split(',').next()?.trim();
-            if url_str.is_empty() {
-                return None;
+    for relay in content.lines().skip(1).filter_map(|line| {
+        let url_str = line.split(',').next()?.trim();
+        if url_str.is_empty() {
+            return None;
+        }
+        let full_url_str = if url_str.contains("://") {
+            url_str.to_string()
+        } else {
+            format!("wss://{}", url_str)
+        };
+        match Url::parse(&full_url_str) {
+            Ok(url) if url.scheme() == "wss" => Some(url.to_string()),
+            _ => {
+                eprintln!(
+                    "Warning: Invalid or unsupported relay URL scheme: {}",
+                    full_url_str
+                );
+                None
             }
-            let full_url_str = if url_str.contains("://") {
-                url_str.to_string()
-            } else {
-                format!("wss://{}", url_str)
-            };
-            match Url::parse(&full_url_str) {
-                Ok(url) if url.scheme() == "wss" => Some(url.to_string()),
-                _ => {
-                    eprintln!(
-                        "Warning: Invalid or unsupported relay URL scheme: {}",
-                        full_url_str
-                    );
-                    None
-                }
-            }
-        })
-    {
+        }
+    }) {
         if !relays.contains(&relay) {
             relays.push(relay);
         }
@@ -108,7 +104,10 @@ mod tests {
         // local_relay_urls may be empty in CI, but the CSV is embedded.
         assert!(!urls.is_empty(), "expected at least one relay from CSV");
         for url in &urls {
-            assert!(url.starts_with("wss://"), "only wss URLs should be kept: {url}");
+            assert!(
+                url.starts_with("wss://"),
+                "only wss URLs should be kept: {url}"
+            );
         }
     }
 

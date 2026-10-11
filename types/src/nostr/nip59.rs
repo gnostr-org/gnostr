@@ -2,8 +2,8 @@
 // https://github.com/nostr-protocol/nips/blob/master/59.md
 
 use crate::nostr::{
-    event::{Event, Rumor, UnsignedEvent},
     ContentEncryptionAlgorithm, PrivateKey, PublicKey,
+    event::{Event, Rumor, UnsignedEvent},
 };
 
 /// Create a Seal event (kind 13) which wraps a Rumor

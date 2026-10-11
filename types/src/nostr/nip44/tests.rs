@@ -1,11 +1,11 @@
 #![allow(clippy::all)]
 #[rustfmt::skip]
 use base64::Engine;
-use secp256k1::{SecretKey, XOnlyPublicKey, SECP256K1};
+use secp256k1::{SECP256K1, SecretKey, XOnlyPublicKey};
 
-use super::{calc_padding, decrypt, encrypt_inner, get_conversation_key, Error};
 #[cfg(feature = "long_tests")]
 use super::encrypt;
+use super::{Error, calc_padding, decrypt, encrypt_inner, get_conversation_key};
 
 // We use the test vectors from Paul Miller's javascript so we don't accidently
 // mistype anything
@@ -241,10 +241,11 @@ fn test_valid_encrypt_decrypt_long_msg() {
         .enumerate()
     {
         let vector = vectorobj.as_object().unwrap();
-        let conversation_key: [u8; 32] = hex::decode(vector.get("conversation_key").unwrap().as_str().unwrap())
-            .unwrap()
-            .try_into()
-            .unwrap();
+        let conversation_key: [u8; 32] =
+            hex::decode(vector.get("conversation_key").unwrap().as_str().unwrap())
+                .unwrap()
+                .try_into()
+                .unwrap();
         let nonce: [u8; 32] = hex::decode(vector.get("nonce").unwrap().as_str().unwrap())
             .unwrap()
             .try_into()
@@ -273,7 +274,11 @@ fn test_valid_encrypt_decrypt_long_msg() {
 
         let decrypted = decrypt(&conversation_key, &payload)
             .expect(&format!("decrypt failed for long vector #{}", i));
-        assert_eq!(decrypted, plaintext, "Decrypt mismatch in long vector #{}", i);
+        assert_eq!(
+            decrypted, plaintext,
+            "Decrypt mismatch in long vector #{}",
+            i
+        );
     }
 }
 
@@ -308,7 +313,16 @@ fn test_invalid_encrypt_msg_lengths() {
             "a".repeat(len)
         };
         let err = encrypt(&conversation_key, &plaintext).unwrap_err();
-        assert_eq!(err, if len == 0 { Error::MessageIsEmpty } else { Error::MessageIsTooLong }, "Unexpected encrypt error for invalid length #{}", i);
+        assert_eq!(
+            err,
+            if len == 0 {
+                Error::MessageIsEmpty
+            } else {
+                Error::MessageIsTooLong
+            },
+            "Unexpected encrypt error for invalid length #{}",
+            i
+        );
     }
 }
 

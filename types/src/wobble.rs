@@ -48,7 +48,10 @@ pub fn wobble_millis_sync() -> Result<f64, ascii::AsciiChar> {
     }
     //gnostr-chat uses millis
     let wobble = now_millis as f64 % tmp_u64 as f64;
-    debug!("wobble_millis_sync: blockheight={}, wobble_millis={}", tmp_u64, wobble);
+    debug!(
+        "wobble_millis_sync: blockheight={}, wobble_millis={}",
+        tmp_u64, wobble
+    );
     unsafe { env::set_var("WOBBLE_MILLIS", wobble.to_string()) };
     Ok(wobble.floor())
 }
@@ -92,7 +95,10 @@ pub async fn wobble_millis_async() -> Result<f64, ascii::AsciiChar> {
     }
     //gnostr-chat uses millis
     let wobble = now_millis as f64 % tmp_u64 as f64;
-    debug!("wobble_millis_async: blockheight={}, wobble_millis={}", tmp_u64, wobble);
+    debug!(
+        "wobble_millis_async: blockheight={}, wobble_millis={}",
+        tmp_u64, wobble
+    );
     unsafe { env::set_var("WOBBLE_MILLIS", wobble.to_string()) };
     Ok(wobble.floor())
 }

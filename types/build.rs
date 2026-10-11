@@ -3,11 +3,15 @@ use std::path::PathBuf;
 use anyhow::Context;
 use sha2::{Digest, Sha256};
 
-const NIP44_VECTORS_SHA256: &str = "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
+const NIP44_VECTORS_SHA256: &str =
+    "269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040";
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("An error occurred within the gnostr-types build script:\n\n{:?}", e);
+        eprintln!(
+            "An error occurred within the gnostr-types build script:\n\n{:?}",
+            e
+        );
         std::process::exit(1);
     }
 }

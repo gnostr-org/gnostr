@@ -8,10 +8,7 @@ use serde::{
 use speedy::{Readable, Writable};
 
 use super::{
-    error::Error,
-    event_kind::EventKind,
-    public_key::PublicKey,
-    signature::Signature,
+    error::Error, event_kind::EventKind, public_key::PublicKey, signature::Signature,
     unixtime::Unixtime,
 };
 

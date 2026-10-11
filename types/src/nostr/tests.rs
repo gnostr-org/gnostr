@@ -90,8 +90,10 @@ fn content_shattering_finds_nostr_references() {
     let content = "note #[0] nostr:nevent1qqsqqqq9wh98g4u6e480vyp6p4w3ux2cd0mxn2rssq0w5cscsgzp2ksprpmhxue69uhkzapwdehhxarjwahhy6mn9e3k7mf0qyt8wumn8ghj7etyv4hzumn0wd68ytnvv9hxgtcpremhxue69uhkummnw3ez6ur4vgh8wetvd3hhyer9wghxuet59uq3kamnwvaz7tmwdaehgu3wd45kketyd9kxwetj9e3k7mf0qy2hwumn8ghj7mn0wd68ytn00p68ytnyv4mz7qgnwaehxw309ahkvenrdpskjm3wwp6kytcpz4mhxue69uhhyetvv9ujuerpd46hxtnfduhsz9mhwden5te0wfjkccte9ehx7um5wghxyctwvshszxthwden5te0wfjkccte9eekummjwsh8xmmrd9skctcnmzajy https://example.com";
     let shattered = ShatteredContent::new(content.to_string());
     assert!(!shattered.segments.is_empty());
-    assert!(shattered
-        .segments
-        .iter()
-        .any(|segment| matches!(segment, ContentSegment::TagReference(0))));
+    assert!(
+        shattered
+            .segments
+            .iter()
+            .any(|segment| matches!(segment, ContentSegment::TagReference(0)))
+    );
 }

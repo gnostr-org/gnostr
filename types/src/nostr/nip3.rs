@@ -4,8 +4,8 @@
 use secp256k1::{SecretKey, XOnlyPublicKey};
 
 use crate::nostr::{
-    event::{Event, EventId, PreEvent},
     EventKind, KeySecurity, KeySigner, PrivateKey, PublicKey, Signer, Unixtime,
+    event::{Event, EventId, PreEvent},
 };
 
 /// Create an OpenTimestamps attestation event for another event.
@@ -43,7 +43,9 @@ pub fn create_attestation_with_pow(
             1,
         )
         .unwrap();
-        signer.sign_event_with_pow(preevent, difficulty, None).unwrap()
+        signer
+            .sign_event_with_pow(preevent, difficulty, None)
+            .unwrap()
     } else {
         Event::sign_with_private_key(
             preevent,

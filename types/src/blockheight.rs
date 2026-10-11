@@ -1,8 +1,8 @@
 use std::env;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use log::debug;
 use crate::nostr::ureq_async;
+use log::debug;
 
 fn synthetic_blockheight() -> u64 {
     let seconds = SystemTime::now()

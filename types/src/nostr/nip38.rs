@@ -9,8 +9,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::nostr::{
-    error::Error, event_kind::EventKind, signature::Signature, Event, PreEvent, PublicKey, Tag,
-    Unixtime,
+    Event, PreEvent, PublicKey, Tag, Unixtime, error::Error, event_kind::EventKind,
+    signature::Signature,
 }; // Re-using existing types
 
 /// NIP-38 User Status Event Kind (Parameterized Replaceable Event)

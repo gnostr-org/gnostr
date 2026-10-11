@@ -9,10 +9,9 @@ use serde::{Deserialize, Serialize};
 use speedy::{Readable, Writable};
 
 use crate::nostr::{
-    id::Id,
     Error, EventDelegation, EventKind, EventReference, IntoVec, KeySecurity, KeySigner,
     MilliSatoshi, NostrBech32, NostrUrl, PrivateKey, PublicKey, RelayUrl, Signature, Signer, TagV3,
-    Unixtime, ZapData,
+    Unixtime, ZapData, id::Id,
 };
 
 /// The main event type
@@ -1206,8 +1205,7 @@ impl UnsignedEventV3 {
         let tags = tags.into_iter().map(TagV3).collect();
 
         UnsignedEventV3(PreEventV3 {
-            pubkey: PublicKey::from_bytes(&pubkey.serialize(), false)
-            .unwrap(),
+            pubkey: PublicKey::from_bytes(&pubkey.serialize(), false).unwrap(),
             created_at: Unixtime::now(),
             kind: EventKind::from(kind as u32),
             tags,

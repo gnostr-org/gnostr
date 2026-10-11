@@ -2,13 +2,13 @@ use std::convert::TryInto;
 
 use base64::Engine;
 use chacha20::{
-    cipher::{KeyIvInit, StreamCipher},
     ChaCha20,
+    cipher::{KeyIvInit, StreamCipher},
 };
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use rand_core::{OsRng, RngCore};
-use secp256k1::{ecdh::shared_secret_point, Parity, PublicKey, SecretKey, XOnlyPublicKey};
+use secp256k1::{Parity, PublicKey, SecretKey, XOnlyPublicKey, ecdh::shared_secret_point};
 use sha2::Sha256;
 mod error;
 pub use error::Error;

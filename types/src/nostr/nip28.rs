@@ -4,9 +4,9 @@
 // https://github.com/nostr-protocol/nips/blob/master/28.md
 
 use crate::nostr::{
+    Error, Id, PublicKey, Signer, TagV3, UncheckedUrl, Unixtime,
     event_kind::EventKind,
     versioned::event3::{EventV3, PreEventV3},
-    Error, Id, Signer, TagV3, UncheckedUrl, Unixtime, PublicKey,
 };
 
 /// Event Kind 40: Create channel
@@ -693,8 +693,10 @@ pub fn mute_user(
 #[allow(unused_imports)]
 mod test {
     use super::*;
-    use crate::nostr::{Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey,
-        PublicKeyHex, Signer, TagV3, UncheckedUrl, Unixtime};
+    use crate::nostr::{
+        Error, EventKind, Id, KeySecurity, KeySigner, PrivateKey, PublicKey, PublicKeyHex, Signer,
+        TagV3, UncheckedUrl, Unixtime,
+    };
 
     #[test]
     fn test_nip28_event_kinds() {

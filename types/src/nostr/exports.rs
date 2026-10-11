@@ -11,11 +11,12 @@ pub mod core {
         filter::Filter,
         id::{Id, IdHex},
         identity::Identity,
+        image_dimensions::ImageDimensions,
         key_signer::KeySigner,
-        metadata::{Metadata, DEFAULT_AVATAR, DEFAULT_BANNER},
+        metadata::{DEFAULT_AVATAR, DEFAULT_BANNER, Metadata},
         naddr::NAddr,
         nevent::NEvent,
-        nostr_url::{find_nostr_bech32_pos, find_nostr_url_pos, NostrBech32, NostrUrl},
+        nostr_url::{NostrBech32, NostrUrl, find_nostr_bech32_pos, find_nostr_url_pos},
         pay_request_data::PayRequestData,
         private_key::{ContentEncryptionAlgorithm, EncryptedPrivateKey, KeySecurity, PrivateKey},
         profile::Profile,
@@ -34,19 +35,18 @@ pub mod core {
         tag::Tag,
         unixtime::Unixtime,
         url::{RelayOrigin, RelayUrl, UncheckedUrl, Url},
-        image_dimensions::ImageDimensions,
     };
     pub use secp256k1::XOnlyPublicKey;
 }
 
 pub mod nips {
     pub use super::super::{
-        client::{local_relay_urls, Client, FilterOptions, Options},
+        client::{Client, FilterOptions, Options, local_relay_urls},
         keys::Keys,
         nip05::Nip05,
         nip19::*,
         nip28::*,
-        nip44::{decrypt, encrypt, get_conversation_key, Error as Nip44Error},
+        nip44::{Error as Nip44Error, decrypt, encrypt, get_conversation_key},
     };
 }
 
@@ -56,8 +56,8 @@ pub mod bridge {
 
 pub mod helpers {
     pub use super::super::{
-        default_gnostr_private_key, get_leading_zero_bits, ureq_async, DEFAULT_GNOSTR_PRIVATE_KEY,
-        IntoVec,
+        DEFAULT_GNOSTR_PRIVATE_KEY, IntoVec, default_gnostr_private_key, get_leading_zero_bits,
+        ureq_async,
     };
     pub use bitcoin_hashes::sha1::Hash as Sha1Hash;
 }

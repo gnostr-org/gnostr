@@ -11,18 +11,18 @@ use std::{
 // Working Nostr Client Implementation with proper interface
 use anyhow::Result;
 // NIP-44 related imports
-use futures_util::{SinkExt, StreamExt};
-use futures::stream;
 use futures::future::join_all;
+use futures::stream;
+use futures_util::{SinkExt, StreamExt};
 use tokio::time::timeout;
 use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage};
 use tracing::{debug, info, warn};
 use url::Url;
 
 use crate::nostr::{
-    private_key::content_encryption::ContentEncryptionAlgorithm, ClientMessage, Error, Event,
-    EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey, RelayMessage, RelayUrl,
-    SubscriptionId, Tag,
+    ClientMessage, Error, Event, EventBuilder, EventKind, Filter, Id, Keys, Metadata, PublicKey,
+    RelayMessage, RelayUrl, SubscriptionId, Tag,
+    private_key::content_encryption::ContentEncryptionAlgorithm,
 };
 
 fn broadcast_log_path() -> Result<PathBuf, Error> {
@@ -128,7 +128,11 @@ pub fn local_relay_urls() -> Vec<String> {
 
     for path in local_relay_endpoint_paths() {
         if let Ok(contents) = fs::read_to_string(&path) {
-            for relay in contents.lines().map(normalize_candidate_relay_url).flatten() {
+            for relay in contents
+                .lines()
+                .map(normalize_candidate_relay_url)
+                .flatten()
+            {
                 relays.push(relay);
             }
         }
@@ -718,8 +722,10 @@ mod tests {
 
     #[test]
     fn build_nip44_direct_message_event_uses_real_keys_and_recipient_tag() {
-        let sender =
-            crate::nostr::PrivateKey(crate::nostr::default_gnostr_private_key(), crate::nostr::KeySecurity::Weak);
+        let sender = crate::nostr::PrivateKey(
+            crate::nostr::default_gnostr_private_key(),
+            crate::nostr::KeySecurity::Weak,
+        );
         let recipient = test_private_key(2);
         let client = Client::new(&Keys::new(sender.clone()), Options::new());
 
@@ -733,7 +739,10 @@ mod tests {
         assert_eq!(event.pubkey, sender.public_key());
         assert_eq!(event.tags.len(), 1);
         assert_eq!(event.tags[0].tagname(), "p");
-        assert_eq!(event.tags[0].parse_pubkey().unwrap().0, recipient.public_key());
+        assert_eq!(
+            event.tags[0].parse_pubkey().unwrap().0,
+            recipient.public_key()
+        );
         assert_eq!(
             recipient
                 .decrypt(&sender.public_key(), &event.content)
