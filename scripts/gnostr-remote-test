@@ -1,6 +1,54 @@
 #!/usr/bin/env bash
 set -x
 
+RELAY_CSV_URL="https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv"
+
+pick_relay_from_csv() {
+  local csv
+  csv=$(curl -fsSL "$RELAY_CSV_URL" 2>/dev/null) || {
+    echo "Failed to fetch relay CSV, using fallback" >&2
+    return 1
+  }
+
+  # Normalize CSV relay entries:
+  # - strip the header
+  # - keep only the first column (relay host)
+  # - prepend wss:// when no scheme is present
+  # - strip trailing :443 (wss default)
+  # - drop empty or localhost-looking entries
+  local relays
+  relays=$(printf '%s\n' "$csv" \
+    | tail -n +2 \
+    | cut -d, -f1 \
+    | sed -E \
+        -e 's/^[[:space:]]+//' \
+        -e 's/[[:space:]]+$//' \
+        -e 's/^(wss?:|https?:)//' \
+        -e 's/^\/+//' \
+        -e 's/:443$//' \
+        -e '/^$/d' \
+        -e '/^localhost/d' \
+        -e '/^127\./d' \
+        -e 's/^/wss:\/\//')
+
+  if [[ -z "$relays" ]]; then
+    echo "No valid relays found in CSV, using fallback" >&2
+    return 1
+  fi
+
+  # Pick a random relay from the list.
+  if command -v shuf >/dev/null 2>&1; then
+    printf '%s\n' "$relays" | shuf -n 1
+  elif command -v sort >/dev/null 2>&1 && sort --help 2>&1 | grep -q -- '-R'; then
+    printf '%s\n' "$relays" | sort -R | head -n 1
+  else
+    local count
+    count=$(printf '%s\n' "$relays" | wc -l | tr -d ' ')
+    local idx=$((RANDOM % count + 1))
+    printf '%s\n' "$relays" | sed -n "${idx}p"
+  fi
+}
+
 echo "gnostr-remote-test file name: $0"
 echo "--- System Information ---"
 echo "Hostname: $(hostname)"
@@ -29,7 +77,13 @@ fi
 
 HASH=$($gnostr --hash "")
 NSEC=${1:-$HASH}
-RELAY=${2:-"wss://relay.gnostr.org"}
+
+if [[ -n "${2:-}" ]]; then
+  RELAY=$2
+else
+  RELAY=$(pick_relay_from_csv || echo "wss://relay.damus.io")
+fi
+echo "Using relay: $RELAY"
 
 export EVENT1=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 30617 -c "" \
   -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
