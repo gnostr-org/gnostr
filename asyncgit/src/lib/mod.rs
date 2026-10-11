@@ -151,7 +151,9 @@ pub use crate::{
 pub use crate::types::DEFAULT_GNOSTR_PRIVATE_KEY;
 
 /// Install the `ring` rustls crypto provider.
-pub use crate::types::patch::install_rustls_crypto_provider;
+pub fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
 
 /// Default deterministic private key material encoded as lowercase hex.
 pub fn default_gnostr_private_key_hex() -> String {
