@@ -71,19 +71,23 @@ pick_relays() {
 }
 
 # Fetch an event by id, trying each provided relay until one returns it.
+# Retries once after a short delay to give relays time to propagate the event.
 fetch_event_by_id() {
   { set +x; } 2>/dev/null
   local id=$1
   shift
-  local relay
-  for relay in "$@"; do
-    local output
-    output=$($gnostr fetch-by-id -i "$id" -r "$relay" 2>/dev/null)
-    if [[ -n "$output" ]]; then
-      set -x
-      printf '%s\n' "$output"
-      return 0
-    fi
+  local relays=("$@")
+  local attempt relay output
+  for attempt in 1 2; do
+    for relay in "${relays[@]}"; do
+      output=$($gnostr fetch-by-id -i "$id" -r "$relay" 2>/dev/null)
+      if [[ -n "$output" ]]; then
+        set -x
+        printf '%s\n' "$output"
+        return 0
+      fi
+    done
+    [[ "$attempt" == "1" ]] && sleep 3
   done
   set -x
   return 1
