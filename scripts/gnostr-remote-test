@@ -84,8 +84,16 @@ if [[ ! -x "$gnostr" ]]; then
   exit 1
 fi
 
-HASH=$($gnostr --hash "")
-NSEC=${1:-$HASH}
+if [[ -n "${1:-}" ]]; then
+  NSEC=$1
+else
+  NSEC=$($gnostr generate-keypair --print-hex 2>/dev/null \
+    | sed -n 's/.*"private_key":"\([^"]*\)".*/\1/p')
+  if [[ -z "$NSEC" ]]; then
+    echo "Failed to generate keypair" >&2
+    exit 1
+  fi
+fi
 
 if [[ -n "${2:-}" ]]; then
   RELAY=$2
