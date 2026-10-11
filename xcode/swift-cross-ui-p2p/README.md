@@ -9,7 +9,8 @@ The first pass includes:
 - TCP + Noise + Yamux
 - mDNS discovery
 - KadDHT / DCUtR wiring
-- a local git repository viewer backed by `Git`
+- a local git repository viewer backed by `Git` (iOS only; the bundled
+  `Clibgit2` xcframework does not include a Mac Catalyst library slice)
 
 Run it with:
 
