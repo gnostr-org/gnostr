@@ -2,25 +2,22 @@
 set -x
 
 RELAY_CSV_URL="https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv"
+DEFAULT_FALLBACK_RELAYS=(
+  "wss://relay.damus.io"
+  "wss://nos.lol"
+)
 
-pick_relay_from_csv() {
+# Fetch the public relay CSV and normalize the entries.
+fetch_relay_csv() {
   # Suppress tracing while handling the large CSV payload.
   { set +x; } 2>/dev/null
   local csv
   csv=$(curl -fsSL "$RELAY_CSV_URL" 2>/dev/null) || {
-    echo "Failed to fetch relay CSV, using fallback" >&2
     set -x
     return 1
   }
 
-  # Normalize CSV relay entries:
-  # - strip the header
-  # - keep only the first column (relay host)
-  # - prepend wss:// when no scheme is present
-  # - strip trailing :443 (wss default)
-  # - drop empty or localhost-looking entries
-  local relays
-  relays=$(printf '%s\n' "$csv" \
+  printf '%s\n' "$csv" \
     | tail -n +2 \
     | cut -d, -f1 \
     | sed -E \
@@ -32,30 +29,70 @@ pick_relay_from_csv() {
         -e '/^$/d' \
         -e '/^localhost/d' \
         -e '/^127\./d' \
-        -e 's/^/wss:\/\//')
+        -e 's/^/wss:\/\//'
+
+  set -x
+}
+
+# Pick N random relays from the CSV, falling back to the hard-coded list.
+pick_relays() {
+  # Suppress tracing while handling the large CSV payload.
+  { set +x; } 2>/dev/null
+  local count=${1:-3}
+  local relays
+  relays=$(fetch_relay_csv)
 
   if [[ -z "$relays" ]]; then
-    echo "No valid relays found in CSV, using fallback" >&2
+    printf '%s\n' "${DEFAULT_FALLBACK_RELAYS[@]}"
     set -x
-    return 1
+    return 0
   fi
 
-  # Pick a random relay from the list.
-  local selected
+  # Shuffle and take the requested count.
+  local selected=""
   if command -v shuf >/dev/null 2>&1; then
-    selected=$(printf '%s\n' "$relays" | shuf -n 1)
+    selected=$(printf '%s\n' "$relays" | shuf -n "$count")
   elif command -v sort >/dev/null 2>&1 && sort --help 2>&1 | grep -q -- '-R'; then
-    selected=$(printf '%s\n' "$relays" | sort -R | head -n 1)
+    selected=$(printf '%s\n' "$relays" | sort -R | head -n "$count")
   else
-    local count
-    count=$(printf '%s\n' "$relays" | wc -l | tr -d ' ')
-    local idx=$((RANDOM % count + 1))
-    selected=$(printf '%s\n' "$relays" | sed -n "${idx}p")
+    local total
+    total=$(printf '%s\n' "$relays" | wc -l | tr -d ' ')
+    local i
+    for ((i = 0; i < count; i++)); do
+      local idx=$((RANDOM % total + 1))
+      selected=$(printf '%s\n%s\n' "$selected" "$(printf '%s\n' "$relays" | sed -n "${idx}p")")
+    done
+    selected=$(printf '%s\n' "$selected" | sed '/^$/d')
   fi
 
-  # Re-enable tracing for the caller.
   set -x
   printf '%s\n' "$selected"
+}
+
+# Fetch an event by id, trying each provided relay until one returns it.
+fetch_event_by_id() {
+  local id=$1
+  shift
+  local relay
+  for relay in "$@"; do
+    local output
+    output=$($gnostr fetch-by-id -i "$id" -r "$relay" 2>/dev/null)
+    if [[ -n "$output" ]]; then
+      printf '%s\n' "$output"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Build -r <relay> arguments for gnostr.
+build_relay_args() {
+  local args=()
+  local relay
+  for relay in "$@"; do
+    args+=("-r" "$relay")
+  done
+  printf '%s\n' "${args[@]}"
 }
 
 echo "gnostr-remote-test file name: $0"
@@ -96,13 +133,15 @@ else
 fi
 
 if [[ -n "${2:-}" ]]; then
-  RELAY=$2
+  mapfile -t RELAYS < <(printf '%s\n' "$2")
 else
-  RELAY=$(pick_relay_from_csv || echo "wss://relay.damus.io")
+  mapfile -t RELAYS < <(pick_relays 3)
 fi
-echo "Using relay: $RELAY"
+echo "Using relays: ${RELAYS[*]}"
 
-export EVENT1=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 30617 -c "" \
+mapfile -t RELAY_ARGS < <(build_relay_args "${RELAYS[@]}")
+
+export EVENT1=$($gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" custom-event -k 30617 -c "" \
   -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
   -t "web|git.gnostr.org" -t "clone|git.gnostr.org" \
   -t "relays|wss://relay.damus.io, wss://relay.gnostr.org" -t "r|<earliest_unique_commit>" \
@@ -113,12 +152,12 @@ export EVENT1=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 30617 -c "" \
 EVENT1_ID=$($gnostr bech32-to-any "$EVENT1" --raw)
 
 echo "$EVENT1_ID"
-$gnostr fetch-by-id -i "$EVENT1_ID" --relay "$RELAY"
+fetch_event_by_id "$EVENT1_ID" "${RELAYS[@]}"
 
 echo
 sleep 2
 
-export EVENT2=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 1 \
+export EVENT2=$($gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" custom-event -k 1 \
   -c "#gnostr distributed/decentralized CI EVENT! REF:https://nostr.band/?q=$EVENT1_ID" \
   -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
   -t "web|git.gnostr.org" -t "clone|git.gnostr.org" \
@@ -128,17 +167,17 @@ export EVENT2=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 1 \
   -t "weeble|$($gnostr --weeble)" -t "blockheight|$($gnostr --blockheight)" \
   -t "wobble|$($gnostr --wobble)")
 export EVENT2_ID=$($gnostr bech32-to-any "$EVENT2" --raw)
-$gnostr fetch-by-id -i "$EVENT2_ID" -r "$RELAY"
+fetch_event_by_id "$EVENT2_ID" "${RELAYS[@]}"
 
 echo
 sleep 2
 
-# Give the relay time to make EVENT2 available before reacting.
+# Give the relays time to make EVENT2 available before reacting.
 sleep 2
 
-$gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" -r "$RELAY" react -e "$EVENT1_ID" --reaction "$EVENT2_ID"
-$gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" -r "$RELAY" react -e "$EVENT2_ID" --reaction "$EVENT1_ID"
+$gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" "${RELAY_ARGS[@]}" react -e "$EVENT1_ID" --reaction "$EVENT2_ID"
+$gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" "${RELAY_ARGS[@]}" react -e "$EVENT2_ID" --reaction "$EVENT1_ID"
 
 # a known event 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 to test
-$gnostr --nsec "$NSEC" -r "$RELAY" react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r "$EVENT1_ID"
-$gnostr --nsec "$NSEC" -r "$RELAY" react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r "$EVENT2_ID"
+$gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r "$EVENT1_ID"
+$gnostr --nsec "$NSEC" "${RELAY_ARGS[@]}" react -e 8bd85322d47f896c1cc4b20887b08513a0c6065b997debe7f4e87cc949ee7686 -r "$EVENT2_ID"
