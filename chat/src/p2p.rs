@@ -745,7 +745,7 @@ pub async fn evt_loop(
                         .await?;
                 }
                 _ => {}
-            }
+            },
             _ = flush_pending_interval.tick() => {
                 flush_pending_chat_messages(
                     &mut swarm,
