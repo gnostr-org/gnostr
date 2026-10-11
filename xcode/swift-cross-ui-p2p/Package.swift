@@ -7,7 +7,7 @@ let package = Package(
     name: "swift-cross-ui-p2p",
     platforms: [
         .macOS(.v11),
-        //.iOS(.v13),
+        .iOS(.v13),
         .macCatalyst(.v13),
     ],
     
@@ -38,6 +38,11 @@ let package = Package(
                 var dependencies: [Target.Dependency] = [
                     .product(name: "SwiftCrossUI", package: "swift-cross-ui"),
                     .product(name: "DefaultBackend", package: "swift-cross-ui"),
+                    .product(
+                        name: "UIKitBackend",
+                        package: "swift-cross-ui",
+                        condition: .when(platforms: [.iOS, .tvOS, .macCatalyst, .visionOS])
+                    ),
                     .product(name: "LibP2P", package: "swift-libp2p"),
                     .product(name: "LibP2PNoise", package: "swift-libp2p-noise"),
                     .product(name: "LibP2PYAMUX", package: "swift-libp2p-yamux"),

@@ -1,5 +1,9 @@
 import CryptoKit
-import DefaultBackend
+#if canImport(UIKitBackend)
+    import UIKitBackend
+#else
+    import DefaultBackend
+#endif
 import Foundation
 import LibP2P
 import LibP2PDCUtR
