@@ -192,6 +192,10 @@ pub struct GnostrCli {
     #[arg(long, default_value = "false")]
     pub warn: bool,
 
+    /// Enable file logging
+    #[arg(long, default_value = "false")]
+    pub logging: bool,
+
     /// Generate bugreport
     #[arg(long, default_value = "false")]
     pub bugreport: bool,
@@ -228,6 +232,7 @@ impl Default for GnostrCli {
             debug: false,
             trace: false,
             warn: false,
+            logging: false,
             bugreport: false,
             commands: vec![],
         }
