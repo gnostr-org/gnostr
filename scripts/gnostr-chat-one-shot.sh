@@ -37,6 +37,39 @@ usage() {
     exit "${1:-0}"
 }
 
+# Known `gnostr chat` flags.  Boolean flags are passed through without a value;
+# value flags consume the next argument.
+BOOLEAN_FLAGS=(
+    --disable-cli-spinners
+    --info
+    --debug
+    --trace
+)
+VALUE_FLAGS=(
+    -n --nsec
+    -p --password
+    --name
+    --hash
+    --gitdir
+    --tab
+)
+
+is_boolean_flag() {
+    local f
+    for f in "${BOOLEAN_FLAGS[@]}"; do
+        [[ "$1" == "$f" ]] && return 0
+    done
+    return 1
+}
+
+is_value_flag() {
+    local f
+    for f in "${VALUE_FLAGS[@]}"; do
+        [[ "$1" == "$f" ]] && return 0
+    done
+    return 1
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --help|-h)
@@ -66,13 +99,21 @@ while [[ $# -gt 0 ]]; do
             shift
             break
             ;;
-        --*)
-            if [[ $# -lt 2 ]]; then
-                echo "error: missing value for flag $1" >&2
+        --*|-n|-p)
+            if is_boolean_flag "$1"; then
+                PASSTHROUGH_FLAGS+=("$1")
+                shift
+            elif is_value_flag "$1"; then
+                if [[ $# -lt 2 ]]; then
+                    echo "error: missing value for flag $1" >&2
+                    usage 1
+                fi
+                PASSTHROUGH_FLAGS+=("$1" "$2")
+                shift 2
+            else
+                echo "error: unknown flag $1" >&2
                 usage 1
             fi
-            PASSTHROUGH_FLAGS+=("$1" "$2")
-            shift 2
             ;;
         *)
             break
