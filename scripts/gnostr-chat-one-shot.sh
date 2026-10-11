@@ -13,12 +13,14 @@
 #   --receiver-name NAME   Name for the headless receiver (default: receiver)
 #   --sender-name NAME     Base name for senders (default: sender)
 #   --messages M1,M2,...   Comma-separated messages (alternative to positional args)
+#   --listen               Start a headless receiver and wait for Ctrl+C
 #   --help                 Show this help
 #
 # Examples:
 #   ./scripts/gnostr-chat-one-shot.sh
 #   ./scripts/gnostr-chat-one-shot.sh --topic my-topic "hello" "world"
 #   ./scripts/gnostr-chat-one-shot.sh --topic dev --name copilot --messages "one,two,three"
+#   ./scripts/gnostr-chat-one-shot.sh --listen --topic my-topic
 
 set -euo pipefail
 
@@ -27,6 +29,7 @@ TOPIC=""
 RECEIVER_NAME="receiver"
 SENDER_NAME="sender"
 MESSAGES=""
+LISTEN=false
 PASSTHROUGH_FLAGS=()
 
 usage() {
@@ -54,6 +57,10 @@ while [[ $# -gt 0 ]]; do
         --messages)
             MESSAGES="$2"
             shift 2
+            ;;
+        --listen)
+            LISTEN=true
+            shift
             ;;
         --)
             shift
@@ -111,6 +118,15 @@ if [[ ! -x "${GNOSTR}" ]]; then
 fi
 
 echo "==> starting headless receiver on topic ${TOPIC}"
+
+if [[ "${LISTEN}" == true ]]; then
+    echo "==> listening mode: press Ctrl+C to stop"
+    echo "    send messages with:"
+    echo "    ${GNOSTR} chat --topic ${TOPIC} --name <sender> --oneshot \"<message>\""
+    "${GNOSTR}" chat --headless --topic "${TOPIC}" --name "${RECEIVER_NAME}" "${PASSTHROUGH_FLAGS[@]}"
+    exit 0
+fi
+
 "${GNOSTR}" chat --headless --topic "${TOPIC}" --name "${RECEIVER_NAME}" "${PASSTHROUGH_FLAGS[@]}" >"${RECEIVER_LOG}" 2>&1 &
 RECEIVER_PID=$!
 
