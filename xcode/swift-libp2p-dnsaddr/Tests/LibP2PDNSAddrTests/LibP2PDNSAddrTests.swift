@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import DNSClient
+@preconcurrency import DNS
 import LibP2P
 import Testing
+import dnssd
 
 @testable import LibP2PDNSAddr
 
@@ -28,6 +29,28 @@ struct LibP2PDNSAddrTests {
         app.resolvers.use(.dnsaddr)
         try await app.startup()
         try await app.asyncShutdown()
+    }
+
+    @Test func testTXTRecordParsing() throws {
+        let peerID = try PeerID(.Ed25519)
+        let expected = "/ip4/104.131.131.82/tcp/4001/p2p/\(peerID.b58String)"
+
+        var txtRecord = TXTRecordRef()
+        var storage = Data()
+        TXTRecordCreate(&txtRecord, 1, &storage)
+
+        var value = expected
+        TXTRecordSetValue(&txtRecord, "dnsaddr", UInt8(value.utf8.count), &value)
+
+        let bytes = Data(bytes: TXTRecordGetBytesPtr(&txtRecord), count: Int(TXTRecordGetLength(&txtRecord)))
+        TXTRecordDeallocate(&txtRecord)
+
+        let parsed = bytes.withUnsafeBytes { buffer -> [Multiaddr] in
+            LibP2PDNSAddr.multiaddrs(fromTXTRecordBytes: buffer, enforcingPeerID: peerID)
+        }
+
+        #expect(parsed.count == 1)
+        #expect(parsed.first?.description == expected)
     }
 
 }
