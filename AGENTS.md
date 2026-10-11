@@ -64,6 +64,47 @@ without checking the vendored patches.
 Vendored forks live in `vendor/` (e.g. `vendor/gitui`, `vendor/nostr-relay`,
 `vendor/time`, `vendor/ed25519-dalek`, `vendor/curve25519-dalek`, etc.).
 
+## Network architecture
+
+The workspace spans several independent network planes. Each plane has its own
+crate and feature gates.
+
+### 1. P2P / libp2p plane (`gnostr-p2p`, `gnostr-chat`)
+
+- TCP + Noise + Yamux, QUIC, WebSocket, optional Tor (`arti-client`).
+- Gossipsub, Kademlia DHT, mDNS, circuit relay, rendezvous, AutoNAT.
+- Chat uses an embedded libp2p relay service for hole punching.
+- See `p2p/AGENTS.md` and `chat/AGENTS.md`.
+
+### 2. Nostr relay / WebSocket plane (`gnostr-relay`, `gnostr-crawler`, root CLI, `ngit`)
+
+- Actix-web/WebSocket relay (vendored `nostr-relay` 0.4.8).
+- `nostr_sdk::Client` relay pool with custom Happy Eyeballs transport in `ngit`.
+- Crawler discovers relays, fetches NIP-11 metadata, and serves an Axum API.
+- Root `gnostr` subcommands (`note`, `dm`, `query`, `sniper`, etc.) publish/query
+  relays via `create_client()`.
+- See `relay/AGENTS.md`, `crawler/AGENTS.md`, and `ngit/AGENTS.md`.
+
+### 3. Web / HTTP plane (`gnostr-web`, `gnostr-js`)
+
+- `gnostr-web` / `gnostr-gnit` / `gnostr-org` use axum.
+- `gnostr-js` and embedded apps use warp.
+- The `gnostr-js` binary can also launch a relay and a crawler API server.
+- See `web/AGENTS.md`.
+
+### 4. Git remote-helper plane (`gnostr-git-helpers`)
+
+- `git-remote-blossom`, `git-remote-nostr`, `git-remote-ipfs`,
+  `git-remote-pkarr`, `git-remote-tor`.
+- Blossom, Nostr relay + git smart HTTP, Kubo IPFS, PKARR, Tor SOCKS5.
+- See `git-helpers/AGENTS.md`.
+
+### 5. Workspace binary plane (`gnostr-bins`)
+
+- Feature-gated binaries that expose the above crates as standalone commands.
+- Features: `blossom`, `web`, `relay`, `chat`, `p2p`, `crawler`, `git`, `legit`.
+- See `bins/AGENTS.md`.
+
 ## Source organization
 
 - `src/main.rs` — CLI entry point, `tokio::main`, logging, argument dispatch.
