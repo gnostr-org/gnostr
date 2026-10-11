@@ -42,34 +42,12 @@ impl Relays {
         self.r.len()
     }
 
-    pub fn de_dup(&self, list: &[Url]) -> Vec<Url> {
-        let list: Vec<Url> = list.to_vec();
-        for url in &list {
-            debug!("de_dup:: url={}", url);
-        }
-        list
-    }
-
-    pub fn de_dup_string(&self, list: &[String]) -> Vec<String> {
-        let list: Vec<String> = list.to_vec();
-        list
-    }
-
     pub fn get_some(&self, max_count: usize) -> Vec<Url> {
-        let mut res = Vec::new();
-        for u in &self.r {
-            res.push(u.clone());
-            if res.len() >= max_count {
-                return res;
-            }
-        }
-        res = self.de_dup(&res);
-        res
+        self.r.iter().take(max_count).cloned().collect()
     }
 
     pub fn get_all(&self) -> Vec<String> {
-        let list: Vec<String> = self.r.iter().map(|u| u.to_string()).collect();
-        self.de_dup_string(&list)
+        self.r.iter().map(|u| u.to_string()).collect()
     }
 
     pub fn print(&self) {

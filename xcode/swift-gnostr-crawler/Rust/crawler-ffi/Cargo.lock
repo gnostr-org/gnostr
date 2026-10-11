@@ -1121,7 +1121,7 @@ dependencies = [
 
 [[package]]
 name = "crawler_ffi"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "gnostr-crawler",
  "gnostr-types",
@@ -3537,7 +3537,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-asyncgit"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "aes",
  "anyhow",
@@ -3581,7 +3581,6 @@ dependencies = [
  "gnostr-grammar",
  "gnostr-scopetime",
  "gnostr-types",
- "gnostr_filehash_core",
  "handlebars",
  "hex",
  "hkdf",
@@ -3671,7 +3670,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-crawler"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3713,14 +3712,14 @@ dependencies = [
 
 [[package]]
 name = "gnostr-filetreelist"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "gnostr-git2-hooks"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "git2",
  "gix-path 0.11.3",
@@ -3731,7 +3730,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-grammar"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "anyhow",
  "cc",
@@ -3751,7 +3750,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-scopetime"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "log",
  "scopetime 0.1.0",
@@ -3759,7 +3758,7 @@ dependencies = [
 
 [[package]]
 name = "gnostr-types"
-version = "970410.1846.41651"
+version = "970861.1845.448495"
 dependencies = [
  "aes",
  "anyhow",
@@ -3818,6 +3817,7 @@ dependencies = [
  "rkyv",
  "ron",
  "rust-ini",
+ "rustls",
  "scrypt",
  "secp256k1 0.29.1",
  "serde",
@@ -3873,14 +3873,6 @@ dependencies = [
  "xxhash-rust",
  "yoke 0.7.5",
  "zeroize",
-]
-
-[[package]]
-name = "gnostr_filehash_core"
-version = "970410.1846.41651"
-dependencies = [
- "chrono",
- "sha2",
 ]
 
 [[package]]

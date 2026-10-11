@@ -44,8 +44,8 @@ It is used by the root `gnostr crawler` subcommand and by several binaries in
   - Online lists fetched over HTTPS (`permissionlesstech/bitchat` CSV,
     `sesseor/nostr-relays-list` TXT).
   - Hard-coded `BOOTSTRAP_RELAYS` static.
-- **Active cap** — at most `MAX_ACTIVE_RELAYS = 3` simultaneous connections
-  (`src/relay_manager.rs:20`).
+- **Active cap** — configurable via `--max-active-relays` (default `50`) or the
+  `GNOSTR_CRAWLER_MAX_ACTIVE_RELAYS` environment variable (`src/relay_manager.rs`).
 - **Subscriptions** — subscribes to `ContactList` + `RecommendRelay` for the past
   6 hours.
 - **Relay discovery from events** — extracts relay URLs from `RelayList` content,
@@ -113,22 +113,23 @@ Helpers: `src/relays.rs:93-421`, `src/commands/sniper.rs:7-32`.
 - `watch [--shitlist <path>]` — crawl bootstrap relays, fetch metadata, bucket by NIP.
 - `nip34 [--shitlist <path>]` — print relays advertising NIP-34.
 - `crawl [ARGS]` — run the main `RelayManager` crawl.
-- `serve [--port 3000] [--detach]` — start the API server.
+- `serve [--port 3000] [--detach] [--no-watch] [--no-sniper] [--shitlist <path>]` — start the API server.
 
 `dispatch_cli_command` passes a `reqwest::Client` to network commands
 (`src/cli.rs:103`).
 
 ## Embedded API server (Axum)
 
-Entry points (`src/api.rs:1681`):
+Entry points (`src/api.rs`):
 
-- `run_api_server(port)` — foreground.
-- `run_api_server_detached(...)` — spawns the current exe with `serve --port <port>`.
+- `run_api_server(options)` — foreground.
+- `run_api_server_detached(command_prefix, options)` — spawns the current exe with `serve`.
+- `ServeOptions { port, no_watch, no_sniper, shitlist }` controls startup behavior.
 
-Startup sidecars (`src/api.rs:1717`):
+Startup sidecars (`src/api.rs`):
 
 - Prepares relay serve files, kinds files, `index.html`.
-- Spawns `run_watch` and the sniper service as background tasks.
+- Spawns `run_watch` and the sniper service as background tasks (each can be disabled with `--no-watch` / `--no-sniper`).
 
 Routes (`src/api.rs:1729`):
 
@@ -137,6 +138,9 @@ GET /                         -> index HTML
 GET /query                    -> generic nostr query form + results
 GET /api/buckets              -> directory listing (JSON)
 GET /api/buckets/file?path=.. -> file contents
+GET /api/health               -> health check (`{"status":"ok"}`)
+GET /api/stats                -> relay count, live NIPs and kinds
+GET /api/sniper/logs          -> recent sniper service logs
 GET /relays.{yaml,json,txt}
 GET /:nip                     -> NIP index HTML
 GET /:nip/query               -> NIP-specific query
@@ -160,8 +164,9 @@ Bind address: `127.0.0.1:<port>` (`src/api.rs:1755`). Default port: `3000`
 
 ### Timeouts
 
-- WebSocket query connect/read timeout: **1 s** (`src/query/mod.rs:196`).
-- Relay liveness HEAD check: **5 s** (`src/relays.rs:447`).
+- WebSocket query connect/read timeout: **5 s** default, configurable via
+  `--query-timeout-secs` or `GNOSTR_CRAWLER_QUERY_TIMEOUT_SECS` (`src/query/mod.rs`).
+- Relay liveness HEAD check: **5 s** (`src/relays.rs`).
 - Relay metadata `reqwest` fetch uses default timeouts.
 
 ### Concurrency
@@ -171,8 +176,9 @@ Bind address: `127.0.0.1:<port>` (`src/api.rs:1755`). Default port: `3000`
 
 ### Proxy
 
-No explicit SOCKS/HTTP proxy configuration is currently exposed in the crawler
-crate.
+HTTP/HTTPS proxy support for metadata fetching is enabled via `reqwest`:
+set `GNOSTR_CRAWLER_PROXY`, `ALL_PROXY`, or `HTTPS_PROXY`. The crawler also
+exposes `gnostr_crawler::api::build_http_client()` to build a proxied client.
 
 ## Feature flags
 
@@ -216,14 +222,15 @@ Other consumers:
 
 ### Adjusting relay concurrency
 
-- `MAX_ACTIVE_RELAYS` in `src/relay_manager.rs:20`.
+- `--max-active-relays` / `GNOSTR_CRAWLER_MAX_ACTIVE_RELAYS` (`src/relay_manager.rs`).
 - `CONCURRENT_REQUESTS` in `src/relay_fetch.rs:7`.
 
 ## Pitfalls
 
-- The 1 s WebSocket query timeout is tight on slow relays; many real relays will
-  be skipped.
-- `MAX_ACTIVE_RELAYS = 3` caps crawl breadth.
+- The default 5 s WebSocket query timeout may still be tight on very slow relays;
+  raise it with `--query-timeout-secs` or `GNOSTR_CRAWLER_QUERY_TIMEOUT_SECS`.
+- The default active relay cap is 50; raise or lower it with `--max-active-relays`
+  or `GNOSTR_CRAWLER_MAX_ACTIVE_RELAYS`.
 - The embedded `relays.yaml` is baked in at compile time; update the source file
   and rebuild to refresh defaults.
 - Many crawler tests are network-dependent and marked `#[ignore]`.

@@ -7302,6 +7302,7 @@ dependencies = [
  "git2 0.21.0",
  "gnostr-asyncgit",
  "gnostr-filetreelist",
+ "gnostr-git2-testing",
  "indicatif 0.14.0",
  "log",
  "nostr-sdk 0.44.1",
@@ -7390,6 +7391,7 @@ dependencies = [
  "git2 0.21.0",
  "log",
  "tempfile",
+ "time 0.1.45",
 ]
 
 [[package]]

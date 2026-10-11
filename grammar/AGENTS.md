@@ -34,7 +34,9 @@ Three blacklist lists in `build.rs` control which grammars are skipped:
 - `MACOS_BLACKLISTED` — excluded on `cfg(target_os = "macos")`.
 - `WINDOWS_BLACKLISTED` / `MUSL_BLACKLISTED` — platform-specific exclusions.
 
-If a grammar fails to link on a platform (undefined `_tree_sitter_*` symbols), add it to the appropriate blacklist rather than disabling the whole TUI feature.
+`is_blacklisted` normalizes hyphenated grammar names to underscores before checking, because Helix `languages.toml` uses hyphens (e.g. `haskell-persistent`) while linker symbols and the blacklist use underscores (`_tree_sitter_haskell_persistent`).
+
+If a grammar fails to link on a platform (undefined `_tree_sitter_*` symbols), add it to the appropriate blacklist rather than disabling the whole TUI feature. On macOS in particular many C/C++ grammars do not link cleanly and are blacklisted in `build.rs`. The generated `language.registry.rs` also uses an explicit `&[&str]` cast for `RegexSet::new` so an all-blacklisted registry still compiles.
 
 ## Dynamic linking
 

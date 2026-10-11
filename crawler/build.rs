@@ -14,9 +14,17 @@ use std::process::Command;
 
 // build.rs - This file will generate src/relays.yaml
 
+const CACHE_TTL_SECS: u64 = 24 * 60 * 60;
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+struct SourceCache {
+    hash: String,
+    fetched_at: u64,
+}
+
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct CachedHashes {
-    hashes: HashMap<String, String>,
+    sources: HashMap<String, SourceCache>,
 }
 
 fn sanitize_relay_entry(line: &str) -> Option<String> {
@@ -48,12 +56,15 @@ async fn main() -> Result<()> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let cache_path = out_dir.join("relay_hashes.json");
     let mut cached_hashes: CachedHashes = match fs::read_to_string(&cache_path) {
-        Ok(content) => serde_json::from_str(&content)?,
+        Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
         Err(_) => CachedHashes::default(),
     };
-    let mut new_hashes = HashMap::new();
 
     let mut all_relays = HashSet::new();
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
 
     // Define relay sources
     let sources = vec![
@@ -63,31 +74,39 @@ async fn main() -> Result<()> {
     ];
 
     for (name, url) in sources {
-        let should_fetch = match cached_hashes.hashes.get(url) {
-            Some(cached_hash) => {
-                // For now, always re-fetch. In a more optimized scenario, we'd fetch headers or a partial file to get a remote hash.
-                // For simplicity, we'll assume a change requires a full re-fetch if the hash doesn't match a *previously stored* hash.
-                // A more robust solution would involve fetching remote hash without downloading full content.
-                eprintln!("Checking hash for {} (cached: {})...", name, cached_hash);
-                // For simplicity in this `build.rs`, we'll always fetch for now.
-                // A real optimization would involve checking remote hash from headers if available.
-                true
-            }
-            None => {
-                eprintln!("No cached hash for {}. Fetching...", name);
-                true
-            }
-        };
+        let cache_fresh = cached_hashes
+            .sources
+            .get(url)
+            .map(|entry| now.saturating_sub(entry.fetched_at) < CACHE_TTL_SECS)
+            .unwrap_or(false);
 
-        if should_fetch {
-            match fetch_online_relays_build(url).await {
-                Ok((urls, current_hash)) => {
-                    for url_str in urls {
-                        all_relays.insert(url_str);
-                    }
-                    new_hashes.insert(url.to_string(), current_hash);
+        if cache_fresh {
+            eprintln!(
+                "Using cached relay list for {} (hash: {}, age: {}s)",
+                name,
+                cached_hashes.sources[url].hash,
+                now.saturating_sub(cached_hashes.sources[url].fetched_at)
+            );
+            continue;
+        }
+
+        eprintln!("Fetching online relays from: {} ({})", name, url);
+        match fetch_online_relays_build(url).await {
+            Ok((urls, current_hash)) => {
+                for url_str in urls {
+                    all_relays.insert(url_str);
                 }
-                Err(e) => eprintln!("Could not fetch online relays from {}: {}", name, e),
+                cached_hashes.sources.insert(
+                    url.to_string(),
+                    SourceCache {
+                        hash: current_hash,
+                        fetched_at: now,
+                    },
+                );
+            }
+            Err(e) => {
+                eprintln!("Could not fetch online relays from {}: {}", name, e);
+                // Keep any existing cached entry so stale-but-present data is not lost.
             }
         }
     }
@@ -99,16 +118,13 @@ async fn main() -> Result<()> {
         writeln!(file, "{}", relay_url)?;
     }
 
-    // Tell Cargo the path to the generated file
-    // Tell Cargo to rerun if build.rs itself changes
+    // Tell Cargo to rerun only if build.rs itself changes.
     println!("cargo:rerun-if-changed=build.rs");
     println!(
         "cargo:rustc-env=GNOSTR_CRAWLER_RELAYS_YAML={}",
         generated_relays_path.display()
     );
 
-    // Write updated hashes to cache file
-    cached_hashes.hashes = new_hashes;
     let serialized = serde_json::to_string_pretty(&cached_hashes)?;
     fs::write(&cache_path, serialized)?;
 

@@ -94,7 +94,11 @@ fn format_started_at(when: SystemTime) -> String {
 fn crawler_service_status_string() -> String {
     let mut slot = crawler_service_slot().lock().unwrap();
     if let Some(state) = slot.as_ref() {
-        if state.thread.as_ref().is_some_and(thread::JoinHandle::is_finished) {
+        if state
+            .thread
+            .as_ref()
+            .is_some_and(thread::JoinHandle::is_finished)
+        {
             slot.take();
             push_crawler_log("crawler service: background thread exited");
             return "crawler service stopped".to_string();
@@ -129,7 +133,11 @@ fn crawler_service_status_string() -> String {
 fn sniper_service_status_string() -> String {
     let mut slot = sniper_service_slot().lock().unwrap();
     if let Some(state) = slot.as_ref() {
-        if state.thread.as_ref().is_some_and(thread::JoinHandle::is_finished) {
+        if state
+            .thread
+            .as_ref()
+            .is_some_and(thread::JoinHandle::is_finished)
+        {
             slot.take();
             push_crawler_log("sniper service: background thread exited");
             return "sniper service stopped".to_string();
@@ -150,7 +158,7 @@ fn sniper_service_status_string() -> String {
 
     "sniper service stopped".to_string()
 }
- 
+
 #[uniffi::export]
 fn rust_hello() -> String {
     "Hello from Rust!".to_string()
@@ -185,7 +193,11 @@ pub fn p2p_network_logs() -> String {
 pub fn crawler_service_logs() -> String {
     filtered_logs(
         crawler_log_slot(),
-        &["crawler service:", "run_api_server:", "starting crawler service"],
+        &[
+            "crawler service:",
+            "run_api_server:",
+            "starting crawler service",
+        ],
     )
 }
 
@@ -215,7 +227,11 @@ pub fn crawler_service_start(port: u16) -> String {
 
     let mut slot = crawler_service_slot().lock().unwrap();
     if let Some(state) = slot.as_ref() {
-        let status = if state.thread.as_ref().is_some_and(thread::JoinHandle::is_finished) {
+        let status = if state
+            .thread
+            .as_ref()
+            .is_some_and(thread::JoinHandle::is_finished)
+        {
             "stopped"
         } else if state.stopping {
             "stopping"
@@ -263,7 +279,10 @@ pub fn crawler_service_start(port: u16) -> String {
 
         let result = runtime.block_on(async move {
             gnostr_crawler::run_api_server_with_shutdown_and_ready(
-                port,
+                gnostr_crawler::api::ServeOptions {
+                    port,
+                    ..Default::default()
+                },
                 async move {
                     let _ = shutdown_rx.await;
                 },
@@ -273,7 +292,9 @@ pub fn crawler_service_start(port: u16) -> String {
         });
 
         if let Err(error) = result {
-            push_crawler_log(format!("crawler service: server exited with error: {error}"));
+            push_crawler_log(format!(
+                "crawler service: server exited with error: {error}"
+            ));
         } else {
             push_crawler_log("crawler service: server stopped");
         }
@@ -290,14 +311,18 @@ pub fn crawler_service_start(port: u16) -> String {
             }
         }
         Ok(Err(error)) => {
-            push_crawler_log(format!("crawler service: failed to start on 127.0.0.1:{port}: {error}"));
+            push_crawler_log(format!(
+                "crawler service: failed to start on 127.0.0.1:{port}: {error}"
+            ));
             let mut slot = crawler_service_slot().lock().unwrap();
             if slot.as_ref().is_some_and(|state| state.port == port) {
                 slot.take();
             }
         }
         Err(error) => {
-            push_crawler_log(format!("crawler service: startup channel closed on 127.0.0.1:{port}: {error}"));
+            push_crawler_log(format!(
+                "crawler service: startup channel closed on 127.0.0.1:{port}: {error}"
+            ));
             let mut slot = crawler_service_slot().lock().unwrap();
             if slot.as_ref().is_some_and(|state| state.port == port) {
                 slot.take();
@@ -322,7 +347,11 @@ pub fn crawler_service_stop() -> String {
         return "crawler service already stopped".to_string();
     };
 
-    if state.thread.as_ref().is_some_and(thread::JoinHandle::is_finished) {
+    if state
+        .thread
+        .as_ref()
+        .is_some_and(thread::JoinHandle::is_finished)
+    {
         slot.take();
         return "crawler service stopped".to_string();
     }
@@ -345,7 +374,11 @@ pub fn sniper_service_start() -> String {
 
     let mut slot = sniper_service_slot().lock().unwrap();
     if let Some(state) = slot.as_ref() {
-        if state.thread.as_ref().is_some_and(thread::JoinHandle::is_finished) {
+        if state
+            .thread
+            .as_ref()
+            .is_some_and(thread::JoinHandle::is_finished)
+        {
             slot.take();
         } else {
             let status = if state.stopping {
@@ -387,27 +420,27 @@ pub fn sniper_service_start() -> String {
         {
             Ok(runtime) => runtime,
             Err(error) => {
-                    gnostr_crawler::record_sniper_lifecycle(format!(
-                        "sniper lifecycle: runtime build failed: {}",
-                        error
-                    ));
-                    gnostr_crawler::record_sniper_log(format!(
-                        "sniper service: runtime build failed: {error}"
-                    ));
-                    return;
-                }
-            };
+                gnostr_crawler::record_sniper_lifecycle(format!(
+                    "sniper lifecycle: runtime build failed: {}",
+                    error
+                ));
+                gnostr_crawler::record_sniper_log(format!(
+                    "sniper service: runtime build failed: {error}"
+                ));
+                return;
+            }
+        };
 
-            gnostr_crawler::record_sniper_lifecycle("sniper lifecycle: worker spawned");
-            let client = reqwest::Client::new();
-            {
-                let mut slot = sniper_service_slot().lock().unwrap();
-                if let Some(state) = slot.as_mut() {
-                    state.requested = false;
+        gnostr_crawler::record_sniper_lifecycle("sniper lifecycle: worker spawned");
+        let client = gnostr_crawler::api::build_http_client();
+        {
+            let mut slot = sniper_service_slot().lock().unwrap();
+            if let Some(state) = slot.as_mut() {
+                state.requested = false;
             }
         }
         runtime.block_on(async move {
-            gnostr_crawler::run_sniper_service_with_shutdown(client, shutdown_rx).await;
+            gnostr_crawler::run_sniper_service_with_shutdown(client, None, shutdown_rx).await;
         });
         gnostr_crawler::record_sniper_log("sniper service: server stopped");
     });
@@ -429,7 +462,11 @@ pub fn sniper_service_stop() -> String {
         return "sniper service already stopped".to_string();
     };
 
-    if state.thread.as_ref().is_some_and(thread::JoinHandle::is_finished) {
+    if state
+        .thread
+        .as_ref()
+        .is_some_and(thread::JoinHandle::is_finished)
+    {
         slot.take();
         return "sniper service stopped".to_string();
     }

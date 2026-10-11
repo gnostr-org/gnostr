@@ -1,17 +1,16 @@
 #[cfg(all(feature = "relay", feature = "crawler"))]
 use clap::{Parser, Subcommand};
 #[cfg(all(feature = "relay", feature = "crawler"))]
-use gnostr_relay::cli::RelayCli;
-#[cfg(all(feature = "relay", feature = "crawler"))]
-use gnostr_relay::launcher;
-#[cfg(all(feature = "relay", feature = "crawler"))]
 use gnostr_js::crawler_control;
 #[cfg(all(feature = "relay", feature = "crawler"))]
 use gnostr_js::utils::detach::{
     capture_detached_pid, existing_detached_pid, relay_port_is_listening,
-    spawn_detached_current_exe_named,
-    spawn_detached_current_exe_named_with_env,
+    spawn_detached_current_exe_named, spawn_detached_current_exe_named_with_env,
 };
+#[cfg(all(feature = "relay", feature = "crawler"))]
+use gnostr_relay::cli::RelayCli;
+#[cfg(all(feature = "relay", feature = "crawler"))]
+use gnostr_relay::launcher;
 
 #[cfg(all(feature = "relay", feature = "crawler"))]
 const DETACHED_ENV: &str = "GNOSTR_JS_RELAY_DETACHED";
@@ -63,10 +62,16 @@ async fn run_web(port: u16, detach: bool) {
             return;
         }
         let port_str = port.to_string();
-        let pid = spawn_detached_current_exe_named(Some("gnostr-js"), ["web", "--port", port_str.as_str()])
-            .expect("spawn detached web app");
+        let pid = spawn_detached_current_exe_named(
+            Some("gnostr-js"),
+            ["web", "--port", port_str.as_str()],
+        )
+        .expect("spawn detached web app");
         let pid_path = capture_detached_pid("gnostr-js-web", pid).expect("write detached web pid");
-        println!("spawned detached web app pid {pid} at {}", pid_path.display());
+        println!(
+            "spawned detached web app pid {pid} at {}",
+            pid_path.display()
+        );
         return;
     }
 
@@ -83,7 +88,9 @@ async fn run_relay(relay: RelayCli, detach: bool) {
     }
 
     if detach {
-        if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+        if let Some(pid) =
+            existing_detached_pid("gnostr-js-relay").expect("check detached relay pid")
+        {
             println!("gnostr-js relay already running with pid {pid}");
             return;
         }
@@ -101,13 +108,16 @@ async fn run_relay(relay: RelayCli, detach: bool) {
             [(DETACHED_ENV, "1")],
         )
         .expect("spawn detached relay");
-        let pid_path = capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
+        let pid_path =
+            capture_detached_pid("gnostr-js-relay", pid).expect("write detached relay pid");
         println!("spawned detached relay pid {pid} at {}", pid_path.display());
         return;
     }
 
     if !is_detached_child {
-        if let Some(pid) = existing_detached_pid("gnostr-js-relay").expect("check detached relay pid") {
+        if let Some(pid) =
+            existing_detached_pid("gnostr-js-relay").expect("check detached relay pid")
+        {
             println!("gnostr-js relay already running with pid {pid}");
             return;
         }
@@ -137,9 +147,12 @@ async fn run_crawler(port: u16, detach: bool) {
         return;
     }
 
-    gnostr_crawler::run_api_server(port)
-        .await
-        .expect("run crawler server");
+    gnostr_crawler::run_api_server(gnostr_crawler::api::ServeOptions {
+        port,
+        ..Default::default()
+    })
+    .await
+    .expect("run crawler server");
 }
 
 #[cfg(all(feature = "relay", feature = "crawler"))]

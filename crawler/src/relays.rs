@@ -1,5 +1,5 @@
-use crate::relay_io::normalize_relay_entry;
 use crate::processor::BOOTSTRAP_RELAYS;
+use crate::relay_io::normalize_relay_entry;
 use anyhow::Result;
 use directories::ProjectDirs;
 use nostr_sdk::prelude::Url;
@@ -11,12 +11,12 @@ use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 use tracing::{debug, info, warn};
 
-#[path = "relays_set.rs"]
-mod relays_set;
 #[path = "relays_html.rs"]
 mod relays_html;
-pub use relays_set::Relays;
+#[path = "relays_set.rs"]
+mod relays_set;
 pub use relays_html::{render_page_shell, render_page_shell_with_header_right, write_index_html};
+pub use relays_set::Relays;
 
 pub fn get_config_dir_path() -> PathBuf {
     ProjectDirs::from("org", "gnostr", "gnostr/crawler")
@@ -222,16 +222,10 @@ fn write_bucket_serve_files(bucket_name: &str, relays: &[String]) -> std::io::Re
     let json_path = config_dir.join("relays.json");
     let txt_path = config_dir.join("relays.txt");
 
-    debug!(
-        "write_bucket_serve_files: writing {}",
-        yaml_path.display()
-    );
+    debug!("write_bucket_serve_files: writing {}", yaml_path.display());
     let yaml_content = serde_yaml::to_string(relays).map_err(std::io::Error::other)?;
     fs::write(&yaml_path, yaml_content)?;
-    debug!(
-        "write_bucket_serve_files: writing {}",
-        json_path.display()
-    );
+    debug!("write_bucket_serve_files: writing {}", json_path.display());
     fs::write(
         &json_path,
         serde_json::to_string_pretty(relays).map_err(std::io::Error::other)?,
@@ -264,7 +258,10 @@ pub fn append_recent_relay(relay: &str) -> std::io::Result<PathBuf> {
     };
 
     if !relays.iter().any(|existing| existing == &relay) {
-        debug!("append_recent_relay: appending relay={} bucket=recent", relay);
+        debug!(
+            "append_recent_relay: appending relay={} bucket=recent",
+            relay
+        );
         relays.push(relay);
         relays.sort();
         relays.dedup();
@@ -289,9 +286,7 @@ pub fn write_relays_serve_files() -> std::io::Result<()> {
     let mut relays: Vec<String> = Vec::new();
     collect_relays_from_bucket_tree(&config_dir, &mut relays)?;
     if relays.is_empty() {
-        info!(
-            "write_relays_serve_files: no bucket relays found, falling back to bootstrap relays"
-        );
+        info!("write_relays_serve_files: no bucket relays found, falling back to bootstrap relays");
         relays.extend(BOOTSTRAP_RELAYS.clone());
     }
     relays.sort();
@@ -426,10 +421,7 @@ pub async fn fetch_online_relays(url: &str) -> Result<Vec<String>> {
     let response = client.get(url).send().await?.error_for_status()?;
     let text = response.text().await?;
 
-    let relays: Vec<String> = text
-        .lines()
-        .filter_map(normalize_relay_entry)
-        .collect();
+    let relays: Vec<String> = text.lines().filter_map(normalize_relay_entry).collect();
 
     debug!("Fetched {} online relays", relays.len());
     Ok(relays)

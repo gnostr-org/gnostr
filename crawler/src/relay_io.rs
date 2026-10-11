@@ -116,10 +116,7 @@ pub(crate) fn parse_relay_entries(content: &str) -> Vec<String> {
             .collect();
     }
 
-    content
-        .lines()
-        .filter_map(normalize_relay_entry)
-        .collect()
+    content.lines().filter_map(normalize_relay_entry).collect()
 }
 
 pub fn load_file(filename: impl AsRef<Path>) -> io::Result<Vec<String>> {

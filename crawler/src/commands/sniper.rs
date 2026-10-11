@@ -1,4 +1,6 @@
-use crate::{fetch_relay_texts, load_relays_or_bootstrap, load_shitlist, parse_relay_metadata, Relay};
+use crate::{
+    fetch_relay_texts, load_relays_or_bootstrap, load_shitlist, parse_relay_metadata, Relay,
+};
 use log::{error, info, trace};
 use nostr_sdk::prelude::Url;
 use std::fs as sync_fs;
@@ -108,8 +110,7 @@ pub async fn run_sniper(
                             info!("software:{:?}", &relay_info.software);
                             info!("version:{:?}", &relay_info.version);
 
-                            if let Err(e) = write_nip_relay_metadata(nip_lower, &url, &relay_info)
-                            {
+                            if let Err(e) = write_nip_relay_metadata(nip_lower, &url, &relay_info) {
                                 error!(
                                     "Failed to write NIP-{} metadata for {}: {}",
                                     nip_lower, url, e
@@ -126,7 +127,11 @@ pub async fn run_sniper(
                                     .replace("ws://", "")
                             );
                         } else {
-                            trace!("run_sniper: Relay {} does not support NIP-{}", url, nip_lower);
+                            trace!(
+                                "run_sniper: Relay {} does not support NIP-{}",
+                                url,
+                                nip_lower
+                            );
                         }
                     }
                 }

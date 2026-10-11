@@ -1,3 +1,9 @@
+pub mod git_helpers;
+
+pub use git_helpers::{
+    log_message_matches, match_with_parent, print_commit, print_time, sig_matches,
+};
+
 use git2::Repository;
 use tempfile::TempDir;
 

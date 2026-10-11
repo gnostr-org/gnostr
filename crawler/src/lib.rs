@@ -15,41 +15,32 @@ use std::{
 };
 
 use tracing_subscriber::fmt;
-pub mod processor;
 pub mod api;
 pub mod cli;
+pub mod commands;
 pub mod message;
-pub mod relay_metadata;
+pub mod processor;
+pub mod pubkeys;
+pub mod query;
 pub mod relay_fetch;
 pub mod relay_io;
-pub mod pubkeys;
-pub mod commands;
-pub mod query;
 pub mod relay_manager;
+pub mod relay_metadata;
 pub mod relays;
 pub mod stats;
 pub mod tui;
-mod api_cache;
-mod api_routes;
-mod git_helpers;
 
+pub use api::{
+    run_api_server, run_api_server_detached, run_api_server_with_shutdown,
+    run_api_server_with_shutdown_and_ready, run_sniper_service_with_shutdown,
+};
 pub use cli::{dispatch_cli_command, run, Cli, CliArgs, Commands};
+pub use commands::{run_nip34, run_sniper, run_watch};
 pub use message::*;
 pub use query::{build_gnostr_query, send, Config, ConfigBuilder};
-pub use api::{
-    run_api_server,
-    run_api_server_detached,
-    run_api_server_with_shutdown,
-    run_api_server_with_shutdown_and_ready,
-    run_sniper_service_with_shutdown,
-};
-pub use commands::{run_nip34, run_sniper, run_watch};
-pub use relay_metadata::Relay;
 pub use relay_fetch::{fetch_relay_texts, parse_relay_metadata, websocket_http_url};
 pub use relay_io::{load_file, load_relays_or_bootstrap, load_shitlist, preprocess_line};
-pub use git_helpers::{
-    log_message_matches, match_with_parent, print_commit, print_time, sig_matches,
-};
+pub use relay_metadata::Relay;
 
 type LogCallback = Option<unsafe extern "C" fn(*const c_char)>;
 

@@ -6,7 +6,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_tracing()?;
 
     let cli = Cli::parse();
-    let client = reqwest::Client::new(); // Centralized client creation
+    let client = gnostr_crawler::api::build_http_client(); // Centralized client creation
 
     dispatch_cli_command(cli, &client).await?;
 

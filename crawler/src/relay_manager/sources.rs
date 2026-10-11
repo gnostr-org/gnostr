@@ -22,10 +22,7 @@ pub async fn load_relay_sources() -> Relays {
             for url_str in urls {
                 relays.add(&url_str);
             }
-            debug!(
-                "Loaded {} relays from online CSV (bitchat)",
-                relays.count()
-            );
+            debug!("Loaded {} relays from online CSV (bitchat)", relays.count());
         }
         Err(e) => debug!("Could not fetch online relays from bitchat: {}", e),
     }
@@ -37,10 +34,7 @@ pub async fn load_relay_sources() -> Relays {
             for url_str in urls {
                 relays.add(&url_str);
             }
-            debug!(
-                "Loaded {} relays from online TXT (sesseor)",
-                relays.count()
-            );
+            debug!("Loaded {} relays from online TXT (sesseor)", relays.count());
         }
         Err(e) => debug!("Could not fetch online relays from sesseor: {}", e),
     }

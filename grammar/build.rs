@@ -234,6 +234,19 @@ static MACOS_BLACKLISTED: &[&str] = &[
     "json5",
     "markdown_inline",
     "ruby",
+    // Additional grammars that fail to link on macOS (missing _tree_sitter_* symbols).
+    "gitignore",
+    "hcl",
+    "html",
+    "json",
+    "markdown",
+    "move",
+    "python",
+    "typescript",
+    "bash",
+    "git_config",
+    "scheme",
+    "yaml",
 ];
 
 /// Grammars that fail to compile on musl-libc targets (statically linked Linux).
@@ -244,15 +257,24 @@ static WINDOWS_BLACKLISTED: &[&str] = &[];
 
 /// Returns true if the grammar should be skipped for the current build target.
 fn is_blacklisted(name: &str) -> bool {
-    if BLACKLISTED_MODULES.contains(&name) {
+    // Helix languages.toml uses hyphens in some grammar names, while generated
+    // linker symbols and our blacklists use underscores. Normalize both.
+    let normalized = name.replace('-', "_");
+    if BLACKLISTED_MODULES.contains(&normalized.as_str())
+        || BLACKLISTED_MODULES.contains(&name)
+    {
         return true;
     }
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
     match target_os.as_str() {
-        "macos" if MACOS_BLACKLISTED.contains(&name) => true,
-        "windows" if WINDOWS_BLACKLISTED.contains(&name) => true,
-        _ if target_env == "musl" && MUSL_BLACKLISTED.contains(&name) => true,
+        "macos" if MACOS_BLACKLISTED.contains(&normalized.as_str())
+            || MACOS_BLACKLISTED.contains(&name) => true,
+        "windows" if WINDOWS_BLACKLISTED.contains(&normalized.as_str())
+            || WINDOWS_BLACKLISTED.contains(&name) => true,
+        _ if target_env == "musl"
+            && (MUSL_BLACKLISTED.contains(&normalized.as_str())
+                || MUSL_BLACKLISTED.contains(&name)) => true,
         _ => false,
     }
 }
@@ -575,9 +597,9 @@ fn build_language_registry(
 
                 thread_local! {
                     static REGEX: ::std::cell::LazyCell<::regex::RegexSet> = ::std::cell::LazyCell::new(|| {
-                        ::regex::RegexSet::new([
+                        ::regex::RegexSet::new(&[
                             #(#injection_regex),*
-                        ])
+                        ] as &[&str])
                         .unwrap()
                     });
                 }

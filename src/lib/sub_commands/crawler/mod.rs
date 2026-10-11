@@ -29,20 +29,43 @@ pub async fn dispatch_crawler_command(
             debug!("dispatch_crawler_command: crawl args={args:?}");
             gnostr_crawler::run(&args).await?;
         }
-        crate::crawler::Commands::Serve { port, detach } => {
+        crate::crawler::Commands::Serve {
+            port,
+            detach,
+            no_watch,
+            no_sniper,
+            shitlist,
+        } => {
             debug!("dispatch_crawler_command: serve port={port} detach={detach}");
             if detach {
+                let mut args = vec![
+                    "crawler".to_string(),
+                    "serve".to_string(),
+                    "--port".to_string(),
+                    port.to_string(),
+                ];
+                if no_watch {
+                    args.push("--no-watch".to_string());
+                }
+                if no_sniper {
+                    args.push("--no-sniper".to_string());
+                }
+                if let Some(shitlist) = shitlist {
+                    args.push("--shitlist".to_string());
+                    args.push(shitlist);
+                }
                 crate::utils::detach::spawn_detached_current_exe_named(
                     Some("gnostr-crawler"),
-                    vec![
-                        "crawler".to_string(),
-                        "serve".to_string(),
-                        "--port".to_string(),
-                        port.to_string(),
-                    ],
+                    args,
                 )?;
             } else {
-                crate::crawler::run_api_server(port).await?;
+                let options = gnostr_crawler::api::ServeOptions {
+                    port,
+                    no_watch,
+                    no_sniper,
+                    shitlist,
+                };
+                crate::crawler::run_api_server(options).await?;
             }
         }
     }

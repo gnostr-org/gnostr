@@ -2,9 +2,19 @@ use futures::{SinkExt, StreamExt};
 use log::{debug, info};
 use std::io;
 use std::time::Duration;
-use tokio_tungstenite::{connect_async, tungstenite::Message};
 use tokio::time::timeout;
+use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
+
+const DEFAULT_QUERY_TIMEOUT_SECS: u64 = 5;
+
+pub fn query_timeout() -> Duration {
+    std::env::var("GNOSTR_CRAWLER_QUERY_TIMEOUT_SECS")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .map(Duration::from_secs)
+        .unwrap_or_else(|| Duration::from_secs(DEFAULT_QUERY_TIMEOUT_SECS))
+}
 
 use crate::message::{
     ClientMessage, EventKind, Filter, IdHex, PublicKeyHex, RelayMessage, SubscriptionId,
@@ -193,7 +203,7 @@ async fn send_to_relay(
     query_string: &str,
     limit: Option<i32>,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let relay_timeout = Duration::from_secs(1);
+    let relay_timeout = query_timeout();
     debug!("query relay: {relay}");
     debug!("send_to_relay: connecting {}", relay);
     let (ws_stream, _) = match timeout(relay_timeout, connect_async(relay.as_str())).await {
@@ -259,11 +269,7 @@ async fn send_to_relay(
         }
     }
 
-    debug!(
-        "send_to_relay: done {} results={}",
-        relay,
-        vec_result.len()
-    );
+    debug!("send_to_relay: done {} results={}", relay, vec_result.len());
     Ok(vec_result)
 }
 
@@ -317,14 +323,12 @@ fn build_filter(
     }
 
     if let Some(limit) = limit {
-        filter.limit = Some(
-            usize::try_from(limit).map_err(|_| {
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "limit must be greater than or equal to zero",
-                )
-            })?,
-        );
+        filter.limit = Some(usize::try_from(limit).map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "limit must be greater than or equal to zero",
+            )
+        })?);
     }
 
     if let Some((tag, val)) = generic {
@@ -352,10 +356,7 @@ fn build_filter(
             .filter(|s| !s.is_empty())
             .map(|s| strip_kind_prefix(s).parse::<u32>())
             .collect();
-        filter.kinds = kind_ints?
-            .into_iter()
-            .map(EventKind::from)
-            .collect();
+        filter.kinds = kind_ints?.into_iter().map(EventKind::from).collect();
     }
 
     Ok(filter)
@@ -373,7 +374,9 @@ pub fn build_gnostr_query(
     kinds: Option<&str>,
     _search: Option<(&str, &str)>,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let filter = build_filter(authors, ids, limit, generic, hashtag, mentions, references, kinds)?;
+    let filter = build_filter(
+        authors, ids, limit, generic, hashtag, mentions, references, kinds,
+    )?;
     let query = ClientMessage::Req(SubscriptionId("gnostr-query".to_string()), vec![filter]);
     let wire = serde_json::to_string(&query)?;
     debug!("build_gnostr_query wire={wire}");
@@ -517,11 +520,9 @@ mod tests {
             }
             websocket
                 .send(Message::Text(
-                    serde_json::to_string(&RelayMessage::Eose(SubscriptionId(
-                        "sub-1".to_string(),
-                    )))
-                    .unwrap()
-                    .into(),
+                    serde_json::to_string(&RelayMessage::Eose(SubscriptionId("sub-1".to_string())))
+                        .unwrap()
+                        .into(),
                 ))
                 .await
                 .unwrap();
@@ -538,11 +539,9 @@ mod tests {
             }
             websocket
                 .send(Message::Text(
-                    serde_json::to_string(&RelayMessage::Eose(SubscriptionId(
-                        "sub-1".to_string(),
-                    )))
-                    .unwrap()
-                    .into(),
+                    serde_json::to_string(&RelayMessage::Eose(SubscriptionId("sub-1".to_string())))
+                        .unwrap()
+                        .into(),
                 ))
                 .await
                 .unwrap();

@@ -14,25 +14,23 @@ use gnostr_asyncgit::{
     sync::{
         add_note,
         commit::{self, mine_commit, CommitMineOptions},
-        show_note,
-        stage_add_file,
-        NoteInfo,
-        RepoPath,
+        show_note, stage_add_file, NoteInfo, RepoPath,
     },
+    types::nip13::NIP13Event,
     types::{
         generate_git_note_event, generate_git_note_event_with_pow, Client as AsyncClient,
         EventBuilder, EventKind, Keys as AsyncKeys, Options as AsyncOptions,
         PrivateKey as AsyncPrivateKey, RelayMessage, SubscriptionId,
     },
-    types::nip13::NIP13Event,
 };
 use gnostr_crawler as crawler;
 use gnostr_crawler::query::{build_gnostr_query, ConfigBuilder};
 use gnostr_crawler::relays::{self, Relays};
+use gnostr_git2_testing as git_helpers;
 use nostr_sdk::prelude::{Keys, ToBech32};
+use time_03::OffsetDateTime;
 use tokio::net::TcpListener;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
-use time_03::OffsetDateTime;
 use url::Url;
 
 static TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -130,9 +128,7 @@ async fn start_ws_server(messages: Vec<String>) -> String {
         }
 
         for msg in messages {
-            ws.send(Message::Text(msg.into()))
-                .await
-                .unwrap();
+            ws.send(Message::Text(msg.into())).await.unwrap();
         }
         let _ = ws.close(None).await;
     });
@@ -269,10 +265,14 @@ async fn publish_and_query_git_note_case(
         event.created_at,
         gnostr_asyncgit::types::Unixtime(note.committer_time)
     );
-    assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
-    assert!(event.tags.iter().any(|tag| {
-        tag.tagname() == "commit" && tag.value() == commit_id.to_string()
-    }));
+    assert!(event
+        .tags
+        .iter()
+        .any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+    assert!(event
+        .tags
+        .iter()
+        .any(|tag| { tag.tagname() == "commit" && tag.value() == commit_id.to_string() }));
 
     if pow_event_flag {
         assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));
@@ -319,9 +319,7 @@ async fn publish_and_query_git_note_case(
                         .find(|message| relay_response_contains_event_id(message, &event_id))
                     {
                         eprintln!("query attempt {attempt} for {label} via {relay}: hit");
-                        eprintln!(
-                            "query hit relay response for {label} via {relay}:\n{message}"
-                        );
+                        eprintln!("query hit relay response for {label} via {relay}:\n{message}");
                         found = Some(message);
                         break;
                     } else {
@@ -413,16 +411,19 @@ fn signature_and_log_matching_work() {
         "gnostr@example.com",
     )
     .unwrap();
-    assert!(crawler::sig_matches(
+    assert!(git_helpers::sig_matches(
         &sig,
         &Some(keys.public_key().to_bech32().unwrap())
     ));
-    assert!(crawler::log_message_matches(
+    assert!(git_helpers::log_message_matches(
         Some("relay connected"),
         &Some("connected".to_string())
     ));
-    assert!(crawler::log_message_matches(Some("relay connected"), &None));
-    assert!(!crawler::log_message_matches(
+    assert!(git_helpers::log_message_matches(
+        Some("relay connected"),
+        &None
+    ));
+    assert!(!git_helpers::log_message_matches(
         None,
         &Some("connected".to_string())
     ));
@@ -466,7 +467,7 @@ fn match_with_parent_detects_diffs() {
     let parent = repo.find_commit(first_commit).unwrap();
     let commit = repo.find_commit(second_commit).unwrap();
     let mut opts = git2::DiffOptions::new();
-    assert!(crawler::match_with_parent(&repo, &commit, &parent, &mut opts).unwrap());
+    assert!(git_helpers::match_with_parent(&repo, &commit, &parent, &mut opts).unwrap());
 }
 
 #[test]
@@ -498,7 +499,8 @@ async fn pow_matrix_events_publish_and_query_from_relays() -> anyhow::Result<()>
         ("mined-commit/mined-note/plain-event", true, true, false),
         ("mined-commit/mined-note/pow-event", true, true, true),
     ] {
-        publish_and_query_git_note_case(label, mine_commit_flag, mine_note_flag, pow_event_flag).await?;
+        publish_and_query_git_note_case(label, mine_commit_flag, mine_note_flag, pow_event_flag)
+            .await?;
     }
 
     Ok(())
@@ -660,13 +662,9 @@ async fn fetch_online_relays_and_liveness_use_http_helpers() {
 #[tokio::test]
 async fn send_reads_messages_from_websocket() {
     let make_frame = |content: &str| {
-        let event = EventBuilder::new(
-            EventKind::TextNote,
-            content.to_string(),
-            Vec::new(),
-        )
-        .to_event(&AsyncPrivateKey::mock())
-        .unwrap();
+        let event = EventBuilder::new(EventKind::TextNote, content.to_string(), Vec::new())
+            .to_event(&AsyncPrivateKey::mock())
+            .unwrap();
         serde_json::to_string(&RelayMessage::Event(
             SubscriptionId("gnostr-query".to_string()),
             Box::new(event),

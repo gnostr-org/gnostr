@@ -38,18 +38,18 @@ pub async fn fetch_relay_texts(
                 debug!("{}: {} responded in {}ms", context, url, ping_ms);
 
                 if !resp.status().is_success() {
-                    warn!("{}: skipping {} due to HTTP {}", context, url, resp.status());
+                    warn!(
+                        "{}: skipping {} due to HTTP {}",
+                        context,
+                        url,
+                        resp.status()
+                    );
                     return Ok((url, String::new(), ping_ms));
                 }
 
                 let text = resp.text().await?;
                 let ping_ms = started.elapsed().as_millis() as u64;
-                debug!(
-                    "{}: {} body received ({} bytes)",
-                    context,
-                    url,
-                    text.len()
-                );
+                debug!("{}: {} body received ({} bytes)", context, url, text.len());
                 Ok((url, text, ping_ms))
             }
         })

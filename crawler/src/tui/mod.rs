@@ -3,15 +3,15 @@ use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{ListItem, ListState};
 
-mod widgets;
-mod json;
 pub mod gnostr_crawler_filetree;
+mod json;
+mod widgets;
 
-pub use json::{value_to_lines, JsonPanel};
-pub use widgets::{DetailPanel, ListPanel};
 pub use gnostr_crawler_filetree::{
     BucketSummary, CrawlerDiskTree, CrawlerFileTreeWidget, MoveSelection,
 };
+pub use json::{value_to_lines, JsonPanel};
+pub use widgets::{DetailPanel, ListPanel};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PaneFocus {
@@ -61,7 +61,11 @@ impl MasterDetailLayout {
     pub fn new(area: Rect) -> Self {
         let root = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(2)])
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Min(0),
+                Constraint::Length(2),
+            ])
             .split(area);
         let panes = Layout::default()
             .direction(Direction::Horizontal)

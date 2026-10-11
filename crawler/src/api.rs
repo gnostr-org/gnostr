@@ -1,7 +1,8 @@
 use crate::commands::run_watch;
-use crate::processor::LOCALHOST_8080;
 use crate::load_relays_or_bootstrap;
+use crate::processor::LOCALHOST_8080;
 use crate::{build_gnostr_query, fetch_relay_texts, parse_relay_metadata, send};
+use ::url::Url;
 use axum::{
     body::Body,
     extract::{Path as AxumPath, Query},
@@ -11,29 +12,64 @@ use axum::{
     Router,
 };
 use log::{debug, error, info, warn};
-use serde::Serialize;
 use nostr_sdk::prelude::*;
+use serde::Serialize;
 use std::collections::{HashMap, HashSet};
-use std::future;
 use std::fs as sync_fs;
+use std::future;
 use std::net::SocketAddr;
-use std::sync::mpsc;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::mpsc;
 use tokio::fs;
-use tokio::task::spawn;
 use tokio::sync::oneshot;
+use tokio::task::spawn;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::{self, TraceLayer};
-use ::url::Url;
+
+#[derive(Debug, Clone, Default)]
+pub struct ServeOptions {
+    pub port: u16,
+    pub no_watch: bool,
+    pub no_sniper: bool,
+    pub shitlist: Option<String>,
+}
+
+impl From<u16> for ServeOptions {
+    fn from(port: u16) -> Self {
+        Self {
+            port,
+            ..Default::default()
+        }
+    }
+}
+
+pub fn build_http_client() -> reqwest::Client {
+    let mut builder = reqwest::Client::builder();
+    if let Ok(proxy_url) = std::env::var("GNOSTR_CRAWLER_PROXY")
+        .or_else(|_| std::env::var("ALL_PROXY"))
+        .or_else(|_| std::env::var("HTTPS_PROXY"))
+    {
+        match reqwest::Proxy::all(&proxy_url) {
+            Ok(proxy) => {
+                builder = builder.proxy(proxy);
+            }
+            Err(e) => {
+                eprintln!("Ignoring invalid proxy {}: {}", proxy_url, e);
+            }
+        }
+    }
+    builder.build().unwrap_or_else(|e| {
+        eprintln!("Failed to build HTTP client with proxy: {e}; using default client");
+        reqwest::Client::new()
+    })
+}
 
 pub(crate) async fn collect_supported_relays_for_nip(
     nip_lower: i32,
     client: &reqwest::Client,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    debug!(
-        "collect_supported_relays_for_nip: start nip={}",
-        nip_lower
-    );
+    debug!("collect_supported_relays_for_nip: start nip={}", nip_lower);
     let relays = load_relays_or_bootstrap();
     info!(
         "collect_supported_relays_for_nip: checking {} relays for NIP {}",
@@ -72,12 +108,55 @@ pub(crate) async fn collect_supported_relays_for_nip(
     Ok(supported)
 }
 
+fn combined_shitlist(shitlist_path: Option<String>) -> HashSet<String> {
+    let mut combined = HashSet::new();
+    for entry in crate::processor::SHITLIST_RELAYS.iter() {
+        let entry = entry.trim();
+        if !entry.is_empty() {
+            combined.insert(entry.to_string());
+        }
+    }
+    if let Some(path) = shitlist_path {
+        match crate::load_shitlist(&path) {
+            Ok(user) => {
+                combined.extend(user);
+            }
+            Err(e) => {
+                warn!("Failed to load shitlist from {}: {}", path, e);
+            }
+        }
+    }
+    let config_shitlist = crate::relays::get_config_dir_path().join("shitlist.yaml");
+    if config_shitlist.exists() {
+        match crate::load_shitlist(&config_shitlist) {
+            Ok(cfg) => {
+                combined.extend(cfg);
+            }
+            Err(e) => {
+                warn!("Failed to load config shitlist: {}", e);
+            }
+        }
+    }
+    combined
+}
+
 pub async fn prime_all_nip_relays_files(
     client: &reqwest::Client,
+    shitlist_path: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     crate::record_sniper_log("sniper service: starting prime pass");
     info!("prime_all_nip_relays_files: starting pass");
-    let relays = load_relays_or_bootstrap();
+    let shitlist = combined_shitlist(shitlist_path);
+    let relays: Vec<String> = load_relays_or_bootstrap()
+        .into_iter()
+        .filter(|url| {
+            let blocked = shitlist.iter().any(|bad| url.contains(bad));
+            if blocked {
+                crate::record_sniper_log(format!("sniper service: skipping shitlisted {}", url));
+            }
+            !blocked
+        })
+        .collect();
     crate::record_sniper_log(format!(
         "sniper service: checking {} relays for NIP support",
         relays.len()
@@ -105,10 +184,7 @@ pub async fn prime_all_nip_relays_files(
     for item in bodies {
         if let Ok((url, json_string, ping_ms)) = item {
             if json_string.is_empty() {
-                crate::record_sniper_log(format!(
-                    "sniper service: no metadata body for {}",
-                    url
-                ));
+                crate::record_sniper_log(format!("sniper service: no metadata body for {}", url));
                 info!("prime_all_nip_relays_files: no metadata body for {}", url);
                 skipped_relays += 1;
                 continue;
@@ -185,10 +261,7 @@ pub async fn prime_all_nip_relays_files(
                             written_files += 1;
                         }
                     } else {
-                        warn!(
-                            "prime_all_nip_relays_files: invalid relay URL {}",
-                            url
-                        );
+                        warn!("prime_all_nip_relays_files: invalid relay URL {}", url);
                     }
                     crate::record_sniper_log(format!(
                         "sniper service: bucket {} now includes {}",
@@ -258,7 +331,10 @@ pub async fn prime_all_nip_relays_files(
                 "sniper service: rebuilt NIP {} aggregate files",
                 nip
             ));
-            info!("prime_all_nip_relays_files: rebuilt NIP {} aggregate files", nip);
+            info!(
+                "prime_all_nip_relays_files: rebuilt NIP {} aggregate files",
+                nip
+            );
         }
     }
 
@@ -269,6 +345,7 @@ pub async fn prime_all_nip_relays_files(
 
 pub async fn run_sniper_service_with_shutdown(
     client: reqwest::Client,
+    shitlist_path: Option<String>,
     mut shutdown: oneshot::Receiver<()>,
 ) {
     crate::record_sniper_lifecycle("sniper lifecycle: worker starting");
@@ -277,11 +354,8 @@ pub async fn run_sniper_service_with_shutdown(
     crate::record_sniper_lifecycle("sniper lifecycle: initial prime requested");
     crate::record_sniper_log("sniper service: performing initial prime pass");
     info!("run_sniper_service: performing initial prime pass");
-    if let Err(e) = prime_all_nip_relays_files(&client).await {
-        crate::record_sniper_lifecycle(format!(
-            "sniper lifecycle: initial prime failed: {}",
-            e
-        ));
+    if let Err(e) = prime_all_nip_relays_files(&client, shitlist_path.clone()).await {
+        crate::record_sniper_lifecycle(format!("sniper lifecycle: initial prime failed: {}", e));
         crate::record_sniper_log(format!("sniper service: initial prime pass failed: {}", e));
         warn!("Sniper service failed: {}", e);
     }
@@ -299,7 +373,7 @@ pub async fn run_sniper_service_with_shutdown(
                 crate::record_sniper_lifecycle("sniper lifecycle: scheduled prime requested");
                 crate::record_sniper_log("sniper service: triggering scheduled prime pass");
                 info!("run_sniper_service: triggering scheduled prime pass");
-                if let Err(e) = prime_all_nip_relays_files(&client).await {
+                if let Err(e) = prime_all_nip_relays_files(&client, shitlist_path.clone()).await {
                     crate::record_sniper_lifecycle(format!(
                         "sniper lifecycle: scheduled prime failed: {}",
                         e
@@ -326,9 +400,9 @@ pub async fn run_sniper_service_with_shutdown(
     }
 }
 
-pub(crate) async fn run_sniper_service(client: reqwest::Client) {
+pub(crate) async fn run_sniper_service(client: reqwest::Client, shitlist_path: Option<String>) {
     let (_shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-    run_sniper_service_with_shutdown(client, shutdown_rx).await;
+    run_sniper_service_with_shutdown(client, shitlist_path, shutdown_rx).await;
 }
 
 pub(crate) async fn refresh_nip_relays_files(
@@ -338,7 +412,11 @@ pub(crate) async fn refresh_nip_relays_files(
     debug!("refresh_nip_relays_files: start nip={}", nip_lower);
     let relays = collect_supported_relays_for_nip(nip_lower, client).await?;
     let dir = crate::relays::write_nip_relays_serve_files(nip_lower, &relays)?;
-    debug!("refresh_nip_relays_files: done nip={} dir={}", nip_lower, dir.display());
+    debug!(
+        "refresh_nip_relays_files: done nip={} dir={}",
+        nip_lower,
+        dir.display()
+    );
     Ok(dir)
 }
 
@@ -504,11 +582,7 @@ pub(crate) async fn get_bucket_entries(Query(params): Query<HashMap<String, Stri
 
     let root = crate::relays::get_config_dir_path();
     let Some(relative) = sanitize_bucket_path(relative_path) else {
-        return (
-            StatusCode::BAD_REQUEST,
-            Body::from("invalid bucket path"),
-        )
-            .into_response();
+        return (StatusCode::BAD_REQUEST, Body::from("invalid bucket path")).into_response();
     };
 
     let directory = root.join(&relative);
@@ -548,7 +622,10 @@ pub(crate) async fn get_bucket_entries(Query(params): Query<HashMap<String, Stri
             path,
             name,
             is_directory: file_type.is_dir(),
-            size_bytes: metadata.as_ref().map(|meta| meta.len()).filter(|_| file_type.is_file()),
+            size_bytes: metadata
+                .as_ref()
+                .map(|meta| meta.len())
+                .filter(|_| file_type.is_file()),
             modified_at_unix: metadata
                 .and_then(|meta| meta.modified().ok())
                 .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
@@ -587,6 +664,75 @@ pub(crate) async fn get_bucket_entries(Query(params): Query<HashMap<String, Stri
     }
 }
 
+pub(crate) async fn get_health() -> Response {
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "application/json")
+        .body(Body::from(r#"{"status":"ok"}"#))
+        .unwrap_or_else(|e| {
+            error!("Failed to build health response: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Internal Server Error"),
+            )
+                .into_response()
+        })
+}
+
+#[derive(Serialize)]
+struct StatsResponse {
+    relay_count: usize,
+    live_nips: Vec<i32>,
+    live_kinds: Vec<String>,
+}
+
+pub(crate) async fn get_stats() -> Response {
+    let relays = crate::load_relays_or_bootstrap();
+    let body = StatsResponse {
+        relay_count: relays.len(),
+        live_nips: crate::relays::live_nips(),
+        live_kinds: crate::relays::live_kinds(),
+    };
+    match serde_json::to_string(&body) {
+        Ok(json) => Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, "application/json")
+            .body(Body::from(json))
+            .unwrap_or_else(|e| {
+                error!("Failed to build stats response: {}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Body::from("Internal Server Error"),
+                )
+                    .into_response()
+            }),
+        Err(e) => {
+            error!("Failed to serialize stats: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from(format!("Failed to serialize stats: {}", e)),
+            )
+                .into_response()
+        }
+    }
+}
+
+pub(crate) async fn get_sniper_logs() -> Response {
+    let logs = crate::sniper_service_logs();
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, "text/plain; charset=utf-8")
+        .body(Body::from(logs))
+        .unwrap_or_else(|e| {
+            error!("Failed to build sniper logs response: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Body::from("Internal Server Error"),
+            )
+                .into_response()
+        })
+}
+
 pub(crate) async fn get_bucket_file(Query(params): Query<HashMap<String, String>>) -> Response {
     let relative_path = params
         .get("path")
@@ -596,11 +742,7 @@ pub(crate) async fn get_bucket_file(Query(params): Query<HashMap<String, String>
 
     let root = crate::relays::get_config_dir_path();
     let Some(relative) = sanitize_bucket_path(relative_path) else {
-        return (
-            StatusCode::BAD_REQUEST,
-            Body::from("invalid bucket path"),
-        )
-            .into_response();
+        return (StatusCode::BAD_REQUEST, Body::from("invalid bucket path")).into_response();
     };
 
     let file_path = root.join(relative);
@@ -618,7 +760,11 @@ pub(crate) async fn get_bucket_file(Query(params): Query<HashMap<String, String>
                     .into_response()
             }),
         Err(e) => {
-            error!("Failed to read bucket file: {}. Path: {}", e, file_path.display());
+            error!(
+                "Failed to read bucket file: {}. Path: {}",
+                e,
+                file_path.display()
+            );
             (
                 StatusCode::NOT_FOUND,
                 Body::from(format!("Failed to read bucket file: {}", e)),
@@ -955,7 +1101,10 @@ fn prepend_local_relay(relays: Vec<Url>) -> Vec<Url> {
     with_local
 }
 
-pub(crate) fn non_empty_param<'a>(params: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
+pub(crate) fn non_empty_param<'a>(
+    params: &'a HashMap<String, String>,
+    key: &str,
+) -> Option<&'a str> {
     params
         .get(key)
         .map(String::as_str)
@@ -1541,9 +1690,16 @@ mod tests {
             "wss://relay.example.com\nws://relay.example.org\n",
         )
         .unwrap();
-        fs::write(config_dir.join("relays.json"), "[\"wss://relay.example.com/\"]").unwrap();
-        fs::write(config_dir.join("relays.txt"), "wss://relay.example.com/ ws://relay.example.org/")
-            .unwrap();
+        fs::write(
+            config_dir.join("relays.json"),
+            "[\"wss://relay.example.com/\"]",
+        )
+        .unwrap();
+        fs::write(
+            config_dir.join("relays.txt"),
+            "wss://relay.example.com/ ws://relay.example.org/",
+        )
+        .unwrap();
 
         let yaml = get_relays_yaml().await;
         assert_eq!(yaml.status(), StatusCode::OK);
@@ -1620,10 +1776,8 @@ mod tests {
         fs::write(config_dir.join("relays.yaml"), "wss://relay.example.com/\n").unwrap();
         fs::write(nip_dir.join("relay-one.json"), r#"{"name":"Relay One"}"#).unwrap();
 
-        let root = get_bucket_entries(Query(HashMap::from([(
-            "path".to_string(),
-            "".to_string(),
-        )]))).await;
+        let root =
+            get_bucket_entries(Query(HashMap::from([("path".to_string(), "".to_string())]))).await;
         assert_eq!(root.status(), StatusCode::OK);
         let root_json = response_text(root).await;
         assert!(root_json.contains("relays.yaml"));
@@ -1632,7 +1786,8 @@ mod tests {
         let nip = get_bucket_entries(Query(HashMap::from([(
             "path".to_string(),
             "34".to_string(),
-        )]))).await;
+        )])))
+        .await;
         assert_eq!(nip.status(), StatusCode::OK);
         let nip_json = response_text(nip).await;
         assert!(nip_json.contains("relay-one.json"));
@@ -1640,7 +1795,8 @@ mod tests {
         let file = get_bucket_file(Query(HashMap::from([(
             "path".to_string(),
             "34/relay-one.json".to_string(),
-        )]))).await;
+        )])))
+        .await;
         assert_eq!(file.status(), StatusCode::OK);
         assert!(response_text(file).await.contains("Relay One"));
     }
@@ -1648,10 +1804,9 @@ mod tests {
     #[tokio::test(flavor = "current_thread")]
     async fn prime_all_nip_relays_files_writes_ping_and_aggregate_files() {
         let _guard = isolate_config_dir();
-        let relay_url = start_http_server(
-            r#"{"name":"Relay One","supported_nips":[34],"version":"1.0"}"#,
-        )
-        .await;
+        let relay_url =
+            start_http_server(r#"{"name":"Relay One","supported_nips":[34],"version":"1.0"}"#)
+                .await;
         let config_dir = crate::relays::get_config_dir_path();
         fs::create_dir_all(&config_dir).unwrap();
         fs::write(
@@ -1661,7 +1816,7 @@ mod tests {
         .unwrap();
 
         let client = reqwest::Client::new();
-        prime_all_nip_relays_files(&client).await.unwrap();
+        prime_all_nip_relays_files(&client, None).await.unwrap();
 
         let nip_dir = config_dir.join("34");
         let relay_file = nip_dir.join("127.0.0.1.json");
@@ -1678,31 +1833,37 @@ mod tests {
     }
 }
 
-pub async fn run_api_server(port: u16) -> Result<(), Box<dyn std::error::Error>> {
-    run_api_server_with_shutdown(port, future::pending::<()>()).await
+pub async fn run_api_server(
+    options: impl Into<ServeOptions>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    run_api_server_with_shutdown(options, future::pending::<()>()).await
 }
 
 pub async fn run_api_server_with_shutdown<F>(
-    port: u16,
+    options: impl Into<ServeOptions>,
     shutdown: F,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     F: std::future::Future<Output = ()> + Send + 'static,
 {
-    run_api_server_with_shutdown_and_ready(port, shutdown, None).await
+    run_api_server_with_shutdown_and_ready(options, shutdown, None).await
 }
 
 pub async fn run_api_server_with_shutdown_and_ready<F>(
-    port: u16,
+    options: impl Into<ServeOptions>,
     shutdown: F,
     ready: Option<mpsc::Sender<Result<(), String>>>,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     F: std::future::Future<Output = ()> + Send + 'static,
 {
-    debug!("run_api_server: Starting API server on port {}", port);
+    let options = options.into();
+    debug!(
+        "run_api_server: Starting API server on port {}",
+        options.port
+    );
 
-    let client = reqwest::Client::new();
+    let client = build_http_client();
     if let Err(e) = crate::relays::write_relays_serve_files() {
         warn!("Failed to prepare relay serve files: {}", e);
     }
@@ -1714,23 +1875,34 @@ where
         warn!("Failed to prepare index.html: {}", e);
     }
 
-    let client_for_watch = client.clone();
-    tokio::task::spawn(async move {
-        if let Err(e) = run_watch(None, &client_for_watch).await {
-            error!("Watch process failed: {}", e);
-        }
-    });
+    let shitlist_path = options.shitlist.clone();
 
-    let client_for_sniper = client.clone();
-    spawn(async move {
-        run_sniper_service(client_for_sniper).await;
-    });
+    if !options.no_watch {
+        let client_for_watch = client.clone();
+        let shitlist_for_watch = shitlist_path.clone();
+        tokio::task::spawn(async move {
+            if let Err(e) = run_watch(shitlist_for_watch, &client_for_watch).await {
+                error!("Watch process failed: {}", e);
+            }
+        });
+    }
+
+    if !options.no_sniper {
+        let client_for_sniper = client.clone();
+        let shitlist_for_sniper = shitlist_path.clone();
+        spawn(async move {
+            run_sniper_service(client_for_sniper, shitlist_for_sniper).await;
+        });
+    }
 
     let app = Router::new()
         .route("/", get(get_index_html))
         .route("/query", get(get_query))
         .route("/api/buckets", get(get_bucket_entries))
         .route("/api/buckets/file", get(get_bucket_file))
+        .route("/api/health", get(get_health))
+        .route("/api/stats", get(get_stats))
+        .route("/api/sniper/logs", get(get_sniper_logs))
         .route("/relays.yaml", get(get_relays_yaml))
         .route("/relays.json", get(get_relays_json))
         .route("/relays.txt", get(get_relays_txt))
@@ -1750,9 +1922,15 @@ where
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().include_headers(true))
                 .on_response(trace::DefaultOnResponse::new().include_headers(true)),
+        )
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any),
         );
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let addr = SocketAddr::from(([127, 0, 0, 1], options.port));
     info!("run_api_server: listening on {}", addr);
     let listener = match tokio::net::TcpListener::bind(&addr).await {
         Ok(listener) => listener,
@@ -1775,13 +1953,24 @@ where
 
 pub fn run_api_server_detached(
     command_prefix: &[&str],
-    port: u16,
+    options: impl Into<ServeOptions>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let options = options.into();
     let current_exe = std::env::current_exe()?;
     let mut command = Command::new(current_exe);
     command.args(command_prefix);
     command.arg("--port");
-    command.arg(port.to_string());
+    command.arg(options.port.to_string());
+    if options.no_watch {
+        command.arg("--no-watch");
+    }
+    if options.no_sniper {
+        command.arg("--no-sniper");
+    }
+    if let Some(shitlist) = &options.shitlist {
+        command.arg("--shitlist");
+        command.arg(shitlist);
+    }
     command.stdin(Stdio::null());
     command.stdout(Stdio::null());
     command.stderr(Stdio::null());

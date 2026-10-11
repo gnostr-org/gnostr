@@ -1,4 +1,3 @@
-use serde_json::Value;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -6,6 +5,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Widget},
 };
+use serde_json::Value;
 
 pub struct JsonPanel<'a> {
     pub title: &'a str,
@@ -18,12 +18,13 @@ pub struct JsonPanel<'a> {
 impl<'a> Widget for JsonPanel<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let lines = if let Some(error) = self.error {
-            vec![
-                Line::from(vec![
-                    Span::styled("json error: ", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
-                    Span::raw(error.to_string()),
-                ]),
-            ]
+            vec![Line::from(vec![
+                Span::styled(
+                    "json error: ",
+                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(error.to_string()),
+            ])]
         } else if let Some(value) = self.value {
             value_to_lines(value)
         } else {
@@ -49,12 +50,22 @@ fn push_value(lines: &mut Vec<Line<'static>>, value: &Value, indent: usize, labe
             if let Some(label) = label {
                 lines.push(Line::from(vec![
                     indent_span(indent),
-                    Span::styled(format!("{}: {{", label), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        format!("{}: {{", label),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                 ]));
             } else {
                 lines.push(Line::from(vec![
                     indent_span(indent),
-                    Span::styled("{", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        "{",
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                 ]));
             }
             for (key, value) in map {
@@ -62,19 +73,34 @@ fn push_value(lines: &mut Vec<Line<'static>>, value: &Value, indent: usize, labe
             }
             lines.push(Line::from(vec![
                 indent_span(indent),
-                Span::styled("}", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "}",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
             ]));
         }
         Value::Array(items) => {
             if let Some(label) = label {
                 lines.push(Line::from(vec![
                     indent_span(indent),
-                    Span::styled(format!("{}: [", label), Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        format!("{}: [", label),
+                        Style::default()
+                            .fg(Color::Magenta)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                 ]));
             } else {
                 lines.push(Line::from(vec![
                     indent_span(indent),
-                    Span::styled("[", Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        "[",
+                        Style::default()
+                            .fg(Color::Magenta)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                 ]));
             }
             for item in items {
@@ -82,7 +108,12 @@ fn push_value(lines: &mut Vec<Line<'static>>, value: &Value, indent: usize, labe
             }
             lines.push(Line::from(vec![
                 indent_span(indent),
-                Span::styled("]", Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "]",
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                ),
             ]));
         }
         _ => {
@@ -90,7 +121,9 @@ fn push_value(lines: &mut Vec<Line<'static>>, value: &Value, indent: usize, labe
                 Ok(rendered) => rendered,
                 Err(_) => String::from("null"),
             };
-            let key = label.map(|label| format!("{}: ", label)).unwrap_or_default();
+            let key = label
+                .map(|label| format!("{}: ", label))
+                .unwrap_or_default();
             let key_style = Style::default().fg(Color::Cyan);
             let value_style = match value {
                 Value::String(_) => Style::default().fg(Color::Green),

@@ -5,8 +5,8 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-pub use gnostr_filetreelist::MoveSelection;
 use gnostr_filetreelist::FileTree;
+pub use gnostr_filetreelist::MoveSelection;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -94,7 +94,9 @@ impl CrawlerDiskTree {
     }
 
     fn visible_items(&self) -> Vec<ListItem<'static>> {
-        let total = self.tree.iterate(0, self.tree.iterate(0, usize::MAX).count());
+        let total = self
+            .tree
+            .iterate(0, self.tree.iterate(0, usize::MAX).count());
         total
             .map(|(item, selected)| {
                 let indent = "  ".repeat(item.info().indent() as usize);
@@ -105,11 +107,14 @@ impl CrawlerDiskTree {
                         "▾"
                     }
                 } else {
-                        " "
-                    };
+                    " "
+                };
                 let label = format!("{indent}{icon} {}", item.info().path_str());
                 let style = if selected {
-                    Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
                 };
@@ -117,7 +122,11 @@ impl CrawlerDiskTree {
                     Span::styled(label, style),
                     Span::raw("  "),
                     Span::styled(
-                        if item.kind().is_path() { "bucket" } else { "file" },
+                        if item.kind().is_path() {
+                            "bucket"
+                        } else {
+                            "file"
+                        },
                         Style::default().fg(Color::DarkGray),
                     ),
                 ]))
@@ -148,7 +157,9 @@ impl<'a> Widget for CrawlerFileTreeWidget<'a> {
         rows.push(ListItem::new(Line::from(vec![
             Span::styled(
                 self.tree.root().display().to_string(),
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw("  "),
             Span::styled(bucket_line, Style::default().fg(Color::DarkGray)),
@@ -190,7 +201,10 @@ fn build_entry(root: &Path, real: &Path) -> Result<FileEntry> {
 }
 
 fn bucket_name(relative: &Path, real: &Path) -> String {
-    if relative.parent().is_some_and(|parent| !parent.as_os_str().is_empty()) {
+    if relative
+        .parent()
+        .is_some_and(|parent| !parent.as_os_str().is_empty())
+    {
         relative
             .components()
             .next()
@@ -251,7 +265,10 @@ fn walk(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
         let path = entry.path();
         let file_name = entry.file_name();
         let file_name = file_name.to_string_lossy();
-        if file_name == "target" || file_name == ".git" || file_name.starts_with('.') && path.is_dir() {
+        if file_name == "target"
+            || file_name == ".git"
+            || file_name.starts_with('.') && path.is_dir()
+        {
             continue;
         }
         let meta = entry.metadata()?;

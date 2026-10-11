@@ -1,7 +1,7 @@
 use crate::api::{run_api_server, run_api_server_detached};
 use crate::commands::{run_nip34, run_sniper, run_watch};
-use crate::processor::BOOTSTRAP_RELAYS;
 use crate::processor::Processor;
+use crate::processor::BOOTSTRAP_RELAYS;
 use crate::relay_manager::RelayManager;
 use clap::{Parser, Subcommand};
 use log::{debug, info};
@@ -46,6 +46,15 @@ pub enum Commands {
         /// Run the API server in the background.
         #[arg(long, default_value_t = false)]
         detach: bool,
+        /// Disable the background watch task.
+        #[arg(long, default_value_t = false)]
+        no_watch: bool,
+        /// Disable the background sniper service.
+        #[arg(long, default_value_t = false)]
+        no_sniper: bool,
+        /// Optional: Path to a shitlist file to exclude relays
+        #[arg(long, short)]
+        shitlist: Option<String>,
     },
 }
 
@@ -69,17 +78,25 @@ pub struct CliArgs {
     arg_spec: Vec<String>,
     #[arg(long)]
     arg_dump: bool,
+    #[arg(long, default_value_t = 50)]
+    max_active_relays: usize,
+    #[arg(long, default_value_t = 5)]
+    query_timeout_secs: u64,
 }
 
 pub async fn run(args: &CliArgs) -> Result<()> {
     debug!("crawler::cli::run start args={args:?}");
-    let _run_async = async {
-        let app_keys = Keys::parse(&args.arg_nsec).unwrap();
-        let relay_client = Client::new(app_keys);
-        let _ = relay_client
-            .send_event_builder(EventBuilder::text_note("#gnostr"))
-            .await;
-    };
+
+    unsafe {
+        std::env::set_var(
+            "GNOSTR_CRAWLER_MAX_ACTIVE_RELAYS",
+            args.max_active_relays.to_string(),
+        );
+        std::env::set_var(
+            "GNOSTR_CRAWLER_QUERY_TIMEOUT_SECS",
+            args.query_timeout_secs.to_string(),
+        );
+    }
 
     let app_keys = Keys::parse(&args.arg_nsec).unwrap();
     let processor = Processor::new();
@@ -118,11 +135,23 @@ pub async fn dispatch_cli_command(
         Commands::Crawl(args) => {
             run(args).await?;
         }
-        Commands::Serve { port, detach } => {
+        Commands::Serve {
+            port,
+            detach,
+            no_watch,
+            no_sniper,
+            shitlist,
+        } => {
+            let options = crate::api::ServeOptions {
+                port: *port,
+                no_watch: *no_watch,
+                no_sniper: *no_sniper,
+                shitlist: shitlist.clone(),
+            };
             if *detach {
-                run_api_server_detached(&["serve"], *port)?;
+                run_api_server_detached(&["serve"], options)?;
             } else {
-                run_api_server(*port).await?;
+                run_api_server(options).await?;
             }
         }
     }

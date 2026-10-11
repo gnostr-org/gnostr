@@ -78,9 +78,7 @@ impl Processor {
         //TODO: forward (proxy)
         debug!(
             "processor::handle_event start id={:?} kind={:?} pubkey={:?}",
-            event.id,
-            event.kind,
-            event.pubkey
+            event.id, event.kind, event.pubkey
         );
         debug!(
             "age {:?}  created_at {:?}",

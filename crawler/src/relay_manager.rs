@@ -4,8 +4,7 @@ use crate::relays::Relays;
 
 use nostr_sdk::{
     prelude::{
-        Client, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, Result,
-        TagStandard, Timestamp,
+        Client, Event, Filter, Keys, Kind, RelayPoolNotification, Result, TagStandard, Timestamp,
     },
     RelayMessage, RelayStatus,
 };
@@ -17,8 +16,15 @@ use log::info;
 use log::trace;
 use log::warn;
 
-const MAX_ACTIVE_RELAYS: usize = 3; //usize::MAX;
+const DEFAULT_MAX_ACTIVE_RELAYS: usize = 50;
 const PERIOD_START_PAST_SECS: u64 = 6 * 60 * 60;
+
+fn max_active_relays() -> usize {
+    std::env::var("GNOSTR_CRAWLER_MAX_ACTIVE_RELAYS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_MAX_ACTIVE_RELAYS)
+}
 
 mod active;
 mod sources;
@@ -55,7 +61,7 @@ impl RelayManager {
 
     fn add_bootstrap_relays_if_needed(&mut self, bootstrap_relays: Vec<&str>) {
         debug!("relay_manager::add_bootstrap_relays_if_needed");
-        if self.relays.count() >= MAX_ACTIVE_RELAYS {
+        if self.relays.count() >= max_active_relays() {
             return;
         }
         seed_bootstrap_relays(&mut self.relays, bootstrap_relays.as_slice());
@@ -63,13 +69,10 @@ impl RelayManager {
 
     async fn add_some_relays(&mut self) -> Result<()> {
         debug!("relay_manager::add_some_relays");
-        let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
+        let some_relays = self.relays.get_some(max_active_relays());
         for r in some_relays {
             debug!("r={}", &r);
             self.relay_client.add_relay(r.clone()).await?;
-            self.relay_client
-                .send_event_builder(EventBuilder::text_note(format!("{}", r)))
-                .await?;
         }
         Ok(())
     }
@@ -88,7 +91,7 @@ impl RelayManager {
             Self::monitor_relays(active_relay_list, relay_client).await;
         });
 
-        let some_relays = self.relays.get_some(MAX_ACTIVE_RELAYS);
+        let some_relays = self.relays.get_some(max_active_relays());
         for url in &some_relays {
             if is_shitlisted(url.as_str()) {
                 debug!("Skipping shitlisted relay: {}", url);
@@ -207,8 +210,7 @@ impl RelayManager {
     async fn subscribe(&mut self, time_start: Timestamp, time_end: Timestamp) -> Result<()> {
         debug!(
             "relay_manager::subscribe start since={} until={}",
-            time_start,
-            time_end
+            time_start, time_end
         );
         self.relay_client
             .subscribe(
@@ -221,13 +223,7 @@ impl RelayManager {
                 None,
             )
             .await?;
-        debug!("Subscribed to relay events",);
-        self.relay_client
-            .send_event_builder(EventBuilder::text_note(format!("{}", time_start)))
-            .await?;
-        self.relay_client
-            .send_event_builder(EventBuilder::text_note(format!("{}", time_end)))
-            .await?;
+        debug!("Subscribed to relay events");
         Ok(())
     }
 
@@ -240,7 +236,7 @@ impl RelayManager {
     async fn reconnect(&mut self) -> Result<()> {
         let connected_relays = self.relay_client.relays().await.len();
         let available_relays = self.relays.count();
-        if connected_relays < MAX_ACTIVE_RELAYS && available_relays > connected_relays {
+        if connected_relays < max_active_relays() && available_relays > connected_relays {
             debug!(
                 "connected_relays={} available_relays={}",
                 connected_relays, available_relays
@@ -248,12 +244,6 @@ impl RelayManager {
             self.disconnect().await?;
             self.add_some_relays().await?;
             self.connect().await?;
-            self.relay_client
-                .send_event_builder(EventBuilder::text_note(format!("{}", connected_relays)))
-                .await?;
-            self.relay_client
-                .send_event_builder(EventBuilder::text_note(format!("{}", available_relays)))
-                .await?;
         }
         Ok(())
     }
