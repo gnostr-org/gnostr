@@ -6,10 +6,8 @@ use std::sync::mpsc::channel;
 use std::thread;
 // use git2::*;
 use super::worker::Worker;
-use gnostr_asyncgit::{
-    filehash::{get_relay_urls, publish_patch_event},
-    types::Keys,
-};
+use gnostr_asyncgit::types::Keys;
+use gnostr_types::nostr::patch::{get_relay_urls, publish_patch_event};
 use time_0_3::OffsetDateTime;
 //TODO use gnostr_asyncgit::types for event creation and injection during the mining loop
 #[derive(Clone, Debug)]

@@ -14,10 +14,10 @@ use std::{
 };
 
 use gnostr_asyncgit::{
-    filehash::{get_relay_urls, publish_patch_event},
     sync::{commit::commit, stage_add_file, RepoPath},
     types::Keys,
 };
+use gnostr_types::nostr::patch::{get_relay_urls, publish_patch_event};
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 
 fn repo_path(repo_dir: &Path) -> Result<RepoPath, Box<dyn Error>> {

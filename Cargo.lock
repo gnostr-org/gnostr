@@ -7076,7 +7076,6 @@ dependencies = [
  "gnostr-relay",
  "gnostr-scopetime",
  "gnostr-types",
- "gnostr_filehash_core",
  "handlebars",
  "hex",
  "hkdf",
@@ -7456,6 +7455,7 @@ dependencies = [
  "clap 4.6.7",
  "env_logger 0.10.2",
  "gnostr-asyncgit",
+ "gnostr-types",
  "log",
  "rust-crypto",
  "time 0.3.47",
@@ -7642,6 +7642,7 @@ dependencies = [
  "rkyv 0.8.18",
  "ron 0.8.1",
  "rust-ini",
+ "rustls 0.23.45",
  "scrypt",
  "secp256k1 0.29.1",
  "serde",
@@ -7766,15 +7767,6 @@ dependencies = [
  "webbrowser",
  "xxhash-rust",
  "yoke 0.7.5",
-]
-
-[[package]]
-name = "gnostr_filehash_core"
-version = "970861.1845.448495"
-dependencies = [
- "chrono",
- "sha2 0.10.9",
- "tempfile",
 ]
 
 [[package]]
@@ -11296,6 +11288,7 @@ dependencies = [
  "gnostr-asyncgit",
  "gnostr-filetreelist",
  "gnostr-relay",
+ "gnostr-types",
  "include_dir",
  "mime_guess",
  "portable-pty",

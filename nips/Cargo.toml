@@ -23,6 +23,7 @@ filetreelist = { workspace = true }
 futures = { workspace = true }
 gnostr-asyncgit = { workspace = true, features = ["tui", "vendor-openssl"] }
 gnostr-relay = { workspace = true }
+gnostr-types = { workspace = true }
 include_dir = { workspace = true, features = ["glob", "metadata"] }
 mime_guess = { workspace = true }
 portable-pty = "0.8.1"

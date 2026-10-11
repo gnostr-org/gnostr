@@ -90,6 +90,7 @@ pub mod nip19;
 pub mod keys;
 pub mod client;
 pub mod image_dimensions;
+pub mod patch;
 pub mod versioned;
 
 pub mod exports;

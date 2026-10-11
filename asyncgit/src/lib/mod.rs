@@ -64,9 +64,6 @@ pub mod js;
 /// Embedded CSS assets.
 pub mod css;
 
-#[path = "filehash/lib.rs"]
-pub mod filehash;
-
 /// Deterministic Nostr profile fixtures used in tests and examples.
 pub mod profiles;
 
@@ -147,7 +144,6 @@ pub use crate::{
         REPO_STATE_KIND,
     },
 };
-pub use filehash::install_rustls_crypto_provider;
 
 /// Default deterministic private key material used by tests and fixtures.
 pub use crate::types::DEFAULT_GNOSTR_PRIVATE_KEY;
