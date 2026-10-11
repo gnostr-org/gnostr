@@ -150,6 +150,9 @@ pub use crate::{
 /// Default deterministic private key material used by tests and fixtures.
 pub use crate::types::DEFAULT_GNOSTR_PRIVATE_KEY;
 
+/// Install the `ring` rustls crypto provider.
+pub use crate::types::patch::install_rustls_crypto_provider;
+
 /// Default deterministic private key material encoded as lowercase hex.
 pub fn default_gnostr_private_key_hex() -> String {
     hex::encode(DEFAULT_GNOSTR_PRIVATE_KEY)
