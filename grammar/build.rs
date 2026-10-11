@@ -222,7 +222,19 @@ static BLACKLISTED_MODULES: &[&str] = &[
 ];
 
 /// Grammars that fail to compile on macOS (beyond the always-blacklisted set above).
-static MACOS_BLACKLISTED: &[&str] = &["git_rebase", "gitattributes", "qmljs", "xml"];
+static MACOS_BLACKLISTED: &[&str] = &[
+    "git_rebase",
+    "gitattributes",
+    "qmljs",
+    "xml",
+    "diff",
+    "git_commit",
+    "javascript",
+    "jinja2",
+    "json5",
+    "markdown_inline",
+    "ruby",
+];
 
 /// Grammars that fail to compile on musl-libc targets (statically linked Linux).
 static MUSL_BLACKLISTED: &[&str] = &[];
