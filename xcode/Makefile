@@ -10,11 +10,20 @@ SCRIPT_VERBOSE := $(if $(VERBOSE),--verbose,)
 
 help:
 	@printf '%s\n' 'Usage: make <script-target> [ARGS="..."] [VERBOSE=1]'
+	@printf '\nbrew-install-mint\n'
+	@printf '\nmint-install-swift-bundler\n'
 	@printf '\n%s\n' 'Available targets:'
 	@for t in $(SCRIPT_TARGETS); do printf '  %-36s ./scripts/%s.sh\n' "$$t" "$$t"; done
 	@printf '  %-36s %s\n' help "Show this help"
 	@printf '  %-36s %s\n' list-scripts "List script targets"
 	@printf '  %-36s %s\n' build-libp2p-framework "Alias for libp2p/build-libp2p-framework"
+
+brew-install-mint:
+	brew install mint
+	@printf '%s\n'
+
+mint-install-swift-bundler:
+	mint install stackotter/swift-bundler@main
 
 list-scripts:
 	@printf '%s\n' $(SCRIPT_TARGETS)
