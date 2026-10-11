@@ -417,6 +417,7 @@ pub async fn evt_loop(
     let reassembler = Arc::new(MessageReassembler::new()); // Create reassembler here
     let mut pending_crawler_search: HashMap<kad::QueryId, i32> = HashMap::new();
     let mut pending_chat_messages: VecDeque<Msg> = VecDeque::new();
+    let mut flush_pending_interval = tokio::time::interval(Duration::from_secs(1));
 
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
@@ -744,6 +745,15 @@ pub async fn evt_loop(
                         .await?;
                 }
                 _ => {}
+            }
+            _ = flush_pending_interval.tick() => {
+                flush_pending_chat_messages(
+                    &mut swarm,
+                    &topic,
+                    &mut pending_chat_messages,
+                    &recv,
+                )
+                .await?;
             }
         }
     }
