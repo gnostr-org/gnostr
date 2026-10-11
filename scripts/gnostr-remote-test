@@ -30,10 +30,11 @@ fetch_relay_list() {
   { set +x; } 2>/dev/null
 
   local raw
-  raw=$(curl -fsSL "${CRAWLER_API_URL}/relays.json" 2>/dev/null)
+  # /relays.txt returns space-separated URLs, easier to parse than JSON.
+  raw=$(curl -fsSL "${CRAWLER_API_URL}/relays.txt" 2>/dev/null)
   if [[ -n "$raw" ]]; then
     set -x
-    printf '%s\n' "$raw" | sed -n 's/.*"\(wss:\/\/[^"]*\)".*/\1/p' | normalize_relay_url
+    printf '%s\n' "$raw" | tr ' ' '\n' | normalize_relay_url
     return 0
   fi
 
