@@ -7,4 +7,5 @@ pub enum ChatEvent {
     ShowInfoMsg(String),
     PeerConnected { peer_id: String, endpoint: String },
     CrawlerSearch { nip: i32 },
+    MessagePublished,
 }

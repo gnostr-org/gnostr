@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::Parser;
 use gnostr_asyncgit::types::PrivateKey;
 use gnostr_p2p::time::{Clock, P2PClock};
@@ -195,13 +195,43 @@ async fn run_oneshot(session: &mut ChatSession, message_input: String) -> Result
     session.wait_for_connected(Duration::from_secs(30)).await?;
     let p2p_timestamp = oneshot_p2p_timestamp(session.topic());
     println!("p2p time timestamp: {p2p_timestamp}");
-    session.send_text(message_input).await?;
-    println!("Oneshot message sent at {p2p_timestamp}. Waiting for propagation...");
 
-    tokio::time::sleep(Duration::from_secs(2)).await;
+    // Subscribe to publication confirmations before sending so we cannot miss the event.
+    let mut publish_rx = session.subscribe();
+    session.send_text(message_input).await?;
+    println!("Oneshot message queued at {p2p_timestamp}. Waiting for publication...");
+
+    match wait_for_message_published(&mut publish_rx, Duration::from_secs(30)).await {
+        Ok(()) => println!("Oneshot message published."),
+        Err(e) => {
+            tracing::warn!("chat oneshot: did not receive publication confirmation: {e}");
+            println!("Warning: message may not have been published: {e}");
+        }
+    }
+
+    // Brief grace period so gossipsub can transmit the message before the swarm is dropped.
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    printer.abort();
     drop(printer);
     tracing::info!("Oneshot operation complete.");
     Ok(())
+}
+
+async fn wait_for_message_published(
+    rx: &mut tokio::sync::broadcast::Receiver<ChatNotification>,
+    timeout: Duration,
+) -> Result<()> {
+    tokio::time::timeout(timeout, async {
+        loop {
+            match rx.recv().await {
+                Ok(ChatNotification::MessagePublished) => return Ok(()),
+                Ok(_) => {}
+                Err(_) => bail!("notification channel closed before publication confirmation"),
+            }
+        }
+    })
+    .await
+    .map_err(|_| anyhow::anyhow!("timed out waiting for publication confirmation"))?
 }
 
 fn oneshot_p2p_timestamp(topic: &str) -> String {
@@ -240,6 +270,7 @@ fn spawn_notification_printer(
                 ChatNotification::Connected { peer_id, endpoint } => {
                     println!("Connected to peer {peer_id} via {endpoint}")
                 }
+                ChatNotification::MessagePublished => {}
             }
         }
     })

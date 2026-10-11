@@ -138,6 +138,7 @@ impl ChatTui {
                 ChatNotification::Connected { peer_id, endpoint } => {
                     self.status = format!("connected to peer {peer_id} via {endpoint}");
                 }
+                ChatNotification::MessagePublished => {}
             }
         }
     }

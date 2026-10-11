@@ -49,7 +49,10 @@ async fn publish_or_queue_chat_message(
 ) -> Result<()> {
     let payload = serde_json::to_vec(&msg)?;
     match swarm.behaviour_mut().gossipsub.publish(topic.clone(), payload) {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            recv.send(ChatEvent::MessagePublished).await?;
+            Ok(())
+        }
         Err(error) if is_insufficient_peers_error(&error) => {
             pending_chat_messages.push_back(msg);
             recv.send(ChatEvent::ShowInfoMsg(
@@ -81,6 +84,7 @@ async fn flush_pending_chat_messages(
             Ok(_) => {
                 recv.send(ChatEvent::ShowInfoMsg("sent queued chat message".to_string()))
                     .await?;
+                recv.send(ChatEvent::MessagePublished).await?;
             }
             Err(error) if is_insufficient_peers_error(&error) => {
                 pending_chat_messages.push_front(msg);
@@ -596,7 +600,7 @@ pub async fn evt_loop(
                         pending_crawler_search.insert(query_id, nip);
                         recv.send(ChatEvent::ShowInfoMsg(format!("searching crawler bucket {nip} providers"))).await?;
                     }
-                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::PeerConnected { .. } => {}
+                    ChatEvent::ShowErrorMsg(_) | ChatEvent::ShowInfoMsg(_) | ChatEvent::PeerConnected { .. } | ChatEvent::MessagePublished => {}
                 }
             }
             event = swarm.select_next_some() => match event {

@@ -16,6 +16,7 @@ pub enum ChatNotification {
     Info(String),
     Error(String),
     Connected { peer_id: String, endpoint: String },
+    MessagePublished,
 }
 
 pub struct ChatSession {
@@ -131,6 +132,7 @@ async fn forward_updates(
                 ChatNotification::Connected { peer_id, endpoint }
             }
             ChatEvent::CrawlerSearch { .. } => continue,
+            ChatEvent::MessagePublished => ChatNotification::MessagePublished,
         };
 
         let _ = updates.send(notification);
