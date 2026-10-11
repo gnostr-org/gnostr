@@ -160,43 +160,47 @@ final class P2PDemoViewModel {
         state = .starting
         log("Starting libp2p node")
 
-        let app = Self.makeApplication(peerID: peerID)
-        self.app = app
-
-        app.discovery.onPeerDiscovered(app) { [weak self] peer in
-            let peerID = peer.peer.b58String
-            let addresses = peer.addresses.map(\.description)
-            DispatchQueue.main.async { [weak self] in
-                self?.recordDiscoveredPeer(
-                    peerID: peerID,
-                    addresses: addresses
-                )
-            }
-        }
-
-        app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self, weak app] in
-            guard let self, let app else { return }
-            let addresses = app.listenAddresses.compactMap { address -> String? in
-                guard let fullAddress = try? address.encapsulate(proto: .p2p, address: app.peerID.b58String) else {
-                    return nil
-                }
-                return fullAddress.description
-            }
-
-            Task { @MainActor in
-                self.listenAddresses = addresses
-                if !addresses.isEmpty {
-                    self.log("Listening on: \(addresses.joined(separator: ", "))")
-                }
-                if self.state == .starting {
-                    self.state = .running
-                    self.log("Node is running")
-                }
-            }
-        }
-
-        runTask = Task { [app] in
+        // Create Application asynchronously
+        runTask = Task { [weak self] in
+            guard let self = self else { return }
             do {
+                let app = try await Self.makeApplication(peerID: self.peerID)
+                await MainActor.run {
+                    self.app = app
+                }
+
+                app.discovery.onPeerDiscovered(app) { [weak self] peer in
+                    let peerID = peer.peer.b58String
+                    let addresses = peer.addresses.map(\.description)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.recordDiscoveredPeer(
+                            peerID: peerID,
+                            addresses: addresses
+                        )
+                    }
+                }
+
+                app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self, weak app] in
+                    guard let self, let app else { return }
+                    let addresses = app.listenAddresses.compactMap { address -> String? in
+                        guard let fullAddress = try? address.encapsulate(proto: .p2p, address: app.peerID.b58String) else {
+                            return nil
+                        }
+                        return fullAddress.description
+                    }
+
+                    Task { @MainActor in
+                        self.listenAddresses = addresses
+                        if !addresses.isEmpty {
+                            self.log("Listening on: \(addresses.joined(separator: ", "))")
+                        }
+                        if self.state == .starting {
+                            self.state = .running
+                            self.log("Node is running")
+                        }
+                    }
+                }
+
                 try await app.execute()
             } catch {
                 await MainActor.run { [weak self] in
@@ -368,8 +372,9 @@ final class P2PDemoViewModel {
         return cwd.path
     }
 
-    private static func makeApplication(peerID: PeerID) -> Application {
-        let app = Application(.testing, peerID: peerID)
+    private static func makeApplication(peerID: PeerID) async throws -> Application {
+        // Migration from deprecated Application(.testing, peerID:) initializer to async factory method.
+        let app = try await Application.make(.testing, peerID: peerID)
         app.logger.logLevel = .notice
         app.security.use(.noise)
         app.muxers.use(.yamux)
