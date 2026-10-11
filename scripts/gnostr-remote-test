@@ -29,7 +29,7 @@ fi
 
 HASH=$($gnostr --hash "")
 NSEC=${1:-$HASH}
-RELAY=${2:-"wss://nos.lol"}
+RELAY=${2:-"wss://relay.damus.io"}
 
 export EVENT1=$($gnostr --nsec "$NSEC" -r "$RELAY" custom-event -k 30617 -c "" \
   -t "a|30617" -t "d|gnostr" -t "name|gnostr" -t "description|a git+nostr workflow utilty" \
@@ -60,6 +60,9 @@ export EVENT2_ID=$($gnostr bech32-to-any "$EVENT2" --raw)
 $gnostr fetch-by-id -i "$EVENT2_ID" -r "$RELAY"
 
 echo
+sleep 2
+
+# Give the relay time to make EVENT2 available before reacting.
 sleep 2
 
 $gnostr --nsec "$($gnostr privkey-to-bech32 "$NSEC")" -r "$RELAY" react -e "$EVENT1_ID" --reaction "$EVENT2_ID"
