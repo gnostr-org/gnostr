@@ -7,8 +7,8 @@ let package = Package(
     name: "swift-cross-ui-p2p",
     platforms: [
         .macOS(.v11),
-        .iOS(.v13),
-        .macCatalyst(.v13),
+        .iOS(.v14),
+        .macCatalyst(.v14),
     ],
     
     products: [

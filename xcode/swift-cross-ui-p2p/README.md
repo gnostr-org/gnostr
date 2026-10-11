@@ -20,10 +20,10 @@ swift run SwiftCrossUIP2P
 
 ## iPad and Mac Catalyst
 
-The package supports iOS, macOS, and Mac Catalyst. When building for iPad or
-Mac Catalyst, the app uses `UIKitBackend` directly so that the UI is rendered
-with the iPad-style appearance on both devices. On macOS it falls back to
-`DefaultBackend` (AppKit), and on Linux it uses `DefaultBackend` (Gtk).
+The package supports iOS 14+, macOS 11+, and Mac Catalyst 14+. When building
+for iPad or Mac Catalyst, the app uses `UIKitBackend` directly so that the UI
+is rendered with the iPad-style appearance on both devices. On macOS it falls
+back to `DefaultBackend` (AppKit), and on Linux it uses `DefaultBackend` (Gtk).
 
 Build for Mac Catalyst from the command line with `xcodebuild`:
 
