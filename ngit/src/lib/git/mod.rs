@@ -1452,6 +1452,12 @@ mod tests {
 
     mod make_patch_from_commit {
         use super::*;
+
+        fn libgit2_version_string() -> String {
+            let (major, minor, rev) = git2::Version::get().libgit2_version();
+            format!("{major}.{minor}.{rev}")
+        }
+
         #[test]
         fn simple_patch_matches_string() -> Result<()> {
             let test_repo = GitTestRepo::default();
@@ -1459,8 +1465,7 @@ mod tests {
 
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
-            assert_eq!(
-                "\
+            let expected = "\
                 From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
                 From: Joe Bloggs <joe.bloggs@pm.me>\n\
                 Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
@@ -1482,7 +1487,11 @@ mod tests {
                 --\n\
                 libgit2 1.9.3\n\
                 \n\
-                ",
+                "
+            .replace("libgit2 1.9.3", &format!("libgit2 {}", libgit2_version_string()));
+
+            assert_eq!(
+                expected,
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &None)?,
             );
             Ok(())
@@ -1495,8 +1504,7 @@ mod tests {
 
             let git_repo = Repo::from_path(&test_repo.dir)?;
 
-            assert_eq!(
-                "\
+            let expected = "\
                 From 431b84edc0d2fa118d63faa3c2db9c73d630a5ae Mon Sep 17 00:00:00 2001\n\
                 From: Joe Bloggs <joe.bloggs@pm.me>\n\
                 Date: Thu, 1 Jan 1970 00:00:00 +0000\n\
@@ -1518,7 +1526,11 @@ mod tests {
                 --\n\
                 libgit2 1.9.3\n\
                 \n\
-                ",
+                "
+            .replace("libgit2 1.9.3", &format!("libgit2 {}", libgit2_version_string()));
+
+            assert_eq!(
+                expected,
                 git_repo.make_patch_from_commit(&oid_to_sha1(&oid), &Some((3, 5)))?,
             );
             Ok(())
