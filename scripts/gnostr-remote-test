@@ -34,43 +34,45 @@ fetch_relay_csv() {
   set -x
 }
 
-# Pick N random relays from the CSV, falling back to the hard-coded list.
+# Pick N random relays from the CSV plus the hard-coded fallback relays.
 pick_relays() {
   # Suppress tracing while handling the large CSV payload.
   { set +x; } 2>/dev/null
-  local count=${1:-3}
+  local csv_count=${1:-3}
   local relays
   relays=$(fetch_relay_csv)
 
-  if [[ -z "$relays" ]]; then
-    printf '%s\n' "${DEFAULT_FALLBACK_RELAYS[@]}"
-    set -x
-    return 0
-  fi
+  # Always start with the fallback relays so we have known-good endpoints.
+  local selected
+  selected=$(printf '%s\n' "${DEFAULT_FALLBACK_RELAYS[@]}")
 
-  # Shuffle and take the requested count.
-  local selected=""
-  if command -v shuf >/dev/null 2>&1; then
-    selected=$(printf '%s\n' "$relays" | shuf -n "$count")
-  elif command -v sort >/dev/null 2>&1 && sort --help 2>&1 | grep -q -- '-R'; then
-    selected=$(printf '%s\n' "$relays" | sort -R | head -n "$count")
-  else
-    local total
-    total=$(printf '%s\n' "$relays" | wc -l | tr -d ' ')
-    local i
-    for ((i = 0; i < count; i++)); do
-      local idx=$((RANDOM % total + 1))
-      selected=$(printf '%s\n%s\n' "$selected" "$(printf '%s\n' "$relays" | sed -n "${idx}p")")
-    done
-    selected=$(printf '%s\n' "$selected" | sed '/^$/d')
+  if [[ -n "$relays" ]]; then
+    # Shuffle and take the requested count of CSV relays.
+    local csv_selected=""
+    if command -v shuf >/dev/null 2>&1; then
+      csv_selected=$(printf '%s\n' "$relays" | shuf -n "$csv_count")
+    elif command -v sort >/dev/null 2>&1 && sort --help 2>&1 | grep -q -- '-R'; then
+      csv_selected=$(printf '%s\n' "$relays" | sort -R | head -n "$csv_count")
+    else
+      local total
+      total=$(printf '%s\n' "$relays" | wc -l | tr -d ' ')
+      local i
+      for ((i = 0; i < csv_count; i++)); do
+        local idx=$((RANDOM % total + 1))
+        csv_selected=$(printf '%s\n%s\n' "$csv_selected" "$(printf '%s\n' "$relays" | sed -n "${idx}p")")
+      done
+      csv_selected=$(printf '%s\n' "$csv_selected" | sed '/^$/d')
+    fi
+    selected=$(printf '%s\n%s\n' "$selected" "$csv_selected")
   fi
 
   set -x
-  printf '%s\n' "$selected"
+  printf '%s\n' "$selected" | sed '/^$/d'
 }
 
 # Fetch an event by id, trying each provided relay until one returns it.
 fetch_event_by_id() {
+  { set +x; } 2>/dev/null
   local id=$1
   shift
   local relay
@@ -78,10 +80,12 @@ fetch_event_by_id() {
     local output
     output=$($gnostr fetch-by-id -i "$id" -r "$relay" 2>/dev/null)
     if [[ -n "$output" ]]; then
+      set -x
       printf '%s\n' "$output"
       return 0
     fi
   done
+  set -x
   return 1
 }
 
