@@ -1099,10 +1099,18 @@ mod test_remote_branches {
 		let branches_1 =
 			get_branches_info(&clone1_dir.into(), false).unwrap();
 
-		eprintln!("branches_1: {branches_1:?}");
+		let find = |branches: &[BranchInfo], name: &str| {
+			branches
+				.iter()
+				.find(|b| b.name == name)
+				.unwrap()
+				.remote_details()
+				.unwrap()
+				.has_tracking
+		};
 
-		assert!(branches_1[0].remote_details().unwrap().has_tracking);
-		assert!(branches_1[1].remote_details().unwrap().has_tracking);
+		assert!(find(&branches_1, "origin/master"));
+		assert!(find(&branches_1, "origin/foo"));
 
 		// clone2
 
@@ -1114,12 +1122,7 @@ mod test_remote_branches {
 		let branches_2 =
 			get_branches_info(&clone2_dir.into(), false).unwrap();
 
-		assert!(
-			!branches_2[0].remote_details().unwrap().has_tracking
-		);
-		assert!(
-			!branches_2[1].remote_details().unwrap().has_tracking
-		);
-		assert!(branches_2[2].remote_details().unwrap().has_tracking);
+		assert!(!find(&branches_2, "origin/foo"));
+		assert!(find(&branches_2, "origin/master"));
 	}
 }
