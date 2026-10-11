@@ -6,8 +6,8 @@ use crate::tui::git::git::remote::{
 use crate::tui::git::gitui_error::Error;
 use crate::tui::git::state::PromptParams;
 use crate::{
-    tui::git::items::TargetData, tui::git::menu::arg::Arg, tui::git::state::State, tui::git::term::Term,
-    tui::git::Res,
+    tui::git::items::TargetData, tui::git::menu::arg::Arg, tui::git::state::State,
+    tui::git::term::Term, tui::git::Res,
 };
 use std::{process::Command, rc::Rc};
 

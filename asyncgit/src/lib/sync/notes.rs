@@ -364,12 +364,8 @@ pub fn mine_note<T: Into<Oid>>(
         Err(err) if err.code() == ErrorCode::NotFound => None,
         Err(err) => return Err(err.into()),
     };
-    let base_message = combine_note_messages(
-        existing_note
-            .as_ref()
-            .and_then(|n| n.message().ok()),
-        note,
-    );
+    let base_message =
+        combine_note_messages(existing_note.as_ref().and_then(|n| n.message().ok()), note);
     let temp_notes_ref = format!(
         "refs/notes/gnostr-mine/{}-{}",
         object_id,
@@ -397,23 +393,24 @@ pub fn mine_note<T: Into<Oid>>(
 
     let final_message = append_nonce(&base_message, nonce, prefix);
     let force = existing_note.is_some();
-    let final_note_id = repo.note(
-        &signature,
-        &signature,
-        notes_ref,
-        object_id,
-        &final_message,
-        force,
-    )
-    .map_err(|err| {
-        let _ = repo.note_delete(
+    let final_note_id = repo
+        .note(
+            &signature,
+            &signature,
+            notes_ref,
             object_id,
-            Some(temp_notes_ref.as_str()),
-            &signature,
-            &signature,
-        );
-        err
-    })?;
+            &final_message,
+            force,
+        )
+        .map_err(|err| {
+            let _ = repo.note_delete(
+                object_id,
+                Some(temp_notes_ref.as_str()),
+                &signature,
+                &signature,
+            );
+            err
+        })?;
 
     let _ = repo.note_delete(
         object_id,
@@ -568,11 +565,7 @@ pub fn run_notes_command(
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::File,
-        io::Write,
-        path::Path,
-    };
+    use std::{fs::File, io::Write, path::Path};
 
     use serial_test::serial;
     use time::OffsetDateTime;
@@ -584,12 +577,11 @@ mod tests {
             stage_add_file,
             tests::repo_init_empty,
         },
-        types::{
-            generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits, Id,
-            Keys,
-            nip3::create_attestation_with_pow, EventKind, PrivateKey, Unixtime,
-        },
         types::nip13::NIP13Event,
+        types::{
+            generate_git_note_event, generate_git_note_event_with_pow, get_leading_zero_bits,
+            nip3::create_attestation_with_pow, EventKind, Id, Keys, PrivateKey, Unixtime,
+        },
     };
 
     use super::*;
@@ -765,8 +757,9 @@ mod tests {
                 },
             )?;
 
-            let attestation_target = Id::try_from_hex_string(&padded_commit_id(commit_id.to_string()))
-                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+            let attestation_target =
+                Id::try_from_hex_string(&padded_commit_id(commit_id.to_string()))
+                    .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
             let secret_key = profile.private_key().0.clone();
             let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
             let attestation = create_attestation_with_pow(
@@ -952,10 +945,14 @@ mod tests {
             assert_eq!(event.kind, EventKind::Patches);
             assert_eq!(event.content, note.message);
             assert_eq!(event.created_at, Unixtime(note.committer_time));
-            assert!(event.tags.iter().any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
-            assert!(event.tags.iter().any(|tag| {
-                tag.tagname() == "commit" && tag.value() == commit_id.to_string()
-            }));
+            assert!(event
+                .tags
+                .iter()
+                .any(|tag| tag.tagname() == "e" && tag.marker() == "root"));
+            assert!(event
+                .tags
+                .iter()
+                .any(|tag| { tag.tagname() == "commit" && tag.value() == commit_id.to_string() }));
 
             if pow_the_event {
                 assert!(event.tags.iter().any(|tag| tag.tagname() == "nonce"));

@@ -20,8 +20,8 @@ mod ignore;
 mod logwalker;
 mod merge;
 mod notes;
-mod pow;
 mod patches;
+mod pow;
 mod rebase;
 pub mod remotes;
 mod repository;
@@ -72,9 +72,10 @@ pub use merge::{
     merge_msg, mergehead_ids, rebase_progress,
 };
 pub use notes::{
-    add_note, amend_note, append_public_attestation_log, default_notes_ref, generate_git_note_event,
-    generate_git_note_event_with_pow, git_note_event_id, git_note_tags, list_notes, remove_note,
-    mine_note, run_notes_command, show_note, GitNote, NoteInfo, NotesCommand, NotesCommandResult,
+    add_note, amend_note, append_public_attestation_log, default_notes_ref,
+    generate_git_note_event, generate_git_note_event_with_pow, git_note_event_id, git_note_tags,
+    list_notes, mine_note, remove_note, run_notes_command, show_note, GitNote, NoteInfo,
+    NotesCommand, NotesCommandResult,
 };
 pub use pow::{
     accumulated_commit_pow, accumulated_note_pow, accumulated_pow, accumulated_pow_depth,
@@ -83,8 +84,8 @@ pub use pow::{
 pub use rebase::rebase_branch;
 pub use remotes::{
     add_remote, delete_remote, get_default_remote, get_default_remote_for_fetch,
-    get_default_remote_for_push, get_remote_url, get_remotes, rename_remote, update_remote_url,
-    validate_remote_name, push::AsyncProgress, tags::PushTagsProgress,
+    get_default_remote_for_push, get_remote_url, get_remotes, push::AsyncProgress, rename_remote,
+    tags::PushTagsProgress, update_remote_url, validate_remote_name,
 };
 pub(crate) use repository::repo;
 pub use repository::{resolve_repo_path, RepoPath, RepoPathRef};
@@ -148,7 +149,14 @@ fn seed_empty_tree_commit(repo: &git2::Repository, label: &str) -> anyhow::Resul
     let empty_tree = seed_empty_tree(repo, label)?;
     let tree = repo.find_tree(empty_tree)?;
     let signature = repo.signature()?;
-    let commit_id = repo.commit(Some("HEAD"), &signature, &signature, "initial empty tree", &tree, &[])?;
+    let commit_id = repo.commit(
+        Some("HEAD"),
+        &signature,
+        &signature,
+        "initial empty tree",
+        &tree,
+        &[],
+    )?;
     log::info!("{label}: empty_tree_commit={commit_id}");
     Ok(commit_id)
 }
@@ -177,8 +185,8 @@ pub fn create_temp_bare_repo() -> anyhow::Result<(tempfile::TempDir, git2::Repos
 }
 
 /// Create a temporary bare repo and seed an empty tree object.
-pub fn create_temp_bare_repo_with_empty_tree()
--> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
+pub fn create_temp_bare_repo_with_empty_tree(
+) -> anyhow::Result<(tempfile::TempDir, git2::Repository)> {
     let (temp_dir, repo) = create_temp_bare_repo()?;
     let _ = seed_empty_tree_commit(&repo, "create_temp_bare_repo_with_empty_tree")?;
     Ok((temp_dir, repo))

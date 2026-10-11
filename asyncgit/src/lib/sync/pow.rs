@@ -34,7 +34,11 @@ fn accumulated_pow_entry(
     include_commit: bool,
     include_notes: bool,
 ) -> Result<AccumulatedPowEntry> {
-    let commit_pow = if include_commit { pow_bits_from_oid(commit_id) } else { 0 };
+    let commit_pow = if include_commit {
+        pow_bits_from_oid(commit_id)
+    } else {
+        0
+    };
     let note = if include_notes {
         show_note(repo_path, commit_id, notes_ref)?
     } else {
@@ -183,8 +187,14 @@ mod tests {
         assert_eq!(note_only.note_pow, summary.note_pow);
         assert_eq!(summary.commit_pow, oid_pow(c3.into()) + oid_pow(c2.into()));
         assert!(summary.note_pow >= oid_pow(note_id));
-        assert!(summary.entries.iter().any(|entry| entry.commit_id == c2.into()));
-        assert!(summary.entries.iter().any(|entry| entry.commit_id == c3.into()));
+        assert!(summary
+            .entries
+            .iter()
+            .any(|entry| entry.commit_id == c2.into()));
+        assert!(summary
+            .entries
+            .iter()
+            .any(|entry| entry.commit_id == c3.into()));
         assert_eq!(summary.entries.len(), 2);
 
         let depth_summary = accumulated_pow_depth(repo_path, 2, None)?;

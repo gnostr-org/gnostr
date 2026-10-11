@@ -103,8 +103,8 @@ use std::{
 };
 
 pub use git2;
-pub use git2::*;
 pub use git2::message_prettify;
+pub use git2::*;
 
 pub use crate::{
     blame::{AsyncBlame, BlameParams},
@@ -115,6 +115,7 @@ pub use crate::{
     fetch_job::AsyncFetchJob,
     filter_commits::{AsyncCommitFilterJob, CommitFilterResult},
     notes::{AsyncNotes, AsyncNotesJob},
+    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3, NostrProfileFixture},
     progress::ProgressPercent,
     pull::{AsyncPull, FetchRequest},
     push::{AsyncPush, PushRequest},
@@ -123,17 +124,18 @@ pub use crate::{
     revlog::{AsyncLog, FetchStatus},
     status::{AsyncStatus, StatusParams},
     sync::{
+        accumulated_commit_pow, accumulated_note_pow, accumulated_pow, accumulated_pow_depth,
         add_note, amend_note, append_public_attestation_log, create_empty_tree,
-        create_empty_tree_sha256, default_notes_ref, create_temp_bare_repo,
-        create_temp_bare_repo_with_empty_tree, create_temp_repo, create_temp_repo_with_empty_tree,
+        create_empty_tree_sha256, create_temp_bare_repo, create_temp_bare_repo_with_empty_tree,
+        create_temp_repo, create_temp_repo_with_empty_tree, default_notes_ref,
         diff::{DiffLine, DiffLineType, FileDiff},
-        list_notes, accumulated_commit_pow, accumulated_note_pow, accumulated_pow,
-        accumulated_pow_depth, mine_note, remotes::push::PushType, remove_note,
-        run_notes_command, show_note, status::{StatusItem, StatusItemType},
+        list_notes, mine_note,
+        remotes::push::PushType,
+        remove_note, run_notes_command, show_note,
+        status::{StatusItem, StatusItemType},
         AccumulatedPowEntry, AccumulatedPowSummary, GitNote, NoteInfo, NotesCommand,
         NotesCommandResult,
     },
-    profiles::{bitcoindev_1, bitcoindev_2, bitcoindev_3, NostrProfileFixture},
     tags::AsyncTags,
     treefiles::AsyncTreeFilesJob,
     types::{
@@ -152,7 +154,6 @@ pub use crate::types::DEFAULT_GNOSTR_PRIVATE_KEY;
 pub fn default_gnostr_private_key_hex() -> String {
     hex::encode(DEFAULT_GNOSTR_PRIVATE_KEY)
 }
-
 
 /// Default deterministic private key material in bech32 form.
 pub const DEFAULT_GNOSTR_PRIVATE_KEY_BECH32: &str =
@@ -324,18 +325,22 @@ mod tests {
 
     #[test]
     fn default_gnostr_private_key_roundtrip_bech32() {
-        let mut private_key = types::PrivateKey(
-            default_gnostr_private_key(),
-            types::KeySecurity::NotTracked,
-        );
+        let mut private_key =
+            types::PrivateKey(default_gnostr_private_key(), types::KeySecurity::NotTracked);
 
         let bech32 = private_key.as_bech32_string();
         assert_eq!(bech32, DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
 
         let parsed = types::PrivateKey::try_from_bech32_string(&bech32).unwrap();
-        assert_eq!(parsed.as_secret_key().secret_bytes(), DEFAULT_GNOSTR_PRIVATE_KEY);
+        assert_eq!(
+            parsed.as_secret_key().secret_bytes(),
+            DEFAULT_GNOSTR_PRIVATE_KEY
+        );
 
         let mut parsed_roundtrip = parsed.clone();
-        assert_eq!(parsed_roundtrip.as_bech32_string(), DEFAULT_GNOSTR_PRIVATE_KEY_BECH32);
+        assert_eq!(
+            parsed_roundtrip.as_bech32_string(),
+            DEFAULT_GNOSTR_PRIVATE_KEY_BECH32
+        );
     }
 }

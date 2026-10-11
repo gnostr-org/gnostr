@@ -1,5 +1,7 @@
 use super::{Action, OpTrait};
-use crate::{tui::git::items::TargetData, tui::git::screen, tui::git::state::State, tui::git::term::Term};
+use crate::{
+    tui::git::items::TargetData, tui::git::screen, tui::git::state::State, tui::git::term::Term,
+};
 use std::rc::Rc;
 
 pub(crate) struct ShowRefs;

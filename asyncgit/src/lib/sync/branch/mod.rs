@@ -220,8 +220,7 @@ pub fn get_branch_remote(repo_path: &RepoPath, branch: &str) -> Result<Option<St
     let branch = repo.find_branch(branch, BranchType::Local)?;
     let reference = bytes2string(branch.get().name_bytes())?;
     let remote_name = repo.branch_upstream_remote(&reference).ok();
-    Ok(remote_name
-        .and_then(|remote_name| remote_name.as_str().ok().map(str::to_owned)))
+    Ok(remote_name.and_then(|remote_name| remote_name.as_str().ok().map(str::to_owned)))
 }
 
 /// returns whether the pull merge strategy is set to rebase

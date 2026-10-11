@@ -1,11 +1,11 @@
 use crate::{
     tui::git::cli::{self, Args},
-    tui::shared::config::{self, Config},
     tui::git::gitui_error::Error,
     tui::git::key_parser::parse_keys,
     tui::git::state::State,
     tui::git::term::{Term, TermBackend},
     tui::git::tests::helpers::RepoTestContext,
+    tui::shared::config::{self, Config},
 };
 use crossterm::event::{Event, KeyEvent};
 use git2::Repository;

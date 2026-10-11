@@ -134,10 +134,7 @@ pub fn get_commits_info(
             let author = c
                 .author()
                 .name()
-                .map_or_else(
-                    |_| String::from("<unknown>"),
-                    |name| name.to_string(),
-                );
+                .map_or_else(|_| String::from("<unknown>"), |name| name.to_string());
             CommitInfo {
                 message,
                 author,

@@ -16,8 +16,16 @@ pub fn get_js_assets() -> HashMap<String, &'static [u8]> {
     let mut assets = HashMap::new();
     asset!(assets, "db.js", "db.js");
     asset!(assets, "mempool.js", "mempool.js");
-    asset!(assets, "browserify-cipher@1.0.1.js", "browserify-cipher@1.0.1.js");
-    asset!(assets, "noble-secp256k1@1.2.14.js", "noble-secp256k1@1.2.14.js");
+    asset!(
+        assets,
+        "browserify-cipher@1.0.1.js",
+        "browserify-cipher@1.0.1.js"
+    );
+    asset!(
+        assets,
+        "noble-secp256k1@1.2.14.js",
+        "noble-secp256k1@1.2.14.js"
+    );
     asset!(assets, "buffer@6.0.3.js", "buffer@6.0.3.js");
     asset!(assets, "bip32@2.0.6.js", "bip32@2.0.6.js");
     asset!(assets, "bip39@3.0.4.js", "bip39@3.0.4.js");

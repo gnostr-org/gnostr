@@ -1,6 +1,8 @@
 //! Git Api for Commits
 //use anyhow::anyhow;
-use git2::{message_prettify, Commit, ErrorCode, ObjectType, Oid, Repository, ResetType, Signature};
+use git2::{
+    message_prettify, Commit, ErrorCode, ObjectType, Oid, Repository, ResetType, Signature,
+};
 
 use hex;
 use serde::{Deserialize, Serialize};
@@ -365,6 +367,7 @@ mod tests {
 
     use crate::{
         error::Result,
+        profiles::bitcoindev_1,
         sync::{
             commit::{
                 self, commit, create_empty_tree, create_empty_tree_sha256, mine_commit,
@@ -376,7 +379,6 @@ mod tests {
             utils::get_head,
             LogWalker, RepoPath,
         },
-        profiles::bitcoindev_1,
         types::{nip13::NIP13Event, nip3::create_attestation_with_pow, Id},
     };
 
@@ -414,7 +416,10 @@ mod tests {
     fn padded_note_id_matches_commit_padding() {
         let id = "abc123";
         println!("padded_note_id: {}", padded_note_id(id.to_string()));
-        assert_eq!(padded_note_id(id.to_string()), padded_commit_id(id.to_string()));
+        assert_eq!(
+            padded_note_id(id.to_string()),
+            padded_commit_id(id.to_string())
+        );
     }
 
     #[test]
@@ -503,8 +508,9 @@ mod tests {
         )?;
         println!("pretty_print_attestations\n  commit={base_commit}");
 
-        let attestation_target = Id::try_from_hex_string(&padded_commit_id(base_commit.to_string()))
-            .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
+        let attestation_target =
+            Id::try_from_hex_string(&padded_commit_id(base_commit.to_string()))
+                .map_err(|err| crate::error::Error::Generic(err.to_string()))?;
         let profile = bitcoindev_1;
         let secret_key = profile.private_key().0.clone();
         let (xonly_public_key, _parity) = secret_key.x_only_public_key(secp256k1::SECP256K1);
@@ -564,13 +570,11 @@ mod tests {
         );
 
         let details = get_commit_details(repo_path, attested_commit)?;
-        assert!(
-            details
-                .message
-                .unwrap()
-                .subject
-                .contains(&attestation.id.as_hex_string())
-        );
+        assert!(details
+            .message
+            .unwrap()
+            .subject
+            .contains(&attestation.id.as_hex_string()));
         assert!(attested_commit.to_string().starts_with('0'));
         Ok(())
     }

@@ -54,25 +54,19 @@ impl From<crate::upstream_sync::HookResult> for HookResult {
 fn to_upstream_repo_path(repo_path: &RepoPath) -> crate::upstream_sync::RepoPath {
     match repo_path {
         RepoPath::Path(path) => crate::upstream_sync::RepoPath::Path(path.clone()),
-        RepoPath::Workdir { gitdir, workdir } => {
-            crate::upstream_sync::RepoPath::Workdir {
-                gitdir: gitdir.clone(),
-                workdir: workdir.clone(),
-            }
-        }
+        RepoPath::Workdir { gitdir, workdir } => crate::upstream_sync::RepoPath::Workdir {
+            gitdir: gitdir.clone(),
+            workdir: workdir.clone(),
+        },
     }
 }
 
-fn to_upstream_target<'a>(
-    push: &'a PrePushTarget<'a>,
-) -> crate::upstream_sync::PrePushTarget<'a> {
+fn to_upstream_target<'a>(push: &'a PrePushTarget<'a>) -> crate::upstream_sync::PrePushTarget<'a> {
     match push {
-        PrePushTarget::Branch { branch, delete } => {
-            crate::upstream_sync::PrePushTarget::Branch {
-                branch,
-                delete: *delete,
-            }
-        }
+        PrePushTarget::Branch { branch, delete } => crate::upstream_sync::PrePushTarget::Branch {
+            branch,
+            delete: *delete,
+        },
         PrePushTarget::Tags => crate::upstream_sync::PrePushTarget::Tags,
     }
 }
@@ -89,10 +83,7 @@ pub fn hooks_pre_push(
     let repo_path = &**repo_path;
     let upstream_repo_path = to_upstream_repo_path(repo_path);
     let upstream_cred = basic_credential.map(|cred| {
-        crate::upstream_sync::cred::BasicAuthCredential::new(
-            cred.username,
-            cred.password,
-        )
+        crate::upstream_sync::cred::BasicAuthCredential::new(cred.username, cred.password)
     });
 
     let result = crate::upstream_sync::hooks_pre_push(
@@ -127,11 +118,9 @@ pub fn hooks_pre_commit(repo_path: &RepoPath) -> Result<HookResult> {
     scope_time!("hooks_pre_commit");
 
     let upstream_repo_path = to_upstream_repo_path(repo_path);
-    Ok(
-        crate::upstream_sync::hooks_pre_commit(&upstream_repo_path)
-            .map_err(|e| Error::Generic(e.to_string()))?
-            .into(),
-    )
+    Ok(crate::upstream_sync::hooks_pre_commit(&upstream_repo_path)
+        .map_err(|e| Error::Generic(e.to_string()))?
+        .into())
 }
 
 ///
@@ -139,11 +128,9 @@ pub fn hooks_post_commit(repo_path: &RepoPath) -> Result<HookResult> {
     scope_time!("hooks_post_commit");
 
     let upstream_repo_path = to_upstream_repo_path(repo_path);
-    Ok(
-        crate::upstream_sync::hooks_post_commit(&upstream_repo_path)
-            .map_err(|e| Error::Generic(e.to_string()))?
-            .into(),
-    )
+    Ok(crate::upstream_sync::hooks_post_commit(&upstream_repo_path)
+        .map_err(|e| Error::Generic(e.to_string()))?
+        .into())
 }
 
 ///
@@ -155,9 +142,11 @@ pub fn hooks_prepare_commit_msg(
     scope_time!("hooks_prepare_commit_msg");
 
     let repo = repo(repo_path)?;
-    Ok(git2_hooks::hooks_prepare_commit_msg(&repo, None, source, msg)
-        .map_err(|e| Error::Generic(e.to_string()))?
-        .into())
+    Ok(
+        git2_hooks::hooks_prepare_commit_msg(&repo, None, source, msg)
+            .map_err(|e| Error::Generic(e.to_string()))?
+            .into(),
+    )
 }
 
 #[cfg(test)]

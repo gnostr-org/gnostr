@@ -23,7 +23,6 @@ use crate::tui::git::bindings::Bindings;
 use crate::tui::git::cli;
 use crate::tui::git::cmd_log::CmdLog;
 use crate::tui::git::cmd_log::CmdLogEntry;
-use crate::tui::shared::config::Config;
 use crate::tui::git::file_watcher::FileWatcher;
 use crate::tui::git::gitui_error::Error;
 use crate::tui::git::items::TargetData;
@@ -34,8 +33,9 @@ use crate::tui::git::prompt;
 use crate::tui::git::prompt::PromptData;
 use crate::tui::git::screen;
 use crate::tui::git::screen::{Screen, ScreenType};
-use crate::tui::shared::term::Term;
 use crate::tui::git::ui;
+use crate::tui::shared::config::Config;
+use crate::tui::shared::term::Term;
 
 use super::Res;
 

@@ -9,15 +9,16 @@ pub mod gitui_error;
 mod highlight;
 pub mod items;
 pub mod key_parser;
-#[cfg(test)]
-mod tests;
 pub mod menu;
 pub mod ops;
 mod prompt;
 pub mod screen;
 pub mod state;
+#[cfg(test)]
+mod tests;
 pub mod ui;
 
+use crate::tui::shared::{config, term::Term};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventState, KeyModifiers};
 use git2::Repository;
 use gitui_error::Error;
@@ -28,7 +29,6 @@ use std::{
     rc::Rc,
     time::Duration,
 };
-use crate::tui::shared::{config, term::Term};
 
 pub use crate::tui::shared::{syntax_parser, term};
 

@@ -1,7 +1,7 @@
 use super::OpTrait;
 use crate::{
-    tui::git::gitui_error::Error, tui::git::items::TargetData, tui::git::ops::Action, tui::git::screen,
-    tui::git::state::State,
+    tui::git::gitui_error::Error, tui::git::items::TargetData, tui::git::ops::Action,
+    tui::git::screen, tui::git::state::State,
 };
 use core::str;
 use std::{path::Path, process::Command, rc::Rc};

@@ -1,7 +1,7 @@
 use super::OpTrait;
 use crate::{
-    tui::git::git::diff::PatchMode, tui::git::items::TargetData, tui::git::ops::Action, tui::git::state::State,
-    tui::git::term::Term,
+    tui::git::git::diff::PatchMode, tui::git::items::TargetData, tui::git::ops::Action,
+    tui::git::state::State, tui::git::term::Term,
 };
 use std::{ffi::OsString, process::Command, rc::Rc};
 

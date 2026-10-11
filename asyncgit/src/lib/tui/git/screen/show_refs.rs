@@ -6,10 +6,10 @@ use std::{
 
 use super::Screen;
 use crate::{
-    tui::shared::config::{Config, StyleConfigEntry},
     tui::git::gitui_error::Error,
     tui::git::items::{self, Item, TargetData},
     tui::git::Res,
+    tui::shared::config::{Config, StyleConfigEntry},
 };
 use git2::{Reference, Repository};
 use ratatui::{

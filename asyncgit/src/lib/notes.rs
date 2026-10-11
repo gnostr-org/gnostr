@@ -183,8 +183,8 @@ mod tests {
     use crossbeam_channel::unbounded;
     use serial_test::serial;
 
-    use crate::create_temp_repo_with_empty_tree;
     use super::*;
+    use crate::create_temp_repo_with_empty_tree;
 
     #[test]
     #[serial]

@@ -1,6 +1,7 @@
 use super::{Action, OpTrait};
 use crate::{
-    tui::git::items::TargetData, tui::git::menu::arg::Arg, tui::git::state::State, tui::git::term::Term,
+    tui::git::items::TargetData, tui::git::menu::arg::Arg, tui::git::state::State,
+    tui::git::term::Term,
 };
 use std::{
     ffi::{OsStr, OsString},

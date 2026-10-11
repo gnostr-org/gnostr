@@ -39,7 +39,9 @@ pub fn blockhash() -> Result<String, ascii::AsciiChar> {
 }
 
 pub async fn blockhash_async() -> String {
-    let blockhash = fetch_blockhash_async().await.unwrap_or_else(|| "0".to_string());
+    let blockhash = fetch_blockhash_async()
+        .await
+        .unwrap_or_else(|| "0".to_string());
     debug!("blockhash_async: {}", blockhash);
     unsafe { env::set_var("BLOCKHASH", blockhash.clone()) };
     blockhash

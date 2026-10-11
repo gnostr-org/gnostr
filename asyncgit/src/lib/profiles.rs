@@ -18,7 +18,8 @@ pub struct NostrProfileFixture {
 
 impl NostrProfileFixture {
     pub fn private_key(self) -> PrivateKey {
-        PrivateKey::try_from_hex_string(self.private_key_hex).expect("fixture private key must be valid")
+        PrivateKey::try_from_hex_string(self.private_key_hex)
+            .expect("fixture private key must be valid")
     }
 
     pub fn public_key(self) -> PublicKey {
@@ -40,18 +41,21 @@ impl NostrProfileFixture {
         metadata.about = Some(self.about.to_string());
         metadata.picture = Some(self.picture.to_string());
         metadata.nip05 = Some(self.nip05.to_string());
-        metadata
-            .other
-            .insert("display_name".to_string(), Value::String(self.display_name.to_string()));
+        metadata.other.insert(
+            "display_name".to_string(),
+            Value::String(self.display_name.to_string()),
+        );
         metadata
             .other
             .insert("lud16".to_string(), Value::String(self.lud16.to_string()));
-        metadata
-            .other
-            .insert("website".to_string(), Value::String(self.website.to_string()));
-        metadata
-            .other
-            .insert("banner".to_string(), Value::String(DEFAULT_BANNER.to_string()));
+        metadata.other.insert(
+            "website".to_string(),
+            Value::String(self.website.to_string()),
+        );
+        metadata.other.insert(
+            "banner".to_string(),
+            Value::String(DEFAULT_BANNER.to_string()),
+        );
         metadata
     }
 

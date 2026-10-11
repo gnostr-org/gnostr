@@ -2,7 +2,8 @@ use gitu_diff::Status;
 
 use super::{confirm, Action, OpTrait};
 use crate::{
-    tui::git::git::diff::Diff, tui::git::gitu_diff, tui::git::items::TargetData, tui::git::state::State,
+    tui::git::git::diff::Diff, tui::git::gitu_diff, tui::git::items::TargetData,
+    tui::git::state::State,
 };
 use std::{path::PathBuf, process::Command, rc::Rc};
 

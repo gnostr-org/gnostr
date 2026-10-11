@@ -4,8 +4,8 @@
 
 use std::{
     sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc, Mutex, RwLock,
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex, RwLock,
     },
     thread,
 };
