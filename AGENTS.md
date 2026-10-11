@@ -76,6 +76,53 @@ crate and feature gates.
 - Chat uses an embedded libp2p relay service for hole punching.
 - See `p2p/AGENTS.md` and `chat/AGENTS.md`.
 
+#### Chat session flow
+
+`gnostr chat` builds a libp2p swarm in `chat/src/p2p.rs` (`evt_loop`):
+
+1. `ChatSession::connect(topic)` (`chat/src/session.rs`) starts a local relay
+   service, opens an mpsc command channel, and spawns the event loop.
+2. The swarm subscribes to the Gossipsub topic, listens on ephemeral
+   `0.0.0.0` TCP/QUIC ports, and discovers peers via mDNS on the local LAN.
+3. When mDNS discovers a peer, the swarm adds it as an explicit Gossipsub peer,
+   registers it with AutoNAT, and dials it (TCP and QUIC paths).
+4. `ConnectionEstablished` triggers a flush of any messages that were queued
+   because of "insufficient peers".
+5. Outgoing chat messages are serialized to JSON and published with
+   `gossipsub::Behaviour::publish`.  The `MessagePublished` notification is
+   emitted when the publish succeeds locally.
+
+#### Modes
+
+- **TUI mode** (default): opens the ratatui interface in `chat/src/tui.rs`.
+- **Headless mode** (`--headless`): sets a process title, prints notifications,
+  and blocks on `tokio::signal::ctrl_c()` until interrupted.
+- **One-shot mode** (`--oneshot "<message>"`): waits up to 30 s for a peer,
+  publishes the message, waits up to 30 s for `MessagePublished`, sleeps 500 ms
+  for propagation, and exits.  It is meant for scripts and CI.
+
+#### Smoke-test script
+
+`scripts/gnostr-chat-one-shot.sh` automates the one-shot flow:
+
+```bash
+# Default: start a headless receiver, send two messages, assert delivery.
+./scripts/gnostr-chat-one-shot.sh
+
+# Custom topic and messages.
+./scripts/gnostr-chat-one-shot.sh --topic my-topic "hello" "world"
+
+# Long-running headless receiver (Ctrl+C to stop).
+./scripts/gnostr-chat-one-shot.sh --listen --topic my-topic
+
+# Pass through chat flags such as --debug or --nsec.
+./scripts/gnostr-chat-one-shot.sh --topic my-topic --debug --nsec <hex> "msg"
+```
+
+The script waits for the receiver to log `Local node is listening`, sends each
+message from a fresh sender process, and verifies the receiver received every
+message.
+
 ### 2. Nostr relay / WebSocket plane (`gnostr-relay`, `gnostr-crawler`, root CLI, `ngit`)
 
 - Actix-web/WebSocket relay (vendored `nostr-relay` 0.4.8).
