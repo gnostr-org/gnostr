@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     && ln -sf "$LIBCLANG_SO" /usr/local/lib/libclang.so
 ENV LIBCLANG_PATH=/usr/local/lib
 RUN cargo build -p gnostr-bins --release
+RUN cargo install blossom-server@0.5.6 --locked
 
 FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y \
@@ -32,7 +33,18 @@ RUN mkdir /var/run/sshd
 COPY --from=builder /usr/src/app/target/release/gnostr-server /usr/local/bin/
 COPY --from=builder /usr/src/app/target/release/gnostr-shell /usr/local/bin/
 COPY --from=builder /usr/src/app/target/release/git-remote-gnostr-node /usr/local/bin/
+COPY --from=builder /usr/local/cargo/bin/blossom-server /usr/local/bin/
 RUN useradd -m -s /usr/local/bin/gnostr-shell git && mkdir -p /home/git/.ssh
+RUN test -x /usr/local/bin/gnostr-server && \
+    test -x /usr/local/bin/gnostr-shell && \
+    test -x /usr/local/bin/git-remote-gnostr-node && \
+    test -x /usr/local/bin/blossom-server
 EXPOSE 3000 22
-RUN echo '#!/bin/bash\n/usr/sbin/sshd\ngnostr-server --bind 0.0.0.0:3000 --data-dir /data "$@"' > /start.sh && chmod +x /start.sh
+RUN cat > /start.sh <<'EOF'
+#!/bin/bash
+set -e
+/usr/sbin/sshd
+gnostr-server --bind 0.0.0.0:3000 --data-dir /data "$@"
+EOF
+RUN chmod +x /start.sh
 ENTRYPOINT ["/start.sh"]
