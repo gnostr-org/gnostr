@@ -4,7 +4,7 @@ use clap::Args;
 use tracing::debug;
 
 use crate::{
-    types::{Client, Error, Event, Filter, Id, Options},
+    types::{Error, Event, Filter, Id},
     utils::{create_client, parse_private_key},
 };
 
@@ -43,27 +43,57 @@ pub async fn react_to_event(
     }
 
     let keys = parse_private_key(private_key, false).await?;
-    let client = create_client(&keys, relays, difficulty_target).await?;
-
     let event_id = Id::try_from_hex_string(&sub_command_args.event_id)?;
 
     let mut filter = Filter::new();
     filter.add_id(&event_id.into());
     filter.limit = Some(1);
 
+    // Try each relay individually until we find the event.  We cannot assume
+    // every relay is available, trustworthy, or supports the event's kind/NIP.
     debug!("Fetching event {} to react to", event_id);
-    let events: Vec<Event> = client
-        .get_events_of(vec![filter], Some(Duration::from_secs(10)))
-        .await?;
+    let mut event_to_react_to: Option<Event> = None;
+    for relay in &relays {
+        debug!("Trying relay {}", relay);
+        let single_client = create_client(&keys, vec![relay.clone()], difficulty_target).await;
+        let single_client = match single_client {
+            Ok(c) => c,
+            Err(err) => {
+                debug!("Failed to create client for relay {}: {}", relay, err);
+                continue;
+            }
+        };
 
-    if events.is_empty() {
-        eprintln!("Unable to find note with the provided event id");
-        exit(0);
+        match single_client
+            .get_events_of(vec![filter.clone()], Some(Duration::from_secs(5)))
+            .await
+        {
+            Ok(events) if !events.is_empty() => {
+                event_to_react_to = Some(events.into_iter().next().unwrap());
+                break;
+            }
+            Ok(_) => {
+                debug!("Relay {} returned no events for {}", relay, event_id);
+            }
+            Err(err) => {
+                debug!("Relay {} failed to fetch {}: {}", relay, event_id, err);
+            }
+        }
     }
 
-    let event_to_react_to = &events[0];
+    let event_to_react_to = match event_to_react_to {
+        Some(e) => e,
+        None => {
+            eprintln!("Unable to find note with the provided event id");
+            exit(0);
+        }
+    };
+
+    // Publish the reaction to all configured relays; send_event succeeds if any
+    // relay accepts it.
+    let client = create_client(&keys, relays, difficulty_target).await?;
     let reaction_id = client
-        .reaction(event_to_react_to, sub_command_args.reaction.clone())
+        .reaction(&event_to_react_to, sub_command_args.reaction.clone())
         .await?;
 
     if sub_command_args.hex {
