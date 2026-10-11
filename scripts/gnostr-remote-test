@@ -139,7 +139,7 @@ fi
 if [[ -n "${2:-}" ]]; then
   mapfile -t RELAYS < <(printf '%s\n' "$2")
 else
-  mapfile -t RELAYS < <(pick_relays 3)
+  mapfile -t RELAYS < <(pick_relays 1)
 fi
 echo "Using relays: ${RELAYS[*]}"
 
