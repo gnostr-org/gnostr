@@ -8,13 +8,13 @@ use std::{
 };
 
 use gnostr_crawler::{
-    api::{run_api_server_with_shutdown_and_ready, ServeOptions},
     init_tracing,
-    processor::{Processor, APP_SECRET_KEY, BOOTSTRAP_RELAYS},
+    processor::{APP_SECRET_KEY, BOOTSTRAP_RELAYS, Processor},
     query::build_gnostr_query,
     relay_fetch::websocket_http_url,
-    relay_manager::RelayManager,
     relay_metadata::Relay,
+    relay_manager::RelayManager,
+    run_api_server_with_shutdown_and_ready,
 };
 use gnostr_types::nostr::{
     client::{Client, Options},
@@ -23,8 +23,8 @@ use gnostr_types::nostr::{
 };
 use nostr_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
-use tokio::{runtime::Builder, sync::oneshot};
 use tracing::{error, info, warn};
+use tokio::{runtime::Builder, sync::oneshot};
 
 #[derive(Serialize)]
 struct Envelope<T> {
@@ -37,19 +37,11 @@ struct Envelope<T> {
 
 impl<T> Envelope<T> {
     fn ok(data: T) -> Self {
-        Self {
-            ok: true,
-            data: Some(data),
-            error: None,
-        }
+        Self { ok: true, data: Some(data), error: None }
     }
 
     fn err(error: impl Into<String>) -> Self {
-        Self {
-            ok: false,
-            data: None,
-            error: Some(error.into()),
-        }
+        Self { ok: false, data: None, error: Some(error.into()) }
     }
 }
 
@@ -110,8 +102,7 @@ struct PublishedGitNoteResponse {
 }
 
 async fn run_crawl_worker() -> Result<(), String> {
-    let app_secret_key =
-        SecretKey::from_bech32(APP_SECRET_KEY).map_err(|error| error.to_string())?;
+    let app_secret_key = SecretKey::from_bech32(APP_SECRET_KEY).map_err(|error| error.to_string())?;
     let app_keys = Keys::new(app_secret_key);
     let processor = Processor::new();
     let mut relay_manager = RelayManager::new(app_keys, processor).await;
@@ -121,10 +112,7 @@ async fn run_crawl_worker() -> Result<(), String> {
     } else {
         live_relays.iter().map(|s| s.as_str()).collect()
     };
-    relay_manager
-        .run(relay_refs)
-        .await
-        .map_err(|error| error.to_string())
+    relay_manager.run(relay_refs).await.map_err(|error| error.to_string())
 }
 
 #[derive(Debug, Deserialize)]
@@ -186,9 +174,7 @@ fn text_note_event_json(request: &TextNoteEventRequest) -> Result<String, String
     serde_json::to_string(&event).map_err(|error| error.to_string())
 }
 
-async fn publish_text_note(
-    request: PublishTextNoteRequest,
-) -> Result<PublishedTextNoteResponse, String> {
+async fn publish_text_note(request: PublishTextNoteRequest) -> Result<PublishedTextNoteResponse, String> {
     let private_key = PrivateKey::try_from_hex_string(&request.private_key_hex)
         .map_err(|error| error.to_string())?;
     let keys = GnostrKeys::new(private_key.clone());
@@ -203,10 +189,7 @@ async fn publish_text_note(
     for relay_url in request.relays {
         info!("crawler publish: trying relay {relay_url}");
         let mut client = Client::new(&keys, Options::new());
-        client
-            .add_relays(vec![relay_url.clone()])
-            .await
-            .map_err(|error| error.to_string())?;
+        client.add_relays(vec![relay_url.clone()]).await.map_err(|error| error.to_string())?;
         match client.send_event(event.clone()).await {
             Ok(_) => {
                 info!("crawler publish: relay accepted {relay_url}");
@@ -228,9 +211,7 @@ async fn publish_text_note(
     }
 }
 
-async fn publish_git_note(
-    request: PublishGitNoteRequest,
-) -> Result<PublishedGitNoteResponse, String> {
+async fn publish_git_note(request: PublishGitNoteRequest) -> Result<PublishedGitNoteResponse, String> {
     let private_key = PrivateKey::try_from_hex_string(&request.private_key_hex)
         .map_err(|error| error.to_string())?;
     let keys = GnostrKeys::new(private_key.clone());
@@ -244,10 +225,7 @@ async fn publish_git_note(
     for relay_url in request.relays {
         info!("crawler publish: trying relay {relay_url}");
         let mut client = Client::new(&keys, Options::new());
-        client
-            .add_relays(vec![relay_url.clone()])
-            .await
-            .map_err(|error| error.to_string())?;
+        client.add_relays(vec![relay_url.clone()]).await.map_err(|error| error.to_string())?;
         match client.send_event(event.clone()).await {
             Ok(_) => {
                 info!("crawler publish: relay accepted {relay_url}");
@@ -305,9 +283,7 @@ unsafe fn read_c_string<'a>(ptr: *const c_char) -> Result<&'a str, String> {
     if ptr.is_null() {
         return Err("null pointer".to_string());
     }
-    CStr::from_ptr(ptr)
-        .to_str()
-        .map_err(|error| error.to_string())
+    CStr::from_ptr(ptr).to_str().map_err(|error| error.to_string())
 }
 
 #[no_mangle]
@@ -334,13 +310,11 @@ pub unsafe extern "C" fn crawler_runtime_start_json(request_json: *const c_char)
     let slot = runtime_slot();
     let mut guard = slot.lock().unwrap();
     if let Some(existing) = guard.as_ref() {
-        return encode(&Envelope::ok(
-            serde_json::to_string(&runtime_state(
-                true,
-                format!("crawler runtime already running on port {}", existing.port),
-            ))
-            .unwrap(),
-        ));
+        return encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+            true,
+            format!("crawler runtime already running on port {}", existing.port),
+        ))
+        .unwrap()));
     }
 
     let (stop_tx, stop_rx) = oneshot::channel::<()>();
@@ -361,16 +335,7 @@ pub unsafe extern "C" fn crawler_runtime_start_json(request_json: *const c_char)
             let shutdown = async move {
                 let _ = stop_rx.await;
             };
-            match run_api_server_with_shutdown_and_ready(
-                ServeOptions {
-                    port,
-                    ..Default::default()
-                },
-                shutdown,
-                Some(ready_tx),
-            )
-            .await
-            {
+            match run_api_server_with_shutdown_and_ready(port, shutdown, Some(ready_tx)).await {
                 Ok(_) => tracing::info!("crawler runtime stopped on port {}", port),
                 Err(error) => tracing::error!("crawler runtime failed: {}", error),
             }
@@ -386,25 +351,17 @@ pub unsafe extern "C" fn crawler_runtime_start_json(request_json: *const c_char)
                 join,
             });
 
-            encode(&Envelope::ok(
-                serde_json::to_string(&runtime_state(
-                    true,
-                    format!("crawler runtime running on port {}", port),
-                ))
-                .unwrap(),
+            encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+                true,
+                format!("crawler runtime running on port {}", port),
             ))
+            .unwrap()))
         }
         Ok(Err(error)) => {
-            error!(
-                "crawler runtime start: failed ready on port {}: {}",
-                port, error
-            );
+            error!("crawler runtime start: failed ready on port {}: {}", port, error);
             let _ = stop_tx.send(());
             let _ = join.join();
-            encode(&Envelope::<String>::err(format!(
-                "crawler runtime failed to start: {}",
-                error
-            )))
+            encode(&Envelope::<String>::err(format!("crawler runtime failed to start: {}", error)))
         }
         Err(_) => {
             warn!("crawler runtime start: timed out on port {}", port);
@@ -488,7 +445,9 @@ pub unsafe extern "C" fn crawler_publish_text_note_json(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn crawler_publish_git_note_json(request_json: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn crawler_publish_git_note_json(
+    request_json: *const c_char,
+) -> *mut c_char {
     ensure_tracing();
     let request_json = match read_c_string(request_json) {
         Ok(value) => value,
@@ -521,9 +480,11 @@ pub unsafe extern "C" fn crawler_runtime_stop_json(_request_json: *const c_char)
     let slot = runtime_slot();
     let mut guard = slot.lock().unwrap();
     let Some(mut handle) = guard.take() else {
-        return encode(&Envelope::ok(
-            serde_json::to_string(&runtime_state(false, "crawler runtime not running")).unwrap(),
-        ));
+        return encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+            false,
+            "crawler runtime not running",
+        ))
+        .unwrap()));
     };
 
     if let Some(stop_tx) = handle.stop_tx.take() {
@@ -532,13 +493,11 @@ pub unsafe extern "C" fn crawler_runtime_stop_json(_request_json: *const c_char)
 
     drop(guard);
     let _ = handle.join.join();
-    encode(&Envelope::ok(
-        serde_json::to_string(&runtime_state(
-            false,
-            format!("crawler runtime stopped on port {}", handle.port),
-        ))
-        .unwrap(),
+    encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+        false,
+        format!("crawler runtime stopped on port {}", handle.port),
     ))
+    .unwrap()))
 }
 
 #[no_mangle]
@@ -546,15 +505,9 @@ pub unsafe extern "C" fn crawler_runtime_status_json(_request_json: *const c_cha
     ensure_tracing();
     let slot = runtime_slot();
     let guard = slot.lock().unwrap();
-    let state = guard
-        .as_ref()
-        .map(|handle| {
-            runtime_state(
-                true,
-                format!("crawler runtime running on port {}", handle.port),
-            )
-        })
-        .unwrap_or_else(|| runtime_state(false, "crawler runtime not running"));
+    let state = guard.as_ref().map(|handle| {
+        runtime_state(true, format!("crawler runtime running on port {}", handle.port))
+    }).unwrap_or_else(|| runtime_state(false, "crawler runtime not running"));
     encode(&Envelope::ok(serde_json::to_string(&state).unwrap()))
 }
 
@@ -564,9 +517,11 @@ pub unsafe extern "C" fn crawler_crawl_start_json(_request_json: *const c_char) 
     let slot = crawl_runtime_slot();
     let mut guard = slot.lock().unwrap();
     if guard.is_some() {
-        return encode(&Envelope::ok(
-            serde_json::to_string(&runtime_state(true, "crawler crawl already running")).unwrap(),
-        ));
+        return encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+            true,
+            "crawler crawl already running",
+        ))
+        .unwrap()));
     }
 
     let (stop_tx, stop_rx) = oneshot::channel::<()>();
@@ -602,17 +557,16 @@ pub unsafe extern "C" fn crawler_crawl_start_json(_request_json: *const c_char) 
                 stop_tx: Some(stop_tx),
                 join,
             });
-            encode(&Envelope::ok(
-                serde_json::to_string(&runtime_state(true, "crawler crawl running")).unwrap(),
+            encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+                true,
+                "crawler crawl running",
             ))
+            .unwrap()))
         }
         Ok(Err(error)) => {
             let _ = stop_tx.send(());
             let _ = join.join();
-            encode(&Envelope::<String>::err(format!(
-                "crawler crawl failed to start: {}",
-                error
-            )))
+            encode(&Envelope::<String>::err(format!("crawler crawl failed to start: {}", error)))
         }
         Err(_) => {
             let _ = stop_tx.send(());
@@ -628,9 +582,11 @@ pub unsafe extern "C" fn crawler_crawl_stop_json(_request_json: *const c_char) -
     let slot = crawl_runtime_slot();
     let mut guard = slot.lock().unwrap();
     let Some(mut handle) = guard.take() else {
-        return encode(&Envelope::ok(
-            serde_json::to_string(&runtime_state(false, "crawler crawl not running")).unwrap(),
-        ));
+        return encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+            false,
+            "crawler crawl not running",
+        ))
+        .unwrap()));
     };
 
     if let Some(stop_tx) = handle.stop_tx.take() {
@@ -639,9 +595,11 @@ pub unsafe extern "C" fn crawler_crawl_stop_json(_request_json: *const c_char) -
 
     drop(guard);
     let _ = handle.join.join();
-    encode(&Envelope::ok(
-        serde_json::to_string(&runtime_state(false, "crawler crawl stopped")).unwrap(),
+    encode(&Envelope::ok(serde_json::to_string(&runtime_state(
+        false,
+        "crawler crawl stopped",
     ))
+    .unwrap()))
 }
 
 #[no_mangle]
@@ -658,9 +616,7 @@ pub unsafe extern "C" fn crawler_crawl_status_json(_request_json: *const c_char)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn crawler_build_gnostr_query_json(
-    request_json: *const c_char,
-) -> *mut c_char {
+pub unsafe extern "C" fn crawler_build_gnostr_query_json(request_json: *const c_char) -> *mut c_char {
     ensure_tracing();
     let request_json = match read_c_string(request_json) {
         Ok(value) => value,
@@ -672,10 +628,7 @@ pub unsafe extern "C" fn crawler_build_gnostr_query_json(
         Err(error) => return encode(&Envelope::<String>::err(error.to_string())),
     };
 
-    let generic = match (
-        request.generic_tag.as_deref(),
-        request.generic_value.as_deref(),
-    ) {
+    let generic = match (request.generic_tag.as_deref(), request.generic_value.as_deref()) {
         (Some(tag), Some(value)) => Some((tag, value)),
         _ => None,
     };
@@ -709,9 +662,7 @@ pub unsafe extern "C" fn crawler_websocket_http_url_json(url: *const c_char) -> 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn crawler_roundtrip_relay_metadata_json(
-    relay_json: *const c_char,
-) -> *mut c_char {
+pub unsafe extern "C" fn crawler_roundtrip_relay_metadata_json(relay_json: *const c_char) -> *mut c_char {
     ensure_tracing();
     let relay_json = match read_c_string(relay_json) {
         Ok(value) => value,
