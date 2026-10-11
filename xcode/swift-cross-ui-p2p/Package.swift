@@ -8,7 +8,9 @@ let package = Package(
     platforms: [
         .macOS(.v11),
         //.iOS(.v13),
+        .macCatalyst(.v13),
     ],
+    
     products: [
         .executable(name: "SwiftCrossUIP2P", targets: ["SwiftCrossUIP2P"]),
     ],
