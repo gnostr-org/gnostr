@@ -250,11 +250,6 @@ path = "src/bin/gnostr-client.rs"
 required-features = ["blossom"]
 
 [[bin]]
-name = "gnostr-dashboard"
-path = "src/bin/gnostr-dashboard.rs"
-required-features = ["blossom"]
-
-[[bin]]
 name = "gnostr-functions"
 path = "src/bin/gnostr-functions.rs"
 required-features = ["blossom"]
