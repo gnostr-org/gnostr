@@ -1,6 +1,6 @@
 [package]
 name = "crawler_ffi"
-version = "970860.1845.450127"
+version = "970861.1845.448495"
 edition = "2021"
 
 [lib]
