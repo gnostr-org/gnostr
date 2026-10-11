@@ -1112,17 +1112,19 @@ mod test_remote_branches {
 		assert!(find(&branches_1, "origin/master"));
 		assert!(find(&branches_1, "origin/foo"));
 
-		// clone2
+		// Remove tracking for the local `foo` branch and verify the
+		// corresponding remote branch is no longer considered tracked.
+		let repo = Repository::open(clone1_dir).unwrap();
+		let mut branch =
+			repo.find_branch("foo", BranchType::Local).unwrap();
+		branch.set_upstream(None).unwrap();
+		drop(branch);
+		drop(repo);
 
-		let (clone2_dir, _clone2) =
-			repo_clone(r1_dir.path().to_str().unwrap()).unwrap();
+		let branches_1 =
+			get_branches_info(&clone1_dir.into(), false).unwrap();
 
-		let clone2_dir = clone2_dir.path().to_str().unwrap();
-
-		let branches_2 =
-			get_branches_info(&clone2_dir.into(), false).unwrap();
-
-		assert!(!find(&branches_2, "origin/foo"));
-		assert!(find(&branches_2, "origin/master"));
+		assert!(find(&branches_1, "origin/master"));
+		assert!(!find(&branches_1, "origin/foo"));
 	}
 }
