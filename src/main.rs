@@ -101,9 +101,16 @@ async fn main() -> anyhow::Result<()> {
         LevelFilter::INFO
     } else if gnostr_cli_args.warn {
         LevelFilter::WARN
+    } else if gnostr_cli_args.logging {
+        LevelFilter::INFO
     } else {
         LevelFilter::OFF
     };
+
+    if gnostr_cli_args.logging {
+        println!("Logging enabled.");
+    }
+
     init_logging(base_level)?;
 
     let env_args: Vec<String> = env::args().collect();
