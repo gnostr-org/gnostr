@@ -320,8 +320,10 @@ Releases use `cargo-dist` configured in `dist-workspace.toml`:
 - Installers: shell, powershell, homebrew. Homebrew tap:
   `gnostr-org/homebrew-gnostr-org`.
 
-Docker images are defined in `docker/` and composed via
-`docker-compose.blossom.yml`. See `DOCKER.md` and `CROSS.md` for details.
+Docker images are defined in `docker/` and composed via `docker-compose.yml`
+(`gnostr-node`, `nginx`, optional `tor`) and `docker-compose.blossom.yml`
+(Blossom server stack). See `docker/Dockerfile.*`, `nginx.conf`, and
+`DOCKER.md` / `CROSS.md` for details.
 
 ## Configuration and runtime
 
