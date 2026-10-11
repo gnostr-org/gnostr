@@ -171,16 +171,17 @@ fi
 "${GNOSTR}" chat --headless --topic "${TOPIC}" --name "${RECEIVER_NAME}" "${PASSTHROUGH_FLAGS[@]}" >"${RECEIVER_LOG}" 2>&1 &
 RECEIVER_PID=$!
 
-# Wait for the receiver to begin listening.
-for _ in $(seq 1 30); do
+# Wait for the receiver to begin listening (debug builds can take 5-10 s).
+RECEIVER_WAIT_SECS=30
+for _ in $(seq 1 "${RECEIVER_WAIT_SECS}"); do
     if grep -q "Local node is listening" "${RECEIVER_LOG}" 2>/dev/null; then
         break
     fi
-    sleep 0.2
+    sleep 1
 done
 
 if ! grep -q "Local node is listening" "${RECEIVER_LOG}" 2>/dev/null; then
-    echo "error: receiver did not start listening" >&2
+    echo "error: receiver did not start listening within ${RECEIVER_WAIT_SECS}s" >&2
     cat "${RECEIVER_LOG}" >&2
     exit 1
 fi
