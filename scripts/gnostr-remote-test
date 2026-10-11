@@ -2,45 +2,57 @@
 set -x
 
 RELAY_CSV_URL="https://raw.githubusercontent.com/permissionlesstech/bitchat/refs/heads/main/relays/online_relays_gps.csv"
+CRAWLER_API_URL="http://127.0.0.1:3000"
 DEFAULT_FALLBACK_RELAYS=(
   "wss://relay.damus.io"
   "wss://nos.lol"
 )
 
-# Fetch the public relay CSV and normalize the entries.
-fetch_relay_csv() {
-  # Suppress tracing while handling the large CSV payload.
+# Normalize a relay URL: trim whitespace, strip scheme/leading slashes and the
+# default :443 port, drop empty/localhost entries, then prepend wss://.
+normalize_relay_url() {
+  sed -E \
+    -e 's/^[[:space:]]+//' \
+    -e 's/[[:space:]]+$//' \
+    -e 's/^(wss?:|https?:)//' \
+    -e 's/^\/+//' \
+    -e 's/:443$//' \
+    -e 's/\/$//' \
+    -e '/^$/d' \
+    -e '/^localhost/d' \
+    -e '/^127\./d' \
+    -e 's/^/wss:\/\//'
+}
+
+# Fetch a list of candidate relays. Prefer the local gnostr crawler API; fall
+# back to the public CSV if the crawler is not running.
+fetch_relay_list() {
   { set +x; } 2>/dev/null
-  local csv
-  csv=$(curl -fsSL "$RELAY_CSV_URL" 2>/dev/null) || {
+
+  local raw
+  raw=$(curl -fsSL "${CRAWLER_API_URL}/relays.json" 2>/dev/null)
+  if [[ -n "$raw" ]]; then
+    set -x
+    printf '%s\n' "$raw" | sed -n 's/.*"\(wss:\/\/[^"]*\)".*/\1/p' | normalize_relay_url
+    return 0
+  fi
+
+  raw=$(curl -fsSL "$RELAY_CSV_URL" 2>/dev/null) || {
     set -x
     return 1
   }
 
-  printf '%s\n' "$csv" \
-    | tail -n +2 \
-    | cut -d, -f1 \
-    | sed -E \
-        -e 's/^[[:space:]]+//' \
-        -e 's/[[:space:]]+$//' \
-        -e 's/^(wss?:|https?:)//' \
-        -e 's/^\/+//' \
-        -e 's/:443$//' \
-        -e '/^$/d' \
-        -e '/^localhost/d' \
-        -e '/^127\./d' \
-        -e 's/^/wss:\/\//'
-
   set -x
+  printf '%s\n' "$raw" | tail -n +2 | cut -d, -f1 | normalize_relay_url
 }
 
-# Pick N random relays from the CSV plus the hard-coded fallback relays.
+# Pick N random relays from the available relay list plus the hard-coded
+# fallback relays.
 pick_relays() {
-  # Suppress tracing while handling the large CSV payload.
   { set +x; } 2>/dev/null
   local csv_count=${1:-3}
   local relays
-  relays=$(fetch_relay_csv)
+  relays=$(fetch_relay_list)
 
   # Always start with the fallback relays so we have known-good endpoints.
   local selected
