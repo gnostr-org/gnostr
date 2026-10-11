@@ -28,7 +28,7 @@ with the iPad-style appearance on both devices. On macOS it falls back to
 Build for Mac Catalyst from the command line with `xcodebuild`:
 
 ```sh
-xcodebuild -scheme SwiftCrossUIP2P \
+xcodebuild -scheme swift-cross-ui-p2p \
   -destination 'platform=macOS,variant=Mac Catalyst' \
   -derivedDataPath .build/derived-data
 ```
