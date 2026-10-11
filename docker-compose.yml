@@ -1,16 +1,20 @@
-version: '3.8'
 services:
   gnostr-node:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.gnostr-node
     volumes: ["gnostr_data:/data"]
   nginx:
     image: nginx:alpine
     ports: ["80:80"]
     volumes: ["./nginx.conf:/etc/nginx/nginx.conf:ro"]
+    depends_on:
+      - gnostr-node
   tor:
     image: goldy/tor-hidden-service
     links: ["nginx"]
     volumes: ["tor_keys:/var/lib/tor/hidden_service/"]
+    profiles: ["tor"]
 volumes:
   gnostr_data:
   tor_keys:
