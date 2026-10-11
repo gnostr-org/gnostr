@@ -1,15 +1,38 @@
-FROM rust:1.75-slim as builder
+FROM rust:latest AS builder
 WORKDIR /usr/src/app
 COPY . .
-RUN apt-get update && apt-get install -y pkg-config libssl-dev && cargo build --release
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    clang \
+    cmake \
+    libclang-dev \
+    libgit2-dev \
+    libssl-dev \
+    llvm-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/* \
+    && LIBCLANG_SO=$(find /usr -name 'libclang.so' 2>/dev/null | head -1 || \
+         find /usr -name 'libclang*.so*' 2>/dev/null | sort -V | tail -n 1) \
+    && { [ -n "$LIBCLANG_SO" ] || { echo "ERROR: could not find libclang.so" >&2; exit 1; }; } \
+    && mkdir -p /usr/local/lib \
+    && ln -sf "$LIBCLANG_SO" /usr/local/lib/libclang.so
+ENV LIBCLANG_PATH=/usr/local/lib
+RUN cargo build -p gnostr-bins --release
 
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y libssl3 ca-certificates curl git openssh-server \
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    libgit2-dev \
+    ca-certificates \
+    curl \
+    git \
+    openssh-server \
     && rm -rf /var/lib/apt/lists/*
-RUN mkdir /var/run/sshd && useradd -m -s /usr/local/bin/gnostr-shell git && mkdir -p /home/git/.ssh
-COPY --from=builder /usr/src/app/target/release/gnostr-node /usr/local/bin/
+RUN mkdir /var/run/sshd
+COPY --from=builder /usr/src/app/target/release/gnostr-server /usr/local/bin/
 COPY --from=builder /usr/src/app/target/release/gnostr-shell /usr/local/bin/
 COPY --from=builder /usr/src/app/target/release/git-remote-gnostr-node /usr/local/bin/
+RUN useradd -m -s /usr/local/bin/gnostr-shell git && mkdir -p /home/git/.ssh
 EXPOSE 3000 22
-RUN echo "#!/bin/bash\n/usr/sbin/sshd\ngnostr-node --web-port 3000" > /start.sh && chmod +x /start.sh
+RUN echo '#!/bin/bash\n/usr/sbin/sshd\ngnostr-server --bind 0.0.0.0:3000 --data-dir /data "$@"' > /start.sh && chmod +x /start.sh
 ENTRYPOINT ["/start.sh"]
