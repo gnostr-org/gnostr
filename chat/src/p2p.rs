@@ -18,8 +18,8 @@ use libp2p::{
     swarm::{NetworkBehaviour, SwarmEvent},
     tcp, yamux, Multiaddr, PeerId, StreamProtocol,
 };
-use parking_lot::Mutex;
 use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use terminal_size::{terminal_size, Width};
 use textwrap::{self, Options};
 use tokio::select;
@@ -48,7 +48,11 @@ async fn publish_or_queue_chat_message(
     recv: &tokio::sync::mpsc::Sender<ChatEvent>,
 ) -> Result<()> {
     let payload = serde_json::to_vec(&msg)?;
-    match swarm.behaviour_mut().gossipsub.publish(topic.clone(), payload) {
+    match swarm
+        .behaviour_mut()
+        .gossipsub
+        .publish(topic.clone(), payload)
+    {
         Ok(_) => {
             recv.send(ChatEvent::MessagePublished).await?;
             Ok(())
@@ -66,7 +70,8 @@ async fn publish_or_queue_chat_message(
             let system = Msg::default()
                 .set_content(format!("publish error: {error:?}"), 0)
                 .set_kind(MsgKind::System);
-            recv.send(ChatEvent::ShowErrorMsg(system.to_string())).await?;
+            recv.send(ChatEvent::ShowErrorMsg(system.to_string()))
+                .await?;
             Ok(())
         }
     }
@@ -80,10 +85,16 @@ async fn flush_pending_chat_messages(
 ) -> Result<()> {
     while let Some(msg) = pending_chat_messages.pop_front() {
         let payload = serde_json::to_vec(&msg)?;
-        match swarm.behaviour_mut().gossipsub.publish(topic.clone(), payload) {
+        match swarm
+            .behaviour_mut()
+            .gossipsub
+            .publish(topic.clone(), payload)
+        {
             Ok(_) => {
-                recv.send(ChatEvent::ShowInfoMsg("sent queued chat message".to_string()))
-                    .await?;
+                recv.send(ChatEvent::ShowInfoMsg(
+                    "sent queued chat message".to_string(),
+                ))
+                .await?;
                 recv.send(ChatEvent::MessagePublished).await?;
             }
             Err(error) if is_insufficient_peers_error(&error) => {
@@ -95,7 +106,8 @@ async fn flush_pending_chat_messages(
                 let system = Msg::default()
                     .set_content(format!("publish error: {error:?}"), 0)
                     .set_kind(MsgKind::System);
-                recv.send(ChatEvent::ShowErrorMsg(system.to_string())).await?;
+                recv.send(ChatEvent::ShowErrorMsg(system.to_string()))
+                    .await?;
             }
         }
     }

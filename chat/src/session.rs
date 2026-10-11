@@ -146,8 +146,14 @@ mod tests {
 
     #[test]
     fn infer_message_kind_detects_git_diff() {
-        assert_eq!(infer_message_kind("diff --git a/file b/file"), MsgKind::GitDiff);
-        assert_eq!(infer_message_kind("--- a/file\n+++ b/file"), MsgKind::GitDiff);
+        assert_eq!(
+            infer_message_kind("diff --git a/file b/file"),
+            MsgKind::GitDiff
+        );
+        assert_eq!(
+            infer_message_kind("--- a/file\n+++ b/file"),
+            MsgKind::GitDiff
+        );
     }
 
     #[test]

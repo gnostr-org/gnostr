@@ -3,9 +3,9 @@
 //!
 //! If chat needs a new wire type, expose it from `p2p` instead of importing
 //! `asyncgit` directly.
- 
-pub mod event;
+
 pub mod command;
+pub mod event;
 pub mod message;
 pub mod msg;
 pub mod p2p;
@@ -15,8 +15,8 @@ pub mod tui;
 #[cfg(test)]
 pub mod tests;
 
-pub use event::ChatEvent;
 pub use command::{chat, run, ChatSubCommands};
+pub use event::ChatEvent;
 pub use message::*;
 pub use p2p::{evt_loop, global_rt};
 pub use session::{ChatNotification, ChatSession};

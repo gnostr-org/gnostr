@@ -72,7 +72,10 @@ mod tests {
             EventKind::Replaceable(10317)
         );
         assert_eq!(
-            status_kinds().into_iter().map(u32::from).collect::<Vec<_>>(),
+            status_kinds()
+                .into_iter()
+                .map(u32::from)
+                .collect::<Vec<_>>(),
             vec![1630, 1631, 1632, 1633]
         );
 

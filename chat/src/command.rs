@@ -44,7 +44,12 @@ pub struct ChatSubCommands {
     #[arg(long, default_value_t = false, help = "Run in headless mode (no TUI)")]
     pub headless: bool,
     pub workdir: Option<String>,
-    #[arg(long, value_name = "GITDIR", default_value = ".", help = "gnostr --gitdir '<string>'")]
+    #[arg(
+        long,
+        value_name = "GITDIR",
+        default_value = ".",
+        help = "gnostr --gitdir '<string>'"
+    )]
     pub gitdir: Option<gnostr_asyncgit::sync::RepoPath>,
     #[arg(short = '1', long, global = true, requires = "topic")]
     pub oneshot: Option<String>,
@@ -177,7 +182,11 @@ fn chat_topic(sub_command_args: &ChatSubCommands) -> String {
         .unwrap_or_else(|| "gnostr-dev".to_string())
 }
 
-async fn run_chat_session(sub_command_args: &ChatSubCommands, username: String, session: &ChatSession) -> Result<()> {
+async fn run_chat_session(
+    sub_command_args: &ChatSubCommands,
+    username: String,
+    session: &ChatSession,
+) -> Result<()> {
     let topic_name = sub_command_args
         .topic
         .clone()
@@ -241,7 +250,10 @@ fn oneshot_p2p_timestamp(topic: &str) -> String {
 
 fn oneshot_clock_path(topic: &str) -> String {
     let mut path = std::env::temp_dir();
-    path.push(format!("gnostr-chat-oneshot-{}.json", sanitize_for_filename(topic)));
+    path.push(format!(
+        "gnostr-chat-oneshot-{}.json",
+        sanitize_for_filename(topic)
+    ));
     path.to_string_lossy().into_owned()
 }
 
@@ -327,7 +339,10 @@ mod tests {
 
     #[test]
     fn sanitize_for_filename_replaces_topic_separators() {
-        assert_eq!(sanitize_for_filename("gnostr/chat oneshot"), "gnostr_chat_oneshot");
+        assert_eq!(
+            sanitize_for_filename("gnostr/chat oneshot"),
+            "gnostr_chat_oneshot"
+        );
     }
 
     #[test]

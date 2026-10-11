@@ -1,8 +1,8 @@
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use std::collections::HashMap;
     use std::collections::BTreeMap;
+    use std::collections::HashMap;
     use std::fs;
     use std::io::Write;
     use std::path::Path;
@@ -10,12 +10,12 @@ mod tests {
     use std::time::Duration;
     use std::time::{SystemTime, UNIX_EPOCH};
 
+    use futures::StreamExt;
     use libp2p::{
         autonat, dcutr, gossipsub, identify, noise, ping, relay, request_response,
         swarm::{NetworkBehaviour, SwarmEvent},
         tcp, yamux, Multiaddr, PeerId,
     };
-    use futures::StreamExt;
     use serde::{Deserialize, Serialize};
     use serial_test::serial;
     use tokio::sync::mpsc;
@@ -32,8 +32,8 @@ mod tests {
         sync::{add_note, commit, show_note, stage_add_file, RepoPath},
         types::{
             generate_git_note_event, Event, EventKind as AsyncEventKind, EventReference, Id,
-            MilliSatoshi, PreEventV3, PrivateKey, PublicKey, RepoRef, RepoState, TagV3, Unixtime,
-            UncheckedUrl, ZapData, ZapDataV1, ZapDataV2,
+            MilliSatoshi, PreEventV3, PrivateKey, PublicKey, RepoRef, RepoState, TagV3,
+            UncheckedUrl, Unixtime, ZapData, ZapDataV1, ZapDataV2,
         },
         GitNote as AsyncGitNote,
     };
@@ -94,7 +94,9 @@ mod tests {
                 })
                 .await
                 .expect("relay probe peer to stay alive");
-            receiver.await.map_err(|_| "dial response channel closed".to_string())?
+            receiver
+                .await
+                .map_err(|_| "dial response channel closed".to_string())?
         }
 
         async fn listen_on(&mut self, addr: Multiaddr) -> Result<(), String> {
@@ -143,7 +145,11 @@ mod tests {
         }
     }
 
-    fn build_relay_circuit_addr(base: &Multiaddr, relay_peer_id: PeerId, target: PeerId) -> Multiaddr {
+    fn build_relay_circuit_addr(
+        base: &Multiaddr,
+        relay_peer_id: PeerId,
+        target: PeerId,
+    ) -> Multiaddr {
         base.clone()
             .with(libp2p::multiaddr::Protocol::P2p(relay_peer_id))
             .with(libp2p::multiaddr::Protocol::P2pCircuit)
@@ -155,28 +161,27 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .expect("system time")
             .as_nanos();
-        let root = std::env::temp_dir().join(format!("gnostr-chat-trace-{}-{unique}", std::process::id()));
+        let root =
+            std::env::temp_dir().join(format!("gnostr-chat-trace-{}-{unique}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create trace repo root");
 
         let repo = git2::Repository::init(&root).expect("init trace repo");
         {
             let mut config = repo.config().expect("trace config");
-            config.set_str("user.name", "gnostr-trace").expect("set trace user");
+            config
+                .set_str("user.name", "gnostr-trace")
+                .expect("set trace user");
             config
                 .set_str("user.email", "trace@gnostr.org")
                 .expect("set trace email");
         }
 
-        let repo_path: RepoPath = root
-            .to_str()
-            .expect("trace repo path")
-            .into();
+        let repo_path: RepoPath = root.to_str().expect("trace repo path").into();
 
         let trace_file = root.join("trace.txt");
         let mut file = fs::File::create(&trace_file).expect("trace file");
-        writeln!(file, "trace repo {}", root.display())
-        .expect("write trace file");
+        writeln!(file, "trace repo {}", root.display()).expect("write trace file");
 
         stage_add_file(&repo_path, Path::new("trace.txt")).expect("stage trace file");
         let commit_id = commit(&repo_path, "trace commit").expect("trace commit");
@@ -275,12 +280,10 @@ mod tests {
                         )),
                         ping: ping::Behaviour::new(ping::Config::new()),
                         request_response: request_response::cbor::Behaviour::new(
-                            [
-                                (
-                                    libp2p::StreamProtocol::new("/relay-probe/1"),
-                                    request_response::ProtocolSupport::Full,
-                                ),
-                            ],
+                            [(
+                                libp2p::StreamProtocol::new("/relay-probe/1"),
+                                request_response::ProtocolSupport::Full,
+                            )],
                             request_response::Config::default(),
                         ),
                     }
@@ -288,12 +291,19 @@ mod tests {
                 .expect("behaviour")
                 .build();
 
-            swarm.listen_on("/ip4/127.0.0.1/tcp/0".parse().expect("tcp listen")).expect("listen tcp");
-            swarm.listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().expect("quic listen")).expect("listen quic");
+            swarm
+                .listen_on("/ip4/127.0.0.1/tcp/0".parse().expect("tcp listen"))
+                .expect("listen tcp");
+            swarm
+                .listen_on("/ip4/127.0.0.1/udp/0/quic-v1".parse().expect("quic listen"))
+                .expect("listen quic");
 
-            let mut pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), String>>> = HashMap::new();
-            let mut pending_request: HashMap<request_response::OutboundRequestId, oneshot::Sender<Result<RelayTraceEnvelope, String>>> =
+            let mut pending_dial: HashMap<PeerId, oneshot::Sender<Result<(), String>>> =
                 HashMap::new();
+            let mut pending_request: HashMap<
+                request_response::OutboundRequestId,
+                oneshot::Sender<Result<RelayTraceEnvelope, String>>,
+            > = HashMap::new();
 
             loop {
                 tokio::select! {
@@ -418,10 +428,8 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .expect("system time")
             .as_nanos();
-        let root = std::env::temp_dir().join(format!(
-            "gnostr-chat-nip34-{}-{unique}",
-            std::process::id()
-        ));
+        let root =
+            std::env::temp_dir().join(format!("gnostr-chat-nip34-{}-{unique}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create nip34 repo root");
 
@@ -555,7 +563,10 @@ mod tests {
         .expect("sign nip34 event")
     }
 
-    fn mock_zap_data_from_event(event: &Event, payer: PublicKey) -> (ZapDataV1, ZapDataV2, ZapData) {
+    fn mock_zap_data_from_event(
+        event: &Event,
+        payer: PublicKey,
+    ) -> (ZapDataV1, ZapDataV2, ZapData) {
         let provider_pubkey = PrivateKey::generate().public_key();
         let zap_v1 = ZapDataV1 {
             id: event.id,
@@ -586,8 +597,14 @@ mod tests {
         event: &Event,
     ) {
         let event_json = serde_json::to_string(event).expect("serialize event");
-        add_note(repo_path, anchor_commit, &event_json, Some(notes_ref), false)
-            .expect("add fetched note");
+        add_note(
+            repo_path,
+            anchor_commit,
+            &event_json,
+            Some(notes_ref),
+            false,
+        )
+        .expect("add fetched note");
         let note = show_note(repo_path, anchor_commit, Some(notes_ref))
             .expect("show fetched note")
             .expect("fetched note exists");
@@ -638,10 +655,7 @@ mod tests {
         .set_content(msg1_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx1
-            .send(ChatEvent::ChatMessage(msg1))
-            .await
-            .unwrap();
+        send_tx1.send(ChatEvent::ChatMessage(msg1)).await.unwrap();
 
         // Receive the message on peer 2's side
         let received_event = next_chat_message(&mut recv_rx2, Duration::from_secs(10)).await;
@@ -663,10 +677,7 @@ mod tests {
         .set_content(msg2_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx2
-            .send(ChatEvent::ChatMessage(msg2))
-            .await
-            .unwrap();
+        send_tx2.send(ChatEvent::ChatMessage(msg2)).await.unwrap();
 
         // Receive the message on peer 1's side
         let received_event_2 = next_chat_message(&mut recv_rx1, Duration::from_secs(10)).await;
@@ -712,10 +723,7 @@ mod tests {
         .set_content(msg1_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx1
-            .send(ChatEvent::ChatMessage(msg1))
-            .await
-            .unwrap();
+        send_tx1.send(ChatEvent::ChatMessage(msg1)).await.unwrap();
 
         let received_event = next_chat_message(&mut recv_rx2, Duration::from_secs(15)).await;
         if let ChatEvent::ChatMessage(received_msg) = received_event {
@@ -723,7 +731,10 @@ mod tests {
             assert_eq!(received_msg.content[0], msg1_content);
             assert_eq!(received_msg.kind, MsgKind::Chat);
         } else {
-            panic!("Received wrong event type on relay-backed peer 2: {:?}", received_event);
+            panic!(
+                "Received wrong event type on relay-backed peer 2: {:?}",
+                received_event
+            );
         }
 
         let msg2_content = "Hello from relay-backed peer 2";
@@ -734,10 +745,7 @@ mod tests {
         .set_content(msg2_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx2
-            .send(ChatEvent::ChatMessage(msg2))
-            .await
-            .unwrap();
+        send_tx2.send(ChatEvent::ChatMessage(msg2)).await.unwrap();
 
         let received_event_2 = next_chat_message(&mut recv_rx1, Duration::from_secs(15)).await;
         if let ChatEvent::ChatMessage(received_msg_2) = received_event_2 {
@@ -791,12 +799,10 @@ mod tests {
             assert_eq!(received_nostr_event.kind, event1.kind);
             assert_eq!(received_nostr_event.content, event1.content);
             assert_eq!(received_nostr_event.id, event1.id);
-            assert!(
-                received_nostr_event
-                    .tags
-                    .iter()
-                    .any(|tag| tag.tagname() == "commit" && tag.value() == commit1.to_string())
-            );
+            assert!(received_nostr_event
+                .tags
+                .iter()
+                .any(|tag| tag.tagname() == "commit" && tag.value() == commit1.to_string()));
             assert_eq!(
                 received_msg.content.first(),
                 Some(&serde_json::to_string(received_nostr_event).expect("event json"))
@@ -855,7 +861,8 @@ mod tests {
             "refs/tags/v0.1.0".to_string(),
             "89abcdef0123456789abcdef0123456789abcdef".to_string(),
         );
-        let repo_state = RepoState::build("gnostr".to_string(), state, &private_key).expect("repo state");
+        let repo_state =
+            RepoState::build("gnostr".to_string(), state, &private_key).expect("repo state");
         let repo_state_event = repo_state.event.clone();
 
         let root_patch = sign_nip34_event(
@@ -889,7 +896,11 @@ mod tests {
                 TagV3::new_pubkey(trusted_maintainer, None, None),
                 TagV3::new_tag("c", &root_commit),
                 TagV3::new_tag("clone", &repo_url),
-                TagV3::from_strings(vec!["r".to_string(), root_commit.clone(), "euc".to_string()]),
+                TagV3::from_strings(vec![
+                    "r".to_string(),
+                    root_commit.clone(),
+                    "euc".to_string(),
+                ]),
             ],
             1_777_759_187,
         );
@@ -903,7 +914,11 @@ mod tests {
                 TagV3::from_strings(vec!["P".to_string(), pr_event.pubkey.as_hex_string()]),
                 TagV3::new_tag("c", &root_commit),
                 TagV3::new_tag("clone", &repo_url),
-                TagV3::from_strings(vec!["r".to_string(), root_commit.clone(), "euc".to_string()]),
+                TagV3::from_strings(vec![
+                    "r".to_string(),
+                    root_commit.clone(),
+                    "euc".to_string(),
+                ]),
             ],
             1_777_759_188,
         );
@@ -915,7 +930,11 @@ mod tests {
                 TagV3::new_tag("r", &root_commit),
                 TagV3::from_strings(vec![
                     "a".to_string(),
-                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    format!(
+                        "30617:{}:{}",
+                        trusted_maintainer.as_hex_string(),
+                        repo_ref.identifier
+                    ),
                     repo_url.clone(),
                     "root".to_string(),
                 ]),
@@ -931,7 +950,11 @@ mod tests {
                 TagV3::new_event(issue_event.id, None, Some("root".to_string())),
                 TagV3::from_strings(vec![
                     "a".to_string(),
-                    format!("30617:{}:{}", trusted_maintainer.as_hex_string(), repo_ref.identifier),
+                    format!(
+                        "30617:{}:{}",
+                        trusted_maintainer.as_hex_string(),
+                        repo_ref.identifier
+                    ),
                     repo_url.clone(),
                     "reply".to_string(),
                 ]),
@@ -1007,29 +1030,84 @@ mod tests {
         let (_git_note_msg, git_note_event, _git_note_commit) = real_nip34_message();
 
         let cases = vec![
-            ("repo announcement", repo_announcement, "repo-announcement", Nip34ProofExpectation::RepoAnnouncement),
-            ("repo state", repo_state_event, "repo-state", Nip34ProofExpectation::RepoState),
-            ("repo patch root", root_patch, "repo-patch-root", Nip34ProofExpectation::PatchRoot),
-            ("pull request", pr_event.clone(), "pull-request", Nip34ProofExpectation::PullRequest),
+            (
+                "repo announcement",
+                repo_announcement,
+                "repo-announcement",
+                Nip34ProofExpectation::RepoAnnouncement,
+            ),
+            (
+                "repo state",
+                repo_state_event,
+                "repo-state",
+                Nip34ProofExpectation::RepoState,
+            ),
+            (
+                "repo patch root",
+                root_patch,
+                "repo-patch-root",
+                Nip34ProofExpectation::PatchRoot,
+            ),
+            (
+                "pull request",
+                pr_event.clone(),
+                "pull-request",
+                Nip34ProofExpectation::PullRequest,
+            ),
             (
                 "pull request update",
                 pr_update_event.clone(),
                 "pull-request-update",
                 Nip34ProofExpectation::PullRequestUpdate,
             ),
-            ("issue", issue_event.clone(), "issue", Nip34ProofExpectation::Issue),
-            ("reply", reply_event.clone(), "reply", Nip34ProofExpectation::Reply),
-            ("status open", status_open.clone(), "status-open", Nip34ProofExpectation::StatusOpen),
+            (
+                "issue",
+                issue_event.clone(),
+                "issue",
+                Nip34ProofExpectation::Issue,
+            ),
+            (
+                "reply",
+                reply_event.clone(),
+                "reply",
+                Nip34ProofExpectation::Reply,
+            ),
+            (
+                "status open",
+                status_open.clone(),
+                "status-open",
+                Nip34ProofExpectation::StatusOpen,
+            ),
             (
                 "status applied",
                 status_applied.clone(),
                 "status-applied",
                 Nip34ProofExpectation::StatusApplied,
             ),
-            ("status draft", status_draft.clone(), "status-draft", Nip34ProofExpectation::StatusDraft),
-            ("status closed", status_closed.clone(), "status-closed", Nip34ProofExpectation::StatusClosed),
-            ("user grasp list", grasp_list.clone(), "user-grasp-list", Nip34ProofExpectation::GraspList),
-            ("git note", git_note_event.clone(), "git-note", Nip34ProofExpectation::GitNote),
+            (
+                "status draft",
+                status_draft.clone(),
+                "status-draft",
+                Nip34ProofExpectation::StatusDraft,
+            ),
+            (
+                "status closed",
+                status_closed.clone(),
+                "status-closed",
+                Nip34ProofExpectation::StatusClosed,
+            ),
+            (
+                "user grasp list",
+                grasp_list.clone(),
+                "user-grasp-list",
+                Nip34ProofExpectation::GraspList,
+            ),
+            (
+                "git note",
+                git_note_event.clone(),
+                "git-note",
+                Nip34ProofExpectation::GitNote,
+            ),
         ];
 
         for (label, event, ref_suffix, expectation) in cases {
@@ -1062,10 +1140,8 @@ mod tests {
                     received_nostr_event,
                 );
 
-                let (zap_v1, zap_v2, zap_alias) = mock_zap_data_from_event(
-                    received_nostr_event,
-                    trusted_maintainer,
-                );
+                let (zap_v1, zap_v2, zap_alias) =
+                    mock_zap_data_from_event(received_nostr_event, trusted_maintainer);
                 let zap_v1_json = serde_json::to_string(&zap_v1).expect("serialize mocked zap v1");
                 let zap_v2_json = serde_json::to_string(&zap_v2).expect("serialize mocked zap v2");
                 let zap_alias_json =
@@ -1204,7 +1280,6 @@ mod tests {
                 panic!("received wrong event type on peer 2 for case {label}");
             }
         }
-
     }
 
     #[tokio::test]
@@ -1217,10 +1292,14 @@ mod tests {
             .expect("local p2p relay service");
         let relay_addr = relay.listen_addr().clone();
         let relay_peer_id = relay.peer_id();
-        let peer_one_reservation_addr =
-            relay_addr.clone().with(libp2p::multiaddr::Protocol::P2p(relay_peer_id)).with(libp2p::multiaddr::Protocol::P2pCircuit);
-        let peer_two_reservation_addr =
-            relay_addr.clone().with(libp2p::multiaddr::Protocol::P2p(relay_peer_id)).with(libp2p::multiaddr::Protocol::P2pCircuit);
+        let peer_one_reservation_addr = relay_addr
+            .clone()
+            .with(libp2p::multiaddr::Protocol::P2p(relay_peer_id))
+            .with(libp2p::multiaddr::Protocol::P2pCircuit);
+        let peer_two_reservation_addr = relay_addr
+            .clone()
+            .with(libp2p::multiaddr::Protocol::P2p(relay_peer_id))
+            .with(libp2p::multiaddr::Protocol::P2pCircuit);
 
         let mut peer_one = spawn_relay_probe_peer("chat-relay-peer-one");
         let mut peer_two = spawn_relay_probe_peer("chat-relay-peer-two");
@@ -1249,7 +1328,8 @@ mod tests {
             "peer two relay status: {peer_two_status}"
         );
 
-        let peer_two_circuit = build_relay_circuit_addr(&relay_addr, relay_peer_id, peer_two.peer_id);
+        let peer_two_circuit =
+            build_relay_circuit_addr(&relay_addr, relay_peer_id, peer_two.peer_id);
         peer_one
             .dial(peer_two.peer_id, peer_two_circuit.clone())
             .await
@@ -1313,10 +1393,7 @@ mod tests {
         .set_content(msg1_content.to_string(), 0)
         .set_kind(MsgKind::Chat);
 
-        send_tx1
-            .send(ChatEvent::ChatMessage(msg1))
-            .await
-            .unwrap();
+        send_tx1.send(ChatEvent::ChatMessage(msg1)).await.unwrap();
 
         // Peer 2 should receive the message
         let received_event_2 = next_chat_message(&mut recv_rx2, Duration::from_secs(10)).await;

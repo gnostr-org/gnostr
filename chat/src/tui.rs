@@ -1,13 +1,13 @@
 use std::{io, time::Duration};
 
-use anyhow::Result;
 use anyhow::Context;
+use anyhow::Result;
+use proctitle::set_title;
 use ratatui::crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use proctitle::set_title;
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -16,8 +16,8 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
-use tracing::debug;
 use tokio::sync::{broadcast::Receiver, mpsc::Sender};
+use tracing::debug;
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{
@@ -27,11 +27,7 @@ use crate::{
 };
 use gnostr_p2p::time::{Clock, ClockStatus, P2PClock};
 
-pub fn run_chat_tui(
-    topic: String,
-    username: String,
-    session: &ChatSession,
-) -> Result<()> {
+pub fn run_chat_tui(topic: String, username: String, session: &ChatSession) -> Result<()> {
     let _ = set_title(&format!("gnostr-chat-{topic}"));
     debug!("run_chat_tui: starting topic={topic} username={username}");
 
@@ -190,9 +186,7 @@ impl ChatTui {
                     return Ok(false);
                 }
 
-                let msg = Msg::default()
-                    .set_kind(MsgKind::Chat)
-                    .set_content(text, 0);
+                let msg = Msg::default().set_kind(MsgKind::Chat).set_content(text, 0);
                 if let Err(e) = input_tx.try_send(ChatEvent::ChatMessage(msg.clone())) {
                     self.status = format!("failed to queue chat message: {e}");
                     return Ok(false);
@@ -226,7 +220,10 @@ impl ChatTui {
                 self.selected = self.selected.saturating_sub(1);
             }
             KeyCode::Down | KeyCode::Char('j') => {
-                self.selected = self.selected.saturating_add(1).min(self.messages.len().saturating_sub(1));
+                self.selected = self
+                    .selected
+                    .saturating_add(1)
+                    .min(self.messages.len().saturating_sub(1));
             }
             KeyCode::Home | KeyCode::Char('g') => {
                 self.selected = 0;
@@ -253,7 +250,11 @@ impl ChatTui {
         let root = frame.area();
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(4), Constraint::Min(0), Constraint::Length(3)])
+            .constraints([
+                Constraint::Length(4),
+                Constraint::Min(0),
+                Constraint::Length(3),
+            ])
             .split(root);
 
         self.draw_header(frame, layout[0]);
@@ -289,7 +290,11 @@ impl ChatTui {
             Focus::Composer => 1,
         })
         .style(Style::default().fg(Color::Gray))
-        .highlight_style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD))
+        .highlight_style(
+            Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
+        )
         .divider(Span::raw(" | "))
         .block(Block::default().title("chat").borders(Borders::ALL));
 
@@ -301,33 +306,75 @@ impl ChatTui {
         let selected = self.selected_message();
         let details = selected.map(|msg| {
             vec![
-                Line::from(vec![Span::styled("from: ", Style::default().fg(Color::Magenta)), Span::raw(&msg.from)]),
-                Line::from(vec![Span::styled("kind: ", Style::default().fg(Color::Magenta)), Span::raw(format!("{:?}", msg.kind))]),
-                Line::from(vec![Span::styled("commit: ", Style::default().fg(Color::Magenta)), Span::raw(msg.commit_id.to_string())]),
-                Line::from(vec![Span::styled("nostr: ", Style::default().fg(Color::Magenta)), Span::raw(if msg.nostr_event.is_some() { "yes" } else { "no" })]),
-                Line::from(vec![Span::styled("chunks: ", Style::default().fg(Color::Magenta)), Span::raw(match (msg.sequence_num, msg.total_chunks) {
-                    (Some(seq), Some(total)) => format!("{}/{}", seq + 1, total),
-                    _ => "single".to_string(),
-                })]),
+                Line::from(vec![
+                    Span::styled("from: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(&msg.from),
+                ]),
+                Line::from(vec![
+                    Span::styled("kind: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(format!("{:?}", msg.kind)),
+                ]),
+                Line::from(vec![
+                    Span::styled("commit: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(msg.commit_id.to_string()),
+                ]),
+                Line::from(vec![
+                    Span::styled("nostr: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(if msg.nostr_event.is_some() {
+                        "yes"
+                    } else {
+                        "no"
+                    }),
+                ]),
+                Line::from(vec![
+                    Span::styled("chunks: ", Style::default().fg(Color::Magenta)),
+                    Span::raw(match (msg.sequence_num, msg.total_chunks) {
+                        (Some(seq), Some(total)) => format!("{}/{}", seq + 1, total),
+                        _ => "single".to_string(),
+                    }),
+                ]),
             ]
         });
 
         let mut lines = vec![
-            Line::from(vec![Span::styled("user: ", Style::default().fg(Color::Magenta)), Span::raw(&self.username)]),
-            Line::from(vec![Span::styled("topic: ", Style::default().fg(Color::Magenta)), Span::raw(&self.topic)]),
-            Line::from(vec![Span::styled("transport: ", Style::default().fg(Color::Magenta)), Span::raw("libp2p + nostr")]),
-            Line::from(vec![Span::styled("focus: ", Style::default().fg(Color::Magenta)), Span::raw(match self.focus {
-                Focus::Timeline => "timeline",
-                Focus::Composer => "composer",
-            })]),
-            Line::from(vec![Span::styled("messages: ", Style::default().fg(Color::Magenta)), Span::raw(self.messages.len().to_string())]),
+            Line::from(vec![
+                Span::styled("user: ", Style::default().fg(Color::Magenta)),
+                Span::raw(&self.username),
+            ]),
+            Line::from(vec![
+                Span::styled("topic: ", Style::default().fg(Color::Magenta)),
+                Span::raw(&self.topic),
+            ]),
+            Line::from(vec![
+                Span::styled("transport: ", Style::default().fg(Color::Magenta)),
+                Span::raw("libp2p + nostr"),
+            ]),
+            Line::from(vec![
+                Span::styled("focus: ", Style::default().fg(Color::Magenta)),
+                Span::raw(match self.focus {
+                    Focus::Timeline => "timeline",
+                    Focus::Composer => "composer",
+                }),
+            ]),
+            Line::from(vec![
+                Span::styled("messages: ", Style::default().fg(Color::Magenta)),
+                Span::raw(self.messages.len().to_string()),
+            ]),
             Line::from(""),
-            Line::from(vec![Span::styled("keys: ", Style::default().fg(Color::Magenta)), Span::raw("tab switch, enter send, ? help, q quit")]),
+            Line::from(vec![
+                Span::styled("keys: ", Style::default().fg(Color::Magenta)),
+                Span::raw("tab switch, enter send, ? help, q quit"),
+            ]),
         ];
 
         if let Some(mut detail_lines) = details {
             lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled("selected", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))]));
+            lines.push(Line::from(vec![Span::styled(
+                "selected",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )]));
             lines.append(&mut detail_lines);
         }
 
@@ -357,7 +404,10 @@ impl ChatTui {
                 .enumerate()
                 .map(|(idx, msg)| {
                     let style = if idx == self.selected {
-                        Style::default().fg(Color::Black).bg(Color::Magenta).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(Color::Magenta)
+                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default()
                     };
@@ -384,15 +434,25 @@ impl ChatTui {
 
     fn draw_composer(&self, frame: &mut Frame, area: Rect) {
         let input = Paragraph::new(self.input.value())
-            .style(Style::default().fg(if self.focus == Focus::Composer { Color::Cyan } else { Color::Gray }))
-            .scroll((0, self.input.visual_scroll(area.width.saturating_sub(4) as usize) as u16))
+            .style(Style::default().fg(if self.focus == Focus::Composer {
+                Color::Cyan
+            } else {
+                Color::Gray
+            }))
+            .scroll((
+                0,
+                self.input
+                    .visual_scroll(area.width.saturating_sub(4) as usize) as u16,
+            ))
             .block(Block::default().title("compose").borders(Borders::ALL));
 
         frame.render_widget(input, area);
 
         if self.focus == Focus::Composer {
             let cursor = self.input.visual_cursor();
-            let scroll = self.input.visual_scroll(area.width.saturating_sub(4) as usize);
+            let scroll = self
+                .input
+                .visual_scroll(area.width.saturating_sub(4) as usize);
             frame.set_cursor_position((
                 area.x + 1 + (cursor.max(scroll) - scroll) as u16,
                 area.y + 1,
@@ -526,7 +586,10 @@ mod tests {
 
     #[test]
     fn sanitize_for_filename_replaces_path_separators() {
-        assert_eq!(sanitize_for_filename("topic/name with spaces"), "topic_name_with_spaces");
+        assert_eq!(
+            sanitize_for_filename("topic/name with spaces"),
+            "topic_name_with_spaces"
+        );
     }
 
     #[test]
