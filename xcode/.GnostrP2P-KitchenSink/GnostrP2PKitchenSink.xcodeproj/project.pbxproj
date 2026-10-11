@@ -26,7 +26,7 @@
 		B701035227CD0B6900D43034 /* GnostrP2PKitchenSink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GnostrP2PKitchenSink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B701035527CD0B6900D43034 /* GnostrP2PKitchenSinkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GnostrP2PKitchenSinkApp.swift; sourceTree = "<group>"; };
 		B701035727CD0B6900D43034 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		B701035927CD0B6B00D43034 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B701035927CD0B6B00D43034 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ../../icons/Assets.xcassets; sourceTree = "<group>"; };
 		B701035C27CD0B6B00D43034 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B701036327CD0C0000D43034 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		B701036427CD0C6800D43034 /* GnostrP2PKitchenSink.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GnostrP2PKitchenSink.entitlements; sourceTree = "<group>"; };
@@ -85,7 +85,8 @@
 			children = (
 				B701035C27CD0B6B00D43034 /* Preview Assets.xcassets */,
 			);
-			path = "Preview Content";
+			name = "Preview Content";
+			path = "../../icons/Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -309,7 +310,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"GnostrP2PKitchenSink/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"$(SRCROOT)/../icons/Preview Content/Preview Assets.xcassets\"";
 				DEVELOPMENT_TEAM = M684FYCYG6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -342,7 +343,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"GnostrP2PKitchenSink/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"$(SRCROOT)/../icons/Preview Content/Preview Assets.xcassets\"";
 				DEVELOPMENT_TEAM = M684FYCYG6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -458,7 +459,6 @@
 			productName = LibP2PPubSub;
 		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = B701034A27CD0B6900D43034 /* Project object */;
 }
