@@ -12,13 +12,20 @@ import LibP2PMPLEX
 import LibP2PRelay
 import LibP2PAutoNAT
 import LibP2PDCUtR
+import LibP2PDNSAddr
 import LibP2PMDNS
 import LibP2PKadDHT
+import LibP2PPubSub
 
 /// Any class that conforms to the ChatDelegate can register themselves on the LibP2PService to get notified of Chat events
 protocol ChatDelegate {
     func on(message:String, from:PeerID)
     func on(nickname:String, from:PeerID)
+}
+
+protocol TopicDelegate {
+    func on(topicMessage message: String, from: PeerID, topic: String)
+    func on(topicPeerJoined peer: PeerID, topic: String)
 }
 
 /// We extend the Request struct with a computed var that provides access to a shared instance of our LibP2PService.
@@ -43,6 +50,12 @@ class LibP2PService {
         case stopping
     }
 
+    public enum PeerConnectionState: Equatable {
+        case disconnected
+        case dialing
+        case connected
+    }
+
     private var app:Application
     private let peerID: PeerID
     private var lna: LocalNetworkAuthorization?
@@ -55,6 +68,14 @@ class LibP2PService {
     private var runtimeHandlersInstalled = false
     private var lifecycleState: LifecycleState = .stopped
     private var topologyRegistrations: [TopologyRegistration] = []
+    private var subscribedTopics: Set<String> = []
+    private var topicSubscriptions: [String: PubSub.SubscriptionHandler] = [:]
+    private let defaultTopic = "gnostr"
+    private var discoveredPeerAddresses: [String: Multiaddr] = [:]
+    private let discoveredPeerAddressesQueue = DispatchQueue(label: "LibP2PService.discoveredPeerAddresses")
+    @Published private var peerConnectionStates: [String: PeerConnectionState] = [:]
+
+    internal var topicDelegate: TopicDelegate? = nil
     
     public var savedPeerID:PeerID? {
         if let pid = UserDefaults.standard.data(forKey: "MyPeerID") {
@@ -92,11 +113,18 @@ class LibP2PService {
         app.relay.use(.relay)
         app.autonat.use(.autonat)
         app.dcutr.use(.dcutr)
+        app.discovery.use(.bootstrap(Self.bootstrapPeers))
+        app.dht.use(.kadDHT(mode: .client, bootstrapPeers: Self.bootstrapPeers))
+        app.pubsub.use(.gossipsub)
+        app.resolvers.use(.dnsaddr)
         app.discovery.use(.mdns)
-        app.discovery.use(.kadDHT)
         app.servers.use(.tcp(host: "0.0.0.0", port: Self.listenPort))
         try! routes(app)
         return app
+    }
+
+    private static var bootstrapPeers: [PeerInfo] {
+        BootstrapPeerDiscovery.IPFSBootNodes
     }
 
     private static var listenPort: Int {
@@ -114,16 +142,11 @@ class LibP2PService {
             self.app.logger.notice("We discovered a peer: \(peer)")
             self.app.connections.getConnectionsToPeer(peer: peer.peer, on: nil).whenSuccess { conns in
                 if conns.isEmpty {
-                    guard let address = peer.addresses.first(where: { $0.description.contains("/tcp/") }) else {
-                        self.app.logger.warning("No dialable TCP address found for peer \(peer.peer)")
-                        return
+                    if let address = peer.addresses.first(where: { $0.description.contains("/tcp/") }) {
+                        self.recordDiscoveredAddress(address, for: peer.peer)
                     }
-                    self.app.logger.notice("Dialing peer \(peer.peer) at \(address)")
-                    do {
-                        try self.app.newStream(to: address, forProtocol: "/chat/1.0.0")
-                    } catch {
-                        self.app.logger.error("Failed to dial peer \(peer.peer): \(error)")
-                    }
+                    self.markPeerDialing(peer.peer)
+                    self.connect(peerID: peer.peer)
                 }
             }
         }
@@ -159,20 +182,129 @@ class LibP2PService {
             self.app.topology.register(registration)
         }
     }
+
+    private func reinstallTopicSubscriptions() {
+        for topic in self.subscribedTopics {
+            self.joinTopicIfNeeded(topic)
+        }
+    }
+
+    public func connectionState(for peerID: PeerID) -> PeerConnectionState {
+        self.peerConnectionStates[peerID.b58String] ?? .disconnected
+    }
+
+    private func recordDiscoveredAddress(_ address: Multiaddr, for peerID: PeerID) {
+        self.discoveredPeerAddressesQueue.sync {
+            self.discoveredPeerAddresses[peerID.b58String] = address
+        }
+    }
+
+    private func discoveredAddress(for peerID: PeerID) -> Multiaddr? {
+        self.discoveredPeerAddressesQueue.sync {
+            self.discoveredPeerAddresses[peerID.b58String]
+        }
+    }
+
+    private func markPeerConnected(_ peerID: PeerID) {
+        DispatchQueue.main.async {
+            self.peerConnectionStates[peerID.b58String] = .connected
+        }
+    }
+
+    private func markPeerDialing(_ peerID: PeerID) {
+        DispatchQueue.main.async {
+            self.peerConnectionStates[peerID.b58String] = .dialing
+        }
+    }
+
+    private func markPeerDisconnected(_ peerID: PeerID) {
+        DispatchQueue.main.async {
+            self.peerConnectionStates[peerID.b58String] = .disconnected
+        }
+    }
+
+    private func connect(peerID: PeerID) {
+        self.app.logger.notice("Connecting to peer \(peerID.b58String)")
+        do {
+            try self.app.newStream(to: peerID, forProtocol: "/ipfs/id/1.0.0")
+        } catch {
+            self.app.logger.error("Failed to connect to peer \(peerID): \(error)")
+            self.markPeerDisconnected(peerID)
+        }
+    }
+
+    private var needsLocalNetworkAuthorization: Bool {
+#if os(iOS) && !targetEnvironment(macCatalyst)
+        return true
+#else
+        return false
+#endif
+    }
+
+    private func joinTopicIfNeeded(_ topic: String) {
+        guard self.topicSubscriptions[topic] == nil else { return }
+
+        do {
+            let subscription = try self.app.pubsub.gossipsub.subscribe(
+                .init(
+                    topic: topic,
+                    signaturePolicy: .strictSign,
+                    validator: .acceptAll,
+                    messageIDFunc: .concatFromAndSequenceFields
+                )
+            )
+
+            let eventLoop = self.app.eventLoopGroup.next()
+            subscription.on = { [weak self] event in
+                guard let self else { return eventLoop.makeSucceededVoidFuture() }
+                switch event {
+                case .newPeer(let peer):
+                    self.app.logger.notice("[LibP2PTopic] \(topic) discovered peer: \(peer.b58String)")
+                    self.topicDelegate?.on(topicPeerJoined: peer, topic: topic)
+                case .data(let message):
+                    guard let fromPeer = try? PeerID(fromBytesID: Array(message.from)) else {
+                        self.app.logger.warning("[LibP2PTopic] Invalid sender for topic \(topic)")
+                        return eventLoop.makeSucceededVoidFuture()
+                    }
+                    let text = String(data: message.data, encoding: .utf8) ?? ""
+                    self.topicDelegate?.on(topicMessage: text, from: fromPeer, topic: topic)
+                case .error(let error):
+                    self.app.logger.error("[LibP2PTopic] \(topic) subscription error: \(error)")
+                }
+                return eventLoop.makeSucceededVoidFuture()
+            }
+
+            self.topicSubscriptions[topic] = subscription
+            self.subscribedTopics.insert(topic)
+            self.app.logger.notice("[LibP2PTopic] Joined gossip topic \(topic)")
+            self.app.pubsub.gossipsub.getPeersSubscribed(to: topic, on: eventLoop).whenSuccess { peers in
+                for peer in peers {
+                    self.topicDelegate?.on(topicPeerJoined: peer, topic: topic)
+                }
+            }
+        } catch {
+            self.app.logger.error("[LibP2PTopic] Failed to join topic \(topic): \(error)")
+        }
+    }
     
     public func start() async throws {
-        guard await self.lna?.requestAuthorization() ?? true else {
-            throw CocoaError(.userCancelled)
+        if self.needsLocalNetworkAuthorization {
+            guard await self.lna?.requestAuthorization() ?? true else {
+                throw CocoaError(.userCancelled)
+            }
         }
         guard self.lifecycleState != .running && self.lifecycleState != .starting else { return }
         self.lifecycleState = .starting
         if self.app.didShutdown {
             self.app = Self.makeApplication(peerID: self.peerID)
-            self.lna = LocalNetworkAuthorization()
+            self.lna = self.needsLocalNetworkAuthorization ? LocalNetworkAuthorization() : nil
             self.runtimeHandlersInstalled = false
+            self.topicSubscriptions = [:]
             self.reinstallTopologyRegistrations()
+            self.reinstallTopicSubscriptions()
         }
         self.installRuntimeHandlersIfNeeded()
+        self.joinTopicIfNeeded(self.defaultTopic)
         do {
             try app.start()
             self.app.logger.notice("LibP2P Started!")
@@ -189,28 +321,38 @@ class LibP2PService {
         self.pingTask?.cancel()
         app.shutdown()
         self.runtimeHandlersInstalled = false
+        self.topicSubscriptions = [:]
         self.lifecycleState = .stopped
     }
     
     public func send(message:String, to peer:PeerID) {
         guard self.app.isRunning else { print("LibP2P needs to be running in order to send messages!"); return }
-        // There's a lot happening in this `newRequest` call, let's break it down
-        // We have some data (our `message`) that we would like to send to our `peer`
-        // Libp2p offers a `Request` type that makes sending a single chunk of data easier than opening up and managing a streaming channel (similar to an HTTP Request)
-        // So we create a `newRequest` to our `peer`, destined for the `/chat/1.0.0` protocol, with the `message` we'd like to send them
-        //
-        // The next couple params are a little more in depth...
-        //  `style` provides the Request with a hint at what kind of behavior to expect.
-        //      `.noResponseExpected` means the stream will imediately request to be closed after sending the data, not waiting for a response / reply. (like a PUT request)
-        //      `.responseExpected` means that we expect data back from the peer (like a GET request)
-        //     Because our `/chat/1.0.0` doesn't support read reciepts we set this to `.noResponseExpected`
-        //     If, let's say, `/chat/2.0.0` supported delivery confirmations (read receipts), we could change this to `.responseExpected` and parse the returned message for confirmation of delivery.
-        //  `withHandlers` let's us configure the `/chat/1.0.0` stream with custom Channel Handlers (similar to middleware if you're familiar with other server side frameworks).
-        //     When we registered our `/chat/1.0.0` route earlier (in our initiailizer) we told Libp2p that the `/chat/1.0.0` should be `.newLineDelimited` (Routes.swift).
-        //     Therefor, when set to `.inherit`, libp2p can automagically use this info to configure the `/chat/1.0.0` stream with the same channel handlers.
-        //     If, for some reason, you wanted to have a unique channel handler configuration for this particular requets, you can add any ChannelHandlers you'd like to here.
-        //       ex: perhaps adding additional Logging handlers if you were trying to debug a request
-        self.app.newRequest(to: peer, forProtocol: "/chat/1.0.0", withRequest: Data(message.utf8), style: .noResponseExpected, withHandlers: .inherit).whenComplete { result in
+        let request = Data(message.utf8)
+        let protocolID = "/chat/1.0.0"
+
+        // Reuse an existing live connection whenever possible so chat messages do not pay
+        // discovery/dial setup on every send.
+        self.app.connections.getBestConnectionForPeer(peer: peer, on: self.app.eventLoopGroup.next()).flatMap { connection -> EventLoopFuture<Data> in
+            if let remoteAddr = connection?.remoteAddr {
+                return self.app.newRequest(
+                    to: remoteAddr,
+                    forProtocol: protocolID,
+                    withRequest: request,
+                    style: .noResponseExpected,
+                    withHandlers: .inherit,
+                    withTimeout: .seconds(10)
+                )
+            }
+
+            return self.app.newRequest(
+                to: peer,
+                forProtocol: protocolID,
+                withRequest: request,
+                style: .noResponseExpected,
+                withHandlers: .inherit,
+                withTimeout: .seconds(10)
+            )
+        }.whenComplete { result in
             switch result {
             case .failure(let error):
                 self.app.logger.error("Error: \(error)")
@@ -218,6 +360,16 @@ class LibP2PService {
                 self.app.logger.trace("Sent message to peer: \(peer)")
             }
         }
+    }
+
+    public func publish(message: String, to topic: String) {
+        guard self.app.isRunning else { print("LibP2P needs to be running in order to publish messages!"); return }
+        self.joinTopicIfNeeded(topic)
+        guard let subscription = self.topicSubscriptions[topic] else {
+            self.app.logger.error("[LibP2PTopic] No subscription available for topic \(topic)")
+            return
+        }
+        subscription.publish(Data(message.utf8))
     }
     
     public func isConnectedTo(peer:PeerID) async -> Bool {

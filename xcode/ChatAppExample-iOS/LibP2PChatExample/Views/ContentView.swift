@@ -17,6 +17,17 @@ struct ContentView: View {
         NavigationView {
             VStack {
                 List {
+                    Section("Topics") {
+                        ForEach(viewModel.topics) { topic in
+                            NavigationLink(destination: {
+                                TopicView(topic: topic)
+                                    .environmentObject(viewModel)
+                            }) {
+                                TopicRow(topic: topic)
+                            }
+                        }
+                    }
+
                     Section("Peers") {
                         if viewModel.chats.isEmpty {
                             Text("No Peers")
@@ -59,7 +70,7 @@ struct ContentView: View {
                     }
                     .disabled(!viewModel.isReady)
             }
-            .navigationTitle("Chats")
+            .navigationTitle("Topics")
             .onAppear {
                 if isServiceRunning {
                     Task.detached(priority: .background) {
