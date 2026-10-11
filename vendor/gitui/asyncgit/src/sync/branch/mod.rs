@@ -138,9 +138,7 @@ pub fn get_branches_info(
 			.filter_map(|b| {
 				let branch = b.ok()?.0;
 				let upstream = branch.upstream().ok()?;
-				let name = upstream.get().name_bytes().to_owned();
-				eprintln!("local upstream: {:?}", std::str::from_utf8(&name));
-				Some(name)
+				Some(upstream.get().name_bytes().to_owned())
 			})
 			.collect();
 		(BranchType::Remote, remotes)
@@ -178,7 +176,7 @@ pub fn get_branches_info(
 			} else {
 				BranchDetails::Remote(RemoteBranch {
 					has_tracking: remotes_with_tracking
-						.contains(name_bytes),
+						.contains(branch.get().name_bytes()),
 				})
 			};
 
@@ -219,21 +217,10 @@ pub(crate) fn branch_set_upstream_after_push(
 	let mut branch =
 		repo.find_branch(branch_name, BranchType::Local)?;
 
-	eprintln!("set_upstream {branch_name}: upstream_err={:?}", branch.upstream().err());
-
-	if let Ok(upstream) = branch.upstream() {
-		eprintln!("{branch_name} upstream ref: {:?}", std::str::from_utf8(upstream.get().name_bytes()));
-	}
-
 	if branch.upstream().is_err() {
 		let remote = get_default_remote_for_push_in_repo(repo)?;
 		let upstream_name = format!("{remote}/{branch_name}");
-		eprintln!("setting upstream {upstream_name}");
 		branch.set_upstream(Some(upstream_name.as_str()))?;
-	}
-
-	if let Ok(upstream) = branch.upstream() {
-		eprintln!("{branch_name} upstream ref after: {:?}", std::str::from_utf8(upstream.get().name_bytes()));
 	}
 
 	Ok(())
