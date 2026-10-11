@@ -33,7 +33,11 @@ exclude = [
     "tui",
     "wix/**",
     "xcode/**",
-    "vendor/gitui/**",
+    ## TODO "vendor/**",
+    "vendor/ngit-cli",
+    "vendor/nostui",
+    "vendor/rexpect",
+    "vendor/simple-websockets",
     "CHANGELOG.md",
     "CODECOV.md",
     "Contrapuntal_Network_Topology.md",
@@ -72,7 +76,7 @@ members = [
     "types",
     "web",
 ]
-exclude = ["tui", "vendor/gitui/**"]
+exclude = ["tui", "vendor/**"]
 
 [workspace.package]
 # gnostr semver: blockheight is major, weeble is minor, wobble is patch.

@@ -91,7 +91,8 @@ impl Worker {
             value
         );
         let blob = format!("commit {}\0{}", raw.len(), raw);
-
+        debug!("raw");
+        debug!("blob");
         (raw, blob)
     }
 
