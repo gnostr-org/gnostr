@@ -421,7 +421,7 @@ tag_package_versions() {
     tree="$(git rev-parse HEAD^{tree})"
     for crate in "${PUBLISH_CRATES[@]}"; do
         if [ "$crate" = "." ]; then
-            tag="gnostr/v$version"
+            tag="v$version"
         else
             tag="$crate/v$version"
         fi
