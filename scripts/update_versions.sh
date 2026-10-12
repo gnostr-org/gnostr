@@ -373,7 +373,6 @@ PUBLISH_CRATES=(
     relay
     scopetime
     types
-    asyncgit/src/lib/filehash/core
     qr
     relay/extensions
     asyncgit
