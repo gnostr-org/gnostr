@@ -79,9 +79,9 @@ ratatui = { workspace = true, default-features = false, features = ["macros"] }
 regex = { workspace = true }
 reqwest = { workspace = true }
 rkyv = "0.8.14"
-rustls = { workspace = true }
 ron = "0.8.1"
 rust-ini = "0.21.3"
+rustls = { workspace = true }
 scrypt = { version = "0.11.0" }
 secp256k1 = { workspace = true }
 serde = { workspace = true }
