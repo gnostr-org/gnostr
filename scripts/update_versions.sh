@@ -390,7 +390,7 @@ PUBLISH_CRATES=(
 )
 
 for crate in "${PUBLISH_CRATES[@]}"; do
-    sleep 1 && pushd "$crate" >/dev/null && cargo sort || true && popd >/dev/null
+    sleep 1 && pushd "$crate" >/dev/null && cargo sort || true && popd >/dev/null || true
 done
 
 PUBLISH_NO_VERIFY_CRATES=(
