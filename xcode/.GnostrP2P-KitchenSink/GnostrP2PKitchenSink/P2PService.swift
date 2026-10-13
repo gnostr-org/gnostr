@@ -102,6 +102,7 @@ final class P2PService: ObservableObject {
     private var chatSubscribedTopic: String?
     private var dialedPeerIDs = Set<String>()
     private var gossipPeerIDs = Set<String>()
+    private var lastJoinAnnouncement: Date?
 
     let peerID: PeerID
 
@@ -165,8 +166,17 @@ final class P2PService: ObservableObject {
                 case .newPeer(let peer):
                     Task { @MainActor in
                         guard let self else { return }
+                        guard peer.b58String != self.peerID.b58String else { return }
+                        let hadPeersBefore = !self.gossipPeerIDs.isEmpty
                         self.gossipPeerIDs.insert(peer.b58String)
                         self.log("Peer joined gossip topic \(topic): \(peer.b58String)")
+
+                        let recentlyAnnounced = self.lastJoinAnnouncement.map { Date().timeIntervalSince($0) < 5.0 } ?? false
+                        if !hadPeersBefore || !recentlyAnnounced {
+                            let addressList = self.listenAddresses.isEmpty ? "no known listen addresses yet" : self.listenAddresses.joined(separator: ", ")
+                            let joinText = "joined \(topic) as \(self.peerID.b58String) on \(addressList)"
+                            self.publishJoinAnnouncement(topic: topic, text: joinText)
+                        }
                     }
                 case .data(let message):
                     let author = message.from.asString(base: .base58btc)
@@ -213,22 +223,19 @@ final class P2PService: ObservableObject {
 
             let addressList = listenAddresses.isEmpty ? "no known listen addresses yet" : listenAddresses.joined(separator: ", ")
             let joinText = "joined \(topic) as \(peerID.b58String) on \(addressList)"
-            if let joinData = Self.encodeRustChatMessage(from: chatDisplayName, text: joinText, kind: "Join") {
-                chatSubscription?.publish(joinData)
-                chatMessages.insert(
-                    ChatEntry(
-                        topic: topic,
-                        kind: "Join",
-                        author: chatDisplayName,
-                        text: joinText,
-                        isLocal: true,
-                        timestamp: Date()
-                    ),
-                    at: 0
-                )
-                chatMessages = Array(chatMessages.prefix(200))
-                log("Sent join message on \(topic)")
-            }
+            publishJoinAnnouncement(topic: topic, text: joinText)
+            chatMessages.insert(
+                ChatEntry(
+                    topic: topic,
+                    kind: "Join",
+                    author: chatDisplayName,
+                    text: joinText,
+                    isLocal: true,
+                    timestamp: Date()
+                ),
+                at: 0
+            )
+            chatMessages = Array(chatMessages.prefix(200))
 
             startHeartbeatLoop(topic: topic, app: app)
         } catch {
@@ -489,6 +496,16 @@ final class P2PService: ObservableObject {
             chatDraftMessage = ""
         }
         log("Sent \(kind.lowercased()) on \(topic)")
+    }
+
+    private func publishJoinAnnouncement(topic: String, text: String) {
+        guard let data = Self.encodeRustChatMessage(from: chatDisplayName, text: text, kind: "Join") else {
+            log("Failed to encode join announcement for \(topic)")
+            return
+        }
+        chatSubscription?.publish(data)
+        lastJoinAnnouncement = Date()
+        log("Announced join on \(topic)")
     }
 
     private func dialDiscoveredPeer(_ peer: PeerInfo) {
