@@ -8,6 +8,7 @@
 import Foundation
 import CryptoKit
 import LibP2P
+import os
 import SwiftUI
 #if os(iOS)
 import UIKit
@@ -37,8 +38,11 @@ final class P2PService: ObservableObject {
 
     private var app: Application?
     private var runTask: Task<Void, Never>?
+    private var diagnosticsTask: Task<Void, Never>?
+    private var startedAt: Date?
 
     let peerID: PeerID
+    private let networkLogger = Logger(subsystem: "MiniP2PSample", category: "network")
 
     init() {
         peerID = Self.makePeerID(for: Self.runtimeProfile)
@@ -74,18 +78,20 @@ final class P2PService: ObservableObject {
         lastError = nil
         state = .starting
         log("Starting node")
+        startedAt = Date()
+        log("Runtime profile: \(runtimeProfile)")
+        log("Listen port: \(listenPort)")
+        log("Peer ID: \(peerIDString)")
 
         let app = Self.makeApplication(peerID: peerID)
         self.app = app
+        log("Configured libp2p logger at trace level")
+        logNetworkSnapshot(app: app, reason: "startup")
+        startDiagnosticsLoop(for: app)
 
         app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self, weak app] in
             guard let self, let app else { return }
-            let addresses = app.listenAddresses.compactMap { address -> String? in
-                guard let fullAddress = try? address.encapsulate(proto: .p2p, address: app.peerID.b58String) else {
-                    return nil
-                }
-                return fullAddress.description
-            }
+            let addresses = self.listenAddressStrings(for: app)
 
             Task { @MainActor in
                 self.listenAddresses = addresses
@@ -113,9 +119,13 @@ final class P2PService: ObservableObject {
             }
 
             await MainActor.run {
+                self?.log("libp2p application returned")
+                self?.diagnosticsTask?.cancel()
+                self?.diagnosticsTask = nil
                 self?.state = .stopped
                 self?.runTask = nil
                 self?.app = nil
+                self?.startedAt = nil
                 self?.log("Node stopped")
             }
         }
@@ -126,6 +136,9 @@ final class P2PService: ObservableObject {
 
         state = .stopping
         log("Stopping node")
+        logNetworkSnapshot(app: app, reason: "stopping")
+        diagnosticsTask?.cancel()
+        diagnosticsTask = nil
         self.app = nil
         self.runTask = nil
 
@@ -144,6 +157,7 @@ final class P2PService: ObservableObject {
                 self?.state = .stopped
                 self?.runTask = nil
                 self?.app = nil
+                self?.startedAt = nil
                 self?.log("Node stopped")
             }
         }
@@ -158,9 +172,44 @@ final class P2PService: ObservableObject {
 
     private static func makeApplication(peerID: PeerID) -> Application {
         let app = Application(.testing, peerID: peerID)
-        app.logger.logLevel = .notice
+        app.logger.logLevel = .trace
         app.listen(.tcp(host: "0.0.0.0", port: Self.listenPort))
         return app
+    }
+
+    private func startDiagnosticsLoop(for app: Application) {
+        diagnosticsTask?.cancel()
+        diagnosticsTask = Task.detached(priority: .background) { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                guard !Task.isCancelled else { break }
+                await MainActor.run {
+                    self?.logNetworkSnapshot(app: app, reason: "periodic")
+                }
+            }
+        }
+    }
+
+    private func listenAddressStrings(for app: Application) -> [String] {
+        app.listenAddresses.compactMap { address -> String? in
+            guard let fullAddress = try? address.encapsulate(proto: .p2p, address: app.peerID.b58String) else {
+                return nil
+            }
+            return fullAddress.description
+        }
+    }
+
+    private func logNetworkSnapshot(app: Application, reason: String) {
+        let addresses = listenAddressStrings(for: app)
+        let elapsed: String
+        if let startedAt {
+            elapsed = String(format: "%.1fs", Date().timeIntervalSince(startedAt))
+        } else {
+            elapsed = "n/a"
+        }
+
+        let snapshot = "Network snapshot [\(reason)]: state=\(state.rawValue), runtime=\(runtimeProfile), peer=\(peerIDString), port=\(listenPort), elapsed=\(elapsed), listenAddresses=\(addresses.isEmpty ? "none" : addresses.joined(separator: ", "))"
+        log(snapshot)
     }
 
     private static var runtimeProfile: RuntimeProfile {
@@ -214,7 +263,9 @@ final class P2PService: ObservableObject {
 
     private func log(_ message: String) {
         let formatter = Self.timestampFormatter
-        activityLog.append("[\(formatter.string(from: Date()))] \(message)")
+        let formatted = "[\(formatter.string(from: Date()))] \(message)"
+        activityLog.append(formatted)
+        networkLogger.info("\(formatted, privacy: .public)")
     }
 
     private static let timestampFormatter: DateFormatter = {

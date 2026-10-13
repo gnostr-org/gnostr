@@ -13,3 +13,7 @@ Catalyst can run side by side:
 - Made for iPad: `10004`
 
 Set `P2P_LISTEN_PORT` to override the default port.
+
+The sample now records detailed network activity in the UI and console, including
+startup configuration, listen-address discovery, periodic network snapshots, and
+shutdown/error events.
