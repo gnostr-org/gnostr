@@ -29,7 +29,7 @@ final class P2PService: ObservableObject {
 
     private enum RuntimeProfile: String {
         case macOS
-        case macCatalyst
+        case macCatalyst //removed
         case iPad
         case iPhone
         case madeForiPad
