@@ -1,11 +1,13 @@
 #!/bin/bash
 # Test all local swift-libp2p-* and swift-gnostr-* (FFI) packages.
-# Usage: ./scripts/test-swift-libp2p-deps.sh [--verbose] [--rust-ffi]
+# Usage: ./scripts/test-swift-libp2p-deps.sh [--verbose] [--rust-ffi] [--cargo-verbose|-vv] [--cargo-nocapture]
 
 set -euo pipefail
 
 VERBOSE=0
 RUST_FFI=0
+CARGO_VERBOSE=0
+CARGO_NOCAPTURE=0
 for arg in "$@"; do
     case "$arg" in
         --verbose|-v)
@@ -14,9 +16,15 @@ for arg in "$@"; do
         --rust-ffi)
             RUST_FFI=1
             ;;
+        --cargo-verbose|-vv)
+            CARGO_VERBOSE=1
+            ;;
+        --cargo-nocapture)
+            CARGO_NOCAPTURE=1
+            ;;
         *)
             echo "Unknown argument: $arg"
-            echo "Usage: $0 [--verbose] [--rust-ffi]"
+            echo "Usage: $0 [--verbose] [--rust-ffi] [--cargo-verbose|-vv] [--cargo-nocapture]"
             exit 1
             ;;
     esac
@@ -31,6 +39,15 @@ mkdir -p "$LOG_DIR"
 SWIFT_TEST_ARGS=()
 if [ "$VERBOSE" -eq 1 ]; then
     SWIFT_TEST_ARGS+=(--verbose)
+fi
+
+CARGO_TEST_ARGS=()
+CARGO_TEST_BINARY_ARGS=()
+if [ "$CARGO_VERBOSE" -eq 1 ]; then
+    CARGO_TEST_ARGS+=(-vv)
+fi
+if [ "$CARGO_NOCAPTURE" -eq 1 ]; then
+    CARGO_TEST_BINARY_ARGS+=(--nocapture)
 fi
 
 run_one_swift_test() {
@@ -70,12 +87,27 @@ run_swift_tests() {
     done
 }
 
+run_one_cargo_test() {
+    local crate_path="$1"
+    local log="$2"
+    if [ ${#CARGO_TEST_ARGS[@]} -gt 0 ] && [ ${#CARGO_TEST_BINARY_ARGS[@]} -gt 0 ]; then
+        cd "$crate_path" && cargo test "${CARGO_TEST_ARGS[@]}" -- "${CARGO_TEST_BINARY_ARGS[@]}" 2>&1 | tee "$log" | tail -40
+    elif [ ${#CARGO_TEST_ARGS[@]} -gt 0 ]; then
+        cd "$crate_path" && cargo test "${CARGO_TEST_ARGS[@]}" 2>&1 | tee "$log" | tail -40
+    elif [ ${#CARGO_TEST_BINARY_ARGS[@]} -gt 0 ]; then
+        cd "$crate_path" && cargo test -- "${CARGO_TEST_BINARY_ARGS[@]}" 2>&1 | tee "$log" | tail -40
+    else
+        cd "$crate_path" && cargo test 2>&1 | tee "$log" | tail -40
+    fi
+    return "${PIPESTATUS[0]}"
+}
+
 run_cargo_tests() {
     local crate_path="$1"
     local name="$2"
     local log="$LOG_DIR/$name.log"
     echo "=== Testing $name (cargo) (log: $log) ==="
-    if (cd "$crate_path" && cargo test 2>&1 | tee "$log" | tail -40); then
+    if run_one_cargo_test "$crate_path" "$log"; then
         RESULTS+=("$name: PASS")
     else
         RESULTS+=("$name: FAIL")
