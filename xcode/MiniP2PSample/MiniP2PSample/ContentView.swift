@@ -236,6 +236,12 @@ final class P2PService: ObservableObject {
                 self?.dialDiscoveredPeer(peer)
             }
         }
+
+        app.events.on(self, event: .disconnected({ [weak self] connection, peer in
+            Task { @MainActor in
+                self?.handleDisconnectedPeer(connection: connection, peer: peer)
+            }
+        }))
     }
 
     private func subscribeToGossip(_ app: Application) {
@@ -256,7 +262,7 @@ final class P2PService: ObservableObject {
                         guard peer.b58String != self?.peerIDString else { return }
                         self?.gossipPeersByID.insert(peer.b58String)
                         self?.log(
-                            "Gossip peer for \(Self.gossipTopic)",
+                            "Peer joined gossip topic \(Self.gossipTopic)",
                             peerID: peer.b58String,
                             addresses: self?.peerAddressesString(for: peer.b58String)
                         )
@@ -330,6 +336,24 @@ final class P2PService: ObservableObject {
                 }
             }
         }
+    }
+
+    private func handleDisconnectedPeer(connection: Connection, peer: PeerID?) {
+        guard let peer else {
+            log("Peer disconnected", addresses: connection.remoteAddr.map { [$0.description] })
+            return
+        }
+
+        guard peer.b58String != peerIDString else { return }
+        let peerID = peer.b58String
+        let wasInGossipMesh = gossipPeersByID.remove(peerID) != nil
+        log(
+            wasInGossipMesh
+                ? "Peer left gossip topic \(Self.gossipTopic)"
+                : "Peer disconnected",
+            peerID: peerID,
+            addresses: peerAddressesString(for: peerID)
+        )
     }
 
     private func pingKnownPeers(using app: Application) {
