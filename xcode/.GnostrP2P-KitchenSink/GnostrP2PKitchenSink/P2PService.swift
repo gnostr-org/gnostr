@@ -248,38 +248,7 @@ final class P2PService: ObservableObject {
     }
 
     func sendChatMessage() {
-        guard app != nil else {
-            log("Chat send requires the node to be running")
-            return
-        }
-
-        let topic = chatTopic.trimmingCharacters(in: .whitespacesAndNewlines)
-        let message = chatDraftMessage.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !topic.isEmpty else {
-            lastError = "Chat topic cannot be empty"
-            log("Chat topic cannot be empty")
-            return
-        }
-
-        guard !message.isEmpty else {
-            return
-        }
-
-        if chatSubscribedTopic != topic || chatSubscription == nil {
-            joinChatTopic()
-        }
-
-        guard chatSubscribedTopic == topic else { return }
-        guard let data = Self.encodeRustChatMessage(from: chatDisplayName, text: message) else {
-            lastError = "Failed to encode chat message"
-            log("Failed to encode chat message for topic \(topic)")
-            return
-        }
-
-        chatSubscription?.publish(data)
-        chatDraftMessage = ""
-        log("Sent chat message on \(topic)")
+        sendChatText(chatDraftMessage, kind: "Chat")
     }
 
     func sendRawMessage(_ text: String) {
@@ -313,11 +282,23 @@ final class P2PService: ObservableObject {
         }
 
         chatSubscription?.publish(data)
+        chatMessages.insert(
+            ChatEntry(
+                topic: topic,
+                kind: "Raw",
+                author: chatDisplayName,
+                text: message,
+                isLocal: true,
+                timestamp: Date()
+            ),
+            at: 0
+        )
+        chatMessages = Array(chatMessages.prefix(200))
         log("Sent raw message on \(topic)")
     }
 
     func start() {
-        guard runTask == nil else { return }
+        guard runTask == nil, state == .stopped else { return }
 
         lastError = nil
         state = .starting
@@ -390,6 +371,14 @@ final class P2PService: ObservableObject {
     }
 
     func stop() {
+        Task { await stopAsync() }
+    }
+
+    func restart() {
+        Task { await stopAsync(); start() }
+    }
+
+    private func stopAsync() async {
         guard let app else { return }
 
         state = .stopping
@@ -399,38 +388,33 @@ final class P2PService: ObservableObject {
         chatSubscribedTopic = nil
         heartbeatTask?.cancel()
         heartbeatTask = nil
+
+        let runTaskToAwait = runTask
         self.app = nil
         self.runTask = nil
 
-        Task.detached(priority: .background) { [weak self] in
-            do {
-                try await app.asyncShutdown()
-            } catch {
-                await MainActor.run { [weak self] in
-                    self?.lastError = error.localizedDescription
-                    self?.log("Error: \(error.localizedDescription)")
-                }
-            }
-
+        do {
+            try await app.asyncShutdown()
+        } catch {
             await MainActor.run { [weak self] in
-                self?.listenAddresses = []
-                self?.state = .stopped
-                self?.runTask = nil
-                self?.app = nil
-                self?.chatSubscription = nil
-                self?.chatSubscribedTopic = nil
-                self?.heartbeatTask = nil
-                self?.dialedPeerIDs.removeAll()
-                self?.gossipPeerIDs.removeAll()
-                self?.log("Node stopped")
+                self?.lastError = error.localizedDescription
+                self?.log("Error: \(error.localizedDescription)")
             }
         }
-    }
 
-    func restart() {
-        stop()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.start()
+        await runTaskToAwait?.value
+
+        await MainActor.run { [weak self] in
+            self?.listenAddresses = []
+            self?.state = .stopped
+            self?.runTask = nil
+            self?.app = nil
+            self?.chatSubscription = nil
+            self?.chatSubscribedTopic = nil
+            self?.heartbeatTask = nil
+            self?.dialedPeerIDs.removeAll()
+            self?.gossipPeerIDs.removeAll()
+            self?.log("Node stopped")
         }
     }
 
@@ -529,6 +513,18 @@ final class P2PService: ObservableObject {
         }
 
         chatSubscription?.publish(data)
+        chatMessages.insert(
+            ChatEntry(
+                topic: topic,
+                kind: kind,
+                author: chatDisplayName,
+                text: message,
+                isLocal: true,
+                timestamp: Date()
+            ),
+            at: 0
+        )
+        chatMessages = Array(chatMessages.prefix(200))
         if kind == "Chat" {
             chatDraftMessage = ""
         }
