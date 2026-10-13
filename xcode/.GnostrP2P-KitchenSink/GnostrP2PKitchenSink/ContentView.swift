@@ -105,7 +105,22 @@ final class KitchenSinkViewModel: ObservableObject {
 
 struct ContentView: View {
     @StateObject private var model = KitchenSinkViewModel()
-    @StateObject private var p2p = P2PService()
+    @StateObject private var node: P2PNode
+    @StateObject private var store: ChatStore
+    @StateObject private var tracker: ReceiptTracker
+    @StateObject private var service: ChatService
+
+    init() {
+        let node = P2PNode()
+        let store = ChatStore()
+        let tracker = ReceiptTracker()
+        let service = ChatService(node: node, store: store, tracker: tracker)
+
+        _node = StateObject(wrappedValue: node)
+        _store = StateObject(wrappedValue: store)
+        _tracker = StateObject(wrappedValue: tracker)
+        _service = StateObject(wrappedValue: service)
+    }
 
     var body: some View {
         TabView(selection: $model.selectedTab) {
@@ -113,11 +128,11 @@ struct ContentView: View {
                 .tabItem { Label("Overview", systemImage: "house") }
                 .tag(KitchenSinkTab.overview)
 
-            p2pTab
+            NetworkInfoView(service: service)
                 .tabItem { Label("P2P", systemImage: "network") }
                 .tag(KitchenSinkTab.p2p)
 
-            chatTab
+            ChatAppView(service: service)
                 .tabItem { Label("Chat", systemImage: "message") }
                 .tag(KitchenSinkTab.chat)
 
@@ -138,7 +153,7 @@ struct ContentView: View {
                 .tag(KitchenSinkTab.activity)
         }
         .task {
-            p2p.start()
+            service.start()
         }
         .sheet(isPresented: $model.isSheetPresented) {
             KitchenSinkSheetView(counter: model.counter)
@@ -179,7 +194,8 @@ struct ContentView: View {
                         statRow(label: "Counter", value: "\(model.counter)")
                         statRow(label: "Mode", value: model.favoriteMode)
                         statRow(label: "Items", value: "\(model.items.count)")
-                        statRow(label: "P2P state", value: p2pStateLabel)
+                        statRow(label: "P2P state", value: service.node.state.rawValue.capitalized)
+                        statRow(label: "Peer ID", value: service.node.peerIDString)
                     }
                 }
 
@@ -190,196 +206,6 @@ struct ContentView: View {
                         TextEditor(text: $model.notes)
                             .frame(minHeight: 140)
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(.quaternary))
-                    }
-                }
-            }
-            .padding(16)
-        }
-    }
-
-    private var p2pTab: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                titleBlock(
-                    title: "P2P",
-                    subtitle: "Start a libp2p node, discover peers, and inspect listen addresses."
-                )
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 10) {
-                        statRow(label: "Runtime profile", value: p2p.runtimeProfile)
-                        statRow(label: "Peer ID", value: p2p.peerIDString)
-                            .textSelection(.enabled)
-                        statRow(label: "Listen port", value: "\(p2p.listenPort)")
-                        statRow(label: "State", value: p2pStateLabel)
-
-                        HStack {
-                            Button("Start node") { p2p.start() }
-                            Button("Stop node") { p2p.stop() }
-                                .disabled(!p2p.isRunning)
-                            Button("Restart") { p2p.restart() }
-                        }
-
-                        HStack {
-                            TextField(
-                                "Ping message",
-                                text: Binding(
-                                    get: { p2p.draftMessage },
-                                    set: { p2p.draftMessage = $0 }
-                                )
-                            )
-                            Button("Queue ping") { p2p.sendLocalPing() }
-                        }
-                    }
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Listen addresses")
-                            .font(.title3.weight(.semibold))
-                        if p2p.listenAddresses.isEmpty {
-                            Text("Start the node to populate listen addresses.")
-                                .font(.callout)
-                        }
-                        ForEach(p2p.listenAddresses, id: \.self) { address in
-                            Text(address)
-                                .font(.callout.monospaced())
-                        }
-                    }
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Discovered peers")
-                            .font(.title3.weight(.semibold))
-                        if p2p.discoveredPeers.isEmpty {
-                            Text("No peers discovered yet.")
-                                .font(.callout)
-                        }
-                        ForEach(p2p.discoveredPeers) { peer in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(peer.peerID)
-                                    .font(.callout.monospaced())
-                                ForEach(peer.addresses, id: \.self) { address in
-                                    Text(address)
-                                        .font(.callout)
-                                }
-                            }
-                            .padding(.vertical, 6)
-                        }
-                    }
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Activity")
-                            .font(.title3.weight(.semibold))
-                        if let lastError = p2p.lastError {
-                            Text("Last error: \(lastError)")
-                                .foregroundStyle(.red)
-                        }
-                        Button("Clear") {
-                            p2p.clearActivityLog()
-                        }
-                        ForEach(p2p.activityLog, id: \.self) { line in
-                            Text(line)
-                                .font(.callout.monospaced())
-                        }
-                    }
-                }
-            }
-            .padding(16)
-        }
-    }
-
-    private var chatTab: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                titleBlock(
-                    title: "Chat",
-                    subtitle: "Join a pubsub topic, send messages, and watch live updates."
-                )
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
-                        statRow(label: "Node state", value: p2pStateLabel)
-                        statRow(label: "Current topic", value: p2p.chatTopic)
-                        statRow(label: "Display name", value: p2p.chatDisplayName)
-
-                        HStack {
-                            TextField("Topic", text: $p2p.chatTopic)
-                                .textFieldStyle(.roundedBorder)
-                                .onSubmit {
-                                    p2p.joinChatTopic()
-                                }
-                            Button("Join topic") {
-                                p2p.joinChatTopic()
-                            }
-                        }
-
-                        HStack {
-                            TextField("Display name", text: $p2p.chatDisplayName)
-                                .textFieldStyle(.roundedBorder)
-                        }
-
-                        HStack {
-                            TextField("Message", text: $p2p.chatDraftMessage)
-                                .textFieldStyle(.roundedBorder)
-                            Button("Send") {
-                                p2p.sendChatMessage()
-                            }
-                            .disabled(p2p.chatDraftMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                    }
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Messages")
-                            .font(.title3.weight(.semibold))
-                        if p2p.chatMessages.isEmpty {
-                            Text("No chat messages yet. Join \(p2p.chatTopic) and send one.")
-                                .font(.callout)
-                        }
-                        LazyVStack(alignment: .leading, spacing: 10) {
-                            ForEach(p2p.chatMessages) { entry in
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Text(entry.topic)
-                                            .font(.headline)
-                                        Text(entry.kind)
-                                            .font(.caption2.bold())
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(.blue.opacity(0.18))
-                                            .clipShape(Capsule())
-                                        if entry.isLocal {
-                                            Text("local")
-                                                .font(.caption2.bold())
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(.green.opacity(0.2))
-                                                .clipShape(Capsule())
-                                        }
-                                        Spacer()
-                                        Text(entry.timestamp, style: .time)
-                                            .font(.callout)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Text(entry.author)
-                                        .font(.subheadline.monospaced())
-                                        .foregroundStyle(.secondary)
-                                    Text(entry.text)
-                                        .font(.body)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(Color.secondary.opacity(0.08))
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -540,17 +366,43 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 16) {
                 titleBlock(
                     title: "Activity",
-                    subtitle: "Recent UI actions and state changes."
+                    subtitle: "Recent network events, UI actions, and state changes."
                 )
 
                 GroupBox {
                     VStack(alignment: .leading, spacing: 8) {
-                        Button("Add log entry") {
-                            model.log("Manual log entry")
+                        HStack {
+                            Button("Add log entry") {
+                                model.log("Manual log entry")
+                            }
+                            Spacer()
+                            Button("Clear") {
+                                model.activityLog.removeAll()
+                                service.clearLogs()
+                                service.node.clearLogs()
+                            }
                         }
+
+                        Text("Network")
+                            .font(.headline)
+                        if service.node.logs.isEmpty && service.logs.isEmpty {
+                            Text("No network activity yet.")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
+                        ForEach(Array((service.node.logs + service.logs).enumerated()), id: \.offset) { _, line in
+                            Text(line)
+                                .font(.caption.monospaced())
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        Divider()
+
+                        Text("UI")
+                            .font(.headline)
                         ForEach(model.activityLog, id: \.self) { entry in
                             Text(entry)
-                                .font(.callout.monospaced())
+                                .font(.caption.monospaced())
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
@@ -577,11 +429,8 @@ struct ContentView: View {
             Spacer()
             Text(value)
                 .font(.body)
+                .textSelection(.enabled)
         }
-    }
-
-    private var p2pStateLabel: String {
-        p2p.state.rawValue.capitalized
     }
 }
 
