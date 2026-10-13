@@ -37,6 +37,9 @@ let package = Package(
         // LibP2P Core Modules
         .package(path: "../swift-libp2p"),
 
+        // LibP2P Muxer
+        .package(path: "../swift-libp2p-yamux"),
+
         // Noise (Security Protocol)
         .package(path: "../swift-noise"),
     ],
@@ -56,7 +59,10 @@ let package = Package(
         ),
         .testTarget(
             name: "LibP2PNoiseTests",
-            dependencies: ["LibP2PNoise"]
+            dependencies: [
+                "LibP2PNoise",
+                .product(name: "LibP2PYAMUX", package: "swift-libp2p-yamux"),
+            ]
         ),
     ]
 )

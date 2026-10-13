@@ -132,3 +132,48 @@ pub unsafe extern "C" fn asyncgit_generate_git_note_event_json(
         Err(error) => encode(&Envelope::<String>::err(error.to_string())),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn call_and_free(ptr: *mut c_char) -> String {
+        assert!(!ptr.is_null());
+        let result = unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() };
+        unsafe { asyncgit_string_free(ptr) };
+        result
+    }
+
+    fn c_str(s: &str) -> CString {
+        CString::new(s).unwrap()
+    }
+
+    #[test]
+    fn test_git_note_event_id_returns_ok() {
+        let commit_id = c_str("deadbeef");
+        let result = call_and_free(unsafe { asyncgit_git_note_event_id_json(commit_id.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("\"data\":"), "result: {result}");
+    }
+
+    #[test]
+    fn test_git_note_event_id_rejects_null() {
+        let result = call_and_free(unsafe { asyncgit_git_note_event_id_json(std::ptr::null()) });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_generate_git_note_event_with_bad_key_fails() {
+        let note_json = c_str(r#"{"note_id":"deadbeefdeadbeefdeadbeefdeadbeefdeadbeef","annotated_id":"cafebabecafebabecafebabecafebabecafebabe","notes_ref":"refs/notes/commits","message":"hello","author":"alice","committer":"bob","committer_time":1234}"#);
+        let key = c_str("not-a-hex-key");
+        let result = call_and_free(unsafe {
+            asyncgit_generate_git_note_event_json(note_json.as_ptr(), key.as_ptr(), 0)
+        });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_string_free_does_not_crash_on_null() {
+        unsafe { asyncgit_string_free(std::ptr::null_mut()) };
+    }
+}

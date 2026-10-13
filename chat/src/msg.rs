@@ -81,6 +81,20 @@ impl Default for Msg {
 }
 
 impl Msg {
+    /// Build a plain chat message payload using the default sender.
+    pub fn chat(content: impl Into<String>) -> Self {
+        let content = content.into();
+        let mut lines: Vec<String> = content.lines().map(|line| line.to_string()).collect();
+        if lines.is_empty() {
+            lines.push(content);
+        }
+
+        Self {
+            content: lines,
+            ..Self::default()
+        }
+    }
+
     /// Set the message kind and return the updated value.
     pub fn set_kind(mut self, kind: MsgKind) -> Self {
         self.kind = kind;
@@ -123,6 +137,11 @@ impl Msg {
     pub fn set_total_chunks(mut self, total_chunks: usize) -> Self {
         self.total_chunks = Some(total_chunks);
         self
+    }
+
+    /// Return the textual body of the message.
+    pub fn body(&self) -> String {
+        self.content.join("\n")
     }
 
     pub fn wrap_text(self, _text: Msg, _max_width: usize) -> Self {

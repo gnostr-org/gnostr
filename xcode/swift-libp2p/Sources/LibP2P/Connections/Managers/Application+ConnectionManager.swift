@@ -25,6 +25,10 @@ extension Application {
     public var connections: ConnectionManager {
         let manager = self.connectionManager.storage.manager.withLockedValue { $0 }
         guard let manager else {
+            if self.didShutdown {
+                self.logger.warning("Accessing connections after Application shutdown; returning empty ConnectionManager")
+                return BasicInMemoryConnectionManager(application: self)
+            }
             fatalError("No ConnectionManager configured. Configure with app.connectionManager.use(...)")
         }
         return manager

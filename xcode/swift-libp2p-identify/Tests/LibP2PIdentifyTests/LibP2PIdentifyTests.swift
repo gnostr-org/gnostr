@@ -260,8 +260,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test func testLibP2PInternalPingMultiaddr() throws {
-        let app1 = try makeClient(port: 10_000)
-        let app2 = try makeClient(port: 10_001)
+        let app1 = try makeClient()
+        let app2 = try makeClient()
 
         defer {
             app1.shutdown()
@@ -280,8 +280,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test func testLibP2PInternalPingMultiaddr_Async() async throws {
-        let app1 = try makeClient(port: 10_000)
-        let app2 = try makeClient(port: 10_001)
+        let app1 = try makeClient()
+        let app2 = try makeClient()
 
         try await app1.startup()
         try await app2.startup()
@@ -297,8 +297,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test func testLibP2PInternalPingPeer() throws {
-        let app1 = try makeClient(port: 10_000)
-        let app2 = try makeClient(port: 10_001)
+        let app1 = try makeClient()
+        let app2 = try makeClient()
 
         defer {
             app1.shutdown()
@@ -316,8 +316,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test func testLibP2PInternalPingPeer_Async() async throws {
-        let app1 = try makeClient(port: 10_000)
-        let app2 = try makeClient(port: 10_001)
+        let app1 = try makeClient()
+        let app2 = try makeClient()
 
         try await app1.startup()
         try await app2.startup()
@@ -337,8 +337,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test func testLibP2PInternalPingPeerCascadeMultipleInflightPings() async throws {
-        let app1 = try makeClient(port: 10_000)
-        let app2 = try makeClient(port: 10_001)
+        let app1 = try makeClient()
+        let app2 = try makeClient()
 
         try await app1.startup()
         try await app2.startup()
@@ -378,8 +378,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test func testLibP2PInternalPingPeerSequentialPingsUseSameConnection() async throws {
-        let app1 = try makeClient(port: 10_000)
-        let app2 = try makeClient(port: 10_001)
+        let app1 = try makeClient()
+        let app2 = try makeClient()
 
         try await app1.startup()
         try await app2.startup()
@@ -414,8 +414,8 @@ struct LibP2PIdentifyTests {
     }
 
     @Test() func testInternalInterop() async throws {
-        let host = try makeEchoHost(port: 10000)
-        let client = try makeClient(port: 10001)
+        let host = try makeEchoHost()
+        let client = try makeClient()
 
         try await host.startup()
         try await client.startup()
@@ -444,8 +444,8 @@ struct LibP2PIdentifyTests {
 
     @Test(.timeLimit(.minutes(2)), arguments: [3, 5, 10])
     func testInternalInteropMultipleRequests_Sequentially(_ numberOfRequests: Int) async throws {
-        let host = try makeEchoHost(port: 10000)
-        let client = try makeClient(port: 10001)
+        let host = try makeEchoHost()
+        let client = try makeClient()
 
         try await host.startup()
         try await client.startup()
@@ -482,7 +482,7 @@ struct LibP2PIdentifyTests {
 
 extension LibP2PIdentifyTests {
     fileprivate func makeEchoHost(
-        port: Int,
+        port: Int = 0,
         peerID: PeerID? = nil,
         logLevel: Logger.Level = .notice
     ) throws -> Application {
@@ -511,7 +511,7 @@ extension LibP2PIdentifyTests {
     }
 
     fileprivate func makeClient(
-        port: Int,
+        port: Int = 0,
         peerID: PeerID? = nil,
         logLevel: Logger.Level = .notice
     ) throws -> Application {

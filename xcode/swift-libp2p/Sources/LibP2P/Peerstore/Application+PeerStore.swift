@@ -23,6 +23,10 @@ extension Application {
     public var peers: PeerStore {
         let manager = self.peerstore.storage.manager.withLockedValue { $0 }
         guard let manager else {
+            if self.didShutdown {
+                self.logger.warning("Accessing peers after Application shutdown; returning empty PeerStore")
+                return BasicInMemoryPeerStore(application: self)
+            }
             fatalError("No Peerstore configured. Configure with app.peerstore.use(...)")
         }
         return manager

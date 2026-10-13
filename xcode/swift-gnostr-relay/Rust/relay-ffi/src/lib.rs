@@ -84,3 +84,53 @@ pub unsafe extern "C" fn relay_listen_endpoint_json(host: *const c_char, port: u
 
     encode(&Envelope::ok(format!("ws://{normalized_host}:{port}")))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn call_and_free(ptr: *mut c_char) -> String {
+        assert!(!ptr.is_null());
+        let result = unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() };
+        unsafe { relay_string_free(ptr) };
+        result
+    }
+
+    fn c_str(s: &str) -> CString {
+        CString::new(s).unwrap()
+    }
+
+    #[test]
+    fn test_relay_default_configuration_json() {
+        let result = call_and_free(unsafe { relay_default_configuration_json(std::ptr::null()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("config_file_path"), "result: {result}");
+        assert!(result.contains("logging"), "result: {result}");
+    }
+
+    #[test]
+    fn test_relay_listen_endpoint_json_localhost() {
+        let host = c_str("127.0.0.1");
+        let result = call_and_free(unsafe { relay_listen_endpoint_json(host.as_ptr(), 8080) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("ws://127.0.0.1:8080"), "result: {result}");
+    }
+
+    #[test]
+    fn test_relay_listen_endpoint_json_unspecified_maps_to_localhost() {
+        let host = c_str("0.0.0.0");
+        let result = call_and_free(unsafe { relay_listen_endpoint_json(host.as_ptr(), 9000) });
+        assert!(result.contains("ws://127.0.0.1:9000"), "result: {result}");
+    }
+
+    #[test]
+    fn test_relay_listen_endpoint_json_rejects_null() {
+        let result = call_and_free(unsafe { relay_listen_endpoint_json(std::ptr::null(), 8080) });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_string_free_does_not_crash_on_null() {
+        unsafe { relay_string_free(std::ptr::null_mut()) };
+    }
+}

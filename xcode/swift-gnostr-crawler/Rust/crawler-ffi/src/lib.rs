@@ -679,3 +679,69 @@ pub unsafe extern "C" fn crawler_roundtrip_relay_metadata_json(relay_json: *cons
         Err(error) => encode(&Envelope::<String>::err(error.to_string())),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn call_and_free(ptr: *mut c_char) -> String {
+        assert!(!ptr.is_null());
+        let result = unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() };
+        unsafe { crawler_string_free(ptr) };
+        result
+    }
+
+    fn c_str(s: &str) -> CString {
+        CString::new(s).unwrap()
+    }
+
+    #[test]
+    fn test_crawler_websocket_http_url_json_wss() {
+        let url = c_str("wss://relay.example.com");
+        let result = call_and_free(unsafe { crawler_websocket_http_url_json(url.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("https://relay.example.com"), "result: {result}");
+    }
+
+    #[test]
+    fn test_crawler_websocket_http_url_json_ws() {
+        let url = c_str("ws://relay.example.com");
+        let result = call_and_free(unsafe { crawler_websocket_http_url_json(url.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("http://relay.example.com"), "result: {result}");
+    }
+
+    #[test]
+    fn test_crawler_websocket_http_url_json_rejects_null() {
+        let result = call_and_free(unsafe { crawler_websocket_http_url_json(std::ptr::null()) });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_crawler_roundtrip_relay_metadata_json() {
+        let relay_json = c_str(r#"{"url":"wss://relay.example.com","name":"Example"}"#);
+        let result = call_and_free(unsafe { crawler_roundtrip_relay_metadata_json(relay_json.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("Example"), "result: {result}");
+    }
+
+    #[test]
+    fn test_crawler_build_gnostr_query_json() {
+        let request_json = c_str(r#"{"limit":10,"kinds":"1,6"}"#);
+        let result = call_and_free(unsafe { crawler_build_gnostr_query_json(request_json.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("kinds"), "result: {result}");
+    }
+
+    #[test]
+    fn test_crawler_build_gnostr_query_json_invalid_request_fails() {
+        let request_json = c_str("not json");
+        let result = call_and_free(unsafe { crawler_build_gnostr_query_json(request_json.as_ptr()) });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_string_free_does_not_crash_on_null() {
+        unsafe { crawler_string_free(std::ptr::null_mut()) };
+    }
+}

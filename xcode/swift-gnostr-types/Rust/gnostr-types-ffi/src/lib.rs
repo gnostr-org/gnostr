@@ -229,3 +229,70 @@ where
         Err(error) => encode(&Envelope::<String>::err(error.to_string())),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn call_and_free(ptr: *mut c_char) -> String {
+        assert!(!ptr.is_null());
+        let result = unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() };
+        unsafe { gnostr_types_string_free(ptr) };
+        result
+    }
+
+    fn c_str(s: &str) -> CString {
+        CString::new(s).unwrap()
+    }
+
+    #[test]
+    fn test_git_note_event_id_returns_ok() {
+        let commit_id = c_str("deadbeef");
+        let result = call_and_free(unsafe { gnostr_types_git_note_event_id_json(commit_id.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("\"data\":"), "result: {result}");
+    }
+
+    #[test]
+    fn test_git_note_event_id_rejects_null() {
+        let result = call_and_free(unsafe { gnostr_types_git_note_event_id_json(std::ptr::null()) });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_git_note_tags_roundtrip() {
+        let note_json = c_str(r#"{"note_id":"deadbeefdeadbeefdeadbeefdeadbeefdeadbeef","annotated_id":"cafebabecafebabecafebabecafebabecafebabe","notes_ref":"refs/notes/commits","message":"hello","author":"alice","committer":"bob","committer_time":1234}"#);
+        let result = call_and_free(unsafe { gnostr_types_git_note_tags_json(note_json.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+    }
+
+    #[test]
+    fn test_generate_git_note_event_with_bad_key_fails() {
+        let note_json = c_str(r#"{"note_id":"n1","annotated_id":"a1","notes_ref":"refs/notes/commits","message":"hello","author":"alice","committer":"bob","committer_time":1234}"#);
+        let key = c_str("not-a-hex-key");
+        let result = call_and_free(unsafe {
+            gnostr_types_generate_git_note_event_json(note_json.as_ptr(), key.as_ptr(), 0)
+        });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_roundtrip_event_json() {
+        let json = c_str(r#"{"id":"0000000000000000000000000000000000000000000000000000000000000000","pubkey":"0000000000000000000000000000000000000000000000000000000000000000","created_at":0,"kind":1,"tags":[],"content":"hello","sig":"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}"#);
+        let result = call_and_free(unsafe { gnostr_types_roundtrip_event_json(json.as_ptr()) });
+        assert!(result.contains("\"ok\":true"), "result: {result}");
+        assert!(result.contains("hello"), "result: {result}");
+    }
+
+    #[test]
+    fn test_roundtrip_invalid_json_fails() {
+        let json = c_str("not json");
+        let result = call_and_free(unsafe { gnostr_types_roundtrip_event_json(json.as_ptr()) });
+        assert!(result.contains("\"ok\":false"), "result: {result}");
+    }
+
+    #[test]
+    fn test_string_free_does_not_crash_on_null() {
+        unsafe { gnostr_types_string_free(std::ptr::null_mut()) };
+    }
+}

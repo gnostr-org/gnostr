@@ -1577,7 +1577,7 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk-ffi"
-version = "0.1.0"
+version = "953258.1868.506994"
 dependencies = [
  "async-trait",
  "async-wsocket",

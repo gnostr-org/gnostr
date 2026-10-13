@@ -138,15 +138,14 @@ public protocol DEREncodable {
 }
 
 extension DEREncodable {
+
     internal func exportPublicKeyPEMRaw() throws -> [UInt8] {
         let publicDER = try self.publicKeyDER()
-        let secp256k1PrimaryObjectIdentifier: [UInt8] = [0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01]
-        let secp256k1SecondaryObjectIdentifier: [UInt8] = [0x2B, 0x81, 0x04, 0x00, 0x0A]
         let secondaryObject: ASN1.Node?
         if Self.primaryObjectIdentifier == RSAPublicKey.primaryObjectIdentifier {
             secondaryObject = .null
-        } else if Self.primaryObjectIdentifier == secp256k1PrimaryObjectIdentifier {
-            secondaryObject = .objectIdentifier(data: Data(secp256k1SecondaryObjectIdentifier))
+        } else if Self.primaryObjectIdentifier == Secp256k1PublicKey.primaryObjectIdentifier {
+            secondaryObject = .objectIdentifier(data: Data(Self.secondaryObjectIdentifier!))
         } else {
             secondaryObject = nil
         }

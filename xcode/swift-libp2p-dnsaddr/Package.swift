@@ -19,7 +19,7 @@ let package = Package(
     name: "swift-libp2p-dnsaddr",
     platforms: [
         .macOS(.v13),
-        .iOS(.v13),
+        .iOS(.v16),
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -34,6 +34,8 @@ let package = Package(
         // LibP2P Core Modules
         .package(path: "../swift-libp2p"),
 
+        // DNS + NIO
+        .package(url: "https://github.com/orlandos-nl/DNSClient.git", .upToNextMajor(from: "2.6.0")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -42,6 +44,7 @@ let package = Package(
             name: "LibP2PDNSAddr",
             dependencies: [
                 .product(name: "LibP2P", package: "swift-libp2p"),
+                .product(name: "DNSClient", package: "DNSClient"),
             ]
         ),
         .testTarget(

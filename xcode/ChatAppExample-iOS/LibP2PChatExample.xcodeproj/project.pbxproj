@@ -25,12 +25,12 @@
 		CA3C5426286A2BEF001E1858 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541C286A2BEF001E1858 /* ChatView.swift */; };
 		CA3C5427286A2BEF001E1858 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541D286A2BEF001E1858 /* ContentView.swift */; };
 		CA3C5428286A2BEF001E1858 /* ChatRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3C541E286A2BEF001E1858 /* ChatRow.swift */; };
-		CA55D76F290860A5007B8F2D /* TopicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76C290860A5007B8F2D /* TopicModel.swift */; };
-		CA55D770290860A5007B8F2D /* TopicRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76D290860A5007B8F2D /* TopicRow.swift */; };
-		CA55D771290860A5007B8F2D /* TopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76E290860A5007B8F2D /* TopicView.swift */; };
 		CA3C542E286A2C3C001E1858 /* LibP2PNoise in Frameworks */ = {isa = PBXBuildFile; productRef = CA3C542D286A2C3C001E1858 /* LibP2PNoise */; };
 		CA3C5431286A2C4F001E1858 /* LibP2PMPLEX in Frameworks */ = {isa = PBXBuildFile; productRef = CA3C5430286A2C4F001E1858 /* LibP2PMPLEX */; };
 		CA3C5436286A3264001E1858 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CA3C5435286A3264001E1858 /* README.md */; };
+		CA55D76F290860A5007B8F2D /* TopicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76C290860A5007B8F2D /* TopicModel.swift */; };
+		CA55D770290860A5007B8F2D /* TopicRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76D290860A5007B8F2D /* TopicRow.swift */; };
+		CA55D771290860A5007B8F2D /* TopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA55D76E290860A5007B8F2D /* TopicView.swift */; };
 		E10000000000000000000021 /* LibP2PRelay in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000011 /* LibP2PRelay */; };
 		E10000000000000000000022 /* LibP2PAutoNAT in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000012 /* LibP2PAutoNAT */; };
 		E10000000000000000000024 /* LibP2PKadDHT in Frameworks */ = {isa = PBXBuildFile; productRef = E10000000000000000000014 /* LibP2PKadDHT */; };
@@ -52,12 +52,12 @@
 		CA3C541C286A2BEF001E1858 /* ChatView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		CA3C541D286A2BEF001E1858 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CA3C541E286A2BEF001E1858 /* ChatRow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRow.swift; sourceTree = "<group>"; };
-		CA55D76C290860A5007B8F2D /* TopicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicModel.swift; sourceTree = "<group>"; };
-		CA55D76D290860A5007B8F2D /* TopicRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicRow.swift; sourceTree = "<group>"; };
-		CA55D76E290860A5007B8F2D /* TopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicView.swift; sourceTree = "<group>"; };
 		CA3C5435286A3264001E1858 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		CA55D76A29085FB4007B8F2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CA55D76B290860A5007B8F2D /* LibP2PChatExample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibP2PChatExample.entitlements; sourceTree = "<group>"; };
+		CA55D76C290860A5007B8F2D /* TopicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicModel.swift; sourceTree = "<group>"; };
+		CA55D76D290860A5007B8F2D /* TopicRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicRow.swift; sourceTree = "<group>"; };
+		CA55D76E290860A5007B8F2D /* TopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -415,7 +415,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -453,7 +453,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -502,10 +502,6 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p-dnsaddr";
 		};
-		E10000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../swift-libp2p-pubsub";
-		};
 		4BA83ABC30179EA900846AE9 /* XCLocalSwiftPackageReference "../swift-libp2p-dcutr" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p-dcutr";
@@ -533,6 +529,10 @@
 		E10000000000000000000004 /* XCLocalSwiftPackageReference "../swift-libp2p-kad-dht" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p-kad-dht";
+		};
+		E10000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-pubsub";
 		};
 /* End XCLocalSwiftPackageReference section */
 

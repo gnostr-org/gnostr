@@ -146,14 +146,8 @@ public final class AutoNATCoordinator: @unchecked Sendable {
         let startTime: DispatchTime
         let promise: EventLoopPromise<AutoNATStatus>
         let addresses: [Multiaddr]
-        let timeoutTask: Scheduled<Void>
-    }
-
-    enum ProbeError: Error {
-        case failedToOpenStream
-        case timedOut
-        case invalidResponse
-        case streamClosedBeforeResponse
+        // Optional scheduled task to track timeout of the probe
+        let timeoutTask: Scheduled<Void?>?
     }
 
     private let application: Application
@@ -187,22 +181,28 @@ public final class AutoNATCoordinator: @unchecked Sendable {
 
     public func probe(peer: PeerID) -> EventLoopFuture<AutoNATStatus> {
         let el = self.application.eventLoopGroup.any()
-        let existingFuture = self.queue.sync { self.pending[peer.b58String]?.promise.futureResult }
-        guard existingFuture == nil else {
-            return existingFuture!
-        }
-
         let promise = el.makePromise(of: AutoNATStatus.self)
         let token = Array(UUID().uuidString.utf8)
         let addresses = self.candidateDialbackAddresses()
-        let timeoutTask = el.scheduleTask(in: .seconds(5)) { [weak self] in
-            guard let self else { return }
-            self.failPendingProbe(peer: peer, error: ProbeError.timedOut)
+        var shouldOpenStream = false
+        var existingFuture: EventLoopFuture<AutoNATStatus>?
+
+        // Schedule a timeout task to fail the probe if no response within 10 seconds.
+        let timeoutTask = el.scheduleTask(in: .seconds(10)) { [weak self] in
+            self?.queue.sync {
+                if let pending = self?.pending.removeValue(forKey: peer.b58String) {
+                    // Fail the promise due to timeout
+                    pending.promise.fail(NSError(domain: "AutoNATCoordinator", code: 1,
+                                                userInfo: [NSLocalizedDescriptionKey: "AutoNAT probe timed out"]))
+                }
+            }
         }
+
         self.queue.sync {
-            guard self.pending[peer.b58String] == nil else {
+            if let existing = self.pending[peer.b58String] {
+                existingFuture = existing.promise.futureResult
+                // Cancel the newly scheduled timeoutTask since we're not using it
                 timeoutTask.cancel()
-                promise.fail(ProbeError.failedToOpenStream)
                 return
             }
             self.pending[peer.b58String] = PendingProbe(
@@ -213,12 +213,24 @@ public final class AutoNATCoordinator: @unchecked Sendable {
                 addresses: addresses,
                 timeoutTask: timeoutTask
             )
+            shouldOpenStream = true
+        }
+
+        guard shouldOpenStream else {
+            return existingFuture ?? promise.futureResult
         }
 
         do {
             try self.application.newStream(to: peer, forProtocol: AutoNATWire.protocolID)
         } catch {
-            self.failPendingProbe(peer: peer, error: error)
+            // Remove pending probe and cancel its timeout, fail promise directly
+            self.queue.sync {
+                if let pending = self.pending.removeValue(forKey: peer.b58String) {
+                    pending.timeoutTask?.cancel()
+                    pending.promise.fail(error)
+                }
+            }
+            promise.fail(error)
         }
 
         return promise.futureResult
@@ -245,13 +257,9 @@ public final class AutoNATCoordinator: @unchecked Sendable {
             case .ready:
                 return .stayOpen
             case .data(let payload):
-                do {
-                    let request = try AutoNATWire.decodeRequest(payload)
-                    let response = try await self.answerDialRequest(request)
-                    return .respondThenClose(try AutoNATWire.encode(response))
-                } catch {
-                    return .close
-                }
+                let request = try AutoNATWire.decodeRequest(payload)
+                let response = try await self.answerDialRequest(request)
+                return .respondThenClose(try AutoNATWire.encode(response))
             default:
                 return .close
             }
@@ -269,34 +277,34 @@ public final class AutoNATCoordinator: @unchecked Sendable {
                 return .respond(try AutoNATWire.encode(request))
 
             case .data(let payload):
-                guard let peer = req.remotePeer else { return .close }
-                do {
-                    let response = try AutoNATWire.decodeResponse(payload)
-                    guard
-                        let pending = self.queue.sync(execute: { self.pending[peer.b58String] }),
-                        pending.token == response.token
-                    else {
-                        self.failPendingProbe(peer: peer, error: ProbeError.invalidResponse)
-                        return .close
-                    }
-                    let status: AutoNATStatus = response.status == .ok ? .publicReachable : .privateBehindNAT
-                    self.completePendingProbe(peer: peer, status: status)
-                    return .close
-                } catch {
-                    self.failPendingProbe(peer: peer, error: error)
+                let response = try AutoNATWire.decodeResponse(payload)
+                // Remove the pending probe and cancel timeout task safely
+                var pendingProbe: PendingProbe?
+                self.queue.sync {
+                    pendingProbe = self.pending.removeValue(forKey: req.remotePeer?.b58String ?? "")
+                }
+                guard let pending = pendingProbe else {
+                    // Pending is nil likely due to timeout having removed it,
+                    // ignore the response and close stream.
                     return .close
                 }
-
-            case .closed:
-                if let peer = req.remotePeer {
-                    self.failPendingProbe(peer: peer, error: ProbeError.streamClosedBeforeResponse)
+                guard pending.token == response.token else {
+                    // Tokens do not match, fail the promise and close.
+                    // This is important for leak safety to avoid hanging promises
+                    // in case of unexpected or duplicate responses.
+                    pending.timeoutTask?.cancel()
+                    pending.promise.fail(NSError(domain: "AutoNATCoordinator", code: 2,
+                                                userInfo: [NSLocalizedDescriptionKey: "AutoNAT response token mismatch"]))
+                    return .close
                 }
-                return .close
+                // Cancel the timeout task since we got a response
+                pending.timeoutTask?.cancel()
 
-            case .error(let error):
-                if let peer = req.remotePeer {
-                    self.failPendingProbe(peer: peer, error: error)
-                }
+                let status: AutoNATStatus = response.status == .ok ? .publicReachable : .privateBehindNAT
+                self.setStatus(status)
+
+                // Succeed the promise directly
+                pending.promise.succeed(status)
                 return .close
 
             default:
@@ -320,49 +328,9 @@ public final class AutoNATCoordinator: @unchecked Sendable {
         self.setStatus(.privateBehindNAT)
         return AutoNATWire.DialResponse(token: request.token, status: .eDialError, dialedAddress: nil)
     }
-
-    internal func debugInsertPendingProbe(peer: PeerID, promise: EventLoopPromise<AutoNATStatus>) {
-        let timeoutTask = self.application.eventLoopGroup.any().scheduleTask(in: .seconds(30)) { }
-        self.queue.sync {
-            self.pending[peer.b58String] = PendingProbe(
-                token: [0x01],
-                peer: peer,
-                startTime: .now(),
-                promise: promise,
-                addresses: [],
-                timeoutTask: timeoutTask
-            )
-        }
-    }
-
-    internal func debugPendingCount() -> Int {
-        self.queue.sync { self.pending.count }
-    }
-
-    internal func debugCompletePendingProbe(peer: PeerID, status: AutoNATStatus) {
-        self.completePendingProbe(peer: peer, status: status)
-    }
-
-    internal func debugFailPendingProbe(peer: PeerID, error: Error) {
-        self.failPendingProbe(peer: peer, error: error)
-    }
-
-    private func completePendingProbe(peer: PeerID, status: AutoNATStatus) {
-        let pending = self.queue.sync { self.pending.removeValue(forKey: peer.b58String) }
-        guard let pending else { return }
-        pending.timeoutTask.cancel()
-        self.setStatus(status)
-        pending.promise.succeed(status)
-    }
-
-    private func failPendingProbe(peer: PeerID, error: Error) {
-        let pending = self.queue.sync { self.pending.removeValue(forKey: peer.b58String) }
-        guard let pending else { return }
-        pending.timeoutTask.cancel()
-        pending.promise.fail(error)
-    }
 }
 
 extension AutoNATCoordinator {
     public static let protocolID = AutoNATWire.protocolID
 }
+

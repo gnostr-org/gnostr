@@ -18,6 +18,7 @@ pub mod tests;
 pub use command::{chat, run, ChatSubCommands};
 pub use event::ChatEvent;
 pub use message::*;
+pub use msg::{Msg, MsgKind, USER_NAME};
 pub use p2p::{evt_loop, global_rt};
 pub use session::{ChatNotification, ChatSession};
 pub use tui::run_chat_tui;

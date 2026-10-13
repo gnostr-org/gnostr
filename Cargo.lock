@@ -15605,7 +15605,7 @@ dependencies = [
  "crossterm 0.28.1",
  "futures",
  "futures-timer",
- "gnostr",
+ "gnostr-chat",
  "hex",
  "libp2p 0.57.0",
  "libp2p-webrtc",
