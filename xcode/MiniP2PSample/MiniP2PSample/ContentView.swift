@@ -45,6 +45,7 @@ final class P2PService: ObservableObject {
 
     private var app: Application?
     private var runTask: Task<Void, Never>?
+    private var shutdownTask: Task<Void, Never>?
     private var diagnosticsTask: Task<Void, Never>?
     private var gossipTask: Task<Void, Never>?
     private var pingTask: Task<Void, Never>?
@@ -87,7 +88,7 @@ final class P2PService: ObservableObject {
     }
 
     func start() {
-        guard runTask == nil else { return }
+        guard runTask == nil, shutdownTask == nil else { return }
 
         lastError = nil
         state = .starting
@@ -150,6 +151,7 @@ final class P2PService: ObservableObject {
                 self?.pingBackoffUntilByPeerID.removeAll()
                 self?.state = .stopped
                 self?.runTask = nil
+                self?.shutdownTask = nil
                 self?.app = nil
                 self?.discoveredPeersByID.removeAll()
                 self?.startedAt = nil
@@ -158,8 +160,9 @@ final class P2PService: ObservableObject {
         }
     }
 
-    func stop() {
-        guard let app else { return }
+    @discardableResult
+    func stop() -> Task<Void, Never>? {
+        guard let app else { return nil }
 
         state = .stopping
         log("Stopping node")
@@ -177,7 +180,7 @@ final class P2PService: ObservableObject {
         self.app = nil
         self.runTask = nil
 
-        Task.detached(priority: .background) { [weak self] in
+        let shutdownTask = Task.detached(priority: .background) { [weak self] in
             do {
                 try await app.asyncShutdown()
             } catch {
@@ -191,18 +194,30 @@ final class P2PService: ObservableObject {
                 self?.listenAddresses = []
                 self?.state = .stopped
                 self?.runTask = nil
+                self?.shutdownTask = nil
                 self?.app = nil
                 self?.discoveredPeersByID.removeAll()
                 self?.startedAt = nil
                 self?.log("Node stopped")
             }
         }
+
+        self.shutdownTask = shutdownTask
+        return shutdownTask
     }
 
     func restart() {
-        stop()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.start()
+        let shutdownTask = stop() ?? self.shutdownTask
+        guard let shutdownTask else {
+            start()
+            return
+        }
+
+        Task.detached(priority: .background) { [weak self] in
+            _ = await shutdownTask.value
+            await MainActor.run {
+                self?.start()
+            }
         }
     }
 
