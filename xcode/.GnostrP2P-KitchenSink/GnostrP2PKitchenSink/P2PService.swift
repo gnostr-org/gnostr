@@ -215,6 +215,18 @@ final class P2PService: ObservableObject {
             let joinText = "joined \(topic) as \(peerID.b58String) on \(addressList)"
             if let joinData = Self.encodeRustChatMessage(from: chatDisplayName, text: joinText, kind: "Join") {
                 chatSubscription?.publish(joinData)
+                chatMessages.insert(
+                    ChatEntry(
+                        topic: topic,
+                        kind: "Join",
+                        author: chatDisplayName,
+                        text: joinText,
+                        isLocal: true,
+                        timestamp: Date()
+                    ),
+                    at: 0
+                )
+                chatMessages = Array(chatMessages.prefix(200))
                 log("Sent join message on \(topic)")
             }
 
