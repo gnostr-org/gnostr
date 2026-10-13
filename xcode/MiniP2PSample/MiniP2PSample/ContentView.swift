@@ -60,7 +60,7 @@ final class P2PService: ObservableObject {
     private let networkLogger = Logger(subsystem: "MiniP2PSample", category: "network")
 
     init() {
-        peerID = Self.makePeerID(for: Self.runtimeProfile)
+        peerID = Self.makePeerID()
     }
 
     var runtimeProfile: String {
@@ -479,10 +479,23 @@ final class P2PService: ObservableObject {
         }
     }
 
-    private static func makePeerID(for profile: RuntimeProfile) -> PeerID {
-        let seed = Data(SHA256.hash(data: Data("MiniP2PSample.peerid.\(profile.rawValue)".utf8)))
+    private static func makePeerID() -> PeerID {
+        let seed = Data(SHA256.hash(data: Data(Self.instanceSeed().utf8)))
         let privateKey = try! Curve25519.Signing.PrivateKey(rawRepresentation: seed)
         return try! PeerID(marshaledPrivateKey: privateKey.marshal())
+    }
+
+    private static func instanceSeed() -> String {
+        let defaults = UserDefaults.standard
+        let key = "MiniP2PSample.peerSeed"
+
+        if let existing = defaults.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+
+        let seed = UUID().uuidString
+        defaults.set(seed, forKey: key)
+        return seed
     }
 
     private func log(_ message: String, peerID: String? = nil, addresses: [String]? = nil) {
