@@ -1,3 +1,4 @@
+[workspace]
 [package]
 name = "rust-libp2p-webrtc-peer"
 version = "0.1.1"
@@ -12,6 +13,7 @@ clap = { version = "4.5.32", features = ["derive", "env"] }
 crossterm = "0.28.1"
 futures = "0.3.31"
 futures-timer = "3.0.3"
+gnostr = { version = "971106.1845.126068", path = "../../.." }
 hex = "0.4.3"
 libp2p = { version = "0.56", features = ["identify", "ping", "tokio", "gossipsub", "macros", "relay", "kad", "rsa", "ed25519", "quic", "request-response", "dns", "memory-connection-limits", "tcp", "noise", "yamux", "autonat", "tls", "dcutr"] }
 libp2p-webrtc = { version = "0.9.0-alpha", features = ["tokio", "pem"] }
