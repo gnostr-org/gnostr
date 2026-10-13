@@ -353,7 +353,15 @@ final class P2PService: ObservableObject {
     }
 
     private func listenAddressStrings(for app: Application) -> [String] {
-        app.listenAddresses.compactMap { address -> String? in
+        if !listenAddresses.isEmpty {
+            return listenAddresses
+        }
+
+        guard !app.didShutdown else {
+            return []
+        }
+
+        return app.listenAddresses.compactMap { address -> String? in
             guard let fullAddress = try? address.encapsulate(proto: .p2p, address: app.peerID.b58String) else {
                 return nil
             }
