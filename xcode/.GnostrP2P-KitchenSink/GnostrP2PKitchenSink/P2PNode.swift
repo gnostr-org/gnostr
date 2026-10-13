@@ -340,15 +340,15 @@ final class P2PNode: ObservableObject {
     private static var platformLabel: String {
         switch runtimeProfile {
             case .macOS:
-                return "macos"
+                return "macos-10000"
             case .macCatalyst:
-                return "maccatalyst"
+                return "maccatalyst-10003"
             case .iPad:
                 return "ipad"
             case .iPhone:
-                return "ios"
+                return "ios-10001"
             case .madeForiPad:
-                return "made-for-ipad"
+                return "made-for-ipad-10004"
         }
     }
 
