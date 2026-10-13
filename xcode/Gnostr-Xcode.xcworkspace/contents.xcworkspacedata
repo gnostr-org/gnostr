@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "group:MiniP2PSample"
+      name = "MiniP2PSample">
+      <FileRef
+         location = "group:MiniP2PSample.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:README.md">
+      </FileRef>
+      <Group
+         location = "group:MiniP2PSample"
+         name = "MiniP2PSample">
+         <FileRef
+            location = "group:MiniP2PSampleApp.swift">
+         </FileRef>
+         <FileRef
+            location = "group:MiniP2PSample.entitlements">
+         </FileRef>
+         <FileRef
+            location = "group:ContentView.swift">
+         </FileRef>
+      </Group>
+   </Group>
+</Workspace>
