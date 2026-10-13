@@ -103,20 +103,18 @@ final class P2PService: ObservableObject {
         log("Configured libp2p logger at trace level")
         configureNetworking(app)
         subscribeToGossip(app)
-        logNetworkSnapshot(app: app, reason: "startup")
+        listenAddresses = captureListenAddressStrings(for: app)
+        if !listenAddresses.isEmpty {
+            log("Listening on: \(listenAddresses.joined(separator: ", "))")
+        }
+        logNetworkSnapshot(reason: "startup")
         startDiagnosticsLoop(for: app)
         startGossipHeartbeatLoop(for: app)
         startPingLoop(for: app)
 
-        app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self, weak app] in
-            guard let self, let app else { return }
-            let addresses = self.listenAddressStrings(for: app)
-
+        app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self] in
+            guard let self else { return }
             Task { @MainActor in
-                self.listenAddresses = addresses
-                if !addresses.isEmpty {
-                    self.log("Listening on: \(addresses.joined(separator: ", "))")
-                }
                 if self.state == .starting {
                     self.state = .running
                     self.log("Node is running")
@@ -166,7 +164,7 @@ final class P2PService: ObservableObject {
 
         state = .stopping
         log("Stopping node")
-        logNetworkSnapshot(app: app, reason: "stopping")
+        logNetworkSnapshot(reason: "stopping")
         diagnosticsTask?.cancel()
         diagnosticsTask = nil
         gossipTask?.cancel()
@@ -410,22 +408,14 @@ final class P2PService: ObservableObject {
                 try? await Task.sleep(nanoseconds: 5_000_000_000)
                 guard !Task.isCancelled else { break }
                 await MainActor.run {
-                    self?.logNetworkSnapshot(app: app, reason: "periodic")
+                    self?.logNetworkSnapshot(reason: "periodic")
                 }
             }
         }
     }
 
-    private func listenAddressStrings(for app: Application) -> [String] {
-        if !listenAddresses.isEmpty {
-            return listenAddresses
-        }
-
-        guard !app.didShutdown else {
-            return []
-        }
-
-        return app.listenAddresses.compactMap { address -> String? in
+    private func captureListenAddressStrings(for app: Application) -> [String] {
+        app.listenAddresses.compactMap { address -> String? in
             guard let fullAddress = try? address.encapsulate(proto: .p2p, address: app.peerID.b58String) else {
                 return nil
             }
@@ -433,8 +423,8 @@ final class P2PService: ObservableObject {
         }
     }
 
-    private func logNetworkSnapshot(app: Application, reason: String) {
-        let addresses = listenAddressStrings(for: app)
+    private func logNetworkSnapshot(reason: String) {
+        let addresses = listenAddresses
         let elapsed: String
         if let startedAt {
             elapsed = String(format: "%.1fs", Date().timeIntervalSince(startedAt))
