@@ -412,6 +412,7 @@ struct ContentView: View {
             }
             .padding(16)
         }
+        .textSelection(.enabled)
     }
 
     private func titleBlock(title: String, subtitle: String) -> some View {

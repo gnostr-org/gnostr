@@ -153,6 +153,7 @@ struct NetworkInfoView: View {
             }
             .padding(16)
         }
+        .textSelection(.enabled)
     }
 
     private var statusColor: Color {
@@ -377,6 +378,7 @@ struct MessageListContent: View {
                     }
                     .padding()
                 }
+                .textSelection(.enabled)
                 .onChange(of: service.store.messages(forTopicId: topic.id).count) { _ in
                     scrollToBottom(proxy: proxy)
                 }
