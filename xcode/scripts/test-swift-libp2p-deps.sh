@@ -2,7 +2,7 @@
 # Test all local swift-libp2p-* and swift-gnostr-* (FFI) packages.
 # Usage: ./scripts/test-swift-libp2p-deps.sh [--verbose] [--rust-ffi]
 
-set -e
+set -euo pipefail
 
 VERBOSE=0
 RUST_FFI=0
@@ -25,11 +25,24 @@ done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RESULTS=()
 FAILURES=()
+LOG_DIR="$ROOT/.build/swift-libp2p-test-logs"
+mkdir -p "$LOG_DIR"
 
 SWIFT_TEST_ARGS=()
 if [ "$VERBOSE" -eq 1 ]; then
     SWIFT_TEST_ARGS+=(--verbose)
 fi
+
+run_one_swift_test() {
+    local dir="$1"
+    local log="$2"
+    if [ ${#SWIFT_TEST_ARGS[@]} -gt 0 ]; then
+        cd "$dir" && swift test "${SWIFT_TEST_ARGS[@]}" 2>&1 | tee "$log" | tail -40
+    else
+        cd "$dir" && swift test 2>&1 | tee "$log" | tail -40
+    fi
+    return "${PIPESTATUS[0]}"
+}
 
 run_swift_tests() {
     local pattern="$1"
@@ -37,8 +50,17 @@ run_swift_tests() {
         if [ -f "$dir/Package.swift" ]; then
             local name
             name=$(basename "$dir")
-            echo "=== Testing $name ==="
-            if (cd "$dir" && swift test "${SWIFT_TEST_ARGS[@]}" 2>&1 | tail -40); then
+
+            # Redis-backed packages require a running redis-server.
+            if [[ "$name" == *redis* ]] && [ "$REDIS_AVAILABLE" -eq 0 ]; then
+                echo "=== Skipping $name (redis-server not available) ==="
+                RESULTS+=("$name: SKIP (redis-server not available)")
+                continue
+            fi
+
+            local log="$LOG_DIR/$name.log"
+            echo "=== Testing $name (log: $log) ==="
+            if run_one_swift_test "$dir" "$log"; then
                 RESULTS+=("$name: PASS")
             else
                 RESULTS+=("$name: FAIL")
@@ -48,19 +70,38 @@ run_swift_tests() {
     done
 }
 
+run_cargo_tests() {
+    local crate_path="$1"
+    local name="$2"
+    local log="$LOG_DIR/$name.log"
+    echo "=== Testing $name (cargo) (log: $log) ==="
+    if (cd "$crate_path" && cargo test 2>&1 | tee "$log" | tail -40); then
+        RESULTS+=("$name: PASS")
+    else
+        RESULTS+=("$name: FAIL")
+        FAILURES+=("$name")
+    fi
+}
+
+REDIS_AVAILABLE=0
+if command -v redis-server >/dev/null 2>&1; then
+    REDIS_AVAILABLE=1
+fi
+
 run_swift_tests "swift-libp2p*"
 run_swift_tests "swift-gnostr*"
 
 if [ "$RUST_FFI" -eq 1 ]; then
     if [ -f "$ROOT/gnostr-sdk-ffi/Cargo.toml" ]; then
-        echo "=== Testing gnostr-sdk-ffi (cargo) ==="
-        if (cd "$ROOT/gnostr-sdk-ffi" && cargo test 2>&1 | tail -40); then
-            RESULTS+=("gnostr-sdk-ffi: PASS")
-        else
-            RESULTS+=("gnostr-sdk-ffi: FAIL")
-            FAILURES+=("gnostr-sdk-ffi")
-        fi
+        run_cargo_tests "$ROOT/gnostr-sdk-ffi" "gnostr-sdk-ffi"
     fi
+
+    for crate in "$ROOT"/swift-gnostr-*/Rust/*-ffi; do
+        if [ -f "$crate/Cargo.toml" ]; then
+            name=$(basename "$crate")
+            run_cargo_tests "$crate" "$name"
+        fi
+    done
 fi
 
 echo ""
