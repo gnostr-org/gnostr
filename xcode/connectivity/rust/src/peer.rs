@@ -37,12 +37,9 @@ use libp2p::{
     },
     swarm::{behaviour::toggle::Toggle, NetworkBehaviour, Swarm, SwarmEvent},
     tcp::Config as TcpConfig,
-    tls::Config as TlsConfig,
     yamux::Config as YamuxConfig,
     PeerId, StreamProtocol, SwarmBuilder,
 };
-use libp2p_webrtc as webrtc;
-use libp2p_webrtc::tokio::Certificate;
 use quick_protobuf::{BytesReader, MessageRead};
 use rand_core::OsRng;
 use std::{
@@ -70,7 +67,6 @@ const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 const GOSSIPSUB_PEER_DISCOVERY: &str = "universal-connectivity-browser-peer-discovery";
 
 // Listen Ports
-const PORT_WEBRTC: u16 = 9090; // UDP
 const PORT_QUIC: u16 = 9091; // UDP
 const PORT_TCP: u16 = 9092; // TCP
 
@@ -139,7 +135,6 @@ impl Peer {
     /// Create a new Peer instance by initializing the swarm and peer state
     pub async fn new(
         keypair: identity::Keypair,
-        tls_cert: Certificate,
         to_ui: Sender<Message>,
         from_ui: Receiver<Message>,
         shutdown: CancellationToken,
@@ -154,12 +149,6 @@ impl Peer {
 
         let mut listen_addresses = HashSet::new();
         for addr in opt.listen_addresses.iter() {
-            // add the WebRTC address
-            listen_addresses.insert(
-                ipaddr_to_multiaddr(addr)
-                    .with(Protocol::Udp(PORT_WEBRTC))
-                    .with(Protocol::WebRTCDirect),
-            );
             // add the QUIC address
             listen_addresses.insert(
                 ipaddr_to_multiaddr(addr)
@@ -177,6 +166,7 @@ impl Peer {
 
         // keep them as Strings because they can be PeerId's or Multiaddr's
         let to_dial = opt.connect;
+        let chat_topic = opt.topic;
 
         // initialize the swarm
         let swarm = {
@@ -317,21 +307,15 @@ impl Peer {
                 .with_tokio()
                 .with_tcp(
                     TcpConfig::new().nodelay(true),
-                    (TlsConfig::new, NoiseConfig::new), // passes the keypair to the constructors
+                    NoiseConfig::new,
                     YamuxConfig::default,
                 )?
                 .with_quic()
-                .with_other_transport(|id_keys| {
-                    Ok(webrtc::tokio::Transport::new(
-                        id_keys.clone(),
-                        tls_cert.clone(),
-                    ))
-                })?
                 .with_dns()?;
 
             // if we are to be a relay client, add the relay client behaviour
             if opt.relay_client {
-                sb.with_relay_client((TlsConfig::new, NoiseConfig::new), YamuxConfig::default)?
+                sb.with_relay_client(NoiseConfig::new, YamuxConfig::default)?
                     .with_behaviour(|_key, relay_client| {
                         behaviour.relay_client = Some(relay_client).into();
                         behaviour
@@ -449,7 +433,7 @@ impl Peer {
         }
 
         // Initialize the gossipsub topics, the hashes are the same as the topic names
-        let chat_topic = GossipsubIdentTopic::new(GOSSIPSUB_CHAT_TOPIC);
+        let chat_topic = GossipsubIdentTopic::new(chat_topic.clone());
         let file_topic = GossipsubIdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC);
         let peer_discovery = GossipsubIdentTopic::new(GOSSIPSUB_PEER_DISCOVERY);
 
@@ -510,8 +494,12 @@ impl Peer {
                     info!("Unsubscribing from topics");
                     // Subscribe to the gossipsub topics
                     for topic in &[chat_topic, file_topic, peer_discovery] {
-                        if !self.swarm.behaviour_mut().gossipsub.unsubscribe(topic) {
-                            debug!("Failed to unsubscribe from topic {topic}");
+                        match self.swarm.behaviour_mut().gossipsub.unsubscribe(topic) {
+                            Ok(true) => {}
+                            Ok(false) => debug!("Failed to unsubscribe from topic {topic}"),
+                            Err(error) => {
+                                debug!("Failed to unsubscribe from topic {topic}: {error}")
+                            }
                         }
                     }
 
@@ -592,7 +580,8 @@ impl Peer {
                     // When we receive a gossipsub event
                     SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(event)) => match event {
                         GossipsubEvent::Message { .. } => {
-                            let msg = UniversalConnectivityMessage::try_from(event)?;
+                            let msg =
+                                UniversalConnectivityMessage::try_from_event(event, chat_topic.as_str())?;
                             self.msg(format!("{msg}")).await?;
                             match msg {
                                 UniversalConnectivityMessage::Chat { from, data, ..} => {
@@ -636,21 +625,18 @@ impl Peer {
                         }
                         GossipsubEvent::Subscribed { peer_id, topic } => {
                             debug!("{peer_id} subscribed to {topic}");
-                            if topic.as_str() == GOSSIPSUB_CHAT_TOPIC {
+                            if topic.as_str() == chat_topic.as_str() {
                                 self.to_ui.send(Message::AddPeer(peer_id.into())).await?;
                             }
                         }
                         GossipsubEvent::Unsubscribed { peer_id, topic } => {
                             debug!("{peer_id} unsubscribed from {topic}");
-                            if topic.as_str() == GOSSIPSUB_CHAT_TOPIC {
+                            if topic.as_str() == chat_topic.as_str() {
                                 self.to_ui.send(Message::RemovePeer(peer_id.into())).await?;
                             }
                         }
                         GossipsubEvent::GossipsubNotSupported { peer_id } => {
                             warn!("{peer_id} does not support gossipsub");
-                        }
-                        GossipsubEvent::SlowPeer { peer_id, .. } => {
-                            warn!("{peer_id} is a slow peer");
                         }
                     }
 
@@ -958,10 +944,8 @@ enum UniversalConnectivityMessage {
     },
 }
 
-impl TryFrom<GossipsubEvent> for UniversalConnectivityMessage {
-    type Error = anyhow::Error;
-
-    fn try_from(event: GossipsubEvent) -> anyhow::Result<Self, Self::Error> {
+impl UniversalConnectivityMessage {
+    fn try_from_event(event: GossipsubEvent, chat_topic: &str) -> anyhow::Result<Self> {
         if let GossipsubEvent::Message {
             propagation_source,
             message,
@@ -974,7 +958,7 @@ impl TryFrom<GossipsubEvent> for UniversalConnectivityMessage {
             let topic = message.topic.clone();
 
             match topic.as_str() {
-                GOSSIPSUB_CHAT_TOPIC => Ok(Self::Chat {
+                topic_name if topic_name == chat_topic => Ok(Self::Chat {
                     propagation_source,
                     from,
                     data,

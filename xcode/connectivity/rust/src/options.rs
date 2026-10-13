@@ -1,10 +1,9 @@
 use clap::Parser;
-use std::{net::IpAddr, path::PathBuf};
+use std::net::IpAddr;
 
 const LISTEN_ADDR: [&str; 1] = ["0.0.0.0"];
 const LOCAL_KEY_PATH: &str = "./local";
-const LOCAL_CERT_PATH: &str = "./cert.pem";
-
+const DEFAULT_TOPIC: &str = "universal-connectivity";
 /// The rust peer command line options
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -21,13 +20,13 @@ pub struct Options {
     #[clap(long, env, action = clap::ArgAction::Append, value_delimiter = ',')]
     pub connect: Vec<String>,
 
-    /// If set, the path to the local certificate file.
-    #[clap(long, env, default_value = LOCAL_CERT_PATH)]
-    pub local_cert_path: PathBuf,
+    /// The gossipsub chat topic to publish and subscribe to.
+    #[clap(long, env, default_value = DEFAULT_TOPIC)]
+    pub topic: String,
 
     /// If set, the path to the local key file.
     #[clap(long, env, default_value = LOCAL_KEY_PATH)]
-    pub local_key_path: PathBuf,
+    pub local_key_path: std::path::PathBuf,
 
     /// If set, the peer will make autonat client requests (default: true)
     #[clap(long, env, default_value = "true")]
