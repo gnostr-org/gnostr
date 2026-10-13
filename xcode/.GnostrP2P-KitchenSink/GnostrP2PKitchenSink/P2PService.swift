@@ -178,6 +178,8 @@ final class P2PService: ObservableObject {
                         guard let self else { return }
                         if kind == "Heartbeat" {
                             self.log("Peer heartbeat on \(topic) from \(author): \(text)")
+                        } else if kind == "Join" {
+                            self.log("Peer joined topic \(topic): \(text)")
                         } else {
                             self.log("Chat message on \(topic) from \(author)")
                         }
@@ -208,6 +210,14 @@ final class P2PService: ObservableObject {
             clearChatMessages()
             gossipPeerIDs.removeAll()
             log("Joined chat topic \(topic)")
+
+            let addressList = listenAddresses.isEmpty ? "no known listen addresses yet" : listenAddresses.joined(separator: ", ")
+            let joinText = "joined \(topic) as \(peerID.b58String) on \(addressList)"
+            if let joinData = Self.encodeRustChatMessage(from: chatDisplayName, text: joinText, kind: "Join") {
+                chatSubscription?.publish(joinData)
+                log("Sent join message on \(topic)")
+            }
+
             startHeartbeatLoop(topic: topic, app: app)
         } catch {
             lastError = error.localizedDescription
