@@ -97,14 +97,16 @@ final class P2PService: ObservableObject {
 
     private var app: Application?
     private var runTask: Task<Void, Never>?
+    private var heartbeatTask: Task<Void, Never>?
     private var chatSubscription: PubSub.SubscriptionHandler?
     private var chatSubscribedTopic: String?
     private var dialedPeerIDs = Set<String>()
+    private var gossipPeerIDs = Set<String>()
 
     let peerID: PeerID
 
     init() {
-        peerID = Self.makePeerID(for: Self.runtimeProfile)
+        peerID = Self.makePeerID()
         chatDisplayName = "ios-\(peerID.b58String.prefix(8))"
     }
 
@@ -162,7 +164,9 @@ final class P2PService: ObservableObject {
                 switch event {
                 case .newPeer(let peer):
                     Task { @MainActor in
-                        self?.log("Chat peer for \(topic): \(peer.b58String)")
+                        guard let self else { return }
+                        self.gossipPeerIDs.insert(peer.b58String)
+                        self.log("Peer joined gossip topic \(topic): \(peer.b58String)")
                     }
                 case .data(let message):
                     let author = message.from.asString(base: .base58btc)
@@ -172,6 +176,11 @@ final class P2PService: ObservableObject {
                     let kind = decoded?.kind ?? "Raw"
                     Task { @MainActor in
                         guard let self else { return }
+                        if kind == "Heartbeat" {
+                            self.log("Peer heartbeat on \(topic) from \(author): \(text)")
+                        } else {
+                            self.log("Chat message on \(topic) from \(author)")
+                        }
                         self.chatMessages.insert(
                             ChatEntry(
                                 topic: topic,
@@ -184,7 +193,6 @@ final class P2PService: ObservableObject {
                             at: 0
                         )
                         self.chatMessages = Array(self.chatMessages.prefix(200))
-                        self.log("Chat message on \(topic) from \(author)")
                     }
                 case .error(let error):
                     Task { @MainActor in
@@ -198,7 +206,9 @@ final class P2PService: ObservableObject {
             chatSubscription = subscription
             chatSubscribedTopic = topic
             clearChatMessages()
+            gossipPeerIDs.removeAll()
             log("Joined chat topic \(topic)")
+            startHeartbeatLoop(topic: topic, app: app)
         } catch {
             lastError = error.localizedDescription
             log("Failed to join chat topic \(topic): \(error.localizedDescription)")
@@ -260,6 +270,12 @@ final class P2PService: ObservableObject {
             }
         }
 
+        app.events.on(self, event: .disconnected({ [weak self] connection, peer in
+            Task { @MainActor in
+                self?.handleDisconnectedPeer(connection: connection, peer: peer)
+            }
+        }))
+
         app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self, weak app] in
             guard let self, let app else { return }
             let addresses = app.listenAddresses.compactMap { address -> String? in
@@ -298,7 +314,10 @@ final class P2PService: ObservableObject {
                 self?.listenAddresses = []
                 self?.chatSubscription = nil
                 self?.chatSubscribedTopic = nil
+                self?.heartbeatTask?.cancel()
+                self?.heartbeatTask = nil
                 self?.dialedPeerIDs.removeAll()
+                self?.gossipPeerIDs.removeAll()
                 self?.log("Node stopped")
             }
         }
@@ -312,6 +331,8 @@ final class P2PService: ObservableObject {
         chatSubscription?.unsubscribe()
         chatSubscription = nil
         chatSubscribedTopic = nil
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         self.app = nil
         self.runTask = nil
 
@@ -332,7 +353,9 @@ final class P2PService: ObservableObject {
                 self?.app = nil
                 self?.chatSubscription = nil
                 self?.chatSubscribedTopic = nil
+                self?.heartbeatTask = nil
                 self?.dialedPeerIDs.removeAll()
+                self?.gossipPeerIDs.removeAll()
                 self?.log("Node stopped")
             }
         }
@@ -346,7 +369,7 @@ final class P2PService: ObservableObject {
     }
 
     func sendLocalPing() {
-        log("Ping: \(draftMessage)")
+        sendChatText(draftMessage, kind: "Heartbeat")
     }
 
     private func recordDiscoveredPeer(peerID: String, addresses: [String]) {
@@ -357,13 +380,93 @@ final class P2PService: ObservableObject {
         }
     }
 
-    private static func encodeRustChatMessage(from sender: String, text: String) -> Data? {
-        let message = RustChatMessage(from: sender, content: text)
+    private static func encodeRustChatMessage(from sender: String, text: String, kind: String = "Chat") -> Data? {
+        let message = RustChatMessage(from: sender, content: text, kind: kind)
         return try? JSONEncoder().encode(message)
     }
 
     private static func decodeRustChatMessage(from data: Data) -> RustChatMessage? {
         try? JSONDecoder().decode(RustChatMessage.self, from: data)
+    }
+
+    private func handleDisconnectedPeer(connection: Connection, peer: PeerID?) {
+        guard let peer else {
+            log("Peer disconnected: \(connection.remoteAddr?.description ?? "unknown")")
+            return
+        }
+
+        let peerID = peer.b58String
+        dialedPeerIDs.remove(peerID)
+        let wasTopicPeer = gossipPeerIDs.remove(peerID) != nil
+        log(wasTopicPeer ? "Peer left gossip topic \(chatTopic): \(peerID)" : "Peer disconnected: \(peerID)")
+    }
+
+    private func startHeartbeatLoop(topic: String, app: Application) {
+        heartbeatTask?.cancel()
+        heartbeatTask = Task.detached(priority: .background) { [weak self] in
+            var counter = 0
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { break }
+                let hasPeers = await MainActor.run { [weak self] in
+                    guard let self else { return false }
+                    return !self.gossipPeerIDs.isEmpty
+                }
+                guard hasPeers else { continue }
+                counter += 1
+                let message = RustChatMessage(
+                    from: app.peerID.b58String,
+                    content: "heartbeat #\(counter) from \(app.peerID.b58String)",
+                    kind: "Heartbeat"
+                )
+                guard let data = try? JSONEncoder().encode(message) else { continue }
+                _ = app.pubsub.gossipsub.publish(
+                    topic: topic,
+                    bytes: data.byteArray,
+                    on: app.eventLoopGroup.next()
+                )
+                await MainActor.run { [weak self] in
+                    self?.log("Published heartbeat #\(counter) to \(topic)")
+                }
+            }
+        }
+    }
+
+    private func sendChatText(_ text: String, kind: String = "Chat") {
+        guard let app else {
+            log("Chat send requires the node to be running")
+            return
+        }
+
+        let topic = chatTopic.trimmingCharacters(in: .whitespacesAndNewlines)
+        let message = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !topic.isEmpty else {
+            lastError = "Chat topic cannot be empty"
+            log("Chat topic cannot be empty")
+            return
+        }
+
+        guard !message.isEmpty else {
+            return
+        }
+
+        if chatSubscribedTopic != topic || chatSubscription == nil {
+            joinChatTopic()
+        }
+
+        guard chatSubscribedTopic == topic else { return }
+        guard let data = Self.encodeRustChatMessage(from: chatDisplayName, text: message, kind: kind) else {
+            lastError = "Failed to encode chat message"
+            log("Failed to encode chat message for topic \(topic)")
+            return
+        }
+
+        chatSubscription?.publish(data)
+        if kind == "Chat" {
+            chatDraftMessage = ""
+        }
+        log("Sent \(kind.lowercased()) on \(topic)")
     }
 
     private func dialDiscoveredPeer(_ peer: PeerInfo) {
@@ -392,7 +495,7 @@ final class P2PService: ObservableObject {
         app.logger.logLevel = .notice
         app.security.use(.noise)
         app.muxers.use(.yamux)
-        app.pubsub.use(.gossipsub(emitSelf: true))
+        app.pubsub.use(.gossipsub(emitSelf: false))
         app.dcutr.use(.dcutr)
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
@@ -443,10 +546,23 @@ final class P2PService: ObservableObject {
         }
     }
 
-    private static func makePeerID(for profile: RuntimeProfile) -> PeerID {
-        let seed = Data(SHA256.hash(data: Data("GnostrP2P-KitchenSink.peerid.\(profile.rawValue)".utf8)))
+    private static func makePeerID() -> PeerID {
+        let seed = Data(SHA256.hash(data: Data(instanceSeed().utf8)))
         let privateKey = try! Curve25519.Signing.PrivateKey(rawRepresentation: seed)
         return try! PeerID(marshaledPrivateKey: privateKey.marshal())
+    }
+
+    private static func instanceSeed() -> String {
+        let defaults = UserDefaults.standard
+        let key = "GnostrP2PKitchenSink.peerSeed"
+
+        if let existing = defaults.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+
+        let seed = UUID().uuidString
+        defaults.set(seed, forKey: key)
+        return seed
     }
 
     private static let timestampFormatter: DateFormatter = {
