@@ -186,7 +186,12 @@ final class P2PService: ObservableObject {
                     let kind = decoded?.kind ?? "Raw"
                     Task { @MainActor in
                         guard let self else { return }
-                        self.log("Received \(kind) on \(topic) from \(author): \(text)")
+                        if kind == "Heartbeat" {
+                            let addresses = self.discoveredPeers.first { $0.peerID == author }?.addresses.joined(separator: ", ") ?? "unknown"
+                            self.log("Received Heartbeat on \(topic) from \(author) @ \(addresses): \(text)")
+                        } else {
+                            self.log("Received \(kind) on \(topic) from \(author): \(text)")
+                        }
                         self.chatMessages.insert(
                             ChatEntry(
                                 topic: topic,
@@ -199,6 +204,10 @@ final class P2PService: ObservableObject {
                             at: 0
                         )
                         self.chatMessages = Array(self.chatMessages.prefix(200))
+
+                        if kind != "Heartbeat" && kind != "Received" {
+                            self.sendReceipt(topic: topic, for: kind, from: author)
+                        }
                     }
                 case .error(let error):
                     Task { @MainActor in
@@ -500,6 +509,18 @@ final class P2PService: ObservableObject {
         chatSubscription?.publish(data)
         lastJoinAnnouncement = Date()
         log("Announced join on \(topic)")
+    }
+
+    private func sendReceipt(topic: String, for originalKind: String, from author: String) {
+        guard originalKind != "Received" else { return }
+        let addressList = listenAddresses.isEmpty ? "no known listen addresses yet" : listenAddresses.joined(separator: ", ")
+        let text = "received \(originalKind) from \(author) as \(peerID.b58String) on \(addressList)"
+        guard let data = Self.encodeRustChatMessage(from: chatDisplayName, text: text, kind: "Received") else {
+            log("Failed to encode receipt for \(originalKind) from \(author)")
+            return
+        }
+        chatSubscription?.publish(data)
+        log("Sent Received receipt for \(originalKind) from \(author)")
     }
 
     private func dialDiscoveredPeer(_ peer: PeerInfo) {
