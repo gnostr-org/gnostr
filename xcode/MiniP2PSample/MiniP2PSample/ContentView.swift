@@ -253,11 +253,19 @@ final class P2PService: ObservableObject {
                     let author = message.from.asString(base: .base58btc)
                     Task { @MainActor in
                         guard author != self?.peerIDString else { return }
-                        self?.log(
-                            "Gossip on \(Self.gossipTopic): \(text)",
-                            peerID: author,
-                            addresses: self?.peerAddressesString(for: author)
-                        )
+                        if let heartbeat = Self.parseHeartbeatPayload(text) {
+                            self?.log(
+                                "Peer heartbeat #\(heartbeat.sequence) on \(Self.gossipTopic): \(heartbeat.payload)",
+                                peerID: author,
+                                addresses: self?.peerAddressesString(for: author)
+                            )
+                        } else {
+                            self?.log(
+                                "Gossip on \(Self.gossipTopic): \(text)",
+                                peerID: author,
+                                addresses: self?.peerAddressesString(for: author)
+                            )
+                        }
                     }
                 case .error(let error):
                     Task { @MainActor in
@@ -493,6 +501,19 @@ final class P2PService: ObservableObject {
 
     private func peerAddressesString(for peerID: String) -> [String]? {
         discoveredPeersByID[peerID]?.addresses.map(\.description)
+    }
+
+    private static func parseHeartbeatPayload(_ payload: String) -> (sequence: Int, payload: String)? {
+        let prefix = "gnostr-dev heartbeat #"
+        guard payload.hasPrefix(prefix) else { return nil }
+
+        let remainder = payload.dropFirst(prefix.count)
+        guard let separator = remainder.firstIndex(of: " "),
+              let sequence = Int(remainder[..<separator]) else {
+            return nil
+        }
+
+        return (sequence, String(remainder))
     }
 
     private static let timestampFormatter: DateFormatter = {
