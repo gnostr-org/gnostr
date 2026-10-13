@@ -306,7 +306,6 @@ final class P2PService: ObservableObject {
 
         let app = Self.makeApplication(peerID: peerID)
         self.app = app
-        joinChatTopic()
 
         app.discovery.onPeerDiscovered(app) { [weak self] peer in
             let peerID = peer.peer.b58String
@@ -340,6 +339,9 @@ final class P2PService: ObservableObject {
                 if self.state == .starting {
                     self.state = .running
                     self.log("Node is running")
+                }
+                if self.chatSubscribedTopic == nil {
+                    self.joinChatTopic()
                 }
             }
         }
