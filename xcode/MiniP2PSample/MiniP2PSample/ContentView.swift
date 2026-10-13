@@ -242,14 +242,22 @@ final class P2PService: ObservableObject {
                     Task { @MainActor in
                         guard peer.b58String != self?.peerIDString else { return }
                         self?.gossipPeersByID.insert(peer.b58String)
-                        self?.log("Gossip peer for \(Self.gossipTopic): \(peer.b58String)")
+                        self?.log(
+                            "Gossip peer for \(Self.gossipTopic)",
+                            peerID: peer.b58String,
+                            addresses: self?.peerAddressesString(for: peer.b58String)
+                        )
                     }
                 case .data(let message):
                     let text = String(data: message.data, encoding: .utf8) ?? "non-utf8 payload"
                     let author = message.from.asString(base: .base58btc)
                     Task { @MainActor in
                         guard author != self?.peerIDString else { return }
-                        self?.log("Gossip on \(Self.gossipTopic) from \(author): \(text)")
+                        self?.log(
+                            "Gossip on \(Self.gossipTopic): \(text)",
+                            peerID: author,
+                            addresses: self?.peerAddressesString(for: author)
+                        )
                     }
                 case .error(let error):
                     Task { @MainActor in
@@ -327,13 +335,21 @@ final class P2PService: ObservableObject {
         pingFuture.whenSuccess { [weak self] duration in
             Task { @MainActor in
                 self?.pingBackoffUntilByPeerID.removeValue(forKey: peerID)
-                self?.log("Ping \(peer.b58String.prefix(12))… = \(duration)")
+                self?.log(
+                    "Ping success (\(duration))",
+                    peerID: peer.b58String,
+                    addresses: peerInfo.addresses.map(\.description)
+                )
             }
         }
         pingFuture.whenFailure { [weak self] error in
             Task { @MainActor in
                 self?.pingBackoffUntilByPeerID[peerID] = Date().addingTimeInterval(10)
-                self?.log("Ping failed for \(peer.b58String.prefix(12))…: \(error.localizedDescription)")
+                self?.log(
+                    "Ping failed: \(error.localizedDescription)",
+                    peerID: peer.b58String,
+                    addresses: peerInfo.addresses.map(\.description)
+                )
             }
         }
     }
@@ -343,19 +359,24 @@ final class P2PService: ObservableObject {
         guard discoveredPeersByID[peerID] == nil else { return }
         discoveredPeersByID[peerID] = peer
         let addresses = peer.addresses.map(\.description).joined(separator: ", ")
-        log("Discovered peer \(peerID)")
-        if !addresses.isEmpty {
-            log("Peer addresses: \(addresses)")
-        }
+        log("Discovered peer", peerID: peerID, addresses: peer.addresses.map(\.description))
     }
 
     private func dialDiscoveredPeer(_ peer: PeerInfo) {
         guard peer.peer.b58String != peerIDString else { return }
         do {
             try app?.newStream(to: peer, forProtocol: "/ipfs/id/1.0.0")
-            log("Dialed discovered peer \(peer.peer.b58String)")
+            log(
+                "Dialed discovered peer",
+                peerID: peer.peer.b58String,
+                addresses: peer.addresses.map(\.description)
+            )
         } catch {
-            log("Failed to dial peer \(peer.peer.b58String): \(error.localizedDescription)")
+            log(
+                "Failed to dial peer: \(error.localizedDescription)",
+                peerID: peer.peer.b58String,
+                addresses: peer.addresses.map(\.description)
+            )
         }
     }
 
@@ -451,11 +472,27 @@ final class P2PService: ObservableObject {
         return try! PeerID(marshaledPrivateKey: privateKey.marshal())
     }
 
-    private func log(_ message: String) {
+    private func log(_ message: String, peerID: String? = nil, addresses: [String]? = nil) {
         let formatter = Self.timestampFormatter
-        let formatted = "[\(formatter.string(from: Date()))] \(message)"
+        let formatted = "[\(formatter.string(from: Date()))] \(message)\(peerContext(peerID: peerID, addresses: addresses))"
         activityLog.append(formatted)
         networkLogger.info("\(formatted, privacy: .public)")
+    }
+
+    private func peerContext(peerID: String?, addresses: [String]?) -> String {
+        var components: [String] = []
+        if let peerID, !peerID.isEmpty {
+            components.append("peer=\(peerID)")
+        }
+        if let addresses, !addresses.isEmpty {
+            components.append("addrs=\(addresses.joined(separator: ", "))")
+        }
+        guard !components.isEmpty else { return "" }
+        return " [\(components.joined(separator: " | "))]"
+    }
+
+    private func peerAddressesString(for peerID: String) -> [String]? {
+        discoveredPeersByID[peerID]?.addresses.map(\.description)
     }
 
     private static let timestampFormatter: DateFormatter = {
