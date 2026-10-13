@@ -85,6 +85,11 @@ extension Application {
         }
 
         var storage: Storage {
+            if let storage = self.application.storage[Key.self] {
+                return storage
+            }
+            self.application.transports.initialize()
+            self.application.transports.use(.tcp)
             guard let storage = self.application.storage[Key.self] else {
                 fatalError("Transports not initialized. Initialize with app.transports.initialize()")
             }

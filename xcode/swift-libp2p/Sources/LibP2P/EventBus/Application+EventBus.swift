@@ -62,6 +62,11 @@ extension Application {
         let application: Application
 
         var storage: Storage {
+            if let storage = self.application.storage[Key.self] {
+                return storage
+            }
+            self.application.eventbus.initialize()
+            self.application.eventbus.use(.default)
             guard let storage = self.application.storage[Key.self] else {
                 fatalError("EventBus not initialized. Configure with app.eventbus.initialize()")
             }

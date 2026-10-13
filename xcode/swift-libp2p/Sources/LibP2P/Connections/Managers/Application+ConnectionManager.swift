@@ -84,6 +84,11 @@ extension Application {
         let application: Application
 
         var storage: Storage {
+            if let storage = self.application.storage[Key.self] {
+                return storage
+            }
+            self.application.connectionManager.initialize()
+            self.application.connectionManager.use(.default(maxConcurrentConnections: 50, ASCEnabled: false))
             guard let storage = self.application.storage[Key.self] else {
                 fatalError("ConnectionManager not initialized. Configure with app.connectionManager.initialize()")
             }

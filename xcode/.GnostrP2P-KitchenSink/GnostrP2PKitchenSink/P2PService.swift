@@ -91,7 +91,7 @@ final class P2PService: ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var state: State = .stopped
     @Published var chatDisplayName = ""
-    @Published var chatTopic = "gnostr-dev"
+    @Published var chatTopic = "universal-connectivity" //for testing
     @Published var chatDraftMessage = ""
     @Published var draftMessage = "Hello from GnostrP2P Kitchen Sink"
 
