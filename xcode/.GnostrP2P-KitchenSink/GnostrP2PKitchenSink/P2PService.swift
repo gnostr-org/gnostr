@@ -643,7 +643,7 @@ final class P2PService: ObservableObject {
             case .iPhone:
                 return "ios"
             case .madeForiPad:
-                return "ipad-10004"
+                return "made-for-ipad-10004"
         }
     }
 
