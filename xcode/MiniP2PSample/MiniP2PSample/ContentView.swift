@@ -51,6 +51,9 @@ final class P2PService: ObservableObject {
     private var startedAt: Date?
     private var gossipSubscription: PubSub.SubscriptionHandler?
     private var discoveredPeersByID: [String: PeerInfo] = [:]
+    private var gossipPeersByID = Set<String>()
+    private var pingBackoffUntilByPeerID: [String: Date] = [:]
+    private var pingCursor = 0
 
     let peerID: PeerID
     private let networkLogger = Logger(subsystem: "MiniP2PSample", category: "network")
@@ -143,6 +146,8 @@ final class P2PService: ObservableObject {
                 self?.pingTask = nil
                 self?.gossipSubscription?.unsubscribe()
                 self?.gossipSubscription = nil
+                self?.gossipPeersByID.removeAll()
+                self?.pingBackoffUntilByPeerID.removeAll()
                 self?.state = .stopped
                 self?.runTask = nil
                 self?.app = nil
@@ -167,6 +172,8 @@ final class P2PService: ObservableObject {
         pingTask = nil
         gossipSubscription?.unsubscribe()
         gossipSubscription = nil
+        gossipPeersByID.removeAll()
+        pingBackoffUntilByPeerID.removeAll()
         self.app = nil
         self.runTask = nil
 
@@ -233,6 +240,7 @@ final class P2PService: ObservableObject {
                 switch event {
                 case .newPeer(let peer):
                     Task { @MainActor in
+                        self?.gossipPeersByID.insert(peer.b58String)
                         self?.log("Gossip peer for \(Self.gossipTopic): \(peer.b58String)")
                     }
                 case .data(let message):
@@ -298,22 +306,32 @@ final class P2PService: ObservableObject {
             return
         }
 
-        guard !discoveredPeersByID.isEmpty else {
+        let candidates = discoveredPeersByID.keys.filter { gossipPeersByID.contains($0) }
+        guard !candidates.isEmpty else {
             return
         }
 
-        for peerInfo in discoveredPeersByID.values where peerInfo.peer.b58String != peerIDString {
-            let peer = peerInfo.peer
-            let pingFuture = identify.ping(peer: peer)
-            pingFuture.whenSuccess { [weak self] duration in
-                Task { @MainActor in
-                    self?.log("Ping \(peer.b58String.prefix(12))… = \(duration)")
-                }
+        let orderedCandidates = candidates.sorted()
+        guard !orderedCandidates.isEmpty else { return }
+        let index = pingCursor % orderedCandidates.count
+        pingCursor = (pingCursor + 1) % orderedCandidates.count
+        let peerID = orderedCandidates[index]
+        guard peerID != peerIDString else { return }
+        guard pingBackoffUntilByPeerID[peerID].map({ $0 > Date() }) != true else { return }
+        guard let peerInfo = discoveredPeersByID[peerID] else { return }
+
+        let peer = peerInfo.peer
+        let pingFuture = identify.ping(peer: peer)
+        pingFuture.whenSuccess { [weak self] duration in
+            Task { @MainActor in
+                self?.pingBackoffUntilByPeerID.removeValue(forKey: peerID)
+                self?.log("Ping \(peer.b58String.prefix(12))… = \(duration)")
             }
-            pingFuture.whenFailure { [weak self] error in
-                Task { @MainActor in
-                    self?.log("Ping failed for \(peer.b58String.prefix(12))…: \(error.localizedDescription)")
-                }
+        }
+        pingFuture.whenFailure { [weak self] error in
+            Task { @MainActor in
+                self?.pingBackoffUntilByPeerID[peerID] = Date().addingTimeInterval(10)
+                self?.log("Ping failed for \(peer.b58String.prefix(12))…: \(error.localizedDescription)")
             }
         }
     }
