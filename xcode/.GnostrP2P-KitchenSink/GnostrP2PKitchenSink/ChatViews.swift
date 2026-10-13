@@ -59,9 +59,11 @@ struct NetworkInfoView: View {
 
                         HStack {
                             Button("Start node") { service.start() }
+                                .disabled(service.node.state != .stopped)
                             Button("Stop node") { service.stop() }
-                                .disabled(!service.node.isRunning)
+                                .disabled(service.node.state != .running)
                             Button("Restart") { service.node.restart() }
+                                .disabled(service.node.state != .running)
                         }
 
                         if let error = service.lastError ?? service.node.lastError {
