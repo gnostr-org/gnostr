@@ -474,7 +474,7 @@ final class P2PService: ObservableObject {
 
     private func log(_ message: String, peerID: String? = nil, addresses: [String]? = nil) {
         let formatter = Self.timestampFormatter
-        let formatted = "[\(formatter.string(from: Date()))] \(message)\(peerContext(peerID: peerID, addresses: addresses))"
+        let formatted = "[\(formatter.string(from: Date()))] \(message)\(peerContext(peerID: peerID ?? peerIDString, addresses: addresses))"
         activityLog.append(formatted)
         networkLogger.info("\(formatted, privacy: .public)")
     }
