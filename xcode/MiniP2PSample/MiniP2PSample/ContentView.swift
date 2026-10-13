@@ -509,31 +509,23 @@ struct ContentView: View {
         NavigationStack {
             GeometryReader { proxy in
                 VStack(spacing: 16) {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                            headerCard
-                            actionBar
+                    stickyHeader
 
-                            if let lastError = service.lastError {
-                                statusBanner(title: "Last error", message: lastError, tint: .red)
-                            }
-
-                            sectionCard(title: "Network activity", subtitle: "Recent network lifecycle events") {
-                                if service.activityLog.isEmpty {
-                                    emptyState("No activity yet")
-                                } else {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        ForEach(service.activityLog.indices, id: \.self) { index in
-                                            logRow(service.activityLog[index])
-                                        }
+                    sectionCard(title: "Network activity", subtitle: "Recent network lifecycle events") {
+                        ScrollView {
+                            if service.activityLog.isEmpty {
+                                emptyState("No activity yet")
+                            } else {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(service.activityLog.indices, id: \.self) { index in
+                                        logRow(service.activityLog[index])
                                     }
                                 }
                             }
                         }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .frame(maxHeight: .infinity, alignment: .topLeading)
                     }
-                    .frame(maxHeight: .infinity)
+                    .frame(maxHeight: .infinity, alignment: .topLeading)
 
                     sectionCard(title: "Listening addresses", subtitle: "Encapsulated multiaddrs for this node") {
                         if service.listenAddresses.isEmpty {
@@ -567,6 +559,17 @@ struct ContentView: View {
         }
         .onDisappear {
             service.stop()
+        }
+    }
+
+    private var stickyHeader: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            headerCard
+            actionBar
+
+            if let lastError = service.lastError {
+                statusBanner(title: "Last error", message: lastError, tint: .red)
+            }
         }
     }
 
