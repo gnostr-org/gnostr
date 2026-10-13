@@ -35,9 +35,4 @@ export GIT_CONFIG_COUNT=1
 export GIT_CONFIG_KEY_0=safe.bareRepository
 export GIT_CONFIG_VALUE_0=all
 
-scratch_root="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gnostr-swift-build"
-scratch_path="${scratch_root}/${package_name}"
-rm -rf "${scratch_path}"
-mkdir -p "${scratch_path}"
-
-exec swift build --package-path "${project_root}/${package_name}" --scratch-path "${scratch_path}" "$@"
+exec swift build --package-path "${project_root}/${package_name}" "$@"
