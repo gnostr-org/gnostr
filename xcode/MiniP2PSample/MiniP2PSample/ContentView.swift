@@ -8,6 +8,11 @@
 import Foundation
 import CryptoKit
 import LibP2P
+import LibP2PKadDHT
+import LibP2PMDNS
+import LibP2PNoise
+import LibP2PPubSub
+import LibP2PYAMUX
 import os
 import SwiftUI
 #if os(iOS)
@@ -16,6 +21,8 @@ import UIKit
 
 @MainActor
 final class P2PService: ObservableObject {
+    private static let gossipTopic = "gnostr-dev"
+
     private enum RuntimeProfile: String {
         case macOS
         case macCatalyst
@@ -39,7 +46,11 @@ final class P2PService: ObservableObject {
     private var app: Application?
     private var runTask: Task<Void, Never>?
     private var diagnosticsTask: Task<Void, Never>?
+    private var gossipTask: Task<Void, Never>?
+    private var pingTask: Task<Void, Never>?
     private var startedAt: Date?
+    private var gossipSubscription: PubSub.SubscriptionHandler?
+    private var discoveredPeersByID: [String: PeerInfo] = [:]
 
     let peerID: PeerID
     private let networkLogger = Logger(subsystem: "MiniP2PSample", category: "network")
@@ -86,8 +97,12 @@ final class P2PService: ObservableObject {
         let app = Self.makeApplication(peerID: peerID)
         self.app = app
         log("Configured libp2p logger at trace level")
+        configureNetworking(app)
+        subscribeToGossip(app)
         logNetworkSnapshot(app: app, reason: "startup")
         startDiagnosticsLoop(for: app)
+        startGossipHeartbeatLoop(for: app)
+        startPingLoop(for: app)
 
         app.eventLoopGroup.next().scheduleTask(in: .milliseconds(100)) { [weak self, weak app] in
             guard let self, let app else { return }
@@ -122,9 +137,16 @@ final class P2PService: ObservableObject {
                 self?.log("libp2p application returned")
                 self?.diagnosticsTask?.cancel()
                 self?.diagnosticsTask = nil
+                self?.gossipTask?.cancel()
+                self?.gossipTask = nil
+                self?.pingTask?.cancel()
+                self?.pingTask = nil
+                self?.gossipSubscription?.unsubscribe()
+                self?.gossipSubscription = nil
                 self?.state = .stopped
                 self?.runTask = nil
                 self?.app = nil
+                self?.discoveredPeersByID.removeAll()
                 self?.startedAt = nil
                 self?.log("Node stopped")
             }
@@ -139,6 +161,12 @@ final class P2PService: ObservableObject {
         logNetworkSnapshot(app: app, reason: "stopping")
         diagnosticsTask?.cancel()
         diagnosticsTask = nil
+        gossipTask?.cancel()
+        gossipTask = nil
+        pingTask?.cancel()
+        pingTask = nil
+        gossipSubscription?.unsubscribe()
+        gossipSubscription = nil
         self.app = nil
         self.runTask = nil
 
@@ -157,6 +185,7 @@ final class P2PService: ObservableObject {
                 self?.state = .stopped
                 self?.runTask = nil
                 self?.app = nil
+                self?.discoveredPeersByID.removeAll()
                 self?.startedAt = nil
                 self?.log("Node stopped")
             }
@@ -173,8 +202,141 @@ final class P2PService: ObservableObject {
     private static func makeApplication(peerID: PeerID) -> Application {
         let app = Application(.testing, peerID: peerID)
         app.logger.logLevel = .trace
+        app.discovery.use(.mdns)
+        app.discovery.use(.kadDHT)
+        app.pubsub.use(.gossipsub(emitSelf: true))
         app.listen(.tcp(host: "0.0.0.0", port: Self.listenPort))
         return app
+    }
+
+    private func configureNetworking(_ app: Application) {
+        app.discovery.onPeerDiscovered(app) { [weak self] peer in
+            DispatchQueue.main.async {
+                self?.recordDiscoveredPeer(peer)
+                self?.dialDiscoveredPeer(peer)
+            }
+        }
+    }
+
+    private func subscribeToGossip(_ app: Application) {
+        do {
+            let subscription = try app.pubsub.gossipsub.subscribe(
+                .init(
+                    topic: Self.gossipTopic,
+                    signaturePolicy: .strictSign,
+                    validator: .acceptAll,
+                    messageIDFunc: .concatFromAndSequenceFields
+                )
+            )
+
+            subscription.on = { [weak self] event in
+                switch event {
+                case .newPeer(let peer):
+                    Task { @MainActor in
+                        self?.log("Gossip peer for \(Self.gossipTopic): \(peer.b58String)")
+                    }
+                case .data(let message):
+                    let text = String(data: message.data, encoding: .utf8) ?? "non-utf8 payload"
+                    let author = message.from.asString(base: .base58btc)
+                    Task { @MainActor in
+                        self?.log("Gossip on \(Self.gossipTopic) from \(author): \(text)")
+                    }
+                case .error(let error):
+                    Task { @MainActor in
+                        self?.lastError = error.localizedDescription
+                        self?.log("Gossip error: \(error.localizedDescription)")
+                    }
+                }
+                return app.eventLoopGroup.next().makeSucceededVoidFuture()
+            }
+
+            gossipSubscription = subscription
+            log("Subscribed to gossip topic \(Self.gossipTopic)")
+        } catch {
+            lastError = error.localizedDescription
+            log("Failed to subscribe to gossip topic \(Self.gossipTopic): \(error.localizedDescription)")
+        }
+    }
+
+    private func startGossipHeartbeatLoop(for app: Application) {
+        gossipTask?.cancel()
+        gossipTask = Task.detached(priority: .background) { [weak self] in
+            var counter = 0
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { break }
+                counter += 1
+                let payload = "gnostr-dev heartbeat #\(counter) from \(app.peerID.b58String)"
+                let result = app.pubsub.gossipsub.publish(
+                    topic: Self.gossipTopic,
+                    bytes: payload.data(using: .utf8)!.byteArray,
+                    on: app.eventLoopGroup.next()
+                )
+                await MainActor.run {
+                    self?.log("Published gossip heartbeat #\(counter) to \(Self.gossipTopic)")
+                }
+                _ = result
+            }
+        }
+    }
+
+    private func startPingLoop(for app: Application) {
+        pingTask?.cancel()
+        pingTask = Task.detached(priority: .background) { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { break }
+                await MainActor.run {
+                    self?.pingKnownPeers(using: app)
+                }
+            }
+        }
+    }
+
+    private func pingKnownPeers(using app: Application) {
+        guard let identify = app.identify as? Identify else {
+            return
+        }
+
+        guard !discoveredPeersByID.isEmpty else {
+            return
+        }
+
+        for peerInfo in discoveredPeersByID.values where peerInfo.peer.b58String != peerIDString {
+            let peer = peerInfo.peer
+            let pingFuture = identify.ping(peer: peer)
+            pingFuture.whenSuccess { [weak self] duration in
+                Task { @MainActor in
+                    self?.log("Ping \(peer.b58String.prefix(12))… = \(duration)")
+                }
+            }
+            pingFuture.whenFailure { [weak self] error in
+                Task { @MainActor in
+                    self?.log("Ping failed for \(peer.b58String.prefix(12))…: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func recordDiscoveredPeer(_ peer: PeerInfo) {
+        let peerID = peer.peer.b58String
+        guard discoveredPeersByID[peerID] == nil else { return }
+        discoveredPeersByID[peerID] = peer
+        let addresses = peer.addresses.map(\.description).joined(separator: ", ")
+        log("Discovered peer \(peerID)")
+        if !addresses.isEmpty {
+            log("Peer addresses: \(addresses)")
+        }
+    }
+
+    private func dialDiscoveredPeer(_ peer: PeerInfo) {
+        guard peer.peer.b58String != peerIDString else { return }
+        do {
+            try app?.newStream(to: peer, forProtocol: "/ipfs/id/1.0.0")
+            log("Dialed discovered peer \(peer.peer.b58String)")
+        } catch {
+            log("Failed to dial peer \(peer.peer.b58String): \(error.localizedDescription)")
+        }
     }
 
     private func startDiagnosticsLoop(for app: Application) {

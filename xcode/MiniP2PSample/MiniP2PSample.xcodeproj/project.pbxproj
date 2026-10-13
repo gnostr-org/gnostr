@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		4B6C6EB82FBE6B34008C157D /* LibP2P in Frameworks */ = {isa = PBXBuildFile; productRef = 4BA7DCC72FBE429400B507EE /* LibP2P */; };
+		A10000000000000000000002 /* LibP2PNoise in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000002 /* LibP2PNoise */; };
+		A10000000000000000000003 /* LibP2PYAMUX in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000003 /* LibP2PYAMUX */; };
+		A10000000000000000000004 /* LibP2PDCUtR in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000004 /* LibP2PDCUtR */; };
+		A10000000000000000000005 /* LibP2PMDNS in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000005 /* LibP2PMDNS */; };
+		A10000000000000000000006 /* LibP2PKadDHT in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000006 /* LibP2PKadDHT */; };
+		A10000000000000000000007 /* LibP2PPubSub in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000007 /* LibP2PPubSub */; };
 		B701035627CD0B6900D43034 /* MiniP2PSampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B701035527CD0B6900D43034 /* MiniP2PSampleApp.swift */; };
 		B701035827CD0B6900D43034 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B701035727CD0B6900D43034 /* ContentView.swift */; };
 		B701035A27CD0B6B00D43034 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B701035927CD0B6B00D43034 /* Assets.xcassets */; };
@@ -30,6 +36,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B6C6EB82FBE6B34008C157D /* LibP2P in Frameworks */,
+				A10000000000000000000002 /* LibP2PNoise in Frameworks */,
+				A10000000000000000000003 /* LibP2PYAMUX in Frameworks */,
+				A10000000000000000000004 /* LibP2PDCUtR in Frameworks */,
+				A10000000000000000000005 /* LibP2PMDNS in Frameworks */,
+				A10000000000000000000006 /* LibP2PKadDHT in Frameworks */,
+				A10000000000000000000007 /* LibP2PPubSub in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -123,6 +135,12 @@
 			mainGroup = B701034927CD0B6900D43034;
 			packageReferences = (
 				4BADD9422FBE6FD500CA0051 /* XCLocalSwiftPackageReference "../swift-libp2p" */,
+				A30000000000000000000002 /* XCLocalSwiftPackageReference "../swift-libp2p-noise" */,
+				A30000000000000000000003 /* XCLocalSwiftPackageReference "../swift-libp2p-yamux" */,
+				A30000000000000000000004 /* XCLocalSwiftPackageReference "../swift-libp2p-dcutr" */,
+				A30000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-mdns" */,
+				A30000000000000000000006 /* XCLocalSwiftPackageReference "../swift-libp2p-kad-dht" */,
+				A30000000000000000000007 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */,
 			);
 			productRefGroup = B701035327CD0B6900D43034 /* Products */;
 			projectDirPath = "";
@@ -372,6 +390,30 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p";
 		};
+		A30000000000000000000002 /* XCLocalSwiftPackageReference "../swift-libp2p-noise" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-noise";
+		};
+		A30000000000000000000003 /* XCLocalSwiftPackageReference "../swift-libp2p-yamux" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-yamux";
+		};
+		A30000000000000000000004 /* XCLocalSwiftPackageReference "../swift-libp2p-dcutr" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-dcutr";
+		};
+		A30000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-mdns" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-mdns";
+		};
+		A30000000000000000000006 /* XCLocalSwiftPackageReference "../swift-libp2p-kad-dht" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-kad-dht";
+		};
+		A30000000000000000000007 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-libp2p-pubsub";
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -379,6 +421,36 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4BADD9422FBE6FD500CA0051 /* XCLocalSwiftPackageReference "../swift-libp2p" */;
 			productName = LibP2P;
+		};
+		A40000000000000000000002 /* LibP2PNoise */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000002 /* XCLocalSwiftPackageReference "../swift-libp2p-noise" */;
+			productName = LibP2PNoise;
+		};
+		A40000000000000000000003 /* LibP2PYAMUX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000003 /* XCLocalSwiftPackageReference "../swift-libp2p-yamux" */;
+			productName = LibP2PYAMUX;
+		};
+		A40000000000000000000004 /* LibP2PDCUtR */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000004 /* XCLocalSwiftPackageReference "../swift-libp2p-dcutr" */;
+			productName = LibP2PDCUtR;
+		};
+		A40000000000000000000005 /* LibP2PMDNS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000005 /* XCLocalSwiftPackageReference "../swift-libp2p-mdns" */;
+			productName = LibP2PMDNS;
+		};
+		A40000000000000000000006 /* LibP2PKadDHT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000006 /* XCLocalSwiftPackageReference "../swift-libp2p-kad-dht" */;
+			productName = LibP2PKadDHT;
+		};
+		A40000000000000000000007 /* LibP2PPubSub */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000007 /* XCLocalSwiftPackageReference "../swift-libp2p-pubsub" */;
+			productName = LibP2PPubSub;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
