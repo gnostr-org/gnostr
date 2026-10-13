@@ -279,69 +279,217 @@ struct ContentView: View {
     @StateObject private var service = P2PService()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("MiniP2PSample").font(.largeTitle.bold())
-            Text("Runtime profile: \(service.runtimeProfile)")
-            Text("Peer ID: \(service.peerIDString)")
-                .font(.caption.monospaced())
-                .textSelection(.enabled)
-            Text("Listen port: \(service.listenPort)")
-            Text("State: \(service.stateLabel)")
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    headerCard
+                    actionBar
 
-            HStack {
-                Button("Start node") {
-                    service.start()
+                    if let lastError = service.lastError {
+                        statusBanner(title: "Last error", message: lastError, tint: .red)
+                    }
+
+                    sectionCard(title: "Network activity", subtitle: "Recent network lifecycle events") {
+                        if service.activityLog.isEmpty {
+                            emptyState("No activity yet")
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(service.activityLog.indices, id: \.self) { index in
+                                    logRow(service.activityLog[index])
+                                }
+                            }
+                        }
+                    }
+
+                    sectionCard(title: "Listening addresses", subtitle: "Encapsulated multiaddrs for this node") {
+                        if service.listenAddresses.isEmpty {
+                            emptyState("No addresses yet")
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(service.listenAddresses, id: \.self) { address in
+                                    addressRow(address)
+                                }
+                            }
+                        }
+                    }
                 }
-                Button("Stop node") {
-                    service.stop()
-                }
-                .disabled(!service.isRunning)
+                .padding(16)
             }
-
-            if let lastError = service.lastError {
-                Text("Last error: \(lastError)")
-                    .foregroundStyle(.red)
-            }
-
-            HStack {
-                Text("Network activity").font(.headline)
-                Spacer()
-                Button("Clear") {
-                    service.clearActivityLog()
+            .navigationTitle("MiniP2PSample")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Clear Log") {
+                        service.clearActivityLog()
+                    }
+                    .disabled(service.activityLog.isEmpty)
                 }
-            }
-
-            if service.activityLog.isEmpty {
-                Text("No activity yet")
-                    .foregroundStyle(.secondary)
-            } else {
-                List(service.activityLog.indices, id: \.self) { index in
-                    Text(service.activityLog[index])
-                        .font(.caption.monospaced())
-                }
-                .frame(minHeight: 180)
-            }
-
-            Divider()
-
-            Text("Listening addresses").font(.headline)
-            if service.listenAddresses.isEmpty {
-                Text("No addresses yet")
-                    .foregroundStyle(.secondary)
-            } else {
-                List(service.listenAddresses, id: \.self) { address in
-                    Text(address)
-                        .font(.caption.monospaced())
-                }
-                .frame(minHeight: 160)
             }
         }
-        .padding()
         .onAppear {
             service.start()
         }
         .onDisappear {
             service.stop()
+        }
+    }
+
+    private var headerCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("MiniP2PSample")
+                        .font(.largeTitle.bold())
+                    Text("Deterministic libp2p node for SwiftUI")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 12)
+
+                statusBadge
+            }
+
+            LazyVGrid(columns: [
+                GridItem(.adaptive(minimum: 160), spacing: 12, alignment: .leading)
+            ], alignment: .leading, spacing: 12) {
+                statChip(title: "Runtime", value: service.runtimeProfile)
+                statChip(title: "Listen port", value: "\(service.listenPort)")
+                statChip(title: "State", value: service.stateLabel)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Peer ID")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text(service.peerIDString)
+                    .font(.caption.monospaced())
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(12)
+            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .padding(16)
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var actionBar: some View {
+        HStack(spacing: 12) {
+            Button("Start node") {
+                service.start()
+            }
+            .buttonStyle(.borderedProminent)
+
+            Button("Stop node") {
+                service.stop()
+            }
+            .buttonStyle(.bordered)
+            .disabled(!service.isRunning)
+
+            Spacer(minLength: 12)
+
+            Button("Restart") {
+                service.restart()
+            }
+            .buttonStyle(.bordered)
+            .disabled(service.state == .stopped)
+        }
+        .padding(16)
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func sectionCard<Content: View>(
+        title: String,
+        subtitle: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.headline)
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            content()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func statChip(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.headline)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var statusBadge: some View {
+        let tint = statusTint
+        return Text(service.stateLabel)
+            .font(.caption.weight(.semibold))
+            .textCase(.uppercase)
+            .foregroundStyle(tint)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(tint.opacity(0.14), in: Capsule())
+    }
+
+    private func statusBanner(title: String, message: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(tint)
+            Text(message)
+                .font(.subheadline)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func emptyState(_ message: String) -> some View {
+        Text(message)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func logRow(_ message: String) -> some View {
+        Text(message)
+            .font(.caption.monospaced())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func addressRow(_ address: String) -> some View {
+        Text(address)
+            .font(.caption.monospaced())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private var statusTint: Color {
+        switch service.state {
+        case .running:
+            return .green
+        case .starting, .stopping:
+            return .orange
+        case .stopped:
+            return .secondary
         }
     }
 }
