@@ -211,7 +211,7 @@ final class P2PService: ObservableObject {
         app.logger.logLevel = .trace
         app.discovery.use(.mdns)
         app.discovery.use(.kadDHT)
-        app.pubsub.use(.gossipsub(emitSelf: true))
+        app.pubsub.use(.gossipsub(emitSelf: false))
         app.listen(.tcp(host: "0.0.0.0", port: Self.listenPort))
         return app
     }
@@ -240,6 +240,7 @@ final class P2PService: ObservableObject {
                 switch event {
                 case .newPeer(let peer):
                     Task { @MainActor in
+                        guard peer.b58String != self?.peerIDString else { return }
                         self?.gossipPeersByID.insert(peer.b58String)
                         self?.log("Gossip peer for \(Self.gossipTopic): \(peer.b58String)")
                     }
@@ -247,6 +248,7 @@ final class P2PService: ObservableObject {
                     let text = String(data: message.data, encoding: .utf8) ?? "non-utf8 payload"
                     let author = message.from.asString(base: .base58btc)
                     Task { @MainActor in
+                        guard author != self?.peerIDString else { return }
                         self?.log("Gossip on \(Self.gossipTopic) from \(author): \(text)")
                     }
                 case .error(let error):
