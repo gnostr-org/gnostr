@@ -3,6 +3,8 @@ use rust_libp2p_webrtc_peer::prelude::*;
 use anyhow::Result;
 use clap::Parser;
 use libp2p::{identity, PeerId};
+use libp2p_webrtc::tokio::Certificate;
+use rand::{rngs::StdRng, SeedableRng};
 use std::path::{Path, PathBuf};
 use tokio::{fs, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
@@ -10,6 +12,8 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
     // parse the command line arguments
     let opt = Options::parse();
 
@@ -19,8 +23,9 @@ async fn main() -> Result<()> {
     // create a shutdown token
     let shutdown = CancellationToken::new();
 
-    // load the identity
+    // load the identity and certificate
     let local_key = read_or_create_identity(&opt.local_key_path).await?;
+    let webrtc_cert = read_or_create_certificate(&opt.local_cert_path).await?;
 
     // create the ui and the channels to communicate with it
     let (mut ui, to_ui, from_ui) = if opt.headless {
@@ -30,7 +35,7 @@ async fn main() -> Result<()> {
     };
 
     // create the peer, connecting it to the ui
-    let mut peer = Peer::new(local_key, to_ui, from_ui, shutdown.clone()).await?;
+    let mut peer = Peer::new(local_key, webrtc_cert, to_ui, from_ui, shutdown.clone()).await?;
 
     // spawn tasks for both the swarm and the ui
     let peer_task: JoinHandle<Result<()>> = tokio::spawn(async move { peer.run().await });
@@ -85,4 +90,25 @@ async fn read_or_create_identity(path: &Path) -> Result<identity::Keypair> {
     );
 
     Ok(identity)
+}
+
+async fn read_or_create_certificate(path: &Path) -> Result<Certificate> {
+    if path.exists() {
+        let pem = fs::read_to_string(path).await?;
+
+        info!("Using existing certificate from {}", path.display());
+
+        return Ok(Certificate::from_pem(&pem)?);
+    }
+
+    let mut rng = StdRng::seed_from_u64(0);
+    let cert = Certificate::generate(&mut rng)?;
+    fs::write(path, cert.serialize_pem().as_bytes()).await?;
+
+    info!(
+        "Generated new certificate and wrote it to {}",
+        path.display()
+    );
+
+    Ok(cert)
 }

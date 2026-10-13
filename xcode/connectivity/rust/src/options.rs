@@ -1,9 +1,11 @@
 use clap::Parser;
 use std::net::IpAddr;
 
+use crate::peer::GOSSIPSUB_CHAT_TOPIC;
+
 const LISTEN_ADDR: [&str; 1] = ["0.0.0.0"];
 const LOCAL_KEY_PATH: &str = "./local";
-const DEFAULT_TOPIC: &str = "universal-connectivity";
+const LOCAL_CERT_PATH: &str = "./cert.pem";
 /// The rust peer command line options
 #[derive(Debug, Parser)]
 #[clap(name = "universal connectivity rust peer")]
@@ -21,8 +23,12 @@ pub struct Options {
     pub connect: Vec<String>,
 
     /// The gossipsub chat topic to publish and subscribe to.
-    #[clap(long, env, default_value = DEFAULT_TOPIC)]
+    #[clap(long, env, default_value = GOSSIPSUB_CHAT_TOPIC)]
     pub topic: String,
+
+    /// If set, the path to the local certificate file.
+    #[clap(long, env, default_value = LOCAL_CERT_PATH)]
+    pub local_cert_path: std::path::PathBuf,
 
     /// If set, the path to the local key file.
     #[clap(long, env, default_value = LOCAL_KEY_PATH)]

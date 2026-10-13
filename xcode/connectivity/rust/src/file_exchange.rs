@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use futures::{io, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use libp2p::{request_response, StreamProtocol};
 
@@ -37,70 +36,81 @@ pub struct Response {
     pub file_body: Vec<u8>,
 }
 
-#[async_trait]
 impl request_response::Codec for Codec {
     type Protocol = StreamProtocol;
     type Request = Request;
     type Response = Response;
 
-    async fn read_request<T>(&mut self, _: &StreamProtocol, io: &mut T) -> io::Result<Self::Request>
-    where
-        T: AsyncRead + Unpin + Send,
-    {
-        let vec = read_length_prefixed(io, 1_000_000).await?;
-
-        if vec.is_empty() {
-            return Err(io::ErrorKind::UnexpectedEof.into());
-        }
-
-        Ok(Request {
-            file_id: String::from_utf8(vec).unwrap(),
-        })
-    }
-
-    async fn read_response<T>(
+    fn read_request<T>(
         &mut self,
         _: &StreamProtocol,
         io: &mut T,
-    ) -> io::Result<Self::Response>
+    ) -> impl std::future::Future<Output = io::Result<Self::Request>> + Send
     where
         T: AsyncRead + Unpin + Send,
     {
-        let vec = read_length_prefixed(io, 500_000_000).await?; // update transfer maximum
+        async move {
+            let vec = read_length_prefixed(io, 1_000_000).await?;
 
-        if vec.is_empty() {
-            return Err(io::ErrorKind::UnexpectedEof.into());
+            if vec.is_empty() {
+                return Err(io::ErrorKind::UnexpectedEof.into());
+            }
+
+            Ok(Request {
+                file_id: String::from_utf8(vec).unwrap(),
+            })
         }
-
-        Ok(Response { file_body: vec })
     }
 
-    async fn write_request<T>(
+    fn read_response<T>(
+        &mut self,
+        _: &StreamProtocol,
+        io: &mut T,
+    ) -> impl std::future::Future<Output = io::Result<Self::Response>> + Send
+    where
+        T: AsyncRead + Unpin + Send,
+    {
+        async move {
+            let vec = read_length_prefixed(io, 500_000_000).await?; // update transfer maximum
+
+            if vec.is_empty() {
+                return Err(io::ErrorKind::UnexpectedEof.into());
+            }
+
+            Ok(Response { file_body: vec })
+        }
+    }
+
+    fn write_request<T>(
         &mut self,
         _: &StreamProtocol,
         io: &mut T,
         Request { file_id }: Request,
-    ) -> io::Result<()>
+    ) -> impl std::future::Future<Output = io::Result<()>> + Send
     where
         T: AsyncWrite + Unpin + Send,
     {
-        write_length_prefixed(io, file_id).await?;
+        async move {
+            write_length_prefixed(io, file_id).await?;
 
-        Ok(())
+            Ok(())
+        }
     }
 
-    async fn write_response<T>(
+    fn write_response<T>(
         &mut self,
         _: &StreamProtocol,
         io: &mut T,
         Response { file_body }: Response,
-    ) -> io::Result<()>
+    ) -> impl std::future::Future<Output = io::Result<()>> + Send
     where
         T: AsyncWrite + Unpin + Send,
     {
-        write_length_prefixed(io, file_body).await?;
+        async move {
+            write_length_prefixed(io, file_body).await?;
 
-        Ok(())
+            Ok(())
+        }
     }
 }
 

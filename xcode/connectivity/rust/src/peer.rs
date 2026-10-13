@@ -37,11 +37,14 @@ use libp2p::{
     },
     swarm::{behaviour::toggle::Toggle, NetworkBehaviour, Swarm, SwarmEvent},
     tcp::Config as TcpConfig,
+    tls::Config as TlsConfig,
     yamux::Config as YamuxConfig,
     PeerId, StreamProtocol, SwarmBuilder,
 };
+use libp2p_webrtc as webrtc;
+use libp2p_webrtc::tokio::Certificate;
 use quick_protobuf::{BytesReader, MessageRead};
-use rand_core::OsRng;
+use rand::{rngs::StdRng, SeedableRng};
 use std::{
     collections::{hash_map::DefaultHasher, HashSet},
     fmt::{self, Write},
@@ -62,11 +65,12 @@ const FILE_EXCHANGE_PROTOCOL_NAME: StreamProtocol =
     StreamProtocol::new("/universal-connectivity-file/1");
 
 // Gossipsub Topics
-const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
+pub(crate) const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
 const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 const GOSSIPSUB_PEER_DISCOVERY: &str = "universal-connectivity-browser-peer-discovery";
 
 // Listen Ports
+const PORT_WEBRTC: u16 = 9090; // UDP
 const PORT_QUIC: u16 = 9091; // UDP
 const PORT_TCP: u16 = 9092; // TCP
 
@@ -99,7 +103,6 @@ struct Behaviour {
 // to make it maximally compatible will all other universal connectivity peers
 //
 // This swarm supports:
-// - WebRTC + TLS on port 9090
 // - QUIC + Noise on UDP port 9091
 // - QUIC + TLS on UDP port 9091
 // - TCP + Noise on TCP port 9092
@@ -113,6 +116,8 @@ pub struct Peer {
     external_addresses: HashSet<Multiaddr>,
     /// The multiaddrs to dial, given on command line
     to_dial: Vec<String>,
+    /// The gossipsub chat topic name.
+    chat_topic_name: String,
     /// The sender to the ui
     to_ui: Sender<Message>,
     /// The receiver from the ui
@@ -135,6 +140,7 @@ impl Peer {
     /// Create a new Peer instance by initializing the swarm and peer state
     pub async fn new(
         keypair: identity::Keypair,
+        tls_cert: Certificate,
         to_ui: Sender<Message>,
         from_ui: Receiver<Message>,
         shutdown: CancellationToken,
@@ -149,6 +155,12 @@ impl Peer {
 
         let mut listen_addresses = HashSet::new();
         for addr in opt.listen_addresses.iter() {
+            // add the WebRTC address
+            listen_addresses.insert(
+                ipaddr_to_multiaddr(addr)
+                    .with(Protocol::Udp(PORT_WEBRTC))
+                    .with(Protocol::WebRTCDirect),
+            );
             // add the QUIC address
             listen_addresses.insert(
                 ipaddr_to_multiaddr(addr)
@@ -166,7 +178,8 @@ impl Peer {
 
         // keep them as Strings because they can be PeerId's or Multiaddr's
         let to_dial = opt.connect;
-        let chat_topic = opt.topic;
+        let chat_topic_name = opt.topic;
+        let webrtc_cert = tls_cert.clone();
 
         // initialize the swarm
         let swarm = {
@@ -176,7 +189,7 @@ impl Peer {
             // Initialize the autonat client behaviour
             let autonat_client = if opt.autonat_client {
                 let cfg = AutonatClientConfig::default();
-                Some(AutonatClient::new(OsRng, cfg))
+                Some(AutonatClient::new(StdRng::seed_from_u64(0), cfg))
             } else {
                 None
             }
@@ -184,7 +197,7 @@ impl Peer {
 
             // Initialize the autonat server behaviour
             let autonat_server = if opt.autonat_server {
-                Some(AutonatServer::new(OsRng))
+                Some(AutonatServer::new(StdRng::seed_from_u64(1)))
             } else {
                 None
             }
@@ -307,15 +320,21 @@ impl Peer {
                 .with_tokio()
                 .with_tcp(
                     TcpConfig::new().nodelay(true),
-                    NoiseConfig::new,
+                    (TlsConfig::new, NoiseConfig::new),
                     YamuxConfig::default,
                 )?
                 .with_quic()
+                .with_other_transport(|id_keys| {
+                    Ok(webrtc::tokio::Transport::new(
+                        id_keys.clone(),
+                        webrtc_cert.clone(),
+                    ))
+                })?
                 .with_dns()?;
 
             // if we are to be a relay client, add the relay client behaviour
             if opt.relay_client {
-                sb.with_relay_client(NoiseConfig::new, YamuxConfig::default)?
+                sb.with_relay_client((TlsConfig::new, NoiseConfig::new), YamuxConfig::default)?
                     .with_behaviour(|_key, relay_client| {
                         behaviour.relay_client = Some(relay_client).into();
                         behaviour
@@ -330,6 +349,7 @@ impl Peer {
             listen_addresses,
             external_addresses,
             to_dial,
+            chat_topic_name,
             to_ui,
             from_ui,
             shutdown,
@@ -433,7 +453,7 @@ impl Peer {
         }
 
         // Initialize the gossipsub topics, the hashes are the same as the topic names
-        let chat_topic = GossipsubIdentTopic::new(chat_topic.clone());
+        let chat_topic = GossipsubIdentTopic::new(self.chat_topic_name.clone());
         let file_topic = GossipsubIdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC);
         let peer_discovery = GossipsubIdentTopic::new(GOSSIPSUB_PEER_DISCOVERY);
 
@@ -494,12 +514,8 @@ impl Peer {
                     info!("Unsubscribing from topics");
                     // Subscribe to the gossipsub topics
                     for topic in &[chat_topic, file_topic, peer_discovery] {
-                        match self.swarm.behaviour_mut().gossipsub.unsubscribe(topic) {
-                            Ok(true) => {}
-                            Ok(false) => debug!("Failed to unsubscribe from topic {topic}"),
-                            Err(error) => {
-                                debug!("Failed to unsubscribe from topic {topic}: {error}")
-                            }
+                        if !self.swarm.behaviour_mut().gossipsub.unsubscribe(topic) {
+                            debug!("Failed to unsubscribe from topic {topic}");
                         }
                     }
 
@@ -581,7 +597,10 @@ impl Peer {
                     SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(event)) => match event {
                         GossipsubEvent::Message { .. } => {
                             let msg =
-                                UniversalConnectivityMessage::try_from_event(event, chat_topic.as_str())?;
+                                UniversalConnectivityMessage::try_from_event(
+                                    event,
+                                    self.chat_topic_name.as_str(),
+                                )?;
                             self.msg(format!("{msg}")).await?;
                             match msg {
                                 UniversalConnectivityMessage::Chat { from, data, ..} => {
@@ -625,18 +644,21 @@ impl Peer {
                         }
                         GossipsubEvent::Subscribed { peer_id, topic } => {
                             debug!("{peer_id} subscribed to {topic}");
-                            if topic.as_str() == chat_topic.as_str() {
+                            if topic.as_str() == chat_topic.hash().as_str() {
                                 self.to_ui.send(Message::AddPeer(peer_id.into())).await?;
                             }
                         }
                         GossipsubEvent::Unsubscribed { peer_id, topic } => {
                             debug!("{peer_id} unsubscribed from {topic}");
-                            if topic.as_str() == chat_topic.as_str() {
+                            if topic.as_str() == chat_topic.hash().as_str() {
                                 self.to_ui.send(Message::RemovePeer(peer_id.into())).await?;
                             }
                         }
                         GossipsubEvent::GossipsubNotSupported { peer_id } => {
                             warn!("{peer_id} does not support gossipsub");
+                        }
+                        GossipsubEvent::SlowPeer { peer_id, .. } => {
+                            warn!("{peer_id} is a slow peer");
                         }
                     }
 
