@@ -186,13 +186,7 @@ final class P2PService: ObservableObject {
                     let kind = decoded?.kind ?? "Raw"
                     Task { @MainActor in
                         guard let self else { return }
-                        if kind == "Heartbeat" {
-                            self.log("Peer heartbeat on \(topic) from \(author): \(text)")
-                        } else if kind == "Join" {
-                            self.log("Peer joined topic \(topic): \(text)")
-                        } else {
-                            self.log("Chat message on \(topic) from \(author)")
-                        }
+                        self.log("Received \(kind) on \(topic) from \(author): \(text)")
                         self.chatMessages.insert(
                             ChatEntry(
                                 topic: topic,
