@@ -18,7 +18,7 @@
 		B701035227CD0B6900D43034 /* MiniP2PSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MiniP2PSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B701035527CD0B6900D43034 /* MiniP2PSampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniP2PSampleApp.swift; sourceTree = "<group>"; };
 		B701035727CD0B6900D43034 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		B701035927CD0B6B00D43034 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B701035927CD0B6B00D43034 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = ../../icons/Assets.xcassets; sourceTree = "<group>"; };
 		B701035C27CD0B6B00D43034 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B701036327CD0C0000D43034 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		B701036427CD0C6800D43034 /* MiniP2PSample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MiniP2PSample.entitlements; sourceTree = "<group>"; };
@@ -70,7 +70,8 @@
 			children = (
 				B701035C27CD0B6B00D43034 /* Preview Assets.xcassets */,
 			);
-			path = "Preview Content";
+			name = "Preview Content";
+			path = "../../icons/Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -282,7 +283,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"MiniP2PSample/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"../icons/Preview Content\"";
 				DEVELOPMENT_TEAM = M684FYCYG6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -316,7 +317,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"MiniP2PSample/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"../icons/Preview Content\"";
 				DEVELOPMENT_TEAM = M684FYCYG6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -365,7 +366,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		4BADD9422FBE6FD500CA0051 /* XCLocalSwiftPackageReference "../LibP2P-iOS" */ = {
+		4BADD9422FBE6FD500CA0051 /* XCLocalSwiftPackageReference "../swift-libp2p" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../swift-libp2p";
 		};
@@ -374,7 +375,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		4BA7DCC72FBE429400B507EE /* LibP2P */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 4BADD9422FBE6FD500CA0051 /* XCLocalSwiftPackageReference "../LibP2P-iOS" */;
+			package = 4BADD9422FBE6FD500CA0051 /* XCLocalSwiftPackageReference "../swift-libp2p" */;
 			productName = LibP2P;
 		};
 /* End XCSwiftPackageProductDependency section */
