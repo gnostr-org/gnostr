@@ -310,6 +310,11 @@ final class P2PService: ObservableObject {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard !Task.isCancelled else { break }
+                let hasPeerToTalkTo = await MainActor.run { [weak self] in
+                    guard let self else { return false }
+                    return !self.gossipPeersByID.isEmpty
+                }
+                guard hasPeerToTalkTo else { continue }
                 counter += 1
                 let payload = "gnostr-dev heartbeat #\(counter) from \(app.peerID.b58String)"
                 let result = app.pubsub.gossipsub.publish(
