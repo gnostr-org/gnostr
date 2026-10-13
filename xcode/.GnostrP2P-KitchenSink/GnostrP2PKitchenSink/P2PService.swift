@@ -108,7 +108,7 @@ final class P2PService: ObservableObject {
 
     init() {
         peerID = Self.makePeerID()
-        chatDisplayName = "ios-\(peerID.b58String.prefix(8))"
+        chatDisplayName = "\(Self.platformLabel)-\(peerID.b58String.prefix(8))"
     }
 
     var runtimeProfile: String {
@@ -280,6 +280,40 @@ final class P2PService: ObservableObject {
         chatSubscription?.publish(data)
         chatDraftMessage = ""
         log("Sent chat message on \(topic)")
+    }
+
+    func sendRawMessage(_ text: String) {
+        guard app != nil else {
+            log("Raw send requires the node to be running")
+            return
+        }
+
+        let topic = chatTopic.trimmingCharacters(in: .whitespacesAndNewlines)
+        let message = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !topic.isEmpty else {
+            lastError = "Chat topic cannot be empty"
+            log("Chat topic cannot be empty")
+            return
+        }
+
+        guard !message.isEmpty else {
+            return
+        }
+
+        if chatSubscribedTopic != topic || chatSubscription == nil {
+            joinChatTopic()
+        }
+
+        guard chatSubscribedTopic == topic else { return }
+        guard let data = message.data(using: .utf8) else {
+            lastError = "Failed to encode raw message"
+            log("Failed to encode raw message for topic \(topic)")
+            return
+        }
+
+        chatSubscription?.publish(data)
+        log("Sent raw message on \(topic)")
     }
 
     func start() {
@@ -600,8 +634,23 @@ final class P2PService: ObservableObject {
         }
     }
 
+    private static var platformLabel: String {
+        switch runtimeProfile {
+            case .macOS:
+                return "macos"
+            case .macCatalyst:
+                return "maccatalyst"
+            case .iPad:
+                return "ipad"
+            case .iPhone:
+                return "ios"
+            case .madeForiPad:
+                return "ios"
+        }
+    }
+
     private static func makePeerID() -> PeerID {
-        let seed = Data(SHA256.hash(data: Data(instanceSeed().utf8)))
+        let seed = Data(SHA256.hash(data: Data("\(platformLabel)\(instanceSeed())".utf8)))
         let privateKey = try! Curve25519.Signing.PrivateKey(rawRepresentation: seed)
         return try! PeerID(marshaledPrivateKey: privateKey.marshal())
     }
