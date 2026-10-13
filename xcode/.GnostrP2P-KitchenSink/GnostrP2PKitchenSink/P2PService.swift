@@ -171,6 +171,20 @@ final class P2PService: ObservableObject {
                         self.gossipPeerIDs.insert(peer.b58String)
                         self.log("Peer joined gossip topic \(topic): \(peer.b58String)")
 
+                        let peerAddresses = self.discoveredPeers.first { $0.peerID == peer.b58String }?.addresses.joined(separator: ", ") ?? "unknown"
+                        self.chatMessages.insert(
+                            ChatEntry(
+                                topic: topic,
+                                kind: "Peer",
+                                author: peer.b58String,
+                                text: "Peer \(peer.b58String) joined topic \(topic) @ \(peerAddresses)",
+                                isLocal: false,
+                                timestamp: Date()
+                            ),
+                            at: 0
+                        )
+                        self.chatMessages = Array(self.chatMessages.prefix(200))
+
                         let recentlyAnnounced = self.lastJoinAnnouncement.map { Date().timeIntervalSince($0) < 5.0 } ?? false
                         if !hadPeersBefore || !recentlyAnnounced {
                             let addressList = self.listenAddresses.isEmpty ? "no known listen addresses yet" : self.listenAddresses.joined(separator: ", ")
@@ -448,9 +462,24 @@ final class P2PService: ObservableObject {
         }
 
         let peerID = peer.b58String
+        guard peerID != self.peerID.b58String else { return }
         dialedPeerIDs.remove(peerID)
         let wasTopicPeer = gossipPeerIDs.remove(peerID) != nil
         log(wasTopicPeer ? "Peer left gossip topic \(chatTopic): \(peerID)" : "Peer disconnected: \(peerID)")
+        if wasTopicPeer {
+            chatMessages.insert(
+                ChatEntry(
+                    topic: chatTopic,
+                    kind: "Peer",
+                    author: peerID,
+                    text: "Peer \(peerID) left topic \(chatTopic)",
+                    isLocal: false,
+                    timestamp: Date()
+                ),
+                at: 0
+            )
+            chatMessages = Array(chatMessages.prefix(200))
+        }
     }
 
     private func startHeartbeatLoop(topic: String, app: Application) {
