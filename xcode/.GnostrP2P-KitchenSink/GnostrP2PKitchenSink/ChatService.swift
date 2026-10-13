@@ -24,7 +24,7 @@ final class ChatService: ObservableObject {
     private var pendingTopicJoins: [String] = []
     private var heartbeatTask: Task<Void, Never>?
 
-    private let defaultTopic = "gnostr-dev"
+    private let defaultTopic = "universal-connectivity"
 
     private func log(_ message: String) {
         let formatter = Self.timestampFormatter

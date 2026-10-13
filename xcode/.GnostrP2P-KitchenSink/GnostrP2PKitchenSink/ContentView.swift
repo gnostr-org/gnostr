@@ -394,6 +394,7 @@ struct ContentView: View {
                             Text(line)
                                 .font(.caption.monospaced())
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                .textSelection(.enabled)
                         }
 
                         Divider()
@@ -404,6 +405,7 @@ struct ContentView: View {
                             Text(entry)
                                 .font(.caption.monospaced())
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                .textSelection(.enabled)
                         }
                     }
                 }

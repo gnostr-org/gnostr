@@ -118,14 +118,17 @@ struct NetworkInfoView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Message types")
                             .font(.title3.weight(.semibold))
-                        FlowLayout(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 4) {
                             ForEach(ChatEnvelopeKind.allCases, id: \.self) { kind in
-                                Text(kind.rawValue)
-                                    .font(.caption.bold())
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentColor.opacity(0.15))
-                                    .clipShape(Capsule())
+                                HStack {
+                                    Text(kind.rawValue)
+                                        .font(.caption.bold())
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.accentColor.opacity(0.15))
+                                        .clipShape(Capsule())
+                                    Spacer()
+                                }
                             }
                         }
                     }
@@ -143,6 +146,7 @@ struct NetworkInfoView: View {
                             Text(line)
                                 .font(.caption.monospaced())
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                .textSelection(.enabled)
                         }
                     }
                 }
@@ -448,6 +452,7 @@ struct MessageBubbleView: View {
                     )
                     .foregroundStyle(.primary)
             }
+            .textSelection(.enabled)
 
             if !message.isLocal { Spacer(minLength: 32) }
         }
@@ -573,50 +578,5 @@ struct ComposerView: View {
         let text = service.composerText
         service.sendRawMessage(text)
         isFocused = true
-    }
-}
-
-// MARK: - Flow Layout helper
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
-                                      y: bounds.minY + result.positions[index].y),
-                          proposal: .unspecified)
-        }
-    }
-
-    private struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-                if x + size.width > maxWidth, x > 0 {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-                positions.append(CGPoint(x: x, y: y))
-                rowHeight = max(rowHeight, size.height)
-                x += size.width + spacing
-                self.size.width = max(self.size.width, x)
-            }
-            self.size.height = y + rowHeight
-        }
     }
 }
