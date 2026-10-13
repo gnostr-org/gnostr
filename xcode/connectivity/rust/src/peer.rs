@@ -1,7 +1,7 @@
 use crate::{
     decode_unknown_protobuf, ipaddr_to_multiaddr, is_private_ip, pretty_print_fields,
     proto::Peer as DiscoveredPeer, split_peer_id, ChatPeer, Codec as FileExchangeCodec, Message,
-    Options, Request as FileRequest,
+    Msg, MsgKind, Options, Request as FileRequest,
 };
 use clap::Parser;
 use futures::StreamExt;
@@ -24,6 +24,7 @@ use libp2p::{
         store::MemoryStore, AddProviderOk, Behaviour as Kademlia, Config as KademliaConfig,
         Event as KademliaEvent, GetClosestPeersOk, GetProvidersOk, QueryId, QueryResult, RecordKey,
     },
+    mdns,
     memory_connection_limits::Behaviour as MemoryConnectionLimits,
     multiaddr::{Multiaddr, Protocol},
     noise::Config as NoiseConfig,
@@ -65,7 +66,7 @@ const FILE_EXCHANGE_PROTOCOL_NAME: StreamProtocol =
     StreamProtocol::new("/universal-connectivity-file/1");
 
 // Gossipsub Topics
-pub(crate) const GOSSIPSUB_CHAT_TOPIC: &str = "universal-connectivity";
+pub(crate) const GOSSIPSUB_CHAT_TOPIC: &str = "gnostr-dev";
 const GOSSIPSUB_CHAT_FILE_TOPIC: &str = "universal-connectivity-file";
 const GOSSIPSUB_PEER_DISCOVERY: &str = "universal-connectivity-browser-peer-discovery";
 
@@ -73,15 +74,6 @@ const GOSSIPSUB_PEER_DISCOVERY: &str = "universal-connectivity-browser-peer-disc
 const PORT_WEBRTC: u16 = 9090; // UDP
 const PORT_QUIC: u16 = 9091; // UDP
 const PORT_TCP: u16 = 9092; // TCP
-
-// Kademlia bootstrap interval
-const KADEMLIA_BOOTSTRAP_INTERVAL: u64 = 300;
-const IPFS_BOOTSTRAP_NODES: [&str; 4] = [
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-    "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-];
 
 /// The Peer Behaviour
 #[derive(NetworkBehaviour)]
@@ -94,6 +86,7 @@ struct Behaviour {
     identify: Identify,
     kademlia: Toggle<Kademlia<MemoryStore>>,
     memory_connection_limits: MemoryConnectionLimits,
+    mdns: mdns::tokio::Behaviour,
     relay_client: Toggle<RelayClient>,
     relay_server: Toggle<RelayServer>,
     request_response: RequestResponse<FileExchangeCodec>,
@@ -126,8 +119,6 @@ pub struct Peer {
     shutdown: CancellationToken,
     /// The swarm itself
     swarm: Swarm<Behaviour>,
-    /// The query id for the kademlia bootstrap
-    bootstrap_query_id: Option<QueryId>,
     /// The query id for providing the universal connectivity agent string
     start_providing_query_id: Option<QueryId>,
     /// The query id for getting the providers of the universal connectivity agent string
@@ -221,6 +212,10 @@ impl Peer {
             }
             .into();
 
+            // Create the mDNS behaviour
+            let mdns = mdns::tokio::Behaviour::new(mdns::Config::default(), local_peer_id)
+                .expect("Valid mDNS config");
+
             // Create a gossipsub behaviour
             let gossipsub = {
                 // This closure creates a unique message id for each message by hashing its contents
@@ -264,9 +259,6 @@ impl Peer {
             let kademlia: Toggle<Kademlia<MemoryStore>> = if opt.kademlia {
                 let mut cfg = KademliaConfig::new(IPFS_KADEMLIA_PROTOCOL_NAME);
                 cfg.set_query_timeout(Duration::from_secs(60));
-                cfg.set_periodic_bootstrap_interval(Some(Duration::from_secs(
-                    KADEMLIA_BOOTSTRAP_INTERVAL,
-                )));
                 let store = MemoryStore::new(local_peer_id);
                 Some(Kademlia::with_config(local_peer_id, store, cfg))
             } else {
@@ -310,6 +302,7 @@ impl Peer {
                 identify,
                 kademlia,
                 memory_connection_limits,
+                mdns,
                 relay_client: None.into(),
                 relay_server,
                 request_response,
@@ -354,7 +347,6 @@ impl Peer {
             from_ui,
             shutdown,
             swarm,
-            bootstrap_query_id: None,
             start_providing_query_id: None,
             get_providers_query_id: None,
             get_closest_peers_query_id: HashSet::new(),
@@ -422,36 +414,6 @@ impl Peer {
             }
         }
 
-        // initiate a bootstrap of kademlia if it is enabled
-        if let Some(ref mut kad) = self.swarm.behaviour_mut().kademlia.as_mut() {
-            // parse the bootstrap multiaddrs
-            let bootstrappers: Vec<Multiaddr> = IPFS_BOOTSTRAP_NODES
-                .iter()
-                .filter_map(|s| s.parse().ok())
-                .collect();
-            for addr in bootstrappers.iter() {
-                if let Some((multiaddr, peerid)) = split_peer_id(addr.clone()) {
-                    kad.add_address(&peerid, multiaddr);
-                }
-            }
-
-            // start the bootstrap process
-            match kad.bootstrap() {
-                Ok(query_id) => {
-                    self.bootstrap_query_id = Some(query_id);
-                    self.msg("Bootstrapping Kademlia").await?;
-                }
-                Err(e) => {
-                    self.msg(format!("Failed to bootstrap Kademlia: {e}"))
-                        .await?;
-                    self.msg(format!(
-                        "Don't worry, it will try again in {KADEMLIA_BOOTSTRAP_INTERVAL} seconds"
-                    ))
-                    .await?;
-                }
-            }
-        }
-
         // Initialize the gossipsub topics, the hashes are the same as the topic names
         let chat_topic = GossipsubIdentTopic::new(self.chat_topic_name.clone());
         let file_topic = GossipsubIdentTopic::new(GOSSIPSUB_CHAT_FILE_TOPIC);
@@ -479,6 +441,17 @@ impl Peer {
                 match message {
                     Message::Chat { data, .. } => {
                         error!("chat received");
+                        let content = String::from_utf8(data).unwrap_or_else(|data| {
+                            String::from_utf8_lossy(&data.into_bytes()).into_owned()
+                        });
+                        let wire = Msg::chat(content);
+                        let data = match serde_json::to_vec(&wire) {
+                            Ok(data) => data,
+                            Err(e) => {
+                                debug!("Failed to serialize chat wire message: {e}");
+                                continue;
+                            }
+                        };
                         match self
                             .swarm
                             .behaviour_mut()
@@ -593,6 +566,35 @@ impl Peer {
                         self.msg(format!("Dcutr connection to {remote_peer_id}: {result}")).await?;
                     }
 
+                    // When we receive an mDNS event
+                    SwarmEvent::Behaviour(BehaviourEvent::Mdns(event)) => match event {
+                        mdns::Event::Discovered(list) => {
+                            for (peer_id, multiaddr) in list {
+                                debug!("mDNS discovered a new peer: {peer_id}");
+                                let peer_id_label = peer_id.to_string();
+                                self.swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+                                let address_with_p2p = multiaddr.with(Protocol::P2p(peer_id.clone()));
+                                if let Err(e) = self.swarm.dial(address_with_p2p.clone()) {
+                                    self.msg(format!(
+                                        "failed to dial discovered peer {peer_id_label}: {e}"
+                                    ))
+                                    .await?;
+                                } else {
+                                    self.msg(format!(
+                                        "Discovered peer {peer_id_label} at {address_with_p2p}"
+                                    ))
+                                    .await?;
+                                }
+                            }
+                        }
+                        mdns::Event::Expired(list) => {
+                            for (peer_id, _multiaddr) in list {
+                                debug!("mDNS discover peer has expired: {peer_id}");
+                                self.swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
+                            }
+                        }
+                    },
+
                     // When we receive a gossipsub event
                     SwarmEvent::Behaviour(BehaviourEvent::Gossipsub(event)) => match event {
                         GossipsubEvent::Message { .. } => {
@@ -603,8 +605,35 @@ impl Peer {
                                 )?;
                             self.msg(format!("{msg}")).await?;
                             match msg {
-                                UniversalConnectivityMessage::Chat { from, data, ..} => {
-                                    self.to_ui.send(Message::Chat{from, data}).await?;
+                                UniversalConnectivityMessage::WireChat { from, wire, .. } => {
+                                    let peer = from;
+                                    let data = wire.body().into_bytes();
+                                    match wire.kind {
+                                        MsgKind::Join => {
+                                            let from = peer
+                                                .map(|peer| format!("{peer}"))
+                                                .unwrap_or_else(|| wire.from.clone());
+                                            self.to_ui.send(Message::Event(format!("{from} joined"))).await?;
+                                        }
+                                        MsgKind::Leave => {
+                                            let from = peer
+                                                .map(|peer| format!("{peer}"))
+                                                .unwrap_or_else(|| wire.from.clone());
+                                            self.to_ui.send(Message::Event(format!("{from} left"))).await?;
+                                        }
+                                        MsgKind::System | MsgKind::Debug => {
+                                            self.to_ui.send(Message::Event(wire.body())).await?;
+                                        }
+                                        _ => {
+                                            self.to_ui.send(Message::Chat { from: peer, data }).await?;
+                                        }
+                                    }
+                                    if let Some(peer) = peer {
+                                        self.to_ui.send(Message::AddPeer(peer)).await?;
+                                    }
+                                }
+                                UniversalConnectivityMessage::Chat { from, data, .. } => {
+                                    self.to_ui.send(Message::Chat { from, data }).await?;
                                     if let Some(peer) = from {
                                         self.to_ui.send(Message::AddPeer(peer)).await?;
                                     }
@@ -708,39 +737,6 @@ impl Peer {
                     // When we receive a kademlia event
                     SwarmEvent::Behaviour(BehaviourEvent::Kademlia(event)) => match event {
                         KademliaEvent::OutboundQueryProgressed { id, result, step, .. } => match result {
-                            QueryResult::Bootstrap(result) => {
-                                if let Some(query_id) = self.bootstrap_query_id {
-                                    if id == query_id {
-                                        match result {
-                                            Ok(bootstrap) => {
-                                                if step.last {
-                                                    self.bootstrap_query_id = None;
-                                                    self.msg("Kademlia bootstrapped".to_string()).await?;
-
-                                                    let mut msgs = Vec::new();
-                                                    if let Some(ref mut kad) = self.swarm.behaviour_mut().kademlia.as_mut() {
-                                                        let key = RecordKey::new(&UNIVERSAL_CONNECTIVITY_AGENT);
-                                                        // start providing the universal connectivity agent string
-                                                        if let Ok(qid) = kad.start_providing(key.clone()) {
-                                                            msgs.push(format!("Kademlia providing: {}", hex::encode(key.clone())));
-                                                            self.start_providing_query_id = Some(qid);
-                                                        }
-                                                    }
-                                                    for msg in msgs.iter() {
-                                                        self.msg(msg).await?;
-                                                    }
-                                                } else {
-                                                    self.msg(format!("Kademlia bootstrapping peer {}, remaining: {}", bootstrap.peer, bootstrap.num_remaining)).await?;
-                                                }
-                                            }
-                                            Err(e) => {
-                                                self.msg(format!("Failed to bootstrap Kademlia: {e}")).await?;
-                                                self.bootstrap_query_id = None;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                             QueryResult::GetClosestPeers(result) => {
                                 if self.get_closest_peers_query_id.contains(&id) {
                                     match result {
@@ -935,6 +931,13 @@ impl Peer {
 }
 
 enum UniversalConnectivityMessage {
+    WireChat {
+        propagation_source: PeerId,
+        from: Option<ChatPeer>,
+        wire: Msg,
+        seq_no: Option<u64>,
+        topic: TopicHash,
+    },
     Chat {
         propagation_source: PeerId,
         from: Option<ChatPeer>,
@@ -980,13 +983,25 @@ impl UniversalConnectivityMessage {
             let topic = message.topic.clone();
 
             match topic.as_str() {
-                topic_name if topic_name == chat_topic => Ok(Self::Chat {
-                    propagation_source,
-                    from,
-                    data,
-                    seq_no,
-                    topic,
-                }),
+                topic_name if topic_name == chat_topic => {
+                    if let Ok(wire) = serde_json::from_slice::<Msg>(&data) {
+                        Ok(Self::WireChat {
+                            propagation_source,
+                            from,
+                            wire,
+                            seq_no,
+                            topic,
+                        })
+                    } else {
+                        Ok(Self::Chat {
+                            propagation_source,
+                            from,
+                            data,
+                            seq_no,
+                            topic,
+                        })
+                    }
+                }
                 GOSSIPSUB_CHAT_FILE_TOPIC => Ok(Self::File {
                     propagation_source,
                     from,
@@ -1044,6 +1059,31 @@ impl UniversalConnectivityMessage {
 impl fmt::Display for UniversalConnectivityMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::WireChat {
+                propagation_source,
+                from,
+                wire,
+                seq_no,
+                topic,
+            } => {
+                let propagation_source = {
+                    let ps: ChatPeer = propagation_source.into();
+                    format!("{} ({})", ps.id(), ps)
+                };
+                let chat_peer = from.as_ref().map_or("Unknown".to_string(), |from| {
+                    format!("{} ({})", from.id(), from)
+                });
+                let source = from.as_ref().map_or("Unknown".to_string(), |peer| {
+                    format!("{} ({})", peer.id(), peer)
+                });
+                let seq_no = seq_no.map_or("Unknown".to_string(), |seq_no| seq_no.to_string());
+                let kind = format!("{:?}", wire.kind);
+                let message = wire.body();
+                write!(
+                    f,
+                    "Received wire chat message:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tkind: {kind}\n\tmsg: {message}"
+                )
+            }
             Self::Chat {
                 propagation_source,
                 from,
@@ -1064,7 +1104,10 @@ impl fmt::Display for UniversalConnectivityMessage {
                 let seq_no = seq_no.map_or("Unknown".to_string(), |seq_no| seq_no.to_string());
                 let message =
                     String::from_utf8(data.to_vec()).unwrap_or("invalid UTF-8".to_string());
-                write!(f, "Received chat message:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tmsg: {message}")
+                write!(
+                    f,
+                    "Received chat message:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tmsg: {message}"
+                )
             }
             Self::File {
                 propagation_source,
@@ -1086,7 +1129,10 @@ impl fmt::Display for UniversalConnectivityMessage {
                 let seq_no = seq_no.map_or("Unknown".to_string(), |seq_no| seq_no.to_string());
                 let message =
                     String::from_utf8(data.to_vec()).unwrap_or("invalid UTF-8".to_string());
-                write!(f, "Received file offer:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tfile id: {message}")
+                write!(
+                    f,
+                    "Received file offer:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tfile id: {message}"
+                )
             }
             Self::PeerDiscovery {
                 propagation_source,
@@ -1111,7 +1157,11 @@ impl fmt::Display for UniversalConnectivityMessage {
                     .map_or("Unknown".to_string(), |discovered_peer| {
                         format!("{} ({})", discovered_peer.id(), discovered_peer)
                     });
-                write!(f, "Received peer discovery:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tpeer: {discovered_peer}\n\tmultiaddrs: {}", discovered_addrs.len())
+                write!(
+                    f,
+                    "Received peer discovery:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tpeer: {discovered_peer}\n\tmultiaddrs: {}",
+                    discovered_addrs.len()
+                )
             }
             Self::Unknown {
                 propagation_source,
@@ -1133,7 +1183,10 @@ impl fmt::Display for UniversalConnectivityMessage {
                 let seq_no = seq_no.map_or("Unknown".to_string(), |seq_no| seq_no.to_string());
                 let fields = decode_unknown_protobuf(data).map_err(|_| fmt::Error)?;
                 let data = pretty_print_fields(&fields);
-                write!(f, "Received unknown message:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tdata: {data}")
+                write!(
+                    f,
+                    "Received unknown message:\n\tp source: {propagation_source}\n\tsource: {source}\n\tseq no: {seq_no}\n\ttopic: {topic}\n\tfrom: {chat_peer}\n\tdata: {data}"
+                )
             }
         }
     }

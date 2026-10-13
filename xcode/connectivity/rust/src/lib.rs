@@ -23,6 +23,9 @@ pub use log::Log;
 pub mod message;
 pub use message::Message;
 
+/// The chat-compatible wire format reexports from `gnostr-chat`.
+pub use gnostr_chat::{Msg, MsgKind, USER_NAME};
+
 /// The command line options module
 pub mod options;
 pub use options::Options;
