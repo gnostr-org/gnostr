@@ -36,8 +36,8 @@ struct InternalIntegrationTests {
     /// Testing Internal Swift Interoperability
     /// ***************************************
     @Test() func testInternalInterop() async throws {
-        let host = try makeLocalEchoHost(port: 10000)
-        let client = try makeLocalClient(port: 10001)
+        let host = try makeLocalEchoHost()
+        let client = try makeLocalClient()
 
         try await host.startup()
         try await client.startup()
@@ -64,8 +64,8 @@ struct InternalIntegrationTests {
 
     @Test(.timeLimit(.minutes(2)), arguments: [3, 5, 10])
     func testInternalInteropMultipleRequests_Sequentially(_ numberOfRequests: Int) async throws {
-        let host = try makeLocalEchoHost(port: 10000)
-        let client = try makeLocalClient(port: 10001)
+        let host = try makeLocalEchoHost()
+        let client = try makeLocalClient()
 
         try await host.startup()
         try await client.startup()
@@ -113,8 +113,8 @@ struct InternalIntegrationTests {
     //  -> Check for existing connections
     //      -> Connection is ready / available, reuse it!
     @Test(.disabled()) func testInternalInteropMultipleRequests_Concurrently() async throws {
-        let host = try makeLocalEchoHost(port: 10000)
-        let client = try makeLocalClient(port: 10001)
+        let host = try makeLocalEchoHost()
+        let client = try makeLocalClient()
 
         try await host.startup()
         try await client.startup()
@@ -268,7 +268,7 @@ struct ExternalIntegrationTests {
     }
 }
 
-private func makeLocalEchoHost(port: Int) throws -> Application {
+private func makeLocalEchoHost(port: Int = 0) throws -> Application {
     let lib = try Application(.testing, peerID: InternalIntegrationTests.DeterministicPeerIDs.host)
     lib.environment.arguments = ["libp2p"]
     lib.security.use(.plaintextV2)
@@ -293,7 +293,7 @@ private func makeLocalEchoHost(port: Int) throws -> Application {
     return lib
 }
 
-private func makeLocalClient(port: Int, peerID: PeerID? = nil) throws -> Application {
+private func makeLocalClient(port: Int = 0, peerID: PeerID? = nil) throws -> Application {
     let lib = try Application(.testing, peerID: peerID ?? InternalIntegrationTests.DeterministicPeerIDs.client)
     lib.environment.arguments = ["libp2p"]
     lib.security.use(.plaintextV2)
