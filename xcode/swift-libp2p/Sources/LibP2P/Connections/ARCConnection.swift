@@ -455,13 +455,15 @@ public class ARCConnection: AppConnection, @unchecked Sendable {
     /// Take this opportunity to configure the child channels pipeline for the specified protocol before data transmission beings
     public func outboundMuxedChildChannelInitializer(_ childChannel: Channel, protocol: String) -> EventLoopFuture<Void>
     {
-        self.eventLoop.flatSubmit {
+        print("ARCConnection::outboundMuxedChildChannelInitializer peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(`protocol`) cache=\(self.newStreamCache.map(\.proto))")
+        return self.eventLoop.flatSubmit {
             // Cancel our idleTimeoutTask if we have one
             self.cancelTimeoutTask()
 
             guard let idx = self.newStreamCache.firstIndex(where: { $0.proto == `protocol` }) else {
                 self.logger.error("No Responder For `\(`protocol`)`")
                 self.logger.error("\(self.newStreamCache)")
+                print("ARCConnection::outboundInitializer noResponder peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(`protocol`) cache=\(self.newStreamCache.map(\.proto))")
                 return childChannel.eventLoop.makeFailedFuture(Application.Connections.Errors.noResponder)
             }  //?? self.application.responder.current
             let pendingStream = self.newStreamCache.remove(at: idx)
@@ -659,16 +661,30 @@ public class ARCConnection: AppConnection, @unchecked Sendable {
         self.eventLoop.execute {
             /// Cancel and clear our idleTimeoutTask if we have one
             self.cancelTimeoutTask()
+            print("ARCConnection::newStream eventLoopExecute peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(proto) isMuxed=\(self.isMuxed) muxerNil=\(self.muxer == nil) newStreamCache=\(self.newStreamCache.map(\.proto)) pendingStreamCache=\(self.pendingStreamCache.map(\.proto))")
+            print("ARCConnection::newStream INSIDE CLOSURE TOP")
             /// Ask our muxer to open the stream...
             if self.isMuxed, let mux = self.muxer {
+                print("ARCConnection::newStream INSIDE IF")
                 /// Store our responder
                 self.logger.trace("Adding `\(proto)` to our newStreamCache")
                 self.newStreamCache.append(pendingStream)
+                print("ARCConnection::aboutToCallMuxer peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(proto) cacheAfterAppend=\(self.newStreamCache.map(\.proto)) muxerType=\(type(of: mux))")
                 /// Ask our installed Muxer to open / initialize a new stream for us...
                 self.logger.debug("Asking Muxer to open / initialize new stream for protocol `\(proto)`")
-                try! mux.newStream(channel: self.channel, proto: proto).whenSuccess { stream in
-                    //print("Skipping Stream Registry")
-                    //self.registry[stream.id] = stream
+                do {
+                    let future = try mux.newStream(channel: self.channel, proto: proto)
+                    print("ARCConnection::gotFuture peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(proto)")
+                    future.whenComplete { result in
+                        switch result {
+                        case .success(let stream):
+                            print("ARCConnection::muxer.newStream success peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(proto) streamID=\(stream.id)")
+                        case .failure(let error):
+                            print("ARCConnection::muxer.newStream failure peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(proto) error=\(error)")
+                        }
+                    }
+                } catch {
+                    print("ARCConnection::muxer.newStream threw peer=\(self.remotePeer?.b58String ?? "unknown") proto=\(proto) error=\(error)")
                 }
 
             } else {

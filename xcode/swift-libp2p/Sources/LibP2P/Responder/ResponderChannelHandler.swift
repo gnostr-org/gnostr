@@ -50,7 +50,7 @@ final class ResponderChannelHandler: ChannelInboundHandler, RemovableChannelHand
             self.logger.trace("Dropping Empty Response")
             return
         }
-        context.write(self.wrapOutboundOut(response), promise: nil)
+        context.writeAndFlush(self.wrapOutboundOut(response), promise: nil)
     }
 
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
